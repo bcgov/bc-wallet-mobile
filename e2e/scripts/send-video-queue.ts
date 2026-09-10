@@ -3,7 +3,7 @@
  *
  *   yarn queue:drain [--scope all|e2e] [--max N] [--reason text] [--dry-run]
  *
- * `--dry-run` logs in and reports which queues hold work, claiming nothing. Needs SM_USER/SM_PASSWORD (e2e/.env.e2e locally, 1Password in CI) and an egress IP the IDcheck
+ * `--dry-run` logs in and reports which queues hold work, claiming nothing. Needs the IDCHECK_* credentials (e2e/.env.e2e locally, 1Password in CI) and an egress IP the IDcheck
  * portal allowlists. Prints what it did as markdown, appends it to $GITHUB_STEP_SUMMARY when set,
  * and exits non-zero only when the drain itself failed (login, network) — stopping with work still
  * queued is a warning, not a failure.

@@ -26,8 +26,8 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * One ordered session: onboard (same session — VerifyPrompt exists only here) → Continue → manual
  * serial → birthdate submit (`authorizeDevice` derives the photo card) → method selection. It browses
  * the send-video and live-call method detours WITHOUT entering the camera, then completes IN-PERSON —
- * the CI method, approved by the real SiteMinder/IDcheck flow (`approveInPersonRequest`; needs
- * `SM_USER`/`SM_PASSWORD` on an allowlisted runner) — reaching VerificationSuccess and verified Home.
+ * the CI method, approved by the real IDcheck flow (`approveInPersonRequest`; needs
+ * the `IDCHECK_*` credentials on an allowlisted runner) — reaching VerificationSuccess and verified Home.
  *
  * mocha bail makes the checkpoints fail-fast within this file only; every other journey still runs.
  */

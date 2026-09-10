@@ -8,7 +8,7 @@
 #   onboarding   — onboarding journeys
 #   auth         — auth/unlock journey
 #   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
-#   verify       — verify entry + verified card-type journeys (uses SM_* creds)
+#   verify       — verify entry + verified card-type journeys (uses the IDCHECK_* sign-in)
 #   send-video   — the four send-video journeys alone: scripted agent review against a shared,
 #                  blind-FIFO SIT queue, so CI runs them one platform at a time (max-parallel 1) and
 #                  keeps them out of every concurrent multi-device run (exclude_send_video)
@@ -19,9 +19,9 @@
 #   upgrade403   — the shipped 4.0.3 release → current, via its frozen pre-rework onboarding walk
 #
 # All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
-# SAUCE_ACCESS_KEY, SM_USER, and SM_PASSWORD are all loaded from the
-# bcsc-mobile-app-cd 1Password vault unconditionally, even for suites (smoke,
-# onboarding, auth) that don't use the SM_* values.
+# SAUCE_ACCESS_KEY and the IDCHECK_* sign-in (user, password, TOTP secret) are all
+# loaded from the bcsc-mobile-app-cd 1Password vault unconditionally, even for
+# suites (smoke, onboarding, auth) that don't use the IDCHECK_* values.
 #
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
@@ -93,13 +93,13 @@ on:
         required: true
         description: >
           1Password service account token. This job loads SAUCE_USERNAME,
-          SAUCE_ACCESS_KEY, SM_USER, and SM_PASSWORD from the
+          SAUCE_ACCESS_KEY and the IDCHECK_* sign-in from the
           bcsc-mobile-app-cd vault itself (in addition to the traction issuer
           credentials it already loaded — see e2e/issuer/README.md), so
-          callers only need to pass this one bootstrap secret through. SM_*
-          were previously optional (only required for verify/regression/
-          migration suites); since all four values now come from the vault
-          unconditionally, SM_* are always present, even for suites that
+          callers only need to pass this one bootstrap secret through. The
+          IDCheck values were previously optional (only required for verify/
+          regression/migration suites); since every value now comes from the
+          vault unconditionally, they are always present, even for suites that
           don't use them.
   workflow_dispatch:
     inputs:
@@ -129,9 +129,9 @@ on:
         required: false
         default: ''
       device_matrix:
-        description: 'JSON array of {platform, device, os_version} objects'
+        description: 'JSON array of {platform, device, os_version} objects — keep os_version pinned (unpinned iOS lands on iOS 15-era devices)'
         type: string
-        default: '[{"platform":"iOS","device":"iPhone.*","os_version":""},{"platform":"Android","device":"Google.*","os_version":""}]'
+        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
       runner_label:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
@@ -167,8 +167,9 @@ jobs:
     timeout-minutes: ${{ (inputs.suite == 'regression' && 180) || (inputs.suite == 'send-video' && 90) || 45 }}
     continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
     strategy:
-      # send-video is pinned to 1: its journeys must never run on two platforms at once
-      max-parallel: ${{ (inputs.suite == 'send-video' && 1) || inputs.max_parallel || 2 }}
+      # send-video is pinned to 1: its journeys must never run on two platforms at once. fromJSON because a
+      # workflow_dispatch number input arrives as a string, which max-parallel rejects ("Unexpected value").
+      max-parallel: ${{ fromJSON((inputs.suite == 'send-video' && 1) || inputs.max_parallel || 2) }}
       fail-fast: false
       matrix:
         device: ${{ fromJSON(inputs.device_matrix) }}
@@ -182,6 +183,8 @@ jobs:
 
       - name: Setup E2E
         uses: ./.github/workflows/actions/setup-e2e
+        with:
+          idcheck-browser: 'true'
 
       # The wallet journey (main + regression suites) drives the e2e issuer — a Traction dev tenant
       # (e2e/issuer/README.md) — over its admin API. This preflight runs the idempotent provisioning
@@ -216,25 +219,32 @@ jobs:
           # tsx binary directly — yarn's own stdout banners would corrupt GITHUB_ENV
           ./node_modules/.bin/tsx scripts/issuer-provision.ts >> "$GITHUB_ENV"
 
-      # Outputs (not export-env) keep these four values scoped to only the
+      # Outputs (not export-env) keep these values scoped to only the
       # step below that references them.
-      - name: Load SauceLabs and SiteMinder secrets from 1Password
+      - name: Load SauceLabs and IDCheck secrets from 1Password
         id: op_e2e
         uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
           SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
-          SM_USER: op://bcsc-mobile-app-cd/bcsc-e2e-test-account/username
-          SM_PASSWORD: op://bcsc-mobile-app-cd/bcsc-e2e-test-account/password
+          # email = the Entra sign-in name (UPN); credential = the login password; the "password" field holds the authenticator base32 seed (TOTP)
+          IDCHECK_USER: op://bcsc-mobile-app-cd/bcsc-ias-test-account/email
+          IDCHECK_PASSWORD: op://bcsc-mobile-app-cd/bcsc-ias-test-account/credential
+          IDCHECK_TOTP_SECRET: op://bcsc-mobile-app-cd/bcsc-ias-test-account/password
 
       - name: Run WDIO tests
         working-directory: e2e
         env:
           SAUCE_USERNAME: ${{ steps.op_e2e.outputs.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ steps.op_e2e.outputs.SAUCE_ACCESS_KEY }}
-          SM_USER: ${{ steps.op_e2e.outputs.SM_USER }}
-          SM_PASSWORD: ${{ steps.op_e2e.outputs.SM_PASSWORD }}
+          IDCHECK_USER: ${{ steps.op_e2e.outputs.IDCHECK_USER }}
+          IDCHECK_PASSWORD: ${{ steps.op_e2e.outputs.IDCHECK_PASSWORD }}
+          IDCHECK_TOTP_SECRET: ${{ steps.op_e2e.outputs.IDCHECK_TOTP_SECRET }}
+          # Persistent-profile + circuit-breaker state; runner.temp is per-job and writable (see idcheck-session.mjs).
+          # No cross-run actions/cache of this dir: matrix jobs are separate ephemeral runners, and caching it
+          # would persist live Entra session cookies in the repo-scoped cache. One cold sign-in per job is fine.
+          IDCHECK_STATE_DIR: ${{ runner.temp }}/idcheck-e2e
           SAUCE_REGION: us
           VARIANT: bcsc-dev
           DEVICE_MATRIX: ${{ inputs.device_matrix }}

@@ -1,14 +1,15 @@
 import { load } from 'cheerio'
 import dotenv from 'dotenv'
-import makeFetchCookie from 'fetch-cookie'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { CookieJar } from 'tough-cookie'
+import {
+  checkIdcheckSignIn,
+  establishIdcheckSession,
+  IDCHECK_ORIGIN,
+  invalidateIdcheckSession,
+} from './idcheck-session.mjs'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
-
-const initialCookieHeader =
-  'Dummy1=DummyVal1; BCGOVFlags=1000%3A1%2C0; BCGOVCustom=NULL; BCGOVBrand=NULL; BCGOVBehavior=NULL; Dummy2=DummyVal2; preDummy1=DummyVal1; preDummy2=DummyVal2; FAILREASON=0; BCGOVTarget=https%3A%2F%2Fidsit.gov.bc.ca%2Fidcheck%2F; BCGOVReferer=https%3A%2F%2Fidsit.gov.bc.ca%2F; SMSESSION=LOGGEDOFF; BCGOVclptryno=1; clp001=Salted__%AD%BAa.%D7L%CA%A2%5C%13%A9%B3%9F%95%F6%EDb%0D%21%8D%F6%1A%A1%B1%E7g%BEMj%C7%AD%DD%CF%B9%ED%3A%0FDB%95_%29%28c%9F%E8%8AI7%A3%2B%F5%03%80%FD3%BC%F4%1C%B5%D9E%C86'
 
 const IDENTIFY_URL =
   'https://idsit.gov.bc.ca/idcheck/protected/deviceCredential/identify?menuItemAction=verifyMobileCardInPerson'
@@ -16,7 +17,6 @@ const VALIDATE_CARDHOLDER_URL = 'https://idsit.gov.bc.ca/idcheck/protected/valid
 const VERIFY_NON_BCSC_URL = 'https://idsit.gov.bc.ca/idcheck/protected/counterNonBcscRequest/verifyIdentity'
 
 // Send-video submissions are reviewed by a different controller family than in-person.
-const IDCHECK_ORIGIN = 'https://idsit.gov.bc.ca'
 const BACKCHECK_BASE_URL = `${IDCHECK_ORIGIN}/idcheck/protected/backCheckRequest`
 const BACKCHECK_DASHBOARD_URL = `${BACKCHECK_BASE_URL}/dashboard`
 const BACKCHECK_CONTINUE_URL = `${BACKCHECK_BASE_URL}/continue`
@@ -53,7 +53,9 @@ const IDENTITY_MATCH_TITLE = 'Choose Which of These is a Match'
 let previousStepAt = 0
 
 /**
- * Logs a compact summary line for a response and throws on non-2xx status.
+ * Logs a compact summary line for a response and throws on non-2xx status, or on a response from
+ * anywhere but IDCheck: a lost session bounces to the identity provider's sign-in page with a 200,
+ * so that is named here (and the cached session dropped) instead of surfacing as a missing token.
  * Returns the response body text so callers that need it can use the return value.
  *
  * @param {string} step
@@ -66,13 +68,18 @@ async function logStep(step, response, bodyText) {
   const now = Date.now()
   const elapsedSeconds = previousStepAt ? ((now - previousStepAt) / 1000).toFixed(1) : '?'
   previousStepAt = now
-  const pathname = new URL(response.url).pathname
+  const landing = new URL(response.url)
+  const pathname = landing.pathname
   const icon = response.ok ? '+' : '!'
-  console.log(`[sm-login] [${icon}] ${step}: ${response.status} ${pathname} (${elapsedSeconds}s)`)
+  console.log(`[idcheck] [${icon}] ${step}: ${response.status} ${pathname} (${elapsedSeconds}s)`)
 
   if (!response.ok) {
     const errorDetail = extractErrorMessage(body)
     throw new Error(`[${step}] HTTP ${response.status} ${pathname}\n${errorDetail}`)
+  }
+  if (landing.origin !== IDCHECK_ORIGIN) {
+    invalidateIdcheckSession()
+    throw new Error(`[${step}] session lost — landed on ${landing.host}${pathname} (${extractErrorMessage(body)})`)
   }
 
   const contentType = response.headers.get('content-type') ?? ''
@@ -256,91 +263,19 @@ function buildUsercodeBody(csrfToken, input) {
 }
 
 /**
- * Shared SM preamble: seeds the cookie jar, authenticates with SiteMinder, and hands the SMSESSION
- * into IDCheck. Returns the cookie-bound fetch every later request must go through.
+ * Shared preamble: the signed-in IDCheck session (idcheck-session.mjs) with the step clock reset, so
+ * the per-step timings cover the chain and the sign-in reports its own.
  *
  * @param {AbortSignal} [signal]
  */
-async function establishIdcheckSession(signal) {
+async function openSession(signal) {
+  const fetchWithCookies = await establishIdcheckSession(signal)
   previousStepAt = Date.now()
-
-  const cookieJar = new CookieJar()
-  const fetchWithCookies = makeFetchCookie(fetch, cookieJar)
-
-  for (const cookie of initialCookieHeader.split(';')) {
-    const trimmedCookie = cookie.trim()
-    if (!trimmedCookie) {
-      continue
-    }
-
-    await cookieJar.setCookie(trimmedCookie, 'https://logontest7.gov.bc.ca/')
-  }
-
-  const username = process.env.SM_USER
-  const password = process.env.SM_PASSWORD
-
-  if (!username || !password) {
-    throw new Error('Missing SM_USER or SM_PASSWORD environment variables (set them in e2e/.env.e2e or export them in your shell)')
-  }
-
-  const smLoginBody = new URLSearchParams({
-    SMENC: 'ISO-8859-1',
-    SMLOCALE: 'US-EN',
-    target: '/clp-cgi/int01/private/postLogon.cgi',
-    smauthreason: '0',
-    smagentname: '',
-    user: username,
-    password,
-  }).toString()
-
-  const smLoginResponse = await fetchWithCookies('https://logontest7.gov.bc.ca/clp-cgi/int01/logon.fcc', {
-    headers: {
-      accept:
-        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-      'accept-language': 'en-US,en;q=0.9,en-CA;q=0.8,pt;q=0.7',
-      'cache-control': 'max-age=0',
-      'content-type': 'application/x-www-form-urlencoded',
-      'sec-ch-ua': '"Not:A-Brand";v="99", "Microsoft Edge";v="145", "Chromium";v="145"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"macOS"',
-      'sec-fetch-dest': 'document',
-      'sec-fetch-mode': 'navigate',
-      'sec-fetch-site': 'same-origin',
-      'upgrade-insecure-requests': '1',
-      Referer: 'https://logontest7.gov.bc.ca/clp-cgi/preLogon.cgi',
-    },
-    body: smLoginBody,
-    method: 'POST',
-    redirect: 'follow',
-    signal,
-  })
-  await logStep('SM login', smLoginResponse)
-
-  const idcheckResponse = await fetchWithCookies('https://idsit.gov.bc.ca/idcheck/?', {
-    headers: {
-      accept:
-        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-      'accept-language': 'en-US,en;q=0.9,en-CA;q=0.8,pt;q=0.7',
-      'sec-ch-ua': '"Not:A-Brand";v="99", "Microsoft Edge";v="145", "Chromium";v="145"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"macOS"',
-      'sec-fetch-dest': 'document',
-      'sec-fetch-mode': 'navigate',
-      'sec-fetch-site': 'same-site',
-      'upgrade-insecure-requests': '1',
-      Referer: 'https://logontest7.gov.bc.ca/',
-    },
-    body: null,
-    method: 'GET',
-    signal,
-  })
-  await logStep('idcheck redirect', idcheckResponse)
-
   return fetchWithCookies
 }
 
 /**
- * SM login flow to approve in-person verification. Selects one of three flows:
+ * Approves an in-person verification in the IDCheck portal. Selects one of three flows:
  *   - 'photo'     : BCSC card with photo (card serial + birthdate identifies user)
  *   - 'non-photo' : BCSC card without photo (adds an extra evidence + registration doc step)
  *   - 'non-bcsc'  : User has no BCSC card (identifies via usercode + two registration documents)
@@ -350,7 +285,7 @@ async function establishIdcheckSession(signal) {
  */
 export async function approveInPersonLogin(input, options = {}) {
   const { signal } = options
-  const fetchWithCookies = await establishIdcheckSession(signal)
+  const fetchWithCookies = await openSession(signal)
 
   const identifyResponse = await fetchWithCookies(IDENTIFY_URL, {
     headers: {
@@ -1041,7 +976,7 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
     const claimForm = findClaimForm(dashboardHtml, input.cardSerialNumber.toUpperCase() === 'N/A' ? 'cardless' : 'cardholder')
     if (!claimForm) {
       console.log(
-        `[sm-login] [~] claim attempt ${attempt}: no claim button on the dashboard — page is "${extractPageTitle(dashboardHtml) || '(untitled)'}"`
+        `[idcheck] [~] claim attempt ${attempt}: no claim button on the dashboard — page is "${extractPageTitle(dashboardHtml) || '(untitled)'}"`
       )
       await waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, signal)
       continue
@@ -1054,7 +989,7 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
     } = await claimQueueHead(fetchWithCookies, claimForm, 'claim send-video request', signal)
     if (!claimed) {
       const landing = describeClaimLanding(claimResponse, claimHtml)
-      console.log(`[sm-login] [~] claim attempt ${attempt}: nothing queued yet (landed on ${landing})`)
+      console.log(`[idcheck] [~] claim attempt ${attempt}: nothing queued yet (landed on ${landing})`)
       await waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, signal, () => landing)
       continue
     }
@@ -1080,7 +1015,7 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
     }
 
     console.log(
-      `[sm-login] [~] claim attempt ${attempt}: claimed foreign request ${claimed.requestIdentifier} ` +
+      `[idcheck] [~] claim attempt ${attempt}: claimed foreign request ${claimed.requestIdentifier} ` +
         `("${claimed.claimedName}", serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'}) — closing it and retrying`
     )
     await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
@@ -1129,10 +1064,10 @@ async function releaseClaimedRequest(fetchWithCookies, $detail, detailUrl, signa
       signal,
     })
     if (!response.ok) {
-      console.warn(`[sm-login] [!] CloseRequest release returned ${response.status}`)
+      console.warn(`[idcheck] [!] CloseRequest release returned ${response.status}`)
     }
   } catch (err) {
-    console.warn('[sm-login] [!] CloseRequest release failed:', err)
+    console.warn('[idcheck] [!] CloseRequest release failed:', err)
   }
 }
 
@@ -1202,7 +1137,7 @@ async function submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, req
 }
 
 /**
- * SM login flow to review (approve or reject) a queued send-video verification request.
+ * Reviews (approves or rejects) a queued send-video verification request in the IDCheck portal.
  *
  * The portal has no queue listing — its claim button takes the next submission FIFO — so the claim is
  * polled until it lands on the expected person, closing foreign submissions along the way (see
@@ -1220,7 +1155,7 @@ export async function reviewSendVideoLogin(input, options = {}) {
 
   assertValidSendVideoReviewInput(input)
 
-  const fetchWithCookies = await establishIdcheckSession(signal)
+  const fetchWithCookies = await openSession(signal)
   const { detailUrl, claimed } = await claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeoutMs, signal)
   const { requestIdentifier, csrfToken, $detail } = claimed
 
@@ -1297,7 +1232,7 @@ export async function drainSendVideoQueue(options = {}) {
   } = options
   assertValidDrainScope(scope, personas)
 
-  const fetchWithCookies = await establishIdcheckSession(signal)
+  const fetchWithCookies = await openSession(signal)
   /** @type {DrainSendVideoQueueResult} */
   const result = { rejected: [], released: [], queuesWithWork: [] }
   /** @type {Map<string, 'rejected' | 'released'>} what this run already did to each request id */
@@ -1396,6 +1331,7 @@ function parseDocSpec(spec) {
 
 function printUsage() {
   console.error('Usage:')
+  console.error('  node login.mjs check     (sign in and read the portal home — credential and connectivity check)')
   console.error('  node login.mjs photo     <serial> <birthdate(YYYY-MM-DD)> <code>')
   console.error('  node login.mjs non-photo <serial> <birthdate(YYYY-MM-DD)> <code> <docTypeId>:<docNum>')
   console.error('  node login.mjs non-bcsc  <code> <docTypeId>:<docNum> <docTypeId>:<docNum>')
@@ -1406,8 +1342,8 @@ function printUsage() {
 }
 
 if (isRunAsCli()) {
-  // CLI-only: load .env.e2e so the standalone invocation has SM_USER/
-  // SM_PASSWORD. When this module is dynamic-imported by wdio tests,
+  // CLI-only: load .env.e2e so the standalone invocation has the IDCHECK_*
+  // credentials. When this module is dynamic-imported by wdio tests,
   // configs/wdio.shared.conf.ts has already loaded .env.e2e and this
   // branch is skipped. In CI, the values come from workflow env (no
   // file load needed).
@@ -1421,7 +1357,9 @@ if (isRunAsCli()) {
   let sendVideoInput = null
 
   try {
-    if (flow === 'photo') {
+    if (flow === 'check') {
+      // nothing to parse: the sign-in is the whole job
+    } else if (flow === 'photo') {
       const [serial, birthdate, code] = rest
       if (!serial || !birthdate || !code) {
         throw new Error('photo flow requires <serial> <birthdate> <code>')
@@ -1474,9 +1412,14 @@ if (isRunAsCli()) {
     process.exit(1)
   }
 
-  if (sendVideoInput) {
+  if (flow === 'check') {
+    const result = await checkIdcheckSignIn()
+    console.log(
+      `[idcheck] signed in as ${result.user} (${result.method} MFA) — landed on ${result.landingUrl} "${result.landingTitle}"`
+    )
+  } else if (sendVideoInput) {
     const claimed = await reviewSendVideoLogin(sendVideoInput)
-    console.log(`[sm-login] reviewed ${claimed.requestIdentifier}: ${claimed.claimedName} (serial ${claimed.claimedSerial})`)
+    console.log(`[idcheck] reviewed ${claimed.requestIdentifier}: ${claimed.claimedName} (serial ${claimed.claimedSerial})`)
   } else {
     await approveInPersonLogin(input)
   }

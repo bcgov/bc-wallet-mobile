@@ -349,7 +349,7 @@ describe('Upgrade from v3: setting up on the v3 release', () => {
     }
   })
 
-  it('reads the confirmation code and approves it via SiteMinder', async () => {
+  it('reads the confirmation code and approves it in the IDCheck portal', async () => {
     let confirmationCode: string
 
     if (driver.isAndroid) {

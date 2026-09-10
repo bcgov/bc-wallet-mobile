@@ -4082,6 +4082,7 @@ __metadata:
     dotenv: "npm:^16.3.1"
     eslint-plugin-wdio: "npm:^9.27.0"
     fetch-cookie: "npm:^3.2.0"
+    playwright-core: "npm:^1.63.0"
     sharp: "npm:^0.34.5"
     tough-cookie: "npm:^6.0.1"
     tsx: "npm:^4.0.0"
@@ -7275,6 +7276,15 @@ __metadata:
   dependencies:
     find-up: "npm:^5.0.0"
   checksum: 10c0/793a496d685dc55bbbdbbb22d884535c3b29241e48e3e8d37e448113a71b9e42f5481a61fdc672d7322de12fbb2c584dd3a68bf89b18fffce5c48a390f911bc5
+  languageName: node
+  linkType: hard
+
+"playwright-core@npm:^1.63.0":
+  version: 1.63.0
+  resolution: "playwright-core@npm:1.63.0"
+  bin:
+    playwright-core: cli.js
+  checksum: 10c0/39c1ebae4029ca2e9371e00a5588d962038e24b6e0bdb7d0d27374dde04838f349b83ae0c8b3b648653d0935cba7fb9011f1201adaab9dd0db7801ad6c75e9aa
   languageName: node
   linkType: hard
 

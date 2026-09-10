@@ -170,7 +170,7 @@ export async function enterBirthdate(user: TestUser): Promise<void> {
   await EnterBirthdateScreen.tapWhenEnabled('primary')
 }
 
-/** The SiteMinder approval payload for a user's flow: serial + birthdate, typed document numbers, or both. */
+/** The IDCheck approval payload for a user's flow: serial + birthdate, typed document numbers, or both. */
 function approvalInputForUser(user: TestUser): ApproveInPersonInput {
   if (user.flow === 'non-bcsc') {
     return {
@@ -225,7 +225,7 @@ export async function reachVerificationMethod(): Promise<void> {
 /**
  * Complete verification via the IN-PERSON method — the only CI-completable one (send-video and
  * live-call open camera screens). From VerificationMethodSelection: read the confirmation code, drive
- * the real SiteMinder SIT approval (needs `SM_USER`/`SM_PASSWORD` and an allowlisted runner IP), then
+ * the real IDCheck SIT approval (needs `IDCHECK_USER`/`IDCHECK_PASSWORD`/`IDCHECK_TOTP_SECRET` and an allowlisted runner IP), then
  * Complete → VerificationSuccess → Home.
  */
 export async function completeVerification(user: TestUser): Promise<void> {
