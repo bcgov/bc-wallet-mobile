@@ -4,15 +4,11 @@ import useVerificationMethodModel from '@/bcsc-theme/features/verify/_models/use
 import { VerificationVideoCache } from '@/bcsc-theme/features/verify/send-video/VideoReviewScreen'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
-import {
-  formatServiceAndUnavailableHours,
-  formatServiceHours,
-  isLiveCallAvailable,
-} from '@/bcsc-theme/utils/service-hours-formatter'
+import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
-import { act, renderHook } from '@testing-library/react-native'
+import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { IASEnvironment } from '@utils/environment'
 import { BCSCCardType } from 'react-native-bcsc-core'
 
@@ -83,9 +79,17 @@ describe('useVerificationMethodModel', () => {
     getServiceHours: jest.fn(),
   }
 
-  beforeEach(() => {
-    jest.clearAllMocks()
+  /**
+   * Settles the mount effect that caches destinations and service hours.
+   *
+   * Until it resolves, `handlePressLiveCall` refetches both instead of using the cached pair, so any
+   * call-count assertion has to wait for it.
+   */
+  const flushMountEffect = async (result: { current: { hoursLoading: boolean } }) => {
+    await waitFor(() => expect(result.current.hoursLoading).toBe(false))
+  }
 
+  beforeEach(() => {
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({
       evidence: mockEvidenceApi,
@@ -97,6 +101,11 @@ describe('useVerificationMethodModel', () => {
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
 
     jest.mocked(useAlerts).mockReturnValue({ videoPromptsMissingAlert: mockVideoPromptsMissingAlert } as any)
+
+    // `clearMocks` clears call history but keeps return values, so the auto-mocked service-hours
+    // helpers need a known baseline every test rather than inheriting the previous test's stub.
+    jest.mocked(formatServiceAndUnavailableHours).mockReturnValue([])
+    jest.mocked(isLiveCallAvailable).mockReturnValue(false)
   })
 
   describe('Initial state', () => {
@@ -106,8 +115,6 @@ describe('useVerificationMethodModel', () => {
       expect(result.current.sendVideoLoading).toBe(false)
       expect(result.current.liveCallLoading).toBe(false)
       expect(result.current.verificationOptions).toEqual(['video_call', 'back_check', 'counter'])
-      expect(result.current.handlePressSendVideo).toBeDefined()
-      expect(result.current.handlePressLiveCall).toBeDefined()
     })
   })
 
@@ -198,6 +205,29 @@ describe('useVerificationMethodModel', () => {
       expect(mockVideoPromptsMissingAlert).toHaveBeenCalledTimes(1)
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalled()
+      expect(result.current.sendVideoLoading).toBe(false)
+    })
+
+    it('logs and stops loading when the cleanup step throws', async () => {
+      mockEvidenceApi.createVerificationRequest.mockResolvedValue({
+        sha256: 'test-sha256',
+        id: 'test-id',
+        prompts: [{ id: 1, prompt: 'Say your name' }],
+      })
+      jest.mocked(removeFileSafely).mockResolvedValue(undefined)
+      const cacheError = new Error('Failed to clear cache')
+      jest.mocked(VerificationVideoCache.clearCache).mockImplementationOnce(() => {
+        throw cacheError
+      })
+
+      const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handlePressSendVideo()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith('Error sending video:', cacheError)
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
       expect(result.current.sendVideoLoading).toBe(false)
     })
 
@@ -297,7 +327,7 @@ describe('useVerificationMethodModel', () => {
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
-      await act(async () => {})
+      await flushMountEffect(result)
 
       await act(async () => {
         await result.current.handlePressLiveCall()
@@ -316,7 +346,7 @@ describe('useVerificationMethodModel', () => {
 
       mockVideoCallApi.getVideoDestinations.mockResolvedValue([{ destination_name: 'Other Destination', id: 'test-2' }])
       mockVideoCallApi.getServiceHours.mockResolvedValue(mockServiceHours)
-      jest.mocked(formatServiceHours).mockReturnValue(formattedHours)
+      jest.mocked(formatServiceAndUnavailableHours).mockReturnValue(formattedHours)
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -410,7 +440,7 @@ describe('useVerificationMethodModel', () => {
 
       mockVideoCallApi.getVideoDestinations.mockResolvedValue([])
       mockVideoCallApi.getServiceHours.mockResolvedValue(mockServiceHours)
-      jest.mocked(formatServiceHours).mockReturnValue(formattedHours)
+      jest.mocked(formatServiceAndUnavailableHours).mockReturnValue(formattedHours)
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
