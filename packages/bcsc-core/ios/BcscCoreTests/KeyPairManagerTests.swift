@@ -91,26 +91,26 @@ final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
   func testKidNamingThePreviousKeySelectsItOverNewest() {
     let previous = key("rsa1", createdSecondsAgo: 100)
     let newest = key("rsa2", createdSecondsAgo: 0)
-    let result = KeyPairManager.decryptKeyInfo(matching: "rsa1", in: [previous, newest])
+    let result = KeyPairManager.decryptKeyInfos(matching: "rsa1", in: [previous, newest]).first
     XCTAssertEqual(result?.tag, "rsa1")
   }
 
   func testEmptyKidFallsBackToNewest() {
     let previous = key("rsa1", createdSecondsAgo: 100)
     let newest = key("rsa2", createdSecondsAgo: 0)
-    let result = KeyPairManager.decryptKeyInfo(matching: "", in: [previous, newest])
+    let result = KeyPairManager.decryptKeyInfos(matching: "", in: [previous, newest]).first
     XCTAssertEqual(result?.tag, "rsa2")
   }
 
   func testKidHeldByNoLocalKeyFallsBackToNewest() {
     let previous = key("rsa1", createdSecondsAgo: 100)
     let newest = key("rsa2", createdSecondsAgo: 0)
-    let result = KeyPairManager.decryptKeyInfo(matching: "rsa9", in: [previous, newest])
+    let result = KeyPairManager.decryptKeyInfos(matching: "rsa9", in: [previous, newest]).first
     XCTAssertEqual(result?.tag, "rsa2")
   }
 
   func testEmptyKeysReturnsNil() {
-    XCTAssertNil(KeyPairManager.decryptKeyInfo(matching: "rsa1", in: []))
+    XCTAssertNil(KeyPairManager.decryptKeyInfos(matching: "rsa1", in: []).first)
   }
 
   func testNamedKeyIsTriedBeforeAllOtherKeysNewestFirst() {
@@ -134,7 +134,7 @@ final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
     )
   }
 
-  func testRetryableFailureUsesTheOlderKeyAndStopsAfterSuccess() throws {
+  func testFailedKeyFallsThroughToTheOlderKeyAndStopsAfterSuccess() throws {
     let newer = key("rsa2", createdSecondsAgo: 0)
     let older = key("rsa1", createdSecondsAgo: 100)
     var attemptedTags = [String]()
@@ -144,18 +144,39 @@ final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
       attempt: { candidate in
         attemptedTags.append(candidate.tag)
         if candidate.tag == "rsa2" {
-          throw RetryableFailure()
+          throw WrongKeyFailure()
         }
         return "decrypted"
-      },
-      shouldRetry: { $0 is RetryableFailure }
+      }
     )
 
     XCTAssertEqual(result, "decrypted")
     XCTAssertEqual(attemptedTags, ["rsa2", "rsa1"])
   }
 
-  func testNonRetryableFailureDoesNotTryAnotherKey() {
+  /// The reviewer's scenario on #4613: the newest key is the one the keychain won't return, and the
+  /// payload belongs to the retained previous key. Aborting here would strand a decryptable JWE.
+  func testKeyTheKeychainCannotReturnFallsThroughToTheNextCandidate() throws {
+    let newer = key("rsa2", createdSecondsAgo: 0)
+    let older = key("rsa1", createdSecondsAgo: 100)
+    var attemptedTags = [String]()
+
+    let result: String = try JWEDecryption.decrypt(
+      with: KeyPairManager.decryptKeyInfos(matching: "", in: [older, newer]),
+      attempt: { candidate in
+        attemptedTags.append(candidate.tag)
+        if candidate.tag == "rsa2" {
+          throw KeychainError.keyNotExists
+        }
+        return "decrypted"
+      }
+    )
+
+    XCTAssertEqual(result, "decrypted")
+    XCTAssertEqual(attemptedTags, ["rsa2", "rsa1"])
+  }
+
+  func testLockedKeychainStopsWithoutTryingAnotherKey() {
     let newer = key("rsa2", createdSecondsAgo: 0)
     let older = key("rsa1", createdSecondsAgo: 100)
     var attemptedTags = [String]()
@@ -166,30 +187,32 @@ final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
         attempt: { candidate in
           attemptedTags.append(candidate.tag)
           throw KeychainError.keychainUnavailable(errSecInteractionNotAllowed)
-        },
-        shouldRetry: { $0 is RetryableFailure }
+        }
       ) as String
-    )
+    ) { error in
+      guard case let KeychainError.keychainUnavailable(status) = error else {
+        return XCTFail("expected KeychainError.keychainUnavailable, got \(error)")
+      }
+      XCTAssertEqual(status, errSecInteractionNotAllowed)
+    }
     XCTAssertEqual(attemptedTags, ["rsa2"])
   }
 
-  func testLegacyWrongKeyFailureIsRetryable() {
-    XCTAssertTrue(
-      JWEDecryption.isRetryableJOSEFailure(
-        "Unsupported AES/CBC/PKCS5Padding/HMAC-SHA2 key length, must be 256, 384 or 512 bits, but is 512"
-      )
-    )
+  func testEveryCandidateFailingThrowsTheLastFailure() {
+    let newer = key("rsa2", createdSecondsAgo: 0)
+    let older = key("rsa1", createdSecondsAgo: 100)
+
+    XCTAssertThrowsError(
+      try JWEDecryption.decrypt(
+        with: KeyPairManager.decryptKeyInfos(matching: "", in: [older, newer]),
+        attempt: { _ in throw WrongKeyFailure() }
+      ) as String
+    ) { error in
+      XCTAssertTrue(error is WrongKeyFailure)
+    }
   }
 
-  func testContentDecryptionFailureIsRetryable() {
-    XCTAssertTrue(JWEDecryption.isRetryableJOSEFailure("Decryption failed"))
-  }
-
-  func testUnsupportedAlgorithmFailureIsNotRetryable() {
-    XCTAssertFalse(JWEDecryption.isRetryableJOSEFailure("Unsupported JWE algorithm [RSA-OAEP]"))
-  }
-
-  private struct RetryableFailure: Error {}
+  private struct WrongKeyFailure: Error {}
 }
 
 /// Exercises the real simulator keychain. Covers the key lifecycle relied on by

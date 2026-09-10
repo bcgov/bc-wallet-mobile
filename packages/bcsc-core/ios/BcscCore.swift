@@ -1533,11 +1533,6 @@ class BcscCore: NSObject {
         // A JWE becomes stateful after decrypting, so each candidate needs a fresh parse.
         let jwe = try JWE.parse(s: jweString)
         return try jwe.decrypt(withDecrypter: RSADecrypter(privateKey: keyPair.private))
-      }, shouldRetry: { error in
-        guard let message = (error as? JOSEException)?.description else {
-          return false
-        }
-        return JWEDecryption.isRetryableJOSEFailure(message)
       })
 
       // Validate the decrypted payload is a compact JWS
