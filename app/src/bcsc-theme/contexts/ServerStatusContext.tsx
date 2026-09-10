@@ -18,6 +18,8 @@ export interface ServerStatusRefreshResult {
 
 export interface ServerStatusContextType extends ServerStatusRefreshResult {
   isChecking: boolean
+  // True once the first status fetch has completed
+  hasChecked: boolean
   //Returns the cached value, adding `{ force: true }` to force an API call
   refresh: (options?: { force?: boolean }) => Promise<ServerStatusRefreshResult>
 }
@@ -29,6 +31,7 @@ const defaultValue: ServerStatusContextType = {
   contactLink: undefined,
   serverStatus: null,
   isChecking: false,
+  hasChecked: true,
   refresh: async () => ({ isAvailable: true, serverStatus: null }),
 }
 
@@ -55,6 +58,7 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
 
   const [serverStatus, setServerStatus] = useState<ServerStatusResponseData | null>(null)
   const [isChecking, setIsChecking] = useState(false)
+  const [hasChecked, setHasChecked] = useState(false)
 
   // Wait for the request to finish before starting another
   const inFlightRef = useRef<Promise<ServerStatusRefreshResult> | null>(null)
@@ -79,6 +83,7 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
         return { isAvailable: true, serverStatus: null }
       } finally {
         setIsChecking(false)
+        setHasChecked(true)
         inFlightRef.current = null
       }
     })()
@@ -158,8 +163,8 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
   }, [serverStatus, dispatch, t])
 
   const value = useMemo<ServerStatusContextType>(
-    () => ({ ...toResult(serverStatus), isChecking, refresh }),
-    [serverStatus, isChecking, refresh]
+    () => ({ ...toResult(serverStatus), isChecking, hasChecked, refresh }),
+    [serverStatus, isChecking, hasChecked, refresh]
   )
 
   return <ServerStatusContext.Provider value={value}>{children}</ServerStatusContext.Provider>
