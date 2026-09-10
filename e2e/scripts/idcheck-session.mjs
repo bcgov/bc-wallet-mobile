@@ -30,21 +30,8 @@ const KEYCLOAK_HOST = 'dev.loginproxy.gov.bc.ca'
 /** Failure screenshots land with the suite's other reports (gitignored, uploaded by CI). */
 const SCREENSHOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../reports/screenshots')
 
-/**
- * Sign-in state lives under a stable dir (not the repo) so a checkout clean or a reports wipe never
- * throws away the Entra device cookie. CI points IDCHECK_STATE_DIR at a per-job writable path.
- */
-const STATE_DIR = process.env.IDCHECK_STATE_DIR || path.join(homedir(), '.idcheck-e2e')
-/** The persistent Chrome profile that carries Entra's device recognition across processes. */
-const PROFILE_DIR = process.env.IDCHECK_PROFILE_DIR || path.join(STATE_DIR, 'profile')
-/** Chrome takes an exclusive lock on a profile dir, so parallel workers serialise the brief sign-in. */
-const LOCK_DIR = `${PROFILE_DIR}.lock`
-const LOCK_WAIT_MS = Number(process.env.IDCHECK_LOCK_WAIT_MS) || 60_000
 const LOCK_POLL_MS = 500
 const LOCK_STALE_MS = 300_000
-const MAX_SIGN_IN_FAILURES = Number(process.env.IDCHECK_MFA_MAX_FAILURES) || 3
-/** Latches the run after too many genuine Entra rejections, so a bad config can't trigger a lockout. */
-const authGuard = createEntraAuthGuard(STATE_DIR, { maxFailures: MAX_SIGN_IN_FAILURES })
 
 const SIGN_IN_TIMEOUT_MS = 45_000
 /** A person approving a push on a phone gets longer than a script typing a code. */
@@ -54,6 +41,11 @@ const POLL_INTERVAL_MS = 250
 const STUCK_AFTER_MS = 10_000
 /** No single page action may outlive this, so the sign-in deadline stays the one that decides. */
 const ACTION_TIMEOUT_MS = 10_000
+/**
+ * Entra answers a submitted code within this long, so an error still showing after it is a new
+ * verdict rather than the previous one lingering while the request is in flight.
+ */
+const OTC_VERDICT_SETTLE_MS = 10_000
 /**
  * The Microsoft sign-in page navigates to itself several times before it settles (an SSO reload). A
  * form field is only touched once no navigation has happened for this long, so a fill and its submit
@@ -97,14 +89,7 @@ export async function establishIdcheckSession(signal) {
     console.log(`[idcheck] [~] session no longer accepted (landed on ${describeLanding(landing)}) — signing in again`)
     cachedSession = null
   }
-
-  const jar = new CookieJar()
-  const fetchWithCookies = makeFetchCookie(fetch, jar)
-  await signInWithBrowser(jar, signal)
-  const landing = await probeLanding(fetchWithCookies, signal)
-  assertIdcheckSignedIn(landing)
-  cachedSession = { fetchWithCookies }
-  return fetchWithCookies
+  return (await openSession(signal)).fetchWithCookies
 }
 
 /**
@@ -114,9 +99,24 @@ export async function establishIdcheckSession(signal) {
  */
 export async function checkIdcheckSignIn(signal) {
   invalidateIdcheckSession()
-  const fetchWithCookies = await establishIdcheckSession(signal)
-  const landing = await probeLanding(fetchWithCookies, signal)
+  const { landing } = await openSession(signal)
   return { ...lastSignIn, landingUrl: landing.response.url, landingTitle: pageTitle(landing.html) }
+}
+
+/**
+ * Signs in through the browser and caches the jar once the home page accepts it. The landing is
+ * returned too, so a caller that wants to show it does not read the page a second time.
+ *
+ * @param {AbortSignal} [signal]
+ */
+async function openSession(signal) {
+  const jar = new CookieJar()
+  const fetchWithCookies = makeFetchCookie(fetch, jar)
+  await signInWithBrowser(jar, signal)
+  const landing = await probeLanding(fetchWithCookies, signal)
+  assertIdcheckSignedIn(landing)
+  cachedSession = { fetchWithCookies }
+  return { fetchWithCookies, landing }
 }
 
 /**
@@ -205,6 +205,33 @@ function readCredentials() {
 }
 
 /**
+ * Where the sign-in state lives, and the guard over it. Read per sign-in rather than at import, since
+ * the CLI (login.mjs) loads .env.e2e only after importing this module.
+ *
+ * The state dir is stable and outside the repo, so a checkout clean or a reports wipe never throws
+ * away the Entra device cookie; CI points IDCHECK_STATE_DIR at a per-job writable path.
+ */
+function readStateConfig() {
+  const stateDir = expandHome(process.env.IDCHECK_STATE_DIR) || path.join(homedir(), '.idcheck-e2e')
+  /** The persistent Chrome profile that carries Entra's device recognition across processes. */
+  const profileDir = expandHome(process.env.IDCHECK_PROFILE_DIR) || path.join(stateDir, 'profile')
+  return {
+    stateDir,
+    profileDir,
+    /** Chrome takes an exclusive lock on a profile dir, so parallel workers serialise the brief sign-in. */
+    lockDir: `${profileDir}.lock`,
+    lockWaitMs: Number(process.env.IDCHECK_LOCK_WAIT_MS) || 60_000,
+    /** Latches the run after too many genuine Entra rejections, so a bad config can't trigger a lockout. */
+    authGuard: createEntraAuthGuard(stateDir, { maxFailures: Number(process.env.IDCHECK_MFA_MAX_FAILURES) || 3 }),
+  }
+}
+
+/** dotenv hands a path over verbatim, so a leading `~` is expanded here. */
+function expandHome(envPath) {
+  return envPath?.replace(/^~(?=$|\/)/, homedir())
+}
+
+/**
  * Signs in through a browser and copies the resulting gov.bc.ca cookies into `jar`.
  *
  * @param {CookieJar} jar
@@ -212,14 +239,15 @@ function readCredentials() {
  */
 async function signInWithBrowser(jar, signal) {
   const credentials = readCredentials()
-  ensureStateDir()
-  authGuard.resetIfRequested()
-  authGuard.assertNotLatched() // fail fast before a bad config or a risk-flagged account signs in again
+  const stateConfig = readStateConfig()
+  ensureStateDir(stateConfig.stateDir)
+  stateConfig.authGuard.resetIfRequested()
+  stateConfig.authGuard.assertNotLatched() // fail fast before a bad config or a risk-flagged account signs in again
   const startedAt = Date.now()
 
   let result
   try {
-    result = await withProfileLock(async (userDataDir, { ephemeral }) => {
+    result = await withProfileLock(stateConfig, async (userDataDir, { ephemeral }) => {
       if (ephemeral) {
         console.log(
           '[idcheck] [~] the browser profile was busy — signing in with a throw-away profile (no device recognition this time)'
@@ -253,12 +281,12 @@ async function signInWithBrowser(jar, signal) {
   } catch (error) {
     // Only a genuine Entra verdict counts toward a lockout — never our own timeouts, aborts or 403s.
     if (error?.entraVerdict) {
-      authGuard.recordFailure(firstLine(error))
+      stateConfig.authGuard.recordFailure(firstLine(error))
     }
     throw error
   }
 
-  authGuard.recordSuccess() // a healthy sign-in (silent SSO included) clears the failure budget
+  stateConfig.authGuard.recordSuccess() // a healthy sign-in (silent SSO included) clears the failure budget
   lastSignIn = {
     user: credentials.user,
     mfa: result.mfa,
@@ -276,19 +304,20 @@ async function signInWithBrowser(jar, signal) {
  * throw-away profile instead — correct, just without this run's device recognition.
  *
  * @template T
+ * @param {ReturnType<typeof readStateConfig>} stateConfig
  * @param {(userDataDir: string, opts: { ephemeral: boolean }) => Promise<T>} criticalSection
  * @returns {Promise<T>}
  */
-async function withProfileLock(criticalSection) {
-  const deadline = Date.now() + LOCK_WAIT_MS
+async function withProfileLock({ profileDir, lockDir, lockWaitMs }, criticalSection) {
+  const deadline = Date.now() + lockWaitMs
   for (;;) {
     try {
-      mkdirSync(LOCK_DIR)
-      writeFileSync(path.join(LOCK_DIR, 'owner'), `${process.pid} ${Date.now()}`)
+      mkdirSync(lockDir)
+      writeFileSync(path.join(lockDir, 'owner'), `${process.pid} ${Date.now()}`)
       break
     } catch (error) {
       if (error?.code !== 'EEXIST') throw error
-      if (reclaimStaleLock()) continue
+      if (reclaimStaleLock(lockDir)) continue
       if (Date.now() > deadline) {
         const ephemeralDir = mkdtempSync(path.join(tmpdir(), 'idcheck-profile-'))
         try {
@@ -301,17 +330,17 @@ async function withProfileLock(criticalSection) {
     }
   }
   try {
-    return await criticalSection(PROFILE_DIR, { ephemeral: false })
+    return await criticalSection(profileDir, { ephemeral: false })
   } finally {
-    rmSync(LOCK_DIR, { recursive: true, force: true })
+    rmSync(lockDir, { recursive: true, force: true })
   }
 }
 
 /** Reclaims a lock left behind by a crashed worker (nothing releases it otherwise). */
-function reclaimStaleLock() {
+function reclaimStaleLock(lockDir) {
   try {
-    if (Date.now() - statSync(LOCK_DIR).mtimeMs > LOCK_STALE_MS) {
-      rmSync(LOCK_DIR, { recursive: true, force: true })
+    if (Date.now() - statSync(lockDir).mtimeMs > LOCK_STALE_MS) {
+      rmSync(lockDir, { recursive: true, force: true })
       return true
     }
     return false
@@ -321,12 +350,12 @@ function reclaimStaleLock() {
 }
 
 /** Makes the sign-in state dir, hard-failing (no silent degrade) if it cannot be written. */
-function ensureStateDir() {
+function ensureStateDir(stateDir) {
   try {
-    mkdirSync(STATE_DIR, { recursive: true })
+    mkdirSync(stateDir, { recursive: true })
   } catch (error) {
     throw new Error(
-      `[idcheck] cannot create the sign-in state dir ${STATE_DIR} (${firstLine(error)}) — set IDCHECK_STATE_DIR to a writable path`
+      `[idcheck] cannot create the sign-in state dir ${stateDir} (${firstLine(error)}) — set IDCHECK_STATE_DIR to a writable path`
     )
   }
 }
@@ -446,14 +475,16 @@ async function driveSignIn(page, credentials) {
         )
       }
 
-      if (await visible(page, '#idSpan_SAOTCC_Error_OTC')) {
-        // A code can be rejected for replay (two runs in one window) or drift; one fresh window is a fair retry.
+      if (Date.now() - codeSubmittedAt > OTC_VERDICT_SETTLE_MS && (await visible(page, '#idSpan_SAOTCC_Error_OTC'))) {
+        // Entra rejects a replayed code (two sign-ins in one window) and a drifted clock alike; the next
+        // window is a fair retry, with a deadline of its own since the wait for it is ours, not the page's.
         if (codeSubmissions >= 2 || !credentials.totpSecret) {
           throw entraError(
             `[idcheck sign-in] verification code rejected twice — check IDCHECK_TOTP_SECRET and the clock: ${await pageText(page, '#idSpan_SAOTCC_Error_OTC')}`
           )
         }
-        await waitForNextTotpWindow(page)
+        await waitForFreshTotpWindow(page, codeSubmittedAt)
+        deadline = Date.now() + SIGN_IN_TIMEOUT_MS
         await submitCode(page, totpCode(credentials.totpSecret))
         codeSubmissions++
         codeSubmittedAt = Date.now()
@@ -477,7 +508,7 @@ async function driveSignIn(page, credentials) {
       } else if (await visible(page, 'input[name="otc"]')) {
         if (codeSubmissions === 0 || Date.now() - codeSubmittedAt > SIGN_IN_TIMEOUT_MS) {
           if (credentials.totpSecret) {
-            await waitForNextTotpWindow(page)
+            await waitForFreshTotpWindow(page, codeSubmittedAt)
             await submitCode(page, totpCode(credentials.totpSecret))
             mfa = 'totp'
           } else if (process.stdin.isTTY) {
@@ -593,11 +624,19 @@ async function promptForCode() {
   }
 }
 
-/** @param {import('playwright-core').Page} page */
-async function waitForNextTotpWindow(page) {
-  const remaining = TOTP_STEP_S - (Math.floor(Date.now() / 1000) % TOTP_STEP_S)
-  if (remaining < TOTP_MIN_REMAINING_S) {
-    await page.waitForTimeout(remaining * 1000 + 200)
+/**
+ * Sleeps into the next TOTP window when a code minted now would be unsafe: the window already minted
+ * the code submitted at `lastSubmittedAtMs` (Entra rejects a replay), or it is about to roll over.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {number} lastSubmittedAtMs 0 before the first submission
+ */
+async function waitForFreshTotpWindow(page, lastSubmittedAtMs) {
+  const nowS = Math.floor(Date.now() / 1000)
+  const remainingS = TOTP_STEP_S - (nowS % TOTP_STEP_S)
+  const sameWindow = Math.floor(nowS / TOTP_STEP_S) === Math.floor(lastSubmittedAtMs / 1000 / TOTP_STEP_S)
+  if (sameWindow || remainingS < TOTP_MIN_REMAINING_S) {
+    await page.waitForTimeout(remainingS * 1000 + 200)
   }
 }
 

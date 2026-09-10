@@ -5,10 +5,11 @@
  * Semantics mirror the account-protection note (docs in ../.notes): only genuine Entra verdicts count
  * — a rejected credential, a rejected code, a risk page — never our own timeouts, aborts or network
  * faults, so an outage cannot latch the account out of the next healthy run. The ledger is a small
- * JSON file shared across processes (each wdio worker is its own process); a healthy sign-in, silent
- * SSO included, clears it.
+ * file shared across processes (each wdio worker is its own process): one line per verdict, appended
+ * rather than rewritten so two workers rejected at once cannot lose each other's count; a healthy
+ * sign-in, silent SSO included, removes it.
  */
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import path from 'node:path'
 
 /**
@@ -16,22 +17,20 @@ import path from 'node:path'
  * @param {{ maxFailures?: number }} [options]
  */
 export function createEntraAuthGuard(stateDir, { maxFailures = 3 } = {}) {
-  const ledgerPath = path.join(stateDir, 'auth-guard.json')
+  const ledgerPath = path.join(stateDir, 'auth-guard.log')
 
-  /** A corrupt or absent ledger reads as "no failures" — availability over a wedged file. */
+  /** The recorded verdicts, oldest first, as "<ISO time> <reason>" lines. An absent ledger reads as none. */
   function readLedger() {
     try {
-      const parsed = JSON.parse(readFileSync(ledgerPath, 'utf8'))
-      return { failures: Number(parsed.failures) || 0, lastReason: parsed.lastReason }
+      return readFileSync(ledgerPath, 'utf8').split('\n').filter(Boolean)
     } catch {
-      return { failures: 0 }
+      return []
     }
   }
 
-  /** Persist the ledger. A write failure hard-throws — a guard that cannot record is not a guard. */
-  function writeLedger(ledger) {
-    mkdirSync(stateDir, { recursive: true })
-    writeFileSync(ledgerPath, JSON.stringify(ledger))
+  /** @param {string} line */
+  function reasonOf(line) {
+    return line.slice(line.indexOf(' ') + 1)
   }
 
   return {
@@ -44,31 +43,32 @@ export function createEntraAuthGuard(stateDir, { maxFailures = 3 } = {}) {
 
     /** Throws before the first keystroke once the budget is spent, so a bad config costs one sign-in, not one per process. */
     assertNotLatched() {
-      const { failures, lastReason } = readLedger()
-      if (failures >= maxFailures) {
+      const verdicts = readLedger()
+      if (verdicts.length >= maxFailures) {
         throw new Error(
-          `[idcheck] Entra sign-in latched after ${failures} failure(s)` +
-            `${lastReason ? ` (last: ${lastReason})` : ''} — fix the cause, then clear it with IDCHECK_AUTH_RESET=1`
+          `[idcheck] Entra sign-in latched after ${verdicts.length} failure(s) (last: ${reasonOf(verdicts.at(-1))})` +
+            ' — fix the cause, then clear it with IDCHECK_AUTH_RESET=1'
         )
       }
     },
 
-    /** Counts one Entra verdict. Callers pass ONLY genuine verdicts, never timeouts or network faults. */
+    /**
+     * Counts one Entra verdict. Callers pass ONLY genuine verdicts, never timeouts or network faults.
+     * A write failure hard-throws — a guard that cannot record is not a guard.
+     */
     recordFailure(reason) {
-      const { failures } = readLedger()
-      writeLedger({ failures: failures + 1, lastReason: reason, lastAt: new Date().toISOString() })
+      mkdirSync(stateDir, { recursive: true })
+      appendFileSync(ledgerPath, `${new Date().toISOString()} ${reason.replaceAll(/\s+/g, ' ')}\n`)
     },
 
     /** A healthy sign-in (silent SSO included) clears the budget. */
     recordSuccess() {
-      if (existsSync(ledgerPath) && readLedger().failures !== 0) {
-        writeLedger({ failures: 0, clearedAt: new Date().toISOString() })
-      }
+      rmSync(ledgerPath, { force: true })
     },
 
     /** For tests and diagnostics. */
     failureCount() {
-      return readLedger().failures
+      return readLedger().length
     },
   }
 }
