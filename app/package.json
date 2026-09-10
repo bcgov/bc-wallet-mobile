@@ -88,7 +88,7 @@
     "buffer": "~6.0.3",
     "credo-ts-indy-vdr-proxy-client": "0.2.8",
     "dotenv": "^17.4.2",
-    "expo": "~54.0.31",
+    "expo": "~54.0.37",
     "expo-crypto": "~14.1.5",
     "expo-secure-store": "~15.0.8",
     "fast-text-encoding": "~1.0.6",
