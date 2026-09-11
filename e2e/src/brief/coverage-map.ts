@@ -275,9 +275,9 @@ export const UAT_CHECKLIST: CoverageSection[] = [
       {
         id: 'feat-change-security',
         label: 'Change security method (biometrics)',
-        platforms: { ios: 'skipped', android: 'skipped' },
-        proof: [],
-        note: 'skipped for e2e 2026-08-28 — device biometrics owned by the UAT team',
+        platforms: both,
+        proof: [{ file: spec('device-auth/device-auth.journey.ts') }],
+        note: 'the device-auth lane: a Sauce session with a screen lock + biometric interception (setupDeviceLock, biometricsInterception); switches to a PIN, unlocks with it, switches back. The prompt is answered by sauce:biometrics-authenticate, which drives the same code path a real match does — the app binds no key to the sensor',
       },
       {
         id: 'feat-change-pin',
@@ -495,6 +495,13 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       { id: 'j-settings', label: 'Main: settings', platforms: both, proof: [{ file: spec('main/settings.journey.ts') }] },
       { id: 'j-wallet', label: 'Wallet: DIDComm credential lifecycle', platforms: both, proof: [{ file: spec('main/wallet.journey.ts') }] },
       { id: 'j-a11y', label: 'Accessibility: automated audits', platforms: both, proof: [{ file: spec('a11y/accessibility.journey.ts') }] },
+    ],
+  },
+  {
+    id: 'device-auth',
+    title: 'Device authentication (Sauce device-lock lane)',
+    rows: [
+      { id: 'j-device-auth', label: 'Device auth: onboarding, unlock and the security switch', platforms: both, proof: [{ file: spec('device-auth/device-auth.journey.ts') }] },
     ],
   },
   {

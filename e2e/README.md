@@ -48,6 +48,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding runs via a frozen walk (`flows/onboarding-v403.ts`). Runs on Sauce on **both platforms**; retire once 4.1.0 is the previous release_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
 | `a11y`       | _Automated accessibility audits over the core unverified screens (`a11y/*.journey.ts`): iOS runs Apple's XCTest audit engine, Android the page-source/screenshot heuristics — see **[Accessibility audits](#accessibility-audits)**. Also part of `regression`_ |
+| `device-auth` | _Device authentication on a **locked** device (`device-auth/*.journey.ts`): onboarding on device auth, the "Confirm it's your device" interstitial, a failed match + retry, and the PIN ↔ device-auth switch in Settings with an unlock on each method. **Sauce RDC only**, on its own capability lane (`setupDeviceLock` + `biometricsInterception`, see **[Device authentication](#device-authentication-sauce-device-lock-lane)**) and never inside `regression` — a locked device changes the state every other journey starts from_ |
 
 ```bash
 # Run by suite name (per-area journey suites)
@@ -544,7 +545,7 @@ path CI already uses)._
 | Android | Non-BCSC reroute at the serial screen | ✅ WORKS (deterministic) | same jobs | _An unrecognised/undecodable code at `ScanSerial` routes to DualIdentificationRequired within seconds, every run — an edge case previously untestable_ |
 | Android | QR (FAB scanner) | ✅ WORKS | `a6f63e6f9f674fab95eea0f560918234` | _junk QR → "not recognized" popup AND pairing QR → full strategy pipeline, both first try; transfer-in scanning shares the same camera component_ |
 | iOS | QR (FAB scanner) | ✅ WORKS | `d7ea2c3c39c548a8a7ddc422d2c32714` | _Sauce's synthesized QR metadata reaches the vision-camera delegate: junk QR → "not recognized" popup AND pairing QR → full strategy pipeline_ |
-| iOS | Code-39 / PDF-417 (any surface) | ❌ DEAD (structural) | `d7ea2c3c39c548a8a7ddc422d2c32714`, `e7214db3895d4d67bb05d053e38e6350` | _Proven, not just documented: the injected card is plainly VISIBLE and sharp in the iOS preview, and code-39/PDF-417 still never fire, while QR fires reliably from the same image. iOS decodes in the OS (`AVCaptureMetadataOutput`) and Sauce only synthesizes QR metadata, so no rotation/clarity/size change can ever help. Mitigation: manual serial entry_ |
+| iOS | Code-39 / PDF-417 (any surface) | ❌ DEAD (structural) | `d7ea2c3c39c548a8a7ddc422d2c32714`, `e7214db3895d4d67bb05d053e38e6350`, `3b6691b413534c2299051991a0dc85e5` (serial: bare code-39, bare PDF-417, card back), `56f3c3775264490c8d92bf98465fd066` (evidence capture) | _Proven, not just documented: the injected card is plainly VISIBLE and sharp in the iOS preview, and code-39/PDF-417 still never fire, while QR fires reliably from the same image. iOS decodes in the OS (`AVCaptureMetadataOutput`) and Sauce only synthesizes QR metadata, so no rotation/clarity/size change can ever help. Mitigation: manual serial entry_ |
 
 _What that buys CI today, split by what each platform can actually do:_
 
@@ -610,6 +611,23 @@ nonexistent card._
 > `decodeBarcodes` — the same guard it already applies to `type === 'unknown'` — would fix the
 > user-facing behaviour and make this screen testable by injection._
 
+### Device authentication (Sauce device-lock lane)
+
+_The app offers "use device authentication" only when the OS calls the device secure —_ `KeyguardManager.isDeviceSecure` _on Android,_ `LAContext.canEvaluatePolicy(.deviceOwnerAuthentication)` _on iOS — and public pool devices carry no screen lock, so on a plain session the secure-app step renders the PIN option alone. Two per-session Sauce capabilities change that, and the_ `device-auth` _suite runs on a capability lane that requests both:_
+
+- `setupDeviceLock: true` _— Sauce sets a real screen lock for the session (000000 on Android, 089675 on iOS). The option renders and the OS credential prompt is real; typing the passcode answers it. On iOS that sheet is invisible to the driver, so it would be typed blind._
+- `biometricsInterception: true` _— Sauce swaps the biometric APIs for its own, and_ `sauce:biometrics-authenticate=true|false` _answers the app's prompt (`helpers/biometrics.ts`). Measured 2026-09-10: this alone also makes the option render on both platforms — on Android the instrumentation flips the keyguard check, which the docs do not list — but the lane keeps the lock too, so each option covers the other's failure mode._
+
+_A mocked answer drives the same path a real match does: the app binds no key to the sensor, so success means "read the stored hash and rotate the wallet key" either way. What it cannot drive: the same-prompt retry after an intermediate biometric failure (Sauce's_ `=false` _settles the prompt as an error, and the app drops back to the "Confirm it's your device" interstitial), and "App reset for security" (the OS lock removed after enrolment)._
+
+_Both options change the state every other journey starts from, so they are never a global switch: the RDC configs give_ `device-auth/*.journey.ts` _its own lane (`DEVICE_AUTH_SPECS`) and exclude those files from every other lane, the suite is not part of_ `regression`_, and the nightly runs it last in its chain. The App Storage "Device Passcode" setting stays OFF on every app group — Sauce applies it to all uploaded versions of the app, which would lock the device under every journey of every build._
+
+```sh
+# the journey, on its lane (Sauce RDC only; it skips itself anywhere else)
+yarn test:android:sauce --suite device-auth
+yarn test:ios:sauce --suite device-auth
+```
+
 ## _CI/CD_
 
 _Tests run automatically in GitHub Actions via a device matrix that controls which OS versions are tested:_
@@ -623,7 +641,9 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 
 _The four send-video journeys are excluded from that concurrent regression matrix and run right after it as their own_ `send-video` _lane — both platforms, one at a time (`max_parallel: 1`), alongside the Android-only migration lane — because they review a shared, blind-FIFO SIT agent queue with shared personas (see **Send-video review queue**). The journeys drain that queue around their own uploads, and the nightly ends with a_ `queue-hygiene` _job that drains it once more._
 
-_The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
+_The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status._
+
+_The nightly ends with the_ `device-auth` _lane (both platforms, last in the chain so its two sessions stay inside the cap): the device-authentication journey on a Sauce session whose device carries a screen lock and biometric interception — see **[Device authentication](#device-authentication-sauce-device-lock-lane)**._
 
 _**Note:** There is no E2E job on_ `main` _merge by design — regression is deferred to the nightly workflow so SauceLabs devices stay free during the day when multiple PRs merge. The in-person verification step needs the runner's egress IP allowlisted with the BC Gov ID Check portal; see the notes in_ `e2e-nightly.yml` _and use the "Verify Allowlist Connectivity" workflow to confirm reachability._
 
