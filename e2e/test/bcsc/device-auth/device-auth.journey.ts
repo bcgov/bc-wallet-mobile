@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import { TEST_PIN, Timeouts } from '../../../src/constants.js'
-import { recoverFromFailedDeviceAuth, relaunchApp, selectAccountLandingIfPresent, unlockWithDeviceAuth } from '../../../src/flows/auth.js'
+import {
+  recoverFromFailedDeviceAuth,
+  relaunchApp,
+  selectAccountLandingIfPresent,
+  unlockWithDeviceAuth,
+  unlockWithPin,
+} from '../../../src/flows/auth.js'
 import { reachSecureApp } from '../../../src/flows/onboarding.js'
 import { failBiometric, matchBiometric } from '../../../src/helpers/biometrics.js'
 import { isDeviceSecurityLane } from '../../../src/helpers/sauce.js'
@@ -21,9 +27,10 @@ import { OnboardingSecureAppScreen, VerifyPromptScreen } from '../../../src/scre
  *
  * Ordered, state-carrying checkpoints: onboard on device auth → relaunch/unlock through the
  * interstitial → a failed match, then the retry → the interstitial's "do not show me this again" →
- * Settings: switch to a PIN (the Change PIN row appears) → switch back (it disappears) → a final
- * relaunch proves the switch persisted. Out of scope: "App reset for security", which the app shows
- * when the OS lock is removed after enrolment — the cloud cannot remove a lock mid-session.
+ * Settings: switch to a PIN (the Change PIN row appears) → relaunch and unlock with that PIN →
+ * switch back to device auth (the row disappears) → a final relaunch unlocks on device auth again.
+ * Out of scope: "App reset for security", which the app shows when the OS lock is removed after
+ * enrolment — the cloud cannot remove a lock mid-session.
  */
 
 /** The availability gate resolves asynchronously, so the option lands after the screen does. */
@@ -100,7 +107,14 @@ describe('Device-auth journey: onboarding, unlock and the security switch', () =
     await SettingsScreen.waitFor('changePin', Timeouts.SCREEN_TRANSITION)
   })
 
+  it('relaunches and unlocks with the PIN', async () => {
+    // AccountLanding → EnterPIN → Home, no interstitial and no prompt: the PIN is the live method.
+    await unlockWithPin(TEST_PIN, { relaunch: true })
+  })
+
   it('switches back to device authentication and unlocks with it after a relaunch (terminal)', async () => {
+    await HomeScreen.tap('menu')
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await SettingsScreen.link('appSecurity')
     await AppSecurityScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await AppSecurityScreen.link('deviceAuth')
