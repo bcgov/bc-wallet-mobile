@@ -64,7 +64,7 @@ exports[`ServiceOutage should match snapshot 1`] = `
               [
                 {
                   "color": "#FFFFFF",
-                  "fontSize": 100,
+                  "fontSize": 75,
                 },
                 {
                   "alignSelf": "center",

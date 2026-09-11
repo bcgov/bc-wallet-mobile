@@ -99,7 +99,7 @@ export const ServiceOutage = ({ inOnboarding = false, onSkipVerification }: Serv
       controls={controls}
       scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
     >
-      <Icon name="error-outline" size={100} color={ColorPalette.brand.icon} style={styles.icon} />
+      <Icon name="error-outline" size={75} color={ColorPalette.brand.icon} style={styles.icon} />
       <View style={styles.textContainer}>
         <ThemedText variant="headingThree">{headerText}</ThemedText>
         {contentText.filter(Boolean).map((text) => (
