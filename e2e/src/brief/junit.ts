@@ -101,6 +101,7 @@ export function parseJunitXml(xml: string, source: string, hint?: Platform): Par
     const tests: TestResult[] = []
     const hookFailures: SuiteResult['hookFailures'] = []
     let failedBefore = false
+    let previous: TestResult | undefined
     $suite.children('testcase').each((_, tcEl) => {
       const $tc = $(tcEl)
       const name = $tc.attr('name') ?? ''
@@ -118,12 +119,12 @@ export function parseJunitXml(xml: string, source: string, hint?: Platform): Par
         failedBefore = true
       } else if ($tc.children('skipped').length) {
         status = failedBefore ? 'blocked' : 'skipped'
-        const previous = tests[tests.length - 1]
         if (previous?.name === name && previous.status === status) return
       } else {
         status = 'pass'
       }
-      tests.push({ name, status, message, timeSec: Number($tc.attr('time')) || 0 })
+      previous = { name, status, message, timeSec: Number($tc.attr('time')) || 0 }
+      tests.push(previous)
     })
 
     suites.push({

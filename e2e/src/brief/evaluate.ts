@@ -89,10 +89,27 @@ function rollUp(cell: CellResult, hookFailed: boolean): CellStatus {
   return 'not-run'
 }
 
-/** Titles in the spec with no result in the suite — what bail left unreported. */
-function unreportedTitles(file: string, tests: TestResult[], titlesOf: SpecTitleLookup): string[] {
-  const reported = new Set(tests.map((test) => sanitizeTitle(test.name)))
-  return (titlesOf(file) ?? []).filter((title) => !reported.has(sanitizeTitle(title)))
+/** Titles with no result among `tests` — what bail left unreported. */
+function unreportedTitles(titles: string[], tests: TestResult[]): string[] {
+  const seen = new Set(tests.map((test) => sanitizeTitle(test.name)))
+  return titles.filter((title) => {
+    const key = sanitizeTitle(title)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+/** The titles a proof's suites can report — from the sources when `file` is an orchestrator that imports them. */
+function proofTitles(proof: Proof, titlesOf: SpecTitleLookup): string[] {
+  return (proof.sources ?? [proof.file]).flatMap((file) => titlesOf(file) ?? [])
+}
+
+const suiteFailed = (suite: SuiteResult): boolean => suite.hookFailures.length > 0 || suite.tests.some((test) => test.status === 'fail')
+
+/** Did any describe in the file fail — so a describe with no result never got its turn. */
+function fileBailed(file: string, run: PlatformRun | undefined): boolean {
+  return (run?.suites ?? []).some((suite) => suite.file === file && suiteFailed(suite))
 }
 
 /** Tally the listed titles by name; a title with no result is blocked when the file bailed, else not run. */
@@ -112,10 +129,18 @@ function tallyNamed(cell: CellResult, titles: string[], tests: TestResult[], bai
 /** One proof's contribution to the cell; true when a hook failure taints the roll-up. */
 function applyProof(cell: CellResult, proof: Proof, run: PlatformRun | undefined, titlesOf: SpecTitleLookup): boolean {
   const suites = matchSuites(proof, run)
+  const titles = proofTitles(proof, titlesOf)
   if (suites.length === 0) {
-    const units = proof.tests?.length ?? 1
-    cell.listed += units
-    cell.notRun += units
+    if (fileBailed(proof.file, run)) {
+      // Another describe of the file failed first, so this one never got its turn.
+      const blocked = proof.tests?.length ?? (titles.length || 1)
+      cell.listed += blocked
+      cell.blocked += blocked
+    } else {
+      const units = proof.tests?.length ?? 1
+      cell.listed += units
+      cell.notRun += units
+    }
     return false
   }
   const tests = suites.flatMap((suite) => suite.tests)
@@ -129,9 +154,9 @@ function applyProof(cell: CellResult, proof: Proof, run: PlatformRun | undefined
   if (proof.tests) tallyNamed(cell, proof.tests, tests, bailed)
   else {
     for (const test of tests) tally(cell, test.status)
-    // Whole-file suites only: an orchestrator's describes share a file, so their remainder is unknowable.
-    if (bailed && !proof.suite) {
-      const blocked = unreportedTitles(proof.file, tests, titlesOf).length
+    // A suite-scoped proof knows its remainder only through `sources` — the file may hold other describes.
+    if (bailed && (!proof.suite || proof.sources)) {
+      const blocked = unreportedTitles(titles, tests).length
       cell.listed += blocked
       cell.blocked += blocked
     }
@@ -184,9 +209,12 @@ export function evaluateSections(
 export function collectFailures(results: RunResults, titlesOf: SpecTitleLookup = noSpecTitles): FailureDetail[] {
   const failures: FailureDetail[] = []
   for (const run of Object.values(results)) {
+    // Several describes can share a file (the migration orchestrator): the remainder is the FILE's.
+    const reportedByFile = new Map<string, TestResult[]>()
+    for (const suite of run.suites) reportedByFile.set(suite.file, [...(reportedByFile.get(suite.file) ?? []), ...suite.tests])
     for (const suite of run.suites) {
       // Bail's unreported remainder lands on the failing checkpoint, or on the hook when nothing ran.
-      const unreported = unreportedTitles(suite.file, suite.tests, titlesOf).length
+      const unreported = unreportedTitles(titlesOf(suite.file) ?? [], reportedByFile.get(suite.file) ?? []).length
       const failedTest = suite.tests.some((test) => test.status === 'fail')
       for (const hook of suite.hookFailures) {
         failures.push({ platform: suite.platform, file: suite.file, suite: suite.title, checkpoint: hook.title, message: hook.message, blockedAfter: failedTest ? 0 : unreported, kind: 'hook' })

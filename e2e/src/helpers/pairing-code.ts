@@ -229,8 +229,9 @@ async function withMintRetry<T>(what: string, mint: () => Promise<T>): Promise<T
 function describeTransportError(err: unknown): string {
   if (err instanceof Error && err.name === 'AbortError') return 'aborted — the mint timeout ran out'
   const message = err instanceof Error ? err.message : String(err)
-  const cause = (err as { cause?: { code?: string; message?: string } } | undefined)?.cause
-  return cause ? `${message} — ${cause.code ?? cause.message ?? String(cause)}` : message
+  const cause = (err as { cause?: unknown } | undefined)?.cause
+  const detail = cause instanceof Error ? ((cause as { code?: string }).code ?? cause.message) : undefined
+  return detail ? `${message} — ${detail}` : message
 }
 
 /** One HTTP round trip of the mint: a transport failure is named after the step, with its cause, and is retryable. */
@@ -299,6 +300,7 @@ async function mintCardtapTransaction({
     })
   )
   if (samlRes.status !== 302) {
+    await readBodyOrThrow('POST /login/saml2', samlRes) // a 4xx/5xx is named (and a 5xx retried) like every other step
     throw new Error(`POST /login/saml2 expected 302, got ${samlRes.status}`)
   }
   const entryLocation = samlRes.headers.get('location')

@@ -2,7 +2,7 @@ import { existsSync, readdirSync, statSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
 import { loadA11yReports, loadBaseline, summarizeA11y } from './a11y-summary.js'
 import { OTHER_COVERAGE, UAT_CHECKLIST } from './coverage-map.js'
-import { collectFailures, evaluateSections, platformTotals } from './evaluate.js'
+import { collectFailures, evaluateSections, platformTotals, type SpecTitleLookup } from './evaluate.js'
 import { loadJunitReports } from './junit.js'
 import type { BriefModel, LaneResult } from './render.js'
 import { specTitles } from './spec-titles.js'
@@ -21,6 +21,26 @@ export interface BuildOptions {
 }
 
 const hasReports = (dir: string): boolean => existsSync(join(dir, 'junit')) || existsSync(join(dir, 'a11y'))
+
+/** The titles a reported file can carry: its own `it`s plus, for an orchestrator, those of the sources it imports. */
+function specTitleLookup(): SpecTitleLookup {
+  const sourcesOf = new Map<string, Set<string>>()
+  for (const section of [...UAT_CHECKLIST, ...OTHER_COVERAGE]) {
+    for (const row of section.rows) {
+      for (const proof of row.proof) {
+        if (!proof.sources) continue
+        const sources = sourcesOf.get(proof.file) ?? new Set<string>()
+        for (const source of proof.sources) sources.add(source)
+        sourcesOf.set(proof.file, sources)
+      }
+    }
+  }
+  return (file) => {
+    const own = specTitles(file)?.its
+    const imported = [...(sourcesOf.get(file) ?? [])].flatMap((source) => specTitles(source)?.its ?? [])
+    return own === undefined && imported.length === 0 ? undefined : [...(own ?? []), ...imported]
+  }
+}
 
 /** A path holding `junit/` or `a11y/` is one report dir; otherwise each child dir that does is one. */
 export function resolveReportDirs(paths: string[]): ReportDir[] {
@@ -70,7 +90,7 @@ export function buildBrief(options: BuildOptions): BriefModel {
     hasReports: reportDirs.some((dir) => dir.name.includes(`-${lane.name}-`)),
   }))
 
-  const titlesOf = (file: string): string[] | undefined => specTitles(file)?.its
+  const titlesOf = specTitleLookup()
   const now = options.now ?? new Date()
   return {
     title: options.title,
