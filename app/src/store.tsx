@@ -100,12 +100,12 @@ export interface BCSCState {
    * throttle retries — see KeyRotationSystemCheck. Not PII. */
   lastKeyRotationAttemptAt?: string
   /**
-   * App version/build seen on the MOST RECENT launch, stamped unconditionally every launch —
-   * deliberately distinct from `appVersion`/`appBuildNumber` above, which only advance on a
-   * SUCCESSFUL device-registration PUT. KeyRotationSystemCheck uses this pair (never
-   * `appVersion`/`appBuildNumber`) to detect "did the app version change since last launch",
-   * so a persistently failing registration PUT can never latch key rotation off forever. See
-   * the #3876 review.
+   * App version/build seen the last time the main-stack system checks ran, stamped whenever it
+   * differs from the running app (see getMainSystemChecks) — deliberately distinct from
+   * `appVersion`/`appBuildNumber` above, which only advance on a SUCCESSFUL device-registration
+   * PUT. KeyRotationSystemCheck uses this pair (never `appVersion`/`appBuildNumber`) to detect
+   * "did the app version change since last launch", so a persistently failing registration PUT
+   * can never latch key rotation off forever. See the #3876 review.
    */
   lastSeenAppVersion?: string
   lastSeenAppBuildNumber?: string
