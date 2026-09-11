@@ -95,6 +95,7 @@ export const TestIds = {
       /** Secondary button, onboarding only: skip verification and continue to Home. */
       skipVerification: 'ServiceOutageSkipVerification',
       checkAgain: 'ServiceOutageCheckAgain',
+      contactUs: 'ServiceOutageContactUs',
     },
   },
 

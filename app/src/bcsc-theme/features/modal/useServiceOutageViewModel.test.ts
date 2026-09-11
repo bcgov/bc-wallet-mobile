@@ -1,4 +1,5 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
+import { CONTACT_US_HELP_URL } from '@/constants'
 import { useNavigation } from '@react-navigation/native'
 import { act, renderHook } from '@testing-library/react-native'
 import useServiceOutageViewModel from './useServiceOutageViewModel'
@@ -44,6 +45,23 @@ describe('useServiceOutageViewModel', () => {
     expect(result.current.buttonText).toBe('BCSC.Modals.ServiceOutage.CheckAgainButton')
     expect(result.current.skipVerificationText).toBe('BCSC.VerifyPrompt.SkipVerification')
     expect(result.current.contentText).toEqual(['Server is down'])
+    expect(result.current.inTheMeantimeText).toBe('BCSC.Modals.ServiceOutage.InTheMeantime')
+    expect(result.current.needHelpPrefixText).toBe('BCSC.Modals.ServiceOutage.NeedHelpPrefix')
+    expect(result.current.contactUsLinkText).toBe('BCSC.Modals.ServiceOutage.ContactUsLink')
+  })
+
+  it('falls back to the default contact URL when the server does not provide one', () => {
+    const { result } = renderHook(() => useServiceOutageViewModel())
+
+    expect(result.current.contactLink).toBe(CONTACT_US_HELP_URL)
+  })
+
+  it('uses the contact link from the server status when provided', () => {
+    mockServerStatus = makeServerStatus({ contactLink: 'https://example.com/contact-us.html' })
+
+    const { result } = renderHook(() => useServiceOutageViewModel())
+
+    expect(result.current.contactLink).toBe('https://example.com/contact-us.html')
   })
 
   it('falls back to a translation key when there is no status message', () => {

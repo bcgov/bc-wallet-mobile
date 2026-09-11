@@ -68,7 +68,6 @@ exports[`ServiceOutage should match snapshot 1`] = `
                 },
                 {
                   "alignSelf": "center",
-                  "paddingVertical": 24,
                 },
                 {
                   "fontFamily": "Material Icons",
@@ -139,7 +138,7 @@ exports[`ServiceOutage should match snapshot 1`] = `
                 ]
               }
             >
-              In the meantime, check the service you're trying to access for other ways to log in.
+              In the meantime, check the service.
             </Text>
             <Text
               maxFontSizeMultiplier={2}
@@ -157,7 +156,40 @@ exports[`ServiceOutage should match snapshot 1`] = `
                 ]
               }
             >
-              If you need help, contact us
+              If you need help, 
+              <Text
+                accessibilityLabel="contact us"
+                accessibilityRole="link"
+                accessible={true}
+                maxFontSizeMultiplier={2}
+                onPress={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "alignSelf": "flex-start",
+                        "color": "#1A5A96",
+                        "textDecorationLine": "underline",
+                      },
+                      {},
+                    ],
+                  ]
+                }
+                testID="com.ariesbifold:id/ServiceOutageContactUs"
+                textProps={
+                  {
+                    "accessibilityHint": "Global.A11y.OpensInBrowser",
+                  }
+                }
+              >
+                contact us
+              </Text>
             </Text>
           </View>
         </View>

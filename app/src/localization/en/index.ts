@@ -576,6 +576,9 @@ const translation = {
         "Header": "Service unavailable",
         "CheckAgainButton": "Check again",
         "LearnMore": "Learn more",
+        "InTheMeantime": "In the meantime, check the service you're trying to access for other ways to log in.",
+        "NeedHelpPrefix": "If you need help, ",
+        "ContactUsLink": "contact us",
       },
       "TermsOfUseUpdated": {
         "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms.",

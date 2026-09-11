@@ -1,8 +1,10 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { TestIds } from '@/test-ids/registry'
+import { openLink } from '@/utils/links'
 import {
   Button,
   ButtonType,
+  Link,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
@@ -10,6 +12,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import useServiceOutageViewModel from './useServiceOutageViewModel'
@@ -21,8 +24,19 @@ export interface ServiceOutageProps {
 }
 
 export const ServiceOutage = ({ inOnboarding = false, onSkipVerification }: ServiceOutageProps): React.ReactElement => {
-  const { headerText, contentText, buttonText, skipVerificationText, isCheckDisabled, handleCheckAgain } =
-    useServiceOutageViewModel()
+  const {
+    headerText,
+    contentText,
+    inTheMeantimeText,
+    needHelpPrefixText,
+    contactUsLinkText,
+    contactLink,
+    buttonText,
+    skipVerificationText,
+    isCheckDisabled,
+    handleCheckAgain,
+  } = useServiceOutageViewModel()
+  const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
   const [loading, setLoading] = useState(false)
   const { Spacing, ColorPalette } = useTheme()
@@ -34,7 +48,6 @@ export const ServiceOutage = ({ inOnboarding = false, onSkipVerification }: Serv
     },
     scrollContainer: {},
     icon: {
-      paddingVertical: Spacing.lg,
       alignSelf: 'center',
     },
     buttonContainer: {
@@ -95,11 +108,17 @@ export const ServiceOutage = ({ inOnboarding = false, onSkipVerification }: Serv
           </ThemedText>
         ))}
 
-        <ThemedText style={styles.textContent}>
-          {"In the meantime, check the service you're trying to access for other ways to log in."}
-        </ThemedText>
+        <ThemedText style={styles.textContent}>{inTheMeantimeText}</ThemedText>
 
-        <ThemedText style={styles.textContent}>{'If you need help, contact us'}</ThemedText>
+        <ThemedText style={styles.textContent}>
+          {needHelpPrefixText}
+          <Link
+            linkText={contactUsLinkText}
+            onPress={() => openLink(contactLink)}
+            textProps={{ accessibilityHint: t('Global.A11y.OpensInBrowser') }}
+            testID={testIdWithKey(TestIds.systemModal.serviceOutage.contactUs)}
+          />
+        </ThemedText>
       </View>
     </ScreenWrapper>
   )

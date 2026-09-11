@@ -1,6 +1,6 @@
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { ServiceOutage } from './ServiceOutage'
 
@@ -9,6 +9,10 @@ const mockHandleCheckAgain = jest.fn()
 jest.mock('./useServiceOutageViewModel', () => () => ({
   headerText: 'Service unavailable',
   contentText: ['The service is currently down.'],
+  inTheMeantimeText: 'In the meantime, check the service.',
+  needHelpPrefixText: 'If you need help, ',
+  contactUsLinkText: 'contact us',
+  contactLink: 'https://id.gov.bc.ca/static/help/contact-us.html',
   skipVerificationText: 'Skip verification',
   buttonText: 'Check again',
   isCheckDisabled: false,
@@ -67,5 +71,18 @@ describe('ServiceOutage', () => {
     fireEvent.press(getByTestId(testIdWithKey('ServiceOutageSkipVerification')))
 
     expect(onSkipVerification).toHaveBeenCalledTimes(1)
+  })
+
+  it('opens the contact link in the browser when the contact us link is pressed', async () => {
+    const { getByTestId } = renderOutage()
+    const { Linking } = jest.requireActual('react-native')
+    const canOpenSpy = jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true as never)
+    const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never)
+
+    fireEvent.press(getByTestId(testIdWithKey('ServiceOutageContactUs')))
+
+    await waitFor(() => expect(openSpy).toHaveBeenCalledWith('https://id.gov.bc.ca/static/help/contact-us.html'))
+    canOpenSpy.mockRestore()
+    openSpy.mockRestore()
   })
 })
