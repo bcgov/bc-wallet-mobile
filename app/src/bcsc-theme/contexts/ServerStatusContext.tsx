@@ -78,7 +78,6 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
         setServerStatus(status)
         return toResult(status)
       } catch (error) {
-        // TODO: (Al) should this fail open?
         logger.error('ServerStatusProvider: failed to fetch server status', error as Error)
         return { isAvailable: true, serverStatus: null }
       } finally {

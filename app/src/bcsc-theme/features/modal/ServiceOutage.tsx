@@ -17,7 +17,6 @@ import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import useServiceOutageViewModel from './useServiceOutageViewModel'
 
-// TODO: replace inOnboarding with onSkipVerification function, if the fucntion is available, show the button
 export interface ServiceOutageProps {
   inOnboarding?: boolean
   onSkipVerification?: () => void
