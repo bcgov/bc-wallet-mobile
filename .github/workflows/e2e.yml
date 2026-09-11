@@ -13,6 +13,9 @@
 #                  blind-FIFO SIT queue, so CI runs them one platform at a time (max-parallel 1) and
 #                  keeps them out of every concurrent multi-device run (exclude_send_video)
 #   a11y         — automated accessibility audits over the core screens (iOS: Apple's audit engine; Android: heuristics)
+#   device-auth  — the device-authentication journey on a device with a screen lock + biometric
+#                  interception: its own Sauce capability lane (a locked device changes the state every
+#                  other journey starts from), never inside regression
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
 #   upgrade      — previous released build → current in-place upgrade (Sauce RDC, both platforms)
@@ -51,7 +54,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, send-video, a11y, regression, migration, upgrade, upgrade403)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, send-video, a11y, device-auth, regression, migration, upgrade, upgrade403)'
         type: string
         required: true
       build_number:
@@ -114,6 +117,7 @@ on:
           - verify
           - send-video
           - a11y
+          - device-auth
           - regression
           - migration
           - upgrade
@@ -152,7 +156,7 @@ jobs:
   #   migration                → configs/sauce/wdio.{ios,android}.sauce.migration.conf.ts
   #   upgrade / upgrade403     → configs/sauce/wdio.{ios,android}.sauce.upgrade.conf.ts
   #   everything else (smoke,  → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
-  #    onboarding, auth, main,
+  #    onboarding, auth, main,    (device-auth selects that config's locked-device capability lane)
   #    verify, regression)
   #
   # Non-blocking suites (migration, upgrade, upgrade403): failures are reported but
