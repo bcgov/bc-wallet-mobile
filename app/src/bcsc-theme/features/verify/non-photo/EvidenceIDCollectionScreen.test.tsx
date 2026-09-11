@@ -219,6 +219,8 @@ describe('EvidenceIDCollection', () => {
 
       expect(scrollToSpy).toHaveBeenCalledWith({ y: 125, animated: false })
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
+      // The jump must land before focus(), or KeyboardAwareScrollView re-positions the field and undoes it.
+      expect(scrollToSpy.mock.invocationCallOrder[0]).toBeLessThan(focusSpy.mock.invocationCallOrder[0])
     })
 
     it('scrolls to and focuses an empty document number in the full NonBCSC form (zero offset honoured)', async () => {
