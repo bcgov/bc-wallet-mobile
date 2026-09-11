@@ -10,7 +10,8 @@ import type { CheckpointStatus, Platform, ReportDir, RunResults, RunnerError, Su
  * (`file://./test/…`) plus the exact describe title in `suiteName`; `name` attributes carry titles with
  * every non-alphanumeric run collapsed to a space, so titles are compared after {@link sanitizeTitle}
  * on both sides. A `<skipped/>` after a `<failure>` in the same file is the mochaOpts.bail cascade,
- * reported as `blocked` so it cannot pass for "nothing to run".
+ * reported as `blocked` so it cannot pass for "nothing to run". A runtime `this.skip()` arrives as two
+ * `<testcase>`s of the same name (the reporter sees the test start, then go pending) and counts once.
  */
 
 /** The reporter's `_prepareName`: split on non-alphanumerics (keeping `@`), rejoin with single spaces. */
@@ -117,6 +118,8 @@ export function parseJunitXml(xml: string, source: string, hint?: Platform): Par
         failedBefore = true
       } else if ($tc.children('skipped').length) {
         status = failedBefore ? 'blocked' : 'skipped'
+        const previous = tests[tests.length - 1]
+        if (previous?.name === name && previous.status === status) return
       } else {
         status = 'pass'
       }

@@ -5,6 +5,7 @@ import { OTHER_COVERAGE, UAT_CHECKLIST } from './coverage-map.js'
 import { collectFailures, evaluateSections, platformTotals } from './evaluate.js'
 import { loadJunitReports } from './junit.js'
 import type { BriefModel, LaneResult } from './render.js'
+import { specTitles } from './spec-titles.js'
 import { PLATFORM_LABEL, PLATFORMS, type Platform, type ReportDir } from './types.js'
 
 /** Report dirs in → a brief model out. Shared by the CLI and the fixture self-test. */
@@ -69,6 +70,7 @@ export function buildBrief(options: BuildOptions): BriefModel {
     hasReports: reportDirs.some((dir) => dir.name.includes(`-${lane.name}-`)),
   }))
 
+  const titlesOf = (file: string): string[] | undefined => specTitles(file)?.its
   const now = options.now ?? new Date()
   return {
     title: options.title,
@@ -77,9 +79,9 @@ export function buildBrief(options: BuildOptions): BriefModel {
     lanes,
     platforms,
     runnerErrors: junit.runnerErrors,
-    uat: evaluateSections(UAT_CHECKLIST, junit.results),
-    other: evaluateSections(OTHER_COVERAGE, junit.results),
-    failures: collectFailures(junit.results),
+    uat: evaluateSections(UAT_CHECKLIST, junit.results, titlesOf),
+    other: evaluateSections(OTHER_COVERAGE, junit.results, titlesOf),
+    failures: collectFailures(junit.results, titlesOf),
     a11y: summarizeA11y(a11y, baseline),
     baselineGeneratedAt: baseline?.generatedAt,
     warnings,

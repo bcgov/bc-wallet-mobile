@@ -4,11 +4,12 @@
  * Map checks: unique row ids; every proof file (and source) exists; every `suite` is a describe in its
  * sources; every listed `it` title is in its file verbatim (a renamed checkpoint fails here instead of
  * quietly rendering as "not run"); no two titles in a file collide once the JUnit reporter sanitizes
- * them; every journey/spec under test/bcsc is mapped in OTHER_COVERAGE.
+ * them; every journey/spec under test/bcsc is mapped in OTHER_COVERAGE (bar the PR-gate smoke spec).
  *
- * Self-test: `scripts/fixtures/brief/` holds hand-written reports covering the bail cascade, runtime
- * skips, a retried suite, a failed before() hook, a worker with no session, the migration
- * orchestrator's shared file and the a11y baseline — each asserted below.
+ * Self-test: `scripts/fixtures/brief/` holds hand-written reports covering the bail cascade (reported
+ * and unreported), runtime skips (and the reporter's doubled skip), a retried suite, a failed before()
+ * hook, a worker with no session, the migration orchestrator's shared file and the a11y baseline — each
+ * asserted below.
  *
  *   yarn brief:check        exit 1 on any problem, listed on stderr
  */
@@ -19,8 +20,9 @@ import { fileURLToPath } from 'node:url'
 import { buildBrief, resolveReportDirs } from '../src/brief/build.js'
 import { OTHER_COVERAGE, UAT_CHECKLIST, type CoverageRow } from '../src/brief/coverage-map.js'
 import type { CellResult } from '../src/brief/evaluate.js'
-import { sanitizeTitle } from '../src/brief/junit.js'
+import { parseJunitXml, sanitizeTitle } from '../src/brief/junit.js'
 import { renderMarkdown, type BriefModel } from '../src/brief/render.js'
+import { type SpecTitles, specTitles } from '../src/brief/spec-titles.js'
 import type { Platform } from '../src/brief/types.js'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
@@ -34,25 +36,11 @@ const fail = (message: string): void => {
 
 // --- the map ----------------------------------------------------------------------------------------
 
-/** `it('…')` / `describe("…")` titles in a spec, with the quote escapes undone. */
-function titlesIn(source: string): { its: Set<string>; describes: Set<string> } {
-  const its = new Set<string>()
-  const describes = new Set<string>()
-  const pattern = /\b(it|describe)(?:\.(?:skip|only))?\(\s*(['"`])((?:\\[\s\S]|(?!\2)[^\\])*)\2/g
-  for (const match of source.matchAll(pattern)) {
-    const title = match[3].replace(/\\(['"`\\])/g, '$1')
-    ;(match[1] === 'it' ? its : describes).add(title)
-  }
-  return { its, describes }
-}
+/** Specs the PR gate runs and the nightly never schedules — a row would only ever read "not run". */
+const NOT_IN_NIGHTLY = new Set(['test/bcsc/smoke.spec.ts'])
 
-const specCache = new Map<string, ReturnType<typeof titlesIn>>()
-function spec(file: string): ReturnType<typeof titlesIn> | undefined {
-  const path = join(E2E_ROOT, file)
-  if (!existsSync(path)) return undefined
-  if (!specCache.has(file)) specCache.set(file, titlesIn(readFileSync(path, 'utf8')))
-  return specCache.get(file)
-}
+/** Every spec the map names, for the collision check. */
+const mappedFiles = new Set<string>()
 
 function checkRow(row: CoverageRow, seenIds: Set<string>): void {
   if (seenIds.has(row.id)) fail(`duplicate row id "${row.id}"`)
@@ -61,21 +49,22 @@ function checkRow(row: CoverageRow, seenIds: Set<string>): void {
     const files = proof.sources ?? [proof.file]
     for (const file of [proof.file, ...(proof.sources ?? [])]) {
       if (!existsSync(join(E2E_ROOT, file))) fail(`${row.id}: ${file} does not exist`)
+      mappedFiles.add(file)
     }
-    const parsed = files.map(spec).filter((entry): entry is ReturnType<typeof titlesIn> => entry !== undefined)
-    if (proof.suite && !parsed.some((entry) => entry.describes.has(proof.suite as string))) {
+    const parsed = files.map(specTitles).filter((entry): entry is SpecTitles => entry !== undefined)
+    if (proof.suite && !parsed.some((entry) => entry.describes.includes(proof.suite as string))) {
       fail(`${row.id}: no describe('${proof.suite}') in ${files.join(', ')}`)
     }
     for (const title of proof.tests ?? []) {
-      if (!parsed.some((entry) => entry.its.has(title))) fail(`${row.id}: no it('${title}') in ${files.join(', ')}`)
+      if (!parsed.some((entry) => entry.its.includes(title))) fail(`${row.id}: no it('${title}') in ${files.join(', ')}`)
     }
   }
 }
 
 function checkCollisions(): void {
-  for (const [file, parsed] of specCache) {
+  for (const file of mappedFiles) {
     const seen = new Map<string, string>()
-    for (const title of parsed.its) {
+    for (const title of specTitles(file)?.its ?? []) {
       const key = sanitizeTitle(title)
       const other = seen.get(key)
       if (other && other !== title) fail(`${file}: "${title}" and "${other}" are the same title once sanitized`)
@@ -101,7 +90,7 @@ function checkUnmapped(): void {
     .map((entry) => `test/bcsc/${entry}`)
     .sort()
   for (const file of specs) {
-    if (!mapped.has(file)) fail(`${file} is not in OTHER_COVERAGE — add a row so the brief shows it`)
+    if (!mapped.has(file) && !NOT_IN_NIGHTLY.has(file)) fail(`${file} is not in OTHER_COVERAGE — add a row so the brief shows it`)
   }
 }
 
@@ -154,9 +143,23 @@ function selfTest(): void {
   assert.deepEqual([rerouteAndroid.status, rerouteAndroid.passed, rerouteAndroid.listed], ['pass', 2, 4])
   const videoCall = cellOf(model, 'photo-video-call', 'ios')
   assert.deepEqual([videoCall.status, videoCall.auto], ['manual', undefined])
-  // a failed before() hook fails the row
+  // a failed before() hook fails the row; nothing ran, so every checkpoint in the file is blocked
+  const walletTitles = specTitles('test/bcsc/main/wallet.journey.ts')?.its ?? []
   const wallet = cellOf(model, 'nav-wallet', 'android')
-  assert.deepEqual([wallet.status, wallet.failed, wallet.listed], ['fail', 1, 1])
+  assert.deepEqual([wallet.status, wallet.failed, wallet.blocked, wallet.listed], ['fail', 1, walletTitles.length, walletTitles.length + 1])
+  // a file that bailed: the reporter wrote nothing for the checkpoints behind the failure — blocked, not "not run"
+  const photoTitles = specTitles('test/bcsc/verify/verified-photo.journey.ts')?.its ?? []
+  const verifiedPhoto = cellOf(model, 'j-verified-photo', 'android')
+  assert.deepEqual(
+    [verifiedPhoto.status, verifiedPhoto.passed, verifiedPhoto.failed, verifiedPhoto.blocked, verifiedPhoto.listed],
+    ['fail', 2, 1, photoTitles.length - 3, photoTitles.length]
+  )
+  const photoInPerson = cellOf(model, 'photo-in-person', 'android')
+  assert.deepEqual([photoInPerson.status, photoInPerson.blocked, photoInPerson.notRun], ['blocked', 1, 0])
+  assert.equal(model.failures.find((entry) => entry.file.endsWith('verified-photo.journey.ts'))?.blockedAfter, photoTitles.length - 3)
+  // the reporter writes a runtime skip twice; the brief counts it once
+  const unverified = cellOf(model, 'j-unverified-main', 'ios')
+  assert.deepEqual([unverified.listed, unverified.skipped], [7, 3])
   // the migration orchestrator reports three suites under one file
   const migration = cellOf(model, 'ext-migration-v3', 'android')
   assert.deepEqual([migration.status, migration.passed, migration.listed], ['pass', 6, 6])
@@ -164,9 +167,12 @@ function selfTest(): void {
   // a worker that never got a session
   assert.equal(model.runnerErrors.length, 1)
   assert.equal(model.runnerErrors[0].platform, 'android')
-  // failures carry the blocked count and hook failures are named as such
+  // failures carry the blocked count (reported skips + the unreported remainder) and hook failures are named as such
+  const settingsReport = parseJunitXml(readFileSync(join(FIXTURES, 'e2e-reports-regression-iOS-18', 'junit', 'wdio-3-0.xml'), 'utf8'), 'fixture')
+  const settingsReported = new Set(settingsReport.suites.flatMap((suite) => suite.tests.map((test) => sanitizeTitle(test.name))))
+  const settingsUnreported = (specTitles('test/bcsc/main/settings.journey.ts')?.its ?? []).filter((title) => !settingsReported.has(sanitizeTitle(title)))
   const settingsFailure = model.failures.find((entry) => entry.file.endsWith('settings.journey.ts'))
-  assert.equal(settingsFailure?.blockedAfter, 6)
+  assert.equal(settingsFailure?.blockedAfter, 6 + settingsUnreported.length)
   assert.equal(model.failures.find((entry) => entry.kind === 'hook')?.suite, 'Wallet journey: DIDComm credential lifecycle')
   // lanes: upgrade produced no reports
   assert.deepEqual(model.lanes.map((lane) => lane.hasReports), [true, false])
@@ -179,7 +185,7 @@ function selfTest(): void {
   assert.deepEqual([birthdate?.newErrors, birthdate?.inBaseline, birthdate?.warnings], [1, false, 1])
 
   const markdown = renderMarkdown(model)
-  for (const heading of ['### UAT checklist', '### Failures (2)', '### Accessibility', '### Legend']) {
+  for (const heading of ['### UAT checklist', '### Failures (3)', '### Accessibility', '### Legend']) {
     assert.ok(markdown.includes(heading), `markdown has ${heading}`)
   }
 }
