@@ -2,7 +2,7 @@ import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { Mode } from '@/constants'
 import { AuthProvider, testIdWithKey, TOKENS, useServices } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { deleteToken, TokenType } from 'react-native-bcsc-core'
 import Developer from './Developer'
@@ -27,10 +27,15 @@ const mockClearTokens = jest.fn()
 
 describe('Developer Screen', () => {
   beforeEach(() => {
-    // Silence console.error because it will print a warning about Switch
-    // "Warning: dispatchCommand was called with a ref ...".
-    jest.spyOn(console, 'error').mockImplementation(() => {
-      return null
+    // The mocked Switch logs "dispatchCommand was called with a ref ..." on every render here.
+    // Suppress only that line so genuine React errors from these tests still surface.
+    // eslint-disable-next-line no-console -- captured so genuine errors still reach the console
+    const passThrough = console.error
+    jest.spyOn(console, 'error').mockImplementation((...args) => {
+      if (/dispatchCommand was called with a ref/.test(args.map(String).join(' '))) {
+        return
+      }
+      passThrough(...args)
     })
     jest.useFakeTimers()
 
@@ -43,8 +48,8 @@ describe('Developer Screen', () => {
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
     jest.useRealTimers()
+    jest.restoreAllMocks()
   })
 
   test('screen renders correctly', () => {
@@ -68,7 +73,9 @@ describe('Developer Screen', () => {
       </BasicAppContext>
     )
 
-    fireEvent.press(getByTestId(testIdWithKey('DeleteTokens')))
+    await act(async () => {
+      fireEvent.press(getByTestId(testIdWithKey('DeleteTokens')))
+    })
 
     await waitFor(() => {
       expect(getByText('true')).toBeTruthy()
@@ -96,7 +103,9 @@ describe('Developer Screen', () => {
       </BasicAppContext>
     )
 
-    fireEvent.press(getByTestId(testIdWithKey('DeleteTokens')))
+    await act(async () => {
+      fireEvent.press(getByTestId(testIdWithKey('DeleteTokens')))
+    })
 
     await waitFor(() => {
       expect(mockLogger.error).toHaveBeenCalledWith('Developer: Failed to delete tokens', deleteError)
@@ -126,12 +135,14 @@ describe('Developer Screen', () => {
         </BasicAppContext>
       )
 
-    test('warns and shows unavailable status when no monitor is registered', () => {
+    test('warns and shows unavailable status when no monitor is registered', async () => {
       mockServiceForToken(undefined)
 
       const { getByTestId, getByText } = renderDeveloperScreen()
 
-      fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+      await act(async () => {
+        fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+      })
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Developer: No AutoCredentialMonitor registered, cannot trigger test fetch'
@@ -139,12 +150,14 @@ describe('Developer Screen', () => {
       expect(getByText('unavailable — monitor not registered')).toBeTruthy()
     })
 
-    test('warns and shows unavailable status when the registered service has no triggerTestWorkflow function', () => {
+    test('warns and shows unavailable status when the registered service has no triggerTestWorkflow function', async () => {
       mockServiceForToken({})
 
       const { getByTestId, getByText } = renderDeveloperScreen()
 
-      fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+      await act(async () => {
+        fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+      })
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Developer: No AutoCredentialMonitor registered, cannot trigger test fetch'
@@ -152,26 +165,30 @@ describe('Developer Screen', () => {
       expect(getByText('unavailable — monitor not registered')).toBeTruthy()
     })
 
-    test('shows triggering status and does not warn when triggerTestWorkflow starts successfully', () => {
+    test('shows triggering status and does not warn when triggerTestWorkflow starts successfully', async () => {
       const triggerTestWorkflow = jest.fn().mockReturnValue(true)
       mockServiceForToken({ triggerTestWorkflow })
 
       const { getByTestId, getByText } = renderDeveloperScreen()
 
-      fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+      await act(async () => {
+        fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+      })
 
       expect(triggerTestWorkflow).toHaveBeenCalledTimes(1)
       expect(getByText('triggering...')).toBeTruthy()
       expect(mockLogger.warn).not.toHaveBeenCalled()
     })
 
-    test('shows not-started status when triggerTestWorkflow returns false', () => {
+    test('shows not-started status when triggerTestWorkflow returns false', async () => {
       const triggerTestWorkflow = jest.fn().mockReturnValue(false)
       mockServiceForToken({ triggerTestWorkflow })
 
       const { getByTestId, getByText } = renderDeveloperScreen()
 
-      fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+      await act(async () => {
+        fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+      })
 
       expect(triggerTestWorkflow).toHaveBeenCalledTimes(1)
       expect(getByText('not started — already in progress or agent not ready')).toBeTruthy()
