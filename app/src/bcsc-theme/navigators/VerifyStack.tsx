@@ -542,12 +542,14 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
 
       <Stack.Screen
         name={BCSCModals.ServiceOutage}
-        component={ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false,
+          headerLeft: createHeaderBackButton,
+          headerBackTestID: testIdWithKey(TestIds.common.back),
         }}
-      />
+      >
+        {({ route }) => <ServiceOutage inOnboarding={route.params?.inOnboarding} />}
+      </Stack.Screen>
     </Stack.Navigator>
   )
 }

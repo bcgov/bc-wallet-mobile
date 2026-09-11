@@ -190,7 +190,7 @@ export type BCSCOnboardingStackParams = {
   // VerificationSessionExpired is intentionally NOT registered in the Onboarding stack — it is the
   // post-reset destination, and an overlapping route name would let React Navigation preserve the
   // modal across the stack swap so it never dismisses. See issue #4050.
-  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
+  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string; inOnboarding?: boolean }
 }
 
 export type BCSCVerifyStackParams = {
@@ -250,7 +250,7 @@ export type BCSCVerifyStackParams = {
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.VerificationSessionExpired]: undefined
-  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
+  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string; inOnboarding?: boolean }
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.VerifyRemoveAccountConfirmation]: undefined
@@ -315,7 +315,7 @@ export type BCSCMainStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
+  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string; inOnboarding?: boolean }
   [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
   [BCSCModals.TermsOfUseUpdated]: undefined
 }
@@ -336,5 +336,5 @@ export type BCSCAuthStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
+  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string; inOnboarding?: boolean }
 }

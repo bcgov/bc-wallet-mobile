@@ -16,6 +16,7 @@ const PendingReviewNotification = () => {
       icon="information"
       hideIconCircle={true}
       iconColor={ColorPalette.brand.primary}
+      requiresServerStatus
       onPress={() => secureActions.continueVerificationProcess()}
     />
   )

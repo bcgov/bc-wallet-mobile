@@ -32,6 +32,11 @@ jest.mock('./hooks/useServiceLoginState', () => ({
   useServiceLoginState: jest.fn(),
 }))
 
+const mockUseServerStatus = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
+
 import { useServiceLoginState } from './hooks/useServiceLoginState'
 
 const mockedUseServiceLoginState = useServiceLoginState as jest.MockedFunction<typeof useServiceLoginState>
@@ -76,6 +81,7 @@ describe('ServiceLogin', () => {
     })
     mockedUseQuickLoginURL.mockReturnValue(jest.fn())
     mockNavigation.canGoBack = jest.fn().mockReturnValue(false)
+    mockUseServerStatus.mockReturnValue({ isAvailable: true })
   })
 
   afterEach(() => {
@@ -93,6 +99,19 @@ describe('ServiceLogin', () => {
     )
 
     expect(tree).toMatchSnapshot()
+  })
+
+  it('renders the service outage screen when IAS is unavailable', () => {
+    mockUseServerStatus.mockReturnValue({ isAvailable: false })
+    mockedUseServiceLoginState.mockReturnValue({
+      state: { serviceTitle: 'Test Service', serviceInitiateLoginUri: 'https://login.example.com' },
+      isLoading: false,
+      serviceHydrated: true,
+    })
+
+    const { getByTestId } = renderScreen(mockNavigation)
+
+    expect(getByTestId(testIdWithKey('ServiceOutageCheckAgain'))).toBeTruthy()
   })
 
   describe('Render views', () => {

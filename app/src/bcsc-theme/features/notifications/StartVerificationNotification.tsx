@@ -23,6 +23,7 @@ const StartVerificationNotification = () => {
       icon="information"
       iconColor={ColorPalette.brand.primary}
       hideIconCircle={true}
+      requiresServerStatus
       onPress={() => {
         dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
         secureActions.continueVerificationProcess()

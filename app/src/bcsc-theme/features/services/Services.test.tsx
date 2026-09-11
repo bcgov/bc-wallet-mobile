@@ -1,8 +1,14 @@
+import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import { useFilterServiceClients } from './hooks/useFilterServiceClients'
 import Services from './Services'
+
+const mockUseServerStatus = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
 
 jest.mock('@/bcsc-theme/hooks/useDataLoader', () => ({
   __esModule: true,
@@ -29,6 +35,7 @@ describe('Services', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
+    mockUseServerStatus.mockReturnValue({ isAvailable: true })
   })
 
   afterEach(() => {
@@ -79,5 +86,35 @@ describe('Services', () => {
     expect(tree.queryByTestId('com.ariesbifold:id/ServicesLoading')).toBeNull()
     expect(tree.getByText('Test Service')).toBeTruthy()
     expect(tree).toMatchSnapshot()
+  })
+
+  it('renders the service outage screen instead of the catalogue when IAS is unavailable', () => {
+    mockUseServerStatus.mockReturnValue({ isAvailable: false })
+    mockedUseFilterServiceClients.mockReturnValue({
+      serviceClients: [
+        {
+          client_ref_id: 'test-1',
+          client_name: 'Test Service',
+          client_description: 'A test service',
+          client_uri: 'https://example.com',
+          application_type: 'web',
+          claims_description: '',
+          suppress_confirmation_info: false,
+          suppress_bookmark_prompt: false,
+          allowed_identification_processes: [],
+          bc_address: false,
+        },
+      ],
+      isLoading: false,
+    })
+
+    const tree = render(
+      <BasicAppContext>
+        <Services />
+      </BasicAppContext>
+    )
+
+    expect(tree.getByTestId(testIdWithKey('ServiceOutageCheckAgain'))).toBeTruthy()
+    expect(tree.queryByText('Test Service')).toBeNull()
   })
 })

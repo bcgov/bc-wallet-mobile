@@ -1,4 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
+import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
+import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
@@ -39,6 +42,9 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
+  // Startup seeds server status; the inline ServiceOutage's "Check again" force-refreshes it, so
+  // no on-focus re-check is needed here.
+  const { isAvailable, isChecking, serverStatus } = useServerStatus()
 
   const handleVerifyNow = useCallback(() => {
     onAnswered?.()
@@ -56,6 +62,17 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
     onAnswered?.()
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
   }, [dispatch, onAnswered])
+
+  // First status fetch still in flight: brief local spinner so we don't paint the prompt only to
+  // swap it for the outage screen a moment later.
+  if (serverStatus === null && isChecking) {
+    return <LoadingScreenContent />
+  }
+
+  // IAS service outage blocks verification; prompt the user to check again or skip verification.
+  if (!isAvailable) {
+    return <ServiceOutage inOnboarding onSkipVerification={showSkip ? handleLater : undefined} />
+  }
 
   const controls = (
     <ControlContainer>

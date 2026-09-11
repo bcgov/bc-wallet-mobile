@@ -1,8 +1,15 @@
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
+import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import NotificationActionCard from './NotificationActionCard'
+
+const mockUseServerStatus = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
 
 describe('NotificationActionCard', () => {
   const baseProps = {
@@ -19,7 +26,10 @@ describe('NotificationActionCard', () => {
       </BasicAppContext>
     )
 
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockUseServerStatus.mockReturnValue({ isAvailable: true })
+  })
 
   it('renders the title and description', () => {
     const { getByTestId } = renderCard()
@@ -56,6 +66,35 @@ describe('NotificationActionCard', () => {
     fireEvent.press(getByTestId(testIdWithKey('DismissNotification')))
 
     expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  describe('requiresServerStatus', () => {
+    it('runs onPress normally when IAS is available', () => {
+      const { getByTestId } = renderCard({ requiresServerStatus: true })
+
+      fireEvent.press(getByTestId(testIdWithKey('ViewNotification')))
+
+      expect(baseProps.onPress).toHaveBeenCalledTimes(1)
+    })
+
+    it('opens the service outage screen instead of onPress when IAS is down', () => {
+      mockUseServerStatus.mockReturnValue({ isAvailable: false })
+      const { getByTestId } = renderCard({ requiresServerStatus: true })
+
+      fireEvent.press(getByTestId(testIdWithKey('ViewNotification')))
+
+      expect(baseProps.onPress).not.toHaveBeenCalled()
+      expect(useNavigation().navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {})
+    })
+
+    it('ignores IAS status when requiresServerStatus is not set', () => {
+      mockUseServerStatus.mockReturnValue({ isAvailable: false })
+      const { getByTestId } = renderCard()
+
+      fireEvent.press(getByTestId(testIdWithKey('ViewNotification')))
+
+      expect(baseProps.onPress).toHaveBeenCalledTimes(1)
+    })
   })
 
   it('renders correctly', () => {

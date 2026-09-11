@@ -1,6 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
+import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import { PAIRING_CODE_LENGTH } from '@/constants'
 import { TestIds } from '@/test-ids/registry'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@bcsc-theme/types/navigators'
@@ -23,9 +25,16 @@ const ManualPairing: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { pairing } = useApi()
   const loadingScreen = useLoadingScreen()
+  const { isAvailable: isServerAvailable } = useServerStatus()
 
   const onSubmit = useCallback(
     async (pairingCode: string) => {
+      // Pairing exchanges the code with IAS. The render below already shows the outage screen when
+      // IAS is down, but a QR-scan / deep-link code auto-submits from an effect that still runs, so
+      // stop the doomed request here too.
+      if (!isServerAvailable) {
+        return
+      }
       const stopLoading = loadingScreen.startLoading()
       try {
         logger.info('Submitting pairing code.')
@@ -55,7 +64,7 @@ const ManualPairing: React.FC = () => {
         stopLoading()
       }
     },
-    [loadingScreen, logger, navigation, pairing, t]
+    [isServerAvailable, loadingScreen, logger, navigation, pairing, t]
   )
 
   // QRCoreStack keeps tabs mounted (unmountOnBlur: false), so a pre-populated
@@ -93,6 +102,11 @@ const ManualPairing: React.FC = () => {
       marginHorizontal: Spacing.md,
     },
   })
+
+  // Entering a pairing code needs IAS; if it's down, show the outage screen in its place.
+  if (!isServerAvailable) {
+    return <ServiceOutage />
+  }
 
   return (
     <ScreenWrapper keyboardActive>

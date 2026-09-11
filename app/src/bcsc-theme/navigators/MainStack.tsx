@@ -565,12 +565,14 @@ const MainStack: React.FC = () => {
 
           <Stack.Screen
             name={BCSCModals.ServiceOutage}
-            component={ServiceOutage}
             options={{
               ...getDefaultModalOptions(t('BCSC.Title')),
-              gestureEnabled: false,
+              headerLeft: createHeaderBackButton,
+              headerBackTestID: testIdWithKey(TestIds.common.back),
             }}
-          />
+          >
+            {({ route }) => <ServiceOutage inOnboarding={route.params?.inOnboarding} />}
+          </Stack.Screen>
 
           <Stack.Screen
             name={BCSCModals.TermsOfUseUpdated}
