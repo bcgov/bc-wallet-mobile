@@ -5,7 +5,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { ScrollView, View } from 'react-native'
+import { ScrollView, TextInput, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import EvidenceIDCollectionScreen from './EvidenceIDCollectionScreen'
 
@@ -172,36 +172,295 @@ describe('EvidenceIDCollection', () => {
     expect(tree.queryByText('BCSC.EvidenceIDCollection.TakeSecondIdPhoto')).toBeNull()
   })
 
-  it('scrolls to first invalid field after validation', async () => {
-    const scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
+  describe('focus and scroll on invalid submit', () => {
+    let scrollToSpy: jest.SpyInstance
+    let focusSpy: jest.SpyInstance
 
-    const tree = render(
-      <BasicAppContext
-        initialStateOverride={{
-          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
-        }}
-      >
-        <EvidenceIDCollectionScreen
-          navigation={mockNavigation as never}
-          route={{ params: { cardType: mockEvidenceType } } as never}
-        />
-      </BasicAppContext>
-    )
-
-    const formContainer = tree
-      .UNSAFE_getAllByType(View)
-      .find((node) => node.props.onLayout && node.props.style?.gap === 18)
-    expect(formContainer).toBeTruthy()
-
-    fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
-    fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
-      nativeEvent: { layout: { y: 25 } },
+    beforeEach(() => {
+      scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
+      focusSpy = jest.spyOn(TextInput.prototype, 'focus')
     })
 
-    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+    afterEach(() => {
+      scrollToSpy.mockRestore()
+      focusSpy.mockRestore()
+    })
 
-    expect(scrollToSpy).toHaveBeenCalledWith({ y: 125, animated: true })
-    scrollToSpy.mockRestore()
+    const focusedTestIds = () => focusSpy.mock.instances.map((instance: any) => instance.props.testID)
+
+    const enter = (tree: ReturnType<typeof render>, field: string, text: string) =>
+      fireEvent(tree.getByTestId(`com.ariesbifold:id/${field}-input`), 'change', { nativeEvent: { text } })
+
+    it('scrolls to and focuses the first invalid field after validation', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      const formContainer = tree
+        .UNSAFE_getAllByType(View)
+        .find((node) => node.props.onLayout && node.props.style?.gap === 18)
+      expect(formContainer).toBeTruthy()
+
+      fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
+      fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
+        nativeEvent: { layout: { y: 25 } },
+      })
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(scrollToSpy).toHaveBeenCalledWith({ y: 125, animated: false })
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
+    })
+
+    it('scrolls to and focuses an empty document number in the full NonBCSC form (zero offset honoured)', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: {
+              ...initialBCSCSecureState,
+              cardProcess: BCSCCardProcess.NonBCSC,
+              additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+            },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      const formContainer = tree
+        .UNSAFE_getAllByType(View)
+        .find((node) => node.props.onLayout && node.props.style?.gap === 18)
+      fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
+      fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
+        nativeEvent: { layout: { y: 0 } },
+      })
+
+      enter(tree, 'lastName', 'Smith')
+      enter(tree, 'firstName', 'Jane')
+      fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(scrollToSpy).toHaveBeenCalledWith({ y: 100, animated: false })
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
+    })
+
+    it('scrolls to and focuses last name when the document number is valid but last name is empty and birth date is invalid', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: {
+              ...initialBCSCSecureState,
+              cardProcess: BCSCCardProcess.NonBCSC,
+              additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+            },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      enter(tree, 'documentNumber', '123456789')
+      fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '99999999')
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/lastName-input'])
+    })
+
+    it('targets the field lowest in visual order (middleNames) even though the model inserts birthDate first', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: {
+              ...initialBCSCSecureState,
+              cardProcess: BCSCCardProcess.NonBCSC,
+              additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+            },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      enter(tree, 'documentNumber', '123456789')
+      enter(tree, 'lastName', 'Smith')
+      enter(tree, 'firstName', 'Jane')
+      enter(tree, 'middleNames', 'A'.repeat(31))
+      fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '99999999')
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/middleNames-input'])
+    })
+
+    it('re-fires scroll and focus on a repeated, unchanged invalid submit', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      const formContainer = tree
+        .UNSAFE_getAllByType(View)
+        .find((node) => node.props.onLayout && node.props.style?.gap === 18)
+      fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
+      fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
+        nativeEvent: { layout: { y: 25 } },
+      })
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(scrollToSpy).toHaveBeenCalledTimes(2)
+      expect(focusSpy).toHaveBeenCalledTimes(2)
+    })
+
+    it('moves the focus target once the first error is corrected and the form is resubmitted', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: {
+              ...initialBCSCSecureState,
+              cardProcess: BCSCCardProcess.NonBCSC,
+              additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+            },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
+
+      enter(tree, 'documentNumber', '123456789')
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input', 'com.ariesbifold:id/lastName-input'])
+    })
+
+    it('still focuses the invalid field when its container was never measured (no scrollTo)', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(scrollToSpy).not.toHaveBeenCalled()
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
+    })
+
+    it('does not scroll or focus on a valid submit', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: {
+              ...initialBCSCSecureState,
+              cardProcess: BCSCCardProcess.NonBCSC,
+              additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+            },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      enter(tree, 'documentNumber', '123456789')
+      enter(tree, 'lastName', 'Smith')
+      enter(tree, 'firstName', 'Jane')
+      fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(scrollToSpy).not.toHaveBeenCalled()
+      expect(focusSpy).not.toHaveBeenCalled()
+    })
+
+    it('only targets documentNumber on the abbreviated BCSCNonPhoto form', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
+    })
+
+    it('only targets documentNumber on the second NonBCSC ID (personal info not rendered)', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: {
+              ...initialBCSCSecureState,
+              cardProcess: BCSCCardProcess.NonBCSC,
+              additionalEvidenceData: [
+                { evidenceType: { ...mockEvidenceType, evidence_type: 'first_id' }, metadata: [] },
+                { evidenceType: mockEvidenceType, metadata: [] },
+              ],
+            },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
+    })
   })
 
   it('keeps the completed ID beneath the evidence list so back returns to it when another ID is needed', async () => {
