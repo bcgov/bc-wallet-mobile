@@ -11,285 +11,299 @@ exports[`ServiceOutage should match snapshot 1`] = `
     }
   }
   style={
-    {
-      "backgroundColor": "#FFFFFF",
-      "flex": 1,
-    }
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
   }
 >
-  <RCTScrollView
-    contentContainerStyle={{}}
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
   >
-    <View>
-      <Text
-        allowFontScaling={false}
-        selectable={false}
-        style={
-          [
-            {
-              "color": "#FFFFFF",
-              "fontSize": 200,
-            },
-            {
-              "alignSelf": "center",
-              "paddingVertical": 24,
-            },
-            {
-              "fontFamily": "Material Icons",
-              "fontStyle": "normal",
-              "fontWeight": "normal",
-            },
-            {},
-          ]
-        }
-      >
-        
-      </Text>
-      <View
-        style={
+    <RCTScrollView
+      contentContainerStyle={
+        [
           {
-            "gap": 24,
-            "padding": 16,
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 26,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          Service unavailable
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "lineHeight": 30,
-              },
-            ]
-          }
-        >
-          The service is currently down.
-        </Text>
+            "flexGrow": 1,
+          },
+          undefined,
+        ]
+      }
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
         <View
-          accessibilityLabel="Learn more"
-          accessibilityRole="button"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": undefined,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          onBlur={[Function]}
-          onClick={[Function]}
-          onFocus={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
           style={
-            {
-              "backgroundColor": "#003366",
-              "borderColor": "transparent",
-              "borderRadius": 4,
-              "borderWidth": 2,
-              "opacity": 1,
-              "padding": 16,
-            }
+            [
+              false,
+              {
+                "gap": 16,
+                "padding": 24,
+              },
+            ]
           }
-          testID="com.ariesbifold:id/ServiceOutageHelpCentre"
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#FFFFFF",
+                  "fontSize": 100,
+                },
+                {
+                  "alignSelf": "center",
+                  "paddingVertical": 24,
+                },
+                {
+                  "fontFamily": "Material Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            
+          </Text>
+          <View
+            style={
+              {
+                "gap": 24,
+                "padding": 16,
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 26,
+                    "fontWeight": "bold",
+                  },
+                  undefined,
+                ]
+              }
+            >
+              Service unavailable
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "lineHeight": 30,
+                  },
+                ]
+              }
+            >
+              The service is currently down.
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "lineHeight": 30,
+                  },
+                ]
+              }
+            >
+              In the meantime, check the service you're trying to access for other ways to log in.
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "lineHeight": 30,
+                  },
+                ]
+              }
+            >
+              If you need help, contact us
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            [
+              [
+                {
+                  "gap": 16,
+                },
+                false,
+                undefined,
+              ],
+              {
+                "marginTop": "auto",
+              },
+            ]
+          }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "gap": 16,
+                "flexGrow": 1,
+                "width": "100%",
               }
             }
           >
             <View
               style={
                 {
-                  "flex": 1,
-                  "gap": 4,
+                  "left": 0,
+                  "position": "absolute",
+                  "right": 0,
+                  "shadowColor": "#000",
+                  "shadowOffset": {
+                    "height": -3,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.9,
+                  "shadowRadius": 3,
+                  "top": 0,
+                  "zIndex": -1,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "backgroundColor": "#F2F2F2",
+                    "height": 1,
                   }
                 }
+              />
+            </View>
+            <View
+              style={
+                {
+                  "backgroundColor": "#F2F2F2",
+                  "flexGrow": 1,
+                  "gap": 8,
+                  "padding": 24,
+                }
+              }
+            >
+              <View
+                accessibilityLabel="Check again"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": false,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onClick={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  {
+                    "backgroundColor": "#003366",
+                    "borderRadius": 4,
+                    "opacity": 1,
+                    "padding": 16,
+                  }
+                }
+                testID="com.ariesbifold:id/ServiceOutageCheckAgain"
               >
-                <Text
-                  maxFontSizeMultiplier={2}
+                <View
                   style={
-                    [
-                      {
-                        "color": "#313132",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 21,
-                        "fontWeight": "bold",
-                      },
-                      {
-                        "color": "#313132",
-                        "fontSize": 21,
-                      },
-                    ]
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                    }
                   }
                 >
-                  Learn more
-                </Text>
-                <Text
-                  allowFontScaling={false}
-                  selectable={false}
-                  style={
-                    [
-                      {
-                        "color": undefined,
-                        "fontSize": 32,
-                      },
-                      {
-                        "color": "#313132",
-                      },
-                      {
-                        "fontFamily": "Material Icons",
-                        "fontStyle": "normal",
-                        "fontWeight": "normal",
-                      },
-                      {},
-                    ]
-                  }
-                >
-                  
-                </Text>
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        [
+                          {
+                            "color": "#FFFFFF",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                            "textAlign": "center",
+                          },
+                          false,
+                          false,
+                        ],
+                      ]
+                    }
+                  >
+                    Check again
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
         </View>
       </View>
-    </View>
-  </RCTScrollView>
-  <View
-    style={
-      {
-        "padding": 16,
-      }
-    }
-  >
-    <View
-      accessibilityLabel="Check again"
-      accessibilityRole="button"
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": false,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      accessibilityValue={
-        {
-          "max": undefined,
-          "min": undefined,
-          "now": undefined,
-          "text": undefined,
-        }
-      }
-      accessible={true}
-      collapsable={false}
-      focusable={true}
-      onClick={[Function]}
-      onResponderGrant={[Function]}
-      onResponderMove={[Function]}
-      onResponderRelease={[Function]}
-      onResponderTerminate={[Function]}
-      onResponderTerminationRequest={[Function]}
-      onStartShouldSetResponder={[Function]}
-      style={
-        {
-          "backgroundColor": "#003366",
-          "borderRadius": 4,
-          "opacity": 1,
-          "padding": 16,
-        }
-      }
-      testID="com.ariesbifold:id/ServiceOutageCheckAgain"
-    >
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "center",
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                false,
-                false,
-              ],
-            ]
-          }
-        >
-          Check again
-        </Text>
-      </View>
-    </View>
+    </RCTScrollView>
   </View>
 </RNCSafeAreaView>
 `;

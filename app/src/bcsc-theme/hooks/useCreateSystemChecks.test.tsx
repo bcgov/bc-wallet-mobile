@@ -20,6 +20,7 @@ export const mockUseEvidenceService = jest.fn()
 export const mockUseNavigation = jest.fn()
 export const mockUseNavigationContainer = jest.fn()
 export const mockGetBundleId = jest.fn()
+export const mockUseServerStatus = jest.fn()
 
 // --------------------
 // External hooks
@@ -60,8 +61,8 @@ jest.mock('@/services/system-checks/AnalyticsSystemCheck', () => ({
   AnalyticsSystemCheck: class AnalyticsSystemCheck {},
 }))
 
-jest.mock('@/services/system-checks/ServerStatusSystemCheck', () => ({
-  ServerStatusSystemCheck: class ServerStatusSystemCheck {},
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
 }))
 
 jest.mock('@/services/system-checks/UpdateAppSystemCheck', () => ({
@@ -152,6 +153,10 @@ jest.mock('@/store', () => ({
 describe('useGetSystemChecks', () => {
   beforeEach(() => {
     jest.resetAllMocks()
+    mockUseServerStatus.mockReturnValue({
+      serverStatus: null,
+      refresh: jest.fn().mockResolvedValue({ serverStatus: null }),
+    })
   })
 
   describe('STARTUP scope', () => {
@@ -193,6 +198,14 @@ describe('useGetSystemChecks', () => {
     })
 
     describe('getSystemChecks', () => {
+      beforeEach(() => {
+        // Provider has a status cached, so the clock-skew / update checks are included.
+        mockUseServerStatus.mockReturnValue({
+          serverStatus: { serverTimestamp: new Date() },
+          refresh: jest.fn(),
+        })
+      })
+
       it('should return the correct system checks for STARTUP scope', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
         mockUseStore.mockReturnValue([
@@ -231,12 +244,11 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(5) // InstallIdSystemCheck, AnalyticsSystemCheck, ServerStatusSystemCheck, ServerClockSkewSystemCheck, UpdateAppSystemCheck
+        expect(systemChecks).toHaveLength(4) // InstallIdSystemCheck, AnalyticsSystemCheck, ServerClockSkewSystemCheck, UpdateAppSystemCheck
         expect(systemChecks[0].constructor.name).toBe('InstallIdSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('AnalyticsSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('ServerStatusSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('ServerClockSkewSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('UpdateAppSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('ServerClockSkewSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('UpdateAppSystemCheck')
       })
 
       it('should not include UpdateAppSystemCheck for non-BCSC builds', async () => {
@@ -277,11 +289,32 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(4) // InstallIdSystemCheck, AnalyticsSystemCheck, ServerStatusSystemCheck, ServerClockSkewSystemCheck
+        expect(systemChecks).toHaveLength(3) // InstallIdSystemCheck, AnalyticsSystemCheck, ServerClockSkewSystemCheck
         expect(systemChecks[0].constructor.name).toBe('InstallIdSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('AnalyticsSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('ServerStatusSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('ServerClockSkewSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('ServerClockSkewSystemCheck')
+      })
+
+      it('omits the clock-skew and update checks when the server status is unknown', async () => {
+        mockUseServerStatus.mockReturnValue({
+          serverStatus: null,
+          refresh: jest.fn().mockResolvedValue({ serverStatus: null }),
+        })
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
+        mockUseConfigApi.mockReturnValue({ getServerStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
+
+        expect(systemChecks.map((c) => c.constructor.name)).toEqual(['InstallIdSystemCheck', 'AnalyticsSystemCheck'])
       })
     })
   })

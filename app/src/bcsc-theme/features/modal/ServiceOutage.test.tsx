@@ -5,69 +5,67 @@ import React from 'react'
 import { ServiceOutage } from './ServiceOutage'
 
 const mockHandleCheckAgain = jest.fn()
-const mockHandleLearnMore = jest.fn()
 
 jest.mock('./useServiceOutageViewModel', () => () => ({
   headerText: 'Service unavailable',
   contentText: ['The service is currently down.'],
-  learnMoreText: 'Learn more',
+  skipVerificationText: 'Skip verification',
   buttonText: 'Check again',
   isCheckDisabled: false,
+  isAvailable: false,
   handleCheckAgain: mockHandleCheckAgain,
-  handleLearnMore: mockHandleLearnMore,
 }))
-
-jest.mock('@/hooks/usePreventGestureBack', () => jest.fn())
 
 describe('ServiceOutage', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  it('should match snapshot', () => {
-    const tree = render(
+  const renderOutage = (props = {}) =>
+    render(
       <BasicAppContext>
-        <ServiceOutage />
+        <ServiceOutage {...props} />
       </BasicAppContext>
     )
 
-    expect(tree.toJSON()).toMatchSnapshot()
+  it('should match snapshot', () => {
+    expect(renderOutage().toJSON()).toMatchSnapshot()
   })
 
-  it('renders header, content, and buttons', () => {
-    const { getByText } = render(
-      <BasicAppContext>
-        <ServiceOutage />
-      </BasicAppContext>
-    )
+  it('renders header, content, and the check again button', () => {
+    const { getByText } = renderOutage()
 
     expect(getByText('Service unavailable')).toBeTruthy()
     expect(getByText('The service is currently down.')).toBeTruthy()
-    expect(getByText('Learn more')).toBeTruthy()
     expect(getByText('Check again')).toBeTruthy()
   })
 
-  it('calls handleCheckAgain when Check again button is pressed', () => {
-    const { getByTestId } = render(
-      <BasicAppContext>
-        <ServiceOutage />
-      </BasicAppContext>
-    )
+  it('calls handleCheckAgain when Check again is pressed', () => {
+    const { getByTestId } = renderOutage()
 
     fireEvent.press(getByTestId(testIdWithKey('ServiceOutageCheckAgain')))
 
     expect(mockHandleCheckAgain).toHaveBeenCalled()
   })
 
-  it('calls handleLearnMore when Learn more button is pressed', () => {
-    const { getByTestId } = render(
-      <BasicAppContext>
-        <ServiceOutage />
-      </BasicAppContext>
-    )
+  it('hides the skip button outside onboarding', () => {
+    const { queryByTestId } = renderOutage()
 
-    fireEvent.press(getByTestId(testIdWithKey('ServiceOutageHelpCentre')))
+    expect(queryByTestId(testIdWithKey('ServiceOutageSkipVerification'))).toBeNull()
+  })
 
-    expect(mockHandleLearnMore).toHaveBeenCalled()
+  it('hides the skip button in onboarding when no onSkipVerification handler is given', () => {
+    const { queryByTestId } = renderOutage({ inOnboarding: true })
+
+    expect(queryByTestId(testIdWithKey('ServiceOutageSkipVerification'))).toBeNull()
+  })
+
+  it('shows the skip button and wires it when inOnboarding and onSkipVerification are provided', () => {
+    const onSkipVerification = jest.fn()
+    const { getByTestId } = renderOutage({ inOnboarding: true, onSkipVerification })
+
+    fireEvent.press(getByTestId(testIdWithKey('ServiceOutageSkipVerification')))
+
+    expect(onSkipVerification).toHaveBeenCalledTimes(1)
   })
 })

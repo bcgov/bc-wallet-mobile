@@ -3,7 +3,6 @@ import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
-import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
 import { MockLogger } from '@bifold/core'
@@ -16,16 +15,6 @@ const makeUtils = (translation: jest.Mock = jest.fn()) => ({
   dispatch: jest.fn(),
   translation: translation as any,
   logger: {} as any,
-})
-
-// Built per test rather than shared: the outer `jest.resetAllMocks()` strips
-// `mockReturnValue` implementations, which would silently turn getState() into undefined.
-const makeNavigation = (currentRoute = 'SomeScreen', overrides: Record<string, unknown> = {}) => ({
-  navigate: jest.fn(),
-  canGoBack: jest.fn().mockReturnValue(false),
-  goBack: jest.fn(),
-  getState: jest.fn().mockReturnValue({ routes: [{ name: currentRoute }], index: 0 }),
-  ...overrides,
 })
 
 describe('System Checks', () => {
@@ -285,152 +274,6 @@ describe('System Checks', () => {
         expect(mockUtils.dispatch).toHaveBeenCalledWith({
           type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
           payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED],
-        })
-      })
-    })
-  })
-
-  describe('ServerStatusSystemCheck', () => {
-    describe('runCheck', () => {
-      it('should return true when server status ok', () => {
-        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, makeUtils(), makeNavigation())
-
-        expect(check.runCheck()).toBe(true)
-      })
-
-      it('should return false when server status not ok', () => {
-        const check = new ServerStatusSystemCheck({ status: 'unavailable' } as any, makeUtils(), makeNavigation())
-
-        expect(check.runCheck()).toBe(false)
-      })
-    })
-
-    describe('onFail', () => {
-      it('should navigate to ServiceOutage modal and dispatch a non-dismissible info banner', () => {
-        const mockUtils = makeUtils(jest.fn().mockReturnValue('Server unavailable'))
-        const mockNavigation = makeNavigation()
-        const check = new ServerStatusSystemCheck(
-          { status: 'unavailable', contactLink: 'https://status.com' } as any,
-          mockUtils,
-          mockNavigation
-        )
-
-        check.onFail()
-
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {
-          statusMessage: undefined,
-          contactLink: 'https://status.com',
-        })
-        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
-        expect(mockUtils.dispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.ADD_BANNER_MESSAGE,
-          payload: [
-            expect.objectContaining({
-              id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-              title: undefined,
-              description: 'Server unavailable',
-              type: 'info',
-              dismissible: false,
-              metadata: { contactLink: 'https://status.com' },
-            }),
-          ],
-        })
-      })
-
-      it('should use statusMessage as description when available', () => {
-        const mockUtils = makeUtils(jest.fn().mockReturnValue('Server unavailable'))
-        const check = new ServerStatusSystemCheck(
-          {
-            status: 'unavailable',
-            contactLink: 'https://status.com',
-            statusMessage: 'Custom server down message',
-          } as any,
-          mockUtils,
-          makeNavigation()
-        )
-
-        check.onFail()
-
-        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
-        expect(mockUtils.dispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.ADD_BANNER_MESSAGE,
-          payload: [
-            expect.objectContaining({
-              id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-              description: 'Custom server down message',
-              type: 'info',
-              metadata: { contactLink: 'https://status.com' },
-            }),
-          ],
-        })
-      })
-
-      it('should not navigate if modal is already visible', () => {
-        const navWithModal = makeNavigation(BCSCModals.ServiceOutage)
-        const mockUtils = makeUtils(jest.fn().mockReturnValue('Server unavailable'))
-        const check = new ServerStatusSystemCheck(
-          { status: 'unavailable', contactLink: 'https://status.com' } as any,
-          mockUtils,
-          navWithModal
-        )
-
-        check.onFail()
-
-        expect(navWithModal.navigate).not.toHaveBeenCalled()
-        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
-      })
-    })
-
-    describe('onSuccess', () => {
-      it('should remove both banner messages when no statusMessage', () => {
-        const mockUtils = makeUtils()
-        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils, makeNavigation())
-
-        check.onSuccess()
-
-        expect(mockUtils.dispatch).toHaveBeenCalledTimes(2)
-        expect(mockUtils.dispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
-          payload: [BCSCBanner.IAS_SERVER_NOTIFICATION],
-        })
-        expect(mockUtils.dispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
-          payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE],
-        })
-      })
-
-      it('should dismiss modal if visible and go back', () => {
-        const navWithModal = makeNavigation(BCSCModals.ServiceOutage, { canGoBack: jest.fn().mockReturnValue(true) })
-        const mockUtils = makeUtils()
-        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils, navWithModal)
-
-        check.onSuccess()
-
-        expect(navWithModal.goBack).toHaveBeenCalled()
-      })
-
-      it('should dispatch non-dismissible info banner if statusMessage exists', () => {
-        const mockUtils = makeUtils()
-        const check = new ServerStatusSystemCheck(
-          { status: 'ok', contactLink: 'https://status.com', statusMessage: 'Server maintenance scheduled' } as any,
-          mockUtils,
-          makeNavigation()
-        )
-
-        check.onSuccess()
-
-        expect(mockUtils.dispatch).toHaveBeenCalledTimes(3)
-        expect(mockUtils.dispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.ADD_BANNER_MESSAGE,
-          payload: [
-            expect.objectContaining({
-              id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-              description: 'Server maintenance scheduled',
-              type: 'info',
-              dismissible: false,
-              metadata: { contactLink: 'https://status.com' },
-            }),
-          ],
         })
       })
     })

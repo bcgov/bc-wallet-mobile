@@ -19,6 +19,11 @@ jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
   })),
 }))
 
+const mockUseServerStatus = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
+
 describe('ManualPairing', () => {
   let mockNavigation: any
   let alertSpy: any
@@ -27,6 +32,7 @@ describe('ManualPairing', () => {
     jest.clearAllMocks()
     mockNavigation = useNavigation()
     jest.mocked(useRoute).mockReturnValue({ params: {} } as ReturnType<typeof useRoute>)
+    mockUseServerStatus.mockReturnValue({ isAvailable: true })
     jest.useFakeTimers()
   })
 
@@ -48,6 +54,28 @@ describe('ManualPairing', () => {
     test('renders correctly', () => {
       const tree = renderScreen()
       expect(tree).toMatchSnapshot()
+    })
+
+    test('renders the service outage screen when IAS is unavailable', () => {
+      mockUseServerStatus.mockReturnValue({ isAvailable: false })
+
+      renderScreen()
+
+      expect(screen.getByTestId(testIdWithKey('ServiceOutageCheckAgain'))).toBeTruthy()
+      expect(screen.queryByTestId(testIdWithKey('ManualPairingCodeInput'))).toBeNull()
+    })
+  })
+
+  describe('Submission during an outage', () => {
+    test('does not submit a pre-populated code while IAS is unavailable', async () => {
+      mockUseServerStatus.mockReturnValue({ isAvailable: false })
+      jest.mocked(useRoute).mockReturnValue({ params: { pairingCode: 'ABCDEF' } } as ReturnType<typeof useRoute>)
+
+      renderScreen()
+
+      await waitFor(() => {
+        expect(mockLoginByPairingCode).not.toHaveBeenCalled()
+      })
     })
   })
 
