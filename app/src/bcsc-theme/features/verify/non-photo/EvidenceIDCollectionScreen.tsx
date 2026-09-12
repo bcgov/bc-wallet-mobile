@@ -140,18 +140,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     jumpToField()
     inputRefs[field].current?.focus()
 
-    // The pre-focus jump can clamp at the scroll view's max offset (birthDate, the last field, when
-    // the keyboard was closed) and land with the field's error text hidden under the keyboard once it
-    // opens: KeyboardAwareScrollView's maybeScroll only guarantees the focused input's own bottom edge
-    // clears the keyboard (bottomOffset defaults to 0), not the error text rendered beneath it. Re-issue
-    // the same jump once the keyboard finishes opening so the whole field clears it. One-shot: removed
-    // as soon as it fires, and by the cleanup below on unmount or a newer request.
-    //
-    // Guard required: when the invalid field is the one already focused, our own focus() call above
-    // emits no keyboard event (it's already the first responder), so this listener stays parked. If the
-    // user then taps a different field, THAT focus change fires keyboardDidShow and this stale handler
-    // would re-jump to the original field, yanking the screen away from what the user just tapped. Only
-    // act if the field this request targeted is still the one focused.
+    // Re-jump once the keyboard opens: the pre-focus jump can clamp at max offset and leave the error text
+    // under the keyboard. isFocused() stops a parked listener re-jumping after the user taps elsewhere.
     const subscription = KeyboardEvents.addListener('keyboardDidShow', () => {
       if (inputRefs[field].current?.isFocused()) {
         jumpToField()
@@ -190,9 +180,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         setFormErrors(evidenceFormErrors)
         const firstInvalidField = FIELD_ORDER.find((field) => evidenceFormErrors[field] !== undefined)
         if (firstInvalidField) {
-          // A fresh object literal on every submit is what re-fires the focus effect (React compares
-          // by identity) — do not memoize or reuse this object, or an identical repeated submit will
-          // silently stop scrolling/focusing.
+          // Always a fresh object: identity is what re-fires the focus effect on an identical resubmit.
           setErrorFocusRequest({ field: firstInvalidField })
         }
         return
