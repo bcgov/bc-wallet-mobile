@@ -3,15 +3,28 @@ import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { initialBCSCSecureState } from '@/store'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render } from '@testing-library/react-native'
+import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { ScrollView, TextInput, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { KeyboardEvents } from 'react-native-keyboard-controller'
 import EvidenceIDCollectionScreen from './EvidenceIDCollectionScreen'
 
 jest.mock('@/bcsc-theme/utils/resume-step-route', () => ({
   getResumeStepRoute: jest.fn(),
 }))
+
+// Overrides the app-wide jestSetup.js mock (KeyboardAwareScrollView only) so this file can also
+// control KeyboardEvents.addListener/remove, to drive the post-focus re-scroll behaviour.
+jest.mock('react-native-keyboard-controller', () => {
+  const { ScrollView: RealScrollView } = jest.requireActual('react-native')
+  return {
+    KeyboardAwareScrollView: RealScrollView,
+    KeyboardEvents: {
+      addListener: jest.fn(() => ({ remove: jest.fn() })),
+    },
+  }
+})
 
 const mockRemoveEvidenceByType = jest.fn().mockResolvedValue(undefined)
 const mockUpdateEvidenceDocumentNumber = jest.fn().mockResolvedValue(undefined)
@@ -223,6 +236,96 @@ describe('EvidenceIDCollection', () => {
       expect(scrollToSpy.mock.invocationCallOrder[0]).toBeLessThan(focusSpy.mock.invocationCallOrder[0])
     })
 
+    it('re-issues the same jump once the keyboard finishes opening', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      const formContainer = tree
+        .UNSAFE_getAllByType(View)
+        .find((node) => node.props.onLayout && node.props.style?.gap === 18)
+      fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
+      fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
+        nativeEvent: { layout: { y: 25 } },
+      })
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(scrollToSpy).toHaveBeenCalledTimes(1)
+
+      const [, onKeyboardDidShow] = jest.mocked(KeyboardEvents.addListener).mock.calls[0]
+      act(() => onKeyboardDidShow({} as never))
+
+      expect(scrollToSpy).toHaveBeenCalledTimes(2)
+      expect(scrollToSpy).toHaveBeenNthCalledWith(2, { y: 125, animated: false })
+    })
+
+    it('removes the keyboardDidShow subscription on unmount so nothing scrolls after the screen is gone', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      const formContainer = tree
+        .UNSAFE_getAllByType(View)
+        .find((node) => node.props.onLayout && node.props.style?.gap === 18)
+      fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
+      fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
+        nativeEvent: { layout: { y: 25 } },
+      })
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      const { remove } = jest.mocked(KeyboardEvents.addListener).mock.results[0].value
+      expect(remove).not.toHaveBeenCalled()
+
+      tree.unmount()
+
+      expect(remove).toHaveBeenCalledTimes(1)
+      // The keyboard never opened before unmount, so only the pre-focus jump happened.
+      expect(scrollToSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('replaces rather than stacks the keyboardDidShow subscription on a second invalid submit', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      const firstSubscription = jest.mocked(KeyboardEvents.addListener).mock.results[0].value
+
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(KeyboardEvents.addListener).toHaveBeenCalledTimes(2)
+      expect(firstSubscription.remove).toHaveBeenCalledTimes(1)
+    })
+
     it('scrolls to and focuses an empty document number in the full NonBCSC form (zero offset honoured)', async () => {
       const tree = render(
         <BasicAppContext
@@ -277,11 +380,24 @@ describe('EvidenceIDCollection', () => {
         </BasicAppContext>
       )
 
+      const formContainer = tree
+        .UNSAFE_getAllByType(View)
+        .find((node) => node.props.onLayout && node.props.style?.gap === 18)
+      fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
+      fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
+        nativeEvent: { layout: { y: 0 } },
+      })
+      fireEvent(tree.getByTestId('com.ariesbifold:id/lastName-input'), 'layout', {
+        nativeEvent: { layout: { y: 80 } },
+      })
+
       enter(tree, 'documentNumber', '123456789')
       fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '99999999')
 
       await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
 
+      // Distinct offset from documentNumber's, so a scroll that ignored the target field couldn't pass.
+      expect(scrollToSpy).toHaveBeenCalledWith({ y: 180, animated: false })
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/lastName-input'])
     })
 
@@ -361,6 +477,14 @@ describe('EvidenceIDCollection', () => {
         </BasicAppContext>
       )
 
+      const formContainer = tree
+        .UNSAFE_getAllByType(View)
+        .find((node) => node.props.onLayout && node.props.style?.gap === 18)
+      fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
+      fireEvent(tree.getByTestId('com.ariesbifold:id/lastName-input'), 'layout', {
+        nativeEvent: { layout: { y: 140 } },
+      })
+
       await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
 
@@ -368,6 +492,11 @@ describe('EvidenceIDCollection', () => {
 
       await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input', 'com.ariesbifold:id/lastName-input'])
+      // documentNumber's container was never measured, so the first press didn't scroll at all; this
+      // is the only scrollTo call, and its offset is distinct from documentNumber's so a scroll that
+      // ignored the target field couldn't pass.
+      expect(scrollToSpy).toHaveBeenCalledTimes(1)
+      expect(scrollToSpy).toHaveBeenCalledWith({ y: 240, animated: false })
     })
 
     it('still focuses the invalid field when its container was never measured (no scrollTo)', async () => {
@@ -419,7 +548,7 @@ describe('EvidenceIDCollection', () => {
       expect(focusSpy).not.toHaveBeenCalled()
     })
 
-    it('only targets documentNumber on the abbreviated BCSCNonPhoto form', async () => {
+    it('cannot target any personal-info field on the abbreviated BCSCNonPhoto form, since none are rendered', async () => {
       const tree = render(
         <BasicAppContext
           initialStateOverride={{
@@ -432,6 +561,11 @@ describe('EvidenceIDCollection', () => {
           />
         </BasicAppContext>
       )
+
+      expect(tree.queryByTestId('com.ariesbifold:id/lastName-input')).toBeNull()
+      expect(tree.queryByTestId('com.ariesbifold:id/firstName-input')).toBeNull()
+      expect(tree.queryByTestId('com.ariesbifold:id/middleNames-input')).toBeNull()
+      expect(tree.queryByTestId('com.ariesbifold:id/birthDate-input')).toBeNull()
 
       await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
 
