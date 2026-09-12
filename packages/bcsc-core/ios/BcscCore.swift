@@ -740,14 +740,27 @@ class BcscCore: NSObject {
       expiry: expiryDate
     )
 
-    let success = tokenStorageService.save(token: token)
+    let result = tokenStorageService.save(token: token)
 
-    if success {
+    if result.succeeded {
       logger.log("setToken: Successfully saved token of type \(tokenType) with id: \(tokenId)")
       resolve(true)
     } else {
-      logger.error("setToken: Failed to save token of type \(tokenType) with id: \(tokenId)")
-      reject("E_TOKEN_SAVE_FAILED", "Failed to save token to keychain", nil)
+      logger.error("setToken: Failed to save token of type \(tokenType) with id: \(tokenId) \(result.detail)")
+      // userInfo reaches JS as error.userInfo and is forwarded to remote logging by
+      // AppError.summarizeCause, which is the only way the OSStatus leaves the device (#4645).
+      let error = NSError(
+        domain: "BcscCore.TokenService",
+        code: Int(result.status),
+        userInfo: [
+          NSLocalizedDescriptionKey: "Failed to save token to keychain",
+          "osStatus": Int(result.status),
+          "detail": result.detail,
+          "tokenType": "\(tokenType)",
+          "isProtectedDataAvailable": result.isProtectedDataAvailable,
+        ]
+      )
+      reject("E_TOKEN_SAVE_FAILED", "Failed to save token to keychain", error)
     }
   }
 
