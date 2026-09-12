@@ -26,10 +26,11 @@ import { RouteProp, StackActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import moment from 'moment'
-import { useRef, useState } from 'react'
+import { createRef, RefObject, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, View } from 'react-native'
+import { ScrollView, TextInput, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { KeyboardEvents } from 'react-native-keyboard-controller'
 import useEvidenceIDCollectionModel, {
   EvidenceCollectionFormErrors,
   EvidenceCollectionFormState,
@@ -42,6 +43,9 @@ const FIELD_ORDER: (keyof EvidenceCollectionFormState)[] = [
   'middleNames',
   'birthDate',
 ]
+
+type EvidenceField = keyof EvidenceCollectionFormState
+type ErrorFocusRequest = { field: EvidenceField }
 
 type EvidenceIDCollectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceIDCollection>
@@ -72,17 +76,14 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const scrollViewRef = useRef<ScrollView>(null)
   const formContainerY = useRef(0)
   const fieldYOffsets = useRef<Partial<Record<keyof EvidenceCollectionFormState, number>>>({})
-
-  const scrollToFirstError = (errors: EvidenceCollectionFormErrors) => {
-    const firstErrorField = FIELD_ORDER.find((field) => errors[field] !== undefined)
-    if (!firstErrorField || fieldYOffsets.current[firstErrorField] === undefined) {
-      return
-    }
-    scrollViewRef.current?.scrollTo({
-      y: formContainerY.current + (fieldYOffsets.current[firstErrorField] ?? 0),
-      animated: true,
-    })
-  }
+  const [errorFocusRequest, setErrorFocusRequest] = useState<ErrorFocusRequest | null>(null)
+  const inputRefs = useRef<Record<EvidenceField, RefObject<TextInput | null>>>({
+    documentNumber: createRef<TextInput>(),
+    lastName: createRef<TextInput>(),
+    firstName: createRef<TextInput>(),
+    middleNames: createRef<TextInput>(),
+    birthDate: createRef<TextInput>(),
+  }).current
 
   // If we have a document number from the route params (ie: from scanning), use that.
   // Otherwise, if this cardType already has an entry in additionalEvidenceData, use the
@@ -123,6 +124,34 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     setFormErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
+  useEffect(() => {
+    if (!errorFocusRequest) {
+      return
+    }
+    const { field } = errorFocusRequest
+    const fieldY = fieldYOffsets.current[field]
+    const jumpToField = () => {
+      if (fieldY !== undefined) {
+        scrollViewRef.current?.scrollTo({ y: formContainerY.current + fieldY, animated: false })
+      }
+    }
+    // Jump, never animate, and do it before focus(): KeyboardAwareScrollView re-positions an
+    // off-screen focused input on its next keyboard event and that write beats an in-flight animation.
+    jumpToField()
+    inputRefs[field].current?.focus()
+
+    // Re-jump once the keyboard opens: the pre-focus jump can clamp at max offset and leave the error text
+    // under the keyboard. isFocused() stops a parked listener re-jumping after the user taps elsewhere.
+    const subscription = KeyboardEvents.addListener('keyboardDidShow', () => {
+      if (inputRefs[field].current?.isFocused()) {
+        jumpToField()
+      }
+      subscription.remove()
+    })
+
+    return () => subscription.remove()
+  }, [errorFocusRequest, inputRefs])
+
   /**
    * Handles the continue button press.
    *
@@ -149,7 +178,11 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       // if there are validation errors, display them and do not proceed
       if (Object.keys(evidenceFormErrors).length > 0) {
         setFormErrors(evidenceFormErrors)
-        scrollToFirstError(evidenceFormErrors)
+        const firstInvalidField = FIELD_ORDER.find((field) => evidenceFormErrors[field] !== undefined)
+        if (firstInvalidField) {
+          // Always a fresh object: identity is what re-fires the focus effect on an identical resubmit.
+          setErrorFocusRequest({ field: firstInvalidField })
+        }
         return
       }
 
@@ -245,6 +278,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         }}
       >
         <InputWithValidation
+          ref={inputRefs.documentNumber}
           id={'documentNumber'}
           label={cardType.document_reference_label}
           value={formState.documentNumber}
@@ -260,6 +294,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         {personalInfoRequired ? (
           <>
             <InputWithValidation
+              ref={inputRefs.lastName}
               id={'lastName'}
               label={t('BCSC.EvidenceIDCollection.LastNameLabel')}
               value={formState.lastName}
@@ -278,6 +313,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
             />
 
             <InputWithValidation
+              ref={inputRefs.firstName}
               id={'firstName'}
               label={t('BCSC.EvidenceIDCollection.FirstNameLabel')}
               value={formState.firstName}
@@ -296,6 +332,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
             />
 
             <InputWithValidation
+              ref={inputRefs.middleNames}
               id={'middleNames'}
               label={t('BCSC.EvidenceIDCollection.MiddleNamesLabel')}
               value={formState.middleNames}
@@ -314,6 +351,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
             />
 
             <DateInput
+              ref={inputRefs.birthDate}
               id={'birthDate'}
               label={t('BCSC.EvidenceIDCollection.BirthDateLabel')}
               value={formState.birthDate}
