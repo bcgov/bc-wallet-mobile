@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="4" failures="1" errors="0" skipped="0">
+  <testsuite name="Upgrade from v3 setting up on the v3 release" timestamp="2026-08-28T06:20:05" time="120.311" tests="2" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Upgrade from v3: setting up on the v3 release"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/migration/migration.spec.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_from_v3:_setting_up_on_the_v3_release" name="taps the Add Card Setup button" time="12.208"/>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_from_v3:_setting_up_on_the_v3_release" name="completes the tutorial carousel" time="8.103"/>
+  </testsuite>
+  <testsuite name="Upgrade from v3 installing the current build" timestamp="2026-08-28T06:22:10" time="95.440" tests="2" failures="1" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Upgrade from v3: installing the current build"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/migration/migration.spec.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_from_v3:_installing_the_current_build" name="installs the current build over v3" time="60.102"/>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_from_v3:_installing_the_current_build" name="relaunches as the current build" time="35.338">
+      <failure message="Element AccountLanding still not displayed after 30000ms"/>
+    </testcase>
+  </testsuite>
+</testsuites>

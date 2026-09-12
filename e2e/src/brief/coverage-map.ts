@@ -343,22 +343,6 @@ export const UAT_CHECKLIST: CoverageSection[] = [
         ],
       },
       {
-        id: 'feat-sign-out-in',
-        label: 'Sign out / in',
-        platforms: { ios: 'na', android: 'na' },
-        proof: [
-          {
-            file: spec('main/settings.journey.ts'),
-            tests: ['auto-locks after the inactivity timeout and re-unlocks with the changed PIN'],
-          },
-          {
-            file: spec('auth/auth-unlock.journey.ts'),
-            tests: ['locks on return from a long background and re-unlocks with the PIN (terminal)'],
-          },
-        ],
-        note: 'no such feature in v4; lock is inactivity/background driven — nearest checkpoints shown',
-      },
-      {
         id: 'feat-login-tile',
         label: 'Log in using tile (deep link)',
         platforms: both,
@@ -466,13 +450,15 @@ export const UAT_CHECKLIST: CoverageSection[] = [
   },
 ]
 
-/** One row per journey/spec, so a file that stops running is visible even when no UAT row names it. */
+/**
+ * One row per journey/spec, so a file that stops running is visible even when no UAT row names it.
+ * `smoke.spec.ts` is the PR gate, never scheduled by the nightly, so it has no row (brief-check exempts it).
+ */
 export const OTHER_COVERAGE: CoverageSection[] = [
   {
     id: 'journeys',
     title: 'Journeys',
     rows: [
-      { id: 'j-smoke', label: 'Smoke: launch + onboarding entry', platforms: both, proof: [{ file: spec('smoke.spec.ts') }] },
       { id: 'j-onboarding-happy', label: 'Onboarding: happy path', platforms: both, proof: [{ file: spec('onboarding/onboarding.journey.ts') }] },
       { id: 'j-onboarding-detours', label: 'Onboarding: detours', platforms: both, proof: [{ file: spec('onboarding/onboarding-detours.journey.ts') }] },
       { id: 'j-onboarding-permissions', label: 'Onboarding: notification permission granted', platforms: both, proof: [{ file: spec('onboarding/onboarding-permissions.journey.ts') }] },
@@ -490,7 +476,13 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       { id: 'j-send-video-cancelled', label: 'Send video: rejected', platforms: both, proof: [{ file: spec('verify/send-video-cancelled.journey.ts') }] },
       { id: 'j-send-video-non-photo', label: 'Send video: non-photo card', platforms: both, proof: [{ file: spec('verify/send-video-non-photo.journey.ts') }] },
       { id: 'j-send-video-non-bcsc', label: 'Send video: non-BCSC', platforms: both, proof: [{ file: spec('verify/send-video-non-bcsc.journey.ts') }] },
-      { id: 'j-video-call', label: 'Verify: video call to the approval boundary', platforms: both, proof: [{ file: spec('verify/video-call.journey.ts') }] },
+      {
+        id: 'j-video-call',
+        label: 'Verify: video call to the approval boundary',
+        platforms: both,
+        proof: [{ file: spec('verify/video-call.journey.ts') }],
+        note: 'the open-hours half skips in the nightly: SIT’s live-call service is closed at midnight PT',
+      },
       { id: 'j-unverified-main', label: 'Main: unverified gating', platforms: both, proof: [{ file: spec('main/unverified-main.journey.ts') }] },
       { id: 'j-settings', label: 'Main: settings', platforms: both, proof: [{ file: spec('main/settings.journey.ts') }] },
       { id: 'j-wallet', label: 'Wallet: DIDComm credential lifecycle', platforms: both, proof: [{ file: spec('main/wallet.journey.ts') }] },

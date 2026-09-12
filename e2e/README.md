@@ -656,13 +656,13 @@ Every nightly run ends with a **brief** — one page on the run's Summary tab (a
 | Symbol | Meaning |
 | --- | --- |
 | ✅ / ❌ | every listed checkpoint passed / at least one failed |
-| ⛔ blocked | skipped because an earlier checkpoint in the same file failed (`mochaOpts.bail`) |
+| ⛔ blocked | never ran because an earlier checkpoint in the same file failed (`mochaOpts.bail`) — the reporter writes nothing for those, so the brief counts them from the spec's `it` titles |
 | ⏭️ skipped | a runtime `this.skip()` — an env or data gate (Sauce-only, iOS-only, missing SIT data) |
 | ⬜ not run | no result for it in these reports (lane not run, spec not scheduled, worker never got a session) |
 | ➖ n/a | not applicable on that platform (e.g. card-barcode scanning on iOS) |
 | 📝 manual | proved by the UAT team, not automation — the manual script is linked |
 
-Cells show `passed/listed` plus tallies when not everything listed passed (`✅ 4/5 ⏭1`). The rows come from `src/brief/coverage-map.ts` — each UAT row names the spec files and exact `it` titles that prove it, per platform — and `yarn brief:check` (the brief job runs it first) fails when a listed title no longer exists or a journey under `test/bcsc/` is not mapped, so renaming a checkpoint means updating the map.
+Cells show `passed/listed` plus tallies when not everything listed passed (`✅ 4/5 ⏭1`). The rows come from `src/brief/coverage-map.ts` — each UAT row names the spec files and exact `it` titles that prove it, per platform — and `yarn brief:check` (the brief job runs it first) fails when a listed title no longer exists or a journey under `test/bcsc/` is not mapped, so renaming a checkpoint means updating the map. `smoke.spec.ts` is the PR gate and has no row: the nightly never schedules it.
 
 ```bash
 yarn brief --reports reports                                   # the brief for a local run, to stdout

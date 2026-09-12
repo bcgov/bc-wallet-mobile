@@ -57,6 +57,9 @@ const IOS_USER_AGENT =
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36'
 const DEFAULT_TIMEOUT_MS = 20_000
+/** Whole-mint attempts before a transport failure is the checkpoint's: SIT drops a connection now and then. */
+const MINT_ATTEMPTS = 3
+const MINT_RETRY_DELAY_MS = 5_000
 
 export type DeepLinkPlatform = 'ios' | 'android'
 
@@ -107,30 +110,32 @@ export function pairingQrUri(pairingCode: string): string {
 
 export async function fetchPairingCode(options: FetchPairingCodeOptions = {}): Promise<PairingSession> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS } = options
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  return withMintRetry('pairing code', async () => {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
-  try {
-    const tx = await mintCardtapTransaction({ userAgent: USER_AGENT, signal: controller.signal })
+    try {
+      const tx = await mintCardtapTransaction({ userAgent: USER_AGENT, signal: controller.signal })
 
-    // Select BC Services Card app as the pairing device. Response body
-    // carries the six-letter pairing code we type into the app.
-    const deviceBody = await putCardtapDevice<{ pairingCode?: string }>(tx, {
-      deviceType: 'REMOTE_PAIRING_CODE',
-      mobileSdkParams: null,
-    })
-    if (!deviceBody.parsed?.pairingCode) {
-      throw new Error(`pairingCode missing from cardtap device response: ${deviceBody.raw.slice(0, 200)}`)
+      // Select BC Services Card app as the pairing device. Response body
+      // carries the six-letter pairing code we type into the app.
+      const deviceBody = await putCardtapDevice<{ pairingCode?: string }>(tx, {
+        deviceType: 'REMOTE_PAIRING_CODE',
+        mobileSdkParams: null,
+      })
+      if (!deviceBody.parsed?.pairingCode) {
+        throw new Error(`pairingCode missing from cardtap device response: ${deviceBody.raw.slice(0, 200)}`)
+      }
+
+      return {
+        transactionId: tx.transactionId,
+        pairingCode: deviceBody.parsed.pairingCode,
+        clientName: tx.clientName,
+      }
+    } finally {
+      clearTimeout(timeoutId)
     }
-
-    return {
-      transactionId: tx.transactionId,
-      pairingCode: deviceBody.parsed.pairingCode,
-      clientName: tx.clientName,
-    }
-  } finally {
-    clearTimeout(timeoutId)
-  }
+  })
 }
 
 /**
@@ -148,47 +153,94 @@ export async function fetchPairingCode(options: FetchPairingCodeOptions = {}): P
 export async function fetchPairingDeepLink(options: FetchPairingDeepLinkOptions): Promise<PairingDeepLinkSession> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, platform } = options
   const userAgent = platform === 'ios' ? IOS_USER_AGENT : ANDROID_USER_AGENT
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  return withMintRetry('pairing deep link', async () => {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
+    try {
+      const tx = await mintCardtapTransaction({
+        userAgent,
+        signal: controller.signal,
+        // The live mobile flow always sends maxTouchPoints — the cardtap UI
+        // uses it to decide whether to surface the LOCAL_APP_SWITCH tile.
+        cardtapQueryExtras: { maxTouchPoints: '1' },
+      })
+
+      const deviceBody = await putCardtapDevice<{
+        pairingCode?: string
+        selectedDevice?: { handlerURI?: string }
+      }>(tx, { deviceType: 'LOCAL_APP_SWITCH' })
+
+      const pairingCode = deviceBody.parsed?.pairingCode
+      const handlerUri = deviceBody.parsed?.selectedDevice?.handlerURI
+      if (!pairingCode || !handlerUri) {
+        throw new Error(
+          `pairingCode or selectedDevice.handlerURI missing from cardtap device response: ${deviceBody.raw.slice(0, 200)}`
+        )
+      }
+
+      // handlerURI ends in `/`, e.g. `ca.bc.gov.iddev.servicescard://pair/https%3A%2F%2F.../device/BC+Parks+Discover+Camping/`
+      const deepLink = `${handlerUri}${pairingCode}`
+      const schemeMatch = /^([^:]+):\/\//.exec(handlerUri)
+      if (!schemeMatch) {
+        throw new Error(`Unable to parse scheme from handlerURI: ${handlerUri}`)
+      }
+
+      return {
+        transactionId: tx.transactionId,
+        pairingCode,
+        clientName: tx.clientName,
+        deepLink,
+        scheme: schemeMatch[1],
+      }
+    } finally {
+      clearTimeout(timeoutId)
+    }
+  })
+}
+
+/** One step of the mint failed; `retryable` = a transport fault (dropped connection, timeout, 5xx) worth another go. */
+class MintStepError extends Error {
+  constructor(
+    step: string,
+    detail: string,
+    readonly retryable: boolean,
+    readonly cause?: unknown
+  ) {
+    super(`${step}: ${detail}`)
+    this.name = 'MintStepError'
+  }
+}
+
+/** Run the whole mint again on a retryable step failure — every attempt opens a fresh transaction. */
+async function withMintRetry<T>(what: string, mint: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await mint()
+    } catch (err) {
+      if (!(err instanceof MintStepError && err.retryable && attempt < MINT_ATTEMPTS)) throw err
+      console.warn(`[pairing-code] ${what} attempt ${attempt}/${MINT_ATTEMPTS} failed (${err.message}); retrying in ${MINT_RETRY_DELAY_MS}ms`)
+      await new Promise((resolve) => setTimeout(resolve, MINT_RETRY_DELAY_MS))
+    }
+  }
+}
+
+/** Undici's bare "fetch failed" hides the socket error in `cause`; our abort is the mint timeout. */
+function describeTransportError(err: unknown): string {
+  if (err instanceof Error && err.name === 'AbortError') return 'aborted — the mint timeout ran out'
+  const message = err instanceof Error ? err.message : String(err)
+  const cause = (err as { cause?: unknown } | undefined)?.cause
+  const detail = cause instanceof Error ? ((cause as { code?: string }).code ?? cause.message) : undefined
+  return detail ? `${message} — ${detail}` : message
+}
+
+/** One HTTP round trip of the mint: a transport failure is named after the step, with its cause, and is retryable. */
+async function transport<T>(step: string, run: () => Promise<T>): Promise<T> {
   try {
-    const tx = await mintCardtapTransaction({
-      userAgent,
-      signal: controller.signal,
-      // The live mobile flow always sends maxTouchPoints — the cardtap UI
-      // uses it to decide whether to surface the LOCAL_APP_SWITCH tile.
-      cardtapQueryExtras: { maxTouchPoints: '1' },
-    })
-
-    const deviceBody = await putCardtapDevice<{
-      pairingCode?: string
-      selectedDevice?: { handlerURI?: string }
-    }>(tx, { deviceType: 'LOCAL_APP_SWITCH' })
-
-    const pairingCode = deviceBody.parsed?.pairingCode
-    const handlerUri = deviceBody.parsed?.selectedDevice?.handlerURI
-    if (!pairingCode || !handlerUri) {
-      throw new Error(
-        `pairingCode or selectedDevice.handlerURI missing from cardtap device response: ${deviceBody.raw.slice(0, 200)}`
-      )
-    }
-
-    // handlerURI ends in `/`, e.g. `ca.bc.gov.iddev.servicescard://pair/https%3A%2F%2F.../device/BC+Parks+Discover+Camping/`
-    const deepLink = `${handlerUri}${pairingCode}`
-    const schemeMatch = /^([^:]+):\/\//.exec(handlerUri)
-    if (!schemeMatch) {
-      throw new Error(`Unable to parse scheme from handlerURI: ${handlerUri}`)
-    }
-
-    return {
-      transactionId: tx.transactionId,
-      pairingCode,
-      clientName: tx.clientName,
-      deepLink,
-      scheme: schemeMatch[1],
-    }
-  } finally {
-    clearTimeout(timeoutId)
+    return await run()
+  } catch (err) {
+    if (err instanceof MintStepError) throw err
+    throw new MintStepError(step, describeTransportError(err), true, err)
   }
 }
 
@@ -215,11 +267,13 @@ async function mintCardtapTransaction({
   const headers = baseHeaders(userAgent)
 
   // 1. Demo RP login page — server returns an auto-submit SAML form.
-  const rpLoginRes = await fetchWithCookies(DEMO_RP_LOGIN, {
-    redirect: 'manual',
-    headers,
-    signal,
-  })
+  const rpLoginRes = await transport('GET /demo/rp1/login', () =>
+    fetchWithCookies(DEMO_RP_LOGIN, {
+      redirect: 'manual',
+      headers,
+      signal,
+    })
+  )
   const rpLoginHtml = await readBodyOrThrow('GET /demo/rp1/login', rpLoginRes)
   const $rpLogin = load(rpLoginHtml)
   const samlRequest = inputValue($rpLogin, 'SAMLRequest')
@@ -231,19 +285,22 @@ async function mintCardtapTransaction({
   // 2. Post the SAML form. Expect 302 with Location pointing at the login entry page.
   const samlBody = new URLSearchParams({ SAMLRequest: samlRequest })
   if (relayState) samlBody.append('RelayState', relayState)
-  const samlRes = await fetchWithCookies(SAML2_POST, {
-    method: 'POST',
-    redirect: 'manual',
-    headers: {
-      ...headers,
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Origin: SIT_BASE,
-      Referer: DEMO_RP_LOGIN,
-    },
-    body: samlBody.toString(),
-    signal,
-  })
+  const samlRes = await transport('POST /login/saml2', () =>
+    fetchWithCookies(SAML2_POST, {
+      method: 'POST',
+      redirect: 'manual',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Origin: SIT_BASE,
+        Referer: DEMO_RP_LOGIN,
+      },
+      body: samlBody.toString(),
+      signal,
+    })
+  )
   if (samlRes.status !== 302) {
+    await readBodyOrThrow('POST /login/saml2', samlRes) // a 4xx/5xx is named (and a 5xx retried) like every other step
     throw new Error(`POST /login/saml2 expected 302, got ${samlRes.status}`)
   }
   const entryLocation = samlRes.headers.get('location')
@@ -254,14 +311,16 @@ async function mintCardtapTransaction({
 
   // 3. Follow the 302 to the login entry page. Server embeds the cardtap
   //    transaction UUID as a JS literal — scrape it.
-  const entryRes = await fetchWithCookies(entryUrl, {
-    redirect: 'manual',
-    headers: {
-      ...headers,
-      Referer: DEMO_RP_LOGIN,
-    },
-    signal,
-  })
+  const entryRes = await transport('GET login entry', () =>
+    fetchWithCookies(entryUrl, {
+      redirect: 'manual',
+      headers: {
+        ...headers,
+        Referer: DEMO_RP_LOGIN,
+      },
+      signal,
+    })
+  )
   const entryHtml = await readBodyOrThrow(`GET ${entryUrl}`, entryRes)
   const transactionId = extractTransactionId(entryHtml)
   if (!transactionId) {
@@ -278,17 +337,19 @@ async function mintCardtapTransaction({
   const txUrl = `${SIT_BASE}/cardtap/v3/transactions/${transactionId}?clientId=${encodeURIComponent(
     CLIENT_ID
   )}${extraQuery}`
-  const txRes = await fetchWithCookies(txUrl, {
-    method: 'POST',
-    headers: {
-      ...headers,
-      'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest',
-      Origin: SIT_BASE,
-      Referer: entryUrl,
-    },
-    signal,
-  })
+  const txRes = await transport('POST cardtap transaction', () =>
+    fetchWithCookies(txUrl, {
+      method: 'POST',
+      headers: {
+        ...headers,
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        Origin: SIT_BASE,
+        Referer: entryUrl,
+      },
+      signal,
+    })
+  )
   const txBodyRaw = await readBodyOrThrow('POST cardtap transaction', txRes)
   const txBody = safeJson<{ clientName?: string }>(txBodyRaw)
 
@@ -307,19 +368,21 @@ async function putCardtapDevice<T>(
   body: Record<string, unknown>
 ): Promise<{ raw: string; parsed: T | null }> {
   const deviceUrl = `${SIT_BASE}/cardtap/v3/transactions/${tx.transactionId}/device`
-  const deviceRes = await tx.fetchWithCookies(deviceUrl, {
-    method: 'PUT',
-    headers: {
-      ...baseHeaders(tx.userAgent),
-      'Content-Type': 'application/json',
-      Accept: 'application/json, text/javascript, */*; q=0.01',
-      'X-Requested-With': 'XMLHttpRequest',
-      Origin: SIT_BASE,
-      Referer: tx.entryUrl,
-    },
-    body: JSON.stringify(body),
-    signal: tx.signal,
-  })
+  const deviceRes = await transport('PUT cardtap device', () =>
+    tx.fetchWithCookies(deviceUrl, {
+      method: 'PUT',
+      headers: {
+        ...baseHeaders(tx.userAgent),
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/javascript, */*; q=0.01',
+        'X-Requested-With': 'XMLHttpRequest',
+        Origin: SIT_BASE,
+        Referer: tx.entryUrl,
+      },
+      body: JSON.stringify(body),
+      signal: tx.signal,
+    })
+  )
   const raw = await readBodyOrThrow('PUT cardtap device', deviceRes)
   return { raw, parsed: safeJson<T>(raw) }
 }
@@ -333,11 +396,11 @@ function baseHeaders(userAgent: string): Record<string, string> {
 }
 
 async function readBodyOrThrow(step: string, response: Response): Promise<string> {
-  const body = await response.text()
+  const body = await transport(step, () => response.text())
   if (!response.ok) {
     const snippet = body.slice(0, 200).replaceAll(/\s+/g, ' ').trim()
     const detail = snippet ? ` — ${snippet}` : ''
-    throw new Error(`${step} failed: HTTP ${response.status}${detail}`)
+    throw new MintStepError(step, `HTTP ${response.status}${detail}`, response.status >= 500)
   }
   return body
 }
