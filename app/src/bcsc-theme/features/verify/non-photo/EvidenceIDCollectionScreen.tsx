@@ -30,6 +30,7 @@ import { createRef, RefObject, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, TextInput, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { KeyboardEvents } from 'react-native-keyboard-controller'
 import useEvidenceIDCollectionModel, {
   EvidenceCollectionFormErrors,
   EvidenceCollectionFormState,
@@ -44,7 +45,7 @@ const FIELD_ORDER: (keyof EvidenceCollectionFormState)[] = [
 ]
 
 type EvidenceField = keyof EvidenceCollectionFormState
-type ErrorFocusRequest = { field: EvidenceField; token: number }
+type ErrorFocusRequest = { field: EvidenceField }
 
 type EvidenceIDCollectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceIDCollection>
@@ -129,12 +130,28 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     }
     const { field } = errorFocusRequest
     const fieldY = fieldYOffsets.current[field]
+    const jumpToField = () => {
+      if (fieldY !== undefined) {
+        scrollViewRef.current?.scrollTo({ y: formContainerY.current + fieldY, animated: false })
+      }
+    }
     // Jump, never animate, and do it before focus(): KeyboardAwareScrollView re-positions an
     // off-screen focused input on its next keyboard event and that write beats an in-flight animation.
-    if (fieldY !== undefined) {
-      scrollViewRef.current?.scrollTo({ y: formContainerY.current + fieldY, animated: false })
-    }
+    jumpToField()
     inputRefs[field].current?.focus()
+
+    // The pre-focus jump can clamp at the scroll view's max offset (birthDate, the last field, when
+    // the keyboard was closed) and land with the field's error text hidden under the keyboard once it
+    // opens: KeyboardAwareScrollView's maybeScroll only guarantees the focused input's own bottom edge
+    // clears the keyboard (bottomOffset defaults to 0), not the error text rendered beneath it. Re-issue
+    // the same jump once the keyboard finishes opening so the whole field clears it. One-shot: removed
+    // as soon as it fires, and by the cleanup below on unmount or a newer request.
+    const subscription = KeyboardEvents.addListener('keyboardDidShow', () => {
+      jumpToField()
+      subscription.remove()
+    })
+
+    return () => subscription.remove()
   }, [errorFocusRequest, inputRefs])
 
   /**
@@ -165,7 +182,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         setFormErrors(evidenceFormErrors)
         const firstInvalidField = FIELD_ORDER.find((field) => evidenceFormErrors[field] !== undefined)
         if (firstInvalidField) {
-          setErrorFocusRequest((prev) => ({ field: firstInvalidField, token: (prev?.token ?? 0) + 1 }))
+          // A fresh object literal on every submit is what re-fires the focus effect (React compares
+          // by identity) — do not memoize or reuse this object, or an identical repeated submit will
+          // silently stop scrolling/focusing.
+          setErrorFocusRequest({ field: firstInvalidField })
         }
         return
       }
