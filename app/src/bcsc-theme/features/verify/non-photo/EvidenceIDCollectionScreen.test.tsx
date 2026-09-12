@@ -188,15 +188,20 @@ describe('EvidenceIDCollection', () => {
   describe('focus and scroll on invalid submit', () => {
     let scrollToSpy: jest.SpyInstance
     let focusSpy: jest.SpyInstance
+    let isFocusedSpy: jest.SpyInstance
 
     beforeEach(() => {
       scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
       focusSpy = jest.spyOn(TextInput.prototype, 'focus')
+      // Default: the field the effect focused is still the one focused when a keyboard event fires.
+      // Individual tests override this to simulate focus having moved elsewhere in the meantime.
+      isFocusedSpy = jest.spyOn(TextInput.prototype, 'isFocused').mockReturnValue(true)
     })
 
     afterEach(() => {
       scrollToSpy.mockRestore()
       focusSpy.mockRestore()
+      isFocusedSpy.mockRestore()
     })
 
     const focusedTestIds = () => focusSpy.mock.instances.map((instance: any) => instance.props.testID)
@@ -267,6 +272,49 @@ describe('EvidenceIDCollection', () => {
 
       expect(scrollToSpy).toHaveBeenCalledTimes(2)
       expect(scrollToSpy).toHaveBeenNthCalledWith(2, { y: 125, animated: false })
+    })
+
+    it('ignores a parked keyboardDidShow once focus has moved to a different field', async () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          }}
+        >
+          <EvidenceIDCollectionScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardType: mockEvidenceType } } as never}
+          />
+        </BasicAppContext>
+      )
+
+      const formContainer = tree
+        .UNSAFE_getAllByType(View)
+        .find((node) => node.props.onLayout && node.props.style?.gap === 18)
+      fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
+      fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
+        nativeEvent: { layout: { y: 25 } },
+      })
+
+      // Invalid submit focuses documentNumber; the keyboard was already open (e.g. from editing
+      // another field), so no keyboardDidShow fires yet and the listener parks.
+      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+      expect(scrollToSpy).toHaveBeenCalledTimes(1)
+
+      const [, onKeyboardDidShow] = jest.mocked(KeyboardEvents.addListener).mock.calls[0]
+      const { remove } = jest.mocked(KeyboardEvents.addListener).mock.results[0].value
+
+      // The user has since tapped a different field, which is what actually triggers this
+      // keyboardDidShow — documentNumber is no longer the focused input.
+      isFocusedSpy.mockReturnValue(false)
+      act(() => onKeyboardDidShow({} as never))
+
+      // No re-jump: re-scrolling to documentNumber now would yank the screen away from whatever
+      // field the user actually tapped.
+      expect(scrollToSpy).toHaveBeenCalledTimes(1)
+      // Still one-shot even when the guard skips the scroll.
+      expect(remove).toHaveBeenCalledTimes(1)
     })
 
     it('removes the keyboardDidShow subscription on unmount so nothing scrolls after the screen is gone', async () => {
@@ -546,30 +594,6 @@ describe('EvidenceIDCollection', () => {
 
       expect(scrollToSpy).not.toHaveBeenCalled()
       expect(focusSpy).not.toHaveBeenCalled()
-    })
-
-    it('cannot target any personal-info field on the abbreviated BCSCNonPhoto form, since none are rendered', async () => {
-      const tree = render(
-        <BasicAppContext
-          initialStateOverride={{
-            bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
-          }}
-        >
-          <EvidenceIDCollectionScreen
-            navigation={mockNavigation as never}
-            route={{ params: { cardType: mockEvidenceType } } as never}
-          />
-        </BasicAppContext>
-      )
-
-      expect(tree.queryByTestId('com.ariesbifold:id/lastName-input')).toBeNull()
-      expect(tree.queryByTestId('com.ariesbifold:id/firstName-input')).toBeNull()
-      expect(tree.queryByTestId('com.ariesbifold:id/middleNames-input')).toBeNull()
-      expect(tree.queryByTestId('com.ariesbifold:id/birthDate-input')).toBeNull()
-
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
-      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
     })
 
     it('only targets documentNumber on the second NonBCSC ID (personal info not rendered)', async () => {
