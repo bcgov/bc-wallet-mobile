@@ -146,8 +146,16 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     // clears the keyboard (bottomOffset defaults to 0), not the error text rendered beneath it. Re-issue
     // the same jump once the keyboard finishes opening so the whole field clears it. One-shot: removed
     // as soon as it fires, and by the cleanup below on unmount or a newer request.
+    //
+    // Guard required: when the invalid field is the one already focused, our own focus() call above
+    // emits no keyboard event (it's already the first responder), so this listener stays parked. If the
+    // user then taps a different field, THAT focus change fires keyboardDidShow and this stale handler
+    // would re-jump to the original field, yanking the screen away from what the user just tapped. Only
+    // act if the field this request targeted is still the one focused.
     const subscription = KeyboardEvents.addListener('keyboardDidShow', () => {
-      jumpToField()
+      if (inputRefs[field].current?.isFocused()) {
+        jumpToField()
+      }
       subscription.remove()
     })
 
