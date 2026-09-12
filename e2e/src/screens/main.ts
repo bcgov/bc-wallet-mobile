@@ -176,11 +176,37 @@ export const SettingsRowIds = {
   autoLock: bcsc(main.settings.autoLock),
 } as const
 
-/** App Security (`MainChangeSecurity` → SecurityMethodSelector). `self` is the always-present
- *  `ChoosePINButton`; return via header `back`. */
+/**
+ * App Security (`MainChangeSecurity` → SecurityMethodSelector). `self` is the always-present
+ * `ChoosePINButton`; return via header `back`. `deviceAuth` renders only when the OS calls the device
+ * secure (same id as the onboarding selector — it is the same component); in settings the current
+ * method's card is the selected one.
+ */
 export const AppSecurityScreen = defineScreen({
   self: bcsc(main.appSecurity.choosePin),
   back: bcsc(common.back),
+  links: {
+    pin: bcsc(main.appSecurity.choosePin),
+    deviceAuth: bcsc(TestIds.onboarding.secureApp.chooseDeviceAuth),
+  },
+})
+
+/**
+ * The device-auth → PIN form (`MainChangePIN` WITHOUT `isChangingExistingPIN`): `PINEntryForm` again, so
+ * the onboarding CreatePIN ids — except the button, which is the generic `Continue`. Success pops
+ * both it and App Security, landing back on Settings.
+ */
+export const SwitchToPinScreen = defineScreen({
+  self: bcsc(TestIds.onboarding.createPin.pin),
+  primary: bcsc(TestIds.onboarding.createPin.continue),
+  back: bcsc(common.back),
+  inputs: {
+    pin: bcsc(TestIds.onboarding.createPin.pin),
+    confirmPin: bcsc(TestIds.onboarding.createPin.confirmPin),
+  },
+  links: {
+    understand: bcsc(TestIds.onboarding.createPin.understand),
+  },
 })
 
 /**

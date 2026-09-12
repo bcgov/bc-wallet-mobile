@@ -6,11 +6,15 @@ function bioLog(message: string): void {
   console.log(`[biometrics] ${message}`)
 }
 
-/** Subtitle set in bcsc-core `DeviceAuthenticationService` / `BcscCoreModule.performDeviceAuthentication`. */
+/**
+ * The app's own `BiometricPrompt`: title = the reason the JS passes (onboarding, unlock, security
+ * switch), subtitle = the fixed "Please authenticate to …" from `BcscCoreModule`. Any of them proves
+ * the prompt is up.
+ */
 const ANDROID_BIOMETRIC_SUBTITLE_SEL =
-  '//android.widget.TextView[contains(@text,"Sign in with FingerPrint") or contains(@text,"Sign in with FaceID") or contains(@text,"Authenticate to secure your app")]'
+  '//android.widget.TextView[contains(@text,"Please authenticate to") or contains(@text,"Authenticate to secure your app") or contains(@text,"Unlock your app") or contains(@text,"Authenticate to change your security method")]'
 
-/** iOS system biometric sheet (en — adjust if running localized Sauce sessions). */
+/** Sauce's interception sheet on iOS — titled after whatever biometry the pool device carries. */
 const IOS_BIOMETRIC_LABEL_SEL =
   '-ios class chain:**/XCUIElementTypeStaticText[`label CONTAINS "Touch ID Verification" OR label CONTAINS "Face ID Verification"`]'
 
@@ -28,6 +32,13 @@ async function waitForNativeBiometricPromptOnSauceRdc(): Promise<void> {
   })
 
   bioLog('Sauce RDC: biometric prompt is visible')
+}
+
+/** True while the prompt is on screen; never throws. */
+export async function isBiometricPromptShowing(): Promise<boolean> {
+  return $(driver.isIOS ? IOS_BIOMETRIC_LABEL_SEL : ANDROID_BIOMETRIC_SUBTITLE_SEL)
+    .isDisplayed()
+    .catch(() => false)
 }
 
 export async function matchBiometric() {
