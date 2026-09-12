@@ -1036,11 +1036,18 @@ export const useSecureActions = () => {
         }
       }
 
-      await updateTokens({
-        refreshToken: freshTokens?.refresh_token ?? refreshToken,
-        registrationAccessToken: recoveredRegistrationAccessToken ?? registrationAccessToken,
-        accessToken: freshTokens?.access_token ?? accessToken,
-      })
+      // A keychain write failure here used to abort an already-successful unlock and surface as
+      // "Device Authentication Failed" (#4645). The tokens are in memory either way, and the next
+      // unlock refreshes from the stored token again, so log and continue.
+      try {
+        await updateTokens({
+          refreshToken: freshTokens?.refresh_token ?? refreshToken,
+          registrationAccessToken: recoveredRegistrationAccessToken ?? registrationAccessToken,
+          accessToken: freshTokens?.access_token ?? accessToken,
+        })
+      } catch (error) {
+        logger.error('[hydrateSecureState] Failed to persist tokens; continuing with in-memory tokens', error as Error)
+      }
 
       // Reconstruct userMetadata from authorizationRequest (matches IAS apps)
       let userMetadata: NonBCSCUserMetadata | undefined = undefined
