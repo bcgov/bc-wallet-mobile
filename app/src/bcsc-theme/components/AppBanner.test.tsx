@@ -43,16 +43,39 @@ describe('AppBanner', () => {
 
     expect(getByText('Non dismissible Message')).toBeTruthy()
   })
+
+  it('orders banners by severity: error, warning, info, success', () => {
+    const messages: AppBannerSectionProps[] = [
+      { id: 'S1' as BCSCBanner, title: 'Success A', type: 'success' },
+      { id: 'I1' as BCSCBanner, title: 'Info A', type: 'info' },
+      { id: 'W1' as BCSCBanner, title: 'Warning A', type: 'warning' },
+      { id: 'E1' as BCSCBanner, title: 'Error A', type: 'error' },
+      { id: 'I2' as BCSCBanner, title: 'Info B', type: 'info' },
+      { id: 'S2' as BCSCBanner, title: 'Success B', type: 'success' },
+    ]
+
+    const { getAllByTestId } = render(<AppBanner messages={messages} />)
+
+    const titles = getAllByTestId(/text-(error|warning|info|success)$/).map((node) => node.props.children)
+    expect(titles).toEqual(['Error A', 'Warning A', 'Info A', 'Info B', 'Success A', 'Success B'])
+  })
 })
 
 describe('AppBannerSection', () => {
-  it('renders correctly with the correct icon and color for type', () => {
-    const { getByText, getByTestId } = render(
-      <AppBannerSection id={'A' as BCSCBanner} title="Success Message" type="success" dismissible={true} />
+  it.each([
+    ['error', '#CE3E39', '#FFFFFF'],
+    ['warning', '#F8BB47', '#2D2D2D'],
+    ['info', '#2E5DD7', '#FFFFFF'],
+    ['success', '#42814A', '#FFFFFF'],
+  ] as const)('%s banner uses the style-guide background and foreground', (type, background, foreground) => {
+    const { getByTestId } = render(
+      <AppBannerSection id={'A' as BCSCBanner} title="Title" description="Description" type={type} />
     )
 
-    expect(getByText('Success Message')).toBeTruthy()
-    expect(getByTestId(testIdWithKey('icon-success'))).toBeTruthy()
+    expect(getByTestId(testIdWithKey(`button-${type}`))).toHaveStyle({ backgroundColor: background })
+    expect(getByTestId(testIdWithKey(`icon-${type}`))).toHaveStyle({ color: foreground })
+    expect(getByTestId(testIdWithKey(`text-${type}`))).toHaveStyle({ color: foreground })
+    expect(getByTestId(testIdWithKey(`description-${type}`))).toHaveStyle({ color: foreground })
   })
 
   it('calls onPress when tapped and dismissible', () => {
