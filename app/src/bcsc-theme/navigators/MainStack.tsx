@@ -1,4 +1,5 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl, SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
+import { NotificationsProvider } from '@/hooks/NotificationsProvider'
 import {
   CredentialDetails,
   Screens,
@@ -187,393 +188,395 @@ const MainStack: React.FC = () => {
           registered below (terms of use, service outage), so the navigator has to stay mounted. */}
       {isAwaitingSystemChecks ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
       <BifoldScope>
-        <Stack.Navigator
-          initialRouteName={initialRouteName}
-          screenOptions={{
-            ...defaultStackOptions,
-            headerShown: false,
-            title: '',
-            headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
-            headerBackTitleVisible: false,
-            headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
-            headerLeft: createHeaderBackButton,
-            header: createHeaderWithoutBanner,
-            headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
-          }}
-        >
-          <Stack.Screen
-            name={BCSCScreens.Contacts}
-            component={ScopedContacts}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.Contacts.Title'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.WhatAreContacts}
-            component={WhatAreContactsScreen}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.Contacts.Title'),
-              headerRight: () => null,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.ContactDetails}
-            component={ScopedContactDetails}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.Contacts.Details.Title'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.EditContactName}
-            component={ScopedEditContactName}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.Contacts.EditName.HeaderTitle'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.ContactJSONDetails}
-            component={ContactJSONDetailsScreen}
-            options={({ route }) => ({
-              headerShown: true,
-              title: route.params?.title ?? t('BCSC.Contacts.JSON.Title'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.CredentialJSONDetails}
-            component={CredentialJSONDetailsScreen}
-            options={{
-              headerShown: true,
-              headerTitle: t('Credentials.JSONDetailsTitle'),
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.ContactChat}
-            component={ContactChatScreen}
-            options={() => ({
-              headerShown: true,
-              title: '',
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.RemoveContact}
-            component={ScopedRemoveContact}
-            options={() => ({
-              ...getDefaultModalOptions(t('BCSC.Contacts.Remove.HeaderTitle')),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCStacks.Tab}
-            component={BCSCTabStack}
-            options={{
-              animationEnabled: false,
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.QRCore}
-            component={QRCoreStack}
-            options={{
+        <NotificationsProvider>
+          <Stack.Navigator
+            initialRouteName={initialRouteName}
+            screenOptions={{
+              ...defaultStackOptions,
               headerShown: false,
+              title: '',
+              headerBackTestID: testIdWithKey('Back'),
+              headerShadowVisible: false,
+              headerBackTitleVisible: false,
+              headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
+              headerLeft: createHeaderBackButton,
+              header: createHeaderWithoutBanner,
+              headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
             }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.ConnectionLoading}
-            component={ConnectionLoadingScreen}
-            options={({ route }) => {
-              // Offers / proof requests opened from a home notification land directly on
-              // the offer / request view, so keep the default back button — backing out
-              // leaves the notification pending (in its read state) instead of forcing
-              // an accept / decline. QR-scan entries (oobRecordId) run the connection
-              // handshake, where backing out mid-exchange isn't supported — the loading
-              // placeholder has its own cancel affordance.
-              const { credentialId, proofId } = route.params
-              if (credentialId || proofId) {
+          >
+            <Stack.Screen
+              name={BCSCScreens.Contacts}
+              component={ScopedContacts}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.Contacts.Title'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.WhatAreContacts}
+              component={WhatAreContactsScreen}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.Contacts.Title'),
+                headerRight: () => null,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.ContactDetails}
+              component={ScopedContactDetails}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.Contacts.Details.Title'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.EditContactName}
+              component={ScopedEditContactName}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.Contacts.EditName.HeaderTitle'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.ContactJSONDetails}
+              component={ContactJSONDetailsScreen}
+              options={({ route }) => ({
+                headerShown: true,
+                title: route.params?.title ?? t('BCSC.Contacts.JSON.Title'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.CredentialJSONDetails}
+              component={CredentialJSONDetailsScreen}
+              options={{
+                headerShown: true,
+                headerTitle: t('Credentials.JSONDetailsTitle'),
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.ContactChat}
+              component={ContactChatScreen}
+              options={() => ({
+                headerShown: true,
+                title: '',
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.RemoveContact}
+              component={ScopedRemoveContact}
+              options={() => ({
+                ...getDefaultModalOptions(t('BCSC.Contacts.Remove.HeaderTitle')),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCStacks.Tab}
+              component={BCSCTabStack}
+              options={{
+                animationEnabled: false,
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.QRCore}
+              component={QRCoreStack}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.ConnectionLoading}
+              component={ConnectionLoadingScreen}
+              options={({ route }) => {
+                // Offers / proof requests opened from a home notification land directly on
+                // the offer / request view, so keep the default back button — backing out
+                // leaves the notification pending (in its read state) instead of forcing
+                // an accept / decline. QR-scan entries (oobRecordId) run the connection
+                // handshake, where backing out mid-exchange isn't supported — the loading
+                // placeholder has its own cancel affordance.
+                const { credentialId, proofId } = route.params
+                if (credentialId || proofId) {
+                  return {
+                    headerShown: true,
+                    title: credentialId ? t('Screens.CredentialOffer') : t('Screens.ProofRequest'),
+                  }
+                }
+
                 return {
                   headerShown: true,
-                  title: credentialId ? t('Screens.CredentialOffer') : t('Screens.ProofRequest'),
+                  headerLeft: () => null,
+                  gestureEnabled: false,
+                  title: t('BCSC.Scan.Connecting'),
                 }
-              }
-
-              return {
+              }}
+            />
+            <Stack.Screen
+              name={Screens.CredentialDetails}
+              component={ScopedCredentialDetails}
+              options={{
                 headerShown: true,
-                headerLeft: () => null,
+                title: t('Screens.CredentialDetails'),
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.EditNickname}
+              component={EditNicknameScreen}
+              options={{
+                headerShown: true,
+                title: t('BCSC.Screens.Nickname'),
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.AccountDetails}
+              component={AccountDetailsScreen}
+              options={{
+                headerShown: true,
+                title: t('BCSC.Screens.AccountDetails'),
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainSettings}
+              component={MainSettingsScreen}
+              options={{
+                headerShown: true,
+                title: t('BCSC.Screens.Settings'),
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainAutoLock}
+              component={AutoLockScreen}
+              options={{
+                headerShown: true,
+                title: t('BCSC.Settings.AutoLockTime'),
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.ProofRequestExpiry}
+              component={ProofRequestExpirationScreen}
+              options={{
+                headerShown: true,
+                title: t('BCSC.Settings.ProofRequestExpiry'),
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainNotificationSettings}
+              component={NotificationSettingsScreen}
+              options={{
+                headerShown: true,
+                title: t('BCSC.Settings.Notifications'),
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainAppSecurity}
+              component={MainChangeSecurityScreen}
+              options={{
+                headerShown: true,
+                title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
+              }}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainChangePIN}
+              component={MainChangePINScreen}
+              options={({ route }) => ({
+                headerShown: true,
+                title: route.params?.isChangingExistingPIN
+                  ? t('BCSC.ChangePIN.ScreenTitle')
+                  : t('BCSC.Settings.ChangePIN.ScreenTitle'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.ManualPairingCode}
+              component={ManualPairingCode}
+              options={() => ({
+                headerShown: true,
+                headerRight: createFloatingHelpMenuButton({
+                  webViewScreen: BCSCScreens.MainWebView,
+                  learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,
+                }),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainWebView}
+              component={WebViewScreen}
+              options={({ route }) => ({
+                headerShown: true,
+                title: route.params.title,
+              })}
+            />
+            <Stack.Screen name={BCSCScreens.PairingConfirmation} component={PairingConfirmation} />
+            <Stack.Screen
+              name={BCSCScreens.MainRemoveAccountConfirmation}
+              component={MainRemoveAccountConfirmationScreen}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.Account.RemoveAccount'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainResetWalletConfirmation}
+              component={MainResetWalletConfirmationScreen}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.Wallet.Reset'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.TransferAccountQRInformation}
+              component={TransferQRInformationScreen}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.TransferInformation.TransferAccount'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.TransferAccountQRDisplay}
+              component={TransferQRDisplayScreen}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.TransferInformation.TransferAccount'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.TransferAccountSuccess}
+              component={TransferSuccessScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.TransferAgeRestriction}
+              component={TransferAgeRestrictionScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.ServiceLogin}
+              component={ServiceLoginScreen}
+              initialParams={pairingInitialParams}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainPrivacyPolicy}
+              component={MainPrivacyPolicyScreen}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.Screens.PrivacyInformation'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.ForgetAllPairings}
+              component={ForgetAllPairingsScreen}
+              options={() => ({
+                headerShown: true,
+                title: t('BCSC.ForgetAllPairings.ScreenTitle'),
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainDeveloper}
+              component={Developer}
+              options={() => ({
+                title: t('Developer.DeveloperMode'),
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.AccountRenewalInformation}
+              component={AccountRenewalInformationScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.AccountRenewalFirstWarning}
+              component={AccountRenewalFirstWarningScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.AccountRenewalFinalWarning}
+              component={AccountRenewalFinalWarningScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.VerificationSuccess}
+              component={VerificationSuccessScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.ReverifyAccount}
+              component={ReverifyAccountScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainVerifyPrompt}
+              component={VerifyPromptScreenNoSkip}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+            <Stack.Screen
+              name={BCSCScreens.MainCancelledReview}
+              component={CancelledReview}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+
+            {/* React navigation docs suggest modals at bottom of stack */}
+            <Stack.Screen
+              name={BCSCModals.InternetDisconnected}
+              component={InternetDisconnected}
+              options={{
+                ...getDefaultModalOptions(t('BCSC.Title')),
                 gestureEnabled: false,
-                title: t('BCSC.Scan.Connecting'),
-              }
-            }}
-          />
-          <Stack.Screen
-            name={Screens.CredentialDetails}
-            component={ScopedCredentialDetails}
-            options={{
-              headerShown: true,
-              title: t('Screens.CredentialDetails'),
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.EditNickname}
-            component={EditNicknameScreen}
-            options={{
-              headerShown: true,
-              title: t('BCSC.Screens.Nickname'),
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.AccountDetails}
-            component={AccountDetailsScreen}
-            options={{
-              headerShown: true,
-              title: t('BCSC.Screens.AccountDetails'),
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainSettings}
-            component={MainSettingsScreen}
-            options={{
-              headerShown: true,
-              title: t('BCSC.Screens.Settings'),
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainAutoLock}
-            component={AutoLockScreen}
-            options={{
-              headerShown: true,
-              title: t('BCSC.Settings.AutoLockTime'),
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.ProofRequestExpiry}
-            component={ProofRequestExpirationScreen}
-            options={{
-              headerShown: true,
-              title: t('BCSC.Settings.ProofRequestExpiry'),
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainNotificationSettings}
-            component={NotificationSettingsScreen}
-            options={{
-              headerShown: true,
-              title: t('BCSC.Settings.Notifications'),
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainAppSecurity}
-            component={MainChangeSecurityScreen}
-            options={{
-              headerShown: true,
-              title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
-            }}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainChangePIN}
-            component={MainChangePINScreen}
-            options={({ route }) => ({
-              headerShown: true,
-              title: route.params?.isChangingExistingPIN
-                ? t('BCSC.ChangePIN.ScreenTitle')
-                : t('BCSC.Settings.ChangePIN.ScreenTitle'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.ManualPairingCode}
-            component={ManualPairingCode}
-            options={() => ({
-              headerShown: true,
-              headerRight: createFloatingHelpMenuButton({
-                webViewScreen: BCSCScreens.MainWebView,
-                learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,
-              }),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainWebView}
-            component={WebViewScreen}
-            options={({ route }) => ({
-              headerShown: true,
-              title: route.params.title,
-            })}
-          />
-          <Stack.Screen name={BCSCScreens.PairingConfirmation} component={PairingConfirmation} />
-          <Stack.Screen
-            name={BCSCScreens.MainRemoveAccountConfirmation}
-            component={MainRemoveAccountConfirmationScreen}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.Account.RemoveAccount'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainResetWalletConfirmation}
-            component={MainResetWalletConfirmationScreen}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.Wallet.Reset'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.TransferAccountQRInformation}
-            component={TransferQRInformationScreen}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.TransferInformation.TransferAccount'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.TransferAccountQRDisplay}
-            component={TransferQRDisplayScreen}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.TransferInformation.TransferAccount'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.TransferAccountSuccess}
-            component={TransferSuccessScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.TransferAgeRestriction}
-            component={TransferAgeRestrictionScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.ServiceLogin}
-            component={ServiceLoginScreen}
-            initialParams={pairingInitialParams}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainPrivacyPolicy}
-            component={MainPrivacyPolicyScreen}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.Screens.PrivacyInformation'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.ForgetAllPairings}
-            component={ForgetAllPairingsScreen}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.ForgetAllPairings.ScreenTitle'),
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainDeveloper}
-            component={Developer}
-            options={() => ({
-              title: t('Developer.DeveloperMode'),
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.AccountRenewalInformation}
-            component={AccountRenewalInformationScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.AccountRenewalFirstWarning}
-            component={AccountRenewalFirstWarningScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.AccountRenewalFinalWarning}
-            component={AccountRenewalFinalWarningScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.VerificationSuccess}
-            component={VerificationSuccessScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.ReverifyAccount}
-            component={ReverifyAccountScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainVerifyPrompt}
-            component={VerifyPromptScreenNoSkip}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainCancelledReview}
-            component={CancelledReview}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
+              }}
+            />
 
-          {/* React navigation docs suggest modals at bottom of stack */}
-          <Stack.Screen
-            name={BCSCModals.InternetDisconnected}
-            component={InternetDisconnected}
-            options={{
-              ...getDefaultModalOptions(t('BCSC.Title')),
-              gestureEnabled: false,
-            }}
-          />
+            <Stack.Screen
+              name={BCSCModals.MandatoryUpdate}
+              component={MandatoryUpdate}
+              options={{
+                ...getDefaultModalOptions(t('BCSC.Title')),
+                gestureEnabled: false,
+              }}
+            />
 
-          <Stack.Screen
-            name={BCSCModals.MandatoryUpdate}
-            component={MandatoryUpdate}
-            options={{
-              ...getDefaultModalOptions(t('BCSC.Title')),
-              gestureEnabled: false,
-            }}
-          />
+            <Stack.Screen
+              name={BCSCModals.DeviceInvalidated}
+              component={DeviceInvalidated}
+              options={{
+                ...getDefaultModalOptions(t('BCSC.Title')),
+                gestureEnabled: false,
+              }}
+            />
 
-          <Stack.Screen
-            name={BCSCModals.DeviceInvalidated}
-            component={DeviceInvalidated}
-            options={{
-              ...getDefaultModalOptions(t('BCSC.Title')),
-              gestureEnabled: false,
-            }}
-          />
+            <Stack.Screen
+              name={BCSCModals.ServiceOutage}
+              component={ServiceOutage}
+              options={{
+                ...getDefaultModalOptions(t('BCSC.Title')),
+                gestureEnabled: false,
+              }}
+            />
 
-          <Stack.Screen
-            name={BCSCModals.ServiceOutage}
-            component={ServiceOutage}
-            options={{
-              ...getDefaultModalOptions(t('BCSC.Title')),
-              gestureEnabled: false,
-            }}
-          />
-
-          <Stack.Screen
-            name={BCSCModals.TermsOfUseUpdated}
-            component={TermsOfUseUpdated}
-            options={{
-              ...getDefaultModalOptions(t('BCSC.Title')),
-              gestureEnabled: false,
-            }}
-          />
-        </Stack.Navigator>
+            <Stack.Screen
+              name={BCSCModals.TermsOfUseUpdated}
+              component={TermsOfUseUpdated}
+              options={{
+                ...getDefaultModalOptions(t('BCSC.Title')),
+                gestureEnabled: false,
+              }}
+            />
+          </Stack.Navigator>
+        </NotificationsProvider>
       </BifoldScope>
     </View>
   )
