@@ -14,8 +14,7 @@ jest.mock('@/bcsc-theme/utils/resume-step-route', () => ({
   getResumeStepRoute: jest.fn(),
 }))
 
-// Overrides the app-wide jestSetup.js mock (KeyboardAwareScrollView only) so this file can also
-// control KeyboardEvents.addListener/remove, to drive the post-focus re-scroll behaviour.
+// Overrides the shared mock so KeyboardEvents.addListener can be spied on.
 jest.mock('react-native-keyboard-controller', () => {
   const { ScrollView: RealScrollView } = jest.requireActual('react-native')
   return {
@@ -193,8 +192,7 @@ describe('EvidenceIDCollection', () => {
     beforeEach(() => {
       scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
       focusSpy = jest.spyOn(TextInput.prototype, 'focus')
-      // Default: the field the effect focused is still the one focused when a keyboard event fires.
-      // Individual tests override this to simulate focus having moved elsewhere in the meantime.
+      // Tests that move focus elsewhere override this.
       isFocusedSpy = jest.spyOn(TextInput.prototype, 'isFocused').mockReturnValue(true)
     })
 
@@ -296,8 +294,6 @@ describe('EvidenceIDCollection', () => {
         nativeEvent: { layout: { y: 25 } },
       })
 
-      // Invalid submit focuses documentNumber; the keyboard was already open (e.g. from editing
-      // another field), so no keyboardDidShow fires yet and the listener parks.
       await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
 
       expect(scrollToSpy).toHaveBeenCalledTimes(1)
@@ -305,15 +301,11 @@ describe('EvidenceIDCollection', () => {
       const [, onKeyboardDidShow] = jest.mocked(KeyboardEvents.addListener).mock.calls[0]
       const { remove } = jest.mocked(KeyboardEvents.addListener).mock.results[0].value
 
-      // The user has since tapped a different field, which is what actually triggers this
-      // keyboardDidShow — documentNumber is no longer the focused input.
+      // Focus has moved to another field; this keyboardDidShow is not ours.
       isFocusedSpy.mockReturnValue(false)
       act(() => onKeyboardDidShow({} as never))
 
-      // No re-jump: re-scrolling to documentNumber now would yank the screen away from whatever
-      // field the user actually tapped.
       expect(scrollToSpy).toHaveBeenCalledTimes(1)
-      // Still one-shot even when the guard skips the scroll.
       expect(remove).toHaveBeenCalledTimes(1)
     })
 
@@ -347,7 +339,6 @@ describe('EvidenceIDCollection', () => {
       tree.unmount()
 
       expect(remove).toHaveBeenCalledTimes(1)
-      // The keyboard never opened before unmount, so only the pre-focus jump happened.
       expect(scrollToSpy).toHaveBeenCalledTimes(1)
     })
 
@@ -540,9 +531,7 @@ describe('EvidenceIDCollection', () => {
 
       await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input', 'com.ariesbifold:id/lastName-input'])
-      // documentNumber's container was never measured, so the first press didn't scroll at all; this
-      // is the only scrollTo call, and its offset is distinct from documentNumber's so a scroll that
-      // ignored the target field couldn't pass.
+      // documentNumber was never measured, so only the second press scrolls.
       expect(scrollToSpy).toHaveBeenCalledTimes(1)
       expect(scrollToSpy).toHaveBeenCalledWith({ y: 240, animated: false })
     })

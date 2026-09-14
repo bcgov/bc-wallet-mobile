@@ -135,8 +135,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         scrollViewRef.current?.scrollTo({ y: formContainerY.current + fieldY, animated: false })
       }
     }
-    // Jump, never animate, and do it before focus(): KeyboardAwareScrollView re-positions an
-    // off-screen focused input on its next keyboard event and that write beats an in-flight animation.
+    // Jump before focus(), never animated: KeyboardAwareScrollView's own repositioning on the next
+    // keyboard event beats an in-flight animation.
     jumpToField()
     inputRefs[field].current?.focus()
 
