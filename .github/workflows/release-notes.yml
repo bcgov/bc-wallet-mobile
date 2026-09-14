@@ -1,0 +1,360 @@
+# Builds a release-notes report from every PR merged between two tags and
+# posts it as a new Discussion in the "Release notes" category.
+#
+# Manual and on-demand — pick any two tags (either order, the workflow figures
+# out which is older) and it does the rest. This is the one piece of the
+# release story `docs/releases.md` doesn't already automate: Publish tags the
+# shipped commit, but nothing summarises what actually shipped since last
+# time. Posting a Discussion (not a comment, not a log) makes the result
+# discoverable, linkable and commentable on its own.
+#
+# TAG ORDER: resolved by commit date, not ancestry. `release/*` branches can
+# carry fixes independently of `main` (docs/releases.md), so two real tags
+# are not guaranteed to sit on one straight line — verified in practice: two
+# actual tags in this repo (bcsc-v4.0.2, bcsc-v4.1.0) share a common ancestor
+# but each has commits the other lacks. `git log older..newer` still means
+# exactly "what's new in newer since older" on history like that, so
+# divergence only produces a `::notice::`, never a failure.
+#
+# HOW PRs ARE FOUND: this repo merges exclusively by squash (verified: zero
+# merge commits anywhere in history), and every squash commit subject ends
+# `(#<PR number>)`. So PR numbers come from `git log --pretty=%s <a>..<b>`
+# plus a regex, not the Search API (fragile date-range matching against
+# whichever branch a tag happens to sit on) and not merge-commit parsing
+# (there are none). If this repo ever starts allowing merge/rebase merges,
+# rebase-merged PRs will stop showing up here and this comment is the flag
+# for why.
+#
+# HOW A TICKET IS RESOLVED: only GitHub-tracked links count
+# (`closingIssuesReferences` — a bare "#1234" in prose creates nothing
+# GitHub tracks, same rule `pr-hygiene.yml` enforces). Cross-repo links are
+# ignored, same as `board-status.yml` — this report only knows this repo's
+# issues.
+#
+# TOKENS: reading `closingIssuesReferences`, an issue's Type, and its Project
+# fields (Sprint) all need scope `GITHUB_TOKEN` cannot be granted (org
+# Projects needs `read:project`, unavailable to the default token). Rather
+# than mint a new credential, this reuses the fine-grained PAT
+# `board-status.yml` already depends on:
+#   op://bcsc-mobile-app-cd/github-projects/credential
+# (org Projects read/write, repo Issues and Pull requests read — see that
+# workflow's header for rotation details; bcgov caps fine-grained PATs at 90
+# days). Unlike `board-status.yml`, a missing PAT here is a hard failure, not
+# a silent skip: that workflow runs unattended on every PR event, where a
+# quiet no-op is harmless; this one is a person waiting on a report, so
+# failing loud is kinder than a green run that created nothing.
+#
+# Creating the Discussion itself uses the *default* token instead — GraphQL
+# is required either way (no REST endpoint exists for `createDiscussion`),
+# but `discussions: write` is a permission `GITHUB_TOKEN` can hold, so the
+# PAT's job stops at reading.
+name: Release Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_a:
+        description: 'A git tag in the range (either order — the workflow figures out which is older)'
+        required: true
+        type: string
+      tag_b:
+        description: 'The other git tag in the range'
+        required: true
+        type: string
+
+permissions: {}
+
+# Two overlapping dispatches would each independently build a report and
+# call createDiscussion, which has no idempotency key — that means two
+# duplicate discussions, not a race worth resolving any other way. Runs are
+# rare and unhurried, so queueing rather than cancelling is the safe default.
+concurrency:
+  group: release-notes
+  cancel-in-progress: false
+
+jobs:
+  release-notes:
+    name: Build and post release notes
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      discussions: write
+    timeout-minutes: 15
+    steps:
+      - name: Check secrets are available
+        id: secrets-check
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          if [ -z "${OP_SERVICE_ACCOUNT_TOKEN}" ]; then
+            echo "::error::No 1Password token available. This workflow needs the fine-grained PAT at op://bcsc-mobile-app-cd/github-projects/credential (org Projects read/write, repo Issues and Pull requests read) to read PR, issue and Sprint data. Configure secrets.OP_SERVICE_ACCOUNT_TOKEN."
+            exit 1
+          fi
+
+      - name: Load project token
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PROJECTS_TOKEN: op://bcsc-mobile-app-cd/github-projects/credential
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # The two tags can be arbitrarily old, so history and tags both
+          # need to be complete for merge-base / git log to see them.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Resolve tag order and enumerate PRs
+        id: range
+        env:
+          TAG_A: ${{ inputs.tag_a }}
+          TAG_B: ${{ inputs.tag_b }}
+        run: |
+          set -euo pipefail
+
+          for t in "${TAG_A}" "${TAG_B}"; do
+            if ! git rev-parse -q --verify "refs/tags/${t}" >/dev/null; then
+              echo "::error::Tag '${t}' does not exist in this repository."
+              exit 1
+            fi
+          done
+
+          # Order by commit date, not ancestry — release/* branches can carry
+          # fixes independent of main (docs/releases.md), so two real tags
+          # are not guaranteed to sit on one straight line. `git log
+          # older..newer` (two-dot) still means exactly what we want —
+          # "commits reachable from newer, excluding anything reachable from
+          # older" — regardless of whether the history is linear.
+          DATE_A=$(git log -1 --format=%ct "${TAG_A}")
+          DATE_B=$(git log -1 --format=%ct "${TAG_B}")
+          if [ "${DATE_A}" -le "${DATE_B}" ]; then
+            OLDER="${TAG_A}"; NEWER="${TAG_B}"
+          else
+            OLDER="${TAG_B}"; NEWER="${TAG_A}"
+          fi
+
+          if ! git merge-base --is-ancestor "${OLDER}" "${NEWER}"; then
+            UNIQUE_TO_OLDER=$(git log --oneline "${NEWER}..${OLDER}" | wc -l | tr -d ' ')
+            echo "::notice::${OLDER} and ${NEWER} are on divergent history (no straight line between them) — ${UNIQUE_TO_OLDER} commit(s) reachable from ${OLDER} never made it into ${NEWER}'s line and are intentionally excluded. This report only covers what's new in ${NEWER} since ${OLDER}."
+          fi
+
+          echo "older=${OLDER}" >> "${GITHUB_OUTPUT}"
+          echo "newer=${NEWER}" >> "${GITHUB_OUTPUT}"
+
+          # Squash-only merge history (see the file header) — PR numbers come
+          # from the tail of each commit subject, e.g. "fix: ... (#4587)".
+          PR_NUMBERS=$(git log --pretty=%s "${OLDER}..${NEWER}" \
+            | grep -oE '\(#[0-9]+\)[[:space:]]*$' \
+            | grep -oE '[0-9]+' \
+            | sort -un) || true
+
+          if [ -z "${PR_NUMBERS}" ]; then
+            echo "::notice::No PRs found between ${OLDER} and ${NEWER} (matching '(#N)' at the end of a commit subject) — the report will be posted with empty tables."
+            echo "pr_numbers=[]" >> "${GITHUB_OUTPUT}"
+          else
+            echo "pr_numbers=$(printf '%s\n' "${PR_NUMBERS}" | jq -R -s -c 'split("\n") | map(select(length > 0) | tonumber)')" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Build release notes report
+        id: report
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          OLDER_TAG: ${{ steps.range.outputs.older }}
+          NEWER_TAG: ${{ steps.range.outputs.newer }}
+        with:
+          github-token: ${{ env.PROJECTS_TOKEN }}
+          script: |
+            const prNumbers = ${{ steps.range.outputs.pr_numbers }}
+            const { OLDER_TAG, NEWER_TAG } = process.env
+            const { owner, repo } = context.repo
+            const here = `${owner}/${repo}`
+
+            // Project 108 is "BC Wallet" — same board board-status.yml moves
+            // issues on. Sprint is resolved by name so a rename surfaces as a
+            // clear failure rather than silently going blank everywhere.
+            const PROJECT_NUMBER = 108
+            const SPRINT_FIELD_NAME = 'Sprint'
+
+            const esc = (s) => (s ?? '').replace(/\|/g, '\\|')
+            const issueLink = (n) => `[#${n}](https://github.com/${here}/issues/${n})`
+            const prLink = (n) => `[#${n}](https://github.com/${here}/pull/${n})`
+
+            const prFragment = (alias) => `
+              ${alias}: pullRequest(number: $${alias}) {
+                number
+                title
+                labels(first: 20) { nodes { name } }
+                closingIssuesReferences(first: 10) {
+                  nodes {
+                    number
+                    title
+                    repository { nameWithOwner }
+                    issueType { name }
+                    labels(first: 20) { nodes { name } }
+                    projectItems(first: 10) {
+                      nodes {
+                        project { number }
+                        fieldValueByName(name: $sprintField) {
+                          ... on ProjectV2ItemFieldSingleSelectValue { name }
+                          ... on ProjectV2ItemFieldIterationValue { title }
+                        }
+                      }
+                    }
+                  }
+                }
+              }`
+
+            const CHUNK = 40
+            const allPRs = []
+            for (let i = 0; i < prNumbers.length; i += CHUNK) {
+              const chunk = prNumbers.slice(i, i + CHUNK)
+              const aliases = chunk.map((_, idx) => `pr${idx}`)
+              const varDecls = aliases.map((a) => `$${a}: Int!`).join(', ')
+              const fragments = aliases.map(prFragment).join('\n')
+              const query = `query($owner: String!, $repo: String!, $sprintField: String!, ${varDecls}) {
+                repository(owner: $owner, name: $repo) { ${fragments} }
+              }`
+              const vars = { owner, repo, sprintField: SPRINT_FIELD_NAME }
+              chunk.forEach((n, idx) => { vars[aliases[idx]] = n })
+
+              let repository
+              try {
+                ;({ repository } = await github.graphql(query, vars))
+              } catch (error) {
+                const status = error.status ?? 0
+                if (status === 401 || /bad credentials|requires authentication/i.test(error.message ?? '')) {
+                  throw new Error(
+                    'Project token rejected (401) — the fine-grained PAT at op://bcsc-mobile-app-cd/github-projects/credential has almost certainly expired (bcgov caps fine-grained PATs at 90 days). Mint a replacement; no GitHub secret needs changing.'
+                  )
+                }
+                throw error
+              }
+              for (const alias of aliases) {
+                const pr = repository[alias]
+                if (!pr) {
+                  core.warning(`A PR in this range no longer resolves via the API — skipping it.`)
+                  continue
+                }
+                allPRs.push(pr)
+              }
+            }
+
+            const noTicketPRs = []
+            const ticketsByNumber = new Map()
+
+            for (const pr of allPRs) {
+              const skipChangelog = pr.labels.nodes.some((l) => l.name === 'status/skip-changelog')
+              if (skipChangelog) continue
+
+              const sameRepoIssues = pr.closingIssuesReferences.nodes.filter(
+                (i) => i.repository.nameWithOwner === here
+              )
+
+              if (sameRepoIssues.length === 0) {
+                noTicketPRs.push(pr)
+                continue
+              }
+
+              for (const issue of sameRepoIssues) {
+                let entry = ticketsByNumber.get(issue.number)
+                if (!entry) {
+                  entry = { issue, prNumbers: new Set() }
+                  ticketsByNumber.set(issue.number, entry)
+                }
+                entry.prNumbers.add(pr.number)
+              }
+            }
+
+            const sprintFor = (issue) => {
+              const item = issue.projectItems.nodes.find((n) => n.project.number === PROJECT_NUMBER)
+              const value = item?.fieldValueByName
+              return value?.name ?? value?.title ?? '—'
+            }
+
+            const categoryFor = (issue) => {
+              const labelNames = issue.labels.nodes.map((l) => l.name)
+              if (labelNames.includes('work/tech-debt')) return 'Tech Debt'
+              if (labelNames.includes('work/spike')) return 'Spike'
+              const type = issue.issueType?.name
+              if (type === 'Bug') return 'Bug'
+              if (type === 'Feature') return 'Feature'
+              if (type === 'Task') return 'Task'
+              return 'Other'
+            }
+
+            const renderTicketTable = (rows) => {
+              const header = '| Title | Ticket | Sprint | PR(s) |\n|---|---|---|---|'
+              const body = rows
+                .map(({ issue, prNumbers: prs }) => {
+                  const prCell = [...prs].sort((a, b) => a - b).map(prLink).join(', ')
+                  return `| ${esc(issue.title)} | ${issueLink(issue.number)} | ${sprintFor(issue)} | ${prCell} |`
+                })
+                .join('\n')
+              return `${header}\n${body}`
+            }
+
+            const renderNoTicketTable = (prs) => {
+              const header = '| PR | Title |\n|---|---|'
+              const body = prs.map((pr) => `| ${prLink(pr.number)} | ${esc(pr.title)} |`).join('\n')
+              return `${header}\n${body}`
+            }
+
+            const CATEGORY_ORDER = ['Bug', 'Feature', 'Task', 'Tech Debt', 'Spike', 'Other']
+            let body = `Range: \`${OLDER_TAG}..${NEWER_TAG}\`\n\n`
+            for (const cat of CATEGORY_ORDER) {
+              const rows = [...ticketsByNumber.values()].filter((e) => categoryFor(e.issue) === cat)
+              if (rows.length === 0) continue
+              body += `## ${cat}\n\n${renderTicketTable(rows)}\n\n`
+            }
+            body += '## No linked ticket\n\n'
+            body += noTicketPRs.length ? renderNoTicketTable(noTicketPRs) : '_None._\n'
+
+            core.setOutput('body', body)
+            core.info(`${ticketsByNumber.size} ticket(s), ${noTicketPRs.length} PR(s) with no linked ticket`)
+
+      - name: Create the discussion
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          NEWER_TAG: ${{ steps.range.outputs.newer }}
+          BODY: ${{ steps.report.outputs.body }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const { owner, repo } = context.repo
+            const { NEWER_TAG, BODY } = process.env
+            const title = `${NEWER_TAG} release notes`
+
+            const { repository } = await github.graphql(
+              `query($owner: String!, $repo: String!) {
+                 repository(owner: $owner, name: $repo) {
+                   id
+                   discussionCategories(first: 20) { nodes { id name slug } }
+                 }
+               }`,
+              { owner, repo }
+            )
+
+            const category = repository.discussionCategories.nodes.find((c) => c.slug === 'release-notes')
+            if (!category) {
+              throw new Error(
+                `No discussion category with slug "release-notes" on ${owner}/${repo}. Create it (Settings → Discussions) or update the slug this workflow looks for.`
+              )
+            }
+
+            const { createDiscussion } = await github.graphql(
+              `mutation($repositoryId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
+                 createDiscussion(input: {
+                   repositoryId: $repositoryId, categoryId: $categoryId, title: $title, body: $body
+                 }) {
+                   discussion { url }
+                 }
+               }`,
+              { repositoryId: repository.id, categoryId: category.id, title, body: BODY }
+            )
+
+            const url = createDiscussion.discussion.url
+            core.info(`Created discussion: ${url}`)
+            await core.summary.addRaw(`📝 Created [release notes discussion](${url})`).write()
