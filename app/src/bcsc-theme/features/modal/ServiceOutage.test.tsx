@@ -52,21 +52,15 @@ describe('ServiceOutage', () => {
     expect(mockHandleCheckAgain).toHaveBeenCalled()
   })
 
-  it('hides the skip button outside onboarding', () => {
+  it('hides the skip button when no onSkipVerification handler is given', () => {
     const { queryByTestId } = renderOutage()
 
     expect(queryByTestId(testIdWithKey('ServiceOutageSkipVerification'))).toBeNull()
   })
 
-  it('hides the skip button in onboarding when no onSkipVerification handler is given', () => {
-    const { queryByTestId } = renderOutage({ inOnboarding: true })
-
-    expect(queryByTestId(testIdWithKey('ServiceOutageSkipVerification'))).toBeNull()
-  })
-
-  it('shows the skip button and wires it when inOnboarding and onSkipVerification are provided', () => {
+  it('shows the skip button and wires it when onSkipVerification is provided', () => {
     const onSkipVerification = jest.fn()
-    const { getByTestId } = renderOutage({ inOnboarding: true, onSkipVerification })
+    const { getByTestId } = renderOutage({ onSkipVerification })
 
     fireEvent.press(getByTestId(testIdWithKey('ServiceOutageSkipVerification')))
 

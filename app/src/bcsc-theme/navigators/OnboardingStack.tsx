@@ -185,14 +185,13 @@ const OnboardingStack = (): React.ReactElement => {
 
       <Stack.Screen
         name={BCSCModals.ServiceOutage}
+        component={ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
           headerLeft: createHeaderBackButton,
           headerBackTestID: testIdWithKey(TestIds.common.back),
         }}
-      >
-        {({ route }) => <ServiceOutage inOnboarding={route.params?.inOnboarding} />}
-      </Stack.Screen>
+      />
     </Stack.Navigator>
   )
 }

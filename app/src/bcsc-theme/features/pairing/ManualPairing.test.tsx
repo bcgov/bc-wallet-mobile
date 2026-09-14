@@ -55,17 +55,12 @@ describe('ManualPairing', () => {
       const tree = renderScreen()
       expect(tree).toMatchSnapshot()
     })
-
-    test('renders the service outage screen when IAS is unavailable', () => {
-      mockUseServerStatus.mockReturnValue({ isAvailable: false })
-
-      renderScreen()
-
-      expect(screen.getByTestId(testIdWithKey('ServiceOutageCheckAgain'))).toBeTruthy()
-      expect(screen.queryByTestId(testIdWithKey('ManualPairingCodeInput'))).toBeNull()
-    })
   })
 
+  // The IAS-unavailable case now redirects away from the PairingCode tab before it mounts, via
+  // QRCoreStack's screenListeners (see QRCoreStack.test.tsx's "server outage gating" tests) rather
+  // than a check inside ManualPairing itself. The submission guard below still applies, since a
+  // pre-populated pairing code can auto-submit from an effect that runs regardless of focus.
   describe('Submission during an outage', () => {
     test('does not submit a pre-populated code while IAS is unavailable', async () => {
       mockUseServerStatus.mockReturnValue({ isAvailable: false })

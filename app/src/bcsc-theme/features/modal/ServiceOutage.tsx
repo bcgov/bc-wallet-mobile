@@ -18,11 +18,10 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import useServiceOutageViewModel from './useServiceOutageViewModel'
 
 export interface ServiceOutageProps {
-  inOnboarding?: boolean
   onSkipVerification?: () => void
 }
 
-export const ServiceOutage = ({ inOnboarding = false, onSkipVerification }: ServiceOutageProps): React.ReactElement => {
+export const ServiceOutage = ({ onSkipVerification }: ServiceOutageProps): React.ReactElement => {
   const {
     headerText,
     contentText,
@@ -79,7 +78,7 @@ export const ServiceOutage = ({ inOnboarding = false, onSkipVerification }: Serv
       >
         {loading && <ButtonLoading />}
       </Button>
-      {inOnboarding && onSkipVerification && (
+      {onSkipVerification && (
         <Button
           title={skipVerificationText}
           buttonType={ButtonType.Secondary}

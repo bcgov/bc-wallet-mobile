@@ -1,15 +1,19 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
-import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
+import { BCSCMainStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import React, { useCallback } from 'react'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import { Edges } from 'react-native-safe-area-context'
+
+type ServiceOutageNavigationProp = StackNavigationProp<Pick<BCSCMainStackParams, BCSCModals.ServiceOutage>>
 
 /**
  * One-time prompt shown after onboarding completes (PIN created) and before the
@@ -42,7 +46,8 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
-  // Startup seeds server status; the inline ServiceOutage's "Check again" force-refreshes it, so
+  const navigation = useNavigation<ServiceOutageNavigationProp>()
+  // Startup seeds server status; the ServiceOutage screen's "Check again" force-refreshes it, so
   // no on-focus re-check is needed here.
   const { isAvailable, isChecking, serverStatus } = useServerStatus()
 
@@ -63,15 +68,16 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
   }, [dispatch, onAnswered])
 
-  // First status fetch still in flight: brief local spinner so we don't paint the prompt only to
-  // swap it for the outage screen a moment later.
-  if (serverStatus === null && isChecking) {
-    return <LoadingScreenContent />
-  }
+  // IAS service outage blocks verification, redirect to the ServiceOutage modal
+  useEffect(() => {
+    if (isAvailable) {
+      return
+    }
+    navigation.navigate(BCSCModals.ServiceOutage, { showSkipVerification: showSkip })
+  }, [isAvailable, navigation, showSkip])
 
-  // IAS service outage blocks verification; prompt the user to check again or skip verification.
-  if (!isAvailable) {
-    return <ServiceOutage inOnboarding onSkipVerification={showSkip ? handleLater : undefined} />
+  if ((serverStatus === null && isChecking) || !isAvailable) {
+    return <LoadingScreenContent />
   }
 
   const controls = (
