@@ -131,19 +131,12 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
       />
       <View style={styles.textContainer}>
         {title ? (
-          <ThemedText
-            variant={'bold'}
-            style={{ color: foreground }}
-            testID={testIdWithKey(`text-${type}`)}
-          >
+          <ThemedText variant={'bold'} style={{ color: foreground }} testID={testIdWithKey(`text-${type}`)}>
             {title}
           </ThemedText>
         ) : null}
         {description ? (
-          <ThemedText
-            style={{ lineHeight: 24, color: foreground }}
-            testID={testIdWithKey(`description-${type}`)}
-          >
+          <ThemedText style={{ lineHeight: 24, color: foreground }} testID={testIdWithKey(`description-${type}`)}>
             {description}
           </ThemedText>
         ) : null}
