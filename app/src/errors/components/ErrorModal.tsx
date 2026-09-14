@@ -1,3 +1,5 @@
+import { getNavigationBreadcrumbs } from '@/bcsc-theme/navigators/stack-utils'
+import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { reportProblem } from '@/utils/logger'
@@ -59,6 +61,10 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
     }
 
     Analytics.trackAlertActionEvent(payload.error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
+
+    if (navigationRef.isReady()) {
+      payload.error.addContext({ navigation: getNavigationBreadcrumbs(navigationRef.getRootState()) })
+    }
 
     return reportProblem({
       title: payload.title,

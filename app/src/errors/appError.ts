@@ -107,6 +107,7 @@ export class AppError extends Error {
     this.context = options?.context ?? {}
 
     if (navigationRef.isReady()) {
+      // TODO (MD): Add navigation context directly on the error instead of here
       this.context = { ...this.context, screen: navigationRef.getCurrentRoute()?.name }
     }
 

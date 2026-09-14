@@ -1,3 +1,5 @@
+import { getNavigationBreadcrumbs } from '@/bcsc-theme/navigators/stack-utils'
+import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { reportProblem } from '@/utils/logger'
 import { AbstractBifoldLogger } from '@bifold/core'
 import React, { ReactNode } from 'react'
@@ -69,6 +71,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     }
 
     logger.error('ErrorBoundary reported:', error)
+
+    if (navigationRef.isReady()) {
+      error.addContext({ navigation: getNavigationBreadcrumbs(navigationRef.getRootState()) })
+    }
 
     // Use the shared pipeline rather than logger.report() so the report carries a report_id that
     // ErrorInfoCard can surface — logger.report() sends to Loki but returns nothing to show the user.

@@ -55,3 +55,20 @@ export const getCurrentStateScreenName = (state: NavigationState): string => {
 
   return getCurrentStateScreenName(currentRoute.state as NavigationState)
 }
+
+/**
+ * Gets the navigation breadcrumbs from the navigation state, accounting for nested navigators.
+ *
+ * @param state - The navigation state object.
+ * @returns A string representing the navigation breadcrumbs.
+ */
+export const getNavigationBreadcrumbs = (state: NavigationState): string => {
+  const currentRoute = state.routes[state.index]
+  const baseName = getBaseScreenName(currentRoute.name)
+
+  if (!currentRoute.state || currentRoute.state.index === undefined || !currentRoute.state.routes) {
+    return baseName
+  }
+
+  return `${baseName} > ${getNavigationBreadcrumbs(currentRoute.state as NavigationState)}`
+}
