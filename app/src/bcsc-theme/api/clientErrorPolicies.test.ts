@@ -430,7 +430,7 @@ describe('clientErrorPolicies', () => {
   describe('alreadyRegisteredErrorPolicy', () => {
     describe('matches', () => {
       it('should match ERR_501_INVALID_REGISTRATION_REQUEST with "client is in invalid" on deviceAuthorization endpoint', () => {
-        const error = newError('err_501_invalid_registration_request')
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
         error.cause = new AxiosError('client is in invalid state')
         const context = {
           endpoint: '/api/devicecode',
@@ -442,7 +442,7 @@ describe('clientErrorPolicies', () => {
       })
 
       it('should NOT match ERR_501_INVALID_REGISTRATION_REQUEST without "client is in invalid" message', () => {
-        const error = newError('err_501_invalid_registration_request')
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
         error.cause = new AxiosError('some other message')
         const context = {
           endpoint: '/api/devicecode',
@@ -454,7 +454,7 @@ describe('clientErrorPolicies', () => {
       })
 
       it('should NOT match ERR_501_INVALID_REGISTRATION_REQUEST on different endpoint', () => {
-        const error = newError('err_501_invalid_registration_request')
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
         error.cause = new AxiosError('client is in invalid state')
         const context = {
           endpoint: '/api/other',
@@ -480,7 +480,7 @@ describe('clientErrorPolicies', () => {
 
     describe('handle', () => {
       it('should reset navigation to the current resume step', () => {
-        const error = newError('err_501_invalid_registration_request')
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
         const dispatchMock = jest.fn()
         const loggerMock = { info: jest.fn() }
         const resumeRoute = { name: BCSCScreens.IdentitySelection }
@@ -1089,7 +1089,7 @@ describe('clientErrorPolicies', () => {
   describe('invalidRegistrationRequestErrorPolicy', () => {
     describe('matches', () => {
       it('should match ERR_501_INVALID_REGISTRATION_REQUEST', () => {
-        const error = newError('err_501_invalid_registration_request')
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
         expect(invalidRegistrationRequestErrorPolicy.matches(error, {} as any)).toBeTruthy()
       })
 
@@ -1101,7 +1101,7 @@ describe('clientErrorPolicies', () => {
 
     describe('handle', () => {
       it('should call invalidRegistrationRequestAlert', () => {
-        const error = newError('err_501_invalid_registration_request')
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
         const mockAlert = jest.fn()
         const context = { alerts: { invalidRegistrationRequestAlert: mockAlert } }
         invalidRegistrationRequestErrorPolicy.handle(error, context as any)
@@ -1113,7 +1113,7 @@ describe('clientErrorPolicies', () => {
   describe('ClientErrorHandlingPolicies', () => {
     describe('policy order', () => {
       it('should prefer alreadyRegisteredErrorPolicy over invalidRegistrationRequestErrorPolicy', () => {
-        const error = newError('err_501_invalid_registration_request')
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
         error.cause = new AxiosError('client is in invalid state')
         const context = {
           endpoint: '/api/devicecode',
@@ -1131,7 +1131,7 @@ describe('clientErrorPolicies', () => {
       it.each([
         ['err_400_failed_to_retrieve_string_resource', failedToRetrieveStringResourceErrorPolicy],
         ['err_500_invalid_url', invalidUrlErrorPolicy],
-        ['err_501_invalid_registration_request', invalidRegistrationRequestErrorPolicy],
+        [AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, invalidRegistrationRequestErrorPolicy],
       ])('should resolve %s to its own policy rather than a global fallback', (appEvent, expectedPolicy) => {
         const error = newError(appEvent as string)
         const context = { endpoint: '/api/some-endpoint', apiEndpoints: {} as any }
@@ -1159,7 +1159,7 @@ describe('clientErrorPolicies', () => {
       })
 
       it('should fall through to invalidRegistrationRequestErrorPolicy for ERR_501 without "client is in invalid"', () => {
-        const error = newError('err_501_invalid_registration_request')
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
         error.cause = new AxiosError('some other reason')
         const context = {
           endpoint: '/api/other',
