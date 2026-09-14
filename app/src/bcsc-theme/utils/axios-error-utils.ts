@@ -2,6 +2,7 @@ import { AppError, ErrorDefinition, ErrorRegistry } from '@/errors'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AppEventCode, isAppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
+import z from 'zod'
 
 enum AxiosErrorCode {
   // Unable to connect to the server (e.g. no internet, CORS issues, DNS errors)
@@ -251,13 +252,22 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
 
   let appError: AppError
 
+  // Use a dummy base so relative paths parse correctly
+  const httpUrl = error.config?.url ? new URL(error.config.url, 'https://example.com').pathname : undefined
+
   const errorOptions = {
     cause: error,
     track,
     context: {
-      // Use a dummy base so relative paths parse correctly
-      url: error.config?.url ? new URL(error.config.url, 'https://example.com').pathname : undefined,
-      method: error.config?.method?.toUpperCase(),
+      http_url: httpUrl,
+      http_route: httpUrl ? _normalizeHttpPath(httpUrl) : undefined,
+      http_method: error.config?.method?.toUpperCase(),
+      http_status: error.response?.status,
+      http_response_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.response?.data),
+      http_request_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.config?.data),
+      // TODO (MD): Remove this (uploadLogContext) from the config and inject directly into the
+      // error at the service layer to prevent the config from being polluted with api specific details.
+
       // Evidence-upload media fields live in context so they serialize with the AppError (toJSON)
       // wherever it is logged or reported.
       ...error.config?.uploadLogContext,
@@ -286,4 +296,48 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   }
 
   return appError
+}
+
+/**
+ * Normalizes an HTTP path by replacing any UUID or numeric segments with a placeholder `{id}`.
+ * @param url - The HTTP path to normalize
+ * @returns The normalized HTTP path with UUIDs and numeric segments replaced by `{id}`
+ */
+const _normalizeHttpPath = (url: string): string => {
+  const pathIdentifierSegment = z.union([z.uuid(), z.string().regex(/^\d+$/)])
+
+  const isIdentifierSegment = (segment: string) => pathIdentifierSegment.safeParse(segment).success
+
+  const segments = url.split('/').map((segment) => (isIdentifierSegment(segment) ? '{id}' : segment))
+
+  return segments.join('/')
+}
+
+/**
+ * For a given payload, calculate its byte length.
+ * @param value - The value to calculate the byte length for
+ * @returns The byte length of the value
+ */
+const _getByteLength = (value: unknown): number => {
+  if (value === undefined || value === null) {
+    return 0
+  }
+
+  if (typeof value === 'string') {
+    return new TextEncoder().encode(value).length
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    return value.byteLength
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return value.byteLength
+  }
+
+  if (typeof FormData !== 'undefined' && value instanceof FormData) {
+    return -1 // FormData size is not easily determined; return -1 to indicate unknown size
+  }
+
+  return new TextEncoder().encode(JSON.stringify(value)).length
 }
