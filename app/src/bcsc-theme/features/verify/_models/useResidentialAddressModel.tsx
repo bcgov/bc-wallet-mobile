@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
@@ -12,6 +13,7 @@ import {
   streetAddressSchema,
 } from '@/bcsc-theme/utils/validation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { isHandledAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCState, NonBCSCUserMetadata } from '@/store'
@@ -55,6 +57,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorModal } = useErrorAlert()
   const { updateCardProcess, updateUserMetadata, updateDeviceCodes, updateVerificationOptions } = useSecureActions()
+  const attemptWithRecovery = useDeviceAuthorizationRecovery()
 
   const [formState, setFormState] = useState<ResidentialAddressFormState>({
     streetAddress: store.bcscSecure.userMetadata?.address?.streetAddress ?? '',
@@ -187,7 +190,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
         ? `${address.streetAddress}\n${address.streetAddress2}`
         : address.streetAddress
 
-      const deviceAuth = await authorization.authorizeDeviceWithUnknownBCSC({
+      const deviceAuthConfig = {
         firstName: store.bcscSecure.userMetadata.name.first,
         lastName: store.bcscSecure.userMetadata.name.last,
         birthdate: moment(store.bcscSecure.birthdate).format('YYYY-MM-DD'),
@@ -198,7 +201,12 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
           province: address.province,
           postalCode: address.postalCode,
         },
-      })
+      }
+
+      const deviceAuth = await attemptWithRecovery(
+        () => authorization.authorizeDeviceWithUnknownBCSC(deviceAuthConfig),
+        BCSCScreens.ResidentialAddress
+      )
 
       // null if handled by error policies
       if (!deviceAuth) {
@@ -232,6 +240,10 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       const nextStep = getResumeStepRoute(predictedStore)
       navigation.dispatch(StackActions.push(nextStep.name, nextStep.params))
     } catch (error) {
+      if (isHandledAppError(error)) {
+        return
+      }
+
       logger.error('ResidentialAddressScreen.handleSubmit -> device authorization failed', { error })
       emitErrorModal(
         t('BCSC.Address.AuthorizationErrorTitle'),
@@ -248,6 +260,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     updateUserMetadata,
     navigation,
     logger,
+    attemptWithRecovery,
     emitErrorModal,
     t,
     authorization,
