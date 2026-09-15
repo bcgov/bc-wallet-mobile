@@ -277,8 +277,7 @@ class BCSCApiClient {
       const tokens = this.tokens ?? (await this.recoverTokens())
 
       if (this.isTokenExpired(tokens.refresh_token)) {
-        // Refresh tokens expire at the device credential's 5-year lifetime (#4654) — this is a
-        // fatal, unrecoverable state for the in-memory cache; callers must fall back to renewal.
+        // Refresh tokens expire with the device credential's 5-year lifetime (#4654); callers must route to renewal
         this.logger.error('[BCSCApiClient] Refresh token expired - fatal error detected')
         throw new Error('Refresh token expired')
       }
@@ -396,10 +395,8 @@ class BCSCApiClient {
    * @returns the populated tokens
    * @throws AppError TOKEN_NULL when the cache is empty and no refresh token
    *   exists in secure storage — the only genuinely unrecoverable case.
-   * @throws Error 'Refresh token expired' when the stored refresh token's `exp` has already
-   *   passed (#4654) — the device credential's 5-year lifetime is over, so refreshing would
-   *   only produce another 401 from the server. A plain `Error` (not an `AppError`) so it
-   *   passes through the response interceptor unchanged and no `onError` alert policy fires.
+   * @throws Error 'Refresh token expired' when the stored refresh token's `exp` has passed (#4654) —
+   *   a plain `Error`, not an `AppError`, so it passes the response interceptor and no alert policy fires.
    */
   async recoverTokens(): Promise<TokenResponse> {
     if (this.tokens) {

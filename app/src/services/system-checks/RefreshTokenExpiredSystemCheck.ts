@@ -3,17 +3,8 @@ import { BCDispatchAction } from '@/store'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
- * Checks whether the stored refresh token has expired (#4654).
- *
- * The refresh token IAS issues at set-up is never rotated in production, so its `exp` claim is
- * effectively the device credential's 5-year lifetime. `hydrateSecureState` already checks this
- * locally and skips the refresh network call when expired (see `useSecureActions`); this check
- * surfaces that result at MAIN_STACK startup by routing the user to the existing account-renewal
- * screen instead of letting them hit a confusing "Problem with Account" error on the first bearer
- * request.
- *
- * Always pushed for verified users (not gated on the flag) so its pass/fail result is recorded in
- * the `[useSystemChecks]: Ran N system checks` log.
+ * Routes a verified user to account renewal when hydration found the stored refresh token expired (#4654),
+ * instead of letting the first bearer request surface a "Problem with Account" error.
  *
  * @class RefreshTokenExpiredSystemCheck
  * @implements {SystemCheckStrategy}

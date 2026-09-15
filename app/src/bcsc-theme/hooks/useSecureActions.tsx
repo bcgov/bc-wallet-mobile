@@ -983,10 +983,8 @@ export const useSecureActions = () => {
       // rotated registration_access_token — always persisted below when present, regardless of
       // which branch this ends up taking (RFC 7592: the reg token may rotate on GET or PUT).
       let recoveredRegistrationAccessToken: string | undefined
-      // The stored refresh token's `exp` is authoritative here: production never rotates it, so
-      // its expiry is the device credential's 5-year lifetime (#4654). When expired, skip the
-      // network round trip (and the key-recovery branch below) entirely — refreshing would only
-      // produce another 401, and the account needs renewal, not a retry.
+      // Production never rotates the refresh token, so its `exp` is the device credential's
+      // 5-year lifetime (#4654): when expired, skip the refresh and key recovery — renewal is the only fix.
       const refreshTokenExpired = Boolean(refreshToken) && isTokenExpired(refreshToken)
 
       if (refreshTokenExpired) {
@@ -1016,11 +1014,8 @@ export const useSecureActions = () => {
           }
 
           if (isAppError(error, AppEventCode.INVALID_TOKEN)) {
-            // The server rejected a refresh token our local `exp` check thought was still valid
-            // (device/server clock disagreement, or a mid-flight revocation) — a real signing-key
-            // mismatch (#4166) never carries this app event, so key recovery is unaffected. Stop
-            // here instead of retrying key recovery, so the user sees one alert, not several
-            // (follow-up: a dedicated error/copy for this case is out of scope for #4654).
+            // Server rejected a locally-valid token: stop here so the user sees one alert, not several.
+            // A signing-key mismatch (#4166) never carries INVALID_TOKEN, so key recovery is unaffected.
             logger.error(
               '[hydrateSecureState] event=refresh_token_rejected server rejected a locally-valid refresh token (invalid_token); skipping key recovery'
             )
