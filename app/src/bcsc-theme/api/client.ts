@@ -15,7 +15,7 @@ import {
   getAppErrorFromAxiosError,
   isNetworkError,
 } from '../utils/axios-error-utils'
-import { isTokenExpired as isTokenExpiredUtil } from '../utils/token-expiry'
+import { isTokenExpired } from '../utils/token-expiry'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
@@ -276,13 +276,13 @@ class BCSCApiClient {
       // was ready). Throws TOKEN_NULL only when no refresh token is recoverable.
       const tokens = this.tokens ?? (await this.recoverTokens())
 
-      if (this.isTokenExpired(tokens.refresh_token)) {
+      if (isTokenExpired(tokens.refresh_token)) {
         // Refresh tokens expire with the device credential's 5-year lifetime (#4654); callers must route to renewal
         this.logger.error('[BCSCApiClient] Refresh token expired - fatal error detected')
         throw new Error('Refresh token expired')
       }
 
-      if (!this.isTokenExpired(tokens.access_token)) {
+      if (!isTokenExpired(tokens.access_token)) {
         // access token is still valid, don't refresh
         return tokens
       }
@@ -316,7 +316,7 @@ class BCSCApiClient {
         throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
       }
 
-      if (this.isTokenExpired(this.tokens.refresh_token)) {
+      if (isTokenExpired(this.tokens.refresh_token)) {
         this.logger.error('[BCSCApiClient] Cannot refresh after 401 - refresh token expired')
         throw new Error('Refresh token expired')
       }
@@ -329,10 +329,6 @@ class BCSCApiClient {
       }
       return this.tokens
     })
-  }
-
-  private isTokenExpired(token?: string): boolean {
-    return isTokenExpiredUtil(token)
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
@@ -418,7 +414,7 @@ class BCSCApiClient {
       })
     }
 
-    if (this.isTokenExpired(storedRefreshToken)) {
+    if (isTokenExpired(storedRefreshToken)) {
       this.logger.error('[BCSCApiClient] Stored refresh token is expired; skipping refresh — account renewal required')
       throw new Error('Refresh token expired')
     }

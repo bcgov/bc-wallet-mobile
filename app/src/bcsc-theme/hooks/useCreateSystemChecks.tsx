@@ -194,25 +194,28 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     }
 
     const systemChecks: SystemCheckStrategy[] = []
+    const refreshTokenExpired = Boolean(store.bcscSecure.refreshTokenExpired)
 
     // DeviceCount and EventReasonAlerts read the cached id token, which only exists
     // for verified users; calling getIdToken without one surfaces a user-facing
     // "token null" error (err 119). Gate them on verification so unverified users
-    // still get the account-independent checks (Terms of Use) below.
-    if (isVerified) {
+    // still get the account-independent checks (Terms of Use) below. Also gate on
+    // !refreshTokenExpired: hydration already skipped the refresh for an expired stored
+    // token, so no id token was ever fetched — calling getIdToken here would hit the
+    // same local 'Refresh token expired' throw and misfire (e.g. DeviceCount's onFail
+    // reading it as a non-network failure and showing the device-limit banner) (#4654).
+    if (isVerified && !refreshTokenExpired) {
       systemChecks.push(new DeviceCountSystemCheck(getIdToken, utils, dismissedAt))
     }
 
-    if (isVerified) {
+    if (isVerified && !refreshTokenExpired) {
       systemChecks.push(
         new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
       )
     }
 
     if (isVerified) {
-      systemChecks.push(
-        new RefreshTokenExpiredSystemCheck(Boolean(store.bcscSecure.refreshTokenExpired), navigation, utils)
-      )
+      systemChecks.push(new RefreshTokenExpiredSystemCheck(refreshTokenExpired, navigation, utils))
     }
 
     if (!isVerified && verificationRequestId) {

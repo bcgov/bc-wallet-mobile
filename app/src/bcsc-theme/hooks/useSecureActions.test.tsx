@@ -839,6 +839,32 @@ describe('useSecureActions', () => {
       expect(reRegisterNewestKey).not.toHaveBeenCalled()
       expect(captureHydrateField('refreshTokenExpired')).toBe(false)
     })
+
+    it('does not call isTokenExpired and flags refreshTokenExpired: false when there is no stored refresh token (session recovery case)', async () => {
+      // No refresh token at all — e.g. a verified user whose tokens file is unreadable/corrupt
+      // (session recovery, see the 'hydrateSecureState account recovery' describe). isTokenExpired
+      // is mocked to true here specifically to prove the `Boolean(refreshToken) &&` short-circuit is
+      // load-bearing: without it, a bare `isTokenExpired(refreshToken)` call with refreshToken
+      // undefined would (per the real util's semantics) evaluate to expired and misroute this user.
+      jest.mocked(getToken).mockImplementation(async (type: any) => {
+        if (type === TokenType.Registration) {
+          return { id: 'g', type, token: 'stored-reg-token', created: 0 } as any
+        }
+        return null
+      })
+      jest.mocked(getCredential).mockResolvedValue({} as any) // verified
+      jest.mocked(isTokenExpired).mockReturnValue(true)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(isTokenExpired).not.toHaveBeenCalled()
+      expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
+      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+      expect(captureHydrateField('sessionRecoveryRequired')).toBe(true)
+    })
   })
 
   describe('updateVerified', () => {

@@ -411,6 +411,54 @@ describe('useGetSystemChecks', () => {
         expect(systemChecks[5].constructor.name).toBe('KeyRotationSystemCheck')
       })
 
+      it('skips the id-token-backed checks for a verified user whose refresh token has expired (#4654)', async () => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          {
+            stateLoaded: true,
+            developer: {
+              environment: {
+                analyticsAppId: 'test-app-id',
+              },
+            },
+            bcsc: {
+              analyticsOptIn: true,
+              selectedNickname: 'Test Device',
+            },
+            bcscSecure: {
+              isHydrated: true,
+              verified: true,
+              refreshTokenExpired: true,
+              registrationAccessToken: 'test-registration-token',
+            },
+          },
+          jest.fn(),
+        ])
+
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+
+        mockGetBundleId.mockReturnValue('ca.bc.gov.id.servicescard')
+
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: { account_expiration_date: new Date() } })
+
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
+        mockUseRegistrationApi.mockReturnValue({})
+        mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+        const names = systemChecks.map((check) => check.constructor.name)
+
+        expect(names).not.toContain('DeviceCountSystemCheck')
+        expect(names).not.toContain('EventReasonAlertsSystemCheck')
+        expect(names).toContain('RefreshTokenExpiredSystemCheck')
+      })
+
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
         mockUseStore.mockReturnValue([

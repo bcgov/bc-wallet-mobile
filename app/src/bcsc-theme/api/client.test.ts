@@ -597,52 +597,6 @@ describe('BCSC Client', () => {
     })
   })
 
-  describe('isTokenExpired', () => {
-    it('should return true when no token is provided', () => {
-      const mockLogger = createMockLogger()
-      const client = new BCSCApiClient('https://example.com', mockLogger as any)
-
-      const result = (client as any).isTokenExpired(undefined)
-
-      expect(result).toBe(true)
-    })
-
-    it('should return false when token has not expired', () => {
-      const mockLogger = createMockLogger()
-      const client = new BCSCApiClient('https://example.com', mockLogger as any)
-
-      // Token expires far in the future
-      ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 })
-
-      const result = (client as any).isTokenExpired('valid-token')
-
-      expect(result).toBe(false)
-    })
-
-    it('should return true when token is within buffer of expiring', () => {
-      const mockLogger = createMockLogger()
-      const client = new BCSCApiClient('https://example.com', mockLogger as any)
-
-      // Token expires in 20 seconds (within 30s buffer)
-      ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 20 })
-
-      const result = (client as any).isTokenExpired('expiring-token')
-
-      expect(result).toBe(true)
-    })
-
-    it('should return true when token has no exp claim', () => {
-      const mockLogger = createMockLogger()
-      const client = new BCSCApiClient('https://example.com', mockLogger as any)
-
-      ;(jwtDecode as jest.Mock).mockReturnValue({})
-
-      const result = (client as any).isTokenExpired('no-exp-token')
-
-      expect(result).toBe(true)
-    })
-  })
-
   describe('ensureValidTokens', () => {
     it('should return existing promise if tokens are already being refreshed', async () => {
       const mockLogger = createMockLogger()
