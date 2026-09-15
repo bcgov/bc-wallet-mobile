@@ -473,6 +473,28 @@ export const mergeLockedCodesWithAccumulated = (
 }
 
 /**
+ * Whether a VisionCamera runtime error is one the library recovers from on its own, so a
+ * single occurrence should not fail the camera over.
+ *
+ * On iOS, `unknown/unknown` is how VisionCamera surfaces an `AVCaptureSessionRuntimeError`
+ * notification (e.g. `AVFoundationErrorDomain -11800` with an `NSOSStatusErrorDomain -12780`
+ * cause): it reports the error and immediately calls `startRunning()` on the capture session
+ * again while the camera is still active. If that restart fails, AVFoundation posts another
+ * runtime error straight away — so callers can treat a repeat within a short window as fatal.
+ *
+ * Android has no such auto-restart and uses `unknown/unknown` as a catch-all, so every
+ * runtime error stays fatal there.
+ *
+ * @param error The error passed to the Camera `onError` callback
+ * @param platform Platform the app is running on (injectable for tests)
+ * @returns true if the error should be given a chance to recover before failing over
+ */
+export const isRecoverableCameraRuntimeError = (
+  error: { code?: string } | null | undefined,
+  platform: string = Platform.OS
+): boolean => platform === 'ios' && error?.code === 'unknown/unknown'
+
+/**
  * Get camera metadata including the selected device and format, with deduplicated formats.
  * Mostly used for logging and debugging purposes.
  *
