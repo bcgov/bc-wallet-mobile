@@ -92,9 +92,9 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
 
     // Add context to the error for debugging purposes
     appError.addContext({
-      iasEnvironment: store.developer.environment.name,
-      verifiedStatus: store.bcscSecure.verifiedStatus,
-      cardProcess: store.bcscSecure.cardProcess,
+      state_ias_environment: store.developer.environment.name,
+      state_verified_status: store.bcscSecure.verifiedStatus,
+      state_card_process: store.bcscSecure.cardProcess,
       // ...
     })
 
