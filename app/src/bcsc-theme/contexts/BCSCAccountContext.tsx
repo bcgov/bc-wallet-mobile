@@ -51,15 +51,17 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   // Listen for token refresh events (e.g., from FCM status notifications) and refresh account data
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener(BCSCEventTypes.TOKENS_REFRESHED, () => {
-      logger.info('BCSCAccountProvider: Tokens refreshed, reloading account data')
-      refresh()
+      if (store.bcscSecure.verified) {
+        logger.info('BCSCAccountProvider: Tokens refreshed, reloading account data')
+        refresh()
+      }
     })
 
     return () => subscription.remove()
-  }, [refresh, logger])
+  }, [refresh, logger, store.bcscSecure.verified])
 
   // If the load failed while offline, retry when connectivity returns
-  useRetryOnReconnect(() => !data && !isLoading, refresh)
+  useRetryOnReconnect(() => Boolean(store.bcscSecure.verified) && !data && !isLoading, refresh)
 
   const accountContextValue = useMemo(() => {
     if (!data) {
