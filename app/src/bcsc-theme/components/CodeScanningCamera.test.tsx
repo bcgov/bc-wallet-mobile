@@ -1,3 +1,4 @@
+import { testIdWithKey } from '@bifold/core'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Platform } from 'react-native'
@@ -278,6 +279,96 @@ describe('CodeScanningCamera', () => {
 
       // The QRScannerTorch component should be rendered
       expect(getByTestId('scan-zone')).toBeTruthy()
+    })
+
+    describe('device torch support (regression: iPad device/flash-unavailable in 4.1.0)', () => {
+      const noTorchDevice = {
+        id: 'back',
+        supportsFocus: true,
+        minZoom: 1,
+        maxZoom: 8,
+        neutralZoom: 1,
+        hasTorch: false,
+      }
+
+      afterEach(() => {
+        // Restore the default per-render factory (a device with a torch).
+        mockedUseCameraDevice.mockImplementation(() => ({
+          id: 'back',
+          supportsFocus: true,
+          minZoom: 1,
+          maxZoom: 8,
+          neutralZoom: 1,
+          hasTorch: true,
+        }))
+      })
+
+      it('passes torch on to the camera when the device has a torch and torchActive is set', () => {
+        const { getByTestId } = render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} torchActive={true} />
+          </BasicAppContext>
+        )
+
+        expect(getByTestId('mock-camera').props.torch).toBe('on')
+      })
+
+      it('never passes torch on to the camera when the device has no torch, even if torchActive is set', () => {
+        mockedUseCameraDevice.mockReturnValue(noTorchDevice)
+
+        const { getByTestId } = render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} torchActive={true} />
+          </BasicAppContext>
+        )
+
+        // VisionCamera throws `device/flash-unavailable` (via onError) for torch='on' on a
+        // device without one, which used to fail the whole scan screen over.
+        expect(getByTestId('mock-camera').props.torch).toBe('off')
+      })
+
+      it('shows the built-in torch button when the device has a torch', () => {
+        const { getByTestId } = render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} />
+          </BasicAppContext>
+        )
+
+        expect(getByTestId(testIdWithKey('ScanTorch'))).toBeTruthy()
+      })
+
+      it('hides the built-in torch button when the device has no torch', () => {
+        mockedUseCameraDevice.mockReturnValue(noTorchDevice)
+
+        const { queryByTestId } = render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} />
+          </BasicAppContext>
+        )
+
+        expect(queryByTestId(testIdWithKey('ScanTorch'))).toBeNull()
+      })
+
+      it('reports torch availability to the parent so it can hide its own torch control', () => {
+        const onTorchAvailabilityChange = jest.fn()
+
+        render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} hideTorchButton onTorchAvailabilityChange={onTorchAvailabilityChange} />
+          </BasicAppContext>
+        )
+        expect(onTorchAvailabilityChange).toHaveBeenLastCalledWith(true)
+
+        onTorchAvailabilityChange.mockClear()
+        mockedUseCameraDevice.mockReturnValue(noTorchDevice)
+
+        render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} hideTorchButton onTorchAvailabilityChange={onTorchAvailabilityChange} />
+          </BasicAppContext>
+        )
+        expect(onTorchAvailabilityChange).toHaveBeenLastCalledWith(false)
+      })
     })
   })
 
@@ -1931,6 +2022,137 @@ describe('CodeScanningCamera', () => {
         'BCSC.CameraDisclosure.ErrorMessage',
         expectedAppError
       )
+    })
+  })
+
+  describe('Recoverable camera runtime errors (regression: iOS unknown/unknown -12780 in 4.1.0)', () => {
+    const originalPlatform = Platform.OS
+
+    const makeAppError = () => ({
+      name: 'NormalizedAppError',
+      message: 'normalized',
+      addContext: jest.fn(),
+      toJSON: jest.fn(),
+    })
+
+    // VisionCamera surfaces an AVCaptureSessionRuntimeError as `unknown/unknown` and restarts
+    // the capture session itself; this is the shape the Camera onError callback receives.
+    const makeRuntimeError = (code = 'unknown/unknown') =>
+      Object.assign(new Error('Error Domain=AVFoundationErrorDomain Code=-11800'), { code })
+
+    beforeEach(() => {
+      jest.useFakeTimers()
+      Platform.OS = 'ios'
+      mockEnsureAppError.mockImplementation(makeAppError)
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+      Platform.OS = originalPlatform
+      mockEnsureAppError.mockImplementation(() => ({ name: 'AppError', message: 'mocked error' }))
+    })
+
+    it('lets VisionCamera restart the session after a single unknown/unknown error instead of failing over', async () => {
+      const onError = jest.fn()
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} onError={onError} />
+        </BasicAppContext>
+      )
+
+      await act(async () => {
+        getByTestId('mock-camera').props.onError(makeRuntimeError())
+      })
+
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      expect(onError).not.toHaveBeenCalled()
+      // Still normalized with the device/format context so the warning carries the same detail.
+      expect(mockEnsureAppError).toHaveBeenCalledWith(
+        expect.objectContaining({ code: 'unknown/unknown' }),
+        AppEventCode.ADD_CARD_CAMERA_BROKEN
+      )
+    })
+
+    it('fails over when a second unknown/unknown error arrives inside the recovery window (restart failed)', async () => {
+      const onError = jest.fn()
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} onError={onError} />
+        </BasicAppContext>
+      )
+      const camera = getByTestId('mock-camera')
+
+      await act(async () => {
+        camera.props.onError(makeRuntimeError())
+      })
+      await act(async () => {
+        jest.advanceTimersByTime(500)
+      })
+      const secondError = makeRuntimeError()
+      await act(async () => {
+        camera.props.onError(secondError)
+      })
+
+      expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
+      expect(onError).toHaveBeenCalledTimes(1)
+      expect(onError).toHaveBeenCalledWith(secondError)
+    })
+
+    it('treats an unknown/unknown error after the recovery window as a fresh recoverable one', async () => {
+      const onError = jest.fn()
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} onError={onError} />
+        </BasicAppContext>
+      )
+      const camera = getByTestId('mock-camera')
+
+      await act(async () => {
+        camera.props.onError(makeRuntimeError())
+      })
+      await act(async () => {
+        jest.advanceTimersByTime(10_001)
+      })
+      await act(async () => {
+        camera.props.onError(makeRuntimeError())
+      })
+
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      expect(onError).not.toHaveBeenCalled()
+    })
+
+    it('still fails over immediately for other error codes on iOS', async () => {
+      const onError = jest.fn()
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} onError={onError} />
+        </BasicAppContext>
+      )
+
+      const flashError = makeRuntimeError('device/flash-unavailable')
+      await act(async () => {
+        getByTestId('mock-camera').props.onError(flashError)
+      })
+
+      expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
+      expect(onError).toHaveBeenCalledWith(flashError)
+    })
+
+    it('still fails over immediately for unknown/unknown on Android (no auto-restart there)', async () => {
+      Platform.OS = 'android'
+      const onError = jest.fn()
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} onError={onError} />
+        </BasicAppContext>
+      )
+
+      await act(async () => {
+        getByTestId('mock-camera').props.onError(makeRuntimeError())
+      })
+
+      expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
+      expect(onError).toHaveBeenCalledTimes(1)
     })
   })
 

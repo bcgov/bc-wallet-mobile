@@ -10,6 +10,7 @@ import {
   determineScanState,
   getPaddedHighlightPosition,
   isCodeAlignedWithZones,
+  isRecoverableCameraRuntimeError,
   mergeLockedCodesWithAccumulated,
   transformBarcodeCoordinates,
 } from './camera'
@@ -538,5 +539,44 @@ describe('mergeLockedCodesWithAccumulated', () => {
     const result = mergeLockedCodesWithAccumulated([serial], new Map(), WINDOW_MS, NOW)
 
     expect(result).toEqual([serial])
+  })
+})
+
+// ─── isRecoverableCameraRuntimeError ──────────────────────────────────────────
+
+describe('isRecoverableCameraRuntimeError', () => {
+  it('treats unknown/unknown as recoverable on iOS (VisionCamera restarts the session itself)', () => {
+    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' }, 'ios')).toBe(true)
+  })
+
+  it('treats unknown/unknown as fatal on Android (no auto-restart, catch-all code)', () => {
+    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' }, 'android')).toBe(false)
+  })
+
+  it.each([
+    'device/flash-unavailable',
+    'device/configuration-error',
+    'session/camera-not-ready',
+    'system/camera-has-been-disconnected',
+  ])('treats %s as fatal on iOS', (code) => {
+    expect(isRecoverableCameraRuntimeError({ code }, 'ios')).toBe(false)
+  })
+
+  it('treats errors without a code as fatal', () => {
+    expect(isRecoverableCameraRuntimeError({}, 'ios')).toBe(false)
+    expect(isRecoverableCameraRuntimeError(null, 'ios')).toBe(false)
+    expect(isRecoverableCameraRuntimeError(undefined, 'ios')).toBe(false)
+  })
+
+  it('defaults to the current platform', () => {
+    const originalPlatform = Platform.OS
+
+    Platform.OS = 'ios'
+    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' })).toBe(true)
+
+    Platform.OS = 'android'
+    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' })).toBe(false)
+
+    Platform.OS = originalPlatform
   })
 })
