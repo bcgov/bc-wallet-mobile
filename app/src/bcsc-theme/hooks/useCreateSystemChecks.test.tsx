@@ -402,12 +402,13 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(5)
+        expect(systemChecks).toHaveLength(6)
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('EventReasonAlertsSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('TermsOfUseSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('KeyRotationSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('RefreshTokenExpiredSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('TermsOfUseSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[5].constructor.name).toBe('KeyRotationSystemCheck')
       })
 
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
@@ -452,6 +453,7 @@ describe('useGetSystemChecks', () => {
         expect(names).toContain('TermsOfUseSystemCheck')
         expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
+        expect(names).not.toContain('RefreshTokenExpiredSystemCheck')
         expect(names).not.toContain('AccountExpirySystemCheck')
         expect(names).not.toContain('AccountRenewalSystemCheck')
         expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')

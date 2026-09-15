@@ -10,8 +10,9 @@ import { useVerificationStatus } from './useVerificationStatus'
  * Extends useVerificationStatus with card expiry awareness.
  *
  * - `isActivelyVerified` — true when the user is verified AND their card has not expired; use this for feature gating
- * - `isExpired` — true when the user has a verified card that IAS has expired server-side, or whose
- *   expiry date has passed
+ * - `isExpired` — true when the user has a verified card that IAS has expired server-side, whose
+ *   expiry date has passed, or whose stored refresh token has expired locally (#4654) — this last
+ *   case can be true even with no `account` loaded, since userinfo can't be fetched without a token
  *
  * Must be used within BCSCAccountProvider.
  */
@@ -23,7 +24,9 @@ export const useCardStatus = () => {
   return useMemo(() => {
     const isExpiredByServer = store.bcsc.credentialMetadata?.bcscReason === BCSCReason.ExpiredBySystem
     const isExpired = verificationStatus.isVerified
-      ? isExpiredByServer || (account != null && isAccountExpired(account.account_expiration_date))
+      ? isExpiredByServer ||
+        store.bcscSecure.refreshTokenExpired === true ||
+        (account != null && isAccountExpired(account.account_expiration_date))
       : false
 
     return {
@@ -31,5 +34,5 @@ export const useCardStatus = () => {
       isExpired,
       isActivelyVerified: verificationStatus.isVerified && !isExpired,
     }
-  }, [verificationStatus, account, store.bcsc.credentialMetadata?.bcscReason])
+  }, [verificationStatus, account, store.bcsc.credentialMetadata?.bcscReason, store.bcscSecure.refreshTokenExpired])
 }

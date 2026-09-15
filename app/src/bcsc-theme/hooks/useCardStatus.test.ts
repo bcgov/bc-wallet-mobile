@@ -11,10 +11,10 @@ const DAY_MS = 24 * 60 * 60 * 1000
 const futureExpiry = new Date(Date.now() + 365 * DAY_MS)
 const pastExpiry = new Date(Date.now() - 30 * DAY_MS)
 
-const mockStore = (opts: { verified?: boolean; bcscReason?: BCSCReason }) => {
+const mockStore = (opts: { verified?: boolean; bcscReason?: BCSCReason; refreshTokenExpired?: boolean }) => {
   jest.mocked(Bifold.useStore).mockReturnValue([
     {
-      bcscSecure: { verified: opts.verified ?? true },
+      bcscSecure: { verified: opts.verified ?? true, refreshTokenExpired: opts.refreshTokenExpired },
       bcsc: { credentialMetadata: { bcscReason: opts.bcscReason ?? BCSCReason.ApprovedByAgent } },
     } as any,
     jest.fn(),
@@ -75,6 +75,26 @@ describe('useCardStatus', () => {
 
   it('is not expired when no account has loaded yet', () => {
     mockStore({})
+    mockAccount(null)
+
+    const { result } = renderHook(() => useCardStatus())
+
+    expect(result.current.isExpired).toBe(false)
+  })
+
+  // #4654: hydration flags refreshTokenExpired before userinfo can ever load, so `account` is null here.
+  it('is expired when hydration flagged the stored refresh token as expired, even with no account loaded', () => {
+    mockStore({ refreshTokenExpired: true })
+    mockAccount(null)
+
+    const { result } = renderHook(() => useCardStatus())
+
+    expect(result.current.isExpired).toBe(true)
+    expect(result.current.isActivelyVerified).toBe(false)
+  })
+
+  it('is not expired from refreshTokenExpired when the user is not verified', () => {
+    mockStore({ verified: false, refreshTokenExpired: true })
     mockAccount(null)
 
     const { result } = renderHook(() => useCardStatus())

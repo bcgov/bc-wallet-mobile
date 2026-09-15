@@ -12,6 +12,7 @@ import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReas
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
 import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
 import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
+import { RefreshTokenExpiredSystemCheck } from '@/services/system-checks/RefreshTokenExpiredSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
@@ -205,6 +206,12 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     if (isVerified) {
       systemChecks.push(
         new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
+      )
+    }
+
+    if (isVerified) {
+      systemChecks.push(
+        new RefreshTokenExpiredSystemCheck(Boolean(store.bcscSecure.refreshTokenExpired), navigation, utils)
       )
     }
 
