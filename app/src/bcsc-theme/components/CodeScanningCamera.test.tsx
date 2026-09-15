@@ -354,7 +354,11 @@ describe('CodeScanningCamera', () => {
 
         render(
           <BasicAppContext>
-            <CodeScanningCamera {...defaultProps} hideTorchButton onTorchAvailabilityChange={onTorchAvailabilityChange} />
+            <CodeScanningCamera
+              {...defaultProps}
+              hideTorchButton
+              onTorchAvailabilityChange={onTorchAvailabilityChange}
+            />
           </BasicAppContext>
         )
         expect(onTorchAvailabilityChange).toHaveBeenLastCalledWith(true)
@@ -364,7 +368,11 @@ describe('CodeScanningCamera', () => {
 
         render(
           <BasicAppContext>
-            <CodeScanningCamera {...defaultProps} hideTorchButton onTorchAvailabilityChange={onTorchAvailabilityChange} />
+            <CodeScanningCamera
+              {...defaultProps}
+              hideTorchButton
+              onTorchAvailabilityChange={onTorchAvailabilityChange}
+            />
           </BasicAppContext>
         )
         expect(onTorchAvailabilityChange).toHaveBeenLastCalledWith(false)
