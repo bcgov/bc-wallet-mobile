@@ -1,3 +1,5 @@
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import {
   cancelVerificationReminders,
@@ -27,6 +29,7 @@ import {
   TokenType,
 } from 'react-native-bcsc-core'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
+import { isTokenExpired } from '../utils/token-expiry'
 import * as useBCSCApiClientModule from './useBCSCApiClient'
 import { useSecureActions } from './useSecureActions'
 
@@ -34,6 +37,9 @@ jest.mock('@bifold/core')
 jest.mock('../utils/key-recovery', () => ({
   performKeyRecovery: jest.fn(),
   reRegisterNewestKey: jest.fn(),
+}))
+jest.mock('../utils/token-expiry', () => ({
+  isTokenExpired: jest.fn(),
 }))
 jest.mock('react-native-bcsc-core', () => ({
   AccountSecurityMethod: {
@@ -91,6 +97,12 @@ const makeEvidence = (overrides: Partial<EvidenceMetadata> = {}): EvidenceMetada
   ...overrides,
 })
 
+/** Reads a field off the payload of the last dispatched HYDRATE_SECURE_STATE action. */
+const captureHydrateField = (field: string) => {
+  const hydrateCall = mockDispatch.mock.calls.find(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)
+  return hydrateCall?.[0]?.payload?.[0]?.[field]
+}
+
 describe('useSecureActions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -109,6 +121,7 @@ describe('useSecureActions', () => {
       isClientReady: false,
       error: undefined,
     } as any)
+    jest.mocked(isTokenExpired).mockReturnValue(false)
   })
 
   // #3419: persistence failures surface the distinct native error code instead of a STORAGE_WRITE_ERROR catch-all.
@@ -743,6 +756,88 @@ describe('useSecureActions', () => {
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
       expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
       expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
+      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+    })
+  })
+
+  describe('hydrateSecureState expired refresh token (#4654)', () => {
+    const account = {
+      id: 'account-1',
+      issuer: 'https://idsit.gov.bc.ca',
+      clientID: 'client-1',
+      displayName: 'Test User',
+    }
+    const mockGetTokensForRefreshToken = jest.fn()
+
+    beforeEach(() => {
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+      jest.mocked(getAccount).mockResolvedValue(account as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest.mocked(getToken).mockImplementation(async (type: any) => {
+        if (type === TokenType.Refresh) {
+          return { id: 'r', type, token: 'stale-refresh-token', created: 0 } as any
+        }
+        if (type === TokenType.Registration) {
+          return { id: 'g', type, token: 'stored-reg-token', created: 0 } as any
+        }
+        return null
+      })
+
+      mockGetTokensForRefreshToken.mockReset()
+      jest.mocked(useBCSCApiClientModule.useBCSCApiClientState).mockReturnValue({
+        client: { getTokensForRefreshToken: mockGetTokensForRefreshToken } as any,
+        isClientReady: true,
+        error: undefined,
+      } as any)
+    })
+
+    it('skips the network call and key recovery, and flags refreshTokenExpired, when the stored token is expired', async () => {
+      jest.mocked(isTokenExpired).mockReturnValue(true)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
+      expect(performKeyRecovery).not.toHaveBeenCalled()
+      expect(reRegisterNewestKey).not.toHaveBeenCalled()
+      expect(captureHydrateField('refreshTokenExpired')).toBe(true)
+      // The stale token is still re-persisted, matching today's failure path (renewal deletes it)
+      expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
+      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
+    })
+
+    it('flags refreshTokenExpired: false when the stored token is valid and refresh succeeds', async () => {
+      jest.mocked(isTokenExpired).mockReturnValue(false)
+      mockGetTokensForRefreshToken.mockResolvedValue({ refresh_token: 'new-refresh', access_token: 'new-access' })
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('stale-refresh-token')
+      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+    })
+
+    it('stops key-recovery retries and does not flag refreshTokenExpired when the server rejects a locally-valid token as invalid_token', async () => {
+      jest.mocked(isTokenExpired).mockReturnValue(false)
+      mockGetTokensForRefreshToken.mockRejectedValue(AppError.fromErrorDefinition(ErrorRegistry.INVALID_TOKEN))
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
+      expect(performKeyRecovery).not.toHaveBeenCalled()
+      expect(reRegisterNewestKey).not.toHaveBeenCalled()
+      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
     })
   })
 

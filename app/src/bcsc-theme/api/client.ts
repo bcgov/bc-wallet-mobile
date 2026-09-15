@@ -6,7 +6,6 @@ import { BCSCEventTypes } from '@/events/eventTypes'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { getUserAgentString } from '@utils/user-agent'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
 import { AppState, DeviceEventEmitter } from 'react-native'
 import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
@@ -16,15 +15,12 @@ import {
   getAppErrorFromAxiosError,
   isNetworkError,
 } from '../utils/axios-error-utils'
+import { isTokenExpired as isTokenExpiredUtil } from '../utils/token-expiry'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 import { loadPersistedJwk, persistJwk } from './jwk-cache'
-
-// Refresh tokens 30 seconds before they actually expire to avoid
-// expiry-on-the-wire races when multiple requests fire near the boundary.
-const TOKEN_EXPIRY_BUFFER_MS = 30 * 1000
 
 // Bounded retry for the JWKS fetch: 3 attempts total, with linear backoff delays of
 // 500ms then 1000ms between attempts. Only transient errors (network / 5xx) are retried —
@@ -281,7 +277,8 @@ class BCSCApiClient {
       const tokens = this.tokens ?? (await this.recoverTokens())
 
       if (this.isTokenExpired(tokens.refresh_token)) {
-        // refresh tokens should not expire
+        // Refresh tokens expire at the device credential's 5-year lifetime (#4654) — this is a
+        // fatal, unrecoverable state for the in-memory cache; callers must fall back to renewal.
         this.logger.error('[BCSCApiClient] Refresh token expired - fatal error detected')
         throw new Error('Refresh token expired')
       }
@@ -336,14 +333,7 @@ class BCSCApiClient {
   }
 
   private isTokenExpired(token?: string): boolean {
-    let isExpired = true
-    // if no token is present, or within the buffer limit of expiring, return that token is "expired" and fetch a new one
-    if (token) {
-      const decodedToken = jwtDecode(token)
-      const exp = decodedToken.exp ?? 0
-      isExpired = Date.now() >= exp * 1000 - TOKEN_EXPIRY_BUFFER_MS
-    }
-    return isExpired
+    return isTokenExpiredUtil(token)
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
@@ -406,6 +396,10 @@ class BCSCApiClient {
    * @returns the populated tokens
    * @throws AppError TOKEN_NULL when the cache is empty and no refresh token
    *   exists in secure storage — the only genuinely unrecoverable case.
+   * @throws Error 'Refresh token expired' when the stored refresh token's `exp` has already
+   *   passed (#4654) — the device credential's 5-year lifetime is over, so refreshing would
+   *   only produce another 401 from the server. A plain `Error` (not an `AppError`) so it
+   *   passes through the response interceptor unchanged and no `onError` alert policy fires.
    */
   async recoverTokens(): Promise<TokenResponse> {
     if (this.tokens) {
@@ -425,6 +419,11 @@ class BCSCApiClient {
           `Token cache empty and no stored refresh token to recover from (nativeDiagnostic=${diagnostic ?? 'none'})`
         ),
       })
+    }
+
+    if (this.isTokenExpired(storedRefreshToken)) {
+      this.logger.error('[BCSCApiClient] Stored refresh token is expired; skipping refresh — account renewal required')
+      throw new Error('Refresh token expired')
     }
 
     this.logger.warn('[BCSCApiClient] Token cache empty; rebuilding from stored refresh token')

@@ -1,3 +1,5 @@
+import { isAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
 import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
@@ -47,6 +49,7 @@ import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
+import { isTokenExpired } from '../utils/token-expiry'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -980,7 +983,17 @@ export const useSecureActions = () => {
       // rotated registration_access_token — always persisted below when present, regardless of
       // which branch this ends up taking (RFC 7592: the reg token may rotate on GET or PUT).
       let recoveredRegistrationAccessToken: string | undefined
-      if (refreshToken && apiClient && isClientReady) {
+      // The stored refresh token's `exp` is authoritative here: production never rotates it, so
+      // its expiry is the device credential's 5-year lifetime (#4654). When expired, skip the
+      // network round trip (and the key-recovery branch below) entirely — refreshing would only
+      // produce another 401, and the account needs renewal, not a retry.
+      const refreshTokenExpired = Boolean(refreshToken) && isTokenExpired(refreshToken)
+
+      if (refreshTokenExpired) {
+        logger.warn(
+          '[hydrateSecureState] event=refresh_token_expired stored refresh token is past its exp; skipping refresh and key recovery — account renewal required'
+        )
+      } else if (refreshToken && apiClient && isClientReady) {
         try {
           freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
         } catch (error) {
@@ -1002,7 +1015,16 @@ export const useSecureActions = () => {
             }
           }
 
-          if (clientID && registrationAccessToken) {
+          if (isAppError(error, AppEventCode.INVALID_TOKEN)) {
+            // The server rejected a refresh token our local `exp` check thought was still valid
+            // (device/server clock disagreement, or a mid-flight revocation) — a real signing-key
+            // mismatch (#4166) never carries this app event, so key recovery is unaffected. Stop
+            // here instead of retrying key recovery, so the user sees one alert, not several
+            // (follow-up: a dedicated error/copy for this case is out of scope for #4654).
+            logger.error(
+              '[hydrateSecureState] event=refresh_token_rejected server rejected a locally-valid refresh token (invalid_token); skipping key recovery'
+            )
+          } else if (clientID && registrationAccessToken) {
             logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
             const recovery = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
             recoveredRegistrationAccessToken = recovery.newRegistrationAccessToken
@@ -1126,6 +1148,7 @@ export const useSecureActions = () => {
         savedServices,
 
         sessionRecoveryRequired,
+        refreshTokenExpired,
       }
 
       logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)
