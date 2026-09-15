@@ -199,9 +199,14 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
+  // Reported by CodeScanningCamera once it has picked a device. Non-Pro iPads have no
+  // torch, and turning one on there makes VisionCamera throw `device/flash-unavailable`.
+  const [hasTorch, setHasTorch] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const isProcessingScan = useRef(false)
+  // Whether the screen has already had focus once — see the focus effect below.
+  const hasFocusedRef = useRef(false)
   const bcscSerialRef = useRef<string | null>(null)
   const birthDateRef = useRef<Date | null>(null)
 
@@ -234,7 +239,20 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     birthDateRef.current = null
   }, [])
 
-  useFocusEffect(useCallback(() => retryCamera(), [retryCamera]))
+  // Reset the scanner on re-entry (e.g. backing out of the next step) so a previous scan's
+  // lock and frozen frame don't linger. The first focus is skipped: the camera has just
+  // mounted with fresh state, and remounting it there tore down and recreated the capture
+  // session back-to-back — two sessions briefly overlapping on the same device, a known
+  // trigger for AVFoundation runtime errors (-11800/-12780) on iOS.
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFocusedRef.current) {
+        hasFocusedRef.current = true
+        return
+      }
+      retryCamera()
+    }, [retryCamera])
+  )
 
   const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
     if (isProcessingScan.current) {
@@ -374,6 +392,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               hideTorchButton
               torchActive={torchOn}
               onToggleTorch={toggleTorch}
+              onTorchAvailabilityChange={setHasTorch}
               onError={onCameraError}
               style={StyleSheet.absoluteFillObject}
             />
@@ -397,7 +416,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
         {/* Torch + manual entry */}
         <View style={styles.bottomBar} pointerEvents="box-none">
-          {cameraFailed ? null : (
+          {cameraFailed || !hasTorch ? null : (
             <View style={styles.torchRow} pointerEvents="box-none">
               <TorchButton active={torchOn} onPress={toggleTorch} />
             </View>
