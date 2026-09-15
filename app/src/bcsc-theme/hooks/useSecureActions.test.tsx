@@ -781,6 +781,30 @@ describe('useSecureActions', () => {
         expect.anything()
       )
     })
+
+    it('keeps refreshed and rotated tokens in the store when the write-back fails', async () => {
+      const mockGetTokensForRefreshToken = jest
+        .fn()
+        .mockResolvedValue({ refresh_token: 'fresh-refresh', access_token: 'fresh-access' })
+      jest.mocked(useBCSCApiClientModule.useBCSCApiClientState).mockReturnValue({
+        client: { getTokensForRefreshToken: mockGetTokensForRefreshToken } as any,
+        isClientReady: true,
+        error: undefined,
+      } as any)
+      jest.mocked(setToken).mockRejectedValue(keychainError())
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      const hydrate = mockDispatch.mock.calls.find(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)
+      expect(hydrate).toBeDefined()
+      expect(hydrate![0].payload[0]).toMatchObject({
+        refreshToken: 'fresh-refresh',
+        accessToken: 'fresh-access',
+      })
+    })
   })
 
   describe('updateVerified', () => {
