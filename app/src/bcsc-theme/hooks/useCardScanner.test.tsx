@@ -1,4 +1,5 @@
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
+import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -15,6 +16,7 @@ const BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C =
 
 jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
+jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery')
 jest.mock('@react-navigation/native')
 jest.mock('@bifold/core')
 
@@ -23,6 +25,11 @@ const mockDispatch = jest.fn() // unused atp
 describe('useCardScanner', () => {
   beforeEach(() => {
     jest.resetAllMocks()
+    // useCardScanner calls useRoute()/useDeviceAuthorizationRecovery() unconditionally at the top
+    // of the hook, regardless of which handler a given test exercises. Its own recovery behavior
+    // is covered by useDeviceAuthorizationRecovery.test.ts — this is a transparent passthrough.
+    jest.mocked(navigation).useRoute.mockReturnValue({ name: BCSCScreens.ScanSerial } as any)
+    jest.mocked(useDeviceAuthorizationRecovery).mockReturnValue(((thunk: () => Promise<unknown>) => thunk()) as any)
   })
 
   describe('scanCard', () => {

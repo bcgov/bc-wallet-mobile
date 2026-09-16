@@ -1,6 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useResidentialAddressModel from '@/bcsc-theme/features/verify/_models/useResidentialAddressModel'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { AppError, ErrorCategory } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -40,6 +42,15 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
     updateVerificationOptions: mockUpdateVerificationOptions,
     updateCardProcess: mockUpdateCardProcess,
   })),
+}))
+
+// Transparent passthrough by default — its own recovery behavior is covered by
+// useDeviceAuthorizationRecovery.test.ts. Individual tests can override this mock to verify
+// this screen correctly wires the thunk/origin screen through to the shared hook.
+const mockAttemptWithRecovery = jest.fn((thunk: () => Promise<unknown>) => thunk())
+jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery', () => ({
+  useDeviceAuthorizationRecovery: jest.fn(() => mockAttemptWithRecovery),
+  useIsDeviceAuthorizationRecovering: jest.fn(() => false),
 }))
 
 describe('useResidentialAddressModel', () => {
@@ -593,6 +604,31 @@ describe('useResidentialAddressModel', () => {
         expect.any(String),
         expect.objectContaining({ cause: mockError })
       )
+      expect(result.current.isSubmitting).toBe(false)
+    })
+
+    it('should not show an error modal when the error was already handled by a global policy', async () => {
+      // e.g. alreadyRegisteredErrorPolicy already navigated the user off this screen — showing
+      // this screen's own modal on top of that would be confusing and wrong.
+      const handledError = new AppError(
+        'test error',
+        {
+          category: ErrorCategory.NETWORK,
+          appEvent: AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST,
+          statusCode: 2810,
+        },
+        { track: false }
+      )
+      handledError.handled = true
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockRejectedValue(handledError)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
       expect(result.current.isSubmitting).toBe(false)
     })
 
