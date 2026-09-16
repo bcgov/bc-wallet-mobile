@@ -39,6 +39,10 @@ jest.mock('@react-navigation/stack', () => {
       Navigator,
       Screen,
     }),
+    // Exposed directly (not just via createStackNavigator()) so tests can grab the same
+    // instances with jest.requireMock, to assert the navigator is actually mounted.
+    Navigator,
+    Screen,
   }
 })
 jest.mock('react-i18next', () => ({
@@ -147,6 +151,11 @@ describe('MainStack', () => {
 
   const queryLoadingScreens = (view: ReturnType<typeof render>) => view.UNSAFE_queryAllByType('LoadingScreen' as any)
 
+  // The mocked Stack.Navigator instance, read from the mock module at call time (not
+  // captured inside the jest.mock factory, which runs before this file's own module body).
+  const queryNavigators = (view: ReturnType<typeof render>) =>
+    view.UNSAFE_queryAllByType(jest.requireMock('@react-navigation/stack').Navigator)
+
   it('renders correctly', () => {
     const { toJSON } = render(<MainStack />)
     expect(toJSON()).toMatchSnapshot()
@@ -216,9 +225,11 @@ describe('MainStack', () => {
     const view = render(<MainStack />)
 
     // The old behaviour replaced the whole tree with a bare LoadingScreen (toJSON() top-level
-    // type === 'LoadingScreen'); the overlay wraps it in the same View the stack renders into.
+    // type === 'LoadingScreen'); the overlay wraps it in the same View the stack renders into,
+    // so the navigator must still be mounted alongside it.
     expect(view.toJSON()).toMatchObject({ type: 'View' })
     expect(queryLoadingScreens(view)).toHaveLength(1)
+    expect(queryNavigators(view)).toHaveLength(1)
   })
 
   it('holds the loading screen over the stack while system checks are still settling', () => {
