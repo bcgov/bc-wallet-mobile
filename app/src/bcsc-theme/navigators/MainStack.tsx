@@ -184,15 +184,14 @@ const MainStack: React.FC = () => {
 
   useVerificationResponseListener()
 
-  if (isLoadingAccount) {
-    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
-  }
+  const showStartupLoading = isLoadingAccount || isAwaitingSystemChecks
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       {/* Overlays rather than replaces the stack: the checks themselves navigate to screens
-          registered below (terms of use, service outage), so the navigator has to stay mounted. */}
-      {isAwaitingSystemChecks ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
+          registered below (terms of use, service outage), and the account load can be retried
+          without unmounting, so the navigator has to stay mounted. */}
+      {showStartupLoading ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
       <BifoldScope>
         <Stack.Navigator
           initialRouteName={initialRouteName}
