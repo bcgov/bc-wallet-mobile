@@ -597,6 +597,49 @@ describe('BCSC Client', () => {
     })
   })
 
+  describe('getAccessToken', () => {
+    const valid = { exp: Math.floor(Date.now() / 1000) + 3600 }
+
+    it('returns the cached access token without refreshing when it is still valid', async () => {
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+      client.tokens = { access_token: 'cached-access', refresh_token: 'r' } as any
+      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      ;(jwtDecode as jest.Mock).mockReturnValue(valid)
+      const fetchTokens = jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens')
+
+      await expect(client.getAccessToken()).resolves.toBe('cached-access')
+      expect(fetchTokens).not.toHaveBeenCalled()
+    })
+
+    it('refreshes first when the cached access token is expired', async () => {
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+      client.tokens = { access_token: 'stale-access', refresh_token: 'valid-refresh' } as any
+      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      ;(jwtDecode as jest.Mock)
+        .mockReturnValueOnce(valid) // refresh token
+        .mockReturnValueOnce({ exp: 0 }) // access token
+      jest
+        .spyOn(BCSCApiClient.prototype as any, 'fetchTokens')
+        .mockResolvedValue({ access_token: 'new-access', refresh_token: 'new-refresh' })
+
+      await expect(client.getAccessToken()).resolves.toBe('new-access')
+      expect(client.tokens?.access_token).toBe('new-access')
+    })
+
+    it('refreshes even when the cached access token looks valid with forceRefresh', async () => {
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+      client.tokens = { access_token: 'rejected-access', refresh_token: 'valid-refresh' } as any
+      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      ;(jwtDecode as jest.Mock).mockReturnValue(valid)
+      const fetchTokens = jest
+        .spyOn(BCSCApiClient.prototype as any, 'fetchTokens')
+        .mockResolvedValue({ access_token: 'new-access', refresh_token: 'new-refresh' })
+
+      await expect(client.getAccessToken({ forceRefresh: true })).resolves.toBe('new-access')
+      expect(fetchTokens).toHaveBeenCalledWith('valid-refresh')
+    })
+  })
+
   describe('ensureValidTokens', () => {
     it('should return existing promise if tokens are already being refreshed', async () => {
       const mockLogger = createMockLogger()
