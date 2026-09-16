@@ -38,9 +38,15 @@ type WebViewContentProps = (WebViewUrlSource | WebViewHtmlSource) & {
   onLoaded?: () => void
 }
 
+/** The endpoint itself or a path below it; a bare prefix test would also match `/accountant`. */
+const isUnder = (url: string, endpoint: string): boolean => {
+  const base = endpoint.replace(/\/$/, '')
+  return url === base || ['/', '?', '#'].some((delimiter) => url.startsWith(base + delimiter))
+}
+
 /** Only the IAS account pages take the bearer; help-centre and privacy pages are public and must not receive it. */
 const isBearerProtectedUrl = (url: string, endpoints: BCSCEndpoints): boolean =>
-  url.startsWith(endpoints.account) || url.startsWith(endpoints.accountDevices)
+  isUnder(url, endpoints.account) || isUnder(url, endpoints.accountDevices)
 
 /** Query strings are dropped so a redirect target's parameters never land in a problem report. */
 const reportableUrl = (url?: string): string | undefined => url?.split('?')[0]
@@ -63,8 +69,8 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
   const { emitErrorModal } = useErrorAlert()
   const { fontScale } = useWindowDimensions()
   const needsBearer = Boolean(url) && isBearerProtectedUrl(url!, client.endpoints)
-  const forceRefresh = useRef(false)
-  const retriedAfter401 = useRef(false)
+  // Set by the one-shot 401 recovery: forces the next token fetch and is reported if that fetch fails too.
+  const rejectedStatus = useRef<number | undefined>(undefined)
 
   const styles = StyleSheet.create({
     loadingContainer: {
@@ -101,10 +107,13 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
     isLoading: isLoadingAccessToken,
     load: loadAccessToken,
     refresh: refreshAccessToken,
-  } = useDataLoader(() => client.getAccessToken({ forceRefresh: forceRefresh.current }), {
+  } = useDataLoader(() => client.getAccessToken({ forceRefresh: rejectedStatus.current !== undefined }), {
     onError: (error) => {
       logger.error('WebView: no access token for a bearer-protected page', error as Error)
-      showPageUnavailable(error, { url: reportableUrl(url) })
+      showPageUnavailable(error, {
+        url: reportableUrl(url),
+        ...(rejectedStatus.current === undefined ? {} : { statusCode: rejectedStatus.current }),
+      })
     },
   })
 
@@ -135,9 +144,8 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
       })
 
       // Same recovery as the API client: a locally valid token the server rejects gets one refresh + reload.
-      if (nativeEvent.statusCode === 401 && needsBearer && !retriedAfter401.current) {
-        retriedAfter401.current = true
-        forceRefresh.current = true
+      if (nativeEvent.statusCode === 401 && needsBearer && rejectedStatus.current === undefined) {
+        rejectedStatus.current = nativeEvent.statusCode
         logger.info('WebView: access token rejected (401); refreshing tokens and reloading once')
         refreshAccessToken()
         return
