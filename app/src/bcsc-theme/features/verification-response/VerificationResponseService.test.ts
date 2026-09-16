@@ -34,7 +34,7 @@ describe('VerificationResponseService', () => {
       expect(result).toBe(true) // Emitted immediately
       expect(navEvents).toHaveLength(1)
       expect(navEvents[0]).toMatchObject({
-        screen: expect.stringContaining(BCSCScreens.VerificationSuccess),
+        screen: BCSCScreens.VerificationSuccess,
         eventType: 'request_reviewed',
       })
       expect(service.hasPendingApproval).toBe(false)
@@ -42,6 +42,23 @@ describe('VerificationResponseService', () => {
   })
 
   describe('processPendingApproval', () => {
+    it('keeps only the most recent buffered event and emits it once', () => {
+      // The buffer is deliberately a single slot, not a queue: a second notification arriving
+      // with no listener overwrites the first rather than queueing behind it.
+      const service = new VerificationResponseService(logger as any)
+      const navEvents: VerificationResponseNavigationEvent[] = []
+
+      service.handleRequestReviewed()
+      service.handleRequestReviewed()
+
+      service.onNavigationRequest((event) => navEvents.push(event))
+
+      expect(service.processPendingApproval()).toBe('request_reviewed')
+      expect(navEvents).toHaveLength(1)
+      expect(service.processPendingApproval()).toBeNull()
+      expect(navEvents).toHaveLength(1)
+    })
+
     it('processes buffered request_reviewed once navigation is ready', () => {
       const service = new VerificationResponseService(logger as any)
       const navEvents: VerificationResponseNavigationEvent[] = []
@@ -85,6 +102,21 @@ describe('VerificationResponseService', () => {
     expect(service.hasPendingApproval).toBe(true)
   })
 
+  it('fans out to every registered navigation listener', () => {
+    const service = new VerificationResponseService(logger as any)
+    const firstEvents: VerificationResponseNavigationEvent[] = []
+    const secondEvents: VerificationResponseNavigationEvent[] = []
+
+    service.onNavigationRequest((event) => firstEvents.push(event))
+    service.onNavigationRequest((event) => secondEvents.push(event))
+
+    service.handleRequestReviewed()
+
+    expect(firstEvents).toHaveLength(1)
+    expect(secondEvents).toHaveLength(1)
+    expect(firstEvents[0]).toEqual(secondEvents[0])
+  })
+
   it('emitNavigation can be called directly with event type', () => {
     const service = new VerificationResponseService(logger as any)
     const navEvents: VerificationResponseNavigationEvent[] = []
@@ -95,7 +127,7 @@ describe('VerificationResponseService', () => {
 
     expect(navEvents).toHaveLength(1)
     expect(navEvents[0]).toMatchObject({
-      screen: expect.stringContaining(BCSCScreens.VerificationSuccess),
+      screen: BCSCScreens.VerificationSuccess,
       eventType: 'request_reviewed',
     })
   })

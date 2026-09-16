@@ -55,6 +55,7 @@ import {
   getCameraMetadata,
   getPaddedHighlightPosition,
   isCodeAlignedWithZones,
+  isRecoverableCameraRuntimeError,
   mergeLockedCodesWithAccumulated,
   transformBarcodeCoordinates,
 } from './utils/camera'
@@ -69,6 +70,14 @@ const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera)
  * A 3× pinch covers the entire min→max zoom range.
  */
 const PINCH_SCALE_FULL_ZOOM = 3
+
+/**
+ * How long after a recoverable camera runtime error a repeat still counts as the same
+ * failure. VisionCamera restarts the capture session itself after an iOS runtime error
+ * and a failed restart posts another one immediately, so a repeat inside this window
+ * means recovery did not work and the camera should fail over.
+ */
+const RECOVERABLE_ERROR_WINDOW_MS = 10_000
 
 export interface CodeScanningCameraProps {
   /**
@@ -158,6 +167,13 @@ export interface CodeScanningCameraProps {
   onToggleTorch?: () => void
 
   /**
+   * Called with whether the selected camera device has a torch, so a parent rendering
+   * its own torch control (see `hideTorchButton`) can hide it on devices without one.
+   * Fires on mount and again if the device changes.
+   */
+  onTorchAvailabilityChange?: (hasTorch: boolean) => void
+
+  /**
    * Called whenever the collective scan state changes
    * (`scanning` → `aligned` → `locked`). Lets a parent rendering its own
    * framing overlay reflect alignment (e.g. recolour the outline).
@@ -188,6 +204,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   hideTorchButton = false,
   torchActive,
   onToggleTorch,
+  onTorchAvailabilityChange,
   onScanStateChange,
   onError,
 }) => {
@@ -295,6 +312,15 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       android: ['wide-angle-camera'],
     }),
   })
+
+  // Never ask the native camera for a torch the device doesn't have. VisionCamera throws
+  // `device/flash-unavailable` (surfaced through onError) instead of ignoring it, and iPads
+  // other than the Pro models have no flash at all — see MaskedCamera for the same guard.
+  const hasTorch = device?.hasTorch ?? false
+
+  useEffect(() => {
+    onTorchAvailabilityChange?.(hasTorch)
+  }, [hasTorch, onTorchAvailabilityChange])
 
   /**
    * Optimize camera format for barcode scanning including dense PDF-417
@@ -978,11 +1004,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       // Add camera device and format info to the error context for better debugging
       appError.addContext(cameraMetadata)
 
-      logger.error('[CodeScanningCamera] runtime error', appError.toJSON())
-
       return appError
     },
-    [cameraMetadata, logger]
+    [cameraMetadata]
   )
 
   /**
@@ -1003,6 +1027,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
   }, [logger, cameraMetadata, getEffectiveZoom, initialZoom, zoom, cameraIsReady])
 
+  // When the last recoverable runtime error (see isRecoverableCameraRuntimeError) arrived,
+  // so a repeat inside RECOVERABLE_ERROR_WINDOW_MS is escalated instead of waited out again.
+  const lastRecoverableErrorAtRef = useRef<number | null>(null)
+
   const handleCameraError = useCallback(
     (error: CameraRuntimeError) => {
       if (isBackgroundedAppState(appStateStatus)) {
@@ -1014,7 +1042,28 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         return
       }
 
-      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), getCameraError(error))
+      const appError = getCameraError(error)
+
+      if (isRecoverableCameraRuntimeError(error)) {
+        const now = Date.now()
+        const previousAt = lastRecoverableErrorAtRef.current
+        lastRecoverableErrorAtRef.current = now
+
+        if (previousAt === null || now - previousAt > RECOVERABLE_ERROR_WINDOW_MS) {
+          // VisionCamera restarts the capture session itself after an iOS runtime error, so a
+          // single one is not a dead camera — failing over here would unmount a camera that is
+          // about to come back. A failed restart posts another runtime error right away, which
+          // lands inside the window and falls through to the fatal path below.
+          logger.warn(
+            '[CodeScanningCamera] recoverable runtime error, waiting for the camera session to restart',
+            appError.toJSON()
+          )
+          return
+        }
+      }
+
+      logger.error('[CodeScanningCamera] runtime error', appError.toJSON())
+      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), appError)
       onError?.(error)
     },
     [appStateStatus, emitErrorModal, t, getCameraError, onError, logger]
@@ -1290,7 +1339,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           isActive={isFocused && !isBackgroundedAppState(appStateStatus) && !frozenFrameUri}
           video={true}
           codeScanner={codeScanner}
-          torch={isTorchOn ? 'on' : 'off'}
+          torch={isTorchOn && hasTorch ? 'on' : 'off'}
           animatedProps={animatedProps}
           onInitialized={handleCameraInitialized}
           onError={handleCameraError}
@@ -1648,8 +1697,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         </View>
       )}
 
-      {/* Torch toggle button */}
-      {!hideTorchButton && (
+      {/* Torch toggle button — only on devices that actually have one */}
+      {!hideTorchButton && hasTorch && (
         <View style={styles.torchContainer}>
           <QRScannerTorch active={isTorchOn} onPress={toggleTorch} />
         </View>

@@ -1,8 +1,10 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useResidentialAddressModel from '@/bcsc-theme/features/verify/_models/useResidentialAddressModel'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('react-native-toast-message', () => ({
@@ -84,13 +86,17 @@ describe('useResidentialAddressModel', () => {
     Spacing: { lg: 16 },
   }
 
-  beforeEach(() => {
-    jest.clearAllMocks()
-    mockUpdateUserMetadata.mockClear()
-    mockUpdateDeviceCodes.mockClear()
-    mockUpdateVerificationOptions.mockClear()
-    mockUpdateCardProcess.mockClear()
+  // Step 1 completes for a Non-BCSC user via two complete evidence items, which is what puts the
+  // resume route past the ID step. Without it `getResumeStepRoute` bounces back to AccountSetup.
+  const idStepComplete = {
+    cardProcess: BCSCCardProcess.NonBCSC,
+    additionalEvidenceData: [
+      { metadata: [{}], documentNumber: 'ID-1' },
+      { metadata: [{}], documentNumber: 'ID-2' },
+    ],
+  }
 
+  beforeEach(() => {
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({
       authorization: mockAuthorizationApi,
@@ -269,6 +275,7 @@ describe('useResidentialAddressModel', () => {
         ...mockStore,
         bcscSecure: {
           ...mockStore.bcscSecure,
+          ...idStepComplete,
           deviceCode: 'existing-device-code',
           deviceCodeExpiresAt: new Date(Date.now() + 3600000),
         },
@@ -296,7 +303,12 @@ describe('useResidentialAddressModel', () => {
           middle: 'M',
         },
       })
-      expect(mockNavigation.dispatch).toHaveBeenCalled()
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'PUSH',
+          payload: expect.objectContaining({ name: BCSCScreens.EnterEmail }),
+        })
+      )
       expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).not.toHaveBeenCalled()
     })
 
@@ -344,9 +356,15 @@ describe('useResidentialAddressModel', () => {
         user_code: 'new-user-code',
         expires_in: 3600,
         verification_options: 'video_call back_check',
-        process: 'test-process',
+        process: BCSCCardProcess.NonBCSC,
       }
       mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, ...idStepComplete } },
+        mockDispatch,
+      ])
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -388,8 +406,31 @@ describe('useResidentialAddressModel', () => {
       })
       expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
 
-      expect(mockNavigation.dispatch).toHaveBeenCalled()
-      expect(mockUpdateCardProcess).toHaveBeenCalledWith('test-process')
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'PUSH',
+          payload: expect.objectContaining({ name: BCSCScreens.EnterEmail }),
+        })
+      )
+      expect(mockUpdateCardProcess).toHaveBeenCalledWith(BCSCCardProcess.NonBCSC)
+    })
+
+    it('should not persist codes or navigate when authorization is handled by an error policy', async () => {
+      // `null` means an error policy already handled the failure; the flow must stop silently.
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(null)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
+      expect(mockUpdateVerificationOptions).not.toHaveBeenCalled()
+      expect(mockUpdateCardProcess).not.toHaveBeenCalled()
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      expect(result.current.isSubmitting).toBe(false)
     })
 
     it('should send the same trimmed values it persists', async () => {
@@ -540,16 +581,7 @@ describe('useResidentialAddressModel', () => {
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
       await act(async () => {
-        try {
-          await result.current.handleSubmit()
-        } catch (error) {
-          // Error is caught and handled internally, but we need to await it
-        }
-      })
-
-      // Wait for state updates to complete
-      await act(async () => {
-        await Promise.resolve()
+        await result.current.handleSubmit()
       })
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -581,7 +613,9 @@ describe('useResidentialAddressModel', () => {
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
-      await expect(result.current.handleSubmit()).rejects.toThrow()
+      await act(async () => {
+        await expect(result.current.handleSubmit()).rejects.toThrow()
+      })
     })
 
     it('should throw error when user name is missing', async () => {
@@ -601,7 +635,9 @@ describe('useResidentialAddressModel', () => {
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
-      await expect(result.current.handleSubmit()).rejects.toThrow()
+      await act(async () => {
+        await expect(result.current.handleSubmit()).rejects.toThrow()
+      })
     })
   })
 
