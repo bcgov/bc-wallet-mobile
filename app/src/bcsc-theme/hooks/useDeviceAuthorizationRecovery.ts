@@ -65,6 +65,11 @@ export const useDeviceAuthorizationRecovery = () => {
         try {
           await cycleRegistration()
           return await action()
+        } catch (retryError) {
+          // Recovery has failed, mark error as unhandled and rethrow
+          const retryAppError = ensureAppError(retryError, AppEventCode.DEVICE_AUTHORIZATION_ERROR)
+          retryAppError.handled = false
+          throw retryAppError
         } finally {
           setRecovering(false)
         }

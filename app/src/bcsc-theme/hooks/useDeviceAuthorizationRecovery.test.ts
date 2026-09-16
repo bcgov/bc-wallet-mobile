@@ -141,5 +141,9 @@ describe('useDeviceAuthorizationRecovery', () => {
     await expect(result.current(thunk, 'ResidentialAddress')).rejects.toBe(secondError)
     expect(mockCycleRegistration).toHaveBeenCalledTimes(1)
     expect(thunk).toHaveBeenCalledTimes(2)
+    // The global policy marks every matching failure "handled" — including this exhausted
+    // retry — but we already tried the one thing it offers and it didn't help. Un-marking it
+    // is what lets the caller's own catch actually surface something instead of going silent.
+    expect(secondError.handled).toBe(false)
   })
 })
