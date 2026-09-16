@@ -201,6 +201,35 @@ describe('useResidentialAddressModel', () => {
     })
   })
 
+  describe('handleSubmit - onInvalidSubmit', () => {
+    it('should call onInvalidSubmit with the errors object on failed validation', async () => {
+      const onInvalidSubmit = jest.fn()
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation, onInvalidSubmit }))
+
+      act(() => {
+        result.current.handleChange('streetAddress', '')
+      })
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(onInvalidSubmit).toHaveBeenCalledTimes(1)
+      expect(onInvalidSubmit).toHaveBeenCalledWith(result.current.formErrors)
+    })
+
+    it('should not call onInvalidSubmit on a valid submit', async () => {
+      const onInvalidSubmit = jest.fn()
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation, onInvalidSubmit }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(onInvalidSubmit).not.toHaveBeenCalled()
+    })
+  })
+
   describe('handleSubmit - validation', () => {
     it('should set validation errors for empty required fields', async () => {
       const storeWithEmptyAddress = {
