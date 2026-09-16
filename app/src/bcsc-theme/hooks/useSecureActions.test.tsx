@@ -8,6 +8,7 @@ import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import {
   AccountSecurityMethod,
+  BCSCCardProcess,
   deleteAuthorizationRequest,
   deleteEvidence,
   EvidenceMetadata,
@@ -42,6 +43,8 @@ jest.mock('react-native-bcsc-core', () => ({
     DeviceAuth: 'device_authentication',
   },
   TokenType: { Refresh: 0, Registration: 2, Access: 1 },
+  // Delegate to the central manual mock so values can't drift from the real enum.
+  BCSCCardProcess: jest.requireActual('../../../__mocks__/react-native-bcsc-core').BCSCCardProcess,
   setEvidence: jest.fn(),
   setAccount: jest.fn(),
   setAccountFlags: jest.fn(),
@@ -1119,6 +1122,89 @@ describe('useSecureActions', () => {
       })
 
       expect(captureHydratedSecureData()?.emailAddress).toBe('legacy@example.com')
+    })
+  })
+
+  describe('hydrateSecureState cardProcess', () => {
+    const completeEvidence = [
+      { evidenceType: { evidence_type: 'passport', image_sides: [{}] }, documentNumber: '123', metadata: [{}] },
+    ]
+
+    beforeEach(() => {
+      jest.mocked(getAccount).mockResolvedValue(null as any)
+      jest.mocked(getToken).mockResolvedValue(null as any)
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+    })
+
+    const captureHydratedCardProcess = () => {
+      const hydrateCall = mockDispatch.mock.calls.find(
+        ([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE
+      )
+      return hydrateCall?.[0]?.payload?.[0]?.cardProcess
+    }
+
+    it('infers NonBCSC for a migrated install with evidence but no recorded cardProcess', async () => {
+      jest.mocked(getEvidence).mockResolvedValue(completeEvidence as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({} as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBe(BCSCCardProcess.NonBCSC)
+    })
+
+    it('still infers NonBCSC when a failed combo-card scan left a stale serial (no deviceCode)', async () => {
+      // handleScanComboCard persists csn before attempting authorization, so a Non-BCSC session
+      // can carry a serial from that failed attempt (see resume-step-route.test.ts:51-58).
+      jest.mocked(getEvidence).mockResolvedValue(completeEvidence as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({ csn: '123456789' } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBe(BCSCCardProcess.NonBCSC)
+    })
+
+    it('does not infer NonBCSC once a deviceCode shows the card was actually authorized', async () => {
+      jest.mocked(getEvidence).mockResolvedValue(completeEvidence as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({ csn: '123456789', deviceCode: 'dc' } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBeUndefined()
+    })
+
+    it('leaves cardProcess undefined when there is no evidence to infer from', async () => {
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({} as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBeUndefined()
+    })
+
+    it('preserves an explicitly recorded cardProcess', async () => {
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({ cardProcess: BCSCCardProcess.BCSCPhoto } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBe(BCSCCardProcess.BCSCPhoto)
     })
   })
 
