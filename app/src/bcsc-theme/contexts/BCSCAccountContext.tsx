@@ -1,6 +1,6 @@
+import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { isAppError } from '@/errors/appError'
-import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { BCSCSecureState, BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -83,7 +83,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       pendingLoadRef.current.connectivity
     )
     lastLoadRef.current = diagnostics
-    logger.info('BCSCAccountProvider: Loading account', diagnostics)
+    logger.info('BCSCAccountProvider: Loading account', { ...diagnostics })
     return userService.getUserMetadata()
   }, [logger, store.bcscSecure, userService])
 
