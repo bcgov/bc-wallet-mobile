@@ -1101,7 +1101,7 @@ export const useSecureActions = () => {
         deviceCode: authRequest?.deviceCode,
         userCode: authRequest?.userCode,
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
-        cardProcess: authRequest?.cardProcess,
+        cardProcess: hydrateCardProcess(authRequest, cleanedEvidence),
 
         refreshToken,
         registrationAccessToken,
@@ -1270,6 +1270,34 @@ export const useSecureActions = () => {
     deleteVerificationData,
     deleteScannedCardData: deleteCardInfo,
   }
+}
+
+/**
+ * Hydrate the card process based on evidence data and the authorization request.
+ * @param authRequest Authorization request to check for existing card process
+ * @param evidenceData Array of evidence metadata to analyze
+ * @returns The hydrated card process, or undefined if it cannot be determined
+ */
+function hydrateCardProcess(
+  authRequest: NativeAuthorizationRequest | null,
+  evidenceData: EvidenceMetadata[]
+): BCSCCardProcess | undefined {
+  // If there's no authorization request, we can't determine the card process
+  if (!authRequest) {
+    return undefined
+  }
+
+  // If cardProcess is already set in the authRequest, use that
+  if (authRequest.cardProcess) {
+    return authRequest.cardProcess
+  }
+
+  // If there's no cardProcess in the authRequest, infer it from the evidenceData
+  if (!authRequest.csn && evidenceData.length > 0) {
+    return BCSCCardProcess.NonBCSC
+  }
+
+  return undefined
 }
 
 export default useSecureActions
