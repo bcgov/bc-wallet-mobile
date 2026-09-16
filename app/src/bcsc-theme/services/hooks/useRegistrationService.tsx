@@ -7,7 +7,13 @@ import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
-import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
+import {
+  AccountSecurityMethod,
+  getAccount,
+  getAccountSecurityMethod,
+  getToken,
+  TokenType,
+} from 'react-native-bcsc-core'
 
 /**
  * Maps AppEventCodes that can be thrown during registration to their
@@ -128,13 +134,36 @@ export const useRegistrationService = () => {
     await register(securityMethod)
   }, [register, store.bcscSecure.registrationAccessToken])
 
+  /**
+   * Deletes the current IAS client registration and creates a fresh one, keeping the same
+   * security method
+   *
+   * @returns Promise<void>
+   */
+  const cycleRegistration = useCallback(async () => {
+    const account = await getAccount()
+    let registrationAccessToken = store.bcscSecure.registrationAccessToken
+    if (!registrationAccessToken) {
+      const nativeToken = await getToken(TokenType.Registration)
+      registrationAccessToken = nativeToken?.token
+    }
+
+    if (registrationAccessToken && account?.clientID) {
+      await registrationApi.deleteRegistration(registrationAccessToken, account.clientID)
+    }
+
+    const securityMethod = await getAccountSecurityMethod()
+    await registrationApi.createRegistration(securityMethod)
+  }, [registrationApi, store.bcscSecure.registrationAccessToken])
+
   return useMemo(
     () => ({
       ...registrationApi, // Spread the base API to include all its methods
       updateRegistration,
       register,
       ensureRegistered,
+      cycleRegistration,
     }),
-    [ensureRegistered, register, registrationApi, updateRegistration]
+    [ensureRegistered, register, registrationApi, updateRegistration, cycleRegistration]
   )
 }

@@ -3,7 +3,7 @@ import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD
 import { isHandledAppError } from '@/errors/appError'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -19,6 +19,7 @@ import {
   ScanableCode,
 } from '../utils/decoder-strategy/DecoderStrategy'
 import { getResumeStepRoute } from '../utils/resume-step-route'
+import { useDeviceAuthorizationRecovery } from './useDeviceAuthorizationRecovery'
 import { useSecureActions } from './useSecureActions'
 
 type DriversLicenseMetadataStub = { birthDate: Date }
@@ -49,6 +50,10 @@ export const useCardScanner = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
+  // useCardScanner is shared between ScanSerialScreen and EvidenceCaptureScreen, so the
+  // originating screen for recovery purposes is whichever one currently renders this hook.
+  const route = useRoute<RouteProp<BCSCVerifyStackParams>>()
+  const attemptWithRecovery = useDeviceAuthorizationRecovery()
   const scannerEnabledRef = useRef(true)
   const { updateUserInfo, updateUserMetadata, updateDeviceCodes, updateCardProcess, updateVerificationOptions } =
     useSecureActions()
@@ -117,9 +122,13 @@ export const useCardScanner = () => {
 
       try {
         // Skip error handling, any false authorization returned push the user into a Non BCSC flow
-        const deviceAuth = await authorizationService.authorizeDevice(bcscSerial, license.birthDate, {
-          skipErrorHandling: isNonBcscFlow,
-        })
+        const deviceAuth = await attemptWithRecovery(
+          () =>
+            authorizationService.authorizeDevice(bcscSerial, license.birthDate, {
+              skipErrorHandling: isNonBcscFlow,
+            }),
+          route.name
+        )
         await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
         return true
       } catch (error) {
@@ -137,7 +146,15 @@ export const useCardScanner = () => {
         return true
       }
     },
-    [authorizationService, updateUserInfo, applyDeviceAuthorization, logger, store.bcscSecure.cardProcess]
+    [
+      authorizationService,
+      attemptWithRecovery,
+      route.name,
+      updateUserInfo,
+      applyDeviceAuthorization,
+      logger,
+      store.bcscSecure.cardProcess,
+    ]
   )
 
   /**
@@ -160,16 +177,19 @@ export const useCardScanner = () => {
         '[CardScanner] Non-BCSC flow: querying /device/barcodes to check if the scanned card is a BC Services Card'
       )
 
-      const deviceAuth = await authorizationService.authorizeDeviceWithBarcodes(
-        buildBarcodePayload(bcscSerial, license),
-        { skipErrorHandling: true }
+      const deviceAuth = await attemptWithRecovery(
+        () =>
+          authorizationService.authorizeDeviceWithBarcodes(buildBarcodePayload(bcscSerial, license), {
+            skipErrorHandling: true,
+          }),
+        route.name
       )
       await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
       await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
       logger.info('[CardScanner] Scanned card matched a BC Services Card; switching to setup')
       return true
     },
-    [authorizationService, updateUserInfo, applyDeviceAuthorization, logger]
+    [authorizationService, attemptWithRecovery, route.name, updateUserInfo, applyDeviceAuthorization, logger]
   )
 
   /**

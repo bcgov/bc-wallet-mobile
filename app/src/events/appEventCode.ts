@@ -119,7 +119,7 @@ export enum AppEventCode {
   ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE = 'err_400_failed_to_retrieve_string_resource',
   ERR_300_EMPTY_RESPONSE = 'err_300_empty_response',
   ERR_500_INVALID_URL = 'err_500_invalid_url',
-  ERR_501_INVALID_REGISTRATION_REQUEST = 'err_501_invalid_registration_request',
+  ERR_501_INVALID_REGISTRATION_REQUEST = 'invalid_registration_request',
   // Device Authorization (device/code) card-status errors — 400 responses from the device
   // authorization endpoint, distinguishing why the card/registration was rejected.
   INVALID_PARAMETER = 'invalid_parameter',
