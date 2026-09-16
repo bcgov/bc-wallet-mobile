@@ -1036,11 +1036,22 @@ export const useSecureActions = () => {
         }
       }
 
-      await updateTokens({
+      // Computed once and used for both the keychain write-back and the store, so the
+      // HYDRATE_SECURE_STATE dispatch below can't clobber a refreshed or rotated token.
+      const effectiveTokens = {
         refreshToken: freshTokens?.refresh_token ?? refreshToken,
         registrationAccessToken: recoveredRegistrationAccessToken ?? registrationAccessToken,
         accessToken: freshTokens?.access_token ?? accessToken,
-      })
+      }
+
+      // A keychain write failure here used to abort an already-successful unlock and surface as
+      // "Device Authentication Failed" (#4645). The tokens are in memory either way, and the next
+      // unlock refreshes from the stored token again, so log and continue.
+      try {
+        await updateTokens(effectiveTokens)
+      } catch (error) {
+        logger.error('[hydrateSecureState] Failed to persist tokens; continuing with in-memory tokens', error as Error)
+      }
 
       // Reconstruct userMetadata from authorizationRequest (matches IAS apps)
       let userMetadata: NonBCSCUserMetadata | undefined = undefined
@@ -1103,9 +1114,7 @@ export const useSecureActions = () => {
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
         cardProcess: hydrateCardProcess(authRequest, cleanedEvidence),
 
-        refreshToken,
-        registrationAccessToken,
-        accessToken,
+        ...effectiveTokens,
 
         verified,
         verifiedStatus: verificationStatus,
