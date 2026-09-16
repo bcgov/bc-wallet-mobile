@@ -99,6 +99,18 @@ describe('ResidentialAddress', () => {
       fireEvent.press(tree.getByTestId(`com.ariesbifold:id/province-option-${value}`))
     }
 
+    it('still auto-advances to postal code after the province picker closes', async () => {
+      const tree = render(
+        <BasicAppContext>
+          <ResidentialAddressScreen navigation={mockNavigation as never} route={mockRoute as never} />
+        </BasicAppContext>
+      )
+
+      selectProvince(tree, 'BC')
+
+      expect(focusedTestIds()).toEqual(['com.ariesbifold:id/postalCode-input'])
+    })
+
     it('scrolls to and focuses street address on an empty submit', async () => {
       const tree = render(
         <BasicAppContext>
@@ -137,7 +149,7 @@ describe('ResidentialAddress', () => {
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/streetAddress2-input'])
     })
 
-    it('focuses city in visual order even though the model reports postal code as the first key', async () => {
+    it('focuses city rather than postal code when both are invalid', async () => {
       const tree = render(
         <BasicAppContext>
           <ResidentialAddressScreen navigation={mockNavigation as never} route={mockRoute as never} />

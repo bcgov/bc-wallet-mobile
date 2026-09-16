@@ -6,9 +6,7 @@ type FocusRequest<F extends string> = { field: F }
 
 /**
  * Scrolls to and focuses the first invalid field on a form after a failed submit.
- *
- * `fieldOrder` must be a module-scope constant: it's a `useCallback` dep, so a fresh array
- * every render would churn `focusFirstInvalidField`'s identity.
+ * `fieldOrder` must be a module-scope constant — it is a `useCallback` dep.
  */
 const useFocusFirstInvalidField = <F extends string>(fieldOrder: readonly F[]) => {
   const scrollViewRef = useRef<ScrollView>(null)
