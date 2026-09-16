@@ -141,6 +141,20 @@ describe('DropdownWithValidation Component', () => {
       expect(getByText('Error message')).toBeTruthy()
       expect(queryByText('Helper text here')).toBeNull()
     })
+
+    test('forwards onLayout from the root View', () => {
+      const onLayout = jest.fn()
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <DropdownWithValidation {...defaultProps} onLayout={onLayout} />
+        </BasicAppContext>
+      )
+
+      const layoutEvent = { nativeEvent: { layout: { y: 42, x: 0, width: 100, height: 20 } } }
+      fireEvent(getByTestId('com.ariesbifold:id/test-dropdown-input'), 'layout', layoutEvent)
+
+      expect(onLayout).toHaveBeenCalledWith(expect.objectContaining(layoutEvent))
+    })
   })
 
   describe('Modal Interaction', () => {

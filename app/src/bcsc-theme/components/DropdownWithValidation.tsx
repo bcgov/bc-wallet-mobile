@@ -2,7 +2,7 @@ import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FlatList, Modal, Pressable, StyleProp, StyleSheet, TextStyle, View } from 'react-native'
+import { FlatList, LayoutChangeEvent, Modal, Pressable, StyleProp, StyleSheet, TextStyle, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -21,6 +21,7 @@ type DropdownWithValidationProps<T> = {
   options: DropdownOption<T>[]
   onChange: (value: T) => void
   onModalClose?: () => void
+  onLayout?: (e: LayoutChangeEvent) => void
   label: string
   placeholder?: string
   subtext?: string
@@ -43,6 +44,7 @@ export const DropdownWithValidation = <T extends string | number>({
   options,
   onChange,
   onModalClose,
+  onLayout,
   label,
   placeholder = 'Select an option',
   subtext,
@@ -166,7 +168,7 @@ export const DropdownWithValidation = <T extends string | number>({
   }
 
   return (
-    <View>
+    <View onLayout={onLayout}>
       <ThemedText
         variant={'labelTitle'}
         style={[{ marginBottom: 8 }, labelProps]}
