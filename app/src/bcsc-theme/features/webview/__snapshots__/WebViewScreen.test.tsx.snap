@@ -9,6 +9,7 @@ exports[`WebViewScreen renders correctly 1`] = `
   mixedContentMode="compatibility"
   onError={[Function]}
   onHttpError={[Function]}
+  onShouldStartLoadWithRequest={[Function]}
   originWhitelist={
     [
       "*",
@@ -18,9 +19,6 @@ exports[`WebViewScreen renders correctly 1`] = `
   sharedCookiesEnabled={true}
   source={
     {
-      "headers": {
-        "Authorization": "Bearer undefined",
-      },
       "uri": "https://example.com",
     }
   }
