@@ -2,7 +2,7 @@ import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { isAppError } from '@/errors/appError'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { BCSCSecureState, BCState, VerificationStatus } from '@/store'
+import { BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import moment from 'moment'
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
@@ -27,34 +27,21 @@ export interface BCSCAccountContextType {
 }
 
 /** What initiated an account load, captured for diagnostics on failure (see #4675). */
-export type AccountLoadTrigger = 'initial' | 'tokens-refreshed' | 'reconnect' | 'manual'
+type AccountLoadTrigger = 'initial' | 'tokens-refreshed' | 'reconnect' | 'manual'
 
-export interface AccountLoadDiagnostics {
+interface AccountLoadDiagnostics {
   trigger: AccountLoadTrigger
   screen: string | undefined
   navigationReady: boolean
   appState: AppStateStatus
   connectivity?: ReconnectEvent
+  /** The raw "verified" flag from secure state - the one isUserVerified() input not already
+   *  captured by verifiedStatus/hasRefreshToken below, so together they reconstruct its guard. */
   verified: boolean
   verifiedStatus: VerificationStatus
   /** Never the token value itself - only whether one exists. */
   hasRefreshToken: boolean
 }
-
-const buildAccountLoadDiagnostics = (
-  trigger: AccountLoadTrigger,
-  secureState: BCSCSecureState,
-  connectivity?: ReconnectEvent
-): AccountLoadDiagnostics => ({
-  trigger,
-  screen: navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined,
-  navigationReady: navigationRef.isReady(),
-  appState: AppState.currentState,
-  ...(connectivity ? { connectivity } : {}),
-  verified: isUserVerified(secureState),
-  verifiedStatus: secureState.verifiedStatus,
-  hasRefreshToken: Boolean(secureState.refreshToken),
-})
 
 export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(null)
 
@@ -76,26 +63,33 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   })
   const lastLoadRef = useRef<AccountLoadDiagnostics | null>(null)
 
-  const loadUserMetadata = useCallback(() => {
-    const diagnostics = buildAccountLoadDiagnostics(
-      pendingLoadRef.current.trigger,
-      store.bcscSecure,
-      pendingLoadRef.current.connectivity
-    )
-    lastLoadRef.current = diagnostics
-    logger.info('BCSCAccountProvider: Loading account', { ...diagnostics })
-    return userService.getUserMetadata()
-  }, [logger, store.bcscSecure, userService])
-
-  const { data, load, isLoading, refresh } = useDataLoader(loadUserMetadata, {
-    onError: (error) => {
-      const accountLoad = lastLoadRef.current
-      if (isAppError(error)) {
-        error.addContext({ accountLoad })
+  const { data, load, isLoading, refresh } = useDataLoader(
+    () => {
+      const { trigger, connectivity } = pendingLoadRef.current
+      const diagnostics: AccountLoadDiagnostics = {
+        trigger,
+        screen: navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined,
+        navigationReady: navigationRef.isReady(),
+        appState: AppState.currentState,
+        ...(connectivity ? { connectivity } : {}),
+        verified: Boolean(store.bcscSecure.verified),
+        verifiedStatus: store.bcscSecure.verifiedStatus,
+        hasRefreshToken: Boolean(store.bcscSecure.refreshToken),
       }
-      logger.error('BCSCAccountProvider: Failed to load user metadata', { error, accountLoad })
+      lastLoadRef.current = diagnostics
+      logger.info('BCSCAccountProvider: Loading account', { ...diagnostics })
+      return userService.getUserMetadata()
     },
-  })
+    {
+      onError: (error) => {
+        const accountLoad = lastLoadRef.current
+        if (isAppError(error)) {
+          error.addContext({ accountLoad })
+        }
+        logger.error('BCSCAccountProvider: Failed to load user metadata', { error, accountLoad })
+      },
+    }
+  )
 
   const canLoadAccount = isUserVerified(store.bcscSecure)
 
