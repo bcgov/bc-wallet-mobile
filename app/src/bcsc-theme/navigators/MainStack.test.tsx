@@ -210,12 +210,15 @@ describe('MainStack', () => {
     expect(PairingModule.pairingPayloadToServiceLoginParams).not.toHaveBeenCalled()
   })
 
-  it('shows the loading screen while the account is still loading', () => {
+  it('overlays the loading screen over the stack while the account is still loading', () => {
     jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
 
-    const { toJSON } = render(<MainStack />)
+    const view = render(<MainStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
+    // The old behaviour replaced the whole tree with a bare LoadingScreen (toJSON() top-level
+    // type === 'LoadingScreen'); the overlay wraps it in the same View the stack renders into.
+    expect(view.toJSON()).toMatchObject({ type: 'View' })
+    expect(queryLoadingScreens(view)).toHaveLength(1)
   })
 
   it('holds the loading screen over the stack while system checks are still settling', () => {
