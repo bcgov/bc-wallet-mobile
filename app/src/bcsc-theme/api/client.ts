@@ -335,6 +335,15 @@ class BCSCApiClient {
     })
   }
 
+  /**
+   * Access token for requests that bypass the axios interceptors (WebView headers). Refreshes when the
+   * cached token is missing or near expiry; `forceRefresh` mirrors the interceptor's 401 recovery.
+   */
+  async getAccessToken(options?: { forceRefresh?: boolean }): Promise<string> {
+    const tokens = options?.forceRefresh ? await this.forceRefreshTokens() : await this.ensureValidTokens()
+    return tokens.access_token
+  }
+
   private isTokenExpired(token?: string): boolean {
     let isExpired = true
     // if no token is present, or within the buffer limit of expiring, return that token is "expired" and fetch a new one
