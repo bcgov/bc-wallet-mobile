@@ -1,4 +1,5 @@
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -19,11 +20,15 @@ export const useEnterBirthdateViewModel = (
   const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions } = useSecureActions()
+  const attemptWithRecovery = useDeviceAuthorizationRecovery()
 
   const authorizeDevice = useCallback(
     async (serial: string, date: Date) => {
       await updateUserInfo({ birthdate: date })
-      const deviceAuth = await authorizationService.authorizeDevice(serial, date)
+      const deviceAuth = await attemptWithRecovery(
+        () => authorizationService.authorizeDevice(serial, date),
+        BCSCScreens.EnterBirthdate
+      )
 
       // Store authorization data
       const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
@@ -67,6 +72,7 @@ export const useEnterBirthdateViewModel = (
     },
     [
       authorizationService,
+      attemptWithRecovery,
       navigation,
       logger,
       store,
