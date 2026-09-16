@@ -796,6 +796,85 @@ describe('useRegistrationService', () => {
     })
   })
 
+  describe('cycleRegistration', () => {
+    it('deletes the existing registration and creates a fresh one', async () => {
+      const registrationApi = {
+        deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
+        createRegistration: jest.fn().mockResolvedValue({ client_id: 'new-client-id' }),
+      } as any
+      const mockSecurityMethod = 'pin' as any
+
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+      ;(getAccountSecurityMethod as jest.Mock).mockResolvedValue(mockSecurityMethod)
+      const bcscCore = jest.requireMock('react-native-bcsc-core')
+      bcscCore.getAccount.mockResolvedValue({ clientID: 'old-client-id' })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
+          }}
+        >
+          {children}
+        </BasicAppContext>
+      )
+      const { result } = renderHook(() => useRegistrationService(), { wrapper })
+
+      await result.current.cycleRegistration()
+
+      expect(registrationApi.deleteRegistration).toHaveBeenCalledWith('existing-token', 'old-client-id')
+      expect(registrationApi.createRegistration).toHaveBeenCalledWith(mockSecurityMethod)
+      // deleteRegistration must resolve before createRegistration fires, otherwise the new
+      // registration could race the deletion of the old one.
+      expect(registrationApi.deleteRegistration.mock.invocationCallOrder[0]).toBeLessThan(
+        registrationApi.createRegistration.mock.invocationCallOrder[0]
+      )
+    })
+
+    it('falls back to the native registration token when the store has none', async () => {
+      const registrationApi = {
+        deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
+        createRegistration: jest.fn().mockResolvedValue({ client_id: 'new-client-id' }),
+      } as any
+
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+      ;(getAccountSecurityMethod as jest.Mock).mockResolvedValue('pin' as any)
+      const bcscCore = jest.requireMock('react-native-bcsc-core')
+      bcscCore.getAccount.mockResolvedValue({ clientID: 'old-client-id' })
+      bcscCore.getToken.mockResolvedValue({ token: 'native-token' })
+
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+
+      await result.current.cycleRegistration()
+
+      expect(bcscCore.getToken).toHaveBeenCalledWith(bcscCore.TokenType.Registration)
+      expect(registrationApi.deleteRegistration).toHaveBeenCalledWith('native-token', 'old-client-id')
+    })
+
+    it('skips deleteRegistration when no token/clientId is available, but still registers fresh', async () => {
+      const registrationApi = {
+        deleteRegistration: jest.fn(),
+        createRegistration: jest.fn().mockResolvedValue({ client_id: 'new-client-id' }),
+      } as any
+
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+      ;(getAccountSecurityMethod as jest.Mock).mockResolvedValue('pin' as any)
+      const bcscCore = jest.requireMock('react-native-bcsc-core')
+      bcscCore.getAccount.mockResolvedValue({ clientID: undefined })
+      bcscCore.getToken.mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+
+      await result.current.cycleRegistration()
+
+      expect(registrationApi.deleteRegistration).not.toHaveBeenCalled()
+      expect(registrationApi.createRegistration).toHaveBeenCalled()
+    })
+  })
+
   it('should return memoized functions', () => {
     const registrationApi = {
       register: jest.fn(),

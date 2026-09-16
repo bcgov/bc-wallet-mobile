@@ -1,4 +1,5 @@
 import { useEnterBirthdateViewModel } from '@/bcsc-theme/features/verify/EnterBirthdate/useEnterBirthdateViewModel'
+import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -12,6 +13,12 @@ const mockAuthorizeDevice = jest.fn().mockResolvedValue(null)
 
 jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
 const mockUseAuthorizationService = jest.mocked(useAuthorizationService)
+
+// Transparent passthrough by default — its own recovery behavior is covered by
+// useDeviceAuthorizationRecovery.test.ts.
+const mockAttemptWithRecovery = jest.fn((thunk: () => Promise<unknown>) => thunk())
+jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery')
+jest.mocked(useDeviceAuthorizationRecovery).mockReturnValue(mockAttemptWithRecovery as any)
 
 // Mock secure actions
 const mockUpdateUserInfo = jest.fn()
