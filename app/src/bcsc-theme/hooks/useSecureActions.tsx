@@ -1284,7 +1284,7 @@ function hydrateCardProcess(
 ): BCSCCardProcess | undefined {
   // If there's no authorization request, we can't determine the card process
   if (!authRequest) {
-    return undefined
+    return
   }
 
   // If cardProcess is already set in the authRequest, use that
@@ -1292,12 +1292,10 @@ function hydrateCardProcess(
     return authRequest.cardProcess
   }
 
-  // If there's no cardProcess in the authRequest, infer it from the evidenceData
-  if (!authRequest.csn && evidenceData.length > 0) {
+  // If there's no deviceCode and there is evidence data, assume NonBCSC process
+  if (!authRequest.deviceCode && evidenceData.length > 0) {
     return BCSCCardProcess.NonBCSC
   }
-
-  return undefined
 }
 
 export default useSecureActions
