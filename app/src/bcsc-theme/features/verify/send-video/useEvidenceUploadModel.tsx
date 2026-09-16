@@ -246,7 +246,10 @@ const useEvidenceUploadModel = (
       const appError = ensureAppError(error, AppEventCode.FILE_UPLOAD_ERROR)
 
       logger.error('[useEvidenceUploadModel] Error during evidence upload process', appError)
-      fileUploadErrorAlert(appError)
+
+      if (!appError.handled) {
+        fileUploadErrorAlert(appError)
+      }
     } finally {
       setIsUploading(false)
       setUploadMessage(null)
