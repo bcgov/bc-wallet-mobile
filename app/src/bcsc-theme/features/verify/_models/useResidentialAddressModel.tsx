@@ -1,6 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
-import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
+import {
+  useDeviceAuthorizationRecovery,
+  useIsDeviceAuthorizationRecovering,
+} from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
@@ -58,6 +61,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
   const { emitErrorModal } = useErrorAlert()
   const { updateCardProcess, updateUserMetadata, updateDeviceCodes, updateVerificationOptions } = useSecureActions()
   const attemptWithRecovery = useDeviceAuthorizationRecovery()
+  const isRecovering = useIsDeviceAuthorizationRecovering()
 
   const [formState, setFormState] = useState<ResidentialAddressFormState>({
     streetAddress: store.bcscSecure.userMetadata?.address?.streetAddress ?? '',
@@ -272,7 +276,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
   return {
     formState,
     formErrors,
-    isSubmitting,
+    isSubmitting: isSubmitting || isRecovering,
     handleChange,
     handleSubmit,
   }

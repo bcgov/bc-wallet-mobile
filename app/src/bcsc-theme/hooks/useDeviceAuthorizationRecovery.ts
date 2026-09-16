@@ -3,7 +3,31 @@ import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { TOKENS, useServices } from '@bifold/core'
-import { useCallback } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
+
+// Module state rather than component state
+// the error handling in useResidentialAddressModel and EnterBirthdateScreen can
+// remount the component before the recovery call even starts, reseting local load state.
+// This module state survives that remount, so the UI can reflect that work is still in progress.
+let isRecovering = false
+const listeners = new Set<() => void>()
+
+const setRecovering = (value: boolean) => {
+  if (isRecovering === value) {
+    return
+  }
+  isRecovering = value
+  listeners.forEach((listener) => listener())
+}
+
+const subscribeToRecovery = (listener: () => void) => {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+const getRecoverySnapshot = () => isRecovering
+
+export const useIsDeviceAuthorizationRecovering = () => useSyncExternalStore(subscribeToRecovery, getRecoverySnapshot)
 
 /**
  * Wraps a single device-authorization call: on that specific conflict, if the reset really was a
@@ -37,9 +61,13 @@ export const useDeviceAuthorizationRecovery = () => {
           originScreen,
         })
 
-        await cycleRegistration()
-
-        return await action()
+        setRecovering(true)
+        try {
+          await cycleRegistration()
+          return await action()
+        } finally {
+          setRecovering(false)
+        }
       }
     },
     [cycleRegistration, logger]
