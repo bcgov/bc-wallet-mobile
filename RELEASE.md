@@ -2,20 +2,22 @@
 
 Once a version's GitHub release exists (the usual release ritual), publish its e2e builds so the
 upgrade lanes (previous release → current, plus a pinned copy per shipped version) can test future
-builds against it:
+builds against it. A shipped build lives under one name on its release and in Sauce storage:
+`BCSC-v<version>.apk` / `.ipa`.
 
 1. Dispatch **Actions → Publish Release E2E Builds** with the release tag (e.g. `bcsc-v4.1.0`).
    It resolves the `Native Build & Test` (`main.yaml`) run for the tag's commit (override with
    `run_id` if they differ), attaches the bcsc-dev `.apk`/`.ipa` to that release as
-   `BCSC-Dev-e2e.*` assets (release notes are untouched), and — for a full release, not a
-   pre-release RC — uploads them to Sauce Labs storage as `BCSC-prev.apk` / `BCSC-prev.ipa`.
-   GitHub build artifacts expire after **7 days**; after that, pass `sauce_source=BCSC-Dev-<build>`
-   and the workflow takes the same build's Sauce storage copy instead (kept about 60 days).
+   `BCSC-v<version>.*` (name derived from the tag; `asset_name` overrides it when the tag doesn't
+   carry the shipped version), uploads the same name to Sauce Labs storage as the pinned copy and —
+   for a full release, not a pre-release RC, at 4.1.0 or later — as `BCSC-prev.apk` /
+   `BCSC-prev.ipa`, the rolling previous release. GitHub build artifacts expire after **7 days**;
+   after that, pass `sauce_source=BCSC-Dev-<build>` and the workflow takes the same build's Sauce
+   storage copy instead (kept about 60 days).
 2. Add the version to the manifest of **Refresh E2E Sauce Builds**
-   (`.github/workflows/refresh-e2e-sauce-builds.yml`) so a pinned `BCSC-v<version>.*` copy exists,
-   and dispatch it. The workflow re-uploads every pinned version and `BCSC-prev.*` from the
-   release assets monthly, keeping the Sauce copies inside the 60-day retention window; a release
-   missing its assets fails its entry.
+   (`.github/workflows/refresh-e2e-sauce-builds.yml`), which re-uploads every pinned copy and
+   `BCSC-prev.*` from the release assets monthly, keeping the Sauce copies inside the 60-day
+   retention window; a release missing its assets fails its entry.
 
 A build that is in neither place must be built from its tag by hand (`e2e/apps/README.md`) and
 attached with `gh release upload`. See the "Upgrade Tests" section in `e2e/README.md` for how the

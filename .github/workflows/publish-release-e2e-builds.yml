@@ -4,23 +4,27 @@
 # pass the release tag (e.g. bcsc-v4.1.0). The e2e upgrade lanes consume what this
 # publishes (previous release → current, and the pinned per-version copies).
 #
+# A shipped build lives under ONE name on its release and in Sauce storage:
+# BCSC-v<version>.apk / .ipa. The name is derived from the tag (bcsc-v4.1.0_rc2 →
+# BCSC-v4.1.0); pass asset_name when the tag doesn't carry the shipped version
+# (the 4.0.3 hotfix on the bcsc-v4.0.2 release → BCSC-v4.0.3).
+#
 # What it does:
 #   1. Fetches the shipped bcsc-dev binaries — from the main.yaml ("Native Build &
 #      Test") run that built the release commit (override with run_id if the tag's
 #      commit isn't the build commit). GitHub artifacts expire after 7 DAYS; once
 #      they are gone, pass sauce_source instead: the Sauce storage copy of the same
 #      build (BCSC-Dev-<run number>.*, kept ~60 days) is downloaded in its place.
-#   2. Attaches them to that version's release as <asset_name>.apk / .ipa (assets
-#      only — release notes are never touched). The default BCSC-Dev-e2e makes the
-#      release a candidate for the rolling previous release; a pinned-only name
-#      (e.g. BCSC-v4.0.3, a pre-rework build the standard upgrade suite cannot
-#      drive) keeps it out of that rotation.
-#   3. For a FULL release (not a pre-release RC) published under the default asset
-#      name, also uploads both to Sauce Labs storage as BCSC-prev.apk / BCSC-prev.ipa,
-#      UNTAGGED (the PR-prune maintenance job only deletes pr-tagged files).
+#   2. Attaches them to that version's release (assets only — release notes are
+#      never touched) and uploads the pinned copy to Sauce storage under the same
+#      name, UNTAGGED (the PR-prune maintenance job only deletes pr-tagged files).
+#   3. For a FULL release (not a pre-release RC) at or above PREV_MIN_VERSION, also
+#      uploads both as BCSC-prev.apk / BCSC-prev.ipa — the rolling previous release
+#      the `upgrade` lane starts from. Older builds predate the onboarding shape
+#      the suite drives, so they stay pinned-only.
 #
-# Pinned per-version copies (BCSC-v<version>.*) come from the monthly "Refresh E2E
-# Sauce Builds" workflow: add the release to its manifest and dispatch it.
+# Afterwards add the version to the manifest of "Refresh E2E Sauce Builds", which
+# re-uploads every pinned copy and BCSC-prev.* monthly from the release assets.
 #
 # Android versionCode = build run number, so "previous" must always be an older
 # run than the build under test (Android refuses downgrade installs).
@@ -44,14 +48,14 @@ on:
         type: string
         default: ''
       asset_name:
-        description: 'Asset name on the release, without extension. Default BCSC-Dev-e2e (rolling-previous candidate); a pinned-only name like BCSC-v4.0.3 never moves BCSC-prev.*'
+        description: 'Override the BCSC-v<version> name derived from the tag when the tag does not carry the shipped version (e.g. BCSC-v4.0.3 on bcsc-v4.0.2)'
         required: false
         type: string
-        default: 'BCSC-Dev-e2e'
+        default: ''
 
 env:
-  ROLLING_ASSET_NAME: BCSC-Dev-e2e
-  ASSET_NAME: ${{ inputs.asset_name || 'BCSC-Dev-e2e' }}
+  # First release with the onboarding shape the upgrade suite drives — nothing older becomes BCSC-prev.*
+  PREV_MIN_VERSION: 4.1.0
   PREV_ANDROID_FILENAME: BCSC-prev.apk
   PREV_IOS_FILENAME: BCSC-prev.ipa
 
@@ -81,14 +85,28 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ inputs.release_tag }}
+          ASSET_NAME_OVERRIDE: ${{ inputs.asset_name }}
         run: |
           release_json=$(gh api "repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}")
           is_prerelease=$(echo "$release_json" | jq -r '.prerelease')
+          # Name from the tag unless overridden: bcsc-v4.1.0_rc2 → BCSC-v4.1.0, bcsc-v4.1.1-8700 → BCSC-v4.1.1
+          name="${ASSET_NAME_OVERRIDE:-BCSC-v$(sed -E 's/^bcsc-v//; s/[-_].*$//' <<<"$RELEASE_TAG")}"
+          if ! [[ "$name" =~ ^BCSC-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$name' is not BCSC-v<x.y.z> — pass asset_name with the shipped version (e.g. BCSC-v4.0.3)"
+            exit 1
+          fi
+          version="${name#BCSC-v}"
+          rolling=false
+          if [ "$is_prerelease" = "false" ] && [ "$(printf '%s\n' "$PREV_MIN_VERSION" "$version" | sort -V | head -1)" = "$PREV_MIN_VERSION" ]; then
+            rolling=true
+          fi
+          echo "ASSET_NAME=$name" >> "$GITHUB_ENV"
           {
             echo "prerelease=$is_prerelease"
             echo "release_id=$(echo "$release_json" | jq -r '.id')"
+            echo "rolling=$rolling"
           } >> "$GITHUB_OUTPUT"
-          echo "$RELEASE_TAG (prerelease: $is_prerelease) → assets ${ASSET_NAME}.apk / ${ASSET_NAME}.ipa"
+          echo "$RELEASE_TAG (prerelease: $is_prerelease) → ${name}.apk / ${name}.ipa; rolling previous release: $rolling"
 
       - name: Resolve the build run
         if: inputs.sauce_source == ''
@@ -190,8 +208,26 @@ jobs:
           echo "✓ Attached ${ASSET_NAME}.apk + ${ASSET_NAME}.ipa to $RELEASE_TAG (from $SOURCE)"
           echo "Attached \`${ASSET_NAME}.apk\` + \`${ASSET_NAME}.ipa\` to **${RELEASE_TAG}** from ${SOURCE}" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Upload the pinned Android copy to SauceLabs
+        uses: ./.github/workflows/actions/upload-to-sauce-storage
+        with:
+          file: ${{ env.ASSET_NAME }}.apk
+          name: ${{ env.ASSET_NAME }}.apk
+          description: e2e upgrade source — ${{ inputs.release_tag }} / ${{ env.ASSET_NAME }}.apk
+          sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+
+      - name: Upload the pinned iOS copy to SauceLabs
+        uses: ./.github/workflows/actions/upload-to-sauce-storage
+        with:
+          file: ${{ env.ASSET_NAME }}.ipa
+          name: ${{ env.ASSET_NAME }}.ipa
+          description: e2e upgrade source — ${{ inputs.release_tag }} / ${{ env.ASSET_NAME }}.ipa
+          sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+
       - name: Skip the rolling previous-release upload
-        if: steps.resolve.outputs.prerelease == 'true' || env.ASSET_NAME != env.ROLLING_ASSET_NAME
+        if: steps.resolve.outputs.rolling == 'false'
         env:
           RELEASE_TAG: ${{ inputs.release_tag }}
           PRERELEASE: ${{ steps.resolve.outputs.prerelease }}
@@ -199,11 +235,11 @@ jobs:
           if [ "$PRERELEASE" = "true" ]; then
             echo "::notice::$RELEASE_TAG is a pre-release — Sauce BCSC-prev.* keeps tracking the newest FULL release"
           else
-            echo "::notice::Published as pinned-only ${ASSET_NAME}.* — Sauce BCSC-prev.* is untouched; add the version to the Refresh E2E Sauce Builds manifest"
+            echo "::notice::${ASSET_NAME} is below ${PREV_MIN_VERSION}, the first release the upgrade suite can drive — pinned copy only, Sauce BCSC-prev.* untouched"
           fi
 
       - name: Upload previous Android build to SauceLabs
-        if: steps.resolve.outputs.prerelease == 'false' && env.ASSET_NAME == env.ROLLING_ASSET_NAME
+        if: steps.resolve.outputs.rolling == 'true'
         uses: ./.github/workflows/actions/upload-to-sauce-storage
         with:
           file: ${{ env.ASSET_NAME }}.apk
@@ -213,7 +249,7 @@ jobs:
           sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
 
       - name: Upload previous iOS build to SauceLabs
-        if: steps.resolve.outputs.prerelease == 'false' && env.ASSET_NAME == env.ROLLING_ASSET_NAME
+        if: steps.resolve.outputs.rolling == 'true'
         uses: ./.github/workflows/actions/upload-to-sauce-storage
         with:
           file: ${{ env.ASSET_NAME }}.ipa
