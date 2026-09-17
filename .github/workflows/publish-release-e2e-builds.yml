@@ -62,7 +62,7 @@ jobs:
     permissions:
       contents: write # upload assets to the release
       actions: read # resolve + download artifacts from the build run
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:
@@ -82,8 +82,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          is_prerelease=$(gh api "repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}" --jq '.prerelease')
-          echo "prerelease=$is_prerelease" >> "$GITHUB_OUTPUT"
+          release_json=$(gh api "repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}")
+          is_prerelease=$(echo "$release_json" | jq -r '.prerelease')
+          {
+            echo "prerelease=$is_prerelease"
+            echo "release_id=$(echo "$release_json" | jq -r '.id')"
+          } >> "$GITHUB_OUTPUT"
           echo "$RELEASE_TAG (prerelease: $is_prerelease) → assets ${ASSET_NAME}.apk / ${ASSET_NAME}.ipa"
 
       - name: Resolve the build run
@@ -156,9 +160,33 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_ID: ${{ steps.resolve.outputs.release_id }}
+          REPO: ${{ github.repository }}
         run: |
-          gh release upload "$RELEASE_TAG" "${ASSET_NAME}.apk" "${ASSET_NAME}.ipa" \
-            --repo "${{ github.repository }}" --clobber
+          # Runner → release-asset uploads crawled at ~0.3 MB/s and one stalled past the job timeout (2026-09-17),
+          # so: one file per attempt, abort under 20 KB/s for 60 s and retry, 15 min for a slow-but-moving one.
+          for file in "${ASSET_NAME}.apk" "${ASSET_NAME}.ipa"; do
+            for attempt in 1 2 3; do
+              # Clobber — a same-named asset, including a stale partial from an aborted attempt, blocks the upload
+              gh api "repos/${REPO}/releases/${RELEASE_ID}/assets?per_page=100" \
+                | jq -r --arg n "$file" '.[] | select(.name == $n) | .id' \
+                | xargs -r -I{} gh api -X DELETE "repos/${REPO}/releases/assets/{}"
+              result=$(curl -sS -o /dev/null -w "%{http_code} %{speed_upload} %{time_total}" \
+                --speed-limit 20480 --speed-time 60 --max-time 900 \
+                -X POST -H "Authorization: Bearer ${GH_TOKEN}" \
+                -H "Accept: application/vnd.github+json" -H "Content-Type: application/octet-stream" \
+                --data-binary "@${file}" \
+                "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${file}" || true)
+              read -r code speed secs <<<"$result"
+              if [ "$code" = "201" ]; then
+                echo "✓ Attached ${file} (attempt ${attempt}, $(( ${speed%.*} / 1024 )) KB/s, ${secs%.*}s)"
+                continue 2
+              fi
+              echo "::warning::${file} attempt ${attempt}: HTTP ${code:-none} after ${secs:-?}s"
+            done
+            echo "::error::Could not attach ${file} to ${RELEASE_TAG} after 3 attempts"
+            exit 1
+          done
           echo "✓ Attached ${ASSET_NAME}.apk + ${ASSET_NAME}.ipa to $RELEASE_TAG (from $SOURCE)"
           echo "Attached \`${ASSET_NAME}.apk\` + \`${ASSET_NAME}.ipa\` to **${RELEASE_TAG}** from ${SOURCE}" >> "$GITHUB_STEP_SUMMARY"
 
