@@ -1,14 +1,19 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCState } from '@/store'
+import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { RouteProp, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Linking, View } from 'react-native'
+import { Image, Linking, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { BCSCScreens, BCSCVerifyStackParams } from '../../types/navigators'
 import { DeviceAuthorizationError } from './deviceAuthorizationError'
 
 const GET_BCSC_URL = 'https://www2.gov.bc.ca/gov/content?id=98CEBFB7201143378046AC4AE5F0B9DE'
+
+const CARD_NOT_FOUND_IMAGE = Image.resolveAssetSource(CardNotFoundImage).uri
+
+const twoThirds = 0.67
 
 interface VerificationCardErrorScreenProps {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationCardError>
@@ -18,9 +23,17 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
+  const { width } = useWindowDimensions()
   const { params } = useRoute<RouteProp<BCSCVerifyStackParams, BCSCScreens.VerificationCardError>>()
 
   const errorType = params.errorType
+
+  const styles = StyleSheet.create({
+    image: {
+      width: width - Spacing.lg * 2,
+      height: (width - Spacing.lg * 2) * twoThirds,
+    },
+  })
 
   if (errorType === DeviceAuthorizationError.CardExpired) {
     const controls = (
@@ -85,6 +98,7 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
         </ThemedText>
       </View>
       <ThemedText>{t('BCSC.MismatchedSerial.Description2')}</ThemedText>
+      <Image source={{ uri: CARD_NOT_FOUND_IMAGE }} style={styles.image} resizeMode={'contain'} />
     </ScreenWrapper>
   )
 }
