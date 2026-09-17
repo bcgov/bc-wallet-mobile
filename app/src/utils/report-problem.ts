@@ -1,3 +1,5 @@
+import { getNavigationBreadcrumbs } from '@/bcsc-theme/navigators/stack-utils'
+import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppError } from '@/errors'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios from 'axios'
@@ -18,6 +20,7 @@ const LOKI_REPORT_PROBLEM_LOG_LEVEL = 'error'
 // List of error context keys that should be flattened into the top-level of the Loki payload.
 const FLATTENED_APP_ERROR_CONTEXT_KEYS = new Set([
   'screen',
+  'navigation',
   'http_route',
   'http_method',
   'http_status',
@@ -76,6 +79,8 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
     message: problem.title, // ie: "Something went wrong"
     description: problem.description, // ie: "The app crashed when I tried to do X"
     code: problem.code,
+    screen: navigationRef.getCurrentRoute()?.name,
+    navigation: getNavigationBreadcrumbs(),
 
     ..._flattenAppError(problem.error),
   }
@@ -90,6 +95,7 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
           application: getApplicationName().toLowerCase(),
           version: getVersion(),
           build: getBuildNumber(),
+          version_build: `${getVersion()}-${getBuildNumber()}`,
           system: getSystemName().toLowerCase(),
           device: getDeviceId(),
           model: getModel(),

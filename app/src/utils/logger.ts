@@ -129,9 +129,12 @@ export const reportProblem = (problem: ReportProblem): string => {
     return reportId
   }
 
-  const payload = createReportProblemLokiPayload(reportId, problem)
-
-  reportProblemLokiTransport(baseOptions.lokiUrl, payload, appLogger)
+  try {
+    const payload = createReportProblemLokiPayload(reportId, problem)
+    reportProblemLokiTransport(baseOptions.lokiUrl, payload, appLogger)
+  } catch (error) {
+    appLogger.error('[ReportProblem] Failed to build or send the problem report.', error as Error)
+  }
 
   return reportId
 }

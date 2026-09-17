@@ -1,10 +1,11 @@
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
-import { RemoteLogger, lokiTransport } from '@bifold/remote-logs'
+import { RemoteLogger } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
 import Config from 'react-native-config'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { appLogger, createAppLogger, reportProblem } from './logger'
+import { createReportProblemLokiPayload, reportProblemLokiTransport } from './report-problem'
 
 type ConfigModule = {
   REMOTE_LOGGING_URL: string
@@ -18,6 +19,7 @@ jest.mock('react-native-device-info', () => ({
   getSystemName: jest.fn(() => 'iOS'),
   getSystemVersion: jest.fn(() => '17.0'),
   getDeviceId: jest.fn(() => 'iPhone15,2'),
+  getModel: jest.fn(() => 'iPhone 15 Pro'),
 }))
 
 jest.mock('react-native-config', () => ({
@@ -27,14 +29,22 @@ jest.mock('react-native-config', () => ({
 
 jest.mock('@bifold/remote-logs', () => {
   return {
-    RemoteLogger: jest.fn().mockImplementation((options) => ({ options })),
-    lokiTransport: jest.fn(),
+    RemoteLogger: jest.fn().mockImplementation((options) => ({ options, warn: jest.fn(), error: jest.fn() })),
   }
 })
 
+// reportProblem's own payload-building and transport are unit-tested in report-problem.test.ts;
+// mocked here so these tests only assert on reportProblem's orchestration (ID generation, URL
+// check, delegation) without making a real network call.
+jest.mock('./report-problem', () => ({
+  createReportProblemLokiPayload: jest.fn(),
+  reportProblemLokiTransport: jest.fn(),
+}))
+
 const mockedConfig = Config as ConfigModule
 const RemoteLoggerMock = RemoteLogger as unknown as jest.Mock
-const lokiTransportMock = lokiTransport as unknown as jest.Mock
+const createReportProblemLokiPayloadMock = createReportProblemLokiPayload as jest.Mock
+const reportProblemLokiTransportMock = reportProblemLokiTransport as jest.Mock
 
 // Matches the ambiguity-free alphabet used by generateReferenceCode
 // (digits 2-9 and A-Z excluding I, L, O, U), grouped as XXXX-XXXX.
@@ -117,13 +127,15 @@ describe('createAppLogger', () => {
 })
 
 describe('reportProblem', () => {
+  // Payload construction (device/stream labels, error flattening, stack-less errors, etc.) is
+  // covered by report-problem.test.ts against the real createReportProblemLokiPayload. These
+  // tests only exercise reportProblem's own orchestration: it generates an ID, checks the
+  // configured Loki URL, and delegates to report-problem.ts — mocked here to isolate that.
   const appError = new AppError('stack trace details', {
     appEvent: 'test-event' as AppEventCode,
     statusCode: 2800,
     category: ErrorCategory.GENERAL,
   })
-
-  appError.stack = 'Error: Boom\n    at somewhere (file.ts:1:1)'
 
   const fakeError = {
     title: 'Boom',
@@ -134,77 +146,39 @@ describe('reportProblem', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    createReportProblemLokiPayloadMock.mockReturnValue({ streams: [{ stream: {}, values: [['0', '{}']] }] })
   })
 
   it('returns a reference code matching the expected format', () => {
     expect(reportProblem(fakeError)).toMatch(REFERENCE_CODE_PATTERN)
   })
 
-  it('sends an incident-report to Loki with the reference code as report_id', () => {
+  it('builds the Loki payload with the reference code and sends it via the configured transport', () => {
     const refCode = reportProblem(fakeError)
 
-    expect(lokiTransportMock).toHaveBeenCalledTimes(1)
-    const payload = lokiTransportMock.mock.calls[0][0]
-    expect(payload.options.job).toBe('incident-report')
-    expect(payload.options.lokiUrl).toBe('https://logs.example')
-    expect(payload.rawMsg[0].message).toBe('Boom')
-    expect(payload.rawMsg[0].data).toMatchObject({
-      description: 'It exploded',
-      code: 2800,
-      message: 'stack trace details',
-      stack: 'Error: Boom\n    at somewhere (file.ts:1:1)',
-      report_id: refCode,
+    expect(createReportProblemLokiPayloadMock).toHaveBeenCalledWith(refCode, fakeError)
+    expect(reportProblemLokiTransportMock).toHaveBeenCalledWith(
+      'https://logs.example',
+      createReportProblemLokiPayloadMock.mock.results[0].value,
+      appLogger
+    )
+  })
+
+  it('never throws and still returns a code when payload construction fails synchronously', () => {
+    createReportProblemLokiPayloadMock.mockImplementationOnce(() => {
+      throw new Error('bad payload')
     })
+
+    let refCode: string | undefined
+    expect(() => {
+      refCode = reportProblem(fakeError)
+    }).not.toThrow()
+    expect(refCode).toMatch(REFERENCE_CODE_PATTERN)
+    expect(reportProblemLokiTransportMock).not.toHaveBeenCalled()
   })
 
-  it('omits stack from the payload when the error has no stack', () => {
-    const oldStack = fakeError.error.stack
-    fakeError.error.stack = undefined
-
-    reportProblem(fakeError)
-
-    const data = lokiTransportMock.mock.calls[0][0].rawMsg[0].data
-    expect(data).not.toHaveProperty('stack')
-    expect(data).toMatchObject({ description: 'It exploded', code: 2800, message: 'stack trace details' })
-
-    fakeError.error.stack = oldStack
-  })
-
-  it('includes app version and OS system labels by default (includeDeviceDetails defaults to true)', () => {
-    reportProblem(fakeError)
-
-    const labels = lokiTransportMock.mock.calls[0][0].options.lokiLabels
-    expect(labels).toEqual({
-      application: 'testapp',
-      version: '1.2.3-77',
-      system: 'iOS v17.0',
-      model: 'iPhone15,2',
-    })
-  })
-
-  it('includes app version and OS system labels when includeDeviceDetails is true', () => {
-    reportProblem(fakeError, { includeDeviceDetails: true })
-
-    const labels = lokiTransportMock.mock.calls[0][0].options.lokiLabels
-    expect(labels).toEqual({
-      application: 'testapp',
-      version: '1.2.3-77',
-      system: 'iOS v17.0',
-      model: 'iPhone15,2',
-    })
-  })
-
-  it('drops the version and system labels but keeps the application when includeDeviceDetails is false', () => {
-    reportProblem(fakeError, { includeDeviceDetails: false })
-
-    const labels = lokiTransportMock.mock.calls[0][0].options.lokiLabels
-    expect(labels).toEqual({ application: 'testapp' })
-    expect(labels).not.toHaveProperty('version')
-    expect(labels).not.toHaveProperty('system')
-  })
-
-  it('never throws and still returns a code when the transport fails', () => {
-    lokiTransportMock.mockImplementationOnce(() => {
+  it('never throws and still returns a code when the transport throws synchronously', () => {
+    reportProblemLokiTransportMock.mockImplementationOnce(() => {
       throw new Error('network down')
     })
 

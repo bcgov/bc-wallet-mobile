@@ -101,6 +101,7 @@ describe('report-problem', () => {
         application: 'testapp',
         version: '1.2.3',
         build: '77',
+        version_build: '1.2.3-77',
         system: 'ios',
         device: 'iPhone15,2',
         model: 'iPhone 15 Pro',

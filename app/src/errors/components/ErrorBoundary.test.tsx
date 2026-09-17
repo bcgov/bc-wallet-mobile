@@ -11,6 +11,7 @@ jest.mock('@/utils/logger', () => {
 
 jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
+  NAVIGATION_VISITED_SCREEN_NAMES: [],
 }))
 
 jest.mock('react-native-device-info', () => ({

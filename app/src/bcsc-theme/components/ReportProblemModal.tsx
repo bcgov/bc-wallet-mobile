@@ -1,6 +1,5 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
-import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -13,7 +12,6 @@ import { KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet,
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-import { getNavigationBreadcrumbs } from '../navigators/stack-utils'
 
 const DESCRIPTION_MAX_LENGTH = 500
 const COPY_FEEDBACK_MS = 2000
@@ -86,13 +84,10 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
 
     const appError = AppError.fromErrorDefinition(ErrorRegistry.REPORT_PROBLEM)
 
-    if (navigationRef.isReady()) {
-      appError.addContext({ navigation: getNavigationBreadcrumbs(navigationRef.getRootState()) })
-    }
-
     // Add context to the error for debugging purposes
     appError.addContext({
       state_ias_environment: store.developer.environment.name,
+      state_verified: store.bcscSecure.verified,
       state_verified_status: store.bcscSecure.verifiedStatus,
       state_card_process: store.bcscSecure.cardProcess,
       // ...
@@ -114,6 +109,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     description,
     store.developer.environment.name,
     store.developer.remoteDebugging.sessionId,
+    store.bcscSecure.verified,
     store.bcscSecure.verifiedStatus,
     store.bcscSecure.cardProcess,
     store.bcsc.installId,

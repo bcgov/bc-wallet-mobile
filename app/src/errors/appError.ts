@@ -1,5 +1,4 @@
 import type { AxiosAppError } from '@/bcsc-theme/api/clientErrorPolicies'
-import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { isAxiosError } from 'axios'
@@ -105,11 +104,6 @@ export class AppError extends Error {
     this.handled = false
     this.tracked = false
     this.context = options?.context ?? {}
-
-    if (navigationRef.isReady()) {
-      /** TODO (MD): Add navigation context at call site instead of here {@see `reportProblem`} calls */
-      this.context = { ...this.context, screen: navigationRef.getCurrentRoute()?.name }
-    }
 
     // Track the error in analytics unless explicitly disabled
     if (options?.track !== false) {

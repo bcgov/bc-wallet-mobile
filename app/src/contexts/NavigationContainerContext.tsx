@@ -6,6 +6,9 @@ import { createContext, PropsWithChildren, useContext, useMemo, useRef, useState
 
 export const navigationRef = createNavigationContainerRef()
 
+export const MAX_VISITED_SCREENS = 15
+export const NAVIGATION_VISITED_SCREEN_NAMES: string[] = []
+
 export interface NavigationContainerContextType {
   isNavigationReady: boolean
 }
@@ -53,6 +56,17 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
             Analytics.trackScreenEvent(currentScreenName, previousScreenName)
 
             screenTransitionKeyRef.current = screenTransitionKey
+          }
+
+          // Update the visited screens list only if the current screen is different from the last visited screen
+          if (
+            currentScreenName &&
+            NAVIGATION_VISITED_SCREEN_NAMES[NAVIGATION_VISITED_SCREEN_NAMES.length - 1] !== currentScreenName
+          ) {
+            NAVIGATION_VISITED_SCREEN_NAMES.push(currentScreenName)
+            if (NAVIGATION_VISITED_SCREEN_NAMES.length > MAX_VISITED_SCREENS) {
+              NAVIGATION_VISITED_SCREEN_NAMES.shift()
+            }
           }
 
           previousScreenRef.current = currentScreenName
