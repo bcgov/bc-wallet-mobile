@@ -47,6 +47,7 @@ import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
+import { stripDisallowedNameCharacters } from '../utils/validation'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -1074,9 +1075,9 @@ export const useSecureActions = () => {
 
         if (authRequest.firstName || authRequest.lastName) {
           userMetadata.name = {
-            first: authRequest.firstName || '',
-            last: authRequest.lastName || '',
-            middle: authRequest.middleNames,
+            first: stripDisallowedNameCharacters(authRequest.firstName),
+            last: stripDisallowedNameCharacters(authRequest.lastName),
+            middle: authRequest.middleNames !== undefined ? stripDisallowedNameCharacters(authRequest.middleNames) : undefined,
           }
         }
       }
