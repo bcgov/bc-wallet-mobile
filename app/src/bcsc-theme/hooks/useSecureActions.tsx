@@ -1,3 +1,5 @@
+import { isAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
 import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
@@ -47,6 +49,7 @@ import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
+import { isTokenExpired } from '../utils/token-expiry'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -980,7 +983,15 @@ export const useSecureActions = () => {
       // rotated registration_access_token — always persisted below when present, regardless of
       // which branch this ends up taking (RFC 7592: the reg token may rotate on GET or PUT).
       let recoveredRegistrationAccessToken: string | undefined
-      if (refreshToken && apiClient && isClientReady) {
+      // Production never rotates the refresh token, so its `exp` is the device credential's
+      // 5-year lifetime (#4654): when expired, skip the refresh and key recovery — renewal is the only fix.
+      const refreshTokenExpired = Boolean(refreshToken) && isTokenExpired(refreshToken)
+
+      if (refreshTokenExpired) {
+        logger.warn(
+          '[hydrateSecureState] event=refresh_token_expired stored refresh token is past its exp; skipping refresh and key recovery — account renewal required'
+        )
+      } else if (refreshToken && apiClient && isClientReady) {
         try {
           freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
         } catch (error) {
@@ -1002,7 +1013,13 @@ export const useSecureActions = () => {
             }
           }
 
-          if (clientID && registrationAccessToken) {
+          if (isAppError(error, AppEventCode.INVALID_TOKEN)) {
+            // Server rejected a locally-valid token: stop here so the user sees one alert, not several.
+            // A signing-key mismatch (#4166) never carries INVALID_TOKEN, so key recovery is unaffected.
+            logger.error(
+              '[hydrateSecureState] event=refresh_token_rejected server rejected a locally-valid refresh token (invalid_token); skipping key recovery'
+            )
+          } else if (clientID && registrationAccessToken) {
             logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
             const recovery = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
             recoveredRegistrationAccessToken = recovery.newRegistrationAccessToken
@@ -1135,6 +1152,7 @@ export const useSecureActions = () => {
         savedServices,
 
         sessionRecoveryRequired,
+        refreshTokenExpired,
       }
 
       logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)
