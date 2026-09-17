@@ -184,13 +184,18 @@ const MainStack: React.FC = () => {
 
   useVerificationResponseListener()
 
-  const showStartupLoading = isLoadingAccount || isAwaitingSystemChecks
+  // Replaces rather than overlays the stack: unmounting the navigator while the account loads drops
+  // the navigation state it inherits from VerifyStack (routes registered in both, e.g.
+  // VerificationSuccess), so it remounts on initialRouteName instead of stranding the user there.
+  if (isLoadingAccount) {
+    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
+  }
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
-      {/* Overlays rather than replaces the stack: system checks navigate to screens registered below
-          and the account load retries in place, so the navigator has to stay mounted. */}
-      {showStartupLoading ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
+      {/* Overlays rather than replaces the stack: the checks themselves navigate to screens
+          registered below (terms of use, service outage), so the navigator has to stay mounted. */}
+      {isAwaitingSystemChecks ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
       <BifoldScope>
         <Stack.Navigator
           initialRouteName={initialRouteName}

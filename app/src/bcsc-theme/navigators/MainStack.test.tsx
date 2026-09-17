@@ -219,23 +219,27 @@ describe('MainStack', () => {
     expect(PairingModule.pairingPayloadToServiceLoginParams).not.toHaveBeenCalled()
   })
 
-  it('overlays the loading screen over the stack while the account is still loading', () => {
+  it('replaces the stack with the loading screen while the account is still loading', () => {
     jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
 
     const view = render(<MainStack />)
 
-    // The old behaviour replaced the whole tree with a bare LoadingScreen (toJSON() top-level
-    // type === 'LoadingScreen'); the overlay wraps it in the same View the stack renders into,
-    // so the navigator must still be mounted alongside it.
-    expect(view.toJSON()).toMatchObject({ type: 'View' })
-    expect(queryLoadingScreens(view)).toHaveLength(1)
-    expect(queryNavigators(view)).toHaveLength(1)
+    // Replace, not overlay: the navigator has to unmount here so it drops any navigation state
+    // inherited from VerifyStack. Overlaying it stranded users on VerificationSuccess (#4682).
+    expect(view.toJSON()).toMatchObject({ type: 'LoadingScreen' })
+    expect(queryNavigators(view)).toHaveLength(0)
   })
 
   it('holds the loading screen over the stack while system checks are still settling', () => {
     jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
 
-    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(1)
+    const view = render(<MainStack />)
+
+    // Overlay, not replace: the checks navigate to screens registered in this navigator (terms of
+    // use, device invalidated, reverify), and a navigate() with no navigator mounted is dropped.
+    expect(view.toJSON()).toMatchObject({ type: 'View' })
+    expect(queryLoadingScreens(view)).toHaveLength(1)
+    expect(queryNavigators(view)).toHaveLength(1)
   })
 
   it('drops the loading screen once the system checks have settled', () => {
