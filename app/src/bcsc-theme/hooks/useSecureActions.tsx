@@ -1077,7 +1077,10 @@ export const useSecureActions = () => {
           userMetadata.name = {
             first: stripDisallowedNameCharacters(authRequest.firstName),
             last: stripDisallowedNameCharacters(authRequest.lastName),
-            middle: authRequest.middleNames !== undefined ? stripDisallowedNameCharacters(authRequest.middleNames) : undefined,
+            middle:
+              authRequest.middleNames !== undefined
+                ? stripDisallowedNameCharacters(authRequest.middleNames)
+                : undefined,
           }
         }
       }
