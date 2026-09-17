@@ -199,8 +199,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // DeviceCount and EventReasonAlerts need a verified user's cached id token; hydration never
     // fetches one when the stored refresh token is expired, so they'd misfire on that path (#4654).
     if (isVerified && !refreshTokenExpired) {
-      systemChecks.push(new DeviceCountSystemCheck(getIdToken, utils, dismissedAt))
       systemChecks.push(
+        new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
         new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
       )
     }
