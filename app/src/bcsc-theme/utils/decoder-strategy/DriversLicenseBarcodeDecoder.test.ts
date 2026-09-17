@@ -20,11 +20,23 @@ const BC_DL_BARCODE_MULTIWORD_LASTNAME_NO_MIDDLE =
 const BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE =
   "%BCVICTORIA^DE LA CRUZ,$MARIA ELENA^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
 
+// Mononym — the '$' delimiter is still present with nothing after it, matching the app's own
+// manual-entry convention of recording a mononym in the last name with an empty first name.
+const BC_DL_BARCODE_MONONYM =
+  "%BCVICTORIA^CHER,$^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
+
+// Mononym variant with no '$' at all — we have no confirmed real-world sample of this shape,
+// but the parser shouldn't crash on it either way. See parseLicenseNames's '?? ''' guard.
+const BC_DL_BARCODE_MONONYM_NO_DOLLAR =
+  "%BCVICTORIA^CHER,^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
+
 const VALID_BC_DL_BARCODES = [
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
   BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
   BC_DL_BARCODE_3_CARET,
+  BC_DL_BARCODE_MONONYM,
+  BC_DL_BARCODE_MONONYM_NO_DOLLAR,
 ]
 
 describe('DriversLicenseBarcodeDecoder', () => {
@@ -201,6 +213,34 @@ describe('DriversLicenseBarcodeDecoder', () => {
       expect(decoded.firstName).toBe('maria')
       expect(decoded.middleNames).toBe('elena')
       expect(decoded.lastName).toBe('de la cruz')
+    })
+
+    it('handles a mononym (empty first name and middle names, full name in lastName)', () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_DL_BARCODE_MONONYM,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.firstName).toBe('')
+      expect(decoded.middleNames).toBe('')
+      expect(decoded.lastName).toBe('cher')
+    })
+
+    it('handles a mononym even if the "$" given-names delimiter is missing entirely', () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_DL_BARCODE_MONONYM_NO_DOLLAR,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.firstName).toBe('')
+      expect(decoded.middleNames).toBe('')
+      expect(decoded.lastName).toBe('cher')
     })
 
     it('should handle century rollover edge case for expiry dates', () => {
