@@ -133,6 +133,12 @@ jobs:
             echo "::error::Run $RUN_ID is from $workflow_path, not main.yaml"
             exit 1
           fi
+          # Shipped builds come from this repo's own branches — a fork's build never becomes a release asset
+          head_repo=$(echo "$run_json" | jq -r '.head_repository.full_name')
+          if [ "$head_repo" != "${{ github.repository }}" ]; then
+            echo "::error::Run $RUN_ID was built from $head_repo, not ${{ github.repository }}"
+            exit 1
+          fi
           run_number=$(echo "$run_json" | jq -r '.run_number')
           {
             echo "RUN_ID=$RUN_ID"
@@ -181,8 +187,14 @@ jobs:
           want="${ASSET_NAME#BCSC-v}"
           aapt2=$(ls "${ANDROID_HOME:-/usr/local/lib/android/sdk}"/build-tools/*/aapt2 | sort -V | tail -1)
           apk=$("$aapt2" dump badging "${ASSET_NAME}.apk" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
-          plist=$(unzip -Z1 "${ASSET_NAME}.ipa" | grep -E '^Payload/[^/]+\.app/Info\.plist$')
-          ipa=$(unzip -p "${ASSET_NAME}.ipa" "$plist" | python3 -c 'import plistlib, sys; print(plistlib.loads(sys.stdin.buffer.read())["CFBundleShortVersionString"])')
+          # zipfile, not unzip: CodeQL reads an unzip after `gh run download` as extracting the artifact over the workspace
+          ipa=$(python3 - "${ASSET_NAME}.ipa" <<'PY'
+          import plistlib, re, sys, zipfile
+          with zipfile.ZipFile(sys.argv[1]) as z:
+              plist = next(n for n in z.namelist() if re.fullmatch(r"Payload/[^/]+\.app/Info\.plist", n))
+              print(plistlib.loads(z.read(plist))["CFBundleShortVersionString"])
+          PY
+          )
           if [ "$apk" != "$want" ] || [ "$ipa" != "$want" ]; then
             echo "::error::${ASSET_NAME}.* carries app version ${apk:-?} (apk) / ${ipa:-?} (ipa), not ${want} — check release_tag / asset_name / run_id / sauce_source; nothing was attached or uploaded"
             exit 1
