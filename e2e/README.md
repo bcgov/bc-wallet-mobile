@@ -219,7 +219,7 @@ _The upgrade suite tests upgrading from the **previous released build** to the c
 
 **_Prerequisites:_**
 
-1. _The rolling previous-release builds in Sauce Labs storage: `BCSC-prev.apk` / `BCSC-prev.ipa`. They track the newest **full** (non-prerelease) `bcsc-v*` GitHub release: the **Publish Release E2E Builds** workflow attaches `BCSC-Dev-e2e.*` assets to a version's release and pushes them to Sauce when a full release ships (see `RELEASE.md`); the monthly **Refresh E2E Sauce Builds** workflow keeps them inside Sauce's 60-day retention. To upgrade from any other build still in storage, override `PREV_ANDROID_APP` / `PREV_IOS_APP` (or pass the `prev_build_number` input when dispatching `e2e.yml`)._
+1. _The upgrade-source builds in Sauce Labs storage. The rolling previous release, `BCSC-prev.apk` / `BCSC-prev.ipa`, tracks the newest **full** (non-prerelease) `bcsc-v*` GitHub release: the **Publish Release E2E Builds** workflow attaches `BCSC-Dev-e2e.*` assets to a version's release and pushes them to Sauce when a full release ships (see `RELEASE.md`). Every shipped version a lane starts from also keeps a pinned copy, `BCSC-v<version>.*` (`BCSC-v3`, `BCSC-v4.0.3`, `BCSC-v4.1.0`), listed in the manifest of the monthly **Refresh E2E Sauce Builds** workflow (`.github/workflows/refresh-e2e-sauce-builds.yml`), which re-uploads each entry and `BCSC-prev.*` from the release assets to stay inside Sauce's 60-day retention. To upgrade from any other build still in storage, override `PREV_ANDROID_APP` / `PREV_IOS_APP` (or pass the `prev_build_number` input when dispatching `e2e.yml`)._
 2. _The current build under test via the standard vars: `ANDROID_APP_FILENAME` / `IOS_APP_FILENAME`._
 
 ```bash
@@ -228,6 +228,10 @@ yarn test:android:upgrade:sauce
 
 # Upgrade from a specific older build instead of the rolling BCSC-prev
 PREV_ANDROID_APP=BCSC-Dev-4550.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
+  yarn test:android:upgrade:sauce
+
+# Or from a pinned release copy (BCSC-v<version>.*, refreshed monthly)
+PREV_ANDROID_APP=BCSC-v4.1.0.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
   yarn test:android:upgrade:sauce
 
 # iOS on Sauce (storage-based mid-session install passes Sauce resigning; validated 2026-08-25)
@@ -239,7 +243,7 @@ PREV_IOS_APP=BCSC-prev.ipa IOS_APP_DEVICE=BCSC.ipa yarn test:ios:upgrade:device
 
 _Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No IDCheck credentials are needed — the journey stays unverified._
 
-_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`, previous binary preserved in Sauce storage as `BCSC-v4.0.3.*`), then reuses the standard install + post-upgrade assertions. Runs on Sauce on both platforms; retire it once 4.1.0 becomes the previous release:_
+_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`; previous binary pinned in Sauce storage as `BCSC-v4.0.3.*`, refreshed monthly from the `BCSC-v4.0.3.*` assets on the `bcsc-v4.0.2` release — the 4.0.3 hotfix is what shipped, and no `bcsc-v4.0.3` release exists), then reuses the standard install + post-upgrade assertions. Runs on Sauce on both platforms; retire it once 4.1.0 becomes the previous release:_
 
 ```bash
 ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn test:android:upgrade403:sauce
