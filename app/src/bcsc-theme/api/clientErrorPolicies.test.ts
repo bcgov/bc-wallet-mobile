@@ -17,6 +17,7 @@ import {
   iasErrorPolicy,
   invalidClientMetadataErrorPolicy,
   invalidRegistrationRequestErrorPolicy,
+  invalidTokenReturnedPolicy,
   invalidUrlErrorPolicy,
   noTokensReturnedErrorPolicy,
   pairingCodeErrorPolicy,
@@ -342,7 +343,7 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call no tokens returned alert', () => {
+      it('should call no tokens returned alert with the error', () => {
         const error = newError('no_tokens_returned')
         const alertMock = jest.fn()
         const context = {
@@ -350,7 +351,57 @@ describe('clientErrorPolicies', () => {
         }
         noTokensReturnedErrorPolicy.handle(error, context as any)
 
-        expect(alertMock).toHaveBeenCalled()
+        expect(alertMock).toHaveBeenCalledWith(error)
+      })
+    })
+  })
+
+  describe('invalidTokenReturnedPolicy', () => {
+    describe('matches', () => {
+      it('should match INVALID_TOKEN on token endpoint', () => {
+        const error = newError('invalid_token')
+        const context = {
+          endpoint: '/api/token',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(invalidTokenReturnedPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should match invalid_token on extended token endpoint', () => {
+        const error = newError('invalid_token')
+        const context = {
+          endpoint: '/api/token/refresh',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(invalidTokenReturnedPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should not match INVALID_TOKEN off the token endpoint', () => {
+        const error = newError('invalid_token')
+        const context = {
+          endpoint: '/api/evidence',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(invalidTokenReturnedPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should call invalid token alert with the error', () => {
+        const error = newError('invalid_token')
+        const alertMock = jest.fn()
+        const context = {
+          alerts: { invalidTokenAlert: alertMock },
+        }
+        invalidTokenReturnedPolicy.handle(error, context as any)
+
+        expect(alertMock).toHaveBeenCalledWith(error)
       })
     })
   })
