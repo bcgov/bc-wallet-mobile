@@ -5,6 +5,8 @@ import {
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
   BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
   BC_DL_BARCODE_3_CARET,
+  BC_DL_BARCODE_MULTIWORD_LASTNAME_NO_MIDDLE,
+  BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE,
   VALID_BC_DL_BARCODES,
 } from '@/bcsc-theme/utils/decoder-strategy/__fixtures__/barcodes'
 
@@ -153,6 +155,34 @@ describe('DriversLicenseBarcodeDecoder', () => {
         city: 'victoria',
         province: 'BC',
       })
+    })
+
+    it('correctly splits middleNames from a multi-word last name with no middle name', () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_DL_BARCODE_MULTIWORD_LASTNAME_NO_MIDDLE,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.firstName).toBe('anna')
+      expect(decoded.middleNames).toBe('')
+      expect(decoded.lastName).toBe('van berg')
+    })
+
+    it('correctly splits middleNames from a multi-word last name with a middle name', () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.firstName).toBe('maria')
+      expect(decoded.middleNames).toBe('elena')
+      expect(decoded.lastName).toBe('de la cruz')
     })
 
     describe('century rollover', () => {
