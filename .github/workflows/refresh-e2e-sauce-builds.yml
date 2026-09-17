@@ -1,0 +1,212 @@
+# Refresh E2E Sauce Builds
+#
+# Sauce Labs app storage deletes files after 60 days of inactivity. This
+# workflow re-uploads the builds the e2e upgrade lanes start from, on a
+# schedule, to keep them available. GitHub Release assets are the durable
+# origin; Sauce storage is a cache of them:
+#   - the pinned versions in the manifest below — every shipped version an
+#     upgrade lane starts from (v3 → migration, 4.0.3 → upgrade403, 4.1.0 →
+#     upgrade), each re-uploaded from its GitHub release under a fixed
+#     BCSC-v<version>.* name. Adding a version = one manifest entry, with its
+#     binaries attached to the release (e2e/apps/README.md).
+#   - the rolling previous release (BCSC-prev.*) — the `BCSC-Dev-e2e.*` assets
+#     on the newest FULL (non-prerelease) `bcsc-v*` release, attached there by
+#     "Publish Release E2E Builds" after each release ships.
+#
+# A release missing its assets fails that entry loudly; the other entries still
+# refresh. Attach the binaries, then re-run.
+#
+# Sauce Storage behaviour: uploading with the same `name` creates a new
+# version in the same app group, resetting the retention clock.
+# `storage:filename=<name>` always resolves to the newest upload of that
+# filename, so the migration/upgrade configs need no changes.
+name: Refresh E2E Sauce Builds
+
+on:
+  schedule:
+    # 1st of every month at 08:00 UTC — well within the 60-day window
+    - cron: '0 8 1 * *'
+  workflow_dispatch: {}
+
+env:
+  E2E_ANDROID_ASSET: BCSC-Dev-e2e.apk
+  E2E_IOS_ASSET: BCSC-Dev-e2e.ipa
+  PREV_ANDROID_FILENAME: BCSC-prev.apk
+  PREV_IOS_FILENAME: BCSC-prev.ipa
+
+jobs:
+  refresh-pinned-builds:
+    name: Refresh ${{ matrix.sauce_name }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      # Manifest. sauce_name: the Sauce storage name (<sauce_name>.apk / .ipa);
+      # release_tag + asset_name: where the binaries live on GitHub Releases.
+      matrix:
+        include:
+          # Frozen v3 BC Services Card builds — the migration lane's source
+          - sauce_name: BCSC-v3
+            release_tag: bcsc-v3
+            asset_name: BCSC-v3
+          # The shipped 4.0.x is the 4.0.3 hotfix (upgrade403's source); no bcsc-v4.0.3 release exists, so it lives on the 4.0.2 release
+          - sauce_name: BCSC-v4.0.3
+            release_tag: bcsc-v4.0.2
+            asset_name: BCSC-v4.0.3
+          # 4.1.0 — its release object sits on the rc2 tag
+          - sauce_name: BCSC-v4.1.0
+            release_tag: bcsc-v4.1.0_rc2
+            asset_name: BCSC-Dev-e2e
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/workflows/actions/upload-to-sauce-storage
+
+      - name: Download ${{ matrix.asset_name }}.* from the ${{ matrix.release_tag }} release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ matrix.release_tag }}
+          ASSET_NAME: ${{ matrix.asset_name }}
+        run: |
+          assets=$(gh api "repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}" --jq '[.assets[].name]')
+          for ext in apk ipa; do
+            if ! jq -e --arg n "${ASSET_NAME}.${ext}" 'index($n)' <<<"$assets" >/dev/null; then
+              echo "::error::Release ${RELEASE_TAG} has no ${ASSET_NAME}.${ext} — attach it (e2e/apps/README.md, 'Upgrade-source binaries') and re-run"
+              exit 1
+            fi
+          done
+          gh release download "$RELEASE_TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern "${ASSET_NAME}.apk" \
+            --pattern "${ASSET_NAME}.ipa" \
+            --dir dl
+          ls -la dl
+
+      - name: Load SauceLabs secrets from 1Password
+        id: op_saucelabs
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
+          SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
+
+      - name: Upload ${{ matrix.sauce_name }}.apk to SauceLabs
+        id: upload_android
+        uses: ./.github/workflows/actions/upload-to-sauce-storage
+        with:
+          file: dl/${{ matrix.asset_name }}.apk
+          name: ${{ matrix.sauce_name }}.apk
+          description: e2e upgrade source — ${{ matrix.release_tag }} / ${{ matrix.asset_name }}.apk
+          sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+
+      - name: Upload ${{ matrix.sauce_name }}.ipa to SauceLabs
+        id: upload_ios
+        uses: ./.github/workflows/actions/upload-to-sauce-storage
+        with:
+          file: dl/${{ matrix.asset_name }}.ipa
+          name: ${{ matrix.sauce_name }}.ipa
+          description: e2e upgrade source — ${{ matrix.release_tag }} / ${{ matrix.asset_name }}.ipa
+          sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+
+      - name: Summarise
+        env:
+          SAUCE_NAME: ${{ matrix.sauce_name }}
+          RELEASE_TAG: ${{ matrix.release_tag }}
+          ASSET_NAME: ${{ matrix.asset_name }}
+          ANDROID_VERSION: ${{ steps.upload_android.outputs.app_version }}
+          ANDROID_BUILD: ${{ steps.upload_android.outputs.build_number }}
+          IOS_VERSION: ${{ steps.upload_ios.outputs.app_version }}
+          IOS_BUILD: ${{ steps.upload_ios.outputs.build_number }}
+        run: |
+          {
+            echo "| Sauce name | Source | App version | Build |"
+            echo "| --- | --- | --- | --- |"
+            echo "| \`${SAUCE_NAME}.apk\` | ${RELEASE_TAG} / ${ASSET_NAME}.apk | ${ANDROID_VERSION:-?} | ${ANDROID_BUILD:-?} |"
+            echo "| \`${SAUCE_NAME}.ipa\` | ${RELEASE_TAG} / ${ASSET_NAME}.ipa | ${IOS_VERSION:-?} | ${IOS_BUILD:-?} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  refresh-prev-builds:
+    name: Refresh BCSC-prev (rolling previous release)
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/workflows/actions/upload-to-sauce-storage
+
+      - name: Resolve the newest full release with e2e builds
+        id: probe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(gh api "repos/${{ github.repository }}/releases?per_page=30" --jq \
+            '[.[] | select((.prerelease or .draft) | not)
+                  | select(.tag_name | startswith("bcsc-v"))
+                  | select([.assets[].name] | index(env.E2E_ANDROID_ASSET))
+                  | select([.assets[].name] | index(env.E2E_IOS_ASSET))][0].tag_name // empty')
+          if [ -z "$tag" ]; then
+            echo "::error::No full bcsc-v* release carries $E2E_ANDROID_ASSET + $E2E_IOS_ASSET — run 'Publish Release E2E Builds' for the newest shipped release, then re-run"
+            exit 1
+          fi
+          echo "Previous release: $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Download the previous release's e2e builds
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ steps.probe.outputs.tag }}" \
+            --repo "${{ github.repository }}" \
+            --pattern "$E2E_ANDROID_ASSET" \
+            --pattern "$E2E_IOS_ASSET" \
+            --dir dl
+          ls -la dl
+
+      - name: Load SauceLabs secrets from 1Password
+        id: op_saucelabs
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
+          SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
+
+      - name: Upload BCSC-prev.apk to SauceLabs
+        id: upload_android
+        uses: ./.github/workflows/actions/upload-to-sauce-storage
+        with:
+          file: dl/${{ env.E2E_ANDROID_ASSET }}
+          name: ${{ env.PREV_ANDROID_FILENAME }}
+          description: e2e rolling previous release — ${{ steps.probe.outputs.tag }} / ${{ env.E2E_ANDROID_ASSET }}
+          sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+
+      - name: Upload BCSC-prev.ipa to SauceLabs
+        id: upload_ios
+        uses: ./.github/workflows/actions/upload-to-sauce-storage
+        with:
+          file: dl/${{ env.E2E_IOS_ASSET }}
+          name: ${{ env.PREV_IOS_FILENAME }}
+          description: e2e rolling previous release — ${{ steps.probe.outputs.tag }} / ${{ env.E2E_IOS_ASSET }}
+          sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+
+      - name: Summarise
+        env:
+          RELEASE_TAG: ${{ steps.probe.outputs.tag }}
+          ANDROID_VERSION: ${{ steps.upload_android.outputs.app_version }}
+          ANDROID_BUILD: ${{ steps.upload_android.outputs.build_number }}
+          IOS_VERSION: ${{ steps.upload_ios.outputs.app_version }}
+          IOS_BUILD: ${{ steps.upload_ios.outputs.build_number }}
+        run: |
+          {
+            echo "| Sauce name | Source | App version | Build |"
+            echo "| --- | --- | --- | --- |"
+            echo "| \`${PREV_ANDROID_FILENAME}\` | ${RELEASE_TAG} / ${E2E_ANDROID_ASSET} | ${ANDROID_VERSION:-?} | ${ANDROID_BUILD:-?} |"
+            echo "| \`${PREV_IOS_FILENAME}\` | ${RELEASE_TAG} / ${E2E_IOS_ASSET} | ${IOS_VERSION:-?} | ${IOS_BUILD:-?} |"
+          } >> "$GITHUB_STEP_SUMMARY"
