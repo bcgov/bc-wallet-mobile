@@ -2,7 +2,14 @@ import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios from 'axios'
-import { getApplicationName, getBuildNumber, getDeviceId, getModel, getSystemName, getVersion } from 'react-native-device-info'
+import {
+  getApplicationName,
+  getBuildNumber,
+  getDeviceId,
+  getModel,
+  getSystemName,
+  getVersion,
+} from 'react-native-device-info'
 import { ReportProblem } from './logger'
 import { createReportProblemLokiPayload, reportProblemLokiTransport } from './report-problem'
 
@@ -89,7 +96,6 @@ describe('report-problem', () => {
   })
 
   describe('createReportProblemLokiPayload', () => {
-
     it('builds a Loki streams payload with the expected stream labels', () => {
       const result = createReportProblemLokiPayload('7K2P-9XQF', baseProblem)
 
