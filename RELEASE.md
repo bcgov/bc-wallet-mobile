@@ -13,7 +13,8 @@ builds against it. A shipped build lives under one name on its release and in Sa
    for a full release, not a pre-release RC, at 4.1.0 or later — as `BCSC-prev.apk` /
    `BCSC-prev.ipa`, the rolling previous release. GitHub build artifacts expire after **7 days**;
    after that, pass `sauce_source=BCSC-Dev-<build>` and the workflow takes the same build's Sauce
-   storage copy instead (kept about 60 days).
+   storage copy instead (kept about 60 days). Binaries stamped with a different version than the
+   name stop the run before anything is attached.
 2. Add the version to the manifest of **Refresh E2E Sauce Builds**
    (`.github/workflows/refresh-e2e-sauce-builds.yml`), which re-uploads every pinned copy and
    `BCSC-prev.*` from the release assets monthly, keeping the Sauce copies inside the 60-day

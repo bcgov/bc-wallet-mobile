@@ -15,6 +15,7 @@
 #      commit isn't the build commit). GitHub artifacts expire after 7 DAYS; once
 #      they are gone, pass sauce_source instead: the Sauce storage copy of the same
 #      build (BCSC-Dev-<run number>.*, kept ~60 days) is downloaded in its place.
+#      The binaries must carry the version in the name, or nothing is attached.
 #   2. Attaches them to that version's release (assets only — release notes are
 #      never touched) and uploads the pinned copy to Sauce storage under the same
 #      name, UNTAGGED (the PR-prune maintenance job only deletes pr-tagged files).
@@ -174,6 +175,20 @@ jobs:
           echo "SOURCE=Sauce storage ${SAUCE_SOURCE}.apk / .ipa" >> "$GITHUB_ENV"
           ls -la "${ASSET_NAME}.apk" "${ASSET_NAME}.ipa"
 
+      - name: Check the binaries carry the version in the asset name
+        run: |
+          # The name comes from operator inputs (tag, asset_name); the binaries decide what gets attached or becomes BCSC-prev.*
+          want="${ASSET_NAME#BCSC-v}"
+          aapt2=$(ls "${ANDROID_HOME:-/usr/local/lib/android/sdk}"/build-tools/*/aapt2 | sort -V | tail -1)
+          apk=$("$aapt2" dump badging "${ASSET_NAME}.apk" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+          plist=$(unzip -Z1 "${ASSET_NAME}.ipa" | grep -E '^Payload/[^/]+\.app/Info\.plist$')
+          ipa=$(unzip -p "${ASSET_NAME}.ipa" "$plist" | python3 -c 'import plistlib, sys; print(plistlib.loads(sys.stdin.buffer.read())["CFBundleShortVersionString"])')
+          if [ "$apk" != "$want" ] || [ "$ipa" != "$want" ]; then
+            echo "::error::${ASSET_NAME}.* carries app version ${apk:-?} (apk) / ${ipa:-?} (ipa), not ${want} — check release_tag / asset_name / run_id / sauce_source; nothing was attached or uploaded"
+            exit 1
+          fi
+          echo "✓ ${ASSET_NAME}.apk / .ipa carry app version ${want}"
+
       - name: Attach e2e builds to the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -183,14 +198,21 @@ jobs:
         run: |
           # Runner → release-asset uploads crawled at ~0.3 MB/s and one stalled past the job timeout (2026-09-17),
           # so: one file per attempt, abort under 20 KB/s for 60 s and retry, 15 min for a slow-but-moving one.
+          # Both files share a 20-minute budget so the loop's own verdict lands before the 30-minute job timeout.
+          deadline=$(( SECONDS + 1200 ))
           for file in "${ASSET_NAME}.apk" "${ASSET_NAME}.ipa"; do
             for attempt in 1 2 3; do
+              left=$(( deadline - SECONDS ))
+              if [ "$left" -lt 60 ]; then
+                echo "::error::Out of time attaching ${file} to ${RELEASE_TAG} (attempt ${attempt})"
+                exit 1
+              fi
               # Clobber — a same-named asset, including a stale partial from an aborted attempt, blocks the upload
               gh api "repos/${REPO}/releases/${RELEASE_ID}/assets?per_page=100" \
                 | jq -r --arg n "$file" '.[] | select(.name == $n) | .id' \
                 | xargs -r -I{} gh api -X DELETE "repos/${REPO}/releases/assets/{}"
               result=$(curl -sS -o /dev/null -w "%{http_code} %{speed_upload} %{time_total}" \
-                --speed-limit 20480 --speed-time 60 --max-time 900 \
+                --speed-limit 20480 --speed-time 60 --max-time "$(( left < 900 ? left : 900 ))" \
                 -X POST -H "Authorization: Bearer ${GH_TOKEN}" \
                 -H "Accept: application/vnd.github+json" -H "Content-Type: application/octet-stream" \
                 --data-binary "@${file}" \

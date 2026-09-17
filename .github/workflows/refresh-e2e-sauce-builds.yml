@@ -141,9 +141,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Newest full bcsc-v* release carrying a BCSC-v<x.y.z>.apk + .ipa pair, x.y.z >= PREV_MIN_VERSION
-          found=$(gh api "repos/${{ github.repository }}/releases?per_page=30" --jq '
+          found=$(gh api "repos/${{ github.repository }}/releases?per_page=100" --paginate --slurp | jq -r '
             def ver: split(".") | map(tonumber);
-            [ .[]
+            [ add[]
               | select((.prerelease or .draft) | not)
               | select(.tag_name | startswith("bcsc-v"))
               | . as $r
