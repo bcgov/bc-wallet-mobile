@@ -3,21 +3,24 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSecureActions } from './useSecureActions'
 import { useVerificationReset } from './useVerificationReset'
 
 /**
- * Returns a callback that asks the user to confirm restarting the identity verification process.
+ * Returns callbacks for restarting the identity verification process.
  *
- * On confirmation, all verification progress is reset (see {@link useVerificationReset}) behind
- * a loading screen, then the verification status is set back to in-progress so the RootStack
- * remounts the VerifyStack at the first verification step.
+ * `restartVerification` resets all verification progress (see {@link useVerificationReset})
+ * behind a loading screen, then sets the verification status back to in-progress so the
+ * RootStack remounts the VerifyStack at the first verification step. It performs the reset
+ * unconditionally — callers that need user confirmation first should use
+ * `promptRestartVerification`; a caller that has already decided a restart is unavoidable (e.g. a
+ * system check that detected unrecoverable stored data) can call it directly.
  *
- * @returns {(onConfirm?: () => void) => void} Callback that shows the confirmation alert. The
- * optional `onConfirm` is invoked when the user confirms, before the reset starts (e.g. to
- * close the menu the restart was triggered from).
+ * `promptRestartVerification` asks the user to confirm before calling `restartVerification`.
+ *
+ * @returns {{ promptRestartVerification: (onConfirm?: () => void) => void, restartVerification: () => Promise<void> }}
  */
 export const useRestartVerification = () => {
   const { t } = useTranslation()
@@ -70,5 +73,8 @@ export const useRestartVerification = () => {
     [emitAlert, t, restartVerification]
   )
 
-  return promptRestartVerification
+  return useMemo(
+    () => ({ promptRestartVerification, restartVerification }),
+    [promptRestartVerification, restartVerification]
+  )
 }

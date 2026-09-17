@@ -1475,6 +1475,11 @@ const translation = {
       "Action1": "Restart Verification (FR)",
       "Loading": "Restarting verification... (FR)",
     },
+    "InvalidStoredMetadata": {
+      "Title": "Verification information needs to be re-entered (FR)",
+      "Description": "Some of the information saved for your verification can't be used. Your verification progress will be reset so you can enter it again. (FR)",
+      "Action1": "Restart Verification (FR)",
+    },
     "DataUseWarning": {
       "Title": "Data Use (FR)",
       "Description": "The app detected that you're on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (FR)",

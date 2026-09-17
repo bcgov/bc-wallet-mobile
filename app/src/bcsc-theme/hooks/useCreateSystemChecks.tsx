@@ -9,6 +9,7 @@ import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCh
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
+import { InvalidStoredMetadataSystemCheck } from '@/services/system-checks/InvalidStoredMetadataSystemCheck'
 import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
@@ -35,6 +36,7 @@ import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
 import { useEvidenceService } from '../services/hooks/useEvidenceService'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useTokenService } from '../services/hooks/useTokenService'
+import { useRestartVerification } from './useRestartVerification'
 import { SystemCheckScope } from './useSystemChecks'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
@@ -75,6 +77,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const tokenService = useTokenService()
   const registrationService = useRegistrationService()
+  const restartVerificationActions = useRestartVerification()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const { isNavigationReady } = useNavigationContainer()
@@ -93,6 +96,15 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   useEffect(() => {
     credentialMetadataRef.current = store.bcsc.credentialMetadata
   }, [store.bcsc.credentialMetadata])
+
+  // Kept in a ref so InvalidStoredMetadataSystemCheck can re-read this at the moment its alert is
+  // acted on, not just when the check ran — the reset it triggers is destructive and verification
+  // can complete while the alert is on screen.
+  const storedMetadataStateRef = useRef({ isVerified, userMetadata: store.bcscSecure.userMetadata })
+  useEffect(() => {
+    storedMetadataStateRef.current = { isVerified, userMetadata: store.bcscSecure.userMetadata }
+  }, [isVerified, store.bcscSecure.userMetadata])
+  const getStoredMetadataState = useCallback(() => storedMetadataStateRef.current, [])
 
   /**
    * Get system checks to run at app startup
@@ -258,8 +270,16 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * @returns Array of system check strategies
    */
   const getVerifySystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    return [new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils)]
-  }, [navigation, utils])
+    return [
+      new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils),
+      new InvalidStoredMetadataSystemCheck(
+        getStoredMetadataState,
+        emitAlert,
+        restartVerificationActions.restartVerification,
+        utils
+      ),
+    ]
+  }, [navigation, utils, getStoredMetadataState, emitAlert, restartVerificationActions])
 
   const getAccountSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
     let checks: SystemCheckStrategy[] = []

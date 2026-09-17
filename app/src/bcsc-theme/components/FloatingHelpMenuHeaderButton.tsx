@@ -151,7 +151,7 @@ const BackToHomeListButton = ({ onClose, position }: MenuRowProps) => {
  */
 const RestartVerificationListButton = ({ onClose, position }: MenuRowProps) => {
   const { t } = useTranslation()
-  const promptRestartVerification = useRestartVerification()
+  const { promptRestartVerification } = useRestartVerification()
 
   return (
     <ListButton position={position} onPress={() => promptRestartVerification(onClose)}>

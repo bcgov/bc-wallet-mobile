@@ -1475,6 +1475,11 @@ const translation = {
       "Action1": "Restart Verification (PT-BR)",
       "Loading": "Restarting verification... (PT-BR)",
     },
+    "InvalidStoredMetadata": {
+      "Title": "Verification information needs to be re-entered (PT-BR)",
+      "Description": "Some of the information saved for your verification can't be used. Your verification progress will be reset so you can enter it again. (PT-BR)",
+      "Action1": "Restart Verification (PT-BR)",
+    },
     "DataUseWarning": {
       "Title": "Data Use (PT-BR)",
       "Description": "The app detected that you're on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (PT-BR)",

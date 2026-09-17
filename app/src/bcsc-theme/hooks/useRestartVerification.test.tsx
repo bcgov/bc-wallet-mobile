@@ -30,7 +30,7 @@ const promptAndGetAlertActions = async (onConfirm?: () => void) => {
   const { result } = renderHook(() => useRestartVerification())
 
   await act(async () => {
-    result.current(onConfirm)
+    result.current.promptRestartVerification(onConfirm)
   })
 
   expect(mockEmitAlert).toHaveBeenCalledWith(
@@ -98,6 +98,20 @@ describe('useRestartVerification', () => {
 
     expect(mockVerificationReset).toHaveBeenCalledTimes(1)
     expect(mockContinueVerificationProcess).not.toHaveBeenCalled()
+    expect(mockStopLoading).toHaveBeenCalledTimes(1)
+  })
+
+  it('restartVerification resets and re-enters the verify flow without prompting', async () => {
+    const { result } = renderHook(() => useRestartVerification())
+
+    await act(async () => {
+      await result.current.restartVerification()
+    })
+
+    expect(mockEmitAlert).not.toHaveBeenCalled()
+    expect(mockStartLoading).toHaveBeenCalledWith('Alerts.RestartVerification.Loading')
+    expect(mockVerificationReset).toHaveBeenCalledTimes(1)
+    expect(mockContinueVerificationProcess).toHaveBeenCalledTimes(1)
     expect(mockStopLoading).toHaveBeenCalledTimes(1)
   })
 })

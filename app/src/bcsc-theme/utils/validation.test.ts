@@ -5,6 +5,7 @@ import {
   emailSchema,
   firstErrorKey,
   firstNameSchema,
+  isStoredUserMetadataValid,
   lastNameSchema,
   middleNamesSchema,
   normalizeForSubmission,
@@ -248,6 +249,68 @@ describe('validation', () => {
 
     it('leaves an omitted optional name empty rather than producing whitespace', () => {
       expect(normalizeForSubmission('   ')).toBe('')
+    })
+  })
+
+  describe('isStoredUserMetadataValid', () => {
+    it('accepts undefined metadata', () => {
+      expect(isStoredUserMetadataValid(undefined)).toBe(true)
+    })
+
+    it('accepts a name and address that pass the same rules the entry forms enforce', () => {
+      expect(
+        isStoredUserMetadataValid({
+          name: { first: 'Jane', middle: "Mary-Ann O'Brien", last: 'Doe' },
+          address: {
+            streetAddress: '123 Main St',
+            postalCode: 'V8V 1A1',
+            city: 'Montréal',
+            province: 'BC',
+            country: 'CA',
+          },
+        })
+      ).toBe(true)
+    })
+
+    it('accepts a mononym (blank first name) and no address', () => {
+      expect(isStoredUserMetadataValid({ name: { first: '', middle: '', last: 'Doe' } })).toBe(true)
+    })
+
+    it('rejects a stored middle name with characters the entry form now disallows', () => {
+      expect(isStoredUserMetadataValid({ name: { first: 'Jane', middle: 'Ann<3', last: 'Doe' } })).toBe(false)
+    })
+
+    it('rejects a stored first or last name with characters the entry form now disallows', () => {
+      expect(isStoredUserMetadataValid({ name: { first: '@Jane', last: 'Doe' } })).toBe(false)
+      expect(isStoredUserMetadataValid({ name: { first: 'Jane', last: 'Doe#1' } })).toBe(false)
+    })
+
+    it('rejects a stored address with a postal code the entry form now disallows', () => {
+      expect(
+        isStoredUserMetadataValid({
+          address: {
+            streetAddress: '123 Main St',
+            postalCode: 'not-a-postal-code',
+            city: 'Victoria',
+            province: 'BC',
+            country: 'CA',
+          },
+        })
+      ).toBe(false)
+    })
+
+    it('rejects a stored address field that exceeds the length the entry form now enforces', () => {
+      expect(
+        isStoredUserMetadataValid({
+          address: {
+            streetAddress: 'A'.repeat(ADDRESS_MAX_LENGTH + 1),
+            postalCode: 'V8V 1A1',
+            city: 'Victoria',
+            province: 'BC',
+            country: 'CA',
+          },
+        })
+      ).toBe(false)
     })
   })
 })

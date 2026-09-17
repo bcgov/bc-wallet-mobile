@@ -1,3 +1,4 @@
+import { NonBCSCUserMetadata } from '@/store'
 import { z } from 'zod'
 
 /**
@@ -130,4 +131,33 @@ export const firstErrorKey = (schema: z.ZodType, value: unknown): string | null 
   const result = parseField(schema, value)
 
   return result.ok ? null : result.errorKey
+}
+
+/**
+ * Re-checks NonBCSCUserMetadata already sitting in storage against the same schemas the
+ * evidence-collection and residential-address forms enforce at entry. Needed because that
+ * validation didn't always exist: data captured by a pre-4.1 app version (or migrated from a V3
+ * install) was saved without it, so a stored name or address can contain characters the server
+ * has always rejected on submission (2111 invalid_parameter) even though the app never asked the
+ * user to fix it. Only fields with an existing entry schema are covered.
+ */
+export const isStoredUserMetadataValid = (metadata: NonBCSCUserMetadata | undefined): boolean => {
+  const nameChecks: [string | undefined, z.ZodType][] = metadata?.name
+    ? [
+        [metadata.name.first, firstNameSchema],
+        [metadata.name.middle, middleNamesSchema],
+        [metadata.name.last, lastNameSchema],
+      ]
+    : []
+
+  const addressChecks: [string | undefined, z.ZodType][] = metadata?.address
+    ? [
+        [metadata.address.streetAddress, streetAddressSchema],
+        [metadata.address.streetAddress2, streetAddress2Schema],
+        [metadata.address.city, citySchema],
+        [metadata.address.postalCode, postalCodeSchema],
+      ]
+    : []
+
+  return [...nameChecks, ...addressChecks].every(([value, schema]) => !firstErrorKey(schema, value ?? ''))
 }

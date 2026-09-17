@@ -20,6 +20,7 @@ export const mockUseEvidenceService = jest.fn()
 export const mockUseNavigation = jest.fn()
 export const mockUseNavigationContainer = jest.fn()
 export const mockGetBundleId = jest.fn()
+export const mockUseRestartVerification = jest.fn()
 
 // --------------------
 // External hooks
@@ -41,6 +42,10 @@ jest.mock('../api/hooks/useConfigApi', () => () => mockUseConfigApi())
 jest.mock('../api/hooks/useRegistrationApi', () => () => mockUseRegistrationApi())
 jest.mock('../services/hooks/useEvidenceService', () => ({
   useEvidenceService: () => mockUseEvidenceService(),
+}))
+
+jest.mock('./useRestartVerification', () => ({
+  useRestartVerification: () => mockUseRestartVerification(),
 }))
 
 jest.mock('@react-navigation/native', () => ({
@@ -103,6 +108,10 @@ jest.mock('@/services/system-checks/TermsOfUseSystemCheck', () => ({
 jest.mock('@/services/system-checks/VerificationSessionExpiredSystemCheck', () => ({
   VerificationSessionExpiredSystemCheck: class VerificationSessionExpiredSystemCheck {},
   getPendingDeviceCodeExpiry: jest.fn(),
+}))
+
+jest.mock('@/services/system-checks/InvalidStoredMetadataSystemCheck', () => ({
+  InvalidStoredMetadataSystemCheck: class InvalidStoredMetadataSystemCheck {},
 }))
 
 jest.mock('@/services/system-checks/VerificationRequestStatusSystemCheck', () => ({
@@ -652,6 +661,10 @@ describe('useGetSystemChecks', () => {
       mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
       mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
       jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
+      mockUseRestartVerification.mockReturnValue({
+        promptRestartVerification: jest.fn(),
+        restartVerification: jest.fn(),
+      })
     }
 
     it('should be ready when secure state is hydrated', () => {
@@ -663,7 +676,7 @@ describe('useGetSystemChecks', () => {
       expect(result.current[SystemCheckScope.VERIFY].isReady).toBe(true)
     })
 
-    it('should return the VerificationSessionExpiredSystemCheck', async () => {
+    it('should return the VerificationSessionExpiredSystemCheck and InvalidStoredMetadataSystemCheck', async () => {
       jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
       mockHydratedStore()
 
@@ -671,8 +684,10 @@ describe('useGetSystemChecks', () => {
 
       const systemChecks = await result.current[SystemCheckScope.VERIFY].getSystemChecks()
 
-      expect(systemChecks).toHaveLength(1)
-      expect(systemChecks[0].constructor.name).toBe('VerificationSessionExpiredSystemCheck')
+      expect(systemChecks.map((c) => c.constructor.name)).toEqual([
+        'VerificationSessionExpiredSystemCheck',
+        'InvalidStoredMetadataSystemCheck',
+      ])
     })
   })
 

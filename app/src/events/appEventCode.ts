@@ -42,6 +42,7 @@ export enum AppEventCode {
   CLOCK_SKEW_ERROR = 'clock_skew_error',
   DATA_USE_WARNING = 'data_use_warning',
   INVALID_PAIRING_CODE = 'invalid_pairing_code',
+  INVALID_STORED_METADATA = 'invalid_stored_metadata',
   INVALID_TOKEN = 'invalid_token',
   IN_CALL_HAVING_TROUBLE = 'in_call_having_trouble',
   IOS_APP_UPDATE_REQUIRED = 'ios_app_update_required',
