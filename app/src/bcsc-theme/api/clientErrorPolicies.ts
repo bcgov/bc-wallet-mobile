@@ -236,8 +236,8 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint.includes(context.apiEndpoints.token)
   },
-  handle: (_error, context) => {
-    context.alerts.noTokensReturnedAlert()
+  handle: (error, context) => {
+    context.alerts.noTokensReturnedAlert(error)
   },
 }
 // Error policy for INVALID_TOKEN event on token endpoint
@@ -245,8 +245,8 @@ export const invalidTokenReturnedPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.INVALID_TOKEN && context.endpoint.includes(context.apiEndpoints.token)
   },
-  handle: (_error, context) => {
-    context.alerts.invalidTokenAlert()
+  handle: (error, context) => {
+    context.alerts.invalidTokenAlert(error)
   },
 }
 
