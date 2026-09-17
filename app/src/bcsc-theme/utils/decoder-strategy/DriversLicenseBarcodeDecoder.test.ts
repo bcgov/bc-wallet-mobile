@@ -12,6 +12,14 @@ const BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C =
 const BC_DL_BARCODE_3_CARET =
   '%BCVICTORIA^CPSIJSIT,$STANDALONE CITZ FOUR^910 GOVERNMENT ST$VICTORIA BC V8W 3Y5?;636028004023964=270419850410=?_%0AV8W3Y5                     F            9873904417                00C00015303?'
 
+// Multi-word last name — regression fixtures for the middleNames parsing bug, where words (and
+// the literal ',$' delimiter) from a multi-word last name used to leak into middleNames.
+const BC_DL_BARCODE_MULTIWORD_LASTNAME_NO_MIDDLE =
+  "%BCVICTORIA^VAN BERG,$ANNA^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
+
+const BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE =
+  "%BCVICTORIA^DE LA CRUZ,$MARIA ELENA^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
+
 const VALID_BC_DL_BARCODES = [
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
@@ -165,6 +173,34 @@ describe('DriversLicenseBarcodeDecoder', () => {
         city: 'victoria',
         province: 'BC',
       })
+    })
+
+    it('correctly splits middleNames from a multi-word last name with no middle name', () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_DL_BARCODE_MULTIWORD_LASTNAME_NO_MIDDLE,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.firstName).toBe('anna')
+      expect(decoded.middleNames).toBe('')
+      expect(decoded.lastName).toBe('van berg')
+    })
+
+    it('correctly splits middleNames from a multi-word last name with a middle name', () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.firstName).toBe('maria')
+      expect(decoded.middleNames).toBe('elena')
+      expect(decoded.lastName).toBe('de la cruz')
     })
 
     it('should handle century rollover edge case for expiry dates', () => {
