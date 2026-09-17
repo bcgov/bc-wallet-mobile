@@ -5,6 +5,8 @@ import {
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
   BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
   BC_DL_BARCODE_3_CARET,
+  BC_DL_BARCODE_MONONYM,
+  BC_DL_BARCODE_MONONYM_NO_DOLLAR,
   BC_DL_BARCODE_MULTIWORD_LASTNAME_NO_MIDDLE,
   BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE,
   VALID_BC_DL_BARCODES,
@@ -183,6 +185,34 @@ describe('DriversLicenseBarcodeDecoder', () => {
       expect(decoded.firstName).toBe('maria')
       expect(decoded.middleNames).toBe('elena')
       expect(decoded.lastName).toBe('de la cruz')
+    })
+
+    it('handles a mononym (empty first name and middle names, full name in lastName)', () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_DL_BARCODE_MONONYM,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.firstName).toBe('')
+      expect(decoded.middleNames).toBe('')
+      expect(decoded.lastName).toBe('cher')
+    })
+
+    it('handles a mononym even if the "$" given-names delimiter is missing entirely', () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_DL_BARCODE_MONONYM_NO_DOLLAR,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.firstName).toBe('')
+      expect(decoded.middleNames).toBe('')
+      expect(decoded.lastName).toBe('cher')
     })
 
     describe('century rollover', () => {

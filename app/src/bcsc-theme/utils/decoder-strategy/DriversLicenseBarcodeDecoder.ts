@@ -71,7 +71,9 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
   private parseLicenseNames(value: string): { firstName: string; middleNames: string; lastName: string } {
     const nameSection = value.split('^')[1]
 
-    const givenNames = nameSection.split('$')[1].split(' ')
+    // A mononym's given-names segment is usually present but empty ('LAST,$'). Guard the '$'
+    // being absent entirely ('LAST,')
+    const givenNames = (nameSection.split('$')[1] ?? '').split(' ')
     const firstName = givenNames[0]
     const middleNames = givenNames.slice(1).join(' ')
     const lastName = nameSection.split(',')[0]
