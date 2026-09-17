@@ -14,7 +14,6 @@ jest.mock('@/contexts/NavigationContainerContext', () => ({
     isReady: jest.fn(() => false),
     getCurrentRoute: jest.fn(() => undefined),
   },
-  NAVIGATION_VISITED_SCREEN_NAMES: [],
 }))
 
 jest.mock('@/utils/analytics/analytics-singleton', () => ({

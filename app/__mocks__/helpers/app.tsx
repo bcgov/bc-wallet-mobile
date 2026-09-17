@@ -10,6 +10,13 @@ import { PropsWithChildren, useMemo } from 'react'
 import 'reflect-metadata'
 import { container } from 'tsyringe'
 
+// RemoteConfigProvider's real init effect awaits PersistentStorage, then a real axios.get() to a
+// URL that's unset under Jest (react-native-config has no test mock here), so it always resolves
+// asynchronously after the test's initial render — outside any act() the many test files using
+// BasicAppContext wrap it in, which is why "not wrapped in act(...)" warnings for it show up
+// throughout the suite. This swaps in a synchronous stand-in, in the one shared place they all
+// render through, so it never has pending work after mount — no act() warning, no doomed network
+// call per test — without touching RemoteConfig.tsx or any individual test file.
 jest.mock('@/remote-config/RemoteConfig', () => {
   const ReactActual = jest.requireActual('react')
   const { getBundledRemoteConfig } = jest.requireActual('@/remote-config/remote-config-utils')
