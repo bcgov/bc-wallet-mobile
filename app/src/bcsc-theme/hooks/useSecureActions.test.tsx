@@ -749,6 +749,67 @@ describe('useSecureActions', () => {
     })
   })
 
+  // #4645: a keychain write failure while hydrating used to abort an already-successful unlock.
+  describe('hydrateSecureState token write-back failure (#4645)', () => {
+    const keychainError = () => Object.assign(new Error('native E_TOKEN_SAVE_FAILED'), { code: 'E_TOKEN_SAVE_FAILED' })
+
+    beforeEach(() => {
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+      jest.mocked(getAccount).mockResolvedValue({ id: 'a', issuer: 'https://i', clientID: 'c' } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest
+        .mocked(getToken)
+        .mockImplementation(async (type: any) =>
+          type === TokenType.Refresh ? ({ id: 'r', type, token: 'stored-refresh', created: 0 } as any) : null
+        )
+    })
+
+    it('completes hydration when the keychain rejects the token write', async () => {
+      jest.mocked(setToken).mockRejectedValue(keychainError())
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await expect(result.current.hydrateSecureState()).resolves.toBeUndefined()
+      })
+
+      expect(mockDispatch.mock.calls.some(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)).toBe(
+        true
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to persist tokens'),
+        expect.anything()
+      )
+    })
+
+    it('keeps refreshed and rotated tokens in the store when the write-back fails', async () => {
+      const mockGetTokensForRefreshToken = jest
+        .fn()
+        .mockResolvedValue({ refresh_token: 'fresh-refresh', access_token: 'fresh-access' })
+      jest.mocked(useBCSCApiClientModule.useBCSCApiClientState).mockReturnValue({
+        client: { getTokensForRefreshToken: mockGetTokensForRefreshToken } as any,
+        isClientReady: true,
+        error: undefined,
+      } as any)
+      jest.mocked(setToken).mockRejectedValue(keychainError())
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      const hydrate = mockDispatch.mock.calls.find(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)
+      expect(hydrate).toBeDefined()
+      expect(hydrate![0].payload[0]).toMatchObject({
+        refreshToken: 'fresh-refresh',
+        accessToken: 'fresh-access',
+      })
+    })
+  })
+
   describe('updateVerified', () => {
     // Short-circuit after the dispatches; the credential-persistence branch is covered elsewhere.
     beforeEach(() => {
