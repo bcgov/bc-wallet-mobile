@@ -14,6 +14,18 @@ jest.mock('@react-navigation/native', () => ({
     reset: jest.fn((config) => ({ type: 'RESET', payload: config })),
     navigate: jest.fn((config) => ({ type: 'NAVIGATE', payload: config })),
   },
+  // The global __mocks__/@react-navigation/core.ts manual mock (auto-applied to any nested
+  // require('@react-navigation/core'), including native's own internal re-export of it) doesn't
+  // export createNavigationContainerRef or createNavigatorFactory, so jest.requireActual above
+  // doesn't pick them up here. This suite pulls in NavigationContainerContext (which calls
+  // createNavigationContainerRef at module load time) and @react-navigation/stack (which calls
+  // createNavigatorFactory at module load time) transitively via the store/logger import chain,
+  // so both just need to exist as callable stubs.
+  createNavigationContainerRef: jest.fn(() => ({
+    isReady: jest.fn(() => false),
+    getCurrentRoute: jest.fn(() => undefined),
+  })),
+  createNavigatorFactory: jest.fn(),
 }))
 
 // Mock bifold services

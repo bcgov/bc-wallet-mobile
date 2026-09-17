@@ -46,6 +46,7 @@ jest.mock('../services/hooks/useEvidenceService', () => ({
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useNavigation: () => mockUseNavigation(),
+  createNavigatorFactory: jest.fn(),
 }))
 
 jest.mock('@/contexts/NavigationContainerContext', () => ({
