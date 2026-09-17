@@ -1,5 +1,5 @@
 import { AppError } from '@/errors'
-import { RemoteLogger, RemoteLoggerOptions, lokiTransport } from '@bifold/remote-logs'
+import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
 import Config from 'react-native-config'
 import {
@@ -12,8 +12,9 @@ import {
 } from 'react-native-device-info'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { generateReferenceCode } from './reference-code'
+import { createReportProblemLokiPayload, reportProblemLokiTransport } from './report-problem'
 
-interface ReportProblem {
+export interface ReportProblem {
   /**
    * The title of the problem being reported.
    * Usually the title of the error modal, but can be any string that describes the problem.
@@ -113,55 +114,25 @@ export const appLogger = createAppLogger()
  * Reporting is best-effort: any transport failure is swallowed so the user is
  * always given a code to share, even when the network/Loki is unavailable.
  *
+ * TODO (MD): Consider moving this to `utils/report-problem.ts`
+ *
  * @param problem - the problem being reported
- * @param options.includeDeviceDetails - when false, the app `version` and OS `system` labels are
- *   omitted so a user can submit a report without sharing device details (defaults to true to
- *   preserve existing error-report behaviour)
  * @returns the reference code to surface to the user
  */
-export const reportProblem = (problem: ReportProblem, options?: { includeDeviceDetails?: boolean }): string => {
-  const referenceCode = generateReferenceCode()
-  const { title, description, error, code } = problem
-  const { includeDeviceDetails = true } = options ?? {}
+export const reportProblem = (problem: ReportProblem): string => {
+  const reportId = generateReferenceCode()
 
-  // Drop the app version / OS labels when the user opts out; keep the application name so support
-  // still knows which app the report came from.
-  const lokiLabels = includeDeviceDetails ? baseOptions.lokiLabels : { application: getApplicationName().toLowerCase() }
-
-  try {
-    if (baseOptions.lokiUrl) {
-      lokiTransport({
-        msg: title,
-        rawMsg: [
-          {
-            message: title,
-            data: {
-              description,
-              code,
-              message: error?.message, // TODO (MD): Deprecate - included in `error`
-              error: error?.toJSON(),
-              report_id: referenceCode, // this report problem - ie: "7K2P-9XQF"
-              install_id: problem.installId, // this app installation - ie: "f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f"
-              session_id: problem.sessionId, // this remote logging session - ie: 1234567890
-
-              // Only attach `stack` when the error actually carries one — user-initiated reports have no real
-              // trace, so the field is omitted rather than logging meaningless construction frames.
-              ...(error?.stack ? { stack: error.stack } : {}),
-            },
-          },
-        ],
-        level: { severity: 3, text: 'error' },
-        options: {
-          lokiUrl: baseOptions.lokiUrl,
-          lokiLabels,
-          job: 'incident-report',
-        },
-      })
-    }
-  } catch (e: any) {
-    // Never let a reporting failure prevent the user from getting their code.
-    appLogger.error?.('Failed to send problem report to Loki', e)
+  if (!baseOptions.lokiUrl) {
+    appLogger.warn(`[ReportProblem] Loki URL not configured. Skipping report for problem: ${problem.title}`)
+    return reportId
   }
 
-  return referenceCode
+  try {
+    const payload = createReportProblemLokiPayload(reportId, problem)
+    reportProblemLokiTransport(baseOptions.lokiUrl, payload, appLogger)
+  } catch (error) {
+    appLogger.error('[ReportProblem] Failed to build or send the problem report.', error as Error)
+  }
+
+  return reportId
 }

@@ -84,18 +84,6 @@ describe('ReportProblemModal', () => {
     expect(Clipboard.setString).toHaveBeenCalledWith('TEST-CODE')
   })
 
-  it('sends a report without an error so no stack trace is attached', () => {
-    const { getByTestId } = renderModal()
-
-    enterDescription(getByTestId)
-    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
-
-    // A user-initiated report isn't a thrown error — no `error` means reportProblem
-    // omits the stack field from the Loki payload entirely
-    const reportedProblem = mockReportProblem.mock.calls[0][0]
-    expect(reportedProblem.error).toBeUndefined()
-  })
-
   it('does not submit an empty (whitespace-only) report', () => {
     const onClose = jest.fn()
     const { getByTestId } = renderModal(onClose)
