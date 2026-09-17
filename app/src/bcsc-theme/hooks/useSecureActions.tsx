@@ -50,6 +50,7 @@ import { createMinimalCredential, getCredentialVerificationStatus } from '../uti
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import { isTokenExpired } from '../utils/token-expiry'
+import { stripDisallowedNameCharacters } from '../utils/validation'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -1091,9 +1092,9 @@ export const useSecureActions = () => {
 
         if (authRequest.firstName || authRequest.lastName) {
           userMetadata.name = {
-            first: authRequest.firstName || '',
-            last: authRequest.lastName || '',
-            middle: authRequest.middleNames,
+            first: stripDisallowedNameCharacters(authRequest.firstName),
+            last: stripDisallowedNameCharacters(authRequest.lastName),
+            middle: authRequest.middleNames !== undefined ? stripDisallowedNameCharacters(authRequest.middleNames) : undefined,
           }
         }
       }
