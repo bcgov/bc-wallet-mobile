@@ -1,9 +1,11 @@
 import { useTheme } from '@bifold/core'
+import type { RefObject } from 'react'
 import { useCallback, useState } from 'react'
-import { LayoutChangeEvent, Platform, Text } from 'react-native'
+import { LayoutChangeEvent, Platform, Text, TextInput } from 'react-native'
 import { InputWithValidation } from './InputWithValidation'
 
 interface DateInputProps {
+  ref?: RefObject<TextInput | null>
   id: string
   label: string
   value: string
@@ -40,7 +42,7 @@ const formatDigits = (digits: string): string => {
   return `${digits.slice(0, 4)}/${digits.slice(4, 6)}/${digits.slice(6)}`
 }
 
-const DateInput = ({ id, label, value, onChange, error, subtext, onLayout }: DateInputProps) => {
+const DateInput = ({ ref, id, label, value, onChange, error, subtext, onLayout }: DateInputProps) => {
   const { Inputs, ColorPalette } = useTheme()
   const [displayValue, setDisplayValue] = useState(formatDigits(getDigits(value)))
 
@@ -79,6 +81,7 @@ const DateInput = ({ id, label, value, onChange, error, subtext, onLayout }: Dat
 
   return (
     <InputWithValidation
+      ref={ref}
       id={id}
       label={label}
       value={displayValue}
