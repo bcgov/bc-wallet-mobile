@@ -111,7 +111,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         autoHide: true,
         visibilityTime: 1500,
       })
-    } catch (error) {
+    } catch {
       setError(t('BCSC.EmailConfirmation.ErrorResendingCode'))
     } finally {
       setResendLoading(false)

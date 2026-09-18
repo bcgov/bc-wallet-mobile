@@ -1,3 +1,6 @@
+import ListOfCredentials from '@assets/img/list-of-credentials.jpg'
+import MobilePhoneScanningLaptop from '@assets/img/mobile-phone-scanning-laptop.jpg'
+import NotificationsScreencap from '@assets/img/notifications-screencap.png'
 import { RenderProps, TourBox, TourStep, useTheme } from '@bifold/core'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -28,7 +31,7 @@ export const homeTourSteps: TourStep[] = [
           stepsOutOf={3}
         >
           <Image
-            source={require('@assets/img/mobile-phone-scanning-laptop.jpg')}
+            source={MobilePhoneScanningLaptop}
             resizeMode={'contain'}
             resizeMethod={'resize'}
             style={{
@@ -73,7 +76,7 @@ export const homeTourSteps: TourStep[] = [
           stepsOutOf={3}
         >
           <Image
-            source={require('@assets/img/notifications-screencap.png')}
+            source={NotificationsScreencap}
             resizeMode={'contain'}
             resizeMethod={'resize'}
             style={{
@@ -118,7 +121,7 @@ export const homeTourSteps: TourStep[] = [
           stepsOutOf={3}
         >
           <Image
-            source={require('@assets/img/list-of-credentials.jpg')}
+            source={ListOfCredentials}
             resizeMode={'contain'}
             resizeMethod={'resize'}
             style={{
