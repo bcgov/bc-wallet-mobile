@@ -1,4 +1,6 @@
 import { BCThemeNames } from '@/constants'
+import LogoLarge from '@assets/img/logo-large.png'
+import LogoLargeWhite from '@assets/img/logo-large-white.png'
 import Logo from '@assets/img/logo-with-text.svg'
 import SecurePIN from '@assets/img/secure-pin.svg'
 import {
@@ -337,13 +339,13 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       },
       img: {
         logoSecondary: {
-          src: require('@assets/img/logo-large.png'),
+          src: LogoLarge,
           height: 120,
           width: 120,
           resizeMode: 'contain',
         },
         logoPrimary: {
-          src: require('@assets/img/logo-large-white.png'),
+          src: LogoLargeWhite,
           aspectRatio: undefined,
           height: 170,
           width: 170,
