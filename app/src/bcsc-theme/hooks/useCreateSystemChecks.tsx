@@ -110,7 +110,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * @returns Array of system check strategies
    */
   const getStartupSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    const serverStatus = cachedServerStatus ?? (await refreshServerStatus()).serverStatus
+    const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
     const systemChecks: SystemCheckStrategy[] = [
       new InstallIdSystemCheck(store.bcsc.installId, dispatch),

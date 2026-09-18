@@ -353,6 +353,56 @@ describe('useGetSystemChecks', () => {
 
         expect(systemChecks.map((c) => c.constructor.name)).toEqual(['InstallIdSystemCheck', 'AnalyticsSystemCheck'])
       })
+
+      it('forces a fresh fetch when no status is cached yet, instead of skipping the update/clock-skew checks', async () => {
+        // Simulates the provider's own initial fetch not having resolved yet: refresh({ force:
+        // true }) is what actually waits for the network call. Without `force`, refresh() would
+        // just hand back the same null it started with and these checks would be silently skipped
+        // for the whole session (STARTUP only runs once).
+        const refresh = jest.fn().mockResolvedValue({ serverStatus: { serverTimestamp: new Date() } })
+        mockUseServerStatus.mockReturnValue({ serverStatus: null, refresh })
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
+        mockUseConfigApi.mockReturnValue({ getServerStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
+
+        expect(refresh).toHaveBeenCalledWith({ force: true })
+        expect(systemChecks.map((c) => c.constructor.name)).toEqual([
+          'InstallIdSystemCheck',
+          'AnalyticsSystemCheck',
+          'ServerClockSkewSystemCheck',
+          'UpdateAppSystemCheck',
+        ])
+      })
+
+      it('does not call refresh at all when a status is already cached', async () => {
+        const refresh = jest.fn()
+        mockUseServerStatus.mockReturnValue({ serverStatus: { serverTimestamp: new Date() }, refresh })
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
+        mockUseConfigApi.mockReturnValue({ getServerStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        await result.current[SystemCheckScope.STARTUP].getSystemChecks()
+
+        expect(refresh).not.toHaveBeenCalled()
+      })
     })
   })
 

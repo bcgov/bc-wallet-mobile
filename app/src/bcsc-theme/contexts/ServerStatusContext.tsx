@@ -6,6 +6,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AppState } from 'react-native'
 
 export interface ServerStatusRefreshResult {
   // True is the IAS server is available and the app can be used normally. If false, certain actions are blocked (e.g. verification flow, service login) and the outage banner is shown.
@@ -115,6 +116,21 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
     fetchedForClientRef.current = client
     setServerStatus(null)
     void fetchStatus()
+  }, [isClientReady, client, fetchStatus])
+
+  // Check server status when app becomes active
+  useEffect(() => {
+    if (!isClientReady || !client) {
+      return
+    }
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        void fetchStatus()
+      }
+    })
+
+    return () => subscription.remove()
   }, [isClientReady, client, fetchStatus])
 
   // Keep the outage and banner in sync with the latest known status

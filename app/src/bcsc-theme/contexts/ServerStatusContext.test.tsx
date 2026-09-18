@@ -3,6 +3,7 @@ import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import * as Bifold from '@bifold/core'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { AppState, AppStateStatus } from 'react-native'
 import { ServerStatusProvider, useServerStatus } from './ServerStatusContext'
 
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
@@ -92,6 +93,34 @@ describe('ServerStatusProvider', () => {
     })
 
     expect(mockGetServerStatus).toHaveBeenCalledTimes(2)
+  })
+
+  it('re-fetches when the app returns to the foreground', async () => {
+    let appStateCallback: (state: AppStateStatus) => void = () => undefined
+    jest.spyOn(AppState, 'addEventListener').mockImplementation((_, callback) => {
+      appStateCallback = callback as (state: AppStateStatus) => void
+      return { remove: jest.fn() } as any
+    })
+
+    const { result } = renderProvider()
+    await waitFor(() => expect(result.current.hasChecked).toBe(true))
+    expect(mockGetServerStatus).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      appStateCallback('background')
+      appStateCallback('active')
+    })
+
+    expect(mockGetServerStatus).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not fetch on foreground return before the client is ready', () => {
+    mockUseBCSCApiClientState.mockReturnValue({ client: null, isClientReady: false } as never)
+    const addEventListenerSpy = jest.spyOn(AppState, 'addEventListener')
+
+    renderProvider()
+
+    expect(addEventListenerSpy).not.toHaveBeenCalled()
   })
 
   it('dispatches the outage banner when the server is down', async () => {
