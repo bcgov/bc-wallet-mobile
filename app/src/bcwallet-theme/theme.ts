@@ -1,6 +1,6 @@
 import { BCThemeNames } from '@/constants'
-import LogoLarge from '@assets/img/logo-large.png'
 import LogoLargeWhite from '@assets/img/logo-large-white.png'
+import LogoLarge from '@assets/img/logo-large.png'
 import Logo from '@assets/img/logo-with-text.svg'
 import SecurePIN from '@assets/img/secure-pin.svg'
 import {
