@@ -44,9 +44,8 @@ export const useUserService = () => {
         alerts.tokenUnexpectedlyNullAlert(error)
       }
 
-      // getUserInfo/getPicture share the request interceptor with token refresh, so a *token*
-      // ERR_206 can also surface here — that one must stay silent (log + analytics only, see
-      // client.ts#fetchTokens), so only a userinfo-response shape failure alerts.
+      // A token-refresh ERR_206 (interceptor, see client.ts#fetchTokens) also lands here and must stay
+      // silent; only a userinfo shape failure alerts.
       if (
         isAppError(error, AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE) &&
         error.context?.endpoint === 'userinfo'

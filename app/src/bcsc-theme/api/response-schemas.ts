@@ -34,11 +34,8 @@ export const userInfoResponseSchema = z.looseObject({
 export type ApiResponseEndpoint = 'token' | 'registration' | 'userinfo'
 
 /**
- * Validates a service response against its schema before the caller uses or saves it (#3581).
- *
- * On a mismatch, logs and attaches to the thrown error only the failing field paths and Zod issue
- * codes — never the received value, the request/response body, or `issue.message` — so PII and
- * tokens never reach logs or analytics.
+ * Validates a service response before the caller uses or saves it (#3581). On a mismatch, logs and
+ * attaches only the failing field paths and Zod issue codes, never values or `issue.message`.
  *
  * @throws AppError with code ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE when `data` fails the schema.
  */

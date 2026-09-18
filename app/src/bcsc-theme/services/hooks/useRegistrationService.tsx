@@ -39,10 +39,8 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE]: alerts.failedToRetrieveStringResourceAlert,
   [AppEventCode.ERR_500_INVALID_URL]: alerts.invalidUrlAlert,
   [AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST]: alerts.invalidRegistrationRequestAlert,
-  // Registration POST/PUT both set skipBearerAuth (their own bearer via headers.Authorization), so
-  // no token-refresh ERR_206 can reach this code-keyed map — only a registration shape failure can.
-  // Deliberate consequence (#3581): the automatic PUT at launch (UpdateDeviceRegistrationSystemCheck)
-  // will show this modal on a shape failure, exactly as ERR_109 does today.
+  // Only a registration shape failure can reach here (POST/PUT set skipBearerAuth, so no token-refresh
+  // ERR_206). Deliberately alerts on the automatic launch PUT too, as ERR_109 does (#3581).
   [AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE]: alerts.missingJsonValuesAlert,
 })
 

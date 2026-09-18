@@ -7,9 +7,8 @@ export type PersistedBCSCState = Partial<BCSCState> & { reportUUID?: string }
 
 const BANNER_TYPES: [BannerType, ...BannerType[]] = ['error', 'warning', 'info', 'success']
 
-// Bounded to BCLocalStorageKeys.BCSC (#3581): the only BC-owned stored value with a versioned,
-// multi-field shape. Requires only the fields the app reads non-defensively; everything else is
-// optional and unknown keys pass through untouched (loose, not strict).
+// Every field optional and unknown keys pass through (#3581): only the type of a present field is
+// checked, so blobs from earlier app versions still load.
 const persistedBCSCStateSchema = z.looseObject({
   appVersion: z.string().optional(),
   appBuildNumber: z.string().optional(),
@@ -60,21 +59,18 @@ export type SanitizedPersistedBCSCState = {
 }
 
 /**
- * Validates a persisted BCSC state blob on load (#3581). Never throws — a corrupt or mismatched
- * top-level field is dropped (logging its path + Zod issue code only, never the value) so the
- * caller's `{ ...initialState.bcsc, ...state }` spread restores that field's in-memory default.
- * The app must never refuse to start over a bad persisted blob.
+ * Validates a persisted BCSC state blob on load (#3581). Never throws: a mismatched top-level field is
+ * dropped (logging only its path and Zod issue code) so the caller's spread restores its default.
  *
- * @returns the sanitized state plus the top-level keys that were dropped, so the caller can
- *   distinguish "field is malformed" from "field predates this version" when applying migrations.
+ * @returns the sanitized state plus the dropped top-level keys, so the caller can tell "malformed"
+ *   from "predates this version" when applying migrations.
  */
 export const sanitizePersistedBCSCState = (raw: unknown, logger: BifoldLogger): SanitizedPersistedBCSCState => {
   const result = persistedBCSCStateSchema.safeParse(raw)
 
   if (result.success) {
-    // No transforms in this schema, so result.data is structurally identical to raw. The cast is
-    // needed regardless: bannerMessages[].id is z.string() here (avoiding a BCSCBanner enum import
-    // in tests), while BCSCBannerMessage.id is the BCSCBanner enum.
+    // Cast, not result.data: the schema has no transforms, and bannerMessages[].id is a plain string
+    // here where BCSCBannerMessage.id is the BCSCBanner enum.
     return { state: raw as PersistedBCSCState, rejectedKeys: [] }
   }
 

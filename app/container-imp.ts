@@ -428,11 +428,8 @@ export class AppContainer implements Container {
       bcsc.showAccountExpiryNotification = undefined
       bcsc.showCardRenewalNotification = undefined
 
-      // Restore fields that failed schema validation (#3581) to their in-memory default rather than
-      // letting a migration rule interpret the corruption as "absent" (e.g. a malformed
-      // verificationSkipped must not fall through to the legacy "missing -> true" rule below).
-      // Deleting (never assigning) lets the final `{ ...initialState.bcsc, ...bcsc }` spread supply
-      // the default, whether or not that key even exists on initialState.bcsc.
+      // Drop rejected keys after migration so the final spread supplies the default instead of a
+      // migration rule reading the corruption as "absent" (#3581, e.g. verificationSkipped -> true).
       for (const key of bcscRejectedKeys) {
         delete (bcsc as { [field: string]: unknown })[key as string]
       }
@@ -441,8 +438,7 @@ export class AppContainer implements Container {
         // Write back under the new field name so subsequent launches skip this mapping. Deferred until
         // after the scrub above so this one-shot write persists the scrubbed blob, not the transient
         // fields that were just nulled out. Failure is non-fatal - the same mapping re-runs next launch.
-        // Skipped entirely when a field was just sanitized: validation never writes (Stage 1), and the
-        // migration is idempotent, so it simply re-runs next launch instead of persisting the cleanup now.
+        // Skipped when a field was rejected: validation never writes back (#3581); the migration re-runs next launch.
         PersistentStorage.storeValueForKey<Partial<BCSCState>>(BCLocalStorageKeys.BCSC, bcsc).catch((error) => {
           this.logger.error('Failed to write back migrated BCSC state (reportUUID -> installId)', error)
         })
