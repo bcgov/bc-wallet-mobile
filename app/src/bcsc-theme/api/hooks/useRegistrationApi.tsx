@@ -23,30 +23,35 @@ import { withAccount } from './withAccountGuard'
 
 export interface RegistrationResponseData {
   client_id: string
+  client_id_issued_at: number
   registration_access_token: string
-  client_id_issued_at?: number
-  registration_client_uri?: string
-  redirect_uris?: string[]
-  client_name?: string
-  token_endpoint_auth_method?: string
-  scope?: string
-  grant_types?: string[]
-  response_types?: string[]
-  // Only `n` is read (see confirmRegisteredKey), so that's the only element field the schema pins.
-  jwks?: {
-    keys?: Array<{ n?: string }>
+  registration_client_uri: string
+  redirect_uris: string[]
+  client_name: string
+  token_endpoint_auth_method: string
+  scope: string
+  grant_types: string[]
+  response_types: string[]
+  jwks: {
+    keys: Array<{
+      kty: string
+      e: string
+      kid: string
+      alg: string
+      n: string
+    }>
   }
-  request_object_signing_alg?: string
-  userinfo_signed_response_alg?: string
-  userinfo_encrypted_response_alg?: string
-  userinfo_encrypted_response_enc?: string
-  id_token_signed_response_alg?: string
-  id_token_encrypted_response_alg?: string
-  id_token_encrypted_response_enc?: string
-  token_endpoint_auth_signing_alg?: string
-  default_max_age?: number
-  require_auth_time?: boolean
-  default_acr_values?: string[]
+  request_object_signing_alg: string
+  userinfo_signed_response_alg: string
+  userinfo_encrypted_response_alg: string
+  userinfo_encrypted_response_enc: string
+  id_token_signed_response_alg: string
+  id_token_encrypted_response_alg: string
+  id_token_encrypted_response_enc: string
+  token_endpoint_auth_signing_alg: string
+  default_max_age: number
+  require_auth_time: boolean
+  default_acr_values: string[]
 }
 
 export interface NonceResponseData {
@@ -201,7 +206,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       const { data: rawData } = await apiClient.post<unknown>(apiClient.endpoints.registration, body, {
         skipBearerAuth: true,
       })
-      const data = parseApiResponse(registrationResponseSchema, rawData, 'registration', logger)
+      const data = parseApiResponse<RegistrationResponseData>(
+        registrationResponseSchema,
+        rawData,
+        'registration',
+        logger
+      )
 
       logger.info('Completed registration request')
 
@@ -340,7 +350,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
         // Validated before use: a shape failure here surfaces as ERR_206, e.g. via the automatic
         // launch-time PUT (UpdateDeviceRegistrationSystemCheck), instead of silently wiping clientID.
-        const updatedRegistrationData = parseApiResponse(
+        const updatedRegistrationData = parseApiResponse<RegistrationResponseData>(
           registrationResponseSchema,
           rawResponseData,
           'registration',

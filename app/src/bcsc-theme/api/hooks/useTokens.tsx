@@ -19,12 +19,11 @@ export interface DeviceTokenPayload {
 }
 export interface TokenResponse {
   access_token: string
+  expires_in: number
   id_token: string
   refresh_token: string
-  // Never read from this response — expires_in consumers read the device-authorization response.
-  expires_in?: number
-  scope?: string
-  token_type?: string
+  scope: string
+  token_type: string
 }
 
 export type TokenApi = ReturnType<typeof useTokenApi>
@@ -48,7 +47,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         }
       )
 
-      return parseApiResponse(tokenResponseSchema, data, 'token', apiClient.logger)
+      return parseApiResponse<TokenResponse>(tokenResponseSchema, data, 'token', apiClient.logger)
     },
     [apiClient]
   )
@@ -67,7 +66,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
         })
-        const data = parseApiResponse(tokenResponseSchema, rawData, 'token', apiClient.logger)
+        const data = parseApiResponse<TokenResponse>(tokenResponseSchema, rawData, 'token', apiClient.logger)
 
         try {
           apiClient.tokens = data

@@ -1,22 +1,19 @@
 import { AppError, ErrorRegistry } from '@/errors'
 import type { BifoldLogger } from '@bifold/core'
 import { z } from 'zod'
-import type { RegistrationResponseData } from './hooks/useRegistrationApi'
-import type { TokenResponse } from './hooks/useTokens'
-import type { UserInfoResponseData } from './hooks/useUserApi'
 
 // expires_in/scope/token_type are unread by the app (#3581 review) — left untyped via looseObject passthrough.
 export const tokenResponseSchema = z.looseObject({
   access_token: z.string(),
   refresh_token: z.string(),
   id_token: z.string(),
-}) satisfies z.ZodType<TokenResponse>
+})
 
 export const registrationResponseSchema = z.looseObject({
   client_id: z.string(),
   registration_access_token: z.string(),
   jwks: z.looseObject({ keys: z.array(z.looseObject({ n: z.string().optional() })).optional() }).optional(),
-}) satisfies z.ZodType<RegistrationResponseData>
+})
 
 export const userInfoResponseSchema = z.looseObject({
   card_expiry: z.string(),
@@ -27,25 +24,21 @@ export const userInfoResponseSchema = z.looseObject({
   address: z.looseObject({ formatted: z.string().optional() }).optional(),
   picture: z.string().optional(),
   card_type: z.string().optional(),
-}) satisfies z.ZodType<UserInfoResponseData>
+})
 
 export type ApiResponseEndpoint = 'token' | 'registration' | 'userinfo'
 
-/**
- * Validates a service response before the caller uses or saves it (#3581). On a mismatch, logs and
- * attaches only the failing field paths and Zod issue codes, never values or `issue.message`.
- *
- * @throws AppError with code ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE when `data` fails the schema.
- */
+// The schema checks only the fields the app reads; the interface remains the declared server
+// contract until Stage 2 reconciles it from log evidence — so this returns an unvalidated cast.
 export const parseApiResponse = <T>(
-  schema: z.ZodType<T>,
+  schema: z.ZodType,
   data: unknown,
   endpoint: ApiResponseEndpoint,
   logger: BifoldLogger
 ): T => {
   const result = schema.safeParse(data)
   if (result.success) {
-    return result.data
+    return result.data as T
   }
 
   const issues = result.error.issues.map((issue) => ({ path: issue.path.map(String).join('.'), code: issue.code }))

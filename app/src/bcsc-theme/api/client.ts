@@ -366,7 +366,7 @@ class BCSCApiClient {
         skipBearerAuth: true,
       })
 
-      return parseApiResponse(tokenResponseSchema, tokensResponse.data, 'token', this.logger)
+      return parseApiResponse<TokenResponse>(tokenResponseSchema, tokensResponse.data, 'token', this.logger)
     })
   }
 

@@ -7,20 +7,20 @@ import { parseApiResponse, userInfoResponseSchema } from '../response-schemas'
 import { withAccount } from './withAccountGuard'
 
 export interface UserInfoResponseData {
-  identity_assurance_level?: string
-  credential_reference?: string
-  sub?: string
-  transaction_identifier?: string
-  given_name?: string // ie: Steve
-  given_names?: string // ie: Steve John
-  family_name?: string // ie: Brule
-  display_name?: string
-  birthdate?: string
-  gender?: string
-  address?: { formatted?: string }
-  picture?: string
-  card_type?: string
-  email?: string
+  identity_assurance_level: string
+  credential_reference: string
+  sub: string
+  transaction_identifier: string
+  given_name: string // ie: Steve
+  given_names: string // ie: Steve John
+  family_name: string // ie: Brule
+  display_name: string
+  birthdate: string
+  gender: string
+  address: { formatted: string }
+  picture: string
+  card_type: any
+  email: string
   /**
    * Backend team clarification:
    * This value is **NOT** the physical card expiration date.
@@ -74,7 +74,7 @@ const useUserApi = (apiClient: BCSCApiClient) => {
         throw AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR)
       }
 
-      return parseApiResponse(userInfoResponseSchema, parsed, 'userinfo', apiClient.logger)
+      return parseApiResponse<UserInfoResponseData>(userInfoResponseSchema, parsed, 'userinfo', apiClient.logger)
     })
   }, [apiClient])
 
