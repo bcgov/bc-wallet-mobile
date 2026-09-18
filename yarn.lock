@@ -5949,56 +5949,56 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@snowplow/browser-plugin-screen-tracking@npm:4.8.1":
-  version: 4.8.1
-  resolution: "@snowplow/browser-plugin-screen-tracking@npm:4.8.1"
+"@snowplow/browser-plugin-screen-tracking@npm:4.8.4":
+  version: 4.8.4
+  resolution: "@snowplow/browser-plugin-screen-tracking@npm:4.8.4"
   dependencies:
-    "@snowplow/browser-tracker-core": "npm:4.8.1"
-    "@snowplow/tracker-core": "npm:4.8.1"
+    "@snowplow/browser-tracker-core": "npm:4.8.4"
+    "@snowplow/tracker-core": "npm:4.8.4"
     tslib: "npm:^2.3.1"
-    uuid: "npm:^10.0.0"
+    uuid: "npm:^11.1.1"
   peerDependencies:
-    "@snowplow/browser-tracker": ~4.8.1
-  checksum: 10c0/b6e82d4eac6ff208239938a52b9fdffb418b7a7efe8286272a7487ef181afe4973ac6cece7f524c2c9eb40e848c10446ce18f3fde6fa59416e05b0adc33204fc
+    "@snowplow/browser-tracker": ~4.8.4
+  checksum: 10c0/2b29f5d7a1222735b6081267c565b317754e056df74968b569d11c9339ca6c0cc0b18fd6718a3af0f66ee3d4c8bd0cdd9272532e698e540ea61ad39c0947595b
   languageName: node
   linkType: hard
 
-"@snowplow/browser-tracker-core@npm:4.8.1":
-  version: 4.8.1
-  resolution: "@snowplow/browser-tracker-core@npm:4.8.1"
+"@snowplow/browser-tracker-core@npm:4.8.4":
+  version: 4.8.4
+  resolution: "@snowplow/browser-tracker-core@npm:4.8.4"
   dependencies:
-    "@snowplow/tracker-core": "npm:4.8.1"
+    "@snowplow/tracker-core": "npm:4.8.4"
     tslib: "npm:^2.3.1"
-    uuid: "npm:^10.0.0"
-  checksum: 10c0/f529cf2ec825ac998d9000102724165bdf8141801354c095cb0dc650aab75b9cef9bb4555ee4fafb04114e9abdddde94e505e65e380f2d6a1845f90b5595b28e
+    uuid: "npm:^11.1.1"
+  checksum: 10c0/74f74ebcd380c15954c98a00fb60ba64467797ccfd200e0460fa21c1669bc1dbe9fd842fbabadfde7a30d415ff5c1a04869fbfb4b341143442fb3c1094dcb4fc
   languageName: node
   linkType: hard
 
-"@snowplow/react-native-tracker@npm:^4.6.8":
-  version: 4.8.1
-  resolution: "@snowplow/react-native-tracker@npm:4.8.1"
+"@snowplow/react-native-tracker@npm:^4.8.4":
+  version: 4.8.4
+  resolution: "@snowplow/react-native-tracker@npm:4.8.4"
   dependencies:
-    "@snowplow/browser-plugin-screen-tracking": "npm:4.8.1"
-    "@snowplow/browser-tracker-core": "npm:4.8.1"
-    "@snowplow/tracker-core": "npm:4.8.1"
+    "@snowplow/browser-plugin-screen-tracking": "npm:4.8.4"
+    "@snowplow/browser-tracker-core": "npm:4.8.4"
+    "@snowplow/tracker-core": "npm:4.8.4"
     tslib: "npm:^2.3.1"
-    uuid: "npm:^10.0.0"
+    uuid: "npm:^11.1.1"
   peerDependencies:
     "@react-native-async-storage/async-storage": ^2.0.0
     react: "*"
     react-native: "*"
-    react-native-get-random-values: ^1.11.0
-  checksum: 10c0/cfdb4bcb53fa5d5f89eef8864e9f5fb71d16dfdae20e522894a76be7f4b8a7d38017f38b7d54ec4c90a6451221317cb7728abe79e35713dd586e688d91b237dc
+    react-native-get-random-values: ^1.11.0 || ^2.0.0
+  checksum: 10c0/1f81acc7eb10ebcda63e70ed00b8771f692294c04ff1ffa2ef2098622c796fb1fabf09e203186554079bb43e531bfd8dbc2c5a080aea6489801e4f733fa0bad2
   languageName: node
   linkType: hard
 
-"@snowplow/tracker-core@npm:4.8.1":
-  version: 4.8.1
-  resolution: "@snowplow/tracker-core@npm:4.8.1"
+"@snowplow/tracker-core@npm:4.8.4":
+  version: 4.8.4
+  resolution: "@snowplow/tracker-core@npm:4.8.4"
   dependencies:
     tslib: "npm:^2.3.1"
-    uuid: "npm:^10.0.0"
-  checksum: 10c0/fc8aa724eb4285c8a6afb106fe1b1b65754cc6a1247149e80d9707ae9f56fee23ad179f5b28e1b6254632f99960641107bc388a7f1fe8d0290357a89548db749
+    uuid: "npm:^11.1.1"
+  checksum: 10c0/778e9b8dd1941ac134b7aefeeacf7074fbb884cb2b813cdfc1f8af808504526a4eb8bd6b8abfebb14e41bc22906b94d221e0384ddd6fce24e95bfacdb415692c
   languageName: node
   linkType: hard
 
@@ -7959,7 +7959,7 @@ __metadata:
     "@react-navigation/devtools": "npm:~6.0.27"
     "@react-navigation/native": "npm:~6.0.16"
     "@react-navigation/stack": "npm:~6.3.29"
-    "@snowplow/react-native-tracker": "npm:^4.6.8"
+    "@snowplow/react-native-tracker": "npm:^4.8.4"
     "@testing-library/jest-native": "npm:~5.4.3"
     "@testing-library/react-native": "npm:~13.3.0"
     "@types/eslint__js": "npm:~8.42.3"
@@ -19708,12 +19708,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^10.0.0":
-  version: 10.0.0
-  resolution: "uuid@npm:10.0.0"
+"uuid@npm:^11.1.1":
+  version: 11.1.1
+  resolution: "uuid@npm:11.1.1"
   bin:
-    uuid: dist/bin/uuid
-  checksum: 10c0/eab18c27fe4ab9fb9709a5d5f40119b45f2ec8314f8d4cf12ce27e4c6f4ffa4a6321dc7db6c515068fa373c075b49691ba969f0010bf37f44c37ca40cd6bf7fe
+    uuid: dist/esm/bin/uuid
+  checksum: 10c0/9e3af58eba872ece5a5e76f4773a94fc78a0ef2c2444c38dbe6b42f41dadf76c01850fd783604f27986f6195e6286aef064d45987d401b2a33127b98ddf7c0c5
   languageName: node
   linkType: hard
 
