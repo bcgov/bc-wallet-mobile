@@ -32,14 +32,15 @@ const persistedBCSCStateSchema = z.looseObject({
   hasDismissedThirdPartyKeyboardAlert: z.boolean().optional(),
   hasDismissedDeviceAuthInfo: z.boolean().optional(),
   deviceLimitBannerDismissedAt: z.string().optional(),
+  // Nested fields optional too: cardType/bcscReason are conditional server claims (#3581 review).
   credentialMetadata: z
     .looseObject({
-      fullName: z.string(),
-      bcscReason: z.string(),
-      deviceCount: z.number(),
-      deviceLimit: z.number(),
-      cardType: z.string(),
-      lastUpdated: z.number(),
+      fullName: z.string().optional(),
+      bcscReason: z.string().optional(),
+      deviceCount: z.number().optional(),
+      deviceLimit: z.number().optional(),
+      cardType: z.string().optional(),
+      lastUpdated: z.number().optional(),
     })
     .optional(),
   hasSeenOnboardingIntro: z.boolean().optional(),

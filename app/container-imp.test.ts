@@ -200,7 +200,7 @@ describe('AppContainer TOKENS.LOAD_STATE (persisted BCSC state validation, #3581
   it('never refuses to start on a non-object blob, dispatching the initial BCSC defaults', async () => {
     mockStoredValues[BCLocalStorageKeys.BCSC] = 'corrupt'
 
-    const { registrations } = buildContainer()
+    const { registrations, logger } = buildContainer()
     const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
     const dispatch = jest.fn()
 
@@ -208,8 +208,10 @@ describe('AppContainer TOKENS.LOAD_STATE (persisted BCSC state validation, #3581
 
     expect(dispatch).toHaveBeenCalledTimes(1)
     const state = dispatch.mock.calls[0][0].payload[0]
-    expect(state.bcsc.hasAccount).toBe(initialState.bcsc.hasAccount)
-    expect(state.bcsc.bannerMessages).toEqual(initialState.bcsc.bannerMessages)
+    // Pins the sanitizer actually ran: a string blob left unsanitized would spread its index keys
+    // ('0', '1', ...) into bcsc instead of being warned about and replaced with {}.
+    expect(logger.warn).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ path: '' }))
+    expect(state.bcsc).toEqual(initialState.bcsc)
   })
 
   it('drops a malformed bannerMessages entry, dispatching no banners rather than throwing', async () => {

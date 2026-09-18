@@ -60,6 +60,18 @@ describe('sanitizePersistedBCSCState', () => {
     })
   })
 
+  it('keeps credentialMetadata intact when it is missing conditional server fields (cardType, bcscReason)', () => {
+    const logger = createMockLogger()
+    const raw = {
+      credentialMetadata: { fullName: 'Steve Brule', deviceCount: 3, deviceLimit: 5, lastUpdated: 123 },
+    }
+
+    const result = sanitizePersistedBCSCState(raw, logger)
+
+    expect(result).toEqual({ state: raw, rejectedKeys: [] })
+    expect(logger.warn).not.toHaveBeenCalled()
+  })
+
   describe('bannerMessages', () => {
     it('drops the whole array when a banner has a non-string title', () => {
       const logger = createMockLogger()

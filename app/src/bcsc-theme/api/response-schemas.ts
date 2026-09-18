@@ -5,13 +5,11 @@ import type { RegistrationResponseData } from './hooks/useRegistrationApi'
 import type { TokenResponse } from './hooks/useTokens'
 import type { UserInfoResponseData } from './hooks/useUserApi'
 
+// expires_in/scope/token_type are unread by the app (#3581 review) — left untyped via looseObject passthrough.
 export const tokenResponseSchema = z.looseObject({
   access_token: z.string(),
   refresh_token: z.string(),
   id_token: z.string(),
-  expires_in: z.number().optional(),
-  scope: z.string().optional(),
-  token_type: z.string().optional(),
 }) satisfies z.ZodType<TokenResponse>
 
 export const registrationResponseSchema = z.looseObject({

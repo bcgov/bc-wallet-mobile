@@ -49,6 +49,16 @@ describe('response-schemas', () => {
       expect(logger.error).not.toHaveBeenCalled()
     })
 
+    it('passes a wrong-typed expires_in through untouched — unread by the app, not type-checked', () => {
+      const logger = createMockLogger()
+      const body = { ...validToken, expires_in: '3600' }
+
+      const result = parseApiResponse(tokenResponseSchema, body, 'token', logger)
+
+      expect(result).toMatchObject(body)
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
     it('accepts a full registration fixture and passes unknown keys through', () => {
       const logger = createMockLogger()
       const result = parseApiResponse(registrationResponseSchema, validRegistration, 'registration', logger)
