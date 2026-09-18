@@ -218,6 +218,12 @@ export interface BCSCSecureState {
    * unreadable/corrupt — i.e. neither a refresh nor a registration token survived
    */
   sessionRecoveryRequired?: boolean
+
+  /**
+   * Set during hydration when the stored refresh token's `exp` has passed — the device credential's
+   * 5-year lifetime is over and the account must be renewed (#4654). Never sent to the server.
+   */
+  refreshTokenExpired?: boolean
 }
 
 /** Initial secure state - unhydrated with no data */

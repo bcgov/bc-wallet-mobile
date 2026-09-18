@@ -10,6 +10,7 @@ import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSyst
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
 import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
+import { RefreshTokenExpiredSystemCheck } from '@/services/system-checks/RefreshTokenExpiredSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
@@ -158,19 +159,19 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       })
 
     const systemChecks: SystemCheckStrategy[] = []
+    const refreshTokenExpired = Boolean(store.bcscSecure.refreshTokenExpired)
 
-    // DeviceCount and EventReasonAlerts read the cached id token, which only exists
-    // for verified users; calling getIdToken without one surfaces a user-facing
-    // "token null" error (err 119). Gate them on verification so unverified users
-    // still get the account-independent checks (Terms of Use) below.
-    if (isVerified) {
-      systemChecks.push(new DeviceCountSystemCheck(getIdToken, utils, dismissedAt))
+    // DeviceCount and EventReasonAlerts need a verified user's cached id token; hydration never
+    // fetches one when the stored refresh token is expired, so they'd misfire on that path (#4654).
+    if (isVerified && !refreshTokenExpired) {
+      systemChecks.push(
+        new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
+        new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
+      )
     }
 
     if (isVerified) {
-      systemChecks.push(
-        new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
-      )
+      systemChecks.push(new RefreshTokenExpiredSystemCheck(refreshTokenExpired, navigation, utils))
     }
 
     if (!isVerified && verificationRequestId) {
