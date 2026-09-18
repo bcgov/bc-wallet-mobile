@@ -266,7 +266,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
         isProcessingScan.current = true
         setScanState('locked')
-        scanner.handleScanNonBcsc()
+        await scanner.handleScanNonBcsc()
         return true
       }
 

@@ -8,6 +8,7 @@ import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 const BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A =
   "%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
@@ -519,6 +520,39 @@ describe('useCardScanner', () => {
         index: 0,
         routes: [{ name: BCSCScreens.EnterBirthdate }],
       })
+    })
+  })
+
+  describe('handleScanNonBcsc', () => {
+    it('should navigate to DualIdentificationRequired and set the Non-BCSC card process', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      const navigationMock = jest.mocked(navigation)
+      const useSecureActionsMock = jest.mocked(useSecureActions)
+
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
+      const mockUpdateCardProcess = jest.fn()
+      const mockNavigationNavigate = jest.fn()
+
+      useSecureActionsMock.mockReturnValue({
+        updateUserInfo: jest.fn(),
+        updateDeviceCodes: jest.fn(),
+        updateCardProcess: mockUpdateCardProcess,
+        updateVerificationOptions: jest.fn(),
+      } as any)
+      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      navigationMock.useNavigation = jest.fn().mockReturnValue({ navigate: mockNavigationNavigate })
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
+
+      const hook = renderHook(() => useCardScanner())
+
+      await hook.result.current.handleScanNonBcsc()
+
+      expect(mockNavigationNavigate).toHaveBeenCalledWith(BCSCScreens.DualIdentificationRequired)
+      // Downstream screens (EvidenceIDCollection, getResumeStepRoute) read the card process from the store
+      expect(mockUpdateCardProcess).toHaveBeenCalledWith(BCSCCardProcess.NonBCSC)
     })
   })
 
