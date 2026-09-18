@@ -2618,13 +2618,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@expo/app-integrity@npm:~55.0.9":
-  version: 55.0.13
-  resolution: "@expo/app-integrity@npm:55.0.13"
+"@expo/app-integrity@npm:~55.0.17":
+  version: 55.0.17
+  resolution: "@expo/app-integrity@npm:55.0.17"
   peerDependencies:
     expo: "*"
     react-native: "*"
-  checksum: 10c0/f6142ca20384218cb0ac3074edb4d55bd1a9b7df2e3425f4322b36d687dfb06d6d0837f3b460d605b1662c561374c43fa655c17d4cc3924f8304fef4277a3436
+  checksum: 10c0/e52ebc9c17d3b6475758a96b36bf3da11dbc27a0caa6e0007215243060294150fac64588a3c6259368c5ee86b5a43b24954a5b19aff2f1ce1d5a2dfd8b8612c6
   languageName: node
   linkType: hard
 
@@ -7927,7 +7927,7 @@ __metadata:
     "@credo-ts/react-native": "npm:0.6.3"
     "@credo-ts/webvh": "npm:0.6.3"
     "@eslint/js": "npm:~8.57.1"
-    "@expo/app-integrity": "npm:~55.0.9"
+    "@expo/app-integrity": "npm:~55.0.17"
     "@formatjs/intl-datetimeformat": "npm:~6.18.2"
     "@formatjs/intl-displaynames": "npm:~6.8.13"
     "@formatjs/intl-getcanonicallocales": "npm:~2.5.6"
