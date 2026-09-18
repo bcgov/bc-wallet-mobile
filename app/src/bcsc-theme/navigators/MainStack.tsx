@@ -67,6 +67,7 @@ import CancelledReview from '../features/verify/send-video/CancelledReview'
 import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
@@ -124,6 +125,7 @@ const useSystemCheckLoadingGate = (hasSettled: boolean) => {
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
   const { isLoadingAccount } = useAccount()
+  const { isVerified } = useVerificationStatus()
   const theme = useTheme()
   const { t } = useTranslation()
   const Stack = createStackNavigator<BCSCMainStackParams>()
@@ -493,13 +495,21 @@ const MainStack: React.FC = () => {
               headerShown: true,
             })}
           />
-          <Stack.Screen
-            name={BCSCScreens.VerificationSuccess}
-            component={VerificationSuccessScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
+          {/* Registered only until the user is verified. Setting `verified` is this screen's whole job,
+              and on that flip this stack inherits the outgoing navigator's state — VerifyStack's, or its
+              own when it remounts under BCSCIdTokenProvider. With the route gone, React Navigation drops
+              it from that state (falling back to initialRouteName if nothing else is left) instead of
+              stranding the user on a Continue with nothing left to do (#4719). Keyed on `verified`, not
+              isUserVerified(): that turns true once tokens arrive, before the user can open this screen. */}
+          {isVerified ? null : (
+            <Stack.Screen
+              name={BCSCScreens.VerificationSuccess}
+              component={VerificationSuccessScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+          )}
           <Stack.Screen
             name={BCSCScreens.ReverifyAccount}
             component={ReverifyAccountScreen}
