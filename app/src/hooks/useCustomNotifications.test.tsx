@@ -78,6 +78,31 @@ describe('useCustomNotifications', () => {
     expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCVerified)
   })
 
+  it('drops VerifiedNotification once the user is verified, even if the status was never cleared', () => {
+    // MainStack stops registering VerificationSuccess on the `verified` flip, so the card's CTA would go nowhere
+    mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
+    mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: 'verified', verificationRequestId: 'req-1' }))
+
+    const { result } = renderHook(() => useCustomNotifications())
+
+    expect(result.current.customNotifications).toHaveLength(0)
+  })
+
+  it('falls through to the notifications of a verified user when the verified status is stale', () => {
+    mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
+    mockUseStore.mockReturnValue(
+      buildStore(
+        { verificationRequestStatus: 'verified', verificationRequestId: 'req-1' },
+        { showAccountExpiryNotification: true }
+      )
+    )
+
+    const { result } = renderHook(() => useCustomNotifications())
+
+    expect(result.current.customNotifications).toHaveLength(1)
+    expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.AccountExpired)
+  })
+
   it('returns CancelledReviewNotification when status is cancelled', () => {
     mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: 'cancelled', verificationRequestId: 'req-1' }))
 
