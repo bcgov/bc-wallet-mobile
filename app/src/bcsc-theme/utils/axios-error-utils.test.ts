@@ -70,7 +70,34 @@ describe('Error Utils', () => {
 
       const appError = getAppErrorFromAxiosError(axiosError)
 
-      expect(appError.context).toEqual({ url: '/device/token', method: 'POST' })
+      expect(appError.context).toEqual({
+        http_url: '/device/token',
+        http_route: '/device/token',
+        http_method: 'POST',
+        http_status: 400,
+        http_response_size: 2,
+        http_request_size: 0,
+      })
+    })
+
+    it('should format the route', () => {
+      const axiosError = {
+        code: 'err_209_bad_request',
+        message: 'Bad request',
+        config: { url: 'https://example.com/device/token', method: 'post' },
+        response: { data: {}, status: 400 },
+      } as any
+
+      const appError = getAppErrorFromAxiosError(axiosError)
+
+      expect(appError.context).toEqual({
+        http_url: '/device/token',
+        http_route: '/device/token',
+        http_method: 'POST',
+        http_status: 400,
+        http_response_size: 2,
+        http_request_size: 0,
+      })
     })
 
     it('should leave the context url undefined when config.url is absent', () => {
@@ -82,7 +109,14 @@ describe('Error Utils', () => {
 
       const appError = getAppErrorFromAxiosError(axiosError)
 
-      expect(appError.context).toEqual({ url: undefined, method: undefined })
+      expect(appError.context).toEqual({
+        http_url: undefined,
+        http_route: undefined,
+        http_method: undefined,
+        http_status: undefined,
+        http_response_size: 0,
+        http_request_size: 0,
+      })
     })
 
     // A status pre-declared via suppressStatusCodeLogs is treated as "expected"/already-owned-

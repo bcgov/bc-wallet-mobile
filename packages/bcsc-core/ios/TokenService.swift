@@ -9,8 +9,21 @@
 import Foundation
 import UIKit
 
+/// Outcome of a keychain write. `status` is the raw `OSStatus` so callers can act on a specific
+/// failure (e.g. errSecDuplicateItem) rather than a bare false.
+struct TokenSaveResult {
+  let status: OSStatus
+  /// Human-readable OSStatus, plus any diagnostic from the existence check that chose the branch.
+  let detail: String
+  let isProtectedDataAvailable: Bool
+
+  var succeeded: Bool {
+    status == errSecSuccess
+  }
+}
+
 protocol TokenStorageServiceProtocol {
-  func save(token: Token, attrAccessible: CFString) -> Bool
+  func save(token: Token, attrAccessible: CFString) -> TokenSaveResult
   func get(id: String, diagnostic: inout String?) -> Token?
   func delete(id: String) -> Bool
 }
@@ -64,9 +77,9 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
 
     - Parameter token: The Token to save
 
-    - Returns: true if the token was saved, false otherwise
+    - Returns: a `TokenSaveResult` carrying the keychain `OSStatus` and a description of the write
    */
-  func save(token: Token, attrAccessible: CFString = kSecAttrAccessibleWhenUnlockedThisDeviceOnly) -> Bool {
+  func save(token: Token, attrAccessible: CFString = kSecAttrAccessibleWhenUnlockedThisDeviceOnly) -> TokenSaveResult {
     logger.log("save: id=\(token.id) type=\(token.type)")
 
     // Set the class name to match native ias-ios for compatibility
@@ -81,9 +94,10 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
       kSecValueData: data,
     ]
     var status = errSecSuccess
+    var branch = "add"
     var existsDiagnostic: String?
     if get(id: token.id, diagnostic: &existsDiagnostic) != nil {
-      // log.debug("token already exists so call update")
+      branch = "update"
 
       let query: NSDictionary = [
         kSecClass: kSecClassKey,
@@ -95,11 +109,23 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     } else {
       status = SecItemAdd(attributes, nil)
     }
-    if status != errSecSuccess {
-      // log.error("save: failed id=\(token.id) type=\(token.type) status=\(describe(status)) isProtectedDataAvailable=\(UIApplication.shared.isProtectedDataAvailable)")
-      return false
+
+    let protectedDataAvailable = UIApplication.shared.isProtectedDataAvailable
+    // existsDiagnostic tells us WHY the existence check chose this branch. An add that fails with
+    // errSecDuplicateItem alongside "succeeded but returned no usable data" means the slot holds an
+    // item we can't decode — see #4645.
+    var detail = "branch=\(branch) status=\(describe(status))"
+    if let existsDiagnostic {
+      detail += " existsCheck=\(existsDiagnostic)"
     }
-    return true
+
+    if status != errSecSuccess {
+      logger.error(
+        "save: failed id=\(token.id) type=\(token.type) \(detail) isProtectedDataAvailable=\(protectedDataAvailable)"
+      )
+    }
+
+    return TokenSaveResult(status: status, detail: detail, isProtectedDataAvailable: protectedDataAvailable)
   }
 
   /**

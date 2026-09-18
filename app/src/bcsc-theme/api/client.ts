@@ -6,7 +6,6 @@ import { BCSCEventTypes } from '@/events/eventTypes'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { getUserAgentString } from '@utils/user-agent'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
 import { AppState, DeviceEventEmitter } from 'react-native'
 import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
@@ -16,15 +15,12 @@ import {
   getAppErrorFromAxiosError,
   isNetworkError,
 } from '../utils/axios-error-utils'
+import { isTokenExpired } from '../utils/token-expiry'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 import { loadPersistedJwk, persistJwk } from './jwk-cache'
-
-// Refresh tokens 30 seconds before they actually expire to avoid
-// expiry-on-the-wire races when multiple requests fire near the boundary.
-const TOKEN_EXPIRY_BUFFER_MS = 30 * 1000
 
 // Bounded retry for the JWKS fetch: 3 attempts total, with linear backoff delays of
 // 500ms then 1000ms between attempts. Only transient errors (network / 5xx) are retried —
@@ -280,13 +276,13 @@ class BCSCApiClient {
       // was ready). Throws TOKEN_NULL only when no refresh token is recoverable.
       const tokens = this.tokens ?? (await this.recoverTokens())
 
-      if (this.isTokenExpired(tokens.refresh_token)) {
-        // refresh tokens should not expire
+      if (isTokenExpired(tokens.refresh_token)) {
+        // Refresh tokens expire with the device credential's 5-year lifetime (#4654); callers must route to renewal
         this.logger.error('[BCSCApiClient] Refresh token expired - fatal error detected')
         throw new Error('Refresh token expired')
       }
 
-      if (!this.isTokenExpired(tokens.access_token)) {
+      if (!isTokenExpired(tokens.access_token)) {
         // access token is still valid, don't refresh
         return tokens
       }
@@ -320,7 +316,7 @@ class BCSCApiClient {
         throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
       }
 
-      if (this.isTokenExpired(this.tokens.refresh_token)) {
+      if (isTokenExpired(this.tokens.refresh_token)) {
         this.logger.error('[BCSCApiClient] Cannot refresh after 401 - refresh token expired')
         throw new Error('Refresh token expired')
       }
@@ -335,15 +331,13 @@ class BCSCApiClient {
     })
   }
 
-  private isTokenExpired(token?: string): boolean {
-    let isExpired = true
-    // if no token is present, or within the buffer limit of expiring, return that token is "expired" and fetch a new one
-    if (token) {
-      const decodedToken = jwtDecode(token)
-      const exp = decodedToken.exp ?? 0
-      isExpired = Date.now() >= exp * 1000 - TOKEN_EXPIRY_BUFFER_MS
-    }
-    return isExpired
+  /**
+   * Access token for requests that bypass the axios interceptors (WebView headers). Refreshes when the
+   * cached token is missing or near expiry; `forceRefresh` mirrors the interceptor's 401 recovery.
+   */
+  async getAccessToken(options?: { forceRefresh?: boolean }): Promise<string> {
+    const tokens = options?.forceRefresh ? await this.forceRefreshTokens() : await this.ensureValidTokens()
+    return tokens.access_token
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
@@ -406,6 +400,8 @@ class BCSCApiClient {
    * @returns the populated tokens
    * @throws AppError TOKEN_NULL when the cache is empty and no refresh token
    *   exists in secure storage — the only genuinely unrecoverable case.
+   * @throws Error 'Refresh token expired' when the stored refresh token's `exp` has passed (#4654) —
+   *   a plain `Error`, not an `AppError`, so it passes the response interceptor and no alert policy fires.
    */
   async recoverTokens(): Promise<TokenResponse> {
     if (this.tokens) {
@@ -425,6 +421,11 @@ class BCSCApiClient {
           `Token cache empty and no stored refresh token to recover from (nativeDiagnostic=${diagnostic ?? 'none'})`
         ),
       })
+    }
+
+    if (isTokenExpired(storedRefreshToken)) {
+      this.logger.error('[BCSCApiClient] Stored refresh token is expired; skipping refresh — account renewal required')
+      throw new Error('Refresh token expired')
     }
 
     this.logger.warn('[BCSCApiClient] Token cache empty; rebuilding from stored refresh token')

@@ -1,15 +1,18 @@
 import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
+import { navigationRef } from '@/contexts/NavigationContainerContext'
+import { isAppError } from '@/errors/appError'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { BCState } from '@/store'
+import { BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import moment from 'moment'
-import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
-import { DeviceEventEmitter } from 'react-native'
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
+import { AppState, AppStateStatus, DeviceEventEmitter } from 'react-native'
 import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
-import { useRetryOnReconnect } from '../hooks/useRetryOnReconnect'
+import { ReconnectEvent, useRetryOnReconnect } from '../hooks/useRetryOnReconnect'
 import { useUserService } from '../services/hooks/useUserService'
 import { formatAccountName } from '../utils/account-utils'
+import { isUserVerified } from '../utils/bcsc-credential'
 
 export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
   picture: string | null // URI to the user's profile picture
@@ -21,6 +24,23 @@ export interface BCSCAccountContextType {
   account: BCSCAccount | null
   isLoadingAccount: boolean
   refreshAccount: () => void
+}
+
+/** What initiated an account load, captured for diagnostics on failure (see #4675). */
+type AccountLoadTrigger = 'initial' | 'tokens-refreshed' | 'reconnect' | 'manual'
+
+interface AccountLoadDiagnostics {
+  trigger: AccountLoadTrigger
+  screen: string | undefined
+  navigationReady: boolean
+  appState: AppStateStatus
+  connectivity?: ReconnectEvent
+  /** The raw "verified" flag from secure state - the one isUserVerified() input not already
+   *  captured by verifiedStatus/hasRefreshToken below, so together they reconstruct its guard. */
+  verified: boolean
+  verifiedStatus: VerificationStatus
+  /** Never the token value itself - only whether one exists. */
+  hasRefreshToken: boolean
 }
 
 export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(null)
@@ -36,37 +56,89 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
 
-  const { data, load, isLoading, refresh } = useDataLoader(userService.getUserMetadata, {
-    onError: (error) => {
-      logger.error('BCSCAccountProvider: Failed to load user metadata', { error })
-    },
+  // Set synchronously just before each load starts, so the diagnostics snapshot reflects
+  // state at load time even though useDataLoader's setIsLoading(true) hasn't re-rendered yet.
+  const pendingLoadRef = useRef<{ trigger: AccountLoadTrigger; connectivity?: ReconnectEvent }>({
+    trigger: 'initial',
   })
+  const lastLoadRef = useRef<AccountLoadDiagnostics | null>(null)
+
+  const { data, load, isLoading, refresh } = useDataLoader(
+    () => {
+      const { trigger, connectivity } = pendingLoadRef.current
+      const diagnostics: AccountLoadDiagnostics = {
+        trigger,
+        screen: navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined,
+        navigationReady: navigationRef.isReady(),
+        appState: AppState.currentState,
+        ...(connectivity ? { connectivity } : {}),
+        verified: Boolean(store.bcscSecure.verified),
+        verifiedStatus: store.bcscSecure.verifiedStatus,
+        hasRefreshToken: Boolean(store.bcscSecure.refreshToken),
+      }
+      lastLoadRef.current = diagnostics
+      logger.info('BCSCAccountProvider: Loading account', { ...diagnostics })
+      return userService.getUserMetadata()
+    },
+    {
+      onError: (error) => {
+        const accountLoad = lastLoadRef.current
+        if (isAppError(error)) {
+          error.addContext({ accountLoad })
+        }
+        logger.error('BCSCAccountProvider: Failed to load user metadata', { error, accountLoad })
+      },
+    }
+  )
+
+  const canLoadAccount = isUserVerified(store.bcscSecure)
+
+  const startAccountLoad = useCallback(
+    (trigger: AccountLoadTrigger, connectivity?: ReconnectEvent) => {
+      if (!canLoadAccount) {
+        logger.info('BCSCAccountProvider: Skipping account load for unverified user', { trigger })
+        return
+      }
+
+      pendingLoadRef.current = { trigger, connectivity }
+
+      if (trigger === 'initial') {
+        load()
+      } else {
+        refresh()
+      }
+    },
+    [canLoadAccount, load, logger, refresh]
+  )
 
   useEffect(() => {
-    if (store.bcscSecure.verified) {
-      load()
-    }
-  }, [load, store.bcscSecure.verified])
+    startAccountLoad('initial')
+  }, [startAccountLoad])
 
   // Listen for token refresh events (e.g., from FCM status notifications) and refresh account data
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener(BCSCEventTypes.TOKENS_REFRESHED, () => {
       logger.info('BCSCAccountProvider: Tokens refreshed, reloading account data')
-      refresh()
+      startAccountLoad('tokens-refreshed')
     })
 
     return () => subscription.remove()
-  }, [refresh, logger])
+  }, [startAccountLoad, logger])
 
   // If the load failed while offline, retry when connectivity returns
-  useRetryOnReconnect(() => !data && !isLoading, refresh)
+  useRetryOnReconnect(
+    () => !data && !isLoading,
+    (event) => startAccountLoad('reconnect', event)
+  )
+
+  const refreshAccount = useCallback(() => startAccountLoad('manual'), [startAccountLoad])
 
   const accountContextValue = useMemo(() => {
     if (!data) {
       return {
         account: null,
         isLoadingAccount: isLoading,
-        refreshAccount: refresh,
+        refreshAccount,
       }
     }
 
@@ -83,9 +155,9 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
         account_expiration_date: moment(data.user.card_expiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate(),
       },
       isLoadingAccount: false,
-      refreshAccount: refresh,
+      refreshAccount,
     }
-  }, [data, isLoading, refresh])
+  }, [data, isLoading, refreshAccount])
 
   return <BCSCAccountContext.Provider value={accountContextValue}>{children}</BCSCAccountContext.Provider>
 }

@@ -39,18 +39,18 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const [isAddingAccount, setIsAddingAccount] = useState(false)
   const registrationService = useRegistrationService()
   const loadingScreen = useLoadingScreen()
-
-  // Latest store snapshot for the focus effect below. Reading through a ref keeps the effect
-  // callback stable so it only runs on focus transitions — depending on the store directly
-  // would re-run it the moment a choice is dispatched and immediately clear it.
   const storeRef = useRef(store)
-  storeRef.current = store
+  const registrationServiceRef = useRef(registrationService)
+  const loadingScreenRef = useRef(loadingScreen)
 
-  // Arriving (back) at the setup question abandons a previously chosen transfer. Clear the
-  // persisted choice — it forces the resume route into the transfer screens, which is what
-  // locked users out of returning to a traditional setup. Any device authorization issued for
-  // the transfer has no identity attached, so discard it too (unless the ID step has progress,
-  // in which case the authorization belongs to that flow).
+  storeRef.current = store
+  registrationServiceRef.current = registrationService
+  loadingScreenRef.current = loadingScreen
+
+  // Arriving (back) at the setup question abandons a previous device registration. Clearing locally isn't enough
+  // IAS still considers the client registered from the abandoned transfer's device
+  // authorization, so a later verification attempt (BCSC, Non BCSC) would run into an 'invald_registration_request' error.
+  // Cycle the registration so that conflict never has a chance to occur.
   useFocusEffect(
     useCallback(() => {
       const { bcsc, bcscSecure } = storeRef.current
@@ -61,9 +61,21 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       dispatch({ type: BCDispatchAction.ACCOUNT_SETUP_TYPE, payload: [] })
 
       if (bcscSecure.deviceCode && !bcscSecure.serial && !bcscSecure.additionalEvidenceData.length) {
-        clearDeviceCodes().catch((error) =>
-          logger.error('[AccountSetupScreen] Failed to clear transfer device authorization', error as Error)
-        )
+        const stopLoading = loadingScreenRef.current.startLoading()
+        const cleanUpAbandonedTransfer = async () => {
+          try {
+            await registrationServiceRef.current.cycleRegistration()
+          } catch (error) {
+            logger.error('[AccountSetupScreen] Failed to cycle registration after abandoned transfer', error as Error)
+          }
+
+          try {
+            await clearDeviceCodes()
+          } catch (error) {
+            logger.error('[AccountSetupScreen] Failed to clear transfer device authorization', error as Error)
+          }
+        }
+        cleanUpAbandonedTransfer().finally(stopLoading)
       }
     }, [dispatch, clearDeviceCodes, logger])
   )

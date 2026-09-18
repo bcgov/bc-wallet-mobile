@@ -60,6 +60,7 @@ jest.mock('../services/hooks/useEvidenceService', () => ({
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useNavigation: () => mockUseNavigation(),
+  createNavigatorFactory: jest.fn(),
 }))
 
 jest.mock('@/contexts/NavigationContainerContext', () => ({
@@ -435,12 +436,61 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(5)
+        expect(systemChecks).toHaveLength(6)
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('EventReasonAlertsSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('TermsOfUseSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('KeyRotationSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('RefreshTokenExpiredSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('TermsOfUseSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[5].constructor.name).toBe('KeyRotationSystemCheck')
+      })
+
+      it('skips the id-token-backed checks for a verified user whose refresh token has expired (#4654)', async () => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          {
+            stateLoaded: true,
+            developer: {
+              environment: {
+                analyticsAppId: 'test-app-id',
+              },
+            },
+            bcsc: {
+              analyticsOptIn: true,
+              selectedNickname: 'Test Device',
+            },
+            bcscSecure: {
+              isHydrated: true,
+              verified: true,
+              refreshTokenExpired: true,
+              registrationAccessToken: 'test-registration-token',
+            },
+          },
+          jest.fn(),
+        ])
+
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+
+        mockGetBundleId.mockReturnValue('ca.bc.gov.id.servicescard')
+
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: { account_expiration_date: new Date() } })
+
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
+        mockUseRegistrationApi.mockReturnValue({})
+        mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+        const names = systemChecks.map((check) => check.constructor.name)
+
+        expect(names).not.toContain('DeviceCountSystemCheck')
+        expect(names).not.toContain('EventReasonAlertsSystemCheck')
+        expect(names).toContain('RefreshTokenExpiredSystemCheck')
       })
 
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
@@ -485,6 +535,7 @@ describe('useGetSystemChecks', () => {
         expect(names).toContain('TermsOfUseSystemCheck')
         expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
+        expect(names).not.toContain('RefreshTokenExpiredSystemCheck')
         expect(names).not.toContain('AccountExpirySystemCheck')
         expect(names).not.toContain('AccountRenewalSystemCheck')
         expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')

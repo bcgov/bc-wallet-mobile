@@ -10,7 +10,8 @@ import type { CheckpointStatus, Platform, ReportDir, RunResults, RunnerError, Su
  * (`file://./test/…`) plus the exact describe title in `suiteName`; `name` attributes carry titles with
  * every non-alphanumeric run collapsed to a space, so titles are compared after {@link sanitizeTitle}
  * on both sides. A `<skipped/>` after a `<failure>` in the same file is the mochaOpts.bail cascade,
- * reported as `blocked` so it cannot pass for "nothing to run".
+ * reported as `blocked` so it cannot pass for "nothing to run". A runtime `this.skip()` arrives as two
+ * `<testcase>`s of the same name (the reporter sees the test start, then go pending) and counts once.
  */
 
 /** The reporter's `_prepareName`: split on non-alphanumerics (keeping `@`), rejoin with single spaces. */
@@ -100,6 +101,7 @@ export function parseJunitXml(xml: string, source: string, hint?: Platform): Par
     const tests: TestResult[] = []
     const hookFailures: SuiteResult['hookFailures'] = []
     let failedBefore = false
+    let previous: TestResult | undefined
     $suite.children('testcase').each((_, tcEl) => {
       const $tc = $(tcEl)
       const name = $tc.attr('name') ?? ''
@@ -117,10 +119,12 @@ export function parseJunitXml(xml: string, source: string, hint?: Platform): Par
         failedBefore = true
       } else if ($tc.children('skipped').length) {
         status = failedBefore ? 'blocked' : 'skipped'
+        if (previous?.name === name && previous.status === status) return
       } else {
         status = 'pass'
       }
-      tests.push({ name, status, message, timeSec: Number($tc.attr('time')) || 0 })
+      previous = { name, status, message, timeSec: Number($tc.attr('time')) || 0 }
+      tests.push(previous)
     })
 
     suites.push({

@@ -43,6 +43,17 @@ export const SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter(isSendVideoSpec)
 export const NON_SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter((path) => !isSendVideoSpec(path))
 
 /**
+ * The device-authentication journeys, partitioned the same way. They need a session whose device
+ * carries a screen lock plus biometric interception (`setupDeviceLock` + `biometricsInterception`), and
+ * a locked device changes the state every OTHER journey starts from — the secure-app step renders two
+ * options, the device can lock mid-session — so the Sauce configs give them a capability lane of their
+ * own and exclude them from every other lane. Never a global switch.
+ */
+const isDeviceAuthSpec = (path: string) => /\/device-auth\/[^/]+\.journey\.ts$/.test(path)
+export const DEVICE_AUTH_SPECS = ALL_SPEC_FILES.filter(isDeviceAuthSpec)
+export const NON_DEVICE_AUTH_SPECS = ALL_SPEC_FILES.filter((path) => !isDeviceAuthSpec(path))
+
+/**
  * `E2E_EXCLUDE_SEND_VIDEO=1` drops the send-video journeys from whatever suite runs. They review a
  * shared, blind-FIFO agent queue and must never run on two platforms at once, so CI keeps them out
  * of the concurrent device matrix and runs them one platform at a time via `--suite send-video`.
@@ -101,6 +112,9 @@ export const config: WebdriverIO.Config = {
     scan: ANDROID_ONLY_SPECS,
     // Automated accessibility audits over the core unverified screens (src/helpers/a11y-audit.ts).
     a11y: [resolve(__dirname, `../test/${variant}/a11y/*.journey.ts`)],
+    // Device authentication on a LOCKED device (Sauce RDC only): its own capability lane, and not in
+    // `regression` — see DEVICE_AUTH_SPECS.
+    'device-auth': DEVICE_AUTH_SPECS,
     // Nightly full run: every per-area journey.
     // Excludes `migration` and `upgrade` — those suites boot an OLD build via their own configs, so
     // they cannot share this run's v4 RDC build (each stays its own suite + workflow path).

@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import DateInput from '@/bcsc-theme/components/DateInput'
+import { useIsDeviceAuthorizationRecovering } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { isHandledAppError } from '@/errors/appError'
@@ -34,6 +35,8 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [loading, setLoading] = useState(false)
+  const isRecovering = useIsDeviceAuthorizationRecovering()
+  const isBusy = loading || isRecovering
   const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY/MM/DD') : '')
   const [birthDateError, setBirthDateError] = useState<string | undefined>(undefined)
 
@@ -78,9 +81,9 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         testID={testIdWithKey(TestIds.verify.enterBirthdate.continue)}
         onPress={handleSubmit}
         buttonType={ButtonType.Primary}
-        disabled={loading}
+        disabled={isBusy}
       >
-        {loading && <ButtonLoading />}
+        {isBusy && <ButtonLoading />}
       </Button>
     </ControlContainer>
   )

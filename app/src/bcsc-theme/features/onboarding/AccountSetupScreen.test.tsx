@@ -10,6 +10,20 @@ import { Text } from 'react-native'
 import { getAccountSecurityMethod, getAuthorizationRequest, setAuthorizationRequest } from 'react-native-bcsc-core'
 import AccountSetupScreen from './AccountSetupScreen'
 
+// Spies on cycleRegistration specifically while keeping the rest of the real hook (ensureRegistered,
+// etc.) intact, so the other tests in this file keep exercising real hook composition.
+const mockCycleRegistration = jest.fn().mockResolvedValue(undefined)
+jest.mock('@/bcsc-theme/services/hooks/useRegistrationService', () => {
+  const actual = jest.requireActual('@/bcsc-theme/services/hooks/useRegistrationService')
+  return {
+    ...actual,
+    useRegistrationService: (...args: unknown[]) => ({
+      ...actual.useRegistrationService(...args),
+      cycleRegistration: mockCycleRegistration,
+    }),
+  }
+})
+
 /** Exposes the current account setup type in the tree so tests can observe store updates. */
 const SetupTypeProbe = () => {
   const [store] = useStore<BCState>()
@@ -81,6 +95,13 @@ describe('AccountSetup', () => {
 
     // Device/user codes are dropped from the persisted authorization request; the rest survives
     expect(setAuthorizationRequest).toHaveBeenCalledWith({ issuer: 'issuer', clientID: 'client-id' })
+
+    // The stale IAS registration must be cycled — not just the local device code cleared —
+    // otherwise a later regular-verification attempt on the same client_id would still conflict.
+    expect(mockCycleRegistration).toHaveBeenCalledTimes(1)
+    const cycleOrder = mockCycleRegistration.mock.invocationCallOrder[0]
+    const clearOrder = (setAuthorizationRequest as jest.Mock).mock.invocationCallOrder[0]
+    expect(cycleOrder).toBeLessThan(clearOrder)
   })
 
   it('keeps the device authorization when the ID step has progress', async () => {
@@ -95,6 +116,7 @@ describe('AccountSetup', () => {
 
     expect(getAuthorizationRequest).not.toHaveBeenCalled()
     expect(setAuthorizationRequest).not.toHaveBeenCalled()
+    expect(mockCycleRegistration).not.toHaveBeenCalled()
   })
 
   it('leaves a non-transfer setup choice untouched on focus', async () => {

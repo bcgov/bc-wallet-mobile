@@ -21,7 +21,26 @@ export async function describeCurrentScreen(limit = 8): Promise<string> {
       break
     }
   }
-  return texts.length ? texts.join(' | ') : '(no visible text found)'
+  return texts.length ? texts.join(' | ') : `(no visible text found; ${await describeSilentScreen()})`
+}
+
+/** The view classes on a text-less screen, so a blank camera or a bare surface is still identifiable. */
+async function describeSilentScreen(): Promise<string> {
+  try {
+    const source = await driver.getPageSource()
+    const counts = new Map<string, number>()
+    for (const [, name] of source.matchAll(driver.isIOS ? /\btype="([^"]+)"/g : /\bclass="([^"]+)"/g)) {
+      counts.set(name, (counts.get(name) ?? 0) + 1)
+    }
+    const top = [...counts]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, n]) => `${name.split('.').pop()}×${n}`)
+    const where = driver.isAndroid ? `${await driver.getCurrentPackage()}/${await driver.getCurrentActivity()}: ` : ''
+    return `${where}${top.join(', ') || 'empty page source'}`
+  } catch (err) {
+    return `page source unavailable: ${(err as Error).message}`
+  }
 }
 
 /**

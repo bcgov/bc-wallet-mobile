@@ -39,6 +39,10 @@ jest.mock('@react-navigation/stack', () => {
       Navigator,
       Screen,
     }),
+    // Exposed directly (not just via createStackNavigator()) so tests can grab the same
+    // instances with jest.requireMock, to assert the navigator is actually mounted.
+    Navigator,
+    Screen,
   }
 })
 jest.mock('react-i18next', () => ({
@@ -147,6 +151,11 @@ describe('MainStack', () => {
 
   const queryLoadingScreens = (view: ReturnType<typeof render>) => view.UNSAFE_queryAllByType('LoadingScreen' as any)
 
+  // The mocked Stack.Navigator instance, read from the mock module at call time (not
+  // captured inside the jest.mock factory, which runs before this file's own module body).
+  const queryNavigators = (view: ReturnType<typeof render>) =>
+    view.UNSAFE_queryAllByType(jest.requireMock('@react-navigation/stack').Navigator)
+
   it('renders correctly', () => {
     const { toJSON } = render(<MainStack />)
     expect(toJSON()).toMatchSnapshot()
@@ -210,18 +219,27 @@ describe('MainStack', () => {
     expect(PairingModule.pairingPayloadToServiceLoginParams).not.toHaveBeenCalled()
   })
 
-  it('shows the loading screen while the account is still loading', () => {
+  it('replaces the stack with the loading screen while the account is still loading', () => {
     jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
 
-    const { toJSON } = render(<MainStack />)
+    const view = render(<MainStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
+    // Replace, not overlay: the navigator has to unmount here so it drops any navigation state
+    // inherited from VerifyStack. Overlaying it stranded users on VerificationSuccess (#4682).
+    expect(view.toJSON()).toMatchObject({ type: 'LoadingScreen' })
+    expect(queryNavigators(view)).toHaveLength(0)
   })
 
   it('holds the loading screen over the stack while system checks are still settling', () => {
     jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
 
-    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(1)
+    const view = render(<MainStack />)
+
+    // Overlay, not replace: the checks navigate to screens registered in this navigator (terms of
+    // use, device invalidated, reverify), and a navigate() with no navigator mounted is dropped.
+    expect(view.toJSON()).toMatchObject({ type: 'View' })
+    expect(queryLoadingScreens(view)).toHaveLength(1)
+    expect(queryNavigators(view)).toHaveLength(1)
   })
 
   it('drops the loading screen once the system checks have settled', () => {

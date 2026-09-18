@@ -1,4 +1,8 @@
-import { FATAL_UNRECOVERABLE_ERROR_STATUS_CODE, UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
+import {
+  FATAL_UNRECOVERABLE_ERROR_STATUS_CODE,
+  UNKNOWN_APP_ERROR_STATUS_CODE,
+  USER_REPORT_ERROR_CODE,
+} from '@/constants'
 import { AppEventCode } from '../events/appEventCode'
 
 /**
@@ -66,6 +70,7 @@ export interface ErrorDefinition {
  *   2800-2899: General/Misc errors
  *
  * Special codes:
+ *       0: Reserved for "Report a problem" user action
  *   9999: Reserved for unknown/unmapped errors
  *   9998: Reserved for fatal unrecoverable errors
  */
@@ -73,6 +78,13 @@ export const ErrorRegistry = {
   // ============================================
   // Special Errors
   // ===========================================
+  REPORT_PROBLEM: {
+    statusCode: USER_REPORT_ERROR_CODE, // 0
+    appEvent: AppEventCode.REPORT_PROBLEM,
+    severity: ErrorSeverity.INFO,
+    category: ErrorCategory.UNKNOWN,
+    message: 'User submitted a problem report',
+  },
   UNKNOWN_ERROR: {
     statusCode: UNKNOWN_APP_ERROR_STATUS_CODE, // 9999
     appEvent: AppEventCode.UNKNOWN_APP_ERROR,

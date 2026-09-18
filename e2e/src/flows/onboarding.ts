@@ -88,15 +88,11 @@ export async function answerNotificationPermission(decision: 'allow' | 'deny'): 
 }
 
 /**
- * Complete the full onboarding walk from a fresh cold start, ending on the VerifyPrompt.
- *
- * Declines analytics and skips push notifications (avoids the OS permission dialog) so the arrange
- * has minimal side effects; journeys that test those choices drive the screens directly instead.
- *
- * The VerifyPrompt exists only in this session — relaunching afterwards lands on
- * AccountLanding → EnterPIN → Home, never back here (its gate is in-memory in the app).
+ * Fresh cold start → the "Secure your app" selector, declining analytics and skipping push
+ * notifications on the way. The shared head of {@link completeOnboarding}; the device-auth journey
+ * takes the selector's other option from here.
  */
-export async function completeOnboarding(pin: string = TEST_PIN): Promise<void> {
+export async function reachSecureApp(): Promise<void> {
   await OnboardingIntroScreen.expectVisible(Timeouts.COLD_START)
   await OnboardingIntroScreen.tap('primary')
 
@@ -113,6 +109,19 @@ export async function completeOnboarding(pin: string = TEST_PIN): Promise<void> 
   await skipNotificationsIfShown()
 
   await OnboardingSecureAppScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * Complete the full onboarding walk from a fresh cold start, ending on the VerifyPrompt.
+ *
+ * Declines analytics and skips push notifications (avoids the OS permission dialog) so the arrange
+ * has minimal side effects; journeys that test those choices drive the screens directly instead.
+ *
+ * The VerifyPrompt exists only in this session — relaunching afterwards lands on
+ * AccountLanding → EnterPIN → Home, never back here (its gate is in-memory in the app).
+ */
+export async function completeOnboarding(pin: string = TEST_PIN): Promise<void> {
+  await reachSecureApp()
   await OnboardingSecureAppScreen.tap('primary')
 
   await OnboardingCreatePINScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
