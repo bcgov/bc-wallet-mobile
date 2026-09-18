@@ -136,6 +136,43 @@ describe('useInitializeAccountStatus', () => {
     expect(result.current.initializingAccount).toBe(false)
   })
 
+  describe('verificationSkipped for accounts predating v4.1', () => {
+    const run = async (bcsc: Record<string, unknown>, account: unknown) => {
+      const mockDispatch = jest.fn()
+      jest.mocked(Bifold.useStore).mockReturnValue([{ stateLoaded: true, bcsc } as any, mockDispatch])
+      jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+      jest.mocked(retryModule.retryAsync).mockResolvedValue(account)
+      renderHook(() => useInitializeAccountStatus())
+      await act(async () => {})
+      return mockDispatch
+    }
+
+    it('sets verificationSkipped to false when adopting a native account (v3 upgrade)', async () => {
+      const mockDispatch = await run({ hasAccount: false }, { nickname: 'Combo' })
+
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
+        payload: [false],
+      })
+    })
+
+    it('does not set verificationSkipped when there is no native account', async () => {
+      const mockDispatch = await run({ hasAccount: false }, null)
+
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
+      )
+    })
+
+    it('does not overwrite an existing verificationSkipped value', async () => {
+      const mockDispatch = await run({ hasAccount: false, verificationSkipped: true }, { nickname: 'Combo' })
+
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
+      )
+    })
+  })
+
   it('falls back to displayName when nickname is missing (e.g. v3 ias-ios migrated users)', async () => {
     const mockDispatch = jest.fn()
     const mockAccount = { nickname: undefined, displayName: 'Jane' }
