@@ -237,9 +237,10 @@ export const useCardScanner = () => {
     [updateUserMetadata, updateUserInfo]
   )
 
-  const handleScanNonBcsc = useCallback(() => {
+  const handleScanNonBcsc = useCallback(async () => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)
-  }, [navigation])
+    await updateCardProcess(BCSCCardProcess.NonBCSC)
+  }, [navigation, updateCardProcess])
 
   /**
    * Starts the scanning process by setting the scan enabled flag.
