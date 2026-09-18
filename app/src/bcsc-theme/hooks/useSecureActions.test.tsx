@@ -1329,6 +1329,69 @@ describe('useSecureActions', () => {
     })
   })
 
+  describe('hydrateSecureState name scrubbing', () => {
+    beforeEach(() => {
+      jest.mocked(getAccount).mockResolvedValue(null as any)
+      jest.mocked(getToken).mockResolvedValue(null as any)
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+    })
+
+    const captureHydratedName = () => {
+      const hydrateCall = mockDispatch.mock.calls.find(
+        ([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE
+      )
+      return hydrateCall?.[0]?.payload?.[0]?.userMetadata?.name
+    }
+
+    it('strips decoder-corrupted comma-dollar characters from middleNames', async () => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        firstName: 'anna',
+        lastName: 'berg',
+        middleNames: 'berg,$anna',
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedName()).toEqual({ first: 'anna', last: 'berg', middle: 'berganna' })
+    })
+
+    it('strips other special characters from first/last name', async () => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        firstName: 'J!ohn#',
+        lastName: 'Sm@ith',
+        middleNames: undefined,
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedName()).toEqual({ first: 'John', last: 'Smith', middle: undefined })
+    })
+
+    it('leaves already-clean names unchanged', async () => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        firstName: 'Jane',
+        lastName: "O'Brien-Smith",
+        middleNames: 'Marie',
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedName()).toEqual({ first: 'Jane', last: "O'Brien-Smith", middle: 'Marie' })
+    })
+  })
+
   describe('updateDeviceCodes', () => {
     it('persists the expiry and schedules reminders when an expiry is provided', async () => {
       const expiresAt = new Date('2026-06-08T12:00:00Z')
