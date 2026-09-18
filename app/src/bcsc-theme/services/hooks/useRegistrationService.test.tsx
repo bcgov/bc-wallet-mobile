@@ -369,7 +369,7 @@ describe('useRegistrationService', () => {
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
-        expect(missingJsonValuesAlert).toHaveBeenCalled()
+        expect(missingJsonValuesAlert).toHaveBeenCalledWith(mockError)
       })
     })
 
@@ -461,7 +461,7 @@ describe('useRegistrationService', () => {
         const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
-        expect(missingJsonValuesAlert).toHaveBeenCalled()
+        expect(missingJsonValuesAlert).toHaveBeenCalledWith(mockError)
       })
     })
 

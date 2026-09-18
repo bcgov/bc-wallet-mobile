@@ -403,6 +403,8 @@ class BCSCApiClient {
    *   exists in secure storage — the only genuinely unrecoverable case.
    * @throws Error 'Refresh token expired' when the stored refresh token's `exp` has passed (#4654) —
    *   a plain `Error`, not an `AppError`, so it passes the response interceptor and no alert policy fires.
+   * @throws AppError with code `ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE` if the rebuilt
+   *   token response fails schema validation (via `getTokensForRefreshToken` → `fetchTokens`)
    */
   async recoverTokens(): Promise<TokenResponse> {
     if (this.tokens) {
