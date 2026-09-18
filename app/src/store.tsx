@@ -369,8 +369,9 @@ export const initialBCSCState: BCSCState = {
  * Migrates a persisted BCSC state blob on load. Two idempotent, read-side migrations:
  * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
  *   have launched on >= v4.1.
- * - Onboarded installs that predate `verificationSkipped`: a missing value is treated as "skipped"
- *   (`true`) so they keep landing on the home screen rather than the post-onboarding verify prompt.
+ * - Onboarded installs that predate `verificationSkipped`: a missing value is treated as "not skipped"
+ *   (`false`) so an unverified user resumes verification rather than seeing the post-onboarding verify
+ *   prompt. v3 upgrades have no persisted blob yet and are handled in useInitializeAccountStatus.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T

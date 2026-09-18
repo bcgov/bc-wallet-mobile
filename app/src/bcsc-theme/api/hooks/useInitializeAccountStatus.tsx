@@ -38,6 +38,12 @@ export const useInitializeAccountStatus = () => {
       // Preserve existing semantics: never downgrade a persisted hasAccount=true
       // on a transient native read failure (see #3405 verification-loop fix)
       if (!store.bcsc.hasAccount) {
+        // A native account with no persisted flag predates v4.1 (e.g. v3 ias-ios/ias-android upgrade),
+        // so it never saw the verify prompt. Mirror migrateBCSCState so an unverified user resumes
+        // their verification instead of being re-prompted and sent back to the start.
+        if (account && store.bcsc.verificationSkipped === undefined) {
+          dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
+        }
         dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [Boolean(account)] })
       }
 
@@ -54,7 +60,7 @@ export const useInitializeAccountStatus = () => {
     } finally {
       setHasCheckedAccount(true)
     }
-  }, [dispatch, logger, store.bcsc.hasAccount, store.bcsc.selectedNickname])
+  }, [dispatch, logger, store.bcsc.hasAccount, store.bcsc.selectedNickname, store.bcsc.verificationSkipped])
 
   useEffect(() => {
     if (!store.stateLoaded || hasCheckedAccount) {
