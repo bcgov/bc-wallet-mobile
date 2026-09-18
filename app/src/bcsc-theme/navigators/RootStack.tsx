@@ -11,6 +11,7 @@ import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
+import { useServerStatus } from '../contexts/ServerStatusContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
@@ -46,6 +47,7 @@ const BCSCRootStack: React.FC = () => {
   const { isNavigationReady } = useNavigationContainer()
   const { initializingAccount } = useInitializeAccountStatus()
   const { needsVerification, isVerified, isVerificationInProgress } = useVerificationStatus()
+  const { isAvailable: isServerAvailable, hasChecked: serverStatusChecked } = useServerStatus()
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
   const resumeEvaluated = useRef(false)
   useSystemChecks(SystemCheckScope.STARTUP)
@@ -88,9 +90,21 @@ const BCSCRootStack: React.FC = () => {
       return
     }
 
+    if (!serverStatusChecked) {
+      return
+    }
+
+    const wantsToResumeVerification =
+      store.bcsc.verificationSkipped === false && !isVerified && !isVerificationInProgress
+
+    // Verification can't resume during an outage. Leave `resumeEvaluated` unset so re-runs re-evaluate
+    if (wantsToResumeVerification && !isServerAvailable) {
+      return
+    }
+
     resumeEvaluated.current = true
 
-    if (store.bcsc.verificationSkipped === false && !isVerified && !isVerificationInProgress) {
+    if (wantsToResumeVerification) {
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS, payload: [VerificationStatus.IN_PROGRESS] })
     }
   }, [
@@ -105,10 +119,23 @@ const BCSCRootStack: React.FC = () => {
     store.bcscSecure.sessionRecoveryRequired,
     isVerified,
     isVerificationInProgress,
+    serverStatusChecked,
+    isServerAvailable,
   ])
 
+  // Wait for server status before rendering app, if the server is down, the user will see the outage screen
+  const awaitingStatusForResume =
+    !serverStatusChecked &&
+    store.bcsc.hasAccount &&
+    store.authentication.didAuthenticate !== false &&
+    store.bcscSecure.sessionRecoveryRequired !== true &&
+    store.bcsc.verificationSkipped === false &&
+    !isVerified &&
+    !isVerificationInProgress &&
+    !verifyPromptAnswered
+
   // Show loading screen if state, API client or navigation is not ready
-  if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
+  if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady || awaitingStatusForResume) {
     return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
   }
 
@@ -128,21 +155,45 @@ const BCSCRootStack: React.FC = () => {
     )
   }
 
+  // A user who chose to verify (verificationSkipped === false) and hasn't finished would normally be
+  // auto-resumed into VerifyStack by the effect above. During an outage that resume is held off, so
+  // fall back to the prompt — its inline ServiceOutage + "skip" is the user's way to Home.
+  const resumeBlockedByOutage =
+    serverStatusChecked &&
+    !isServerAvailable &&
+    store.bcsc.verificationSkipped === false &&
+    !isVerified &&
+    !isVerificationInProgress
+
   // This prompt controls if the user is sent back into the verification stack or can cotinue into the main app
   // the value is only set when the user interacts with the prompt and is reset on a factory reset
-  const showVerifyPrompt = store.bcsc.verificationSkipped === undefined && !verifyPromptAnswered && needsVerification
+  const showVerifyPrompt =
+    (store.bcsc.verificationSkipped === undefined && !verifyPromptAnswered && needsVerification) ||
+    (resumeBlockedByOutage && !verifyPromptAnswered)
+
+  // The auto-resume decision (effect above) is still pending: chose to verify, not verified, not yet
+  // resumed or skipped, IAS status known. Keep VerifyStack rendered through this window so there's no
+  // flash of Home before the resume dispatch lands — and so the outage fallback has a stack to
+  // render its prompt in.
+  const pendingVerificationResume =
+    serverStatusChecked &&
+    store.bcsc.verificationSkipped === false &&
+    !isVerified &&
+    !isVerificationInProgress &&
+    !verifyPromptAnswered
 
   // Render the verify journey when the prompt is due, OR whenever verification is actively in
   // progress. Combining both into a single VerifyStack render keeps it mounted across the prompt →
   // in-progress transition, so VerifyPrompt → AccountSetup animates as an in-stack slide instead of
   // a RootStack swap.
-  const showVerifyStack = showVerifyPrompt || (!isVerified && isVerificationInProgress)
+  const showVerifyStack = showVerifyPrompt || pendingVerificationResume || (!isVerified && isVerificationInProgress)
 
   return (
     <BCSCAgentProvider>
       {showVerifyStack ? (
         <BCSCActivityProvider>
           <VerifyStack
+            key={resumeBlockedByOutage ? 'verify-outage-fallback' : 'verify'}
             showVerifyPrompt={showVerifyPrompt}
             onVerifyPromptAnswered={() => setVerifyPromptAnswered(true)}
           />

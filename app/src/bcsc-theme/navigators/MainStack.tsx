@@ -22,6 +22,7 @@ import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { useAccount } from '../contexts/BCSCAccountContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
+import { useServerStatus } from '../contexts/ServerStatusContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
@@ -106,7 +107,7 @@ const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKe
 
 /**
  * Holds the startup loading screen until the system checks that decide the Home notification card
- * have settled. Home renders that card straight out of the store, so a check resolving after paint
+ * have settled in addition to the server status check. Home renders that card straight out of the store, so a check resolving after paint
  * swaps the card in front of the user (e.g. "Start verification" flipping to "Verified"). Capped by
  * {@link SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS} so a hung request can't strand the app.
  *
@@ -165,7 +166,10 @@ const MainStack: React.FC = () => {
 
   const mainStackChecks = useSystemChecks(SystemCheckScope.MAIN_STACK)
   const accountChecks = useSystemChecks(SystemCheckScope.ACCOUNT)
-  const isAwaitingSystemChecks = useSystemCheckLoadingGate(mainStackChecks.hasSettled && accountChecks.hasSettled)
+  const { hasChecked: serverStatusChecked } = useServerStatus()
+  const isAwaitingSystemChecks = useSystemCheckLoadingGate(
+    mainStackChecks.hasSettled && accountChecks.hasSettled && serverStatusChecked
+  )
   useBCSCStack(BCSCStacks.Main)
 
   // Accept connection-invitation deep links (e.g. from the showcase) once the
@@ -571,7 +575,8 @@ const MainStack: React.FC = () => {
             component={ServiceOutage}
             options={{
               ...getDefaultModalOptions(t('BCSC.Title')),
-              gestureEnabled: false,
+              headerLeft: createHeaderBackButton,
+              headerBackTestID: testIdWithKey(TestIds.common.back),
             }}
           />
 

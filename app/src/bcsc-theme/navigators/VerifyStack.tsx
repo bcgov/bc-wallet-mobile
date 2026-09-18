@@ -4,7 +4,7 @@ import { useVerificationResponseListener } from '@/bcsc-theme/features/verificat
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
@@ -138,7 +138,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { clearAdditionalEvidence } = useSecureActions()
   const resumeRoute = getResumeStepRoute(store)
   // Opening on the prompt (rather than swapping stacks to reach it) lets prompt → setup question
@@ -542,12 +542,25 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
 
       <Stack.Screen
         name={BCSCModals.ServiceOutage}
-        component={ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false,
+          headerLeft: createHeaderBackButton,
+          headerBackTestID: testIdWithKey(TestIds.common.back),
         }}
-      />
+      >
+        {({ route }) => (
+          <ServiceOutage
+            onSkipVerification={
+              route.params?.showSkipVerification
+                ? () => {
+                    onVerifyPromptAnswered?.()
+                    dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
+                  }
+                : undefined
+            }
+          />
+        )}
+      </Stack.Screen>
     </Stack.Navigator>
   )
 }

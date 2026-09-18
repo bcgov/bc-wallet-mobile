@@ -66,6 +66,11 @@ jest.mock('../features/agent/BCSCAgentProvider', () => ({
   default: ({ children }: any) => children,
 }))
 
+const mockUseServerStatus = jest.fn()
+jest.mock('../contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
+
 const mockStore = (overrides: Record<string, any> = {}) => ({
   stateLoaded: true,
   bcsc: { hasAccount: false },
@@ -79,6 +84,7 @@ const mockProcessPendingChallenges = jest.fn()
 describe('BCSCRootStack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
 
     const mockLoadState = jest.fn()
     jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
@@ -355,6 +361,32 @@ describe('BCSCRootStack', () => {
       // the session; re-rendering in that state must not pull the user back into VerifyStack.
       rerender(<BCSCRootStack />)
       expect(mockDispatch).toHaveBeenCalledTimes(1)
+    })
+
+    it('holds the loading screen until the IAS status is known for a would-resume user', () => {
+      const mockDispatch = jest.fn()
+      mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: false })
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(false), mockDispatch] as any)
+
+      const { toJSON } = render(<BCSCRootStack />)
+
+      expect(toJSON()).toBe('LoadingScreen')
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'bcsc/updateSecureVerifiedStatus' })
+      )
+    })
+
+    it('falls back to the verify prompt (not the resume step) and does not resume during an outage', () => {
+      const mockDispatch = jest.fn()
+      mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(false), mockDispatch] as any)
+
+      const { toJSON } = render(<BCSCRootStack />)
+
+      expect(toJSON()).toBe('VerifyStack')
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'bcsc/updateSecureVerifiedStatus' })
+      )
     })
   })
 

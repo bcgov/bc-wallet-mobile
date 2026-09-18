@@ -61,6 +61,22 @@ describe('useConfigApi', () => {
       ;(mockApiClient.get as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
       await expect(config.getServerStatus()).rejects.toThrow('Network error')
     })
+
+    it('passes through an unavailable status and message', async () => {
+      // eslint-disable-next-line no-extra-semi
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { status: 'unavailable', statusMessage: 'Down for maintenance' },
+        headers: { date: 'Wed, 01 Jan 2025 00:00:00 GMT' },
+      })
+
+      const response = await config.getServerStatus()
+
+      expect(response).toEqual({
+        status: 'unavailable',
+        statusMessage: 'Down for maintenance',
+        serverTimestamp: new Date('Wed, 01 Jan 2025 00:00:00 GMT'),
+      })
+    })
   })
 
   describe('getTermsOfUse', () => {

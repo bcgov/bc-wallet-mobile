@@ -1,15 +1,23 @@
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCLocalStorageKeys } from '@/store'
 import { PersistentStorage } from '@bifold/core'
+import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { VerifyPromptScreen } from './VerifyPromptScreen'
+
+const mockUseServerStatus = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
 
 describe('VerifyPromptScreen', () => {
   let storeSpy: jest.SpyInstance
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseServerStatus.mockReturnValue({ isAvailable: true, isChecking: false, serverStatus: {} })
     storeSpy = jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
   })
 
@@ -54,5 +62,41 @@ describe('VerifyPromptScreen', () => {
 
     expect(tree.queryByTestId('com.ariesbifold:id/SkipVerification')).toBeNull()
     expect(tree.getByTestId('com.ariesbifold:id/Continue')).toBeTruthy()
+  })
+
+  describe('during an IAS outage', () => {
+    beforeEach(() => {
+      mockUseServerStatus.mockReturnValue({ isAvailable: false, isChecking: false, serverStatus: {} })
+    })
+
+    // Redirects to the BCSCModals.ServiceOutage route (rather than rendering ServiceOutage inline)
+    // so the outage screen's own header/back button apply. The "Skip Verification" button that
+    // route shows is wired up by VerifyStack itself (it can't receive VerifyPromptScreen's
+    // onAnswered/dispatch closure as a navigation param) - see VerifyStack's own coverage of that.
+    it('redirects to the ServiceOutage screen instead of rendering the prompt', () => {
+      const tree = renderScreen()
+
+      expect(tree.queryByTestId('com.ariesbifold:id/Continue')).toBeNull()
+      expect(useNavigation().navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {
+        showSkipVerification: true,
+      })
+    })
+
+    it('tells the outage screen not to offer skip when showSkip is false (main-app entry)', () => {
+      renderScreen({ showSkip: false })
+
+      expect(useNavigation().navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {
+        showSkipVerification: false,
+      })
+    })
+
+    it('shows a loading state and does not redirect while the first status check is still running', () => {
+      mockUseServerStatus.mockReturnValue({ isAvailable: true, isChecking: true, serverStatus: null })
+
+      const tree = renderScreen()
+
+      expect(tree.queryByTestId('com.ariesbifold:id/Continue')).toBeNull()
+      expect(useNavigation().navigate).not.toHaveBeenCalled()
+    })
   })
 })
