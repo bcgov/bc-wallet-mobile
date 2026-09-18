@@ -188,6 +188,7 @@ const AuthStack = (): React.ReactElement => {
           ...getDefaultModalOptions(t('BCSC.Title')),
           headerLeft: createHeaderBackButton,
           headerBackTestID: testIdWithKey(TestIds.common.back),
+          gestureEnabled: false,
         }}
       />
     </Stack.Navigator>
