@@ -5,6 +5,7 @@ import { act, renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 
 const mockJwk = { kty: 'RSA', e: 'AQAB', kid: 'test-kid', alg: 'RS256', n: 'test-modulus' }
+const createMockLogger = () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() })
 
 describe('useUserApi', () => {
   describe('getUserInfo', () => {
@@ -15,6 +16,7 @@ describe('useUserApi', () => {
       const mockApiClient = {
         get: jest.fn(),
         fetchJwk: jest.fn().mockResolvedValue(mockJwk),
+        logger: createMockLogger(),
         endpoints: {
           userInfo: '/user/info',
         },
@@ -41,6 +43,36 @@ describe('useUserApi', () => {
       const mockApiClient = {
         get: jest.fn(),
         fetchJwk: jest.fn().mockResolvedValue(mockJwk),
+        logger: createMockLogger(),
+        endpoints: {
+          userInfo: '/user/info',
+        },
+      }
+
+      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
+      decodePayloadMock.mockResolvedValue({
+        verified: true,
+        claims: JSON.stringify({ given_name: 'steve brule', card_expiry: '2030-01-01' }),
+      })
+
+      const hook = renderHook(() => useUserApi(mockApiClient as any))
+
+      await act(async () => {
+        const user = await hook.result.current.getUserInfo()
+
+        expect(user.given_name).toBe('steve brule')
+      })
+    })
+
+    it('should throw ERR_206 when claims are missing card_expiry', async () => {
+      const decodePayloadMock = jest.mocked(BcscCore).decodePayload
+      const getAccountMock = jest.mocked(BcscCore).getAccount
+
+      const mockApiClient = {
+        get: jest.fn(),
+        fetchJwk: jest.fn().mockResolvedValue(mockJwk),
+        logger: createMockLogger(),
         endpoints: {
           userInfo: '/user/info',
         },
@@ -53,9 +85,37 @@ describe('useUserApi', () => {
       const hook = renderHook(() => useUserApi(mockApiClient as any))
 
       await act(async () => {
+        await expect(hook.result.current.getUserInfo()).rejects.toMatchObject({
+          appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+        })
+      })
+    })
+
+    it('resolves with optional fields undefined when claims contain only card_expiry', async () => {
+      const decodePayloadMock = jest.mocked(BcscCore).decodePayload
+      const getAccountMock = jest.mocked(BcscCore).getAccount
+
+      const mockApiClient = {
+        get: jest.fn(),
+        fetchJwk: jest.fn().mockResolvedValue(mockJwk),
+        logger: createMockLogger(),
+        endpoints: {
+          userInfo: '/user/info',
+        },
+      }
+
+      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
+      decodePayloadMock.mockResolvedValue({ verified: true, claims: JSON.stringify({ card_expiry: '2030-01-01' }) })
+
+      const hook = renderHook(() => useUserApi(mockApiClient as any))
+
+      await act(async () => {
         const user = await hook.result.current.getUserInfo()
 
-        expect(user.given_name).toBe('steve brule')
+        expect(user.card_expiry).toBe('2030-01-01')
+        expect(user.given_names).toBeUndefined()
+        expect(user.email).toBeUndefined()
       })
     })
 
@@ -66,6 +126,7 @@ describe('useUserApi', () => {
       const mockApiClient = {
         get: jest.fn(),
         fetchJwk: jest.fn().mockResolvedValue(null),
+        logger: createMockLogger(),
         endpoints: {
           userInfo: '/user/info',
         },

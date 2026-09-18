@@ -18,39 +18,35 @@ import {
   setAccount,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
+import { parseApiResponse, registrationResponseSchema } from '../response-schemas'
 import { withAccount } from './withAccountGuard'
 
 export interface RegistrationResponseData {
   client_id: string
-  client_id_issued_at: number
   registration_access_token: string
-  registration_client_uri: string
-  redirect_uris: string[]
-  client_name: string
-  token_endpoint_auth_method: string
-  scope: string
-  grant_types: string[]
-  response_types: string[]
-  jwks: {
-    keys: Array<{
-      kty: string
-      e: string
-      kid: string
-      alg: string
-      n: string
-    }>
+  client_id_issued_at?: number
+  registration_client_uri?: string
+  redirect_uris?: string[]
+  client_name?: string
+  token_endpoint_auth_method?: string
+  scope?: string
+  grant_types?: string[]
+  response_types?: string[]
+  // Only `n` is read (see confirmRegisteredKey), so that's the only element field the schema pins.
+  jwks?: {
+    keys?: Array<{ n?: string }>
   }
-  request_object_signing_alg: string
-  userinfo_signed_response_alg: string
-  userinfo_encrypted_response_alg: string
-  userinfo_encrypted_response_enc: string
-  id_token_signed_response_alg: string
-  id_token_encrypted_response_alg: string
-  id_token_encrypted_response_enc: string
-  token_endpoint_auth_signing_alg: string
-  default_max_age: number
-  require_auth_time: boolean
-  default_acr_values: string[]
+  request_object_signing_alg?: string
+  userinfo_signed_response_alg?: string
+  userinfo_encrypted_response_alg?: string
+  userinfo_encrypted_response_enc?: string
+  id_token_signed_response_alg?: string
+  id_token_encrypted_response_alg?: string
+  id_token_encrypted_response_enc?: string
+  token_endpoint_auth_signing_alg?: string
+  default_max_age?: number
+  require_auth_time?: boolean
+  default_acr_values?: string[]
 }
 
 export interface NonceResponseData {
@@ -176,6 +172,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    * @throws AppError with code `ERR_121_REGISTRATION_KEY_NOT_CONFIRMED` if the sent signing key's modulus is
    *   definitively absent from the server's echoed jwks (see {@link confirmRegisteredKey})
+   * @throws AppError with code `ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE` if the registration
+   *   response is missing `client_id` or `registration_access_token`
    *
    * @returns Promise resolving to registration response data or void if account exists
    */
@@ -200,9 +198,10 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       logger.info('Generated dynamic client registration body')
 
-      const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
+      const { data: rawData } = await apiClient.post<unknown>(apiClient.endpoints.registration, body, {
         skipBearerAuth: true,
       })
+      const data = parseApiResponse(registrationResponseSchema, rawData, 'registration', logger)
 
       logger.info('Completed registration request')
 
@@ -268,6 +267,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
    * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if response body cannot be parsed as JSON
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
+   * @throws AppError with code `ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE` if the updated registration
+   *   response is missing `client_id` or `registration_access_token`
    *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
@@ -317,9 +318,9 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
         }
 
-        let updatedRegistrationData: RegistrationResponseData | null = null
+        let rawResponseData: unknown
         try {
-          const { data } = await apiClient.put<RegistrationResponseData>(
+          const { data } = await apiClient.put<unknown>(
             `${apiClient.endpoints.registration}/${account.clientID}`,
             updatePayload,
             {
@@ -330,19 +331,23 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
             }
           )
 
-          updatedRegistrationData = data
+          rawResponseData = data
         } catch (error) {
           const errMessage = error instanceof Error ? error.message : String(error)
           logger.error(`Failed to update registration: ${errMessage}`)
           throw error
         }
 
+        // Validated before use: a shape failure here surfaces as ERR_206, e.g. via the automatic
+        // launch-time PUT (UpdateDeviceRegistrationSystemCheck), instead of silently wiping clientID.
+        const updatedRegistrationData = parseApiResponse(registrationResponseSchema, rawResponseData, 'registration', logger)
+
         logger.info('Completed registration update request')
         try {
           const securityMethod = await getAccountSecurityMethod()
 
           await setAccount({
-            clientID: updatedRegistrationData?.client_id,
+            clientID: updatedRegistrationData.client_id,
             issuer: apiClient.endpoints.issuer,
             securityMethod,
             nickname: selectedNickname,

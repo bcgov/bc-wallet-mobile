@@ -5,6 +5,7 @@ import { cancelVerificationReminders } from '@/services/notifications/verificati
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
+import { parseApiResponse, tokenResponseSchema } from '../response-schemas'
 import { withAccount } from './withAccountGuard'
 
 export interface IdTokenMetadataConfig {
@@ -18,11 +19,12 @@ export interface DeviceTokenPayload {
 }
 export interface TokenResponse {
   access_token: string
-  expires_in: number
   id_token: string
   refresh_token: string
-  scope: string
-  token_type: string
+  // Never read from this response — expires_in consumers read the device-authorization response.
+  expires_in?: number
+  scope?: string
+  token_type?: string
 }
 
 export type TokenApi = ReturnType<typeof useTokenApi>
@@ -31,7 +33,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   const { updateTokens } = useSecureActions()
   const deviceToken = useCallback(
     async (payload: DeviceTokenPayload) => {
-      const { data } = await apiClient.post<TokenResponse>(
+      const { data } = await apiClient.post<unknown>(
         apiClient.endpoints.token,
         {
           device_code: payload.device_code,
@@ -46,7 +48,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         }
       )
 
-      return data
+      return parseApiResponse(tokenResponseSchema, data, 'token', apiClient.logger)
     },
     [apiClient]
   )
@@ -61,10 +63,11 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           confirmationCode
         ).catch((error) => throwNativeBcscError(error))
 
-        const { data } = await apiClient.post<TokenResponse>(apiClient.endpoints.token, body, {
+        const { data: rawData } = await apiClient.post<unknown>(apiClient.endpoints.token, body, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
         })
+        const data = parseApiResponse(tokenResponseSchema, rawData, 'token', apiClient.logger)
 
         try {
           apiClient.tokens = data

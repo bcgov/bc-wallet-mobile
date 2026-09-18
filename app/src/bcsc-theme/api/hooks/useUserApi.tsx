@@ -3,23 +3,24 @@ import { throwAppError } from '@bcsc-theme/utils/native-error-map'
 import { useCallback, useMemo } from 'react'
 import { decodePayload, DecodePayloadResult } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
+import { parseApiResponse, userInfoResponseSchema } from '../response-schemas'
 import { withAccount } from './withAccountGuard'
 
 export interface UserInfoResponseData {
-  identity_assurance_level: string
-  credential_reference: string
-  sub: string
-  transaction_identifier: string
-  given_name: string // ie: Steve
-  given_names: string // ie: Steve John
-  family_name: string // ie: Brule
-  display_name: string
-  birthdate: string
-  gender: string
-  address: { formatted: string }
-  picture: string
-  card_type: any
-  email: string
+  identity_assurance_level?: string
+  credential_reference?: string
+  sub?: string
+  transaction_identifier?: string
+  given_name?: string // ie: Steve
+  given_names?: string // ie: Steve John
+  family_name?: string // ie: Brule
+  display_name?: string
+  birthdate?: string
+  gender?: string
+  address?: { formatted?: string }
+  picture?: string
+  card_type?: string
+  email?: string
   /**
    * Backend team clarification:
    * This value is **NOT** the physical card expiration date.
@@ -35,6 +36,8 @@ const useUserApi = (apiClient: BCSCApiClient) => {
   /**
    * Get user information in a JWE string and decode.
    *
+   * @throws AppError with code `ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE` if the decoded
+   *   claims are missing `card_expiry`
    * @returns {*} {Promise<UserInfoResponseData>} A promise that resolves to the user information.
    */
   const getUserInfo = useCallback(async (): Promise<UserInfoResponseData> => {
@@ -60,7 +63,7 @@ const useUserApi = (apiClient: BCSCApiClient) => {
         throw AppError.fromErrorDefinition(ErrorRegistry.JWS_VERIFICATION_FAILED)
       }
 
-      let parsed: UserInfoResponseData
+      let parsed: unknown
       try {
         parsed = JSON.parse(result.claims)
       } catch (error) {
@@ -71,7 +74,7 @@ const useUserApi = (apiClient: BCSCApiClient) => {
         throw AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR)
       }
 
-      return parsed
+      return parseApiResponse(userInfoResponseSchema, parsed, 'userinfo', apiClient.logger)
     })
   }, [apiClient])
 

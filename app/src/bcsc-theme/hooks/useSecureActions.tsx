@@ -1014,7 +1014,13 @@ export const useSecureActions = () => {
             }
           }
 
-          if (isAppError(error, AppEventCode.INVALID_TOKEN)) {
+          if (isAppError(error, AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE)) {
+            // A shape failure on a 2xx token response can never be a signing-key mismatch (a key
+            // mismatch is a 401, never a 2xx with a wrong body), and key recovery/re-registration
+            // can mutate local keys or PUT the registration — so skip it. Tokens stay stale, same
+            // as the "recovery did not occur" branch below.
+            logger.warn('[hydrateSecureState] token response failed schema validation; skipping key recovery')
+          } else if (isAppError(error, AppEventCode.INVALID_TOKEN)) {
             // Server rejected a locally-valid token: stop here so the user sees one alert, not several.
             // A signing-key mismatch (#4166) never carries INVALID_TOKEN, so key recovery is unaffected.
             logger.error(

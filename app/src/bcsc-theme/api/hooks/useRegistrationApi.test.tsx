@@ -246,7 +246,7 @@ describe('useRegistrationApi', () => {
 
         expect(setAccount).toHaveBeenCalled()
         expect(mockUpdateTokens).toHaveBeenCalled()
-        expect(data.jwks.keys).toHaveLength(2)
+        expect(data.jwks?.keys).toHaveLength(2)
         expect(mockLogger.info).toHaveBeenCalledWith(
           expect.stringContaining('Confirmed sent signing key modulus is present in server jwks')
         )

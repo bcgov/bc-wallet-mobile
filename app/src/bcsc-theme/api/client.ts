@@ -21,6 +21,7 @@ import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 import { loadPersistedJwk, persistJwk } from './jwk-cache'
+import { parseApiResponse, tokenResponseSchema } from './response-schemas'
 
 // Bounded retry for the JWKS fetch: 3 attempts total, with linear backoff delays of
 // 500ms then 1000ms between attempts. Only transient errors (network / 5xx) are retried —
@@ -360,12 +361,12 @@ class BCSCApiClient {
         (error) => throwNativeBcscError(error)
       )
 
-      const tokensResponse = await this.post<TokenResponse>(this.endpoints.token, tokenBody, {
+      const tokensResponse = await this.post<unknown>(this.endpoints.token, tokenBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         skipBearerAuth: true,
       })
 
-      return tokensResponse.data
+      return parseApiResponse(tokenResponseSchema, tokensResponse.data, 'token', this.logger)
     })
   }
 
