@@ -340,7 +340,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
         // Validated before use: a shape failure here surfaces as ERR_206, e.g. via the automatic
         // launch-time PUT (UpdateDeviceRegistrationSystemCheck), instead of silently wiping clientID.
-        const updatedRegistrationData = parseApiResponse(registrationResponseSchema, rawResponseData, 'registration', logger)
+        const updatedRegistrationData = parseApiResponse(
+          registrationResponseSchema,
+          rawResponseData,
+          'registration',
+          logger
+        )
 
         logger.info('Completed registration update request')
         try {

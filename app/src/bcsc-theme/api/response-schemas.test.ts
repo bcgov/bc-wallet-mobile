@@ -103,16 +103,16 @@ describe('response-schemas', () => {
     it('rejects a token missing id_token', () => {
       const logger = createMockLogger()
       const { access_token, refresh_token } = validToken
-      expect(() =>
-        parseApiResponse(tokenResponseSchema, { access_token, refresh_token }, 'token', logger)
-      ).toThrow(expect.objectContaining({ appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE }))
+      expect(() => parseApiResponse(tokenResponseSchema, { access_token, refresh_token }, 'token', logger)).toThrow(
+        expect.objectContaining({ appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE })
+      )
     })
 
     it('rejects a registration response missing registration_access_token', () => {
       const logger = createMockLogger()
-      expect(() =>
-        parseApiResponse(registrationResponseSchema, { client_id: 'c' }, 'registration', logger)
-      ).toThrow(expect.objectContaining({ appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE }))
+      expect(() => parseApiResponse(registrationResponseSchema, { client_id: 'c' }, 'registration', logger)).toThrow(
+        expect.objectContaining({ appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE })
+      )
     })
 
     it('rejects a user-info response missing card_expiry', () => {
@@ -126,7 +126,12 @@ describe('response-schemas', () => {
       const logger = createMockLogger()
       let error: unknown
       try {
-        parseApiResponse(userInfoResponseSchema, { card_expiry: '2030-01-01', address: 'not-an-object' }, 'userinfo', logger)
+        parseApiResponse(
+          userInfoResponseSchema,
+          { card_expiry: '2030-01-01', address: 'not-an-object' },
+          'userinfo',
+          logger
+        )
       } catch (e) {
         error = e
       }

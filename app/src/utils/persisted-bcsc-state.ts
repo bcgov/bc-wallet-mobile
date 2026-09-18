@@ -1,6 +1,6 @@
 import { AccountSetupType, BCSCState } from '@/store'
-import type { BifoldLogger } from '@bifold/core'
 import { BannerType } from '@bcwallet-theme/theme'
+import type { BifoldLogger } from '@bifold/core'
 import { z } from 'zod'
 
 export type PersistedBCSCState = Partial<BCSCState> & { reportUUID?: string }
