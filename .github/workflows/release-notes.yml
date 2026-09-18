@@ -1,53 +1,27 @@
-# Builds a release-notes report from every PR merged between two tags and
-# posts it as a new Discussion in the "Release notes" category.
+# Builds a report from every PR merged between two tags and
+# posts it as a Discussion in the "Release notes" category. Manual and
+# on-demand — give it any two tags, in either order.
 #
-# Manual and on-demand — pick any two tags (either order, the workflow figures
-# out which is older) and it does the rest. This is the one piece of the
-# release story `docs/releases.md` doesn't already automate: Publish tags the
-# shipped commit, but nothing summarises what actually shipped since last
-# time. Posting a Discussion (not a comment, not a log) makes the result
-# discoverable, linkable and commentable on its own.
+# How it works:
+#   1. Figure out which tag is older (by commit date) and list the PRs
+#      merged in between. This repo only squash-merges
+#   2. For each PR, find its linked issue via GitHub's own "Closes #123"
+#      tracking (`closingIssuesReferences`). PRs with no linked issue go
+#      in their own "No linked ticket" section.
+#   3. Look up each linked issue's Sprint/Priority from the "BC Wallet"
+#      project board, and bucket it into a category (Bug/Feature/Task/Tech
+#      Debt/Spike/Other) from its issue type and labels.
+#   4. Render it all as Markdown tables, grouped by category, and post as a
+#      new Discussion.
 #
-# TAG ORDER: resolved by commit date, not ancestry. `release/*` branches can
-# carry fixes independently of `main` (docs/releases.md), so two real tags
-# are not guaranteed to sit on one straight line — verified in practice: two
-# actual tags in this repo (bcsc-v4.0.2, bcsc-v4.1.0) share a common ancestor
-# but each has commits the other lacks. `git log older..newer` still means
-# exactly "what's new in newer since older" on history like that, so
-# divergence only produces a `::notice::`, never a failure.
+# Reading Project fields needs a scope the default GITHUB_TOKEN can't get,
+# so this reuses the fine-grained PAT `board-status.yml` already depends on
+# (op://bcsc-mobile-app-cd/github-projects/credential). Unlike that
+# workflow
 #
-# HOW PRs ARE FOUND: this repo merges exclusively by squash (verified: zero
-# merge commits anywhere in history), and every squash commit subject ends
-# `(#<PR number>)`. So PR numbers come from `git log --pretty=%s <a>..<b>`
-# plus a regex, not the Search API (fragile date-range matching against
-# whichever branch a tag happens to sit on) and not merge-commit parsing
-# (there are none). If this repo ever starts allowing merge/rebase merges,
-# rebase-merged PRs will stop showing up here and this comment is the flag
-# for why.
-#
-# HOW A TICKET IS RESOLVED: only GitHub-tracked links count
-# (`closingIssuesReferences` — a bare "#1234" in prose creates nothing
-# GitHub tracks, same rule `pr-hygiene.yml` enforces). Cross-repo links are
-# ignored, same as `board-status.yml` — this report only knows this repo's
-# issues.
-#
-# TOKENS: reading `closingIssuesReferences`, an issue's Type, and its Project
-# fields (Sprint, Priority) all need scope `GITHUB_TOKEN` cannot be granted (org
-# Projects needs `read:project`, unavailable to the default token). Rather
-# than mint a new credential, this reuses the fine-grained PAT
-# `board-status.yml` already depends on:
-#   op://bcsc-mobile-app-cd/github-projects/credential
-# (org Projects read/write, repo Issues and Pull requests read — see that
-# workflow's header for rotation details; bcgov caps fine-grained PATs at 90
-# days). Unlike `board-status.yml`, a missing PAT here is a hard failure, not
-# a silent skip: that workflow runs unattended on every PR event, where a
-# quiet no-op is harmless; this one is a person waiting on a report, so
-# failing loud is kinder than a green run that created nothing.
-#
-# Creating the Discussion itself uses the *default* token instead — GraphQL
-# is required either way (no REST endpoint exists for `createDiscussion`),
-# but `discussions: write` is a permission `GITHUB_TOKEN` can hold, so the
-# PAT's job stops at reading.
+# Creating the Discussion itself uses the default GITHUB_TOKEN instead —
+# `discussions: write` is a permission it can hold, so the PAT's job stops
+# at reading.
 name: Release Notes
 
 on:
@@ -64,10 +38,8 @@ on:
 
 permissions: {}
 
-# Two overlapping dispatches would each independently build a report and
-# call createDiscussion, which has no idempotency key — that means two
-# duplicate discussions, not a race worth resolving any other way. Runs are
-# rare and unhurried, so queueing rather than cancelling is the safe default.
+# Queue instead of cancel: overlapping runs would each post a duplicate
+# Discussion, and runs are rare enough that queueing is fine.
 concurrency:
   group: release-notes
   cancel-in-progress: false
@@ -122,12 +94,8 @@ jobs:
             fi
           done
 
-          # Order by commit date, not ancestry — release/* branches can carry
-          # fixes independent of main (docs/releases.md), so two real tags
-          # are not guaranteed to sit on one straight line. `git log
-          # older..newer` (two-dot) still means exactly what we want —
-          # "commits reachable from newer, excluding anything reachable from
-          # older" — regardless of whether the history is linear.
+          # Order by commit date, not ancestry — tags aren't guaranteed to
+          # sit on one straight line (see header).
           DATE_A=$(git log -1 --format=%ct "${TAG_A}")
           DATE_B=$(git log -1 --format=%ct "${TAG_B}")
           if [ "${DATE_A}" -le "${DATE_B}" ]; then
@@ -172,10 +140,8 @@ jobs:
             const { owner, repo } = context.repo
             const here = `${owner}/${repo}`
 
-            // Project 108 is "BC Wallet" — same board board-status.yml moves
-            // issues on. Sprint and Priority are resolved by name so a
-            // rename surfaces as a clear failure rather than silently going
-            // blank everywhere.
+            // Project 108 = "BC Wallet" board. Sprint/Priority are looked up
+            // by field name, so a rename fails loudly instead of going blank.
             const PROJECT_NUMBER = 108
             const SPRINT_FIELD_NAME = 'Sprint'
             const PRIORITY_FIELD_NAME = 'Priority'
