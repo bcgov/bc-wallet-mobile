@@ -354,6 +354,25 @@ describe('useRegistrationService', () => {
       })
     })
 
+    describe('App error ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE', () => {
+      it('should show missingJsonValuesAlert on a registration shape failure', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const missingJsonValuesAlert = jest.fn()
+        const mockAlerts = { missingJsonValuesAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(missingJsonValuesAlert).toHaveBeenCalled()
+      })
+    })
+
     it('should rethrow error without showing alert if error is not bcsc native error or client registration null app error', async () => {
       const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
       const registrationApi = {
@@ -425,6 +444,25 @@ describe('useRegistrationService', () => {
 
       expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
       expect(data).toEqual(mockData)
+    })
+
+    describe('App error ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE', () => {
+      it('should show missingJsonValuesAlert on a registration shape failure (automatic PUT at launch)', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE)
+        const registrationApi = {
+          updateRegistration: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const missingJsonValuesAlert = jest.fn()
+        const mockAlerts = { missingJsonValuesAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+
+        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+        expect(missingJsonValuesAlert).toHaveBeenCalled()
+      })
     })
 
     describe('App error ERR_120_KEYCHAIN_KEY_GENERATION_ERROR', () => {

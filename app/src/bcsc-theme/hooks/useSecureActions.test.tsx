@@ -828,6 +828,24 @@ describe('useSecureActions', () => {
       expect(captureHydrateField('refreshTokenExpired')).toBe(false)
     })
 
+    it('skips key recovery and re-registration on a token-shape (ERR_206) failure, leaving tokens stale', async () => {
+      jest.mocked(isTokenExpired).mockReturnValue(false)
+      mockGetTokensForRefreshToken.mockRejectedValue(AppError.fromErrorDefinition(ErrorRegistry.MISSING_JSON_VALUES))
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
+      expect(performKeyRecovery).not.toHaveBeenCalled()
+      expect(reRegisterNewestKey).not.toHaveBeenCalled()
+      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+      // Stored credentials/keys are not mutated: the stale refresh/registration tokens are simply re-persisted as-is.
+      expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
+      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
+    })
+
     it('stops key-recovery retries and does not flag refreshTokenExpired when the server rejects a locally-valid token as invalid_token', async () => {
       jest.mocked(isTokenExpired).mockReturnValue(false)
       mockGetTokensForRefreshToken.mockRejectedValue(AppError.fromErrorDefinition(ErrorRegistry.INVALID_TOKEN))

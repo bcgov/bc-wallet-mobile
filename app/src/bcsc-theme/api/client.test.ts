@@ -378,6 +378,152 @@ describe('BCSC Client', () => {
     })
   })
 
+  describe('fetchTokens response validation (#3581)', () => {
+    // Unlike every other suite in this file, these exercise fetchTokens' real body — no test spies
+    // it out — through the real adapter seam, so a schema mismatch is genuinely caught.
+    const setupClient = (mockLogger: any) => {
+      const client = new BCSCApiClient('https://example.com', mockLogger)
+      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      return client
+    }
+
+    const okResponse = (data: unknown) => (config: any) =>
+      Promise.resolve({ status: 200, data, statusText: 'OK', headers: {} as any, config })
+
+    it('direct: rejects with ERR_206, leaves tokens/tokensPromise untouched, and logs only paths/codes', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupClient(mockLogger)
+      client.client.defaults.adapter = okResponse({ access_token: 'a' })
+
+      await expect(client.getTokensForRefreshToken('r')).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+      })
+
+      expect(client.tokens).toBeUndefined()
+      expect(client.tokensPromise).toBeNull()
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          issues: expect.arrayContaining([{ path: 'refresh_token', code: 'invalid_type' }]),
+        })
+      )
+      const loggedJson = JSON.stringify(mockLogger.error.mock.calls[0])
+      expect(loggedJson).not.toContain('"a"')
+    })
+
+    it('interceptor refresh: rejects the protected request with ERR_206, never sends it, and preserves stored tokens', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupClient(mockLogger)
+      const storedTokens = { access_token: 'stale-access', refresh_token: 'valid-refresh', id_token: 'id' }
+      client.tokens = storedTokens as any
+      ;(jwtDecode as jest.Mock).mockImplementation((token: string) =>
+        token === 'valid-refresh' ? { exp: Math.floor(Date.now() / 1000) + 3600 } : { exp: 0 }
+      )
+
+      let adapterCalls = 0
+      client.client.defaults.adapter = (config: any) => {
+        adapterCalls += 1
+        return okResponse({ access_token: 'a' })(config)
+      }
+
+      await expect(client.get('/protected')).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+      })
+
+      expect(adapterCalls).toBe(1) // only the token endpoint — the protected request was never sent
+      expect(client.tokens).toBe(storedTokens)
+    })
+
+    it('401 retry: rejects with ERR_206 after the refresh attempt, without a second protected attempt', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupClient(mockLogger)
+      const storedTokens = { access_token: 'access-1', refresh_token: 'refresh-1', id_token: 'id-1' }
+      client.tokens = storedTokens as any
+      ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 })
+
+      let callCount = 0
+      client.client.defaults.adapter = (config: any) => {
+        callCount += 1
+        if (callCount === 1) {
+          return Promise.reject(
+            new AxiosError('Unauthorized', 'ERR_BAD_REQUEST', config, null, {
+              status: 401,
+              data: {},
+              statusText: 'Unauthorized',
+              headers: {} as any,
+              config,
+            })
+          )
+        }
+        return okResponse({ access_token: 'a' })(config)
+      }
+
+      await expect(client.get('/protected')).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+      })
+
+      expect(callCount).toBe(2) // original 401 + one refresh attempt; no retried protected request
+      expect(client.tokens).toBe(storedTokens)
+    })
+
+    it('concurrent: two protected requests share one tokensPromise, both reject with ERR_206, one adapter call', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupClient(mockLogger)
+      client.tokens = { access_token: 'stale-access', refresh_token: 'valid-refresh', id_token: 'id' } as any
+      ;(jwtDecode as jest.Mock).mockImplementation((token: string) =>
+        token === 'valid-refresh' ? { exp: Math.floor(Date.now() / 1000) + 3600 } : { exp: 0 }
+      )
+
+      let adapterCalls = 0
+      let releaseAdapter: () => void = () => {}
+      // Held open deliberately: without this, the first refresh could resolve (clearing
+      // tokensPromise) before the second request is even issued, defeating the sharing assertion.
+      const held = new Promise<void>((resolve) => {
+        releaseAdapter = resolve
+      })
+      client.client.defaults.adapter = async (config: any) => {
+        adapterCalls += 1
+        await held
+        return { status: 200, data: { access_token: 'a' }, statusText: 'OK', headers: {} as any, config }
+      }
+
+      const first = client.get('/a')
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      const second = client.get('/b')
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      releaseAdapter()
+
+      await expect(first).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+      })
+      await expect(second).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+      })
+      expect(adapterCalls).toBe(1)
+      expect(client.tokensPromise).toBeNull()
+    })
+
+    it('recovery: a later call with a valid body succeeds and updates client.tokens', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupClient(mockLogger)
+      client.client.defaults.adapter = okResponse({ access_token: 'a' })
+
+      await expect(client.getTokensForRefreshToken('r')).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+      })
+      expect(client.tokensPromise).toBeNull()
+
+      const validTokens = { access_token: 'new-access', refresh_token: 'new-refresh', id_token: 'new-id' }
+      client.client.defaults.adapter = okResponse(validTokens)
+
+      const tokens = await client.getTokensForRefreshToken('r')
+
+      expect(tokens).toEqual(validTokens)
+      expect(client.tokens).toEqual(validTokens)
+    })
+  })
+
   it('should log error when initialized with empty URL', () => {
     const mockLogger = createMockLogger()
     const client = new BCSCApiClient('', mockLogger as any)

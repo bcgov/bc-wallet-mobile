@@ -167,6 +167,18 @@ describe('useRegistrationApi', () => {
       )
     })
 
+    it('throws ERR_206 when the response is missing registration_access_token, without saving anything', async () => {
+      mockApiClient.post.mockResolvedValue({ data: { client_id: 'test-client-id' } })
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+      await expectAppErrorRejection(promise, AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE)
+      expect(setAccount).not.toHaveBeenCalled()
+      expect(mockUpdateTokens).not.toHaveBeenCalled()
+    })
+
     it('should throw CLIENT_REGISTRATION_NULL when DCR body is null', async () => {
       jest.mocked(getDynamicClientRegistrationBody).mockResolvedValue(null)
 
@@ -379,6 +391,18 @@ describe('useRegistrationApi', () => {
         registrationAccessToken: mockRegistrationResponse.registration_access_token,
       })
       expect(data).toEqual(mockRegistrationResponse)
+    })
+
+    it('throws ERR_206 when the response is missing client_id, without saving anything (clientID-wipe regression)', async () => {
+      mockApiClient.put.mockResolvedValue({ data: { registration_access_token: 'new-reg-access-token' } })
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      const promise = result.current.updateRegistration('reg-access-token', 'NewNickname')
+
+      await expectAppErrorRejection(promise, AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE)
+      expect(setAccount).not.toHaveBeenCalled()
+      expect(mockUpdateTokens).not.toHaveBeenCalled()
     })
 
     it('should throw if client is not ready (with existing account)', async () => {

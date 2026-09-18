@@ -1,4 +1,5 @@
 import * as useUserApiModule from '@/bcsc-theme/api/hooks/useUserApi'
+import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import { mockAppError } from '@mocks/helpers/error'
@@ -110,6 +111,42 @@ describe('useUserService', () => {
       await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
       expect(mockAlerts.tokenUnexpectedlyNullAlert).toHaveBeenCalledWith(mockError)
+    })
+
+    it('should show missingJsonValuesAlert on a userinfo ERR_206 and rethrow error', async () => {
+      const mockError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JSON_VALUES, {
+        context: { endpoint: 'userinfo' },
+      })
+      const userApi = {
+        getUserInfo: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { missingJsonValuesAlert: jest.fn() }
+
+      jest.spyOn(useUserApiModule, 'default').mockReturnValue(userApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useUserService())
+
+      await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
+      expect(mockAlerts.missingJsonValuesAlert).toHaveBeenCalledWith(mockError)
+    })
+
+    it('should NOT alert on a token-endpoint ERR_206, but still rethrow', async () => {
+      const mockError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JSON_VALUES, {
+        context: { endpoint: 'token' },
+      })
+      const userApi = {
+        getUserInfo: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { missingJsonValuesAlert: jest.fn() }
+
+      jest.spyOn(useUserApiModule, 'default').mockReturnValue(userApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useUserService())
+
+      await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
+      expect(mockAlerts.missingJsonValuesAlert).not.toHaveBeenCalled()
     })
   })
 
@@ -234,6 +271,24 @@ describe('useUserService', () => {
       await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
       expect(mockAlerts.tokenUnexpectedlyNullAlert).toHaveBeenCalledWith(mockError)
+    })
+
+    it('should show missingJsonValuesAlert on a userinfo ERR_206 and rethrow error', async () => {
+      const mockError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JSON_VALUES, {
+        context: { endpoint: 'userinfo' },
+      })
+      const userApi = {
+        getUserInfo: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { missingJsonValuesAlert: jest.fn() }
+
+      jest.spyOn(useUserApiModule, 'default').mockReturnValue(userApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useUserService())
+
+      await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
+      expect(mockAlerts.missingJsonValuesAlert).toHaveBeenCalledWith(mockError)
     })
   })
 

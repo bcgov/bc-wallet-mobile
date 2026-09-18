@@ -116,6 +116,25 @@ describe('useTokenApi', () => {
 
       expect(response).toEqual(mockTokenResponse)
     })
+
+    it('throws ERR_206 on a wrong-shaped body and does not update apiClient.tokens', async () => {
+      const mockPayload: VerifyAttestationPayload = {
+        device_code: 'mock_device_code',
+        client_id: 'mock_client_id',
+        client_assertion: 'mock_client_assertion',
+        attestation: 'mock_attestation',
+      }
+
+      mockApiClient.post.mockResolvedValue({ ...mockAxiosResponse, data: { access_token: 'a' } })
+      const tokensBefore = mockApiClient.tokens
+
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
+
+      await expect(result.current.deviceToken(mockPayload)).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+      })
+      expect(mockApiClient.tokens).toBe(tokensBefore)
+    })
   })
 
   describe('checkDeviceCodeStatus', () => {
@@ -151,6 +170,22 @@ describe('useTokenApi', () => {
 
       expect(mockApiClient.tokens).toEqual(mockTokenResponse)
       expect(response).toEqual(mockTokenResponse)
+    })
+
+    it('throws ERR_206 on a wrong-shaped body without updating tokens', async () => {
+      const mockAccount = { clientID: 'mock_client_id', issuer: 'mock_issuer' }
+      ;(getDeviceCodeRequestBody as jest.Mock).mockResolvedValue('mock-body')
+      ;(withAccount as jest.Mock).mockImplementation(async (callback) => callback(mockAccount))
+      mockApiClient.post.mockResolvedValue({ ...mockAxiosResponse, data: { access_token: 'a' } })
+      const tokensBefore = mockApiClient.tokens
+
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
+
+      await expect(result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')).rejects.toMatchObject(
+        { appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE }
+      )
+      expect(setToken).not.toHaveBeenCalled()
+      expect(mockApiClient.tokens).toBe(tokensBefore)
     })
 
     it('should handle withAccount errors', async () => {
