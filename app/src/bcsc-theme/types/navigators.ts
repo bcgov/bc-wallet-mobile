@@ -31,8 +31,6 @@ export enum BCSCModals {
 export type ServiceOutageParams = {
   statusMessage?: string
   contactLink?: string
-  // Only VerifyStack's registration wires this into an actual "Skip Verification" button
-  showSkipVerification?: boolean
 }
 
 /**

@@ -1,4 +1,3 @@
-import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCLocalStorageKeys } from '@/store'
 import { PersistentStorage } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
@@ -69,28 +68,36 @@ describe('VerifyPromptScreen', () => {
       mockUseServerStatus.mockReturnValue({ isAvailable: false, isChecking: false, serverStatus: {} })
     })
 
-    // Redirects to the BCSCModals.ServiceOutage route (rather than rendering ServiceOutage inline)
-    // so the outage screen's own header/back button apply. The "Skip Verification" button that
-    // route shows is wired up by VerifyStack itself (it can't receive VerifyPromptScreen's
-    // onAnswered/dispatch closure as a navigation param) - see VerifyStack's own coverage of that.
-    it('redirects to the ServiceOutage screen instead of rendering the prompt', () => {
+    // Rendered inline rather than navigated to: on a fresh launch the prompt mounts in the same
+    // commit as VerifyStack, and a navigate from a mount effect is dropped by the navigator's init.
+    it('renders the ServiceOutage screen in place of the prompt', () => {
       const tree = renderScreen()
 
       expect(tree.queryByTestId('com.ariesbifold:id/Continue')).toBeNull()
-      expect(useNavigation().navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {
-        showSkipVerification: true,
-      })
+      expect(tree.getByTestId('com.ariesbifold:id/ServiceOutageCheckAgain')).toBeTruthy()
+      expect(useNavigation().navigate).not.toHaveBeenCalled()
     })
 
-    it('tells the outage screen not to offer skip when showSkip is false (main-app entry)', () => {
-      renderScreen({ showSkip: false })
+    it('lets the user skip verification from the outage screen', async () => {
+      const onAnswered = jest.fn()
+      const tree = renderScreen({ onAnswered })
 
-      expect(useNavigation().navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {
-        showSkipVerification: false,
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceOutageSkipVerification'))
       })
+
+      expect(onAnswered).toHaveBeenCalledTimes(1)
+      expect(bcscWrites()).toContainEqual(expect.objectContaining({ verificationSkipped: true }))
     })
 
-    it('shows a loading state and does not redirect while the first status check is still running', () => {
+    it('hides skip on the outage screen when showSkip is false (main-app entry)', () => {
+      const tree = renderScreen({ showSkip: false })
+
+      expect(tree.queryByTestId('com.ariesbifold:id/ServiceOutageSkipVerification')).toBeNull()
+      expect(tree.getByTestId('com.ariesbifold:id/ServiceOutageCheckAgain')).toBeTruthy()
+    })
+
+    it('shows a loading state while the first status check is still running', () => {
       mockUseServerStatus.mockReturnValue({ isAvailable: true, isChecking: true, serverStatus: null })
 
       const tree = renderScreen()
