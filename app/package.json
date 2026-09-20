@@ -25,10 +25,10 @@
     "android": "react-native run-android --active-arch-only",
     "ios": "react-native run-ios",
     "start": "react-native start --reset-cache",
-    "test": "TZ=GMT jest --config ./jest.config.js",
-    "test:watch": "TZ=GMT jest --config ./jest.config.js --watch",
-    "test:coverage": "TZ=GMT jest --config ./jest.config.js --coverage",
-    "test:snapshot": "TZ=GMT jest --updateSnapshot",
+    "test": "TZ=GMT node --no-sparkplug ./node_modules/jest/bin/jest.js --config ./jest.config.js",
+    "test:watch": "TZ=GMT node --no-sparkplug ./node_modules/jest/bin/jest.js --config ./jest.config.js --watch",
+    "test:coverage": "TZ=GMT node --no-sparkplug ./node_modules/jest/bin/jest.js --config ./jest.config.js --coverage",
+    "test:snapshot": "TZ=GMT node --no-sparkplug ./node_modules/jest/bin/jest.js --updateSnapshot",
     "lint": "eslint --color .",
     "lint:fix": "eslint --color . --fix",
     "format": "prettier --log-level=error --write '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'",
@@ -40,6 +40,7 @@
     "snowplow:start": "adb reverse tcp:9090 tcp:9090 && docker run -p 9090:9090 snowplow/snowplow-micro:3.0.1 && echo 'Snowplow Micro analytics server started on port 9090'",
     "snowplow:stop": "docker ps -a -q --filter ancestor=snowplow/snowplow-micro:3.0.1 | xargs -r docker rm -f && echo 'Snowplow Micro analytics container stopped and removed'"
   },
+  "//": "Jest disables Sparkplug to avoid the Node V8 crash tracked in https://github.com/bcgov/bc-wallet-mobile/issues/4634.",
   "dependencies": {
     "@bifold/core": "3.0.22",
     "@bifold/oca": "3.0.22",
