@@ -13,7 +13,7 @@
  * Prerequisites:
  * - V3 app uploaded to Sauce Labs storage (set as initial `appium:app`)
  * - V4 app uploaded to Sauce Labs storage
- * - SiteMinder credentials in `.env.e2e` (SM_USER / SM_PASSWORD — for in-person verification approval)
+ * - IDCheck credentials in `.env.e2e` (IDCHECK_USER / IDCHECK_PASSWORD / IDCHECK_TOTP_SECRET — for in-person verification approval)
  *
  * Run with: yarn wdio configs/sauce/wdio.<platform>.sauce.migration.conf.ts --suite migration
  */

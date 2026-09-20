@@ -1,4 +1,4 @@
-/* eslint-disable no-extra-semi, @typescript-eslint/no-extra-semi */
+/* eslint-disable no-extra-semi */
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'

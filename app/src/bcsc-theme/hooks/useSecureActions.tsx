@@ -1,3 +1,5 @@
+import { isAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
 import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
@@ -47,6 +49,8 @@ import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
+import { isTokenExpired } from '../utils/token-expiry'
+import { stripDisallowedNameCharacters } from '../utils/validation'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -980,7 +984,15 @@ export const useSecureActions = () => {
       // rotated registration_access_token — always persisted below when present, regardless of
       // which branch this ends up taking (RFC 7592: the reg token may rotate on GET or PUT).
       let recoveredRegistrationAccessToken: string | undefined
-      if (refreshToken && apiClient && isClientReady) {
+      // Production never rotates the refresh token, so its `exp` is the device credential's
+      // 5-year lifetime (#4654): when expired, skip the refresh and key recovery — renewal is the only fix.
+      const refreshTokenExpired = Boolean(refreshToken) && isTokenExpired(refreshToken)
+
+      if (refreshTokenExpired) {
+        logger.warn(
+          '[hydrateSecureState] event=refresh_token_expired stored refresh token is past its exp; skipping refresh and key recovery — account renewal required'
+        )
+      } else if (refreshToken && apiClient && isClientReady) {
         try {
           freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
         } catch (error) {
@@ -1002,7 +1014,13 @@ export const useSecureActions = () => {
             }
           }
 
-          if (clientID && registrationAccessToken) {
+          if (isAppError(error, AppEventCode.INVALID_TOKEN)) {
+            // Server rejected a locally-valid token: stop here so the user sees one alert, not several.
+            // A signing-key mismatch (#4166) never carries INVALID_TOKEN, so key recovery is unaffected.
+            logger.error(
+              '[hydrateSecureState] event=refresh_token_rejected server rejected a locally-valid refresh token (invalid_token); skipping key recovery'
+            )
+          } else if (clientID && registrationAccessToken) {
             logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
             const recovery = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
             recoveredRegistrationAccessToken = recovery.newRegistrationAccessToken
@@ -1036,11 +1054,22 @@ export const useSecureActions = () => {
         }
       }
 
-      await updateTokens({
+      // Computed once and used for both the keychain write-back and the store, so the
+      // HYDRATE_SECURE_STATE dispatch below can't clobber a refreshed or rotated token.
+      const effectiveTokens = {
         refreshToken: freshTokens?.refresh_token ?? refreshToken,
         registrationAccessToken: recoveredRegistrationAccessToken ?? registrationAccessToken,
         accessToken: freshTokens?.access_token ?? accessToken,
-      })
+      }
+
+      // A keychain write failure here used to abort an already-successful unlock and surface as
+      // "Device Authentication Failed" (#4645). The tokens are in memory either way, and the next
+      // unlock refreshes from the stored token again, so log and continue.
+      try {
+        await updateTokens(effectiveTokens)
+      } catch (error) {
+        logger.error('[hydrateSecureState] Failed to persist tokens; continuing with in-memory tokens', error as Error)
+      }
 
       // Reconstruct userMetadata from authorizationRequest (matches IAS apps)
       let userMetadata: NonBCSCUserMetadata | undefined = undefined
@@ -1063,9 +1092,12 @@ export const useSecureActions = () => {
 
         if (authRequest.firstName || authRequest.lastName) {
           userMetadata.name = {
-            first: authRequest.firstName || '',
-            last: authRequest.lastName || '',
-            middle: authRequest.middleNames,
+            first: stripDisallowedNameCharacters(authRequest.firstName),
+            last: stripDisallowedNameCharacters(authRequest.lastName),
+            middle:
+              authRequest.middleNames !== undefined
+                ? stripDisallowedNameCharacters(authRequest.middleNames)
+                : undefined,
           }
         }
       }
@@ -1101,11 +1133,9 @@ export const useSecureActions = () => {
         deviceCode: authRequest?.deviceCode,
         userCode: authRequest?.userCode,
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
-        cardProcess: authRequest?.cardProcess,
+        cardProcess: hydrateCardProcess(authRequest, cleanedEvidence),
 
-        refreshToken,
-        registrationAccessToken,
-        accessToken,
+        ...effectiveTokens,
 
         verified,
         verifiedStatus: verificationStatus,
@@ -1126,6 +1156,7 @@ export const useSecureActions = () => {
         savedServices,
 
         sessionRecoveryRequired,
+        refreshTokenExpired,
       }
 
       logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)
@@ -1269,6 +1300,32 @@ export const useSecureActions = () => {
     deleteSecureData,
     deleteVerificationData,
     deleteScannedCardData: deleteCardInfo,
+  }
+}
+
+/**
+ * Hydrate the card process based on evidence data and the authorization request.
+ * @param authRequest Authorization request to check for existing card process
+ * @param evidenceData Array of evidence metadata to analyze
+ * @returns The hydrated card process, or undefined if it cannot be determined
+ */
+function hydrateCardProcess(
+  authRequest: NativeAuthorizationRequest | null,
+  evidenceData: EvidenceMetadata[]
+): BCSCCardProcess | undefined {
+  // If there's no authorization request, we can't determine the card process
+  if (!authRequest) {
+    return
+  }
+
+  // If cardProcess is already set in the authRequest, use that
+  if (authRequest.cardProcess) {
+    return authRequest.cardProcess
+  }
+
+  // If there's no deviceCode and there is evidence data, assume NonBCSC process
+  if (!authRequest.deviceCode && evidenceData.length > 0) {
+    return BCSCCardProcess.NonBCSC
   }
 }
 

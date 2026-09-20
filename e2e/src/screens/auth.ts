@@ -52,6 +52,31 @@ export const EnterPINScreen = defineScreen({
 })
 
 /**
+ * "Confirm it's your device" (`DeviceAuthInfo`) — the interstitial before EVERY device-auth unlock
+ * until `hideConfirmation` is ticked. `primary` (Continue) raises the OS prompt. Keyed on the checkbox
+ * because `Continue` is shared by a dozen screens.
+ */
+export const ConfirmDeviceAuthScreen = defineScreen({
+  self: bcsc(auth.confirmDeviceAuthInfo.hideConfirmation),
+  primary: bcsc(auth.confirmDeviceAuthInfo.continue),
+  links: {
+    hideConfirmation: bcsc(auth.confirmDeviceAuthInfo.hideConfirmation),
+  },
+})
+
+/**
+ * "App reset for security" (`DeviceAuthAppReset`) — where a device-auth account lands when the OS
+ * lock was removed after enrolment. Assert only: `primary` (SetUpApp) factory-resets the app.
+ */
+export const DeviceAuthAppResetScreen = defineScreen({
+  self: bcsc(auth.deviceAuthAppReset.setUpApp),
+  primary: bcsc(auth.deviceAuthAppReset.setUpApp),
+  links: {
+    learnMore: bcsc(auth.deviceAuthAppReset.learnMore),
+  },
+})
+
+/**
  * Timed lockout screen (route "Too many PIN attempts") — shown after five consecutive wrong PINs.
  * The native attempt counter persists across relaunches and escalates (5 → 1 min, 10 → 10 min, …);
  * `AccountLanding`'s Unlock goes straight here while locked. `RemoveAccount` (factory reset) is the

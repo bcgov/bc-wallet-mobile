@@ -1,3 +1,4 @@
+import { NAVIGATION_VISITED_SCREEN_NAMES } from '@/contexts/NavigationContainerContext'
 import { NavigationState } from '@react-navigation/native'
 import { StackNavigationOptions } from '@react-navigation/stack'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
@@ -55,3 +56,15 @@ export const getCurrentStateScreenName = (state: NavigationState): string => {
 
   return getCurrentStateScreenName(currentRoute.state as NavigationState)
 }
+
+/**
+ * Formats a session's visited-screen history into a breadcrumb trail for error reports.
+ *
+ * A live NavigationState snapshot can't reconstruct "where the user came from" — React Navigation
+ * prunes popped routes out of `state.routes` on back-navigation, so the trail has to be recorded
+ * as navigation happens (see `visitedScreenNames` in NavigationContainerContext) rather than
+ * derived here from a single point-in-time state.
+ *
+ * @returns A string representing the navigation breadcrumbs.
+ */
+export const getNavigationBreadcrumbs = (): string => NAVIGATION_VISITED_SCREEN_NAMES.join(' > ')

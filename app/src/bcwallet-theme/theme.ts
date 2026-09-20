@@ -1,4 +1,6 @@
 import { BCThemeNames } from '@/constants'
+import LogoLargeWhite from '@assets/img/logo-large-white.png'
+import LogoLarge from '@assets/img/logo-large.png'
 import Logo from '@assets/img/logo-with-text.svg'
 import SecurePIN from '@assets/img/secure-pin.svg'
 import {
@@ -65,6 +67,17 @@ export const GrayscaleColors: IGrayscaleColors = {
   lightGrey: '#D3D3D3',
   veryLightGrey: '#EDEBE9',
   white: '#FFFFFF',
+}
+
+export type BannerType = 'error' | 'warning' | 'info' | 'success'
+
+// BCSC Style Guide banner colours. Backgrounds are design-fixed, so foregrounds are too —
+// deliberately a shared constant, not a per-theme token, so Light and Dark cannot diverge.
+export const BannerColors: Record<BannerType, { background: string; foreground: string }> = {
+  error: { background: '#CE3E39', foreground: '#FFFFFF' },
+  warning: { background: '#F8BB47', foreground: '#2D2D2D' },
+  info: { background: '#2E5DD7', foreground: '#FFFFFF' },
+  success: { background: '#42814A', foreground: '#FFFFFF' },
 }
 
 export const BrandColors: IBrandColors = {
@@ -326,13 +339,13 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       },
       img: {
         logoSecondary: {
-          src: require('@assets/img/logo-large.png'),
+          src: LogoLarge,
           height: 120,
           width: 120,
           resizeMode: 'contain',
         },
         logoPrimary: {
-          src: require('@assets/img/logo-large-white.png'),
+          src: LogoLargeWhite,
           aspectRatio: undefined,
           height: 170,
           width: 170,

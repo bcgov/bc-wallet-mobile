@@ -129,7 +129,7 @@ type LoginModule = {
   }) => Promise<DrainSendVideoQueueResult>
 }
 
-/** The SiteMinder/IDcheck script, loaded lazily so a journey only pays for it at the approval step. */
+/** The IDCheck portal script, loaded lazily so a journey only pays for it at the approval step. */
 async function loadLoginModule(): Promise<LoginModule> {
   return (await import(loginModuleUrl)) as LoginModule
 }
@@ -154,7 +154,7 @@ async function withDriverKeepalive<T>(work: () => Promise<T>): Promise<T> {
 }
 
 /**
- * Approve an in-person verification request by running the SM login flow in-process.
+ * Approve an in-person verification request by driving the IDCheck portal in-process.
  *
  * Strips dashes/spaces from the formatted code (e.g. "PEDD-RJUW" → "PEDDRJUW")
  * before passing it to the script. For card-tap flows ('photo', 'non-photo') the
@@ -162,14 +162,14 @@ async function withDriverKeepalive<T>(work: () => Promise<T>): Promise<T> {
  *
  * @param formattedCode - The confirmation code as displayed in the app (XXXX-XXXX)
  * @param input - Flow selector + per-flow inputs
- * @param timeoutMs - Budget for the WHOLE chain (~10 sequential SIT round trips), not per request — so a
- *   thin budget always expires on the last one, `approve`, whatever was actually slow. The per-step
- *   `[sm-login]` timings tell them apart.
+ * @param timeoutMs - Budget for the WHOLE chain (a browser sign-in when no session is cached yet, then
+ *   ~10 sequential SIT round trips), not per request — so a thin budget always expires on the last one,
+ *   `approve`, whatever was actually slow. The per-step `[idcheck]` timings tell them apart.
  */
 export async function approveInPersonRequest(
   formattedCode: string,
   input: ApproveInPersonInput,
-  timeoutMs = 60_000
+  timeoutMs = 90_000
 ): Promise<void> {
   const code = formattedCode.replaceAll(/[\s-]/g, '')
   if (!/^[A-Za-z0-9]{8}$/.test(code)) {
@@ -194,9 +194,9 @@ export async function approveInPersonRequest(
     const elapsedMs = Date.now() - startedAt
     const message = error instanceof Error ? error.message : String(error)
     // Our own abort surfaces from undici as a bare "This operation was aborted" — name it as OUR budget
-    // so it is never mistaken for an SM rejection.
+    // so it is never mistaken for a portal rejection.
     const detail = controller.signal.aborted
-      ? `the ${timeoutMs}ms budget for the whole SM chain ran out (see the per-step [sm-login] timings for where it went)`
+      ? `the ${timeoutMs}ms budget for the whole IDCheck chain ran out (see the per-step [idcheck] timings for where it went)`
       : message
     throw new Error(`In-person approval failed after ${elapsedMs}ms (flow=${input.flow}, code="${code}"): ${detail}`)
   } finally {
@@ -205,7 +205,7 @@ export async function approveInPersonRequest(
 }
 
 /**
- * Review (approve or reject) a queued send-video verification request by running the SM login flow
+ * Review (approve or reject) a queued send-video verification request by driving the IDCheck portal
  * in-process, and say which request that was.
  *
  * The portal's queue is a blind FIFO claim, so the script polls until the submission appears and
@@ -216,7 +216,7 @@ export async function approveInPersonRequest(
  *
  * @param input - Decision + who the request must be for (reject adds the reason fields)
  * @param timeoutMs - Budget for the WHOLE chain — dominated by the claim polling (up to 120s in the
- *   script) plus SM login and the decision round trips, so a thin budget expires mid-poll.
+ *   script) plus the sign-in and the decision round trips, so a thin budget expires mid-poll.
  */
 export async function reviewSendVideoRequest(
   input: SendVideoReviewInput,
@@ -247,9 +247,9 @@ export async function reviewSendVideoRequest(
     const elapsedMs = Date.now() - startedAt
     const message = error instanceof Error ? error.message : String(error)
     // Our own abort surfaces from undici as a bare "This operation was aborted" — name it as OUR budget
-    // so it is never mistaken for an SM rejection.
+    // so it is never mistaken for a portal rejection.
     const detail = controller.signal.aborted
-      ? `the ${timeoutMs}ms budget for the whole SM chain ran out (see the per-step [sm-login] timings for where it went)`
+      ? `the ${timeoutMs}ms budget for the whole IDCheck chain ran out (see the per-step [idcheck] timings for where it went)`
       : message
     throw new Error(
       `Send-video ${input.decision} failed after ${elapsedMs}ms (serial=${input.cardSerialNumber}): ${detail}`
@@ -312,7 +312,7 @@ export async function drainSendVideoQueue(options: DrainSendVideoQueueOptions = 
     const elapsedMs = Date.now() - startedAt
     const message = error instanceof Error ? error.message : String(error)
     const detail = controller.signal.aborted
-      ? `the ${timeoutMs}ms budget for the whole drain ran out (see the per-step [sm-login] timings for where it went)`
+      ? `the ${timeoutMs}ms budget for the whole drain ran out (see the per-step [idcheck] timings for where it went)`
       : message
     throw new Error(`Queue drain failed after ${elapsedMs}ms (scope=${scope}): ${detail}`)
   } finally {

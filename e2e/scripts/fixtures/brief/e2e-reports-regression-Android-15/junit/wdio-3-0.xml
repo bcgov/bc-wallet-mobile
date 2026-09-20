@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="3" failures="1" errors="0" skipped="0">
+  <testsuite name="Verified journey photo card" timestamp="2026-08-28T05:40:10" time="182.553" tests="3" failures="1" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Verified journey: photo card"/>
+      <property name="capabilities" value="android.2b291fdh2008n8"/>
+      <property name="file" value="file://./test/bcsc/verify/verified-photo.journey.ts"/>
+    </properties>
+    <testcase classname="android.2b291fdh2008n8.Verified_journey:_photo_card" name="onboards to the verify prompt" time="44.120"/>
+    <testcase classname="android.2b291fdh2008n8.Verified_journey:_photo_card" name="enters the photo serial and submits the birthdate" time="98.301"/>
+    <testcase classname="android.2b291fdh2008n8.Verified_journey:_photo_card" name="resumes to the verification method selection after authorizing" time="40.132">
+      <failure message="None of [methodSelection, home] appeared within 20000ms. On screen: SIT | Verify in person"/>
+    </testcase>
+  </testsuite>
+</testsuites>

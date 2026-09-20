@@ -184,6 +184,9 @@ const MainStack: React.FC = () => {
 
   useVerificationResponseListener()
 
+  // Replaces rather than overlays the stack: unmounting the navigator while the account loads drops
+  // the navigation state it inherits from VerifyStack (routes registered in both, e.g.
+  // VerificationSuccess), so it remounts on initialRouteName instead of stranding the user there.
   if (isLoadingAccount) {
     return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
   }

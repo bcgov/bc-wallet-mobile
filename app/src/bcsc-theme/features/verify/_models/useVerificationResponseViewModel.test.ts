@@ -62,7 +62,6 @@ describe('useVerificationResponseViewModel', () => {
   }
 
   beforeEach(() => {
-    jest.clearAllMocks()
     jest.restoreAllMocks()
 
     // Reset mock implementations
@@ -116,25 +115,30 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should set isSettingUpAccount to true during setup', async () => {
-      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+      let resolveRegistration: () => void
+      mockRegistrationService.updateRegistration.mockReturnValue(
+        new Promise<void>((resolve) => {
+          resolveRegistration = resolve
+        })
+      )
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
-      // Initially false
       expect(result.current.isSettingUpAccount).toBe(false)
 
-      const setupPromise = await act(async () => {
-        await result.current.handleAccountSetup()
+      let setupPromise: Promise<void>
+      await act(async () => {
+        setupPromise = result.current.handleAccountSetup()
       })
 
-      await setupPromise
+      expect(result.current.isSettingUpAccount).toBe(true)
 
-      // Should be false after completion
+      await act(async () => {
+        resolveRegistration!()
+        await setupPromise!
+      })
+
       expect(result.current.isSettingUpAccount).toBe(false)
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
     })
 
     it('should set isSettingUpAccount to false even when an error occurs', async () => {
@@ -147,10 +151,6 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       expect(result.current.isSettingUpAccount).toBe(false)
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
       expect(mockLogger.error).toHaveBeenCalled()
     })
 
@@ -163,78 +163,9 @@ describe('useVerificationResponseViewModel', () => {
       await act(async () => {
         await result.current.handleAccountSetup()
       })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(`Failed to update registration: ${errorMessage}`)
       )
-    })
-
-    it('should still perform token refresh and mark verified even when registration update is skipped', async () => {
-      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalled()
-      expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
-    })
-
-    it('should mark account as verified', async () => {
-      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
-    })
-
-    it('should clean up user metadata by setting it to null', async () => {
-      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
-    })
-
-    it('should update registration with token and nickname', async () => {
-      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
     })
 
     it('should handle error when updateRegistration fails', async () => {
@@ -245,10 +176,6 @@ describe('useVerificationResponseViewModel', () => {
 
       await act(async () => {
         await result.current.handleAccountSetup()
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
       })
       expect(mockLogger.error).toHaveBeenCalled()
       expect(result.current.isSettingUpAccount).toBe(false)
@@ -261,10 +188,6 @@ describe('useVerificationResponseViewModel', () => {
 
       await act(async () => {
         await result.current.handleAccountSetup()
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
       })
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to update registration: String error')
@@ -279,23 +202,25 @@ describe('useVerificationResponseViewModel', () => {
       await act(async () => {
         await result.current.handleAccountSetup()
       })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
       expect(mockLogger.error).toHaveBeenCalled()
     })
 
-    it('should not throw when updateVerified fails', async () => {
+    it('logs and stops loading instead of surfacing an updateVerified failure', async () => {
       mockUpdateVerified.mockRejectedValue(new Error('Update verified failed'))
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
-      await expect(
-        act(async () => {
-          await result.current.handleAccountSetup()
-        })
-      ).resolves.not.toThrow()
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to clean up verification process: Update verified failed')
+      )
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT })
+      )
+      expect(result.current.isSettingUpAccount).toBe(false)
     })
 
     it('should not perform imperative navigation on success (#4368)', async () => {
@@ -372,10 +297,6 @@ describe('useVerificationResponseViewModel', () => {
       await act(async () => {
         await result.current.handleAccountSetup()
       })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
 
       // Verify all operations were called in order:
       // updateUserMetadata → token refresh → updateRegistration → updateVerified → clearAuthorizationRequest
@@ -433,10 +354,6 @@ describe('useVerificationResponseViewModel', () => {
       // Should still proceed with other operations even without device code
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
     })
   })

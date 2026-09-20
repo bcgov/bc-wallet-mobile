@@ -25,7 +25,7 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  *
  * One ordered session: onboard → manual serial → birthdate → method selection → the full capture chain
  * (selfie photo, prompted recording, upload) → Home, then the REAL agent approval, scripted against the
- * IDCheck SIT review portal (`reviewSendVideoRequest`; needs `SM_USER`/`SM_PASSWORD` on an allowlisted
+ * IDCheck SIT review portal (`reviewSendVideoRequest`; needs the `IDCHECK_*` credentials on an allowlisted
  * runner), then the app's own status re-check → VerificationSuccess and verified Home.
  *
  * QUEUE HYGIENE: the portal has no worklist — a review claims the NEXT queued request blindly and

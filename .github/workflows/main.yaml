@@ -100,8 +100,8 @@ jobs:
 
   # ─── Dynamic Variant Matrix ──────────────────────────────────────────
   # Determine variant matrix
-  # - PRs / merge queue / release/v4.x branches: bcwallet-prod + bcsc-dev (fast feedback).
-  # - Pushes / workflow_dispatch on main: all variants.
+  # - PRs / merge queue: bcwallet-prod + bcsc-dev (fast feedback).
+  # - Pushes / workflow_dispatch on main and release/*: all variants, so Publish has every variant to ship.
   compute-variants:
     runs-on: ubuntu-22.04
     outputs:
@@ -111,9 +111,8 @@ jobs:
         id: set-variants
         env:
           EVENT_NAME: ${{ github.event_name }}
-          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [[ "$EVENT_NAME" == "pull_request" || "$EVENT_NAME" == "merge_group" || "$REF_NAME" == release/v* ]]; then
+          if [[ "$EVENT_NAME" == "pull_request" || "$EVENT_NAME" == "merge_group" ]]; then
             echo 'variants=["bcwallet-prod","bcsc-dev"]' >> "$GITHUB_OUTPUT"
           else
             echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-test","bcsc-prod"]' >> "$GITHUB_OUTPUT"

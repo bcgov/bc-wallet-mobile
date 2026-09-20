@@ -20,6 +20,7 @@ import {
   tapHelpMenuRow,
 } from '../helpers/help-menu.js'
 import { describeCurrentScreen, reachCameraScreen, type ScreenProbe, waitForAnyScreen } from '../helpers/screens.js'
+import { backgroundAppFor } from './auth.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
 import type { ScreenPresence } from '../screens/core/defineScreen.js'
 import { AppErrorModal } from '../screens/errors.js'
@@ -170,7 +171,7 @@ export async function enterBirthdate(user: TestUser): Promise<void> {
   await EnterBirthdateScreen.tapWhenEnabled('primary')
 }
 
-/** The SiteMinder approval payload for a user's flow: serial + birthdate, typed document numbers, or both. */
+/** The IDCheck approval payload for a user's flow: serial + birthdate, typed document numbers, or both. */
 function approvalInputForUser(user: TestUser): ApproveInPersonInput {
   if (user.flow === 'non-bcsc') {
     return {
@@ -225,7 +226,7 @@ export async function reachVerificationMethod(): Promise<void> {
 /**
  * Complete verification via the IN-PERSON method — the only CI-completable one (send-video and
  * live-call open camera screens). From VerificationMethodSelection: read the confirmation code, drive
- * the real SiteMinder SIT approval (needs `SM_USER`/`SM_PASSWORD` and an allowlisted runner IP), then
+ * the real IDCheck SIT approval (needs `IDCHECK_USER`/`IDCHECK_PASSWORD`/`IDCHECK_TOTP_SECRET` and an allowlisted runner IP), then
  * Complete → VerificationSuccess → Home.
  */
 export async function completeVerification(user: TestUser): Promise<void> {
@@ -344,6 +345,9 @@ async function recordPromptedVideo(): Promise<void> {
 /** Attempts at arming the recorder before the journey gives up on the device's camera stack. */
 const RECORDING_START_ATTEMPTS = 3
 
+/** Background dwell between arm attempts — long enough for the OS to tear the capture session down. */
+const RECORDER_RESET_BACKGROUND_S = 3
+
 /** How long StartRecording gets to leave the screen after its tap before the tap is called swallowed. */
 const RECORDING_START_LEAVE_MS = 5_000
 
@@ -355,7 +359,9 @@ type RecorderArmOutcome = 'armed' | 'error' | 'bounced'
  * Arming fails transiently on rack devices — the recorder errors at 00:00 behind the app's
  * "Recording error" modal, or the thumbnail snapshot fails and the app bounces back to the
  * instructions — so it is retried from VideoInstructions, whose StartRecording issues a fresh prompt
- * set each time. The final failure carries the modal's details rather than a timeout.
+ * set each time. A camera that errored once has never come back on a plain re-tap (iOS, error 2002),
+ * so each retry first cycles the app through the background: the app drops the capture session on
+ * background and rebuilds it on focus. The final failure carries the modal's details rather than a timeout.
  */
 async function startVideoRecording(): Promise<void> {
   let lastFailure = ''
@@ -366,6 +372,9 @@ async function startVideoRecording(): Promise<void> {
     }
     lastFailure = outcome === 'error' ? await recoverFromRecordingError() : await recoverFromRecorderBounce()
     console.warn(`[verify] The recorder did not arm (attempt ${attempt}/${RECORDING_START_ATTEMPTS}): ${lastFailure}`)
+    if (attempt < RECORDING_START_ATTEMPTS) {
+      await backgroundAppFor(RECORDER_RESET_BACKGROUND_S)
+    }
   }
   throw new Error(`The recording failed to start after ${RECORDING_START_ATTEMPTS} attempts. Last: ${lastFailure}`)
 }

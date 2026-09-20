@@ -1,3 +1,5 @@
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import {
   cancelVerificationReminders,
@@ -8,6 +10,7 @@ import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import {
   AccountSecurityMethod,
+  BCSCCardProcess,
   deleteAuthorizationRequest,
   deleteEvidence,
   EvidenceMetadata,
@@ -27,6 +30,7 @@ import {
   TokenType,
 } from 'react-native-bcsc-core'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
+import { isTokenExpired } from '../utils/token-expiry'
 import * as useBCSCApiClientModule from './useBCSCApiClient'
 import { useSecureActions } from './useSecureActions'
 
@@ -35,6 +39,9 @@ jest.mock('../utils/key-recovery', () => ({
   performKeyRecovery: jest.fn(),
   reRegisterNewestKey: jest.fn(),
 }))
+jest.mock('../utils/token-expiry', () => ({
+  isTokenExpired: jest.fn(),
+}))
 jest.mock('react-native-bcsc-core', () => ({
   AccountSecurityMethod: {
     PinNoDeviceAuth: 'app_pin_no_device_authn',
@@ -42,6 +49,8 @@ jest.mock('react-native-bcsc-core', () => ({
     DeviceAuth: 'device_authentication',
   },
   TokenType: { Refresh: 0, Registration: 2, Access: 1 },
+  // Delegate to the central manual mock so values can't drift from the real enum.
+  BCSCCardProcess: jest.requireActual('../../../__mocks__/react-native-bcsc-core').BCSCCardProcess,
   setEvidence: jest.fn(),
   setAccount: jest.fn(),
   setAccountFlags: jest.fn(),
@@ -91,6 +100,12 @@ const makeEvidence = (overrides: Partial<EvidenceMetadata> = {}): EvidenceMetada
   ...overrides,
 })
 
+/** Reads a field off the payload of the last dispatched HYDRATE_SECURE_STATE action. */
+const captureHydrateField = (field: string) => {
+  const hydrateCall = mockDispatch.mock.calls.find(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)
+  return hydrateCall?.[0]?.payload?.[0]?.[field]
+}
+
 describe('useSecureActions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -109,6 +124,7 @@ describe('useSecureActions', () => {
       isClientReady: false,
       error: undefined,
     } as any)
+    jest.mocked(isTokenExpired).mockReturnValue(false)
   })
 
   // #3419: persistence failures surface the distinct native error code instead of a STORAGE_WRITE_ERROR catch-all.
@@ -743,6 +759,175 @@ describe('useSecureActions', () => {
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
       expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
       expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
+      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+    })
+  })
+
+  describe('hydrateSecureState expired refresh token (#4654)', () => {
+    const account = {
+      id: 'account-1',
+      issuer: 'https://idsit.gov.bc.ca',
+      clientID: 'client-1',
+      displayName: 'Test User',
+    }
+    const mockGetTokensForRefreshToken = jest.fn()
+
+    beforeEach(() => {
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+      jest.mocked(getAccount).mockResolvedValue(account as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest.mocked(getToken).mockImplementation(async (type: any) => {
+        if (type === TokenType.Refresh) {
+          return { id: 'r', type, token: 'stale-refresh-token', created: 0 } as any
+        }
+        if (type === TokenType.Registration) {
+          return { id: 'g', type, token: 'stored-reg-token', created: 0 } as any
+        }
+        return null
+      })
+
+      mockGetTokensForRefreshToken.mockReset()
+      jest.mocked(useBCSCApiClientModule.useBCSCApiClientState).mockReturnValue({
+        client: { getTokensForRefreshToken: mockGetTokensForRefreshToken } as any,
+        isClientReady: true,
+        error: undefined,
+      } as any)
+    })
+
+    it('skips the network call and key recovery, and flags refreshTokenExpired, when the stored token is expired', async () => {
+      jest.mocked(isTokenExpired).mockReturnValue(true)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
+      expect(performKeyRecovery).not.toHaveBeenCalled()
+      expect(reRegisterNewestKey).not.toHaveBeenCalled()
+      expect(captureHydrateField('refreshTokenExpired')).toBe(true)
+      // The stale token is still re-persisted, matching today's failure path (renewal deletes it)
+      expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
+      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
+    })
+
+    it('flags refreshTokenExpired: false when the stored token is valid and refresh succeeds', async () => {
+      jest.mocked(isTokenExpired).mockReturnValue(false)
+      mockGetTokensForRefreshToken.mockResolvedValue({ refresh_token: 'new-refresh', access_token: 'new-access' })
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('stale-refresh-token')
+      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+    })
+
+    it('stops key-recovery retries and does not flag refreshTokenExpired when the server rejects a locally-valid token as invalid_token', async () => {
+      jest.mocked(isTokenExpired).mockReturnValue(false)
+      mockGetTokensForRefreshToken.mockRejectedValue(AppError.fromErrorDefinition(ErrorRegistry.INVALID_TOKEN))
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
+      expect(performKeyRecovery).not.toHaveBeenCalled()
+      expect(reRegisterNewestKey).not.toHaveBeenCalled()
+      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+    })
+
+    it('does not call isTokenExpired and flags refreshTokenExpired: false when there is no stored refresh token (session recovery case)', async () => {
+      // No refresh token at all — e.g. a verified user whose tokens file is unreadable/corrupt
+      // (session recovery, see the 'hydrateSecureState account recovery' describe). isTokenExpired
+      // is mocked to true here specifically to prove the `Boolean(refreshToken) &&` short-circuit is
+      // load-bearing: without it, a bare `isTokenExpired(refreshToken)` call with refreshToken
+      // undefined would (per the real util's semantics) evaluate to expired and misroute this user.
+      jest.mocked(getToken).mockImplementation(async (type: any) => {
+        if (type === TokenType.Registration) {
+          return { id: 'g', type, token: 'stored-reg-token', created: 0 } as any
+        }
+        return null
+      })
+      jest.mocked(getCredential).mockResolvedValue({} as any) // verified
+      jest.mocked(isTokenExpired).mockReturnValue(true)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(isTokenExpired).not.toHaveBeenCalled()
+      expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
+      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+      expect(captureHydrateField('sessionRecoveryRequired')).toBe(true)
+    })
+  })
+
+  // #4645: a keychain write failure while hydrating used to abort an already-successful unlock.
+  describe('hydrateSecureState token write-back failure (#4645)', () => {
+    const keychainError = () => Object.assign(new Error('native E_TOKEN_SAVE_FAILED'), { code: 'E_TOKEN_SAVE_FAILED' })
+
+    beforeEach(() => {
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+      jest.mocked(getAccount).mockResolvedValue({ id: 'a', issuer: 'https://i', clientID: 'c' } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest
+        .mocked(getToken)
+        .mockImplementation(async (type: any) =>
+          type === TokenType.Refresh ? ({ id: 'r', type, token: 'stored-refresh', created: 0 } as any) : null
+        )
+    })
+
+    it('completes hydration when the keychain rejects the token write', async () => {
+      jest.mocked(setToken).mockRejectedValue(keychainError())
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await expect(result.current.hydrateSecureState()).resolves.toBeUndefined()
+      })
+
+      expect(mockDispatch.mock.calls.some(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)).toBe(
+        true
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to persist tokens'),
+        expect.anything()
+      )
+    })
+
+    it('keeps refreshed and rotated tokens in the store when the write-back fails', async () => {
+      const mockGetTokensForRefreshToken = jest
+        .fn()
+        .mockResolvedValue({ refresh_token: 'fresh-refresh', access_token: 'fresh-access' })
+      jest.mocked(useBCSCApiClientModule.useBCSCApiClientState).mockReturnValue({
+        client: { getTokensForRefreshToken: mockGetTokensForRefreshToken } as any,
+        isClientReady: true,
+        error: undefined,
+      } as any)
+      jest.mocked(setToken).mockRejectedValue(keychainError())
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      const hydrate = mockDispatch.mock.calls.find(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)
+      expect(hydrate).toBeDefined()
+      expect(hydrate![0].payload[0]).toMatchObject({
+        refreshToken: 'fresh-refresh',
+        accessToken: 'fresh-access',
+      })
     })
   })
 
@@ -1058,6 +1243,152 @@ describe('useSecureActions', () => {
       })
 
       expect(captureHydratedSecureData()?.emailAddress).toBe('legacy@example.com')
+    })
+  })
+
+  describe('hydrateSecureState cardProcess', () => {
+    const completeEvidence = [
+      { evidenceType: { evidence_type: 'passport', image_sides: [{}] }, documentNumber: '123', metadata: [{}] },
+    ]
+
+    beforeEach(() => {
+      jest.mocked(getAccount).mockResolvedValue(null as any)
+      jest.mocked(getToken).mockResolvedValue(null as any)
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+    })
+
+    const captureHydratedCardProcess = () => {
+      const hydrateCall = mockDispatch.mock.calls.find(
+        ([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE
+      )
+      return hydrateCall?.[0]?.payload?.[0]?.cardProcess
+    }
+
+    it('infers NonBCSC for a migrated install with evidence but no recorded cardProcess', async () => {
+      jest.mocked(getEvidence).mockResolvedValue(completeEvidence as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({} as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBe(BCSCCardProcess.NonBCSC)
+    })
+
+    it('still infers NonBCSC when a failed combo-card scan left a stale serial (no deviceCode)', async () => {
+      // handleScanComboCard persists csn before attempting authorization, so a Non-BCSC session
+      // can carry a serial from that failed attempt (see resume-step-route.test.ts:51-58).
+      jest.mocked(getEvidence).mockResolvedValue(completeEvidence as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({ csn: '123456789' } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBe(BCSCCardProcess.NonBCSC)
+    })
+
+    it('does not infer NonBCSC once a deviceCode shows the card was actually authorized', async () => {
+      jest.mocked(getEvidence).mockResolvedValue(completeEvidence as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({ csn: '123456789', deviceCode: 'dc' } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBeUndefined()
+    })
+
+    it('leaves cardProcess undefined when there is no evidence to infer from', async () => {
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({} as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBeUndefined()
+    })
+
+    it('preserves an explicitly recorded cardProcess', async () => {
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({ cardProcess: BCSCCardProcess.BCSCPhoto } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedCardProcess()).toBe(BCSCCardProcess.BCSCPhoto)
+    })
+  })
+
+  describe('hydrateSecureState name scrubbing', () => {
+    beforeEach(() => {
+      jest.mocked(getAccount).mockResolvedValue(null as any)
+      jest.mocked(getToken).mockResolvedValue(null as any)
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+    })
+
+    const captureHydratedName = () => {
+      const hydrateCall = mockDispatch.mock.calls.find(
+        ([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE
+      )
+      return hydrateCall?.[0]?.payload?.[0]?.userMetadata?.name
+    }
+
+    it('strips decoder-corrupted comma-dollar characters from middleNames', async () => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        firstName: 'anna',
+        lastName: 'berg',
+        middleNames: 'berg,$anna',
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedName()).toEqual({ first: 'anna', last: 'berg', middle: 'berganna' })
+    })
+
+    it('strips other special characters from first/last name', async () => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        firstName: 'J!ohn#',
+        lastName: 'Sm@ith',
+        middleNames: undefined,
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedName()).toEqual({ first: 'John', last: 'Smith', middle: undefined })
+    })
+
+    it('leaves already-clean names unchanged', async () => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        firstName: 'Jane',
+        lastName: "O'Brien-Smith",
+        middleNames: 'Marie',
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydratedName()).toEqual({ first: 'Jane', last: "O'Brien-Smith", middle: 'Marie' })
     })
   })
 
