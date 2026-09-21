@@ -13,8 +13,11 @@ import type { PrevBuild } from './types.js'
 
 /**
  * The legacy native v3 app (`BCSC-v3.*`), driven by the raw selectors in `v3TestIDs.ts`. Only the
- * in-person path exists on v3, and a saved serial alone is not resumable after the swap (the current
- * build asks for the setup type first), so the sole v3 scenario is the unapproved in-person request.
+ * in-person path is driven. No partial state survives from v3: a typed serial sits in v3's own
+ * `add_card_info` file, which the current build never reads (v3 writes the serial into the
+ * authorization request only once the birthdate is submitted), and a captured document hydrates but a
+ * migrant has no recorded setup type, so the resume re-asks it and the un-numbered evidence is cleaned
+ * up on the way back in. So v3 arranges the unapproved in-person request and the verified account.
  */
 export const v3PrevBuild: PrevBuild = {
   label: 'v3',
