@@ -1,0 +1,78 @@
+name: Upload to Sauce Storage
+description: |
+  Upload a local build to Sauce Labs app storage under a fixed name. Uploads go
+  untagged, so the PR-build prune never touches them; re-uploading a name adds a
+  new version to its app group and resets Sauce's 60-day inactivity clock.
+  `storage:filename=<name>` in the wdio configs resolves to the newest upload.
+
+inputs:
+  file:
+    description: Path of the .apk / .ipa to upload
+    required: true
+  name:
+    description: Sauce storage filename (e.g. BCSC-v4.1.0.apk)
+    required: true
+  description:
+    description: Free-text note shown in the Sauce storage UI
+    required: false
+    default: ''
+  sauce_username:
+    description: Sauce Labs username
+    required: true
+  sauce_access_key:
+    description: Sauce Labs access key
+    required: true
+
+outputs:
+  id:
+    description: Storage id of the new upload
+    value: ${{ steps.upload.outputs.id }}
+  app_version:
+    description: App version Sauce read from the binary (e.g. 4.1.0)
+    value: ${{ steps.upload.outputs.app_version }}
+  build_number:
+    description: Build number Sauce read from the binary (Android versionCode / iOS CFBundleVersion)
+    value: ${{ steps.upload.outputs.build_number }}
+
+runs:
+  using: composite
+  steps:
+    - name: Upload ${{ inputs.name }}
+      id: upload
+      shell: bash
+      env:
+        FILE: ${{ inputs.file }}
+        NAME: ${{ inputs.name }}
+        DESCRIPTION: ${{ inputs.description }}
+        SAUCE_USERNAME: ${{ inputs.sauce_username }}
+        SAUCE_ACCESS_KEY: ${{ inputs.sauce_access_key }}
+      run: |
+        set -euo pipefail
+        if [ ! -s "$FILE" ]; then
+          echo "::error::$FILE is missing or empty"
+          exit 1
+        fi
+        response=$(curl -s -w "\n%{http_code}" \
+          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+          --proto "=https" --location --request POST \
+          'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
+          --form "payload=@${FILE}" \
+          --form "name=${NAME}" \
+          --form "description=${DESCRIPTION}")
+        http_code=$(echo "$response" | tail -1)
+        body=$(echo "$response" | sed '$d')
+        if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+          echo "$body"
+          echo "::error::Sauce upload of $NAME failed with HTTP $http_code"
+          exit 1
+        fi
+        id=$(jq -r '.item.id // empty' <<<"$body")
+        # Sauce reports the pair differently per platform: Android version + version_code, iOS short_version + version.
+        app_version=$(jq -r '.item.metadata | (.short_version // .version) // empty' <<<"$body")
+        build_number=$(jq -r '.item.metadata | (.version_code // (if .short_version then .version else null end)) // empty' <<<"$body")
+        {
+          echo "id=$id"
+          echo "app_version=$app_version"
+          echo "build_number=$build_number"
+        } >> "$GITHUB_OUTPUT"
+        echo "✓ Uploaded $NAME (app ${app_version:-?} build ${build_number:-?}, id ${id:-?}, HTTP $http_code)"

@@ -223,7 +223,7 @@ _The upgrade suite tests upgrading from the **previous released build** to the c
 
 **_Prerequisites:_**
 
-1. _The rolling previous-release builds in Sauce Labs storage: `BCSC-prev.apk` / `BCSC-prev.ipa`. They track the newest **full** (non-prerelease) `bcsc-v*` GitHub release: the **Publish Release E2E Builds** workflow attaches `BCSC-Dev-e2e.*` assets to a version's release and pushes them to Sauce when a full release ships (see `RELEASE.md`); the monthly **Refresh E2E Sauce Builds** workflow keeps them inside Sauce's 60-day retention. To upgrade from any other build still in storage, override `PREV_ANDROID_APP` / `PREV_IOS_APP` (or pass the `prev_build_number` input when dispatching `e2e.yml`)._
+1. _The upgrade-source builds in Sauce Labs storage. The rolling previous release, `BCSC-prev.apk` / `BCSC-prev.ipa`, tracks the newest **full** (non-prerelease) `bcsc-v*` GitHub release: the **Publish Release E2E Builds** workflow attaches `BCSC-v<version>.*` assets to a version's release and pushes them to Sauce as `BCSC-prev.*` when a full release at 4.1.0 or later ships (see `RELEASE.md`). Every shipped version a lane starts from also keeps a pinned copy under that same `BCSC-v<version>.*` name (`BCSC-v3`, `BCSC-v4.0.3`, `BCSC-v4.1.0`), listed in the manifest of the monthly **Refresh E2E Sauce Builds** workflow (`.github/workflows/refresh-e2e-sauce-builds.yml`), which re-uploads each entry and `BCSC-prev.*` from the release assets to stay inside Sauce's 60-day retention. To upgrade from any other build still in storage, override `PREV_ANDROID_APP` / `PREV_IOS_APP` (or pass the `prev_build_number` input when dispatching `e2e.yml`)._
 2. _The current build under test via the standard vars: `ANDROID_APP_FILENAME` / `IOS_APP_FILENAME`._
 
 ```bash
@@ -232,6 +232,10 @@ yarn test:android:upgrade:sauce
 
 # Upgrade from a specific older build instead of the rolling BCSC-prev
 PREV_ANDROID_APP=BCSC-Dev-4550.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
+  yarn test:android:upgrade:sauce
+
+# Or from a pinned release copy (BCSC-v<version>.*, refreshed monthly)
+PREV_ANDROID_APP=BCSC-v4.1.0.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
   yarn test:android:upgrade:sauce
 
 # iOS on Sauce (storage-based mid-session install passes Sauce resigning; validated 2026-08-25)

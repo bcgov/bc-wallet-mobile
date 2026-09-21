@@ -322,6 +322,20 @@ exports[`VerificationCardErrorScreen renders MismatchedSerial variant correctly 
       >
         BCSC.MismatchedSerial.Description2
       </Text>
+      <Image
+        resizeMode="contain"
+        source={
+          {
+            "uri": "mocked-image-uri",
+          }
+        }
+        style={
+          {
+            "height": 470.34000000000003,
+            "width": 702,
+          }
+        }
+      />
     </View>
   </RCTScrollView>
   <View

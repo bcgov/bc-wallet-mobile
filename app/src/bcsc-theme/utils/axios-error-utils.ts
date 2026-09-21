@@ -332,7 +332,7 @@ const _toRouteTemplate = (url: string): string => {
  */
 
 const _isEncodedVerificationRequestId = (value: string): boolean => {
-  return /^\d+$/.test(Buffer.from(value, 'base64url').toString('utf8'))
+  return /^\d+$/.test(Buffer.from(value.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'))
 }
 
 /**

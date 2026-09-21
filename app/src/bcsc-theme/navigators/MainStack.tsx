@@ -69,6 +69,7 @@ import CancelledReview from '../features/verify/send-video/CancelledReview'
 import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
@@ -132,6 +133,7 @@ const useSystemCheckLoadingGate = (hasSettled: boolean) => {
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
   const { isLoadingAccount } = useAccount()
+  const { isVerified } = useVerificationStatus()
   const theme = useTheme()
   const { t } = useTranslation()
   const Stack = createStackNavigator<BCSCMainStackParams>()
@@ -184,13 +186,18 @@ const MainStack: React.FC = () => {
 
   useVerificationResponseListener()
 
-  const showStartupLoading = isLoadingAccount || isAwaitingSystemChecks
+  // Replaces rather than overlays the stack: unmounting the navigator while the account loads drops
+  // the navigation state it inherits from VerifyStack (routes registered in both, e.g.
+  // VerificationSuccess), so it remounts on initialRouteName instead of stranding the user there.
+  if (isLoadingAccount) {
+    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
+  }
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
-      {/* Overlays rather than replaces the stack: system checks navigate to screens registered below
-          and the account load retries in place, so the navigator has to stay mounted. */}
-      {showStartupLoading ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
+      {/* Overlays rather than replaces the stack: the checks themselves navigate to screens
+          registered below (terms of use, service outage), so the navigator has to stay mounted. */}
+      {isAwaitingSystemChecks ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
       <BifoldScope>
         <Stack.Navigator
           initialRouteName={initialRouteName}
@@ -504,13 +511,21 @@ const MainStack: React.FC = () => {
               headerShown: true,
             })}
           />
-          <Stack.Screen
-            name={BCSCScreens.VerificationSuccess}
-            component={VerificationSuccessScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
+          {/* Registered only until the user is verified. Setting `verified` is this screen's whole job,
+              and on that flip this stack inherits the outgoing navigator's state — VerifyStack's, or its
+              own when it remounts under BCSCIdTokenProvider. With the route gone, React Navigation drops
+              it from that state (falling back to initialRouteName if nothing else is left) instead of
+              stranding the user on a Continue with nothing left to do (#4719). Keyed on `verified`, not
+              isUserVerified(): that turns true once tokens arrive, before the user can open this screen. */}
+          {isVerified ? null : (
+            <Stack.Screen
+              name={BCSCScreens.VerificationSuccess}
+              component={VerificationSuccessScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+          )}
           <Stack.Screen
             name={BCSCScreens.ReverifyAccount}
             component={ReverifyAccountScreen}

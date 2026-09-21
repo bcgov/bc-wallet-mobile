@@ -164,7 +164,12 @@ out to every TestFlight ring. A person submits it for Apple's review.
 **Releasing on Google Play.** Ring-4 puts the build on its closed track. A
 person promotes it to Production.
 
-Both are on the list to automate. Neither blocks a release today.
+**Publishing the e2e upgrade builds.** After a release ships, a person dispatches
+Publish Release E2E Builds for its tag and adds the version to the Refresh E2E
+Sauce Builds manifest, so the nightly upgrade lanes start from it. See
+`RELEASE.md`.
+
+The store steps are on the list to automate. None of these blocks a release today.
 
 ## One-time setup
 

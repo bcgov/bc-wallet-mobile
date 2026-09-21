@@ -125,7 +125,7 @@ const TransferQRDisplayScreen: React.FC = () => {
           stopAllPolling()
           navigation.navigate(BCSCScreens.TransferAccountSuccess)
         }
-      } catch (error) {
+      } catch {
         // Do nothing, a fail state from this endpoint just means the attestation hasn't been consumed yet
       }
     },
