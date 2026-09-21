@@ -23,7 +23,7 @@
 #   upgradeSendVideo — a pending send-video review survives the previous→current upgrade (own serial, injection-off lane)
 #   upgradeExtra — costlier upgrade state-preservation checks (in-person pending, partial non-BCSC, resume states); dispatch-only
 #   upgrade403Extra — the same state checks 4.0.3's frozen walks can arrange (in-person pending, resume states); dispatch-only
-#   upgradeV3    — the legacy v3 app → current with an unapproved in-person request (the v3 driver's one in-progress state)
+#   upgradeV3    — the legacy v3 app → current: an unverified account, and an unapproved in-person request (the v3 driver's one in-progress state)
 #
 # All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
 # SAUCE_ACCESS_KEY and the IDCHECK_* sign-in (user, password, TOTP secret) are all

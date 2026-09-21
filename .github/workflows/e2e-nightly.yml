@@ -262,9 +262,10 @@ jobs:
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
-  # ─── Upgrade from v3 with an in-progress verification ───────────
-  # The migration lane covers a VERIFIED v3 account; this boots the same v3 build, shows an in-person
-  # code without approving it, installs the current build and proves the request resumes and can be
+  # ─── Upgrade from v3: unverified, and with an in-progress verification ───────────
+  # The migration lane covers a VERIFIED v3 account; this boots the same v3 build twice: once with no
+  # card (account + PIN survive, verification can start — no IDCheck), once showing an in-person code
+  # without approving it, then installs the current build and proves the request resumes and can be
   # approved. Android-only like the migration lane (the iOS post-install relaunch flake). Advisory.
   e2e-upgrade-v3:
     needs: [check-for-merges, resolve-build, e2e-upgrade403]
