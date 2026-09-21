@@ -49,7 +49,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `upgradeExtra` | _The costlier upgrade state-preservation checks — an unapproved in-person request, partial non-BCSC progress (resume assert; completion deferred until the non-BCSC counter approval works), and the two resume states (saved serial, a captured document awaiting its number). **Dispatch-only** (owner may promote to weekly)_ |
 | `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding and verify screens run via frozen walks (`flows/onboarding-v403.ts`, `flows/verify-v403.ts`): the base PIN/settings check plus a **verified account**. Runs on Sauce on **both platforms**; keep while 4.0.3 is in the field_ |
 | `upgrade403Extra` | _The state checks 4.0.3's frozen walks can arrange — an unapproved in-person request, a saved serial, a captured document awaiting its number. **Dispatch-only**_ |
-| `upgradeV3` | _The legacy **v3** app → current with an unapproved in-person request — the one in-progress state the native v3 driver can arrange (the `migration` suite covers the verified account). Android-only in the nightly, like `migration`_ |
+| `upgradeV3` | _The legacy **v3** app → current: an **unverified** account (nickname + PIN, no card — the base check, no IDCheck) and an unapproved in-person request, the one in-progress state the native v3 driver can arrange (the `migration` suite covers the verified account). Android-only in the nightly, like `migration`_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
 | `a11y`       | _Automated accessibility audits over the core unverified screens (`a11y/*.journey.ts`): iOS runs Apple's XCTest audit engine, Android the page-source/screenshot heuristics — see **[Accessibility audits](#accessibility-audits)**. Also part of `regression`_ |
 | `device-auth` | _Device authentication on a **locked** device (`device-auth/*.journey.ts`): onboarding on device auth, the "Confirm it's your device" interstitial, a failed match + retry, and the PIN ↔ device-auth switch in Settings with an unlock on each method. **Sauce RDC only**, on its own capability lane (`setupDeviceLock` + `biometricsInterception`, see **[Device authentication](#device-authentication-sauce-device-lock-lane)**) and never inside `regression` — a locked device changes the state every other journey starts from_ |
@@ -266,8 +266,8 @@ _Only the **arrange** half is version-specific — after the swap every assertio
 | `send-video-pending` | send-video submitted + pending | resume → PendingReview → scripted approve → verified | `upgradeSendVideo`, nightly (serial, injection-off) | not frozen yet (4.0.3's send-video is a two-media hub) | n/a — no native send-video driver |
 | `in-person-pending` | in-person code shown, **not** approved | resume → method selection → approve → verified (records whether the code is the same or fresh) | `upgradeExtra`, dispatch | `upgrade403Extra`, dispatch | `upgradeV3`, nightly (Android) — resumes via the verify prompt's Skip + the Home card |
 | `non-bcsc-partial` | two documents + address + email (non-BCSC) | resume → method selection, nothing re-requested (completion deferred — the non-BCSC counter approval is blocked) | `upgradeExtra`, dispatch | not frozen yet | n/a — no native non-BCSC driver |
-| `resume-serial` | serial saved, birthdate not submitted | resume → EnterBirthdate | `upgradeExtra`, dispatch | `upgrade403Extra`, dispatch | n/a — a v3 migrant has no recorded setup type, so a bare serial resumes to the setup question by design |
-| `resume-capture` | first non-BCSC document photographed, number not entered | resume → EvidenceIDCollection (the partial the app keeps: an ID selected with **no** photo is cleaned up on the post-upgrade unlock) | `upgradeExtra`, dispatch | `upgrade403Extra`, dispatch | n/a |
+| `resume-serial` | serial saved, birthdate not submitted | resume → EnterBirthdate | `upgradeExtra`, dispatch | `upgrade403Extra`, dispatch | n/a — v3 keeps a typed serial in its own `add_card_info` file, which the current build never reads (v3 writes it into the authorization request only once the birthdate is submitted — the `in-person-pending` state), so there is nothing to preserve |
+| `resume-capture` | first non-BCSC document photographed, number not entered | resume → EvidenceIDCollection (the partial the app keeps: an ID selected with **no** photo is cleaned up on the post-upgrade unlock) | `upgradeExtra`, dispatch | `upgrade403Extra`, dispatch | n/a — v3's `evidence_upload` does hydrate, but a migrant has no recorded setup type, so the resume re-asks it (AccountSetup → IdentitySelection) and EvidenceTypeList's cleanup drops the un-numbered document: the current build loses this state by design, and v3 has no native non-BCSC driver anyway |
 
 _The verified scenarios need the `IDCHECK_*` credentials on an allowlisted runner (the in-person / send-video approval). `send-video-pending` reviews the shared blind-FIFO queue, so it runs like the `send-video` lane — one platform at a time, the queue drained first, Android injection-off (the Android upgrade config splits into an injection-on lane and an injection-off send-video lane). `resume-capture` and `non-bcsc-partial` need camera injection (Sauce)._
 
@@ -279,7 +279,7 @@ ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn wdio configs/sauce/wdio.android
 ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn wdio configs/sauce/wdio.android.sauce.upgrade.conf.ts --suite upgradeExtra
 ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn test:android:upgrade403Extra:sauce
 
-# From v3 (the in-person request across the swap)
+# From v3 (an unverified account, then the in-person request across the swap)
 ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn test:android:upgradeV3:sauce
 ```
 
@@ -863,6 +863,7 @@ e2e/
 │       │   ├── upgrade-from-v403.spec.ts    # the shipped 4.0.3 via its frozen pre-rework onboarding (--suite upgrade403)
 │       │   ├── upgrade-verified-v403.spec.ts, upgrade-in-person-pending-v403.spec.ts, upgrade-resume-serial-v403.spec.ts,
 │       │   │   upgrade-resume-capture-v403.spec.ts   # the same scenarios on 4.0.3 (upgrade403 / upgrade403Extra)
+│       │   ├── upgrade-from-v3.spec.ts              # the native v3 app, unverified → current: account + PIN survive, verification can start (--suite upgradeV3)
 │       │   └── upgrade-in-person-pending-v3.spec.ts  # the in-person scenario on the native v3 app (--suite upgradeV3)
 │       │
 │       └── migration/                       # v3 → v4 upgrade (--suite migration; deprioritized). v3 phase uses v3TestIDs.ts
