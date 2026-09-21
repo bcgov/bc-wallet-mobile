@@ -437,7 +437,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
           upgradeWrapper('upgrade-in-person-pending-v403', 'in-person-pending'),
           upgradeWrapper('upgrade-in-person-pending-v3', 'in-person-pending'),
         ],
-        note: 'previous release + 4.0.3 dispatch-only (upgradeExtra / upgrade403Extra) → not run nightly; v3 nightly on Android (upgradeV3)',
+        note: 'previous release + 4.0.3 dispatch-only (upgradeExtra / upgrade403Extra) → not run nightly; v3 nightly (upgradeV3)',
       },
       {
         id: 'ext-upgrade-partial-nonbcsc',
@@ -467,14 +467,14 @@ export const UAT_CHECKLIST: CoverageSection[] = [
       {
         id: 'ext-upgrade-v3-unverified',
         label: 'Upgrade from v3 with an unverified account',
-        platforms: androidOnly,
+        platforms: both,
         proof: [{ file: spec('upgrade/upgrade-from-v3.spec.ts') }],
-        note: 'nightly on Android (upgradeV3); the v3 user who never added a card — the account and PIN survive and verification starts from the setup-type question',
+        note: 'nightly (upgradeV3); the v3 user who never added a card — the account and PIN survive and verification starts from the setup-type question',
       },
       {
         id: 'ext-migration-v3',
         label: 'Upgrade from v3 (migration)',
-        platforms: androidOnly,
+        platforms: both,
         proof: [
           {
             file: spec('migration/migration.spec.ts'),
@@ -485,7 +485,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
             ],
           },
         ],
-        note: 'nightly runs it on Android only',
+        note: 'nightly, one platform at a time beside the send-video lane',
       },
     ],
   },
@@ -583,12 +583,12 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       { id: 'j-upgrade-403-in-person', label: 'Upgrade from 4.0.3: unapproved in-person request survives', platforms: both, proof: [upgradeWrapper('upgrade-in-person-pending-v403', 'in-person-pending')] },
       { id: 'j-upgrade-403-resume-serial', label: 'Upgrade from 4.0.3: saved serial survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-serial-v403', 'resume-serial')] },
       { id: 'j-upgrade-403-resume-capture', label: 'Upgrade from 4.0.3: captured document awaiting its number survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-capture-v403', 'resume-capture')] },
-      { id: 'j-upgrade-v3-unverified', label: 'Upgrade from v3: unverified account survives, verification can start', platforms: androidOnly, proof: [{ file: spec('upgrade/upgrade-from-v3.spec.ts') }], note: 'nightly runs it on Android only, like the migration lane' },
-      { id: 'j-upgrade-v3-in-person', label: 'Upgrade from v3: unapproved in-person request survives', platforms: androidOnly, proof: [upgradeWrapper('upgrade-in-person-pending-v3', 'in-person-pending')], note: 'nightly runs it on Android only, like the migration lane' },
+      { id: 'j-upgrade-v3-unverified', label: 'Upgrade from v3: unverified account survives, verification can start', platforms: both, proof: [{ file: spec('upgrade/upgrade-from-v3.spec.ts') }] },
+      { id: 'j-upgrade-v3-in-person', label: 'Upgrade from v3: unapproved in-person request survives', platforms: both, proof: [upgradeWrapper('upgrade-in-person-pending-v3', 'in-person-pending')] },
       {
         id: 'j-migration-v3-add-card',
         label: 'Upgrade from v3: set up on the v3 release',
-        platforms: androidOnly,
+        platforms: both,
         proof: [
           {
             file: spec('migration/migration.spec.ts'),
@@ -600,7 +600,7 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       {
         id: 'j-migration-upgrade',
         label: 'Upgrade from v3: install the current build',
-        platforms: androidOnly,
+        platforms: both,
         proof: [
           {
             file: spec('migration/migration.spec.ts'),
@@ -612,7 +612,7 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       {
         id: 'j-migration-v4-unlock',
         label: 'Upgrade from v3: unlock with the v3 PIN',
-        platforms: androidOnly,
+        platforms: both,
         proof: [
           {
             file: spec('migration/migration.spec.ts'),
