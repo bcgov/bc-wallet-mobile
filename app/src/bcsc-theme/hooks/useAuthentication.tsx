@@ -40,10 +40,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
     let stopLoading
 
     try {
-      stopLoading = startLoading(t('BCSC.Loading.AppStartup'), {
-        progressPercent: (2 / 3) * 100,
-        statusMessage: t('BCSC.Loading.AccountLoading'),
-      })
+      stopLoading = startLoading(t('BCSC.Loading.AppStartup'))
 
       // Check if they have changed their device auth settings
       const deviceAuthAvailable = await canPerformDeviceAuthentication()

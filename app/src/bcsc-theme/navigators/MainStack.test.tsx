@@ -217,7 +217,7 @@ describe('MainStack', () => {
 
     expect(toJSON()).toMatchObject({
       type: 'LoadingScreen',
-      props: { progressPercent: (2 / 3) * 100, statusMessage: 'BCSC.Loading.AccountLoading' },
+      props: { message: 'BCSC.Loading.AppStartup' },
     })
   })
 
@@ -226,8 +226,7 @@ describe('MainStack', () => {
 
     const loadingScreens = queryLoadingScreens(render(<MainStack />))
     expect(loadingScreens).toHaveLength(1)
-    expect(loadingScreens[0].props.progressPercent).toBe((2 / 3) * 100)
-    expect(loadingScreens[0].props.statusMessage).toBe('BCSC.Loading.AccountLoading')
+    expect(loadingScreens[0].props.message).toBe('BCSC.Loading.AppStartup')
   })
 
   it('drops the loading screen once the system checks have settled', () => {

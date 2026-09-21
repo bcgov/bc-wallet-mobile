@@ -97,7 +97,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { progressPercent: (2 / 3) * 100 } })
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
   })
 
   it('renders LoadingScreen when initializingAccount is true', () => {
@@ -109,7 +109,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { progressPercent: (2 / 3) * 100 } })
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
   })
 
   it('renders LoadingScreen when isClientReady is false', () => {
@@ -122,7 +122,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { progressPercent: (2 / 3) * 100 } })
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
 
     // Reset for other tests
     jest.requireMock('../hooks/useBCSCApiClient').useBCSCApiClientState = () => ({
@@ -140,7 +140,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { progressPercent: (2 / 3) * 100 } })
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
 
     // Reset for other tests
     jest.requireMock('@/contexts/NavigationContainerContext').useNavigationContainer = () => ({

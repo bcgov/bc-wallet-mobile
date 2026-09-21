@@ -27,8 +27,9 @@ change the heading/status layout. Use secondary buttons for waiting-screen Cance
 actions; the feature owns their availability and behavior.
 
 Use explicit workflow stages for progress; omit the bar when progress is unknown.
-Startup holds at two-thirds until ready. Video submission advances through preparation,
-upload, and finalization. Progress does not introduce a delay before leaving the screen.
+Startup has no progress bar until it exposes meaningful completed stages. Video submission
+advances through preparation, upload, and finalization. Progress does not introduce a delay
+before leaving the screen.
 Video-call setup advances from 0% during evidence upload to 25% during session
 creation and 50% while connecting, then holds at 75% while waiting for an agent.
 These positions represent stages, not elapsed time or upload bytes. The waiting

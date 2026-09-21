@@ -30,15 +30,7 @@ describe('authentication loading handoff', () => {
   }) => (
     <BasicAppContext>
       <BCSCLoadingProvider>
-        {mainLoading ? (
-          <LoadingScreen
-            message="BCSC.Loading.AppStartup"
-            progressPercent={(2 / 3) * 100}
-            statusMessage="BCSC.Loading.AccountLoading"
-          />
-        ) : (
-          <Authentication />
-        )}
+        {mainLoading ? <LoadingScreen message="BCSC.Loading.AppStartup" /> : <Authentication />}
         {genericLoading && <LoadingScreen message="Other work" />}
       </BCSCLoadingProvider>
     </BasicAppContext>
@@ -76,7 +68,7 @@ describe('authentication loading handoff', () => {
       await pending
     })
     expect(view.getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'))).toHaveStyle({ display: 'flex' })
-    expect(view.getByText('BCSC.Loading.AccountLoading')).toBeTruthy()
+    expect(view.getByText('BCSC.Loading.AppStartup')).toBeTruthy()
     expect(start).toHaveBeenCalledTimes(1)
     expect(stop).not.toHaveBeenCalled()
 
@@ -107,7 +99,7 @@ describe('authentication loading handoff', () => {
     })
 
     const illustration = view.UNSAFE_getByType(BCAnimatedLoadingIcon)
-    expect(view.getByText('BCSC.Loading.AccountLoading')).toBeTruthy()
+    expect(view.getByText('BCSC.Loading.AppStartup')).toBeTruthy()
 
     await act(async () => {
       resolveUnlock({ success: true, walletKey: 'test-key' })
@@ -128,7 +120,7 @@ describe('authentication loading handoff', () => {
     view.rerender(<App mainLoading />)
     expect(view.getByTestId(testIdWithKey('LoadingScreenContent'))).toBeTruthy()
     expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
-    expect(view.getByText('BCSC.Loading.AccountLoading')).toBeTruthy()
+    expect(view.getByText('BCSC.Loading.AppStartup')).toBeTruthy()
     expect(illustration.props.active).toBe(true)
 
     view.rerender(<App />)

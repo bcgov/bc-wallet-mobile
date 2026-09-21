@@ -62,10 +62,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         const { success, walletKey, locked, message } = await verifyPIN(pin)
 
         if (success) {
-          stopLoading = startLoading(t('BCSC.Loading.AppStartup'), {
-            progressPercent: (2 / 3) * 100,
-            statusMessage: t('BCSC.Loading.AccountLoading'),
-          })
+          stopLoading = startLoading(t('BCSC.Loading.AppStartup'))
           await handleSuccessfulAuth(walletKey)
           logger.info('PIN verified successfully - navigating to main app')
         } else if (locked) {

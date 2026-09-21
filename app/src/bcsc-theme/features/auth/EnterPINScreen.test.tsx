@@ -134,10 +134,7 @@ describe('EnterPINScreen', () => {
     await act(async () => {
       resolveVerification({ success: true, walletKey: 'test-key', locked: false, message: '', remainingTime: 0 })
     })
-    expect(mockStartLoading).toHaveBeenCalledWith('BCSC.Loading.AppStartup', {
-      progressPercent: (2 / 3) * 100,
-      statusMessage: 'BCSC.Loading.AccountLoading',
-    })
+    expect(mockStartLoading).toHaveBeenCalledWith('BCSC.Loading.AppStartup')
     expect(mockStopLoading).not.toHaveBeenCalled()
 
     await act(async () => {
