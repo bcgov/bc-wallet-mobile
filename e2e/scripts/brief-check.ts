@@ -173,7 +173,10 @@ function selfTest(): void {
     ['fail', 3, 1, migrationTitles.length - 4, migrationTitles.length]
   )
   const unlockIos = cellOf(model, 'j-migration-v4-unlock', 'ios').auto
-  assert.deepEqual([unlockIos?.status, unlockIos?.blocked, unlockIos?.listed], ['blocked', 2, 2])
+  // v4-unlock never runs in the bailed iOS fixture, so every one of its checkpoints is blocked — derive
+  // the count from the spec so adding checkpoints there (e.g. the verified-state asserts) doesn't rot this.
+  const v4UnlockCount = specTitles('test/bcsc/migration/v4-unlock.spec.ts')?.its.length ?? 0
+  assert.deepEqual([unlockIos?.status, unlockIos?.blocked, unlockIos?.listed], ['blocked', v4UnlockCount, v4UnlockCount])
   assert.equal(cellOf(model, 'j-migration-v3-add-card', 'ios').auto?.status, 'pass')
   assert.equal(model.failures.find((entry) => entry.platform === 'ios' && entry.file.endsWith('migration.spec.ts'))?.blockedAfter, migrationTitles.length - 4)
   // a worker that never got a session

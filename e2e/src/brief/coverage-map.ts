@@ -45,6 +45,15 @@ const both: Record<Platform, PlatformMode> = { ios: 'auto', android: 'auto' }
 const manual: Record<Platform, PlatformMode> = { ios: 'manual', android: 'manual' }
 const androidOnly: Record<Platform, PlatformMode> = { ios: 'na', android: 'auto' }
 
+/**
+ * An upgrade state-preservation wrapper: a one-describe spec per previous build whose `it`s live in the
+ * shared scenario module, so the titles are read from there (`sources`), the results from the wrapper.
+ */
+const upgradeWrapper = (wrapper: string, scenario: string): Proof => ({
+  file: spec(`upgrade/${wrapper}.spec.ts`),
+  sources: [spec(`upgrade/scenarios/${scenario}.scenario.ts`)],
+})
+
 const IN_PERSON_COMPLETE = 'completes verification in person and lands on verified Home'
 const SEND_VIDEO_APPROVED = 'is approved by the agent (scripted against the SIT review portal)'
 
@@ -406,6 +415,50 @@ export const UAT_CHECKLIST: CoverageSection[] = [
         note: 'lane exits early with a notice until BCSC-prev.* exists in Sauce storage → shows not run',
       },
       {
+        id: 'ext-upgrade-verified',
+        label: 'Upgrade keeps a verified account',
+        platforms: both,
+        proof: [upgradeWrapper('upgrade-verified', 'verified'), upgradeWrapper('upgrade-verified-v403', 'verified')],
+        note: 'nightly, in the upgrade + upgrade403 lanes; verified state + a pairing-code login must survive (v3: the migration lane)',
+      },
+      {
+        id: 'ext-upgrade-pending-review',
+        label: 'Upgrade keeps a pending send-video review',
+        platforms: both,
+        proof: [upgradeWrapper('upgrade-send-video-pending', 'send-video-pending')],
+        note: 'nightly, own serial send-video upgrade lane (injection-off on Android); previous release only',
+      },
+      {
+        id: 'ext-upgrade-in-person-pending',
+        label: 'Upgrade keeps an unapproved in-person request',
+        platforms: both,
+        proof: [
+          upgradeWrapper('upgrade-in-person-pending', 'in-person-pending'),
+          upgradeWrapper('upgrade-in-person-pending-v403', 'in-person-pending'),
+          upgradeWrapper('upgrade-in-person-pending-v3', 'in-person-pending'),
+        ],
+        note: 'previous release + 4.0.3 dispatch-only (upgradeExtra / upgrade403Extra) → not run nightly; v3 nightly on Android (upgradeV3)',
+      },
+      {
+        id: 'ext-upgrade-partial-nonbcsc',
+        label: 'Upgrade keeps partial non-BCSC progress',
+        platforms: both,
+        proof: [upgradeWrapper('upgrade-non-bcsc-partial', 'non-bcsc-partial')],
+        note: 'dispatch-only (upgradeExtra); completion deferred until the non-BCSC counter approval works → resume assert only; previous release only',
+      },
+      {
+        id: 'ext-upgrade-partial-resume',
+        label: 'Upgrade keeps a partially entered verification',
+        platforms: both,
+        proof: [
+          upgradeWrapper('upgrade-resume-serial', 'resume-serial'),
+          upgradeWrapper('upgrade-resume-capture', 'resume-capture'),
+          upgradeWrapper('upgrade-resume-serial-v403', 'resume-serial'),
+          upgradeWrapper('upgrade-resume-capture-v403', 'resume-capture'),
+        ],
+        note: 'dispatch-only (upgradeExtra / upgrade403Extra) → shows not run nightly; v3 cannot resume a bare serial (no setup type recorded) and has no capture driver',
+      },
+      {
         id: 'ext-upgrade-403',
         label: 'Upgrade from 4.0.3',
         platforms: both,
@@ -512,7 +565,18 @@ export const OTHER_COVERAGE: CoverageSection[] = [
     title: 'Upgrades (separate lanes)',
     rows: [
       { id: 'j-upgrade', label: 'Upgrade from previous release', platforms: both, proof: [{ file: spec('upgrade/upgrade.spec.ts') }] },
+      { id: 'j-upgrade-verified', label: 'Upgrade: verified account survives', platforms: both, proof: [upgradeWrapper('upgrade-verified', 'verified')] },
+      { id: 'j-upgrade-send-video', label: 'Upgrade: pending send-video review survives', platforms: both, proof: [upgradeWrapper('upgrade-send-video-pending', 'send-video-pending')] },
+      { id: 'j-upgrade-in-person', label: 'Upgrade: unapproved in-person request survives', platforms: both, proof: [upgradeWrapper('upgrade-in-person-pending', 'in-person-pending')] },
+      { id: 'j-upgrade-non-bcsc', label: 'Upgrade: partial non-BCSC progress survives', platforms: both, proof: [upgradeWrapper('upgrade-non-bcsc-partial', 'non-bcsc-partial')] },
+      { id: 'j-upgrade-resume-serial', label: 'Upgrade: saved serial survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-serial', 'resume-serial')] },
+      { id: 'j-upgrade-resume-capture', label: 'Upgrade: captured document awaiting its number survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-capture', 'resume-capture')] },
       { id: 'j-upgrade-403', label: 'Upgrade from 4.0.3', platforms: both, proof: [{ file: spec('upgrade/upgrade-from-v403.spec.ts') }] },
+      { id: 'j-upgrade-403-verified', label: 'Upgrade from 4.0.3: verified account survives', platforms: both, proof: [upgradeWrapper('upgrade-verified-v403', 'verified')] },
+      { id: 'j-upgrade-403-in-person', label: 'Upgrade from 4.0.3: unapproved in-person request survives', platforms: both, proof: [upgradeWrapper('upgrade-in-person-pending-v403', 'in-person-pending')] },
+      { id: 'j-upgrade-403-resume-serial', label: 'Upgrade from 4.0.3: saved serial survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-serial-v403', 'resume-serial')] },
+      { id: 'j-upgrade-403-resume-capture', label: 'Upgrade from 4.0.3: captured document awaiting its number survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-capture-v403', 'resume-capture')] },
+      { id: 'j-upgrade-v3-in-person', label: 'Upgrade from v3: unapproved in-person request survives', platforms: androidOnly, proof: [upgradeWrapper('upgrade-in-person-pending-v3', 'in-person-pending')], note: 'nightly runs it on Android only, like the migration lane' },
       {
         id: 'j-migration-v3-add-card',
         label: 'Upgrade from v3: set up on the v3 release',
