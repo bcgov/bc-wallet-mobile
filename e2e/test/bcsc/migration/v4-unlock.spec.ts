@@ -1,5 +1,6 @@
 import { Timeouts } from '../../../src/constants.js'
 import { selectAccountLandingIfPresent } from '../../../src/flows/auth.js'
+import { expectVerifiedInSettings, loginWithPairingCode } from '../../../src/flows/main.js'
 import { annotate } from '../../../src/helpers/sauce.js'
 import { AccountLandingScreen, EnterPINScreen } from '../../../src/screens/auth.js'
 import { HomeScreen, TabBar } from '../../../src/screens/main.js'
@@ -31,5 +32,18 @@ describe('Upgrade from v3: unlocking with the v3 PIN', () => {
     await TabBar.expectVisible(Timeouts.SCREEN_TRANSITION)
     await annotate('Migration: SUCCESS — v4 unlocked with v3 PIN')
     console.log('[migration] v4 app unlocked successfully with v3 PIN')
+  })
+
+  // The v3 account was verified in person before the upgrade, so v4 must read it back as verified —
+  // the same state-preservation checks the previous-release upgrade lane makes. v3 already paid for
+  // the approval, so this is nearly free here.
+  it('keeps the account verified: the Settings Profile row is present', async () => {
+    await expectVerifiedInSettings()
+  })
+
+  it('logs in with a pairing code — the migrated device credential still works server-side', async () => {
+    await annotate('Migration: pairing-code login against SIT')
+    await loginWithPairingCode()
+    await annotate('Migration: SUCCESS — verified state survived the v3 → v4 upgrade')
   })
 })
