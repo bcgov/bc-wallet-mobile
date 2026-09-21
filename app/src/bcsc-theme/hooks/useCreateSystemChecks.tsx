@@ -283,7 +283,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       },
       [SystemCheckScope.MAIN_STACK]: {
         getSystemChecks: getMainSystemChecks,
-        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && !accountContext?.isLoadingAccount),
         isApplicable: true,
       },
       [SystemCheckScope.VERIFY]: {
@@ -308,5 +308,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     getVerifySystemChecks,
     getAccountSystemChecks,
     accountContext?.account,
+    accountContext?.isLoadingAccount,
   ])
 }
