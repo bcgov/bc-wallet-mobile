@@ -18,7 +18,7 @@ message or text on the screen itself informing the user that the feature isn't a
 
 ## Waiting screens
 
-BCSC loading overlays, video submission, and video-call setup use the shared `WaitingScreenContent`
+BCSC loading overlays, video submission, and video-call waits use the shared `WaitingScreenContent`
 and `BCAnimatedLoadingIcon`. Center the illustration in the safe-area viewport,
 with the heading between the optional status row and illustration. Allow scrolling
 for larger text and short screens.
@@ -36,7 +36,8 @@ Hidden loading views must not run animations. Concurrent operations own separate
 loading tokens; the overlay stays visible until all tokens are released.
 Video submission preserves the existing Cancel behavior (#4585): reveal it after
 10 seconds without shifting content, then return to verification-method selection.
-Startup has no Cancel control.
+Startup and post-call verification checks have no Cancel control. Post-call checks
+show the existing verification message without a progress bar.
 
 ## Test IDs: Register the key, then reference it
 
