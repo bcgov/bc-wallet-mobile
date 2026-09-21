@@ -173,9 +173,12 @@ export const config: WebdriverIO.Config = {
       resolve(__dirname, `../test/${variant}/upgrade/upgrade-resume-serial-v403.spec.ts`),
       resolve(__dirname, `../test/${variant}/upgrade/upgrade-resume-capture-v403.spec.ts`),
     ],
-    // The legacy v3 app → current (PREV_*_APP = BCSC-v3.*) with an in-progress verification — the one
+    // The legacy v3 app → current (PREV_*_APP = BCSC-v3.*): an unverified account, and the one in-progress
     // state v3's native driver can arrange beyond the migration lane's verified account.
-    upgradeV3: [resolve(__dirname, `../test/${variant}/upgrade/upgrade-in-person-pending-v3.spec.ts`)],
+    upgradeV3: [
+      resolve(__dirname, `../test/${variant}/upgrade/upgrade-from-v3.spec.ts`),
+      resolve(__dirname, `../test/${variant}/upgrade/upgrade-in-person-pending-v3.spec.ts`),
+    ],
   },
   // iOS configs append ANDROID_ONLY_SPECS to this — append, never assign, or the env exclusion is lost.
   exclude: EXCLUDE_SEND_VIDEO ? [...SEND_VIDEO_SPECS] : [],
