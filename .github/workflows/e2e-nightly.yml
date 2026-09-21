@@ -378,6 +378,8 @@ jobs:
         env:
           BUILD_NUMBER: ${{ needs.resolve-build.outputs.build_number }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # The main job runs the dispatched suite (regression on the schedule), so its lane is labelled by suite.
+          LANE_MAIN_SUITE: ${{ inputs.suite || 'regression' }}
           LANE_REGRESSION: ${{ needs.e2e.result }}
           LANE_SEND_VIDEO: ${{ needs.e2e-send-video.result }}
           LANE_MIGRATION: ${{ needs.e2e-migration.result }}
@@ -389,7 +391,7 @@ jobs:
         run: |
           ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts \
             --title "E2E nightly — build ${BUILD_NUMBER}" --run-url "$RUN_URL" \
-            --lane "regression=${LANE_REGRESSION}" --lane "send-video=${LANE_SEND_VIDEO}" \
+            --lane "${LANE_MAIN_SUITE}=${LANE_REGRESSION}" --lane "send-video=${LANE_SEND_VIDEO}" \
             --lane "migration=${LANE_MIGRATION}" \
             --lane "upgrade=${LANE_UPGRADE}" --lane "upgrade403=${LANE_UPGRADE403}" \
             --lane "upgradeV3=${LANE_UPGRADE_V3}" --lane "upgradeSendVideo=${LANE_UPGRADE_SEND_VIDEO}" \

@@ -418,8 +418,23 @@ export const UAT_CHECKLIST: CoverageSection[] = [
         id: 'ext-upgrade-verified',
         label: 'Upgrade keeps a verified account',
         platforms: both,
-        proof: [upgradeWrapper('upgrade-verified', 'verified'), upgradeWrapper('upgrade-verified-v403', 'verified')],
-        note: 'nightly, in the upgrade + upgrade403 lanes; verified state + a pairing-code login must survive (v3: the migration lane)',
+        proof: [
+          upgradeWrapper('upgrade-verified', 'verified'),
+          upgradeWrapper('upgrade-verified-v403', 'verified'),
+          // v3: the migration lane makes the same four asserts after its unlock.
+          {
+            file: spec('migration/migration.spec.ts'),
+            suite: 'Upgrade from v3: unlocking with the v3 PIN',
+            tests: [
+              'keeps the account verified: the Settings Profile row is present',
+              'reads back Account Details',
+              'opens the Services catalogue instead of the verify prompt',
+              'logs in with a pairing code — the migrated device credential still works server-side',
+            ],
+            sources: [spec('migration/v4-unlock.spec.ts')],
+          },
+        ],
+        note: 'nightly: the upgrade + upgrade403 lanes, and the migration lane for v3; verified state + a pairing-code login must survive',
       },
       {
         id: 'ext-upgrade-pending-review',

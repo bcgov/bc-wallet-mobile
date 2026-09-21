@@ -47,9 +47,8 @@ export function defineInPersonPendingUpgrade(prev: PrevBuild): void {
   it('authorizes and displays an in-person code on the previous build, without approving', async () => {
     await annotate(`Upgrade (in-person pending, from ${prev.label}): displaying the code on the previous build`)
     await prev.authorize(getTestUser())
-    // Read the code and STOP — no approval on the previous build.
+    // Read the code and STOP — no approval on the previous build. Never logged: it approves the request.
     codeBeforeUpgrade = await prev.showInPersonCode()
-    console.log(`[upgrade-in-person] confirmation code before the upgrade: ${codeBeforeUpgrade}`)
   })
 
   it('installs the current build over the previous build', async () => {
@@ -73,10 +72,11 @@ export function defineInPersonPendingUpgrade(prev: PrevBuild): void {
 
   it('shows an in-person code after the upgrade and approving it completes verification', async () => {
     const codeAfterUpgrade = await reachInPersonConfirmationCode()
-    // The finding: is the code carried across the upgrade, or freshly minted? Recorded, not asserted.
+    // The finding: is the code carried across the upgrade, or freshly minted? Recorded (never the codes
+    // themselves), not asserted.
     const persistence =
       codeAfterUpgrade === codeBeforeUpgrade ? 'SAME code across the upgrade' : 'FRESH code minted after the upgrade'
-    console.log(`[upgrade-in-person] confirmation code after the upgrade: ${codeAfterUpgrade} — ${persistence}`)
+    console.log(`[upgrade-in-person] ${persistence}`)
     await annotate(`Upgrade (in-person pending, from ${prev.label}): ${persistence}`)
 
     await approveInPersonAndComplete(getTestUser(), codeAfterUpgrade)
