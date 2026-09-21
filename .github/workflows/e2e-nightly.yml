@@ -6,13 +6,17 @@
 # a shared, blind-FIFO SIT agent queue with shared personas, so they are
 # kept out of the concurrent regression matrix) alongside the Android-only
 # migration lane, then the remaining upgrade lanes (previous release →
-# current, 4.0.3 → current) as chained advisory jobs — each boots an OLD
-# build via its own config, so they cannot live inside the regression wdio
-# suite itself — then the device-auth lane (the device-authentication
-# journey on a device with a screen lock + biometric interception, a state
-# no other journey may start from, so it has its own Sauce capability lane).
-# A final queue-hygiene job drains the SIT review queue so the UAT team
-# never starts the day behind e2e leftovers.
+# current incl. a verified account, 4.0.3 → current incl. a verified account,
+# v3 → current with an in-progress verification, then a pending send-video
+# review across the upgrade — last among the queue users, one platform at a
+# time) as chained advisory jobs — each boots an OLD build via its own config,
+# so they cannot live inside the regression wdio suite itself — then the
+# device-auth lane (the device-authentication journey on a device with a
+# screen lock + biometric interception, a state no other journey may start
+# from, so it has its own Sauce capability lane). A final queue-hygiene job
+# drains the SIT review queue so the UAT team never starts the day behind e2e
+# leftovers. The costlier upgrade state-preservation checks (upgradeExtra,
+# upgrade403Extra) are dispatch-only.
 #
 # Default device matrix: 1 iOS + 1 Android device (one modern OS major each).
 # os_version stays PINNED: unpinned, Sauce hands out iOS 15-era devices, where
@@ -66,6 +70,10 @@ on:
           - migration
           - upgrade
           - upgrade403
+          - upgradeSendVideo
+          - upgradeExtra
+          - upgrade403Extra
+          - upgradeV3
         default: regression
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
@@ -254,6 +262,45 @@ jobs:
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
+  # ─── Upgrade from v3 with an in-progress verification ───────────
+  # The migration lane covers a VERIFIED v3 account; this boots the same v3 build, shows an in-person
+  # code without approving it, installs the current build and proves the request resumes and can be
+  # approved. Android-only like the migration lane (the iOS post-install relaunch flake). Advisory.
+  e2e-upgrade-v3:
+    needs: [check-for-merges, resolve-build, e2e-upgrade403]
+    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+    with:
+      suite: upgradeV3
+      build_number: ${{ needs.resolve-build.outputs.build_number }}
+      device_matrix: '[{"platform":"Android","device":"Google.*","os_version":"15"}]'
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  # ─── Upgrade with a pending send-video review ───────────────────
+  # Proves a submitted-but-unreviewed send-video request survives the previous→current upgrade. It is a
+  # send-video journey in all but location: it reviews the shared blind-FIFO queue, so it runs LAST among
+  # the queue users, one platform at a time (its suite pins max_parallel 1), after the regular send-video
+  # lane has finished and drained. Its own `upgradeSendVideo` suite routes it to the Android injection-off
+  # upgrade lane (the recorder needs injection off). Advisory (continue-on-error in e2e.yml), regression
+  # runs only. The costlier upgrade state checks (upgradeExtra / upgrade403Extra: in-person pending, partial
+  # non-BCSC, the resume states) are dispatch-only — run them via the nightly's suite input or e2e.yml.
+  e2e-upgrade-send-video:
+    needs: [check-for-merges, resolve-build, e2e-upgrade-v3]
+    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+    with:
+      suite: upgradeSendVideo
+      build_number: ${{ needs.resolve-build.outputs.build_number }}
+      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+      max_parallel: 1
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
   # ─── Device-auth lane: a locked device with biometric interception ─
   # The device-authentication journey needs a Sauce session whose device carries a screen lock
   # (`setupDeviceLock`) and biometric interception (`biometricsInterception`) — the app offers device
@@ -263,7 +310,7 @@ jobs:
   # two sessions stay inside the account-wide cap. Blocking, like the regression: the coverage-map row
   # for "Change security method (biometrics)" is proved by this lane alone.
   e2e-device-auth:
-    needs: [check-for-merges, resolve-build, e2e-upgrade403]
+    needs: [check-for-merges, resolve-build, e2e-upgrade-send-video]
     if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
     uses: ./.github/workflows/e2e.yml
     permissions:
@@ -280,7 +327,7 @@ jobs:
   # the end-of-night double check, whatever the lanes did (always()) — so a run that died mid-journey
   # never leaves a submission for the UAT team to clear in the morning.
   queue-hygiene:
-    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403, e2e-device-auth]
+    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403, e2e-upgrade-v3, e2e-upgrade-send-video, e2e-device-auth]
     if: ${{ always() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' }}
     uses: ./.github/workflows/e2e-send-video-queue.yml
     permissions:
@@ -296,7 +343,7 @@ jobs:
   # reads the e2e-reports-* artifacts they uploaded, and writes the run summary + e2e-nightly-brief.
   brief:
     name: Nightly brief
-    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403, e2e-device-auth, queue-hygiene]
+    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403, e2e-upgrade-v3, e2e-upgrade-send-video, e2e-device-auth, queue-hygiene]
     if: ${{ always() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' }}
     runs-on: ubuntu-22.04
     permissions:
@@ -331,6 +378,8 @@ jobs:
           LANE_MIGRATION: ${{ needs.e2e-migration.result }}
           LANE_UPGRADE: ${{ needs.e2e-upgrade.result }}
           LANE_UPGRADE403: ${{ needs.e2e-upgrade403.result }}
+          LANE_UPGRADE_V3: ${{ needs.e2e-upgrade-v3.result }}
+          LANE_UPGRADE_SEND_VIDEO: ${{ needs.e2e-upgrade-send-video.result }}
           LANE_DEVICE_AUTH: ${{ needs.e2e-device-auth.result }}
         run: |
           ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts \
@@ -338,6 +387,7 @@ jobs:
             --lane "regression=${LANE_REGRESSION}" --lane "send-video=${LANE_SEND_VIDEO}" \
             --lane "migration=${LANE_MIGRATION}" \
             --lane "upgrade=${LANE_UPGRADE}" --lane "upgrade403=${LANE_UPGRADE403}" \
+            --lane "upgradeV3=${LANE_UPGRADE_V3}" --lane "upgradeSendVideo=${LANE_UPGRADE_SEND_VIDEO}" \
             --lane "device-auth=${LANE_DEVICE_AUTH}" \
             --out brief.md --json brief.json
           cat brief.md >> "$GITHUB_STEP_SUMMARY"

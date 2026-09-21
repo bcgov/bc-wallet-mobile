@@ -18,8 +18,12 @@
 #                  other journey starts from), never inside regression
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
-#   upgrade      — previous released build → current in-place upgrade (Sauce RDC, both platforms)
-#   upgrade403   — the shipped 4.0.3 release → current, via its frozen pre-rework onboarding walk
+#   upgrade      — previous released build → current in-place upgrade: PIN/settings + a verified account survive
+#   upgrade403   — the shipped 4.0.3 release → current via its frozen pre-rework walks: PIN/settings + a verified account survive
+#   upgradeSendVideo — a pending send-video review survives the previous→current upgrade (own serial, injection-off lane)
+#   upgradeExtra — costlier upgrade state-preservation checks (in-person pending, partial non-BCSC, resume states); dispatch-only
+#   upgrade403Extra — the same state checks 4.0.3's frozen walks can arrange (in-person pending, resume states); dispatch-only
+#   upgradeV3    — the legacy v3 app → current with an unapproved in-person request (the v3 driver's one in-progress state)
 #
 # All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
 # SAUCE_ACCESS_KEY and the IDCHECK_* sign-in (user, password, TOTP secret) are all
@@ -54,7 +58,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, send-video, a11y, device-auth, regression, migration, upgrade, upgrade403)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, send-video, a11y, device-auth, regression, migration, upgrade, upgrade403, upgradeSendVideo, upgradeExtra, upgrade403Extra, upgradeV3)'
         type: string
         required: true
       build_number:
@@ -122,6 +126,10 @@ on:
           - migration
           - upgrade
           - upgrade403
+          - upgradeSendVideo
+          - upgradeExtra
+          - upgrade403Extra
+          - upgradeV3
         default: smoke
       build_number:
         description: 'Build number (run_number from the build workflow)'
@@ -154,13 +162,17 @@ jobs:
   # Single unified job for all suites. Config file paths are selected at
   # runtime via a case statement on $SUITE:
   #   migration                → configs/sauce/wdio.{ios,android}.sauce.migration.conf.ts
-  #   upgrade / upgrade403     → configs/sauce/wdio.{ios,android}.sauce.upgrade.conf.ts
+  #   upgrade / upgrade403 /   → configs/sauce/wdio.{ios,android}.sauce.upgrade.conf.ts
+  #    upgradeSendVideo /         (the Android upgrade config splits into an injection-on lane and an
+  #    upgradeExtra /             injection-off send-video lane; upgradeSendVideo routes to the latter.
+  #    upgrade403Extra /          Every upgrade-family suite boots the previous build its case below
+  #    upgradeV3                  pins: rolling BCSC-prev.*, BCSC-v4.0.3.*, or BCSC-v3.*)
   #   everything else (smoke,  → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
   #    onboarding, auth, main,    (device-auth selects that config's locked-device capability lane)
   #    verify, regression)
   #
-  # Non-blocking suites (migration, upgrade, upgrade403): failures are reported but
-  # do not gate the pipeline.
+  # Non-blocking suites (migration and every upgrade-family suite): failures are
+  # reported but do not gate the pipeline.
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
     runs-on: ${{ inputs.runner_label }}
@@ -168,12 +180,13 @@ jobs:
       contents: read
     # regression runs every journey serially (~2h per platform with retries and growing); send-video is four
     # recording journeys with retries; other suites (merge-queue smoke) stay tight
-    timeout-minutes: ${{ (inputs.suite == 'regression' && 180) || (inputs.suite == 'send-video' && 90) || 45 }}
-    continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
+    timeout-minutes: ${{ (inputs.suite == 'regression' && 180) || (inputs.suite == 'send-video' && 90) || (contains(fromJSON('["upgradeExtra","upgrade403Extra"]'), inputs.suite) && 60) || 45 }}
+    continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403","upgradeSendVideo","upgradeExtra","upgrade403Extra","upgradeV3"]'), inputs.suite) }}
     strategy:
-      # send-video is pinned to 1: its journeys must never run on two platforms at once. fromJSON because a
-      # workflow_dispatch number input arrives as a string, which max-parallel rejects ("Unexpected value").
-      max-parallel: ${{ fromJSON((inputs.suite == 'send-video' && 1) || inputs.max_parallel || 2) }}
+      # send-video / upgradeSendVideo are pinned to 1: they review the blind-FIFO queue and must never run
+      # on two platforms at once. fromJSON because a workflow_dispatch number input arrives as a string,
+      # which max-parallel rejects ("Unexpected value").
+      max-parallel: ${{ fromJSON(((inputs.suite == 'send-video' || inputs.suite == 'upgradeSendVideo') && 1) || inputs.max_parallel || 2) }}
       fail-fast: false
       matrix:
         device: ${{ fromJSON(inputs.device_matrix) }}
@@ -274,12 +287,13 @@ jobs:
           DEVICE_COUNT=$(printf '%s' "$DEVICE_MATRIX" | jq 'length')
           [ "$DEVICE_COUNT" -ge 1 ] 2>/dev/null || DEVICE_COUNT=1
           [ "$MAX_PARALLEL" -ge 1 ] 2>/dev/null || MAX_PARALLEL=2
-          if [ "$SUITE" = "send-video" ]; then MAX_PARALLEL=1; fi   # mirrors strategy.max-parallel
+          # send-video and upgradeSendVideo both review the blind-FIFO queue — one platform at a time.
+          if [ "$SUITE" = "send-video" ] || [ "$SUITE" = "upgradeSendVideo" ]; then MAX_PARALLEL=1; fi   # mirrors strategy.max-parallel
           PARALLEL_JOBS=$(( DEVICE_COUNT > MAX_PARALLEL ? MAX_PARALLEL : DEVICE_COUNT ))
           export SAUCE_MAX_INSTANCES=$(( SAUCE_RDS_CONCURRENCY / PARALLEL_JOBS ))
-          # The send-video journeys review a blind-FIFO queue: one session at a time whatever the budget
-          # (the Android lane caps itself, iOS has no per-lane cap).
-          if [ "$SUITE" = "send-video" ]; then export SAUCE_MAX_INSTANCES=1; fi
+          # The send-video reviews use a blind-FIFO queue: one session at a time whatever the budget
+          # (the Android lane caps itself, iOS has no per-lane cap). Same for the send-video upgrade spec.
+          if [ "$SUITE" = "send-video" ] || [ "$SUITE" = "upgradeSendVideo" ]; then export SAUCE_MAX_INSTANCES=1; fi
           echo "Devices: $DEVICE_COUNT | parallel jobs: $PARALLEL_JOBS | wdio maxInstances: $SAUCE_MAX_INSTANCES"
 
           # Those journeys must never run on two platforms at once — each platform's queue drain would
@@ -293,12 +307,15 @@ jobs:
             echo "::notice::Send-video journeys excluded from this ${SUITE} run: ${PARALLEL_JOBS} platforms run in parallel. Use the send-video suite (or max_parallel: 1) to include them."
           fi
 
+          # The rolling-previous upgrade lanes all start from BCSC-prev.* and share the upgrade configs.
+          ROLLING_PREV=0
+          case "$SUITE" in upgrade | upgradeSendVideo | upgradeExtra) ROLLING_PREV=1 ;; esac
           case "$SUITE" in
             migration)
               IOS_CONF="configs/sauce/wdio.ios.sauce.migration.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.migration.conf.ts"
               ;;
-            upgrade | upgrade403)
+            upgrade | upgrade403 | upgradeSendVideo | upgradeExtra | upgrade403Extra | upgradeV3)
               IOS_CONF="configs/sauce/wdio.ios.sauce.upgrade.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.upgrade.conf.ts"
               ;;
@@ -307,28 +324,35 @@ jobs:
               ANDROID_CONF="configs/sauce/wdio.android.sauce.rdc.conf.ts"
               ;;
           esac
-          # Upgrade suite: optional override of the rolling previous build (BCSC-prev.*).
-          if [ "$SUITE" = "upgrade" ] && [ -n "$PREV_BUILD_NUMBER" ]; then
+          # Rolling-previous lanes: optional override of the rolling previous build (BCSC-prev.*).
+          if [ "$ROLLING_PREV" = "1" ] && [ -n "$PREV_BUILD_NUMBER" ]; then
             export PREV_ANDROID_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.apk"
             export PREV_IOS_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.ipa"
           fi
           # The rolling BCSC-prev.* first exists once a full release publishes its e2e builds —
-          # until then a default upgrade run cannot start a session; skip with a notice, not a failure.
-          # Each matrix job is one platform, so probe that platform's file.
-          if [ "$SUITE" = "upgrade" ] && [ -z "$PREV_BUILD_NUMBER" ]; then
+          # until then a default rolling-previous run cannot start a session; skip with a notice, not a
+          # failure. Each matrix job is one platform, so probe that platform's file.
+          if [ "$ROLLING_PREV" = "1" ] && [ -z "$PREV_BUILD_NUMBER" ]; then
             if [ "$PLATFORM" = "iOS" ]; then PREV_FILE="BCSC-prev.ipa"; else PREV_FILE="BCSC-prev.apk"; fi
             total=$(curl -su "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
               "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${PREV_FILE}&per_page=1" | jq -r '.total_items')
             if [ "$total" = "0" ]; then
-              echo "::notice::${PREV_FILE} not in Sauce storage yet (no full release has published e2e builds) — skipping the upgrade suite"
+              echo "::notice::${PREV_FILE} not in Sauce storage yet (no full release has published e2e builds) — skipping the ${SUITE} suite"
               exit 0
             fi
           fi
-          # upgrade403 pins its previous build to the preserved 4.0.3 binaries.
-          if [ "$SUITE" = "upgrade403" ]; then
-            export PREV_ANDROID_APP="BCSC-v4.0.3.apk"
-            export PREV_IOS_APP="BCSC-v4.0.3.ipa"
-          fi
+          # The pinned lanes: each suite family drives exactly one old build with its own frozen walk,
+          # so the binary is fixed here rather than chosen by input.
+          case "$SUITE" in
+            upgrade403 | upgrade403Extra)
+              export PREV_ANDROID_APP="BCSC-v4.0.3.apk"
+              export PREV_IOS_APP="BCSC-v4.0.3.ipa"
+              ;;
+            upgradeV3)
+              export PREV_ANDROID_APP="BCSC-v3.apk"
+              export PREV_IOS_APP="BCSC-v3.ipa"
+              ;;
+          esac
           if [ "$PLATFORM" = "iOS" ]; then
             IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
               yarn wdio "$IOS_CONF" --suite "${SUITE}"
