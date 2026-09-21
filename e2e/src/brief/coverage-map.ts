@@ -456,13 +456,20 @@ export const UAT_CHECKLIST: CoverageSection[] = [
           upgradeWrapper('upgrade-resume-serial-v403', 'resume-serial'),
           upgradeWrapper('upgrade-resume-capture-v403', 'resume-capture'),
         ],
-        note: 'dispatch-only (upgradeExtra / upgrade403Extra) → shows not run nightly; v3 cannot resume a bare serial (no setup type recorded) and has no capture driver',
+        note: "dispatch-only (upgradeExtra / upgrade403Extra) → shows not run nightly; not representable from v3: the current build never reads v3's typed-serial file, and a migrant's captured document is re-asked and cleaned up (no setup type recorded)",
       },
       {
         id: 'ext-upgrade-403',
         label: 'Upgrade from 4.0.3',
         platforms: both,
         proof: [{ file: spec('upgrade/upgrade-from-v403.spec.ts') }],
+      },
+      {
+        id: 'ext-upgrade-v3-unverified',
+        label: 'Upgrade from v3 with an unverified account',
+        platforms: androidOnly,
+        proof: [{ file: spec('upgrade/upgrade-from-v3.spec.ts') }],
+        note: 'nightly on Android (upgradeV3); the v3 user who never added a card — the account and PIN survive and verification starts from the setup-type question',
       },
       {
         id: 'ext-migration-v3',
@@ -576,6 +583,7 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       { id: 'j-upgrade-403-in-person', label: 'Upgrade from 4.0.3: unapproved in-person request survives', platforms: both, proof: [upgradeWrapper('upgrade-in-person-pending-v403', 'in-person-pending')] },
       { id: 'j-upgrade-403-resume-serial', label: 'Upgrade from 4.0.3: saved serial survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-serial-v403', 'resume-serial')] },
       { id: 'j-upgrade-403-resume-capture', label: 'Upgrade from 4.0.3: captured document awaiting its number survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-capture-v403', 'resume-capture')] },
+      { id: 'j-upgrade-v3-unverified', label: 'Upgrade from v3: unverified account survives, verification can start', platforms: androidOnly, proof: [{ file: spec('upgrade/upgrade-from-v3.spec.ts') }], note: 'nightly runs it on Android only, like the migration lane' },
       { id: 'j-upgrade-v3-in-person', label: 'Upgrade from v3: unapproved in-person request survives', platforms: androidOnly, proof: [upgradeWrapper('upgrade-in-person-pending-v3', 'in-person-pending')], note: 'nightly runs it on Android only, like the migration lane' },
       {
         id: 'j-migration-v3-add-card',
