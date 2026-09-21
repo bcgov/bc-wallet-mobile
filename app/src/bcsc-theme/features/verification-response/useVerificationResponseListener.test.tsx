@@ -255,7 +255,7 @@ describe('useVerificationResponseListener', () => {
 
     it('should not proceed if verificationRequestId is missing', async () => {
       // Override the store mock for this test
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { useStore } = require('@bifold/core')
       useStore.mockReturnValueOnce([
         {
@@ -282,7 +282,7 @@ describe('useVerificationResponseListener', () => {
 
     it('should not proceed if deviceCode is missing', async () => {
       // Override the store mock for this test
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { useStore } = require('@bifold/core')
       useStore.mockReturnValueOnce([
         {

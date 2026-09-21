@@ -138,6 +138,12 @@ describe('BCSCAccountContext', () => {
 
       expect(mockGetUserMetadata).not.toHaveBeenCalled()
     })
+
+    it('never reports loading, since no account load will run', () => {
+      const { result } = renderAccount(unverified)
+
+      expect(result.current.isLoadingAccount).toBe(false)
+    })
   })
 
   describe('verified user', () => {
@@ -151,6 +157,45 @@ describe('BCSCAccountContext', () => {
       await waitFor(() => expect(result.current.account).not.toBeNull())
 
       expect(mockGetUserMetadata).toHaveBeenCalledTimes(1)
+    })
+
+    // #4654: MainStack unmounts its navigator while this flag is true. A `false` on the very first
+    // render — before the load effect runs — mounts the navigator and immediately unmounts it,
+    // silently dropping any navigation the system checks perform in between. Records every
+    // rendered value, since the offending one is only observable on the initial render.
+    it('reports loading on the very first render, before the load effect runs', async () => {
+      const seen: boolean[] = []
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <BasicAppContext initialStateOverride={{ bcscSecure: verified }}>
+          <BCSCAccountProvider>{children}</BCSCAccountProvider>
+        </BasicAppContext>
+      )
+
+      const { result } = renderHook(
+        () => {
+          const context = useAccount()
+          seen.push(context.isLoadingAccount)
+          return context
+        },
+        { wrapper }
+      )
+
+      expect(seen[0]).toBe(true)
+
+      await waitFor(() => expect(result.current.account).not.toBeNull())
+
+      expect(result.current.isLoadingAccount).toBe(false)
+    })
+
+    // A failed load must still settle the flag, or MainStack never remounts its navigator.
+    it('stops reporting loading when the initial load fails', async () => {
+      mockGetUserMetadata.mockRejectedValue(new Error('offline'))
+
+      const { result } = renderAccount(verified)
+
+      await waitFor(() => expect(result.current.isLoadingAccount).toBe(false))
+
+      expect(result.current.account).toBeNull()
     })
 
     describe('fullname_formatted', () => {

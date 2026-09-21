@@ -226,7 +226,7 @@ const isEnabled = async (): Promise<boolean> => {
     const messageTokenValue = await getToken(messagingInstance)
 
     return messageTokenValue === deviceTokenValue
-  } catch (error) {
+  } catch {
     return false
   }
 }

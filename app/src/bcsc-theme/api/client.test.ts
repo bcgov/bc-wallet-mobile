@@ -189,7 +189,7 @@ describe('BCSC Client', () => {
       try {
         await client.get('/endpoint', { skipBearerAuth: true })
         expect(true).toBe(false) // Force fail if no error is thrown
-      } catch (error) {
+      } catch {
         const loggedContext = mockLogger.error.mock.calls[0][1].context
         expect(Object.keys(loggedContext).some((key) => key.startsWith('media_'))).toBe(false)
       }
