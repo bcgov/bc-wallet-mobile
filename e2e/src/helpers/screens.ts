@@ -78,6 +78,26 @@ export type ScreenProbe = ScreenPresence | (() => Promise<boolean>)
 const ANY_SCREEN_PROBE_MS = 500
 
 /**
+ * Poll `candidates` until one is on screen and say which, or `undefined` once `timeoutMs` is spent.
+ * Never scrolls. The non-throwing half of {@link waitForAnyScreen}, for callers that interleave the
+ * plain probes with something else (a scrolling look) before they give up.
+ */
+export async function probeAnyScreen<K extends string>(
+  candidates: Record<K, ScreenProbe>,
+  timeoutMs: number
+): Promise<K | undefined> {
+  const deadline = Date.now() + timeoutMs
+  const entries = Object.entries(candidates) as [K, ScreenProbe][]
+  for (;;) {
+    for (const [key, probe] of entries) {
+      const present = typeof probe === 'function' ? await probe() : await probe.isPresent(ANY_SCREEN_PROBE_MS)
+      if (present) return key
+    }
+    if (Date.now() > deadline) return undefined
+  }
+}
+
+/**
  * Wait until one of `candidates` is on screen and say which — for the seams where the app may
  * legitimately land on either of two screens (a relaunch that resumes into verification, or Home).
  * Never scrolls; on timeout the thrown error names what was actually on screen.
@@ -86,17 +106,9 @@ export async function waitForAnyScreen<K extends string>(
   candidates: Record<K, ScreenProbe>,
   timeoutMs: number = Timeouts.SCREEN_TRANSITION
 ): Promise<K> {
-  const deadline = Date.now() + timeoutMs
-  const entries = Object.entries(candidates) as [K, ScreenProbe][]
-  for (;;) {
-    for (const [key, probe] of entries) {
-      const present = typeof probe === 'function' ? await probe() : await probe.isPresent(ANY_SCREEN_PROBE_MS)
-      if (present) return key
-    }
-    if (Date.now() > deadline) {
-      throw new Error(
-        `None of [${entries.map(([key]) => key).join(', ')}] appeared within ${timeoutMs}ms. On screen: ${await describeCurrentScreen()}`
-      )
-    }
-  }
+  const landed = await probeAnyScreen(candidates, timeoutMs)
+  if (landed) return landed
+  throw new Error(
+    `None of [${Object.keys(candidates).join(', ')}] appeared within ${timeoutMs}ms. On screen: ${await describeCurrentScreen()}`
+  )
 }

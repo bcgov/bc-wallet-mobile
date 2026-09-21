@@ -59,7 +59,9 @@ export async function selectAccountLandingIfPresent(): Promise<void> {
       await OnboardingIntroScreen.tap('primary')
     }
     if (Date.now() > deadline) {
-      throw new Error('AccountLanding did not appear (nor AuthIntro) within the launch timeout')
+      throw new Error(
+        `AccountLanding did not appear (nor AuthIntro) within the launch timeout. On screen: ${await describeCurrentScreen()}`
+      )
     }
   }
 }

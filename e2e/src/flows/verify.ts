@@ -19,7 +19,7 @@ import {
   RestartVerificationAlert,
   tapHelpMenuRow,
 } from '../helpers/help-menu.js'
-import { describeCurrentScreen, reachCameraScreen, type ScreenProbe, waitForAnyScreen } from '../helpers/screens.js'
+import { describeCurrentScreen, probeAnyScreen, reachCameraScreen, type ScreenProbe } from '../helpers/screens.js'
 import { backgroundAppFor } from './auth.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
 import type { ScreenPresence } from '../screens/core/defineScreen.js'
@@ -76,6 +76,21 @@ const engine = new BaseScreen()
 /** Confirming action on EnterEmail's skip alert — copy-matched, as its buttons carry no testIDs. */
 const EMAIL_SKIP_CONFIRM = 'Skip'
 
+/** One round of scroll-free landing probes inside {@link resumeVerification} before the scrolling look. */
+const RESUME_PROBE_ROUND_MS = 3_000
+/** The scrolling look's plain wait — short, the hunt is what it is there for. */
+const RESUME_SCROLL_LOOK_MS = 1_000
+
+/** Whether `screen` is on screen once its scroll hunt has run; never throws. */
+async function isVisibleAfterScrolling(screen: ScreenPresence): Promise<boolean> {
+  try {
+    await screen.expectVisible(RESUME_SCROLL_LOOK_MS)
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * VerifyPrompt `Continue` → the AccountSetup add-or-transfer choice.
  *
@@ -113,6 +128,11 @@ export async function leaveVerificationToHome(): Promise<void> {
  * An account that never answered the verify prompt (state written by a build predating it, e.g. a v3
  * migrant) is shown the prompt first. Its Continue replaces onto AccountSetup and would re-ask for the
  * card, so the prompt is skipped and the Home card taken — the one route that honours saved progress.
+ *
+ * The landing probes never scroll, and a step whose marker sits below the fold (method selection
+ * anchors on the Hours-of-Service heading, under three tall option cards) reads as a miss to them. So
+ * once a round of probes has ruled out Home and the prompt, the resumed step gets one scrolling look
+ * — the hunt ends scrolled back to the top, so a Home card that appears meanwhile is not lost.
  */
 export async function resumeVerification(
   resumedOnto?: ScreenPresence,
@@ -124,7 +144,21 @@ export async function resumeVerification(
   }
   // Probed by its Skip button: the prompt's Continue id is the generic one many verify screens share.
   candidates.prompt = () => VerifyPromptScreen.isVisible('skipVerification')
-  const landed = await waitForAnyScreen(candidates, timeoutMs)
+  const deadline = Date.now() + timeoutMs
+  let landed: string | undefined
+  for (;;) {
+    landed = await probeAnyScreen(candidates, RESUME_PROBE_ROUND_MS)
+    if (landed) break
+    if (resumedOnto && (await isVisibleAfterScrolling(resumedOnto))) {
+      landed = 'resumed'
+      break
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `None of [${Object.keys(candidates).join(', ')}] appeared within ${timeoutMs}ms. On screen: ${await describeCurrentScreen()}`
+      )
+    }
+  }
   if (landed === 'prompt') {
     console.log('[verify] The verify prompt is up — skipping it to resume through the Home card')
     await VerifyPromptScreen.tapToReach('secondary', HomeNotificationCard)
