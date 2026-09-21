@@ -12,7 +12,7 @@ describe('CallLoadingView', () => {
 
   it('keeps Cancel available immediately and updates the status without changing the heading', () => {
     const onCancel = jest.fn()
-    const view = render(<CallLoadingView onCancel={onCancel} />, { wrapper: BasicAppContext })
+    const view = render(<CallLoadingView onCancel={onCancel} progressPercent={0} />, { wrapper: BasicAppContext })
 
     expect(view.getByRole('progressbar', { name: 'BCSC.VideoCall.Loading.SettingThingsUp' })).toBeTruthy()
     const cancel = view.getByRole('button', { name: 'Global.Cancel' })
@@ -20,10 +20,10 @@ describe('CallLoadingView', () => {
     fireEvent.press(cancel)
     expect(onCancel).toHaveBeenCalledTimes(1)
 
-    view.rerender(<CallLoadingView onCancel={onCancel} message="Uploading your photo..." />)
+    view.rerender(<CallLoadingView onCancel={onCancel} message="Uploading your photo..." progressPercent={0} />)
     expect(view.getByRole('progressbar', { name: 'Uploading your photo...' })).toBeTruthy()
 
-    view.rerender(<CallLoadingView onCancel={onCancel} message="Creating video session..." />)
+    view.rerender(<CallLoadingView onCancel={onCancel} message="Creating video session..." progressPercent={25} />)
     expect(view.getByRole('progressbar', { name: 'Creating video session...' })).toBeTruthy()
     expect(view.queryByText('Uploading your photo...')).toBeNull()
     expect(view.getByText('BCSC.VideoCall.Loading.OneMomentPlease')).toBeTruthy()
@@ -32,7 +32,7 @@ describe('CallLoadingView', () => {
 
   it('preserves delayed feedback across stage changes while keeping status and Cancel available', () => {
     const onCancel = jest.fn()
-    const view = render(<CallLoadingView onCancel={onCancel} message="Uploading your photo..." />, {
+    const view = render(<CallLoadingView onCancel={onCancel} message="Uploading your photo..." progressPercent={0} />, {
       wrapper: BasicAppContext,
     })
     const delayedMessage = 'BCSC.VideoCall.Loading.TakingLongerThanUsual'
@@ -40,8 +40,10 @@ describe('CallLoadingView', () => {
     act(() => jest.advanceTimersByTime(10000))
     expect(view.queryByText(delayedMessage)).toBeNull()
 
-    view.rerender(<CallLoadingView onCancel={onCancel} message="Creating video session..." />)
-    act(() => jest.advanceTimersByTime(5000))
+    view.rerender(<CallLoadingView onCancel={onCancel} message="Creating video session..." progressPercent={25} />)
+    act(() => jest.advanceTimersByTime(3199))
+    expect(view.queryByText(delayedMessage)).toBeNull()
+    act(() => jest.advanceTimersByTime(1))
 
     expect(view.getByText(delayedMessage)).toBeTruthy()
     expect(view.getByRole('progressbar', { name: 'Creating video session...' })).toBeTruthy()

@@ -4,37 +4,22 @@ import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+// Preserve the existing warning delay independently of workflow progress.
+const LONG_WAIT_DELAY_MS = 13200
+
 type CallLoadingViewProps = {
   onCancel: () => void
   message?: string
+  progressPercent: number
 }
 
-const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
+const CallLoadingView = ({ onCancel, message, progressPercent }: CallLoadingViewProps) => {
   const { t } = useTranslation()
-  const [progressPercent, setProgressPercent] = useState(0)
   const [delayReached, setDelayReached] = useState(false)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgressPercent((prev) => {
-        if (prev > 90) {
-          setDelayReached(true)
-        }
-
-        // Logarithmic progression - slows down as it approaches 100%
-        const maxProgress = 97
-
-        if (prev >= maxProgress) {
-          return prev
-        }
-
-        const increment = (maxProgress - prev) * 0.02
-
-        return Math.min(prev + increment, maxProgress)
-      })
-    }, 100)
-
-    return () => clearInterval(interval)
+    const timeout = setTimeout(() => setDelayReached(true), LONG_WAIT_DELAY_MS)
+    return () => clearTimeout(timeout)
   }, [])
 
   const controls = (

@@ -31,6 +31,14 @@ type LiveCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.LiveCall>
 }
 
+const CALL_SETUP_PROGRESS = {
+  [VideoCallFlowState.IDLE]: 0,
+  [VideoCallFlowState.UPLOADING_DOCUMENTS]: 0,
+  [VideoCallFlowState.CREATING_SESSION]: 25,
+  [VideoCallFlowState.CONNECTING_WEBRTC]: 50,
+  [VideoCallFlowState.WAITING_FOR_AGENT]: 75,
+}
+
 const getCallVolume = (result: VolumeResult) =>
   Platform.OS === 'android' ? (result.call ?? result.volume) : result.volume
 
@@ -369,7 +377,13 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   }
 
   if (flowState !== VideoCallFlowState.IN_CALL) {
-    return <CallLoadingView onCancel={handleEndCall} message={stateMessage || undefined} />
+    return (
+      <CallLoadingView
+        onCancel={handleEndCall}
+        message={stateMessage || undefined}
+        progressPercent={CALL_SETUP_PROGRESS[flowState]}
+      />
+    )
   }
 
   return (
