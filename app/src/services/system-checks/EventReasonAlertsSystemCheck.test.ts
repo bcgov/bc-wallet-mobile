@@ -177,9 +177,17 @@ describe('EventReasonAlertsSystemCheck', () => {
       const check = new EventReasonAlertsSystemCheck(getIdToken, emitAlert, undefined, mockUtils, mockNavigation)
 
       const result = await check.runCheck()
+      check.onFail()
 
       expect(result).toBe(false)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCDeviceInvalidated', {
+        invalidationReason: BCSCReason.Cancel,
+      })
+      expect(mockUtils.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
+      )
     })
+
     it('should render an alert with CARD_STATUS_UPDATED event when reason Renew', async () => {
       const mockIdToken = createMockIdToken({
         bcsc_event: BCSCEvent.Renewal,
