@@ -17,8 +17,8 @@ export const V3_USER = TestUsers.combined
 /** Format DOB from "YYYYMMDD" to individual components for date picker. */
 function parseDob(dob: string) {
   const y = dob.slice(0, 4)
-  const m = parseInt(dob.slice(4, 6), 10)
-  const d = parseInt(dob.slice(6, 8), 10)
+  const m = Number.parseInt(dob.slice(4, 6), 10)
+  const d = Number.parseInt(dob.slice(6, 8), 10)
   const months = [
     'January',
     'February',
@@ -70,10 +70,10 @@ async function scrollNumberPickerTo(
     }
 
     // Try parsing as numbers (days, years)
-    const curNum = parseInt(current, 10)
-    const targetNum = parseInt(target, 10)
+    const curNum = Number.parseInt(current, 10)
+    const targetNum = Number.parseInt(target, 10)
 
-    if (!isNaN(curNum) && !isNaN(targetNum)) {
+    if (!Number.isNaN(curNum) && !Number.isNaN(targetNum)) {
       // For days (1-31), use circular distance
       if (curNum >= 1 && curNum <= 31 && targetNum >= 1 && targetNum <= 31) {
         const forward = (targetNum - curNum + 31) % 31 || 31
