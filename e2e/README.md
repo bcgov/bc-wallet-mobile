@@ -44,8 +44,12 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `send-video` | _The four send-video journeys alone (`verify/send-video-*.journey.ts`): a scripted agent review against the shared SIT queue. Also inside `verify` / `regression`, but CI runs them in their own one-platform-at-a-time lane and drops them from any parallel multi-device run (`E2E_EXCLUDE_SEND_VIDEO=1`) — see **[Send-video review queue](#send-video-review-queue)**_ |
 | `main`       | _Main-stack journeys — unverified gating + settings + wallet credential lifecycle (`main/*.journey.ts`)_ |
 | `migration`  | _The upgrade **from v3**: v3 onboarding + verification, install the current build over it, unlock with the v3 PIN. Same shape as the two upgrade lanes below; its own suite because v3 is a different app lineage (own binaries + `src/v3TestIDs.ts`) and it runs Android-only in CI_ |
-| `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence. Runs on Sauce on **both platforms** (mid-session install passes Sauce resigning)_ |
-| `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding runs via a frozen walk (`flows/onboarding-v403.ts`). Runs on Sauce on **both platforms**; retire once 4.1.0 is the previous release_ |
+| `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence — and (added) a **verified account** whose device credential must still work after the swap. Runs on Sauce on **both platforms** (mid-session install passes Sauce resigning)_ |
+| `upgradeSendVideo` | _Previous released build → current with a **pending send-video review**: submit on the old build, upgrade, resume onto PendingReview, then the scripted agent decision completes it. A send-video journey in all but location — its own **serial** one-platform-at-a-time lane, Android **injection-off** (the recorder), queue drained first_ |
+| `upgradeExtra` | _The costlier upgrade state-preservation checks — an unapproved in-person request, partial non-BCSC progress (resume assert; completion deferred until the non-BCSC counter approval works), and the two resume states (saved serial, a captured document awaiting its number). **Dispatch-only** (owner may promote to weekly)_ |
+| `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding and verify screens run via frozen walks (`flows/onboarding-v403.ts`, `flows/verify-v403.ts`): the base PIN/settings check plus a **verified account**. Runs on Sauce on **both platforms**; keep while 4.0.3 is in the field_ |
+| `upgrade403Extra` | _The state checks 4.0.3's frozen walks can arrange — an unapproved in-person request, a saved serial, a captured document awaiting its number. **Dispatch-only**_ |
+| `upgradeV3` | _The legacy **v3** app → current with an unapproved in-person request — the one in-progress state the native v3 driver can arrange (the `migration` suite covers the verified account). Android-only in the nightly, like `migration`_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
 | `a11y`       | _Automated accessibility audits over the core unverified screens (`a11y/*.journey.ts`): iOS runs Apple's XCTest audit engine, Android the page-source/screenshot heuristics — see **[Accessibility audits](#accessibility-audits)**. Also part of `regression`_ |
 | `device-auth` | _Device authentication on a **locked** device (`device-auth/*.journey.ts`): onboarding on device auth, the "Confirm it's your device" interstitial, a failed match + retry, and the PIN ↔ device-auth switch in Settings with an unlock on each method. **Sauce RDC only**, on its own capability lane (`setupDeviceLock` + `biometricsInterception`, see **[Device authentication](#device-authentication-sauce-device-lock-lane)**) and never inside `regression` — a locked device changes the state every other journey starts from_ |
@@ -239,11 +243,40 @@ PREV_IOS_APP=BCSC-prev.ipa IOS_APP_DEVICE=BCSC.ipa yarn test:ios:upgrade:device
 
 _Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No IDCheck credentials are needed — the journey stays unverified._
 
-_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`, previous binary preserved in Sauce storage as `BCSC-v4.0.3.*`), then reuses the standard install + post-upgrade assertions. Runs on Sauce on both platforms; retire it once 4.1.0 becomes the previous release:_
+_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own suite: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`, previous binary preserved in Sauce storage as `BCSC-v4.0.3.*`), then reuses the standard install + post-upgrade assertions. Runs on Sauce on both platforms; keep it while 4.0.3 is in the field:_
 
 ```bash
 ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn test:android:upgrade403:sauce
 IOS_APP_FILENAME=BCSC-Dev-<current>.ipa yarn test:ios:upgrade403:sauce
+```
+
+#### _State preservation across the upgrade_
+
+_The base `upgrade` spec proves the PIN and settings survive. These scenarios prove that **verification state** survives the binary swap — the worst thing an update can do to a real user is lose their device credential or a review already in the agent queue. Each arranges its state on the previous build, installs the current build over it, and asserts what survived. The binary-swap proof itself stays in the base `upgrade.spec.ts` (same lane, same prev→current pair, every night)._
+
+_Only the **arrange** half is version-specific — after the swap every assertion is today's DSL — so each scenario's checkpoints live once, in `test/bcsc/upgrade/scenarios/*.scenario.ts`, parameterised by a **previous-build driver** (`src/flows/prev-build/`: `current` = the rolling release driven by today's flows, `v403` = the frozen 4.0.3 walks, `v3` = the native v3 selectors). A spec file is one `describe` per scenario × previous build, so the brief reports each pair on its own row; a suite lists the wrappers for the one build its lane boots. Adding a lineage = implement `PrevBuild` for it and add wrappers for the states it can arrange._
+
+| Scenario | State arranged on the previous build | After the upgrade | previous release | 4.0.3 | v3 |
+| --- | --- | --- | --- | --- | --- |
+| `verified` | full in-person verification (photo) | verified Home: Profile row, Account Details, Services catalogue, a pairing-code login | `upgrade`, nightly | `upgrade403`, nightly | the `migration` suite (its post-upgrade step makes the same asserts) |
+| `send-video-pending` | send-video submitted + pending | resume → PendingReview → scripted approve → verified | `upgradeSendVideo`, nightly (serial, injection-off) | not frozen yet (4.0.3's send-video is a two-media hub) | n/a — no native send-video driver |
+| `in-person-pending` | in-person code shown, **not** approved | resume → method selection → approve → verified (records whether the code is the same or fresh) | `upgradeExtra`, dispatch | `upgrade403Extra`, dispatch | `upgradeV3`, nightly (Android) — resumes via the verify prompt's Skip + the Home card |
+| `non-bcsc-partial` | two documents + address + email (non-BCSC) | resume → method selection, nothing re-requested (completion deferred — the non-BCSC counter approval is blocked) | `upgradeExtra`, dispatch | not frozen yet | n/a — no native non-BCSC driver |
+| `resume-serial` | serial saved, birthdate not submitted | resume → EnterBirthdate | `upgradeExtra`, dispatch | `upgrade403Extra`, dispatch | n/a — a v3 migrant has no recorded setup type, so a bare serial resumes to the setup question by design |
+| `resume-capture` | first non-BCSC document photographed, number not entered | resume → EvidenceIDCollection (the partial the app keeps: an ID selected with **no** photo is cleaned up on the post-upgrade unlock) | `upgradeExtra`, dispatch | `upgrade403Extra`, dispatch | n/a |
+
+_The verified scenarios need the `IDCHECK_*` credentials on an allowlisted runner (the in-person / send-video approval). `send-video-pending` reviews the shared blind-FIFO queue, so it runs like the `send-video` lane — one platform at a time, the queue drained first, Android injection-off (the Android upgrade config splits into an injection-on lane and an injection-off send-video lane). `resume-capture` and `non-bcsc-partial` need camera injection (Sauce)._
+
+```bash
+# The verified-account upgrade (nightly), from the rolling previous release
+ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn wdio configs/sauce/wdio.android.sauce.upgrade.conf.ts --suite upgrade
+
+# The costlier state checks on demand (dispatch-only lanes)
+ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn wdio configs/sauce/wdio.android.sauce.upgrade.conf.ts --suite upgradeExtra
+ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn test:android:upgrade403Extra:sauce
+
+# From v3 (the in-person request across the swap)
+ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn test:android:upgradeV3:sauce
 ```
 
 ### _Variant Selection_
@@ -637,7 +670,7 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
 | _Nightly (schedule)_ | `regression` | _1 iOS (18) + 1 Android (15)_ | `bcsc-dev` | _—_          |
 
-> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, and `upgrade403` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (migration on Android 15; `upgrade` / `upgrade403` on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*`. `a11y` rides inside `regression` on both platforms as an advisory lane — its findings are reports, not failures. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, `upgrade403`, `upgradeV3` and `upgradeSendVideo` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (migration and `upgradeV3` on Android 15; `upgrade` / `upgrade403` / `upgradeSendVideo` on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*` and `upgradeV3` the `BCSC-v3.*` pair. The `upgrade` and `upgrade403` lanes also carry the verified-account state check; `upgradeSendVideo` (a pending review across the upgrade) is a send-video journey, so it runs last among the queue users, one platform at a time, on the Android injection-off upgrade lane. The costlier state checks (`upgradeExtra` / `upgrade403Extra`: unapproved in-person, partial non-BCSC, resume states) are dispatch-only. `a11y` rides inside `regression` on both platforms as an advisory lane — its findings are reports, not failures. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
 
 _The four send-video journeys are excluded from that concurrent regression matrix and run right after it as their own_ `send-video` _lane — both platforms, one at a time (`max_parallel: 1`), alongside the Android-only migration lane — because they review a shared, blind-FIFO SIT agent queue with shared personas (see **Send-video review queue**). The journeys drain that queue around their own uploads, and the nightly ends with a_ `queue-hygiene` _job that drains it once more._
 
@@ -647,7 +680,7 @@ _The nightly ends with the_ `device-auth` _lane (both platforms, last in the cha
 
 _**Note:** There is no E2E job on_ `main` _merge by design — regression is deferred to the nightly workflow so SauceLabs devices stay free during the day when multiple PRs merge. The in-person verification step needs the runner's egress IP allowlisted with the BC Gov ID Check portal; see the notes in_ `e2e-nightly.yml` _and use the "Verify Allowlist Connectivity" workflow to confirm reachability._
 
-_**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices = 2 jobs) this fits within a single round. Nightly uses the same two-device matrix; it runs longer end-to-end because the advisory lanes (migration, upgrade, upgrade403) chain serially after the regression._
+_**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices = 2 jobs) this fits within a single round. Nightly uses the same two-device matrix; it runs longer end-to-end because the advisory lanes (migration, upgrade, upgrade403, upgradeV3, upgradeSendVideo, device-auth) chain serially after the regression._
 
 ### Nightly brief
 
@@ -734,7 +767,10 @@ e2e/
 │   │   ├── onboarding.ts                    # completeOnboarding, skipToHome, skipNotificationsIfShown
 │   │   ├── auth.ts                          # unlockWithPin, relaunchApp, selectAccountLandingIfPresent
 │   │   ├── verify.ts                        # startVerification, enterSerialManually, completeVerification, evidence/email
-│   │   └── main.ts                          # main-stack arrange helpers
+│   │   ├── main.ts                          # main-stack arrange helpers
+│   │   ├── onboarding-v403.ts, verify-v403.ts  # frozen walks for the shipped 4.0.3 (Setup Steps entry, pre-rework ids)
+│   │   ├── onboarding-v3.ts                 # the native v3 app's steps over v3TestIDs (migration lane + the v3 driver)
+│   │   └── prev-build/                      # PrevBuild: the arrange half of an upgrade per previous build (current / v403 / v3)
 │   │
 │   ├── support/
 │   │   └── context.ts                       # per-journey TestUser context (setTestUser / getTestUser)
@@ -808,9 +844,22 @@ e2e/
 │       ├── a11y/
 │       │   └── accessibility.journey.ts     # audits 28 unverified screens (--suite a11y; also in regression)
 │       │
-│       ├── upgrade/                         # previous release → current in-place upgrade (--suite upgrade)
+│       ├── upgrade/                         # previous build → current in-place upgrade (--suite upgrade / upgradeSendVideo / upgradeExtra / upgrade403 / upgrade403Extra / upgradeV3)
+│       │   ├── scenarios/                   # the state-preservation checkpoints, once each, parameterised by a previous-build driver
+│       │   │   ├── verified.scenario.ts             # verify in person on prev → upgrade → verified state survives
+│       │   │   ├── send-video-pending.scenario.ts   # submit send-video on prev → upgrade → PendingReview → approve
+│       │   │   ├── in-person-pending.scenario.ts    # in-person code shown, not approved → upgrade → resume → approve
+│       │   │   ├── non-bcsc-partial.scenario.ts     # 2 docs+address+email on prev → upgrade → resume to method (completion deferred)
+│       │   │   ├── resume-serial.scenario.ts        # serial saved → upgrade → resume onto EnterBirthdate
+│       │   │   └── resume-capture.scenario.ts       # document photographed, no number → upgrade → resume onto EvidenceIDCollection
 │       │   ├── upgrade.spec.ts              # onboard on prev build → installApp current → unlock + settings persist
-│       │   └── upgrade-from-v403.spec.ts    # the shipped 4.0.3 via its frozen pre-rework onboarding (--suite upgrade403)
+│       │   ├── upgrade-verified.spec.ts, upgrade-send-video-pending.spec.ts, upgrade-in-person-pending.spec.ts,
+│       │   │   upgrade-non-bcsc-partial.spec.ts, upgrade-resume-serial.spec.ts, upgrade-resume-capture.spec.ts
+│       │   │                                # one-describe wrappers: a scenario on the rolling previous release (upgrade / upgradeSendVideo / upgradeExtra)
+│       │   ├── upgrade-from-v403.spec.ts    # the shipped 4.0.3 via its frozen pre-rework onboarding (--suite upgrade403)
+│       │   ├── upgrade-verified-v403.spec.ts, upgrade-in-person-pending-v403.spec.ts, upgrade-resume-serial-v403.spec.ts,
+│       │   │   upgrade-resume-capture-v403.spec.ts   # the same scenarios on 4.0.3 (upgrade403 / upgrade403Extra)
+│       │   └── upgrade-in-person-pending-v3.spec.ts  # the in-person scenario on the native v3 app (--suite upgradeV3)
 │       │
 │       └── migration/                       # v3 → v4 upgrade (--suite migration; deprioritized). v3 phase uses v3TestIDs.ts
 │           ├── migration.spec.ts            # orchestrator: v3 onboarding → upgrade → v4 unlock
