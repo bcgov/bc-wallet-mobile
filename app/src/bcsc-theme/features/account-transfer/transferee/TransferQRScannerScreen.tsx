@@ -34,7 +34,7 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
   }
 
   if (isLoading) {
-    return <WaitingScreenContent message={t('Global.Loading')} />
+    return <WaitingScreenContent message={t('BCSC.TransferInstructions.AddingDevice')} />
   }
 
   return (

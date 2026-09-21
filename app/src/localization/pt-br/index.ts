@@ -1113,6 +1113,7 @@ const translation = {
       "TransferAccount": "Add device (PT-BR)",
     },
     "TransferInstructions": {
+      "AddingDevice": "Adding this device... (PT-BR)",
       "Title": "Scan your QR code to add your device (PT-BR)",
       "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner. (PT-BR)",
       "Step2": "Choose <b>‘Add another device'</b> to get your QR code. (PT-BR)",
