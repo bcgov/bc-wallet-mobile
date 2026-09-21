@@ -18,10 +18,13 @@ message or text on the screen itself informing the user that the feature isn't a
 
 ## Waiting screens
 
-BCSC loading overlays and video submission use the shared `WaitingScreenContent`
+BCSC loading overlays, video submission, and video-call setup use the shared `WaitingScreenContent`
 and `BCAnimatedLoadingIcon`. Center the illustration in the safe-area viewport,
 with the heading between the optional status row and illustration. Allow scrolling
 for larger text and short screens.
+Place optional supporting text below the illustration so delayed feedback does not
+change the heading/status layout. Use secondary buttons for waiting-screen Cancel
+actions; the feature owns their availability and behavior.
 
 Use explicit workflow stages for progress; omit the bar when progress is unknown.
 Startup holds at two-thirds until ready. Video submission advances through preparation,

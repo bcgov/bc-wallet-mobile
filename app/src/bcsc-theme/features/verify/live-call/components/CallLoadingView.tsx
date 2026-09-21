@@ -1,11 +1,8 @@
-import { BCAnimatedLoadingIcon } from '@/bcsc-theme/components/BCAnimatedLoadingIcon'
-import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import ProgressBar from '@/components/ProgressBar'
+import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
 import { TestIds } from '@/test-ids/registry'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
 
 type CallLoadingViewProps = {
   onCancel: () => void
@@ -13,7 +10,6 @@ type CallLoadingViewProps = {
 }
 
 const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
-  const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [progressPercent, setProgressPercent] = useState(0)
   const [delayReached, setDelayReached] = useState(false)
@@ -42,37 +38,23 @@ const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
   }, [])
 
   const controls = (
-    <ControlContainer>
-      <Button
-        buttonType={ButtonType.Primary}
-        onPress={onCancel}
-        title={t('Global.Cancel')}
-        accessibilityLabel={t('Global.Cancel')}
-        testID={testIdWithKey(TestIds.verify.liveCall.cancel)}
-      />
-    </ControlContainer>
+    <Button
+      buttonType={ButtonType.Secondary}
+      onPress={onCancel}
+      title={t('Global.Cancel')}
+      accessibilityLabel={t('Global.Cancel')}
+      testID={testIdWithKey(TestIds.verify.liveCall.cancel)}
+    />
   )
 
   return (
-    <ScreenWrapper padded={false} scrollable={false} edges={['top', 'bottom', 'left', 'right']} controls={controls}>
-      <ProgressBar dark={true} progressPercent={progressPercent} />
-      <View style={{ flex: 1, padding: Spacing.md }}>
-        <ThemedText variant={'headingThree'} style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
-          {t('BCSC.VideoCall.Loading.OneMomentPlease')}
-        </ThemedText>
-        <ThemedText style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
-          {message || t('BCSC.VideoCall.Loading.SettingThingsUp')}
-        </ThemedText>
-        <View style={{ alignSelf: 'center', marginVertical: Spacing.md }}>
-          <BCAnimatedLoadingIcon size={200} />
-        </View>
-        {delayReached ? (
-          <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
-            {t('BCSC.VideoCall.Loading.TakingLongerThanUsual')}
-          </ThemedText>
-        ) : null}
-      </View>
-    </ScreenWrapper>
+    <WaitingScreenContent
+      message={t('BCSC.VideoCall.Loading.OneMomentPlease')}
+      statusMessage={message || t('BCSC.VideoCall.Loading.SettingThingsUp')}
+      supportingMessage={delayReached ? t('BCSC.VideoCall.Loading.TakingLongerThanUsual') : undefined}
+      progressPercent={progressPercent}
+      controls={controls}
+    />
   )
 }
 

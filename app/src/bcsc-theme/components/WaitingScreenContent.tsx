@@ -11,6 +11,7 @@ import { BCAnimatedLoadingIcon } from './BCAnimatedLoadingIcon'
 export const WaitingScreenContent = ({
   message,
   statusMessage,
+  supportingMessage,
   progressPercent,
   testID,
   controls,
@@ -18,6 +19,7 @@ export const WaitingScreenContent = ({
 }: {
   message: string
   statusMessage?: string
+  supportingMessage?: string
   progressPercent?: number
   testID?: string
   controls?: ReactNode
@@ -79,6 +81,12 @@ export const WaitingScreenContent = ({
       marginTop: Spacing.sm,
       alignItems: 'center',
     },
+    supportingMessage: {
+      marginTop: Spacing.md,
+      paddingHorizontal: Spacing.lg,
+      textAlign: 'center',
+      color: colors.status,
+    },
     controls: {
       marginTop: 'auto',
       padding: Spacing.lg,
@@ -136,6 +144,11 @@ export const WaitingScreenContent = ({
         <View style={styles.illustration} accessible={false} importantForAccessibility="no-hide-descendants">
           <BCAnimatedLoadingIcon size={iconSize} active={active} />
         </View>
+        {supportingMessage ? (
+          <ThemedText variant="labelSubtitle" style={styles.supportingMessage}>
+            {supportingMessage}
+          </ThemedText>
+        ) : null}
         {controls ? <View style={styles.controls}>{controls}</View> : null}
       </ScrollView>
     </SafeAreaView>
