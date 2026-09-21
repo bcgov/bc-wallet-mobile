@@ -20,8 +20,8 @@ export const v403PrevBuild: PrevBuild = {
   pin: TEST_PIN,
   bcscUser: TestUsers.photo,
   nonBcscUser: TestUsers.na,
-  // 4.0.3 keys the evidence rows by label rather than type; the same substrings are expected to match.
-  nonBcscDocs: { first: 'BC Drivers Licence', second: 'Canadian Passport' },
+  // 4.0.3 keyed the rows by display label (today: by type code), so the BCDL row reads differently here.
+  nonBcscDocs: { first: "B.C. driver's licence", second: 'Canadian Passport' },
 
   async onboard(pin, user) {
     await onboardOnV403(pin)

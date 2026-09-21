@@ -109,6 +109,10 @@ export async function leaveVerificationToHome(): Promise<void> {
  * in (the in-progress flag is in-memory); across a relaunch the app resumes a user who chose to
  * verify straight onto their step, so pass `resumedOnto` to accept that landing too. Either way the
  * stack mounts at `getResumeStepRoute`; which screen that is stays the caller's assertion.
+ *
+ * An account that never answered the verify prompt (state written by a build predating it, e.g. a v3
+ * migrant) is shown the prompt first. Its Continue replaces onto AccountSetup and would re-ask for the
+ * card, so the prompt is skipped and the Home card taken — the one route that honours saved progress.
  */
 export async function resumeVerification(
   resumedOnto?: ScreenPresence,
@@ -118,7 +122,14 @@ export async function resumeVerification(
   if (resumedOnto) {
     candidates.resumed = resumedOnto
   }
-  if ((await waitForAnyScreen(candidates, timeoutMs)) === 'card') {
+  // Probed by its Skip button: the prompt's Continue id is the generic one many verify screens share.
+  candidates.prompt = () => VerifyPromptScreen.isVisible('skipVerification')
+  const landed = await waitForAnyScreen(candidates, timeoutMs)
+  if (landed === 'prompt') {
+    console.log('[verify] The verify prompt is up — skipping it to resume through the Home card')
+    await VerifyPromptScreen.tapToReach('secondary', HomeNotificationCard)
+  }
+  if (landed !== 'resumed') {
     await HomeNotificationCard.tapToNavigate('primary')
     return
   }
@@ -172,7 +183,7 @@ export async function enterBirthdate(user: TestUser): Promise<void> {
 }
 
 /** The IDCheck approval payload for a user's flow: serial + birthdate, typed document numbers, or both. */
-function approvalInputForUser(user: TestUser): ApproveInPersonInput {
+export function approvalInputForUser(user: TestUser): ApproveInPersonInput {
   if (user.flow === 'non-bcsc') {
     return {
       flow: 'non-bcsc',
@@ -224,24 +235,42 @@ export async function reachVerificationMethod(): Promise<void> {
 }
 
 /**
- * Complete verification via the IN-PERSON method — the only CI-completable one (send-video and
- * live-call open camera screens). From VerificationMethodSelection: read the confirmation code, drive
- * the real IDCheck SIT approval (needs `IDCHECK_USER`/`IDCHECK_PASSWORD`/`IDCHECK_TOTP_SECRET` and an allowlisted runner IP), then
- * Complete → VerificationSuccess → Home.
+ * VerificationMethodSelection → In-Person → the confirmation code, read off VerifyInPerson and
+ * returned WITHOUT approving. The half of {@link completeVerification} that runs before the real
+ * IDCheck approval, split out so the upgrade suite can display the code on the previous build and
+ * approve it after the binary swap.
  */
-export async function completeVerification(user: TestUser): Promise<void> {
+export async function reachInPersonConfirmationCode(): Promise<string> {
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   await VerificationMethodSelectionScreen.link('inPerson')
 
   await VerifyInPersonScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  const confirmationCode = await VerifyInPersonScreen.read('confirmationCode')
-  await approveInPersonRequest(confirmationCode, approvalInputForUser(user))
+  return VerifyInPersonScreen.read('confirmationCode')
+}
+
+/**
+ * From VerifyInPerson with `formattedCode` already displayed: drive the real IDCheck SIT approval
+ * (needs `IDCHECK_USER`/`IDCHECK_PASSWORD`/`IDCHECK_TOTP_SECRET` and an allowlisted runner IP), then
+ * Complete → VerificationSuccess → Home. The half of {@link completeVerification} after the code is read.
+ */
+export async function approveInPersonAndComplete(user: TestUser, formattedCode: string): Promise<void> {
+  await approveInPersonRequest(formattedCode, approvalInputForUser(user))
 
   await VerifyInPersonScreen.tapWhenEnabled('primary') // Complete
   await VerificationSuccessScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   await VerificationSuccessScreen.tap('primary') // Continue → exits verify stack to Home
 
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * Complete verification via the IN-PERSON method — the only CI-completable one (send-video and
+ * live-call open camera screens). From VerificationMethodSelection: read the confirmation code, drive
+ * the real IDCheck SIT approval, then Complete → VerificationSuccess → Home.
+ */
+export async function completeVerification(user: TestUser): Promise<void> {
+  const confirmationCode = await reachInPersonConfirmationCode()
+  await approveInPersonAndComplete(user, confirmationCode)
 }
 
 /**
@@ -1008,7 +1037,7 @@ async function reachEvidenceCamera(): Promise<void> {
  * `retakeFirstSide` exercises PhotoReview's Retake — it re-shoots the same side, so only the
  * discard-and-return path differs.
  */
-async function capturePhotoIdDocument(
+export async function capturePhotoIdDocument(
   image: string,
   barcodeMasks: readonly ImageMaskRegion[] = [],
   options: { retakeFirstSide?: boolean } = {}
