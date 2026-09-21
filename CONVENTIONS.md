@@ -18,7 +18,7 @@ message or text on the screen itself informing the user that the feature isn't a
 
 ## Waiting screens
 
-BCSC loading overlays, video submission, and video-call waits use the shared `WaitingScreenContent`
+BCSC loading overlays, video submission, video-call waits, and transfer-scan processing use the shared `WaitingScreenContent`
 and `BCAnimatedLoadingIcon`. Center the illustration in the safe-area viewport,
 with the heading between the optional status row and illustration. Allow scrolling
 for larger text and short screens.
