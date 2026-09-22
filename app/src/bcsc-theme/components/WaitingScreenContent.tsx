@@ -2,9 +2,9 @@ import ProgressBar from '@/components/ProgressBar'
 import { TestIds } from '@/test-ids/registry'
 import { AppColorPalette, LightWaitingScreenColors } from '@/theme/waiting-screen'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { ReactNode, useState } from 'react'
+import { ReactNode, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { BCAnimatedLoadingIcon } from './BCAnimatedLoadingIcon'
 
@@ -34,6 +34,18 @@ export const WaitingScreenContent = ({
   const hasProgress = progressPercent !== undefined
   const status = statusMessage ?? t('Init.Starting')
   const isLayoutReady = viewportHeight > 0 && (!hasProgress || loadingHeight > 0)
+
+  const handleViewportLayout = useCallback(({ nativeEvent }: LayoutChangeEvent) => {
+    if (nativeEvent.layout.height > 0) {
+      setViewportHeight(nativeEvent.layout.height)
+    }
+  }, [])
+
+  const handleLoadingLayout = useCallback(({ nativeEvent }: LayoutChangeEvent) => {
+    if (nativeEvent.layout.height > 0) {
+      setLoadingHeight(nativeEvent.layout.height)
+    }
+  }, [])
 
   const styles = StyleSheet.create({
     container: {
@@ -66,6 +78,7 @@ export const WaitingScreenContent = ({
     headingContainer: {
       minHeight: Math.max(
         0,
+        // Keeps the icon vertically centered after accounting for the progress row above it.
         (viewportHeight - iconSize) / 2 - (hasProgress ? loadingHeight + Spacing.sm : 0) - Spacing.sm
       ),
       paddingHorizontal: Spacing.lg,
@@ -99,22 +112,14 @@ export const WaitingScreenContent = ({
         style={styles.viewport}
         contentContainerStyle={styles.content}
         testID={testIdWithKey(TestIds.common.waitingScreenViewport)}
-        onLayout={({ nativeEvent }) => {
-          if (nativeEvent.layout.height > 0) {
-            setViewportHeight(nativeEvent.layout.height)
-          }
-        }}
+        onLayout={handleViewportLayout}
       >
         <View style={styles.header}>
           {hasProgress && (
             <View
               style={styles.loading}
               testID={testIdWithKey(TestIds.common.waitingScreenStatus)}
-              onLayout={({ nativeEvent }) => {
-                if (nativeEvent.layout.height > 0) {
-                  setLoadingHeight(nativeEvent.layout.height)
-                }
-              }}
+              onLayout={handleLoadingLayout}
             >
               <View
                 style={styles.track}
