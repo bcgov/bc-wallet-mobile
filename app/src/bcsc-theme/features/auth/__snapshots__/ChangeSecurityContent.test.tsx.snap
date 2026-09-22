@@ -423,7 +423,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",
@@ -1094,7 +1094,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",
@@ -1632,7 +1632,7 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",

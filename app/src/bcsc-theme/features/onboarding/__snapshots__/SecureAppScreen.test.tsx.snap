@@ -422,7 +422,7 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",
@@ -976,7 +976,7 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",

@@ -1,6 +1,5 @@
 import ProgressBar from '@/components/ProgressBar'
 import { TestIds } from '@/test-ids/registry'
-import { AppColorPalette, LightWaitingScreenColors } from '@/theme/waiting-screen'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ReactNode, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -26,7 +25,6 @@ export const WaitingScreenContent = ({
   active?: boolean
 }) => {
   const { ColorPalette, Spacing } = useTheme()
-  const colors = (ColorPalette as AppColorPalette).waitingScreen ?? LightWaitingScreenColors
   const { t } = useTranslation()
   const [viewportHeight, setViewportHeight] = useState(0)
   const [loadingHeight, setLoadingHeight] = useState(0)
@@ -73,7 +71,6 @@ export const WaitingScreenContent = ({
       paddingVertical: 6,
       textAlign: 'center',
       lineHeight: 21,
-      color: colors.status,
     },
     headingContainer: {
       minHeight: Math.max(
@@ -86,7 +83,7 @@ export const WaitingScreenContent = ({
     },
     heading: {
       textAlign: 'center',
-      color: colors.heading,
+      color: ColorPalette.brand.primary,
       fontSize: 24,
       lineHeight: 36,
     },
@@ -98,7 +95,6 @@ export const WaitingScreenContent = ({
       marginTop: Spacing.md,
       paddingHorizontal: Spacing.lg,
       textAlign: 'center',
-      color: colors.status,
     },
     controls: {
       marginTop: 'auto',
@@ -130,8 +126,8 @@ export const WaitingScreenContent = ({
               >
                 <ProgressBar
                   progressPercent={progressPercent}
-                  trackColor={colors.track}
-                  progressColor={colors.progress}
+                  trackColor={ColorPalette.grayscale.veryLightGrey}
+                  progressColor={ColorPalette.brand.highlight}
                 />
               </View>
               <ThemedText variant="caption" style={styles.status}>

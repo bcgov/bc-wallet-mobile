@@ -112,7 +112,6 @@ exports[`WaitingScreenContent renders the themed 8-point bar in dark 1`] = `
                   "fontWeight": "normal",
                 },
                 {
-                  "color": "#FFFFFF",
                   "lineHeight": 21,
                   "paddingHorizontal": 24,
                   "paddingVertical": 6,
@@ -238,7 +237,7 @@ exports[`WaitingScreenContent renders the themed 8-point bar in light 1`] = `
             <View
               style={
                 {
-                  "backgroundColor": "#FAF9F8",
+                  "backgroundColor": "#EDEBE9",
                   "height": 8,
                   "width": "100%",
                 }
@@ -248,7 +247,7 @@ exports[`WaitingScreenContent renders the themed 8-point bar in light 1`] = `
                 collapsable={false}
                 style={
                   {
-                    "backgroundColor": "#F8BA47",
+                    "backgroundColor": "#FCBA19",
                     "bottom": 0,
                     "height": "100%",
                     "left": 0,
@@ -283,7 +282,6 @@ exports[`WaitingScreenContent renders the themed 8-point bar in light 1`] = `
                   "fontWeight": "normal",
                 },
                 {
-                  "color": "#474543",
                   "lineHeight": 21,
                   "paddingHorizontal": 24,
                   "paddingVertical": 6,
@@ -315,7 +313,7 @@ exports[`WaitingScreenContent renders the themed 8-point bar in light 1`] = `
                   "fontWeight": "normal",
                 },
                 {
-                  "color": "#013366",
+                  "color": "#003366",
                   "fontSize": 24,
                   "lineHeight": 36,
                   "textAlign": "center",

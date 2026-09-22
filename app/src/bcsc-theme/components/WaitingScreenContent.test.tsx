@@ -42,10 +42,10 @@ describe('WaitingScreenContent', () => {
     expect(view.getByRole('progressbar', { name: 'Loading account' })).toBeTruthy()
     expect(view.toJSON()).toMatchSnapshot()
     expect(view.getByText('Preparing')).toHaveStyle({
-      color: theme === BCThemeNames.Light ? '#013366' : '#FCBA19',
+      color: theme === BCThemeNames.Light ? '#003366' : '#FCBA19',
     })
     expect(view.getByText('Loading account')).toHaveStyle({
-      color: theme === BCThemeNames.Light ? '#474543' : '#FFFFFF',
+      color: theme === BCThemeNames.Light ? '#313132' : '#FFFFFF',
     })
   })
 })

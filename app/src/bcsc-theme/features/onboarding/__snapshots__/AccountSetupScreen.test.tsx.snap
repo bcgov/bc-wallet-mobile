@@ -426,7 +426,7 @@ exports[`AccountSetup renders correctly 1`] = `
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",

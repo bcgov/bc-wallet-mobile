@@ -787,7 +787,7 @@ exports[`PINEntryForm renders correctly with create and confirm PIN fields 1`] =
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",

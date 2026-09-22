@@ -847,7 +847,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",
@@ -1882,7 +1882,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",

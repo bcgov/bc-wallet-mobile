@@ -423,7 +423,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) marks t
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",
@@ -977,7 +977,7 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",
@@ -1647,7 +1647,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                       "fontWeight": "bold",
                     },
                     {
-                      "color": "#013366",
+                      "color": "#003366",
                       "fontSize": 24,
                       "lineHeight": 36,
                       "textAlign": "center",
