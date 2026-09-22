@@ -100,12 +100,12 @@ export interface BCSCState {
    * throttle retries — see KeyRotationSystemCheck. Not PII. */
   lastKeyRotationAttemptAt?: string
   /**
-   * App version/build seen on the MOST RECENT launch, stamped unconditionally every launch —
-   * deliberately distinct from `appVersion`/`appBuildNumber` above, which only advance on a
-   * SUCCESSFUL device-registration PUT. KeyRotationSystemCheck uses this pair (never
-   * `appVersion`/`appBuildNumber`) to detect "did the app version change since last launch",
-   * so a persistently failing registration PUT can never latch key rotation off forever. See
-   * the #3876 review.
+   * App version/build seen the last time the main-stack system checks ran, stamped whenever it
+   * differs from the running app (see getMainSystemChecks) — deliberately distinct from
+   * `appVersion`/`appBuildNumber` above, which only advance on a SUCCESSFUL device-registration
+   * PUT. KeyRotationSystemCheck uses this pair (never `appVersion`/`appBuildNumber`) to detect
+   * "did the app version change since last launch", so a persistently failing registration PUT
+   * can never latch key rotation off forever. See the #3876 review.
    */
   lastSeenAppVersion?: string
   lastSeenAppBuildNumber?: string
@@ -218,6 +218,12 @@ export interface BCSCSecureState {
    * unreadable/corrupt — i.e. neither a refresh nor a registration token survived
    */
   sessionRecoveryRequired?: boolean
+
+  /**
+   * Set during hydration when the stored refresh token's `exp` has passed — the device credential's
+   * 5-year lifetime is over and the account must be renewed (#4654). Never sent to the server.
+   */
+  refreshTokenExpired?: boolean
 }
 
 /** Initial secure state - unhydrated with no data */
@@ -363,8 +369,9 @@ export const initialBCSCState: BCSCState = {
  * Migrates a persisted BCSC state blob on load. Two idempotent, read-side migrations:
  * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
  *   have launched on >= v4.1.
- * - Onboarded installs that predate `verificationSkipped`: a missing value is treated as "skipped"
- *   (`true`) so they keep landing on the home screen rather than the post-onboarding verify prompt.
+ * - Onboarded installs that predate `verificationSkipped`: a missing value is treated as "not skipped"
+ *   (`false`) so an unverified user resumes verification rather than seeing the post-onboarding verify
+ *   prompt. v3 upgrades have no persisted blob yet and are handled in useInitializeAccountStatus.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T

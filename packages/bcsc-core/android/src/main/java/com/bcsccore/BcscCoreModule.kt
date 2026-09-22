@@ -1833,27 +1833,50 @@ class BcscCoreModule internal constructor(
         // makes 2507 reports self-classifying in the field.
         val diagnostics = decodeDiagnosticsSummary(jweString)
         try {
-            // The server keeps encrypting to the previous key until it has seen the new one, so use
-            // the key the response names when we hold it. Otherwise fall back to newest, as before.
             val kid = incomingJWEHeader(jweString).kid.takeIf { it.isNotEmpty() }
-            val decryptKeyPair =
-                kid?.let { keyPairSource.getBcscKeyPair(it) }
-                    ?: keyPairSource.getCurrentBcscKeyPair()
+            val decryptKeyInfos =
+                keyPairSource
+                    .getAllBcscKeyPairInfos()
+                    .sortedByDescending { it.getCreatedAt() }
+                    .let { keys ->
+                        val namedKey = kid?.let { namedKid -> keys.firstOrNull { it.getAlias() == namedKid } }
+                        if (namedKey ==
+                            null
+                        ) {
+                            keys
+                        } else {
+                            listOf(namedKey) + keys.filter { it.getAlias() != namedKey.getAlias() }
+                        }
+                    }
 
-            if (decryptKeyPair.getKeyPair()?.private == null) {
+            if (decryptKeyInfos.isEmpty()) {
                 promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption $diagnostics")
                 return
             }
 
-            // Parse the JWE object
-            val jweObject = JWEObject.parse(jweString)
+            var jwtPayload: String? = null
+            var lastDecryptionError: com.nimbusds.jose.JOSEException? = null
+            for (decryptKeyInfo in decryptKeyInfos) {
+                val decryptKeyPair = keyPairSource.getBcscKeyPair(decryptKeyInfo.getAlias())
+                val privateKey = decryptKeyPair?.getKeyPair()?.private ?: continue
+                try {
+                    // JWEObject is mutable after decryption, so parse a fresh instance for each key.
+                    val jweObject = JWEObject.parse(jweString)
+                    jweObject.decrypt(RSADecrypter(privateKey))
+                    jwtPayload = jweObject.payload.toString()
+                    break
+                } catch (e: com.nimbusds.jose.JOSEException) {
+                    lastDecryptionError = e
+                }
+            }
 
-            // Create RSA decrypter with the private key
-            val rsaDecrypter = RSADecrypter(decryptKeyPair.getKeyPair()!!.private)
-
-            // Decrypt the JWE to get the inner JWT (compact JWS)
-            jweObject.decrypt(rsaDecrypter)
-            val jwtPayload = jweObject.payload.toString()
+            if (jwtPayload == null) {
+                if (lastDecryptionError != null) {
+                    throw lastDecryptionError
+                }
+                promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption $diagnostics")
+                return
+            }
 
             // Parse the inner JWS and verify its signature. `verified` is a flag (never throws); the
             // caller decides what to do when it is false. A malformed inner token maps to
@@ -1914,7 +1937,7 @@ class BcscCoreModule internal constructor(
             Log.e(NAME, "decodePayload: JWE parse error: ${e.message} $diagnostics", e)
             promise.reject("E_JWE_PARSE_ERROR", "Invalid JWE format: ${e.message} $diagnostics", e)
         } catch (e: com.nimbusds.jose.JOSEException) {
-            // Wrong key (kidMatchesLocal=false) or unsupported alg/enc — read the diagnostics.
+            // Every local key failed, or the JWE uses an unsupported alg/enc — read the diagnostics.
             Log.e(NAME, "decodePayload: JWE decryption error: ${e.message} $diagnostics", e)
             promise.reject("E_JWE_DECRYPT_ERROR", "Failed to decrypt JWE: ${e.message} $diagnostics", e)
         } catch (e: IllegalArgumentException) {

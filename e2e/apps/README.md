@@ -160,37 +160,47 @@ The WDIO configs look for these by default (override via env var):
 
 Set the overrides in `e2e/.env.saucelabs` (Sauce) or your shell (local).
 
-## Previous-release binaries (upgrade suite)
+## Upgrade-source binaries (upgrade suites)
 
-The upgrade suite boots the **previous released build** first, then installs the current build over it. The binaries live as `BCSC-Dev-e2e.apk` / `BCSC-Dev-e2e.ipa` assets on each version's GitHub release, attached by the "Publish Release E2E Builds" workflow. Releases published before that workflow existed carry no assets — the first downloadable pair lands with the first release it runs for; until then this block stops at the echo (see the interim options below it):
+The upgrade suites boot an **older released build** first, then install the current build over it. GitHub Release assets are the durable origin of those older builds; Sauce storage holds a copy of each. A shipped build lives under one name in both places, `BCSC-v<version>.apk` / `.ipa`:
+
+| Sauce name      | Lane                | Release it is attached to                                                              |
+| --------------- | ------------------- | -------------------------------------------------------------------------------------- |
+| `BCSC-v3.*`     | `migration`         | `bcsc-v3`                                                                              |
+| `BCSC-v4.0.3.*` | `upgrade403`        | `bcsc-v4.0.2` (the 4.0.3 hotfix is what shipped; there is no `bcsc-v4.0.3` release)    |
+| `BCSC-v4.1.0.*` | `upgrade` (pinned)  | `bcsc-v4.1.0_rc2` (the release object sits on the rc2 tag)                             |
+| `BCSC-prev.*`   | `upgrade` (rolling) | the newest full `bcsc-v*` release carrying a `BCSC-v<x.y.z>.*` pair at 4.1.0 or later  |
+
+The pinned rows are the manifest of `.github/workflows/refresh-e2e-sauce-builds.yml` (**Refresh E2E Sauce Builds**), which re-uploads every row plus `BCSC-prev.*` monthly (Sauce deletes storage files after 60 days of inactivity) and fails an entry whose release is missing its assets. 4.1.0 is the first release the standard upgrade suite can drive, so nothing older ever becomes `BCSC-prev.*`.
+
+**Attaching a release's binaries.** Dispatch **Publish Release E2E Builds** with the release tag. It takes the bcsc-dev binaries from the release commit's build run, attaches them as `BCSC-v<version>.*` (derived from the tag), uploads the pinned Sauce copy and, for a full release at 4.1.0 or later, `BCSC-prev.*`. Once the run's artifacts are gone (7 days), pass `sauce_source=BCSC-Dev-<build>` to take the same build's Sauce storage copy instead; pass `asset_name` when the tag doesn't carry the shipped version:
 
 ```bash
-# newest full (non-prerelease) bcsc release that carries the e2e builds
-tag=$(gh api 'repos/{owner}/{repo}/releases?per_page=30' --jq \
-  '[.[] | select((.prerelease or .draft) | not) | select(.tag_name | startswith("bcsc-v")) | select([.assets[].name] | index("BCSC-Dev-e2e.apk"))][0].tag_name // empty')
-if [ -z "$tag" ]; then
-  echo "no release carries e2e builds yet — see the interim options in this README"
-else
-  gh release download "$tag" --pattern 'BCSC-Dev-e2e.*' --dir e2e/apps &&
-    mv e2e/apps/BCSC-Dev-e2e.apk e2e/apps/BCSC-prev.apk &&
-    mv e2e/apps/BCSC-Dev-e2e.ipa e2e/apps/BCSC-prev.ipa
-fi
+gh workflow run publish-release-e2e-builds.yml -f release_tag=<tag> -f sauce_source=BCSC-Dev-<build>
+# the tag says 4.0.2 but the shipped build is the 4.0.3 hotfix
+gh workflow run publish-release-e2e-builds.yml -f release_tag=bcsc-v4.0.2 -f sauce_source=BCSC-v4.0.3 -f asset_name=BCSC-v4.0.3
 ```
 
-**Until a release with e2e builds exists:**
+Then add the version to the refresh manifest. A build that is in neither place must be rebuilt from its tag per the sections above and attached with `gh release upload <tag> <files>`.
 
-- **Sauce runs need no local file at all** — point the suite at any older build still in Sauce storage: `PREV_ANDROID_APP=BCSC-Dev-<N>.apk yarn test:android:upgrade:sauce`, or the `prev_build_number` input when dispatching the E2E workflow.
-- **Local Android device runs** can pull an older main build from Sauce storage (needs `e2e/.env.saucelabs` credentials; pick an `<N>` from the storage UI or a recent main run):
+**Local runs** pull the same release assets:
+
+```bash
+gh release download <tag> --pattern 'BCSC-v<version>.*' --dir e2e/apps &&
+  mv e2e/apps/BCSC-v<version>.apk e2e/apps/BCSC-prev.apk &&
+  mv e2e/apps/BCSC-v<version>.ipa e2e/apps/BCSC-prev.ipa
+```
+
+- **Sauce runs need no local file at all** — point the suite at any stored build: `PREV_ANDROID_APP=BCSC-v4.1.0.apk yarn test:android:upgrade:sauce`, or the `prev_build_number` input when dispatching the E2E workflow.
+- **Local Android device runs** can also pull any build straight from Sauce storage (needs `e2e/.env.saucelabs` credentials):
 
   ```bash
   set -a; source e2e/.env.saucelabs; set +a
-  N=<older build number>
+  NAME=BCSC-v4.1.0.apk
   id=$(curl -su "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-    "https://api.us-west-1.saucelabs.com/v1/storage/files?q=BCSC-Dev-${N}.apk&per_page=1" | jq -r '.items[0].id')
+    "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${NAME}&per_page=1" | jq -r '.items[0].id')
   curl -su "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" -o e2e/apps/BCSC-prev.apk \
     "https://api.us-west-1.saucelabs.com/v1/storage/download/${id}"
   ```
 
 - **Local iOS device runs** should build the released tag from source per the sections above (a Sauce-stored `.ipa` is signed for another team, so it may not install on your device).
-
-On Sauce the suite resolves `BCSC-prev.*` from **Sauce Storage** — "Publish Release E2E Builds" uploads them when a full release ships and "Refresh E2E Sauce Builds" re-uploads monthly (Sauce deletes storage files after 60 days of inactivity). To seed or fix them by hand, upload with the same curl pattern as above using `name=BCSC-prev.apk` / `name=BCSC-prev.ipa`.

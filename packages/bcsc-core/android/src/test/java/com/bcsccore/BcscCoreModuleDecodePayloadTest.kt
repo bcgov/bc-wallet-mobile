@@ -36,11 +36,12 @@ import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.interfaces.RSAPublicKey
+import java.util.Base64
 import java.util.Collections
 
 /**
- * Covers how the decrypt key is chosen (issue #4595): use the key a response names when we hold it,
- * and the newest key otherwise. Runs the real [BcscCoreModule.decodePayload] against a real
+ * Covers how the decrypt key is chosen (issue #4595): try a response-named key first, then every
+ * remaining key newest-first. Runs the real [BcscCoreModule.decodePayload] against a real
  * [BcscKeyPairRepo] over a stand-in [KeyStore], so the last test checks real code, not a substitute.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -75,11 +76,13 @@ class BcscCoreModuleDecodePayloadTest {
     /** The real repository, over a stand-in keystore holding exactly the [KEYS] aliases. */
     private class InMemoryKeyStoreRepo(
         infoSource: KeyPairInfoSource,
+        private val keys: Map<String, KeyPair> = KEYS,
     ) : BcscKeyPairRepo(infoSource) {
+        val retrievedAliases = mutableListOf<String>()
         private val keyStore: KeyStore =
             mockk<KeyStore>(relaxed = true).also {
-                every { it.aliases() } answers { Collections.enumeration(KEYS.keys.toList()) }
-                every { it.containsAlias(any()) } answers { firstArg<String>() in KEYS }
+                every { it.aliases() } answers { Collections.enumeration(keys.keys.toList()) }
+                every { it.containsAlias(any()) } answers { firstArg<String>() in keys }
             }
 
         override fun loadAndroidKeyStore(): KeyStore = keyStore
@@ -92,10 +95,11 @@ class BcscCoreModuleDecodePayloadTest {
         override fun getKeyPair(
             keyStore: KeyStore,
             kid: String,
-        ): KeyPair = KEYS.getValue(kid)
+        ): KeyPair = keys.getValue(kid).also { retrievedAliases += kid }
     }
 
     private lateinit var infoSource: InMemoryKeyPairInfoSource
+    private lateinit var keyPairRepo: InMemoryKeyStoreRepo
     private lateinit var module: BcscCoreModule
 
     @Before
@@ -110,7 +114,8 @@ class BcscCoreModuleDecodePayloadTest {
                     "rsa2" to KeyPairInfo("rsa2", 2_000L),
                 ),
             )
-        module = BcscCoreModule(mockk(relaxed = true), InMemoryKeyStoreRepo(infoSource))
+        keyPairRepo = InMemoryKeyStoreRepo(infoSource)
+        module = BcscCoreModule(mockk(relaxed = true), keyPairRepo)
     }
 
     @After
@@ -132,13 +137,35 @@ class BcscCoreModuleDecodePayloadTest {
     }
 
     /** Runs decodePayload (no JWK, so `verified` is false and irrelevant) and returns the resolved map. */
-    private fun decode(jwe: String): JavaOnlyMap {
+    private fun decode(
+        jwe: String,
+        key: JavaOnlyMap? = null,
+    ): JavaOnlyMap {
         val promise = mockk<Promise>(relaxed = true)
         val result = slot<JavaOnlyMap>()
-        module.decodePayload(jwe, null, promise)
+        module.decodePayload(jwe, key, promise)
         // on failure MockK prints the reject(code, message) call, diagnostics included
         verify { promise.resolve(capture(result)) }
         return result.captured
+    }
+
+    private fun assertDecryptRejected(jwe: String) {
+        val promise = mockk<Promise>(relaxed = true)
+        module.decodePayload(jwe, null, promise)
+        verify { promise.reject("E_JWE_DECRYPT_ERROR", any<String>(), any<Throwable>()) }
+    }
+
+    private fun jwkFor(keyPair: KeyPair): JavaOnlyMap {
+        val publicKey = keyPair.public as RSAPublicKey
+        return JavaOnlyMap().apply {
+            putString("n", base64Url(publicKey.modulus.toByteArray()))
+            putString("e", base64Url(publicKey.publicExponent.toByteArray()))
+        }
+    }
+
+    private fun base64Url(bytes: ByteArray): String {
+        val unsigned = bytes.dropWhile { it == 0.toByte() }.toByteArray()
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(unsigned)
     }
 
     @Test
@@ -149,17 +176,37 @@ class BcscCoreModuleDecodePayloadTest {
     }
 
     @Test
-    fun `a response with no label opens with the newest key`() {
-        val result = decode(serverJwe(KEYS.getValue("rsa2"), kid = null))
+    fun `a response with no label retries the older key after newest fails`() {
+        val result = decode(serverJwe(KEYS.getValue("rsa1"), kid = null))
 
         assertTrue(result.getString("claims")!!.contains("user-123"))
+        assertEquals(listOf("rsa2", "rsa1"), keyPairRepo.retrievedAliases)
     }
 
     @Test
-    fun `a label naming a key this device does not hold falls back to the newest key`() {
-        val result = decode(serverJwe(KEYS.getValue("rsa2"), kid = "rsa9"))
+    fun `a label naming a key this device does not hold falls back through all local keys`() {
+        val result = decode(serverJwe(KEYS.getValue("rsa1"), kid = "rsa9"))
 
         assertTrue(result.getString("claims")!!.contains("user-123"))
+        assertEquals(listOf("rsa2", "rsa1"), keyPairRepo.retrievedAliases)
+    }
+
+    @Test
+    fun `a wrong named key retries an older key`() {
+        val metadataBefore = infoSource.store.mapValues { it.value.createdAt }
+        val result = decode(serverJwe(KEYS.getValue("rsa1"), kid = "rsa2"))
+
+        assertTrue(result.getString("claims")!!.contains("user-123"))
+        assertEquals(listOf("rsa2", "rsa1"), keyPairRepo.retrievedAliases)
+        assertEquals(metadataBefore, infoSource.store.mapValues { it.value.createdAt })
+    }
+
+    @Test
+    fun `a named key that succeeds does not try another key`() {
+        val result = decode(serverJwe(KEYS.getValue("rsa2"), kid = "rsa2"))
+
+        assertTrue(result.getString("claims")!!.contains("user-123"))
+        assertEquals(listOf("rsa2"), keyPairRepo.retrievedAliases)
     }
 
     @Test
@@ -170,5 +217,42 @@ class BcscCoreModuleDecodePayloadTest {
         assertFalse(infoSource.store.containsKey("rsa3"))
         assertEquals(setOf("rsa1", "rsa2"), infoSource.store.keys)
         assertEquals(2_000L, infoSource.store["rsa2"]!!.createdAt)
+    }
+
+    @Test
+    fun `all keys failing decryption rejects with the decrypt error`() {
+        assertDecryptRejected(serverJwe(rsa(), kid = "rsa2"))
+
+        assertEquals(listOf("rsa2", "rsa1", "rsa3"), keyPairRepo.retrievedAliases)
+    }
+
+    @Test
+    fun `a tampered authentication tag is rejected`() {
+        val parts = serverJwe(KEYS.getValue("rsa2"), kid = "rsa2").split(".").toMutableList()
+        parts[4] = (if (parts[4].first() == 'A') "B" else "A") + parts[4].drop(1)
+
+        assertDecryptRejected(parts.joinToString("."))
+    }
+
+    @Test
+    fun `a successful decrypt does not bypass inner signature verification`() {
+        val result = decode(serverJwe(KEYS.getValue("rsa2"), kid = "rsa2"), jwkFor(KEYS.getValue("rsa1")))
+
+        assertFalse(result.getBoolean("verified"))
+        assertEquals(listOf("rsa2"), keyPairRepo.retrievedAliases)
+    }
+
+    @Test
+    fun `an empty key inventory rejects without minting a key`() {
+        val emptyInfoSource = InMemoryKeyPairInfoSource(emptyMap())
+        val emptyRepo = InMemoryKeyStoreRepo(emptyInfoSource, emptyMap())
+        val emptyModule = BcscCoreModule(mockk(relaxed = true), emptyRepo)
+        val promise = mockk<Promise>(relaxed = true)
+
+        emptyModule.decodePayload(serverJwe(rsa(), kid = null), null, promise)
+
+        verify { promise.reject("E_NO_KEYS_FOUND", any<String>()) }
+        assertTrue(emptyInfoSource.store.isEmpty())
+        assertTrue(emptyRepo.retrievedAliases.isEmpty())
     }
 }

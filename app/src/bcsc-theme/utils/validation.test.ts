@@ -13,6 +13,7 @@ import {
   serialSchema,
   streetAddress2Schema,
   streetAddressSchema,
+  stripDisallowedNameCharacters,
 } from '@/bcsc-theme/utils/validation'
 
 // NOTE: ask bm about this suite if you need to update validation rules: the rules are based on ias-ios
@@ -248,6 +249,29 @@ describe('validation', () => {
 
     it('leaves an omitted optional name empty rather than producing whitespace', () => {
       expect(normalizeForSubmission('   ')).toBe('')
+    })
+  })
+
+  describe('stripDisallowedNameCharacters', () => {
+    it('removes decoder-corrupted comma-dollar delimiters', () => {
+      expect(stripDisallowedNameCharacters('berg,$anna')).toBe('berganna')
+    })
+
+    it('removes other special characters without rejecting the field', () => {
+      expect(stripDisallowedNameCharacters('J!ohn#')).toBe('John')
+    })
+
+    it('preserves allowed punctuation', () => {
+      expect(stripDisallowedNameCharacters("O'Brien-Smith 3rd")).toBe("O'Brien-Smith 3rd")
+    })
+
+    it('trims but does not throw on an all-special-character input', () => {
+      expect(stripDisallowedNameCharacters('!!!')).toBe('')
+    })
+
+    it('handles undefined and empty input', () => {
+      expect(stripDisallowedNameCharacters(undefined)).toBe('')
+      expect(stripDisallowedNameCharacters('')).toBe('')
     })
   })
 })

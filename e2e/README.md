@@ -48,6 +48,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding runs via a frozen walk (`flows/onboarding-v403.ts`). Runs on Sauce on **both platforms**; retire once 4.1.0 is the previous release_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
 | `a11y`       | _Automated accessibility audits over the core unverified screens (`a11y/*.journey.ts`): iOS runs Apple's XCTest audit engine, Android the page-source/screenshot heuristics — see **[Accessibility audits](#accessibility-audits)**. Also part of `regression`_ |
+| `device-auth` | _Device authentication on a **locked** device (`device-auth/*.journey.ts`): onboarding on device auth, the "Confirm it's your device" interstitial, a failed match + retry, and the PIN ↔ device-auth switch in Settings with an unlock on each method. **Sauce RDC only**, on its own capability lane (`setupDeviceLock` + `biometricsInterception`, see **[Device authentication](#device-authentication-sauce-device-lock-lane)**) and never inside `regression` — a locked device changes the state every other journey starts from_ |
 
 ```bash
 # Run by suite name (per-area journey suites)
@@ -59,7 +60,7 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite main
 yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts --suite scan
 ```
 
-_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need SiteMinder credentials (see the **SiteMinder** section) for the in-person approval step. The `main` suite's wallet journey additionally needs the Traction issuer tenant configured (`ISSUER_TENANT_ID`/`ISSUER_API_KEY` in `.env.e2e`, one-time `yarn issuer:provision` — see `issuer/README.md`). A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
+_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need IDCheck credentials (see the **IDCheck sign-in** section) for the in-person approval step. The `main` suite's wallet journey additionally needs the Traction issuer tenant configured (`ISSUER_TENANT_ID`/`ISSUER_API_KEY` in `.env.e2e`, one-time `yarn issuer:provision` — see `issuer/README.md`). A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
 
 ### _Local — iOS Simulator_
 
@@ -196,7 +197,7 @@ V3_IOS_APP=BCSC-v3.ipa
 # ANDROID_APP_FILENAME / IOS_APP_FILENAME
 ```
 
-3. _Ensure SiteMinder credentials (_`SM_USER`_,_ `SM_PASSWORD`_) are set in_ `.env.e2e` _(the v3 flow uses in-person verification)._
+3. _Ensure the IDCheck credentials (_`IDCHECK_USER`_,_ `IDCHECK_PASSWORD`_,_ `IDCHECK_TOTP_SECRET`_) are set in_ `.env.e2e` _(the v3 flow uses in-person verification)._
 
 ```bash
 # Run migration on both platforms
@@ -218,7 +219,7 @@ _The upgrade suite tests upgrading from the **previous released build** to the c
 
 **_Prerequisites:_**
 
-1. _The rolling previous-release builds in Sauce Labs storage: `BCSC-prev.apk` / `BCSC-prev.ipa`. They track the newest **full** (non-prerelease) `bcsc-v*` GitHub release: the **Publish Release E2E Builds** workflow attaches `BCSC-Dev-e2e.*` assets to a version's release and pushes them to Sauce when a full release ships (see `RELEASE.md`); the monthly **Refresh E2E Sauce Builds** workflow keeps them inside Sauce's 60-day retention. To upgrade from any other build still in storage, override `PREV_ANDROID_APP` / `PREV_IOS_APP` (or pass the `prev_build_number` input when dispatching `e2e.yml`)._
+1. _The upgrade-source builds in Sauce Labs storage. The rolling previous release, `BCSC-prev.apk` / `BCSC-prev.ipa`, tracks the newest **full** (non-prerelease) `bcsc-v*` GitHub release: the **Publish Release E2E Builds** workflow attaches `BCSC-v<version>.*` assets to a version's release and pushes them to Sauce as `BCSC-prev.*` when a full release at 4.1.0 or later ships (see `RELEASE.md`). Every shipped version a lane starts from also keeps a pinned copy under that same `BCSC-v<version>.*` name (`BCSC-v3`, `BCSC-v4.0.3`, `BCSC-v4.1.0`), listed in the manifest of the monthly **Refresh E2E Sauce Builds** workflow (`.github/workflows/refresh-e2e-sauce-builds.yml`), which re-uploads each entry and `BCSC-prev.*` from the release assets to stay inside Sauce's 60-day retention. To upgrade from any other build still in storage, override `PREV_ANDROID_APP` / `PREV_IOS_APP` (or pass the `prev_build_number` input when dispatching `e2e.yml`)._
 2. _The current build under test via the standard vars: `ANDROID_APP_FILENAME` / `IOS_APP_FILENAME`._
 
 ```bash
@@ -229,6 +230,10 @@ yarn test:android:upgrade:sauce
 PREV_ANDROID_APP=BCSC-Dev-4550.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
   yarn test:android:upgrade:sauce
 
+# Or from a pinned release copy (BCSC-v<version>.*, refreshed monthly)
+PREV_ANDROID_APP=BCSC-v4.1.0.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
+  yarn test:android:upgrade:sauce
+
 # iOS on Sauce (storage-based mid-session install passes Sauce resigning; validated 2026-08-25)
 yarn test:ios:upgrade:sauce
 
@@ -236,9 +241,9 @@ yarn test:ios:upgrade:sauce
 PREV_IOS_APP=BCSC-prev.ipa IOS_APP_DEVICE=BCSC.ipa yarn test:ios:upgrade:device
 ```
 
-_Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No SiteMinder credentials are needed — the journey stays unverified._
+_Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No IDCheck credentials are needed — the journey stays unverified._
 
-_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`, previous binary preserved in Sauce storage as `BCSC-v4.0.3.*`), then reuses the standard install + post-upgrade assertions. Runs on Sauce on both platforms; retire it once 4.1.0 becomes the previous release:_
+_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`; previous binary pinned in Sauce storage as `BCSC-v4.0.3.*`, refreshed monthly from the `BCSC-v4.0.3.*` assets on the `bcsc-v4.0.2` release — the 4.0.3 hotfix is what shipped, and no `bcsc-v4.0.3` release exists), then reuses the standard install + post-upgrade assertions. Runs on Sauce on both platforms; retire it once 4.1.0 becomes the previous release:_
 
 ```bash
 ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn test:android:upgrade403:sauce
@@ -256,9 +261,9 @@ VARIANT=bcsc yarn test:android:sauce
 
 ## _Environment Variables_
 
-_Two env files split general e2e config (including SiteMinder credentials) from SauceLabs credentials:_
+_Two env files split general e2e config (including the IDCheck credentials) from SauceLabs credentials:_
 
-- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_. Includes the SiteMinder credentials used by the in-person verification approval flow._
+- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_. Includes the IDCheck credentials used by the in-person verification approval flow._
 - **`.env.saucelabs`** _— loaded only for sauce runs. Copy from_ `.env.saucelabs.example`_._
 
 ### _General (`.env.e2e`)_
@@ -300,33 +305,42 @@ _Two env files split general e2e config (including SiteMinder credentials) from 
 | `PREV_ANDROID_APP`         | `BCSC-prev.apk`       | _Previous released Android app for upgrade tests (local file or Sauce storage filename)_ |
 | `PREV_IOS_APP`             | `BCSC-prev.ipa`       | _Previous released iOS app for upgrade tests (local file or Sauce storage filename)_ |
 
-### _SiteMinder (in_ `.env.e2e`_)_
+### _IDCheck sign-in (in_ `.env.e2e`_)_
 
-_The in-person verification approval flow (`approveInPersonRequest` in_ `src/helpers/approval.ts`_) automates the SiteMinder login used by the IDCheck portal. It reads credentials from_ `process.env` _— locally these come from_ `e2e/.env.e2e` _(loaded by_ `configs/wdio.shared.conf.ts`_), and in CI they come from GitHub Actions secrets injected via_ `.github/workflows/e2e.yml`_:_
+_The in-person verification approval (`approveInPersonRequest` in_ `src/helpers/approval.ts`_), the send-video review and the queue drain all act in the IDCheck SIT portal, which signs its agents in through BC Gov SSO (Keycloak) and Entra ID ("IDIR - MFA"). The sign-in is a short drive of the Microsoft pages in a headless Chrome (`scripts/idcheck-session.mjs`); everything after it is plain cookie-bound HTTP (`scripts/login.mjs`). One sign-in is cached per process, so a journey's drain → review → drain signs in once. The account is the shared IAS test IDIR (`bcsc-ias-test-account` in 1Password); its sign-in name is the account's gov email. Credentials come from_ `process.env` _— locally from_ `e2e/.env.e2e` _(loaded by_ `configs/wdio.shared.conf.ts`_), in CI from 1Password via_ `.github/workflows/e2e.yml`_:_
 
-| _Variable_    | _Description_                                          |
-| ------------- | ------------------------------------------------------ |
-| `SM_USER`     | _SiteMinder username for the IDCheck test environment_ |
-| `SM_PASSWORD` | _SiteMinder password for the IDCheck test environment_ |
+| _Variable_             | _Description_                                                                                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IDCHECK_USER`         | _The account's Entra sign-in name (its gov email). Needs the IDIM Verification Specialist role._                                                          |
+| `IDCHECK_PASSWORD`     | _The account password_                                                                                                                                   |
+| `IDCHECK_TOTP_SECRET`  | _Base32 seed of the account's authenticator ("software token") MFA — the same seed 1Password renders the live code from. Required for CI; optional locally_ |
+| `IDCHECK_LOGIN_HEADED` | _Set to_ `1` _to watch the sign-in in a visible browser_                                                                                                 |
 
-_For local runs, add them to your_ `.env.e2e` _(see_ `.env.e2e.example`_):_
+_The browser is Google Chrome where it is installed (dev Macs, GitHub-hosted runners); otherwise run_ `yarn playwright-core install chromium` _once in_ `e2e/`_. Without a TOTP seed the script waits for you to approve the Microsoft Authenticator push on your phone and logs the number to match, so a personal IDIR works for local runs. Check the credentials with:_
 
 ```bash
-# e2e/.env.e2e
-SM_USER='your-siteminder-username'
-SM_PASSWORD='your-siteminder-password'
+yarn idcheck:check               # sign in, read the portal home; prints the MFA path (silent/totp/push) and landing title
 ```
 
-_The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any journey that completes in-person verification (the verified_ `verify` _/_ `main` _journeys, and_ `migration`_) will fail at the approval step._
+_**Staying off Entra's bot-detection radar.** A shared account that signs in too often from an automation-flagged browser gets risk-blocked (see_ `.notes/mfa-account-protection.md`_). Three always-on defences keep sign-ins rare: the browser reuses a **persistent profile** (`~/.idcheck-e2e/profile`, or_ `IDCHECK_PROFILE_DIR`_) so Entra recognises the device and most sign-ins go silent; "Stay signed in?" is answered Yes for the persistent cookie; and a **circuit breaker** (`scripts/entra-auth-guard.mjs`) latches the run after_ `IDCHECK_MFA_MAX_FAILURES` _(default 3) genuine Entra rejections — never on timeouts or an allowlist 403 (its contract is covered by_ `yarn test:unit`_). Knobs:_
+
+| _Variable_                 | _Description_                                                                                                    |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `IDCHECK_STATE_DIR`        | _Where the profile and the sign-in ledger live (default_ `~/.idcheck-e2e`_; CI uses the runner temp dir)_         |
+| `IDCHECK_PROFILE_DIR`      | _Override just the browser-profile dir. **Delete it to force a fresh MFA challenge.**_                            |
+| `IDCHECK_MFA_MAX_FAILURES` | _Entra rejections before the run latches (default 3)_                                                             |
+| `IDCHECK_AUTH_RESET`       | _Set to_ `1` _to clear a latch once the real cause is fixed_                                                      |
+
+_The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any journey that completes in-person verification (the verified_ `verify` _/_ `main` _journeys, and_ `migration`_) will fail at the approval step. A failed sign-in leaves a screenshot in_ `reports/screenshots/` _and, on a genuine Entra rejection, names the account-protection state._
 
 ### _Send-video review queue_
 
-_The send-video journeys upload real verification requests to the SIT IDcheck agent queue and review them through the same SiteMinder session (`reviewSendVideoRequest`). That queue has **no worklist** — a review claims the_ next _request blindly and then checks it is the expected persona on the expected platform — and it is **shared** with the UAT team. Two things follow:_
+_The send-video journeys upload real verification requests to the SIT IDcheck agent queue and review them through the same IDCheck session (`reviewSendVideoRequest`). That queue has **no worklist** — a review claims the_ next _request blindly and then checks it is the expected persona on the expected platform — and it is **shared** with the UAT team. Two things follow:_
 
 - _**Never run send-video journeys on two platforms at once.** The personas are shared, so one platform would review (or drain) the other's live upload. CI keeps them out of the concurrent device matrix and runs them in their own_ `send-video` _lane, one platform at a time; a parallel multi-device_ `verify` _/_ `regression` _run drops them automatically (`E2E_EXCLUDE_SEND_VIDEO=1`, with a notice)._
 - _**The queue is drained around every submission.** Each send-video journey rejects whatever is queued before it submits (so its own upload is the head the review claims), and its teardown drains again if the upload was never reviewed. The nightly ends with a_ `queue-hygiene` _job (`e2e-send-video-queue.yml`) that drains once more, so a run that died mid-journey leaves nothing for the morning. Rejections carry the reason "Automated e2e queue cleanup"._
 
-_On demand — locally with the SiteMinder credentials above (and an allowlisted egress IP, e.g. the VPN), or from the Actions tab as **Drain send-video queue**:_
+_On demand — locally with the IDCheck credentials above (and an allowlisted egress IP, e.g. the VPN), or from the Actions tab as **Drain send-video queue**:_
 
 ```bash
 yarn queue:drain                 # reject everything queued (scope all)
@@ -535,7 +549,7 @@ path CI already uses)._
 | Android | Non-BCSC reroute at the serial screen | ✅ WORKS (deterministic) | same jobs | _An unrecognised/undecodable code at `ScanSerial` routes to DualIdentificationRequired within seconds, every run — an edge case previously untestable_ |
 | Android | QR (FAB scanner) | ✅ WORKS | `a6f63e6f9f674fab95eea0f560918234` | _junk QR → "not recognized" popup AND pairing QR → full strategy pipeline, both first try; transfer-in scanning shares the same camera component_ |
 | iOS | QR (FAB scanner) | ✅ WORKS | `d7ea2c3c39c548a8a7ddc422d2c32714` | _Sauce's synthesized QR metadata reaches the vision-camera delegate: junk QR → "not recognized" popup AND pairing QR → full strategy pipeline_ |
-| iOS | Code-39 / PDF-417 (any surface) | ❌ DEAD (structural) | `d7ea2c3c39c548a8a7ddc422d2c32714`, `e7214db3895d4d67bb05d053e38e6350` | _Proven, not just documented: the injected card is plainly VISIBLE and sharp in the iOS preview, and code-39/PDF-417 still never fire, while QR fires reliably from the same image. iOS decodes in the OS (`AVCaptureMetadataOutput`) and Sauce only synthesizes QR metadata, so no rotation/clarity/size change can ever help. Mitigation: manual serial entry_ |
+| iOS | Code-39 / PDF-417 (any surface) | ❌ DEAD (structural) | `d7ea2c3c39c548a8a7ddc422d2c32714`, `e7214db3895d4d67bb05d053e38e6350`, `3b6691b413534c2299051991a0dc85e5` (serial: bare code-39, bare PDF-417, card back), `56f3c3775264490c8d92bf98465fd066` (evidence capture) | _Proven, not just documented: the injected card is plainly VISIBLE and sharp in the iOS preview, and code-39/PDF-417 still never fire, while QR fires reliably from the same image. iOS decodes in the OS (`AVCaptureMetadataOutput`) and Sauce only synthesizes QR metadata, so no rotation/clarity/size change can ever help. Mitigation: manual serial entry_ |
 
 _What that buys CI today, split by what each platform can actually do:_
 
@@ -601,6 +615,23 @@ nonexistent card._
 > `decodeBarcodes` — the same guard it already applies to `type === 'unknown'` — would fix the
 > user-facing behaviour and make this screen testable by injection._
 
+### Device authentication (Sauce device-lock lane)
+
+_The app offers "use device authentication" only when the OS calls the device secure —_ `KeyguardManager.isDeviceSecure` _on Android,_ `LAContext.canEvaluatePolicy(.deviceOwnerAuthentication)` _on iOS — and public pool devices carry no screen lock, so on a plain session the secure-app step renders the PIN option alone. Two per-session Sauce capabilities change that, and the_ `device-auth` _suite runs on a capability lane that requests both:_
+
+- `setupDeviceLock: true` _— Sauce sets a real screen lock for the session (000000 on Android, 089675 on iOS). The option renders and the OS credential prompt is real; typing the passcode answers it. On iOS that sheet is invisible to the driver, so it would be typed blind._
+- `biometricsInterception: true` _— Sauce swaps the biometric APIs for its own, and_ `sauce:biometrics-authenticate=true|false` _answers the app's prompt (`helpers/biometrics.ts`). Measured 2026-09-10: this alone also makes the option render on both platforms — on Android the instrumentation flips the keyguard check, which the docs do not list — but the lane keeps the lock too, so each option covers the other's failure mode._
+
+_A mocked answer drives the same path a real match does: the app binds no key to the sensor, so success means "read the stored hash and rotate the wallet key" either way. What it cannot drive: the same-prompt retry after an intermediate biometric failure (Sauce's_ `=false` _settles the prompt as an error, and the app drops back to the "Confirm it's your device" interstitial), and "App reset for security" (the OS lock removed after enrolment)._
+
+_Both options change the state every other journey starts from, so they are never a global switch: the RDC configs give_ `device-auth/*.journey.ts` _its own lane (`DEVICE_AUTH_SPECS`) and exclude those files from every other lane, the suite is not part of_ `regression`_, and the nightly runs it last in its chain. The App Storage "Device Passcode" setting stays OFF on every app group — Sauce applies it to all uploaded versions of the app, which would lock the device under every journey of every build._
+
+```sh
+# the journey, on its lane (Sauce RDC only; it skips itself anywhere else)
+yarn test:android:sauce --suite device-auth
+yarn test:ios:sauce --suite device-auth
+```
+
 ## _CI/CD_
 
 _Tests run automatically in GitHub Actions via a device matrix that controls which OS versions are tested:_
@@ -614,7 +645,9 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 
 _The four send-video journeys are excluded from that concurrent regression matrix and run right after it as their own_ `send-video` _lane — both platforms, one at a time (`max_parallel: 1`), alongside the Android-only migration lane — because they review a shared, blind-FIFO SIT agent queue with shared personas (see **Send-video review queue**). The journeys drain that queue around their own uploads, and the nightly ends with a_ `queue-hygiene` _job that drains it once more._
 
-_The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
+_The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status._
+
+_The nightly ends with the_ `device-auth` _lane (both platforms, last in the chain so its two sessions stay inside the cap): the device-authentication journey on a Sauce session whose device carries a screen lock and biometric interception — see **[Device authentication](#device-authentication-sauce-device-lock-lane)**._
 
 _**Note:** There is no E2E job on_ `main` _merge by design — regression is deferred to the nightly workflow so SauceLabs devices stay free during the day when multiple PRs merge. The in-person verification step needs the runner's egress IP allowlisted with the BC Gov ID Check portal; see the notes in_ `e2e-nightly.yml` _and use the "Verify Allowlist Connectivity" workflow to confirm reachability._
 
@@ -627,13 +660,13 @@ Every nightly run ends with a **brief** — one page on the run's Summary tab (a
 | Symbol | Meaning |
 | --- | --- |
 | ✅ / ❌ | every listed checkpoint passed / at least one failed |
-| ⛔ blocked | skipped because an earlier checkpoint in the same file failed (`mochaOpts.bail`) |
+| ⛔ blocked | never ran because an earlier checkpoint in the same file failed (`mochaOpts.bail`) — the reporter writes nothing for those, so the brief counts them from the spec's `it` titles |
 | ⏭️ skipped | a runtime `this.skip()` — an env or data gate (Sauce-only, iOS-only, missing SIT data) |
 | ⬜ not run | no result for it in these reports (lane not run, spec not scheduled, worker never got a session) |
 | ➖ n/a | not applicable on that platform (e.g. card-barcode scanning on iOS) |
 | 📝 manual | proved by the UAT team, not automation — the manual script is linked |
 
-Cells show `passed/listed` plus tallies when not everything listed passed (`✅ 4/5 ⏭1`). The rows come from `src/brief/coverage-map.ts` — each UAT row names the spec files and exact `it` titles that prove it, per platform — and `yarn brief:check` (the brief job runs it first) fails when a listed title no longer exists or a journey under `test/bcsc/` is not mapped, so renaming a checkpoint means updating the map.
+Cells show `passed/listed` plus tallies when not everything listed passed (`✅ 4/5 ⏭1`). The rows come from `src/brief/coverage-map.ts` — each UAT row names the spec files and exact `it` titles that prove it, per platform — and `yarn brief:check` (the brief job runs it first) fails when a listed title no longer exists or a journey under `test/bcsc/` is not mapped, so renaming a checkpoint means updating the map. `smoke.spec.ts` is the PR gate and has no row: the nightly never schedules it.
 
 ```bash
 yarn brief --reports reports                                   # the brief for a local run, to stdout
@@ -675,7 +708,8 @@ e2e/
 │   ├── generate-scan-assets.mjs             # combo-card backs for the scan suite
 │   ├── issuer-provision.ts                  # issuer tenant bootstrap / CI preflight (yarn issuer:provision)
 │   ├── issuer-smoke.ts                      # issuer API smoke, no device (yarn issuer:smoke)
-│   ├── login.mjs                            # SiteMinder login helper for approval flow
+│   ├── idcheck-session.mjs                  # IDCheck sign-in (headless Chrome → cookie jar), cached per process
+│   ├── login.mjs                            # IDCheck portal driver: in-person approval, send-video review, queue drain
 │   ├── setup-drivers.mjs                    # installs Appium drivers (yarn setup)
 │   └── start-android-emulator.mjs           # launches emulator with DNS (yarn emulator:android)
 │
@@ -713,7 +747,7 @@ e2e/
 │   │   ├── a11y-audit.ts                    # auditScreen(): iOS XCTest audit engine + report/roll-up (non-blocking)
 │   │   ├── a11y-android.ts                  # Android heuristics: unlabeled controls, touch targets, screenshot contrast
 │   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
-│   │   ├── approval.ts                      # in-person verification approval via SiteMinder
+│   │   ├── approval.ts                      # in-person approval + send-video review via the IDCheck portal
 │   │   ├── biometrics.ts                    # biometric simulation (Sauce Labs RDC)
 │   │   ├── camera.ts                        # camera image injection + padding (photos, QR, video)
 │   │   ├── deep-link.ts                     # dispatch <scheme>:// deep links (pairing / login)

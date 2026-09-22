@@ -32,7 +32,7 @@ New architecture support and turbomodule fixes. We should swap this library out 
 
 Turbomodule fixes. We should swap this library out soon, hasn't been updated in four years.
 
-#### @bifold-remote-logs-npm-3.0.21-4ae200989a.patch
+#### @bifold-remote-logs-npm-3.0.22-943bfd093c.patch
 
 Gates `test`/`trace` log methods on their own levels instead of `debug` (so ledger lookups no longer flood the default dev log level), drops `console.trace` for the `trace` level (no more stack traces on routine logs), forces `LogLevel.test` instead of `debug` when remote logging is enabled (support sessions keep full detail), and tags `trace` lines with a `[TRACE]` console prefix so they stay distinguishable from `debug` in Metro. #4599
 

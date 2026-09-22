@@ -213,6 +213,13 @@ const translation = {
     "EnableProxy": "Enable proxy (PT-BR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
     "SwitchTheme": "Switch theme (PT-BR)",
+    "ProofRequestExpirationTimes": {
+      "TwoMinutes": "2 minutes (PT-BR)",
+      "OneHour": "1 hour (PT-BR)",
+      "FortyEightHours": "48 hours (PT-BR)",
+      "SevenDays": "7 days (PT-BR)",
+      "Never": "Never (PT-BR)"
+    },
     "AppSection": "App (PT-BR)",
     "Testing": "Testing (PT-BR)",
     "ErrorAlertTest": "Error & Alert Testing (PT-BR)",
@@ -438,6 +445,7 @@ const translation = {
       "Biometrics": "Biometrics (PT-BR)",
       "EditNickname": "Edit Nickname (PT-BR)",
       "AutoLockTime": "Auto lock time (PT-BR)",
+      "ProofRequestExpiry": "Proof request expiration (PT-BR)",
       "Notifications": "Notifications (PT-BR)",
       "ChangeNotificationsHeader": "Change notification settings? (PT-BR)",
       "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions. (PT-BR)",
@@ -1070,8 +1078,8 @@ const translation = {
     },
     "MismatchedSerial": {
       "Heading": "Card not found (PT-BR)",
-      "Description1": "Enter the letters and numbers by the barcode on the back of your card. (PT-BR)",
-      "Description2": "Check the serial number and birthdate match what is on your card. (PT-BR)",
+      "Description1": "Check the serial number and birthdate match what is on your card: (PT-BR)",
+      "Description2": "Check your card is a BC Services Card by looking at the front of your card: (PT-BR)",
       "SerialNumber": "Serial number: {{serial}} (PT-BR)",
       "Birthdate": "Birthdate: {{birthdate}} (PT-BR)",
       "TryAnotherCard": "Try another card (PT-BR)",

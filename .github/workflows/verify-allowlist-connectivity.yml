@@ -94,6 +94,9 @@ jobs:
             "support.iddev|support.iddev.gov.bc.ca|/"
             "idsit /idcheck|idsit.gov.bc.ca|/idcheck"
             "support.idsit|support.idsit.gov.bc.ca|/"
+            # the IDcheck sign-in hops (BC Gov SSO, then Entra ID) — public, but the approval depends on them
+            "sso dev.loginproxy|dev.loginproxy.gov.bc.ca|/auth/realms/standard/.well-known/openid-configuration"
+            "entra login.microsoftonline|login.microsoftonline.com|/6fdb5200-3d0d-4a8a-b036-d3685e359adc/v2.0/.well-known/openid-configuration"
           )
 
           OVERALL=0

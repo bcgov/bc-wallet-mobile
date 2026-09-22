@@ -1,5 +1,6 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
-import { CONTACT_US_HELP_URL, hitSlop, USER_REPORT_ERROR_CODE } from '@/constants'
+import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
+import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { reportProblem } from '@/utils/logger'
@@ -81,18 +82,39 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     }
     submittedRef.current = true
 
+    const appError = AppError.fromErrorDefinition(ErrorRegistry.REPORT_PROBLEM)
+
+    // Add context to the error for debugging purposes
+    appError.addContext({
+      state_ias_environment: store.developer.environment.name,
+      state_verified: store.bcscSecure.verified,
+      state_verified_status: store.bcscSecure.verifiedStatus,
+      state_card_process: store.bcscSecure.cardProcess,
+      // ...
+    })
+
     // Send the report through the shared pipeline.
     // Showing the returned ID is what keeps the modal open on the confirmation view.
     const reportId = reportProblem({
       title: t('BCSC.ReportProblem.Title'),
       description: description.trim(),
-      code: USER_REPORT_ERROR_CODE,
+      code: appError.statusCode,
+      error: appError,
       installId: store.bcsc.installId, // App install ID
       sessionId: store.developer.remoteDebugging.sessionId, // Remote logging session ID
     })
 
     setReportId(reportId)
-  }, [description, t, store.bcsc.installId, store.developer.remoteDebugging.sessionId])
+  }, [
+    description,
+    store.developer.environment.name,
+    store.developer.remoteDebugging.sessionId,
+    store.bcscSecure.verified,
+    store.bcscSecure.verifiedStatus,
+    store.bcscSecure.cardProcess,
+    store.bcsc.installId,
+    t,
+  ])
 
   const handleCopy = useCallback(() => {
     if (!reportId) {

@@ -13,8 +13,9 @@ import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info
 import type { MediaFormat } from '@/bcsc-theme/utils/media-format'
 import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
-import { AppError, ErrorRegistry } from '@/errors'
-import { isAppError, isAxiosAppError } from '@/errors/appError'
+import { isAxiosAppError } from '@/errors/appError'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
@@ -274,18 +275,14 @@ const useEvidenceUploadModel = (
         return
       }
 
-      /**
-       * Dev note: evidence_upload_server_error + evidence_upload_unkown_error are both deprecated in the IAS documentation.
-       * So all errors during the upload process will be categorized as FILE_UPLOAD_ERROR.
-       */
-      // toJSON() summarizes `cause` without its context, and this wrapper is what the error modal
-      // reports — so carry the interceptor's context (media_* fields, url, method) forward.
-      const appError = AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, {
-        cause: error,
-        context: isAppError(error) ? error.context : undefined,
-      })
+      // Use the original AppError and fallback to FILE_UPLOAD_ERROR
+      const appError = ensureAppError(error, AppEventCode.FILE_UPLOAD_ERROR)
+
       logger.error('[useEvidenceUploadModel] Error during evidence upload process', appError)
-      fileUploadErrorAlert(appError)
+
+      if (!appError.handled) {
+        fileUploadErrorAlert(appError)
+      }
     } finally {
       setIsUploading(false)
     }

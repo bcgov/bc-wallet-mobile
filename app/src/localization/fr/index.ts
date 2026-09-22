@@ -213,6 +213,13 @@ const translation = {
     "EnableProxy": "Enable proxy (FR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
     "SwitchTheme": "Switch theme (FR)",
+    "ProofRequestExpirationTimes": {
+      "TwoMinutes": "2 minutes (FR)",
+      "OneHour": "1 hour (FR)",
+      "FortyEightHours": "48 hours (FR)",
+      "SevenDays": "7 days (FR)",
+      "Never": "Never (FR)"
+    },
     "AppSection": "App (FR)",
     "Testing": "Testing (FR)",
     "ErrorAlertTest": "Error & Alert Testing (FR)",
@@ -438,6 +445,7 @@ const translation = {
       "Biometrics": "Biometrics (FR)",
       "EditNickname": "Edit Nickname (FR)",
       "AutoLockTime": "Auto lock time (FR)",
+      "ProofRequestExpiry": "Proof request expiration (FR)",
       "Notifications": "Notifications (FR)",
       "ChangeNotificationsHeader": "Change notification settings? (FR)",
       "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions. (FR)",
@@ -1070,8 +1078,8 @@ const translation = {
     },
     "MismatchedSerial": {
       "Heading": "Card not found (FR)",
-      "Description1": "Enter the letters and numbers by the barcode on the back of your card. (FR)",
-      "Description2": "Check the serial number and birthdate match what is on your card. (FR)",
+      "Description1": "Check the serial number and birthdate match what is on your card: (FR)",
+      "Description2": "Check your card is a BC Services Card by looking at the front of your card: (FR)",
       "SerialNumber": "Serial number: {{serial}} (FR)",
       "Birthdate": "Birthdate: {{birthdate}} (FR)",
       "TryAnotherCard": "Try another card (FR)",

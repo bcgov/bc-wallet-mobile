@@ -1,7 +1,7 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { formatExpiryBadge, formatTimestamp } from '@/bcsc-theme/utils/datetime-utils'
-import { NOTIFICATION_EXPIRY_WARNING_WINDOW_MS, PROOF_REQUEST_NOTIFICATION_TTL_MS } from '@/constants'
+import { formatExpiryBadge, formatTimestamp, getProofRequestExpiry } from '@/bcsc-theme/utils/datetime-utils'
+import { NOTIFICATION_EXPIRY_WARNING_WINDOW_MS } from '@/constants'
 import { CredentialNotificationRecord } from '@/hooks/notifications'
 import { useDeclineCredentialOffer } from '@/hooks/useDeclineCredentialOffer'
 import { useDeclineProofRequest } from '@/hooks/useDeclineProofRequest'
@@ -13,6 +13,7 @@ import {
   CredentialMetadata,
   getConnectionName,
   parsedSchema,
+  ProofRequestExpirationTime,
   Screens,
   useStore,
 } from '@bifold/core'
@@ -291,12 +292,11 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   // Done proofs only stay in the list until their outcome has been viewed, so treat them as unread
   const isRead = !isDone && Boolean(proofMeta?.request_seen)
 
-  // Pending proof requests are short-lived: they are removed from the list once their TTL
-  // passes (see useNotifications), so warn about the protocol expiry or the app-imposed
-  // removal time, whichever comes first. Expiry is moot once the proof is done.
-  const removalTime = new Date(new Date(proof.createdAt).getTime() + PROOF_REQUEST_NOTIFICATION_TTL_MS)
-  const soonestExpiry = expiresTime && expiresTime < removalTime ? expiresTime : removalTime
-  const effectiveExpiry = isDone ? undefined : soonestExpiry
+  const proofRequestExpirationMs =
+    store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
+  const effectiveExpiry = isDone
+    ? undefined
+    : getProofRequestExpiry(proof.createdAt, proofRequestExpirationMs, expiresTime)
 
   // Flip the notification from unread to read once the user opens it
   const markRequestSeen = async () => {

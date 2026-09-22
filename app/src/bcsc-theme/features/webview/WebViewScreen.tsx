@@ -10,5 +10,6 @@ interface WebViewScreenProps {
  * Route param type safety is enforced by each stack's param list, not here.
  */
 export const WebViewScreen: React.FC<WebViewScreenProps> = ({ route }) => {
-  return <WebViewContent url={route.params.url} />
+  // Keyed by url so a navigate() that only swaps params starts over: token check, 401 retry guard and WebView.
+  return <WebViewContent key={route.params.url} url={route.params.url} />
 }

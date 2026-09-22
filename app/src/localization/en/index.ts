@@ -213,6 +213,13 @@ const translation = {
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchTheme": "Switch theme",
+    "ProofRequestExpirationTimes": {
+      "TwoMinutes": "2 minutes",
+      "OneHour": "1 hour",
+      "FortyEightHours": "48 hours",
+      "SevenDays": "7 days",
+      "Never": "Never"
+    },
     "AppSection": "App",
     "Testing": "Testing",
     "ErrorAlertTest": "Error & Alert Testing",
@@ -438,6 +445,7 @@ const translation = {
       "Biometrics": "Biometrics",
       "EditNickname": "Edit Nickname",
       "AutoLockTime": "Auto lock time",
+      "ProofRequestExpiry": "Proof request expiration",
       "Notifications": "Notifications",
       "ChangeNotificationsHeader": "Change notification settings?",
       "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions.",
@@ -1070,8 +1078,8 @@ const translation = {
     },
     "MismatchedSerial": {
       "Heading": "Card not found",
-      "Description1": "Enter the letters and numbers by the barcode on the back of your card.",
-      "Description2": "Check the serial number and birthdate match what is on your card.",
+      "Description1": "Check the serial number and birthdate match what is on your card:",
+      "Description2": "Check your card is a BC Services Card by looking at the front of your card:",
       "SerialNumber": "Serial number: {{serial}}",
       "Birthdate": "Birthdate: {{birthdate}}",
       "TryAnotherCard": "Try another card",
@@ -1083,7 +1091,6 @@ const translation = {
         "ButtonText": "Get a BC Services Card"
       }
     },
-    // TODO: placeholder copy — needs content review before ship
     "DeviceAuthorizationError": {
       "InvalidParameter": {
         "Heading": "Card Not Found",

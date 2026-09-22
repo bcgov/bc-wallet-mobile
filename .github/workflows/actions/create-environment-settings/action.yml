@@ -33,6 +33,9 @@ inputs:
   default_environment:
     description: 'The default IAS environment (e.g. SIT, PROD, QA, TEST)'
     required: false
+  remote_config_url:
+    description: 'The remote config URL'
+    required: true
 
 runs:
   using: composite
@@ -51,6 +54,7 @@ runs:
         INDY_VDR_PROXY_URL: ${{ inputs.indy_vdr_proxy_url }}
         SNOWPLOW_COLLECTOR_URL: ${{ inputs.snowplow_collector_url }}
         DEFAULT_ENVIRONMENT: ${{ inputs.default_environment }}
+        REMOTE_CONFIG_URL: ${{ inputs.remote_config_url }}
       run: |
         echo "BUILD_TARGET=${BUILD_TARGET}" >.env
         echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
@@ -62,3 +66,4 @@ runs:
         echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
         echo "SNOWPLOW_COLLECTOR_URL=${SNOWPLOW_COLLECTOR_URL}" >>.env
         echo "DEFAULT_ENVIRONMENT=${DEFAULT_ENVIRONMENT}" >>.env
+        echo "REMOTE_CONFIG_URL=${REMOTE_CONFIG_URL}" >>.env

@@ -275,9 +275,9 @@ export const UAT_CHECKLIST: CoverageSection[] = [
       {
         id: 'feat-change-security',
         label: 'Change security method (biometrics)',
-        platforms: { ios: 'skipped', android: 'skipped' },
-        proof: [],
-        note: 'skipped for e2e 2026-08-28 — device biometrics owned by the UAT team',
+        platforms: both,
+        proof: [{ file: spec('device-auth/device-auth.journey.ts') }],
+        note: 'the device-auth lane: a Sauce session with a screen lock + biometric interception (setupDeviceLock, biometricsInterception); switches to a PIN, unlocks with it, switches back. The prompt is answered by sauce:biometrics-authenticate, which drives the same code path a real match does — the app binds no key to the sensor',
       },
       {
         id: 'feat-change-pin',
@@ -341,22 +341,6 @@ export const UAT_CHECKLIST: CoverageSection[] = [
             ],
           },
         ],
-      },
-      {
-        id: 'feat-sign-out-in',
-        label: 'Sign out / in',
-        platforms: { ios: 'na', android: 'na' },
-        proof: [
-          {
-            file: spec('main/settings.journey.ts'),
-            tests: ['auto-locks after the inactivity timeout and re-unlocks with the changed PIN'],
-          },
-          {
-            file: spec('auth/auth-unlock.journey.ts'),
-            tests: ['locks on return from a long background and re-unlocks with the PIN (terminal)'],
-          },
-        ],
-        note: 'no such feature in v4; lock is inactivity/background driven — nearest checkpoints shown',
       },
       {
         id: 'feat-login-tile',
@@ -466,13 +450,15 @@ export const UAT_CHECKLIST: CoverageSection[] = [
   },
 ]
 
-/** One row per journey/spec, so a file that stops running is visible even when no UAT row names it. */
+/**
+ * One row per journey/spec, so a file that stops running is visible even when no UAT row names it.
+ * `smoke.spec.ts` is the PR gate, never scheduled by the nightly, so it has no row (brief-check exempts it).
+ */
 export const OTHER_COVERAGE: CoverageSection[] = [
   {
     id: 'journeys',
     title: 'Journeys',
     rows: [
-      { id: 'j-smoke', label: 'Smoke: launch + onboarding entry', platforms: both, proof: [{ file: spec('smoke.spec.ts') }] },
       { id: 'j-onboarding-happy', label: 'Onboarding: happy path', platforms: both, proof: [{ file: spec('onboarding/onboarding.journey.ts') }] },
       { id: 'j-onboarding-detours', label: 'Onboarding: detours', platforms: both, proof: [{ file: spec('onboarding/onboarding-detours.journey.ts') }] },
       { id: 'j-onboarding-permissions', label: 'Onboarding: notification permission granted', platforms: both, proof: [{ file: spec('onboarding/onboarding-permissions.journey.ts') }] },
@@ -490,11 +476,24 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       { id: 'j-send-video-cancelled', label: 'Send video: rejected', platforms: both, proof: [{ file: spec('verify/send-video-cancelled.journey.ts') }] },
       { id: 'j-send-video-non-photo', label: 'Send video: non-photo card', platforms: both, proof: [{ file: spec('verify/send-video-non-photo.journey.ts') }] },
       { id: 'j-send-video-non-bcsc', label: 'Send video: non-BCSC', platforms: both, proof: [{ file: spec('verify/send-video-non-bcsc.journey.ts') }] },
-      { id: 'j-video-call', label: 'Verify: video call to the approval boundary', platforms: both, proof: [{ file: spec('verify/video-call.journey.ts') }] },
+      {
+        id: 'j-video-call',
+        label: 'Verify: video call to the approval boundary',
+        platforms: both,
+        proof: [{ file: spec('verify/video-call.journey.ts') }],
+        note: 'the open-hours half skips in the nightly: SIT’s live-call service is closed at midnight PT',
+      },
       { id: 'j-unverified-main', label: 'Main: unverified gating', platforms: both, proof: [{ file: spec('main/unverified-main.journey.ts') }] },
       { id: 'j-settings', label: 'Main: settings', platforms: both, proof: [{ file: spec('main/settings.journey.ts') }] },
       { id: 'j-wallet', label: 'Wallet: DIDComm credential lifecycle', platforms: both, proof: [{ file: spec('main/wallet.journey.ts') }] },
       { id: 'j-a11y', label: 'Accessibility: automated audits', platforms: both, proof: [{ file: spec('a11y/accessibility.journey.ts') }] },
+    ],
+  },
+  {
+    id: 'device-auth',
+    title: 'Device authentication (Sauce device-lock lane)',
+    rows: [
+      { id: 'j-device-auth', label: 'Device auth: onboarding, unlock and the security switch', platforms: both, proof: [{ file: spec('device-auth/device-auth.journey.ts') }] },
     ],
   },
   {

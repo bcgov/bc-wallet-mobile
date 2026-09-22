@@ -19,6 +19,10 @@ logs/
 # Test reports (JUnit / Allure / failure screenshots)
 reports/
 
+# IDCheck sign-in: persistent browser profile + circuit-breaker ledger (local overrides landing in-repo)
+.idcheck-profile/
+.idcheck-e2e/
+
 # Downloaded CI artifacts + the rendered brief (yarn brief)
 artifacts/
 brief.md

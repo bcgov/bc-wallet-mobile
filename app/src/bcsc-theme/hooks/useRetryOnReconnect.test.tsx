@@ -47,6 +47,17 @@ describe('useRetryOnReconnect', () => {
     expect(retry).not.toHaveBeenCalled()
   })
 
+  it('passes the triggering NetInfo event to retry, including an unknown reachability', () => {
+    const retry = jest.fn()
+    renderHook(() => useRetryOnReconnect(() => true, retry))
+
+    netInfoListener(netInfoState(false))
+    netInfoListener(netInfoState(true, null))
+
+    expect(retry).toHaveBeenCalledTimes(1)
+    expect(retry).toHaveBeenCalledWith({ isConnected: true, isInternetReachable: null })
+  })
+
   it('should not treat connected-but-unreachable as online', () => {
     const retry = jest.fn()
     renderHook(() => useRetryOnReconnect(() => true, retry))

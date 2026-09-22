@@ -1,6 +1,12 @@
 name: Setup E2E
 description: Node + Yarn, the cached e2e dependencies, and a scripts-off `yarn install` in e2e/
 
+inputs:
+  idcheck-browser:
+    description: 'Make sure a browser exists for the IDCheck sign-in (scripts/idcheck-session.mjs)'
+    required: false
+    default: 'false'
+
 runs:
   using: composite
   steps:
@@ -21,3 +27,11 @@ runs:
       working-directory: e2e
       # skip-build: no dependency lifecycle scripts on CI — native binaries (sharp, esbuild) come from platform packages
       run: yarn install --immutable --mode=skip-build
+
+    # The IDCheck sign-in drives Google Chrome, which the hosted Ubuntu images ship; the install is the fallback.
+    # The Playwright CLI is called by path: "yarn <bin> install" reads as a package install to SonarCloud (S6505).
+    - name: Ensure a browser for the IDCheck sign-in
+      if: inputs.idcheck-browser == 'true'
+      shell: bash
+      working-directory: e2e
+      run: google-chrome --version || node_modules/.bin/playwright-core install --with-deps chromium
