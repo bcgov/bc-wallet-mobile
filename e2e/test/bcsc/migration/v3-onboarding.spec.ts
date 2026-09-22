@@ -96,8 +96,8 @@ describe('Upgrade from v3: setting up on the v3 release', () => {
   })
 
   it('reads the confirmation code and approves it in the IDCheck portal', async () => {
+    // Never logged: it approves the request, and Sauce/CI logs are remote.
     const confirmationCode = await readConfirmationCode()
-    console.log(`[migration] V3 confirmation code: "${confirmationCode}"`)
     await approveInPersonRequest(confirmationCode, {
       flow: 'photo',
       cardSerialNumber: testUser.cardSerial,
