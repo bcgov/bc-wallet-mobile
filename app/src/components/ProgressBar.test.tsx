@@ -12,26 +12,26 @@ describe('ProgressBar Component', () => {
     jest.useRealTimers()
   })
 
-  test('renders correctly', () => {
+  test('renders correctly', async () => {
     const tree = render(
       <BasicAppContext>
         <ProgressBar progressPercent={0} />
       </BasicAppContext>
     )
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(tree).toMatchSnapshot()
     })
   })
 
-  test('renders correctly in dark mode', () => {
+  test('renders correctly in dark mode', async () => {
     const tree = render(
       <BasicAppContext>
         <ProgressBar progressPercent={0} dark />
       </BasicAppContext>
     )
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(tree).toMatchSnapshot()
     })
   })

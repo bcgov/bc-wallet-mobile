@@ -16,6 +16,39 @@ Where possible, users should be able to access screens or tools before async res
 (e.g. wallet initialization) are ready. Rather than blocking navigation, show a banner
 message or text on the screen itself informing the user that the feature isn't available yet and to try again shortly.
 
+## Waiting screens
+
+BCSC loading overlays, video submission, video-call waits, and transfer-scan processing use the shared `WaitingScreenContent`
+and `BCAnimatedLoadingIcon`. Center the illustration in the safe-area viewport,
+with the heading between the optional status row and illustration. Allow scrolling
+for larger text and short screens.
+Place optional supporting text below the illustration so delayed feedback does not
+change the heading/status layout. Use secondary buttons for waiting-screen Cancel
+actions; the feature owns cancellation and navigation.
+
+Use explicit workflow stages for progress; omit the bar when progress is unknown.
+Startup has no progress bar until it exposes meaningful completed stages. Video submission
+advances through preparation, upload, and finalization. Progress does not introduce a delay
+before leaving the screen.
+Video-call setup advances from 0% during evidence upload to 25% during session
+creation and 50% while connecting, then holds at 75% while waiting for an agent.
+These positions represent stages, not elapsed time or upload bytes. The waiting
+view ends when the call starts. Longer-wait feedback uses an independent timeout
+per attempt and does not advance the bar.
+Keep waiting-screen colors in the theme and follow the
+[style guide](https://www.figma.com/design/GhRluKzTmhtGAjTrYZWSE4/BCSC-Style-Guide?node-id=5143-5507).
+
+Hidden loading views must not run animations. Concurrent operations own separate
+loading tokens; the overlay stays visible until all tokens are released.
+Video-call setup and video submission use `CancellableWaitingScreen` to reveal Cancel
+after 10 seconds without fading or shifting content (#4513). It keeps Cancel hidden
+from accessibility until available, disables it during cancellation, and guards repeated
+taps. Video-call setup also shows its longer-wait message at that threshold;
+cancelling stops setup and returns to Start Video Call. Video submission preserves its
+existing cancellation destination: verification-method selection (#4585).
+Startup and post-call verification checks have no Cancel control. Post-call checks
+show the existing verification message without a progress bar.
+
 ## Test IDs: Register the key, then reference it
 
 Never pass a string literal to `testIdWithKey`. Add the key to `app/src/test-ids/registry.ts` under

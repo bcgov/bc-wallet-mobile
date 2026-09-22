@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { Animated } from 'react-native'
+import { Animated, Easing } from 'react-native'
 import Svg, { ClipPath, Defs, G, Mask, Path, Rect } from 'react-native-svg'
 
-const ANIMATION_DURATION_MS = 2000
+const ANIMATION_DURATION_MS = 4000
 const WAVE_WIDTH = 118
 const LIGHT_BLUE_WATER = '#76BAFF'
 const DARK_BLUE_MOUNTAINS = '#234075'
@@ -14,64 +14,48 @@ const AnimatedG = Animated.createAnimatedComponent(G)
 
 interface BCAnimatedLoadingIconProps {
   size: number
+  active?: boolean
 }
 
-/**
- * Renders the BCAnimatedLoadingIcon component, which displays an animated loading icon.
- *
- * @param {BCAnimatedLoadingIconProps} props - The properties for the BCAnimatedLoadingIcon component, including the size of the icon.
- * @returns The BCAnimatedLoadingIcon component.
- */
-export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
-  const skyAnimation = useRef(new Animated.Value(0)).current
-  const waterAnimation = useRef(new Animated.Value(0)).current
+/** Stops native animation while inactive, retaining the illustration for layout reuse. */
+export const BCAnimatedLoadingIcon = ({ size, active = true }: BCAnimatedLoadingIconProps) => {
+  const phase = useRef(new Animated.Value(0)).current
 
-  const darkSkyOpacity = skyAnimation // 0→1 fades dark sky in
-  const lightSkyOpacity = skyAnimation.interpolate({
+  const darkSkyOpacity = phase.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 1, 0],
+  })
+  const lightSkyOpacity = phase.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 0, 1],
+  })
+  const waterAnimation = phase.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 0], // inverse
+    outputRange: [0, -2 * WAVE_WIDTH],
   })
 
   useEffect(() => {
+    if (!active) {
+      return
+    }
+    // A single timing keeps the entire loop on the native driver while startup occupies JavaScript.
     const animation = Animated.loop(
-      Animated.sequence([
-        // Move one wave left and change sky color to dark blue
-        Animated.parallel([
-          Animated.timing(waterAnimation, {
-            toValue: -WAVE_WIDTH,
-            duration: ANIMATION_DURATION_MS,
-            useNativeDriver: true,
-          }),
-          Animated.timing(skyAnimation, {
-            toValue: 1,
-            duration: ANIMATION_DURATION_MS,
-            useNativeDriver: true,
-          }),
-        ]),
-        // Move one wave left and change sky color back to light yellow
-        Animated.parallel([
-          Animated.timing(waterAnimation, {
-            toValue: -2 * WAVE_WIDTH,
-            duration: ANIMATION_DURATION_MS,
-            useNativeDriver: true,
-          }),
-          Animated.timing(skyAnimation, {
-            toValue: 0,
-            duration: ANIMATION_DURATION_MS,
-            useNativeDriver: true,
-          }),
-        ]),
-      ])
+      Animated.timing(phase, {
+        toValue: 1,
+        duration: ANIMATION_DURATION_MS,
+        easing: Easing.linear,
+        useNativeDriver: true,
+        isInteraction: false,
+      })
     )
 
     animation.start()
 
-    // Cleanup function to stop the animation when the component unmounts
-    return animation.stop
-  }, [skyAnimation, waterAnimation])
+    return () => animation.stop()
+  }, [active, phase])
 
   return (
-    <Svg width={props.size} height={props.size} viewBox="0 0 113 113" fill="none">
+    <Svg width={size} height={size} viewBox="0 0 113 113" fill="none">
       <Defs>
         <ClipPath id="clip0_369_1738">
           <Rect width="113" height="113" fill="white" />

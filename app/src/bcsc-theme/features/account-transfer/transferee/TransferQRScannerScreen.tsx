@@ -1,12 +1,13 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { QRScannerFrame } from '@/bcsc-theme/components/QRScannerFrame'
+import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DismissiblePopupModal, ScanCamera } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import useTransferQRScannerViewModel from './useTransferQRScannerViewModel'
 
 type TransferQRScannerScreenProps = {
@@ -33,7 +34,7 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
   }
 
   if (isLoading) {
-    return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+    return <WaitingScreenContent message={t('BCSC.TransferInstructions.AddingDevice')} />
   }
 
   return (

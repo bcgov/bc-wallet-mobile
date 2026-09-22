@@ -31,6 +31,14 @@ type LiveCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.LiveCall>
 }
 
+const CALL_SETUP_PROGRESS = {
+  [VideoCallFlowState.IDLE]: 0,
+  [VideoCallFlowState.UPLOADING_DOCUMENTS]: 0,
+  [VideoCallFlowState.CREATING_SESSION]: 25,
+  [VideoCallFlowState.CONNECTING_WEBRTC]: 50,
+  [VideoCallFlowState.WAITING_FOR_AGENT]: 75,
+}
+
 const getCallVolume = (result: VolumeResult) =>
   Platform.OS === 'android' ? (result.call ?? result.volume) : result.volume
 
@@ -267,6 +275,16 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [flowState, videoCallError, t])
 
+  const handleCancelCall = useCallback(async () => {
+    try {
+      await cleanup()
+      navigation.navigate(BCSCScreens.StartCall)
+    } catch (error) {
+      logger.error('Error while cancelling video call setup', error as Error)
+      unknownErrorModal(error)
+    }
+  }, [cleanup, navigation, logger, unknownErrorModal])
+
   // when the user presses the end call button
   const handleEndCall = useCallback(async () => {
     try {
@@ -369,7 +387,13 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   }
 
   if (flowState !== VideoCallFlowState.IN_CALL) {
-    return <CallLoadingView onCancel={handleEndCall} message={stateMessage || undefined} />
+    return (
+      <CallLoadingView
+        onCancel={handleCancelCall}
+        message={stateMessage || undefined}
+        progressPercent={CALL_SETUP_PROGRESS[flowState]}
+      />
+    )
   }
 
   return (

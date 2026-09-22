@@ -5,7 +5,7 @@ exports[`ProgressBar Component renders correctly 1`] = `
   style={
     {
       "backgroundColor": "#F2F2F2",
-      "height": 11,
+      "height": 8,
       "width": "100%",
     }
   }
@@ -44,7 +44,7 @@ exports[`ProgressBar Component renders correctly in dark mode 1`] = `
   style={
     {
       "backgroundColor": "#001e3d",
-      "height": 11,
+      "height": 8,
       "width": "100%",
     }
   }

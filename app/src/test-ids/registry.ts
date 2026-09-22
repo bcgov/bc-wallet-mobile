@@ -38,6 +38,8 @@ export const TestIds = {
     // App-level gates and overlays, not screen controls: the splash/loading body, the two halves of
     // `BCSCLoadingContext`'s overlay, and the retry on the Credo agent gate. Any screen can be behind them.
     loadingScreen: 'LoadingScreenContent',
+    waitingScreenViewport: 'WaitingScreenContentViewport',
+    waitingScreenStatus: 'WaitingScreenContentStatus',
     loadingOverlay: 'BCSCLoadingProviderOverlay',
     loadingChildren: 'BCSCLoadingProviderChildren',
     agentRetry: 'AgentRetry',
@@ -391,6 +393,7 @@ export const TestIds = {
     },
     /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
     evidenceUploading: {
+      screen: 'UploadingScreen',
       cancelUpload: 'CancelUpload',
     },
     /** `SuccessfullySent` — the post-upload confirmation. `goToHome` is the screen's ONLY way out:

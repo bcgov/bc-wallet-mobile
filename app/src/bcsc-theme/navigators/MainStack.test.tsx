@@ -250,7 +250,10 @@ describe('MainStack', () => {
 
     // Replace, not overlay: the navigator has to unmount here so it drops any navigation state
     // inherited from VerifyStack. Overlaying it stranded users on VerificationSuccess (#4682).
-    expect(view.toJSON()).toMatchObject({ type: 'LoadingScreen' })
+    expect(view.toJSON()).toMatchObject({
+      type: 'LoadingScreen',
+      props: { message: 'BCSC.Loading.AppStartup' },
+    })
     expect(queryNavigators(view)).toHaveLength(0)
   })
 
@@ -262,8 +265,11 @@ describe('MainStack', () => {
     // Overlay, not replace: the checks navigate to screens registered in this navigator (terms of
     // use, device invalidated, reverify), and a navigate() with no navigator mounted is dropped.
     expect(view.toJSON()).toMatchObject({ type: 'View' })
-    expect(queryLoadingScreens(view)).toHaveLength(1)
     expect(queryNavigators(view)).toHaveLength(1)
+
+    const loadingScreens = queryLoadingScreens(view)
+    expect(loadingScreens).toHaveLength(1)
+    expect(loadingScreens[0].props.message).toBe('BCSC.Loading.AppStartup')
   })
 
   it('drops the loading screen once the system checks have settled', () => {
