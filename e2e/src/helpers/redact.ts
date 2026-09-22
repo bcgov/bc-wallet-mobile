@@ -63,13 +63,20 @@ const PERSONA_VALUES = new RegExp(
 /** Shape masks for values that are not ours to know — a foreign request's, or minted by the server. */
 const MASKS: readonly (readonly [RegExp, string])[] = [
   [PERSONA_VALUES, '<persona>'],
-  [/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, '<email>'],
   [/\b[A-Z]\d{8}\b/g, '<serial>'], // a BCSC card serial
   [/\b[A-Z0-9]{4}-[A-Z0-9]{4}\b/g, '<code>'], // an in-person confirmation code
   [/\d{6,}/g, '<digits>'], // birthdates, PINs, phone and document numbers
 ]
 
+/** Any word with an `@` inside it; a stricter shape buys nothing a diagnostic needs. */
+function isEmailLike(token: string): boolean {
+  const at = token.indexOf('@')
+  return at > 0 && at < token.length - 1
+}
+
 /** `text` with anything that identifies a card holder or unlocks a request masked. */
 export function redactSensitiveText(text: string): string {
-  return MASKS.reduce((out, [pattern, mask]) => out.replaceAll(pattern, mask), text)
+  const masked = MASKS.reduce((out, [pattern, mask]) => out.replaceAll(pattern, mask), text)
+  // Emails go by token: an unanchored `local+@domain` regex rescans the local part from every position.
+  return masked.replaceAll(/\S+/g, (token) => (isEmailLike(token) ? '<email>' : token))
 }
