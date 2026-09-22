@@ -143,8 +143,11 @@ describe('LiveCall', () => {
 
     act(() => jest.advanceTimersByTime(10000))
     const cancel = view.getByRole('button', { name: 'Global.Cancel' })
-    fireEvent.press(cancel)
-    fireEvent.press(cancel)
+    act(() => {
+      fireEvent.press(cancel)
+      fireEvent.press(cancel)
+    })
+    expect(cancel).toBeDisabled()
     expect(cleanup).toHaveBeenCalledTimes(1)
     expect(mockNavigation.navigate).not.toHaveBeenCalled()
 

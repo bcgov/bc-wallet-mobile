@@ -1002,21 +1002,6 @@ describe('useEvidenceUploadModel', () => {
       },
     }
 
-    it('sets isCancelling to true', async () => {
-      const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithPaths as BCState, jest.fn()])
-
-      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
-
-      expect(result.current.isCancelling).toBe(false)
-
-      await act(async () => {
-        await result.current.handleCancel()
-      })
-
-      expect(result.current.isCancelling).toBe(true)
-    })
-
     it('removes all media files', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([storeWithPaths as BCState, jest.fn()])

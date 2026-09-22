@@ -54,7 +54,6 @@ const useEvidenceUploadModel = (
   const { processAdditionalEvidence } = useEvidenceUpload()
   const { t } = useTranslation()
   const [isUploading, setIsUploading] = useState(false)
-  const [isCancelling, setIsCancelling] = useState(false)
   const [uploadStage, setUploadStage] = useState(UploadStage.PreparingVideo)
   const { fileUploadErrorAlert, alreadyVerifiedAlert } = useAlerts(navigation)
   const { recoverFromAlreadyVerified } = useAlreadyVerifiedRecovery()
@@ -311,7 +310,6 @@ const useEvidenceUploadModel = (
   ])
 
   const handleCancel = useCallback(async () => {
-    setIsCancelling(true)
     isCancelledRef.current = true
     await Promise.allSettled([
       removeFileSafely(photoPath, logger),
@@ -328,7 +326,6 @@ const useEvidenceUploadModel = (
     handleCancel,
     isReady,
     isUploading,
-    isCancelling,
     uploadMessage,
     progressPercent: UPLOAD_PROGRESS[uploadStage],
   }

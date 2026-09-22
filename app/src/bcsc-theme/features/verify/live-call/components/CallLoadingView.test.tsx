@@ -28,7 +28,7 @@ describe('CallLoadingView', () => {
     view.unmount()
   })
 
-  it('reveals Cancel and longer-wait feedback at 10 seconds despite stage changes', () => {
+  it('reveals Cancel and longer-wait feedback at 10 seconds despite stage changes', async () => {
     const onCancel = jest.fn()
     const view = render(<CallLoadingView onCancel={onCancel} message="Uploading your photo..." progressPercent={0} />, {
       wrapper: BasicAppContext,
@@ -57,7 +57,7 @@ describe('CallLoadingView', () => {
     const cancel = view.getByRole('button', { name: 'Global.Cancel' })
     expect(cancel).toBe(reservedButton)
     expect(cancel).toBeEnabled()
-    fireEvent.press(cancel)
+    await act(async () => fireEvent.press(cancel))
     expect(onCancel).toHaveBeenCalledTimes(1)
     view.unmount()
   })

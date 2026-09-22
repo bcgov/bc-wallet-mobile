@@ -24,7 +24,7 @@ with the heading between the optional status row and illustration. Allow scrolli
 for larger text and short screens.
 Place optional supporting text below the illustration so delayed feedback does not
 change the heading/status layout. Use secondary buttons for waiting-screen Cancel
-actions; the feature owns their availability and behavior.
+actions; the feature owns cancellation and navigation.
 
 Use explicit workflow stages for progress; omit the bar when progress is unknown.
 Startup has no progress bar until it exposes meaningful completed stages. Video submission
@@ -40,8 +40,10 @@ Keep waiting-screen colors in the theme and follow the
 
 Hidden loading views must not run animations. Concurrent operations own separate
 loading tokens; the overlay stays visible until all tokens are released.
-Video-call setup and video submission reveal Cancel after 10 seconds without shifting
-content (#4513). Video-call setup also shows its longer-wait message at that threshold;
+Video-call setup and video submission use `CancellableWaitingScreen` to reveal Cancel
+after 10 seconds without fading or shifting content (#4513). It keeps Cancel hidden
+from accessibility until available, disables it during cancellation, and guards repeated
+taps. Video-call setup also shows its longer-wait message at that threshold;
 cancelling stops setup and returns to Start Video Call. Video submission preserves its
 existing cancellation destination: verification-method selection (#4585).
 Startup and post-call verification checks have no Cancel control. Post-call checks

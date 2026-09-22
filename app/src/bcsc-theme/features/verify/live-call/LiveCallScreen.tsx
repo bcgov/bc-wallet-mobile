@@ -389,7 +389,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   if (flowState !== VideoCallFlowState.IN_CALL) {
     return (
       <CallLoadingView
-        onCancel={preventDoublePress(handleCancelCall)}
+        onCancel={handleCancelCall}
         message={stateMessage || undefined}
         progressPercent={CALL_SETUP_PROGRESS[flowState]}
       />
