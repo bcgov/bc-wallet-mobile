@@ -188,7 +188,8 @@ const OnboardingStack = (): React.ReactElement => {
         component={ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false,
+          headerLeft: createHeaderBackButton,
+          headerBackTestID: testIdWithKey(TestIds.common.back),
         }}
       />
     </Stack.Navigator>

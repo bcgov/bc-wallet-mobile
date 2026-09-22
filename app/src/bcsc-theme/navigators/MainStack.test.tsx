@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native'
 import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import { useAccount } from '../contexts/BCSCAccountContext'
+import { useServerStatus } from '../contexts/ServerStatusContext'
 import * as PairingModule from '../features/pairing'
 import { PairingNavigationListener, PairingPayload } from '../features/pairing/types'
 import { useSystemChecks } from '../hooks/useSystemChecks'
@@ -64,6 +65,9 @@ jest.mock('../contexts/BCSCLoadingContext', () => ({
 jest.mock('../hooks/useSystemChecks', () => ({
   SystemCheckScope: { MAIN_STACK: 'MAIN_STACK', ACCOUNT: 'ACCOUNT' },
   useSystemChecks: jest.fn(() => ({ hasSettled: true })),
+}))
+jest.mock('../contexts/ServerStatusContext', () => ({
+  useServerStatus: jest.fn(() => ({ hasChecked: true })),
 }))
 jest.mock('../hooks/useVerificationStatus', () => ({
   useVerificationStatus: jest.fn(() => ({ isVerified: true })),
@@ -151,6 +155,7 @@ describe('MainStack', () => {
     jest.mocked(PairingModule.usePairingService).mockReturnValue(makePairingService() as any)
     jest.mocked(PairingModule.pairingPayloadToServiceLoginParams).mockReturnValue({ pairingCode: 'code' } as any)
     jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: true })
+    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: true } as any)
     jest.mocked(useVerificationStatus).mockReturnValue({ isVerified: true } as any)
   })
 
@@ -273,6 +278,39 @@ describe('MainStack', () => {
   it('releases the loading screen when the system checks never settle', () => {
     jest.useFakeTimers()
     jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+
+    try {
+      const view = render(<MainStack />)
+      expect(queryLoadingScreens(view)).toHaveLength(1)
+
+      act(() => {
+        jest.advanceTimersByTime(SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
+      })
+
+      expect(queryLoadingScreens(view)).toHaveLength(0)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  // Screens under this stack (Services tab, ServiceLogin, pairing, settings) gate solely on
+  // isAvailable, which fails open (true) until the first check completes — so this stack must not
+  // render underneath until that initial fetch has resolved, or a real outage could go unnoticed.
+  it('holds the loading screen over the stack while the initial server-status check is still pending', () => {
+    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: false } as any)
+
+    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(1)
+  })
+
+  it('drops the loading screen once the initial server-status check has resolved', () => {
+    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: true } as any)
+
+    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(0)
+  })
+
+  it('releases the loading screen when the server-status check never settles', () => {
+    jest.useFakeTimers()
+    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: false } as any)
 
     try {
       const view = render(<MainStack />)
