@@ -132,7 +132,6 @@ export const WaitingScreenContent = ({
                   progressPercent={progressPercent}
                   trackColor={colors.track}
                   progressColor={colors.progress}
-                  active={active}
                 />
               </View>
               <ThemedText variant="caption" style={styles.status}>

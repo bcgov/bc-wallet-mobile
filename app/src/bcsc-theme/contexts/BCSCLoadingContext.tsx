@@ -5,12 +5,7 @@ import { createContext, PropsWithChildren, useCallback, useContext, useLayoutEff
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
-interface LoadingOptions {
-  statusMessage?: string
-  progressPercent?: number
-}
-
-interface LoadingScreenProps extends LoadingOptions {
+interface LoadingScreenProps {
   message?: string
 }
 
@@ -18,23 +13,25 @@ interface BCSCLoadingContextType {
   isLoading: boolean
   loadingMessage: string | null
   /** Returns an idempotent release function. The overlay stays visible until every loader releases it. */
-  startLoading: (message?: string, options?: LoadingOptions) => () => void
-  updateLoadingMessage: (message: string) => void
+  startLoading: (message?: string) => () => void
 }
 
 export const BCSCLoadingContext = createContext<BCSCLoadingContextType | null>(null)
 
 export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
+  const styles = StyleSheet.create({
+    visible: { flex: 1, display: 'flex' },
+    hidden: { display: 'none', pointerEvents: 'none' },
+  })
   const { t } = useTranslation()
-  const [loaders, setLoaders] = useState(new Map<symbol, LoadingScreenProps>())
+  const [loaders, setLoaders] = useState(new Map<symbol, string | undefined>())
   const isLoading = loaders.size > 0
   const activeLoaders = useMemo(() => Array.from(loaders.values()).reverse(), [loaders])
-  const loadingMessage = activeLoaders.find((loader) => loader.message !== undefined)?.message ?? null
-  const options = activeLoaders[0]
+  const loadingMessage = activeLoaders.find((message) => message !== undefined) ?? null
 
-  const startLoading = useCallback((message?: string, options?: LoadingOptions) => {
+  const startLoading = useCallback((message?: string) => {
     const token = Symbol()
-    setLoaders((current) => new Map(current).set(token, { message, ...options }))
+    setLoaders((current) => new Map(current).set(token, message))
     return () => {
       setLoaders((current) => {
         if (!current.has(token)) {
@@ -47,16 +44,9 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
     }
   }, [])
 
-  const updateLoadingMessage = useCallback((message: string) => {
-    setLoaders((current) => {
-      const token = Array.from(current.keys()).at(-1)
-      return token ? new Map(current).set(token, { ...current.get(token), message }) : current
-    })
-  }, [])
-
   const context = useMemo(
-    () => ({ isLoading, loadingMessage, startLoading, updateLoadingMessage }),
-    [isLoading, loadingMessage, startLoading, updateLoadingMessage]
+    () => ({ isLoading, loadingMessage, startLoading }),
+    [isLoading, loadingMessage, startLoading]
   )
 
   return (
@@ -77,8 +67,6 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
       >
         <WaitingScreenContent
           message={loadingMessage ?? t('BCSC.Loading.DefaultMessage')}
-          statusMessage={options?.statusMessage}
-          progressPercent={options?.progressPercent}
           active={isLoading}
           testID={testIdWithKey(TestIds.common.loadingScreen)}
         />
@@ -95,16 +83,8 @@ export const useLoadingScreen = () => {
   return context
 }
 
-export const LoadingScreen = ({ message, statusMessage, progressPercent }: LoadingScreenProps) => {
+export const LoadingScreen = ({ message }: LoadingScreenProps) => {
   const { startLoading } = useLoadingScreen()
-  useLayoutEffect(
-    () => startLoading(message, { statusMessage, progressPercent }),
-    [startLoading, message, statusMessage, progressPercent]
-  )
+  useLayoutEffect(() => startLoading(message), [startLoading, message])
   return null
 }
-
-const styles = StyleSheet.create({
-  visible: { flex: 1, display: 'flex' },
-  hidden: { display: 'none', pointerEvents: 'none' },
-})

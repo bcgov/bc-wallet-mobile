@@ -16,14 +16,12 @@ describe('BCSCLoadingContext', () => {
     expect(loop).not.toHaveBeenCalled()
   })
 
-  it('uses one layout for loaders with and without progress and stops the loop when idle', () => {
+  it('keeps the illustration running across message changes and stops the loop when idle', () => {
     const stop = jest.fn()
     const start = jest.fn()
     jest.spyOn(Animated, 'loop').mockReturnValue({ start, stop, reset: jest.fn() })
-    const App = ({ progress, show = true }: { progress?: number; show?: boolean }) => (
-      <BCSCLoadingProvider>
-        {show && <LoadingScreen message="Preparing" statusMessage="Starting" progressPercent={progress} />}
-      </BCSCLoadingProvider>
+    const App = ({ message = 'Preparing', show = true }: { message?: string; show?: boolean }) => (
+      <BCSCLoadingProvider>{show && <LoadingScreen message={message} />}</BCSCLoadingProvider>
     )
     const view = render(<App />)
     const illustration = view.UNSAFE_getByType(BCAnimatedLoadingIcon)
@@ -31,8 +29,8 @@ describe('BCSCLoadingContext', () => {
     expect(view.queryByRole('progressbar')).toBeNull()
     expect(start).toHaveBeenCalledTimes(1)
 
-    view.rerender(<App progress={50} />)
-    expect(view.getByRole('progressbar', { name: 'Starting' })).toBeTruthy()
+    view.rerender(<App message="Loading account" />)
+    expect(view.getByText('Loading account')).toBeTruthy()
     expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
     expect(start).toHaveBeenCalledTimes(1)
     expect(stop).not.toHaveBeenCalled()
@@ -49,7 +47,7 @@ describe('BCSCLoadingContext', () => {
     let stopSecond!: () => void
     act(() => {
       stopFirst = result.current.startLoading('First')
-      stopSecond = result.current.startLoading('Second', { progressPercent: 50 })
+      stopSecond = result.current.startLoading('Second')
     })
     expect(result.current.loadingMessage).toBe('Second')
     act(() => stopSecond())
@@ -62,7 +60,7 @@ describe('BCSCLoadingContext', () => {
     expect(result.current.loadingMessage).toBeNull()
   })
 
-  it('does not replace a supplied message with an unnamed loader and supports updating it', () => {
+  it('does not replace a supplied message with an unnamed loader', () => {
     const { result } = renderHook(() => useLoadingScreen(), { wrapper: BCSCLoadingProvider })
     let stopSecond!: () => void
     act(() => {
@@ -70,8 +68,6 @@ describe('BCSCLoadingContext', () => {
       stopSecond = result.current.startLoading()
     })
     expect(result.current.loadingMessage).toBe('First')
-    act(() => result.current.updateLoadingMessage('Updated'))
-    expect(result.current.loadingMessage).toBe('Updated')
     act(() => stopSecond())
     expect(result.current.loadingMessage).toBe('First')
   })
@@ -86,26 +82,5 @@ describe('BCSCLoadingContext', () => {
     act(() => stopFirst())
     expect(result.current.isLoading).toBe(true)
     expect(result.current.loadingMessage).toBe('Second')
-  })
-
-  it('updates status and progress without restarting the illustration or losing the other loader', () => {
-    const App = ({ progress }: { progress?: number }) => (
-      <BCSCLoadingProvider>
-        <LoadingScreen message="Other work" />
-        {progress !== undefined && (
-          <LoadingScreen message="Submitting" statusMessage={`Stage ${progress}`} progressPercent={progress} />
-        )}
-      </BCSCLoadingProvider>
-    )
-    const view = render(<App progress={25} />)
-    const illustration = view.UNSAFE_getByType(BCAnimatedLoadingIcon)
-    expect(view.getByRole('progressbar', { name: 'Stage 25' })).toBeTruthy()
-    view.rerender(<App progress={50} />)
-    expect(view.getByRole('progressbar', { name: 'Stage 50' })).toBeTruthy()
-    expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
-    view.rerender(<App />)
-    expect(view.getByText('Other work')).toBeTruthy()
-    expect(view.queryByRole('progressbar')).toBeNull()
-    expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
   })
 })

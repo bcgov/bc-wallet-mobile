@@ -7,18 +7,14 @@ export interface ProgressBarProps {
   dark?: boolean
   trackColor?: ColorValue
   progressColor?: ColorValue
-  active?: boolean
 }
 
-const ProgressBar = ({ progressPercent, dark = false, trackColor, progressColor, active = true }: ProgressBarProps) => {
+const ProgressBar = ({ progressPercent, dark = false, trackColor, progressColor }: ProgressBarProps) => {
   const { ColorPalette } = useTheme()
   const { width: windowWidth } = useWindowDimensions()
   const [progressBarScale] = useState(new Animated.Value(0))
 
   useEffect(() => {
-    if (!active) {
-      return
-    }
     const animation = Animated.timing(progressBarScale, {
       toValue: progressPercent,
       duration: 300,
@@ -27,7 +23,7 @@ const ProgressBar = ({ progressPercent, dark = false, trackColor, progressColor,
     })
     animation.start()
     return () => animation.stop()
-  }, [progressPercent, progressBarScale, active])
+  }, [progressPercent, progressBarScale])
 
   const styles = StyleSheet.create({
     progressBarContainer: {

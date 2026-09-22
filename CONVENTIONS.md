@@ -40,8 +40,10 @@ Keep waiting-screen colors in the theme and follow the
 
 Hidden loading views must not run animations. Concurrent operations own separate
 loading tokens; the overlay stays visible until all tokens are released.
-Video submission preserves the existing Cancel behavior (#4585): reveal it after
-10 seconds without shifting content, then return to verification-method selection.
+Video-call setup and video submission reveal Cancel after 10 seconds without shifting
+content (#4513). Video-call setup also shows its longer-wait message at that threshold;
+cancelling stops setup and returns to Start Video Call. Video submission preserves its
+existing cancellation destination: verification-method selection (#4585).
 Startup and post-call verification checks have no Cancel control. Post-call checks
 show the existing verification message without a progress bar.
 

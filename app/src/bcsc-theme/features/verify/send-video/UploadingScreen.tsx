@@ -1,4 +1,5 @@
 import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
+import { WAITING_SCREEN_CANCEL_DELAY_MS } from '@/bcsc-theme/features/verify/constants'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey } from '@bifold/core'
@@ -8,7 +9,6 @@ import { useTranslation } from 'react-i18next'
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated'
 import useEvidenceUploadModel from './useEvidenceUploadModel'
 
-const CANCEL_BUTTON_DELAY_MS = 10000
 const FADE_IN_DURATION = 200
 
 type UploadingScreenProps = {
@@ -26,7 +26,7 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
   }, [])
 
   useEffect(() => {
-    const timeout = setTimeout(() => setCanCancel(true), CANCEL_BUTTON_DELAY_MS)
+    const timeout = setTimeout(() => setCanCancel(true), WAITING_SCREEN_CANCEL_DELAY_MS)
     return () => clearTimeout(timeout)
   }, [])
 

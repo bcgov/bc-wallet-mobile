@@ -1,11 +1,10 @@
 import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
+import { WAITING_SCREEN_CANCEL_DELAY_MS } from '@/bcsc-theme/features/verify/constants'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-
-// Preserve the existing warning delay independently of workflow progress.
-const LONG_WAIT_DELAY_MS = 13200
+import { View } from 'react-native'
 
 type CallLoadingViewProps = {
   onCancel: () => void
@@ -18,18 +17,27 @@ const CallLoadingView = ({ onCancel, message, progressPercent }: CallLoadingView
   const [delayReached, setDelayReached] = useState(false)
 
   useEffect(() => {
-    const timeout = setTimeout(() => setDelayReached(true), LONG_WAIT_DELAY_MS)
+    const timeout = setTimeout(() => setDelayReached(true), WAITING_SCREEN_CANCEL_DELAY_MS)
     return () => clearTimeout(timeout)
   }, [])
 
+  // Reserve space so revealing Cancel does not shift the waiting layout (#4513).
   const controls = (
-    <Button
-      buttonType={ButtonType.Secondary}
-      onPress={onCancel}
-      title={t('Global.Cancel')}
-      accessibilityLabel={t('Global.Cancel')}
-      testID={testIdWithKey(TestIds.verify.liveCall.cancel)}
-    />
+    <View
+      style={{ opacity: delayReached ? 1 : 0 }}
+      pointerEvents={delayReached ? 'auto' : 'none'}
+      accessibilityElementsHidden={!delayReached}
+      importantForAccessibility={delayReached ? 'auto' : 'no-hide-descendants'}
+    >
+      <Button
+        buttonType={ButtonType.Secondary}
+        onPress={onCancel}
+        disabled={!delayReached}
+        title={t('Global.Cancel')}
+        accessibilityLabel={t('Global.Cancel')}
+        testID={testIdWithKey(TestIds.verify.liveCall.cancel)}
+      />
+    </View>
   )
 
   return (
