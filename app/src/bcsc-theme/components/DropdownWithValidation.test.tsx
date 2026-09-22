@@ -340,8 +340,7 @@ describe('DropdownWithValidation Component', () => {
     })
   })
 
-  // RN's Modal.onDismiss only fires on iOS; Jest's Modal mock never fires it, so these tests can only
-  // pin the platform branch in handleClose, not the real native dismissal — iOS needs a device check.
+  // Jest's Modal mock never fires onDismiss, so these pin the platform branch, not native dismissal.
   describe('Modal dismiss (platform-dependent onModalClose)', () => {
     afterEach(() => {
       Platform.OS = 'ios'

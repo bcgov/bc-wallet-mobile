@@ -100,9 +100,7 @@ describe('ResidentialAddress', () => {
       fireEvent.press(tree.getByTestId(`com.ariesbifold:id/province-option-${value}`))
     }
 
-    // Android only: onModalClose fires synchronously (see DropdownWithValidation.handleClose). On iOS
-    // it fires from Modal's onDismiss, which Jest's Modal mock never invokes, so this path is
-    // unverifiable here — confirmed working on Android, needs a human on an iOS device.
+    // Android only: iOS fires onModalClose from Modal's onDismiss, which Jest's Modal mock never invokes.
     it('still auto-advances to postal code after the province picker closes (Android)', async () => {
       Platform.OS = 'android'
       const tree = render(
