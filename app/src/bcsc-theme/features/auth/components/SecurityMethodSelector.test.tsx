@@ -1,27 +1,18 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { testIdWithKey } from '@bifold/core'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import {
   AccountSecurityMethod,
-  BiometricType,
   canPerformDeviceAuthentication,
-  getAvailableBiometricType,
   performDeviceAuthentication,
 } from 'react-native-bcsc-core'
-import { BasicAppContext } from '../../../../../__mocks__/helpers/app'
 import { SecurityMethodSelector } from './SecurityMethodSelector'
 
 jest.mock('react-native-bcsc-core', () => ({
   canPerformDeviceAuthentication: jest.fn(),
-  getAvailableBiometricType: jest.fn(),
   performDeviceAuthentication: jest.fn(),
-  BiometricType: {
-    None: 'none',
-    FaceID: 'face id',
-    TouchID: 'touch id',
-    Fingerprint: 'fingerprint',
-  },
   AccountSecurityMethod: {
     PinNoDeviceAuth: 'app_pin_no_device_authn',
     PinWithDeviceAuth: 'app_pin_has_device_authn',
@@ -30,15 +21,22 @@ jest.mock('react-native-bcsc-core', () => ({
 }))
 
 const mockCanPerformDeviceAuthentication = jest.mocked(canPerformDeviceAuthentication)
-const mockGetAvailableBiometricType = jest.mocked(getAvailableBiometricType)
 const mockPerformDeviceAuthentication = jest.mocked(performDeviceAuthentication)
 
 describe('SecurityMethodSelector', () => {
   const mockOnDeviceAuthPress = jest.fn()
   const mockOnPINPress = jest.fn()
 
+  const renderSubject = (props: Partial<React.ComponentProps<typeof SecurityMethodSelector>> = {}) =>
+    render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} {...props} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
   beforeEach(() => {
-    jest.clearAllMocks()
     jest.useFakeTimers()
   })
 
@@ -49,17 +47,10 @@ describe('SecurityMethodSelector', () => {
   describe('when device auth is available', () => {
     beforeEach(() => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
     })
 
     it('renders both device auth and PIN options', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
@@ -72,13 +63,7 @@ describe('SecurityMethodSelector', () => {
     })
 
     it('shows description content', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingContent')).toBeTruthy()
@@ -86,13 +71,7 @@ describe('SecurityMethodSelector', () => {
     })
 
     it('calls onPINPress when PIN option is pressed', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppPINTitle')).toBeTruthy()
@@ -107,13 +86,7 @@ describe('SecurityMethodSelector', () => {
     it('calls performDeviceAuthentication when device auth option is pressed', async () => {
       mockPerformDeviceAuthentication.mockResolvedValue(true)
 
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
@@ -130,13 +103,7 @@ describe('SecurityMethodSelector', () => {
     it('calls onDeviceAuthPress after successful device authentication', async () => {
       mockPerformDeviceAuthentication.mockResolvedValue(true)
 
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
@@ -154,17 +121,10 @@ describe('SecurityMethodSelector', () => {
   describe('when device auth is NOT available', () => {
     beforeEach(() => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(false)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.None)
     })
 
     it('renders PIN-only view with buttons', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
@@ -177,13 +137,7 @@ describe('SecurityMethodSelector', () => {
     })
 
     it('renders PIN-only view (no Learn More button in onboarding)', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByTestId(testIdWithKey('ChoosePINButton'))).toBeTruthy()
@@ -193,13 +147,7 @@ describe('SecurityMethodSelector', () => {
     })
 
     it('calls onPINPress when PIN button is pressed', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByTestId(testIdWithKey('ChoosePINButton'))).toBeTruthy()
@@ -215,21 +163,10 @@ describe('SecurityMethodSelector', () => {
   describe('in settings context (with currentMethod)', () => {
     beforeEach(() => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
     })
 
     it('shows current method indicator when currentMethod is provided', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              currentMethod={AccountSecurityMethod.PinWithDeviceAuth}
-            />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject({ currentMethod: AccountSecurityMethod.PinWithDeviceAuth })
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentMethod')).toBeTruthy()
@@ -237,17 +174,7 @@ describe('SecurityMethodSelector', () => {
     })
 
     it('marks the PIN card as the current method', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              currentMethod={AccountSecurityMethod.PinWithDeviceAuth}
-            />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject({ currentMethod: AccountSecurityMethod.PinWithDeviceAuth })
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentMethod')).toBeTruthy()
@@ -269,17 +196,7 @@ describe('SecurityMethodSelector', () => {
     })
 
     it('marks the device auth card as the current method', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              currentMethod={AccountSecurityMethod.DeviceAuth}
-            />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject({ currentMethod: AccountSecurityMethod.DeviceAuth })
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentMethod')).toBeTruthy()
@@ -302,18 +219,10 @@ describe('SecurityMethodSelector', () => {
       mockPerformDeviceAuthentication.mockResolvedValue(true)
 
       const customPrompt = 'Custom authenticate prompt'
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              currentMethod={AccountSecurityMethod.PinWithDeviceAuth}
-              deviceAuthPrompt={customPrompt}
-            />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject({
+        currentMethod: AccountSecurityMethod.PinWithDeviceAuth,
+        deviceAuthPrompt: customPrompt,
+      })
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
@@ -331,21 +240,10 @@ describe('SecurityMethodSelector', () => {
   describe('settings context when device auth is NOT available', () => {
     beforeEach(() => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(false)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.None)
     })
 
     it('shows device auth not setup message', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              currentMethod={AccountSecurityMethod.PinNoDeviceAuth}
-            />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject({ currentMethod: AccountSecurityMethod.PinNoDeviceAuth })
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Settings.AppSecurity.DeviceAuthNotSetup')).toBeTruthy()
@@ -356,15 +254,8 @@ describe('SecurityMethodSelector', () => {
   describe('error handling', () => {
     it('handles error when loading device auth info', async () => {
       mockCanPerformDeviceAuthentication.mockRejectedValue(new Error('Failed to check device auth'))
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.None)
 
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       // Should fall back to device auth not available state
       await waitFor(() => {
@@ -374,16 +265,9 @@ describe('SecurityMethodSelector', () => {
 
     it('handles device authentication failure gracefully', async () => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
       mockPerformDeviceAuthentication.mockResolvedValue(false)
 
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
@@ -402,16 +286,9 @@ describe('SecurityMethodSelector', () => {
 
     it('handles device authentication error gracefully', async () => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
       mockPerformDeviceAuthentication.mockRejectedValue(new Error('Biometric error'))
 
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
@@ -430,17 +307,11 @@ describe('SecurityMethodSelector', () => {
 
     it('handles onDeviceAuthPress error gracefully', async () => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
       mockPerformDeviceAuthentication.mockResolvedValue(true)
-      mockOnDeviceAuthPress.mockRejectedValue(new Error('Parent handler error'))
+      // Once-only so the rejecting handler does not leak into later tests.
+      mockOnDeviceAuthPress.mockRejectedValueOnce(new Error('Parent handler error'))
 
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
+      const tree = renderSubject()
 
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
@@ -453,24 +324,17 @@ describe('SecurityMethodSelector', () => {
         expect(mockOnDeviceAuthPress).toHaveBeenCalled()
       })
 
-      // Should not crash - error is caught and logged
-    })
-
-    it('shows Device Passcode label when biometric type is None', async () => {
-      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.None)
-
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
-
+      // Graceful handling means the rejection is swallowed: the full-screen loading overlay put up
+      // for the auth attempt is torn down again and the selector stays mounted and interactive.
+      // While the overlay is up BCSCLoadingProvider hides its children (display: none +
+      // no-hide-descendants), which RNTL excludes from queries — so these lookups succeeding is
+      // itself proof that stopLoading() ran.
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
       })
+
+      fireEvent.press(tree.getByTestId(testIdWithKey('ChoosePINButton')))
+      expect(mockOnPINPress).toHaveBeenCalled()
     })
   })
 })
