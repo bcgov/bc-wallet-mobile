@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,7 +16,7 @@ const AddCredentialButton = () => {
     <IconButton
       buttonLocation={ButtonLocation.Right}
       accessibilityLabel={t('Credentials.AddCredential')}
-      testID={testIdWithKey('AddCredential')}
+      testID={testIdWithKey(TestIds.bcwallet.home.addCredential)}
       onPress={activateSlider}
       icon="plus-circle-outline"
     />

@@ -208,9 +208,9 @@ class BcscCore: NSObject {
     return Data(base64Encoded: base64)
   }
 
-  /// Best-effort read of the *incoming* JWE protected header for diagnostics. Reads the
-  /// real `kid` straight off the wire — NOT `JWEHeader.kid`, which the parser overwrites
-  /// with the server's own public-key id. Unreadable fields come back as "?".
+  /// Best-effort read of the *incoming* JWE protected header for diagnostics and decrypt-key
+  /// selection. Reads the real `kid` straight off the wire — NOT `JWEHeader.kid`, which the
+  /// parser overwrites with the server's own public-key id. Unreadable fields come back as "?".
   private func incomingJWEHeader(_ jweString: String) -> (alg: String, enc: String, kid: String, parts: Int) {
     let parts = jweString.components(separatedBy: ".")
     guard parts.count == 5, let headerSegment = parts.first,
@@ -308,7 +308,7 @@ class BcscCore: NSObject {
       let keys = try keyPairManager.findAllPrivateKeys()
 
       let result = keys.map { keyInfo -> [String: Any] in
-        return [
+        [
           "keyType": keyInfo.keyType.name,
           "keySize": keyInfo.keySize,
           "id": keyInfo.tag,
@@ -440,6 +440,108 @@ class BcscCore: NSObject {
     } else {
       reject("E_KEYSTORE_ERROR", "Failed to delete key '\(alias)' from keychain", nil)
     }
+  }
+
+  /// Generates a new signing keypair; activation is implicit on generation — see the JS wrapper's warning.
+  @objc(createNewKeyPair:reject:)
+  func createNewKeyPair(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let keyPairManager = KeyPairManager()
+    let newKeyId: String
+    do {
+      newKeyId = try generateKeyPair()
+    } catch let KeychainError.keychainUnavailable(status) {
+      reject(
+        "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+        "Keychain temporarily unavailable while generating new key pair (OSStatus \(status))",
+        KeychainError.keychainUnavailable(status)
+      )
+      return
+    } catch {
+      reject(
+        "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+        "Failed to generate new key pair: \(error.localizedDescription)",
+        error
+      )
+      return
+    }
+
+    do {
+      let keyPair = try keyPairManager.getKeyPair(with: newKeyId)
+      guard let keyData = RSAUtil.secKeyRefToData(inputKey: keyPair.public),
+            let (modulus, exponent) = RSAUtil.splitIntoComponents(keyData: keyData)
+      else {
+        cleanUpUnregisteredKeyAfterGenerationFailure(
+          newKeyId,
+          keyPairManager: keyPairManager,
+          context: "RSA component extraction failure"
+        )
+        // Reuse E_KEY_EXPORT_FAILED (same as getKeyPair's export failure) rather than
+        // E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR — the key exists, this is an export failure,
+        // and that other code maps to KEYCHAIN_KEY_NOT_FOUND, which would misroute JS recovery.
+        reject(
+          "E_KEY_EXPORT_FAILED",
+          "Generated new key '\(redactedAlias(newKeyId))' but could not extract its RSA components",
+          nil
+        )
+        return
+      }
+      let keys = try? keyPairManager.findAllPrivateKeys()
+      let created = keys?.first(where: { $0.tag == newKeyId })?.created.timeIntervalSince1970
+        ?? Date().timeIntervalSince1970
+      resolve([
+        "id": newKeyId,
+        "created": created,
+        "n": modulus.base64EncodedString(),
+        "e": exponent.base64EncodedString(),
+      ])
+    } catch let KeychainError.keychainUnavailable(status) {
+      cleanUpUnregisteredKeyAfterGenerationFailure(
+        newKeyId,
+        keyPairManager: keyPairManager,
+        context: "keychain-unavailable retrieval failure"
+      )
+      reject(
+        "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+        "Keychain temporarily unavailable while retrieving newly generated key '\(redactedAlias(newKeyId))' (OSStatus \(status))",
+        KeychainError.keychainUnavailable(status)
+      )
+    } catch {
+      cleanUpUnregisteredKeyAfterGenerationFailure(
+        newKeyId,
+        keyPairManager: keyPairManager,
+        context: "retrieval failure"
+      )
+      reject(
+        "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+        "Failed to retrieve newly generated key pair '\(redactedAlias(newKeyId))': \(error.localizedDescription)",
+        error
+      )
+    }
+  }
+
+  /**
+   * A key activates the instant `generateKeyPair()` returns, before JS gets its alias — so a
+   * failure after that point must delete it here or strand signing on an unregistered key
+   * (#4166/2111). Best-effort only: a cleanup failure is logged but never masks the caller's error.
+   */
+  private func cleanUpUnregisteredKeyAfterGenerationFailure(
+    _ alias: String, keyPairManager: KeyPairManager, context: String
+  ) {
+    if !keyPairManager.deleteKey(withLabel: alias) {
+      logger
+        .warning(
+          "createNewKeyPair: best-effort cleanup failed to delete unregistered key '\(redactedAlias(alias))' after \(context)"
+        )
+    }
+  }
+
+  /// Truncates the alias (`<provider><UUID>/N`) to avoid leaking the embedded per-device UUID
+  /// in logs and reject() messages, while keeping enough to correlate a device's own entries.
+  private func redactedAlias(_ alias: String) -> String {
+    alias.count <= 8 ? alias : "…" + String(alias.suffix(8))
   }
 
   func getKeyPair(
@@ -638,14 +740,27 @@ class BcscCore: NSObject {
       expiry: expiryDate
     )
 
-    let success = tokenStorageService.save(token: token)
+    let result = tokenStorageService.save(token: token)
 
-    if success {
+    if result.succeeded {
       logger.log("setToken: Successfully saved token of type \(tokenType) with id: \(tokenId)")
       resolve(true)
     } else {
-      logger.error("setToken: Failed to save token of type \(tokenType) with id: \(tokenId)")
-      reject("E_TOKEN_SAVE_FAILED", "Failed to save token to keychain", nil)
+      logger.error("setToken: Failed to save token of type \(tokenType) with id: \(tokenId) \(result.detail)")
+      // userInfo reaches JS as error.userInfo and is forwarded to remote logging by
+      // AppError.summarizeCause, which is the only way the OSStatus leaves the device (#4645).
+      let error = NSError(
+        domain: "BcscCore.TokenService",
+        code: Int(result.status),
+        userInfo: [
+          NSLocalizedDescriptionKey: "Failed to save token to keychain",
+          "osStatus": Int(result.status),
+          "detail": result.detail,
+          "tokenType": "\(tokenType)",
+          "isProtectedDataAvailable": result.isProtectedDataAvailable,
+        ]
+      )
+      reject("E_TOKEN_SAVE_FAILED", "Failed to save token to keychain", error)
     }
   }
 
@@ -1415,7 +1530,8 @@ class BcscCore: NSObject {
     // key. This is what makes 2507 reports self-classifying in the field.
     let diagnostics = decodeDiagnosticsSummary(keys: keys, jweString: jweString)
 
-    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
+    let decryptKeyInfos = KeyPairManager.decryptKeyInfos(matching: incomingJWEHeader(jweString).kid, in: keys)
+    guard !decryptKeyInfos.isEmpty else {
       reject(
         "E_NO_KEYS_FOUND",
         "No keys available to decrypt JWE \(diagnostics)",
@@ -1424,35 +1540,13 @@ class BcscCore: NSObject {
       return
     }
 
-    let keyPair: (public: SecKey, private: SecKey)
     do {
-      keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
-    } catch let KeychainError.keychainUnavailable(status) {
-      // The key likely exists but can't be read right now (device locked, auth
-      // failure, or launched in the background before first unlock). Distinct,
-      // retryable signal — do not conflate with a genuine decryption failure.
-      reject(
-        "E_KEYCHAIN_UNAVAILABLE",
-        "Keychain temporarily unavailable while retrieving decrypt key (OSStatus \(status)) \(diagnostics)",
-        keychainDiagnosticsError(
-          site: "decode_payload_retrieve_key", underlying: KeychainError.keychainUnavailable(status), keys: keys
-        )
-      )
-      return
-    } catch {
-      reject(
-        "E_KEYPAIR_RETRIEVAL_FAILED",
-        "Failed to retrieve decrypt key: \(errorMessage(error)) \(diagnostics)",
-        keychainDiagnosticsError(site: "decode_payload_retrieve_key", underlying: error, keys: keys)
-      )
-      return
-    }
-
-    do {
-      let jwe = try JWE.parse(s: jweString)
-      let decrypter = RSADecrypter(privateKey: keyPair.private)
-      // Decrypt JWE payload into the inner JWT (compact JWS)
-      let payload = try jwe.decrypt(withDecrypter: decrypter)
+      let payload = try JWEDecryption.decrypt(with: decryptKeyInfos, attempt: { decryptKeyInfo in
+        let keyPair = try keyPairManager.getKeyPair(with: decryptKeyInfo.tag)
+        // A JWE becomes stateful after decrypting, so each candidate needs a fresh parse.
+        let jwe = try JWE.parse(s: jweString)
+        return try jwe.decrypt(withDecrypter: RSADecrypter(privateKey: keyPair.private))
+      })
 
       // Validate the decrypted payload is a compact JWS
       let segments = payload.components(separatedBy: ".")
@@ -1490,11 +1584,25 @@ class BcscCore: NSObject {
         return
       }
       resolve(["verified": verified, "claims": claims])
+    } catch let KeychainError.keychainUnavailable(status) {
+      reject(
+        "E_KEYCHAIN_UNAVAILABLE",
+        "Keychain temporarily unavailable while retrieving decrypt key (OSStatus \(status)) \(diagnostics)",
+        keychainDiagnosticsError(
+          site: "decode_payload_retrieve_key", underlying: KeychainError.keychainUnavailable(status), keys: keys
+        )
+      )
+    } catch let error as KeychainError {
+      reject(
+        "E_KEYPAIR_RETRIEVAL_FAILED",
+        "Failed to retrieve decrypt key: \(errorMessage(error)) \(diagnostics)",
+        keychainDiagnosticsError(site: "decode_payload_retrieve_key", underlying: error, keys: keys)
+      )
     } catch {
       // Wrong key, unsupported alg, corrupted/garbled ciphertext, or a malformed JWE all
       // land here. The diagnostics string is what tells them apart downstream:
       //   [keys=0]              → no usable key
-      //   kidMatchesLocal=false → server encrypted to a key this device doesn't hold
+      //   kidMatchesLocal=false → server did not name a local key; every local key was tried
       //   jweAlg/jweEnc unsupported → algorithm mismatch (iOS supports RSA1_5 + CBC-HMAC)
       //   jweParts!=5 / jweAlg=? → corrupted or replaced ciphertext in transit
       reject(

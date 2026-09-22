@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="5" failures="0" errors="0" skipped="0">
+  <testsuite name="Verify journey entry spine" timestamp="2026-08-28T05:55:19" time="230.554" tests="5" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Verify journey: entry spine"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/verify/verify-entry.journey.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Verify_journey:_entry_spine" name="onboards to the verify prompt" time="38.550"/>
+    <testcase classname="ios.5fc23a1b909c4d.Verify_journey:_entry_spine" name="continues into verification onto the account setup choice" time="9.106"/>
+    <testcase classname="ios.5fc23a1b909c4d.Verify_journey:_entry_spine" name="chooses Add Account and reaches identity selection" time="8.771"/>
+    <testcase classname="ios.5fc23a1b909c4d.Verify_journey:_entry_spine" name="passes the camera gate to manual serial entry and types the serial" time="17.203"/>
+    <testcase classname="ios.5fc23a1b909c4d.Verify_journey:_entry_spine" name="fills the birthdate stopping short of the authorize call" time="12.440"/>
+  </testsuite>
+</testsuites>

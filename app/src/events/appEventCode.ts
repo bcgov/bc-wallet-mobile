@@ -14,6 +14,7 @@ export enum AlertInteractionEvent {
 export enum AppEventCode {
   GENERAL = 'general',
   UNKNOWN_APP_ERROR = 'unknown_app_error', // Non-IAS error code
+  REPORT_PROBLEM = 'report_problem', // Non-IAS error code
   ADD_CARD_CAMERA_BROKEN = 'add_card_camera_broken',
   ADD_CARD_DYNAMIC_REGISTRATION = 'add_card_dynamic_registration', //being tracked
   ADD_CARD_INCORRECT_OS = 'add_card_incorrect_os',
@@ -119,7 +120,7 @@ export enum AppEventCode {
   ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE = 'err_400_failed_to_retrieve_string_resource',
   ERR_300_EMPTY_RESPONSE = 'err_300_empty_response',
   ERR_500_INVALID_URL = 'err_500_invalid_url',
-  ERR_501_INVALID_REGISTRATION_REQUEST = 'err_501_invalid_registration_request',
+  ERR_501_INVALID_REGISTRATION_REQUEST = 'invalid_registration_request',
   // Device Authorization (device/code) card-status errors — 400 responses from the device
   // authorization endpoint, distinguishing why the card/registration was rejected.
   INVALID_PARAMETER = 'invalid_parameter',

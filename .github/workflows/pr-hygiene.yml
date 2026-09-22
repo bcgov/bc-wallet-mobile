@@ -1,6 +1,6 @@
 # Checks that a PR asking for review is linked to an issue and has its template
-# sections filled in. Deterministic — no judgement calls, no API cost beyond one
-# GraphQL query.
+# sections filled in. Deterministic — no judgement calls, and one GraphQL query
+# unless it has to wait for GitHub to register the issue link.
 #
 # Lands non-blocking. Make it a required check on `main` and `release/**` only
 # after it has run quietly for a week (see the rollout plan).
@@ -65,17 +65,33 @@ jobs:
             const problems = []
 
             // Ask for links GitHub actually tracks — a bare "#123" in prose creates none.
-            const { repository } = await github.graphql(
-              `query($owner:String!, $repo:String!, $number:Int!) {
-                 repository(owner:$owner, name:$repo) {
-                   pullRequest(number:$number) {
-                     closingIssuesReferences(first: 5) { nodes { number } }
+            const closingIssues = async () => {
+              const { repository } = await github.graphql(
+                `query($owner:String!, $repo:String!, $number:Int!) {
+                   repository(owner:$owner, name:$repo) {
+                     pullRequest(number:$number) {
+                       closingIssuesReferences(first: 5) { nodes { number } }
+                     }
                    }
-                 }
-               }`,
-              { owner: context.repo.owner, repo: context.repo.repo, number: pr.number }
-            )
-            const linked = repository.pullRequest.closingIssuesReferences.nodes
+                 }`,
+                { owner: context.repo.owner, repo: context.repo.repo, number: pr.number }
+              )
+              return repository.pullRequest.closingIssuesReferences.nodes
+            }
+
+            // GitHub resolves `Closes #123` into a tracked link a few seconds after
+            // the webhook fires, so an empty first result may just be the workflow
+            // outrunning it. Only an absent link waits, and only long enough to tell
+            // "not linked yet" apart from "not linked".
+            const RETRY_DELAY_MS = 7000
+            const RETRIES = 3
+            let linked = await closingIssues()
+            for (let attempt = 1; linked.length === 0 && attempt <= RETRIES; attempt++) {
+              core.info(`No linked issue yet — retrying in ${RETRY_DELAY_MS / 1000}s (${attempt}/${RETRIES})`)
+              await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
+              linked = await closingIssues()
+            }
+
             if (linked.length === 0) {
               problems.push(
                 'No linked issue. Put `Closes #1234` on the first line, or link one in the Development sidebar. ' +

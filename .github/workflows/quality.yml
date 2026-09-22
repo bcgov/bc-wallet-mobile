@@ -17,6 +17,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Dependabot/fork runs get no repo secrets, so gate only the
+      # secret-dependent steps below on this — build/typecheck/test stay
+      # unconditional (job-level `if:` can't read `secrets`).
+      - name: Check secret availability
+        id: secrets-check
+        if: always()
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          if [ -n "$OP_SERVICE_ACCOUNT_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "OP_SERVICE_ACCOUNT_TOKEN unavailable (Dependabot or fork run); skipping 1Password load and codecov upload."
+          fi
+
       - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
@@ -60,14 +76,14 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           CODECOV_TOKEN: op://bcsc-mobile-app-cd/codecov/credential
-        if: always() && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
+        if: always() && steps.secrets-check.outputs.available == 'true' && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
 
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # (v7.0.0) pinning for SonarQube
         with:
           token: ${{ env.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
-        if: always() && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
+        if: always() && steps.secrets-check.outputs.available == 'true' && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
 
   lint-format:
     runs-on: macos-26
@@ -101,6 +117,42 @@ jobs:
 
       - name: Format check
         run: yarn format:check
+
+  e2e-typecheck:
+    runs-on: ubuntu-latest
+    name: E2E Typecheck
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/workflows/actions/setup-node
+
+      # e2e is not a root workspace member, so it installs from its own lockfile into its own cache.
+      - name: Cache e2e Yarn cache
+        uses: actions/cache@v6
+        with:
+          path: e2e/.yarn/cache
+          key: ${{ runner.os }}-yarn-e2e-${{ hashFiles('e2e/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-e2e-
+
+      # --mode=skip-build disables Yarn's lifecycle scripts, which are on by default in Yarn v2+.
+      # Several e2e devDependencies fetch from the network on postinstall (edgedriver/geckodriver
+      # download browsers, appium auto-installs extensions); a typecheck needs none of them.
+      - name: Install dependencies
+        working-directory: e2e
+        run: yarn install --immutable --mode=skip-build
+
+      # The suite compiles against app/src/test-ids/registry.ts, so a testID key renamed or deleted
+      # app-side fails here at PR time instead of minutes into a Sauce run behind a build cycle.
+      - name: Typecheck
+        working-directory: e2e
+        run: yarn typecheck
+
+      # The IDCheck sign-in's circuit breaker (scripts/entra-auth-guard.test.mjs): plain node:test, no secrets.
+      - name: Unit tests
+        working-directory: e2e
+        run: yarn test:unit
 
   test-ios:
     runs-on: macos-26
@@ -140,7 +192,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: 17

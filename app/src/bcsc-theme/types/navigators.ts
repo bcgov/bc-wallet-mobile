@@ -23,6 +23,17 @@ export enum BCSCModals {
 }
 
 /**
+ * Params for the {@link BCSCModals.ServiceOutage} route, registered identically in every stack
+ * that can reach it (MainStack, VerifyStack, AuthStack, OnboardingStack). Shared as a named type
+ * so a screen used across more than one of those stacks (e.g. VerifyPromptScreen) can type its
+ * `navigation.navigate(BCSCModals.ServiceOutage, ...)` call against a single source of truth.
+ */
+export type ServiceOutageParams = {
+  statusMessage?: string
+  contactLink?: string
+}
+
+/**
  * BCSC Screens enum
  *
  * Note: These values are attempting to align with V3 screen names where possible.
@@ -124,6 +135,7 @@ export enum BCSCScreens {
   MainPrivacyPolicy = `${BCSCStacks.Main} Privacy Information`,
   MainDeveloper = `${BCSCStacks.Main} Developer`,
   MainAutoLock = 'BCSCMainAutoLock',
+  ProofRequestExpiry = 'BCSCProofRequestExpiry',
   MainNotificationSettings = 'BCSCMainNotificationSettings',
   MainAppSecurity = `${BCSCStacks.Main} App Security Setting`,
   MainChangePIN = `${BCSCStacks.Main} Change PIN`,
@@ -189,7 +201,7 @@ export type BCSCOnboardingStackParams = {
   // VerificationSessionExpired is intentionally NOT registered in the Onboarding stack — it is the
   // post-reset destination, and an overlapping route name would let React Navigation preserve the
   // modal across the stack swap so it never dismisses. See issue #4050.
-  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
+  [BCSCModals.ServiceOutage]: ServiceOutageParams
 }
 
 export type BCSCVerifyStackParams = {
@@ -242,13 +254,14 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyPrivacyPolicy]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
   [BCSCScreens.VerifyAutoLock]: undefined
+  [BCSCScreens.ProofRequestExpiry]: undefined
   [BCSCScreens.VerifyNotificationSettings]: undefined
   [BCSCScreens.VerifyAppSecurity]: undefined
   [BCSCScreens.VerifyChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.VerificationSessionExpired]: undefined
-  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
+  [BCSCModals.ServiceOutage]: ServiceOutageParams
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.VerifyRemoveAccountConfirmation]: undefined
@@ -283,6 +296,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountDetails]: undefined
   [BCSCScreens.MainDeveloper]: undefined
   [BCSCScreens.MainAutoLock]: undefined
+  [BCSCScreens.ProofRequestExpiry]: undefined
   [BCSCScreens.MainNotificationSettings]: undefined
   [BCSCScreens.MainAppSecurity]: undefined
   [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined
@@ -312,7 +326,7 @@ export type BCSCMainStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
+  [BCSCModals.ServiceOutage]: ServiceOutageParams
   [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
   [BCSCModals.TermsOfUseUpdated]: undefined
 }
@@ -333,5 +347,5 @@ export type BCSCAuthStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
+  [BCSCModals.ServiceOutage]: ServiceOutageParams
 }

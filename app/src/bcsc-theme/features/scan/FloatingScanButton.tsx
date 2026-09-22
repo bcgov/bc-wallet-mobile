@@ -1,4 +1,5 @@
 import { hitSlop } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -64,7 +65,7 @@ const FloatingScanButton: React.FC<FloatingScanButtonProps> = ({ activeTabName, 
       accessibilityLabel={t('AddCredentialSlider.ScanQRCode')}
       accessibilityRole="button"
       hitSlop={{ ...hitSlop, bottom: 0 }}
-      testID={testIdWithKey('FloatingScanButton')}
+      testID={testIdWithKey(TestIds.main.scan.fab)}
       onPress={onPress}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >

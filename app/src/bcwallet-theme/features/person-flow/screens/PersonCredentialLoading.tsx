@@ -1,5 +1,6 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   AttestationEventTypes,
   BifoldError,
@@ -253,7 +254,10 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       </ThemedText>
       <ScrollView style={styles.container}>
         <View style={styles.messageContainer}>
-          <Text style={[TextTheme.modalHeadingThree, styles.messageText]} testID={testIdWithKey('RequestProcessing')}>
+          <Text
+            style={[TextTheme.modalHeadingThree, styles.messageText]}
+            testID={testIdWithKey(TestIds.bcwallet.personCredentialLoading.requestProcessing)}
+          >
             {t('ProofRequest.RequestProcessing')}
           </Text>
         </View>
@@ -266,7 +270,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
         <Button
           title={t('Global.GoBack')}
           accessibilityLabel={t('Global.GoBack')}
-          testID={testIdWithKey('BackToPersonScreen')}
+          testID={testIdWithKey(TestIds.bcwallet.personCredentialLoading.backToPersonScreen)}
           onPress={onDismissModalTouched}
           buttonType={ButtonType.ModalSecondary}
         />

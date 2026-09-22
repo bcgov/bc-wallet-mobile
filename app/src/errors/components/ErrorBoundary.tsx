@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { reportProblem } from '@/utils/logger'
 import { AbstractBifoldLogger } from '@bifold/core'
 import React, { ReactNode } from 'react'

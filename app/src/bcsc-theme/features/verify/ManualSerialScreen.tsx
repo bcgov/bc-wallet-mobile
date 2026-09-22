@@ -4,6 +4,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { firstErrorKey, serialSchema } from '@/bcsc-theme/utils/validation'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -48,7 +49,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       <Button
         title={t('Global.Continue')}
         buttonType={ButtonType.Primary}
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.verify.manualSerial.continue)}
         accessibilityLabel={t('Global.Continue')}
         onPress={onContinuePressed}
       />

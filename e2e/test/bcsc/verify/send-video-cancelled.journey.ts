@@ -2,6 +2,8 @@ import { TestUsers } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
+  cleanUpQueuedSubmission,
+  clearReviewQueueBeforeSubmit,
   enterBirthdate,
   enterSerialManually,
   expectCancelledReviewReason,
@@ -11,7 +13,7 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /**
@@ -24,15 +26,27 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * Deliberately stops at that screen. Its button re-registers the device from scratch to re-enter
  * verification, which is the account-reset journey's story, not this one's.
  *
- * QUEUE HYGIENE: reviews claim the NEXT queued request blindly — a foreign head is CLOSED and the
- * claim retried, so this must not run CONCURRENTLY with another send-video journey, whose live request
- * would be closed too (the suite is serial at the default `maxInstances: 1`).
+ * QUEUE HYGIENE: the portal has no worklist — a review claims the NEXT queued request blindly and
+ * matches it by persona, which a stale upload of the same persona also satisfies. So the queue is
+ * drained before this journey submits, drained again by the teardown if the upload is never reviewed,
+ * and the send-video journeys run one platform at a time (CI's `send-video` lane), never concurrently.
  */
 const AGENT_REASON = 'Automated e2e rejection'
 
 describe('Verified journey: send video, rejected', () => {
+  /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
+  let reviewed: ClaimedRequestSummary | undefined
+
   before(() => {
     setTestUser(TestUsers.photo)
+  })
+
+  after(async () => {
+    await cleanUpQueuedSubmission()
+  })
+
+  it('clears the review queue before submitting', async () => {
+    await clearReviewQueueBeforeSubmit()
   })
 
   it('onboards to the verify prompt', async () => {
@@ -59,7 +73,7 @@ describe('Verified journey: send video, rejected', () => {
 
   it('is rejected by the agent, with a reason (scripted against the SIT review portal)', async () => {
     const user = getTestUser()
-    await reviewSendVideoRequest({
+    reviewed = await reviewSendVideoRequest({
       decision: 'reject',
       cardSerialNumber: user.cardSerial,
       surname: user.lastName,
@@ -69,7 +83,7 @@ describe('Verified journey: send video, rejected', () => {
   })
 
   it('shows the cancelled review with the agent reason', async () => {
-    await waitForSendVideoDecision('cancelled')
+    await waitForSendVideoDecision('cancelled', { reviewed })
     await expectCancelledReviewReason(AGENT_REASON)
   })
 })

@@ -1,5 +1,8 @@
-import NetInfo from '@react-native-community/netinfo'
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo'
 import { useEffect, useRef } from 'react'
+
+/** The subset of a NetInfo event that identifies the connectivity transition which triggered a retry. */
+export type ReconnectEvent = Pick<NetInfoState, 'isConnected' | 'isInternetReachable'>
 
 /**
  * Invokes `retry` when internet connectivity is restored (offline -> online
@@ -9,9 +12,9 @@ import { useEffect, useRef } from 'react'
  * was offline, so the app heals without requiring a restart.
  *
  * @param shouldRetry - Returns true when a retry is needed (e.g. data is missing and not currently loading).
- * @param retry - The reload action to invoke.
+ * @param retry - The reload action to invoke, given the NetInfo event that triggered it.
  */
-export const useRetryOnReconnect = (shouldRetry: () => boolean, retry: () => void) => {
+export const useRetryOnReconnect = (shouldRetry: () => boolean, retry: (event: ReconnectEvent) => void) => {
   const wasConnectedRef = useRef<boolean | null>(null)
 
   // Refs keep the NetInfo subscription stable across renders
@@ -28,7 +31,7 @@ export const useRetryOnReconnect = (shouldRetry: () => boolean, retry: () => voi
       wasConnectedRef.current = connected
 
       if (cameOnline && shouldRetryRef.current()) {
-        retryRef.current()
+        retryRef.current({ isConnected, isInternetReachable })
       }
     })
 

@@ -3,6 +3,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useVerificationPendingActions } from '@/bcsc-theme/hooks/useVerificationPendingActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -41,7 +42,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   const controls = (
     <ControlContainer>
       <Button
-        testID={testIdWithKey('ChooseAnotherWayToVerify')}
+        testID={testIdWithKey(TestIds.verify.pendingReview.chooseAnotherWay)}
         accessibilityLabel={t('BCSC.Steps.ChooseAnotherWayToVerify')}
         title={t('BCSC.Steps.ChooseAnotherWayToVerify')}
         buttonType={ButtonType.Secondary}

@@ -1,4 +1,5 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { a11yLabel } from '@utils/accessibility'
 import { StyleSheet, View } from 'react-native'
@@ -148,7 +149,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
         accessibilityLabel={a11yLabel(props.subtext ? `${props.title}. ${props.subtext}` : props.title)}
         accessibilityState={{ selected: true }}
         style={[styles.cardContainer, styles.cardContainerSelected]}
-        testID={props.testID ?? testIdWithKey(`CardButton-${props.title}`)}
+        testID={props.testID ?? testIdWithKey(`${TestIds.shared.cardButtonPrefix}${props.title}`)}
       >
         {cardContent}
       </View>
@@ -165,7 +166,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
       style={[styles.cardContainer, props.disabled && styles.cardContainerDisabled]}
       onPress={props.disabled ? undefined : props.onPress}
       disabled={props.disabled}
-      testID={props.testID ?? testIdWithKey(`CardButton-${props.title}`)}
+      testID={props.testID ?? testIdWithKey(`${TestIds.shared.cardButtonPrefix}${props.title}`)}
     >
       {cardContent}
     </PressableOpacity>

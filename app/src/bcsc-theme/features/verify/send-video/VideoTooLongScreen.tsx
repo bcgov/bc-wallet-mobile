@@ -3,7 +3,8 @@ import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { TestIds } from '@/test-ids/registry'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -51,6 +52,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
         buttonType={ButtonType.Primary}
         title={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
         onPress={onPressRetake}
+        testID={testIdWithKey(TestIds.verify.videoTooLong.retake)}
         accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
         disabled={isRefreshingPrompts}
       />
@@ -65,7 +67,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
             })
           )
         }}
-        testID={'Cancel'}
+        testID={testIdWithKey(TestIds.verify.videoTooLong.cancel)}
         accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
       />
     </ControlContainer>

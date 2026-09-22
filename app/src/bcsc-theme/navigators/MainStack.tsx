@@ -1,4 +1,5 @@
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl, SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import {
   CredentialDetails,
   Screens,
@@ -21,6 +22,7 @@ import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { useAccount } from '../contexts/BCSCAccountContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
+import { useServerStatus } from '../contexts/ServerStatusContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
@@ -61,12 +63,14 @@ import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsS
 import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { NotificationSettingsScreen } from '../features/settings/NotificationSettingsScreen'
+import { ProofRequestExpirationScreen } from '../features/settings/ProofRequestExpirationScreen'
 import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
 import { useVerificationResponseListener } from '../features/verification-response/useVerificationResponseListener'
 import CancelledReview from '../features/verify/send-video/CancelledReview'
 import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
@@ -78,7 +82,7 @@ const ScopedCredentialDetails = (props: CredentialDetailsProps) => {
   const { t } = useTranslation()
   const navigation = useMemo(() => createBifoldNavigationAdapter(props.navigation, { t }), [props.navigation, t])
   return (
-    <AgentReadyGate testID={testIdWithKey('CredentialDetails.Loading')}>
+    <AgentReadyGate testID={testIdWithKey(TestIds.credential.details.loading)}>
       <CredentialDetails {...props} navigation={navigation} />
     </AgentReadyGate>
   )
@@ -91,14 +95,46 @@ const VerifyPromptScreenNoSkip = () => <VerifyPromptScreen showSkip={false} />
 // Gate them so an early mount — a cold-start quick-tap into Settings → Contacts,
 // or navigation state restoring onto a deep contact screen — shows the loading/
 // retry state instead of crashing on a missing ConnectionProvider.
-const ScopedContacts = withAgentReadyGate(ContactsScreen, testIdWithKey('Contacts.Loading'))
-const ScopedContactDetails = withAgentReadyGate(ContactDetailsScreen, testIdWithKey('ContactDetails.Loading'))
-const ScopedEditContactName = withAgentReadyGate(EditContactNameScreen, testIdWithKey('EditContactName.Loading'))
-const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKey('RemoveContact.Loading'))
+const ScopedContacts = withAgentReadyGate(ContactsScreen, testIdWithKey(TestIds.main.contacts.loading))
+const ScopedContactDetails = withAgentReadyGate(
+  ContactDetailsScreen,
+  testIdWithKey(TestIds.main.contactDetails.loading)
+)
+const ScopedEditContactName = withAgentReadyGate(
+  EditContactNameScreen,
+  testIdWithKey(TestIds.main.contactEditName.loading)
+)
+const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKey(TestIds.main.contactRemove.loading))
+
+/**
+ * Holds the startup loading screen until the system checks that decide the Home notification card
+ * have settled in addition to the server status check. Home renders that card straight out of the store, so a check resolving after paint
+ * swaps the card in front of the user (e.g. "Start verification" flipping to "Verified"). Capped by
+ * {@link SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS} so a hung request can't strand the app.
+ *
+ * @param hasSettled - Whether every tracked system check scope has finished running.
+ * @returns Whether the loading screen should still be shown.
+ */
+const useSystemCheckLoadingGate = (hasSettled: boolean) => {
+  const [waitedTooLong, setWaitedTooLong] = useState(false)
+
+  useEffect(() => {
+    if (hasSettled) {
+      return
+    }
+
+    const timeoutId = setTimeout(() => setWaitedTooLong(true), SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
+
+    return () => clearTimeout(timeoutId)
+  }, [hasSettled])
+
+  return !hasSettled && !waitedTooLong
+}
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
   const { isLoadingAccount } = useAccount()
+  const { isVerified } = useVerificationStatus()
   const theme = useTheme()
   const { t } = useTranslation()
   const Stack = createStackNavigator<BCSCMainStackParams>()
@@ -130,8 +166,12 @@ const MainStack: React.FC = () => {
 
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
 
-  useSystemChecks(SystemCheckScope.MAIN_STACK)
-  useSystemChecks(SystemCheckScope.ACCOUNT)
+  const mainStackChecks = useSystemChecks(SystemCheckScope.MAIN_STACK)
+  const accountChecks = useSystemChecks(SystemCheckScope.ACCOUNT)
+  const { hasChecked: serverStatusChecked } = useServerStatus()
+  const isAwaitingSystemChecks = useSystemCheckLoadingGate(
+    mainStackChecks.hasSettled && accountChecks.hasSettled && serverStatusChecked
+  )
   useBCSCStack(BCSCStacks.Main)
 
   // Accept connection-invitation deep links (e.g. from the showcase) once the
@@ -150,12 +190,18 @@ const MainStack: React.FC = () => {
 
   useVerificationResponseListener()
 
+  // Replaces rather than overlays the stack: unmounting the navigator while the account loads drops
+  // the navigation state it inherits from VerifyStack (routes registered in both, e.g.
+  // VerificationSuccess), so it remounts on initialRouteName instead of stranding the user there.
   if (isLoadingAccount) {
     return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
   }
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
+      {/* Overlays rather than replaces the stack: the checks themselves navigate to screens
+          registered below (terms of use, service outage), so the navigator has to stay mounted. */}
+      {isAwaitingSystemChecks ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
       <BifoldScope>
         <Stack.Navigator
           initialRouteName={initialRouteName}
@@ -163,7 +209,7 @@ const MainStack: React.FC = () => {
             ...defaultStackOptions,
             headerShown: false,
             title: '',
-            headerBackTestID: testIdWithKey('Back'),
+            headerBackTestID: testIdWithKey(TestIds.common.back),
             headerShadowVisible: false,
             headerBackTitleVisible: false,
             headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
@@ -317,6 +363,14 @@ const MainStack: React.FC = () => {
             }}
           />
           <Stack.Screen
+            name={BCSCScreens.ProofRequestExpiry}
+            component={ProofRequestExpirationScreen}
+            options={{
+              headerShown: true,
+              title: t('BCSC.Settings.ProofRequestExpiry'),
+            }}
+          />
+          <Stack.Screen
             name={BCSCScreens.MainNotificationSettings}
             component={NotificationSettingsScreen}
             options={{
@@ -461,13 +515,21 @@ const MainStack: React.FC = () => {
               headerShown: true,
             })}
           />
-          <Stack.Screen
-            name={BCSCScreens.VerificationSuccess}
-            component={VerificationSuccessScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
+          {/* Registered only until the user is verified. Setting `verified` is this screen's whole job,
+              and on that flip this stack inherits the outgoing navigator's state — VerifyStack's, or its
+              own when it remounts under BCSCIdTokenProvider. With the route gone, React Navigation drops
+              it from that state (falling back to initialRouteName if nothing else is left) instead of
+              stranding the user on a Continue with nothing left to do (#4719). Keyed on `verified`, not
+              isUserVerified(): that turns true once tokens arrive, before the user can open this screen. */}
+          {isVerified ? null : (
+            <Stack.Screen
+              name={BCSCScreens.VerificationSuccess}
+              component={VerificationSuccessScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+          )}
           <Stack.Screen
             name={BCSCScreens.ReverifyAccount}
             component={ReverifyAccountScreen}
@@ -523,7 +585,8 @@ const MainStack: React.FC = () => {
             component={ServiceOutage}
             options={{
               ...getDefaultModalOptions(t('BCSC.Title')),
-              gestureEnabled: false,
+              headerLeft: createHeaderBackButton,
+              headerBackTestID: testIdWithKey(TestIds.common.back),
             }}
           />
 

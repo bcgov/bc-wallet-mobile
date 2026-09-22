@@ -94,7 +94,12 @@ describe('MaskedCamera', () => {
   const renderCamera = () => {
     return render(
       <BasicAppContext>
-        <MaskedCamera navigation={mockNavigation as never} cameraFace="back" onPhotoTaken={mockOnPhotoTaken} />
+        <MaskedCamera
+          navigation={mockNavigation as never}
+          cameraFace="back"
+          onPhotoTaken={mockOnPhotoTaken}
+          photoOutput={{} as any}
+        />
       </BasicAppContext>
     )
   }

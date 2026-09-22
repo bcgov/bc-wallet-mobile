@@ -10,9 +10,12 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import type { MediaFormat } from '@/bcsc-theme/utils/media-format'
+import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
-import { AppError, ErrorRegistry } from '@/errors'
 import { isAxiosAppError } from '@/errors/appError'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
@@ -72,10 +75,14 @@ const useEvidenceUploadModel = (
   )
 
   const uploadEvidenceMetadata = useCallback(
-    async (photoMetadata: VerificationPhotoUploadPayload, videoMetadata: VerificationVideoUploadPayload) => {
+    async (
+      photoMetadata: VerificationPhotoUploadPayload,
+      videoMetadata: VerificationVideoUploadPayload,
+      formats: { photo?: MediaFormat; video?: MediaFormat }
+    ) => {
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
-        evidence.uploadPhotoEvidenceMetadata(photoMetadata),
-        evidence.uploadVideoEvidenceMetadata(videoMetadata),
+        evidence.uploadPhotoEvidenceMetadata(photoMetadata, formats.photo),
+        evidence.uploadVideoEvidenceMetadata(videoMetadata, formats.video),
       ])
 
       logger.debug('Photo/Video metadata responded')
@@ -94,10 +101,10 @@ const useEvidenceUploadModel = (
       additionalUploads: { uploadUri: string; imageBytes: Buffer }[]
     ) => {
       await Promise.all([
-        evidence.uploadPhotoEvidenceBinary(photoUploadUri, photoBytes),
+        evidence.uploadPhotoEvidenceBinary(photoUploadUri, photoBytes, 'image'),
         evidence.uploadVideoEvidenceBinary(videoUploadUri, videoBytes),
         ...additionalUploads.map(({ uploadUri, imageBytes }) =>
-          evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes)
+          evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes, 'document')
         ),
       ])
       logger.debug('Uploaded all evidence files')
@@ -174,7 +181,10 @@ const useEvidenceUploadModel = (
       // is busy or closed, so it needs its own.
       const selfieMetadata = await withPlausibleCaptureDate(photoMetadata, logger)
 
-      const evidenceMetadata = await uploadEvidenceMetadata(selfieMetadata, localFiles.videoMetadata)
+      const evidenceMetadata = await uploadEvidenceMetadata(selfieMetadata, localFiles.videoMetadata, {
+        photo: sniffMediaFormat(localFiles.photoBytes),
+        video: sniffMediaFormat(localFiles.videoBytes),
+      })
       if (isCancelledRef.current) {
         return
       }
@@ -232,13 +242,14 @@ const useEvidenceUploadModel = (
         return
       }
 
-      /**
-       * Dev note: evidence_upload_server_error + evidence_upload_unkown_error are both deprecated in the IAS documentation.
-       * So all errors during the upload process will be categorized as FILE_UPLOAD_ERROR.
-       */
-      const appError = AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, { cause: error })
+      // Use the original AppError and fallback to FILE_UPLOAD_ERROR
+      const appError = ensureAppError(error, AppEventCode.FILE_UPLOAD_ERROR)
+
       logger.error('[useEvidenceUploadModel] Error during evidence upload process', appError)
-      fileUploadErrorAlert(appError)
+
+      if (!appError.handled) {
+        fileUploadErrorAlert(appError)
+      }
     } finally {
       setIsUploading(false)
       setUploadMessage(null)

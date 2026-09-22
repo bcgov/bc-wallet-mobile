@@ -1,7 +1,7 @@
 name: Load Variant Config
 description: |
   Source a variant.env file and export all its variables to GITHUB_ENV.
-  Handles multi-line values (e.g. TESTFLIGHT_BETA_GROUPS) automatically
+  Handles multi-line values (e.g. IOS_URL_SCHEMES) automatically
   using the GITHUB_ENV heredoc delimiter syntax.
 
 inputs:

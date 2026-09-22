@@ -1,4 +1,6 @@
 import {
+  MAX_VISITED_SCREENS,
+  NAVIGATION_VISITED_SCREEN_NAMES,
   NavigationContainerContext,
   NavigationContainerProvider,
   useNavigationContainer,
@@ -52,6 +54,7 @@ describe('NavigationContainerContext', () => {
     jest.clearAllMocks()
     capturedOnReady = undefined
     capturedOnStateChange = undefined
+    NAVIGATION_VISITED_SCREEN_NAMES.length = 0
   })
 
   it('should have isNavigationReady as false by default', () => {
@@ -116,6 +119,46 @@ describe('NavigationContainerContext', () => {
       expect(Analytics.trackScreenEvent).toHaveBeenCalledTimes(2)
       expect(Analytics.trackScreenEvent).toHaveBeenNthCalledWith(1, 'HomeScreen', undefined)
       expect(Analytics.trackScreenEvent).toHaveBeenNthCalledWith(2, 'SettingsScreen', 'HomeScreen')
+    })
+
+    it('should append each newly visited screen to visitedScreenNames', () => {
+      renderHook(() => useContext(NavigationContainerContext), { wrapper })
+
+      capturedOnStateChange?.({ index: 0, routes: [{ name: 'HomeScreen' }] })
+      capturedOnStateChange?.({ index: 0, routes: [{ name: 'SettingsScreen' }] })
+
+      expect(NAVIGATION_VISITED_SCREEN_NAMES).toEqual(['HomeScreen', 'SettingsScreen'])
+    })
+
+    it('should not append to visitedScreenNames for a duplicate consecutive transition', () => {
+      renderHook(() => useContext(NavigationContainerContext), { wrapper })
+
+      const state = { index: 0, routes: [{ name: 'HomeScreen' }] }
+
+      // Unlike the Analytics dedup above (which keys on previous->current and so still fires on the
+      // second call), the breadcrumb trail compares directly against the last recorded entry, so
+      // repeated onStateChange calls for the same screen never add more than one entry.
+      capturedOnStateChange?.(state)
+      capturedOnStateChange?.(state)
+      capturedOnStateChange?.(state)
+
+      expect(NAVIGATION_VISITED_SCREEN_NAMES).toEqual(['HomeScreen'])
+    })
+
+    it('should cap visitedScreenNames at the most recent MAX_VISITED_SCREENS screens', () => {
+      renderHook(() => useContext(NavigationContainerContext), { wrapper })
+
+      const totalScreens = MAX_VISITED_SCREENS + 5
+
+      for (let i = 0; i < totalScreens; i++) {
+        capturedOnStateChange?.({ index: 0, routes: [{ name: `Screen${i}` }] })
+      }
+
+      expect(NAVIGATION_VISITED_SCREEN_NAMES).toHaveLength(MAX_VISITED_SCREENS)
+      expect(NAVIGATION_VISITED_SCREEN_NAMES[0]).toBe(`Screen${totalScreens - MAX_VISITED_SCREENS}`)
+      expect(NAVIGATION_VISITED_SCREEN_NAMES[NAVIGATION_VISITED_SCREEN_NAMES.length - 1]).toBe(
+        `Screen${totalScreens - 1}`
+      )
     })
   })
 

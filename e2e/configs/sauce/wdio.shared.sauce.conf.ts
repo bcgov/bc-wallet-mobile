@@ -77,6 +77,16 @@ config.services = [
 ]
 
 /**
+ * The device-auth lane's Sauce options: `setupDeviceLock` sets a real screen lock for the session
+ * (000000 on Android, 089675 on iOS) — the gate behind the app's device-authentication option
+ * (`KeyguardManager.isDeviceSecure` / `LAContext.canEvaluatePolicy(.deviceOwnerAuthentication)`) —
+ * and `biometricsInterception` lets `sauce:biometrics-authenticate` answer the app's prompts. Requested
+ * by the RDC configs' device-auth lane ALONE. The persistent App Storage "Device Passcode" setting stays
+ * OFF on every app group: it would lock the device under every journey of every uploaded build.
+ */
+const DEVICE_SECURITY_LANE = { setupDeviceLock: true, biometricsInterception: true } as const
+
+/**
  * Shared Sauce RDC session options WITHOUT camera injection — the Android send-video lane
  * (see wdio.android.sauce.rdc.conf.ts): injection instruments the whole camera pipeline, which
  * kills the recorder's stop/finalize, and those journeys record from the rack feed instead.
@@ -117,4 +127,4 @@ config.afterTest = async function (test, _context, result) {
   await browser.execute(`sauce:job-result=${result.passed ? 'passed' : 'failed'}`)
 }
 
-export { config, sauceRdcOptions, sauceRdcOptionsNoCameraInjection }
+export { config, DEVICE_SECURITY_LANE, sauceRdcOptions, sauceRdcOptionsNoCameraInjection }

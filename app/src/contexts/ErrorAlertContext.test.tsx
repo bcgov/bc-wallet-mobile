@@ -32,11 +32,6 @@ jest.mock('react-native', () => ({
   },
 }))
 
-jest.mock('../errors/errorHandler', () => {
-  const actual = jest.requireActual('../errors/errorHandler')
-  return { ...actual }
-})
-
 jest.mock('@bifold/core', () => ({
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
   useStore: jest.fn().mockReturnValue([
@@ -112,22 +107,11 @@ jest.mock('react-native-device-info', () => ({
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
 
 describe('ErrorAlertContext', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
   const wrapper = ({ children }: { children: React.ReactNode }) => <ErrorAlertProvider>{children}</ErrorAlertProvider>
 
   describe('useErrorAlert hook', () => {
     it('should throw error when used outside ErrorAlertProvider', () => {
       expect(() => renderHook(() => useErrorAlert())).toThrow('useErrorAlert must be used within an ErrorAlertProvider')
-    })
-
-    it('should return context with emitErrorModal, and emitAlert', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      expect(result.current).toHaveProperty('emitErrorModal')
-      expect(result.current).toHaveProperty('emitAlert')
     })
   })
 
@@ -246,12 +230,14 @@ describe('ErrorAlertContext', () => {
         result.current.emitErrorModal('Title 1', 'Desc 1', appError)
       })
 
+      expect(mockBCSCErrorModal).toHaveBeenLastCalledWith(expect.objectContaining({ errorKey: 1 }))
+
       act(() => {
         result.current.emitErrorModal('Title 2', 'Desc 2', appError)
       })
 
-      // Two calls should have triggered two trackAlertDisplayEvent calls
-      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledTimes(2)
+      // A repeated error must bump the key, otherwise the modal never re-opens.
+      expect(mockBCSCErrorModal).toHaveBeenLastCalledWith(expect.objectContaining({ errorKey: 2 }))
     })
   })
 

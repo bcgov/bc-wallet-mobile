@@ -1,0 +1,55 @@
+[
+  {
+    "screen": "UnverifiedHome",
+    "platform": "ios",
+    "engine": "xcuitest-audit",
+    "checks": ["contrast", "elementDetection", "hitRegion", "sufficientElementDescription", "dynamicType", "textClipped", "trait", "parentChild", "action"],
+    "durationMs": 1408,
+    "issues": []
+  },
+  {
+    "screen": "ChangePIN",
+    "platform": "ios",
+    "engine": "xcuitest-audit",
+    "checks": ["contrast", "elementDetection", "hitRegion", "sufficientElementDescription", "dynamicType", "textClipped", "trait", "parentChild", "action"],
+    "durationMs": 1622,
+    "issues": [
+      {
+        "rule": "hitRegion",
+        "severity": "error",
+        "message": "Element has no hit region",
+        "detail": "the info icon reports a zero-sized hit region",
+        "element": "Button \"PIN requirements\"",
+        "location": "331,128 24×24",
+        "signature": "hitRegion|Button|PIN requirements"
+      }
+    ]
+  },
+  {
+    "screen": "EnterBirthdate",
+    "platform": "ios",
+    "engine": "xcuitest-audit",
+    "checks": ["contrast", "elementDetection", "hitRegion", "sufficientElementDescription", "dynamicType", "textClipped", "trait", "parentChild", "action"],
+    "durationMs": 1514,
+    "issues": [
+      {
+        "rule": "contrast",
+        "severity": "error",
+        "message": "Element has insufficient contrast",
+        "detail": "contrast ratio 2.9:1 against the grouped background",
+        "element": "StaticText \"Date of birth\"",
+        "location": "24,312 327×20",
+        "signature": "contrast|StaticText|Date of birth"
+      },
+      {
+        "rule": "dynamicType",
+        "severity": "warning",
+        "message": "Text is not scaled by Dynamic Type",
+        "detail": "the helper text stays 13pt at the largest content size",
+        "element": "StaticText \"Why we need this\"",
+        "location": "24,344 327×16",
+        "signature": "dynamicType|StaticText|Why we need this"
+      }
+    ]
+  }
+]

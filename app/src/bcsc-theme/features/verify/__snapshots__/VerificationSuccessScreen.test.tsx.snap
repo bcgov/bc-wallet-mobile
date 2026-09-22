@@ -214,7 +214,7 @@ exports[`VerificationSuccess renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="com.ariesbifold:id/BCSC.Verification.ButtonText"
+          testID="com.ariesbifold:id/Continue"
         >
           <View
             style={

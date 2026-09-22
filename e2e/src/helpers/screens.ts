@@ -1,4 +1,5 @@
 import { Timeouts } from '../constants.js'
+import type { ScreenPresence } from '../screens/core/defineScreen.js'
 import { acceptSystemAlertsUntil } from './alerts.js'
 
 /**
@@ -20,7 +21,26 @@ export async function describeCurrentScreen(limit = 8): Promise<string> {
       break
     }
   }
-  return texts.length ? texts.join(' | ') : '(no visible text found)'
+  return texts.length ? texts.join(' | ') : `(no visible text found; ${await describeSilentScreen()})`
+}
+
+/** The view classes on a text-less screen, so a blank camera or a bare surface is still identifiable. */
+async function describeSilentScreen(): Promise<string> {
+  try {
+    const source = await driver.getPageSource()
+    const counts = new Map<string, number>()
+    for (const [, name] of source.matchAll(driver.isIOS ? /\btype="([^"]+)"/g : /\bclass="([^"]+)"/g)) {
+      counts.set(name, (counts.get(name) ?? 0) + 1)
+    }
+    const top = [...counts]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, n]) => `${name.split('.').pop()}×${n}`)
+    const where = driver.isAndroid ? `${await driver.getCurrentPackage()}/${await driver.getCurrentActivity()}: ` : ''
+    return `${where}${top.join(', ') || 'empty page source'}`
+  } catch (err) {
+    return `page source unavailable: ${(err as Error).message}`
+  }
 }
 
 /**
@@ -49,4 +69,34 @@ export async function reachCameraScreen(
 ): Promise<void> {
   if (await acceptSystemAlertsUntil(isReady, { timeoutMs })) return
   throw new Error(`${name} did not become ready within ${timeoutMs}ms. On screen: ${await describeCurrentScreen()}`)
+}
+
+/** A screen object, or a cheap non-throwing probe for anything a screen object cannot name. */
+export type ScreenProbe = ScreenPresence | (() => Promise<boolean>)
+
+/** Per-candidate sampling budget inside {@link waitForAnyScreen} — polled, so an interval, not a wait. */
+const ANY_SCREEN_PROBE_MS = 500
+
+/**
+ * Wait until one of `candidates` is on screen and say which — for the seams where the app may
+ * legitimately land on either of two screens (a relaunch that resumes into verification, or Home).
+ * Never scrolls; on timeout the thrown error names what was actually on screen.
+ */
+export async function waitForAnyScreen<K extends string>(
+  candidates: Record<K, ScreenProbe>,
+  timeoutMs: number = Timeouts.SCREEN_TRANSITION
+): Promise<K> {
+  const deadline = Date.now() + timeoutMs
+  const entries = Object.entries(candidates) as [K, ScreenProbe][]
+  for (;;) {
+    for (const [key, probe] of entries) {
+      const present = typeof probe === 'function' ? await probe() : await probe.isPresent(ANY_SCREEN_PROBE_MS)
+      if (present) return key
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `None of [${entries.map(([key]) => key).join(', ')}] appeared within ${timeoutMs}ms. On screen: ${await describeCurrentScreen()}`
+      )
+    }
+  }
 }

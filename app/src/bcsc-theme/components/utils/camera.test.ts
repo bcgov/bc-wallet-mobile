@@ -1,7 +1,6 @@
 import { Platform } from 'react-native'
 
 import {
-  EnhancedCode,
   Rect,
   ScanZone,
   calculateBarcodeOrientation,
@@ -9,7 +8,8 @@ import {
   // determineScanState,
   getPaddedHighlightPosition,
   isCodeAlignedWithZones,
-  // mergeLockedCodesWithAccumulated,
+  isRecoverableCameraRuntimeError,
+  //mergeLockedCodesWithAccumulated,
   transformBarcodeCoordinates,
 } from './camera'
 
@@ -376,15 +376,15 @@ describe('isCodeAlignedWithZones', () => {
 
 // ─── determineScanState ────────────────────────────────────────────────────────
 
-const makeCode = (value: string, isAligned: boolean, readingCount: number): EnhancedCode =>
-  ({
-    type: 'code-39',
-    value,
-    isAligned,
-    readingCount,
-  }) as unknown as EnhancedCode
-
-const OPTIONS = { minCodesForAligned: 2, lockReadingThreshold: 5 }
+// const makeCode = (value: string, isAligned: boolean, readingCount: number): EnhancedCode =>
+//   ({
+//     type: 'code-39',
+//     value,
+//     isAligned,
+//     readingCount,
+//   }) as unknown as EnhancedCode
+//
+// const OPTIONS = { minCodesForAligned: 2, lockReadingThreshold: 5 }
 
 // describe('determineScanState', () => {
 //   it('returns scanning when no codes are provided', () => {
@@ -466,7 +466,7 @@ const OPTIONS = { minCodesForAligned: 2, lockReadingThreshold: 5 }
 
 // ─── mergeLockedCodesWithAccumulated ───────────────────────────────────────────
 
-const makeEnhancedCode = (type: string, value: string): EnhancedCode => ({ type, value }) as unknown as EnhancedCode
+// const makeEnhancedCode = (type: string, value: string): EnhancedCode => ({ type, value }) as unknown as EnhancedCode
 
 // describe('mergeLockedCodesWithAccumulated', () => {
 //   const NOW = 1_000_000
@@ -539,3 +539,42 @@ const makeEnhancedCode = (type: string, value: string): EnhancedCode => ({ type,
 //     expect(result).toEqual([serial])
 //   })
 // })
+
+// ─── isRecoverableCameraRuntimeError ──────────────────────────────────────────
+
+describe('isRecoverableCameraRuntimeError', () => {
+  it('treats unknown/unknown as recoverable on iOS (VisionCamera restarts the session itself)', () => {
+    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' }, 'ios')).toBe(true)
+  })
+
+  it('treats unknown/unknown as fatal on Android (no auto-restart, catch-all code)', () => {
+    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' }, 'android')).toBe(false)
+  })
+
+  it.each([
+    'device/flash-unavailable',
+    'device/configuration-error',
+    'session/camera-not-ready',
+    'system/camera-has-been-disconnected',
+  ])('treats %s as fatal on iOS', (code) => {
+    expect(isRecoverableCameraRuntimeError({ code }, 'ios')).toBe(false)
+  })
+
+  it('treats errors without a code as fatal', () => {
+    expect(isRecoverableCameraRuntimeError({}, 'ios')).toBe(false)
+    expect(isRecoverableCameraRuntimeError(null, 'ios')).toBe(false)
+    expect(isRecoverableCameraRuntimeError(undefined, 'ios')).toBe(false)
+  })
+
+  it('defaults to the current platform', () => {
+    const originalPlatform = Platform.OS
+
+    Platform.OS = 'ios'
+    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' })).toBe(true)
+
+    Platform.OS = 'android'
+    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' })).toBe(false)
+
+    Platform.OS = originalPlatform
+  })
+})

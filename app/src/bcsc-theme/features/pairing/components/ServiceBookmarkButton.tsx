@@ -1,5 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -46,7 +47,7 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
       accessibilityRole="button"
       accessibilityState={{ selected: bookmarked }}
       accessibilityLabel={t('BCSC.ManualPairing.BookmarkServiceButton')}
-      testID={testIdWithKey('BookmarkService')}
+      testID={testIdWithKey(TestIds.main.pairing.bookmark)}
     >
       <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
         {t('BCSC.ManualPairing.BookmarkServiceButton')}

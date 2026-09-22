@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import * as PushNotifications from '@/utils/PushNotificationsHelper'
 import PushNotificationImage from '@assets/img/push-notifications-image.svg'
 import {
@@ -159,7 +160,7 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
           title={t('BCSC.Settings.OpenDeviceSettings')}
           buttonType={ButtonType.Primary}
           onPress={openDeviceSettings}
-          testID={testIdWithKey('OpenNotificationSettings')}
+          testID={testIdWithKey(TestIds.main.notificationSettings.openDeviceSettings)}
           accessibilityLabel={t('BCSC.Settings.OpenDeviceSettings')}
         />
       ) : (
@@ -167,7 +168,7 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
           title={t('BCSC.Onboarding.EnableNotifications')}
           buttonType={ButtonType.Primary}
           onPress={enableNotifications}
-          testID={testIdWithKey('EnableNotifications')}
+          testID={testIdWithKey(TestIds.main.notificationSettings.enable)}
           accessibilityLabel={t('BCSC.Onboarding.EnableNotifications')}
         />
       )}

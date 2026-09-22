@@ -1,4 +1,5 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { Link, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
@@ -62,7 +63,7 @@ const WhatAreContactsScreen = ({ navigation }: WhatAreContactsScreenProps) => {
       <ThemedText style={{ marginTop: Spacing.lg }}>
         {t('BCSC.Contacts.WhatAre.FooterPrefix')}
         <Link
-          testID={testIdWithKey('ContactsList')}
+          testID={testIdWithKey(TestIds.main.whatAreContacts.contactsList)}
           linkText={t('BCSC.Contacts.WhatAre.FooterLink')}
           onPress={onPressContactsList}
         />

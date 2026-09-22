@@ -1,6 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
-import { modulusInSet, normalizeModulus } from '@/bcsc-theme/utils/jwk-modulus'
+import { confirmModulusRegistered } from '@/bcsc-theme/utils/jwk-modulus'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
@@ -60,22 +60,11 @@ export interface NonceResponseData {
 export type RegistrationApi = ReturnType<typeof useRegistrationApi>
 
 /**
- * Confirms the signing key sent during INITIAL client registration actually landed in the
- * server's echoed jwks, matched on modulus bytes (never kid — see jwk-modulus.ts).
- *
- * Scoped to createRegistration only — NOT called from updateRegistration. This isn't because
- * only one key can ever exist at that point (a corrupted-key self-heal inside the native DCR
- * body builder can mint a replacement even on an update call): it's a deliberate scope
- * decision from issue #4166 ("We only need to check the new key is sent on initial
- * registration and it matches ... AND the recovery (healing) mechanics for people who upgrade
- * from previous versions"). Confirming updateRegistration's key too was explicitly out of
- * scope; the separate key-recovery flow (key-recovery.ts) is what catches a desync from any
- * cause, on the next hydration.
- *
- * Hard-fails (throws AppError ERR_121) only on a DEFINITE mismatch: the sent modulus decodes,
- * the server returned at least one decodable modulus, and the sent modulus isn't among them.
- * An unparseable/empty side (a server- or body-shape surprise, not a confirmed desync) is
- * logged and treated as pass-through so setup is never bricked by a parsing edge case.
+ * Confirms the signing key sent during INITIAL client registration landed in the server's
+ * echoed jwks (see jwk-modulus.ts). Scoped to createRegistration only, not updateRegistration —
+ * a deliberate #4166 decision; key-recovery.ts catches an updateRegistration desync instead, on
+ * the next hydration. Hard-fails (ERR_121) only on a definite mismatch; an unparseable/empty
+ * side is pass-through so setup is never bricked by a parsing edge case.
  */
 function confirmRegisteredKey(body: string, data: RegistrationResponseData, logger: BifoldLogger): void {
   let sentN: string | undefined
@@ -92,17 +81,16 @@ function confirmRegisteredKey(body: string, data: RegistrationResponseData, logg
   }
 
   const serverNs = (data.jwks?.keys ?? []).map((key) => key?.n)
-  const sentModulus = normalizeModulus(sentN)
-  const hasDecodableServerModulus = serverNs.some((n) => normalizeModulus(n) !== null)
+  const verdict = confirmModulusRegistered(sentN, serverNs)
 
-  if (!sentModulus || !hasDecodableServerModulus) {
+  if (verdict === 'unknown') {
     logger.warn(
       '[RegistrationApi] Could not confirm signing key registration — sent or server jwks unparseable/empty; proceeding'
     )
     return
   }
 
-  if (!modulusInSet(sentN, serverNs)) {
+  if (verdict === 'mismatch') {
     logger.error(
       '[RegistrationApi] Sent signing key modulus was not found in the server-confirmed jwks after initial registration'
     )

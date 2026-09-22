@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -25,14 +26,14 @@ const TransferSuccessScreen: React.FC = () => {
   const controls = (
     <ControlContainer>
       <Button
-        testID={testIdWithKey('TransferSuccessButton')}
+        testID={testIdWithKey(TestIds.main.transferSuccess.done)}
         accessibilityLabel={t('BCSC.TransferSuccess.ButtonText')}
         title={t('BCSC.TransferSuccess.ButtonText')}
         buttonType={ButtonType.Primary}
         onPress={() => navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })}
       />
       <Button
-        testID={testIdWithKey('RemoveAccountButton')}
+        testID={testIdWithKey(TestIds.main.transferSuccess.removeAccount)}
         buttonType={ButtonType.Critical}
         title={t('BCSC.Account.RemoveAccount')}
         onPress={() => {

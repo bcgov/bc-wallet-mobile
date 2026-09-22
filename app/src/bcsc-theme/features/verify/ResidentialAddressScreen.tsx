@@ -3,6 +3,7 @@ import { DropdownWithValidation } from '@/bcsc-theme/components/DropdownWithVali
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { PROVINCE_OPTIONS } from '@/bcsc-theme/utils/address-utils'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -40,7 +41,7 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
       <Button
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
-        testID={testIdWithKey('ResidentialAddressContinue')}
+        testID={testIdWithKey(TestIds.verify.residentialAddress.continue)}
         buttonType={ButtonType.Primary}
         onPress={handleSubmit}
         disabled={isSubmitting}

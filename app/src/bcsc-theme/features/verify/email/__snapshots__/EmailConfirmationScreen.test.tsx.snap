@@ -466,7 +466,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                   },
                 ]
               }
-              testID="ResendCodeLink"
+              testID="com.ariesbifold:id/ResendCodeLink"
             >
               BCSC.EmailConfirmation.SendNewCode
             </Text>
@@ -491,7 +491,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 },
               ]
             }
-            testID="GoToMyEmailLink"
+            testID="com.ariesbifold:id/GoToMyEmailLink"
           >
             BCSC.EmailConfirmation.GoToMyEmail
           </Text>

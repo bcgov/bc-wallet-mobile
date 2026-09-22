@@ -3,6 +3,8 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import TransferQRScannerScreen from './TransferQRScannerScreen'
 
+jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
+
 const mockNavigation = {
   navigate: jest.fn(),
   dispatch: jest.fn(),

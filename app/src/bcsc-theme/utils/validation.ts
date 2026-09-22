@@ -20,8 +20,10 @@ const SERIAL_PATTERN = /^[A-Za-z0-9]{3,15}$/
 
 const EMAIL_PATTERN = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/
 
-/** Mirrors the ias-ios `isValidName` regex. */
-const NAME_PATTERN = /^[A-Za-z][A-Za-z0-9 '.-]*$/
+/** Mirrors the ias-ios `isValidName` regex. Shared with stripDisallowedNameCharacters below. */
+const NAME_CHARACTER_CLASS = "A-Za-z0-9 '.-"
+const NAME_PATTERN = new RegExp(`^[A-Za-z][${NAME_CHARACTER_CLASS}]*$`)
+const DISALLOWED_NAME_CHARACTERS = new RegExp(`[^${NAME_CHARACTER_CLASS}]`, 'g')
 
 /** Split out so a leading non-letter gets its own message, as in ias-ios. */
 const NAME_START_PATTERN = /^[A-Za-z]/
@@ -109,6 +111,14 @@ export const middleNamesSchema = withNameCharacterRules(
  * upper-cased form would slip through (`ß` uppercases to `SS`).
  */
 export const normalizeForSubmission = (value: string): string => value.trim().toUpperCase()
+
+/**
+ * Strips characters outside the name character class from legacy-persisted values, so old
+ * unsanitized data (pre-4.0.3 manual entry, or decoder-corrupted scans) can't resurface special
+ * characters.
+ */
+export const stripDisallowedNameCharacters = (value?: string): string =>
+  (value ?? '').replace(DISALLOWED_NAME_CHARACTERS, '').trim()
 
 export type FieldResult<T> = { ok: true; value: T } | { ok: false; errorKey: string }
 

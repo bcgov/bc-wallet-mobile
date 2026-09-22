@@ -1,4 +1,5 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import ContactsIllustration from '@assets/img/contacts.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -132,7 +133,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
               title={t('BCSC.Contacts.WhatAreContactsButton')}
               onPress={onPressWhatAreContacts}
               accessibilityLabel={t('BCSC.Contacts.WhatAreContactsButton')}
-              testID={testIdWithKey('WhatAreContacts')}
+              testID={testIdWithKey(TestIds.main.contacts.whatAreContacts)}
             />
           </View>
         </View>
@@ -151,7 +152,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
           placeholder={t('BCSC.Contacts.SearchPlaceholder')}
           placeholderTextColor={ColorPalette.grayscale.mediumGrey}
           accessibilityLabel={a11yLabel(t('BCSC.Contacts.SearchPlaceholder'))}
-          testID={testIdWithKey('SearchContacts')}
+          testID={testIdWithKey(TestIds.main.contacts.search)}
           returnKeyType="search"
           autoCorrect={false}
         />
@@ -165,7 +166,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
               setQuery('')
             }}
             accessibilityLabel={a11yLabel(t('Global.Close'))}
-            testID={testIdWithKey('clearSearch')}
+            testID={testIdWithKey(TestIds.main.contacts.clearSearch)}
           />
         ) : null}
       </View>

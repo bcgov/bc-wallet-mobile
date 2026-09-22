@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey, usePreventDoublePress, useStore, useTheme } from '@bifold/core'
 import { IASEnvironment } from '@utils/environment'
 import React from 'react'
@@ -85,7 +86,7 @@ const EnvironmentSelector: React.FC<EnvironmentSelectorProps> = ({ onEnvironment
         <Button
           title={t('Global.Cancel')}
           accessibilityLabel={t('Global.Cancel')}
-          testID={testIdWithKey('Cancel')}
+          testID={testIdWithKey(TestIds.developer.environmentSelectorCancel)}
           onPress={onCancel}
           buttonType={ButtonType.Secondary}
         />

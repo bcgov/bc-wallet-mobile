@@ -8,6 +8,7 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCQRCoreScreens, BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
@@ -68,7 +69,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
             description={t('BCSC.Home.LogInFromComputerDescription')}
             onPress={handlePairingCodePress}
             accessibilityHint={a11yLabel(t('BCSC.Home.LogInFromComputerDescription'))}
-            testID={testIdWithKey('LogInFromComputer')}
+            testID={testIdWithKey(TestIds.main.pairing.logInFromComputer)}
           />
         ) : null}
         <NotificationsList />
@@ -117,14 +118,14 @@ export const HomeV4_0_x: React.FC<HomeProps> = ({ navigation }) => {
             description={t('BCSC.Home.WhereToUseDescription')}
             style={{ marginBottom: Spacing.md }}
             onPress={handleWhereToUsePress}
-            testID={testIdWithKey('WhereToUse')}
+            testID={testIdWithKey(TestIds.main.home.whereToUse)}
           />
           <SectionButton
             title={t('BCSC.Home.LogInFromComputerTitle')}
             accessibilityLabel={a11yLabel(t('BCSC.Home.LogInFromComputerAccessibilityLabel'))}
             description={t('BCSC.Home.LogInFromComputerDescription')}
             onPress={handlePairingCodePress}
-            testID={testIdWithKey('LogInFromComputer')}
+            testID={testIdWithKey(TestIds.main.pairing.logInFromComputer)}
           />
           {store.bcsc.bannerMessages.length > 0 && (
             <View style={{ marginTop: Spacing.lg }}>

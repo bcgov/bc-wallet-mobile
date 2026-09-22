@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonLocation, ButtonType, IconButton, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { a11yLabel } from '@utils/accessibility'
 import { useCallback } from 'react'
@@ -48,7 +49,7 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
         <IconButton
           buttonLocation={ButtonLocation.Left}
           accessibilityLabel={a11yLabel(t('BCSC.SystemChecks.Devices.CloseButton'))}
-          testID={testIdWithKey('CloseReviewDevices')}
+          testID={testIdWithKey(TestIds.main.reviewDevices.headerClose)}
           onPress={() => handleClose({ shouldAnimate: true })}
           icon={'close'}
         />
@@ -72,7 +73,7 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
           title={t('BCSC.SystemChecks.Devices.ManageDevicesButton')}
           buttonType={ButtonType.Primary}
           onPress={handleManageDevices}
-          testID={testIdWithKey('ManageDevices')}
+          testID={testIdWithKey(TestIds.main.reviewDevices.manageDevices)}
           accessibilityLabel={a11yLabel(t('BCSC.SystemChecks.Devices.ManageDevicesButton'))}
         />
 
@@ -80,7 +81,7 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
           title={t('BCSC.SystemChecks.Devices.CloseButton')}
           buttonType={ButtonType.Secondary}
           onPress={() => handleClose({ shouldAnimate: true })}
-          testID={testIdWithKey('Close')}
+          testID={testIdWithKey(TestIds.main.reviewDevices.close)}
           accessibilityLabel={a11yLabel(t('BCSC.SystemChecks.Devices.CloseButton'))}
         />
 
@@ -88,7 +89,7 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
           title={t('BCSC.SystemChecks.Devices.DeleteButton')}
           buttonType={ButtonType.Secondary}
           onPress={() => handleDelete({ shouldAnimate: true })}
-          testID={testIdWithKey('Delete')}
+          testID={testIdWithKey(TestIds.main.reviewDevices.delete)}
           accessibilityLabel={a11yLabel(t('BCSC.SystemChecks.Devices.DeleteButton'))}
         />
       </View>

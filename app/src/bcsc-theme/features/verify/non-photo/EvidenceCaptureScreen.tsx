@@ -9,9 +9,12 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { buildBarcodePayload } from '@/bcsc-theme/utils/barcode'
 import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
+import { isAxiosAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { withAlert } from '@/utils/alert'
 import { MaskType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -59,7 +62,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { cardType } = route.params
   const [store] = useStore<BCState>()
   const isNonBCSCFlow = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
-  const { clearAdditionalEvidence, updateEvidenceMetadata } = useSecureActions()
+  const { clearAdditionalEvidence, updateEvidenceMetadata, truncateEvidence } = useSecureActions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
@@ -77,7 +80,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   // stops below), so the backend only needs to be asked once per card.
   const barcodesCheckedRef = useRef(false)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-  const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
+  const { failedToReadFromLocalStorageAlert, documentExpiredAlert } = useAlerts(navigation)
 
   const { scannerOutput, resetScanner } = useBCServicesCardScannerOutput({
     minMatches: 0, // No hit threshold
@@ -140,14 +143,30 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
      *
      * In the Non-Photo BCSC flow we've already done authorizeDevice, so we skip.
      */
-    if (isNonBCSCFlow) {
-      if (bcscSerialRef.current && licenseRef.current && !barcodesCheckedRef.current) {
-        barcodesCheckedRef.current = true
+    if (isNonBCSCFlow && bcscSerialRef.current && licenseRef.current && !barcodesCheckedRef.current) {
+      barcodesCheckedRef.current = true
+
+      try {
         const switchedToBcsc = await scanner.handleScanBarcodes(bcscSerialRef.current, licenseRef.current)
+
         if (switchedToBcsc) {
           await clearAdditionalEvidence()
           return
         }
+      } catch (error) {
+        if (isAxiosAppError(error, 400) && error.cause.message === AppEventCode.CARD_EXPIRED) {
+          // User scanned an expired BC Services Card.
+          // Remove the last evidence entry and navigate back to the EvidenceTypeList screen
+          await truncateEvidence(
+            store.bcscSecure.additionalEvidenceData,
+            store.bcscSecure.additionalEvidenceData.length - 1
+          )
+          navigation.navigate(BCSCScreens.EvidenceTypeList, { cardProcess: BCSCCardProcess.NonBCSC })
+          documentExpiredAlert()
+          return
+        }
+
+        // Note: Card not found is a valid error - continue with the evidence capture flow
       }
     }
 
@@ -214,7 +233,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   return (
     <>
       {captureState === CaptureState.CAPTURING ? (
-        <View style={styles.container} testID={testIdWithKey('EvidenceCaptureScreenMaskedCamera')}>
+        <View style={styles.container} testID={testIdWithKey(TestIds.verify.evidenceCapture.maskedCamera)}>
           <MaskedCamera
             navigation={navigation}
             cameraFace={'back'}

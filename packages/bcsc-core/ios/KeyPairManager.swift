@@ -244,6 +244,16 @@ class KeyPairManager: KeyPairManagerProtocol {
     }
   }
 
+  /// The response-named key gets the first attempt; all other existing keys follow newest-first.
+  /// The snapshot prevents keychain changes during a decrypt from changing the retry set.
+  static func decryptKeyInfos(matching kid: String, in keys: [PrivateKeyInfo]) -> [PrivateKeyInfo] {
+    let newestFirst = keys.sorted(by: { $0.created > $1.created })
+    guard !kid.isEmpty, let match = newestFirst.first(where: { $0.tag == kid }) else {
+      return newestFirst
+    }
+    return [match] + newestFirst.filter { $0.tag != match.tag }
+  }
+
   func generateKeyPair(
     withLabel label: String,
     keyType: KeyType = KeyType.RSA,

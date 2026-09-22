@@ -176,11 +176,37 @@ export const SettingsRowIds = {
   autoLock: bcsc(main.settings.autoLock),
 } as const
 
-/** App Security (`MainChangeSecurity` → SecurityMethodSelector). `self` is the always-present
- *  `ChoosePINButton`; return via header `back`. */
+/**
+ * App Security (`MainChangeSecurity` → SecurityMethodSelector). `self` is the always-present
+ * `ChoosePINButton`; return via header `back`. `deviceAuth` renders only when the OS calls the device
+ * secure (same id as the onboarding selector — it is the same component); in settings the current
+ * method's card is the selected one.
+ */
 export const AppSecurityScreen = defineScreen({
   self: bcsc(main.appSecurity.choosePin),
   back: bcsc(common.back),
+  links: {
+    pin: bcsc(main.appSecurity.choosePin),
+    deviceAuth: bcsc(TestIds.onboarding.secureApp.chooseDeviceAuth),
+  },
+})
+
+/**
+ * The device-auth → PIN form (`MainChangePIN` WITHOUT `isChangingExistingPIN`): `PINEntryForm` again, so
+ * the onboarding CreatePIN ids — except the button, which is the generic `Continue`. Success pops
+ * both it and App Security, landing back on Settings.
+ */
+export const SwitchToPinScreen = defineScreen({
+  self: bcsc(TestIds.onboarding.createPin.pin),
+  primary: bcsc(TestIds.onboarding.createPin.continue),
+  back: bcsc(common.back),
+  inputs: {
+    pin: bcsc(TestIds.onboarding.createPin.pin),
+    confirmPin: bcsc(TestIds.onboarding.createPin.confirmPin),
+  },
+  links: {
+    understand: bcsc(TestIds.onboarding.createPin.understand),
+  },
 })
 
 /**
@@ -391,6 +417,7 @@ export const ContactsScreen = defineScreen({
     loading: bcsc(main.contacts.loading),
     search: bcsc(main.contacts.search), // renders only POPULATED — with whatAreContacts absent, the populated proof
     clearSearch: bcsc(main.contacts.clearSearch), // renders only while the query is non-empty
+    row: bcsc(main.contacts.row), // SHARED by every row — a specific contact is picked by name label (helpers/a11y.ts)
   },
 })
 
@@ -403,9 +430,10 @@ export const WhatAreContactsScreen = defineScreen({
 })
 
 /** Contact details (`ContactDetailsScreen`, agent-gated) — reached by tapping a POPULATED contacts-list
- *  row, which carries NO testID (select by a11y label = the contact name, helpers/a11y.ts). `pin` and
- *  `unpin` are ONE button whose id flips with the pinned state — waiting for the flipped id IS the
- *  toggle assert. `viewJson` is developer-mode-only, so normal runs assert its ABSENCE. */
+ *  row (the row id is shared, so a specific contact is selected by a11y label = the contact name,
+ *  helpers/a11y.ts). `pin` and `unpin` are ONE button whose id flips with the pinned state — waiting
+ *  for the flipped id IS the toggle assert. `viewJson` is developer-mode-only, so normal runs assert
+ *  its ABSENCE. */
 export const ContactDetailScreen = defineScreen({
   self: bcsc(main.contactDetails.message),
   back: bcsc(common.back),
@@ -422,11 +450,17 @@ export const ContactDetailScreen = defineScreen({
   },
 })
 
-/** Contact chat (`ContactChatScreen`). Its composer has NO testID and an EMPTY a11y label, so sending
- *  from the app is not automatable — the journey only asserts RECEIVED copy (issuer-sent basic
- *  messages, by visible text) and leaves via the header back. */
+/** Contact chat (`ContactChatScreen`). `message` (the composer) is editable only once the Credo agent
+ *  is ready; `send` submits it. Received copy (issuer-sent basic messages) is still asserted by
+ *  visible text — bubbles carry no ids. Leaves via the header back. */
 export const ContactChatScreen = defineScreen({
   back: bcsc(common.back),
+  inputs: {
+    message: bcsc(main.contactChat.composer),
+  },
+  links: {
+    send: bcsc(main.contactChat.send),
+  },
 })
 
 /** Edit-contact-name form (agent-gated). `primary`/`secondary` are label-derived by ActionScreenLayout

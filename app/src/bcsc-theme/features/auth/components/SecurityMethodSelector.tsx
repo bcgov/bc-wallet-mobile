@@ -1,6 +1,7 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -196,7 +197,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         title={t('BCSC.Onboarding.SecureAppPINTitle')}
         accessibilityLabel={t('BCSC.Onboarding.SecureAppPINTitle')}
         onPress={onPINPress}
-        testID={testIdWithKey('ChoosePINButton')}
+        testID={testIdWithKey(TestIds.onboarding.secureApp.choosePin)}
       />
     </ControlContainer>
   )
@@ -221,7 +222,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         {/* Device Auth Option (selected when it is the current method in settings) */}
         <CardButton
           title={copy.deviceAuthTitle}
-          testID={testIdWithKey('ChooseDeviceAuthButton')}
+          testID={testIdWithKey(TestIds.onboarding.secureApp.chooseDeviceAuth)}
           subtext={copy.deviceAuthSubtext}
           startIcon="screen-lock-portrait"
           onPress={handleDeviceAuthentication}
@@ -231,7 +232,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         {/* PIN Option (selected when it is the current method in settings) */}
         <CardButton
           title={copy.pinTitle}
-          testID={testIdWithKey('ChoosePINButton')}
+          testID={testIdWithKey(TestIds.onboarding.secureApp.choosePin)}
           subtext={copy.pinSubtext}
           startIcon="password"
           onPress={onPINPress}

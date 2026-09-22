@@ -1,5 +1,6 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
@@ -109,14 +110,14 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
         <View style={styles.header}>
           <Icon name="error" size={30} color={colors.icon} style={styles.icon} />
           <View style={styles.headerTextContainer}>
-            <Text style={styles.titleText} testID={testIdWithKey('HeaderText')}>
+            <Text style={styles.titleText} testID={testIdWithKey(TestIds.errorModal.title)}>
               {title}
             </Text>
           </View>
           <PressableOpacity
             onPress={onDismiss}
             hitSlop={hitSlop}
-            testID={testIdWithKey('CloseButton')}
+            testID={testIdWithKey(TestIds.errorModal.close)}
             accessibilityLabel={t('Global.Close')}
             accessibilityRole="button"
           >
@@ -125,7 +126,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
         </View>
 
         <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-          <Text style={styles.bodyText} testID={testIdWithKey('BodyText')}>
+          <Text style={styles.bodyText} testID={testIdWithKey(TestIds.errorModal.body)}>
             {description}
           </Text>
 
@@ -134,7 +135,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
               accessibilityLabel={showDetails ? t('Global.HideDetails') : t('Global.ShowDetails')}
               accessibilityRole="button"
               accessibilityState={{ expanded: showDetails }}
-              testID={testIdWithKey('ShowDetails')}
+              testID={testIdWithKey(TestIds.errorModal.showDetails)}
               style={styles.showDetailsTouchable}
               onPress={() => setShowDetails((prev) => !prev)}
               activeOpacity={0.7}
@@ -149,7 +150,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
           )}
 
           {message && showDetails && (
-            <Text style={styles.detailsText} testID={testIdWithKey('DetailsText')}>
+            <Text style={styles.detailsText} testID={testIdWithKey(TestIds.errorModal.details)}>
               {formattedDetails}
             </Text>
           )}
@@ -159,7 +160,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
               <TouchableOpacity
                 accessibilityLabel={reported ? t('Error.Reported') : t('Error.ReportThisProblem')}
                 accessibilityRole="button"
-                testID={testIdWithKey('ReportThisProblem')}
+                testID={testIdWithKey(TestIds.errorModal.reportThisProblem)}
                 style={[styles.primaryButton, reported && styles.primaryButtonDisabled]}
                 onPress={handleReport}
                 disabled={reported}
@@ -180,7 +181,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
               <TouchableOpacity
                 accessibilityLabel={action.text}
                 accessibilityRole="button"
-                testID={testIdWithKey('ActionButton')}
+                testID={testIdWithKey(TestIds.errorModal.action)}
                 style={action.style === 'destructive' ? styles.destructiveButton : styles.secondaryButton}
                 onPress={() => {
                   onDismiss()
@@ -198,13 +199,13 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
           </View>
 
           {enableReport && onReport && !reported && (
-            <Text style={styles.noteText} testID={testIdWithKey('ReportNote')}>
+            <Text style={styles.noteText} testID={testIdWithKey(TestIds.errorModal.reportNote)}>
               <Text style={styles.noteBold}>{t('Error.NotePrefix')}</Text>
               {t('Error.NoteBody')}
               <Text
                 style={styles.noteLink}
                 accessibilityRole="link"
-                testID={testIdWithKey('SupportLink')}
+                testID={testIdWithKey(TestIds.errorModal.supportLink)}
                 onPress={() => Linking.openURL(CONTACT_US_HELP_URL)}
               >
                 {t('Error.SupportLink')}
@@ -213,21 +214,21 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
           )}
 
           {reported && referenceCode && (
-            <View style={styles.referenceContainer} testID={testIdWithKey('ReportId')}>
+            <View style={styles.referenceContainer} testID={testIdWithKey(TestIds.errorModal.reportId)}>
               <Text style={styles.referenceLabel}>{t('Error.ReportId')}</Text>
               <View style={styles.referenceRow}>
                 <Text
                   style={styles.referenceCode}
                   selectable
                   accessibilityLabel={`${t('Error.ReportId')}: ${referenceCode}`}
-                  testID={testIdWithKey('ReportIdValue')}
+                  testID={testIdWithKey(TestIds.errorModal.reportIdValue)}
                 >
                   {referenceCode}
                 </Text>
                 <TouchableOpacity
                   accessibilityLabel={copied ? t('Error.CodeCopied') : t('Error.CopyCode')}
                   accessibilityRole="button"
-                  testID={testIdWithKey('CopyReportId')}
+                  testID={testIdWithKey(TestIds.errorModal.copyReportId)}
                   style={styles.copyButton}
                   onPress={handleCopy}
                   activeOpacity={0.7}
@@ -244,7 +245,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
             </View>
           )}
 
-          <Text style={styles.footer} testID={testIdWithKey('VersionNumber')}>
+          <Text style={styles.footer} testID={testIdWithKey(TestIds.errorModal.versionNumber)}>
             {t('Settings.Version')} {getVersion()} ({getBuildNumber()})
           </Text>
         </ScrollView>

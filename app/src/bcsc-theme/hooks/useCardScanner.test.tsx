@@ -1,4 +1,5 @@
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
+import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -7,6 +8,7 @@ import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 const BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A =
   "%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
@@ -15,6 +17,7 @@ const BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C =
 
 jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
+jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery')
 jest.mock('@react-navigation/native')
 jest.mock('@bifold/core')
 
@@ -23,6 +26,11 @@ const mockDispatch = jest.fn() // unused atp
 describe('useCardScanner', () => {
   beforeEach(() => {
     jest.resetAllMocks()
+    // useCardScanner calls useRoute()/useDeviceAuthorizationRecovery() unconditionally at the top
+    // of the hook, regardless of which handler a given test exercises. Its own recovery behavior
+    // is covered by useDeviceAuthorizationRecovery.test.ts — this is a transparent passthrough.
+    jest.mocked(navigation).useRoute.mockReturnValue({ name: BCSCScreens.ScanSerial } as any)
+    jest.mocked(useDeviceAuthorizationRecovery).mockReturnValue(((thunk: () => Promise<unknown>) => thunk()) as any)
   })
 
   describe('scanCard', () => {
@@ -515,6 +523,39 @@ describe('useCardScanner', () => {
     })
   })
 
+  describe('handleScanNonBcsc', () => {
+    it('should navigate to DualIdentificationRequired and set the Non-BCSC card process', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      const navigationMock = jest.mocked(navigation)
+      const useSecureActionsMock = jest.mocked(useSecureActions)
+
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
+      const mockUpdateCardProcess = jest.fn()
+      const mockNavigationNavigate = jest.fn()
+
+      useSecureActionsMock.mockReturnValue({
+        updateUserInfo: jest.fn(),
+        updateDeviceCodes: jest.fn(),
+        updateCardProcess: mockUpdateCardProcess,
+        updateVerificationOptions: jest.fn(),
+      } as any)
+      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      navigationMock.useNavigation = jest.fn().mockReturnValue({ navigate: mockNavigationNavigate })
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
+
+      const hook = renderHook(() => useCardScanner())
+
+      await hook.result.current.handleScanNonBcsc()
+
+      expect(mockNavigationNavigate).toHaveBeenCalledWith(BCSCScreens.DualIdentificationRequired)
+      // Downstream screens (EvidenceIDCollection, getResumeStepRoute) read the card process from the store
+      expect(mockUpdateCardProcess).toHaveBeenCalledWith(BCSCCardProcess.NonBCSC)
+    })
+  })
+
   describe('handleScanBarcodes', () => {
     const mockLicense: any = {
       birthDate: new Date('1970-01-01'),
@@ -578,39 +619,6 @@ describe('useCardScanner', () => {
         index: 0,
         routes: [{ name: BCSCScreens.VerificationMethodSelection }],
       })
-    })
-
-    it('should return false and not surface an error when the barcodes are not a BC Services Card', async () => {
-      const useAuthorizationServiceMock = jest.mocked(useAuthorizationService)
-      const bifoldMock = jest.mocked(Bifold)
-      const navigationMock = jest.mocked(navigation)
-      const useSecureActionsMock = jest.mocked(useSecureActions)
-
-      const mockState: any = {
-        bcsc: { accountSetupType: AccountSetupType.AddAccount },
-        bcscSecure: { additionalEvidenceData: [] },
-      }
-      const mockNavigationReset = jest.fn()
-
-      useAuthorizationServiceMock.mockReturnValue({
-        authorizeDeviceWithBarcodes: jest.fn().mockRejectedValue(new Error('card_not_found')),
-      } as any)
-      useSecureActionsMock.mockReturnValue({
-        updateUserInfo: jest.fn(),
-        updateDeviceCodes: jest.fn(),
-        updateCardProcess: jest.fn(),
-        updateVerificationOptions: jest.fn(),
-      } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
-      navigationMock.useNavigation = jest.fn().mockReturnValue({ reset: mockNavigationReset })
-      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn(), info: jest.fn() } as any])
-
-      const hook = renderHook(() => useCardScanner())
-
-      const result = await hook.result.current.handleScanBarcodes('A06198657', mockLicense)
-
-      expect(result).toBe(false)
-      expect(mockNavigationReset).not.toHaveBeenCalled()
     })
   })
 })

@@ -178,6 +178,7 @@ exports[`VideoTooLong renders correctly 1`] = `
               "padding": 16,
             }
           }
+          testID="com.ariesbifold:id/VideoTooLongRetake"
         >
           <View
             style={
@@ -255,7 +256,7 @@ exports[`VideoTooLong renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="Cancel"
+          testID="com.ariesbifold:id/VideoTooLongCancel"
         >
           <View
             style={

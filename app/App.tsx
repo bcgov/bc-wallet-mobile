@@ -17,6 +17,7 @@ import { isAppError } from '@/errors/appError'
 import { ErrorBoundaryWrapper } from '@/errors/components/ErrorBoundary'
 import { AppEventCode } from '@/events/appEventCode'
 import { localization } from '@/localization'
+import { RemoteConfigProvider } from '@/remote-config/RemoteConfig'
 import { initialState, reducer } from '@/store'
 import { themes } from '@/theme'
 import { initIssuer } from '@/utils/issuer'
@@ -136,36 +137,38 @@ const App = () => {
               defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.Light : BCThemeNames.BCWallet}
             >
               <NavigationContainerProvider>
-                <PairingServiceProvider service={pairingService}>
-                  <ConnectionInvitationServiceProvider service={connectionInvitationService}>
-                    <FcmServiceProvider service={fcmService} viewModel={fcmViewModel}>
-                      <VerificationResponseServiceProvider service={verificationResponseService}>
-                        <AnimatedComponentsProvider value={animatedComponents}>
-                          <AuthProvider>
-                            <NetworkProvider>
-                              <ThemeAwareStatusBar />
-                              <ErrorModal enableReport />
-                              <WebDisplay
-                                destinationUrl={surveyMonkeyUrl}
-                                exitUrl={surveyMonkeyExitUrl}
-                                visible={surveyVisible}
-                                onClose={() => setSurveyVisible(false)}
-                              />
-                              <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                                <ErrorAlertProvider enableReport>
-                                  <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
-                                    <Root />
-                                  </KeyboardProvider>
-                                </ErrorAlertProvider>
-                              </TourProvider>
-                              <Toast topOffset={15} config={toastConfig} />
-                            </NetworkProvider>
-                          </AuthProvider>
-                        </AnimatedComponentsProvider>
-                      </VerificationResponseServiceProvider>
-                    </FcmServiceProvider>
-                  </ConnectionInvitationServiceProvider>
-                </PairingServiceProvider>
+                <RemoteConfigProvider logger={logger}>
+                  <PairingServiceProvider service={pairingService}>
+                    <ConnectionInvitationServiceProvider service={connectionInvitationService}>
+                      <FcmServiceProvider service={fcmService} viewModel={fcmViewModel}>
+                        <VerificationResponseServiceProvider service={verificationResponseService}>
+                          <AnimatedComponentsProvider value={animatedComponents}>
+                            <AuthProvider>
+                              <NetworkProvider>
+                                <ThemeAwareStatusBar />
+                                <ErrorModal enableReport />
+                                <WebDisplay
+                                  destinationUrl={surveyMonkeyUrl}
+                                  exitUrl={surveyMonkeyExitUrl}
+                                  visible={surveyVisible}
+                                  onClose={() => setSurveyVisible(false)}
+                                />
+                                <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
+                                  <ErrorAlertProvider enableReport>
+                                    <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
+                                      <Root />
+                                    </KeyboardProvider>
+                                  </ErrorAlertProvider>
+                                </TourProvider>
+                                <Toast topOffset={15} config={toastConfig} />
+                              </NetworkProvider>
+                            </AuthProvider>
+                          </AnimatedComponentsProvider>
+                        </VerificationResponseServiceProvider>
+                      </FcmServiceProvider>
+                    </ConnectionInvitationServiceProvider>
+                  </PairingServiceProvider>
+                </RemoteConfigProvider>
               </NavigationContainerProvider>
             </ThemeProvider>
           </StoreProvider>
