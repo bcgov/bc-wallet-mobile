@@ -175,7 +175,8 @@ export async function approveInPersonRequest(
   if (!/^[A-Za-z0-9]{8}$/.test(code)) {
     throw new Error('Invalid confirmation code: expected 8 alphanumeric characters (optionally formatted as XXXX-XXXX)')
   }
-  console.log(`[approval] Approving in-person request (flow=${input.flow}) with code: ${code}`)
+  // The code stays out of this log and the error below: it approves the request, and Sauce/CI logs are remote.
+  console.log(`[approval] Approving in-person request (flow=${input.flow})`)
 
   const loginInput: ApproveInPersonLoginInput =
     input.flow === 'non-bcsc'
@@ -198,7 +199,7 @@ export async function approveInPersonRequest(
     const detail = controller.signal.aborted
       ? `the ${timeoutMs}ms budget for the whole IDCheck chain ran out (see the per-step [idcheck] timings for where it went)`
       : message
-    throw new Error(`In-person approval failed after ${elapsedMs}ms (flow=${input.flow}, code="${code}"): ${detail}`)
+    throw new Error(`In-person approval failed after ${elapsedMs}ms (flow=${input.flow}): ${detail}`)
   } finally {
     clearTimeout(timeoutId)
   }
