@@ -31,8 +31,9 @@
 #      name, UNTAGGED (the PR-prune maintenance job only deletes pr-tagged files).
 #   4. For a FULL release at or above PREV_MIN_VERSION, also uploads both as
 #      BCSC-prev.apk / BCSC-prev.ipa — the rolling previous release the `upgrade`
-#      lane starts from — unless Sauce already holds a newer build there (a release
-#      object created late for an older version must not roll it back). Older
+#      lane starts from — unless the BCSC-prev.* there (its newest upload, the one
+#      the lane boots) is already a newer build: a release object created late for
+#      an older version must not roll it back. Older
 #      builds predate the onboarding shape the suite drives, so they stay pinned-only.
 #
 # Afterwards add the version to the manifest of "Refresh E2E Sauce Builds", which
@@ -73,9 +74,10 @@ on:
         type: boolean
         default: false
 
-# An automatic run and a hand dispatch for the same release wait for each other
+# One run at a time, whatever the release: two runs racing the BCSC-prev.* check could
+# each read the old pointer and the older build's upload land last
 concurrency:
-  group: publish-release-e2e-builds-${{ inputs.release_tag || github.event.release.tag_name }}
+  group: publish-release-e2e-builds
   cancel-in-progress: false
 
 env:
@@ -298,7 +300,8 @@ jobs:
           elif [ "$(printf '%s\n' "$PREV_MIN_VERSION" "$VERSION" | sort -V | head -1)" != "$PREV_MIN_VERSION" ]; then
             reason="${ASSET_NAME} is below ${PREV_MIN_VERSION}, the first release the upgrade suite can drive — pinned copy only"
           else
-            # Forward only: a release object created late for an older version must not roll the pointer back
+            # Forward only: a release object created late for an older version must not roll the pointer back.
+            # The pointer is the newest BCSC-prev.apk upload — what storage:filename= resolves to for the lane
             # (a failed lookup reads as "nothing there" — the uploads below fail on their own if Sauce is down)
             current=$(curl -sfu "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" --proto "=https" \
               "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${PREV_ANDROID_FILENAME}&per_page=20" \
