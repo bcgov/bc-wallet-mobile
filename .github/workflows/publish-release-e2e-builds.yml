@@ -301,13 +301,18 @@ jobs:
             reason="${ASSET_NAME} is below ${PREV_MIN_VERSION}, the first release the upgrade suite can drive — pinned copy only"
           else
             # Forward only: a release object created late for an older version must not roll the pointer back.
-            # The pointer is the newest BCSC-prev.apk upload — what storage:filename= resolves to for the lane
-            # (a failed lookup reads as "nothing there" — the uploads below fail on their own if Sauce is down)
+            # The pointer is the newest BCSC-prev.apk upload — what storage:filename= resolves to for the lane.
+            # "none" = no pointer yet; anything else that isn't a build number means the lookup failed → fail closed
             current=$(curl -sfu "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" --proto "=https" \
               "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${PREV_ANDROID_FILENAME}&per_page=20" \
-              | jq -r --arg n "$PREV_ANDROID_FILENAME" '[.items[] | select(.name == $n)] | sort_by(.upload_timestamp) | last | .metadata.version_code // empty' \
+              | jq -r --arg n "$PREV_ANDROID_FILENAME" '[.items[] | select(.name == $n)] | sort_by(.upload_timestamp) | last | if . == null then "none" else .metadata.version_code end' \
               || true)
-            if [ -n "$current" ] && [ "$current" -gt "$BUILD_NUMBER" ]; then
+            if [ "$current" = "none" ]; then
+              echo "No ${PREV_ANDROID_FILENAME} in Sauce storage yet — this build becomes the first"
+            elif ! [[ "$current" =~ ^[0-9]+$ ]]; then
+              echo "::error::Could not read which build Sauce ${PREV_ANDROID_FILENAME} is (lookup returned '${current}') — nothing was attached or uploaded; re-run once Sauce answers"
+              exit 1
+            elif [ "$current" -gt "$BUILD_NUMBER" ]; then
               reason="Sauce BCSC-prev.* is build ${current}, newer than ${ASSET_NAME}'s ${BUILD_NUMBER} — left alone (dispatch 'Refresh E2E Sauce Builds' to re-point it from the newest full release)"
             fi
           fi
