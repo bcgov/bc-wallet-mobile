@@ -1,24 +1,37 @@
-## After shipping a release: publish the e2e builds
+## After shipping a release: the e2e builds
 
-Once a version's GitHub release exists (the usual release ritual), publish its e2e builds so the
-upgrade lanes (previous release → current, plus a pinned copy per shipped version) can test future
-builds against it. A shipped build lives under one name on its release and in Sauce storage:
-`BCSC-v<version>.apk` / `.ipa`.
+Every shipped version gets e2e builds so the upgrade lanes (previous release → current, plus a
+pinned copy per shipped version) can test future builds against it. A shipped build lives under
+one name on its release and in Sauce storage: `BCSC-v<version>.apk` / `.ipa`.
 
-1. Dispatch **Actions → Publish Release E2E Builds** with the release tag (e.g. `bcsc-v4.1.0`).
-   It resolves the `Native Build & Test` (`main.yaml`) run for the tag's commit (override with
-   `run_id` if they differ), attaches the bcsc-dev `.apk`/`.ipa` to that release as
-   `BCSC-v<version>.*` (name derived from the tag; `asset_name` overrides it when the tag doesn't
-   carry the shipped version), uploads the same name to Sauce Labs storage as the pinned copy and —
-   for a full release, not a pre-release RC, at 4.1.0 or later — as `BCSC-prev.apk` /
-   `BCSC-prev.ipa`, the rolling previous release. GitHub build artifacts expire after **7 days**;
-   after that, pass `sauce_source=BCSC-Dev-<build>` and the workflow takes the same build's Sauce
-   storage copy instead (kept about 60 days). Binaries stamped with a different version than the
-   name stop the run before anything is attached.
+1. **Create the GitHub release when the version ships** — a full release, not a pre-release, on
+   the Publish tag of the shipped build (e.g. `bcsc-v4.1.1-8677`). Publishing it runs
+   **Publish Release E2E Builds** on its own: it resolves the shipped build from the Publish tag
+   (`bcsc-v<version>-<build>` — the release tag itself, else the newest one for the version, so a
+   release object sitting on an RC tag still gets the shipped build), takes the bcsc-dev
+   `.apk`/`.ipa` from that `Native Build & Test` (`main.yaml`) run — its artifacts, or, once those
+   have expired after **30 days**, the same build's Sauce storage copy `BCSC-Dev-<build>.*` (main
+   builds only, kept about 60 days) — attaches them to the release as `BCSC-v<version>.*`, uploads
+   the same name to Sauce Labs storage as the pinned copy and, at 4.1.0 or later, as
+   `BCSC-prev.apk` / `BCSC-prev.ipa`, the rolling previous release (never rolled back to an older
+   build). Binaries stamped with a different version or build number than the name stop the run
+   before anything is attached. A run that cannot resolve the build fails and emails whoever
+   published the release, saying what to dispatch by hand; until the first release has been seen
+   through, that person also checks the run went green (Actions → Publish Release E2E Builds).
 2. Add the version to the manifest of **Refresh E2E Sauce Builds**
    (`.github/workflows/refresh-e2e-sauce-builds.yml`), which re-uploads every pinned copy and
    `BCSC-prev.*` from the release assets monthly, keeping the Sauce copies inside the 60-day
    retention window; a release missing its assets fails its entry.
+
+**Dispatching by hand** (Actions → Publish Release E2E Builds → Run workflow, or
+`gh workflow run publish-release-e2e-builds.yml -f release_tag=<tag> …`) covers what the
+automatic run does not: a pre-release RC (pinned copy only, `BCSC-prev.*` untouched); a
+pre-release flipped to a full release later (that fires a different event); a release created
+before the build reached ring-0 (re-run it, or dispatch with `run_id`); a tag that does not carry
+the shipped version (`asset_name`, e.g. `BCSC-v4.0.3` on `bcsc-v4.0.2`); binaries gone from the
+run and from `BCSC-Dev-<build>.*` — release-branch builds never get a Sauce copy — (`sauce_source`
+names any stored build); and `dry_run`, which resolves, downloads and checks but attaches and
+uploads nothing.
 
 A build that is in neither place must be built from its tag by hand (`e2e/apps/README.md`) and
 attached with `gh release upload`. See the "Upgrade Tests" section in `e2e/README.md` for how the

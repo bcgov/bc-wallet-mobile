@@ -1,7 +1,11 @@
 # Publish Release E2E Builds
 #
-# Run MANUALLY after a version's GitHub release exists (the usual release ritual):
-# pass the release tag (e.g. bcsc-v4.1.0). The e2e upgrade lanes consume what this
+# Runs on its own when a FULL bcsc-v* release is published on GitHub (not a draft,
+# not a pre-release). Dispatch it by hand for what that cannot resolve: a pre-release
+# RC, a pre-release flipped to a full release later (that fires `released`, not
+# `published`), a tag that doesn't carry the shipped version, or a build whose
+# binaries are gone from both places. Either way it takes one release tag (e.g.
+# bcsc-v4.1.1-8677) and derives the rest. The e2e upgrade lanes consume what it
 # publishes (previous release → current, and the pinned per-version copies).
 #
 # A shipped build lives under ONE name on its release and in Sauce storage:
@@ -10,19 +14,26 @@
 # (the 4.0.3 hotfix on the bcsc-v4.0.2 release → BCSC-v4.0.3).
 #
 # What it does:
-#   1. Fetches the shipped bcsc-dev binaries — from the main.yaml ("Native Build &
-#      Test") run that built the release commit (override with run_id if the tag's
-#      commit isn't the build commit). GitHub artifacts expire after 7 DAYS; once
-#      they are gone, pass sauce_source instead: the Sauce storage copy of the same
-#      build (BCSC-Dev-<run number>.*, kept ~60 days) is downloaded in its place.
-#      The binaries must carry the version in the name, or nothing is attached.
-#   2. Attaches them to that version's release (assets only — release notes are
+#   1. Resolves the shipped build from the tag Publish puts on a build once it
+#      reaches ring-0, bcsc-v<version>-<build>: the release tag itself when it is
+#      one, else the newest for the version. The release object may sit elsewhere
+#      (the 4.1.0 release is on bcsc-v4.1.0_rc2 = build 8030; 8333 shipped) and
+#      both builds report version 4.1.0, so the Publish tag decides, not the
+#      release commit. No Publish tag → fails: re-run once ring-0 has the build,
+#      or dispatch with run_id.
+#   2. Fetches the bcsc-dev binaries from that main.yaml ("Native Build & Test")
+#      run. Its artifacts expire after 30 DAYS; after that the same build's Sauce
+#      storage copy (BCSC-Dev-<build>.*, main builds only, kept ~60 days) is taken
+#      instead, or sauce_source names any stored build. The binaries must carry
+#      the version and the build number, or nothing is attached.
+#   3. Attaches them to that version's release (assets only — release notes are
 #      never touched) and uploads the pinned copy to Sauce storage under the same
 #      name, UNTAGGED (the PR-prune maintenance job only deletes pr-tagged files).
-#   3. For a FULL release (not a pre-release RC) at or above PREV_MIN_VERSION, also
-#      uploads both as BCSC-prev.apk / BCSC-prev.ipa — the rolling previous release
-#      the `upgrade` lane starts from. Older builds predate the onboarding shape
-#      the suite drives, so they stay pinned-only.
+#   4. For a FULL release at or above PREV_MIN_VERSION, also uploads both as
+#      BCSC-prev.apk / BCSC-prev.ipa — the rolling previous release the `upgrade`
+#      lane starts from — unless Sauce already holds a newer build there (a release
+#      object created late for an older version must not roll it back). Older
+#      builds predate the onboarding shape the suite drives, so they stay pinned-only.
 #
 # Afterwards add the version to the manifest of "Refresh E2E Sauce Builds", which
 # re-uploads every pinned copy and BCSC-prev.* monthly from the release assets.
@@ -32,19 +43,22 @@
 name: Publish Release E2E Builds
 
 on:
+  # Only the default branch's copy of this file sees release events
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Tag of the shipped release (e.g. bcsc-v4.1.0)'
+        description: 'Tag of the shipped release (e.g. bcsc-v4.1.1-8677)'
         required: true
         type: string
       run_id:
-        description: 'Override: main.yaml run ID that built the shipped binaries (default: resolved from the tag commit)'
+        description: 'Override: main.yaml run ID that built the shipped binaries (default: the build named by the Publish tag bcsc-v<version>-<build>)'
         required: false
         type: string
         default: ''
       sauce_source:
-        description: 'Fallback once the build artifacts have expired: Sauce storage name of the shipped build without extension (e.g. BCSC-Dev-8333)'
+        description: 'Override: Sauce storage name of the shipped build without extension (e.g. BCSC-Dev-8333; default: the build run''s artifacts, then its BCSC-Dev-<build> copy)'
         required: false
         type: string
         default: ''
@@ -53,24 +67,43 @@ on:
         required: false
         type: string
         default: ''
+      dry_run:
+        description: 'Resolve, download and check the binaries, but attach and upload nothing'
+        required: false
+        type: boolean
+        default: false
+
+# An automatic run and a hand dispatch for the same release wait for each other
+concurrency:
+  group: publish-release-e2e-builds-${{ inputs.release_tag || github.event.release.tag_name }}
+  cancel-in-progress: false
 
 env:
+  RELEASE_TAG: ${{ inputs.release_tag || github.event.release.tag_name }}
   # First release with the onboarding shape the upgrade suite drives — nothing older becomes BCSC-prev.*
   PREV_MIN_VERSION: 4.1.0
   PREV_ANDROID_FILENAME: BCSC-prev.apk
   PREV_IOS_FILENAME: BCSC-prev.ipa
+  # Sauce name of a main build's copy (bcsc-dev SAUCE_LABS_PREFIX-<build>); release/* builds have none
+  DEV_BUILD_PREFIX: BCSC-Dev
 
 jobs:
   publish-release-e2e-builds:
     name: Publish e2e builds for a release
+    # The repo also carries BC Wallet v1.0.x releases, and an RC is a pre-release
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (!github.event.release.draft && !github.event.release.prerelease && startsWith(github.event.release.tag_name, 'bcsc-v'))
     runs-on: ubuntu-22.04
     permissions:
       contents: write # upload assets to the release
       actions: read # resolve + download artifacts from the build run
     timeout-minutes: 30
     steps:
+      # A release event checks out the tagged commit, which may predate this action
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event_name == 'release' && github.event.repository.default_branch || '' }}
           sparse-checkout: .github/workflows/actions/upload-to-sauce-storage
 
       - name: Load SauceLabs secrets from 1Password
@@ -85,126 +118,208 @@ jobs:
         id: resolve
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
           ASSET_NAME_OVERRIDE: ${{ inputs.asset_name }}
         run: |
-          release_json=$(gh api "repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}")
-          is_prerelease=$(echo "$release_json" | jq -r '.prerelease')
-          # Name from the tag unless overridden: bcsc-v4.1.0_rc2 → BCSC-v4.1.0, bcsc-v4.1.1-8700 → BCSC-v4.1.1
+          if [[ "$RELEASE_TAG" != bcsc-v* ]]; then
+            echo "::error::${RELEASE_TAG} is not a bcsc-v* release"
+            exit 1
+          fi
+          # Drafts have no tag ref yet, so they 404 here
+          if ! release_json=$(gh api "repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}"); then
+            echo "::error::No published release for ${RELEASE_TAG} (a draft does not count) — publish it, then re-run"
+            exit 1
+          fi
+          is_prerelease=$(jq -r '.prerelease' <<<"$release_json")
+          # Name from the tag unless overridden: bcsc-v4.1.0_rc2 → BCSC-v4.1.0, bcsc-v4.1.1-8677 → BCSC-v4.1.1
           name="${ASSET_NAME_OVERRIDE:-BCSC-v$(sed -E 's/^bcsc-v//; s/[-_].*$//' <<<"$RELEASE_TAG")}"
           if ! [[ "$name" =~ ^BCSC-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::'$name' is not BCSC-v<x.y.z> — pass asset_name with the shipped version (e.g. BCSC-v4.0.3)"
             exit 1
           fi
-          version="${name#BCSC-v}"
-          rolling=false
-          if [ "$is_prerelease" = "false" ] && [ "$(printf '%s\n' "$PREV_MIN_VERSION" "$version" | sort -V | head -1)" = "$PREV_MIN_VERSION" ]; then
-            rolling=true
-          fi
-          echo "ASSET_NAME=$name" >> "$GITHUB_ENV"
+          {
+            echo "ASSET_NAME=$name"
+            echo "VERSION=${name#BCSC-v}"
+          } >> "$GITHUB_ENV"
           {
             echo "prerelease=$is_prerelease"
-            echo "release_id=$(echo "$release_json" | jq -r '.id')"
-            echo "rolling=$rolling"
+            echo "release_id=$(jq -r '.id' <<<"$release_json")"
           } >> "$GITHUB_OUTPUT"
-          echo "$RELEASE_TAG (prerelease: $is_prerelease) → ${name}.apk / ${name}.ipa; rolling previous release: $rolling"
+          echo "$RELEASE_TAG (prerelease: $is_prerelease) → ${name}.apk / ${name}.ipa"
 
       - name: Resolve the build run
-        if: inputs.sauce_source == ''
+        if: ${{ !inputs.sauce_source }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
+          REPO: ${{ github.repository }}
           RUN_ID_OVERRIDE: ${{ inputs.run_id }}
         run: |
+          expected_build=""
+          publish_tag=""
           if [ -n "$RUN_ID_OVERRIDE" ]; then
             RUN_ID="$RUN_ID_OVERRIDE"
           else
-            sha=$(gh api "repos/${{ github.repository }}/commits/${RELEASE_TAG}" --jq '.sha')
-            RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/main.yaml/runs?head_sha=${sha}&per_page=20" \
-              --jq '[.workflow_runs[] | select(.conclusion=="success")][0].id // empty')
+            if [[ "$RELEASE_TAG" =~ ^bcsc-v[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]]; then
+              publish_tag="$RELEASE_TAG"
+            else
+              # Newest ring-0 build of this version
+              publish_tag=$(gh api "repos/${REPO}/git/matching-refs/tags/bcsc-v${VERSION}-" --jq '
+                [.[].ref | ltrimstr("refs/tags/") | select(test("^bcsc-v[0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+$"))]
+                | max_by(sub(".*-"; "") | tonumber) // empty')
+            fi
+            if [ -z "$publish_tag" ]; then
+              echo "::error::No Publish tag bcsc-v${VERSION}-<build> exists: either the build has not reached ring-0 yet (re-run once Publish has tagged it) or ${RELEASE_TAG} does not carry the shipped version (dispatch with asset_name, or run_id / sauce_source)"
+              exit 1
+            fi
+            expected_build="${publish_tag##*-}"
+            sha=$(gh api "repos/${REPO}/commits/${publish_tag}" --jq '.sha')
+            RUN_ID=$(gh api "repos/${REPO}/actions/workflows/main.yaml/runs?head_sha=${sha}&per_page=20" \
+              --jq "[.workflow_runs[] | select(.run_number == ${expected_build} and .conclusion == \"success\")][0].id // empty")
             if [ -z "$RUN_ID" ]; then
-              echo "::error::No successful main.yaml run found for ${RELEASE_TAG} (${sha}) — pass run_id explicitly"
+              echo "::error::${publish_tag} names build ${expected_build} but no successful main.yaml run #${expected_build} exists for ${sha} — pass run_id explicitly"
               exit 1
             fi
           fi
-          run_json=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}")
-          workflow_path=$(echo "$run_json" | jq -r '.path')
+          run_json=$(gh api "repos/${REPO}/actions/runs/${RUN_ID}")
+          workflow_path=$(jq -r '.path' <<<"$run_json")
           if [ "$workflow_path" != ".github/workflows/main.yaml" ]; then
             echo "::error::Run $RUN_ID is from $workflow_path, not main.yaml"
             exit 1
           fi
           # Shipped builds come from this repo's own branches — a fork's build never becomes a release asset
-          head_repo=$(echo "$run_json" | jq -r '.head_repository.full_name')
-          if [ "$head_repo" != "${{ github.repository }}" ]; then
-            echo "::error::Run $RUN_ID was built from $head_repo, not ${{ github.repository }}"
+          head_repo=$(jq -r '.head_repository.full_name' <<<"$run_json")
+          if [ "$head_repo" != "$REPO" ]; then
+            echo "::error::Run $RUN_ID was built from $head_repo, not ${REPO}"
             exit 1
           fi
-          run_number=$(echo "$run_json" | jq -r '.run_number')
+          run_number=$(jq -r '.run_number' <<<"$run_json")
           {
             echo "RUN_ID=$RUN_ID"
-            echo "SOURCE=main.yaml run $RUN_ID (build $run_number, $(echo "$run_json" | jq -r '.html_url'))"
+            echo "BUILD=$run_number"
+            echo "EXPECTED_BUILD=$expected_build"
+            echo "PUBLISH_TAG=$publish_tag"
+            echo "BUILD_RUN=main.yaml run $RUN_ID (build $run_number, $(jq -r '.html_url' <<<"$run_json"))${publish_tag:+ via $publish_tag}"
           } >> "$GITHUB_ENV"
-          echo "Using main.yaml run $RUN_ID (build $run_number) for $RELEASE_TAG"
+          echo "Using main.yaml run $RUN_ID (build $run_number${publish_tag:+, Publish tag $publish_tag}) for $RELEASE_TAG"
 
-      - name: Download bcsc-dev artifacts from the build run
-        if: inputs.sauce_source == ''
+      - name: Fetch the shipped binaries
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh run download "$RUN_ID" --repo "${{ github.repository }}" --name android-bcsc-dev.apk --dir dl/android
-          gh run download "$RUN_ID" --repo "${{ github.repository }}" --name ios-bcsc-dev.ipa --dir dl/ios
-          mv dl/android/app-release.apk "${ASSET_NAME}.apk"
-          mv dl/ios/BCWallet.ipa "${ASSET_NAME}.ipa"
-          ls -la "${ASSET_NAME}.apk" "${ASSET_NAME}.ipa"
-
-      - name: Download the shipped build from Sauce storage
-        if: inputs.sauce_source != ''
-        env:
+          REPO: ${{ github.repository }}
           SAUCE_USERNAME: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
           SAUCE_SOURCE: ${{ inputs.sauce_source }}
         run: |
-          for ext in apk ipa; do
-            name="${SAUCE_SOURCE}.${ext}"
-            # q= is a substring match; keep the exact name, newest upload
-            id=$(curl -sfu "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" --proto "=https" \
-              "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${name}&per_page=20" \
-              | jq -r --arg n "$name" '[.items[] | select(.name == $n)] | sort_by(.upload_timestamp) | last | .id // empty')
-            if [ -z "$id" ]; then
-              echo "::error::${name} is not in Sauce storage (aged out?) — build the tag per e2e/apps/README.md and attach by hand"
+          # <name without extension> → ${ASSET_NAME}.apk / .ipa from Sauce storage, newest upload of that exact name
+          sauce_download() {
+            local base=$1 ext name id
+            for ext in apk ipa; do
+              name="${base}.${ext}"
+              # q= is a substring match; keep the exact name
+              id=$(curl -sfu "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" --proto "=https" \
+                "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${name}&per_page=20" \
+                | jq -r --arg n "$name" '[.items[] | select(.name == $n)] | sort_by(.upload_timestamp) | last | .id // empty')
+              if [ -z "$id" ]; then
+                echo "${name} is not in Sauce storage"
+                return 1
+              fi
+              # Explicit: errexit is off inside an `if !` call
+              curl -sfu "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" --proto "=https" --location \
+                -o "${ASSET_NAME}.${ext}" "https://api.us-west-1.saucelabs.com/v1/storage/download/${id}" \
+                || { echo "Download of ${name} (id ${id}) failed"; return 1; }
+              echo "Downloaded ${name} (id ${id}) → ${ASSET_NAME}.${ext}"
+            done
+          }
+          if [ -n "$SAUCE_SOURCE" ]; then
+            if ! sauce_download "$SAUCE_SOURCE"; then
+              echo "::error::${SAUCE_SOURCE}.* is not in Sauce storage (aged out?) — build the tag per e2e/apps/README.md and attach by hand"
               exit 1
             fi
-            curl -sfu "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" --proto "=https" --location \
-              -o "${ASSET_NAME}.${ext}" "https://api.us-west-1.saucelabs.com/v1/storage/download/${id}"
-            echo "Downloaded ${name} (id ${id}) → ${ASSET_NAME}.${ext}"
-          done
-          echo "SOURCE=Sauce storage ${SAUCE_SOURCE}.apk / .ipa" >> "$GITHUB_ENV"
+            source="Sauce storage ${SAUCE_SOURCE}.apk / .ipa"
+          else
+            state=$(gh api "repos/${REPO}/actions/runs/${RUN_ID}/artifacts?per_page=100" \
+              --jq '[.artifacts[] | select(.name == "android-bcsc-dev.apk" or .name == "ios-bcsc-dev.ipa")] | if length < 2 then "missing" elif any(.expired) then "expired" else "ok" end')
+            if [ "$state" = "ok" ]; then
+              gh run download "$RUN_ID" --repo "$REPO" --name android-bcsc-dev.apk --dir dl/android
+              gh run download "$RUN_ID" --repo "$REPO" --name ios-bcsc-dev.ipa --dir dl/ios
+              mv dl/android/app-release.apk "${ASSET_NAME}.apk"
+              mv dl/ios/BCWallet.ipa "${ASSET_NAME}.ipa"
+              source="the build run's bcsc-dev artifacts"
+            else
+              copy="${DEV_BUILD_PREFIX}-${BUILD}"
+              echo "::notice::The bcsc-dev artifacts of run ${RUN_ID} are ${state} (they live 30 days) — taking the Sauce storage copy ${copy}.* instead"
+              if ! sauce_download "$copy"; then
+                echo "::error::Build ${BUILD} is in neither place: its artifacts are ${state} and Sauce storage has no ${copy}.* (release/* builds never get one) — build the tag per e2e/apps/README.md and attach by hand, or dispatch with sauce_source"
+                exit 1
+              fi
+              source="Sauce storage ${copy}.apk / .ipa (the build run's artifacts are ${state})"
+            fi
+          fi
+          echo "SOURCE=$source" >> "$GITHUB_ENV"
           ls -la "${ASSET_NAME}.apk" "${ASSET_NAME}.ipa"
 
-      - name: Check the binaries carry the version in the asset name
+      - name: Check the binaries carry the version and build in the asset name
         run: |
-          # The name comes from operator inputs (tag, asset_name); the binaries decide what gets attached or becomes BCSC-prev.*
-          want="${ASSET_NAME#BCSC-v}"
-          aapt2=$(ls "${ANDROID_HOME:-/usr/local/lib/android/sdk}"/build-tools/*/aapt2 | sort -V | tail -1)
-          apk=$("$aapt2" dump badging "${ASSET_NAME}.apk" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")
+          # The name comes from the tag / operator inputs; the binaries decide what gets attached or becomes BCSC-prev.*
+          aapt2=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name aapt2 | sort -V | tail -1)
+          badging=$("$aapt2" dump badging "${ASSET_NAME}.apk")
+          apk=$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" <<<"$badging")
+          apk_build=$(sed -n "s/.*versionCode='\([^']*\)'.*/\1/p" <<<"$badging")
           # zipfile, not unzip: CodeQL reads an unzip after `gh run download` as extracting the artifact over the workspace
-          ipa=$(python3 - "${ASSET_NAME}.ipa" <<'PY'
+          read -r ipa ipa_build < <(python3 - "${ASSET_NAME}.ipa" <<'PY'
           import plistlib, re, sys, zipfile
           with zipfile.ZipFile(sys.argv[1]) as z:
               plist = next(n for n in z.namelist() if re.fullmatch(r"Payload/[^/]+\.app/Info\.plist", n))
-              print(plistlib.loads(z.read(plist))["CFBundleShortVersionString"])
+              info = plistlib.loads(z.read(plist))
+              print(info["CFBundleShortVersionString"], info["CFBundleVersion"])
           PY
           )
-          if [ "$apk" != "$want" ] || [ "$ipa" != "$want" ]; then
-            echo "::error::${ASSET_NAME}.* carries app version ${apk:-?} (apk) / ${ipa:-?} (ipa), not ${want} — check release_tag / asset_name / run_id / sauce_source; nothing was attached or uploaded"
+          if [ "$apk" != "$VERSION" ] || [ "$ipa" != "$VERSION" ]; then
+            echo "::error::${ASSET_NAME}.* carries app version ${apk:-?} (apk) / ${ipa:-?} (ipa), not ${VERSION} — check release_tag / asset_name / run_id / sauce_source; nothing was attached or uploaded"
             exit 1
           fi
-          echo "✓ ${ASSET_NAME}.apk / .ipa carry app version ${want}"
+          # Both builds of a version report the same version; only the build number tells the shipped one from an RC
+          if [ -n "$EXPECTED_BUILD" ] && { [ "$apk_build" != "$EXPECTED_BUILD" ] || [ "$ipa_build" != "$EXPECTED_BUILD" ]; }; then
+            echo "::error::${ASSET_NAME}.* carries build ${apk_build:-?} (apk) / ${ipa_build:-?} (ipa), not the ${EXPECTED_BUILD} that ${PUBLISH_TAG} names — nothing was attached or uploaded"
+            exit 1
+          fi
+          echo "BUILD_NUMBER=$apk_build" >> "$GITHUB_ENV"
+          echo "✓ ${ASSET_NAME}.apk / .ipa carry app version ${VERSION}, build ${apk_build}"
+
+      - name: Decide whether this build becomes the rolling previous release
+        id: prev
+        env:
+          PRERELEASE: ${{ steps.resolve.outputs.prerelease }}
+          SAUCE_USERNAME: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+        run: |
+          reason=""
+          if [ "$PRERELEASE" = "true" ]; then
+            reason="${RELEASE_TAG} is a pre-release — Sauce BCSC-prev.* keeps tracking the newest FULL release"
+          elif [ "$(printf '%s\n' "$PREV_MIN_VERSION" "$VERSION" | sort -V | head -1)" != "$PREV_MIN_VERSION" ]; then
+            reason="${ASSET_NAME} is below ${PREV_MIN_VERSION}, the first release the upgrade suite can drive — pinned copy only"
+          else
+            # Forward only: a release object created late for an older version must not roll the pointer back
+            # (a failed lookup reads as "nothing there" — the uploads below fail on their own if Sauce is down)
+            current=$(curl -sfu "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" --proto "=https" \
+              "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${PREV_ANDROID_FILENAME}&per_page=20" \
+              | jq -r --arg n "$PREV_ANDROID_FILENAME" '[.items[] | select(.name == $n)] | sort_by(.upload_timestamp) | last | .metadata.version_code // empty' \
+              || true)
+            if [ -n "$current" ] && [ "$current" -gt "$BUILD_NUMBER" ]; then
+              reason="Sauce BCSC-prev.* is build ${current}, newer than ${ASSET_NAME}'s ${BUILD_NUMBER} — left alone (dispatch 'Refresh E2E Sauce Builds' to re-point it from the newest full release)"
+            fi
+          fi
+          if [ -n "$reason" ]; then
+            echo "::notice::$reason"
+            echo "rolling=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "rolling=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "PREV_REASON=$reason" >> "$GITHUB_ENV"
 
       - name: Attach e2e builds to the release
+        if: inputs.dry_run != true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
           RELEASE_ID: ${{ steps.resolve.outputs.release_id }}
           REPO: ${{ github.repository }}
         run: |
@@ -240,54 +355,67 @@ jobs:
             exit 1
           done
           echo "✓ Attached ${ASSET_NAME}.apk + ${ASSET_NAME}.ipa to $RELEASE_TAG (from $SOURCE)"
-          echo "Attached \`${ASSET_NAME}.apk\` + \`${ASSET_NAME}.ipa\` to **${RELEASE_TAG}** from ${SOURCE}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload the pinned Android copy to SauceLabs
+        if: inputs.dry_run != true
         uses: ./.github/workflows/actions/upload-to-sauce-storage
         with:
           file: ${{ env.ASSET_NAME }}.apk
           name: ${{ env.ASSET_NAME }}.apk
-          description: e2e upgrade source — ${{ inputs.release_tag }} / ${{ env.ASSET_NAME }}.apk
+          description: e2e upgrade source — ${{ env.RELEASE_TAG }} / ${{ env.ASSET_NAME }}.apk
           sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
           sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
 
       - name: Upload the pinned iOS copy to SauceLabs
+        if: inputs.dry_run != true
         uses: ./.github/workflows/actions/upload-to-sauce-storage
         with:
           file: ${{ env.ASSET_NAME }}.ipa
           name: ${{ env.ASSET_NAME }}.ipa
-          description: e2e upgrade source — ${{ inputs.release_tag }} / ${{ env.ASSET_NAME }}.ipa
+          description: e2e upgrade source — ${{ env.RELEASE_TAG }} / ${{ env.ASSET_NAME }}.ipa
           sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
           sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
 
-      - name: Skip the rolling previous-release upload
-        if: steps.resolve.outputs.rolling == 'false'
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
-          PRERELEASE: ${{ steps.resolve.outputs.prerelease }}
-        run: |
-          if [ "$PRERELEASE" = "true" ]; then
-            echo "::notice::$RELEASE_TAG is a pre-release — Sauce BCSC-prev.* keeps tracking the newest FULL release"
-          else
-            echo "::notice::${ASSET_NAME} is below ${PREV_MIN_VERSION}, the first release the upgrade suite can drive — pinned copy only, Sauce BCSC-prev.* untouched"
-          fi
-
       - name: Upload previous Android build to SauceLabs
-        if: steps.resolve.outputs.rolling == 'true'
+        if: steps.prev.outputs.rolling == 'true' && inputs.dry_run != true
         uses: ./.github/workflows/actions/upload-to-sauce-storage
         with:
           file: ${{ env.ASSET_NAME }}.apk
           name: ${{ env.PREV_ANDROID_FILENAME }}
-          description: e2e rolling previous release — ${{ inputs.release_tag }} / ${{ env.ASSET_NAME }}.apk
+          description: e2e rolling previous release — ${{ env.RELEASE_TAG }} / ${{ env.ASSET_NAME }}.apk
           sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
           sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
 
       - name: Upload previous iOS build to SauceLabs
-        if: steps.resolve.outputs.rolling == 'true'
+        if: steps.prev.outputs.rolling == 'true' && inputs.dry_run != true
         uses: ./.github/workflows/actions/upload-to-sauce-storage
         with:
           file: ${{ env.ASSET_NAME }}.ipa
           name: ${{ env.PREV_IOS_FILENAME }}
-          description: e2e rolling previous release — ${{ inputs.release_tag }} / ${{ env.ASSET_NAME }}.ipa
+          description: e2e rolling previous release — ${{ env.RELEASE_TAG }} / ${{ env.ASSET_NAME }}.ipa
           sauce_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
           sauce_access_key: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+
+      - name: Summarise
+        env:
+          DRY_RUN: ${{ inputs.dry_run == true }}
+          ROLLING: ${{ steps.prev.outputs.rolling }}
+        run: |
+          verb="were"
+          note=""
+          if [ "$DRY_RUN" = "true" ]; then
+            verb="would be"
+            note=" (dry run — nothing attached or uploaded)"
+          fi
+          {
+            echo "### ${RELEASE_TAG} → \`${ASSET_NAME}.apk\` / \`${ASSET_NAME}.ipa\`${note}"
+            echo
+            echo "- Build: ${BUILD_RUN:-not resolved (sauce_source given)}"
+            echo "- Binaries: ${SOURCE} — app version ${VERSION}, build ${BUILD_NUMBER}"
+            echo "- Release assets and the pinned Sauce copy ${verb} written"
+            if [ "$ROLLING" = "true" ]; then
+              echo "- Sauce \`${PREV_ANDROID_FILENAME}\` / \`${PREV_IOS_FILENAME}\` ${verb} moved to this build"
+            else
+              echo "- Sauce BCSC-prev.* untouched: ${PREV_REASON}"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
