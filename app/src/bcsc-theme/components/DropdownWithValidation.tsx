@@ -2,7 +2,17 @@ import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FlatList, LayoutChangeEvent, Modal, Pressable, StyleProp, StyleSheet, TextStyle, View } from 'react-native'
+import {
+  FlatList,
+  LayoutChangeEvent,
+  Modal,
+  Platform,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  TextStyle,
+  View,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -142,7 +152,11 @@ export const DropdownWithValidation = <T extends string | number>({
 
   const handleClose = () => {
     setIsOpen(false)
-    onModalClose?.()
+    // iOS calls onModalClose via Modal's onDismiss once the native dismiss animation finishes;
+    // calling it here too would focus a still-presented modal and be dropped.
+    if (Platform.OS !== 'ios') {
+      onModalClose?.()
+    }
   }
 
   const renderOption = ({ item, index }: { item: DropdownOption<T>; index: number }) => {
@@ -212,7 +226,7 @@ export const DropdownWithValidation = <T extends string | number>({
         </ThemedText>
       ) : null}
 
-      <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
+      <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose} onDismiss={onModalClose}>
         <View
           style={[styles.modalContent, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
           testID={testIdWithKey(`${id}${TestIds.shared.field.modalContent}`)}

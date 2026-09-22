@@ -6,7 +6,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { ScrollView, TextInput } from 'react-native'
+import { Platform, ScrollView, TextInput } from 'react-native'
 import { KeyboardEvents } from 'react-native-keyboard-controller'
 import { ResidentialAddressScreen } from './ResidentialAddressScreen'
 
@@ -83,6 +83,7 @@ describe('ResidentialAddress', () => {
       scrollToSpy.mockRestore()
       focusSpy.mockRestore()
       isFocusedSpy.mockRestore()
+      Platform.OS = 'ios'
     })
 
     const focusedTestIds = () => focusSpy.mock.instances.map((instance: any) => instance.props.testID)
@@ -99,7 +100,11 @@ describe('ResidentialAddress', () => {
       fireEvent.press(tree.getByTestId(`com.ariesbifold:id/province-option-${value}`))
     }
 
-    it('still auto-advances to postal code after the province picker closes', async () => {
+    // Android only: onModalClose fires synchronously (see DropdownWithValidation.handleClose). On iOS
+    // it fires from Modal's onDismiss, which Jest's Modal mock never invokes, so this path is
+    // unverifiable here — confirmed working on Android, needs a human on an iOS device.
+    it('still auto-advances to postal code after the province picker closes (Android)', async () => {
+      Platform.OS = 'android'
       const tree = render(
         <BasicAppContext>
           <ResidentialAddressScreen navigation={mockNavigation as never} route={mockRoute as never} />

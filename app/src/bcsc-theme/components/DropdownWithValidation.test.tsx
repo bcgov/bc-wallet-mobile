@@ -1,6 +1,7 @@
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Modal, Platform } from 'react-native'
 import { DropdownOption, DropdownWithValidation } from './DropdownWithValidation'
 
 describe('DropdownWithValidation Component', () => {
@@ -336,6 +337,45 @@ describe('DropdownWithValidation Component', () => {
         expect(option1.props.accessibilityState.selected).toBe(false)
         expect(option3.props.accessibilityState.selected).toBe(false)
       })
+    })
+  })
+
+  // RN's Modal.onDismiss only fires on iOS; Jest's Modal mock never fires it, so these tests can only
+  // pin the platform branch in handleClose, not the real native dismissal — iOS needs a device check.
+  describe('Modal dismiss (platform-dependent onModalClose)', () => {
+    afterEach(() => {
+      Platform.OS = 'ios'
+    })
+
+    test('Android calls onModalClose synchronously when an option is selected', () => {
+      Platform.OS = 'android'
+      const onModalClose = jest.fn()
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <DropdownWithValidation {...defaultProps} onModalClose={onModalClose} />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/test-dropdown-input'))
+      fireEvent.press(getByTestId('com.ariesbifold:id/test-dropdown-option-option1'))
+
+      expect(onModalClose).toHaveBeenCalledTimes(1)
+    })
+
+    test('iOS does not call onModalClose synchronously, and passes it as Modal onDismiss instead', () => {
+      Platform.OS = 'ios'
+      const onModalClose = jest.fn()
+      const { getByTestId, UNSAFE_getByType } = render(
+        <BasicAppContext>
+          <DropdownWithValidation {...defaultProps} onModalClose={onModalClose} />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/test-dropdown-input'))
+      fireEvent.press(getByTestId('com.ariesbifold:id/test-dropdown-option-option1'))
+
+      expect(onModalClose).not.toHaveBeenCalled()
+      expect(UNSAFE_getByType(Modal).props.onDismiss).toBe(onModalClose)
     })
   })
 
