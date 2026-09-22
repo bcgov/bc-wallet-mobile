@@ -625,7 +625,7 @@ export async function waitForSendVideoDecision(
     if (Date.now() + REVIEW_DECISION_POLL_MS >= deadline) {
       const reviewed = options.reviewed
         ? `The scripted review decided ${options.reviewed.queue} request ${options.reviewed.requestIdentifier} ` +
-          `(${options.reviewed.claimedName}, serial ${options.reviewed.claimedSerial}, ${options.reviewed.claimedOs || 'os unknown'})`
+          `(${options.reviewed.persona}, ${options.reviewed.claimedOs || 'os unknown'})`
         : 'The scripted review reported success'
       throw new Error(
         `The agent decision (${expected}) did not reach the app within ${REVIEW_DECISION_TIMEOUT_MS}ms of re-checking. ` +

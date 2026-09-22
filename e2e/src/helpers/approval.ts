@@ -2,6 +2,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { TestUsers } from '../constants.js'
 import { clearQueuedSubmission } from '../support/send-video-queue.js'
+import { type PersonaLabel, personaLabel } from './redact.js'
 
 /**
  * Normalizes BIRTH_DATE to YYYY-MM-DD regardless of input format.
@@ -77,10 +78,15 @@ export type SendVideoReviewInput =
       typeReasonId?: string
     } & SendVideoReviewIdentity)
 
+/** An identity plus the label logs use for it — the serial and name themselves never reach a log line. */
+type LabelledIdentity = SendVideoReviewIdentity & { persona: PersonaLabel }
+
 /** What the scripted review claimed and decided — for the journey's logs and its decision-timeout message. */
 export interface ClaimedRequestSummary {
   requestIdentifier: string
   queue: 'cardholder' | 'cardless'
+  /** Whose request it was, as a log may say it: a persona key, or `foreign`. */
+  persona: string
   claimedName: string
   claimedSerial: string
   /** "iOS 18.6" / "Android 15" as the portal renders it; '' when the page did not say. */
@@ -116,12 +122,12 @@ export interface DrainSendVideoQueueResult {
 type LoginModule = {
   approveInPersonLogin: (input: ApproveInPersonLoginInput, options?: { signal?: AbortSignal }) => Promise<void>
   reviewSendVideoLogin: (
-    input: SendVideoReviewInput,
+    input: SendVideoReviewInput & { persona: PersonaLabel },
     options?: { signal?: AbortSignal; claimTimeoutMs?: number }
   ) => Promise<ClaimedRequestSummary>
   drainSendVideoQueue: (options: {
     scope: DrainScope
-    personas: SendVideoReviewIdentity[]
+    personas: LabelledIdentity[]
     reason?: string
     maxClaims?: number
     dryRun?: boolean
@@ -224,8 +230,10 @@ export async function reviewSendVideoRequest(
   timeoutMs = 180_000
 ): Promise<ClaimedRequestSummary> {
   const platform = input.platform ?? currentPlatform()
+  // Logs and errors name the persona, never the serial or the name: Sauce/CI logs are remote.
+  const persona = personaLabel(input)
   console.log(
-    `[approval] Reviewing send-video request (decision=${input.decision}, serial=${input.cardSerialNumber}, platform=${platform ?? 'any'})`
+    `[approval] Reviewing send-video request (decision=${input.decision}, persona=${persona}, platform=${platform ?? 'any'})`
   )
 
   const { reviewSendVideoLogin } = await loadLoginModule()
@@ -236,12 +244,12 @@ export async function reviewSendVideoRequest(
 
   try {
     const claimed = await withDriverKeepalive(() =>
-      reviewSendVideoLogin({ ...input, platform }, { signal: controller.signal })
+      reviewSendVideoLogin({ ...input, platform, persona }, { signal: controller.signal })
     )
     clearQueuedSubmission()
     console.log(
-      `[approval] Decided ${claimed.queue} request ${claimed.requestIdentifier}: ${claimed.claimedName} ` +
-        `(serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'})`
+      `[approval] Decided ${claimed.queue} request ${claimed.requestIdentifier} ` +
+        `(${claimed.persona}, ${claimed.claimedOs || 'os unknown'})`
     )
     return claimed
   } catch (error: unknown) {
@@ -252,16 +260,15 @@ export async function reviewSendVideoRequest(
     const detail = controller.signal.aborted
       ? `the ${timeoutMs}ms budget for the whole IDCheck chain ran out (see the per-step [idcheck] timings for where it went)`
       : message
-    throw new Error(
-      `Send-video ${input.decision} failed after ${elapsedMs}ms (serial=${input.cardSerialNumber}): ${detail}`
-    )
+    throw new Error(`Send-video ${input.decision} failed after ${elapsedMs}ms (persona=${persona}): ${detail}`)
   } finally {
     clearTimeout(timeoutId)
   }
 }
 
 /** The personas the journeys submit as — what `scope: 'e2e'` keeps a drain to. */
-export const E2E_SEND_VIDEO_PERSONAS: SendVideoReviewIdentity[] = Object.values(TestUsers).map((user) => ({
+export const E2E_SEND_VIDEO_PERSONAS: LabelledIdentity[] = Object.entries(TestUsers).map(([persona, user]) => ({
+  persona: persona as PersonaLabel,
   cardSerialNumber: user.cardSerial,
   surname: user.lastName,
   firstName: user.firstName,
@@ -336,12 +343,12 @@ export function renderDrainSummary(result: DrainSendVideoQueueResult, scope: Dra
     )
   } else {
     lines.push(
-      '| Action | Queue | Request | Name | Serial | Device | App | Video date |',
-      '| --- | --- | --- | --- | --- | --- | --- | --- |'
+      '| Action | Queue | Request | Persona | Device | App | Video date |',
+      '| --- | --- | --- | --- | --- | --- | --- |'
     )
     for (const row of rows) {
       lines.push(
-        `| ${row.action} | ${row.queue} | ${row.requestIdentifier} | ${row.claimedName} | ${row.claimedSerial} | ` +
+        `| ${row.action} | ${row.queue} | ${row.requestIdentifier} | ${row.persona} | ` +
           `${row.claimedOs || '?'} | ${row.claimedAppVersion || '?'} | ${row.videoDate || '?'} |`
       )
     }

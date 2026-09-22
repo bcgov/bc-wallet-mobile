@@ -712,7 +712,6 @@ async function resolveIdentityMatch(fetchWithCookies, matchesHtml, matchesUrl, e
   const wantedSurname = expected.surname.toUpperCase()
   const wantedFirstName = expected.firstName.toUpperCase()
   let chosenId = null
-  const inspected = []
 
   for (const [index, candidateId] of candidateIds.entries()) {
     const candidateResponse = await fetchWithCookies(`${IDMATCH_RESULT_URL}/${matchTransactionId}/${index}`, {
@@ -736,21 +735,19 @@ async function resolveIdentityMatch(fetchWithCookies, matchesHtml, matchesUrl, e
     }
 
     const candidate = JSON.parse(await candidateResponse.text())
-    inspected.push(candidate.displayName ?? '(unnamed)')
     if (
       (candidate.lastName ?? '').toUpperCase() === wantedSurname &&
       (candidate.firstName ?? '').toUpperCase() === wantedFirstName
     ) {
       chosenId = candidateId
-      console.log(`  identity match: candidate ${index} (${candidate.displayName}) of ${candidateIds.length}`)
+      // Candidates are named by position only: their names are the portal's identities, not ours to log.
+      console.log(`  identity match: candidate ${index} of ${candidateIds.length}`)
       break
     }
   }
 
   if (!chosenId) {
-    throw new Error(
-      `[identity match] none of the ${candidateIds.length} candidates is "${expected.surname}, ${expected.firstName}". Offered: ${JSON.stringify(inspected)}`
-    )
+    throw new Error(`[identity match] none of the ${candidateIds.length} candidates is the expected person`)
   }
 
   const matchResponse = await fetchWithCookies(BACKCHECK_MATCHES_URL, {
@@ -783,6 +780,7 @@ async function resolveIdentityMatch(fetchWithCookies, matchesHtml, matchesUrl, e
  * @property {string} surname - Expected surname; the real guard for a cardless request
  * @property {string} firstName - Expected first name; also picks the identity match when one is asked for
  * @property {'ios' | 'android'} [platform] - The submitting device's platform; a same-persona request from the other one is foreign
+ * @property {string} [persona] - What logs call this identity (a persona key); the serial and name never reach a log line
  *
  * @typedef {Object} SendVideoRejectInput
  * @property {'reject'} decision
@@ -790,6 +788,7 @@ async function resolveIdentityMatch(fetchWithCookies, matchesHtml, matchesUrl, e
  * @property {string} surname
  * @property {string} firstName
  * @property {'ios' | 'android'} [platform]
+ * @property {string} [persona]
  * @property {string} verificationComment - Reason text the app shows the user on the cancelled-review screen
  * @property {string} [comment] - Internal portal note; defaults to verificationComment
  * @property {string} [typeReasonId] - Portal reject-reason id; defaults to DEFAULT_REJECT_REASON_ID
@@ -900,9 +899,31 @@ function matchesExpectedPlatform(claimed, input) {
   return claimed.claimedPlatform === input.platform
 }
 
-/** One line naming a claimed request, for logs and summaries. */
-function describeClaimed(claimed) {
-  return `${claimed.queue} ${claimed.requestIdentifier}: ${claimed.claimedName} — serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'}, app ${claimed.claimedAppVersion || '?'}, video ${claimed.videoDate || '?'}`
+/**
+ * One line naming a claimed request, for logs and summaries — by persona label, never by the name or
+ * serial on it: these lines reach remote logs.
+ *
+ * @param {ClaimedRequest} claimed
+ * @param {string} persona
+ */
+function describeClaimed(claimed, persona) {
+  return `${claimed.queue} ${claimed.requestIdentifier} (${persona}, ${claimed.claimedOs || 'os unknown'}, app ${claimed.claimedAppVersion || '?'}, video ${claimed.videoDate || '?'})`
+}
+
+/** What logs call the identity a caller expects: its persona label, or `expected` for an unlabelled CLI one. */
+function expectedPersona(input) {
+  return input.persona ?? 'expected'
+}
+
+/**
+ * The label for a claimed request: the matching persona's, or `foreign` for anyone else's.
+ *
+ * @param {ClaimedRequest} claimed
+ * @param {{ cardSerialNumber: string, surname: string, firstName: string, persona?: string }[]} personas
+ */
+function claimedPersona(claimed, personas) {
+  const matched = personas.find((persona) => matchesExpectedIdentity(claimed, persona))
+  return matched ? expectedPersona(matched) : 'foreign'
 }
 
 /** Reads the dashboard — the only page that says which queues hold work. */
@@ -996,7 +1017,7 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
 
     if (matchesExpectedIdentity(claimed, input)) {
       await logStep('claim send-video request', claimResponse, claimHtml)
-      console.log(`  claimed ${describeClaimed(claimed)}`)
+      console.log(`  claimed ${describeClaimed(claimed, expectedPersona(input))}`)
       return { detailUrl: claimResponse.url, claimed }
     }
 
@@ -1007,23 +1028,20 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
       // while still holding the claim would leave the queue head ours and block the next run too.
       await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
       throw new Error(
-        `[claim send-video request] CloseRequest is not clearing ${claimed.requestIdentifier} ` +
-          `("${claimed.claimedName}", serial ${claimed.claimedSerial}) — claimed it ${timesClaimed} times while ` +
-          `waiting for "${input.surname}, ${input.firstName}" (serial ${input.cardSerialNumber}); ` +
-          `check the SIT backcheck dashboard`
+        `[claim send-video request] CloseRequest is not clearing foreign request ${claimed.requestIdentifier} — ` +
+          `claimed it ${timesClaimed} times while waiting for ${expectedPersona(input)}; check the SIT backcheck dashboard`
       )
     }
 
     console.log(
-      `[idcheck] [~] claim attempt ${attempt}: claimed foreign request ${claimed.requestIdentifier} ` +
-        `("${claimed.claimedName}", serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'}) — closing it and retrying`
+      `[idcheck] [~] claim attempt ${attempt}: claimed ${describeClaimed(claimed, 'foreign')} — closing it and retrying`
     )
     await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
     await waitForNextClaimAttemptOrThrow(
       claimDeadline,
       claimTimeoutMs,
       signal,
-      () => `closed foreign request ${claimed.requestIdentifier} ("${claimed.claimedName}")`
+      () => `closed foreign request ${claimed.requestIdentifier}`
     )
   }
 }
@@ -1161,13 +1179,14 @@ export async function reviewSendVideoLogin(input, options = {}) {
 
   await submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, requestIdentifier, csrfToken, input, signal)
 
-  return summarizeClaimed(claimed)
+  return summarizeClaimed(claimed, expectedPersona(input))
 }
 
 /**
  * @typedef {Object} ClaimedRequestSummary
  * @property {string} requestIdentifier
  * @property {ReviewQueue} queue
+ * @property {string} persona - Whose request it was, as a log may say it: a persona label, or `foreign`
  * @property {string} claimedName
  * @property {string} claimedSerial
  * @property {string} claimedOs
@@ -1181,10 +1200,10 @@ export async function reviewSendVideoLogin(input, options = {}) {
  * @property {string} [stoppedReason] - Why the drain stopped before the dashboard ran dry
  */
 
-/** @param {ClaimedRequest} claimed @returns {ClaimedRequestSummary} */
-function summarizeClaimed(claimed) {
+/** @param {ClaimedRequest} claimed @param {string} persona @returns {ClaimedRequestSummary} */
+function summarizeClaimed(claimed, persona) {
   const { requestIdentifier, queue, claimedName, claimedSerial, claimedOs, claimedAppVersion, videoDate } = claimed
-  return { requestIdentifier, queue, claimedName, claimedSerial, claimedOs, claimedAppVersion, videoDate }
+  return { requestIdentifier, queue, persona, claimedName, claimedSerial, claimedOs, claimedAppVersion, videoDate }
 }
 
 /** The reason the portal records for a request the drain rejects — it lands in the card's activity log. */
@@ -1218,7 +1237,7 @@ function assertValidDrainScope(scope, personas) {
  *
  * `dryRun` only logs in and reads the dashboard — which queues hold work — claiming nothing.
  *
- * @param {{ scope?: 'all' | 'e2e', personas?: { cardSerialNumber: string, surname: string, firstName: string }[], reason?: string, maxClaims?: number, dryRun?: boolean, signal?: AbortSignal }} [options]
+ * @param {{ scope?: 'all' | 'e2e', personas?: { cardSerialNumber: string, surname: string, firstName: string, persona?: string }[], reason?: string, maxClaims?: number, dryRun?: boolean, signal?: AbortSignal }} [options]
  * @returns {Promise<DrainSendVideoQueueResult>}
  */
 export async function drainSendVideoQueue(options = {}) {
@@ -1266,21 +1285,22 @@ export async function drainSendVideoQueue(options = {}) {
       return result
     }
 
-    const summary = summarizeClaimed(claimed)
+    const persona = claimedPersona(claimed, personas)
+    const summary = summarizeClaimed(claimed, persona)
     const before = handled.get(claimed.requestIdentifier)
     if (before) {
       // A decision that did not stick, or a foreign head under 'e2e' — either way, stop churning.
       await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
-      result.stoppedReason = `${claimed.requestIdentifier} ("${claimed.claimedName}") came back after being ${before}`
+      result.stoppedReason = `${claimed.requestIdentifier} (${persona}) came back after being ${before}`
       return result
     }
 
-    if (scope === 'e2e' && !personas.some((persona) => matchesExpectedIdentity(claimed, persona))) {
+    if (scope === 'e2e' && persona === 'foreign') {
       await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
       handled.set(claimed.requestIdentifier, 'released')
       result.released.push(summary)
-      result.stoppedReason = `foreign request at the head — released ${claimed.requestIdentifier} ("${claimed.claimedName}") and stopped (scope e2e)`
-      console.log(`[queue drain] released ${describeClaimed(claimed)}`)
+      result.stoppedReason = `foreign request at the head — released ${claimed.requestIdentifier} and stopped (scope e2e)`
+      console.log(`[queue drain] released ${describeClaimed(claimed, persona)}`)
       return result
     }
 
@@ -1302,7 +1322,7 @@ export async function drainSendVideoQueue(options = {}) {
     )
     handled.set(claimed.requestIdentifier, 'rejected')
     result.rejected.push(summary)
-    console.log(`[queue drain] rejected ${describeClaimed(claimed)}`)
+    console.log(`[queue drain] rejected ${describeClaimed(claimed, persona)}`)
   }
 }
 
@@ -1419,7 +1439,7 @@ if (isRunAsCli()) {
     )
   } else if (sendVideoInput) {
     const claimed = await reviewSendVideoLogin(sendVideoInput)
-    console.log(`[idcheck] reviewed ${claimed.requestIdentifier}: ${claimed.claimedName} (serial ${claimed.claimedSerial})`)
+    console.log(`[idcheck] reviewed ${claimed.queue} request ${claimed.requestIdentifier} (${claimed.persona})`)
   } else {
     await approveInPersonLogin(input)
   }

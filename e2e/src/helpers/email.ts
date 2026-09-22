@@ -16,7 +16,8 @@ export async function getTempEmailAddress(): Promise<{ email: string; token: str
 
     const { email_addr, sid_token } = await response.json()
 
-    console.log(`Created temporary email address: ${email_addr}`)
+    // The address itself stays out of the log: it is the inbox the confirmation code lands in.
+    console.log(`Created a temporary email address at ${new URL(TEMP_EMAIL_API).host}`)
 
     return { email: email_addr, token: sid_token }
   } catch (error) {
@@ -127,8 +128,8 @@ export async function getEmailConfirmationCode(
       return confirmationCodeMatch[1]
     }
 
-    console.log('Email content:', { emailContent })
-    throw new Error('Confirmation code not found in email body')
+    // Never the body: it is the message that carries the code.
+    throw new Error(`Confirmation code not found in the ${emailContent.mail_body.length}-character email body`)
   }
 
   throw new Error('Email confirmation code timeout exceeded')

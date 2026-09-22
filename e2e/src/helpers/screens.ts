@@ -1,10 +1,12 @@
 import { Timeouts } from '../constants.js'
 import type { ScreenPresence } from '../screens/core/defineScreen.js'
 import { acceptSystemAlertsUntil } from './alerts.js'
+import { redactSensitiveText } from './redact.js'
 
 /**
  * Dump the first several visible text strings on the current screen — makes "unexpected screen"
- * failures self-diagnosing by revealing which screen we actually landed on.
+ * failures self-diagnosing by revealing which screen we actually landed on. Holder and one-time
+ * values are masked: this lands in thrown errors, and so in remote logs.
  */
 export async function describeCurrentScreen(limit = 8): Promise<string> {
   const selector = driver.isIOS
@@ -15,7 +17,7 @@ export async function describeCurrentScreen(limit = 8): Promise<string> {
   for (const el of els) {
     const t = driver.isIOS ? await el.getAttribute('label').catch(() => null) : await el.getText().catch(() => null)
     if (t) {
-      texts.push(t)
+      texts.push(redactSensitiveText(t))
     }
     if (texts.length >= limit) {
       break
