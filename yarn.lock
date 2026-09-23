@@ -1187,6 +1187,7 @@ __metadata:
   linkType: hard
 
 "@babel/plugin-transform-private-property-in-object@npm:^7.24.7, @babel/plugin-transform-private-property-in-object@npm:^7.28.6, @babel/plugin-transform-private-property-in-object@npm:^7.29.7":
+  version: 7.29.7
   resolution: "@babel/plugin-transform-private-property-in-object@npm:7.29.7"
   dependencies:
     "@babel/helper-annotate-as-pure": "npm:^7.29.7"
@@ -1752,28 +1753,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/core@portal:bifold/packages/core::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@bifold/core@portal:bifold/packages/core::locator=bc-wallet-mobile%40workspace%3A."
+"@bifold/core@npm:3.0.22":
+  version: 3.0.22
+  resolution: "@bifold/core@npm:3.0.22"
   dependencies:
-    "@openwallet-foundation/askar-react-native": "npm:0.6.1-alpha-20260720140434"
-    "@openwallet-foundation/askar-shared": "npm:0.6.1-alpha-20260720140434"
+    "@openwallet-foundation/askar-react-native": "npm:0.6.0"
+    "@openwallet-foundation/askar-shared": "npm:0.6.0"
     "@types/base-64": "npm:^1.0.2"
-    react-native-nitro-image: "npm:^0.15.2"
-    react-native-nitro-modules: "npm:^0.37.1"
-    react-native-vision-camera-barcode-scanner: "npm:^5.2.3"
   peerDependencies:
+    "@animo-id/expo-secure-environment": 0.1.5
     "@bifold/react-hooks": 3.0.22
-    "@credo-ts/anoncreds": 0.7.0
-    "@credo-ts/askar": 0.7.0
-    "@credo-ts/core": 0.7.0
-    "@credo-ts/didcomm": 0.7.0
-    "@credo-ts/indy-vdr": 0.7.0
-    "@credo-ts/openid4vc": 0.7.0
+    "@credo-ts/anoncreds": 0.6.3
+    "@credo-ts/askar": 0.6.3
+    "@credo-ts/core": 0.6.3
+    "@credo-ts/didcomm": 0.6.3
+    "@credo-ts/indy-vdr": 0.6.3
+    "@credo-ts/openid4vc": 0.6.3
     "@credo-ts/push-notifications": 0.7.1
-    "@credo-ts/question-answer": 0.7.0
-    "@credo-ts/react-native": 0.7.0
-    "@credo-ts/webvh": 0.7.0
+    "@credo-ts/question-answer": 0.6.3
+    "@credo-ts/react-native": 0.6.3
+    "@credo-ts/webvh": 0.6.3
     "@formatjs/intl-datetimeformat": ~6.18.2
     "@formatjs/intl-displaynames": ~6.8.13
     "@formatjs/intl-getcanonicallocales": ~2.5.6
@@ -1782,35 +1781,36 @@ __metadata:
     "@formatjs/intl-numberformat": ~8.15.6
     "@formatjs/intl-pluralrules": ~5.4.6
     "@formatjs/intl-relativetimeformat": ~11.4.13
-    "@hyperledger/anoncreds-react-native": 0.4.1-alpha-20260609124337
-    "@hyperledger/indy-vdr-react-native": 0.3.1-dev.1
-    "@hyperledger/indy-vdr-shared": 0.3.1-dev.1
-    "@openwallet-foundation/askar-react-native": 0.6.1-alpha-20260720140434
+    "@hyperledger/anoncreds-react-native": 0.3.4
+    "@hyperledger/indy-vdr-react-native": 0.2.4
+    "@hyperledger/indy-vdr-shared": 0.2.3
+    "@openwallet-foundation/askar-react-native": 0.6.0
     "@react-native-async-storage/async-storage": ~2.2.0
     "@react-native-clipboard/clipboard": ~1.16.3
-    "@react-native-community/netinfo": 12.0.1
+    "@react-native-community/netinfo": ~11.4.1
     "@react-navigation/bottom-tabs": ~6.0.9
-    "@react-navigation/core": ~6.4.17
+    "@react-navigation/core": ~6.1.1
     "@react-navigation/devtools": ~6.0.27
     "@react-navigation/native": ~6.0.16
     "@react-navigation/stack": ~6.3.29
-    axios: ~1.15.0
+    axios: ~1.13.2
     base-64: ~1.0.0
     class-transformer: 0.5.1
-    i18next: ~25.8.0
+    expo-crypto: ~15.0.8
+    i18next: ~21.6.16
     lodash.startcase: ~4.4.0
     moment: ~2.29.4
     query-string: ~7.1.3
-    react: 19.2.3
-    react-i18next: ~16.5.4
+    react: ~19.1.4
+    react-i18next: ~11.17.1
     react-native: "*"
     react-native-animated-pagination-dots: ~0.1.73
     react-native-bouncy-checkbox: ~3.0.7
     react-native-config: ~1.5.5
-    react-native-confirmation-code-field: ~9.0.0
+    react-native-confirmation-code-field: ~7.3.2
     react-native-device-info: ~8.7.1
     react-native-fs: ~2.20.0
-    react-native-gesture-handler: ~2.32.0
+    react-native-gesture-handler: ~2.28.0
     react-native-get-random-values: ~1.11.0
     react-native-gifted-chat: ~3.3.2
     react-native-keychain: ~10.0.0
@@ -1819,92 +1819,121 @@ __metadata:
     react-native-orientation-locker: "*"
     react-native-permissions: ~5.4.1
     react-native-qrcode-svg: ~6.2.0
-    react-native-safe-area-context: ~5.7.0
+    react-native-safe-area-context: ~5.6.2
     react-native-screenguard: "*"
-    react-native-screens: ~4.26.0
+    react-native-screens: ~4.16.0
     react-native-splash-screen: ~3.3.0
-    react-native-svg: 15.15.4
+    react-native-svg: ~15.12.1
     react-native-tcp-socket: ~6.0.6
     react-native-toast-message: ~2.1.10
     react-native-url-polyfill: 3.0.0
-    react-native-uuid: ~2.0.4
+    react-native-uuid: ~2.0.3
     react-native-vector-icons: ~10.3.0
+    react-native-vision-camera: "*"
     tsyringe: ~4.8.0
     uuid: ~9.0.1
   bin:
     bifold: bin/bifold
+  checksum: 10c0/caa1a8a4b90980f7f4122f93d684a0403b9d3c8498d5a0566eebf6ed58fb0b735a3d2aa5c86eb0df2a193907aff7a1c9dd0265c3d995049dc93ca818a210d40d
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@bifold/oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@bifold/oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A."
+"@bifold/oca@npm:3.0.22":
+  version: 3.0.22
+  resolution: "@bifold/oca@npm:3.0.22"
   dependencies:
-    "@credo-ts/anoncreds": "npm:0.7.0"
-    "@credo-ts/core": "npm:0.7.0"
-    "@credo-ts/didcomm": "npm:0.7.0"
-    axios: "npm:~1.15.0"
+    "@credo-ts/anoncreds": "npm:0.6.3"
+    "@credo-ts/core": "npm:0.6.3"
+    "@credo-ts/didcomm": "npm:0.6.3"
+    axios: "npm:~1.13.2"
     lodash.startcase: "npm:~4.4.0"
     react-native-fs: "npm:~2.20.0"
+  checksum: 10c0/03fddc26a688ee8c5357db9315d8870ad09872822e7b6ef50c66502bbb5268c28d03e45b0e105958e8b9a080cfddb180d874e1729ed0c69e1f6682cdb701329b
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@bifold/react-hooks@portal:bifold/packages/react-hooks::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@bifold/react-hooks@portal:bifold/packages/react-hooks::locator=bc-wallet-mobile%40workspace%3A."
+"@bifold/react-hooks@npm:3.0.22":
+  version: 3.0.22
+  resolution: "@bifold/react-hooks@npm:3.0.22"
   dependencies:
     rxjs: "npm:^7.2.0"
   peerDependencies:
-    "@credo-ts/core": 0.7.0
-    "@credo-ts/didcomm": 0.7.0
-    "@credo-ts/question-answer": 0.7.0
-    react: 19.2.3
+    "@credo-ts/core": 0.6.3
+    "@credo-ts/didcomm": 0.6.3
+    "@credo-ts/question-answer": 0.6.3
+    react: ">=17.0.0 <19.0.0"
   bin:
     bifold: bin/bifold
+  checksum: 10c0/5f3a2f8f19fffdc037bcd840c3cd9185a1fbf10c12dc6e96238fa065c2f8e3214b02a781e6f7e481d4e30033cbb33d0ebba4c12e1893fcd121f32a51b9b2a1dd
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@bifold/react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@bifold/react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A."
+"@bifold/react-native-attestation@npm:3.0.22":
+  version: 3.0.22
+  resolution: "@bifold/react-native-attestation@npm:3.0.22"
   peerDependencies:
     react: "*"
     react-native: "*"
+  checksum: 10c0/0af9f309e081ea53a35e7ce8d6d93d2909c647d6c1c53416e25f4b876128cbf06884378b5f13b18967d47953d60fe98e2cb4072c7a7a3568f84fdd2e9e46855e
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@bifold/remote-logs@portal:bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@bifold/remote-logs@portal:bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A."
+"@bifold/remote-logs@npm:3.0.22":
+  version: 3.0.22
+  resolution: "@bifold/remote-logs@npm:3.0.22"
   dependencies:
     "@bifold/core": "npm:3.0.22"
-    "@credo-ts/core": "npm:0.7.0"
-    axios: "npm:~1.15.0"
+    "@credo-ts/core": "npm:0.6.3"
+    axios: "npm:~1.13.2"
     buffer: "npm:~6.0.3"
-    react: "npm:19.2.3"
-    react-native: "npm:0.86.3"
+    react: "npm:~19.1.4"
+    react-native: "npm:0.81.5"
     react-native-logs: "npm:~5.1.0"
   peerDependencies:
-    "@credo-ts/core": 0.7.0
-    axios: ~1.15.0
+    "@credo-ts/core": 0.6.3
+    axios: ~1.13.2
     buffer: ~6.0.3
-    react: 19.2.3
-    react-native: 0.86.3
+    react: ~19.1.4
+    react-native: 0.81.5
     react-native-logs: ~5.1.0
+  checksum: 10c0/8477c76c033c0974df80961f6a1ca895a6d9952d26d2767ff02a63654d7dae21db0f425b5f8e9a2a70aaef33b70f77962829d498c71fb14921f02684ba09e4f1
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@bifold/verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@bifold/verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A."
+"@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.0.22#~/.yarn/patches/@bifold-remote-logs-npm-3.0.22-943bfd093c.patch":
+  version: 3.0.22
+  resolution: "@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.0.22#~/.yarn/patches/@bifold-remote-logs-npm-3.0.22-943bfd093c.patch::version=3.0.22&hash=be24b1"
+  dependencies:
+    "@bifold/core": "npm:3.0.22"
+    "@credo-ts/core": "npm:0.6.3"
+    axios: "npm:~1.13.2"
+    buffer: "npm:~6.0.3"
+    react: "npm:~19.1.4"
+    react-native: "npm:0.81.5"
+    react-native-logs: "npm:~5.1.0"
+  peerDependencies:
+    "@credo-ts/core": 0.6.3
+    axios: ~1.13.2
+    buffer: ~6.0.3
+    react: ~19.1.4
+    react-native: 0.81.5
+    react-native-logs: ~5.1.0
+  checksum: 10c0/59bb47211931c29ec97a26fb343bd582758d19872a083df92780831c36fc05c36dcab9a28ec9ddb12a94a17d5291e2a5a6afa962017dee6c28118f26ce84050e
+  languageName: node
+  linkType: hard
+
+"@bifold/verifier@npm:3.0.22":
+  version: 3.0.22
+  resolution: "@bifold/verifier@npm:3.0.22"
   peerDependencies:
     "@bifold/react-hooks": 3.0.22
-    "@credo-ts/anoncreds": 0.7.0
-    "@credo-ts/core": 0.7.0
-    "@hyperledger/anoncreds-shared": 0.4.1-alpha-20260609124337
-    react: 19.2.3
+    "@credo-ts/anoncreds": 0.6.3
+    "@credo-ts/core": 0.6.3
+    "@hyperledger/anoncreds-shared": 0.3.4
+    react: ~19.1.4
+  checksum: 10c0/fb294fe6e91e4ed946721531e1ff7d143ab5dcba9283f654e75e6d3786ea92416b5834daf04c70583cb5b8b68d59bc9b9de5ec452caf78a7fbe3d410737bbc9d
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@cbor-extract/cbor-extract-darwin-arm64@npm:2.2.2":
   version: 2.2.2
@@ -2193,6 +2222,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@credo-ts/anoncreds@npm:0.6.3":
+  version: 0.6.3
+  resolution: "@credo-ts/anoncreds@npm:0.6.3"
+  dependencies:
+    "@astronautlabs/jsonpath": "npm:^1.1.2"
+    "@credo-ts/core": "npm:0.6.3"
+    "@credo-ts/didcomm": "npm:0.6.3"
+    "@sphereon/pex-models": "npm:^2.3.2"
+    class-transformer: "npm:0.5.1"
+    class-validator: "npm:^0.14.3"
+    reflect-metadata: "npm:0.2.2"
+  peerDependencies:
+    "@hyperledger/anoncreds-shared": ^0.3.4
+  checksum: 10c0/a9897f2a8bc71e6d36b6527d985f12d6fbee5a0e33de9a96323b13c7b9821e2b8d418ee04ec03a84b7d7a3ed171f9c58cb9441481b040f5e6a567d07a4da32e5
+  languageName: node
+  linkType: hard
+
 "@credo-ts/anoncreds@npm:0.7.0":
   version: 0.7.0
   resolution: "@credo-ts/anoncreds@npm:0.7.0"
@@ -2239,6 +2285,56 @@ __metadata:
   peerDependencies:
     "@openwallet-foundation/askar-shared": ^0.4.3 || ^0.5.0 || ^0.6.0
   checksum: 10c0/2d4ce540e5b03f8c507c4ec3b3ce3400aa6429c69ee44977a53636fa11fef25ab3dcc8eb272e4901026acb265ea9f67272d865311f2772849209d80f96fc6491
+  languageName: node
+  linkType: hard
+
+"@credo-ts/core@npm:0.6.3":
+  version: 0.6.3
+  resolution: "@credo-ts/core@npm:0.6.3"
+  dependencies:
+    "@animo-id/mdoc": "npm:^0.5.2"
+    "@animo-id/pex": "npm:^6.1.1"
+    "@astronautlabs/jsonpath": "npm:^1.1.2"
+    "@digitalcredentials/jsonld": "npm:^9.0.0"
+    "@digitalcredentials/jsonld-signatures": "npm:^12.0.1"
+    "@digitalcredentials/vc": "npm:^10.0.2"
+    "@multiformats/base-x": "npm:^4.0.1"
+    "@noble/curves": "npm:^2.0.1"
+    "@noble/hashes": "npm:^2.0.1"
+    "@peculiar/asn1-ecc": "npm:^2.6.0"
+    "@peculiar/asn1-rsa": "npm:^2.6.0"
+    "@peculiar/asn1-schema": "npm:^2.6.0"
+    "@peculiar/asn1-x509": "npm:^2.6.0"
+    "@peculiar/x509": "npm:^1.14.3"
+    "@sd-jwt/core": "npm:^0.19.0"
+    "@sd-jwt/decode": "npm:^0.19.0"
+    "@sd-jwt/jwt-status-list": "npm:^0.19.0"
+    "@sd-jwt/present": "npm:^0.19.0"
+    "@sd-jwt/sd-jwt-vc": "npm:^0.19.0"
+    "@sd-jwt/types": "npm:^0.19.0"
+    "@sd-jwt/utils": "npm:^0.19.0"
+    "@sphereon/pex-models": "npm:^2.3.2"
+    "@sphereon/ssi-types": "npm:0.33.0"
+    "@stablelib/ed25519": "npm:^2.0.2"
+    "@types/ws": "npm:^8.18.1"
+    buffer: "npm:^6.0.3"
+    class-transformer: "npm:0.5.1"
+    class-validator: "npm:^0.14.3"
+    dcql: "npm:^3.0.0"
+    did-resolver: "npm:^4.1.0"
+    ec-compression: "npm:0.0.1-alpha.12"
+    lru_map: "npm:^0.4.1"
+    make-error: "npm:^1.3.6"
+    object-inspect: "npm:^1.13.4"
+    reflect-metadata: "npm:0.2.2"
+    rxjs: "npm:^7.8.2"
+    tsyringe: "npm:^4.10.0"
+    uuid: "npm:^13.0.0"
+    varint: "npm:^6.0.0"
+    web-did-resolver: "npm:^2.0.32"
+    webcrypto-core: "npm:^1.8.1"
+    zod: "npm:^4.3.6"
+  checksum: 10c0/736ac6955e6b989184eea37c3fc82202408bcc885026e4aff76481f7f89a3d78c25b85fc31e62d1cc7aadb7df8a72084bf9bd158c304c8205a9e9121a5636f87
   languageName: node
   linkType: hard
 
@@ -2303,6 +2399,20 @@ __metadata:
     "@credo-ts/core": ^0.6.0
     "@credo-ts/didcomm": ^0.6.0
   checksum: 10c0/6f3817c14debfaf8dd9584924f23ad53fa7a595ba396cd1ad3ccfc17d1c48c0cc2161132896e6944c995b190402953412a7cdbd1f743cc32613f402725721ef9
+  languageName: node
+  linkType: hard
+
+"@credo-ts/didcomm@npm:0.6.3":
+  version: 0.6.3
+  resolution: "@credo-ts/didcomm@npm:0.6.3"
+  dependencies:
+    "@credo-ts/core": "npm:0.6.3"
+    class-transformer: "npm:0.5.1"
+    class-validator: "npm:^0.14.3"
+    luxon: "npm:^3.7.2"
+    query-string: "npm:^9.3.1"
+    rxjs: "npm:^7.8.2"
+  checksum: 10c0/f7e10dddafca428c9aa8a910cb681bab9842c6934f61083f3bc9d6133e2e2f754063596326cf49b3f48658972757d7af6ab3deb3082531543bb62b80c33f36b3
   languageName: node
   linkType: hard
 
@@ -4055,6 +4165,18 @@ __metadata:
     zod: "npm:^4.3.5"
     zod-validation-error: "npm:^5.0.0"
   checksum: 10c0/f183cede193abbcedeaf359b41dedf74a4f1ab991566fdebdb7fa48bbfab9b93578eb1f4ec32505f0317efbf22bf29509b83c0bf50824920ebb62be6475d3eeb
+  languageName: node
+  linkType: hard
+
+"@openwallet-foundation/askar-react-native@npm:0.6.0":
+  version: 0.6.0
+  resolution: "@openwallet-foundation/askar-react-native@npm:0.6.0"
+  dependencies:
+    "@openwallet-foundation/askar-shared": "npm:0.6.0"
+  peerDependencies:
+    react: ">= 16"
+    react-native: ">= 0.71"
+  checksum: 10c0/1ed1d7899a39bc777df9b3ddcf257c7d35c798ecc181d2c0768c60830b65f0a9ac08ea83b372654ffe48cded806a6ed55da4df561a7651350b2b4690a3e029ed
   languageName: node
   linkType: hard
 
@@ -6199,52 +6321,101 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:8.70.0, @typescript-eslint/eslint-plugin@npm:^8.36.0, @typescript-eslint/eslint-plugin@npm:~8.70.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/eslint-plugin@npm:8.70.0"
+"@typescript-eslint/eslint-plugin@npm:8.70.1, @typescript-eslint/eslint-plugin@npm:~8.70.0":
+  version: 8.70.1
+  resolution: "@typescript-eslint/eslint-plugin@npm:8.70.1"
   dependencies:
     "@eslint-community/regexpp": "npm:^4.12.2"
-    "@typescript-eslint/scope-manager": "npm:8.70.0"
-    "@typescript-eslint/type-utils": "npm:8.70.0"
-    "@typescript-eslint/utils": "npm:8.70.0"
-    "@typescript-eslint/visitor-keys": "npm:8.70.0"
+    "@typescript-eslint/scope-manager": "npm:8.70.1"
+    "@typescript-eslint/type-utils": "npm:8.70.1"
+    "@typescript-eslint/utils": "npm:8.70.1"
+    "@typescript-eslint/visitor-keys": "npm:8.70.1"
     ignore: "npm:^7.0.5"
     natural-compare: "npm:^1.4.0"
     ts-api-utils: "npm:^2.5.0"
   peerDependencies:
-    "@typescript-eslint/parser": ^8.70.0
+    "@typescript-eslint/parser": ^8.70.1
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/e69f6f697493f4b5cb0411498edd63d75afb3e6881c632f9b23c416e64dd06458956ae489a253f0d08b90645b935a32a509d1e2b17068974a2a34a5c2b3f334b
+  checksum: 10c0/6d703bd93dd65ad8bea35dfc7d79a69c0ecbcb7725e289028446673978fc2064993e1c6479dc70c06e1b776cea1a79fce17092cca337183cdd9f93c44f79f27a
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:8.70.0, @typescript-eslint/parser@npm:^8.36.0, @typescript-eslint/parser@npm:~8.70.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/parser@npm:8.70.0"
+"@typescript-eslint/eslint-plugin@npm:^8.36.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/eslint-plugin@npm:8.67.0"
   dependencies:
-    "@typescript-eslint/scope-manager": "npm:8.70.0"
-    "@typescript-eslint/types": "npm:8.70.0"
-    "@typescript-eslint/typescript-estree": "npm:8.70.0"
-    "@typescript-eslint/visitor-keys": "npm:8.70.0"
+    "@eslint-community/regexpp": "npm:^4.12.2"
+    "@typescript-eslint/scope-manager": "npm:8.67.0"
+    "@typescript-eslint/type-utils": "npm:8.67.0"
+    "@typescript-eslint/utils": "npm:8.67.0"
+    "@typescript-eslint/visitor-keys": "npm:8.67.0"
+    ignore: "npm:^7.0.5"
+    natural-compare: "npm:^1.4.0"
+    ts-api-utils: "npm:^2.5.0"
+  peerDependencies:
+    "@typescript-eslint/parser": ^8.67.0
+    eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+    typescript: ">=4.8.4 <6.1.0"
+  checksum: 10c0/5962baaa764cd6350dfdf51c9a09fdd9ee6be65982ac562ee9b732f851744158e5006bf8ce61556a93534d831be8300fd89d7b79b6b4d7170dc2381d987dc8d9
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/parser@npm:8.70.1, @typescript-eslint/parser@npm:~8.70.0":
+  version: 8.70.1
+  resolution: "@typescript-eslint/parser@npm:8.70.1"
+  dependencies:
+    "@typescript-eslint/scope-manager": "npm:8.70.1"
+    "@typescript-eslint/types": "npm:8.70.1"
+    "@typescript-eslint/typescript-estree": "npm:8.70.1"
+    "@typescript-eslint/visitor-keys": "npm:8.70.1"
     debug: "npm:^4.4.3"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/6d35e0cad56902295599c3da7e4f4c97ebf6f19fcc4333100ad05ef757ba9c431db9cdbd886b6748eb88afd0bc64f8c1c7a81b37589bbd4cc346f6e9eb4e3d12
+  checksum: 10c0/892025824f25e64ced093dc25a4ae1b6a03b1cdf8bbb00637914bd4fd640887bdc3fcf585f2eadb260677d329690c7e837aedc3680d5532f8277fd30e451bc30
   languageName: node
   linkType: hard
 
-"@typescript-eslint/project-service@npm:8.70.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/project-service@npm:8.70.0"
+"@typescript-eslint/parser@npm:^8.36.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/parser@npm:8.67.0"
   dependencies:
-    "@typescript-eslint/tsconfig-utils": "npm:^8.70.0"
-    "@typescript-eslint/types": "npm:^8.70.0"
+    "@typescript-eslint/scope-manager": "npm:8.67.0"
+    "@typescript-eslint/types": "npm:8.67.0"
+    "@typescript-eslint/typescript-estree": "npm:8.67.0"
+    "@typescript-eslint/visitor-keys": "npm:8.67.0"
+    debug: "npm:^4.4.3"
+  peerDependencies:
+    eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+    typescript: ">=4.8.4 <6.1.0"
+  checksum: 10c0/8f6f8fbea429509ca0c95c4d48a45da0c890172a590606d65587e75a3ca762c3e5678a20a63fc9e386b0b21b7aa643ba9724354ceaa75bc8f62d0b22cb0198c8
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/project-service@npm:8.67.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/project-service@npm:8.67.0"
+  dependencies:
+    "@typescript-eslint/tsconfig-utils": "npm:^8.67.0"
+    "@typescript-eslint/types": "npm:^8.67.0"
     debug: "npm:^4.4.3"
   peerDependencies:
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/eb7d0b4c91015e9aa47672ba20dfda0717e5fa09afa7e28f25b5d7b7b0cd8af4b394f94c3a1528358a7d8c8be4165ed4291a345cbe19bb137a24c6a4f006b398
+  checksum: 10c0/d8f89dc209f2186c04fb1c42c1a5c69c21696a7a57c5f2be2222682a6440b49ec32687ae85cbd1c1c164431635fbc37bb9404b336e5748966e270ee1347e028c
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/project-service@npm:8.70.1":
+  version: 8.70.1
+  resolution: "@typescript-eslint/project-service@npm:8.70.1"
+  dependencies:
+    "@typescript-eslint/tsconfig-utils": "npm:^8.70.1"
+    "@typescript-eslint/types": "npm:^8.70.1"
+    debug: "npm:^4.4.3"
+  peerDependencies:
+    typescript: ">=4.8.4 <6.1.0"
+  checksum: 10c0/3f168d3dd18fd63718e0758c6e4f28741640c2dc38f18a46c9f2276bdc8a6e0927bfcd1f0cf40e01b6c2e3c2eac179ff6ed916c5ad539e284fb66511066e1425
   languageName: node
   linkType: hard
 
@@ -6258,38 +6429,73 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/scope-manager@npm:8.70.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/scope-manager@npm:8.70.0"
+"@typescript-eslint/scope-manager@npm:8.67.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/scope-manager@npm:8.67.0"
   dependencies:
-    "@typescript-eslint/types": "npm:8.70.0"
-    "@typescript-eslint/visitor-keys": "npm:8.70.0"
-  checksum: 10c0/ca05825fb16266d90e73bd1745407f719fc6d5fdb33045cdae21d3259f13c9b54d8b956d5c64a3eb83baff7690527fb16d01a2d7318379f97fb79a1cbf8ca103
+    "@typescript-eslint/types": "npm:8.67.0"
+    "@typescript-eslint/visitor-keys": "npm:8.67.0"
+  checksum: 10c0/8f1fe7dffcb6929ad66dcdca77dd1e4a703f18ab3ab1d685458af74dad10b9be05795e64bd58ff60b45cda8d45737240c84874674d39140c2689e00e3ee82bb9
   languageName: node
   linkType: hard
 
-"@typescript-eslint/tsconfig-utils@npm:8.70.0, @typescript-eslint/tsconfig-utils@npm:^8.70.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/tsconfig-utils@npm:8.70.0"
+"@typescript-eslint/scope-manager@npm:8.70.1":
+  version: 8.70.1
+  resolution: "@typescript-eslint/scope-manager@npm:8.70.1"
+  dependencies:
+    "@typescript-eslint/types": "npm:8.70.1"
+    "@typescript-eslint/visitor-keys": "npm:8.70.1"
+  checksum: 10c0/979ef0a6119ffd7045dc0e7e14c9e9a12c135a83554962ff4b33acab7bfdabda3631e8c6818ef5fc6c9b1d21d381f61e593a1bd8c92019333926447a27aaca21
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/tsconfig-utils@npm:8.67.0, @typescript-eslint/tsconfig-utils@npm:^8.67.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/tsconfig-utils@npm:8.67.0"
   peerDependencies:
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/925df7c1fbb4e8050dda3fa3dad4a6f515a1f7f2b43f5c145d9eaac856adb84bba04eb5038cc0f78c2307c1df4e2d64dbb4e2e47abffa4844e25cfe62ce402cf
+  checksum: 10c0/c19161347ea3d7a0081653c4d399275a3e0d66f87a24131fb5a358e6b55bc27d709781dbda16382f3f721d790338dcf42c65c9e6c26077123e9f3d076d37a894
   languageName: node
   linkType: hard
 
-"@typescript-eslint/type-utils@npm:8.70.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/type-utils@npm:8.70.0"
+"@typescript-eslint/tsconfig-utils@npm:8.70.1, @typescript-eslint/tsconfig-utils@npm:^8.70.1":
+  version: 8.70.1
+  resolution: "@typescript-eslint/tsconfig-utils@npm:8.70.1"
+  peerDependencies:
+    typescript: ">=4.8.4 <6.1.0"
+  checksum: 10c0/c1b11fd209a547f637403a4143a5bfc72bfa6eae2f6771b62131392964f5012056608f10ce9156a5316f8b16cbe98f41de156e3f83f72870a875c80c0a8b9248
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/type-utils@npm:8.67.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/type-utils@npm:8.67.0"
   dependencies:
-    "@typescript-eslint/types": "npm:8.70.0"
-    "@typescript-eslint/typescript-estree": "npm:8.70.0"
-    "@typescript-eslint/utils": "npm:8.70.0"
+    "@typescript-eslint/types": "npm:8.67.0"
+    "@typescript-eslint/typescript-estree": "npm:8.67.0"
+    "@typescript-eslint/utils": "npm:8.67.0"
     debug: "npm:^4.4.3"
     ts-api-utils: "npm:^2.5.0"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/b745dc16a9ae50fc1bf7880388425d05d7d1775d23819dfcbdbe5930829fb426d7a011a9848494f427f61e236a4deeb9e8f0fd60db4b7a717a791c8454d63584
+  checksum: 10c0/0970ea126f9b63a6eb9ca3525a6bf3065dffb3f61a00bd0ee84967140e7ecffe45cafda0cd2c90233dcc06b19c8fb98f4cd90ba8ebbb12deaf9501b9f5b54d8c
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/type-utils@npm:8.70.1":
+  version: 8.70.1
+  resolution: "@typescript-eslint/type-utils@npm:8.70.1"
+  dependencies:
+    "@typescript-eslint/types": "npm:8.70.1"
+    "@typescript-eslint/typescript-estree": "npm:8.70.1"
+    "@typescript-eslint/utils": "npm:8.70.1"
+    debug: "npm:^4.4.3"
+    ts-api-utils: "npm:^2.5.0"
+  peerDependencies:
+    eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+    typescript: ">=4.8.4 <6.1.0"
+  checksum: 10c0/b195d46e7f9a4aece9bb7643db698a640c61a1dff846ae5a076c1b5e55b182f21fa2f57e6708438dcba067a61fccde61b2743c37bedc321768f2b6b3967dfa25
   languageName: node
   linkType: hard
 
@@ -6300,10 +6506,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/types@npm:8.70.0, @typescript-eslint/types@npm:^8.70.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/types@npm:8.70.0"
-  checksum: 10c0/e3f98d0c0e708fcadebb3b457bf3f38a2512220b6bc9823212cacf310377539fb3c24f9e9e754d13b611a3ac6028a0bba16d02eeef03198c65e7ba605bb2036d
+"@typescript-eslint/types@npm:8.67.0, @typescript-eslint/types@npm:^8.67.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/types@npm:8.67.0"
+  checksum: 10c0/b892a00d4cbea9604a0abf6eedd0ea019b27df4220a1d90e0035101cb4f846722c9e3eeadce40b423c1e0240709bbc787c6ca49bcc4f8c25ba23b4bd0436492a
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/types@npm:8.70.1, @typescript-eslint/types@npm:^8.70.1":
+  version: 8.70.1
+  resolution: "@typescript-eslint/types@npm:8.70.1"
+  checksum: 10c0/8bbc4806c5d9a7350b0cba1e60e93b235a3935d33972efba8f127688cc29db49efef2e42472bb5127f211daf2fbfd9f05be4e9bf8cd4cb8e7fdebb7be543ce16
   languageName: node
   linkType: hard
 
@@ -6325,14 +6538,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/typescript-estree@npm:8.70.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/typescript-estree@npm:8.70.0"
+"@typescript-eslint/typescript-estree@npm:8.67.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/typescript-estree@npm:8.67.0"
   dependencies:
-    "@typescript-eslint/project-service": "npm:8.70.0"
-    "@typescript-eslint/tsconfig-utils": "npm:8.70.0"
-    "@typescript-eslint/types": "npm:8.70.0"
-    "@typescript-eslint/visitor-keys": "npm:8.70.0"
+    "@typescript-eslint/project-service": "npm:8.67.0"
+    "@typescript-eslint/tsconfig-utils": "npm:8.67.0"
+    "@typescript-eslint/types": "npm:8.67.0"
+    "@typescript-eslint/visitor-keys": "npm:8.67.0"
     debug: "npm:^4.4.3"
     minimatch: "npm:^10.2.2"
     semver: "npm:^7.7.3"
@@ -6340,22 +6553,56 @@ __metadata:
     ts-api-utils: "npm:^2.5.0"
   peerDependencies:
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/11e6c9c0108184902bc229376cce00eb81ee2b88a7cc3bf02a8c159bf59b2c7af21d2b330976b1751fedd5c27e257731b0d60840268299582c458c2a0a29525e
+  checksum: 10c0/449350fcf4f4ee55a6bb7a73302c4eef072a1282d366344cb625c0f17231eb4088251e6ce61fb48d0d536febb9a28f3725b9bd78ac8d0dbf9c161cf51745870c
   languageName: node
   linkType: hard
 
-"@typescript-eslint/utils@npm:8.70.0, @typescript-eslint/utils@npm:^8.0.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/utils@npm:8.70.0"
+"@typescript-eslint/typescript-estree@npm:8.70.1":
+  version: 8.70.1
+  resolution: "@typescript-eslint/typescript-estree@npm:8.70.1"
+  dependencies:
+    "@typescript-eslint/project-service": "npm:8.70.1"
+    "@typescript-eslint/tsconfig-utils": "npm:8.70.1"
+    "@typescript-eslint/types": "npm:8.70.1"
+    "@typescript-eslint/visitor-keys": "npm:8.70.1"
+    debug: "npm:^4.4.3"
+    minimatch: "npm:^10.2.2"
+    semver: "npm:^7.7.3"
+    tinyglobby: "npm:^0.2.15"
+    ts-api-utils: "npm:^2.5.0"
+  peerDependencies:
+    typescript: ">=4.8.4 <6.1.0"
+  checksum: 10c0/d0444d74a6136c92bc83d89dfb0515b1f9a9809ed6913941c41104d163eb0f40fb8b13741f93b8d0def9c41d200f6fa691507723a1433d9f25ffe6857f16bb3a
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/utils@npm:8.67.0, @typescript-eslint/utils@npm:^8.0.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/utils@npm:8.67.0"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.9.1"
-    "@typescript-eslint/scope-manager": "npm:8.70.0"
-    "@typescript-eslint/types": "npm:8.70.0"
-    "@typescript-eslint/typescript-estree": "npm:8.70.0"
+    "@typescript-eslint/scope-manager": "npm:8.67.0"
+    "@typescript-eslint/types": "npm:8.67.0"
+    "@typescript-eslint/typescript-estree": "npm:8.67.0"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/15353ecd0c5e29057e5846c6b84de601b679448e01293dbf1ae7dbe94ab6d4b586f8690a262630522441307fafad01ab3b0b46a85eb71907c19a2f124d7bba3f
+  checksum: 10c0/cccaca1aeba52ec332ee95f3367b84eaf5dd9d60a0d1b4332ebe41b775fa7e8b8faf412de4d88b73a22f84b01f6ab48496c61863407b08fcbef9af429b6b89f1
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/utils@npm:8.70.1":
+  version: 8.70.1
+  resolution: "@typescript-eslint/utils@npm:8.70.1"
+  dependencies:
+    "@eslint-community/eslint-utils": "npm:^4.9.1"
+    "@typescript-eslint/scope-manager": "npm:8.70.1"
+    "@typescript-eslint/types": "npm:8.70.1"
+    "@typescript-eslint/typescript-estree": "npm:8.70.1"
+  peerDependencies:
+    eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+    typescript: ">=4.8.4 <6.1.0"
+  checksum: 10c0/c946cf4ea68651ae25352c43fbc1cdb108079b70bed8a3bc86f0e3b35f166e468ab2c8b5d8137078622c1b22fc5599d55d8b88d530c2674df2d41f9e8bd3b305
   languageName: node
   linkType: hard
 
@@ -6387,13 +6634,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/visitor-keys@npm:8.70.0":
-  version: 8.70.0
-  resolution: "@typescript-eslint/visitor-keys@npm:8.70.0"
+"@typescript-eslint/visitor-keys@npm:8.67.0":
+  version: 8.67.0
+  resolution: "@typescript-eslint/visitor-keys@npm:8.67.0"
   dependencies:
-    "@typescript-eslint/types": "npm:8.70.0"
+    "@typescript-eslint/types": "npm:8.67.0"
     eslint-visitor-keys: "npm:^5.0.0"
-  checksum: 10c0/43fe28dc1045a686deead8c9334f6e9d8b3fa8f84917147aabd9747783b8bc531254a95a9bfb33355b25cf5ec9a72c62bcde313f13869d7a5e5603d96be593a9
+  checksum: 10c0/d43e6151cd1cdbcfb2f9fa54946198baaebaf0b7a9057ccb2f1aeba1aa3eb46708a97cd7773dcfd0eba3bd45642a5520f4607001cd27d8958e41aa56b2fe7a35
+  languageName: node
+  linkType: hard
+
+"@typescript-eslint/visitor-keys@npm:8.70.1":
+  version: 8.70.1
+  resolution: "@typescript-eslint/visitor-keys@npm:8.70.1"
+  dependencies:
+    "@typescript-eslint/types": "npm:8.70.1"
+    eslint-visitor-keys: "npm:^5.0.0"
+  checksum: 10c0/b5faf6ec7ef8c39bcc127401a2197315fa784a30bcc0e97c5e0dda3c2f574b64e097d6ca9d886accccd3a67f78a77e2b53520735a733d6e15dcd0fa666bb657c
   languageName: node
   linkType: hard
 
@@ -7310,8 +7567,6 @@ __metadata:
     react-native-keychain: "npm:~10.0.0"
     react-native-localize: "npm:~2.2.6"
     react-native-logs: "npm:~5.1.0"
-    react-native-nitro-image: "npm:^0.15.2"
-    react-native-nitro-modules: "npm:^0.37.0"
     react-native-orientation-locker: "npm:~1.6.0"
     react-native-permissions: "npm:~5.4.1"
     react-native-qrcode-svg: "npm:~6.2.0"
@@ -7329,9 +7584,8 @@ __metadata:
     react-native-url-polyfill: "npm:^3.0.0"
     react-native-uuid: "npm:~2.0.4"
     react-native-vector-icons: "npm:~10.3.0"
-    react-native-video: "patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch"
-    react-native-vision-camera: "npm:^5.2.3"
-    react-native-vision-camera-barcode-scanner: "npm:^5.2.3"
+    react-native-video: "npm:~6.19.2"
+    react-native-vision-camera: "patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch"
     react-native-volume-manager: "npm:~1.10.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:13.16.1"
@@ -9649,8 +9903,8 @@ __metadata:
   linkType: hard
 
 "eslint-plugin-jest@npm:^29.0.1":
-  version: 29.16.6
-  resolution: "eslint-plugin-jest@npm:29.16.6"
+  version: 29.16.1
+  resolution: "eslint-plugin-jest@npm:29.16.1"
   dependencies:
     "@typescript-eslint/utils": "npm:^8.0.0"
   peerDependencies:
@@ -9665,7 +9919,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/c483057f6b7c6500c6208eb965b61fe3a81dbd86123dd1a129584ed8c490336275a8815196922c20bd4895761a7d5b993f7b37869c69d57594b522fe318def8d
+  checksum: 10c0/6aca236a8db9e9e736322f991ad6f33d776b9fabd9c3ddb1bb24515191a4438b2908ec88c5768dcfbb2323f48e6105fab91ee41d35574fa0bdd7631d53986506
   languageName: node
   linkType: hard
 
@@ -11289,9 +11543,9 @@ __metadata:
   linkType: hard
 
 "ignore@npm:^7.0.5":
-  version: 7.0.9
-  resolution: "ignore@npm:7.0.9"
-  checksum: 10c0/fec02e67b8c01a873d3b60eff6cce5e390365d7c45fea57f60f4ff52b9be5873c366867a3b8e154a3140330b72b41b94f19e1f28adfe0ef558c6b28bbf02a1b4
+  version: 7.0.6
+  resolution: "ignore@npm:7.0.6"
+  checksum: 10c0/fc01ef1d14efbe003439b60538726351e81483d1b6f55bdbb3a4465c6346d9481afad5b350dfbd604ddd7049618ef9093ff26dc147984aabc303c56ba53ea3b5
   languageName: node
   linkType: hard
 
@@ -15552,30 +15806,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-nitro-image@npm:^0.15.2":
-  version: 0.15.2
-  resolution: "react-native-nitro-image@npm:0.15.2"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-    react-native-nitro-modules: "*"
-  peerDependenciesMeta:
-    react-native-nitro-modules:
-      optional: true
-  checksum: 10c0/25ac98e5bdbdaf05bfdab704e7098e54541b053e6022b03f1d3053297f84e13b876006fc4d600223fb82b322b271f74ba42fff1234dc6474b35bf244326eab0c
-  languageName: node
-  linkType: hard
-
-"react-native-nitro-modules@npm:^0.37.0, react-native-nitro-modules@npm:^0.37.1":
-  version: 0.37.1
-  resolution: "react-native-nitro-modules@npm:0.37.1"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  checksum: 10c0/5178f2ee891cb746b084fdf382b6020e366d8e4a81922a3f1d60a453d34fca6ebb1b00c4c28785c36385bc182ab76a30cba70441c39abbc25d3ad54db612e46e
-  languageName: node
-  linkType: hard
-
 "react-native-orientation-locker@npm:~1.6.0":
   version: 1.6.0
   resolution: "react-native-orientation-locker@npm:1.6.0"
@@ -15776,7 +16006,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-video@npm:6.19.2":
+"react-native-video@npm:~6.19.2":
   version: 6.19.2
   resolution: "react-native-video@npm:6.19.2"
   peerDependencies:
@@ -15786,44 +16016,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-video@patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch":
-  version: 6.19.2
-  resolution: "react-native-video@patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch::version=6.19.2&hash=84fde1"
+"react-native-vision-camera@npm:4.7.3":
+  version: 4.7.3
+  resolution: "react-native-vision-camera@npm:4.7.3"
   peerDependencies:
+    "@shopify/react-native-skia": "*"
     react: "*"
     react-native: "*"
-  checksum: 10c0/0de67356dfd9454cb01bfcb48902e1b424bf7cd10c3a28d06d0375b243fe22fe431bb1ec331e1ce1ecd155fb04a5c0b0457e99b85a7a7d4ed21a15d2784a0a03
+    react-native-reanimated: "*"
+    react-native-worklets-core: "*"
+  peerDependenciesMeta:
+    "@shopify/react-native-skia":
+      optional: true
+    react-native-reanimated:
+      optional: true
+    react-native-worklets-core:
+      optional: true
+  checksum: 10c0/46001037f4f9a85e75c023e5082b137c179fd520741e088009d217f0a6eaf3a819b9784ae68aced95fa70c3345346c79dd2ee70bc04cfd811c7eefeda675cab2
   languageName: node
   linkType: hard
 
-"react-native-vision-camera-barcode-scanner@npm:^5.2.3":
-  version: 5.2.3
-  resolution: "react-native-vision-camera-barcode-scanner@npm:5.2.3"
+"react-native-vision-camera@patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch":
+  version: 4.7.3
+  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch::version=4.7.3&hash=0907f2"
   peerDependencies:
+    "@shopify/react-native-skia": "*"
     react: "*"
     react-native: "*"
-    react-native-nitro-image: "*"
-    react-native-nitro-modules: "*"
-    react-native-vision-camera: "*"
+    react-native-reanimated: "*"
+    react-native-worklets-core: "*"
   peerDependenciesMeta:
-    react-native-nitro-modules:
+    "@shopify/react-native-skia":
       optional: true
-  checksum: 10c0/3081afe648ef397a074c4bbc3c421d2b03d5bca4cff550b61e23904bb78c0f9fd75176b5b0c91040c040e395091b9c64f84a39f743da4f358f55f41ed82f5f28
-  languageName: node
-  linkType: hard
-
-"react-native-vision-camera@npm:^5.2.3":
-  version: 5.2.3
-  resolution: "react-native-vision-camera@npm:5.2.3"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-    react-native-nitro-image: "*"
-    react-native-nitro-modules: "*"
-  peerDependenciesMeta:
-    react-native-nitro-modules:
+    react-native-reanimated:
       optional: true
-  checksum: 10c0/4c55b4e2dc659f38d3247e300c1a462493ea22e3d704b61d457dcb261399a23f57418e5caa6793456a0c557999f50439a4b4143bd467b3c5bb91dbb1aee2a324
+    react-native-worklets-core:
+      optional: true
+  checksum: 10c0/2341dfb7181a7ff28534aceb0dce25b292923ec48795c6c01642627da42485d15f5f8d2ae4ca63dbb54137a017ec66a0e5fba15f646315160e1f8ea0ba3c76f4
   languageName: node
   linkType: hard
 
@@ -17925,17 +18154,17 @@ __metadata:
   linkType: hard
 
 "typescript-eslint@npm:~8.70.0":
-  version: 8.70.0
-  resolution: "typescript-eslint@npm:8.70.0"
+  version: 8.70.1
+  resolution: "typescript-eslint@npm:8.70.1"
   dependencies:
-    "@typescript-eslint/eslint-plugin": "npm:8.70.0"
-    "@typescript-eslint/parser": "npm:8.70.0"
-    "@typescript-eslint/typescript-estree": "npm:8.70.0"
-    "@typescript-eslint/utils": "npm:8.70.0"
+    "@typescript-eslint/eslint-plugin": "npm:8.70.1"
+    "@typescript-eslint/parser": "npm:8.70.1"
+    "@typescript-eslint/typescript-estree": "npm:8.70.1"
+    "@typescript-eslint/utils": "npm:8.70.1"
   peerDependencies:
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.1.0"
-  checksum: 10c0/bf6625631bfcc7392bb1403681ef934f4f428c41a6a090b081a77ed0d342326c31097956900d701d078ac0c8a599d53377b504455fa9ce7214365c4c8d4635a3
+  checksum: 10c0/9d9a01dca7f0663b7dbe496c2e1697f0cf6a44570f7dd53926bf5ea80a54bb0f7ca1c88771d82eabc6083f7983a9dec24f6b4ed1957d0810d9e9e68a250cbc4d
   languageName: node
   linkType: hard
 

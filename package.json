@@ -76,13 +76,7 @@
     "shell-quote": "1.8.4",
     "@credo-ts/anoncreds@npm:0.7.0": "patch:@credo-ts/anoncreds@npm%3A0.7.0#~/.yarn/patches/@credo-ts-anoncreds-npm-0.7.0-757752e5ca.patch",
     "@credo-ts/anoncreds@npm:^0.6.1": "patch:@credo-ts/anoncreds@npm%3A0.7.0#~/.yarn/patches/@credo-ts-anoncreds-npm-0.7.0-757752e5ca.patch",
-    "@credo-ts/core@npm:^0.6.1": "0.7.0",
-    "@bifold/core": "portal:bifold/packages/core",
-    "@bifold/oca": "portal:bifold/packages/oca",
-    "@bifold/react-hooks": "portal:bifold/packages/react-hooks",
-    "@bifold/react-native-attestation": "portal:bifold/packages/react-native-attestation",
-    "@bifold/remote-logs": "portal:bifold/packages/remote-logs",
-    "@bifold/verifier": "portal:bifold/packages/verifier"
+    "@credo-ts/core@npm:^0.6.1": "0.7.0"
   },
   "dependencies": {
     "react-native-bcsc-core": "workspace:*"

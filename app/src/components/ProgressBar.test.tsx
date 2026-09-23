@@ -1,5 +1,5 @@
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render, waitFor } from '@testing-library/react-native'
+import { render } from '@testing-library/react-native'
 import React from 'react'
 import ProgressBar from './ProgressBar'
 
@@ -19,9 +19,7 @@ describe('ProgressBar Component', () => {
       </BasicAppContext>
     )
 
-    waitFor(() => {
-      expect(tree).toMatchSnapshot()
-    })
+    expect(tree).toMatchSnapshot()
   })
 
   test('renders correctly in dark mode', () => {
@@ -31,8 +29,6 @@ describe('ProgressBar Component', () => {
       </BasicAppContext>
     )
 
-    waitFor(() => {
-      expect(tree).toMatchSnapshot()
-    })
+    expect(tree).toMatchSnapshot()
   })
 })
