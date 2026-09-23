@@ -1,6 +1,6 @@
 {
-  "name": "BCWallet",
-  "displayName": "BC Wallet",
+  "name": "BC Services Card",
+  "displayName": "BC Services Card",
   "ios": {
     "infoPlist": {
       "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera to capture photos and videos.",

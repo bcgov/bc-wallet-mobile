@@ -2,7 +2,8 @@ import { testIdWithKey } from '@bifold/core'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Platform } from 'react-native'
-import { useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
+import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 
 import { AppEventCode } from '@/events/appEventCode'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -12,10 +13,9 @@ import { BCSC_SN_SCAN_ZONES } from './utils/camera'
 
 // Store references to mock functions for access in tests
 const mockRequestPermission = jest.fn()
-const mockTakeSnapshot = jest.fn().mockResolvedValue({ path: '/tmp/snapshot.jpg' })
 const mockFocus = jest.fn().mockResolvedValue(undefined)
 let mockHasPermission = true
-let mockCodeScannerCallback: ((codes: any[], frame: any) => void) | null = null
+let mockCodeScannerCallback: ((codes: any[], frame?: any) => void) | null = null
 const mockEmitErrorModal = jest.fn()
 const mockEnsureAppError = jest.fn<{ name: string; message: string }, [unknown, AppEventCode]>(() => ({
   name: 'AppError',
@@ -33,22 +33,21 @@ jest.mock('react-native-vision-camera', () => {
 
   // Forward ref Camera component mock
   // eslint-disable-next-line react/display-name
-  const MockCamera = React.forwardRef(({ children, onInitialized, ...props }: any, ref: any) => {
+  const MockCamera = React.forwardRef(({ children, onStarted, ...props }: any, ref: any) => {
     // Expose mock methods via ref
     React.useImperativeHandle(ref, () => ({
-      takeSnapshot: mockTakeSnapshot,
-      focus: mockFocus,
+      focusTo: mockFocus,
     }))
 
-    // Simulate onInitialized callback
+    // Simulate the session starting
     React.useEffect(() => {
       const timer = setTimeout(() => {
-        if (onInitialized) {
-          onInitialized()
+        if (onStarted) {
+          onStarted()
         }
       }, 0)
       return () => clearTimeout(timer)
-    }, [onInitialized])
+    }, [onStarted])
 
     return (
       <View testID="mock-camera" {...props}>
@@ -61,36 +60,40 @@ jest.mock('react-native-vision-camera', () => {
     Camera: MockCamera,
     useCameraDevice: jest.fn(() => ({
       id: 'back',
-      supportsFocus: true,
+      supportsFocusMetering: true,
       minZoom: 1,
       maxZoom: 8,
-      neutralZoom: 1,
       hasTorch: true,
-    })),
-    useCameraFormat: jest.fn(() => ({
-      videoWidth: 1920,
-      videoHeight: 1080,
-      photoWidth: 1920,
-      photoHeight: 1080,
     })),
     useCameraPermission: jest.fn(() => ({
       hasPermission: mockHasPermission,
       requestPermission: mockRequestPermission,
     })),
-    useCodeScanner: jest.fn((config: any) => {
-      // Store the callback for manual triggering in tests
-      mockCodeScannerCallback = config.onCodeScanned
-      return config
-    }),
-    CameraCaptureError: class CameraCaptureError extends Error {
-      code: string
-      constructor(code: string, message: string) {
-        super(message)
-        this.code = code
-      }
-    },
   }
 })
+
+// Mock react-native-vision-camera-barcode-scanner. Tests drive the scanner with the shape of
+// `ScannedCode` (type/value/frame/corners); this adapter converts it to the v5 `Barcode` shape.
+jest.mock('react-native-vision-camera-barcode-scanner', () => ({
+  useBarcodeScannerOutput: jest.fn((config: any) => {
+    mockCodeScannerCallback = (codes: any[]) =>
+      config.onBarcodeScanned(
+        codes.map((code) => ({
+          format: code.type,
+          rawValue: code.value,
+          displayValue: code.value,
+          boundingBox: {
+            left: code.frame?.x ?? 0,
+            top: code.frame?.y ?? 0,
+            right: (code.frame?.x ?? 0) + (code.frame?.width ?? 0),
+            bottom: (code.frame?.y ?? 0) + (code.frame?.height ?? 0),
+          },
+          cornerPoints: code.corners ?? [],
+        }))
+      )
+    return { mock: 'scanner-output' }
+  }),
+}))
 
 // Mock BCSCActivityContext — not provided by BasicAppContext. Tests that need a
 // non-default appStateStatus call `mockedUseBCSCActivity.mockReturnValue(...)`
@@ -142,7 +145,7 @@ jest.mock('react-native-gesture-handler', () => ({
 const mockedUseBCSCActivity = useBCSCActivity as jest.Mock
 const mockedUseCameraDevice = useCameraDevice as jest.Mock
 const mockedUseCameraPermission = useCameraPermission as jest.Mock
-const mockedUseCodeScanner = useCodeScanner as jest.Mock
+const mockedUseBarcodeScannerOutput = useBarcodeScannerOutput as jest.Mock
 
 describe('CodeScanningCamera', () => {
   const mockOnCodeScanned = jest.fn()
@@ -206,9 +209,9 @@ describe('CodeScanningCamera', () => {
       </BasicAppContext>
     )
 
-    expect(mockedUseCodeScanner).toHaveBeenCalledWith(
+    expect(mockedUseBarcodeScannerOutput).toHaveBeenCalledWith(
       expect.objectContaining({
-        codeTypes: expect.arrayContaining(['code-128', 'pdf-417']),
+        barcodeFormats: expect.arrayContaining(['code-128', 'pdf-417']),
       })
     )
   })
@@ -458,10 +461,10 @@ describe('CodeScanningCamera', () => {
         </BasicAppContext>
       )
 
-      expect(mockedUseCodeScanner).toHaveBeenCalledWith(
+      expect(mockedUseBarcodeScannerOutput).toHaveBeenCalledWith(
         expect.objectContaining({
-          codeTypes: ['code-39', 'code-128', 'pdf-417'],
-          onCodeScanned: expect.any(Function),
+          barcodeFormats: ['code-128', 'code-39', 'pdf-417'],
+          onBarcodeScanned: expect.any(Function),
         })
       )
     })

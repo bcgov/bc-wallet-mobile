@@ -1,7 +1,7 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
-import { useBCServicesCardScannerOutput, useEvidencePhotoOutput } from '@/bcsc-theme/components/utils/camera-output'
+import { useEvidencePhotoOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
@@ -17,12 +17,12 @@ import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { withAlert } from '@/utils/alert'
 import { MaskType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission } from 'react-native-vision-camera'
+import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 
 /**
  * Builds the barcodes array for the evidence upload payload, matching the
@@ -72,7 +72,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const scanner = useCardScanner()
-  const photoOutput = useEvidencePhotoOutput()
   const bcscSerialRef = useRef<string | null>(null)
   const licenseRef = useRef<DriversLicenseMetadata | null>(null)
   // Guards against re-hitting /device/barcodes on every photo of a multi-sided
@@ -81,16 +80,38 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const barcodesCheckedRef = useRef(false)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert, documentExpiredAlert } = useAlerts(navigation)
+  const photoOutput = useEvidencePhotoOutput()
+  const codeScanner = useBarcodeScannerOutput({
+    barcodeFormats: scanner.codeTypes,
+    onBarcodeScanned: async (codes) => {
+      if (!codes.length) {
+        return
+      }
 
-  const { scannerOutput, resetScanner } = useBCServicesCardScannerOutput({
-    minMatches: 0, // No hit threshold
-    onScanBCServicesCard: async (serial, license) => {
-      bcscSerialRef.current = serial
-      licenseRef.current = license
+      // If we have already captured both values, no need to keep scanning
+      if (bcscSerialRef.current && licenseRef.current) {
+        return
+      }
+
+      const scannableCodes = codes.map((code) => ({
+        type: code.format,
+        value: code.displayValue,
+      }))
+
+      await scanner.scanCard(scannableCodes, async (bcscSerial, license) => {
+        if (bcscSerial) {
+          bcscSerialRef.current = bcscSerial
+        }
+
+        if (license) {
+          licenseRef.current = license
+        }
+      })
+    },
+    onError: (error) => {
+      logger.error('[EvidenceCaptureScreen] Error scanning barcode', error)
     },
   })
-
-  useFocusEffect(useCallback(() => resetScanner(), [resetScanner]))
 
   // SVGOverlay's customPath is the cutout — this rectangle leaves the top
   // banner area inside the dark overlay so the instruction text reads clearly.
@@ -243,8 +264,8 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             customPath={customHeaderPath}
             maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
-            codeScanner={scannerOutput}
             photoOutput={photoOutput}
+            codeScanner={codeScanner}
           />
         </View>
       ) : (

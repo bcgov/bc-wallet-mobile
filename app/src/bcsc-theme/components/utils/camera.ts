@@ -1,7 +1,6 @@
 import { Platform } from 'react-native'
 import { CameraDevice } from 'react-native-vision-camera'
-// import { FormatFilter } from 'react-native-vision-camera'
-import { Barcode } from 'react-native-vision-camera-barcode-scanner'
+import { Barcode, BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
 
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
@@ -9,9 +8,37 @@ import { Barcode } from 'react-native-vision-camera-barcode-scanner'
 export type Rect = { x: number; y: number; width: number; height: number }
 
 /**
- * Extended Code interface with position and orientation metadata
+ * Plain-object snapshot of a scanned barcode.
+ *
+ * VisionCamera v5 `Barcode`s are native hybrid objects (getters over native memory), so they
+ * can't be spread or held onto safely — their fields are copied out once, in the scan callback.
  */
-export interface EnhancedCode extends Barcode {
+export interface ScannedCode {
+  /** Barcode format (e.g. 'code-39', 'pdf-417') */
+  type: BarcodeFormat
+  /** Decoded value, if the scanner could decode one */
+  value?: string
+  /** Bounding box relative to the scanned frame */
+  frame: Rect
+  /** Corner points relative to the scanned frame */
+  corners: { x: number; y: number }[]
+}
+
+/** Copy the fields we use off a native `Barcode` into a plain `ScannedCode`. */
+export const toScannedCode = (barcode: Barcode): ScannedCode => {
+  const { left, right, top, bottom } = barcode.boundingBox
+  return {
+    type: barcode.format,
+    value: barcode.rawValue ?? barcode.displayValue,
+    frame: { x: left, y: top, width: right - left, height: bottom - top },
+    corners: barcode.cornerPoints.map(({ x, y }) => ({ x, y })),
+  }
+}
+
+/**
+ * Extended code interface with position and orientation metadata
+ */
+export interface EnhancedCode extends ScannedCode {
   /** Position of the barcode in the camera frame */
   position?: Rect
   /** Orientation of the barcode (horizontal or vertical) */
@@ -356,114 +383,114 @@ export const isCodeAlignedWithZones = (
   return isFullyWithinBounds(scanZoneBounds, { x: marginX, y: marginY })
 }
 
-// /**
-//  * Determine the collective scan state from the current set of enhanced codes.
-//  *
-//  * Transitions:
-//  * - `'scanning'`  — fewer than `minCodesForAligned` qualifying codes detected
-//  * - `'aligned'`   — enough qualifying codes, but not yet consistently read
-//  * - `'locked'`    — all qualifying codes have been read ≥ `lockReadingThreshold` times
-//  *
-//  * All identified (non-empty value) codes qualify for these transitions — position
-//  * on screen is not a gate. Card identity is validated downstream by decoding
-//  * content (`useCardScanner` → `decodeScannedCode`); a scan that decodes to a
-//  * DL-only card with no BCSC serial is rejected there via the `onCodeScanned`
-//  * `false` return, which resets the scanner. `isAligned` is still computed per
-//  * code (see `enhanceSingleCode`) but only drives focus-cycle prioritisation and
-//  * the (purely visual) scan zone outline colour — never whether a scan counts.
-//  *
-//  * @param codes Enhanced codes from the current scan frame
-//  * @param options Thresholds controlling state transitions
-//  * @returns The new scan state and the qualifying codes that drove the transition
-//  */
-// export const determineScanState = (
-//   codes: EnhancedCode[],
-//   options: {
-//     minCodesForAligned: number
-//     lockReadingThreshold: number
-//   }
-// ): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } => {
-//   const { minCodesForAligned, lockReadingThreshold } = options
-//   const identifiedCodes = codes.filter((c) => c.value && c.value.length > 0)
-//
-//   // Every identified code qualifies — no alignment/position filter.
-//   const qualifyingCodes = identifiedCodes
-//
-//   const qualifyingCount = qualifyingCodes.length
-//   const allLocked =
-//     qualifyingCount >= minCodesForAligned && qualifyingCodes.every((c) => (c.readingCount ?? 0) >= lockReadingThreshold)
-//
-//   let newScanState: ScanState
-//   if (allLocked) {
-//     newScanState = 'locked'
-//   } else if (qualifyingCount >= minCodesForAligned) {
-//     newScanState = 'aligned'
-//   } else {
-//     newScanState = 'scanning'
-//   }
-//
-//   return { newScanState, qualifyingCodes }
-// }
+/**
+ * Determine the collective scan state from the current set of enhanced codes.
+ *
+ * Transitions:
+ * - `'scanning'`  — fewer than `minCodesForAligned` qualifying codes detected
+ * - `'aligned'`   — enough qualifying codes, but not yet consistently read
+ * - `'locked'`    — all qualifying codes have been read ≥ `lockReadingThreshold` times
+ *
+ * All identified (non-empty value) codes qualify for these transitions — position
+ * on screen is not a gate. Card identity is validated downstream by decoding
+ * content (`useCardScanner` → `decodeScannedCode`); a scan that decodes to a
+ * DL-only card with no BCSC serial is rejected there via the `onCodeScanned`
+ * `false` return, which resets the scanner. `isAligned` is still computed per
+ * code (see `enhanceSingleCode`) but only drives focus-cycle prioritisation and
+ * the (purely visual) scan zone outline colour — never whether a scan counts.
+ *
+ * @param codes Enhanced codes from the current scan frame
+ * @param options Thresholds controlling state transitions
+ * @returns The new scan state and the qualifying codes that drove the transition
+ */
+export const determineScanState = (
+  codes: EnhancedCode[],
+  options: {
+    minCodesForAligned: number
+    lockReadingThreshold: number
+  }
+): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } => {
+  const { minCodesForAligned, lockReadingThreshold } = options
+  const identifiedCodes = codes.filter((c) => c.value && c.value.length > 0)
+
+  // Every identified code qualifies — no alignment/position filter.
+  const qualifyingCodes = identifiedCodes
+
+  const qualifyingCount = qualifyingCodes.length
+  const allLocked =
+    qualifyingCount >= minCodesForAligned && qualifyingCodes.every((c) => (c.readingCount ?? 0) >= lockReadingThreshold)
+
+  let newScanState: ScanState
+  if (allLocked) {
+    newScanState = 'locked'
+  } else if (qualifyingCount >= minCodesForAligned) {
+    newScanState = 'aligned'
+  } else {
+    newScanState = 'scanning'
+  }
+
+  return { newScanState, qualifyingCodes }
+}
 
 /** A validated code carried over from a recent frame, with the time it was recorded. */
 export type AccumulatedCode = { code: EnhancedCode; timestamp: number }
 
-// /**
-//  * Merge a locked frame's qualifying codes with any recently-validated codes carried
-//  * over from the accumulator, so a lock that only required a single barcode (e.g.
-//  * `minCodesForAligned === 1` for the single-zone `BCSC_SN_SCAN_ZONES`) still hands
-//  * along a different barcode that was read moments earlier but dropped out of frame
-//  * before the lock — e.g. the birthdate-bearing PDF-417 on a combo card when the
-//  * easier code-39 serial alone satisfies the lock threshold first.
-//  *
-//  * Ordering: accumulated extras are returned FIRST, current-frame codes LAST. Callers
-//  * (`useCardScanner`'s decode loop) apply "later code wins" when the same kind of
-//  * data shows up twice, so putting the current frame last means a fresher reading
-//  * always overrides a stale accumulated one of the same decoded kind — ordering
-//  * alone resolves that conflict, no extra same-kind filtering is needed here. Only
-//  * exact `${type}-${value}` duplicates against the current frame are dropped from
-//  * the accumulator; anything else (including a stale same-type/different-value
-//  * entry) is passed through and left for the ordering to resolve downstream.
-//  *
-//  * Scoping: eligibility is time-based only (`windowMs`), not card-identity-based —
-//  * this is what makes the normal combo-card case work. Known limitation (accepted,
-//  * minor): if the user swaps to a *different* physical BCSC card mid-scan within the
-//  * window and the new card's serial locks before the prior card's PDF-417 expires,
-//  * the merge can pair a serial from card B with a birthdate from card A. This is
-//  * self-correcting — the backend rejects the mismatched serial+birthdate
-//  * (`VerificationCardError.MismatchedSerial` → retry), so it never produces an
-//  * incorrect authorization or corrupts data. Clearing on barcode-reading decay was
-//  * considered and rejected: that would defeat the feature, since carrying a
-//  * no-longer-visible barcode into the lock is precisely the point. A correct
-//  * card-identity-aware invalidation is deferred as out of scope.
-//  *
-//  * @param currentFrameCodes Qualifying codes from the frame that triggered the lock
-//  * @param accumulated Map of recently-validated codes, keyed by `${type}-${value}`
-//  * @param windowMs Max age (ms) for an accumulated entry to still be eligible
-//  * @param now Current time in ms (injectable for tests; defaults to `Date.now()`)
-//  * @returns Current-frame codes plus any still-fresh, non-duplicate accumulated codes, extras first
-//  */
-// export const mergeLockedCodesWithAccumulated = (
-//   currentFrameCodes: EnhancedCode[],
-//   accumulated: ReadonlyMap<string, AccumulatedCode>,
-//   windowMs: number,
-//   now: number = Date.now()
-// ): EnhancedCode[] => {
-//   const currentFrameKeys = new Set(currentFrameCodes.map((c) => `${c.type}-${c.value}`))
-//
-//   const accumulatedExtras: EnhancedCode[] = []
-//   accumulated.forEach((entry, key) => {
-//     if (now - entry.timestamp > windowMs) {
-//       return
-//     }
-//     if (currentFrameKeys.has(key)) {
-//       return
-//     }
-//     accumulatedExtras.push(entry.code)
-//   })
-//
-//   return [...accumulatedExtras, ...currentFrameCodes]
-// }
+/**
+ * Merge a locked frame's qualifying codes with any recently-validated codes carried
+ * over from the accumulator, so a lock that only required a single barcode (e.g.
+ * `minCodesForAligned === 1` for the single-zone `BCSC_SN_SCAN_ZONES`) still hands
+ * along a different barcode that was read moments earlier but dropped out of frame
+ * before the lock — e.g. the birthdate-bearing PDF-417 on a combo card when the
+ * easier code-39 serial alone satisfies the lock threshold first.
+ *
+ * Ordering: accumulated extras are returned FIRST, current-frame codes LAST. Callers
+ * (`useCardScanner`'s decode loop) apply "later code wins" when the same kind of
+ * data shows up twice, so putting the current frame last means a fresher reading
+ * always overrides a stale accumulated one of the same decoded kind — ordering
+ * alone resolves that conflict, no extra same-kind filtering is needed here. Only
+ * exact `${type}-${value}` duplicates against the current frame are dropped from
+ * the accumulator; anything else (including a stale same-type/different-value
+ * entry) is passed through and left for the ordering to resolve downstream.
+ *
+ * Scoping: eligibility is time-based only (`windowMs`), not card-identity-based —
+ * this is what makes the normal combo-card case work. Known limitation (accepted,
+ * minor): if the user swaps to a *different* physical BCSC card mid-scan within the
+ * window and the new card's serial locks before the prior card's PDF-417 expires,
+ * the merge can pair a serial from card B with a birthdate from card A. This is
+ * self-correcting — the backend rejects the mismatched serial+birthdate
+ * (`VerificationCardError.MismatchedSerial` → retry), so it never produces an
+ * incorrect authorization or corrupts data. Clearing on barcode-reading decay was
+ * considered and rejected: that would defeat the feature, since carrying a
+ * no-longer-visible barcode into the lock is precisely the point. A correct
+ * card-identity-aware invalidation is deferred as out of scope.
+ *
+ * @param currentFrameCodes Qualifying codes from the frame that triggered the lock
+ * @param accumulated Map of recently-validated codes, keyed by `${type}-${value}`
+ * @param windowMs Max age (ms) for an accumulated entry to still be eligible
+ * @param now Current time in ms (injectable for tests; defaults to `Date.now()`)
+ * @returns Current-frame codes plus any still-fresh, non-duplicate accumulated codes, extras first
+ */
+export const mergeLockedCodesWithAccumulated = (
+  currentFrameCodes: EnhancedCode[],
+  accumulated: ReadonlyMap<string, AccumulatedCode>,
+  windowMs: number,
+  now: number = Date.now()
+): EnhancedCode[] => {
+  const currentFrameKeys = new Set(currentFrameCodes.map((c) => `${c.type}-${c.value}`))
+
+  const accumulatedExtras: EnhancedCode[] = []
+  accumulated.forEach((entry, key) => {
+    if (now - entry.timestamp > windowMs) {
+      return
+    }
+    if (currentFrameKeys.has(key)) {
+      return
+    }
+    accumulatedExtras.push(entry.code)
+  })
+
+  return [...accumulatedExtras, ...currentFrameCodes]
+}
 
 /**
  * Whether a VisionCamera runtime error is one the library recovers from on its own, so a

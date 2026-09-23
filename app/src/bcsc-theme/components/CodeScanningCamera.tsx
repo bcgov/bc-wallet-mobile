@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next'
 import {
   Alert,
   Animated,
-  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -17,34 +16,17 @@ import {
   useWindowDimensions,
 } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import Reanimated, {
-  Extrapolation,
-  interpolate,
-  runOnJS,
-  useAnimatedProps,
-  useSharedValue,
-} from 'react-native-reanimated'
-import {
-  Camera,
-  CameraCaptureError,
-  CameraProps,
-  CameraRuntimeError,
-  Code,
-  CodeScannerFrame,
-  CodeType,
-  useCameraDevice,
-  useCameraFormat,
-  useCameraPermission,
-  useCodeScanner,
-} from 'react-native-vision-camera'
+import Reanimated, { Extrapolation, interpolate, runOnJS, useSharedValue } from 'react-native-reanimated'
+import { Camera, CameraRef, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import { BarcodeFormat, TargetBarcodeFormat, useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import { isVisionCameraTorchToggleErrorV5_2_3 } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import {
   AccumulatedCode,
-  CameraFormat,
   EnhancedCode,
   Rect,
   ScanState,
@@ -57,13 +39,11 @@ import {
   isCodeAlignedWithZones,
   isRecoverableCameraRuntimeError,
   mergeLockedCodesWithAccumulated,
-  transformBarcodeCoordinates,
+  ScannedCode,
+  toScannedCode,
 } from './utils/camera'
 
 export type { EnhancedCode, ScanZone }
-
-Reanimated.addWhitelistedNativeProps({ zoom: true })
-const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera)
 
 /**
  * How far the pinch gesture scales to reach the full device zoom range.
@@ -90,9 +70,8 @@ export interface CodeScanningCameraProps {
    * accepted.
    *
    * @param codes Array of scanned codes with position and orientation metadata
-   * @param frame The camera frame information
    */
-  onCodeScanned: (codes: EnhancedCode[], frame: CodeScannerFrame) => Promise<void | boolean>
+  onCodeScanned: (codes: EnhancedCode[]) => Promise<void | boolean>
 
   /**
    * Custom style for the camera container
@@ -184,7 +163,7 @@ export interface CodeScanningCameraProps {
    * Called when the camera hits a runtime error that isn't just the app being
    * backgrounded. Lets the parent fall back to a non-camera path.
    */
-  onError?: (error: CameraRuntimeError) => void
+  onError?: (error: Error) => void
 }
 
 /** Feature flag: when true, shows Confirm/Try Again buttons on lock.
@@ -209,18 +188,24 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   onError,
 }) => {
   // Derive scanner code types from the declared scan zones (deduped)
-  const codeTypes = [...new Set(scanZones.flatMap((z) => z.types))] as CodeType[]
+  const codeTypesKey = [...new Set(scanZones.flatMap((z) => z.types))].sort().join(',')
+  // Keyed on content so a new `scanZones` array with the same types doesn't recreate the native scanner output
+  const codeTypes = useMemo(
+    () => (codeTypesKey ? codeTypesKey.split(',') : []) as TargetBarcodeFormat[],
+    [codeTypesKey]
+  )
 
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorModal } = useErrorAlert()
   const { appStateStatus, pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
-  const camera = useRef<Camera>(null)
+  const camera = useRef<CameraRef>(null)
+  const [cameraStarted, setCameraStarted] = useState(false)
   const [torchEnabled, setTorchEnabled] = useState(false)
   // When `torchActive`/`onToggleTorch` are provided, the parent owns torch state.
   const isTorchOn = torchActive ?? torchEnabled
-  const { width, height: windowHeight } = useWindowDimensions()
+  const { width } = useWindowDimensions()
   const { hasPermission, requestPermission } = useCameraPermission()
   const isFocused = useIsFocused()
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
@@ -230,21 +215,20 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const zoom = useSharedValue(initialZoom)
   const zoomOffset = useSharedValue(0)
   const [zoomDisplay, setZoomDisplay] = useState(initialZoom)
-  const cameraIsReady = useSharedValue(false)
 
   // Barcode highlight state
   const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])
   const highlightFadeAnim = useRef(new Animated.Value(0)).current
 
-  const clearHighlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const clearHighlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Prevents initialZoom from being reapplied on every screen re-focus or camera re-init
   const hasInitializedRef = useRef(false)
 
   // Track locked state inside scanner callback closure (React state is stale in callback)
   const isLockedRef = useRef(false)
-  // Store locked codes and frame for deferred callback when user taps "Continue"
-  const lockedScanRef = useRef<{ codes: EnhancedCode[]; frame: CodeScannerFrame } | null>(null)
+  // Store locked codes for deferred callback when user taps "Continue"
+  const lockedScanRef = useRef<{ codes: EnhancedCode[] } | null>(null)
 
   // --- Configurable highlight thresholds ---
   // Reading count required per code to reach "locked" state (green with border).
@@ -262,7 +246,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // Track consecutive readings for validation
   // iOS detects reliably at full resolution — use higher threshold for certainty
   // Android detects less frequently — lower threshold to reduce user frustration
-  const barcodeReadings = useRef<Map<string, { value: string; type: CodeType | 'unknown'; count: number }>>(new Map())
+  const barcodeReadings = useRef<Map<string, { value: string; type: BarcodeFormat; count: number }>>(new Map())
   const VALIDATION_THRESHOLD = Platform.OS === 'ios' ? 5 : 3
 
   // Collective scan state: 'scanning' → 'aligned' → 'locked'
@@ -285,9 +269,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const accumulatedCodes = useRef<Map<string, AccumulatedCode>>(new Map())
   const ACCUMULATION_WINDOW_MS = Platform.OS === 'ios' ? 2000 : 3000
 
-  // Track camera container and preview dimensions for coordinate transformation
+  // Track camera container dimensions for scan zone alignment
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
-  const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null)
 
   // Track scan zone position for alignment detection
   const [scanZoneBounds, setScanZoneBounds] = useState<{
@@ -297,9 +280,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     height: number
   } | null>(null)
 
-  // Frozen camera preview — stores a snapshot URI when scanning is locked
-  const [frozenFrameUri, setFrozenFrameUri] = useState<string | null>(null)
-
   /**
    * Select the optimal camera device for barcode scanning
    * Prioritizes devices with better focus capabilities and macro support for dense PDF-417 codes
@@ -307,9 +287,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const device = useCameraDevice(cameraType, {
     physicalDevices: Platform.select({
       // On iOS, prefer telephoto for better zoom/focus on dense barcodes, then ultra-wide for focus control
-      ios: ['telephoto-camera', 'ultra-wide-angle-camera', 'wide-angle-camera'],
+      ios: ['telephoto', 'ultra-wide-angle', 'wide-angle'],
       // On Android, prefer wide-angle camera
-      android: ['wide-angle-camera'],
+      android: ['wide-angle'],
     }),
   })
 
@@ -322,25 +302,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     onTorchAvailabilityChange?.(hasTorch)
   }, [hasTorch, onTorchAvailabilityChange])
 
-  /**
-   * Optimize camera format for barcode scanning including dense PDF-417
-   *
-   * Key considerations:
-   * - 1080p (1920x1080) provides sufficient resolution for PDF-417 barcodes
-   *   (Google ML Kit recommends >=1156px width for dense PDF-417)
-   * - 30 FPS is CRITICAL: gives 3x more scanning opportunities than 10 FPS. Essential for catching
-   *   both PDF-417 and Code-39 within the accumulation window. Dropping FPS degrades detection.
-   * - On Android, the patched native code now uses this videoResolution for the
-   *   code scanner's ImageAnalysis pipeline (previously defaulted to ~640x480)
-   * - On iOS, some older devices have limited format support; we provide graceful fallbacks
-   *
-   * IMPORTANT: Format filters are applied in order; VisionCamera tries each constraint
-   * and falls back to the next if no format matches. We order from strict to permissive
-   * while preserving FPS (critical for barcode scanning) at each tier.
-   */
-  const format = useCameraFormat(device, CameraFormat.CodeScanningFormat)
-
-  const cameraMetadata = useMemo(() => getCameraMetadata(device, format), [device, format])
+  const cameraMetadata = useMemo(() => getCameraMetadata(device), [device])
 
   // Calculate effective zoom based on device capabilities
   const getEffectiveZoom = useCallback(
@@ -387,13 +349,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const minZoomValue = device?.minZoom ?? 1
   const maxZoomValue = Math.min(device?.maxZoom ?? 10, 20)
 
-  // Wait until camera is ready before applying zoom
-  // zoom can be ignored if the prop is passed in and the camera isn't ready
-  const animatedProps = useAnimatedProps<CameraProps>(
-    () => (cameraIsReady.value ? { zoom: zoom.value } : {}),
-    [zoom, cameraIsReady]
-  )
-
   // Pinch-to-zoom gesture — maps linear pinch scale to the camera's zoom range
   const pinchGesture = Gesture.Pinch()
     .onBegin(() => {
@@ -422,20 +377,18 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // Tap-to-focus gesture (replaces the Pressable overlay)
   const focusByTap = useCallback(
     async (point: { x: number; y: number }) => {
-      if (!device?.supportsFocus || !camera.current) {
+      if (!device?.supportsFocusMetering || !camera.current) {
         return
       }
       drawFocusTap(point)
       try {
-        await camera.current.focus(point)
+        await camera.current.focusTo(point)
       } catch (error) {
-        if (error instanceof CameraCaptureError && error.code === 'capture/focus-canceled') {
-          return
-        }
-        throw error
+        // Focus can be cancelled by a newer focus request or a camera restart — not actionable
+        logger.debug('Tap-to-focus error', { error: String(error) })
       }
     },
-    [device?.supportsFocus, drawFocusTap]
+    [device?.supportsFocusMetering, drawFocusTap, logger]
   )
 
   const tapGesture = Gesture.Tap().onEnd((event) => {
@@ -452,24 +405,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // --- Helpers extracted from onCodeScanned to reduce cognitive complexity ---
 
   /** Enhance a single barcode with position, orientation, alignment, and validation metadata */
-  const enhanceSingleCode = (code: Code): EnhancedCode => {
-    let position: { x: number; y: number; width: number; height: number } | undefined
-
-    // Use the frame property which is already relative to the Camera Preview
-    if (code.frame && containerSize && frameSize) {
-      // Transform coordinates from camera sensor space to container space
-      position = transformBarcodeCoordinates(
-        code.frame,
-        frameSize.width,
-        frameSize.height,
-        containerSize.width,
-        containerSize.height,
-        { width, height: windowHeight }
-      )
-    } else if (code.frame) {
-      // Fallback to untransformed coordinates if we don't have dimensions yet
-      position = code.frame
-    }
+  const enhanceSingleCode = (code: ScannedCode): EnhancedCode => {
+    // v5 reports the bounding box relative to the scanned frame, which is requested at preview
+    // resolution (see `outputResolution` on the scanner output), so it is used as the on-screen
+    // position directly rather than run through `transformBarcodeCoordinates`.
+    const position: Rect = code.frame
 
     const corners = code.corners
     const orientation = calculateBarcodeOrientation(corners)
@@ -660,7 +600,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }
 
   /** Handle the lock state transition when all qualifying codes are consistently detected */
-  const handleLockTransition = (qualifyingCodes: EnhancedCode[], frame: CodeScannerFrame, newScanState: ScanState) => {
+  const handleLockTransition = (qualifyingCodes: EnhancedCode[], newScanState: ScanState) => {
     if (newScanState !== 'locked' || isLockedRef.current) {
       return
     }
@@ -679,7 +619,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     isLockedRef.current = true
     lockedScanRef.current = {
       codes: mergeLockedCodesWithAccumulated(qualifyingCodes, accumulatedCodes.current, ACCUMULATION_WINDOW_MS),
-      frame,
     }
     // Cancel any clear timeout so highlights persist
     if (clearHighlightTimeoutRef.current) {
@@ -734,21 +673,20 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * Enhanced code scanner with position and orientation metadata
    * Pauses scanning while processing detected codes to prevent multiple callbacks
    * Requires at least 2 codes to proceed (barcode + license or combo card detection)
+   *
+   * `outputResolution: 'full'` scans at the sensor's full resolution — dense PDF-417 codes need
+   * more than the preview-sized frames give (ML Kit recommends >=1156px width).
    */
-  const codeScanner = useCodeScanner({
-    codeTypes,
-    onCodeScanned: (codes, frame) => {
-      // Capture frame dimensions on first scan
-      if (!frameSize) {
-        setFrameSize({ width: frame.width, height: frame.height })
-      }
-
+  const scannerOutput = useBarcodeScannerOutput({
+    barcodeFormats: codeTypes,
+    outputResolution: 'full',
+    onBarcodeScanned: (barcodes) => {
       // When locked, completely pause scanning — highlights are frozen on screen
       if (isLockedRef.current) {
         return
       }
 
-      if (codes.length === 0) {
+      if (barcodes.length === 0) {
         handleNoCodesDetected()
         return
       }
@@ -757,7 +695,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       lastDetectionAtRef.current = Date.now()
 
       // Enhance codes with position and orientation metadata
-      const enhancedCodes = codes.map(enhanceSingleCode)
+      const enhancedCodes = barcodes.map((barcode) => enhanceSingleCode(toScannedCode(barcode)))
       const currentScanKeys = new Set(enhancedCodes.map((c) => `${c.type}-${c.value}`))
       decayStaleReadings(currentScanKeys)
       updateZoneDetectionTracking(enhancedCodes)
@@ -765,7 +703,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       setScanState(newScanState)
       updateBarcodeHighlights(enhancedCodes, newScanState)
       accumulateValidatedResults(enhancedCodes)
-      handleLockTransition(qualifyingCodes, frame, newScanState)
+      handleLockTransition(qualifyingCodes, newScanState)
+    },
+    onError: (error) => {
+      logger.error('[CodeScanningCamera] Error scanning barcode', error)
     },
   })
 
@@ -786,27 +727,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       }
     }
   }, [hasPermission, requestPermission])
-
-  // Capture a snapshot to freeze the camera preview when scanning locks
-  useEffect(() => {
-    if (scanState === 'locked' && camera.current && !frozenFrameUri) {
-      camera.current
-        .takeSnapshot({ quality: 85 })
-        .then((photo) => {
-          // Guard: if scanning was reset before the snapshot resolved, discard it.
-          // Without this, the frozen frame would re-appear after resetScanningState().
-          if (!isLockedRef.current) {
-            return
-          }
-          setFrozenFrameUri(`file://${photo.path}`)
-        })
-        .catch((err) => {
-          // On failure, the camera will simply be deactivated (isActive=false)
-          // which retains the last frame on iOS. On Android the preview may go black.
-          logger.debug('Could not capture frozen frame snapshot', { error: String(err) })
-        })
-    }
-  }, [scanState, frozenFrameUri, logger])
 
   const scanSize = Math.min(width - 80, 300)
   const scanAreaDimensions = { width: scanSize, height: scanSize / 4 }
@@ -845,11 +765,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // focus and mount, not scanState) rather than being restarted on every scan-state
   // flip — see the effect below.
   const focusCycleIndex = useRef(0)
-  const focusCycleTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const focusCycleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const FOCUS_CYCLE_INTERVAL_MS = 2500 // Idle-nudge tick interval
 
   const startFocusCycling = useCallback(() => {
-    if (scanZones.length === 0 || !containerSize || !device?.supportsFocus) {
+    if (scanZones.length === 0 || !containerSize || !device?.supportsFocusMetering) {
       return
     }
 
@@ -888,15 +808,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       const focusX = (zone.box.x + zone.box.width / 2) * containerSize.width
       const focusY = (zone.box.y + zone.box.height / 2) * containerSize.height
 
-      camera.current.focus({ x: focusX, y: focusY }).catch((err) => {
-        // Silently ignore focus errors (canceled, not supported, etc.)
-        if (!(err instanceof CameraCaptureError && err.code === 'capture/focus-canceled')) {
-          logger.debug('Auto-focus cycle error', {
-            zone: zoneIndex,
-            undetected: undetectedIndices,
-            error: String(err),
-          })
-        }
+      camera.current.focusTo({ x: focusX, y: focusY }).catch((err) => {
+        // Focus errors (canceled, not supported, etc.) are not actionable — log and move on
+        logger.debug('Auto-focus cycle error', {
+          zone: zoneIndex,
+          undetected: undetectedIndices,
+          error: String(err),
+        })
       })
 
       focusCycleIndex.current += 1
@@ -1010,29 +928,36 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   )
 
   /**
-   * Handler for camera initialization
-   * Sets the zoom level once the camera is fully initialized and ready
+   * Handler for the camera session starting
+   * Sets the zoom level once the camera is fully started and ready
    */
-  const handleCameraInitialized = useCallback(() => {
-    logger.debug('Camera initialized', cameraMetadata)
+  const handleCameraStarted = useCallback(() => {
+    logger.debug('Camera started', cameraMetadata)
+    setCameraStarted(true)
 
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true
       const targetZoom = getEffectiveZoom(initialZoom ?? 1)
       zoom.value = targetZoom
       setZoomDisplay(targetZoom)
-      // Forcing cameraIsReady to trigger animatedProps to re-evaluate and apply properly
-      cameraIsReady.value = true
       logger.debug('Zoom applied after initialization', { zoom: targetZoom })
     }
-  }, [logger, cameraMetadata, getEffectiveZoom, initialZoom, zoom, cameraIsReady])
+  }, [logger, cameraMetadata, getEffectiveZoom, initialZoom, zoom])
+
+  const handleCameraStopped = useCallback(() => setCameraStarted(false), [])
 
   // When the last recoverable runtime error (see isRecoverableCameraRuntimeError) arrived,
   // so a repeat inside RECOVERABLE_ERROR_WINDOW_MS is escalated instead of waited out again.
   const lastRecoverableErrorAtRef = useRef<number | null>(null)
 
   const handleCameraError = useCallback(
-    (error: CameraRuntimeError) => {
+    (error: Error) => {
+      if (isVisionCameraTorchToggleErrorV5_2_3(error)) {
+        // VisionCamera v5.2.3 can throw when the torch is toggled quickly on Android — not a dead camera.
+        logger.debug('[CodeScanningCamera] Ignoring known Android VisionCamera(V5.2.3) torch toggle error')
+        return
+      }
+
       if (isBackgroundedAppState(appStateStatus)) {
         // Ignore camera errors while backgrounded or transitioning (app switcher, notification
         // shade, incoming call on iOS) — they are expected and not actionable.
@@ -1044,7 +969,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
       const appError = getCameraError(error)
 
-      if (isRecoverableCameraRuntimeError(error)) {
+      if (isRecoverableCameraRuntimeError(error as { code?: string })) {
         const now = Date.now()
         const previousAt = lastRecoverableErrorAtRef.current
         lastRecoverableErrorAtRef.current = now
@@ -1070,7 +995,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   )
 
   const handleSaveScanZones = useCallback(() => {
-    if (!containerSize || !frameSize) {
+    if (!containerSize) {
       Alert.alert('Not Ready', 'Camera dimensions not available yet.')
       return
     }
@@ -1113,12 +1038,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           .join('\n'),
       [{ text: 'OK' }]
     )
-  }, [detectedCodes, containerSize, frameSize, logger])
+  }, [detectedCodes, containerSize, logger])
 
   const resetScanningState = useCallback(() => {
     isLockedRef.current = false
     lockedScanRef.current = null
-    setFrozenFrameUri(null)
     setScanState('scanning')
     barcodeReadings.current.clear()
     accumulatedCodes.current.clear()
@@ -1150,7 +1074,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     const locked = lockedScanRef.current
     if (locked) {
       try {
-        const result = await onCodeScanned(locked.codes, locked.frame)
+        const result = await onCodeScanned(locked.codes)
         if (result === false) {
           resetScanningState()
         }
@@ -1331,25 +1255,23 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             The coordinate transformation logic accounts for the cropped portion to ensure
             highlight boxes align correctly with visible barcodes.
           */}
-        <ReanimatedCamera
+        <Camera
           ref={camera}
           style={styles.camera}
           device={device}
-          format={format}
-          isActive={isFocused && !isBackgroundedAppState(appStateStatus) && !frozenFrameUri}
-          video={true}
-          codeScanner={codeScanner}
-          torch={isTorchOn && hasTorch ? 'on' : 'off'}
-          animatedProps={animatedProps}
-          onInitialized={handleCameraInitialized}
+          isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
+          outputs={[scannerOutput]}
+          constraints={[{ fps: 30 }]}
+          zoom={zoom}
+          getInitialZoom={() => getEffectiveZoom(initialZoom)}
+          // Never ask the camera for a torch before the session has started (Android drops it) or on
+          // a device without one.
+          torchMode={hasTorch && cameraStarted ? (isTorchOn ? 'on' : 'off') : undefined}
+          onStarted={handleCameraStarted}
+          onStopped={handleCameraStopped}
           onError={handleCameraError}
           resizeMode="cover"
         />
-
-        {/* Frozen frame overlay — shows last camera frame when scanning is locked */}
-        {frozenFrameUri && (
-          <Image source={{ uri: frozenFrameUri }} style={[StyleSheet.absoluteFill, { zIndex: 1 }]} resizeMode="cover" />
-        )}
 
         {/* Overlay container for highlights and focus indicator */}
         <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none', zIndex: 2 }]}>
@@ -1374,113 +1296,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
                 }}
               />
             ))}
-
-          {/* Debug: Center crosshair diagnostic — maps image center through our transform.
-                If transform is correct, this yellow crosshair should be at the exact center
-                of the camera preview. Any offset reveals a coordinate mapping error. */}
-          {showBarcodeHighlight &&
-            enableScanZones &&
-            frameSize &&
-            containerSize &&
-            (() => {
-              // Map the center of the ImageAnalysis frame through our transform
-              const centerFrame = {
-                x: 0,
-                y: 0,
-                // Use a small rect at center of the portrait-oriented frame
-                width: 4,
-                height: 4,
-              }
-              // In portrait space, center is at (fw/2, fh/2)
-              // where fw=min(frameW,frameH), fh=max(frameW,frameH)
-              const fw = Math.min(frameSize.width, frameSize.height)
-              const fh = Math.max(frameSize.width, frameSize.height)
-              centerFrame.x = fw / 2 - 2
-              centerFrame.y = fh / 2 - 2
-
-              const scaleX = containerSize.width / fw
-              const scaleY = containerSize.height / fh
-              const scale = Math.max(scaleX, scaleY)
-              const offsetX = (containerSize.width - fw * scale) / 2
-              const offsetY = (containerSize.height - fh * scale) / 2
-
-              const cx = centerFrame.x * scale + offsetX
-              const cy = centerFrame.y * scale + offsetY
-
-              // Also compute 25% and 75% reference points
-              const q1x = fw * 0.25 * scale + offsetX
-              const q1y = fh * 0.25 * scale + offsetY
-              const q3x = fw * 0.75 * scale + offsetX
-              const q3y = fh * 0.75 * scale + offsetY
-
-              return (
-                <>
-                  {/* Center crosshair — should be at exact center of preview */}
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left: cx - 15,
-                      top: cy - 1,
-                      width: 30,
-                      height: 2,
-                      backgroundColor: 'yellow',
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left: cx - 1,
-                      top: cy - 15,
-                      width: 2,
-                      height: 30,
-                      backgroundColor: 'yellow',
-                    }}
-                  />
-                  {/* 25% marker (top-left quadrant) */}
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left: q1x - 5,
-                      top: q1y - 1,
-                      width: 10,
-                      height: 2,
-                      backgroundColor: 'cyan',
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left: q1x - 1,
-                      top: q1y - 5,
-                      width: 2,
-                      height: 10,
-                      backgroundColor: 'cyan',
-                    }}
-                  />
-                  {/* 75% marker (bottom-right quadrant) */}
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left: q3x - 5,
-                      top: q3y - 1,
-                      width: 10,
-                      height: 2,
-                      backgroundColor: 'magenta',
-                    }}
-                  />
-                  <View
-                    style={{
-                      position: 'absolute',
-                      left: q3x - 1,
-                      top: q3y - 5,
-                      width: 2,
-                      height: 10,
-                      backgroundColor: 'magenta',
-                    }}
-                  />
-                </>
-              )
-            })()}
 
           {/* Barcode highlight overlay - rendered inside camera view for correct positioning */}
           {showBarcodeHighlight &&
