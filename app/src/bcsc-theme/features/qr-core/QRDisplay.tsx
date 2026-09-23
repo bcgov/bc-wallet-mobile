@@ -1,5 +1,6 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   ButtonLocation,
   IconButton,
@@ -61,7 +62,7 @@ const QRDisplay: React.FC = () => {
         icon="share-variant"
         iconTintColor={ColorPalette.brand.primary}
         accessibilityLabel={t('Global.Share')}
-        testID={testIdWithKey('Share')}
+        testID={testIdWithKey(TestIds.main.qrDisplay.share)}
         onPress={vm.share}
       />
     )
@@ -96,7 +97,7 @@ const QRDisplay: React.FC = () => {
 
   if (vm.status === QRDisplayStatus.LOADING) {
     return (
-      <View style={styles.stateContainer} testID={testIdWithKey('QRDisplay.Loading')}>
+      <View style={styles.stateContainer} testID={testIdWithKey(TestIds.main.qrDisplay.loading)}>
         <ActivityIndicator size="large" color={ColorPalette.brand.primary} />
       </View>
     )
@@ -104,7 +105,7 @@ const QRDisplay: React.FC = () => {
 
   if (vm.status === QRDisplayStatus.ERROR) {
     return (
-      <View style={styles.stateContainer} testID={testIdWithKey('QRDisplay.Error')}>
+      <View style={styles.stateContainer} testID={testIdWithKey(TestIds.main.qrDisplay.error)}>
         <InfoBox
           notificationType={InfoBoxType.Error}
           title={t('BCSC.QRDisplay.ErrorTitle')}

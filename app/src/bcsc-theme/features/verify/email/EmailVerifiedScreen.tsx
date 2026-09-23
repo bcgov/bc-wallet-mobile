@@ -2,6 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Spacing } from '@/bcwallet-theme/theme'
+import { TestIds } from '@/test-ids/registry'
 import { BLUE_LIGHT } from '@/theme'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
 import { CommonActions, useFocusEffect } from '@react-navigation/native'
@@ -34,7 +35,7 @@ const EmailVerifiedScreen = ({ navigation }: EmailVerifiedScreenProps) => {
   const controls = (
     <ControlContainer>
       <Button
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.verify.emailVerified.continue)}
         accessibilityLabel={t('Global.Continue')}
         title={t('Global.Continue')}
         buttonType={ButtonType.Primary}

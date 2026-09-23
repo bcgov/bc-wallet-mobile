@@ -1,17 +1,43 @@
-import { CardButton } from '@/bcsc-theme/components/CardButton'
-import usePreventGestureBack from '@/hooks/usePreventGestureBack'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { TestIds } from '@/test-ids/registry'
+import { openLink } from '@/utils/links'
+import {
+  Button,
+  ButtonType,
+  Link,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  useAnimatedComponents,
+  useTheme,
+} from '@bifold/core'
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import useServiceOutageViewModel from './useServiceOutageViewModel'
 
-export const ServiceOutage = (): React.ReactElement => {
-  const { headerText, contentText, learnMoreText, buttonText, isCheckDisabled, handleCheckAgain, handleLearnMore } =
-    useServiceOutageViewModel()
-  const { Spacing, ColorPalette } = useTheme()
+export interface ServiceOutageProps {
+  onSkipVerification?: () => void
+}
 
-  usePreventGestureBack()
+export const ServiceOutage = ({ onSkipVerification }: ServiceOutageProps): React.ReactElement => {
+  const {
+    headerText,
+    contentText,
+    inTheMeantimeText,
+    needHelpPrefixText,
+    contactUsLinkText,
+    contactLink,
+    buttonText,
+    skipVerificationText,
+    isCheckDisabled,
+    handleCheckAgain,
+  } = useServiceOutageViewModel()
+  const { t } = useTranslation()
+  const { ButtonLoading } = useAnimatedComponents()
+  const [loading, setLoading] = useState(false)
+  const { Spacing, ColorPalette } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
@@ -20,7 +46,6 @@ export const ServiceOutage = (): React.ReactElement => {
     },
     scrollContainer: {},
     icon: {
-      paddingVertical: Spacing.lg,
       alignSelf: 'center',
     },
     buttonContainer: {
@@ -35,36 +60,64 @@ export const ServiceOutage = (): React.ReactElement => {
     },
   })
 
-  return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Icon name="error-outline" size={200} color={ColorPalette.brand.icon} style={styles.icon} />
-        <View style={styles.textContainer}>
-          <ThemedText variant="headingThree">{headerText}</ThemedText>
-          {contentText.filter(Boolean).map((text) => (
-            <ThemedText key={text} style={styles.textContent}>
-              {text}
-            </ThemedText>
-          ))}
-          <CardButton
-            title={learnMoreText}
-            onPress={handleLearnMore}
-            endIcon="open-in-new"
-            testID={testIdWithKey('ServiceOutageHelpCentre')}
-          />
-        </View>
-      </ScrollView>
+  const handleControls = async () => {
+    setLoading(true)
+    await handleCheckAgain()
+    setLoading(false)
+  }
 
-      <View style={styles.buttonContainer}>
+  const controls = (
+    <ControlContainer>
+      <Button
+        title={buttonText}
+        buttonType={ButtonType.Primary}
+        onPress={handleControls}
+        disabled={isCheckDisabled}
+        accessibilityLabel={buttonText}
+        testID={testIdWithKey(TestIds.systemModal.serviceOutage.checkAgain)}
+      >
+        {loading && <ButtonLoading />}
+      </Button>
+      {onSkipVerification && (
         <Button
-          title={buttonText}
-          buttonType={ButtonType.Primary}
-          onPress={handleCheckAgain}
-          disabled={isCheckDisabled}
-          accessibilityLabel={buttonText}
-          testID={testIdWithKey('ServiceOutageCheckAgain')}
+          title={skipVerificationText}
+          buttonType={ButtonType.Secondary}
+          onPress={onSkipVerification}
+          accessibilityLabel={skipVerificationText}
+          testID={testIdWithKey(TestIds.systemModal.serviceOutage.skipVerification)}
         />
+      )}
+    </ControlContainer>
+  )
+
+  return (
+    <ScreenWrapper
+      keyboardActive
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+    >
+      <Icon name="error-outline" size={75} color={ColorPalette.brand.icon} style={styles.icon} />
+      <View style={styles.textContainer}>
+        <ThemedText variant="headingThree">{headerText}</ThemedText>
+        {contentText.filter(Boolean).map((text) => (
+          <ThemedText key={text} style={styles.textContent}>
+            {text}
+          </ThemedText>
+        ))}
+
+        <ThemedText style={styles.textContent}>{inTheMeantimeText}</ThemedText>
+
+        <ThemedText style={styles.textContent}>
+          {needHelpPrefixText}
+          <Link
+            linkText={contactUsLinkText}
+            onPress={() => openLink(contactLink)}
+            textProps={{ accessibilityHint: t('Global.A11y.OpensInBrowser') }}
+            testID={testIdWithKey(TestIds.systemModal.serviceOutage.contactUs)}
+          />
+        </ThemedText>
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }

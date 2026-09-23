@@ -1,6 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCModals, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, TOKENS, useServices } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useCallback } from 'react'
@@ -48,7 +49,7 @@ export const VerificationSessionExpired = ({ navigation }: VerificationSessionEx
       ]}
       buttonText={t('BCSC.Modals.VerificationSessionExpired.Button')}
       onButtonPress={handleFactoryReset}
-      testID={testIdWithKey('VerificationSessionExpiredButton')}
+      testID={testIdWithKey(TestIds.systemModal.sessionExpired.button)}
     />
   )
 }

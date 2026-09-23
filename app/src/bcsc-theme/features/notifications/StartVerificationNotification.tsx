@@ -1,5 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { useTheme } from '@bifold/core'
+import { BCDispatchAction, BCState } from '@/store'
+import { useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationActionCard from './NotificationActionCard'
 
@@ -12,6 +13,7 @@ const StartVerificationNotification = () => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
   const secureActions = useSecureActions()
+  const [, dispatch] = useStore<BCState>()
 
   return (
     <NotificationActionCard
@@ -21,7 +23,9 @@ const StartVerificationNotification = () => {
       icon="information"
       iconColor={ColorPalette.brand.primary}
       hideIconCircle={true}
+      requiresServerStatus
       onPress={() => {
+        dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
         secureActions.continueVerificationProcess()
       }}
     />

@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -40,14 +41,14 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
     <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
-        testID={testIdWithKey('SendVideo')}
+        testID={testIdWithKey(TestIds.verify.verifyNotComplete.sendVideo)}
         accessibilityLabel={t('BCSC.VideoCall.VerifyNotComplete.SendVideoInstead')}
         title={t('BCSC.VideoCall.VerifyNotComplete.SendVideoInstead')}
         onPress={onPressSendVideo}
       />
       <Button
         buttonType={ButtonType.Secondary}
-        testID={testIdWithKey('TryAgain')}
+        testID={testIdWithKey(TestIds.verify.verifyNotComplete.tryAgain)}
         accessibilityLabel={t('BCSC.VideoCall.VerifyNotComplete.TryAgain')}
         title={t('BCSC.VideoCall.VerifyNotComplete.TryAgain')}
         onPress={onPressSendVideo}
@@ -68,7 +69,7 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
         title={''}
         onPress={() => Linking.openURL(HelpCentreUrl.AUDIO_VIDEO_TROUBLESHOOTING)}
         accessibilityLabel={t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
-        testID={testIdWithKey('Trouble')}
+        testID={testIdWithKey(TestIds.verify.verifyNotComplete.trouble)}
       >
         <View style={styles.linkButtonContent}>
           <ThemedText style={Buttons.secondaryText}>{t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}</ThemedText>

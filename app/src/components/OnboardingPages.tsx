@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -42,7 +43,7 @@ const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme'
       <Button
         title={t('Onboarding.GetStarted')}
         accessibilityLabel={t('Onboarding.GetStarted')}
-        testID={testIdWithKey('GetStarted')}
+        testID={testIdWithKey(TestIds.bcwallet.onboarding.getStarted)}
         onPress={onTutorialCompleted}
         buttonType={ButtonType.Primary}
       />

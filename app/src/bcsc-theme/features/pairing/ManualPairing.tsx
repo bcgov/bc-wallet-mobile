@@ -1,7 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { PAIRING_CODE_LENGTH } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
@@ -22,9 +24,14 @@ const ManualPairing: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { pairing } = useApi()
   const loadingScreen = useLoadingScreen()
+  const { isAvailable: isServerAvailable } = useServerStatus()
 
   const onSubmit = useCallback(
     async (pairingCode: string) => {
+      // no-op if the server is unavailable
+      if (!isServerAvailable) {
+        return
+      }
       const stopLoading = loadingScreen.startLoading()
       try {
         logger.info('Submitting pairing code.')
@@ -54,7 +61,7 @@ const ManualPairing: React.FC = () => {
         stopLoading()
       }
     },
-    [loadingScreen, logger, navigation, pairing, t]
+    [isServerAvailable, loadingScreen, logger, navigation, pairing, t]
   )
 
   // QRCoreStack keeps tabs mounted (unmountOnBlur: false), so a pre-populated
@@ -115,7 +122,7 @@ const ManualPairing: React.FC = () => {
           autoCapitalize: 'characters',
           autoComplete: 'off',
           autoCorrect: false,
-          testID: testIdWithKey('ManualPairingCodeInput'),
+          testID: testIdWithKey(TestIds.main.pairing.manualCodeInput),
           accessibilityLabel: 'Pairing-Code-Input',
         }}
       />

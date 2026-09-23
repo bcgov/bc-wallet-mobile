@@ -1,5 +1,6 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { hitSlop, WALLET_LEARN_MORE_URL } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { openLink } from '@/utils/links'
 import EmptyWalletIllustration from '@assets/img/bcsc-empty-wallet.svg'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -47,12 +48,15 @@ const EmptyWalletList: React.FC = () => {
   }
 
   return (
-    <View style={[styles.container, { padding: Spacing.lg, minHeight }]} testID={testIdWithKey('Wallet.Empty')}>
+    <View
+      style={[styles.container, { padding: Spacing.lg, minHeight }]}
+      testID={testIdWithKey(TestIds.main.wallet.empty)}
+    >
       <EmptyWalletIllustration
         width={184}
         height={167}
         style={{ marginBottom: Spacing.lg }}
-        testID={testIdWithKey('Wallet.EmptyIllustration')}
+        testID={testIdWithKey(TestIds.main.wallet.emptyIllustration)}
       />
       <ThemedText variant="headingThree" style={[styles.message, { color: ColorPalette.brand.primary }]}>
         {t('BCSC.Wallet.EmptyMessage')}
@@ -63,7 +67,7 @@ const EmptyWalletList: React.FC = () => {
         accessibilityLabel={a11yLabel(t('BCSC.Wallet.EmptyLearnMore'))}
         hitSlop={hitSlop}
         onPress={handleLearnMore}
-        testID={testIdWithKey('Wallet.EmptyLearnMore')}
+        testID={testIdWithKey(TestIds.main.wallet.emptyLearnMore)}
         style={{
           alignSelf: 'stretch',
           marginTop: Spacing.lg,

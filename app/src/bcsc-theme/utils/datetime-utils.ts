@@ -1,16 +1,52 @@
 import moment from 'moment'
 
+const MINUTE_MS = 60_000
+const DAY_MS = 24 * 60 * MINUTE_MS
+const YEAR_MS = 365 * DAY_MS
+
 /**
- * Format a timestamp in a user-friendly way (e.g., "Just now", "5 minutes ago", "3:45 PM",
- * "June 4, 3:45 PM"), as used by the home screen notification cards.
+ * Formats date to time: 4:30 PM or 16:30 depending on locale
  *
  * @param {Date} date The timestamp to format
- * @return {*}  {string}
+ * @return {*}  {string} formatted string output
+ */
+function clockTime(date: Date): string {
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
+/**
+ * Formats date into string output: "Sep 25, 1:30 PM".
+ * If `withYear` is set, string output: "Sep 25, 2015, 1:30 PM".
+ *
+ * @param {Date} date The timestamp to format
+ * @param {boolean} withYear Whether to include the year
+ * @return {*}  {string} formatted string output
+ */
+function calendarTime(date: Date, withYear: boolean): string {
+  return date.toLocaleDateString([], {
+    month: 'short',
+    day: 'numeric',
+    year: withYear ? 'numeric' : undefined,
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
+/**
+ * Format a timestamp for notification cards, using the following breakpoints:
+ *
+ * under a minute: "Just now"
+ * 1–59 minutes: relative minutes, rounded down ("45 minutes ago")
+ * 1–24 hours: clock time ("4:23 PM")
+ * 1 Day up to a year: month, day, clock time ("Sep 25, 1:30 PM")
+ * over a year: month, day, year, clock time ("Sep 25, 2015, 1:30 PM")
+ *
+ * @param {Date} date The timestamp to format
+ * @return {*}  {string} formatted string output
  */
 export function formatTimestamp(date: Date): string {
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMin = Math.floor(diffMs / 60_000)
+  const diffMs = Date.now() - date.getTime()
+  const diffMin = Math.floor(diffMs / MINUTE_MS)
 
   if (diffMin < 1) {
     return 'Just now'
@@ -18,18 +54,22 @@ export function formatTimestamp(date: Date): string {
   if (diffMin < 60) {
     return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`
   }
-
-  const diffHours = Math.floor(diffMin / 60)
-  if (diffHours < 24) {
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  if (diffMs < DAY_MS) {
+    return clockTime(date)
   }
-
-  return date.toLocaleDateString([], { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  return calendarTime(date, diffMs > YEAR_MS)
 }
 
 /**
- * Format an expiry time as a short badge label counting down until the item expires
- * (e.g., "Expires in 5 min", "Expires in 3 hours", "Expired").
+ * Format an expiry time as a short badge label, using the same breakpoints as
+ * {@link formatTimestamp} phrased as a forward-looking deadline:
+ *
+ * already passed: "Expired"
+ * under a minute: "Expires in less than a minute"
+ * 1–59 minutes: relative minutes, rounded down ("Expires in 45 minutes")
+ * 1–24 hours: clock time ("Expires at 4:23 PM")
+ * 1 Day up to a year: month, day, clock time ("Expires Sep 25, 1:30 PM")
+ * over a year: month, day, year, clock time ("Expires Sep 25, 2027, 1:30 PM")
  *
  * @param {Date} expiresTime When the item expires
  * @return {*}  {string}
@@ -39,16 +79,39 @@ export function formatExpiryBadge(expiresTime: Date): string {
   if (diffMs <= 0) {
     return 'Expired'
   }
-  const diffMin = Math.floor(diffMs / 60_000)
+
+  const diffMin = Math.floor(diffMs / MINUTE_MS)
+  if (diffMin < 1) {
+    return 'Expires in less than a minute'
+  }
   if (diffMin < 60) {
-    return `Expires in ${diffMin} min`
+    return `Expires in ${diffMin} minute${diffMin === 1 ? '' : 's'}`
   }
-  const diffHours = Math.floor(diffMin / 60)
-  if (diffHours < 24) {
-    return `Expires in ${diffHours} hour${diffHours === 1 ? '' : 's'}`
+  if (diffMs < DAY_MS) {
+    return `Expires at ${clockTime(expiresTime)}`
   }
-  const diffDays = Math.floor(diffHours / 24)
-  return `Expires in ${diffDays} day${diffDays === 1 ? '' : 's'}`
+  return `Expires ${calendarTime(expiresTime, diffMs > YEAR_MS)}`
+}
+
+/**
+ * Return whichever comes first: the proof request's own expiry (`protocolExpiresTime`) or the
+ * time the app drops it from the notification list (`createdAt` + the configured expiry time ).
+ *
+ * @param {Date} createdAt When the proof exchange record was created
+ * @param {number} proofRequestExpirationMs App TTL in ms; 0 means no app-imposed expiry
+ * @param {Date} [protocolExpiresTime] The proof request's own expiry, if it has one
+ * @return {*}  {Date | undefined} The earlier of the two, or undefined if neither applies
+ */
+export function getProofRequestExpiry(
+  createdAt: Date,
+  proofRequestExpirationMs: number,
+  protocolExpiresTime?: Date
+): Date | undefined {
+  const removalTime =
+    proofRequestExpirationMs > 0 ? new Date(new Date(createdAt).getTime() + proofRequestExpirationMs) : undefined
+  return [protocolExpiresTime, removalTime]
+    .filter((d): d is Date => d !== undefined)
+    .reduce((earliest: Date | undefined, d) => (!earliest || d < earliest ? d : earliest), undefined)
 }
 
 /**

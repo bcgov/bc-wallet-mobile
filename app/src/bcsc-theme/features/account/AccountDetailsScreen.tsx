@@ -6,6 +6,7 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
+import { TestIds } from '@/test-ids/registry'
 
 import { InformationCard } from '@/bcsc-theme/components/InformationCard'
 import { isAccountExpired } from '@/bcsc-theme/utils/datetime-utils'
@@ -135,7 +136,7 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
         onPress={openAccountWebview}
         accessibilityLabel={t('BCSC.AccountDetails.SeeFullDetails')}
         accessibilityHint={t('Global.A11y.OpensInBrowser')}
-        testID={testIdWithKey('SeeFullAccountDetails')}
+        testID={testIdWithKey(TestIds.main.accountDetails.seeFullDetails)}
         disabled={isDisabled || !bcscServiceClient}
       >
         <View style={styles.buttonContent}>
@@ -166,34 +167,34 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
         value={nickname}
         onEdit={onEditNickname}
         editAccessibilityLabel={t('BCSC.Settings.EditNickname')}
-        testID={testIdWithKey('NicknameField')}
+        testID={testIdWithKey(TestIds.main.accountDetails.nicknameField)}
       />
       <AccountField
         label={t('BCSC.Account.AccountInfo.AppExpiryDate')}
         value={expiryValue}
-        testID={testIdWithKey('AppExpiryDateField')}
+        testID={testIdWithKey(TestIds.main.accountDetails.appExpiryField)}
       />
       <AccountField
         label={t('BCSC.Account.AccountInfo.AccountType')}
         value={accountType}
-        testID={testIdWithKey('AccountTypeField')}
+        testID={testIdWithKey(TestIds.main.accountDetails.accountTypeField)}
       />
       <AccountField
         label={t('BCSC.Account.AccountInfo.Address')}
         value={account.address?.formatted ?? ''}
         onEdit={openAccountWebview}
         editAccessibilityLabel={t('BCSC.Account.AccountInfo.Address')}
-        testID={testIdWithKey('AddressField')}
+        testID={testIdWithKey(TestIds.main.accountDetails.addressField)}
       />
       <AccountField
         label={t('BCSC.Account.AccountInfo.DateOfBirth')}
         value={account.birthdate ?? ''}
-        testID={testIdWithKey('DateOfBirthField')}
+        testID={testIdWithKey(TestIds.main.accountDetails.dateOfBirthField)}
       />
       <AccountField
         label={t('BCSC.Account.AccountInfo.EmailAddress')}
         value={account.email ?? ''}
-        testID={testIdWithKey('EmailAddressField')}
+        testID={testIdWithKey(TestIds.main.accountDetails.emailField)}
       />
     </ScreenWrapper>
   )

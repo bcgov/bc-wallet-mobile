@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey } from '@bifold/core'
 import {
   createContext,
@@ -107,7 +108,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
       {/** When loading make children invisible (still mounted) **/}
       <View
         style={childrenStyle}
-        testID={testIdWithKey('BCSCLoadingProviderChildren')}
+        testID={testIdWithKey(TestIds.common.loadingChildren)}
         importantForAccessibility={isLoading ? 'no-hide-descendants' : 'yes'} // Hide from screen readers when loading, show when not loading
       >
         {children}
@@ -116,7 +117,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
       {/** When loading make loading overlay visible **/}
       <View
         style={loadingStyle}
-        testID={testIdWithKey('BCSCLoadingProviderOverlay')}
+        testID={testIdWithKey(TestIds.common.loadingOverlay)}
         accessible={isLoading} // Only make the loading screen accessible when it's visible
         importantForAccessibility={isLoading ? 'yes' : 'no-hide-descendants'} // Hide from screen readers when not visible, show when visible
       >

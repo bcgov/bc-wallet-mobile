@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey, useAnimatedComponents, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -43,7 +44,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
         <Button
           buttonType={ButtonType.Primary}
           onPress={handleAccept}
-          testID={testIdWithKey(`UsePhoto`)}
+          testID={testIdWithKey(TestIds.verify.photoReview.usePhoto)}
           title={t('BCSC.PhotoReview.UsePhoto')}
           accessibilityLabel={t('BCSC.PhotoReview.UsePhoto')}
           disabled={loading}
@@ -53,7 +54,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
         <Button
           buttonType={ButtonType.Secondary}
           onPress={onRetake}
-          testID={testIdWithKey(`RetakePhoto`)}
+          testID={testIdWithKey(TestIds.verify.photoReview.retake)}
           title={t('BCSC.PhotoReview.RetakePhoto')}
           accessibilityLabel={t('BCSC.PhotoReview.RetakePhoto')}
         />

@@ -2,6 +2,7 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
+import { TestIds } from '@/test-ids/registry'
 import {
   MaskType,
   SVGOverlay,
@@ -265,7 +266,7 @@ const MaskedCamera = ({
           onPress={handleCancel}
           accessibilityLabel={t('BCSC.CameraDisclosure.CancelCamera')}
           accessibilityRole="button"
-          testID={testIdWithKey('CancelCamera')}
+          testID={testIdWithKey(TestIds.shared.maskedCamera.cancel)}
         >
           <ThemedText style={{ color: ColorPalette.grayscale.white }}>{t('Global.Cancel')}</ThemedText>
         </TouchableOpacity>
@@ -274,7 +275,7 @@ const MaskedCamera = ({
           onPress={preventDoublePress(takePhoto)}
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
-          testID={testIdWithKey('TakePhoto')}
+          testID={testIdWithKey(TestIds.shared.maskedCamera.takePhoto)}
         ></TouchableOpacity>
         {hasTorch ? (
           <TouchableOpacity
@@ -282,7 +283,7 @@ const MaskedCamera = ({
             onPress={toggleTorch}
             accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
             accessibilityRole="button"
-            testID={testIdWithKey('ToggleFlash')}
+            testID={testIdWithKey(TestIds.shared.maskedCamera.toggleFlash)}
           >
             <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>

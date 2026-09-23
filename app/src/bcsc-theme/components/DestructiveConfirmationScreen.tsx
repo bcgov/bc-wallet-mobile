@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -76,7 +77,7 @@ const DestructiveConfirmationScreen: React.FC<DestructiveConfirmationScreenProps
         accessibilityLabel={confirmLabel}
         buttonType={ButtonType.Critical}
         title={confirmLabel}
-        testID={testIdWithKey('ConfirmDestructiveAction')}
+        testID={testIdWithKey(TestIds.main.removeAccount.confirm)}
         onPress={onConfirm}
         disabled={disabled}
       />

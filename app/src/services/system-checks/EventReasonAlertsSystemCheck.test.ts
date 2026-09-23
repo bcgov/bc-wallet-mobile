@@ -1,4 +1,5 @@
 import { tokenToCredentialMetadata } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
 import { AppEventCode } from '@/events/appEventCode'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
@@ -176,9 +177,27 @@ describe('EventReasonAlertsSystemCheck', () => {
       const getIdToken = jest.fn().mockResolvedValue(mockIdToken)
       const check = new EventReasonAlertsSystemCheck(getIdToken, emitAlert, undefined, mockUtils, mockNavigation)
 
-      const result = await check.runCheck()
+      await check.runCheck()
+      check.onFail()
 
-      expect(result).toBe(false)
+      expect(mockUtils.dispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+        payload: [expect.objectContaining({ bcscReason: BCSCReason.Cancel })],
+      })
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, {
+        invalidationReason: BCSCReason.Cancel,
+      })
+    })
+
+    it('should do nothing when onFail runs before runCheck', () => {
+      const getIdToken = jest.fn()
+      const check = new EventReasonAlertsSystemCheck(getIdToken, emitAlert, undefined, mockUtils, mockNavigation)
+
+      check.onFail()
+
+      expect(mockUtils.dispatch).not.toHaveBeenCalled()
+      expect(emitAlert).not.toHaveBeenCalled()
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
     it('should render an alert with CARD_STATUS_UPDATED event when reason Renew', async () => {
       const mockIdToken = createMockIdToken({

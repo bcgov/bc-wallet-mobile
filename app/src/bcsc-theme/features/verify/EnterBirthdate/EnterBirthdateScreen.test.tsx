@@ -4,6 +4,15 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
+const renderScreen = (navigation: any) =>
+  render(
+    <BasicAppContext>
+      <EnterBirthdateScreen navigation={navigation} />
+    </BasicAppContext>
+  )
+
 describe('EnterBirthdate', () => {
   let mockNavigation: any
 
@@ -19,32 +28,20 @@ describe('EnterBirthdate', () => {
   })
 
   it('renders correctly', () => {
-    const tree = render(
-      <BasicAppContext>
-        <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
-    )
+    const tree = renderScreen(mockNavigation as never)
 
     expect(tree).toMatchSnapshot()
   })
 
   it('keeps the Continue button enabled when no date is entered', () => {
-    const { getByTestId } = render(
-      <BasicAppContext>
-        <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
-    )
+    const { getByTestId } = renderScreen(mockNavigation as never)
 
     const continueButton = getByTestId('com.ariesbifold:id/Continue')
     expect(continueButton.props.accessibilityState?.disabled).toBeFalsy()
   })
 
   it('shows an error and does not proceed when Continue is pressed with an empty date', () => {
-    const { getByTestId, getByText } = render(
-      <BasicAppContext>
-        <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
-    )
+    const { getByTestId, getByText } = renderScreen(mockNavigation as never)
 
     const continueButton = getByTestId('com.ariesbifold:id/Continue')
     fireEvent.press(continueButton)
@@ -56,11 +53,7 @@ describe('EnterBirthdate', () => {
   })
 
   it('updates birthdate field with typed slash date value', () => {
-    const { getByTestId } = render(
-      <BasicAppContext>
-        <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
-    )
+    const { getByTestId } = renderScreen(mockNavigation as never)
 
     const input = getByTestId('com.ariesbifold:id/birthDate-input')
     fireEvent.changeText(input, '1990/06/15')
@@ -69,11 +62,7 @@ describe('EnterBirthdate', () => {
   })
 
   it('shows an error and does not proceed for an invalid complete date', () => {
-    const { getByTestId, getByText } = render(
-      <BasicAppContext>
-        <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
-    )
+    const { getByTestId, getByText } = renderScreen(mockNavigation as never)
 
     const input = getByTestId('com.ariesbifold:id/birthDate-input')
     fireEvent.changeText(input, '1990/13/40')
@@ -89,11 +78,7 @@ describe('EnterBirthdate', () => {
   })
 
   it('allows Continue button after a valid date is typed', () => {
-    const { getByTestId } = render(
-      <BasicAppContext>
-        <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
-    )
+    const { getByTestId } = renderScreen(mockNavigation as never)
 
     const input = getByTestId('com.ariesbifold:id/birthDate-input')
     fireEvent.changeText(input, '1990/06/15')

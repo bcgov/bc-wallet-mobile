@@ -10,48 +10,19 @@ import {
 
 describe('BCServicesCardBarcodeDecoder', () => {
   describe('isBCSCSerial', () => {
-    describe('returns true for valid BCSC serials', () => {
-      it('should validate serial with 1 letter followed by 8 digits', () => {
-        expect(isBCSCSerial('A12345678')).toBe(true)
-      })
-
-      it('should validate serial with multiple letters followed by digits', () => {
-        expect(isBCSCSerial('AB1234567')).toBe(true)
-      })
-
-      it('should validate serial with lowercase letter followed by digits', () => {
-        expect(isBCSCSerial('a12345678')).toBe(true)
-      })
-
-      it('should validate serial with multiple letters and digits', () => {
-        expect(isBCSCSerial('ABC1234')).toBe(true)
-      })
-    })
-
-    describe('returns false for invalid BCSC serials', () => {
-      it('should invalidate serial without leading letter', () => {
-        expect(isBCSCSerial('123456789')).toBe(false)
-      })
-
-      it('should invalidate serial with special characters', () => {
-        expect(isBCSCSerial('A1234@678')).toBe(false)
-      })
-
-      it('should invalidate serial that is too long', () => {
-        expect(isBCSCSerial('A1234567890')).toBe(false)
-      })
-
-      it('should invalidate empty serial', () => {
-        expect(isBCSCSerial('')).toBe(false)
-      })
-
-      it('should invalidate serial with only letters', () => {
-        expect(isBCSCSerial('ABCDEFGH')).toBe(false)
-      })
-
-      it('should invalidate serial with only digits', () => {
-        expect(isBCSCSerial('12345678')).toBe(false)
-      })
+    it.each([
+      ['A12345678', true, '1 letter followed by 8 digits'],
+      ['AB1234567', true, 'multiple letters followed by digits'],
+      ['a12345678', true, 'lowercase letter followed by digits'],
+      ['ABC1234', true, 'multiple letters and digits'],
+      ['123456789', false, 'no leading letter'],
+      ['A1234@678', false, 'special characters'],
+      ['A1234567890', false, 'too long'],
+      ['', false, 'empty serial'],
+      ['ABCDEFGH', false, 'only letters'],
+      ['12345678', false, 'only digits'],
+    ])('isBCSCSerial(%s) -> %s (%s)', (serial, expected) => {
+      expect(isBCSCSerial(serial)).toBe(expected)
     })
   })
   describe('canDecode', () => {

@@ -50,6 +50,16 @@ export interface ServiceClientsFilter {
    */
   serviceClientIdsFilter?: string[]
   /**
+   * The ref ids of the service clients the user has saved (bookmarked).
+   *
+   * Services without a `service_listing_sort_order` are not meant to be listed, but they are
+   * still shown when the user has saved them.
+   *
+   * @format uuid
+   * @type {string[]}
+   */
+  savedServiceClientIds?: string[]
+  /**
    * If true, the hook will skip loading service clients and return an empty list.
    * @type {boolean}
    */
@@ -114,7 +124,11 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
       return []
     }
 
-    let serviceClientsCopy = serviceClients
+    // Services without a listing sort order are not meant to appear in the list, unless saved
+    const savedIdsSet = new Set(filter.savedServiceClientIds ?? [])
+    let serviceClientsCopy = serviceClients.filter(
+      (service) => service.service_listing_sort_order != null || savedIdsSet.has(service.client_ref_id)
+    )
 
     // Filter services based on the card process
     if (filter.cardProcessFilter) {
@@ -136,7 +150,13 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
 
     // Sort services by their listing order, then alphabetically by name
     return _sortServiceClients(serviceClientsCopy)
-  }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter, filter.serviceClientIdsFilter])
+  }, [
+    serviceClients,
+    filter.cardProcessFilter,
+    filter.requireBCAddressFilter,
+    filter.serviceClientIdsFilter,
+    filter.savedServiceClientIds,
+  ])
 
   // Further filter services based on the partial name filter
   const queriedServiceClients = useMemo(() => {

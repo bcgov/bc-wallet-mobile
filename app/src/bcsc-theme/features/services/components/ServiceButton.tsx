@@ -2,6 +2,7 @@ import { ListButton, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { hitSlop } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { a11yLabel } from '@utils/accessibility'
 import React from 'react'
@@ -59,7 +60,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({
           <ThemedText
             variant={'bold'}
             style={styles.title}
-            testID={testID ?? testIdWithKey(`ServiceButton-${title.replaceAll(/\s+/g, '')}`)}
+            testID={testID ?? testIdWithKey(`${TestIds.main.services.serviceRowPrefix}${title.replaceAll(/\s+/g, '')}`)}
           >
             {title}
           </ThemedText>
@@ -68,7 +69,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({
             hitSlop={hitSlop}
             accessibilityRole={'button'}
             accessibilityLabel={a11yLabel(`Toggle bookmark for ${title}`)}
-            testID={testIdWithKey(`ServiceButton-Bookmark-${title.replaceAll(/\s+/g, '')}`)}
+            testID={testIdWithKey(`${TestIds.main.services.serviceBookmarkPrefix}${title.replaceAll(/\s+/g, '')}`)}
           >
             <Icon name={isBookmarked ? 'bookmark' : 'bookmark-outline'} size={24} color={ColorPalette.brand.primary} />
           </Pressable>

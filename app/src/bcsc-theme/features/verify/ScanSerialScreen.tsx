@@ -4,6 +4,7 @@ import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { decodeBarcodes, DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -199,9 +200,14 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
+  // Reported by CodeScanningCamera once it has picked a device. Non-Pro iPads have no
+  // torch, and turning one on there makes VisionCamera throw `device/flash-unavailable`.
+  const [hasTorch, setHasTorch] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const isProcessingScan = useRef(false)
+  // Whether the screen has already had focus once — see the focus effect below.
+  const hasFocusedRef = useRef(false)
   const bcscSerialRef = useRef<string | null>(null)
   const birthDateRef = useRef<Date | null>(null)
 
@@ -234,7 +240,20 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     birthDateRef.current = null
   }, [])
 
-  useFocusEffect(useCallback(() => retryCamera(), [retryCamera]))
+  // Reset the scanner on re-entry (e.g. backing out of the next step) so a previous scan's
+  // lock and frozen frame don't linger. The first focus is skipped: the camera has just
+  // mounted with fresh state, and remounting it there tore down and recreated the capture
+  // session back-to-back — two sessions briefly overlapping on the same device, a known
+  // trigger for AVFoundation runtime errors (-11800/-12780) on iOS.
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFocusedRef.current) {
+        hasFocusedRef.current = true
+        return
+      }
+      retryCamera()
+    }, [retryCamera])
+  )
 
   const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
     if (isProcessingScan.current) {
@@ -248,7 +267,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
         isProcessingScan.current = true
         setScanState('locked')
-        scanner.handleScanNonBcsc()
+        await scanner.handleScanNonBcsc()
         return true
       }
 
@@ -346,7 +365,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         secondaryAction={{
           title: t('BCSC.Instructions.EnterManually'),
           onPress: goToManualEntry,
-          testID: testIdWithKey('EnterManually'),
+          testID: testIdWithKey(TestIds.verify.scanSerial.enterManually),
         }}
       />
     )
@@ -374,6 +393,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               hideTorchButton
               torchActive={torchOn}
               onToggleTorch={toggleTorch}
+              onTorchAvailabilityChange={setHasTorch}
               onError={onCameraError}
               style={StyleSheet.absoluteFill}
             />
@@ -397,7 +417,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
         {/* Torch + manual entry */}
         <View style={styles.bottomBar} pointerEvents="box-none">
-          {cameraFailed ? null : (
+          {cameraFailed || !hasTorch ? null : (
             <View style={styles.torchRow} pointerEvents="box-none">
               <TorchButton active={torchOn} onPress={toggleTorch} />
             </View>
@@ -406,7 +426,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
             <Button
               title={t('BCSC.Instructions.EnterManually')}
               accessibilityLabel={t('BCSC.Instructions.EnterManually')}
-              testID={testIdWithKey('EnterManually')}
+              testID={testIdWithKey(TestIds.verify.scanSerial.enterManually)}
               onPress={goToManualEntry}
               buttonType={ButtonType.Primary}
             />
@@ -414,7 +434,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               <Button
                 title={t('BCSC.Scan.TryAgain')}
                 accessibilityLabel={t('BCSC.Scan.TryAgain')}
-                testID={testIdWithKey('RetryCamera')}
+                testID={testIdWithKey(TestIds.verify.scanSerial.retryCamera)}
                 onPress={retryCamera}
                 buttonType={ButtonType.Secondary}
               />

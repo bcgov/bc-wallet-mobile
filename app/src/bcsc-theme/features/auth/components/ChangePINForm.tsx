@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -202,7 +203,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         buttonType={ButtonType.Primary}
         title={t('BCSC.ChangePIN.ButtonTitle')}
         accessibilityLabel={t('BCSC.ChangePIN.ButtonTitle')}
-        testID={testIdWithKey('ChangePIN')}
+        testID={testIdWithKey(TestIds.main.changePin.submit)}
         onPress={onPressChangePIN}
       >
         {loading && <ButtonLoading />}
@@ -216,7 +217,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         <View style={styles.pinFormRow}>
           <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.EnterCurrentPIN')}</ThemedText>
           <PINInput
-            testIDKey="EnterCurrentPIN"
+            testIDKey={TestIds.main.changePin.current}
             onPINChange={handleCurrentPINChange}
             onPINComplete={handleCurrentPINComplete}
             errorMessage={currentPINError}
@@ -226,7 +227,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         <View style={styles.pinFormRow}>
           <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.EnterNewPIN')}</ThemedText>
           <PINInput
-            testIDKey="EnterNewPIN"
+            testIDKey={TestIds.main.changePin.newPin}
             ref={newPINRef}
             onPINChange={handleNewPINChange}
             onPINComplete={handleNewPINComplete}
@@ -237,7 +238,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         <View style={styles.pinFormRow}>
           <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.ReenterNewPIN')}</ThemedText>
           <PINInput
-            testIDKey="ReenterNewPIN"
+            testIDKey={TestIds.main.changePin.confirm}
             ref={confirmPINRef}
             onPINChange={handleConfirmPINChange}
             onPINComplete={handleConfirmPINComplete}
@@ -254,7 +255,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
           <CheckBoxRow
             title={t('BCSC.ChangePIN.IUnderstand')}
             accessibilityLabel={t('BCSC.ChangePIN.IUnderstand')}
-            testID={testIdWithKey('IUnderstand')}
+            testID={testIdWithKey(TestIds.main.changePin.understand)}
             checked={checked}
             onPress={() => {
               setCheckboxError(checked)

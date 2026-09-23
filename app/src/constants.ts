@@ -54,6 +54,7 @@ export const BCThemeNames = {
 export const BCSC_EMAIL_NOT_PROVIDED = 'Not provided'
 export const BCSC_APPLE_STORE_URL = 'https://apps.apple.com/us/app/id1234298467'
 export const BCSC_GOOGLE_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=ca.bc.gov.id.servicescard'
+export const ACCOUNT_SERVICES_URL = 'https://id.gov.bc.ca/account/services'
 export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
 export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'
 export const ACCESSIBILITY_URL =
@@ -111,15 +112,14 @@ export const ONBOARDING_ICON_IMAGE_SIZE = 125
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 export const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
 export const FIVE_MINUTES_IN_SECONDS = 5 * 60
-export const SERVER_STATUS_RECHECK_INTERVAL_MS = 60 * 1000
+/**
+ * Ceiling on how long the main stack holds its startup loading screen waiting for system checks to
+ * complete. An unreachable or hung endpoint must not be able to strand the app behind the loading
+ * screen indefinitely.
+ */
+export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 4 * 1000
 
 // Notification constants
-/**
- * How long a pending proof request notification stays in the notifications list. Users who hit
- * a problem often scan a new QR code and abandon the previous proof request, so old requests
- * are removed rather than left to pile up. (Duration is tentative, per the designs.)
- */
-export const PROOF_REQUEST_NOTIFICATION_TTL_MS = 60 * 60 * 1000 // 1 hour
 /**
  * Notifications within this window of expiring (or already expired) show the yellow
  * "attention" state to warn the user before the item becomes unusable / is removed.

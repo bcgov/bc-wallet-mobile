@@ -1,0 +1,7 @@
+{
+  "$comment": "Fixture baseline: ChangePIN's finding is known; EnterBirthdate is deliberately absent so its findings read as NEW.",
+  "generatedAt": "2026-08-27T09:00:00.000Z",
+  "ios": {
+    "ChangePIN": ["hitRegion|Button|PIN requirements"]
+  }
+}

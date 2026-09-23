@@ -8,6 +8,7 @@ import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { normalizeForSubmission } from '@/bcsc-theme/utils/validation'
 import { MINIMUM_VERIFICATION_AGE } from '@/constants'
 import { BCState, NonBCSCUserMetadata } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -213,7 +214,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       <Button
         title={primaryActionLabel}
         accessibilityLabel={a11yLabel(primaryActionLabel)}
-        testID={testIdWithKey('EvidenceIDCollectionContinue')}
+        testID={testIdWithKey(TestIds.verify.evidenceIdCollection.continue)}
         buttonType={ButtonType.Primary}
         onPress={handleOnContinue}
         disabled={isSubmitting}

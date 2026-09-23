@@ -1,4 +1,5 @@
 import { hitSlop } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -33,7 +34,7 @@ const TorchButton: React.FC<TorchButtonProps> = ({ active, onPress, size = 24 })
       accessible
       accessibilityLabel={active ? t('BCSC.Scan.TorchOn') : t('BCSC.Scan.TorchOff')}
       accessibilityRole={'button'}
-      testID={testIdWithKey('ScanTorch')}
+      testID={testIdWithKey(TestIds.verify.scanSerial.scanTorch)}
       style={styles.button}
       onPress={onPress}
       hitSlop={hitSlop}

@@ -1,5 +1,6 @@
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import {
   DispatchAction,
   LimitedTextInput,
@@ -71,7 +72,7 @@ const EditContactNameScreen = ({ navigation, route }: EditContactNameScreenProps
             limit={NAME_MAX}
             handleChangeText={setName}
             accessibilityLabel={t('BCSC.Contacts.EditName.Label')}
-            testID={testIdWithKey('NameInput')}
+            testID={testIdWithKey(TestIds.main.contactEditName.nameInput)}
           />
         </View>
       </View>

@@ -5,6 +5,7 @@ import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
@@ -31,6 +32,7 @@ import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { NotificationSettingsScreen } from '../features/settings/NotificationSettingsScreen'
+import { ProofRequestExpirationScreen } from '../features/settings/ProofRequestExpirationScreen'
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
@@ -71,6 +73,7 @@ import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { useLeaveVerification } from '../hooks/useLeaveVerification'
+import useSecureActions from '../hooks/useSecureActions'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
@@ -136,6 +139,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
   const [store] = useStore<BCState>()
+  const { clearAdditionalEvidence } = useSecureActions()
   const resumeRoute = getResumeStepRoute(store)
   // Opening on the prompt (rather than swapping stacks to reach it) lets prompt → setup question
   // animate as an in-stack slide. Everyone else resumes at the step they left off on.
@@ -159,7 +163,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         headerShadowVisible: false,
         headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
         headerLeft: createHeaderBackButton,
-        headerBackTestID: testIdWithKey('Back'),
+        headerBackTestID: testIdWithKey(TestIds.common.back),
         headerBackTitleVisible: false,
         header: createHeaderWithoutBanner,
         headerRight: createVerifyHelpMenuButton({ showRestartVerification: true }),
@@ -396,7 +400,14 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         }
         options={{
           header: createProgressHeader(2, 60),
-          headerLeft: createVerifyHeaderBackButton(),
+          headerLeft: createVerifyHeaderBackButton((navigation) => {
+            if (navigation.canGoBack()) {
+              return navigation.goBack()
+            }
+
+            clearAdditionalEvidence()
+            navigation.replace(BCSCScreens.IdentitySelection)
+          }),
         }}
       />
       <Stack.Screen
@@ -414,7 +425,14 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         }
         options={{
           header: createProgressHeader(2, 75),
-          headerLeft: createVerifyHeaderBackButton(),
+          headerLeft: createVerifyHeaderBackButton((navigation) => {
+            if (navigation.canGoBack()) {
+              return navigation.goBack()
+            }
+
+            clearAdditionalEvidence()
+            navigation.replace(BCSCScreens.IdentitySelection)
+          }),
         }}
       />
       <Stack.Screen name={BCSCScreens.VerifyWebView} component={WebViewScreen} />
@@ -444,6 +462,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       />
       <Stack.Screen name={BCSCScreens.VerifySettings} component={VerifySettingsScreen} />
       <Stack.Screen name={BCSCScreens.VerifyAutoLock} component={AutoLockScreen} />
+      <Stack.Screen name={BCSCScreens.ProofRequestExpiry} component={ProofRequestExpirationScreen} />
       <Stack.Screen
         name={BCSCScreens.VerifyNotificationSettings}
         component={NotificationSettingsScreen}
@@ -526,7 +545,8 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         component={ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false,
+          headerLeft: createHeaderBackButton,
+          headerBackTestID: testIdWithKey(TestIds.common.back),
         }}
       />
     </Stack.Navigator>

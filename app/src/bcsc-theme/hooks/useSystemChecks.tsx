@@ -1,18 +1,13 @@
-import BCSCApiClient from '@/bcsc-theme/api/client'
-import useConfigApi from '@/bcsc-theme/api/hooks/useConfigApi'
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { SERVER_STATUS_RECHECK_INTERVAL_MS } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
-import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { runSystemChecks } from '@/services/system-checks/system-checks'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, DeviceEventEmitter } from 'react-native'
 import { useTokenService } from '../services/hooks/useTokenService'
@@ -30,28 +25,28 @@ export enum SystemCheckScope {
  * Hook to run system checks based on the provided scope.
  *
  * Scopes:
- *   - STARTUP: Checks that need to run when the app starts, regardless of user authentication ie: server status, internet connectivity
+ *   - STARTUP: Checks that need to run when the app starts, regardless of user authentication ie: internet connectivity
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
  *   - VERIFY: Checks that run within the verification flow (VerifyStack) for an unverified, authenticated user ie: expired verification session
  *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
- * @returns {*} {void}
+ * @returns Whether the scope has settled, i.e. its checks have finished running (or will never run).
+ *   Callers that paint state the checks can change (see MainStack's loading gate) wait on this.
  */
-export const useSystemChecks = (scope: SystemCheckScope) => {
+export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean } => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
-  const configApi = useConfigApi(client as BCSCApiClient)
   const tokenService = useTokenService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const ranSystemChecksRef = useRef(false)
+  const [hasRun, setHasRun] = useState(false)
   const systemChecks = useCreateSystemChecks()
   const appStateRef = useRef(AppState.currentState)
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const { emitAlert } = useErrorAlert()
 
-  const hasServerOutage = store.bcsc.bannerMessages.some((b) => b.id === BCSCBanner.IAS_SERVER_UNAVAILABLE)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, t, logger])
 
   // Updated credential metadata ref
@@ -61,31 +56,6 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
   // Get system checks for the specified scope (useGetSystemChecks)
   const scopeSystemCheck = systemChecks[scope]
-
-  /**
-   * Re-checks server status on demand (foreground return, interval timer).
-   * Creates a ServerStatusSystemCheck inline and runs it — on success the
-   * modal is dismissed and banners are cleared, on failure the modal is
-   * shown and banners are re-added.
-   */
-  const recheckServerStatus = useCallback(async () => {
-    if (!isClientReady) {
-      return
-    }
-
-    try {
-      const serverStatus = await configApi.getServerStatus()
-      const check = new ServerStatusSystemCheck(serverStatus, utils, navigation)
-
-      if (check.runCheck()) {
-        check.onSuccess()
-      } else {
-        check.onFail()
-      }
-    } catch (error) {
-      logger.error('[useSystemChecks]: Failed to re-check server status', error as Error)
-    }
-  }, [isClientReady, configApi, utils, navigation, logger])
 
   // Internet connectivity and foreground listener
   useEffect(() => {
@@ -105,11 +75,10 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     const appStateSubscription = AppState.addEventListener('change', async (nextAppState) => {
       appStateRef.current = nextAppState
 
-      // When app becomes active, refresh network state and server status to ensure accurate status
+      // When app becomes active, refresh network state to ensure accurate connectivity status
       if (nextAppState === 'active') {
         const { isConnected, isInternetReachable } = await NetInfo.refresh()
         await runSystemChecks([new InternetStatusSystemCheck(isConnected, isInternetReachable, navigation, logger)])
-        await recheckServerStatus()
       }
     })
 
@@ -117,20 +86,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       unsubscribeNetInfo()
       appStateSubscription.remove()
     }
-  }, [scope, logger, navigation, recheckServerStatus])
-
-  // Periodic server status re-check during active outage (matches v3 60-second interval)
-  useEffect(() => {
-    if (scope !== SystemCheckScope.STARTUP || !hasServerOutage) {
-      return
-    }
-
-    const intervalId = setInterval(() => {
-      recheckServerStatus()
-    }, SERVER_STATUS_RECHECK_INTERVAL_MS)
-
-    return () => clearInterval(intervalId)
-  }, [scope, hasServerOutage, recheckServerStatus])
+  }, [scope, logger, navigation])
 
   // Listen for token refresh events (e.g., from FCM status notifications) and run device invalidation check
   useEffect(() => {
@@ -182,9 +138,16 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         )
       } catch (error) {
         logger.error(`[useSystemChecks]: Error running system checks for scope: ${scope}:`, error as Error)
+      } finally {
+        setHasRun(true)
       }
     }
 
     runSystemChecksByScope()
   }, [logger, scope, scopeSystemCheck])
+
+  return useMemo(
+    () => ({ hasSettled: hasRun || !scopeSystemCheck.isApplicable }),
+    [hasRun, scopeSystemCheck.isApplicable]
+  )
 }

@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import ArrowUp from '@assets/img/arrowup.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -56,7 +57,7 @@ const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, r
       <Button
         title={t('Global.Close')}
         buttonType={ButtonType.Primary}
-        testID={testIdWithKey('Close')}
+        testID={testIdWithKey(TestIds.main.pairing.confirmationClose)}
         accessibilityLabel={t('Global.Close')}
         onPress={onClose}
       />

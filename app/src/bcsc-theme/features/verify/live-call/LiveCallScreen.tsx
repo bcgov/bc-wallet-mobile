@@ -8,16 +8,17 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { CROP_DELAY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, TOKENS, usePreventDoublePress, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { Platform, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import InCallManager from 'react-native-incall-manager'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { VolumeManager } from 'react-native-volume-manager'
+import { VolumeManager, VolumeResult } from 'react-native-volume-manager'
 import { MediaStreamTrack, RTCView } from 'react-native-webrtc'
 import CallErrorView from './components/CallErrorView'
 import CallIconButton from './components/CallIconButton'
@@ -29,6 +30,9 @@ import { formatCallTime } from './utils/formatCallTime'
 type LiveCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.LiveCall>
 }
+
+const getCallVolume = (result: VolumeResult) =>
+  Platform.OS === 'android' ? (result.call ?? result.volume) : result.volume
 
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
@@ -156,14 +160,14 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     const getInitialVolume = async () => {
       try {
         const volume = await VolumeManager.getVolume()
-        setSystemVolume(volume.volume)
+        setSystemVolume(getCallVolume(volume))
       } catch (error) {
         logger.warn('Failed to get initial volume', { error: error as Error })
       }
     }
 
     const volumeListener = VolumeManager.addVolumeListener((result) => {
-      setSystemVolume(result.volume)
+      setSystemVolume(getCallVolume(result))
     })
 
     getInitialVolume()
@@ -407,7 +411,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               style={styles.hasTroubleContainer}
               accessibilityLabel={a11yLabel(t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble'))}
               accessibilityRole="button"
-              testID={testIdWithKey('HavingTrouble')}
+              testID={testIdWithKey(TestIds.verify.liveCall.havingTrouble)}
             >
               <ThemedText style={{ color: ColorPalette.grayscale.white, padding: Spacing.sm }}>
                 {t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
@@ -423,7 +427,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               size={iconSize}
               iconName={onMute ? 'microphone-off' : 'microphone'}
               label={onMute ? 'Unmute' : 'Mute'}
-              testIDKey={'Mute'}
+              testIDKey={TestIds.verify.liveCall.mute}
             />
             <CallIconButton
               onPress={toggleVideo}
@@ -432,7 +436,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               size={iconSize}
               iconName={videoHidden ? 'video-off' : 'video'}
               label={videoHidden ? 'Show Video' : 'Hide Video'}
-              testIDKey={'Video'}
+              testIDKey={TestIds.verify.liveCall.video}
             />
             <CallIconButton
               onPress={preventDoublePress(handleEndCall)}
@@ -441,7 +445,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               size={iconSize}
               iconName={'phone-cancel'}
               label={'End Call'}
-              testIDKey={'EndCall'}
+              testIDKey={TestIds.verify.liveCall.endCall}
             />
           </View>
         </View>

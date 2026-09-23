@@ -1,15 +1,23 @@
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
-import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import {
+  BCSCMainStackParams,
+  BCSCModals,
+  BCSCQRCoreScreens,
+  BCSCQRCoreTabParams,
+  BCSCScreens,
+} from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -38,7 +46,7 @@ const createQRBackButton = () => {
     return (
       <HeaderBackButton
         accessibilityLabel="Back"
-        testID={testIdWithKey('Back')}
+        testID={testIdWithKey(TestIds.common.back)}
         onPress={() => navigation.getParent()?.goBack()}
       />
     )
@@ -83,6 +91,7 @@ const QRCoreStack: React.FC = () => {
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { isActivelyVerified, isExpired } = useCardStatus()
+  const { isAvailable: isServerAvailable } = useServerStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
 
@@ -92,32 +101,44 @@ const QRCoreStack: React.FC = () => {
     },
   })
 
+  /**
+   * Redirects away from the PairingCode tab when there is a server outage.
+   *
+   * @returns Whether a redirect was made so the caller can decide to `preventDefault()`
+   */
+  const redirectFromPairingCodeTab = useCallback((): boolean => {
+    if (isServerAvailable && isActivelyVerified) {
+      return false
+    }
+
+    navigation.navigate(BCSCScreens.QRCore, { screen: BCSCQRCoreScreens.Scanner })
+
+    if (!isServerAvailable) {
+      logger.debug('[QRCoreStack] Server unavailable, redirecting to ServiceOutage screen')
+      navigation.navigate(BCSCModals.ServiceOutage, {})
+    } else if (isExpired) {
+      logger.debug('[QRCoreStack] User is not actively verified, redirecting to ReverifyAccount screen')
+      navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: true })
+    } else {
+      logger.debug('[QRCoreStack] User is not actively verified, redirecting to VerifyPrompt screen')
+      navigation.navigate(BCSCScreens.MainVerifyPrompt)
+    }
+
+    return true
+  }, [isServerAvailable, isActivelyVerified, isExpired, logger, navigation])
+
   return (
     <>
       <Tab.Navigator
         screenListeners={({ route }) => ({
           focus: () => {
-            if (route.name === BCSCQRCoreScreens.PairingCode && !isActivelyVerified) {
-              if (isExpired) {
-                logger.debug('[QRCoreStack] User is not actively verified, redirecting to ReverifyAccount screen')
-                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: true })
-              } else {
-                logger.debug('[QRCoreStack] User is not actively verified, redirecting to VerifyPrompt screen')
-                navigation.navigate(BCSCScreens.MainVerifyPrompt)
-              }
-              return
+            if (route.name === BCSCQRCoreScreens.PairingCode) {
+              redirectFromPairingCodeTab()
             }
           },
           tabPress: (event) => {
-            if (route.name === BCSCQRCoreScreens.PairingCode && !isActivelyVerified) {
+            if (route.name === BCSCQRCoreScreens.PairingCode && redirectFromPairingCodeTab()) {
               event.preventDefault()
-              if (isExpired) {
-                logger.debug('[QRCoreStack] User is not actively verified, redirecting to ReverifyAccount screen')
-                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: true })
-              } else {
-                logger.debug('[QRCoreStack] User is not actively verified, redirecting to VerifyPrompt screen')
-                navigation.navigate(BCSCScreens.MainVerifyPrompt)
-              }
             }
           },
         })}
@@ -144,7 +165,7 @@ const QRCoreStack: React.FC = () => {
             tabBarIcon: createTabBarIcon(t('Scan.ScanQRCode'), 'qrcode-scan'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('Scan.ScanQRCode'),
-            tabBarTestID: testIdWithKey('ScanQRCode'),
+            tabBarTestID: testIdWithKey(TestIds.main.qrCore.scannerTab),
             headerRight: createFloatingHelpMenuButton({
               webViewScreen: BCSCScreens.MainWebView,
               learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,
@@ -161,7 +182,7 @@ const QRCoreStack: React.FC = () => {
               tabBarIcon: createTabBarIcon(t('Scan.MyQRCode'), 'qrcode'),
               tabBarShowLabel: false,
               tabBarAccessibilityLabel: t('Scan.MyQRCode'),
-              tabBarTestID: testIdWithKey('MyQRCode'),
+              tabBarTestID: testIdWithKey(TestIds.main.qrCore.displayTab),
             }}
           />
         ) : null}
@@ -174,7 +195,7 @@ const QRCoreStack: React.FC = () => {
             tabBarIcon: createTabBarIcon(t('BCSC.ManualPairing.TabTitle'), 'import'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('BCSC.ManualPairing.TabTitle'),
-            tabBarTestID: testIdWithKey('PairingCode'),
+            tabBarTestID: testIdWithKey(TestIds.main.qrCore.pairingCodeTab),
             headerRight: createFloatingHelpMenuButton({
               webViewScreen: BCSCScreens.MainWebView,
               learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,

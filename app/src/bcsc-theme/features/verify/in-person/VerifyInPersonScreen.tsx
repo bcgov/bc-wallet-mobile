@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BC_SERVICE_LOCATION_URL } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
   Button,
@@ -102,7 +103,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       <ControlContainer>
         <Button
           buttonType={ButtonType.Primary}
-          testID={testIdWithKey('Complete')}
+          testID={testIdWithKey(TestIds.verify.verifyInPerson.complete)}
           accessibilityLabel={t('BCSC.VerifyIdentity.Complete')}
           title={t('BCSC.VerifyIdentity.Complete')}
           onPress={onPressComplete}
@@ -130,7 +131,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
           onPress={() => Linking.openURL(BC_SERVICE_LOCATION_URL)}
           accessibilityLabel={t('BCSC.VerifyIdentity.WhereToGoLink')}
           accessibilityHint={t('Global.A11y.OpensInBrowser')}
-          testID={testIdWithKey('ServiceBCLink')}
+          testID={testIdWithKey(TestIds.verify.verifyInPerson.serviceBcLink)}
         >
           <View style={styles.linkButtonContent}>
             <ThemedText style={Buttons.secondaryText}>{t('BCSC.VerifyIdentity.WhereToGoLink')}</ThemedText>
@@ -160,7 +161,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
           {t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}
         </ThemedText>
         <ThemedText
-          testID={testIdWithKey('ConfirmationCode')}
+          testID={testIdWithKey(TestIds.verify.verifyInPerson.confirmationCode)}
           variant={'headingTwo'}
           style={[styles.dataValue, { marginBottom: Spacing.md, letterSpacing: 7 }]}
         >

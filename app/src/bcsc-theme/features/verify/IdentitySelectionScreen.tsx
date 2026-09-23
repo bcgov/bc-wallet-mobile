@@ -3,6 +3,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import ScanExampleImage from '@assets/img/scan_example.png'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -64,14 +65,14 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
         buttonType={ButtonType.Primary}
         accessibilityLabel={t('BCSC.IdentitySelection.Scan')}
         title={t('BCSC.IdentitySelection.Scan')}
-        testID={testIdWithKey('Scan')}
+        testID={testIdWithKey(TestIds.verify.identitySelection.scan)}
         onPress={onPressScan}
       />
       <Button
         buttonType={ButtonType.Secondary}
         accessibilityLabel={t('BCSC.IdentitySelection.UseOtherID')}
         title={t('BCSC.IdentitySelection.UseOtherID')}
-        testID={testIdWithKey('OtherID')}
+        testID={testIdWithKey(TestIds.verify.identitySelection.otherId)}
         onPress={onPressOtherID}
       />
     </ControlContainer>

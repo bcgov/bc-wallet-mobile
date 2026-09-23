@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -43,7 +44,7 @@ const SettingsHeaderButton = ({
       icon={'menu'}
       iconTintColor={ColorPalette.brand.primary}
       accessibilityLabel={accessibilityLabel || a11yLabel(t('BCSC.Screens.Settings'))}
-      testID={testID || testIdWithKey('SettingsMenuButton')}
+      testID={testID || testIdWithKey(TestIds.common.settingsMenu)}
       onPress={onPress}
     />
   )

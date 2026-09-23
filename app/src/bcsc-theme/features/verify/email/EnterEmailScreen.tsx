@@ -8,6 +8,7 @@ import { EMAIL_MAX_LENGTH, emailSchema, parseField } from '@/bcsc-theme/utils/va
 import BulletPointList from '@/components/BulletPointList'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -107,7 +108,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
         onPress={handleSubmit}
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.verify.enterEmail.continue)}
       >
         {loading && <ButtonLoading />}
       </Button>
@@ -117,7 +118,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
           onPress={handleSkip}
           title={t('BCSC.EnterEmail.EmailSkipButton2')}
           accessibilityLabel={t('BCSC.EnterEmail.EmailSkipButton2')}
-          testID={testIdWithKey('SkipEmail')}
+          testID={testIdWithKey(TestIds.verify.enterEmail.skip)}
         />
       ) : null}
     </ControlContainer>

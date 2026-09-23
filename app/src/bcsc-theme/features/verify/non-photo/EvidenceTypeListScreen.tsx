@@ -7,6 +7,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { isCardEvidenceComplete } from '@/bcsc-theme/utils/card-utils'
 import { ICON_SIZE } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -94,9 +95,11 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   // stack (the first-ID list and the second-ID list) keeps its own baseline, so backing to one only
   // releases the ID chosen from it.
   const baselineCountRef = useRef<number | null>(null)
+  const isNavigatingRef = useRef(false)
 
   useFocusEffect(
     useCallback(() => {
+      isNavigatingRef.current = false
       const evidence = storeRef.current.bcscSecure.additionalEvidenceData
       if (baselineCountRef.current === null) {
         // First (forward) visit: the baseline is how many IDs are already fully collected before this
@@ -254,6 +257,33 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
    */
   const showOtherOptions = photoFilter === 'photo' && store.bcscSecure.additionalEvidenceData.length === 0
 
+  const handleSelectEvidenceType = useCallback(
+    (item: EvidenceType) => {
+      if (isNavigatingRef.current) {
+        return
+      }
+      isNavigatingRef.current = true
+
+      addEvidenceType(item).catch((error) => {
+        logger.error(`Error adding evidence type: ${error}`)
+        isNavigatingRef.current = false
+      })
+      // push (not navigate) so the second ID opens a fresh instructions screen instead of
+      // popping back to the first ID's IDPhotoInformation already in the stack.
+      navigation.push(BCSCScreens.IDPhotoInformation, { cardType: item })
+    },
+    [addEvidenceType, navigation, logger]
+  )
+
+  const handleShowOtherOptions = useCallback(() => {
+    if (isNavigatingRef.current) {
+      return
+    }
+    isNavigatingRef.current = true
+
+    navigation.replace(BCSCScreens.EvidenceTypeList, { cardProcess, photoFilter: 'nonPhoto' })
+  }, [navigation, cardProcess])
+
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
   }
@@ -281,13 +311,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
             {section.data.map((item) => (
               <ListButton
                 key={item.evidence_type_label}
-                onPress={() => {
-                  addEvidenceType(item)
-                  // push (not navigate) so the second ID opens a fresh instructions screen instead of
-                  // popping back to the first ID's IDPhotoInformation already in the stack.
-                  navigation.push(BCSCScreens.IDPhotoInformation, { cardType: item })
-                }}
-                testID={testIdWithKey(`EvidenceTypeListItem-${item.evidence_type}`)}
+                onPress={() => handleSelectEvidenceType(item)}
+                testID={testIdWithKey(`${TestIds.verify.evidenceTypeList.itemStem}${item.evidence_type}`)}
                 accessibilityLabel={a11yShortLabel(item.evidence_type_label)}
               >
                 <View style={styles.listButtonContainer}>
@@ -305,13 +330,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
           <ThemedText style={styles.sectionTitle}>{t('BCSC.EvidenceTypeList.OtherOptions')}</ThemedText>
           <ListButtonGroup>
             <ListButton
-              onPress={() => {
-                navigation.replace(BCSCScreens.EvidenceTypeList, {
-                  cardProcess,
-                  photoFilter: 'nonPhoto',
-                })
-              }}
-              testID={testIdWithKey('EvidenceTypeListOtherOptions')}
+              onPress={handleShowOtherOptions}
+              testID={testIdWithKey(TestIds.verify.evidenceTypeList.otherOptions)}
               accessibilityLabel={a11yLabel(t('BCSC.EvidenceTypeList.ShowMoreOptions'))}
             >
               <View style={styles.listButtonContainer}>

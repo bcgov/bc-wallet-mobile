@@ -1,7 +1,7 @@
 import { TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { relaunchApp, selectAccountLandingIfPresent, unlockWithPin } from '../../../src/flows/auth.js'
 import { skipToHome } from '../../../src/flows/onboarding.js'
-import { openDeveloperMenuFromSettings } from '../../../src/helpers/developer.js'
+import { openDeveloperMenuFromSettings, scrollToSettingsVersionFooter } from '../../../src/helpers/developer.js'
 import { AccountLandingScreen, AuthSettingsScreen } from '../../../src/screens/auth.js'
 import { DeveloperScreen } from '../../../src/screens/developer.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
@@ -68,6 +68,8 @@ describe('Auth journey: returning-user intro', () => {
     // is persisted, so the row is now offered on every settings surface.
     await HomeScreen.tap('menu')
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // The row sits at the foot of a list that outruns the default scroll hunt on small phones.
+    await scrollToSettingsVersionFooter()
     await SettingsScreen.waitFor('developerMode', Timeouts.SCREEN_TRANSITION)
   })
 })

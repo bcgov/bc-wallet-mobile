@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -66,7 +67,7 @@ const Terms: React.FC = () => {
       <Button
         title={t('Global.Accept')}
         accessibilityLabel={t('Global.Accept')}
-        testID={testIdWithKey('Accept')}
+        testID={testIdWithKey(TestIds.bcwallet.terms.accept)}
         onPress={onSubmitPressed}
         buttonType={ButtonType.Primary}
       />

@@ -2,6 +2,7 @@ import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import AnalyticsIcon from '@assets/img/analytics-icon.svg'
 import {
@@ -83,13 +84,13 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
         title={t('BCSC.Onboarding.AcceptAnalytics')}
         buttonType={ButtonType.Primary}
         onPress={handleAcceptPressed}
-        testID={testIdWithKey('Accept')}
+        testID={testIdWithKey(TestIds.onboarding.optInAnalytics.accept)}
       />
       <Button
         title={t('BCSC.Onboarding.DenyAnalytics')}
         buttonType={ButtonType.Secondary}
         onPress={handleDeniedPressed}
-        testID={testIdWithKey('Decline')}
+        testID={testIdWithKey(TestIds.onboarding.optInAnalytics.decline)}
       />
     </ControlContainer>
   )

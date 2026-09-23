@@ -155,7 +155,7 @@ describe('EmailConfirmation', () => {
         bcscSecure: { emailAddress: 'test@example.com' },
       })
 
-      fireEvent.press(screen.getByTestId('ResendCodeLink'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('ResendCodeLink')))
 
       await waitFor(() => {
         expect(mockCreateEmailVerification).toHaveBeenCalledWith('test@example.com')
@@ -173,7 +173,7 @@ describe('EmailConfirmation', () => {
         bcscSecure: { emailAddress: 'test@example.com' },
       })
 
-      fireEvent.press(screen.getByTestId('ResendCodeLink'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('ResendCodeLink')))
 
       await waitFor(() => {
         expect(screen.getByText('BCSC.EmailConfirmation.ErrorResendingCode')).toBeTruthy()
@@ -187,7 +187,7 @@ describe('EmailConfirmation', () => {
         bcscSecure: { emailAddress: 'test@example.com' },
       })
 
-      fireEvent.press(screen.getByTestId('ResendCodeLink'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('ResendCodeLink')))
 
       await waitFor(() => {
         expect(mockCreateEmailVerification).toHaveBeenCalled()
@@ -209,7 +209,7 @@ describe('EmailConfirmation', () => {
       const expectedUrl = Platform.OS === 'ios' ? 'message://' : 'mailto:'
       renderScreen()
 
-      fireEvent.press(screen.getByTestId('GoToMyEmailLink'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('GoToMyEmailLink')))
 
       await waitFor(() => {
         expect(openURLSpy).toHaveBeenCalledWith(expectedUrl)

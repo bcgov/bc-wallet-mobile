@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React, { ComponentType, PropsWithChildren } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -37,7 +38,7 @@ const AgentReadyGate: React.FC<Props> = ({ children, testID }) => {
             buttonType={ButtonType.Primary}
             onPress={retry}
             accessibilityLabel={t('Init.Retry')}
-            testID={testIdWithKey('AgentRetry')}
+            testID={testIdWithKey(TestIds.common.agentRetry)}
           />
         </View>
       )

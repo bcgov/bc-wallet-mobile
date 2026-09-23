@@ -1,4 +1,5 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -19,7 +20,7 @@ export const BirthdateLockoutScreen = ({ navigation }: BirthdateLockoutScreenPro
     <Button
       title={t('Global.Close')}
       accessibilityLabel={t('Global.Close')}
-      testID={testIdWithKey('Close')}
+      testID={testIdWithKey(TestIds.verify.birthdateLockout.close)}
       onPress={handleClose}
       buttonType={ButtonType.Secondary}
     />

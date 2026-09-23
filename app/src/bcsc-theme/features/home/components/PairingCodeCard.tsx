@@ -1,4 +1,5 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { a11yLabel } from '@utils/accessibility'
 import React from 'react'
@@ -69,7 +70,7 @@ const PairingCodeCard: React.FC<PairingCodeCardProps> = ({
       accessibilityRole="button"
       accessibilityLabel={a11yLabel(title)}
       accessibilityHint={accessibilityHint}
-      testID={testID ?? testIdWithKey('PairingCodeCard')}
+      testID={testID ?? testIdWithKey(TestIds.main.home.pairingCodeCard)}
     >
       <Icon name={'login'} size={ICON_SIZE} color={ColorPalette.brand.primary} accessible={false} />
       <View style={styles.content}>

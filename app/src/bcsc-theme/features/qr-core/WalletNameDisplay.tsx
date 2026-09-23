@@ -1,4 +1,5 @@
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { ButtonLocation, IconButton, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -34,13 +35,13 @@ const WalletNameDisplay: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ThemedText variant="headingTwo" testID={testIdWithKey('WalletName')} style={styles.name}>
+      <ThemedText variant="headingTwo" testID={testIdWithKey(TestIds.main.qrDisplay.walletName)} style={styles.name}>
         {store.bcsc.selectedNickname || 'My Wallet'}
       </ThemedText>
       <IconButton
         buttonLocation={ButtonLocation.Right}
         accessibilityLabel={t('Nickname.EditNickname')}
-        testID={testIdWithKey('EditNickname')}
+        testID={testIdWithKey(TestIds.main.qrDisplay.editNickname)}
         onPress={handleEdit}
         icon="pencil"
         iconTintColor={TextTheme.headingTwo.color}

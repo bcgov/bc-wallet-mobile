@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -134,11 +135,12 @@ export const DropdownWithValidation = <T extends string | number>({
 
   const handleSelect = (selectedValue: T) => {
     onChange(selectedValue)
-    setIsOpen(false)
+    handleClose()
   }
 
   const handleClose = () => {
     setIsOpen(false)
+    onModalClose?.()
   }
 
   const renderOption = ({ item, index }: { item: DropdownOption<T>; index: number }) => {
@@ -152,7 +154,7 @@ export const DropdownWithValidation = <T extends string | number>({
           isLastItem && { borderBottomWidth: 0 },
         ]}
         onPress={() => handleSelect(item.value)}
-        testID={testIdWithKey(`${id}-option-${item.value}`)}
+        testID={testIdWithKey(`${id}${TestIds.shared.field.optionPrefix}${item.value}`)}
         accessibilityLabel={a11yLabel(item.label)}
         accessibilityRole="menuitem"
         accessibilityState={{ selected: isSelected }}
@@ -168,7 +170,7 @@ export const DropdownWithValidation = <T extends string | number>({
       <ThemedText
         variant={'labelTitle'}
         style={[{ marginBottom: 8 }, labelProps]}
-        testID={testIdWithKey(`${id}-label`)}
+        testID={testIdWithKey(`${id}${TestIds.shared.field.label}`)}
       >
         {label}
       </ThemedText>
@@ -176,7 +178,7 @@ export const DropdownWithValidation = <T extends string | number>({
       <Pressable
         style={styles.dropdownButton}
         onPress={() => setIsOpen(true)}
-        testID={testIdWithKey(`${id}-input`)}
+        testID={testIdWithKey(`${id}${TestIds.shared.field.input}`)}
         accessibilityRole="combobox"
         accessibilityState={{ expanded: isOpen }}
         accessibilityLabel={a11yLabel(`${label}, ${selectedOption?.label || placeholder}`)}
@@ -192,7 +194,7 @@ export const DropdownWithValidation = <T extends string | number>({
       {error ? (
         <ThemedText
           style={[{ marginTop: 4, color: ColorPalette.semantic.error, fontSize: 12 }, errorProps]}
-          testID={testIdWithKey(`${id}-error`)}
+          testID={testIdWithKey(`${id}${TestIds.shared.field.error}`)}
         >
           {error}
         </ThemedText>
@@ -202,16 +204,16 @@ export const DropdownWithValidation = <T extends string | number>({
         <ThemedText
           style={[{ marginTop: 8 }, subtextProps]}
           variant={'labelSubtitle'}
-          testID={testIdWithKey(`${id}-subtext`)}
+          testID={testIdWithKey(`${id}${TestIds.shared.field.subtext}`)}
         >
           {subtext}
         </ThemedText>
       ) : null}
 
-      <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose} onDismiss={onModalClose}>
+      <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
         <View
           style={[styles.modalContent, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
-          testID={testIdWithKey(`${id}-modal-content`)}
+          testID={testIdWithKey(`${id}${TestIds.shared.field.modalContent}`)}
         >
           <View style={styles.modalHeader}>
             <View style={{ width: 32 }} />
@@ -219,7 +221,7 @@ export const DropdownWithValidation = <T extends string | number>({
             <PressableOpacity
               style={styles.closeButton}
               onPress={handleClose}
-              testID={testIdWithKey(`${id}-close`)}
+              testID={testIdWithKey(`${id}${TestIds.shared.field.close}`)}
               accessibilityLabel={a11yLabel(t('Global.Close'))}
               accessibilityRole="button"
               hitSlop={hitSlop}

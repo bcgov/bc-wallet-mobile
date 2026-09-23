@@ -1,4 +1,5 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -42,14 +43,14 @@ const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({
         <Button
           title={t('BCSC.Instructions.ScanBarcode')}
           accessibilityLabel={t('BCSC.Instructions.ScanBarcode')}
-          testID={testIdWithKey('ScanBarcode')}
+          testID={testIdWithKey(TestIds.verify.serialInstructions.scanBarcode)}
           onPress={() => navigation.navigate(BCSCScreens.ScanSerial)}
           buttonType={ButtonType.Primary}
         />
         <Button
           title={t('BCSC.Instructions.EnterManually')}
           accessibilityLabel={t('BCSC.Instructions.EnterManually')}
-          testID={testIdWithKey('EnterManually')}
+          testID={testIdWithKey(TestIds.verify.serialInstructions.enterManually)}
           onPress={() => navigation.navigate(BCSCScreens.ManualSerial)}
           buttonType={ButtonType.Secondary}
         />

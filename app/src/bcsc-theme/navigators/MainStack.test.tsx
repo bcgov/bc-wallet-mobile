@@ -1,12 +1,18 @@
+import { SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import { render } from '@testing-library/react-native'
+import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import { useAccount } from '../contexts/BCSCAccountContext'
+import { useServerStatus } from '../contexts/ServerStatusContext'
 import * as PairingModule from '../features/pairing'
 import { PairingNavigationListener, PairingPayload } from '../features/pairing/types'
+import { useSystemChecks } from '../hooks/useSystemChecks'
+import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { BCSCScreens } from '../types/navigators'
 import MainStack from './MainStack'
+
+jest.mock('@/bcsc-theme/contexts/BCSCAccountContext')
 
 let capturedNavigationListener: PairingNavigationListener | undefined
 
@@ -35,6 +41,10 @@ jest.mock('@react-navigation/stack', () => {
       Navigator,
       Screen,
     }),
+    // Exposed directly (not just via createStackNavigator()) so tests can grab the same
+    // instances with jest.requireMock, to assert the navigator is actually mounted.
+    Navigator,
+    Screen,
   }
 })
 jest.mock('react-i18next', () => ({
@@ -44,6 +54,7 @@ jest.mock('@/constants', () => ({
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: {},
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
   Mode: { BCWallet: 'bcwallet', BCSC: 'bcsc' },
+  SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS: 10000,
 }))
 jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
@@ -52,8 +63,14 @@ jest.mock('../contexts/BCSCLoadingContext', () => ({
   LoadingScreen: 'LoadingScreen',
 }))
 jest.mock('../hooks/useSystemChecks', () => ({
-  SystemCheckScope: { MAIN_STACK: 'MAIN_STACK' },
-  useSystemChecks: jest.fn(),
+  SystemCheckScope: { MAIN_STACK: 'MAIN_STACK', ACCOUNT: 'ACCOUNT' },
+  useSystemChecks: jest.fn(() => ({ hasSettled: true })),
+}))
+jest.mock('../contexts/ServerStatusContext', () => ({
+  useServerStatus: jest.fn(() => ({ hasChecked: true })),
+}))
+jest.mock('../hooks/useVerificationStatus', () => ({
+  useVerificationStatus: jest.fn(() => ({ isVerified: true })),
 }))
 jest.mock('../features/pairing', () => ({
   usePairingService: jest.fn(),
@@ -137,7 +154,20 @@ describe('MainStack', () => {
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
     jest.mocked(PairingModule.usePairingService).mockReturnValue(makePairingService() as any)
     jest.mocked(PairingModule.pairingPayloadToServiceLoginParams).mockReturnValue({ pairingCode: 'code' } as any)
+    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: true })
+    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: true } as any)
+    jest.mocked(useVerificationStatus).mockReturnValue({ isVerified: true } as any)
   })
+
+  const queryLoadingScreens = (view: ReturnType<typeof render>) => view.UNSAFE_queryAllByType('LoadingScreen' as any)
+
+  // The mocked Stack.Navigator instance, read from the mock module at call time (not
+  // captured inside the jest.mock factory, which runs before this file's own module body).
+  const queryNavigators = (view: ReturnType<typeof render>) =>
+    view.UNSAFE_queryAllByType(jest.requireMock('@react-navigation/stack').Navigator)
+
+  const queryScreenNames = (view: ReturnType<typeof render>): string[] =>
+    view.UNSAFE_queryAllByType(jest.requireMock('@react-navigation/stack').Screen).map((screen) => screen.props.name)
 
   it('renders correctly', () => {
     const { toJSON } = render(<MainStack />)
@@ -202,11 +232,97 @@ describe('MainStack', () => {
     expect(PairingModule.pairingPayloadToServiceLoginParams).not.toHaveBeenCalled()
   })
 
-  it('shows the loading screen while the account is still loading', () => {
+  it('registers VerificationSuccess for an unverified user, who opens it from the Home "Verified" card', () => {
+    jest.mocked(useVerificationStatus).mockReturnValue({ isVerified: false } as any)
+
+    expect(queryScreenNames(render(<MainStack />))).toContain(BCSCScreens.VerificationSuccess)
+  })
+
+  it('stops registering VerificationSuccess once the user is verified', () => {
+    // This stack inherits the outgoing navigator's state on the `verified` flip. React Navigation only
+    // drops VerificationSuccess from that state if the route no longer exists here; while it was always
+    // registered, pressing Continue from the Home "Verified" card left the user on the screen (#4719).
+    const screenNames = queryScreenNames(render(<MainStack />))
+
+    expect(screenNames).not.toContain(BCSCScreens.VerificationSuccess)
+    expect(screenNames).toContain(BCSCScreens.MainSettings)
+  })
+
+  it('replaces the stack with the loading screen while the account is still loading', () => {
     jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
 
-    const { toJSON } = render(<MainStack />)
+    const view = render(<MainStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
+    // Replace, not overlay: the navigator has to unmount here so it drops any navigation state
+    // inherited from VerifyStack. Overlaying it stranded users on VerificationSuccess (#4682).
+    expect(view.toJSON()).toMatchObject({ type: 'LoadingScreen' })
+    expect(queryNavigators(view)).toHaveLength(0)
+  })
+
+  it('holds the loading screen over the stack while system checks are still settling', () => {
+    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+
+    const view = render(<MainStack />)
+
+    // Overlay, not replace: the checks navigate to screens registered in this navigator (terms of
+    // use, device invalidated, reverify), and a navigate() with no navigator mounted is dropped.
+    expect(view.toJSON()).toMatchObject({ type: 'View' })
+    expect(queryLoadingScreens(view)).toHaveLength(1)
+    expect(queryNavigators(view)).toHaveLength(1)
+  })
+
+  it('drops the loading screen once the system checks have settled', () => {
+    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(0)
+  })
+
+  it('releases the loading screen when the system checks never settle', () => {
+    jest.useFakeTimers()
+    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+
+    try {
+      const view = render(<MainStack />)
+      expect(queryLoadingScreens(view)).toHaveLength(1)
+
+      act(() => {
+        jest.advanceTimersByTime(SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
+      })
+
+      expect(queryLoadingScreens(view)).toHaveLength(0)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  // Screens under this stack (Services tab, ServiceLogin, pairing, settings) gate solely on
+  // isAvailable, which fails open (true) until the first check completes — so this stack must not
+  // render underneath until that initial fetch has resolved, or a real outage could go unnoticed.
+  it('holds the loading screen over the stack while the initial server-status check is still pending', () => {
+    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: false } as any)
+
+    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(1)
+  })
+
+  it('drops the loading screen once the initial server-status check has resolved', () => {
+    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: true } as any)
+
+    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(0)
+  })
+
+  it('releases the loading screen when the server-status check never settles', () => {
+    jest.useFakeTimers()
+    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: false } as any)
+
+    try {
+      const view = render(<MainStack />)
+      expect(queryLoadingScreens(view)).toHaveLength(1)
+
+      act(() => {
+        jest.advanceTimersByTime(SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
+      })
+
+      expect(queryLoadingScreens(view)).toHaveLength(0)
+    } finally {
+      jest.useRealTimers()
+    }
   })
 })

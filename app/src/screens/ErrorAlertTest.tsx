@@ -232,7 +232,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       injectErrorCodeIntoAxiosResponse(client, 'err_400_failed_to_retrieve_string_resource'),
     err_500_invalid_url: () => injectErrorCodeIntoAxiosResponse(client, 'err_500_invalid_url'),
     err_501_invalid_registration_request: () =>
-      injectErrorCodeIntoAxiosResponse(client, 'err_501_invalid_registration_request'),
+      injectErrorCodeIntoAxiosResponse(client, 'invalid_registration_request'),
     err_bad_request: () => injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_REQUEST'),
     err_bad_response: () => injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_RESPONSE'),
     econnaborted: () => injectErrorCodeIntoAxiosResponse(client, 'ECONNABORTED'),
