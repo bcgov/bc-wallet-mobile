@@ -14,6 +14,9 @@
 #   4. Render it all as Markdown tables, grouped by category, and post as a
 #      new Discussion.
 #
+# The step scripts live in scripts/release-notes/ — see that directory for
+# the actual logic.
+#
 # Reading Project fields needs a scope the default GITHUB_TOKEN doesn't have,
 # so this reuses the fine-grained PAT `board-status.yml` already depends on
 # (op://bcsc-mobile-app-cd/github-projects/credential)
@@ -70,34 +73,6 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           PROJECTS_TOKEN: op://bcsc-mobile-app-cd/github-projects/credential
 
-      - name: Verify discussion category exists
-        id: category
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          github-token: ${{ github.token }}
-          script: |
-            const { owner, repo } = context.repo
-
-            const { repository } = await github.graphql(
-              `query($owner: String!, $repo: String!) {
-                 repository(owner: $owner, name: $repo) {
-                   id
-                   discussionCategories(first: 20) { nodes { id name slug } }
-                 }
-               }`,
-              { owner, repo }
-            )
-
-            const category = repository.discussionCategories.nodes.find((c) => c.slug === 'release-notes')
-            if (!category) {
-              throw new Error(
-                `No discussion category with slug "release-notes" on ${owner}/${repo}. Create it (Settings → Discussions) or update the slug this workflow looks for.`
-              )
-            }
-
-            core.setOutput('repository_id', repository.id)
-            core.setOutput('category_id', category.id)
-
       - name: Checkout
         uses: actions/checkout@v7
         with:
@@ -106,52 +81,21 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      - name: Verify discussion category exists
+        id: category
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const script = require('./scripts/release-notes/verify-discussion-category.js')
+            await script({ github, context, core })
+
       - name: Resolve tag order and enumerate PRs
         id: range
         env:
           TAG_A: ${{ inputs.tag_a }}
           TAG_B: ${{ inputs.tag_b }}
-        run: |
-          set -euo pipefail
-
-          for t in "${TAG_A}" "${TAG_B}"; do
-            if ! git rev-parse -q --verify "refs/tags/${t}" >/dev/null; then
-              echo "::error::Tag '${t}' does not exist in this repository."
-              exit 1
-            fi
-          done
-
-          # Order by commit date, not ancestry — tags aren't guaranteed to
-          # sit on one straight line (see header).
-          DATE_A=$(git log -1 --format=%ct "${TAG_A}")
-          DATE_B=$(git log -1 --format=%ct "${TAG_B}")
-          if [ "${DATE_A}" -le "${DATE_B}" ]; then
-            OLDER="${TAG_A}"; NEWER="${TAG_B}"
-          else
-            OLDER="${TAG_B}"; NEWER="${TAG_A}"
-          fi
-
-          if ! git merge-base --is-ancestor "${OLDER}" "${NEWER}"; then
-            UNIQUE_TO_OLDER=$(git log --oneline "${NEWER}..${OLDER}" | wc -l | tr -d ' ')
-            echo "::notice::${OLDER} and ${NEWER} are on divergent history (no straight line between them) — ${UNIQUE_TO_OLDER} commit(s) reachable from ${OLDER} never made it into ${NEWER}'s line and are intentionally excluded. This report only covers what's new in ${NEWER} since ${OLDER}."
-          fi
-
-          echo "older=${OLDER}" >> "${GITHUB_OUTPUT}"
-          echo "newer=${NEWER}" >> "${GITHUB_OUTPUT}"
-
-          # Squash-only merge history (see the file header) — PR numbers come
-          # from the tail of each commit subject, e.g. "fix: ... (#4587)".
-          PR_NUMBERS=$(git log --pretty=%s "${OLDER}..${NEWER}" \
-            | grep -oE '\(#[0-9]+\)[[:space:]]*$' \
-            | grep -oE '[0-9]+' \
-            | sort -un) || true
-
-          if [ -z "${PR_NUMBERS}" ]; then
-            echo "::notice::No PRs found between ${OLDER} and ${NEWER} (matching '(#N)' at the end of a commit subject) — the report will be posted with empty tables."
-            echo "pr_numbers=[]" >> "${GITHUB_OUTPUT}"
-          else
-            echo "pr_numbers=$(printf '%s\n' "${PR_NUMBERS}" | jq -R -s -c 'split("\n") | map(select(length > 0) | tonumber)')" >> "${GITHUB_OUTPUT}"
-          fi
+        run: ./scripts/release-notes/resolve-tag-range.sh
 
       - name: Check for an existing release notes discussion
         env:
@@ -160,30 +104,8 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
-            const { owner, repo } = context.repo
-            const { NEWER_TAG } = process.env
-            const title = `${NEWER_TAG} release notes`
-
-            // GitHub's search is tokenized, not exact — "in:title" can surface
-            // near matches (e.g. v1.2.3 vs v1.2.30), so confirm an exact title
-            // match before treating it as a real collision.
-            const { search } = await github.graphql(
-              `query($searchQuery: String!) {
-                 search(query: $searchQuery, type: DISCUSSION, first: 10) {
-                   nodes {
-                     ... on Discussion { title url }
-                   }
-                 }
-               }`,
-              { searchQuery: `repo:${owner}/${repo} in:title "${title}"` }
-            )
-
-            const existing = search.nodes.find((d) => d.title === title)
-            if (existing) {
-              throw new Error(
-                `A discussion titled "${title}" already exists: ${existing.url}. Delete it first if you want to regenerate its contents, otherwise this run is a duplicate.`
-              )
-            }
+            const script = require('./scripts/release-notes/check-existing-discussion.js')
+            await script({ github, context, core })
 
       - name: Build release notes report
         id: report
@@ -191,169 +113,12 @@ jobs:
         env:
           OLDER_TAG: ${{ steps.range.outputs.older }}
           NEWER_TAG: ${{ steps.range.outputs.newer }}
+          PR_NUMBERS: ${{ steps.range.outputs.pr_numbers }}
         with:
           github-token: ${{ env.PROJECTS_TOKEN }}
           script: |
-            const prNumbers = ${{ steps.range.outputs.pr_numbers }}
-            const { OLDER_TAG, NEWER_TAG } = process.env
-            const { owner, repo } = context.repo
-            const here = `${owner}/${repo}`
-
-            // Project 108 = "BC Wallet" board. Sprint/Priority are looked up
-            // by field name, so a rename fails loudly instead of going blank.
-            const PROJECT_NUMBER = 108
-            const SPRINT_FIELD_NAME = 'Sprint'
-            const PRIORITY_FIELD_NAME = 'Priority'
-
-            const esc = (s) => (s ?? '').replace(/\|/g, '\\|')
-            const issueLink = (n) => `[#${n}](https://github.com/${here}/issues/${n})`
-            const prLink = (n) => `[#${n}](https://github.com/${here}/pull/${n})`
-
-            const prFragment = (alias) => `
-              ${alias}: pullRequest(number: $${alias}) {
-                number
-                title
-                labels(first: 20) { nodes { name } }
-                closingIssuesReferences(first: 10) {
-                  nodes {
-                    number
-                    title
-                    repository { nameWithOwner }
-                    issueType { name }
-                    labels(first: 20) { nodes { name } }
-                    projectItems(first: 10) {
-                      nodes {
-                        project { number }
-                        sprint: fieldValueByName(name: $sprintField) {
-                          ... on ProjectV2ItemFieldSingleSelectValue { name }
-                          ... on ProjectV2ItemFieldIterationValue { title }
-                        }
-                        priority: fieldValueByName(name: $priorityField) {
-                          ... on ProjectV2ItemFieldSingleSelectValue { name }
-                        }
-                      }
-                    }
-                  }
-                }
-              }`
-
-            const CHUNK = 40
-            const allPRs = []
-            for (let i = 0; i < prNumbers.length; i += CHUNK) {
-              const chunk = prNumbers.slice(i, i + CHUNK)
-              const aliases = chunk.map((_, idx) => `pr${idx}`)
-              const varDecls = aliases.map((a) => `$${a}: Int!`).join(', ')
-              const fragments = aliases.map(prFragment).join('\n')
-              const query = `query($owner: String!, $repo: String!, $sprintField: String!, $priorityField: String!, ${varDecls}) {
-                repository(owner: $owner, name: $repo) { ${fragments} }
-              }`
-              const vars = { owner, repo, sprintField: SPRINT_FIELD_NAME, priorityField: PRIORITY_FIELD_NAME }
-              chunk.forEach((n, idx) => { vars[aliases[idx]] = n })
-
-              let repository
-              try {
-                ;({ repository } = await github.graphql(query, vars))
-              } catch (error) {
-                const status = error.status ?? 0
-                const types = (error.errors ?? []).map((e) => e.type)
-                if (status === 401 || /bad credentials|requires authentication/i.test(error.message ?? '')) {
-                  throw new Error(
-                    'Project token rejected (401) — the fine-grained PAT at op://bcsc-mobile-app-cd/github-projects/credential has almost certainly expired (bcgov caps fine-grained PATs at 90 days). Mint a replacement; no GitHub secret needs changing.'
-                  )
-                }
-                if (types.includes('INSUFFICIENT_SCOPES')) {
-                  throw new Error(
-                    'Project token lacks required scope.'
-                  )
-                }
-                throw error
-              }
-              for (const alias of aliases) {
-                const pr = repository[alias]
-                if (!pr) {
-                  core.warning(`A PR in this range no longer resolves via the API — skipping it.`)
-                  continue
-                }
-                allPRs.push(pr)
-              }
-            }
-
-            const noTicketPRs = []
-            const ticketsByNumber = new Map()
-
-            for (const pr of allPRs) {
-              const skipChangelog = pr.labels.nodes.some((l) => l.name === 'status/skip-changelog')
-              if (skipChangelog) continue
-
-              const sameRepoIssues = pr.closingIssuesReferences.nodes.filter(
-                (i) => i.repository.nameWithOwner === here
-              )
-
-              if (sameRepoIssues.length === 0) {
-                noTicketPRs.push(pr)
-                continue
-              }
-
-              for (const issue of sameRepoIssues) {
-                let entry = ticketsByNumber.get(issue.number)
-                if (!entry) {
-                  entry = { issue, prNumbers: new Set() }
-                  ticketsByNumber.set(issue.number, entry)
-                }
-                entry.prNumbers.add(pr.number)
-              }
-            }
-
-            const projectItemFor = (issue) =>
-              issue.projectItems.nodes.find((n) => n.project.number === PROJECT_NUMBER)
-
-            const sprintFor = (issue) => {
-              const value = projectItemFor(issue)?.sprint
-              return value?.name ?? value?.title ?? '—'
-            }
-
-            const priorityFor = (issue) => projectItemFor(issue)?.priority?.name ?? '—'
-
-            const categoryFor = (issue) => {
-              const labelNames = issue.labels.nodes.map((l) => l.name)
-              if (labelNames.includes('work/tech-debt')) return 'Tech Debt'
-              if (labelNames.includes('work/spike')) return 'Spike'
-              const type = issue.issueType?.name
-              if (type === 'Bug') return 'Bug'
-              if (type === 'Feature') return 'Feature'
-              if (type === 'Task') return 'Task'
-              return 'Other'
-            }
-
-            const renderTicketTable = (rows) => {
-              const header = '| Ticket | Priority | Title | Sprint | PR(s) |\n|---|---|---|---|---|'
-              const body = rows
-                .map(({ issue, prNumbers: prs }) => {
-                  const prCell = [...prs].sort((a, b) => a - b).map(prLink).join(', ')
-                  return `| ${issueLink(issue.number)} | ${priorityFor(issue)} | ${esc(issue.title)} | ${sprintFor(issue)} | ${prCell} |`
-                })
-                .join('\n')
-              return `${header}\n${body}`
-            }
-
-            const renderNoTicketTable = (prs) => {
-              const header = '| PR | Title |\n|---|---|'
-              const body = prs.map((pr) => `| ${prLink(pr.number)} | ${esc(pr.title)} |`).join('\n')
-              return `${header}\n${body}`
-            }
-
-            const CATEGORY_ORDER = ['Bug', 'Feature', 'Task', 'Tech Debt', 'Spike', 'Other']
-            let body = `Range: \`${OLDER_TAG}..${NEWER_TAG}\`\n\n`
-            for (const cat of CATEGORY_ORDER) {
-              const rows = [...ticketsByNumber.values()].filter((e) => categoryFor(e.issue) === cat)
-              if (rows.length === 0) continue
-              body += `## ${cat}\n\n${renderTicketTable(rows)}\n\n`
-            }
-            body += '## No linked ticket\n\n'
-            body += noTicketPRs.length ? renderNoTicketTable(noTicketPRs) : '_None._\n'
-
-            core.setOutput('body', body)
-            core.info(`${ticketsByNumber.size} ticket(s), ${noTicketPRs.length} PR(s) with no linked ticket`)
+            const script = require('./scripts/release-notes/build-report.js')
+            await script({ github, context, core })
 
       - name: Create the discussion
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -365,20 +130,5 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
-            const { NEWER_TAG, BODY, REPOSITORY_ID, CATEGORY_ID } = process.env
-            const title = `${NEWER_TAG} release notes`
-
-            const { createDiscussion } = await github.graphql(
-              `mutation($repositoryId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
-                 createDiscussion(input: {
-                   repositoryId: $repositoryId, categoryId: $categoryId, title: $title, body: $body
-                 }) {
-                   discussion { url }
-                 }
-               }`,
-              { repositoryId: REPOSITORY_ID, categoryId: CATEGORY_ID, title, body: BODY }
-            )
-
-            const url = createDiscussion.discussion.url
-            core.info(`Created discussion: ${url}`)
-            await core.summary.addRaw(`📝 Created [release notes discussion](${url})`).write()
+            const script = require('./scripts/release-notes/create-discussion.js')
+            await script({ github, core })
