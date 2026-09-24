@@ -135,14 +135,15 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   return (
     <ScreenWrapper padded={false} keyboardActive controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <View style={{ gap: Spacing.sm }}>
-        <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.EnterPIN.Title')}</ThemedText>
         <PINInput
           testIDKey={TestIds.auth.enterPin.pin}
           onPINChange={handlePINChange}
           onPINComplete={handlePINComplete}
           errorMessage={errorMessage}
+          accessibilityLabel={a11yLabel(t('BCSC.EnterPIN.Title'))}
         />
-        <ThemedText variant={'caption'}>{`The one you chose to secure this app`}</ThemedText>
+        <ThemedText variant={'caption'}>{t('BCSC.EnterPIN.Description')}</ThemedText>
       </View>
     </ScreenWrapper>
   )

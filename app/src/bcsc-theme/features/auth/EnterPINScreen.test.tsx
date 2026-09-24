@@ -62,7 +62,7 @@ describe('EnterPINScreen', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('Enter your 6-digit PIN')).toBeTruthy()
+        expect(tree.getByText('BCSC.EnterPIN.Title')).toBeTruthy()
       })
 
       expect(tree).toMatchSnapshot()
@@ -80,7 +80,7 @@ describe('EnterPINScreen', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('Enter your 6-digit PIN')).toBeTruthy()
+        expect(tree.getByText('BCSC.EnterPIN.Title')).toBeTruthy()
       })
 
       // Simulate entering a 6-digit PIN and pressing Continue
