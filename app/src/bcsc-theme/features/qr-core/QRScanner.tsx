@@ -85,7 +85,15 @@ const QRScanner: React.FC = () => {
   // spinner instead so the dedupe state survives the in-flight strategy.handle.
   return (
     <View style={styles.container}>
-      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} torchActive={torchActive} error={scanError} />
+      {/* Camera preview + bifold's unlabeled tap-to-focus Pressable: nothing here for a screen reader. */}
+      <View style={StyleSheet.absoluteFill} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <ScanCamera
+          handleCodeScan={handleScan}
+          enableCameraOnError={true}
+          torchActive={torchActive}
+          error={scanError}
+        />
+      </View>
       <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
       <TouchableOpacity
         style={styles.torchButton}
