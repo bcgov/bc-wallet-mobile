@@ -173,9 +173,10 @@ The upgrade suites boot an **older released build** first, then install the curr
 
 The pinned rows are the manifest of `.github/workflows/refresh-e2e-sauce-builds.yml` (**Refresh E2E Sauce Builds**), which re-uploads every row plus `BCSC-prev.*` monthly (Sauce deletes storage files after 60 days of inactivity) and fails an entry whose release is missing its assets. 4.1.0 is the first release the standard upgrade suite can drive, so nothing older ever becomes `BCSC-prev.*`.
 
-**Attaching a release's binaries.** Dispatch **Publish Release E2E Builds** with the release tag. It takes the bcsc-dev binaries from the release commit's build run, attaches them as `BCSC-v<version>.*` (derived from the tag), uploads the pinned Sauce copy and, for a full release at 4.1.0 or later, `BCSC-prev.*`. Once the run's artifacts are gone (7 days), pass `sauce_source=BCSC-Dev-<build>` to take the same build's Sauce storage copy instead; pass `asset_name` when the tag doesn't carry the shipped version:
+**Attaching a release's binaries.** Publishing a full `bcsc-v*` GitHub release runs **Publish Release E2E Builds** on its own. It resolves the shipped build from the Publish tag `bcsc-v<version>-<build>` (the release tag itself, else the newest for the version), takes the bcsc-dev binaries from that build run — its artifacts, or once those are gone (30 days) the same build's Sauce storage copy `BCSC-Dev-<build>.*` (main builds only) — attaches them as `BCSC-v<version>.*` (derived from the tag), uploads the pinned Sauce copy and, at 4.1.0 or later, `BCSC-prev.*` (never rolled back to an older build). Dispatch it by hand for what that cannot resolve — a pre-release RC, a pre-release flipped to a full release, a build with no Publish tag (`run_id`), a tag that doesn't carry the shipped version (`asset_name`), binaries in neither place (`sauce_source` names any stored build) — or with `dry_run` to see what a run would do:
 
 ```bash
+gh workflow run publish-release-e2e-builds.yml -f release_tag=<tag> -f dry_run=true
 gh workflow run publish-release-e2e-builds.yml -f release_tag=<tag> -f sauce_source=BCSC-Dev-<build>
 # the tag says 4.0.2 but the shipped build is the 4.0.3 hotfix
 gh workflow run publish-release-e2e-builds.yml -f release_tag=bcsc-v4.0.2 -f sauce_source=BCSC-v4.0.3 -f asset_name=BCSC-v4.0.3
