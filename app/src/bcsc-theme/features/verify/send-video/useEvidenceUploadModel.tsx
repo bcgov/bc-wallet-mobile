@@ -61,11 +61,8 @@ const useEvidenceUploadModel = (
   const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata } = store.bcsc
   const { verificationRequestId, verificationRequestSha } = store.bcscSecure
 
+  // Derived from the stage alone so the text keeps matching the bar after an error or completion.
   const uploadMessage = useMemo(() => {
-    if (!isUploading) {
-      return null
-    }
-
     const messages: Record<UploadStage, string> = {
       [UploadStage.PreparingVideo]: t('BCSC.SendVideo.UploadProgress.PreparingVideo'),
       [UploadStage.PreparingDocuments]: t('BCSC.SendVideo.UploadProgress.PreparingDocuments'),
@@ -74,7 +71,7 @@ const useEvidenceUploadModel = (
       [UploadStage.Complete]: t('BCSC.SendVideo.UploadProgress.FinalizingVerification'),
     }
     return messages[uploadStage]
-  }, [isUploading, t, uploadStage])
+  }, [t, uploadStage])
 
   const isReady = useMemo(
     () => Boolean(photoPath && videoPath && videoThumbnailPath),

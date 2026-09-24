@@ -23,9 +23,9 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
   return (
     <CancellableWaitingScreen
       message={t('BCSC.SendVideo.UploadProgress.UploadingInformation')}
-      statusMessage={uploadMessage ?? t('BCSC.SendVideo.UploadProgress.PreparingVideo')}
+      statusMessage={uploadMessage}
       progressPercent={progressPercent}
-      testID={testIdWithKey(TestIds.verify.evidenceUploading.screen)}
+      testIDKey={TestIds.verify.evidenceUploading.screen}
       onCancel={handleCancel}
       cancelTestID={testIdWithKey(TestIds.verify.evidenceUploading.cancelUpload)}
     />

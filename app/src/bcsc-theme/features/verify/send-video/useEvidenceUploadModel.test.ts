@@ -276,6 +276,7 @@ describe('useEvidenceUploadModel', () => {
             await pending
           })
           expect(result.current.progressPercent).toBe(75)
+          expect(result.current.uploadMessage).toBe('BCSC.SendVideo.UploadProgress.FinalizingVerification')
           expect(mockFileUploadErrorAlert).toHaveBeenCalled()
           expect(mockNavigation.dispatch).not.toHaveBeenCalled()
         } else {
@@ -291,6 +292,7 @@ describe('useEvidenceUploadModel', () => {
             await pending
           })
           expect(result.current.progressPercent).toBe(100)
+          expect(result.current.uploadMessage).toBe('BCSC.SendVideo.UploadProgress.FinalizingVerification')
           expect(mockNavigation.dispatch).toHaveBeenCalled()
           expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
         }
