@@ -1,28 +1,46 @@
 {
-  "$comment": "Known accessibility findings (platform → screen → issue signatures). Regenerate from a report dir: cd e2e && yarn a11y:baseline --reports <dir>. Report-only: the brief tags findings missing here as NEW.",
-  "generatedAt": "2026-09-24T00:33:28.833Z",
+  "$comment": "Known accessibility findings (platform → screen → issue signatures). A finding missing here is NEW: the brief tags it and the a11y roll-up checkpoint fails on it (A11Y_AUDIT_FAIL_ON_NEW=0 to report only). Regenerate from a report dir once the findings are triaged: cd e2e && yarn a11y:baseline --reports <dir>.",
+  "generatedAt": "2026-09-24T18:46:08.503Z",
   "ios": {
-    "AccountLanding": [],
-    "AccountSetup": [],
+    "AccountLanding": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
+    "AccountSetup": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
     "AppSecurity": [],
     "AutoLock": [],
-    "ChangePIN": [],
+    "ChangePIN": [
+      "sufficientElementDescription|SecureTextField|com.ariesbifold:id/EnterCurrentPIN",
+      "sufficientElementDescription|SecureTextField|com.ariesbifold:id/EnterNewPIN",
+      "sufficientElementDescription|SecureTextField|com.ariesbifold:id/ReenterNewPIN"
+    ],
     "EnterBirthdate": [],
-    "EnterPIN": [],
+    "EnterPIN": [
+      "sufficientElementDescription|SecureTextField|com.ariesbifold:id/PINInput"
+    ],
     "HelpMenu": [
       "elementDetection||Potentially inaccessible text"
     ],
     "Home": [],
     "IdentitySelection": [],
-    "MainVerifyPrompt": [],
+    "MainVerifyPrompt": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
     "ManualSerial": [],
     "NotificationSettings": [],
-    "OnboardingCreatePIN": [],
-    "OnboardingIntro": [],
+    "OnboardingCreatePIN": [
+      "sufficientElementDescription|Other|com.ariesbifold:id/IUnderstand"
+    ],
+    "OnboardingIntro": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
     "OnboardingNotifications": [],
     "OnboardingOptInAnalytics": [],
     "OnboardingPrivacyPolicy": [],
-    "OnboardingSecureApp": [],
+    "OnboardingSecureApp": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
     "OnboardingSettings": [],
     "OnboardingTermsOfUse": [],
     "PrivacyPolicy": [],
@@ -30,7 +48,9 @@
     "RemoveAccountConfirm": [],
     "ScanSerial": [],
     "Settings": [],
-    "VerifyPrompt": [],
+    "VerifyPrompt": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
     "Wallet": []
   },
   "android": {
@@ -40,7 +60,8 @@
     ],
     "AccountSetup": [
       "touch-target|Button|com.ariesbifold:id/Back",
-      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "unlabeled-control|ViewGroup|com.ariesbifold:id/DeveloperCounter"
     ],
     "AppSecurity": [
       "touch-target|Button|com.ariesbifold:id/Back",
@@ -49,11 +70,9 @@
     "AutoLock": [
       "touch-target|Button|com.ariesbifold:id/Back",
       "touch-target|Button|com.ariesbifold:id/HelpMenu",
-      "touch-target|CheckBox|com.ariesbifold:id/auto-lock-time-0",
       "touch-target|CheckBox|com.ariesbifold:id/auto-lock-time-1",
       "touch-target|CheckBox|com.ariesbifold:id/auto-lock-time-3",
       "touch-target|CheckBox|com.ariesbifold:id/auto-lock-time-5",
-      "touch-target|ViewGroup|0",
       "touch-target|ViewGroup|1",
       "touch-target|ViewGroup|3",
       "touch-target|ViewGroup|5"
@@ -61,7 +80,10 @@
     "ChangePIN": [
       "touch-target|Button|com.ariesbifold:id/Back",
       "touch-target|Button|com.ariesbifold:id/HelpMenu",
-      "touch-target|CheckBox|com.ariesbifold:id/IUnderstand"
+      "touch-target|CheckBox|com.ariesbifold:id/IUnderstand",
+      "unlabeled-text-field|EditText|com.ariesbifold:id/EnterCurrentPIN",
+      "unlabeled-text-field|EditText|com.ariesbifold:id/EnterNewPIN",
+      "unlabeled-text-field|EditText|com.ariesbifold:id/ReenterNewPIN"
     ],
     "EnterBirthdate": [
       "touch-target|Button|com.ariesbifold:id/Back",
@@ -70,10 +92,12 @@
     ],
     "EnterPIN": [
       "touch-target|Button|com.ariesbifold:id/HelpMenu",
-      "touch-target|Button|undefined"
+      "touch-target|Button|undefined",
+      "unlabeled-text-field|EditText|com.ariesbifold:id/PINInput"
     ],
     "HelpMenu": [
-      "touch-target|Button|Close"
+      "touch-target|Button|Close",
+      "unlabeled-control|ViewGroup|"
     ],
     "Home": [
       "touch-target|Button|com.ariesbifold:id/HelpMenu",
@@ -103,7 +127,8 @@
     ],
     "OnboardingIntro": [
       "touch-target|Button|com.ariesbifold:id/HelpMenu",
-      "touch-target|Button|com.ariesbifold:id/SettingsMenuButton"
+      "touch-target|Button|com.ariesbifold:id/SettingsMenuButton",
+      "unlabeled-control|ViewGroup|com.ariesbifold:id/DeveloperCounter"
     ],
     "OnboardingNotifications": [
       "touch-target|Button|com.ariesbifold:id/Back",
@@ -123,7 +148,9 @@
     ],
     "OnboardingSettings": [
       "touch-target|Button|com.ariesbifold:id/Back",
-      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/SectionHeaderChevron",
+      "touch-target|ViewGroup|BC Services Card, Version 4.1.0 (8748)"
     ],
     "OnboardingTermsOfUse": [
       "touch-target|Button|com.ariesbifold:id/Back",
@@ -135,19 +162,24 @@
     ],
     "QRScanner": [
       "touch-target|Button|com.ariesbifold:id/Back",
-      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "unlabeled-control|ViewGroup|com.ariesbifold:id/ScanCameraTapArea"
     ],
     "RemoveAccountConfirm": [
       "touch-target|Button|com.ariesbifold:id/Back",
       "touch-target|Button|com.ariesbifold:id/HelpMenu"
     ],
     "ScanSerial": [
+      "text-contrast|TextView|SIT",
       "touch-target|Button|com.ariesbifold:id/Back",
-      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/ScanTorch"
     ],
     "Settings": [
       "touch-target|Button|com.ariesbifold:id/Back",
-      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+      "touch-target|Button|com.ariesbifold:id/Feedback",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/SectionHeaderChevron"
     ],
     "VerifyPrompt": [
       "touch-target|Button|com.ariesbifold:id/HelpMenu"
