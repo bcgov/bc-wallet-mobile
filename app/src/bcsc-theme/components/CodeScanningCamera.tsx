@@ -23,7 +23,7 @@ import { BarcodeFormat, TargetBarcodeFormat, useBarcodeScannerOutput } from 'rea
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
-import { isVisionCameraTorchToggleErrorV5_2_3 } from '../hooks/useVisionCamera'
+import { isCameraControlCanceledError } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import {
   AccumulatedCode,
@@ -952,9 +952,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   const handleCameraError = useCallback(
     (error: Error) => {
-      if (isVisionCameraTorchToggleErrorV5_2_3(error)) {
-        // VisionCamera v5.2.3 can throw when the torch is toggled quickly on Android — not a dead camera.
-        logger.debug('[CodeScanningCamera] Ignoring known Android VisionCamera(V5.2.3) torch toggle error')
+      if (isCameraControlCanceledError(error)) {
+        logger.debug('[CodeScanningCamera] Ignoring canceled camera-control call', { message: error.message })
         return
       }
 
@@ -1262,7 +1261,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
           outputs={[scannerOutput]}
           constraints={[{ fps: 30 }]}
-          zoom={zoomDisplay}
+          // Before the session starts, Android rejects setZoom ("Camera is not active"); getInitialZoom covers startup.
+          zoom={cameraStarted ? zoomDisplay : undefined}
           getInitialZoom={() => getEffectiveZoom(initialZoom)}
           // Never ask the camera for a torch before the session has started (Android drops it) or on
           // a device without one.

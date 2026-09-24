@@ -145,13 +145,15 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
   )
 }
 
-/** TODO (MD): Deprecate this once VisionCamera fixes the torch toggling issue on Android
+/**
+ * CameraX cancels a camera-control call (torch, zoom) when a newer call supersedes it or the
+ * camera isn't active yet; VisionCamera v5.2.3 reports that through `onError`. Not a dead camera.
+ * TODO (MD): Deprecate this once VisionCamera stops surfacing these on Android
  * @see https://github.com/margelo/react-native-vision-camera/issues/3907#issuecomment-5264861310
  * @see https://github.com/margelo/react-native-vision-camera/issues/4069
  */
-export const isVisionCameraTorchToggleErrorV5_2_3 = (error: unknown): error is Error => {
-  const VISION_CAMERA_ANDROID_TORCH_TOGGLE_ERROR_V5_2_3 =
-    'androidx.camera.core.CameraControl$OperationCanceledException: There is a new enableTorch being set'
+export const isCameraControlCanceledError = (error: unknown): error is Error => {
+  const CAMERAX_OPERATION_CANCELED = 'androidx.camera.core.CameraControl$OperationCanceledException'
 
-  return error instanceof Error && error.message.includes(VISION_CAMERA_ANDROID_TORCH_TOGGLE_ERROR_V5_2_3)
+  return error instanceof Error && error.message.includes(CAMERAX_OPERATION_CANCELED)
 }

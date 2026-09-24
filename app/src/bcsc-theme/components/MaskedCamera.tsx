@@ -20,7 +20,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, CameraOutput, CameraPhotoOutput } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
-import { isVisionCameraTorchToggleErrorV5_2_3, useVisionCamera } from '../hooks/useVisionCamera'
+import { isCameraControlCanceledError, useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import { getCameraMetadata } from './utils/camera'
 
@@ -146,9 +146,8 @@ const MaskedCamera = ({
         return
       }
 
-      if (isVisionCameraTorchToggleErrorV5_2_3(error)) {
-        // VisionCamera v5.2.3 has a known issue where toggling the torch can throw an error on Android devices.
-        logger.debug('[MaskedCamera] Ignoring known Android VisionCamera(V5.2.3) torch toggle error')
+      if (isCameraControlCanceledError(error)) {
+        logger.debug('[MaskedCamera] Ignoring canceled camera-control call', { message: error.message })
         return
       }
 

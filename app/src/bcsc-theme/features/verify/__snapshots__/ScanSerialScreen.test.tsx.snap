@@ -98,7 +98,6 @@ exports[`ScanSerial renders correctly 1`] = `
             }
           }
           testID="vision-camera"
-          zoom={2}
         />
         <View
           style={
