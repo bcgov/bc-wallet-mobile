@@ -33,7 +33,14 @@ import { useTranslation } from 'react-i18next'
 import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Camera, PhotoFile, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
+import {
+  Camera,
+  CameraOutput,
+  MirrorMode,
+  PhotoFile,
+  useCameraPermission,
+  useMicrophonePermission,
+} from 'react-native-vision-camera'
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -48,6 +55,12 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       videoOutput,
       photoOutput,
     })
+  // Mirrored preview, un-mirrored saved photo/video so text held up reads correctly for ID Check (#4020).
+  // Per-output mirrorMode comes from our react-native-vision-camera patch.
+  const mirrorMode = useCallback(
+    (output: CameraOutput): MirrorMode => (output === photoOutput || output === videoOutput ? 'off' : 'auto'),
+    [photoOutput, videoOutput]
+  )
   const { t } = useTranslation()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
@@ -372,6 +385,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           ref={cameraRef}
           style={styles.camera}
           device={device}
+          mirrorMode={mirrorMode}
           outputs={[photoOutput, videoOutput]}
           // Also deactivate while the app is backgrounded/inactive, same as CodeScanningCamera and
           // MaskedCamera — this only changes what gets passed to the native camera prop; `isActive`

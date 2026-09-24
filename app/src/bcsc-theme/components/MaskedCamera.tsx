@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Camera, CameraOutput, CameraPhotoOutput } from 'react-native-vision-camera'
+import { Camera, CameraOutput, CameraPhotoOutput, MirrorMode } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import { isCameraControlCanceledError, useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
@@ -68,6 +68,13 @@ const MaskedCamera = ({
     position: cameraFace,
     photoOutput,
   })
+
+  // Mirrored front preview, un-mirrored saved photo so text reads correctly for ID Check (#4020).
+  // Per-output mirrorMode comes from our react-native-vision-camera patch.
+  const mirrorMode = useCallback(
+    (output: CameraOutput): MirrorMode => (output === photoOutput ? 'off' : 'auto'),
+    [photoOutput]
+  )
 
   const cameraMetadata = useMemo(() => getCameraMetadata(device), [device])
   const hasTorch = device?.hasTorch ?? false
@@ -195,6 +202,7 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
+        mirrorMode={mirrorMode}
         isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
         onError={onError}
         outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}

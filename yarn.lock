@@ -7494,7 +7494,7 @@ __metadata:
     react-native-uuid: "npm:~2.0.4"
     react-native-vector-icons: "npm:~10.3.0"
     react-native-video: "patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch"
-    react-native-vision-camera: "npm:^5.2.3"
+    react-native-vision-camera: "patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch"
     react-native-vision-camera-barcode-scanner: "npm:^5.2.3"
     react-native-volume-manager: "npm:~1.10.0"
     react-native-webrtc: "npm:~124.0.6"
@@ -15976,7 +15976,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-vision-camera@npm:^5.2.3":
+"react-native-vision-camera@npm:5.2.3":
   version: 5.2.3
   resolution: "react-native-vision-camera@npm:5.2.3"
   peerDependencies:
@@ -15988,6 +15988,21 @@ __metadata:
     react-native-nitro-modules:
       optional: true
   checksum: 10c0/4c55b4e2dc659f38d3247e300c1a462493ea22e3d704b61d457dcb261399a23f57418e5caa6793456a0c557999f50439a4b4143bd467b3c5bb91dbb1aee2a324
+  languageName: node
+  linkType: hard
+
+"react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch":
+  version: 5.2.3
+  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch::version=5.2.3&hash=0edc8c"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-nitro-image: "*"
+    react-native-nitro-modules: "*"
+  peerDependenciesMeta:
+    react-native-nitro-modules:
+      optional: true
+  checksum: 10c0/428c5be406d7a6219359aaba7dc81fd2d763e4805fa36574bc7708a9dda2b3932cfd3b368344ae8fb889f13cca001600d3f571e4c8ecc2857eb08e84bbb14c7a
   languageName: node
   linkType: hard
 

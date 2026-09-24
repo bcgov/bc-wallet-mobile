@@ -36,6 +36,7 @@ exports[`TakePhoto renders correctly 1`] = `
         }
       }
       isActive={true}
+      mirrorMode={[Function]}
       onConfigured={[Function]}
       onError={[Function]}
       onStarted={[Function]}
