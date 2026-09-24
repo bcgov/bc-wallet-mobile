@@ -149,8 +149,7 @@
     "OnboardingSettings": [
       "touch-target|Button|com.ariesbifold:id/Back",
       "touch-target|Button|com.ariesbifold:id/HelpMenu",
-      "touch-target|Button|com.ariesbifold:id/SectionHeaderChevron",
-      "touch-target|ViewGroup|BC Services Card, Version 4.1.0 (8748)"
+      "touch-target|Button|com.ariesbifold:id/SectionHeaderChevron"
     ],
     "OnboardingTermsOfUse": [
       "touch-target|Button|com.ariesbifold:id/Back",

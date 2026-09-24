@@ -330,7 +330,8 @@ function formatBaselineDiff(diffs: readonly A11yScreenDiff[]): string {
  * The journey's terminal checkpoint: attach + persist the roll-up, then fail only for what IS a defect
  * of this lane — no audit could run (a broken engine/grid, which would otherwise silently produce no
  * signal), a finding missing from `a11y-baseline.json` on a screen it knows (fail-on-new; a screen it
- * has never seen is reported, not gated), or error-severity findings under A11Y_AUDIT_STRICT=1.
+ * has never seen is reported, not gated; a baseline without the platform's section fails outright), or
+ * error-severity findings under A11Y_AUDIT_STRICT=1.
  */
 export async function reportA11ySummary(): Promise<void> {
   if (collected.length === 0) {
@@ -352,9 +353,11 @@ export async function reportA11ySummary(): Promise<void> {
     throw new Error(`Accessibility audits could not run on ${platform} (${unavailable.length} screens): ${reasons}`)
   }
   if (isFailOnNew()) {
-    if (!baseline) {
+    // Fail closed: without the platform's section every screen reads as unseen and nothing gates.
+    if (!baseline?.[platform]) {
+      const what = baseline ? `has no ${platform} section` : 'is missing'
       throw new Error(
-        `No a11y-baseline.json at ${BASELINE_PATH} — nothing to gate on (A11Y_AUDIT_FAIL_ON_NEW=0 to report only)`
+        `a11y-baseline.json ${what} (${BASELINE_PATH}) — nothing to gate on (A11Y_AUDIT_FAIL_ON_NEW=0 to report only)`
       )
     }
     const regressions = diffs.filter((diff) => diff.inBaseline)
