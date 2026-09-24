@@ -1,5 +1,5 @@
 {
-  "name": "BC Services Card",
+  "name": "BCWallet",
   "displayName": "BC Services Card",
   "ios": {
     "infoPlist": {
