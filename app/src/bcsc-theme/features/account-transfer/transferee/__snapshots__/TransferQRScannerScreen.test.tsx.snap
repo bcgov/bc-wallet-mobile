@@ -9,25 +9,39 @@ exports[`TransferQRScanner renders correctly 1`] = `
   }
 >
   <View
+    accessibilityElementsHidden={true}
+    importantForAccessibility="no-hide-descendants"
     style={
-      [
-        {
-          "bottom": 0,
-          "left": 0,
-          "position": "absolute",
-          "right": 0,
-          "top": 0,
-        },
-        {
-          "transform": [
-            {
-              "rotate": "0deg",
-            },
-          ],
-        },
-      ]
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
     }
-  />
+  >
+    <View
+      style={
+        [
+          {
+            "bottom": 0,
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "top": 0,
+          },
+          {
+            "transform": [
+              {
+                "rotate": "0deg",
+              },
+            ],
+          },
+        ]
+      }
+    />
+  </View>
   <View
     onLayout={[Function]}
     pointerEvents="none"
