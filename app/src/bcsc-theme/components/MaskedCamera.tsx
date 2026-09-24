@@ -126,6 +126,12 @@ const MaskedCamera = ({
   })
 
   useEffect(() => {
+    if (!isFocused) {
+      setTorchEnabled(false)
+    }
+  }, [isFocused])
+
+  useEffect(() => {
     navigation.setOptions({
       headerShown: !device,
     })
