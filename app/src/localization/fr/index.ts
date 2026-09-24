@@ -415,6 +415,10 @@ const translation = {
       "FailedToSetPIN": "Failed to set PIN (FR)",
       "ErrorSettingPIN": "An error occurred while setting the PIN (FR)"
     },
+    "EnterPIN": {
+      "Title": "Enter your 6-digit PIN (FR)",
+      "Description": "The one you chose to secure this app (FR)"
+    },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN (FR)",
       "EnterCurrentPIN": "Enter your current PIN (FR)",

@@ -79,7 +79,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             BCSC.Onboarding.SecureAppOnboardingContent
           </Text>
           <View
-            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. BCSC.Settings.AppSecurity.DeviceAuth"
+            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. BCSC.Settings.AppSecurity.DeviceAuth"
             accessibilityState={
               {
                 "selected": true,
@@ -852,7 +852,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             </View>
           </View>
           <View
-            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. BCSC.Settings.AppSecurity.PIN"
+            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. BCSC.Settings.AppSecurity.PIN"
             accessibilityState={
               {
                 "selected": true,

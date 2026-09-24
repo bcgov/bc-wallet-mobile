@@ -489,7 +489,7 @@ it('audits Settings', async () => {
 })
 
 it('reports the accessibility audit roll-up', async () => {
-  await reportA11ySummary() // terminal checkpoint: fails only if NO audit could run (or under A11Y_AUDIT_STRICT=1)
+  await reportA11ySummary() // terminal checkpoint: fails on a finding missing from a11y-baseline.json, or if NO audit could run
 })
 ```
 
@@ -498,9 +498,9 @@ What each platform can see is very different, and the report says which engine p
 | Platform | Engine | Checks | Blind spots |
 | --- | --- | --- | --- |
 | iOS 17+ | Apple's audit engine via `mobile: performAccessibilityAudit` (XCTest) | contrast, hit region, element description, traits, clipped text, dynamic type, parent/child, actions | screen-reader announcements and order |
-| Android | page-source + screenshot heuristics (`src/helpers/a11y-android.ts`) | tappable elements with no accessible name, unlabeled text fields, touch targets under 44dp (error under 24dp), text contrast under 4.5:1 sampled from the screenshot (regions the pushed screen covers are skipped, not flagged) | roles/traits, focus order, live regions, anything semantic — there is no Appium-native audit engine for Android (Google's ATF is in-process only) |
+| Android | page-source + screenshot heuristics (`src/helpers/a11y-android.ts`), over the tree TalkBack sees (views marked not important for accessibility are dropped) | tappable elements with no accessible name, unlabeled text fields, touch targets under 44dp (error under 24dp; a row clipped at a scroll edge is skipped), text contrast under 4.5:1 sampled from the screenshot (regions the pushed screen covers are skipped, not flagged) | roles/traits, focus order, live regions, anything semantic — there is no Appium-native audit engine for Android (Google's ATF is in-process only) |
 
-Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) that `a11y-baseline.json` is keyed on — the nightly brief tags findings missing from it as NEW (see **Nightly brief** under CI/CD). Neither engine can assert VoiceOver/TalkBack behaviour — that pass stays manual with the UAT team.
+Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) that `a11y-baseline.json` is keyed on. A finding missing from the baseline is NEW: the roll-up checkpoint fails on it when the baseline knows the screen (fail-on-new, either severity), and the nightly brief tags it (see **Nightly brief** under CI/CD). A screen the baseline has never seen is reported, not gated, until the baseline is regenerated; a baseline with no section for the platform (or none at all) fails the roll-up outright, since nothing would gate. Neither engine can assert VoiceOver/TalkBack behaviour — that pass stays manual with the UAT team.
 
 ```bash
 # The whole lane locally (one cheap unverified session, ~20 screens)
@@ -508,7 +508,8 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite a11y
 yarn wdio configs/local/wdio.android.local.emu.conf.ts --suite a11y
 
 A11Y_AUDIT_TYPES=contrast,hitRegion   # iOS: narrow the audit types (default: all)
-A11Y_AUDIT_STRICT=1                    # fail the roll-up on error-severity findings
+A11Y_AUDIT_FAIL_ON_NEW=0               # report findings missing from a11y-baseline.json instead of failing the roll-up (default: fail)
+A11Y_AUDIT_STRICT=1                    # fail the roll-up on error-severity findings, known or not
 ```
 
 ### _Camera Image Injection_
@@ -641,7 +642,7 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
 | _Nightly (schedule)_ | `regression` | _1 iOS (18) + 1 Android (15)_ | `bcsc-dev` | _—_          |
 
-> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, and `upgrade403` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (migration on Android 15; `upgrade` / `upgrade403` on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*`. `a11y` rides inside `regression` on both platforms as an advisory lane — its findings are reports, not failures. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, and `upgrade403` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (migration on Android 15; `upgrade` / `upgrade403` on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*`. `a11y` rides inside `regression` on both platforms — known findings are reports; one missing from `a11y-baseline.json` fails its roll-up checkpoint. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
 
 _The four send-video journeys are excluded from that concurrent regression matrix and run right after it as their own_ `send-video` _lane — both platforms, one at a time (`max_parallel: 1`), alongside the Android-only migration lane — because they review a shared, blind-FIFO SIT agent queue with shared personas (see **Send-video review queue**). The journeys drain that queue around their own uploads, and the nightly ends with a_ `queue-hygiene` _job that drains it once more._
 
@@ -675,7 +676,7 @@ yarn brief:check                                               # the coverage ma
 yarn a11y:baseline --reports reports                           # re-snapshot the known a11y findings after triage
 ```
 
-The accessibility section lists only screens with errors, per platform, with how many findings are NEW versus `a11y-baseline.json` (platform → screen → issue `signature`). A screen the baseline has never seen shows all its findings as NEW and says so. The baseline is report-only: regenerate it once the findings are triaged, and review its diff like code.
+The accessibility section lists only screens with errors, per platform, with how many findings are NEW versus `a11y-baseline.json` (platform → screen → issue `signature`). A screen the baseline has never seen shows all its findings as NEW and says so. The baseline gates the lane — a NEW finding on a screen it knows fails the roll-up checkpoint (`A11Y_AUDIT_FAIL_ON_NEW=0` to report only) — so regenerate it once the findings are triaged, and review its diff like code.
 
 ## _Local App Binaries_
 

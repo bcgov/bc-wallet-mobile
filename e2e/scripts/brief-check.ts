@@ -17,6 +17,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { diffScreen, loadA11yReports } from '../src/brief/a11y-summary.js'
 import { buildBrief, resolveReportDirs } from '../src/brief/build.js'
 import { OTHER_COVERAGE, UAT_CHECKLIST, type CoverageRow } from '../src/brief/coverage-map.js'
 import type { CellResult } from '../src/brief/evaluate.js'
@@ -195,6 +196,18 @@ function selfTest(): void {
   assert.deepEqual([changePin?.newErrors, changePin?.inBaseline], [0, true])
   const birthdate = ios?.errorScreens.find((screen) => screen.screen === 'EnterBirthdate')
   assert.deepEqual([birthdate?.newErrors, birthdate?.inBaseline, birthdate?.warnings], [1, false, 1])
+  // the roll-up gates on the same diff: a known screen's NEW findings fail it, an unseen screen's are only reported
+  const fixtureBaseline = { ios: { ChangePIN: ['hitRegion|Button|PIN requirements'] } }
+  const iosReports = loadA11yReports(reportDirs).ios?.reports ?? []
+  const diffs = iosReports.map((report) => diffScreen(report, fixtureBaseline.ios))
+  assert.deepEqual(
+    diffs.map((diff) => [diff.screen, diff.inBaseline, diff.newIssues.length]),
+    [
+      ['UnverifiedHome', false, 0],
+      ['ChangePIN', true, 0],
+      ['EnterBirthdate', false, 2],
+    ]
+  )
 
   const markdown = renderMarkdown(model)
   for (const heading of ['### UAT checklist', '### Failures (4)', '### Accessibility', '### Legend']) {

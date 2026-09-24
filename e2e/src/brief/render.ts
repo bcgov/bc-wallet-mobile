@@ -173,7 +173,7 @@ function renderA11ySection(model: BriefModel): string[] {
   for (const summary of model.a11y) out.push(...renderA11yPlatform(summary), '')
   if (model.a11y.length) {
     const baseline = model.baselineGeneratedAt ? `generated ${model.baselineGeneratedAt}` : 'not found — every finding reads as NEW'
-    out.push(`_Baseline: e2e/a11y-baseline.json (${baseline}). Regenerate with \`yarn a11y:baseline --reports <dir>\` once the findings are triaged._`, '')
+    out.push(`_Baseline: e2e/a11y-baseline.json (${baseline}). A NEW finding fails the lane's roll-up checkpoint; regenerate with \`yarn a11y:baseline --reports <dir>\` once the findings are triaged._`, '')
   }
   return out
 }

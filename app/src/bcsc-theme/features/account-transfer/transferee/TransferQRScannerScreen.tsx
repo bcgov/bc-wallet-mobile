@@ -38,7 +38,10 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
 
   return (
     <View style={styles.container}>
-      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
+      {/* Camera preview + bifold's unlabeled tap-to-focus Pressable: nothing here for a screen reader. */}
+      <View style={StyleSheet.absoluteFill} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
+      </View>
       <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
       {scanError && (
         <DismissiblePopupModal

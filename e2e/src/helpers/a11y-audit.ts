@@ -1,6 +1,8 @@
 import { addAttachment } from '@wdio/allure-reporter'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { type A11yScreenDiff, diffScreen, loadBaseline } from '../brief/a11y-summary.js'
 import { ANDROID_CHECKS, auditAndroidScreen } from './a11y-android.js'
 
 /**
@@ -12,9 +14,10 @@ import { ANDROID_CHECKS, auditAndroidScreen } from './a11y-android.js'
  * screenshot heuristics (`a11y-android.ts`) — shallower, and the report says so.
  *
  * An audit NEVER fails the checkpoint that runs it: findings go to Allure and `reports/a11y/`, and the
- * journey's last checkpoint reports the roll-up (`reportA11ySummary`), which fails only when the engine
- * could not run at all or when A11Y_AUDIT_STRICT=1 and error-severity findings exist. Screen readers
- * (VoiceOver/TalkBack) cannot be asserted by automation — that pass stays manual with the UAT team.
+ * journey's last checkpoint reports the roll-up (`reportA11ySummary`), which fails when a finding is
+ * missing from `a11y-baseline.json` (fail-on-new; A11Y_AUDIT_FAIL_ON_NEW=0 to report only), when the
+ * engine could not run at all, or when A11Y_AUDIT_STRICT=1 and error-severity findings exist. Screen
+ * readers (VoiceOver/TalkBack) cannot be asserted by automation — that pass stays manual with the UAT team.
  */
 
 export type A11yPlatform = 'ios' | 'android'
@@ -31,7 +34,7 @@ export interface A11yIssue {
   element: string
   /** Where it sat on THIS device (`x,y w×h`, points/pixels) — for finding it on the screenshot only. */
   location?: string
-  /** Stable key for a future fail-on-new baseline: rule + element identity. */
+  /** Stable key the fail-on-new baseline is keyed on: rule + element identity. */
   signature: string
   /** How many elements shared this signature on the screen (present when more than one). */
   occurrences?: number
@@ -76,6 +79,9 @@ const IOS_TYPE_PREFIX = 'XCUIAccessibilityAuditType'
 const IOS_ELEMENT_PREFIX = 'XCUIElementType'
 
 const REPORTS_DIR = resolve(process.cwd(), 'reports', 'a11y')
+const BASELINE_PATH = resolve(dirname(fileURLToPath(import.meta.url)), '../../a11y-baseline.json')
+const RESNAPSHOT_HINT =
+  'fix them, or once triaged re-snapshot the baseline: cd e2e && yarn a11y:baseline --reports <dir>'
 
 /** Every audit this worker ran, for the roll-up. One journey file = one worker, so this is per journey. */
 const collected: A11yAuditReport[] = []
@@ -83,6 +89,12 @@ const collected: A11yAuditReport[] = []
 function isStrict(): boolean {
   const flag = process.env.A11Y_AUDIT_STRICT?.trim().toLowerCase()
   return flag === '1' || flag === 'true'
+}
+
+/** On unless A11Y_AUDIT_FAIL_ON_NEW=0|false: a finding missing from the baseline fails the roll-up. */
+function isFailOnNew(): boolean {
+  const flag = process.env.A11Y_AUDIT_FAIL_ON_NEW?.trim().toLowerCase()
+  return flag !== '0' && flag !== 'false'
 }
 
 function requestedIosAuditTypes(override?: IosAuditType[]): IosAuditType[] {
@@ -291,18 +303,47 @@ export function formatA11ySummary(reports: readonly A11yAuditReport[] = collecte
     .join('\n')
 }
 
+const countNew = (diffs: readonly A11yScreenDiff[]): number => diffs.reduce((n, diff) => n + diff.newIssues.length, 0)
+
+/** Per screen, its NEW findings one line each. */
+function formatNewIssues(diffs: readonly A11yScreenDiff[]): string[] {
+  return diffs.flatMap((diff) => [`- ${diff.screen}`, ...diff.newIssues.map((issue) => `    ${formatIssue(issue)}`)])
+}
+
+/** The NEW findings per known screen, and the screens the baseline has never seen (reported, not gated). */
+function formatBaselineDiff(diffs: readonly A11yScreenDiff[]): string {
+  const regressions = diffs.filter((diff) => diff.inBaseline)
+  const unseen = diffs.filter((diff) => !diff.inBaseline)
+  const total = countNew(regressions)
+  const headline = total
+    ? `NEW vs a11y-baseline.json: ${total} findings on ${regressions.length} screens`
+    : 'NEW vs a11y-baseline.json: none'
+  const lines = [headline, ...formatNewIssues(regressions)]
+  if (unseen.length) {
+    const names = unseen.map((diff) => `${diff.screen} (${diff.newIssues.length})`).join(', ')
+    lines.push(`Screens the baseline has never seen — findings reported, not gated until it is regenerated: ${names}`)
+  }
+  return lines.join('\n')
+}
+
 /**
- * The journey's terminal checkpoint: attach + persist the roll-up, then fail only for the two things
- * that ARE defects of this lane — no audit could run (a broken engine/grid, which would otherwise
- * silently produce no signal), or error-severity findings under A11Y_AUDIT_STRICT=1.
+ * The journey's terminal checkpoint: attach + persist the roll-up, then fail only for what IS a defect
+ * of this lane — no audit could run (a broken engine/grid, which would otherwise silently produce no
+ * signal), a finding missing from `a11y-baseline.json` on a screen it knows (fail-on-new; a screen it
+ * has never seen is reported, not gated; a baseline without the platform's section fails outright), or
+ * error-severity findings under A11Y_AUDIT_STRICT=1.
  */
 export async function reportA11ySummary(): Promise<void> {
   if (collected.length === 0) {
     throw new Error('No accessibility audits were recorded — call auditScreen() at the journey checkpoints')
   }
-  const summary = formatA11ySummary()
   const platform = collected[0].platform
   writeReportFile(platform, `${fileStamp()}-summary.json`, JSON.stringify(collected, null, 2))
+  const baseline = loadBaseline(BASELINE_PATH)
+  const diffs = collected
+    .map((report) => diffScreen(report, baseline?.[platform]))
+    .filter((diff) => diff.newIssues.length)
+  const summary = `${formatA11ySummary()}\n${formatBaselineDiff(diffs)}`
   await attach('a11y audit summary', summary, 'text/plain')
   console.log(`[a11y]\n${summary}`)
 
@@ -310,6 +351,21 @@ export async function reportA11ySummary(): Promise<void> {
   if (unavailable.length === collected.length) {
     const reasons = [...new Set(unavailable.map((report) => report.reason ?? 'unknown'))].join(' | ')
     throw new Error(`Accessibility audits could not run on ${platform} (${unavailable.length} screens): ${reasons}`)
+  }
+  if (isFailOnNew()) {
+    // Fail closed: without the platform's section every screen reads as unseen and nothing gates.
+    if (!baseline?.[platform]) {
+      const what = baseline ? `has no ${platform} section` : 'is missing'
+      throw new Error(
+        `a11y-baseline.json ${what} (${BASELINE_PATH}) — nothing to gate on (A11Y_AUDIT_FAIL_ON_NEW=0 to report only)`
+      )
+    }
+    const regressions = diffs.filter((diff) => diff.inBaseline)
+    const total = countNew(regressions)
+    if (total > 0) {
+      const headline = `${total} accessibility findings not in a11y-baseline.json — ${RESNAPSHOT_HINT}`
+      throw new Error([headline, ...formatNewIssues(regressions)].join('\n'))
+    }
   }
   const errors = collected.flatMap((report) => report.issues).filter((issue) => issue.severity === 'error')
   if (isStrict() && errors.length > 0) {

@@ -41,6 +41,10 @@ const TRANSITION_IN_DURATION = 200
 const TRANSITION_OUT_DURATION = 150
 const DEFAULT_ROTATION = 0
 const HALF_ROTATION = 180
+const SECTION_HEADER_ICON_SIZE = 22
+/** Explore-by-touch uses layout bounds (hitSlop does not grow them), so the chevron gets a 44dp box. */
+const SECTION_HEADER_CHEVRON_TARGET = 44
+const SECTION_HEADER_CHEVRON_OVERHANG = (SECTION_HEADER_CHEVRON_TARGET - SECTION_HEADER_ICON_SIZE) / 2
 
 const noop = () => {
   // TODO: wire to real handler once the destination screen exists
@@ -102,7 +106,7 @@ const SectionHeader: React.FC<
   return (
     <Animated.View layout={LinearTransition.duration(TRANSITION_IN_DURATION)}>
       <View style={styles.sectionHeader}>
-        <Icon name={iconName} size={22} color={TextTheme.bold.color} />
+        <Icon name={iconName} size={SECTION_HEADER_ICON_SIZE} color={TextTheme.bold.color} />
         <ThemedText variant="bold" style={styles.sectionHeaderText}>
           {title}
         </ThemedText>
@@ -115,7 +119,7 @@ const SectionHeader: React.FC<
           style={styles.sectionHeaderChevron}
         >
           <Animated.View style={chevronStyle}>
-            <Icon name="chevron-down" size={22} color={TextTheme.bold.color} />
+            <Icon name="chevron-down" size={SECTION_HEADER_ICON_SIZE} color={TextTheme.bold.color} />
           </Animated.View>
         </PressableOpacity>
       </View>
@@ -456,6 +460,13 @@ const makeStyles = (
     },
     sectionHeaderChevron: {
       marginLeft: 'auto',
+      minWidth: SECTION_HEADER_CHEVRON_TARGET,
+      minHeight: SECTION_HEADER_CHEVRON_TARGET,
+      // Icon pinned to the right edge; the box grows leftwards and into the row padding, staying
+      // inside the row (Android clips a11y bounds to the parent) without moving the icon.
+      alignItems: 'flex-end',
+      justifyContent: 'center',
+      marginVertical: -SECTION_HEADER_CHEVRON_OVERHANG,
     },
     profileCard: {
       flexDirection: 'row',
@@ -678,10 +689,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       </SectionHeader>
 
       <View style={styles.versionContainer}>
+        {/* Hidden developer trigger, not a control: keep TalkBack off it (the text stays readable). */}
         <TouchableWithoutFeedback
           onPress={incrementDeveloperMenuCounter}
           disabled={store.preferences.developerModeEnabled}
           accessible={false}
+          importantForAccessibility="no"
         >
           <View style={{ alignItems: 'center' }}>
             <ThemedText variant="labelSubtitle">{t('BCSC.Title')}</ThemedText>

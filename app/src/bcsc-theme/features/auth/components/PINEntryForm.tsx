@@ -277,7 +277,8 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         <View style={styles.pinCheckboxRow}>
           <CheckBoxRow
             title={tWithPrefix('IUnderstand')}
-            accessibilityLabel={a11yLabel(tWithPrefix('IUnderstand'))}
+            // Plain spaces on purpose: NBSP-joined, this sentence is one token Apple's audit calls unreadable.
+            accessibilityLabel={tWithPrefix('IUnderstand')}
             testID={testIdWithKey(TestIds.onboarding.createPin.understand)}
             checked={checked}
             onPress={() => {

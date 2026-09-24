@@ -438,7 +438,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
         label: 'Automated audit (iOS: Apple audit engine · Android: heuristics)',
         platforms: both,
         proof: [{ file: spec('a11y/accessibility.journey.ts'), tests: ['reports the accessibility audit roll-up'] }],
-        note: 'advisory; the roll-up fails only if the engine could not run — findings below',
+        note: 'the roll-up fails on a finding missing from a11y-baseline.json, or if the engine could not run — findings below',
       },
       {
         id: 'a11y-screen-reader',
