@@ -1,3 +1,4 @@
+import { AppError, ErrorRegistry } from '@/errors'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -5,7 +6,6 @@ import { TOKENS, useServices } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
 import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
-import useApi from '../api/hooks/useApi'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { getNotificationTokens } from '../utils/push-notification-tokens'
 import { useBCSCApiClient } from './useBCSCApiClient'
@@ -33,7 +33,6 @@ export const STUB_SERVICE_CLIENT: ClientMetadataStub = { client_ref_id: '' }
  * and returns a promise resolving to the quick login URL or an error message.
  */
 export const useQuickLoginURL = () => {
-  const { jwks } = useApi()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
@@ -59,7 +58,7 @@ export const useQuickLoginURL = () => {
         const [tokens, account, jwk] = await Promise.all([
           getNotificationTokens(logger),
           getAccount(),
-          jwks.getFirstJwk(),
+          client.fetchJwk(),
         ])
 
         if (!tokens) {
@@ -68,6 +67,10 @@ export const useQuickLoginURL = () => {
 
         if (!account) {
           return { success: false, error: 'No account data received' }
+        }
+
+        if (!jwk) {
+          throw AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
         }
 
         const loginHint = await createQuickLoginJWT(
@@ -92,7 +95,7 @@ export const useQuickLoginURL = () => {
         return { success: false, error: `Error creating quick login URL: ${(error as Error).message}` }
       }
     },
-    [alerts, client, jwks, logger]
+    [alerts, client, logger]
   )
 
   return getQuickLoginURL
