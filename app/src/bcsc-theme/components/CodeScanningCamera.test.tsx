@@ -287,7 +287,7 @@ describe('CodeScanningCamera', () => {
     describe('device torch support (regression: iPad device/flash-unavailable in 4.1.0)', () => {
       const noTorchDevice = {
         id: 'back',
-        supportsFocus: true,
+        supportsFocusMetering: true,
         minZoom: 1,
         maxZoom: 8,
         neutralZoom: 1,
@@ -298,7 +298,7 @@ describe('CodeScanningCamera', () => {
         // Restore the default per-render factory (a device with a torch).
         mockedUseCameraDevice.mockImplementation(() => ({
           id: 'back',
-          supportsFocus: true,
+          supportsFocusMetering: true,
           minZoom: 1,
           maxZoom: 8,
           neutralZoom: 1,
@@ -306,17 +306,18 @@ describe('CodeScanningCamera', () => {
         }))
       })
 
-      it('passes torch on to the camera when the device has a torch and torchActive is set', () => {
+      it('passes torch on to the camera when the device has a torch and torchActive is set', async () => {
         const { getByTestId } = render(
           <BasicAppContext>
             <CodeScanningCamera {...defaultProps} torchActive={true} />
           </BasicAppContext>
         )
 
-        expect(getByTestId('mock-camera').props.torch).toBe('on')
+        // torchMode is withheld until the camera session reports started
+        await waitFor(() => expect(getByTestId('mock-camera').props.torchMode).toBe('on'))
       })
 
-      it('never passes torch on to the camera when the device has no torch, even if torchActive is set', () => {
+      it('never passes torch on to the camera when the device has no torch, even if torchActive is set', async () => {
         mockedUseCameraDevice.mockReturnValue(noTorchDevice)
 
         const { getByTestId } = render(
@@ -327,7 +328,8 @@ describe('CodeScanningCamera', () => {
 
         // VisionCamera throws `device/flash-unavailable` (via onError) for torch='on' on a
         // device without one, which used to fail the whole scan screen over.
-        expect(getByTestId('mock-camera').props.torch).toBe('off')
+        await act(async () => {})
+        expect(getByTestId('mock-camera').props.torchMode).toBeUndefined()
       })
 
       it('shows the built-in torch button when the device has a torch', () => {
@@ -822,8 +824,7 @@ describe('CodeScanningCamera', () => {
 
         await waitFor(() => {
           expect(mockOnCodeScanned).toHaveBeenCalledWith(
-            expect.arrayContaining([expect.objectContaining({ value: 'INSIDE_ZONE', isAligned: true })]),
-            mockFrame
+            expect.arrayContaining([expect.objectContaining({ value: 'INSIDE_ZONE', isAligned: true })])
           )
         })
       })
@@ -854,8 +855,7 @@ describe('CodeScanningCamera', () => {
         // camera would read the barcode correctly forever without confirming.
         await waitFor(() => {
           expect(mockOnCodeScanned).toHaveBeenCalledWith(
-            expect.arrayContaining([expect.objectContaining({ value: 'OUTSIDE_ZONE', isAligned: false })]),
-            mockFrame
+            expect.arrayContaining([expect.objectContaining({ value: 'OUTSIDE_ZONE', isAligned: false })])
           )
         })
       })
@@ -1377,7 +1377,7 @@ describe('CodeScanningCamera', () => {
     it('renders correctly when device does not support focus', () => {
       mockedUseCameraDevice.mockReturnValueOnce({
         id: 'back',
-        supportsFocus: false,
+        supportsFocusMetering: false,
         minZoom: 1,
         maxZoom: 4,
         hasTorch: false,
@@ -2177,7 +2177,7 @@ describe('CodeScanningCamera', () => {
       // the real hook behaves when the underlying camera device hasn't changed.
       mockedUseCameraDevice.mockReturnValue({
         id: 'back',
-        supportsFocus: true,
+        supportsFocusMetering: true,
         minZoom: 1,
         maxZoom: 8,
         neutralZoom: 1,
@@ -2190,7 +2190,7 @@ describe('CodeScanningCamera', () => {
       // Restore the default per-render factory for any tests outside this describe.
       mockedUseCameraDevice.mockImplementation(() => ({
         id: 'back',
-        supportsFocus: true,
+        supportsFocusMetering: true,
         minZoom: 1,
         maxZoom: 8,
         neutralZoom: 1,
@@ -2396,8 +2396,7 @@ describe('CodeScanningCamera', () => {
           expect.arrayContaining([
             expect.objectContaining({ type: 'pdf-417', value: 'DL_DATA' }),
             expect.objectContaining({ type: 'code-39', value: 'SERIAL' }),
-          ]),
-          mockFrame
+          ])
         )
       })
     })

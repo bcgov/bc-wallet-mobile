@@ -25,16 +25,12 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
     testID="camera-preview-container"
   >
     <View
-      animatedProps={{}}
-      codeScanner={
-        {
-          "codeTypes": [
-            "code-39",
-            "code-128",
-            "pdf-417",
-          ],
-          "onCodeScanned": [Function],
-        }
+      constraints={
+        [
+          {
+            "fps": 30,
+          },
+        ]
       }
       device={
         {
@@ -43,19 +39,20 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
           "maxZoom": 8,
           "minZoom": 1,
           "neutralZoom": 1,
-          "supportsFocus": true,
+          "supportsFocusMetering": true,
         }
       }
-      format={
-        {
-          "photoHeight": 1080,
-          "photoWidth": 1920,
-          "videoHeight": 1080,
-          "videoWidth": 1920,
-        }
-      }
+      getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "mock": "scanner-output",
+          },
+        ]
+      }
       resizeMode="cover"
       style={
         {
@@ -63,8 +60,7 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
         }
       }
       testID="mock-camera"
-      torch="off"
-      video={true}
+      zoom={2}
     />
     <View
       style={
@@ -294,16 +290,12 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
     testID="camera-preview-container"
   >
     <View
-      animatedProps={{}}
-      codeScanner={
-        {
-          "codeTypes": [
-            "code-39",
-            "code-128",
-            "pdf-417",
-          ],
-          "onCodeScanned": [Function],
-        }
+      constraints={
+        [
+          {
+            "fps": 30,
+          },
+        ]
       }
       device={
         {
@@ -312,19 +304,20 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
           "maxZoom": 8,
           "minZoom": 1,
           "neutralZoom": 1,
-          "supportsFocus": true,
+          "supportsFocusMetering": true,
         }
       }
-      format={
-        {
-          "photoHeight": 1080,
-          "photoWidth": 1920,
-          "videoHeight": 1080,
-          "videoWidth": 1920,
-        }
-      }
+      getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "mock": "scanner-output",
+          },
+        ]
+      }
       resizeMode="cover"
       style={
         {
@@ -332,8 +325,7 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
         }
       }
       testID="mock-camera"
-      torch="off"
-      video={true}
+      zoom={2}
     />
     <View
       style={
@@ -563,15 +555,12 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
     testID="camera-preview-container"
   >
     <View
-      animatedProps={{}}
-      codeScanner={
-        {
-          "codeTypes": [
-            "pdf-417",
-            "code-39",
-          ],
-          "onCodeScanned": [Function],
-        }
+      constraints={
+        [
+          {
+            "fps": 30,
+          },
+        ]
       }
       device={
         {
@@ -580,19 +569,20 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
           "maxZoom": 8,
           "minZoom": 1,
           "neutralZoom": 1,
-          "supportsFocus": true,
+          "supportsFocusMetering": true,
         }
       }
-      format={
-        {
-          "photoHeight": 1080,
-          "photoWidth": 1920,
-          "videoHeight": 1080,
-          "videoWidth": 1920,
-        }
-      }
+      getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "mock": "scanner-output",
+          },
+        ]
+      }
       resizeMode="cover"
       style={
         {
@@ -600,8 +590,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
         }
       }
       testID="mock-camera"
-      torch="off"
-      video={true}
+      zoom={2}
     />
     <View
       style={
@@ -831,15 +820,12 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
     testID="camera-preview-container"
   >
     <View
-      animatedProps={{}}
-      codeScanner={
-        {
-          "codeTypes": [
-            "pdf-417",
-            "code-39",
-          ],
-          "onCodeScanned": [Function],
-        }
+      constraints={
+        [
+          {
+            "fps": 30,
+          },
+        ]
       }
       device={
         {
@@ -848,19 +834,20 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
           "maxZoom": 8,
           "minZoom": 1,
           "neutralZoom": 1,
-          "supportsFocus": true,
+          "supportsFocusMetering": true,
         }
       }
-      format={
-        {
-          "photoHeight": 1080,
-          "photoWidth": 1920,
-          "videoHeight": 1080,
-          "videoWidth": 1920,
-        }
-      }
+      getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "mock": "scanner-output",
+          },
+        ]
+      }
       resizeMode="cover"
       style={
         {
@@ -868,8 +855,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
         }
       }
       testID="mock-camera"
-      torch="off"
-      video={true}
+      zoom={2}
     />
     <View
       style={
@@ -1099,16 +1085,12 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
     testID="camera-preview-container"
   >
     <View
-      animatedProps={{}}
-      codeScanner={
-        {
-          "codeTypes": [
-            "code-39",
-            "code-128",
-            "pdf-417",
-          ],
-          "onCodeScanned": [Function],
-        }
+      constraints={
+        [
+          {
+            "fps": 30,
+          },
+        ]
       }
       device={
         {
@@ -1117,19 +1099,20 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
           "maxZoom": 8,
           "minZoom": 1,
           "neutralZoom": 1,
-          "supportsFocus": true,
+          "supportsFocusMetering": true,
         }
       }
-      format={
-        {
-          "photoHeight": 1080,
-          "photoWidth": 1920,
-          "videoHeight": 1080,
-          "videoWidth": 1920,
-        }
-      }
+      getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "mock": "scanner-output",
+          },
+        ]
+      }
       resizeMode="cover"
       style={
         {
@@ -1137,8 +1120,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
         }
       }
       testID="mock-camera"
-      torch="off"
-      video={true}
+      zoom={2}
     />
     <View
       style={
@@ -1368,16 +1350,12 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
     testID="camera-preview-container"
   >
     <View
-      animatedProps={{}}
-      codeScanner={
-        {
-          "codeTypes": [
-            "code-39",
-            "code-128",
-            "pdf-417",
-          ],
-          "onCodeScanned": [Function],
-        }
+      constraints={
+        [
+          {
+            "fps": 30,
+          },
+        ]
       }
       device={
         {
@@ -1385,20 +1363,20 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
           "id": "back",
           "maxZoom": 8,
           "minZoom": 1,
-          "neutralZoom": 1,
-          "supportsFocus": true,
+          "supportsFocusMetering": true,
         }
       }
-      format={
-        {
-          "photoHeight": 1080,
-          "photoWidth": 1920,
-          "videoHeight": 1080,
-          "videoWidth": 1920,
-        }
-      }
+      getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "mock": "scanner-output",
+          },
+        ]
+      }
       resizeMode="cover"
       style={
         {
@@ -1406,8 +1384,7 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
         }
       }
       testID="mock-camera"
-      torch="off"
-      video={true}
+      zoom={2}
     />
     <View
       style={
@@ -1637,16 +1614,12 @@ exports[`CodeScanningCamera renders with barcode highlight enabled 1`] = `
     testID="camera-preview-container"
   >
     <View
-      animatedProps={{}}
-      codeScanner={
-        {
-          "codeTypes": [
-            "code-39",
-            "code-128",
-            "pdf-417",
-          ],
-          "onCodeScanned": [Function],
-        }
+      constraints={
+        [
+          {
+            "fps": 30,
+          },
+        ]
       }
       device={
         {
@@ -1654,20 +1627,20 @@ exports[`CodeScanningCamera renders with barcode highlight enabled 1`] = `
           "id": "back",
           "maxZoom": 8,
           "minZoom": 1,
-          "neutralZoom": 1,
-          "supportsFocus": true,
+          "supportsFocusMetering": true,
         }
       }
-      format={
-        {
-          "photoHeight": 1080,
-          "photoWidth": 1920,
-          "videoHeight": 1080,
-          "videoWidth": 1920,
-        }
-      }
+      getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "mock": "scanner-output",
+          },
+        ]
+      }
       resizeMode="cover"
       style={
         {
@@ -1675,8 +1648,7 @@ exports[`CodeScanningCamera renders with barcode highlight enabled 1`] = `
         }
       }
       testID="mock-camera"
-      torch="off"
-      video={true}
+      zoom={2}
     />
     <View
       style={
@@ -1906,16 +1878,12 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
     testID="camera-preview-container"
   >
     <View
-      animatedProps={{}}
-      codeScanner={
-        {
-          "codeTypes": [
-            "code-39",
-            "code-128",
-            "pdf-417",
-          ],
-          "onCodeScanned": [Function],
-        }
+      constraints={
+        [
+          {
+            "fps": 30,
+          },
+        ]
       }
       device={
         {
@@ -1923,20 +1891,20 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
           "id": "back",
           "maxZoom": 8,
           "minZoom": 1,
-          "neutralZoom": 1,
-          "supportsFocus": true,
+          "supportsFocusMetering": true,
         }
       }
-      format={
-        {
-          "photoHeight": 1080,
-          "photoWidth": 1920,
-          "videoHeight": 1080,
-          "videoWidth": 1920,
-        }
-      }
+      getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "mock": "scanner-output",
+          },
+        ]
+      }
       resizeMode="cover"
       style={
         {
@@ -1944,8 +1912,7 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
         }
       }
       testID="mock-camera"
-      torch="off"
-      video={true}
+      zoom={3}
     />
     <View
       style={
@@ -2175,16 +2142,12 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
     testID="camera-preview-container"
   >
     <View
-      animatedProps={{}}
-      codeScanner={
-        {
-          "codeTypes": [
-            "code-39",
-            "code-128",
-            "pdf-417",
-          ],
-          "onCodeScanned": [Function],
-        }
+      constraints={
+        [
+          {
+            "fps": 30,
+          },
+        ]
       }
       device={
         {
@@ -2192,20 +2155,20 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
           "id": "back",
           "maxZoom": 8,
           "minZoom": 1,
-          "neutralZoom": 1,
-          "supportsFocus": true,
+          "supportsFocusMetering": true,
         }
       }
-      format={
-        {
-          "photoHeight": 1080,
-          "photoWidth": 1920,
-          "videoHeight": 1080,
-          "videoWidth": 1920,
-        }
-      }
+      getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "mock": "scanner-output",
+          },
+        ]
+      }
       resizeMode="cover"
       style={
         {
@@ -2213,8 +2176,7 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
         }
       }
       testID="mock-camera"
-      torch="off"
-      video={true}
+      zoom={2}
     />
     <View
       style={

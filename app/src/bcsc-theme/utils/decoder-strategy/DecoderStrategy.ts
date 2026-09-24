@@ -4,8 +4,6 @@ import { BCComboCardBarcodeDecoder } from './BCComboCardBarcodeDecoder'
 import { BCServicesCardBarcodeDecoder } from './BCServicesCardBarcodeDecoder'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
 
-type RawBarcodeValue = string
-
 // Enum representing the kinds of decoded codes
 export enum DecodedCodeKind {
   DriversLicenseBarcode = 'DriversLicenseBarcode',

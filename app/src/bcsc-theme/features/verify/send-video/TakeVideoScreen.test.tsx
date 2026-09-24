@@ -8,11 +8,11 @@ import { useCameraDevice, useCameraPermission, useMicrophonePermission } from 'r
 import TakeVideoScreen from './TakeVideoScreen'
 
 // Mock react-native-vision-camera with a forwardRef Camera that renders into the tree (props —
-// including `isActive` and `onInitialized` — reachable via the `mock-camera` testID), matching the
+// including `isActive` and `onConfigured` — reachable via the `mock-camera` testID), matching the
 // pattern used in CodeScanningCamera.test.tsx / MaskedCamera.test.tsx. Deliberately does NOT
-// auto-fire `onInitialized` (unlike those two) so the existing tests below — none of which expect
+// auto-fire `onConfigured` (unlike those two) so the existing tests below — none of which expect
 // the recording countdown to start — are unaffected; only tests that explicitly need the
-// post-initialization `isActive` value call `camera.props.onInitialized()` themselves.
+// post-initialization `isActive` value call `camera.props.onConfigured()` themselves.
 jest.mock('react-native-vision-camera', () => {
   const React = jest.requireActual('react')
   const { View } = jest.requireActual('react-native')
@@ -38,9 +38,10 @@ jest.mock('react-native-vision-camera', () => {
     useCameraDevice: jest.fn().mockReturnValue({ id: 'mock-device' }),
     useCameraPermission: jest.fn().mockReturnValue({ hasPermission: true, requestPermission: jest.fn() }),
     useMicrophonePermission: jest.fn().mockReturnValue({ hasPermission: true, requestPermission: jest.fn() }),
-    useCameraFormat: jest.fn().mockReturnValue({ videoWidth: 640, videoHeight: 480, fps: 24 }),
-    CameraRuntimeError: class extends Error {},
-    CameraCaptureError: class extends Error {},
+    // Output hooks used by camera-output.tsx (useSelfiePhotoOutput / useSelfieVideoOutput)
+    CommonResolutions: { FHD_16_9: 'FHD_16_9', VGA_16_9: 'VGA_16_9' },
+    usePhotoOutput: jest.fn().mockReturnValue({ capturePhotoToFile: jest.fn() }),
+    useVideoOutput: jest.fn().mockReturnValue({ setOutputSettings: jest.fn(), createRecorder: jest.fn() }),
   }
 })
 
@@ -165,7 +166,7 @@ describe('TakeVideoScreen', () => {
       // regardless of appStateStatus — confirm the background case holds once isActive(state) also
       // flips true, which is the scenario this fix actually targets (mid-session backgrounding).
       act(() => {
-        camera.props.onInitialized()
+        camera.props.onConfigured()
       })
 
       expect(getByTestId('mock-camera').props.isActive).toBe(false)
@@ -184,7 +185,7 @@ describe('TakeVideoScreen', () => {
       expect(camera.props.isActive).toBe(false)
 
       act(() => {
-        camera.props.onInitialized()
+        camera.props.onConfigured()
       })
 
       expect(getByTestId('mock-camera').props.isActive).toBe(true)
@@ -203,7 +204,7 @@ describe('TakeVideoScreen', () => {
       const camera = getByTestId('mock-camera')
 
       act(() => {
-        camera.props.onInitialized()
+        camera.props.onConfigured()
       })
 
       // The gate deactivates on KNOWN background states rather than activating only on a
