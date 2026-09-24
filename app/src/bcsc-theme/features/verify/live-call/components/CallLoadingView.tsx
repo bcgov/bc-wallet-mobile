@@ -14,6 +14,7 @@ const CallLoadingView = ({ onCancel, message, progressPercent }: CallLoadingView
 
   return (
     <CancellableWaitingScreen
+      testIDKey={TestIds.verify.liveCall.loadingScreen}
       message={t('BCSC.VideoCall.Loading.OneMomentPlease')}
       statusMessage={message || t('BCSC.VideoCall.Loading.SettingThingsUp')}
       delayedMessage={t('BCSC.VideoCall.Loading.TakingLongerThanUsual')}

@@ -439,6 +439,7 @@ export const TestIds = {
      *  agent answers, and CallErrorView's pair on a failed setup. The "Call ended" processing view
      *  has no ids. */
     liveCall: {
+      loadingScreen: 'LiveCallLoadingScreen',
       cancel: 'Cancel',
       mute: 'Mute',
       video: 'Video',

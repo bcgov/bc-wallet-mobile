@@ -34,6 +34,7 @@ describe('CallLoadingView', () => {
       wrapper: BasicAppContext,
     })
     const delayedMessage = 'BCSC.VideoCall.Loading.TakingLongerThanUsual'
+    expect(view.getByTestId(testIdWithKey(TestIds.verify.liveCall.loadingScreen))).toBeTruthy()
     const reservedButton = view.getByTestId(testIdWithKey(TestIds.verify.liveCall.cancel), {
       includeHiddenElements: true,
     })

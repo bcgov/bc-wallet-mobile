@@ -35,7 +35,7 @@ exports[`LiveCall renders correctly 1`] = `
         "flex": 1,
       }
     }
-    testID="com.ariesbifold:id/WaitingScreenContent"
+    testID="com.ariesbifold:id/LiveCallLoadingScreen"
   >
     <RCTScrollView
       contentContainerStyle={
@@ -50,7 +50,7 @@ exports[`LiveCall renders correctly 1`] = `
           "opacity": 0,
         }
       }
-      testID="com.ariesbifold:id/WaitingScreenContentViewport"
+      testID="com.ariesbifold:id/LiveCallLoadingScreenViewport"
     >
       <View>
         <View
@@ -67,7 +67,7 @@ exports[`LiveCall renders correctly 1`] = `
                 "gap": 2,
               }
             }
-            testID="com.ariesbifold:id/WaitingScreenContentStatus"
+            testID="com.ariesbifold:id/LiveCallLoadingScreenStatus"
           >
             <View
               accessibilityLabel="BCSC.VideoCall.CallStates.Initializing"

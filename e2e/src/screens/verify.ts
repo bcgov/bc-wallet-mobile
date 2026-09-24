@@ -261,7 +261,7 @@ export const VideoTooLongScreen = defineScreen({
  * (CancelUpload) aborts; the happy path just waits for SuccessfullySent.
  */
 export const EvidenceUploadingScreen = defineScreen({
-  self: bcsc(v.evidenceUploading.cancelUpload),
+  self: bcsc(v.evidenceUploading.screen),
   primary: bcsc(v.evidenceUploading.cancelUpload),
 })
 
@@ -337,12 +337,15 @@ export const StartCallScreen = defineScreen({
 
 /**
  * LiveCall's pre-connect face (`CallLoadingView`) — up through the evidence upload, session mint,
- * WebRTC connect, and the wait for an agent. `self`/`primary` (Cancel) is its only control; WHICH
- * state it is in is copy-only, so the waiting state is matched by text (see `startLiveCall`).
+ * WebRTC connect, and the wait for an agent. The screen marker is visible before the delayed Cancel
+ * control. The setup stage is copy-only, so queue arrival is matched by text (see `startLiveCall`).
  */
 export const LiveCallLoadingScreen = defineScreen({
-  self: bcsc(v.liveCall.cancel),
+  self: bcsc(v.liveCall.loadingScreen),
   primary: bcsc(v.liveCall.cancel),
+  elements: {
+    cancel: bcsc(v.liveCall.cancel),
+  },
 })
 
 /**
