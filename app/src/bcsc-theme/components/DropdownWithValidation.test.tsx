@@ -1,6 +1,7 @@
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Modal, Platform } from 'react-native'
 import { DropdownOption, DropdownWithValidation } from './DropdownWithValidation'
 
 describe('DropdownWithValidation Component', () => {
@@ -140,6 +141,20 @@ describe('DropdownWithValidation Component', () => {
 
       expect(getByText('Error message')).toBeTruthy()
       expect(queryByText('Helper text here')).toBeNull()
+    })
+
+    test('forwards onLayout from the root View', () => {
+      const onLayout = jest.fn()
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <DropdownWithValidation {...defaultProps} onLayout={onLayout} />
+        </BasicAppContext>
+      )
+
+      const layoutEvent = { nativeEvent: { layout: { y: 42, x: 0, width: 100, height: 20 } } }
+      fireEvent(getByTestId('com.ariesbifold:id/test-dropdown-input'), 'layout', layoutEvent)
+
+      expect(onLayout).toHaveBeenCalledWith(expect.objectContaining(layoutEvent))
     })
   })
 
@@ -322,6 +337,44 @@ describe('DropdownWithValidation Component', () => {
         expect(option1.props.accessibilityState.selected).toBe(false)
         expect(option3.props.accessibilityState.selected).toBe(false)
       })
+    })
+  })
+
+  // Jest's Modal mock never fires onDismiss, so these pin the platform branch, not native dismissal.
+  describe('Modal dismiss (platform-dependent onModalClose)', () => {
+    afterEach(() => {
+      Platform.OS = 'ios'
+    })
+
+    test('Android calls onModalClose synchronously when an option is selected', () => {
+      Platform.OS = 'android'
+      const onModalClose = jest.fn()
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <DropdownWithValidation {...defaultProps} onModalClose={onModalClose} />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/test-dropdown-input'))
+      fireEvent.press(getByTestId('com.ariesbifold:id/test-dropdown-option-option1'))
+
+      expect(onModalClose).toHaveBeenCalledTimes(1)
+    })
+
+    test('iOS does not call onModalClose synchronously, and passes it as Modal onDismiss instead', () => {
+      Platform.OS = 'ios'
+      const onModalClose = jest.fn()
+      const { getByTestId, UNSAFE_getByType } = render(
+        <BasicAppContext>
+          <DropdownWithValidation {...defaultProps} onModalClose={onModalClose} />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/test-dropdown-input'))
+      fireEvent.press(getByTestId('com.ariesbifold:id/test-dropdown-option-option1'))
+
+      expect(onModalClose).not.toHaveBeenCalled()
+      expect(UNSAFE_getByType(Modal).props.onDismiss).toBe(onModalClose)
     })
   })
 
