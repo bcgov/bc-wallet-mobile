@@ -49,6 +49,8 @@ export const BCAnimatedLoadingIcon = ({ size, active = true }: BCAnimatedLoading
       })
     )
 
+    // Restart from the top; otherwise the native loop runs from wherever the last stop left `phase`.
+    phase.setValue(0)
     animation.start()
 
     return () => animation.stop()
