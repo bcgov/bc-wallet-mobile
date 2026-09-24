@@ -31,6 +31,7 @@ import {
   Rect,
   ScanState,
   ScanZone,
+  ScannedCode,
   calculateBarcodeOrientation,
   clampZoom,
   determineScanState,
@@ -39,7 +40,6 @@ import {
   isCodeAlignedWithZones,
   isRecoverableCameraRuntimeError,
   mergeLockedCodesWithAccumulated,
-  ScannedCode,
   toScannedCode,
 } from './utils/camera'
 
@@ -1262,7 +1262,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
           outputs={[scannerOutput]}
           constraints={[{ fps: 30 }]}
-          zoom={zoom}
+          zoom={zoomDisplay}
           getInitialZoom={() => getEffectiveZoom(initialZoom)}
           // Never ask the camera for a torch before the session has started (Android drops it) or on
           // a device without one.
