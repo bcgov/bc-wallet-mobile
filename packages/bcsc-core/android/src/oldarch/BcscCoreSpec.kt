@@ -247,6 +247,8 @@ abstract class BcscCoreSpec internal constructor(
         promise: Promise,
     )
 
+    abstract fun createNewKeyPair(promise: Promise)
+
     abstract fun getNativeFilesScan(promise: Promise)
 
     // Saved Services (Client Metadata) Storage Methods
