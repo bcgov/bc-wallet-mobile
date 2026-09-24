@@ -16,6 +16,7 @@ exports[`WaitingScreenContent renders the themed 8-point bar in dark 1`] = `
       "flex": 1,
     }
   }
+  testID="com.ariesbifold:id/WaitingScreenContent"
 >
   <RCTScrollView
     contentContainerStyle={
@@ -55,6 +56,13 @@ exports[`WaitingScreenContent renders the themed 8-point bar in dark 1`] = `
             accessibilityState={
               {
                 "busy": true,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": 100,
+                "min": 0,
+                "now": 50,
               }
             }
             accessible={true}
@@ -186,6 +194,7 @@ exports[`WaitingScreenContent renders the themed 8-point bar in light 1`] = `
       "flex": 1,
     }
   }
+  testID="com.ariesbifold:id/WaitingScreenContent"
 >
   <RCTScrollView
     contentContainerStyle={
@@ -225,6 +234,13 @@ exports[`WaitingScreenContent renders the themed 8-point bar in light 1`] = `
             accessibilityState={
               {
                 "busy": true,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": 100,
+                "min": 0,
+                "now": 50,
               }
             }
             accessible={true}

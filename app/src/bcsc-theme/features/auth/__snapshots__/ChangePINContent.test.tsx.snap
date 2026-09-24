@@ -817,7 +817,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
             "opacity": 0,
           }
         }
-        testID="com.ariesbifold:id/WaitingScreenContentViewport"
+        testID="com.ariesbifold:id/LoadingScreenContentViewport"
       >
         <View>
           <View
@@ -1852,7 +1852,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
             "opacity": 0,
           }
         }
-        testID="com.ariesbifold:id/WaitingScreenContentViewport"
+        testID="com.ariesbifold:id/LoadingScreenContentViewport"
       >
         <View>
           <View

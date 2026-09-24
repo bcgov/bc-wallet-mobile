@@ -33,6 +33,25 @@ describe('WaitingScreenContent', () => {
     expect(view.queryByRole('progressbar')).toBeNull()
   })
 
+  it('derives every id from testIDKey so a screen and the loading overlay can coexist', () => {
+    const view = render(
+      <>
+        <WaitingScreenContent message="Overlay" progressPercent={0} />
+        <WaitingScreenContent message="Upload" progressPercent={0} testIDKey="UploadingScreen" />
+      </>
+    )
+    expect(view.getByTestId(testIdWithKey('WaitingScreenContent'))).toBeTruthy()
+    expect(view.getByTestId(testIdWithKey('WaitingScreenContentViewport'))).toBeTruthy()
+    expect(view.getByTestId(testIdWithKey('UploadingScreen'))).toBeTruthy()
+    expect(view.getByTestId(testIdWithKey('UploadingScreenViewport'))).toBeTruthy()
+    expect(view.getByTestId(testIdWithKey('UploadingScreenStatus'))).toBeTruthy()
+  })
+
+  it('exposes the stage percentage to screen readers', () => {
+    const view = render(<WaitingScreenContent message="Preparing" progressPercent={75} />)
+    expect(view.getByRole('progressbar')).toHaveAccessibilityValue({ min: 0, max: 100, now: 75 })
+  })
+
   it.each([BCThemeNames.Light, BCThemeNames.Dark])('renders the themed 8-point bar in %s', (theme) => {
     const view = render(
       <ThemeProvider themes={themes} defaultThemeName={theme}>

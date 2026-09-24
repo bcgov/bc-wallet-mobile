@@ -757,7 +757,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
             "opacity": 0,
           }
         }
-        testID="com.ariesbifold:id/WaitingScreenContentViewport"
+        testID="com.ariesbifold:id/LoadingScreenContentViewport"
       >
         <View>
           <View

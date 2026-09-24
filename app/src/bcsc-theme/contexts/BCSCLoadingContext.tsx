@@ -68,7 +68,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
         <WaitingScreenContent
           message={loadingMessage ?? t('BCSC.Loading.DefaultMessage')}
           active={isLoading}
-          testID={testIdWithKey(TestIds.common.loadingScreen)}
+          testIDKey={TestIds.common.loadingScreen}
         />
       </View>
     </BCSCLoadingContext.Provider>

@@ -393,7 +393,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             "opacity": 0,
           }
         }
-        testID="com.ariesbifold:id/WaitingScreenContentViewport"
+        testID="com.ariesbifold:id/LoadingScreenContentViewport"
       >
         <View>
           <View
@@ -1064,7 +1064,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             "opacity": 0,
           }
         }
-        testID="com.ariesbifold:id/WaitingScreenContentViewport"
+        testID="com.ariesbifold:id/LoadingScreenContentViewport"
       >
         <View>
           <View
@@ -1602,7 +1602,7 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
             "opacity": 0,
           }
         }
-        testID="com.ariesbifold:id/WaitingScreenContentViewport"
+        testID="com.ariesbifold:id/LoadingScreenContentViewport"
       >
         <View>
           <View

@@ -12,7 +12,7 @@ export const WaitingScreenContent = ({
   statusMessage,
   supportingMessage,
   progressPercent,
-  testID,
+  testIDKey = TestIds.shared.waitingScreen.key,
   controls,
   active = true,
 }: {
@@ -20,7 +20,7 @@ export const WaitingScreenContent = ({
   statusMessage?: string
   supportingMessage?: string
   progressPercent?: number
-  testID?: string
+  testIDKey?: string
   controls?: ReactNode
   active?: boolean
 }) => {
@@ -103,18 +103,18 @@ export const WaitingScreenContent = ({
   })
 
   return (
-    <SafeAreaView style={styles.container} testID={testID}>
+    <SafeAreaView style={styles.container} testID={testIdWithKey(testIDKey)}>
       <ScrollView
         style={styles.viewport}
         contentContainerStyle={styles.content}
-        testID={testIdWithKey(TestIds.common.waitingScreenViewport)}
+        testID={testIdWithKey(`${testIDKey}${TestIds.shared.waitingScreen.viewportSuffix}`)}
         onLayout={handleViewportLayout}
       >
         <View style={styles.header}>
           {hasProgress && (
             <View
               style={styles.loading}
-              testID={testIdWithKey(TestIds.common.waitingScreenStatus)}
+              testID={testIdWithKey(`${testIDKey}${TestIds.shared.waitingScreen.statusSuffix}`)}
               onLayout={handleLoadingLayout}
             >
               <View
@@ -123,9 +123,11 @@ export const WaitingScreenContent = ({
                 accessibilityRole="progressbar"
                 accessibilityLabel={status}
                 accessibilityState={{ busy: true }}
+                accessibilityValue={{ min: 0, max: 100, now: progressPercent }}
               >
                 <ProgressBar
                   progressPercent={progressPercent}
+                  height={8} // As specified in Figma.
                   trackColor={ColorPalette.grayscale.veryLightGrey}
                   progressColor={ColorPalette.brand.highlight}
                 />

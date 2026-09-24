@@ -38,8 +38,6 @@ export const TestIds = {
     // App-level gates and overlays, not screen controls: the splash/loading body, the two halves of
     // `BCSCLoadingContext`'s overlay, and the retry on the Credo agent gate. Any screen can be behind them.
     loadingScreen: 'LoadingScreenContent',
-    waitingScreenViewport: 'WaitingScreenContentViewport',
-    waitingScreenStatus: 'WaitingScreenContentStatus',
     loadingOverlay: 'BCSCLoadingProviderOverlay',
     loadingChildren: 'BCSCLoadingProviderChildren',
     agentRetry: 'AgentRetry',
@@ -136,6 +134,13 @@ export const TestIds = {
     /** `PINInput` appends this to its `testIDKey`, and uses it BARE when no key was passed. */
     pinInput: {
       visibilitySuffix: 'VisibilityButton',
+    },
+    /** `WaitingScreenContent` appends these to its `testIDKey`, falling back to `key` when none was passed,
+     *  so the always-mounted loading overlay and a screen's own waiting view never share ids. */
+    waitingScreen: {
+      key: 'WaitingScreenContent',
+      viewportSuffix: 'Viewport',
+      statusSuffix: 'Status',
     },
     /** Title-derived row ids. `SectionButton` strips whitespace from the title; `CardButton` does not. */
     cardButtonPrefix: 'CardButton-',

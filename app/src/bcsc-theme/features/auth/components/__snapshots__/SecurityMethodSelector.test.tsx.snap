@@ -393,7 +393,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) marks t
             "opacity": 0,
           }
         }
-        testID="com.ariesbifold:id/WaitingScreenContentViewport"
+        testID="com.ariesbifold:id/LoadingScreenContentViewport"
       >
         <View>
           <View
@@ -947,7 +947,7 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
             "opacity": 0,
           }
         }
-        testID="com.ariesbifold:id/WaitingScreenContentViewport"
+        testID="com.ariesbifold:id/LoadingScreenContentViewport"
       >
         <View>
           <View
@@ -1617,7 +1617,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             "opacity": 0,
           }
         }
-        testID="com.ariesbifold:id/WaitingScreenContentViewport"
+        testID="com.ariesbifold:id/LoadingScreenContentViewport"
       >
         <View>
           <View
