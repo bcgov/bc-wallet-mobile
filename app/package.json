@@ -46,7 +46,7 @@
     "@bifold/oca": "3.1.0",
     "@bifold/react-hooks": "3.1.0",
     "@bifold/react-native-attestation": "3.1.0",
-    "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.0.22#~/.yarn/patches/@bifold-remote-logs-npm-3.0.22-943bfd093c.patch",
+    "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.1.0#~/.yarn/patches/@bifold-remote-logs-npm-3.1.0-7e3e0ffb2c.patch",
     "@bifold/verifier": "3.1.0",
     "@credo-ts/anoncreds": "0.7.0",
     "@credo-ts/askar": "0.7.0",

@@ -32,7 +32,7 @@ describe('RemoteLogger trace/test level patch', () => {
     // so this is the assertion that actually proves it's gated out.
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
 
-    const logger = new RemoteLogger({ logLevel: LogLevel.debug })
+    const logger = new RemoteLogger({ logLevel: LogLevel.Debug })
 
     logger.trace('ledger lookup')
     logger.test('some test message')
@@ -49,7 +49,7 @@ describe('RemoteLogger trace/test level patch', () => {
     // 'test' level falls through to the transport's default console.log branch, not console.debug.
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
 
-    const logger = new RemoteLogger({ logLevel: LogLevel.test })
+    const logger = new RemoteLogger({ logLevel: LogLevel.Test })
 
     logger.test('a test line')
     jest.runOnlyPendingTimers()
@@ -62,7 +62,7 @@ describe('RemoteLogger trace/test level patch', () => {
     const traceSpy = jest.spyOn(console, 'trace').mockImplementation(() => {})
     const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {})
 
-    const logger = new RemoteLogger({ logLevel: LogLevel.trace })
+    const logger = new RemoteLogger({ logLevel: LogLevel.Trace })
 
     logger.trace('ledger lookup')
     jest.runOnlyPendingTimers()
@@ -75,19 +75,19 @@ describe('RemoteLogger trace/test level patch', () => {
   it('forces the lowest level (test) when remote logging is enabled, and trace reaches the console', () => {
     const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {})
 
-    const logger = new RemoteLogger({ logLevel: LogLevel.warn })
+    const logger = new RemoteLogger({ logLevel: LogLevel.Warn })
 
-    expect(logger.logLevel).toBe(LogLevel.warn)
+    expect(logger.logLevel).toBe(LogLevel.Warn)
 
     logger.remoteLoggingEnabled = true
-    expect(logger.logLevel).toBe(LogLevel.test)
+    expect(logger.logLevel).toBe(LogLevel.Test)
 
     logger.trace('ledger lookup')
     jest.runOnlyPendingTimers()
     expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('[TRACE]'))
 
     logger.remoteLoggingEnabled = false
-    expect(logger.logLevel).toBe(LogLevel.warn)
+    expect(logger.logLevel).toBe(LogLevel.Warn)
 
     logger.dispose()
   })
@@ -96,7 +96,7 @@ describe('RemoteLogger trace/test level patch', () => {
     jest.spyOn(console, 'debug').mockImplementation(() => {})
 
     const logger = new RemoteLogger({
-      logLevel: LogLevel.warn,
+      logLevel: LogLevel.Warn,
       // Basic-auth credentials are load-bearing: the transport parses them out of the
       // URL, matching the shape of the real REMOTE_LOGGING_URL.
       lokiUrl: 'https://user:pass@loki.example.com/loki/api/v1/push',
@@ -124,7 +124,7 @@ describe('RemoteLogger trace/test level patch', () => {
   it('leaves error reporting unchanged', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
 
-    const logger = new RemoteLogger({ logLevel: LogLevel.warn })
+    const logger = new RemoteLogger({ logLevel: LogLevel.Warn })
 
     logger.error('something broke', new Error('boom'))
     jest.runOnlyPendingTimers()

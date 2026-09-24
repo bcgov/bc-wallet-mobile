@@ -78,9 +78,9 @@ const parseEnvLogLevel = (value?: string): LogLevel => {
     case 'info':
       return LogLevel.Info
     case 'trace':
-      return LogLevel.trace
+      return LogLevel.Trace
     case 'test':
-      return LogLevel.test
+      return LogLevel.Test
     case 'debug':
       return LogLevel.Debug
     default:

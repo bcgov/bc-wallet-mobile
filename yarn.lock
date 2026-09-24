@@ -1753,91 +1753,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/core@npm:3.0.22":
-  version: 3.0.22
-  resolution: "@bifold/core@npm:3.0.22"
-  dependencies:
-    "@openwallet-foundation/askar-react-native": "npm:0.6.0"
-    "@openwallet-foundation/askar-shared": "npm:0.6.0"
-    "@types/base-64": "npm:^1.0.2"
-  peerDependencies:
-    "@animo-id/expo-secure-environment": 0.1.5
-    "@bifold/react-hooks": 3.0.22
-    "@credo-ts/anoncreds": 0.6.3
-    "@credo-ts/askar": 0.6.3
-    "@credo-ts/core": 0.6.3
-    "@credo-ts/didcomm": 0.6.3
-    "@credo-ts/indy-vdr": 0.6.3
-    "@credo-ts/openid4vc": 0.6.3
-    "@credo-ts/push-notifications": 0.7.1
-    "@credo-ts/question-answer": 0.6.3
-    "@credo-ts/react-native": 0.6.3
-    "@credo-ts/webvh": 0.6.3
-    "@formatjs/intl-datetimeformat": ~6.18.2
-    "@formatjs/intl-displaynames": ~6.8.13
-    "@formatjs/intl-getcanonicallocales": ~2.5.6
-    "@formatjs/intl-listformat": ~7.7.13
-    "@formatjs/intl-locale": ~4.2.13
-    "@formatjs/intl-numberformat": ~8.15.6
-    "@formatjs/intl-pluralrules": ~5.4.6
-    "@formatjs/intl-relativetimeformat": ~11.4.13
-    "@hyperledger/anoncreds-react-native": 0.3.4
-    "@hyperledger/indy-vdr-react-native": 0.2.4
-    "@hyperledger/indy-vdr-shared": 0.2.3
-    "@openwallet-foundation/askar-react-native": 0.6.0
-    "@react-native-async-storage/async-storage": ~2.2.0
-    "@react-native-clipboard/clipboard": ~1.16.3
-    "@react-native-community/netinfo": ~11.4.1
-    "@react-navigation/bottom-tabs": ~6.0.9
-    "@react-navigation/core": ~6.1.1
-    "@react-navigation/devtools": ~6.0.27
-    "@react-navigation/native": ~6.0.16
-    "@react-navigation/stack": ~6.3.29
-    axios: ~1.13.2
-    base-64: ~1.0.0
-    class-transformer: 0.5.1
-    expo-crypto: ~15.0.8
-    i18next: ~21.6.16
-    lodash.startcase: ~4.4.0
-    moment: ~2.29.4
-    query-string: ~7.1.3
-    react: ~19.1.4
-    react-i18next: ~11.17.1
-    react-native: "*"
-    react-native-animated-pagination-dots: ~0.1.73
-    react-native-bouncy-checkbox: ~3.0.7
-    react-native-config: ~1.5.5
-    react-native-confirmation-code-field: ~7.3.2
-    react-native-device-info: ~8.7.1
-    react-native-fs: ~2.20.0
-    react-native-gesture-handler: ~2.28.0
-    react-native-get-random-values: ~1.11.0
-    react-native-gifted-chat: ~3.3.2
-    react-native-keychain: ~10.0.0
-    react-native-localize: ~2.2.6
-    react-native-logs: ~5.1.0
-    react-native-orientation-locker: "*"
-    react-native-permissions: ~5.4.1
-    react-native-qrcode-svg: ~6.2.0
-    react-native-safe-area-context: ~5.6.2
-    react-native-screenguard: "*"
-    react-native-screens: ~4.16.0
-    react-native-splash-screen: ~3.3.0
-    react-native-svg: ~15.12.1
-    react-native-tcp-socket: ~6.0.6
-    react-native-toast-message: ~2.1.10
-    react-native-url-polyfill: 3.0.0
-    react-native-uuid: ~2.0.3
-    react-native-vector-icons: ~10.3.0
-    react-native-vision-camera: "*"
-    tsyringe: ~4.8.0
-    uuid: ~9.0.1
-  bin:
-    bifold: bin/bifold
-  checksum: 10c0/caa1a8a4b90980f7f4122f93d684a0403b9d3c8498d5a0566eebf6ed58fb0b735a3d2aa5c86eb0df2a193907aff7a1c9dd0265c3d995049dc93ca818a210d40d
-  languageName: node
-  linkType: hard
-
 "@bifold/core@npm:3.1.0":
   version: 3.1.0
   resolution: "@bifold/core@npm:3.1.0"
@@ -1963,47 +1878,47 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/remote-logs@npm:3.0.22":
-  version: 3.0.22
-  resolution: "@bifold/remote-logs@npm:3.0.22"
+"@bifold/remote-logs@npm:3.1.0":
+  version: 3.1.0
+  resolution: "@bifold/remote-logs@npm:3.1.0"
   dependencies:
-    "@bifold/core": "npm:3.0.22"
-    "@credo-ts/core": "npm:0.6.3"
-    axios: "npm:~1.13.2"
+    "@bifold/core": "npm:3.1.0"
+    "@credo-ts/core": "npm:0.7.0"
+    axios: "npm:~1.15.0"
     buffer: "npm:~6.0.3"
-    react: "npm:~19.1.4"
-    react-native: "npm:0.81.5"
+    react: "npm:19.2.3"
+    react-native: "npm:0.86.3"
     react-native-logs: "npm:~5.1.0"
   peerDependencies:
-    "@credo-ts/core": 0.6.3
-    axios: ~1.13.2
+    "@credo-ts/core": 0.7.0
+    axios: ~1.15.0
     buffer: ~6.0.3
-    react: ~19.1.4
-    react-native: 0.81.5
+    react: 19.2.3
+    react-native: 0.86.3
     react-native-logs: ~5.1.0
-  checksum: 10c0/8477c76c033c0974df80961f6a1ca895a6d9952d26d2767ff02a63654d7dae21db0f425b5f8e9a2a70aaef33b70f77962829d498c71fb14921f02684ba09e4f1
+  checksum: 10c0/3172b506a060abed76a0fed2daf6caed451bae8083fb28870cb9c9dc320bb1d02b976f2955a400b6bd217b2248fa0ad307b2adc67059ce9da6f2806356b813a7
   languageName: node
   linkType: hard
 
-"@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.0.22#~/.yarn/patches/@bifold-remote-logs-npm-3.0.22-943bfd093c.patch":
-  version: 3.0.22
-  resolution: "@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.0.22#~/.yarn/patches/@bifold-remote-logs-npm-3.0.22-943bfd093c.patch::version=3.0.22&hash=be24b1"
+"@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.0#~/.yarn/patches/@bifold-remote-logs-npm-3.1.0-7e3e0ffb2c.patch":
+  version: 3.1.0
+  resolution: "@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.0#~/.yarn/patches/@bifold-remote-logs-npm-3.1.0-7e3e0ffb2c.patch::version=3.1.0&hash=d66630"
   dependencies:
-    "@bifold/core": "npm:3.0.22"
-    "@credo-ts/core": "npm:0.6.3"
-    axios: "npm:~1.13.2"
+    "@bifold/core": "npm:3.1.0"
+    "@credo-ts/core": "npm:0.7.0"
+    axios: "npm:~1.15.0"
     buffer: "npm:~6.0.3"
-    react: "npm:~19.1.4"
-    react-native: "npm:0.81.5"
+    react: "npm:19.2.3"
+    react-native: "npm:0.86.3"
     react-native-logs: "npm:~5.1.0"
   peerDependencies:
-    "@credo-ts/core": 0.6.3
-    axios: ~1.13.2
+    "@credo-ts/core": 0.7.0
+    axios: ~1.15.0
     buffer: ~6.0.3
-    react: ~19.1.4
-    react-native: 0.81.5
+    react: 19.2.3
+    react-native: 0.86.3
     react-native-logs: ~5.1.0
-  checksum: 10c0/59bb47211931c29ec97a26fb343bd582758d19872a083df92780831c36fc05c36dcab9a28ec9ddb12a94a17d5291e2a5a6afa962017dee6c28118f26ce84050e
+  checksum: 10c0/1e1e0bf0f3cfb7d5a757e11b8a52a5e723016a8d35a3bb92360ca0d1c7e974537fff6e6440be8e33722d0f83d0e64b9b9a9c71e175a7ad40105ccc9e1b166436
   languageName: node
   linkType: hard
 
@@ -2353,56 +2268,6 @@ __metadata:
   peerDependencies:
     "@openwallet-foundation/askar-shared": ^0.4.3 || ^0.5.0 || ^0.6.0
   checksum: 10c0/2d4ce540e5b03f8c507c4ec3b3ce3400aa6429c69ee44977a53636fa11fef25ab3dcc8eb272e4901026acb265ea9f67272d865311f2772849209d80f96fc6491
-  languageName: node
-  linkType: hard
-
-"@credo-ts/core@npm:0.6.3":
-  version: 0.6.3
-  resolution: "@credo-ts/core@npm:0.6.3"
-  dependencies:
-    "@animo-id/mdoc": "npm:^0.5.2"
-    "@animo-id/pex": "npm:^6.1.1"
-    "@astronautlabs/jsonpath": "npm:^1.1.2"
-    "@digitalcredentials/jsonld": "npm:^9.0.0"
-    "@digitalcredentials/jsonld-signatures": "npm:^12.0.1"
-    "@digitalcredentials/vc": "npm:^10.0.2"
-    "@multiformats/base-x": "npm:^4.0.1"
-    "@noble/curves": "npm:^2.0.1"
-    "@noble/hashes": "npm:^2.0.1"
-    "@peculiar/asn1-ecc": "npm:^2.6.0"
-    "@peculiar/asn1-rsa": "npm:^2.6.0"
-    "@peculiar/asn1-schema": "npm:^2.6.0"
-    "@peculiar/asn1-x509": "npm:^2.6.0"
-    "@peculiar/x509": "npm:^1.14.3"
-    "@sd-jwt/core": "npm:^0.19.0"
-    "@sd-jwt/decode": "npm:^0.19.0"
-    "@sd-jwt/jwt-status-list": "npm:^0.19.0"
-    "@sd-jwt/present": "npm:^0.19.0"
-    "@sd-jwt/sd-jwt-vc": "npm:^0.19.0"
-    "@sd-jwt/types": "npm:^0.19.0"
-    "@sd-jwt/utils": "npm:^0.19.0"
-    "@sphereon/pex-models": "npm:^2.3.2"
-    "@sphereon/ssi-types": "npm:0.33.0"
-    "@stablelib/ed25519": "npm:^2.0.2"
-    "@types/ws": "npm:^8.18.1"
-    buffer: "npm:^6.0.3"
-    class-transformer: "npm:0.5.1"
-    class-validator: "npm:^0.14.3"
-    dcql: "npm:^3.0.0"
-    did-resolver: "npm:^4.1.0"
-    ec-compression: "npm:0.0.1-alpha.12"
-    lru_map: "npm:^0.4.1"
-    make-error: "npm:^1.3.6"
-    object-inspect: "npm:^1.13.4"
-    reflect-metadata: "npm:0.2.2"
-    rxjs: "npm:^7.8.2"
-    tsyringe: "npm:^4.10.0"
-    uuid: "npm:^13.0.0"
-    varint: "npm:^6.0.0"
-    web-did-resolver: "npm:^2.0.32"
-    webcrypto-core: "npm:^1.8.1"
-    zod: "npm:^4.3.6"
-  checksum: 10c0/736ac6955e6b989184eea37c3fc82202408bcc885026e4aff76481f7f89a3d78c25b85fc31e62d1cc7aadb7df8a72084bf9bd158c304c8205a9e9121a5636f87
   languageName: node
   linkType: hard
 
@@ -4219,18 +4084,6 @@ __metadata:
     zod: "npm:^4.3.5"
     zod-validation-error: "npm:^5.0.0"
   checksum: 10c0/f183cede193abbcedeaf359b41dedf74a4f1ab991566fdebdb7fa48bbfab9b93578eb1f4ec32505f0317efbf22bf29509b83c0bf50824920ebb62be6475d3eeb
-  languageName: node
-  linkType: hard
-
-"@openwallet-foundation/askar-react-native@npm:0.6.0":
-  version: 0.6.0
-  resolution: "@openwallet-foundation/askar-react-native@npm:0.6.0"
-  dependencies:
-    "@openwallet-foundation/askar-shared": "npm:0.6.0"
-  peerDependencies:
-    react: ">= 16"
-    react-native: ">= 0.71"
-  checksum: 10c0/1ed1d7899a39bc777df9b3ddcf257c7d35c798ecc181d2c0768c60830b65f0a9ac08ea83b372654ffe48cded806a6ed55da4df561a7651350b2b4690a3e029ed
   languageName: node
   linkType: hard
 
@@ -7513,7 +7366,7 @@ __metadata:
     "@bifold/oca": "npm:3.1.0"
     "@bifold/react-hooks": "npm:3.1.0"
     "@bifold/react-native-attestation": "npm:3.1.0"
-    "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.0.22#~/.yarn/patches/@bifold-remote-logs-npm-3.0.22-943bfd093c.patch"
+    "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.1.0#~/.yarn/patches/@bifold-remote-logs-npm-3.1.0-7e3e0ffb2c.patch"
     "@bifold/verifier": "npm:3.1.0"
     "@credo-ts/anoncreds": "npm:0.7.0"
     "@credo-ts/askar": "npm:0.7.0"
