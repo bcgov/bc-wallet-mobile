@@ -42,8 +42,8 @@ Hidden loading views must not run animations. Concurrent operations own separate
 loading tokens; the overlay stays visible until all tokens are released.
 Video-call setup and video submission use `CancellableWaitingScreen` to reveal Cancel
 after 10 seconds without fading or shifting content (#4513). It keeps Cancel hidden
-from accessibility until available, disables it during cancellation, and guards repeated
-taps. Video-call setup also shows its longer-wait message at that threshold;
+from accessibility until available, then disables it for good once pressed so repeated
+taps cannot cancel twice. Video-call setup also shows its longer-wait message at that threshold;
 cancelling stops setup and returns to Start Video Call. Video submission preserves its
 existing cancellation destination: verification-method selection (#4585).
 Startup and post-call verification checks have no Cancel control. Post-call checks
