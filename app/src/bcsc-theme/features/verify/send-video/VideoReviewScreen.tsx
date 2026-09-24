@@ -19,7 +19,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { CommonActions } from '@react-navigation/native'
+import { CommonActions, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -48,6 +48,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
+  const isFocused = useIsFocused()
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
   const { failedToReadFromLocalStorageAlert, videoPromptsMissingAlert } = useAlerts(navigation)
@@ -211,7 +212,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       </ThemedText>
       <Video
         source={{ uri: videoPath }}
-        paused={paused}
+        // The screen keeps rendering through the exit transition, so without this the recording's audio
+        // plays over the next screen.
+        paused={paused || !isFocused}
         audioOutput={'speaker'}
         repeat
         resizeMode={'cover'}

@@ -2,6 +2,7 @@ import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import * as ReactNavigationNative from '@react-navigation/native'
 import { useNavigation as useContextNavigation, useFocusEffect } from '@react-navigation/native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -158,5 +159,15 @@ describe('VideoReview', () => {
       expect(event.preventDefault).toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
+  })
+
+  it('pauses playback once the screen loses focus', () => {
+    // Otherwise the recording's audio keeps playing over the upload screen during the exit transition.
+    const isFocusedSpy = jest.spyOn(ReactNavigationNative, 'useIsFocused').mockReturnValue(false)
+
+    const tree = renderScreen()
+
+    expect(tree.UNSAFE_getByProps({ repeat: true }).props.paused).toBe(true)
+    isFocusedSpy.mockRestore()
   })
 })
