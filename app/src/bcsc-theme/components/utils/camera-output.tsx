@@ -25,5 +25,6 @@ export const useSelfieVideoOutput = () => {
   return useVideoOutput({
     fileType: 'mp4',
     targetResolution: CommonResolutions.VGA_16_9, // 480p
+    enableAudio: true,
   })
 }
