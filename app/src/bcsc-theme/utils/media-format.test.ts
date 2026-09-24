@@ -1,4 +1,4 @@
-import { sniffMediaFormat } from './media-format'
+import { normalizeMp4MajorBrand, sniffMediaFormat } from './media-format'
 
 const ascii4ToBytes = (value: string): number[] => [
   value.charCodeAt(0),
@@ -76,5 +76,58 @@ describe('sniffMediaFormat', () => {
 
   it('returns undefined for a buffer too short for any signature check', () => {
     expect(sniffMediaFormat(new Uint8Array([0xff, 0xd8]))).toBeUndefined()
+  })
+})
+
+describe('normalizeMp4MajorBrand', () => {
+  const majorBrandOf = (bytes: Uint8Array) => String.fromCodePoint(...bytes.slice(8, 12))
+
+  it('rewrites an isom major brand to mp42 in place and returns the original brand', () => {
+    // Header written by VisionCamera v5 / Media3 on Android
+    const bytes = buildFtypBox('isom', ['isom', 'iso2', 'mp41'])
+    const before = Array.from(bytes)
+
+    expect(normalizeMp4MajorBrand(bytes)).toBe('isom')
+    expect(majorBrandOf(bytes)).toBe('mp42')
+    expect(sniffMediaFormat(bytes)).toBe('video/mp4')
+    // Only the 4 major-brand bytes change
+    const changed = Array.from(bytes).flatMap((b, i) => (b === before[i] ? [] : [i]))
+    expect(changed).toEqual([8, 9, 10, 11])
+  })
+
+  it.each(['iso2', 'iso4', 'iso5', 'iso6', 'avc1'])('rewrites the %s MP4 brand', (brand) => {
+    const bytes = buildFtypBox(brand)
+
+    expect(normalizeMp4MajorBrand(bytes)).toBe(brand)
+    expect(majorBrandOf(bytes)).toBe('mp42')
+  })
+
+  it.each(['mp42', 'mp41'])('leaves an already-accepted %s brand alone', (brand) => {
+    const bytes = buildFtypBox(brand, ['isom'])
+    const before = Array.from(bytes)
+
+    expect(normalizeMp4MajorBrand(bytes)).toBeUndefined()
+    expect(Array.from(bytes)).toEqual(before)
+  })
+
+  it.each([
+    ['QuickTime', 'qt  '],
+    ['HEIC', 'heic'],
+    ['an unknown brand', 'abcd'],
+  ])('leaves %s alone', (_label, brand) => {
+    const bytes = buildFtypBox(brand)
+    const before = Array.from(bytes)
+
+    expect(normalizeMp4MajorBrand(bytes)).toBeUndefined()
+    expect(Array.from(bytes)).toEqual(before)
+  })
+
+  it('leaves non-ftyp input and short buffers alone', () => {
+    const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01])
+    const short = new Uint8Array([0x00, 0x00, 0x00, 0x1c, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f])
+
+    expect(normalizeMp4MajorBrand(jpeg)).toBeUndefined()
+    expect(normalizeMp4MajorBrand(short)).toBeUndefined()
+    expect(Array.from(short.slice(8))).toEqual([0x69, 0x73, 0x6f])
   })
 })
