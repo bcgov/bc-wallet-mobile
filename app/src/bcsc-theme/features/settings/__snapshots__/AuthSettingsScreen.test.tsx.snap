@@ -144,7 +144,12 @@ exports[`AuthSettings renders correctly 1`] = `
                 onStartShouldSetResponder={[Function]}
                 style={
                   {
+                    "alignItems": "flex-end",
+                    "justifyContent": "center",
                     "marginLeft": "auto",
+                    "marginVertical": -11,
+                    "minHeight": 44,
+                    "minWidth": 44,
                     "opacity": 1,
                   }
                 }
@@ -555,7 +560,12 @@ exports[`AuthSettings renders correctly 1`] = `
                 onStartShouldSetResponder={[Function]}
                 style={
                   {
+                    "alignItems": "flex-end",
+                    "justifyContent": "center",
                     "marginLeft": "auto",
+                    "marginVertical": -11,
+                    "minHeight": 44,
+                    "minWidth": 44,
                     "opacity": 1,
                   }
                 }
@@ -908,6 +918,7 @@ exports[`AuthSettings renders correctly 1`] = `
               }
               accessible={false}
               focusable={true}
+              importantForAccessibility="no"
               onClick={[Function]}
               onResponderGrant={[Function]}
               onResponderMove={[Function]}

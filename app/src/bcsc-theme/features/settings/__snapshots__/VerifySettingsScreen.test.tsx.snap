@@ -144,7 +144,12 @@ exports[`VerifySettings renders correctly when authenticated 1`] = `
                 onStartShouldSetResponder={[Function]}
                 style={
                   {
+                    "alignItems": "flex-end",
+                    "justifyContent": "center",
                     "marginLeft": "auto",
+                    "marginVertical": -11,
+                    "minHeight": 44,
+                    "minWidth": 44,
                     "opacity": 1,
                   }
                 }
@@ -846,7 +851,12 @@ exports[`VerifySettings renders correctly when authenticated 1`] = `
                 onStartShouldSetResponder={[Function]}
                 style={
                   {
+                    "alignItems": "flex-end",
+                    "justifyContent": "center",
                     "marginLeft": "auto",
+                    "marginVertical": -11,
+                    "minHeight": 44,
+                    "minWidth": 44,
                     "opacity": 1,
                   }
                 }
@@ -1257,7 +1267,12 @@ exports[`VerifySettings renders correctly when authenticated 1`] = `
                 onStartShouldSetResponder={[Function]}
                 style={
                   {
+                    "alignItems": "flex-end",
+                    "justifyContent": "center",
                     "marginLeft": "auto",
+                    "marginVertical": -11,
+                    "minHeight": 44,
+                    "minWidth": 44,
                     "opacity": 1,
                   }
                 }
@@ -1610,6 +1625,7 @@ exports[`VerifySettings renders correctly when authenticated 1`] = `
               }
               accessible={false}
               focusable={true}
+              importantForAccessibility="no"
               onClick={[Function]}
               onResponderGrant={[Function]}
               onResponderMove={[Function]}
@@ -2093,7 +2109,12 @@ exports[`VerifySettings renders correctly when unauthenticated 1`] = `
                 onStartShouldSetResponder={[Function]}
                 style={
                   {
+                    "alignItems": "flex-end",
+                    "justifyContent": "center",
                     "marginLeft": "auto",
+                    "marginVertical": -11,
+                    "minHeight": 44,
+                    "minWidth": 44,
                     "opacity": 1,
                   }
                 }
@@ -2504,7 +2525,12 @@ exports[`VerifySettings renders correctly when unauthenticated 1`] = `
                 onStartShouldSetResponder={[Function]}
                 style={
                   {
+                    "alignItems": "flex-end",
+                    "justifyContent": "center",
                     "marginLeft": "auto",
+                    "marginVertical": -11,
+                    "minHeight": 44,
+                    "minWidth": 44,
                     "opacity": 1,
                   }
                 }
@@ -2857,6 +2883,7 @@ exports[`VerifySettings renders correctly when unauthenticated 1`] = `
               }
               accessible={false}
               focusable={true}
+              importantForAccessibility="no"
               onClick={[Function]}
               onResponderGrant={[Function]}
               onResponderMove={[Function]}
