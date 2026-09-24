@@ -113,8 +113,8 @@ describe('createAppLogger', () => {
     ['fatal', LogLevel.Fatal],
     ['error', LogLevel.Error],
     ['warning', LogLevel.Warn],
-    ['trace', LogLevel.Debug],
-    ['test', LogLevel.Debug],
+    ['trace', LogLevel.Trace],
+    ['test', LogLevel.Test],
     ['unknown', LogLevel.Debug],
   ])('maps env value %s to correct log level', (envValue, expectedLevel) => {
     mockedConfig.LOG_LEVEL = envValue
