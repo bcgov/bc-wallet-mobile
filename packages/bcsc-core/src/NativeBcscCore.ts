@@ -43,8 +43,8 @@ export type PrivateKeyInfo = {
 
 export type KeyPair = {
   id: string;
-  public: string;
-  private?: string;
+  publicKey: string;
+  privateKey?: string;
   privateKeyAvailable: string;
 };
 

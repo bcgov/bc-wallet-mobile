@@ -193,8 +193,8 @@ export enum BCSCAccountType {
 
 export interface KeyPair {
   id: string; // 'id' for platform neutrality
-  public: string;
-  private?: string; // may not be available in secure hardware
+  publicKey: string;
+  privateKey?: string; // may not be available in secure hardware
   privateKeyAvailable: string; // Indicates if the private key exists,
   // even if not extractable
 }
