@@ -111,11 +111,6 @@ const config = mergeConfig(defaultConfig, {
       if (moduleName === 'expo-crypto') {
         return { type: 'sourceFile', filePath: path.join(__dirname, 'shims', 'expo-crypto.js') }
       }
-      // @bifold/core's attestation hook imports @expo/app-integrity, which needs
-      // expo-modules-core (not installed). Redirect to a local shim.
-      if (moduleName === '@expo/app-integrity') {
-        return { type: 'sourceFile', filePath: path.join(__dirname, 'shims', 'expo-app-integrity.js') }
-      }
       return context.resolveRequest(context, moduleName, platform)
     },
   },
