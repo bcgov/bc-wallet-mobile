@@ -89,10 +89,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
         return
       }
 
-      const scannableCodes = codes.map((code) => ({
-        type: code.format,
-        value: code.displayValue,
-      }))
+const scannableCodes = codes.map((code) => ({
+  type: code.format,
+  value: code.rawValue ?? code.displayValue,
+}))
 
       await scanner.scanCard(scannableCodes, async (bcscSerial, license) => {
         if (bcscSerial) {
