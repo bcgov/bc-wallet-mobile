@@ -1,6 +1,6 @@
 import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
-import { Button, ButtonType, usePreventDoublePress } from '@bifold/core'
-import { ComponentProps, useEffect, useState } from 'react'
+import { Button, ButtonType } from '@bifold/core'
+import { ComponentProps, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 
@@ -23,12 +23,23 @@ export const CancellableWaitingScreen = ({
 }: CancellableWaitingScreenProps) => {
   const { t } = useTranslation()
   const [delayReached, setDelayReached] = useState(false)
-  const { isPressing, preventDoublePress } = usePreventDoublePress()
+  const cancelledRef = useRef(false)
+  const [cancelled, setCancelled] = useState(false)
 
   useEffect(() => {
     const timeout = setTimeout(() => setDelayReached(true), CANCEL_DELAY_MS)
     return () => clearTimeout(timeout)
   }, [])
+
+  // Latches for good: cancel navigates away, and a second tap during the transition would run it twice.
+  const handleCancel = useCallback(async () => {
+    if (cancelledRef.current) {
+      return
+    }
+    cancelledRef.current = true
+    setCancelled(true)
+    await onCancel()
+  }, [onCancel])
 
   // Reserve space so revealing Cancel does not shift the waiting layout (#4513, #4585).
   const controls = (
@@ -40,8 +51,8 @@ export const CancellableWaitingScreen = ({
     >
       <Button
         buttonType={ButtonType.Secondary}
-        onPress={preventDoublePress(onCancel)}
-        disabled={!delayReached || isPressing}
+        onPress={handleCancel}
+        disabled={!delayReached || cancelled}
         title={t('Global.Cancel')}
         accessibilityLabel={t('Global.Cancel')}
         testID={cancelTestID}

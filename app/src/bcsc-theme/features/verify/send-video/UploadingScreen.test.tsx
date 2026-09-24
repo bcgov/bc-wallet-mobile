@@ -18,7 +18,7 @@ jest.mock('@/bcsc-theme/components/BCAnimatedLoadingIcon', () => ({
 const defaultModelReturn = {
   handleSend: jest.fn(),
   handleCancel: jest.fn(),
-  uploadMessage: null,
+  uploadMessage: 'BCSC.SendVideo.UploadProgress.PreparingVideo',
   progressPercent: 0,
   isReady: true,
   isUploading: false,
@@ -92,7 +92,7 @@ describe('UploadingScreen', () => {
     expect(defaultModelReturn.handleSend).toHaveBeenCalledTimes(1)
   })
 
-  it('disables Cancel while cancellation is in progress', async () => {
+  it('keeps Cancel disabled once pressed, including after cancellation resolves', async () => {
     let finishCancellation!: () => void
     const handleCancel = jest.fn(() => new Promise<void>((resolve) => (finishCancellation = resolve)))
     jest.mocked(useEvidenceUploadModel).mockReturnValue({ ...defaultModelReturn, handleCancel })
@@ -110,6 +110,8 @@ describe('UploadingScreen', () => {
     expect(handleCancel).toHaveBeenCalledTimes(1)
 
     await act(async () => finishCancellation())
-    expect(cancelButton).toBeEnabled()
+    expect(cancelButton).toBeDisabled()
+    await act(async () => fireEvent.press(cancelButton))
+    expect(handleCancel).toHaveBeenCalledTimes(1)
   })
 })
