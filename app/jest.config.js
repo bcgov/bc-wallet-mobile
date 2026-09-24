@@ -32,6 +32,8 @@ module.exports = {
     '^uuid$': require.resolve('uuid'),
     '^@bifold/core$': require.resolve('@bifold/core'),
     '@openwallet-foundation/askar-react-native': require.resolve('@openwallet-foundation/askar-react-native'),
+    // ESM-only package (exports only an `import` condition) pulled in by @credo-ts/core 0.7; Jest's CJS resolver can't find it.
+    '^@verifiables/request-converter$': '<rootDir>/node_modules/@verifiables/request-converter/dist/index.js',
   },
   transform: {
     '^.+\\.(js|jsx|ts|tsx|mjs)$': 'babel-jest',
