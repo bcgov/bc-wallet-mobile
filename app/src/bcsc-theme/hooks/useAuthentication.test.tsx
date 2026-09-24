@@ -397,8 +397,9 @@ describe('useAuthentication', () => {
         await result.current.performDeviceAuth()
       })
 
-      expect(mockStartLoading).toHaveBeenCalledWith('BCSC.Loading.AppStartup')
-      expect(mockStopLoading).toHaveBeenCalled()
+      expect(mockStartLoading).toHaveBeenNthCalledWith(1)
+      expect(mockStartLoading).toHaveBeenNthCalledWith(2, 'BCSC.Loading.AppStartup')
+      expect(mockStopLoading).toHaveBeenCalledTimes(2)
     })
 
     it('stops loading even when an error occurs', async () => {
@@ -457,7 +458,8 @@ describe('useAuthentication', () => {
         await result.current.unlockApp()
       })
 
-      expect(mockStartLoading).toHaveBeenCalled()
+      expect(mockStartLoading).toHaveBeenCalledTimes(1)
+      expect(mockStartLoading).not.toHaveBeenCalledWith('BCSC.Loading.AppStartup')
       expect(mockStopLoading).toHaveBeenCalled()
     })
 

@@ -38,9 +38,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
    */
   const performDeviceAuth = useCallback(async () => {
     let stopLoading
+    let stopStartupLoading
 
     try {
-      stopLoading = startLoading(t('BCSC.Loading.AppStartup'))
+      stopLoading = startLoading()
 
       // Check if they have changed their device auth settings
       const deviceAuthAvailable = await canPerformDeviceAuthentication()
@@ -59,6 +60,8 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
         return
       }
 
+      // The startup message waits for auth to succeed; the OS prompt sits over the generic overlay.
+      stopStartupLoading = startLoading(t('BCSC.Loading.AppStartup'))
       await handleSuccessfulAuth(walletKey)
       logger.info('[Authentication:performDeviceAuth] Device authentication successful')
     } catch (error) {
@@ -68,6 +71,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
     } finally {
+      stopStartupLoading?.()
       stopLoading?.()
     }
   }, [handleSuccessfulAuth, startLoading, t, logger, navigation, deviceAuthenticationErrorAlert])

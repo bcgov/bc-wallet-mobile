@@ -99,12 +99,14 @@ describe('authentication loading handoff', () => {
     })
 
     const illustration = view.UNSAFE_getByType(BCAnimatedLoadingIcon)
-    expect(view.getByText('BCSC.Loading.AppStartup')).toBeTruthy()
+    expect(view.getByText('BCSC.Loading.DefaultMessage')).toBeTruthy()
+    expect(view.queryByText('BCSC.Loading.AppStartup')).toBeNull()
 
     await act(async () => {
       resolveUnlock({ success: true, walletKey: 'test-key' })
     })
     expect(handleSuccessfulAuth).toHaveBeenCalledWith('test-key')
+    expect(view.getByText('BCSC.Loading.AppStartup')).toBeTruthy()
     expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
 
     await act(async () => {
