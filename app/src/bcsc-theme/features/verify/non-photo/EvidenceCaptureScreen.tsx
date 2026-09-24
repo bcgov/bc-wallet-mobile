@@ -16,10 +16,10 @@ import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { withAlert } from '@/utils/alert'
-import { MaskType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
-import { StyleSheet, useWindowDimensions, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission } from 'react-native-vision-camera'
 import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
@@ -56,8 +56,6 @@ enum CaptureState {
   REVIEWING = 'REVIEWING',
 }
 
-const TOP_BANNER_HEIGHT = 140
-
 const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
   const [store] = useStore<BCState>()
@@ -68,8 +66,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
   const [capturedPhotos, setCapturedPhotos] = useState<PhotoMetadata[]>([])
   const { hasPermission, requestPermission } = useCameraPermission()
-  const { width, height } = useWindowDimensions()
-  const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const scanner = useCardScanner()
   const bcscSerialRef = useRef<string | null>(null)
@@ -112,10 +108,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       logger.error('[EvidenceCaptureScreen] Error scanning barcode', error)
     },
   })
-
-  // SVGOverlay's customPath is the cutout — this rectangle leaves the top
-  // banner area inside the dark overlay so the instruction text reads clearly.
-  const customHeaderPath = `M 0 ${TOP_BANNER_HEIGHT} H ${width} V ${height} H 0 Z`
 
   const styles = StyleSheet.create({
     container: {
@@ -252,7 +244,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   }
 
   return (
-    <>
+    <ScreenWrapper padded={false} scrollable={false} edges={['top']}>
       {captureState === CaptureState.CAPTURING ? (
         <View style={styles.container} testID={testIdWithKey(TestIds.verify.evidenceCapture.maskedCamera)}>
           <MaskedCamera
@@ -260,9 +252,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             cameraFace={'back'}
             cameraInstructions={currentSide.image_side_tip}
             cameraLabel={currentSide.image_side_label}
-            maskType={MaskType.CUSTOM}
-            customPath={customHeaderPath}
-            maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
             photoOutput={photoOutput}
             codeScanner={codeScanner}
@@ -271,7 +260,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       ) : (
         <PhotoReview photoPath={currentPhotoPath!} onAccept={handleAcceptPhoto} onRetake={handleRetakePhoto} />
       )}
-    </>
+    </ScreenWrapper>
   )
 }
 
