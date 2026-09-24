@@ -1838,43 +1838,128 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/oca@npm:3.0.22":
-  version: 3.0.22
-  resolution: "@bifold/oca@npm:3.0.22"
+"@bifold/core@npm:3.1.0":
+  version: 3.1.0
+  resolution: "@bifold/core@npm:3.1.0"
   dependencies:
-    "@credo-ts/anoncreds": "npm:0.6.3"
-    "@credo-ts/core": "npm:0.6.3"
-    "@credo-ts/didcomm": "npm:0.6.3"
-    axios: "npm:~1.13.2"
-    lodash.startcase: "npm:~4.4.0"
-    react-native-fs: "npm:~2.20.0"
-  checksum: 10c0/03fddc26a688ee8c5357db9315d8870ad09872822e7b6ef50c66502bbb5268c28d03e45b0e105958e8b9a080cfddb180d874e1729ed0c69e1f6682cdb701329b
+    "@openwallet-foundation/askar-react-native": "npm:0.6.1-alpha-20260720140434"
+    "@openwallet-foundation/askar-shared": "npm:0.6.1-alpha-20260720140434"
+    "@types/base-64": "npm:^1.0.2"
+    react-native-nitro-image: "npm:^0.15.2"
+    react-native-nitro-modules: "npm:^0.37.1"
+    react-native-vision-camera-barcode-scanner: "npm:^5.2.3"
+  peerDependencies:
+    "@bifold/react-hooks": ^3.0.22
+    "@credo-ts/anoncreds": 0.7.0
+    "@credo-ts/askar": 0.7.0
+    "@credo-ts/core": 0.7.0
+    "@credo-ts/didcomm": 0.7.0
+    "@credo-ts/indy-vdr": 0.7.0
+    "@credo-ts/openid4vc": 0.7.0
+    "@credo-ts/push-notifications": 0.7.1
+    "@credo-ts/question-answer": 0.7.0
+    "@credo-ts/react-native": 0.7.0
+    "@credo-ts/webvh": 0.7.0
+    "@formatjs/intl-datetimeformat": ~6.18.2
+    "@formatjs/intl-displaynames": ~6.8.13
+    "@formatjs/intl-getcanonicallocales": ~2.5.6
+    "@formatjs/intl-listformat": ~7.7.13
+    "@formatjs/intl-locale": ~4.2.13
+    "@formatjs/intl-numberformat": ~8.15.6
+    "@formatjs/intl-pluralrules": ~5.4.6
+    "@formatjs/intl-relativetimeformat": ~11.4.13
+    "@hyperledger/anoncreds-react-native": 0.4.1-alpha-20260609124337
+    "@hyperledger/indy-vdr-react-native": 0.3.1-dev.1
+    "@hyperledger/indy-vdr-shared": 0.3.1-dev.1
+    "@openwallet-foundation/askar-react-native": 0.6.1-alpha-20260720140434
+    "@react-native-async-storage/async-storage": ~2.2.0
+    "@react-native-clipboard/clipboard": ~1.16.3
+    "@react-native-community/netinfo": 12.0.1
+    "@react-navigation/bottom-tabs": ~6.0.9
+    "@react-navigation/core": ~6.4.17
+    "@react-navigation/devtools": ~6.0.27
+    "@react-navigation/native": ~6.0.16
+    "@react-navigation/stack": ~6.3.29
+    axios: ~1.15.0
+    base-64: ~1.0.0
+    class-transformer: 0.5.1
+    i18next: ~25.8.0
+    lodash.startcase: ~4.4.0
+    moment: ~2.29.4
+    query-string: ~7.1.3
+    react: 19.2.3
+    react-i18next: ~16.5.4
+    react-native: "*"
+    react-native-animated-pagination-dots: ~0.1.73
+    react-native-bouncy-checkbox: ~3.0.7
+    react-native-config: ~1.5.5
+    react-native-confirmation-code-field: ~9.0.0
+    react-native-device-info: ~8.7.1
+    react-native-fs: ~2.20.0
+    react-native-gesture-handler: ~2.32.0
+    react-native-get-random-values: ~1.11.0
+    react-native-gifted-chat: ~3.3.2
+    react-native-keychain: ~10.0.0
+    react-native-localize: ~2.2.6
+    react-native-logs: ~5.1.0
+    react-native-orientation-locker: "*"
+    react-native-permissions: ~5.4.1
+    react-native-qrcode-svg: ~6.2.0
+    react-native-safe-area-context: ~5.7.0
+    react-native-screenguard: "*"
+    react-native-screens: ~4.26.0
+    react-native-splash-screen: ~3.3.0
+    react-native-svg: 15.15.4
+    react-native-tcp-socket: ~6.0.6
+    react-native-toast-message: ~2.1.10
+    react-native-url-polyfill: 3.0.0
+    react-native-uuid: ~2.0.4
+    react-native-vector-icons: ~10.3.0
+    tsyringe: ~4.8.0
+    uuid: ~9.0.1
+  bin:
+    bifold: bin/bifold
+  checksum: 10c0/146d9252e5381b1b7416836b7a6e6631adb4840a09e7d742ce2ee80bd4f084280a09835ba1566afa16bb25c734f29de6665071158f4eb28129256546717b7dec
   languageName: node
   linkType: hard
 
-"@bifold/react-hooks@npm:3.0.22":
-  version: 3.0.22
-  resolution: "@bifold/react-hooks@npm:3.0.22"
+"@bifold/oca@npm:3.1.0":
+  version: 3.1.0
+  resolution: "@bifold/oca@npm:3.1.0"
+  dependencies:
+    "@credo-ts/anoncreds": "npm:0.7.0"
+    "@credo-ts/core": "npm:0.7.0"
+    "@credo-ts/didcomm": "npm:0.7.0"
+    axios: "npm:~1.15.0"
+    lodash.startcase: "npm:~4.4.0"
+    react-native-fs: "npm:~2.20.0"
+  checksum: 10c0/88e46956c39270a7817d4755883eb05035516908ac1e98808c205cb3710d9ccad554cc9b184ebb6b9c6b78f091610c8b034955270d6cc7302b6004c6759ed8d3
+  languageName: node
+  linkType: hard
+
+"@bifold/react-hooks@npm:3.1.0":
+  version: 3.1.0
+  resolution: "@bifold/react-hooks@npm:3.1.0"
   dependencies:
     rxjs: "npm:^7.2.0"
   peerDependencies:
-    "@credo-ts/core": 0.6.3
-    "@credo-ts/didcomm": 0.6.3
-    "@credo-ts/question-answer": 0.6.3
-    react: ">=17.0.0 <19.0.0"
+    "@credo-ts/core": 0.7.0
+    "@credo-ts/didcomm": 0.7.0
+    "@credo-ts/question-answer": 0.7.0
+    react: 19.2.3
   bin:
     bifold: bin/bifold
-  checksum: 10c0/5f3a2f8f19fffdc037bcd840c3cd9185a1fbf10c12dc6e96238fa065c2f8e3214b02a781e6f7e481d4e30033cbb33d0ebba4c12e1893fcd121f32a51b9b2a1dd
+  checksum: 10c0/04e178d169ffe779327806d09809489d86819ccecc52639a1ac58abb6c682e6ff2689a5b2185feefcad223bed9f5ab0cba825ea1b4a0c883f9677b7893a9bfce
   languageName: node
   linkType: hard
 
-"@bifold/react-native-attestation@npm:3.0.22":
-  version: 3.0.22
-  resolution: "@bifold/react-native-attestation@npm:3.0.22"
+"@bifold/react-native-attestation@npm:3.1.0":
+  version: 3.1.0
+  resolution: "@bifold/react-native-attestation@npm:3.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/0af9f309e081ea53a35e7ce8d6d93d2909c647d6c1c53416e25f4b876128cbf06884378b5f13b18967d47953d60fe98e2cb4072c7a7a3568f84fdd2e9e46855e
+  checksum: 10c0/1379d4f5cbcf4d3a333d541c41842433a32097eee58e0cadabaca3491a664c5d422fbfd66da48e956ce6b66ac76f24699eaf2b561834c9d0d3d12cd5e82a18f3
   languageName: node
   linkType: hard
 
@@ -1922,16 +2007,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/verifier@npm:3.0.22":
-  version: 3.0.22
-  resolution: "@bifold/verifier@npm:3.0.22"
+"@bifold/verifier@npm:3.1.0":
+  version: 3.1.0
+  resolution: "@bifold/verifier@npm:3.1.0"
   peerDependencies:
-    "@bifold/react-hooks": 3.0.22
-    "@credo-ts/anoncreds": 0.6.3
-    "@credo-ts/core": 0.6.3
-    "@hyperledger/anoncreds-shared": 0.3.4
-    react: ~19.1.4
-  checksum: 10c0/fb294fe6e91e4ed946721531e1ff7d143ab5dcba9283f654e75e6d3786ea92416b5834daf04c70583cb5b8b68d59bc9b9de5ec452caf78a7fbe3d410737bbc9d
+    "@bifold/react-hooks": ^3.0.22
+    "@credo-ts/anoncreds": 0.7.0
+    "@credo-ts/core": 0.7.0
+    "@hyperledger/anoncreds-shared": 0.4.1-alpha-20260609124337
+    react: 19.2.3
+  checksum: 10c0/918fbbd24429ea5708941d3600099d4af508e152afa07c219b296ba5088eb70107d2f5a3ce25b07c3e506c98592649a3b4c7b874ba6b187bab126f19a8b68d10
   languageName: node
   linkType: hard
 
@@ -2222,23 +2307,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@credo-ts/anoncreds@npm:0.6.3":
-  version: 0.6.3
-  resolution: "@credo-ts/anoncreds@npm:0.6.3"
-  dependencies:
-    "@astronautlabs/jsonpath": "npm:^1.1.2"
-    "@credo-ts/core": "npm:0.6.3"
-    "@credo-ts/didcomm": "npm:0.6.3"
-    "@sphereon/pex-models": "npm:^2.3.2"
-    class-transformer: "npm:0.5.1"
-    class-validator: "npm:^0.14.3"
-    reflect-metadata: "npm:0.2.2"
-  peerDependencies:
-    "@hyperledger/anoncreds-shared": ^0.3.4
-  checksum: 10c0/a9897f2a8bc71e6d36b6527d985f12d6fbee5a0e33de9a96323b13c7b9821e2b8d418ee04ec03a84b7d7a3ed171f9c58cb9441481b040f5e6a567d07a4da32e5
-  languageName: node
-  linkType: hard
-
 "@credo-ts/anoncreds@npm:0.7.0":
   version: 0.7.0
   resolution: "@credo-ts/anoncreds@npm:0.7.0"
@@ -2399,20 +2467,6 @@ __metadata:
     "@credo-ts/core": ^0.6.0
     "@credo-ts/didcomm": ^0.6.0
   checksum: 10c0/6f3817c14debfaf8dd9584924f23ad53fa7a595ba396cd1ad3ccfc17d1c48c0cc2161132896e6944c995b190402953412a7cdbd1f743cc32613f402725721ef9
-  languageName: node
-  linkType: hard
-
-"@credo-ts/didcomm@npm:0.6.3":
-  version: 0.6.3
-  resolution: "@credo-ts/didcomm@npm:0.6.3"
-  dependencies:
-    "@credo-ts/core": "npm:0.6.3"
-    class-transformer: "npm:0.5.1"
-    class-validator: "npm:^0.14.3"
-    luxon: "npm:^3.7.2"
-    query-string: "npm:^9.3.1"
-    rxjs: "npm:^7.8.2"
-  checksum: 10c0/f7e10dddafca428c9aa8a910cb681bab9842c6934f61083f3bc9d6133e2e2f754063596326cf49b3f48658972757d7af6ab3deb3082531543bb62b80c33f36b3
   languageName: node
   linkType: hard
 
@@ -7455,12 +7509,12 @@ __metadata:
     "@babel/core": "npm:~7.28.6"
     "@babel/preset-env": "npm:~7.28.6"
     "@babel/runtime": "npm:~7.28.6"
-    "@bifold/core": "npm:3.0.22"
-    "@bifold/oca": "npm:3.0.22"
-    "@bifold/react-hooks": "npm:3.0.22"
-    "@bifold/react-native-attestation": "npm:3.0.22"
+    "@bifold/core": "npm:3.1.0"
+    "@bifold/oca": "npm:3.1.0"
+    "@bifold/react-hooks": "npm:3.1.0"
+    "@bifold/react-native-attestation": "npm:3.1.0"
     "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.0.22#~/.yarn/patches/@bifold-remote-logs-npm-3.0.22-943bfd093c.patch"
-    "@bifold/verifier": "npm:3.0.22"
+    "@bifold/verifier": "npm:3.1.0"
     "@credo-ts/anoncreds": "npm:0.7.0"
     "@credo-ts/askar": "npm:0.7.0"
     "@credo-ts/core": "npm:0.7.0"
@@ -15806,6 +15860,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-nitro-image@npm:^0.15.2":
+  version: 0.15.2
+  resolution: "react-native-nitro-image@npm:0.15.2"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-nitro-modules: "*"
+  peerDependenciesMeta:
+    react-native-nitro-modules:
+      optional: true
+  checksum: 10c0/25ac98e5bdbdaf05bfdab704e7098e54541b053e6022b03f1d3053297f84e13b876006fc4d600223fb82b322b271f74ba42fff1234dc6474b35bf244326eab0c
+  languageName: node
+  linkType: hard
+
+"react-native-nitro-modules@npm:^0.37.1":
+  version: 0.37.1
+  resolution: "react-native-nitro-modules@npm:0.37.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/5178f2ee891cb746b084fdf382b6020e366d8e4a81922a3f1d60a453d34fca6ebb1b00c4c28785c36385bc182ab76a30cba70441c39abbc25d3ad54db612e46e
+  languageName: node
+  linkType: hard
+
 "react-native-orientation-locker@npm:~1.6.0":
   version: 1.6.0
   resolution: "react-native-orientation-locker@npm:1.6.0"
@@ -16013,6 +16091,22 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 10c0/f5e06d4b38ebdbe082e344659deeb64f11e42567f5b89f48b9c6013118643b21687cea7b3f89f593ea77f3b32307423fcdfc26830d399eaa3335dafc16c4be5a
+  languageName: node
+  linkType: hard
+
+"react-native-vision-camera-barcode-scanner@npm:^5.2.3":
+  version: 5.2.3
+  resolution: "react-native-vision-camera-barcode-scanner@npm:5.2.3"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-nitro-image: "*"
+    react-native-nitro-modules: "*"
+    react-native-vision-camera: "*"
+  peerDependenciesMeta:
+    react-native-nitro-modules:
+      optional: true
+  checksum: 10c0/3081afe648ef397a074c4bbc3c421d2b03d5bca4cff550b61e23904bb78c0f9fd75176b5b0c91040c040e395091b9c64f84a39f743da4f358f55f41ed82f5f28
   languageName: node
   linkType: hard
 

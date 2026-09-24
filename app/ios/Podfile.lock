@@ -1589,7 +1589,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-attestation (3.0.22):
+  - react-native-attestation (3.1.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3175,7 +3175,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 3c805ea54675b00ef1755f23b3c1fccf34962b93
   React-microtasksnativemodule: 97a771dbbb4315c71579995b53e4e3e351a99d89
   React-mutationobservernativemodule: 530bff1bba9511a5133e3cf8170e3b2c0df49e89
-  react-native-attestation: fcfe57d4bde665568f3005c0187a6287b0f39d03
+  react-native-attestation: fb32bf53a2e6c67676f0dd83bd3ed2233e35fa0b
   react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-drop-shadow: aeb76e4b46c09924b4a8ee3d454dd00fdb5c62d9
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
