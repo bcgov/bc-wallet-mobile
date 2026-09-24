@@ -276,14 +276,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   }, [flowState, videoCallError, t])
 
   const handleCancelCall = useCallback(async () => {
-    try {
-      await cleanup()
-      navigation.navigate(BCSCScreens.StartCall)
-    } catch (error) {
-      logger.error('Error while cancelling video call setup', error as Error)
-      unknownErrorModal(error)
-    }
-  }, [cleanup, navigation, logger, unknownErrorModal])
+    await cleanup()
+    navigation.navigate(BCSCScreens.StartCall)
+  }, [cleanup, navigation])
 
   // when the user presses the end call button
   const handleEndCall = useCallback(async () => {

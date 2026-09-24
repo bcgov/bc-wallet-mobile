@@ -202,6 +202,10 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   // the UI can make use of
   const handleError = useCallback(
     (type: VideoCallErrorType, error: Error) => {
+      // After cleanup (e.g. the user cancelled setup), in-flight step failures are expected, not errors to surface.
+      if (abortedRef.current) {
+        return
+      }
       logger.error(`Video call error [${type}]:`, error)
       const videoCallError = createVideoCallError(type, error?.toString())
 
@@ -223,9 +227,18 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const uploadPreCallEvidence = useCallback(async (): Promise<boolean> => {
     try {
       await uploadSelfiePhoto()
+      if (abortedRef.current) {
+        return false
+      }
       const additionalEvidence = await processAdditionalEvidence()
+      if (abortedRef.current) {
+        return false
+      }
       await uploadEvidenceBinaries(additionalEvidence)
     } catch (error) {
+      if (abortedRef.current) {
+        return false
+      }
       // 409 on the evidence endpoints means the registration request is already approved
       if (isAxiosAppError(error, 409)) {
         const recovered = await recoverFromAlreadyVerified()
