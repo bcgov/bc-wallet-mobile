@@ -398,7 +398,7 @@ class BcscCoreModule internal constructor(
 
     /** Generates a new signing keypair; activation is implicit on generation — see the JS wrapper's warning. */
     @ReactMethod
-    fun createNewKeyPair(promise: Promise) {
+    override fun createNewKeyPair(promise: Promise) {
         // Captured once generated so a failure below can best-effort delete it (see cleanup fun).
         var bcscKeyPair: BcscKeyPair? = null
         try {
@@ -471,7 +471,8 @@ class BcscCoreModule internal constructor(
         tokenType: Double,
         promise: Promise,
     ) {
-        @Suppress("NAME_SHADOWING") val tokenType = tokenType.toInt()
+        @Suppress("NAME_SHADOWING")
+        val tokenType = tokenType.toInt()
         Log.d(NAME, "getToken called with tokenType: $tokenType")
 
         // First, get the account to obtain the account ID
@@ -770,7 +771,8 @@ class BcscCoreModule internal constructor(
         expiry: Double,
         promise: Promise,
     ) {
-        @Suppress("NAME_SHADOWING") val tokenType = tokenType.toInt()
+        @Suppress("NAME_SHADOWING")
+        val tokenType = tokenType.toInt()
         Log.d(NAME, "setToken called with tokenType: $tokenType")
 
         try {
@@ -874,7 +876,8 @@ class BcscCoreModule internal constructor(
         tokenType: Double,
         promise: Promise,
     ) {
-        @Suppress("NAME_SHADOWING") val tokenType = tokenType.toInt()
+        @Suppress("NAME_SHADOWING")
+        val tokenType = tokenType.toInt()
         Log.d(NAME, "deleteToken called with tokenType: $tokenType")
 
         try {
