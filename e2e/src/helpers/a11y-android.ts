@@ -20,8 +20,6 @@ const TOUCH_TARGET_RECOMMENDED_DP = 48
 const TOUCH_TARGET_WARN_BELOW_DP = 44
 /** WCAG 2.5.8 (AA). */
 const TOUCH_TARGET_MINIMUM_DP = 24
-/** Anything thinner is a row clipped at a scroll edge, not a control. */
-const CLIPPED_TARGET_DP = 4
 /** WCAG 1.4.3 (AA): 4.5:1 for body text, 3:1 for large text (≥18pt, or ≥14pt bold). */
 const CONTRAST_AA = 4.5
 const CONTRAST_AA_LARGE_TEXT = 3
@@ -56,6 +54,8 @@ interface UiNode {
   enabled: boolean
   displayed: boolean
   bounds?: Bounds
+  /** Bounds of the nearest scrolling ancestor — what clips this node's reported bounds. */
+  scroll?: Bounds
   children: UiNode[]
 }
 
@@ -70,11 +70,16 @@ function parseBounds(value: string): Bounds | undefined {
   return right > left && bottom > top ? { left, top, right, bottom } : undefined
 }
 
-function toNode($: CheerioAPI, el: DomElement): UiNode {
+const isScrollContainer = (cls: string): boolean => /(ScrollView|RecyclerView|ListView|ViewPager\d?)$/.test(cls)
+
+function toNode($: CheerioAPI, el: DomElement, scroll?: Bounds): UiNode {
   const $el = $(el)
   const attr = (name: string): string => $el.attr(name) ?? ''
+  const cls = attr('class')
+  const bounds = parseBounds(attr('bounds'))
+  const childScroll = isScrollContainer(cls) && bounds ? bounds : scroll
   return {
-    cls: attr('class'),
+    cls,
     id: attr('resource-id'),
     text: attr('text'),
     desc: attr('content-desc'),
@@ -82,11 +87,12 @@ function toNode($: CheerioAPI, el: DomElement): UiNode {
     clickable: attr('clickable') === 'true',
     enabled: attr('enabled') !== 'false',
     displayed: attr('displayed') !== 'false',
-    bounds: parseBounds(attr('bounds')),
+    bounds,
+    scroll,
     children: $el
       .children()
       .toArray()
-      .map((child) => toNode($, child)),
+      .map((child) => toNode($, child, childScroll)),
   }
 }
 
@@ -199,6 +205,17 @@ function checkLabels(nodes: UiNode[]): A11yIssue[] {
   return issues
 }
 
+/**
+ * Bounds are the visible slice: a row cut by the top or bottom edge of its scroll view reports only
+ * what is on screen, which is not a small control. (A genuinely short row sitting exactly on that
+ * edge is skipped too — the price of not knowing its full height.)
+ */
+function isClippedByScroll(node: UiNode, heightDp: number): boolean {
+  const { bounds, scroll } = node
+  if (!bounds || !scroll) return false
+  return (bounds.top === scroll.top || bounds.bottom === scroll.bottom) && heightDp < TOUCH_TARGET_WARN_BELOW_DP
+}
+
 function checkTouchTargets(nodes: UiNode[], density: number): A11yIssue[] {
   const toDp = (px: number): number => (px * 160) / density
   const issues: A11yIssue[] = []
@@ -208,7 +225,7 @@ function checkTouchTargets(nodes: UiNode[], density: number): A11yIssue[] {
     const width = Math.round(toDp(node.bounds.right - node.bounds.left))
     const height = Math.round(toDp(node.bounds.bottom - node.bounds.top))
     const smallest = Math.min(width, height)
-    if (smallest < CLIPPED_TARGET_DP || smallest >= TOUCH_TARGET_WARN_BELOW_DP) continue
+    if (smallest >= TOUCH_TARGET_WARN_BELOW_DP || isClippedByScroll(node, height)) continue
     const severity: A11ySeverity = smallest < TOUCH_TARGET_MINIMUM_DP ? 'error' : 'warning'
     issues.push(
       issue(
@@ -358,11 +375,26 @@ async function resolveDensity(): Promise<{ dpi: number; assumed: boolean }> {
   return { dpi: FALLBACK_DENSITY_DPI, assumed: true }
 }
 
+/**
+ * The tree as TalkBack sees it. The default dump keeps every view; `ignoreUnimportantViews` drops the
+ * ones marked not important for accessibility (RN `importantForAccessibility="no…"`), which is how a
+ * hidden tap target stops reading as an unnamed control.
+ */
+async function accessibilityTreeSource(): Promise<string> {
+  const before = (await driver.getSettings()) as { ignoreUnimportantViews?: boolean }
+  await driver.updateSettings({ ignoreUnimportantViews: true })
+  try {
+    return await driver.getPageSource()
+  } finally {
+    await driver.updateSettings({ ignoreUnimportantViews: before.ignoreUnimportantViews ?? false })
+  }
+}
+
 /** Run every heuristic against the current screen. Never throws — an engine failure is reported as such. */
 export async function auditAndroidScreen(): Promise<A11yEngineResult> {
   try {
     await driver.pause(SETTLE_MS)
-    const source = await driver.getPageSource()
+    const source = await accessibilityTreeSource()
     const density = await resolveDensity()
     const screenshot = await driver.takeScreenshot()
 
