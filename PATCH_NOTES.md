@@ -41,3 +41,9 @@ Upstream (Bifold `packages/remote-logs`): `src/logger.ts` L86 (remote-logging ov
 #### react-native-vision-camera-npm-5.2.3-cdc12318c5.patch
 
 Lets `mirrorMode` on `<Camera>`/`useCamera` be a function that returns the mode per output (`useCameraController`, `src` and `lib`). v5 otherwise applies one mode to every output, including the preview, so a mirrored selfie preview forces mirrored saved photos and videos. We keep the preview mirrored and save un-mirrored, so text held up reads correctly for ID Check (#4020). JS only, no native change. Pass a memoized function, because it's an effect dependency. Drop this patch if v5 adds per-output mirroring to `<Camera>`.
+
+#### react-native-video-npm-6.19.2-1043ec3883.patch
+
+**Android:** `ReactExoplayerView` builds against media3 1.9.0, the version VisionCamera v5's CameraX forces app-wide (see `RNVideo_media3Version` in `app/android/build.gradle`).
+
+**iOS:** react-native-video never manages the audio session in this app. `AudioSessionManager` is force-disabled by default, and activation/deactivation respect that flag. A player registers, and configures the session for playback, in `init`, before its `disableAudioSessionManagement` prop is applied. Its `setActive(true/false)` calls also ignored the flag. On the selfie-video review screen, that silenced the camera's microphone, so every Retake recorded digital silence. Only `VideoReviewScreen` uses react-native-video.

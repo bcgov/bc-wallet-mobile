@@ -71,3 +71,39 @@ index e16ac96d8a89055ee6e950777ce73388d22061ee..92ff5346b671054308d21c9881750d20
                  boolean isHeapReached = availableHeapInBytes > 0 && loadedBytes >= availableHeapInBytes;
                  if (isHeapReached) {
                      return false;
+diff --git a/ios/Video/AudioSessionManager.swift b/ios/Video/AudioSessionManager.swift
+index 93a8a9f9a11ab6b65c74d00c359fa8e469900603..130e6b49af55049ffb8edecaf9e6c2752c0d9d81 100644
+--- a/ios/Video/AudioSessionManager.swift
++++ b/ios/Video/AudioSessionManager.swift
+@@ -7,7 +7,10 @@ class AudioSessionManager {
+     private var videoViews = NSHashTable<RCTVideo>.weakObjects()
+     private var isAudioSessionActive = false
+     private var remoteControlEventsActive = false
+-    private var isAudioSessionManagementForcedDisabled = false
++    // PATCH (bc-wallet-mobile): disabled by default. A view registers (and configures the session for
++    // playback) in init, before its `disableAudioSessionManagement` prop is applied, which silenced the
++    // camera's microphone on iOS selfie-video Retakes.
++    private var isAudioSessionManagementForcedDisabled = true
+ 
+     private var isAudioSessionManagementDisabled: Bool {
+         if isAudioSessionManagementForcedDisabled {
+@@ -287,7 +290,8 @@ class AudioSessionManager {
+     }
+ 
+     private func activateAudioSession() {
+-        if isAudioSessionActive {
++        // PATCH (bc-wallet-mobile): activation ignored the disabled flag
++        if isAudioSessionActive || isAudioSessionManagementForcedDisabled {
+             return
+         }
+ 
+@@ -300,7 +304,8 @@ class AudioSessionManager {
+     }
+ 
+     private func deactivateAudioSession() {
+-        if !isAudioSessionActive {
++        // PATCH (bc-wallet-mobile): deactivation ignored the disabled flag
++        if !isAudioSessionActive || isAudioSessionManagementForcedDisabled {
+             return
+         }
+ 

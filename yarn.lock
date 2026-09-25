@@ -15952,11 +15952,11 @@ __metadata:
 
 "react-native-video@patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch":
   version: 6.19.2
-  resolution: "react-native-video@patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch::version=6.19.2&hash=84fde1"
+  resolution: "react-native-video@patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch::version=6.19.2&hash=742bd4"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/0de67356dfd9454cb01bfcb48902e1b424bf7cd10c3a28d06d0375b243fe22fe431bb1ec331e1ce1ecd155fb04a5c0b0457e99b85a7a7d4ed21a15d2784a0a03
+  checksum: 10c0/428fe11b05a32296bd93b07f9b6981f8c95fd99b919c8b51494c62f13cd088c80639067f009da57c04c7472ab6d6f80e6fe62963f4bf06c742e88b08b7c6884f
   languageName: node
   linkType: hard
 
