@@ -23,10 +23,10 @@ import { CommonActions, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
+import { Image, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { OnLoadData } from 'react-native-video'
-import { Video } from 'react-native-video'
+import { Video, ViewType } from 'react-native-video'
 
 export const VerificationVideoCache = new MediaCache()
 
@@ -210,18 +210,23 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       <ThemedText variant={'headingFour'} style={styles.heading}>
         {t('BCSC.SendVideo.VideoReview.Heading')}
       </ThemedText>
-      <Video
-        source={{ uri: videoPath }}
-        // The screen keeps rendering through the exit transition, so without this the recording's audio
-        // plays over the next screen.
-        paused={paused || !isFocused}
-        audioOutput={'speaker'}
-        repeat
-        resizeMode={'cover'}
-        style={styles.video}
-        onLoad={(data) => onVideoLoad(data)}
-        disableAudioSessionManagement
-      />
+      {/* The screen keeps rendering through the exit transition, and on Android the player's view outlives it
+          and its audio plays on. Swapping in the still thumbnail as soon as the screen blurs avoids both. */}
+      {isFocused ? (
+        <Video
+          source={{ uri: videoPath }}
+          paused={paused}
+          audioOutput={'speaker'}
+          repeat
+          resizeMode={'cover'}
+          style={styles.video}
+          onLoad={(data) => onVideoLoad(data)}
+          disableAudioSessionManagement
+          viewType={ViewType.TEXTURE}
+        />
+      ) : (
+        <Image source={{ uri: `file://${videoThumbnailPath}` }} style={styles.video} resizeMode={'cover'} />
+      )}
       <TouchableOpacity
         style={styles.pauseButton}
         onPress={onTogglePause}
