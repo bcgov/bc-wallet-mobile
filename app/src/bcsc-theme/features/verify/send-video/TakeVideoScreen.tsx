@@ -232,7 +232,6 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
 
     let snapshot: PhotoFile
     try {
-      // snapshot = await cameraRef.current.takePhoto({ flash: 'off', enableShutterSound: false })
       snapshot = await takePhoto()
     } catch (error) {
       // Without this catch a failure here (e.g. device out of disk space) is an unhandled

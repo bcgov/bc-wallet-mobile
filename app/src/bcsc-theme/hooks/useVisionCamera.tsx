@@ -2,7 +2,6 @@ import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useMemo, useRef } from 'react'
 import { activateAudioSessionForRecording } from 'react-native-bcsc-core'
 import {
-  CameraOutput,
   CameraPhotoOutput,
   CameraRef,
   CameraVideoOutput,
@@ -30,7 +29,6 @@ interface VisionCameraOptions {
   deviceFilter?: DeviceFilter
   photoOutput?: CameraPhotoOutput
   videoOutput?: CameraVideoOutput
-  scannerOutput?: CameraOutput
 }
 
 /**
