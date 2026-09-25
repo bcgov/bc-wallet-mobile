@@ -1940,6 +1940,43 @@ class BcscCore: NSObject {
     resolve(hashString)
   }
 
+  /// Copies a recorded video into an MP4 container without re-encoding, then deletes the original.
+  ///
+  /// VisionCamera v5 records with `AVCaptureMovieFileOutput`, which always writes QuickTime even when the
+  /// file is named `.mp4`, and IAS only accepts MP4. The passthrough export keeps the original streams.
+  /// Rejects if the result has no audio track: this is for selfie videos, which must have sound.
+  ///
+  /// - Parameters:
+  ///   - path: Path or `file://` URI of the recorded video.
+  ///   - resolve: Path of the new MP4, in the same form (path or `file://` URI) as the input.
+  ///   - reject: An error if the path is invalid or the export fails.
+  func remuxVideoToMp4(
+    _ path: String, resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let isFileURI = path.hasPrefix("file://")
+    guard let inputURL = isFileURI ? URL(string: path) : URL(fileURLWithPath: path) else {
+      reject("E_INVALID_PATH", "Invalid video path", nil)
+      return
+    }
+
+    VideoRemuxer.remuxToMp4(inputURL) { result in
+      switch result {
+      case let .success(outputURL):
+        try? FileManager.default.removeItem(at: inputURL)
+        resolve(isFileURI ? outputURL.absoluteString : outputURL.path)
+      case .failure(.unsupported):
+        reject("E_REMUX_UNSUPPORTED", "Video can't be exported as MP4", nil)
+      case let .failure(.exportFailed(error)):
+        let reason = error?.localizedDescription ?? "unknown error"
+        reject("E_REMUX_FAILED", "Failed to convert video to MP4: \(reason)", error)
+      case .failure(.audioLost):
+        // A silent video would still upload and only be caught at ID Check review
+        reject("E_REMUX_AUDIO_LOST", "The audio track was lost converting the video to MP4", nil)
+      }
+    }
+  }
+
   // MARK: - PIN Authentication Methods
 
   /// Sets a PIN for the current account

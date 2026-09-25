@@ -106,6 +106,11 @@ abstract class BcscCoreSpec internal constructor(
         promise: Promise,
     )
 
+    abstract fun remuxVideoToMp4(
+        path: String,
+        promise: Promise,
+    )
+
     abstract fun decodePayload(
         jweString: String,
         key: com.facebook.react.bridge.ReadableMap?,

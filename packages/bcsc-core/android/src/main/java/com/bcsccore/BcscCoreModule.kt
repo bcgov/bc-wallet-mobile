@@ -1735,6 +1735,15 @@ class BcscCoreModule internal constructor(
         }
     }
 
+    /** Android recordings (CameraX) are already MP4, so this only exists to match the iOS remux. */
+    @ReactMethod
+    override fun remuxVideoToMp4(
+        path: String,
+        promise: Promise,
+    ) {
+        promise.resolve(path)
+    }
+
     @ReactMethod
     override fun hashBase64(
         base64: String,

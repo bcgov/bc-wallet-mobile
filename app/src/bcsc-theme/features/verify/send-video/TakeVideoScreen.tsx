@@ -6,6 +6,7 @@ import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVisionCamera } from '@/bcsc-theme/hooks/useVisionCamera'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isBackgroundedAppState } from '@/bcsc-theme/utils/app-state'
+import { toMp4VideoPath } from '@/bcsc-theme/utils/file-info'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { hitSlop, MAX_SELFIE_VIDEO_DURATION_SECONDS, MIN_PROMPT_DURATION_SECONDS } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
@@ -268,8 +269,21 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           return
         }
 
+        let videoPath: string
+        try {
+          videoPath = await toMp4VideoPath(video.filePath)
+        } catch (error) {
+          logger.error('Failed to convert the selfie video to MP4', error as Error)
+          emitErrorModal(
+            t('BCSC.SendVideo.TakeVideo.RecordingError'),
+            t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription'),
+            getCameraError(error)
+          )
+          return
+        }
+
         navigation.navigate(BCSCScreens.VideoReview, {
-          videoPath: video.filePath,
+          videoPath,
           videoThumbnailPath: snapshot.filePath,
         })
       },
