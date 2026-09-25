@@ -188,7 +188,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   onError,
 }) => {
   // Derive scanner code types from the declared scan zones (deduped)
-  const codeTypesKey = [...new Set(scanZones.flatMap((z) => z.types))].sort().join(',')
+  const codeTypesKey = [...new Set(scanZones.flatMap((z) => z.types))].sort((a, b) => a.localeCompare(b)).join(',')
   // Keyed on content so a new `scanZones` array with the same types doesn't recreate the native scanner output
   const codeTypes = useMemo(
     () => (codeTypesKey ? codeTypesKey.split(',') : []) as TargetBarcodeFormat[],
