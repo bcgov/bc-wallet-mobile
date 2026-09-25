@@ -39,7 +39,7 @@ export const toScannedCode = (barcode: Barcode): ScannedCode => {
  * Extended code interface with position and orientation metadata
  */
 export interface EnhancedCode extends ScannedCode {
-  /** Position of the barcode in the camera frame */
+  /** Position of the barcode in camera container coordinates */
   position?: Rect
   /** Orientation of the barcode (horizontal or vertical) */
   orientation?: 'horizontal' | 'vertical'
@@ -93,53 +93,24 @@ export const calculateBarcodeOrientation = (corners?: { x: number; y: number }[]
 export const clampZoom = (target: number, min: number, max: number): number => Math.max(min, Math.min(target, max))
 
 /**
- * Expand a highlight bounding box on Android to include the quiet zones that
- * ML Kit's `boundingBox` omits. On other platforms the position is returned as-is.
+ * Transform a barcode box from scanner-frame space to preview container space.
  *
- * @param position Transformed barcode position in container coordinates
- * @param pad Padding in pixels to add on each side (default 8)
- * @returns Padded position on Android, original position on other platforms
- */
-export const getPaddedHighlightPosition = (position: Rect, pad: number = 8): Rect => {
-  if (Platform.OS !== 'android') {
-    return position
-  }
-  return {
-    x: position.x - pad,
-    y: position.y - pad,
-    width: position.width + pad * 2,
-    height: position.height + pad * 2,
-  }
-}
-
-/**
- * Transform coordinates from CodeScannerFrame space to preview container space.
+ * `cameraFrameWidth`/`cameraFrameHeight` are the scanner output's `currentResolution`, which is
+ * unrotated (sensor landscape) on both platforms. The box itself differs:
  *
- * Key platform differences (from VisionCamera v4 native source code):
+ * **iOS**: the scanner output passes ML Kit the raw landscape buffer without rotating it, so
+ *   the box is in landscape buffer pixels. Normalize, then rotate into portrait.
  *
- * **iOS** (`CameraSession+CodeScanner.swift`):
- *   - `CodeScannerFrame` = `device.activeFormat.videoDimensions` → always LANDSCAPE (e.g., 1920×1080)
- *   - `code.frame` = `AVMetadataObject.bounds` (normalized 0–1) × videoDimensions
- *   - `AVMetadataObject.bounds` are already orientation-corrected by AVFoundation:
- *     bounds.x = horizontal fraction (left→right), bounds.y = vertical fraction (top→bottom)
- *   - BUT VisionCamera scales them by landscape dims: x*1920, y*1080
- *   - This creates coordinates that are positionally correct but in a mismatched aspect ratio
- *   - Fix: Normalize back to 0–1 fractions, then remap to portrait frame dimensions
- *
- * **Android** (`CodeScannerPipeline.kt`):
- *   - `CodeScannerFrame` = `InputImage.width/height` → RAW (unrotated) dimensions (e.g., 640×480)
- *   - `code.frame` = ML Kit `Barcode.boundingBox` → in ROTATED (portrait) space (e.g., 480×640)
- *   - ML Kit applies `rotationDegrees` internally, returning bounding boxes in upright coords
- *   - But `InputImage.width/height` returns pre-rotation dimensions
- *   - Fix: Swap frame dimensions only (coordinates are already in portrait space)
+ * **Android**: ML Kit applies the image's `rotationDegrees`, so the box is already upright
+ *   (e.g. 3000×4000) while the resolution is not (4000×3000). Swap the frame dimensions only.
  *
  * With resizeMode="cover", the camera preview fills the container while maintaining
  * aspect ratio, center-cropping any overflow. We use Math.max(scaleX, scaleY) for
  * the uniform scale and compute centering offsets for the cropped dimension.
  *
- * @param frame Code bounding box in camera sensor coordinate space
- * @param cameraFrameWidth Width reported by CodeScannerFrame
- * @param cameraFrameHeight Height reported by CodeScannerFrame
+ * @param frame Code bounding box in scanner-frame coordinates
+ * @param cameraFrameWidth Width of the scanner output's `currentResolution`
+ * @param cameraFrameHeight Height of the scanner output's `currentResolution`
  * @param containerWidth Width of the camera preview container in pixels
  * @param containerHeight Height of the camera preview container in pixels
  * @param windowDimensions Current window dimensions, used to detect device orientation
@@ -168,23 +139,10 @@ export const transformBarcodeCoordinates = (
 
   if (isDevicePortrait) {
     if (Platform.OS === 'ios') {
-      // iOS: AVMetadataObject.bounds are in RAW landscape sensor space.
-      // VisionCamera scales normalized bounds (0–1) by videoDimensions:
-      //   code.x = bounds.x * size.width  (sensor long/short axis)
-      //   code.y = bounds.y * size.height  (sensor short/long axis)
-      //
-      // Normalizing by the SAME dimensions recovers the original 0–1 bounds,
-      // regardless of whether size.width > size.height or vice versa.
-      //
-      // For portrait display, from empirical testing:
-      //   bounds.x (sensor "X") corresponds to physical VERTICAL (top-to-bottom)
-      //   bounds.y (sensor "Y") corresponds to physical HORIZONTAL (right-to-left, inverted)
-      //
-      // Portrait mapping - sensor coordinates to display coordinates:
-      //   Empirically: boundsY maps to display X (but mirrored: 1-Y-H)
-      //                boundsX maps to display Y
-      const normX = fx / cameraFrameWidth // recovers bounds.x
-      const normY = fy / cameraFrameHeight // recovers bounds.y
+      // iOS: the box is in the raw landscape buffer. For the portrait back camera,
+      // buffer X runs top-to-bottom on screen and buffer Y runs right-to-left.
+      const normX = fx / cameraFrameWidth
+      const normY = fy / cameraFrameHeight
       const normW = fWidth / cameraFrameWidth
       const normH = fHeight / cameraFrameHeight
 
@@ -198,10 +156,7 @@ export const transformBarcodeCoordinates = (
       fWidth = normH * fw
       fHeight = normW * fh
     } else if (isFrameLandscape) {
-      // Android: ML Kit applies rotationDegrees internally and returns boundingBox
-      // in portrait coordinate space (e.g., 480×640), but InputImage.width/height
-      // (used for CodeScannerFrame) returns raw unrotated dimensions (e.g., 640×480).
-      // Just swap frame dimensions to match the bounding box coordinate space.
+      // Android: the box is already upright; only the resolution needs swapping.
       fw = cameraFrameHeight
       fh = cameraFrameWidth
     }

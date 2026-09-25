@@ -76,7 +76,12 @@ jest.mock('react-native-vision-camera', () => {
 // `ScannedCode` (type/value/frame/corners); this adapter converts it to the v5 `Barcode` shape.
 jest.mock('react-native-vision-camera-barcode-scanner', () => ({
   useBarcodeScannerOutput: jest.fn((config: any) => {
-    mockCodeScannerCallback = (codes: any[]) =>
+    // The optional frame stands in for the output's `currentResolution` (the scanner-frame size).
+    const output: { mock: string; currentResolution?: { width: number; height: number } } = {
+      mock: 'scanner-output',
+    }
+    mockCodeScannerCallback = (codes: any[], frame?: { width: number; height: number }) => {
+      output.currentResolution = frame
       config.onBarcodeScanned(
         codes.map((code) => ({
           format: code.type,
@@ -91,7 +96,8 @@ jest.mock('react-native-vision-camera-barcode-scanner', () => ({
           cornerPoints: code.corners ?? [],
         }))
       )
-    return { mock: 'scanner-output' }
+    }
+    return output
   }),
 }))
 
@@ -182,16 +188,6 @@ describe('CodeScanningCamera', () => {
     const tree = render(
       <BasicAppContext>
         <CodeScanningCamera {...defaultProps} initialZoom={2.0} />
-      </BasicAppContext>
-    )
-
-    expect(tree).toMatchSnapshot()
-  })
-
-  it('renders with barcode highlight enabled', () => {
-    const tree = render(
-      <BasicAppContext>
-        <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
       </BasicAppContext>
     )
 
@@ -410,7 +406,7 @@ describe('CodeScanningCamera', () => {
     it('renders with enableScanZones flag enabled', () => {
       const tree = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} enableScanZones={true} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} enableScanZones={true} />
         </BasicAppContext>
       )
 
@@ -420,12 +416,7 @@ describe('CodeScanningCamera', () => {
     it('renders with both custom scan zones and enableScanZones', () => {
       const tree = render(
         <BasicAppContext>
-          <CodeScanningCamera
-            {...defaultProps}
-            scanZones={customScanZones}
-            enableScanZones={true}
-            showBarcodeHighlight={true}
-          />
+          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
         </BasicAppContext>
       )
 
@@ -474,7 +465,7 @@ describe('CodeScanningCamera', () => {
     it('processes codes when scanner detects barcodes', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -504,7 +495,7 @@ describe('CodeScanningCamera', () => {
     it('handles empty codes array', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -520,7 +511,7 @@ describe('CodeScanningCamera', () => {
     it('processes codes with vertical orientation', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -550,7 +541,7 @@ describe('CodeScanningCamera', () => {
     it('processes multiple codes simultaneously', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -658,7 +649,7 @@ describe('CodeScanningCamera', () => {
     it('starts in scanning state', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
       // Should have scan-zone without locked state buttons
@@ -668,7 +659,7 @@ describe('CodeScanningCamera', () => {
     it('does not show locked buttons in initial state', () => {
       const { queryByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
       // Locked state buttons should not be visible initially
@@ -692,7 +683,7 @@ describe('CodeScanningCamera', () => {
     it('detects codes aligned with scan zones', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} />
         </BasicAppContext>
       )
 
@@ -731,12 +722,7 @@ describe('CodeScanningCamera', () => {
     it('processes codes with enableScanZones for debug mode', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera
-            {...defaultProps}
-            scanZones={customScanZones}
-            enableScanZones={true}
-            showBarcodeHighlight={true}
-          />
+          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
         </BasicAppContext>
       )
 
@@ -862,11 +848,71 @@ describe('CodeScanningCamera', () => {
     })
   })
 
+  describe('Barcode coordinate conversion', () => {
+    // Landscape 1600×1200 scanner frame into a 300×400 container: scale 0.25, no crop.
+    // The raw iOS buffer box (640,400)×(160,400) maps to the container box (100,160)×(100,40),
+    // inside BCSC_SN_SCAN_ZONES (x:[54,246], y:[80,288]); the raw box is off-screen.
+    const scannerFrame = { width: 1600, height: 1200 }
+    const bufferCode = {
+      type: 'code-39',
+      value: 'BUFFER_CODE',
+      frame: { x: 640, y: 400, width: 160, height: 400 },
+      corners: [],
+    }
+
+    const scanFiveFrames = async (frame?: { width: number; height: number }) => {
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+      await act(async () => {
+        fireEvent(getByTestId('camera-preview-container'), 'layout', {
+          nativeEvent: { layout: { x: 0, y: 0, width: 300, height: 400 } },
+        })
+      })
+      for (let i = 0; i < 5; i++) {
+        await act(async () => {
+          mockCodeScannerCallback!([bufferCode], frame)
+        })
+      }
+    }
+
+    it('maps the scanner-frame box into the container before checking alignment', async () => {
+      await scanFiveFrames(scannerFrame)
+
+      await waitFor(() => {
+        expect(mockOnCodeScanned).toHaveBeenCalledWith([
+          expect.objectContaining({
+            value: 'BUFFER_CODE',
+            isAligned: true,
+            position: {
+              x: expect.closeTo(100),
+              y: expect.closeTo(160),
+              width: expect.closeTo(100),
+              height: expect.closeTo(40),
+            },
+          }),
+        ])
+      })
+    })
+
+    it('falls back to the raw box when the scanner resolution is unknown', async () => {
+      await scanFiveFrames()
+
+      await waitFor(() => {
+        expect(mockOnCodeScanned).toHaveBeenCalledWith([
+          expect.objectContaining({ value: 'BUFFER_CODE', isAligned: false, position: bufferCode.frame }),
+        ])
+      })
+    })
+  })
+
   describe('Consecutive scan validation', () => {
     it('tracks consecutive readings of the same code', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -891,7 +937,7 @@ describe('CodeScanningCamera', () => {
     it('resets count when code value changes', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -935,7 +981,7 @@ describe('CodeScanningCamera', () => {
     it('decays the reading count across a single blank frame instead of resetting it', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -987,7 +1033,7 @@ describe('CodeScanningCamera', () => {
 
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} scanZones={twoZones} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} scanZones={twoZones} />
         </BasicAppContext>
       )
 
@@ -1033,7 +1079,7 @@ describe('CodeScanningCamera', () => {
 
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1072,7 +1118,7 @@ describe('CodeScanningCamera', () => {
 
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1106,7 +1152,7 @@ describe('CodeScanningCamera', () => {
 
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1140,7 +1186,7 @@ describe('CodeScanningCamera', () => {
     it('handles codes without frame property', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1164,7 +1210,7 @@ describe('CodeScanningCamera', () => {
     it('handles codes without corners', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1188,7 +1234,7 @@ describe('CodeScanningCamera', () => {
     it('handles codes with single corner point', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1214,7 +1260,7 @@ describe('CodeScanningCamera', () => {
     it('displays decoded value for code-39 barcodes', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1238,7 +1284,7 @@ describe('CodeScanningCamera', () => {
     it('displays decoded value for code-128 barcodes', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1272,7 +1318,7 @@ describe('CodeScanningCamera', () => {
     it('clears highlights after timeout when no codes detected', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1398,7 +1444,7 @@ describe('CodeScanningCamera', () => {
 
       const { unmount } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1432,7 +1478,7 @@ describe('CodeScanningCamera', () => {
       // Need 2+ codes with 5+ consecutive readings each to trigger locked state
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} enableScanZones={true} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} enableScanZones={true} />
         </BasicAppContext>
       )
 
@@ -1476,7 +1522,7 @@ describe('CodeScanningCamera', () => {
     it('updates detected codes with position changes', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -1538,12 +1584,7 @@ describe('CodeScanningCamera', () => {
     it('renders debug crosshairs when enableScanZones and frameSize are set', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera
-            {...defaultProps}
-            scanZones={customScanZones}
-            enableScanZones={true}
-            showBarcodeHighlight={true}
-          />
+          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
         </BasicAppContext>
       )
 
@@ -1576,12 +1617,7 @@ describe('CodeScanningCamera', () => {
     it('renders scan zone debug overlays', async () => {
       const tree = render(
         <BasicAppContext>
-          <CodeScanningCamera
-            {...defaultProps}
-            scanZones={customScanZones}
-            enableScanZones={true}
-            showBarcodeHighlight={true}
-          />
+          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
         </BasicAppContext>
       )
 
@@ -1612,7 +1648,7 @@ describe('CodeScanningCamera', () => {
     it('detects which zone a code belongs to for focus cycling', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} />
         </BasicAppContext>
       )
 
@@ -1644,7 +1680,7 @@ describe('CodeScanningCamera', () => {
     it('rejects codes with mismatched types for zones', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} showBarcodeHighlight={true} />
+          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} />
         </BasicAppContext>
       )
 
@@ -1718,12 +1754,7 @@ describe('CodeScanningCamera', () => {
     it('transitions to aligned state with 2+ codes qualifying', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera
-            {...defaultProps}
-            scanZones={customScanZones}
-            enableScanZones={true}
-            showBarcodeHighlight={true}
-          />
+          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
         </BasicAppContext>
       )
 
@@ -1771,7 +1802,7 @@ describe('CodeScanningCamera', () => {
     it('adds padding to highlight position on Android', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} enableScanZones={true} />
+          <CodeScanningCamera {...defaultProps} enableScanZones={true} />
         </BasicAppContext>
       )
 
@@ -1808,12 +1839,7 @@ describe('CodeScanningCamera', () => {
 
       const { getByTestId } = render(
         <BasicAppContext>
-          <CodeScanningCamera
-            {...defaultProps}
-            scanZones={customScanZones}
-            enableScanZones={true}
-            showBarcodeHighlight={true}
-          />
+          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
         </BasicAppContext>
       )
 

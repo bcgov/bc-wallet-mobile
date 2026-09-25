@@ -17,7 +17,7 @@ import {
 } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Reanimated, { Extrapolation, interpolate, runOnJS, useSharedValue } from 'react-native-reanimated'
-import { Camera, CameraRef, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import { Camera, CameraOutput, CameraRef, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
 import { BarcodeFormat, TargetBarcodeFormat, useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 
 import { ensureAppError } from '@/errors/errorHandler'
@@ -36,11 +36,11 @@ import {
   clampZoom,
   determineScanState,
   getCameraMetadata,
-  getPaddedHighlightPosition,
   isCodeAlignedWithZones,
   isRecoverableCameraRuntimeError,
   mergeLockedCodesWithAccumulated,
   toScannedCode,
+  transformBarcodeCoordinates,
 } from './utils/camera'
 
 export type { EnhancedCode, ScanZone }
@@ -83,13 +83,6 @@ export interface CodeScanningCameraProps {
    * @default 'back'
    */
   cameraType?: 'front' | 'back'
-
-  /**
-   * Enable/disable barcode highlight overlay
-   * When enabled, shows visual feedback for detected barcodes
-   * @default false
-   */
-  showBarcodeHighlight?: boolean
 
   /**
    * Enable scan zone tracking and saving (dev/debug feature).
@@ -174,7 +167,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   onCodeScanned,
   style,
   cameraType = 'back',
-  showBarcodeHighlight = false,
   enableScanZones = false,
   scanZones,
   initialZoom = 2,
@@ -205,7 +197,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const [torchEnabled, setTorchEnabled] = useState(false)
   // When `torchActive`/`onToggleTorch` are provided, the parent owns torch state.
   const isTorchOn = torchActive ?? torchEnabled
-  const { width } = useWindowDimensions()
+  const windowDimensions = useWindowDimensions()
   const { hasPermission, requestPermission } = useCameraPermission()
   const isFocused = useIsFocused()
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
@@ -216,12 +208,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const zoomOffset = useSharedValue(0)
   const [zoomDisplay, setZoomDisplay] = useState(initialZoom)
 
-  // Barcode highlight state
-  const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])
-  const highlightFadeAnim = useRef(new Animated.Value(0)).current
-
-  const clearHighlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   // Prevents initialZoom from being reapplied on every screen re-focus or camera re-init
   const hasInitializedRef = useRef(false)
 
@@ -230,8 +216,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // Store locked codes for deferred callback when user taps "Continue"
   const lockedScanRef = useRef<{ codes: EnhancedCode[] } | null>(null)
 
-  // --- Configurable highlight thresholds ---
-  // Reading count required per code to reach "locked" state (green with border).
+  // --- Configurable scan thresholds ---
+  // Reading count required per code to reach "locked" state.
   // The count accumulates on each frame the code is detected and decays by
   // READING_DECAY_PER_MISSED_FRAME (not reset to 0) on a missed frame — see
   // decayStaleReadings — so it isn't strictly "consecutive" readings.
@@ -406,9 +392,19 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   /** Enhance a single barcode with position, orientation, alignment, and validation metadata */
   const enhanceSingleCode = (code: ScannedCode): EnhancedCode => {
-    // v5 reports the box in full-resolution frame pixels, not screen points, and it isn't converted.
-    // Only scan-zone alignment (focus-cycle priority) and the highlight overlay read it; scanning doesn't.
-    const position: Rect = code.frame
+    const frameSize = scannerOutputRef.current?.currentResolution
+    // Falls back to the raw scanner-frame box until the container is laid out and the scanner is running
+    const position: Rect =
+      containerSize && frameSize
+        ? transformBarcodeCoordinates(
+            code.frame,
+            frameSize.width,
+            frameSize.height,
+            containerSize.width,
+            containerSize.height,
+            windowDimensions
+          )
+        : code.frame
 
     const corners = code.corners
     const orientation = calculateBarcodeOrientation(corners)
@@ -525,60 +521,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       lockReadingThreshold: LOCK_READING_THRESHOLD,
     })
 
-  /** Update barcode highlight overlays with fade animations */
-  const updateBarcodeHighlights = (enhancedCodes: EnhancedCode[], newScanState: ScanState) => {
-    if (!showBarcodeHighlight) {
-      return
-    }
-
-    // Clear any pending clear timeout since we have detected codes
-    if (clearHighlightTimeoutRef.current) {
-      clearTimeout(clearHighlightTimeoutRef.current)
-      clearHighlightTimeoutRef.current = null
-    }
-
-    // Update if codes changed OR if position changed (for real-time tracking as camera moves)
-    const codesChanged =
-      detectedCodes.length !== enhancedCodes.length ||
-      enhancedCodes.some(
-        (code, idx) =>
-          !detectedCodes[idx] ||
-          detectedCodes[idx].value !== code.value ||
-          detectedCodes[idx].type !== code.type ||
-          // Track position changes for live updates as camera moves
-          (code.position &&
-            detectedCodes[idx].position &&
-            (Math.abs(code.position.x - detectedCodes[idx].position!.x) > 5 ||
-              Math.abs(code.position.y - detectedCodes[idx].position!.y) > 5 ||
-              Math.abs(code.position.width - detectedCodes[idx].position!.width) > 5 ||
-              Math.abs(code.position.height - detectedCodes[idx].position!.height) > 5))
-      )
-
-    if (codesChanged) {
-      setDetectedCodes(enhancedCodes)
-
-      // Fade in the highlight
-      Animated.timing(highlightFadeAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }).start()
-    }
-
-    // Set a timeout to clear highlights if no codes are detected for 500ms
-    // Skip when locked — highlights should persist until user action
-    if (newScanState !== 'locked') {
-      clearHighlightTimeoutRef.current = setTimeout(() => {
-        setDetectedCodes([])
-        Animated.timing(highlightFadeAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }).start()
-      }, 500)
-    }
-  }
-
   /** Accumulate validated codes across frames within a time window */
   const accumulateValidatedResults = (enhancedCodes: EnhancedCode[]) => {
     const now = Date.now()
@@ -619,16 +561,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     lockedScanRef.current = {
       codes: mergeLockedCodesWithAccumulated(qualifyingCodes, accumulatedCodes.current, ACCUMULATION_WINDOW_MS),
     }
-    // Cancel any clear timeout so highlights persist
-    if (clearHighlightTimeoutRef.current) {
-      clearTimeout(clearHighlightTimeoutRef.current)
-      clearHighlightTimeoutRef.current = null
-    }
   }
 
   /**
    * Handle a frame where no codes are detected — decay (don't reset) validation
-   * readings, and clear highlights / drop back to 'scanning' once readings have
+   * readings, and drop back to 'scanning' once readings have
    * fully decayed to empty. This keeps a single blank frame from resetting lock
    * progress or flickering the outline back to its unread colour.
    */
@@ -640,23 +577,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     decayStaleReadings(new Set())
 
     if (barcodeReadings.current.size > 0) {
-      // Still have partially-decayed readings — hold the current scan state/highlights.
+      // Still have partially-decayed readings — hold the current scan state.
       return
     }
 
-    // Fully decayed — clear highlights and validation state
-    // (but never reset if locked — highlights are frozen)
+    // Fully decayed — clear validation state
     detectedZoneIndices.current = new Set()
     setScanState('scanning')
-    if (showBarcodeHighlight && detectedCodes.length > 0) {
-      setDetectedCodes([])
-      // Fade out the highlight
-      Animated.timing(highlightFadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start()
-    }
   }
 
   // Event-driven gate for the idle-nudge tick below: doFocus() only actually calls
@@ -680,7 +607,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     barcodeFormats: codeTypes,
     outputResolution: 'full',
     onBarcodeScanned: (barcodes) => {
-      // When locked, completely pause scanning — highlights are frozen on screen
+      // When locked, completely pause scanning
       if (isLockedRef.current) {
         return
       }
@@ -700,7 +627,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       updateZoneDetectionTracking(enhancedCodes)
       const { newScanState, qualifyingCodes } = computeScanState(enhancedCodes)
       setScanState(newScanState)
-      updateBarcodeHighlights(enhancedCodes, newScanState)
       accumulateValidatedResults(enhancedCodes)
       handleLockTransition(qualifyingCodes, newScanState)
     },
@@ -708,6 +634,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       logger.error('[CodeScanningCamera] Error scanning barcode', error)
     },
   })
+  // Read by enhanceSingleCode, which is declared before the output exists
+  const scannerOutputRef = useRef<CameraOutput | null>(null)
+  scannerOutputRef.current = scannerOutput
 
   useEffect(() => {
     if (!hasPermission) {
@@ -716,10 +645,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
     // Cleanup timeout on unmount
     return () => {
-      if (clearHighlightTimeoutRef.current) {
-        clearTimeout(clearHighlightTimeoutRef.current)
-        clearHighlightTimeoutRef.current = null
-      }
       if (focusCycleTimerRef.current) {
         clearInterval(focusCycleTimerRef.current)
         focusCycleTimerRef.current = null
@@ -727,10 +652,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
   }, [hasPermission, requestPermission])
 
-  const scanSize = Math.min(width - 80, 300)
+  const scanSize = Math.min(windowDimensions.width - 80, 300)
   const scanAreaDimensions = { width: scanSize, height: scanSize / 4 }
-
-  const getHighlightPosition = useCallback((position: Rect) => getPaddedHighlightPosition(position), [])
 
   /**
    * Check if a code's box falls within a scan zone (with proportional margin).
@@ -738,8 +661,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * Otherwise falls back to the default centered scan zone overlay.
    *
    * Uses a box-in-zone check for alignment, with proportional expansion by
-   * `marginFactor` on each side. This keeps highlights closely matched to
-   * the scan zone while allowing a small tolerance when needed.
+   * `marginFactor` on each side for a small tolerance.
    *
    * @param codePosition The detected code's position in container coordinates
    * @param codeType Optional barcode type for type-aware matching with custom zones
@@ -892,11 +814,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       accumulatedCodesRef.clear()
       detectedZoneIndices.current = new Set()
 
-      // Clear any pending animation timeouts to prevent memory leaks
-      if (clearHighlightTimeoutRef.current) {
-        clearTimeout(clearHighlightTimeoutRef.current)
-        clearHighlightTimeoutRef.current = null
-      }
       if (focusCycleTimerRef.current) {
         clearInterval(focusCycleTimerRef.current)
         focusCycleTimerRef.current = null
@@ -998,7 +915,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       return
     }
 
-    const scanZones = detectedCodes
+    // The save button only renders while locked, so the locked codes are the ones on screen
+    const scanZones = (lockedScanRef.current?.codes ?? [])
       .filter((c) => c.value && c.position)
       .map((c) => ({
         types: [c.type],
@@ -1036,7 +954,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           .join('\n'),
       [{ text: 'OK' }]
     )
-  }, [detectedCodes, containerSize, logger])
+  }, [containerSize, logger])
 
   const resetScanningState = useCallback(() => {
     isLockedRef.current = false
@@ -1044,21 +962,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     setScanState('scanning')
     barcodeReadings.current.clear()
     accumulatedCodes.current.clear()
-    setDetectedCodes([])
-
-    // Clean up any pending timeouts
-    if (clearHighlightTimeoutRef.current) {
-      clearTimeout(clearHighlightTimeoutRef.current)
-      clearHighlightTimeoutRef.current = null
-    }
-
-    // Fade out highlights
-    Animated.timing(highlightFadeAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start()
-  }, [highlightFadeAnim])
+  }, [])
 
   /** Resume scanning without firing the callback (used in scan zone mode) */
   const handleContinueScanning = useCallback(() => {
@@ -1141,23 +1045,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       borderWidth: 2,
       borderColor: ColorPalette.grayscale.white,
       backgroundColor: 'transparent',
-    },
-    barcodeHighlight: {
-      position: 'absolute',
-      borderWidth: 2,
-    },
-    barcodeHighlightScanning: {
-      borderColor: '#FF6600',
-      backgroundColor: 'rgba(255, 102, 0, 0.15)',
-    },
-    barcodeHighlightAligned: {
-      borderWidth: 0,
-      backgroundColor: 'rgba(0, 255, 0, 0.15)',
-    },
-    barcodeHighlightLocked: {
-      borderColor: '#00FF00',
-      borderWidth: 3,
-      backgroundColor: 'rgba(0, 255, 0, 0.25)',
     },
     saveButton: {
       backgroundColor: 'rgba(0, 180, 0, 0.9)',
@@ -1252,8 +1139,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       >
         {/*
             resizeMode="cover" fills the container without black bars by cropping the camera feed.
-            The coordinate transformation logic accounts for the cropped portion to ensure
-            highlight boxes align correctly with visible barcodes.
+            transformBarcodeCoordinates accounts for the cropped portion when mapping barcode boxes.
           */}
         <Camera
           ref={camera}
@@ -1274,117 +1160,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           resizeMode="cover"
         />
 
-        {/* Overlay container for highlights and focus indicator */}
+        {/* Overlay container for the focus indicator */}
         <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none', zIndex: 2 }]}>
-          {/* Debug: Scan zone outlines — shows where we expect barcodes (iOS diagnostic) */}
-          {showBarcodeHighlight &&
-            enableScanZones &&
-            scanZones &&
-            containerSize &&
-            scanZones.map((zone) => (
-              <View
-                key={`debug-zone-${zone.types.join('-')}-${zone.box.x}-${zone.box.y}`}
-                style={{
-                  position: 'absolute',
-                  left: zone.box.x * containerSize.width,
-                  top: zone.box.y * containerSize.height,
-                  width: zone.box.width * containerSize.width,
-                  height: zone.box.height * containerSize.height,
-                  borderWidth: 2,
-                  borderColor: '#00FFFF',
-                  borderStyle: 'dashed',
-                  backgroundColor: 'rgba(0, 255, 255, 0.1)',
-                }}
-              />
-            ))}
-
-          {/* Barcode highlight overlay - rendered inside camera view for correct positioning */}
-          {showBarcodeHighlight &&
-            detectedCodes.map((code) => {
-              if (!code.position) {
-                return null
-              }
-
-              // Highlight style is based on COLLECTIVE scan state, not per-code
-              let highlightStyle
-              if (scanState === 'locked') {
-                highlightStyle = styles.barcodeHighlightLocked
-              } else if (scanState === 'aligned') {
-                highlightStyle = styles.barcodeHighlightAligned
-              } else {
-                highlightStyle = styles.barcodeHighlightScanning
-              }
-
-              // Show decoded value inside highlight for 1D barcodes (code-39, code-128)
-              const show1DValue = (code.type === 'code-39' || code.type === 'code-128') && code.value
-              // Scale font to fit: use box height as baseline, shrink if text is too wide
-              const maxFontForHeight = Math.max(8, Math.min(code.position.height * 0.6, 16))
-              // Estimate chars that fit at this font size (~0.6 char-width ratio for monospace)
-              const charsAtMaxFont = code.position.width / (maxFontForHeight * 0.6)
-              const valueLen = code.value?.length ?? 1
-              const fontSize1D =
-                valueLen > charsAtMaxFont ? Math.max(6, code.position.width / (valueLen * 0.6)) : maxFontForHeight
-
-              const highlightPosition = getHighlightPosition(code.position)
-              const showDebugRawBox = enableScanZones && Platform.OS === 'android'
-
-              return (
-                <Animated.View
-                  key={`${code.type}-${code.value}`}
-                  style={[
-                    styles.barcodeHighlight,
-                    highlightStyle,
-                    {
-                      left: highlightPosition.x,
-                      top: highlightPosition.y,
-                      width: highlightPosition.width,
-                      height: highlightPosition.height,
-                      opacity: highlightFadeAnim,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      overflow: 'hidden',
-                    },
-                  ]}
-                >
-                  {showDebugRawBox && (
-                    <View
-                      pointerEvents="none"
-                      style={{
-                        position: 'absolute',
-                        left: highlightPosition.x - code.position.x,
-                        top: highlightPosition.y - code.position.y,
-                        width: code.position.width,
-                        height: code.position.height,
-                        borderWidth: 1,
-                        borderColor: '#FF00FF',
-                        borderStyle: 'dashed',
-                      }}
-                    />
-                  )}
-                  {show1DValue && (
-                    <Text
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.5}
-                      style={{
-                        color: '#FFFFFF',
-                        fontSize: fontSize1D,
-                        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                        textShadowColor: 'rgba(0,0,0,0.8)',
-                        textShadowOffset: { width: 1, height: 1 },
-                        textShadowRadius: 2,
-                        paddingHorizontal: 2,
-                      }}
-                    >
-                      {code.value}
-                    </Text>
-                  )}
-                </Animated.View>
-              )
-            })}
-
           {/* Focus indicator - rendered inside camera view for correct positioning */}
           {focusPoint && (
             <Animated.View
