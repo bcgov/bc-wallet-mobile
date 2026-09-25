@@ -6,7 +6,7 @@ import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVisionCamera } from '@/bcsc-theme/hooks/useVisionCamera'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isBackgroundedAppState } from '@/bcsc-theme/utils/app-state'
-import { toMp4VideoPath } from '@/bcsc-theme/utils/file-info'
+import { removeFileSafely, toMp4VideoPath } from '@/bcsc-theme/utils/file-info'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { hitSlop, MAX_SELFIE_VIDEO_DURATION_SECONDS, MIN_PROMPT_DURATION_SECONDS } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
@@ -78,6 +78,8 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const [exceedsMaxDuration, setExceedsMaxDuration] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const exceedsMaxDurationRef = useRef(false)
+  // Set when the user cancels or leaves, so a recording still finishing (MP4 conversion) doesn't navigate afterwards.
+  const abandonedRef = useRef(false)
   const elapsedTimeRef = useRef(0)
   const promptOpacity = useRef(new Animated.Value(1)).current
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
@@ -166,6 +168,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   )
 
   const handleCancel = async () => {
+    abandonedRef.current = true
     if (cameraRef.current) {
       await cancelRecordingVideo()
     }
@@ -209,6 +212,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [])
 
   const startRecording = useCallback(async () => {
+    abandonedRef.current = false
     setElapsedTime(0)
     setPromptTimestamp(0)
     setRecordingInProgress(false)
@@ -273,11 +277,20 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           videoPath = await toMp4VideoPath(video.filePath)
         } catch (error) {
           logger.error('Failed to convert the selfie video to MP4', error as Error)
+          if (abandonedRef.current) {
+            return
+          }
           emitErrorModal(
             t('BCSC.SendVideo.TakeVideo.RecordingError'),
             t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription'),
             getCameraError(error)
           )
+          return
+        }
+
+        if (abandonedRef.current) {
+          logger.info('Recording abandoned during MP4 conversion, discarding it')
+          await removeFileSafely(videoPath, logger)
           return
         }
 
@@ -356,9 +369,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     }, [startRecording, isActive, hasCameraPermission, hasMicrophonePermission])
   )
 
-  // Cleanup timer on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
+      abandonedRef.current = true
       if (timerRef.current) {
         clearInterval(timerRef.current)
       }

@@ -1,8 +1,13 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import * as visionCamera from '@/bcsc-theme/hooks/useVisionCamera'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { removeFileSafely, toMp4VideoPath } from '@/bcsc-theme/utils/file-info'
 import { AppError } from '@/errors'
+import { TestIds } from '@/test-ids/registry'
+import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { useNavigation } from '@react-navigation/native'
-import { act, render, waitFor } from '@testing-library/react-native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 import TakeVideoScreen from './TakeVideoScreen'
@@ -44,6 +49,12 @@ jest.mock('react-native-vision-camera', () => {
     useVideoOutput: jest.fn().mockReturnValue({ setOutputSettings: jest.fn(), createRecorder: jest.fn() }),
   }
 })
+
+jest.mock('@/bcsc-theme/utils/file-info', () => ({
+  ...jest.requireActual('@/bcsc-theme/utils/file-info'),
+  toMp4VideoPath: jest.fn((path: string) => Promise.resolve(path)),
+  removeFileSafely: jest.fn(),
+}))
 
 // Mock BCSCActivityContext — not provided by BasicAppContext
 const mockUseBCSCActivity = jest.fn(() => ({ appStateStatus: 'active' }))
@@ -147,6 +158,104 @@ describe('TakeVideoScreen', () => {
 
     expect(caught).toBeInstanceOf(AppError)
     expect((caught as AppError).statusCode).toBe(2412)
+  })
+
+  describe('Cancel while the recording is still converting to MP4', () => {
+    const startAndFinishRecording = async (navigation: ReturnType<typeof useNavigation>) => {
+      let recordingCallbacks: Parameters<ReturnType<typeof visionCamera.useVisionCamera>['startRecordingVideo']>[0]
+      const realUseVisionCamera = jest.requireActual('@/bcsc-theme/hooks/useVisionCamera').useVisionCamera
+      jest.spyOn(visionCamera, 'useVisionCamera').mockImplementation((options) => ({
+        ...realUseVisionCamera(options),
+        cameraRef: { current: {} },
+        takePhoto: jest.fn().mockResolvedValue({ filePath: '/tmp/thumbnail.jpg' }),
+        startRecordingVideo: jest.fn(async (callbacks) => {
+          recordingCallbacks = callbacks
+        }),
+        cancelRecordingVideo: jest.fn(),
+      }))
+
+      let resolveConversion!: (path: string) => void
+      jest.mocked(toMp4VideoPath).mockReturnValue(
+        new Promise((resolve) => {
+          resolveConversion = resolve
+        })
+      )
+
+      const screen = render(
+        <BasicAppContext initialStateOverride={storeWithPrompts}>
+          <TakeVideoScreen navigation={navigation as never} />
+        </BasicAppContext>
+      )
+
+      act(() => {
+        screen.getByTestId('mock-camera').props.onConfigured()
+      })
+      // useFocusEffect is a no-op mock, so run the latest focus callback by hand to start the countdown
+      const focusCallback = jest.mocked(useFocusEffect).mock.calls.at(-1)![0]
+      act(() => {
+        focusCallback()
+      })
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(3000)
+      })
+
+      act(() => {
+        recordingCallbacks!.onRecordingFinished({
+          filePath: '/tmp/recording.mov',
+          reason: 'stopped',
+          duration: 5,
+          fileSize: 100,
+        } as never)
+      })
+
+      return { screen, resolveConversion }
+    }
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('does not open Video Review and discards the converted file', async () => {
+      const navigation = useNavigation()
+      const { screen, resolveConversion } = await startAndFinishRecording(navigation)
+
+      await act(async () => {
+        fireEvent.press(screen.getByTestId(testIdWithKey(TestIds.verify.takeVideo.cancel)))
+      })
+      await act(async () => {
+        resolveConversion('/tmp/recording.mp4')
+      })
+
+      expect(navigation.goBack).toHaveBeenCalled()
+      expect(navigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.VideoReview, expect.anything())
+      expect(removeFileSafely).toHaveBeenCalledWith('/tmp/recording.mp4', expect.anything())
+    })
+
+    it('opens Video Review when the user does not cancel', async () => {
+      const navigation = useNavigation()
+      const { resolveConversion } = await startAndFinishRecording(navigation)
+
+      await act(async () => {
+        resolveConversion('/tmp/recording.mp4')
+      })
+
+      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VideoReview, {
+        videoPath: '/tmp/recording.mp4',
+        videoThumbnailPath: '/tmp/thumbnail.jpg',
+      })
+    })
+
+    it('does not open Video Review after the screen unmounts', async () => {
+      const navigation = useNavigation()
+      const { screen, resolveConversion } = await startAndFinishRecording(navigation)
+
+      screen.unmount()
+      await act(async () => {
+        resolveConversion('/tmp/recording.mp4')
+      })
+
+      expect(navigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.VideoReview, expect.anything())
+    })
   })
 
   describe('Background / foreground camera lifecycle (regression for #4256)', () => {
