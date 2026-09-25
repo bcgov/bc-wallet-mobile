@@ -1102,6 +1102,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       flex: 1,
       position: 'relative',
       overflow: 'hidden',
+      // Shows behind the overlay until the first camera frame arrives (~1s on iOS), as MaskedCamera does
+      backgroundColor: 'black',
     },
     camera: {
       flex: 1,

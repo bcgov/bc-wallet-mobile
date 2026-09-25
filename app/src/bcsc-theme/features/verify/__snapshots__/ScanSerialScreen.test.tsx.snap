@@ -51,6 +51,7 @@ exports[`ScanSerial renders correctly 1`] = `
         onLayout={[Function]}
         style={
           {
+            "backgroundColor": "black",
             "flex": 1,
             "overflow": "hidden",
             "position": "relative",
