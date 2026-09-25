@@ -7,6 +7,7 @@ import {
   DidCommCredentialExchangeRecord,
   DidCommCredentialState,
   DidCommProofExchangeRecord,
+  DidCommProofState,
 } from '@credo-ts/didcomm'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -75,20 +76,28 @@ export const credentialToChatItem = (
   }
 }
 
-export const proofToChatItem = (p: DidCommProofExchangeRecord, t: TFn): ChatItem | null => {
-  const labelKey = proofEventLabelKey(p)
+export const proofToChatItem = (
+  proofRecord: DidCommProofExchangeRecord,
+  t: TFn,
+  navigation: ChatNavigation
+): ChatItem | null => {
+  const labelKey = proofEventLabelKey(proofRecord)
   if (!labelKey) {
     return null
   }
-  const role = proofEventRole(p)
+
+  const role = proofEventRole(proofRecord)
+  const canView = proofRecord.state === DidCommProofState.RequestReceived
+
   return {
-    _id: p.id,
+    _id: proofRecord.id,
     text: t(labelKey as any),
-    createdAt: new Date(p.createdAt),
+    createdAt: new Date(proofRecord.createdAt),
     user: { _id: userIdForRole(role) },
     kind: 'proofEvent',
     role,
     eventLabelKey: labelKey,
+    onView: canView ? () => navigation.navigate(BCSCScreens.ConnectionLoading, { proofId: proofRecord.id }) : undefined,
   }
 }
 

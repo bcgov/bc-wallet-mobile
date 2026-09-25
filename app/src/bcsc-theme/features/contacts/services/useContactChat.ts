@@ -37,19 +37,19 @@ export const useContactChat = (connectionId: string, navigation: ChatNavigation)
   const items: ChatItem[] = useMemo(() => {
     const out: ChatItem[] = []
 
-    for (const m of basicMessages) {
-      out.push(messageToChatItem(m, theirLabel))
+    for (const message of basicMessages) {
+      out.push(messageToChatItem(message, theirLabel))
     }
 
-    for (const c of credentials) {
-      const item = credentialToChatItem(c, t, navigation)
+    for (const credential of credentials) {
+      const item = credentialToChatItem(credential, t, navigation)
       if (item) {
         out.push(item)
       }
     }
 
-    for (const p of proofs) {
-      const item = proofToChatItem(p, t)
+    for (const proof of proofs) {
+      const item = proofToChatItem(proof, t, navigation)
       if (item) {
         out.push(item)
       }
