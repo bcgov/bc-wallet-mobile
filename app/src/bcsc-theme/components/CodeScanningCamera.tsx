@@ -406,9 +406,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   /** Enhance a single barcode with position, orientation, alignment, and validation metadata */
   const enhanceSingleCode = (code: ScannedCode): EnhancedCode => {
-    // v5 reports the bounding box relative to the scanned frame, which is requested at preview
-    // resolution (see `outputResolution` on the scanner output), so it is used as the on-screen
-    // position directly rather than run through `transformBarcodeCoordinates`.
+    // v5 reports the box in full-resolution frame pixels, not screen points, and it isn't converted.
+    // Only scan-zone alignment (focus-cycle priority) and the highlight overlay read it; scanning doesn't.
     const position: Rect = code.frame
 
     const corners = code.corners
