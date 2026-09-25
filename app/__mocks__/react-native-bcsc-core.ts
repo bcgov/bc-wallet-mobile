@@ -123,6 +123,7 @@ export const createPreVerificationJWT = jest.fn().mockResolvedValue('mock-pre-ve
 export const createQuickLoginJWT = jest.fn().mockResolvedValue('mock-quick-login-jwt')
 export const hashBase64 = jest.fn().mockResolvedValue('mock-hash')
 export const remuxVideoToMp4 = jest.fn((path: string) => Promise.resolve(path))
+export const activateAudioSessionForRecording = jest.fn().mockResolvedValue(undefined)
 
 // PIN Authentication
 export const setPIN = jest

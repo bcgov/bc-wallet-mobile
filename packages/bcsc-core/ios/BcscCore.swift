@@ -1,3 +1,4 @@
+import AVFoundation
 import CryptoKit
 import Foundation
 import LocalAuthentication
@@ -1974,6 +1975,26 @@ class BcscCore: NSObject {
         // A silent video would still upload and only be caught at ID Check review
         reject("E_REMUX_AUDIO_LOST", "The audio track was lost converting the video to MP4", nil)
       }
+    }
+  }
+
+  /// Sets the shared audio session up for video recording and activates it; call before each recording.
+  ///
+  /// react-native-video deactivates the shared session when its last player goes away, even with
+  /// `disableAudioSessionManagement`, which cuts the microphone off from a running camera. VisionCamera v4
+  /// re-activated the session per recording; v5 only configures it when the camera session starts.
+  /// `.defaultToSpeaker` without Bluetooth keeps capture on the built-in route, avoiding the A/V offset that
+  /// buffered Bluetooth output adds (as the old v4 patch did).
+  func activateAudioSessionForRecording(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+  ) {
+    do {
+      let session = AVAudioSession.sharedInstance()
+      try session.setCategory(.playAndRecord, mode: .videoRecording, options: [.defaultToSpeaker])
+      try session.setActive(true)
+      resolve(nil)
+    } catch {
+      reject("E_AUDIO_SESSION", "Failed to activate the audio session: \(error.localizedDescription)", error)
     }
   }
 

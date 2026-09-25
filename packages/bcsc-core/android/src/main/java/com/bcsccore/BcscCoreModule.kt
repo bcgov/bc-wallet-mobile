@@ -1744,6 +1744,12 @@ class BcscCoreModule internal constructor(
         promise.resolve(path)
     }
 
+    /** iOS-only audio session setup; Android needs nothing before recording. */
+    @ReactMethod
+    override fun activateAudioSessionForRecording(promise: Promise) {
+        promise.resolve(null)
+    }
+
     @ReactMethod
     override fun hashBase64(
         base64: String,

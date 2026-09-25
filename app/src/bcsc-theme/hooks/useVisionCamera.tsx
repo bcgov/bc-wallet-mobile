@@ -1,5 +1,6 @@
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useMemo, useRef } from 'react'
+import { activateAudioSessionForRecording } from 'react-native-bcsc-core'
 import {
   CameraOutput,
   CameraPhotoOutput,
@@ -82,6 +83,14 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
       }
 
       logger.debug('[Camera] Starting video recording')
+
+      // Another component (e.g. the review screen's video player) may have deactivated the audio session,
+      // which leaves the microphone silent on iOS. Recording still goes ahead if this fails.
+      try {
+        await activateAudioSessionForRecording()
+      } catch (error) {
+        logger.warn('[Camera] Failed to activate the audio session for recording', { error: String(error) })
+      }
 
       // Note: Video output settings must be set before creating the recorder
       videoOutput.setOutputSettings({ codec: DEFAULT_VIDEO_OUTPUT_CODEC })

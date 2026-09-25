@@ -74,6 +74,8 @@ RCT_EXTERN_METHOD(hashBase64 : (NSString *)base64 resolve : (RCTPromiseResolveBl
 RCT_EXTERN_METHOD(remuxVideoToMp4 : (NSString *)path resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(activateAudioSessionForRecording : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(createQuickLoginJWT : (NSString *)accessToken clientId : (NSString *)clientId issuer : (
     NSString *)issuer clientRefId : (NSString *)clientRefId key : (NSDictionary *)key fcmDeviceToken : (NSString *)
                       fcmDeviceToken deviceToken : (NSString *_Nullable)deviceToken resolve : (RCTPromiseResolveBlock)

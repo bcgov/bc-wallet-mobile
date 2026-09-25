@@ -627,6 +627,20 @@ export const remuxVideoToMp4 = async (path: string): Promise<string> => {
 };
 
 /**
+ * Sets the audio session up for video recording and activates it. Call before each recording.
+ *
+ * iOS: another component (e.g. a video player) can deactivate the shared audio session while the camera is
+ * running, and VisionCamera v5 only configures audio when the camera starts, so later recordings are silent.
+ * Keeps audio on the built-in route (no Bluetooth), avoiding the A/V offset buffered Bluetooth output adds.
+ * Android: no-op.
+ *
+ * @throws If the audio session can't be configured or activated
+ */
+export const activateAudioSessionForRecording = async (): Promise<void> => {
+  return BcscCore.activateAudioSessionForRecording();
+};
+
+/**
  * Creates a quick login JWT assertion matching the format used in ias-ios app.
  * This creates a signed JWT with device info claims and access token nonce, following QuickLoginProtocol pattern.
  * @param accessToken The access token to include in the nonce

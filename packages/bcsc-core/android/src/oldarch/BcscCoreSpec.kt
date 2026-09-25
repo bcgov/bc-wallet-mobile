@@ -111,6 +111,8 @@ abstract class BcscCoreSpec internal constructor(
         promise: Promise,
     )
 
+    abstract fun activateAudioSessionForRecording(promise: Promise)
+
     abstract fun decodePayload(
         jweString: String,
         key: com.facebook.react.bridge.ReadableMap?,
