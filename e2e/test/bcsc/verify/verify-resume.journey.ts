@@ -98,6 +98,14 @@ describe('Verify journey: resume routing', () => {
     await EnterBirthdateScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
+  it('leaves the resumed flow for home and re-enters it', async () => {
+    // Every exit relies on the root stack swapping to Home once the in-progress flag drops. A session the
+    // app resumed itself is where that swap has silently failed before, so it is asserted here on its own.
+    await leaveVerificationToHome()
+    await resumeVerification()
+    await EnterBirthdateScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
   it('stays on the birthdate step when the restart confirmation is cancelled', async () => {
     await restartVerification('cancel')
     await EnterBirthdateScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
