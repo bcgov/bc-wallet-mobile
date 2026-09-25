@@ -3,7 +3,7 @@ import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountStatus'
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
@@ -49,7 +49,10 @@ const BCSCRootStack: React.FC = () => {
   const { needsVerification, isVerified, isVerificationInProgress } = useVerificationStatus()
   const { isAvailable: isServerAvailable, hasChecked: serverStatusChecked } = useServerStatus()
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
-  const resumeEvaluated = useRef(false)
+  // Startup-only: whether the one-shot auto-resume below has been decided. State, not a ref, so the
+  // render stops reading "chose to verify, not in progress" as a pending resume once it has — every
+  // exit from the verify flow produces exactly that state on purpose.
+  const [resumeEvaluated, setResumeEvaluated] = useState(false)
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
@@ -73,11 +76,14 @@ const BCSCRootStack: React.FC = () => {
     }
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
 
+  // Chose to verify (prompt, Home card or v3 upgrade) and has neither finished nor entered the flow yet
+  const wantsToResumeVerification = store.bcsc.verificationSkipped === false && !isVerified && !isVerificationInProgress
+
   // A user who chose to start verification during onboarding and is not verified
   // will be routed to continue verification where they left off
   // Runs exactly once per session so the user isn't stuck in verification
   useEffect(() => {
-    if (resumeEvaluated.current) {
+    if (resumeEvaluated) {
       return
     }
     if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
@@ -94,31 +100,28 @@ const BCSCRootStack: React.FC = () => {
       return
     }
 
-    const wantsToResumeVerification =
-      store.bcsc.verificationSkipped === false && !isVerified && !isVerificationInProgress
-
     // Verification can't resume during an outage. Leave `resumeEvaluated` unset so re-runs re-evaluate
     if (wantsToResumeVerification && !isServerAvailable) {
       return
     }
 
-    resumeEvaluated.current = true
+    // Both updates land in one render, so a resumed user never sees Home in between
+    setResumeEvaluated(true)
 
     if (wantsToResumeVerification) {
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS, payload: [VerificationStatus.IN_PROGRESS] })
     }
   }, [
     dispatch,
+    resumeEvaluated,
     store.stateLoaded,
     isClientReady,
     initializingAccount,
     isNavigationReady,
     store.bcsc.hasAccount,
-    store.bcsc.verificationSkipped,
     store.authentication.didAuthenticate,
     store.bcscSecure.sessionRecoveryRequired,
-    isVerified,
-    isVerificationInProgress,
+    wantsToResumeVerification,
     serverStatusChecked,
     isServerAvailable,
   ])
@@ -129,9 +132,7 @@ const BCSCRootStack: React.FC = () => {
     store.bcsc.hasAccount &&
     store.authentication.didAuthenticate !== false &&
     store.bcscSecure.sessionRecoveryRequired !== true &&
-    store.bcsc.verificationSkipped === false &&
-    !isVerified &&
-    !isVerificationInProgress &&
+    wantsToResumeVerification &&
     !verifyPromptAnswered
 
   // Show loading screen if state, API client or navigation is not ready
@@ -157,13 +158,10 @@ const BCSCRootStack: React.FC = () => {
 
   // A user who chose to verify (verificationSkipped === false) and hasn't finished would normally be
   // auto-resumed into VerifyStack by the effect above. During an outage that resume is held off, so
-  // fall back to the prompt — its inline ServiceOutage + "skip" is the user's way to Home.
+  // fall back to the prompt — its inline ServiceOutage + "skip" is the user's way to Home. Startup-only:
+  // once the resume has been evaluated, a later outage is the banner on Home, not this prompt.
   const resumeBlockedByOutage =
-    serverStatusChecked &&
-    !isServerAvailable &&
-    store.bcsc.verificationSkipped === false &&
-    !isVerified &&
-    !isVerificationInProgress
+    !resumeEvaluated && serverStatusChecked && !isServerAvailable && wantsToResumeVerification
 
   // This prompt controls if the user is sent back into the verification stack or can cotinue into the main app
   // the value is only set when the user interacts with the prompt and is reset on a factory reset
@@ -171,16 +169,11 @@ const BCSCRootStack: React.FC = () => {
     (store.bcsc.verificationSkipped === undefined && !verifyPromptAnswered && needsVerification) ||
     (resumeBlockedByOutage && !verifyPromptAnswered)
 
-  // The auto-resume decision (effect above) is still pending: chose to verify, not verified, not yet
-  // resumed or skipped, IAS status known. Keep VerifyStack rendered through this window so there's no
-  // flash of Home before the resume dispatch lands — and so the outage fallback has a stack to
-  // render its prompt in.
-  const pendingVerificationResume =
-    serverStatusChecked &&
-    store.bcsc.verificationSkipped === false &&
-    !isVerified &&
-    !isVerificationInProgress &&
-    !verifyPromptAnswered
+  // The auto-resume dispatch (effect above) hasn't landed yet. Keep VerifyStack mounted through this
+  // window so Home doesn't flash first, and so the outage fallback has a stack for its prompt. Once
+  // evaluated only IN_PROGRESS keeps the stack up, so leaving (UNVERIFIED) swaps to MainStack and a
+  // restart's UNVERIFIED → IN_PROGRESS remounts it at the first step.
+  const pendingVerificationResume = !resumeEvaluated && serverStatusChecked && wantsToResumeVerification
 
   // Render the verify journey when the prompt is due, OR whenever verification is actively in
   // progress. Combining both into a single VerifyStack render keeps it mounted across the prompt →
