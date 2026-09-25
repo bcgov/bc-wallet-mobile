@@ -17,7 +17,8 @@ end
 node_require('react-native/scripts/react_native_pods.rb')
 node_require('react-native-permissions/scripts/setup.rb')
 
-platform :ios, '15.5' #min_ios_version_supported
+# Google ML Kit barcode scanning (react-native-vision-camera-barcode-scanner, also used by @bifold/core) needs iOS 15.5
+platform :ios, '15.5'
 prepare_react_native_project!
 
 # uncomment wanted permissions (also from RNP docs linked above)
