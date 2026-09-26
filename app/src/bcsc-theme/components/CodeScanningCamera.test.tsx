@@ -2,7 +2,7 @@ import { testIdWithKey } from '@bifold/core'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Platform } from 'react-native'
-import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import { useCameraDevice } from 'react-native-vision-camera'
 import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 
 import { AppEventCode } from '@/events/appEventCode'
@@ -58,13 +58,7 @@ jest.mock('react-native-vision-camera', () => {
 
   return {
     Camera: MockCamera,
-    useCameraDevice: jest.fn(() => ({
-      id: 'back',
-      supportsFocusMetering: true,
-      minZoom: 1,
-      maxZoom: 8,
-      hasTorch: true,
-    })),
+    useCameraDevice: jest.fn(() => mockDefaultDevice),
     useCameraPermission: jest.fn(() => ({
       hasPermission: mockHasPermission,
       requestPermission: mockRequestPermission,
@@ -150,8 +144,18 @@ jest.mock('react-native-gesture-handler', () => ({
 // Typed handles to the mocked hooks above, for use in test bodies
 const mockedUseBCSCActivity = useBCSCActivity as jest.Mock
 const mockedUseCameraDevice = useCameraDevice as jest.Mock
-const mockedUseCameraPermission = useCameraPermission as jest.Mock
 const mockedUseBarcodeScannerOutput = useBarcodeScannerOutput as jest.Mock
+
+const originalPlatformOS = Platform.OS
+// Stable like the real hook: a new object per render changes startFocusCycling's identity and restarts cycling
+const mockDefaultDevice = {
+  id: 'back',
+  supportsFocusMetering: true,
+  minZoom: 1,
+  maxZoom: 8,
+  neutralZoom: 1,
+  hasTorch: true,
+}
 
 describe('CodeScanningCamera', () => {
   const mockOnCodeScanned = jest.fn()
@@ -172,6 +176,14 @@ describe('CodeScanningCamera', () => {
       pauseActivityTracking: mockPauseActivityTracking,
       resumeActivityTracking: mockResumeActivityTracking,
     })
+    mockedUseCameraDevice.mockReturnValue(mockDefaultDevice)
+    mockEnsureAppError.mockImplementation(() => ({ name: 'AppError', message: 'mocked error' }))
+    mockOnCodeScanned.mockReset()
+  })
+
+  afterEach(() => {
+    Platform.OS = originalPlatformOS
+    jest.useRealTimers()
   })
 
   it('renders correctly with default props', () => {
@@ -236,12 +248,7 @@ describe('CodeScanningCamera', () => {
 
   describe('Camera Permission', () => {
     it('renders permission required message when no permission', () => {
-      // Mock no permission
-      mockedUseCameraPermission.mockReturnValueOnce({
-        hasPermission: false,
-        requestPermission: mockRequestPermission,
-      })
-      mockedUseCameraDevice.mockReturnValueOnce(null)
+      mockHasPermission = false
 
       const { getByText } = render(
         <BasicAppContext>
@@ -253,10 +260,7 @@ describe('CodeScanningCamera', () => {
     })
 
     it('requests permission when not granted', () => {
-      mockedUseCameraPermission.mockReturnValueOnce({
-        hasPermission: false,
-        requestPermission: mockRequestPermission,
-      })
+      mockHasPermission = false
 
       render(
         <BasicAppContext>
@@ -289,18 +293,6 @@ describe('CodeScanningCamera', () => {
         neutralZoom: 1,
         hasTorch: false,
       }
-
-      afterEach(() => {
-        // Restore the default per-render factory (a device with a torch).
-        mockedUseCameraDevice.mockImplementation(() => ({
-          id: 'back',
-          supportsFocusMetering: true,
-          minZoom: 1,
-          maxZoom: 8,
-          neutralZoom: 1,
-          hasTorch: true,
-        }))
-      })
 
       it('passes torch on to the camera when the device has a torch and torchActive is set', async () => {
         const { getByTestId } = render(
@@ -758,10 +750,6 @@ describe('CodeScanningCamera', () => {
       // position pure cover-mode scaling, fully deterministic to hand-compute.
       beforeEach(() => {
         Platform.OS = 'android'
-      })
-
-      afterEach(() => {
-        Platform.OS = 'ios'
       })
 
       const containerLayout = { x: 0, y: 0, width: 400, height: 800 }
@@ -1421,7 +1409,7 @@ describe('CodeScanningCamera', () => {
 
   describe('Device without focus support', () => {
     it('renders correctly when device does not support focus', () => {
-      mockedUseCameraDevice.mockReturnValueOnce({
+      mockedUseCameraDevice.mockReturnValue({
         id: 'back',
         supportsFocusMetering: false,
         minZoom: 1,
@@ -1955,7 +1943,7 @@ describe('CodeScanningCamera', () => {
         addContext: jest.fn(),
         toJSON: jest.fn(),
       }
-      mockEnsureAppError.mockReturnValueOnce(expectedAppError)
+      mockEnsureAppError.mockReturnValue(expectedAppError)
 
       await act(async () => {
         camera.props.onError(runtimeError)
@@ -2044,7 +2032,7 @@ describe('CodeScanningCamera', () => {
         addContext: jest.fn(),
         toJSON: jest.fn(),
       }
-      mockEnsureAppError.mockReturnValueOnce(expectedAppError)
+      mockEnsureAppError.mockReturnValue(expectedAppError)
 
       await act(async () => {
         camera.props.onError(runtimeError)
@@ -2063,8 +2051,6 @@ describe('CodeScanningCamera', () => {
   })
 
   describe('Recoverable camera runtime errors (regression: iOS unknown/unknown -12780 in 4.1.0)', () => {
-    const originalPlatform = Platform.OS
-
     const makeAppError = () => ({
       name: 'NormalizedAppError',
       message: 'normalized',
@@ -2085,8 +2071,6 @@ describe('CodeScanningCamera', () => {
 
     afterEach(() => {
       jest.useRealTimers()
-      Platform.OS = originalPlatform
-      mockEnsureAppError.mockImplementation(() => ({ name: 'AppError', message: 'mocked error' }))
     })
 
     it('lets VisionCamera restart the session after a single unknown/unknown error instead of failing over', async () => {
@@ -2196,32 +2180,10 @@ describe('CodeScanningCamera', () => {
   describe('Focus cycling restart storm (regression #4256/#4300)', () => {
     beforeEach(() => {
       jest.useFakeTimers()
-      // The module-level device mock factory returns a brand-new object on every call,
-      // so without pinning it, startFocusCycling's useCallback (deps include `device`)
-      // would get a new identity on every re-render regardless of cause — masking the
-      // exact thing under test here. Pin it to a single stable reference, matching how
-      // the real hook behaves when the underlying camera device hasn't changed.
-      mockedUseCameraDevice.mockReturnValue({
-        id: 'back',
-        supportsFocusMetering: true,
-        minZoom: 1,
-        maxZoom: 8,
-        neutralZoom: 1,
-        hasTorch: true,
-      })
     })
 
     afterEach(() => {
       jest.useRealTimers()
-      // Restore the default per-render factory for any tests outside this describe.
-      mockedUseCameraDevice.mockImplementation(() => ({
-        id: 'back',
-        supportsFocusMetering: true,
-        minZoom: 1,
-        maxZoom: 8,
-        neutralZoom: 1,
-        hasTorch: true,
-      }))
     })
 
     const mockFrame = { width: 1920, height: 1080 }
@@ -2315,7 +2277,7 @@ describe('CodeScanningCamera', () => {
     })
 
     it('keeps the idle-nudge alive across a lock -> auto-confirm-rejected -> reset cycle (guards against stop-on-lock without a matching restart)', async () => {
-      mockOnCodeScanned.mockResolvedValueOnce(false)
+      mockOnCodeScanned.mockResolvedValue(false)
 
       const { getByTestId } = render(
         <BasicAppContext>
@@ -2375,7 +2337,6 @@ describe('CodeScanningCamera', () => {
 
     afterEach(() => {
       jest.useRealTimers()
-      Platform.OS = 'ios'
     })
 
     const mockFrame = { width: 640, height: 480 }

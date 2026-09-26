@@ -1364,6 +1364,7 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
           "id": "back",
           "maxZoom": 8,
           "minZoom": 1,
+          "neutralZoom": 1,
           "supportsFocusMetering": true,
         }
       }
@@ -1628,6 +1629,7 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
           "id": "back",
           "maxZoom": 8,
           "minZoom": 1,
+          "neutralZoom": 1,
           "supportsFocusMetering": true,
         }
       }
@@ -1892,6 +1894,7 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
           "id": "back",
           "maxZoom": 8,
           "minZoom": 1,
+          "neutralZoom": 1,
           "supportsFocusMetering": true,
         }
       }
