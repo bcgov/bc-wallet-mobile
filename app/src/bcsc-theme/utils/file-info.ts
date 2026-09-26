@@ -1,10 +1,23 @@
 import { DEFAULT_SELFIE_VIDEO_FILENAME, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import readFileInChunks from '@/utils/read-file'
 import { BifoldLogger } from '@bifold/core'
-import { hashBase64, PhotoMetadata, saveEvidencePhoto } from 'react-native-bcsc-core'
+import { Platform } from 'react-native'
+import { hashBase64, PhotoMetadata, remuxVideoToMp4, saveEvidencePhoto } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 import { VerificationPrompt, VerificationVideoUploadPayload } from '../api/hooks/useEvidenceApi'
 import { isPlausibleCaptureDateSeconds } from './capture-date'
+
+/**
+ * Returns a path to the recorded selfie video as a real MP4, which is all IAS accepts.
+ * On iOS, VisionCamera v5 records QuickTime, so the recording is remuxed (the original is deleted).
+ * @throws If the iOS remux fails
+ */
+export const toMp4VideoPath = async (recordedPath: string): Promise<string> => {
+  if (Platform.OS !== 'ios') {
+    return recordedPath
+  }
+  return remuxVideoToMp4(recordedPath)
+}
 
 export const getFileInfo = async (filePath: string) => {
   const stats = await RNFS.stat(filePath)

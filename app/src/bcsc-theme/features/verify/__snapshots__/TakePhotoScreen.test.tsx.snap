@@ -35,18 +35,19 @@ exports[`TakePhoto renders correctly 1`] = `
           "id": "mock-device",
         }
       }
-      format={
-        {
-          "videoHeight": 480,
-          "videoWidth": 640,
-        }
-      }
       isActive={true}
-      isMirrored={false}
+      mirrorMode={[Function]}
+      onConfigured={[Function]}
       onError={[Function]}
-      onInitialized={[Function]}
-      photo={true}
-      photoQualityBalance="quality"
+      onStarted={[Function]}
+      onStopped={[Function]}
+      outputs={
+        [
+          {
+            "capturePhotoToFile": [MockFunction],
+          },
+        ]
+      }
       ref={
         {
           "current": null,
@@ -57,8 +58,6 @@ exports[`TakePhoto renders correctly 1`] = `
           "flex": 1,
         }
       }
-      torch="off"
-      video={true}
     />
     <RNSVGSvgView
       bbHeight={1334}

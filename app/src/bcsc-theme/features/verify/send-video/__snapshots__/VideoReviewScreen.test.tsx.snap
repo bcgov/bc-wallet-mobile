@@ -107,7 +107,7 @@ exports[`VideoReview renders correctly 1`] = `
               },
             ]
           }
-          viewType={1}
+          viewType={0}
         />
       </View>
       <View

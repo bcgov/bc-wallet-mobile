@@ -613,6 +613,34 @@ export const hashBase64 = async (base64: string): Promise<string> => {
 };
 
 /**
+ * Copies a recorded video into a real MP4 container, without re-encoding, and deletes the original.
+ *
+ * iOS: VisionCamera v5 records QuickTime even when asked for MP4, which IAS rejects. Android: the
+ * recording is already MP4, so the same path is returned unchanged.
+ *
+ * @param path Path (or file:// URI) of the recorded video
+ * @returns Path of the MP4 file, in the same form (path or file:// URI) as the input
+ * @throws If the video can't be read or exported
+ */
+export const remuxVideoToMp4 = async (path: string): Promise<string> => {
+  return BcscCore.remuxVideoToMp4(path);
+};
+
+/**
+ * Sets the audio session up for video recording and activates it. Call before each recording.
+ *
+ * iOS: another component (e.g. a video player) can deactivate the shared audio session while the camera is
+ * running, and VisionCamera v5 only configures audio when the camera starts, so later recordings are silent.
+ * Keeps audio on the built-in route (no Bluetooth), avoiding the A/V offset buffered Bluetooth output adds.
+ * Android: no-op.
+ *
+ * @throws If the audio session can't be configured or activated
+ */
+export const activateAudioSessionForRecording = async (): Promise<void> => {
+  return BcscCore.activateAudioSessionForRecording();
+};
+
+/**
  * Creates a quick login JWT assertion matching the format used in ias-ios app.
  * This creates a signed JWT with device info claims and access token nonce, following QuickLoginProtocol pattern.
  * @param accessToken The access token to include in the nonce

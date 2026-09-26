@@ -8,7 +8,6 @@ import {
   calculateBarcodeOrientation,
   clampZoom,
   determineScanState,
-  getPaddedHighlightPosition,
   isCodeAlignedWithZones,
   isRecoverableCameraRuntimeError,
   mergeLockedCodesWithAccumulated,
@@ -97,59 +96,6 @@ describe('clampZoom', () => {
     expect(clampZoom(1.5, 1, 2)).toBe(1.5)
     expect(clampZoom(0.9, 1, 2)).toBe(1)
     expect(clampZoom(2.1, 1, 2)).toBe(2)
-  })
-})
-
-// ─── getPaddedHighlightPosition ───────────────────────────────────────────────
-
-describe('getPaddedHighlightPosition', () => {
-  const position: Rect = { x: 100, y: 200, width: 300, height: 150 }
-
-  describe('on iOS', () => {
-    beforeEach(() => {
-      Object.defineProperty(Platform, 'OS', { value: 'ios', configurable: true })
-    })
-
-    it('returns the position unchanged', () => {
-      expect(getPaddedHighlightPosition(position)).toEqual(position)
-    })
-
-    it('returns the position unchanged with a custom pad', () => {
-      expect(getPaddedHighlightPosition(position, 20)).toEqual(position)
-    })
-  })
-
-  describe('on Android', () => {
-    beforeEach(() => {
-      Object.defineProperty(Platform, 'OS', { value: 'android', configurable: true })
-    })
-
-    it('pads all sides by the default 8px', () => {
-      expect(getPaddedHighlightPosition(position)).toEqual({
-        x: 92,
-        y: 192,
-        width: 316,
-        height: 166,
-      })
-    })
-
-    it('pads all sides by a custom pad amount', () => {
-      expect(getPaddedHighlightPosition(position, 12)).toEqual({
-        x: 88,
-        y: 188,
-        width: 324,
-        height: 174,
-      })
-    })
-
-    it('returns zero-size rect correctly padded', () => {
-      expect(getPaddedHighlightPosition({ x: 0, y: 0, width: 0, height: 0 }, 8)).toEqual({
-        x: -8,
-        y: -8,
-        width: 16,
-        height: 16,
-      })
-    })
   })
 })
 

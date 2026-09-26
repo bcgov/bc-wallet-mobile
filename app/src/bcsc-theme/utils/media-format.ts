@@ -97,3 +97,29 @@ export const sniffMediaFormat = (bytes: Uint8Array): MediaFormat | undefined => 
 
   return undefined
 }
+
+// IAS's Tika check only recognises MP4 by an mp41/mp42 major brand (IASP-19102).
+const SERVER_ACCEPTED_MP4_BRANDS = new Set(['mp41', 'mp42'])
+const SERVER_MP4_BRAND = 'mp42'
+
+/**
+ * Rewrites an MP4's `ftyp` major brand to `mp42` **in place** when it's another MP4 brand, such as
+ * `isom` from VisionCamera v5 / Media3 on Android. IAS rejects other brands (IASP-19102). Only those 4
+ * bytes change, so the file still plays; call it before hashing so the sha256 covers the uploaded bytes.
+ * Returns the original brand when rewritten, otherwise undefined (non-MP4, QuickTime or already accepted).
+ */
+export const normalizeMp4MajorBrand = (bytes: Uint8Array): string | undefined => {
+  if (bytes.length < 12 || readAscii4(bytes, 4) !== 'ftyp') {
+    return undefined
+  }
+
+  const majorBrand = readAscii4(bytes, 8)
+  if (SERVER_ACCEPTED_MP4_BRANDS.has(majorBrand) || !MP4_BRANDS.has(majorBrand)) {
+    return undefined
+  }
+
+  for (let i = 0; i < 4; i++) {
+    bytes[8 + i] = SERVER_MP4_BRAND.charCodeAt(i)
+  }
+  return majorBrand
+}

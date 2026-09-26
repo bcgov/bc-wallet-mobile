@@ -37,3 +37,13 @@ Turbomodule fixes. We should swap this library out soon, hasn't been updated in 
 Gates `test`/`trace` log methods on their own levels instead of `debug` (so ledger lookups no longer flood the default dev log level), drops `console.trace` for the `trace` level (no more stack traces on routine logs), forces `LogLevel.Test` instead of `Debug` when remote logging is enabled (support sessions keep full detail), and tags `trace` lines with a `[TRACE]` console prefix so they stay distinguishable from `debug` in Metro. #4599
 
 Upstream (Bifold `packages/remote-logs`): `src/logger.ts` L86 (remote-logging override), L187/L193 (`test`/`trace` gates); `src/transports/console.ts` L133-136 (`[TEST]` prefix block) and L146-150 (`console.trace` case). Tests to adjust when porting: `src/__tests__/console.transport.test.ts` L18 (mocks `console.trace`), `src/__tests__/logger.comprehensive.test.ts` L44 (hardcodes `logLevel = 2`). Drop this patch once the upstream fix lands.
+
+#### react-native-vision-camera-npm-5.2.3-cdc12318c5.patch
+
+Lets `mirrorMode` on `<Camera>`/`useCamera` be a function that returns the mode per output (`useCameraController`, `src` and `lib`). v5 otherwise applies one mode to every output, including the preview, so a mirrored selfie preview forces mirrored saved photos and videos. We keep the preview mirrored and save un-mirrored, so text held up reads correctly for ID Check (#4020). JS only, no native change. Pass a memoized function, because it's an effect dependency. Drop this patch if v5 adds per-output mirroring to `<Camera>`.
+
+#### react-native-video-npm-6.19.2-1043ec3883.patch
+
+**Android:** `ReactExoplayerView` builds against media3 1.9.0, the version VisionCamera v5's CameraX forces app-wide (see `RNVideo_media3Version` in `app/android/build.gradle`).
+
+**iOS:** react-native-video never manages the audio session in this app. `AudioSessionManager` is force-disabled by default, and activation/deactivation respect that flag. A player registers, and configures the session for playback, in `init`, before its `disableAudioSessionManagement` prop is applied. Its `setActive(true/false)` calls also ignored the flag. On the selfie-video review screen, that silenced the camera's microphone, so every Retake recorded digital silence. Only `VideoReviewScreen` uses react-native-video.
