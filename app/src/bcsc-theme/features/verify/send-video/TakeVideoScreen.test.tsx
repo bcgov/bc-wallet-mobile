@@ -258,6 +258,98 @@ describe('TakeVideoScreen', () => {
     })
   })
 
+  describe('Recorder fails to start', () => {
+    const startRecordingThatFails = async (navigation: ReturnType<typeof useNavigation>) => {
+      const realUseVisionCamera = jest.requireActual('@/bcsc-theme/hooks/useVisionCamera').useVisionCamera
+      jest.spyOn(visionCamera, 'useVisionCamera').mockImplementation((options) => ({
+        ...realUseVisionCamera(options),
+        cameraRef: { current: {} },
+        takePhoto: jest.fn().mockResolvedValue({ filePath: '/tmp/thumbnail.jpg' }),
+        startRecordingVideo: jest.fn().mockRejectedValue(new Error('recorder failed to start')),
+        cancelRecordingVideo: jest.fn(),
+      }))
+
+      const screen = render(
+        <BasicAppContext initialStateOverride={storeWithPrompts}>
+          <TakeVideoScreen navigation={navigation as never} />
+        </BasicAppContext>
+      )
+
+      act(() => {
+        screen.getByTestId('mock-camera').props.onConfigured()
+      })
+      // useFocusEffect is a no-op mock, so run the latest focus callback by hand to start the countdown
+      const focusCallback = jest.mocked(useFocusEffect).mock.calls.at(-1)![0]
+      act(() => {
+        focusCallback()
+      })
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(3000)
+      })
+
+      return screen
+    }
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('stops the timer, discards the thumbnail and goes back', async () => {
+      const setIntervalSpy = jest.spyOn(global, 'setInterval')
+      const clearIntervalSpy = jest.spyOn(global, 'clearInterval')
+      const navigation = useNavigation()
+      const screen = await startRecordingThatFails(navigation)
+
+      const timerCall = setIntervalSpy.mock.calls.findIndex(([, delay]) => delay === 1000)
+      expect(clearIntervalSpy).toHaveBeenCalledWith(setIntervalSpy.mock.results[timerCall].value)
+      expect(navigation.goBack).toHaveBeenCalled()
+      expect(removeFileSafely).toHaveBeenCalledWith('/tmp/thumbnail.jpg', expect.anything())
+      expect(screen.queryByTestId(testIdWithKey(TestIds.verify.takeVideo.cancel))).toBeNull()
+    })
+
+    it('does not go back again when the screen has already unmounted', async () => {
+      const navigation = useNavigation()
+      let rejectStart!: (error: Error) => void
+      const realUseVisionCamera = jest.requireActual('@/bcsc-theme/hooks/useVisionCamera').useVisionCamera
+      jest.spyOn(visionCamera, 'useVisionCamera').mockImplementation((options) => ({
+        ...realUseVisionCamera(options),
+        cameraRef: { current: {} },
+        takePhoto: jest.fn().mockResolvedValue({ filePath: '/tmp/thumbnail.jpg' }),
+        startRecordingVideo: jest.fn(
+          () =>
+            new Promise<void>((_, reject) => {
+              rejectStart = reject
+            })
+        ),
+        cancelRecordingVideo: jest.fn(),
+      }))
+
+      const screen = render(
+        <BasicAppContext initialStateOverride={storeWithPrompts}>
+          <TakeVideoScreen navigation={navigation as never} />
+        </BasicAppContext>
+      )
+      act(() => {
+        screen.getByTestId('mock-camera').props.onConfigured()
+      })
+      const focusCallback = jest.mocked(useFocusEffect).mock.calls.at(-1)![0]
+      act(() => {
+        focusCallback()
+      })
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(3000)
+      })
+
+      screen.unmount()
+      await act(async () => {
+        rejectStart(new Error('recorder failed to start'))
+      })
+
+      expect(navigation.goBack).not.toHaveBeenCalled()
+      expect(removeFileSafely).toHaveBeenCalledWith('/tmp/thumbnail.jpg', expect.anything())
+    })
+  })
+
   describe('Background / foreground camera lifecycle (regression for #4256)', () => {
     it('deactivates the camera when the app goes to the background, even once the camera has initialized', () => {
       mockUseBCSCActivity.mockReturnValue({ appStateStatus: 'background' })

@@ -251,55 +251,73 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       return
     }
 
-    await startRecordingVideo({
-      onRecordingError: (error) => {
-        stopTimer() // Stop timer on error
+    try {
+      await startRecordingVideo({
+        onRecordingError: (error) => {
+          stopTimer() // Stop timer on error
 
-        logger.error(`Recording error: ${error.message}`, error)
+          logger.error(`Recording error: ${error.message}`, error)
 
-        emitErrorModal(
-          t('BCSC.SendVideo.TakeVideo.RecordingError'),
-          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription'),
-          getCameraError(error)
-        )
-      },
-      onRecordingFinished: async (video) => {
-        logger.info(`Recording finished, duration: ${video.duration}`)
-        stopTimer() // Stop timer when manually stopping recording
-        setPrompt('')
-        if (exceedsMaxDurationRef.current) {
-          navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
-          return
-        }
-
-        let videoPath: string
-        try {
-          videoPath = await toMp4VideoPath(video.filePath)
-        } catch (error) {
-          logger.error('Failed to convert the selfie video to MP4', error as Error)
-          if (abandonedRef.current) {
-            return
-          }
           emitErrorModal(
             t('BCSC.SendVideo.TakeVideo.RecordingError'),
             t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription'),
             getCameraError(error)
           )
-          return
-        }
+        },
+        onRecordingFinished: async (video) => {
+          logger.info(`Recording finished, duration: ${video.duration}`)
+          stopTimer() // Stop timer when manually stopping recording
+          setPrompt('')
+          if (exceedsMaxDurationRef.current) {
+            navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
+            return
+          }
 
-        if (abandonedRef.current) {
-          logger.info('Recording abandoned during MP4 conversion, discarding it')
-          await removeFileSafely(videoPath, logger)
-          return
-        }
+          let videoPath: string
+          try {
+            videoPath = await toMp4VideoPath(video.filePath)
+          } catch (error) {
+            logger.error('Failed to convert the selfie video to MP4', error as Error)
+            if (abandonedRef.current) {
+              return
+            }
+            emitErrorModal(
+              t('BCSC.SendVideo.TakeVideo.RecordingError'),
+              t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription'),
+              getCameraError(error)
+            )
+            return
+          }
 
-        navigation.navigate(BCSCScreens.VideoReview, {
-          videoPath,
-          videoThumbnailPath: snapshot.filePath,
-        })
-      },
-    })
+          if (abandonedRef.current) {
+            logger.info('Recording abandoned during MP4 conversion, discarding it')
+            await removeFileSafely(videoPath, logger)
+            return
+          }
+
+          navigation.navigate(BCSCScreens.VideoReview, {
+            videoPath,
+            videoThumbnailPath: snapshot.filePath,
+          })
+        },
+      })
+    } catch (error) {
+      // The recorder failed to start, so neither callback will fire: clean up here or the timer
+      // keeps counting on a screen that isn't recording.
+      stopTimer()
+      setRecordingInProgress(false)
+      await removeFileSafely(snapshot.filePath, logger)
+      if (abandonedRef.current) {
+        return
+      }
+
+      emitErrorModal(
+        t('BCSC.SendVideo.TakeVideo.RecordingError'),
+        t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription'),
+        getCameraError(error)
+      )
+      navigation.goBack()
+    }
   }, [
     prompts,
     startTimer,
