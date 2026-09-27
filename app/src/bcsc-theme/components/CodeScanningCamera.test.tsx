@@ -1257,12 +1257,13 @@ describe('CodeScanningCamera', () => {
     it('applies the initial zoom once the camera session starts', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} initialZoom={2.5} />
+          <CodeScanningCamera {...defaultProps} initialZoom={10} />
         </BasicAppContext>
       )
 
+      // Above the device's maxZoom (8), so only the start handler's clamp can produce 8.
       expect(screen.getByTestId('mock-camera').props.zoom).toBeUndefined()
-      await waitFor(() => expect(screen.getByTestId('mock-camera').props.zoom).toBe(2.5))
+      await waitFor(() => expect(screen.getByTestId('mock-camera').props.zoom).toBe(8))
     })
   })
 
