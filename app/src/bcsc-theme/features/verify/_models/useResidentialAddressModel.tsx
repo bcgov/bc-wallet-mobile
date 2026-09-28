@@ -45,6 +45,7 @@ export type ResidentialAddressFormErrors = {
 
 type useResidentialAddressModelProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ResidentialAddress>
+  onInvalidSubmit?: (errors: ResidentialAddressFormErrors) => void
 }
 
 /**
@@ -53,7 +54,7 @@ type useResidentialAddressModelProps = {
  * - Form validation
  * - Submit handler with device authorization
  */
-const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelProps) => {
+const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResidentialAddressModelProps) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { authorization } = useApi()
@@ -134,6 +135,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
+      onInvalidSubmit?.(errors)
       return
     }
 
@@ -271,6 +273,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     updateDeviceCodes,
     updateVerificationOptions,
     updateCardProcess,
+    onInvalidSubmit,
   ])
 
   return {
