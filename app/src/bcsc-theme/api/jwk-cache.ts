@@ -11,7 +11,7 @@ import { RemoteLogger } from '@bifold/remote-logs'
 export interface PersistedJwkRecord {
   baseURL: string
   jwk: JWK
-  fetchedAt: number // epoch ms, logging/diagnostics only — there is no TTL, this is network-first
+  fetchedAt: number // epoch ms, logging/diagnostics only — the persisted fallback has no time to live
 }
 
 /**

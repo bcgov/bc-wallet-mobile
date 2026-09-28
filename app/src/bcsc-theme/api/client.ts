@@ -1,6 +1,7 @@
 import { JWK } from '@/bcsc-theme/types/jwk'
 import type { UploadLogContext } from '@/bcsc-theme/utils/media-format'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
+import { JWK_CACHE_TTL_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
@@ -99,6 +100,7 @@ class BCSCApiClient {
   onError?: BCSCClientOnErrorCallback
   private cachedJwk: JWK | null = null // in-memory JWK cache, invalidated when baseURL changes
   private cachedJwkBaseUrl: string | null = null
+  private cachedJwkFetchedAt: number | null = null // epoch ms, compared against JWK_CACHE_TTL_MS
   private jwkFetchPromise: Promise<JWK | null> | null = null // single-flight in-progress JWK fetch
   private jwkFetchPromiseBaseUrl: string | null = null // baseURL the in-flight fetch was started for
 
@@ -504,10 +506,13 @@ class BCSCApiClient {
   }
 
   /**
-   * Fetches the first JWK from the server's JWKS endpoint. Used for JWT signature verification.
+   * Fetches the first JWK from the server's JWKS endpoint. Used both to verify server-signed JWS
+   * (ID token, FCM login challenge) and to encrypt the quick login JWE.
    *
    * Resolution order:
-   * 1. In-memory cache hit (reused while the environment / baseURL is unchanged).
+   *
+   * 1. In-memory cache hit (key is cached until environment is changed or key is expired `JWK_CACHE_TTL_MS`).
+   *    An expired key triggers a refresh of the JWK.
    * 2. An in-flight fetch for the same baseURL (single-flight — see jwkFetchPromise below).
    *    Concurrent callers — e.g. BCSCApiClientContext's fire-and-forget warm-up landing alongside
    *    an early verification call at startup — join the same retry loop instead of each racing
@@ -529,7 +534,12 @@ class BCSCApiClient {
    * TODO: This should probably not be in the client, move logic elsewhere.
    */
   async fetchJwk(): Promise<JWK | null> {
-    if (this.cachedJwk && this.cachedJwkBaseUrl === this.baseURL) {
+    if (
+      this.cachedJwk &&
+      this.cachedJwkBaseUrl === this.baseURL &&
+      this.cachedJwkFetchedAt !== null &&
+      Date.now() - this.cachedJwkFetchedAt < JWK_CACHE_TTL_MS
+    ) {
       this.logger.info(
         `[BCSCApiClient] JWK served from in-memory cache (kid: ${this.cachedJwk.kid}, baseURL: ${this.baseURL})`
       )
@@ -595,6 +605,7 @@ class BCSCApiClient {
     if (jwk) {
       this.cachedJwk = jwk
       this.cachedJwkBaseUrl = baseURL
+      this.cachedJwkFetchedAt = Date.now()
       this.logger.info(`[BCSCApiClient] JWK fetched from network (kid: ${jwk.kid}, baseURL: ${baseURL})`)
       // Logs its own success/failure — see persistJwk in jwk-cache.ts.
       await persistJwk(baseURL, jwk, this.logger)
