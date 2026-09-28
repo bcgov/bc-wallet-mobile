@@ -1,9 +1,10 @@
 import { testIdWithKey } from '@bifold/core'
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Platform } from 'react-native'
-import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import { useCameraDevice } from 'react-native-vision-camera'
 import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
+import { ReactTestInstance } from 'react-test-renderer'
 
 import { AppEventCode } from '@/events/appEventCode'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -58,13 +59,7 @@ jest.mock('react-native-vision-camera', () => {
 
   return {
     Camera: MockCamera,
-    useCameraDevice: jest.fn(() => ({
-      id: 'back',
-      supportsFocusMetering: true,
-      minZoom: 1,
-      maxZoom: 8,
-      hasTorch: true,
-    })),
+    useCameraDevice: jest.fn(() => mockDefaultDevice),
     useCameraPermission: jest.fn(() => ({
       hasPermission: mockHasPermission,
       requestPermission: mockRequestPermission,
@@ -150,8 +145,49 @@ jest.mock('react-native-gesture-handler', () => ({
 // Typed handles to the mocked hooks above, for use in test bodies
 const mockedUseBCSCActivity = useBCSCActivity as jest.Mock
 const mockedUseCameraDevice = useCameraDevice as jest.Mock
-const mockedUseCameraPermission = useCameraPermission as jest.Mock
 const mockedUseBarcodeScannerOutput = useBarcodeScannerOutput as jest.Mock
+
+const originalPlatformOS = Platform.OS
+// Stable like the real hook: a new object per render changes startFocusCycling's identity and restarts cycling
+const mockDefaultDevice = {
+  id: 'back',
+  supportsFocusMetering: true,
+  minZoom: 1,
+  maxZoom: 8,
+  neutralZoom: 1,
+  hasTorch: true,
+}
+
+type MockScannedCode = {
+  type: string
+  value?: string
+  frame?: { x: number; y: number; width: number; height: number }
+  corners?: { x: number; y: number }[]
+}
+// The scanner output's currentResolution; omit it to use the raw boxes as container coordinates.
+type ScannerResolution = { width: number; height: number }
+
+const scanFrame = async (codes: MockScannedCode[], resolution?: ScannerResolution) => {
+  expect(mockCodeScannerCallback).toBeInstanceOf(Function)
+  await act(async () => {
+    mockCodeScannerCallback!(codes, resolution)
+  })
+}
+
+const scanFrames = async (codes: MockScannedCode[], count: number, resolution?: ScannerResolution) => {
+  for (let i = 0; i < count; i++) {
+    await scanFrame(codes, resolution)
+  }
+}
+
+// The onLayout handler lives on camera-preview-container; fireEvent does not reach it from scan-zone.
+const layoutCameraContainer = async (width: number, height: number) => {
+  await act(async () => {
+    fireEvent(screen.getByTestId('camera-preview-container'), 'layout', {
+      nativeEvent: { layout: { x: 0, y: 0, width, height } },
+    })
+  })
+}
 
 describe('CodeScanningCamera', () => {
   const mockOnCodeScanned = jest.fn()
@@ -172,6 +208,14 @@ describe('CodeScanningCamera', () => {
       pauseActivityTracking: mockPauseActivityTracking,
       resumeActivityTracking: mockResumeActivityTracking,
     })
+    mockedUseCameraDevice.mockReturnValue(mockDefaultDevice)
+    mockEnsureAppError.mockImplementation(() => ({ name: 'AppError', message: 'mocked error' }))
+    mockOnCodeScanned.mockReset()
+  })
+
+  afterEach(() => {
+    Platform.OS = originalPlatformOS
+    jest.useRealTimers()
   })
 
   it('renders correctly with default props', () => {
@@ -212,16 +256,57 @@ describe('CodeScanningCamera', () => {
     )
   })
 
-  it('calculates orientation correctly for horizontal barcode', () => {
-    // This would be tested via the enhanced code processing
-    // We'll validate this in integration tests
-    expect(true).toBe(true)
+  it('calculates orientation correctly for horizontal barcode', async () => {
+    render(
+      <BasicAppContext>
+        <CodeScanningCamera {...defaultProps} />
+      </BasicAppContext>
+    )
+
+    const wideCorners = [
+      { x: 100, y: 200 },
+      { x: 300, y: 200 },
+      { x: 300, y: 250 },
+      { x: 100, y: 250 },
+    ]
+    await scanFrames(
+      [
+        {
+          type: 'pdf-417',
+          value: 'HORIZONTAL',
+          frame: { x: 100, y: 200, width: 200, height: 50 },
+          corners: wideCorners,
+        },
+      ],
+      5
+    )
+
+    expect(mockOnCodeScanned).toHaveBeenCalledWith([
+      expect.objectContaining({ value: 'HORIZONTAL', orientation: 'horizontal' }),
+    ])
   })
 
-  it('calculates orientation correctly for vertical barcode', () => {
-    // This would be tested via the enhanced code processing
-    // We'll validate this in integration tests
-    expect(true).toBe(true)
+  it('calculates orientation correctly for vertical barcode', async () => {
+    render(
+      <BasicAppContext>
+        <CodeScanningCamera {...defaultProps} />
+      </BasicAppContext>
+    )
+
+    const tallCorners = [
+      { x: 100, y: 100 },
+      { x: 150, y: 100 },
+      { x: 150, y: 300 },
+      { x: 100, y: 300 },
+    ]
+    await scanFrames(
+      [{ type: 'code-39', value: 'VERTICAL', frame: { x: 100, y: 100, width: 50, height: 200 }, corners: tallCorners }],
+      5
+    )
+
+    expect(mockOnCodeScanned).toHaveBeenCalledWith([
+      expect.objectContaining({ value: 'VERTICAL', orientation: 'vertical' }),
+    ])
   })
 
   it('renders with custom initial zoom', () => {
@@ -236,12 +321,7 @@ describe('CodeScanningCamera', () => {
 
   describe('Camera Permission', () => {
     it('renders permission required message when no permission', () => {
-      // Mock no permission
-      mockedUseCameraPermission.mockReturnValueOnce({
-        hasPermission: false,
-        requestPermission: mockRequestPermission,
-      })
-      mockedUseCameraDevice.mockReturnValueOnce(null)
+      mockHasPermission = false
 
       const { getByText } = render(
         <BasicAppContext>
@@ -253,10 +333,7 @@ describe('CodeScanningCamera', () => {
     })
 
     it('requests permission when not granted', () => {
-      mockedUseCameraPermission.mockReturnValueOnce({
-        hasPermission: false,
-        requestPermission: mockRequestPermission,
-      })
+      mockHasPermission = false
 
       render(
         <BasicAppContext>
@@ -269,17 +346,6 @@ describe('CodeScanningCamera', () => {
   })
 
   describe('Torch Toggle', () => {
-    it('renders torch toggle button', () => {
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      // The QRScannerTorch component should be rendered
-      expect(getByTestId('scan-zone')).toBeTruthy()
-    })
-
     describe('device torch support (regression: iPad device/flash-unavailable in 4.1.0)', () => {
       const noTorchDevice = {
         id: 'back',
@@ -289,18 +355,6 @@ describe('CodeScanningCamera', () => {
         neutralZoom: 1,
         hasTorch: false,
       }
-
-      afterEach(() => {
-        // Restore the default per-render factory (a device with a torch).
-        mockedUseCameraDevice.mockImplementation(() => ({
-          id: 'back',
-          supportsFocusMetering: true,
-          minZoom: 1,
-          maxZoom: 8,
-          neutralZoom: 1,
-          hasTorch: true,
-        }))
-      })
 
       it('passes torch on to the camera when the device has a torch and torchActive is set', async () => {
         const { getByTestId } = render(
@@ -463,79 +517,37 @@ describe('CodeScanningCamera', () => {
     })
 
     it('processes codes when scanner detects barcodes', async () => {
+      const onScanStateChange = jest.fn()
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
+          <CodeScanningCamera {...defaultProps} onScanStateChange={onScanStateChange} />
         </BasicAppContext>
       )
+      expect(onScanStateChange).toHaveBeenLastCalledWith('scanning')
 
-      // Simulate code detection
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'pdf-417',
-            value: 'TEST1234',
-            frame: { x: 100, y: 200, width: 200, height: 50 },
-            corners: [
-              { x: 100, y: 200 },
-              { x: 300, y: 200 },
-              { x: 300, y: 250 },
-              { x: 100, y: 250 },
-            ],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
+      await scanFrame([
+        { type: 'pdf-417', value: 'TEST1234', frame: { x: 100, y: 200, width: 200, height: 50 }, corners: [] },
+      ])
 
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
+      expect(onScanStateChange).toHaveBeenLastCalledWith('aligned')
+      expect(mockOnCodeScanned).not.toHaveBeenCalled()
     })
 
     it('handles empty codes array', async () => {
+      const onScanStateChange = jest.fn()
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
+          <CodeScanningCamera {...defaultProps} onScanStateChange={onScanStateChange} />
         </BasicAppContext>
       )
 
-      if (mockCodeScannerCallback) {
-        const mockFrame = { width: 1920, height: 1080 }
+      await scanFrame([
+        { type: 'pdf-417', value: 'TEST1234', frame: { x: 100, y: 200, width: 200, height: 50 }, corners: [] },
+      ])
+      await scanFrame([])
 
-        await act(async () => {
-          mockCodeScannerCallback!([], mockFrame)
-        })
-      }
-    })
-
-    it('processes codes with vertical orientation', async () => {
-      render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      if (mockCodeScannerCallback) {
-        // Vertical barcode (height > width in corners)
-        const mockCodes = [
-          {
-            type: 'code-39',
-            value: 'VERTICAL123',
-            frame: { x: 100, y: 100, width: 50, height: 200 },
-            corners: [
-              { x: 100, y: 100 },
-              { x: 150, y: 100 },
-              { x: 150, y: 300 },
-              { x: 100, y: 300 },
-            ],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
+      // The single reading decays to zero, which resets the scan back to 'scanning'.
+      expect(onScanStateChange.mock.calls).toEqual([['scanning'], ['aligned'], ['scanning']])
     })
 
     it('processes multiple codes simultaneously', async () => {
@@ -545,27 +557,23 @@ describe('CodeScanningCamera', () => {
         </BasicAppContext>
       )
 
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'pdf-417',
-            value: 'PDF417VALUE',
-            frame: { x: 100, y: 200, width: 300, height: 100 },
-            corners: [],
-          },
-          {
-            type: 'code-39',
-            value: 'CODE39VALUE',
-            frame: { x: 100, y: 400, width: 300, height: 30 },
-            corners: [],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
+      await scanFrames(
+        [
+          { type: 'pdf-417', value: 'PDF417VALUE', frame: { x: 100, y: 200, width: 300, height: 100 }, corners: [] },
+          { type: 'code-39', value: 'CODE39VALUE', frame: { x: 100, y: 400, width: 300, height: 30 }, corners: [] },
+        ],
+        5
+      )
 
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
+      expect(mockOnCodeScanned).toHaveBeenCalledTimes(1)
+      const [codes] = mockOnCodeScanned.mock.calls[0]
+      expect(codes).toHaveLength(2)
+      expect(codes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ value: 'PDF417VALUE' }),
+          expect.objectContaining({ value: 'CODE39VALUE' }),
+        ])
+      )
     })
   })
 
@@ -681,73 +689,28 @@ describe('CodeScanningCamera', () => {
     ]
 
     it('detects codes aligned with scan zones', async () => {
-      const { getByTestId } = render(
+      render(
         <BasicAppContext>
           <CodeScanningCamera {...defaultProps} scanZones={customScanZones} />
         </BasicAppContext>
       )
+      await layoutCameraContainer(400, 600)
 
-      // Trigger container layout to set dimensions
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
-      })
-
-      // Simulate detecting aligned codes within the scan zones
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'pdf-417',
-            value: 'ALIGNED_PDF417',
-            frame: { x: 50, y: 120, width: 300, height: 80 },
-            corners: [],
-          },
-          {
-            type: 'code-39',
-            value: 'ALIGNED_CODE39',
-            frame: { x: 50, y: 420, width: 300, height: 40 },
-            corners: [],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
-    })
-
-    it('processes codes with enableScanZones for debug mode', async () => {
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
-        </BasicAppContext>
+      // No scanner resolution, so the boxes are already in container coordinates.
+      await scanFrames(
+        [
+          { type: 'pdf-417', value: 'ALIGNED_PDF417', frame: { x: 50, y: 120, width: 300, height: 80 }, corners: [] },
+          { type: 'code-39', value: 'ALIGNED_CODE39', frame: { x: 50, y: 420, width: 300, height: 40 }, corners: [] },
+        ],
+        5
       )
 
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
-      })
-
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'pdf-417',
-            value: 'DEBUG_PDF417',
-            frame: { x: 100, y: 200, width: 200, height: 50 },
-            corners: [],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
+      expect(mockOnCodeScanned).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ value: 'ALIGNED_PDF417', isAligned: true }),
+          expect.objectContaining({ value: 'ALIGNED_CODE39', isAligned: true }),
+        ])
+      )
     })
 
     describe('position gate removed (regression for #4256)', () => {
@@ -758,10 +721,6 @@ describe('CodeScanningCamera', () => {
       // position pure cover-mode scaling, fully deterministic to hand-compute.
       beforeEach(() => {
         Platform.OS = 'android'
-      })
-
-      afterEach(() => {
-        Platform.OS = 'ios'
       })
 
       const containerLayout = { x: 0, y: 0, width: 400, height: 800 }
@@ -799,14 +758,8 @@ describe('CodeScanningCamera', () => {
           fireEvent(cameraContainer, 'layout', { nativeEvent: { layout: containerLayout } })
         })
 
-        if (mockCodeScannerCallback) {
-          // LOCK_READING_THRESHOLD (5) consecutive frames of the same code.
-          for (let i = 0; i < 5; i++) {
-            await act(async () => {
-              mockCodeScannerCallback!([insideZoneCode], mockFrame)
-            })
-          }
-        }
+        // LOCK_READING_THRESHOLD (5) consecutive frames of the same code.
+        await scanFrames([insideZoneCode], 5, mockFrame)
 
         await waitFor(() => {
           expect(mockOnCodeScanned).toHaveBeenCalledWith(
@@ -827,14 +780,8 @@ describe('CodeScanningCamera', () => {
           fireEvent(cameraContainer, 'layout', { nativeEvent: { layout: containerLayout } })
         })
 
-        if (mockCodeScannerCallback) {
-          // LOCK_READING_THRESHOLD (5) consecutive frames of the same code.
-          for (let i = 0; i < 5; i++) {
-            await act(async () => {
-              mockCodeScannerCallback!([outsideZoneCode], mockFrame)
-            })
-          }
-        }
+        // LOCK_READING_THRESHOLD (5) consecutive frames of the same code.
+        await scanFrames([outsideZoneCode], 5, mockFrame)
 
         // Before this fix, an unaligned code was filtered out of `qualifyingCodes`
         // in determineScanState and the scan would never reach 'locked' — the
@@ -871,11 +818,7 @@ describe('CodeScanningCamera', () => {
           nativeEvent: { layout: { x: 0, y: 0, width: 300, height: 400 } },
         })
       })
-      for (let i = 0; i < 5; i++) {
-        await act(async () => {
-          mockCodeScannerCallback!([bufferCode], frame)
-        })
-      }
+      await scanFrames([bufferCode], 5, frame)
     }
 
     it('maps the scanner-frame box into the container before checking alignment', async () => {
@@ -915,23 +858,20 @@ describe('CodeScanningCamera', () => {
           <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
-
-      if (mockCodeScannerCallback) {
-        const mockCode = {
-          type: 'pdf-417',
-          value: 'CONSISTENT_VALUE',
-          frame: { x: 100, y: 200, width: 200, height: 50 },
-          corners: [],
-        }
-        const mockFrame = { width: 1920, height: 1080 }
-
-        // Simulate multiple consecutive detections of the same code
-        for (let i = 0; i < 5; i++) {
-          await act(async () => {
-            mockCodeScannerCallback!([mockCode], mockFrame)
-          })
-        }
+      const code = {
+        type: 'pdf-417',
+        value: 'CONSISTENT_VALUE',
+        frame: { x: 100, y: 200, width: 200, height: 50 },
+        corners: [],
       }
+
+      await scanFrames([code], 4)
+      expect(mockOnCodeScanned).not.toHaveBeenCalled()
+
+      await scanFrame([code])
+      expect(mockOnCodeScanned).toHaveBeenCalledWith([
+        expect.objectContaining({ value: 'CONSISTENT_VALUE', readingCount: 5, isValidated: true }),
+      ])
     })
 
     it('resets count when code value changes', async () => {
@@ -940,40 +880,20 @@ describe('CodeScanningCamera', () => {
           <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
-
-      if (mockCodeScannerCallback) {
-        const mockFrame = { width: 1920, height: 1080 }
-
-        // First code
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'VALUE_1',
-                frame: { x: 100, y: 200, width: 200, height: 50 },
-                corners: [],
-              },
-            ],
-            mockFrame
-          )
-        })
-
-        // Different code (should reset)
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'VALUE_2',
-                frame: { x: 100, y: 200, width: 200, height: 50 },
-                corners: [],
-              },
-            ],
-            mockFrame
-          )
-        })
+      const first = {
+        type: 'pdf-417',
+        value: 'VALUE_1',
+        frame: { x: 100, y: 200, width: 200, height: 50 },
+        corners: [],
       }
+      const second = { ...first, value: 'VALUE_2' }
+
+      await scanFrames([first], 4)
+      await scanFrame([second])
+      expect(mockOnCodeScanned).not.toHaveBeenCalled()
+
+      await scanFrames([second], 4)
+      expect(mockOnCodeScanned).toHaveBeenCalledWith([expect.objectContaining({ value: 'VALUE_2', readingCount: 5 })])
     })
   })
 
@@ -993,30 +913,18 @@ describe('CodeScanningCamera', () => {
       }
       const mockFrame = { width: 1920, height: 1080 }
 
-      if (mockCodeScannerCallback) {
-        // 4 consecutive frames with the code — readingCount: 1, 2, 3, 4
-        for (let i = 0; i < 4; i++) {
-          await act(async () => {
-            mockCodeScannerCallback!([mockCode], mockFrame)
-          })
-        }
+      // 4 consecutive frames with the code — readingCount: 1, 2, 3, 4
+      await scanFrames([mockCode], 4, mockFrame)
 
-        // 1 blank frame (codes.length === 0) — decays 4 → 3 instead of clearing to 0
-        await act(async () => {
-          mockCodeScannerCallback!([], mockFrame)
-        })
+      // 1 blank frame (codes.length === 0) — decays 4 → 3 instead of clearing to 0
+      await scanFrame([], mockFrame)
 
-        expect(mockOnCodeScanned).not.toHaveBeenCalled()
+      expect(mockOnCodeScanned).not.toHaveBeenCalled()
 
-        // 2 more frames with the code — 3 → 4 → 5, reaching LOCK_READING_THRESHOLD.
-        // If the old clear()-on-blank-frame behavior were still in place, this
-        // would need 5 more frames (readingCount would have reset to 0).
-        for (let i = 0; i < 2; i++) {
-          await act(async () => {
-            mockCodeScannerCallback!([mockCode], mockFrame)
-          })
-        }
-      }
+      // 2 more frames with the code — 3 → 4 → 5, reaching LOCK_READING_THRESHOLD.
+      // If the old clear()-on-blank-frame behavior were still in place, this
+      // would need 5 more frames (readingCount would have reset to 0).
+      await scanFrames([mockCode], 2, mockFrame)
 
       await waitFor(() => {
         expect(mockOnCodeScanned).toHaveBeenCalled()
@@ -1041,313 +949,23 @@ describe('CodeScanningCamera', () => {
       const codeB = { type: 'code-39', value: 'CODE_B', frame: { x: 100, y: 400, width: 200, height: 30 }, corners: [] }
       const mockFrame = { width: 1920, height: 1080 }
 
-      if (mockCodeScannerCallback) {
-        // Both codes for 4 frames — each readingCount: 1, 2, 3, 4
-        for (let i = 0; i < 4; i++) {
-          await act(async () => {
-            mockCodeScannerCallback!([codeA, codeB], mockFrame)
-          })
-        }
+      // Both codes for 4 frames — each readingCount: 1, 2, 3, 4
+      await scanFrames([codeA, codeB], 4, mockFrame)
 
-        // codeB drops out for one (still nonempty) frame — its count decays
-        // 4 → 3 via the stale-key path in decayStaleReadings; codeA keeps
-        // incrementing normally (4 → 5) since it's present every frame.
-        await act(async () => {
-          mockCodeScannerCallback!([codeA], mockFrame)
-        })
+      // codeB drops out for one (still nonempty) frame — its count decays
+      // 4 → 3 via the stale-key path in decayStaleReadings; codeA keeps
+      // incrementing normally (4 → 5) since it's present every frame.
+      await scanFrame([codeA], mockFrame)
 
-        expect(mockOnCodeScanned).not.toHaveBeenCalled()
+      expect(mockOnCodeScanned).not.toHaveBeenCalled()
 
-        // codeB returns — 3 → 4, then one more frame → 5. Both codes must reach
-        // the threshold together (minCodesForAligned = 2) to lock and confirm.
-        for (let i = 0; i < 2; i++) {
-          await act(async () => {
-            mockCodeScannerCallback!([codeA, codeB], mockFrame)
-          })
-        }
-      }
+      // codeB returns — 3 → 4, then one more frame → 5. Both codes must reach
+      // the threshold together (minCodesForAligned = 2) to lock and confirm.
+      await scanFrames([codeA, codeB], 2, mockFrame)
 
       await waitFor(() => {
         expect(mockOnCodeScanned).toHaveBeenCalled()
       })
-    })
-  })
-
-  describe('Coordinate transformation', () => {
-    it('transforms coordinates for iOS in portrait mode', async () => {
-      Platform.OS = 'ios'
-
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 800 } },
-        })
-      })
-
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'pdf-417',
-            value: 'IOS_TEST',
-            frame: { x: 500, y: 300, width: 400, height: 100 },
-            corners: [
-              { x: 500, y: 300 },
-              { x: 900, y: 300 },
-              { x: 900, y: 400 },
-              { x: 500, y: 400 },
-            ],
-          },
-        ]
-        // Landscape frame dimensions (typical for iOS)
-        const mockFrame = { width: 1920, height: 1080 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
-    })
-
-    it('transforms coordinates for Android in portrait mode', async () => {
-      Platform.OS = 'android'
-
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 800 } },
-        })
-      })
-
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'pdf-417',
-            value: 'ANDROID_TEST',
-            frame: { x: 100, y: 200, width: 300, height: 80 },
-            corners: [],
-          },
-        ]
-        // Landscape frame dimensions (raw sensor on Android)
-        const mockFrame = { width: 640, height: 480 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
-    })
-
-    it('handles portrait frame dimensions on Android', async () => {
-      Platform.OS = 'android'
-
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 800 } },
-        })
-      })
-
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'pdf-417',
-            value: 'ANDROID_PORTRAIT',
-            frame: { x: 100, y: 200, width: 300, height: 80 },
-            corners: [],
-          },
-        ]
-        // Portrait frame dimensions
-        const mockFrame = { width: 480, height: 640 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
-    })
-  })
-
-  describe('Code without position data', () => {
-    it('handles codes without frame property', async () => {
-      render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'qr',
-            value: 'NO_FRAME_CODE',
-            // No frame property
-            corners: [],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
-    })
-
-    it('handles codes without corners', async () => {
-      render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'code-128',
-            value: 'NO_CORNERS_CODE',
-            frame: { x: 100, y: 200, width: 200, height: 50 },
-            // No corners or empty corners
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
-    })
-
-    it('handles codes with single corner point', async () => {
-      render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'code-39',
-            value: 'SINGLE_CORNER',
-            frame: { x: 100, y: 200, width: 200, height: 50 },
-            corners: [{ x: 100, y: 200 }],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
-    })
-  })
-
-  describe('Barcode type display', () => {
-    it('displays decoded value for code-39 barcodes', async () => {
-      render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'code-39',
-            value: 'ABC123',
-            frame: { x: 100, y: 200, width: 200, height: 30 },
-            corners: [],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
-    })
-
-    it('displays decoded value for code-128 barcodes', async () => {
-      render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'code-128',
-            value: 'CODE128TEST',
-            frame: { x: 100, y: 200, width: 250, height: 35 },
-            corners: [],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
-
-        await act(async () => {
-          mockCodeScannerCallback!(mockCodes, mockFrame)
-        })
-      }
-    })
-  })
-
-  describe('Highlight clearing', () => {
-    beforeEach(() => {
-      jest.useFakeTimers()
-    })
-
-    afterEach(() => {
-      jest.useRealTimers()
-    })
-
-    it('clears highlights after timeout when no codes detected', async () => {
-      render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      if (mockCodeScannerCallback) {
-        // First detect a code
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'TEMP_CODE',
-                frame: { x: 100, y: 200, width: 200, height: 50 },
-                corners: [],
-              },
-            ],
-            { width: 1920, height: 1080 }
-          )
-        })
-
-        // Then detect no codes
-        await act(async () => {
-          mockCodeScannerCallback!([], { width: 1920, height: 1080 })
-        })
-
-        // Advance timers to trigger highlight clear
-        await act(async () => {
-          jest.advanceTimersByTime(600)
-        })
-      }
     })
   })
 
@@ -1380,48 +998,43 @@ describe('CodeScanningCamera', () => {
       const callsBeforeDetection = mockFocus.mock.calls.length
       expect(callsBeforeDetection).toBeGreaterThan(0)
 
-      if (mockCodeScannerCallback) {
-        const mockFrame = { width: 1920, height: 1080 }
-        const detect = async (value: string) => {
-          await act(async () => {
-            mockCodeScannerCallback!(
-              [{ type: 'pdf-417', value, frame: { x: 100, y: 200, width: 200, height: 50 }, corners: [] }],
-              mockFrame
-            )
-          })
-        }
+      const mockFrame = { width: 1920, height: 1080 }
+      const detect = (value: string) =>
+        scanFrame(
+          [{ type: 'pdf-417', value, frame: { x: 100, y: 200, width: 200, height: 50 }, corners: [] }],
+          mockFrame
+        )
 
-        // Simulate continuous scanning: a fresh detection every 500ms (well
-        // under the 2s FOCUS_SUPPRESS_AFTER_DETECTION_MS window) for 2.5s
-        // straight — long enough to span a full FOCUS_CYCLE_INTERVAL_MS (2.5s)
-        // tick. A different value each time keeps readingCount from reaching
-        // the lock threshold, so scanState (and the cycling effect it drives)
-        // settles after the first detection and doesn't restart mid-loop.
-        for (let i = 0; i < 5; i++) {
-          await detect(`ACTIVE_${i}`)
-          await act(async () => {
-            jest.advanceTimersByTime(500)
-          })
-        }
-
-        // No new (unsuppressed) focus calls should have landed while detections
-        // kept refreshing the suppression window.
-        expect(mockFocus.mock.calls).toHaveLength(callsBeforeDetection)
-
-        // Detection stops here. Advance past the suppression window plus a full
-        // cycle interval (2000 + 2500ms) — cycling should resume automatically.
+      // Simulate continuous scanning: a fresh detection every 500ms (well
+      // under the 2s FOCUS_SUPPRESS_AFTER_DETECTION_MS window) for 2.5s
+      // straight — long enough to span a full FOCUS_CYCLE_INTERVAL_MS (2.5s)
+      // tick. A different value each time keeps readingCount from reaching
+      // the lock threshold, so scanState (and the cycling effect it drives)
+      // settles after the first detection and doesn't restart mid-loop.
+      for (let i = 0; i < 5; i++) {
+        await detect(`ACTIVE_${i}`)
         await act(async () => {
-          jest.advanceTimersByTime(2000 + 2500)
+          jest.advanceTimersByTime(500)
         })
-
-        expect(mockFocus.mock.calls.length).toBeGreaterThan(callsBeforeDetection)
       }
+
+      // No new (unsuppressed) focus calls should have landed while detections
+      // kept refreshing the suppression window.
+      expect(mockFocus.mock.calls).toHaveLength(callsBeforeDetection)
+
+      // Detection stops here. Advance past the suppression window plus a full
+      // cycle interval (2000 + 2500ms) — cycling should resume automatically.
+      await act(async () => {
+        jest.advanceTimersByTime(2000 + 2500)
+      })
+
+      expect(mockFocus.mock.calls.length).toBeGreaterThan(callsBeforeDetection)
     })
   })
 
   describe('Device without focus support', () => {
-    it('renders correctly when device does not support focus', () => {
-      mockedUseCameraDevice.mockReturnValueOnce({
+    it('does not start focus cycling when the device does not support focus metering', async () => {
+      mockedUseCameraDevice.mockReturnValue({
         id: 'back',
         supportsFocusMetering: false,
         minZoom: 1,
@@ -1429,207 +1042,67 @@ describe('CodeScanningCamera', () => {
         hasTorch: false,
       })
 
-      const tree = render(
+      render(
         <BasicAppContext>
           <CodeScanningCamera {...defaultProps} />
         </BasicAppContext>
       )
-      expect(tree).toBeTruthy()
+      await layoutCameraContainer(400, 800)
+
+      expect(mockFocus).not.toHaveBeenCalled()
     })
   })
 
   describe('Unmount cleanup', () => {
     it('cleans up timeouts on unmount', async () => {
       jest.useFakeTimers()
+      const setIntervalSpy = jest.spyOn(global, 'setInterval')
+      const clearIntervalSpy = jest.spyOn(global, 'clearInterval')
+      try {
+        const { unmount } = render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} />
+          </BasicAppContext>
+        )
+        // Focus cycling only starts once the container has a size.
+        await layoutCameraContainer(400, 800)
 
-      const { unmount } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
+        const cycleIndex = setIntervalSpy.mock.calls.findIndex(([, delay]) => delay === 2500)
+        expect(cycleIndex).toBeGreaterThanOrEqual(0)
+        const focusCycleTimer = setIntervalSpy.mock.results[cycleIndex].value
+        // Fake timer handles compare structurally, so check identity rather than toHaveBeenCalledWith.
+        expect(clearIntervalSpy.mock.calls.map(([timer]) => timer)).not.toContain(focusCycleTimer)
 
-      // Trigger some code scanning
-      if (mockCodeScannerCallback) {
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'CLEANUP_TEST',
-                frame: { x: 100, y: 200, width: 200, height: 50 },
-                corners: [],
-              },
-            ],
-            { width: 1920, height: 1080 }
-          )
-        })
+        unmount()
+
+        expect(clearIntervalSpy.mock.calls.map(([timer]) => timer)).toContain(focusCycleTimer)
+      } finally {
+        setIntervalSpy.mockRestore()
+        clearIntervalSpy.mockRestore()
       }
-
-      // Unmount should clear timers
-      unmount()
-
-      jest.useRealTimers()
     })
   })
 
   describe('Locked state with enableScanZones', () => {
     it('triggers locked state after consecutive readings in enableScanZones mode', async () => {
-      // In enableScanZones mode, all identified codes count as qualifying
-      // Need 2+ codes with 5+ consecutive readings each to trigger locked state
-      const { getByTestId } = render(
+      const onScanStateChange = jest.fn()
+      render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} enableScanZones={true} />
+          <CodeScanningCamera {...defaultProps} enableScanZones={true} onScanStateChange={onScanStateChange} />
         </BasicAppContext>
       )
+      const codes = [
+        { type: 'pdf-417', value: 'LOCKED_PDF417', frame: { x: 50, y: 100, width: 300, height: 80 }, corners: [] },
+        { type: 'code-39', value: 'LOCKED_CODE39', frame: { x: 50, y: 300, width: 300, height: 30 }, corners: [] },
+      ]
 
-      // Set up container dimensions first
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
-      })
+      await scanFrames(codes, 4)
+      expect(screen.queryByTestId('save-scan-zones-button')).toBeNull()
 
-      if (mockCodeScannerCallback) {
-        const mockCodes = [
-          {
-            type: 'pdf-417',
-            value: 'LOCKED_PDF417',
-            frame: { x: 50, y: 100, width: 300, height: 80 },
-            corners: [],
-          },
-          {
-            type: 'code-39',
-            value: 'LOCKED_CODE39',
-            frame: { x: 50, y: 300, width: 300, height: 30 },
-            corners: [],
-          },
-        ]
-        const mockFrame = { width: 1920, height: 1080 }
-
-        // Simulate 6 consecutive detections (above LOCK_READING_THRESHOLD of 5)
-        for (let i = 0; i < 6; i++) {
-          await act(async () => {
-            mockCodeScannerCallback!(mockCodes, mockFrame)
-          })
-        }
-      }
-
-      // In enableScanZones mode, Save Scan Zones button should appear when locked
-      // Note: The button may or may not render based on ENABLE_MANUAL_CONFIRM flag
-    })
-
-    it('updates detected codes with position changes', async () => {
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
-      })
-
-      if (mockCodeScannerCallback) {
-        const mockFrame = { width: 1920, height: 1080 }
-
-        // First detection
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'MOVING_CODE',
-                frame: { x: 100, y: 200, width: 200, height: 50 },
-                corners: [],
-              },
-            ],
-            mockFrame
-          )
-        })
-
-        // Same code but moved position (>5px change triggers update)
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'MOVING_CODE',
-                frame: { x: 110, y: 210, width: 200, height: 50 },
-                corners: [],
-              },
-            ],
-            mockFrame
-          )
-        })
-      }
-    })
-  })
-
-  describe('Debug diagnostics rendering', () => {
-    const customScanZones: ScanZone[] = [
-      {
-        types: ['pdf-417'],
-        box: { x: 0.1, y: 0.2, width: 0.8, height: 0.15 },
-      },
-      {
-        types: ['code-39'],
-        box: { x: 0.1, y: 0.7, width: 0.8, height: 0.08 },
-      },
-    ]
-
-    it('renders debug crosshairs when enableScanZones and frameSize are set', async () => {
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
-        </BasicAppContext>
-      )
-
-      // Trigger container layout
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 800 } },
-        })
-      })
-
-      // Trigger a code scan to set frameSize
-      if (mockCodeScannerCallback) {
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'DEBUG_TEST',
-                frame: { x: 100, y: 200, width: 200, height: 50 },
-                corners: [],
-              },
-            ],
-            { width: 1920, height: 1080 }
-          )
-        })
-      }
-    })
-
-    it('renders scan zone debug overlays', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
-        </BasicAppContext>
-      )
-
-      // Trigger layout to set container size
-      const scanZone = tree.getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
-      })
-
-      expect(tree.toJSON()).toBeTruthy()
+      await scanFrame(codes)
+      expect(onScanStateChange).toHaveBeenLastCalledWith('locked')
+      expect(screen.getByTestId('save-scan-zones-button')).toBeTruthy()
+      expect(screen.getByTestId('continue-scanning-button')).toBeTruthy()
     })
   })
 
@@ -1646,67 +1119,53 @@ describe('CodeScanningCamera', () => {
     ]
 
     it('detects which zone a code belongs to for focus cycling', async () => {
-      const { getByTestId } = render(
+      jest.useFakeTimers()
+      render(
         <BasicAppContext>
           <CodeScanningCamera {...defaultProps} scanZones={customScanZones} />
         </BasicAppContext>
       )
+      await layoutCameraContainer(400, 600)
+      // Cycling starts on zone 0 (centre of x:[40,360], y:[60,180]).
+      expect(mockFocus).toHaveBeenLastCalledWith({ x: expect.closeTo(200), y: expect.closeTo(120) })
+      const callsBefore = mockFocus.mock.calls.length
 
-      const scanZone = getByTestId('scan-zone')
+      // A code-39 inside zone 1 marks that zone as detected.
+      await scanFrame([
+        { type: 'code-39', value: 'ZONE2_CODE', frame: { x: 80, y: 370, width: 240, height: 40 }, corners: [] },
+      ])
       await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
+        jest.advanceTimersByTime(2500)
       })
 
-      if (mockCodeScannerCallback) {
-        // Code that should align with first scan zone (pdf-417)
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'ZONE1_CODE',
-                frame: { x: 80, y: 90, width: 240, height: 60 },
-                corners: [],
-              },
-            ],
-            { width: 1920, height: 1080 }
-          )
-        })
-      }
+      // The next tick skips detected zone 1 and returns to zone 0; plain round-robin would focus zone 1 at (200, 390).
+      expect(mockFocus).toHaveBeenCalledTimes(callsBefore + 1)
+      expect(mockFocus).toHaveBeenLastCalledWith({ x: expect.closeTo(200), y: expect.closeTo(120) })
     })
 
     it('rejects codes with mismatched types for zones', async () => {
-      const { getByTestId } = render(
+      render(
         <BasicAppContext>
           <CodeScanningCamera {...defaultProps} scanZones={customScanZones} />
         </BasicAppContext>
       )
+      await layoutCameraContainer(400, 600)
 
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
-      })
+      // The code-128 sits where the pdf-417 zone is; the code-39 in its own zone shows the layout took effect.
+      await scanFrames(
+        [
+          { type: 'code-128', value: 'WRONG_TYPE', frame: { x: 80, y: 90, width: 240, height: 60 }, corners: [] },
+          { type: 'code-39', value: 'RIGHT_TYPE', frame: { x: 80, y: 370, width: 240, height: 40 }, corners: [] },
+        ],
+        5
+      )
 
-      if (mockCodeScannerCallback) {
-        // Code-128 should not match pdf-417 or code-39 zones even if position aligns
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'code-128',
-                value: 'WRONG_TYPE',
-                frame: { x: 80, y: 90, width: 240, height: 60 },
-                corners: [],
-              },
-            ],
-            { width: 1920, height: 1080 }
-          )
-        })
-      }
+      expect(mockOnCodeScanned).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ value: 'WRONG_TYPE', isAligned: false }),
+          expect.objectContaining({ value: 'RIGHT_TYPE', isAligned: true }),
+        ])
+      )
     })
   })
 
@@ -1724,18 +1183,26 @@ describe('CodeScanningCamera', () => {
     })
 
     it('handles layout events for default scan zone', async () => {
-      const { getByTestId } = render(
+      render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} />
+          <CodeScanningCamera {...defaultProps} scanZones={[]} />
         </BasicAppContext>
       )
+      await layoutCameraContainer(400, 800)
 
-      const scanZone = getByTestId('scan-zone')
+      // With no scan zones, alignment falls back to the bounds of the default opening, which has no testID.
+      const defaultOpening = screen.getByTestId('scan-zone').children[0] as ReactTestInstance
       await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 50, y: 200, width: 300, height: 75 } },
-        })
+        fireEvent(defaultOpening, 'layout', { nativeEvent: { layout: { x: 50, y: 350, width: 300, height: 75 } } })
       })
+      await scanFrames(
+        [{ type: 'code-39', value: 'IN_DEFAULT_ZONE', frame: { x: 60, y: 360, width: 280, height: 50 }, corners: [] }],
+        5
+      )
+
+      expect(mockOnCodeScanned).toHaveBeenCalledWith([
+        expect.objectContaining({ value: 'IN_DEFAULT_ZONE', isAligned: true }),
+      ])
     })
   })
 
@@ -1752,138 +1219,51 @@ describe('CodeScanningCamera', () => {
     ]
 
     it('transitions to aligned state with 2+ codes qualifying', async () => {
-      const { getByTestId } = render(
+      const onScanStateChange = jest.fn()
+      render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
+          <CodeScanningCamera
+            {...defaultProps}
+            scanZones={customScanZones}
+            enableScanZones={true}
+            onScanStateChange={onScanStateChange}
+          />
         </BasicAppContext>
       )
-
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
-      })
-
-      if (mockCodeScannerCallback) {
-        // Two codes detected should trigger aligned state (but not locked without consecutive reads)
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'ALIGN_PDF',
-                frame: { x: 20, y: 60, width: 360, height: 150 },
-                corners: [],
-              },
-              {
-                type: 'code-39',
-                value: 'ALIGN_CODE39',
-                frame: { x: 20, y: 360, width: 360, height: 90 },
-                corners: [],
-              },
-            ],
-            { width: 1920, height: 1080 }
-          )
-        })
+      const pdf417 = {
+        type: 'pdf-417',
+        value: 'ALIGN_PDF',
+        frame: { x: 20, y: 60, width: 360, height: 150 },
+        corners: [],
       }
-    })
-  })
-
-  describe('Highlight position for Android', () => {
-    beforeEach(() => {
-      Platform.OS = 'android'
-    })
-
-    afterEach(() => {
-      Platform.OS = 'ios'
-    })
-
-    it('adds padding to highlight position on Android', async () => {
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} enableScanZones={true} />
-        </BasicAppContext>
-      )
-
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
-      })
-
-      if (mockCodeScannerCallback) {
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'ANDROID_HIGHLIGHT',
-                frame: { x: 100, y: 200, width: 200, height: 50 },
-                corners: [],
-              },
-            ],
-            { width: 640, height: 480 }
-          )
-        })
+      const code39 = {
+        type: 'code-39',
+        value: 'ALIGN_CODE39',
+        frame: { x: 20, y: 360, width: 360, height: 90 },
+        corners: [],
       }
-    })
-  })
 
-  describe('Code with detected value rendering', () => {
-    it('shows highlight with different styles based on scan state', async () => {
-      const customScanZones: ScanZone[] = [
-        { types: ['pdf-417', 'code-39'], box: { x: 0.05, y: 0.1, width: 0.9, height: 0.8 } },
-      ]
+      // Two zones need two qualifying codes before the scan is aligned.
+      await scanFrame([pdf417])
+      expect(onScanStateChange).toHaveBeenLastCalledWith('scanning')
 
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} scanZones={customScanZones} enableScanZones={true} />
-        </BasicAppContext>
-      )
-
-      const scanZone = getByTestId('scan-zone')
-      await act(async () => {
-        fireEvent(scanZone, 'layout', {
-          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 600 } },
-        })
-      })
-
-      if (mockCodeScannerCallback) {
-        // Single code shows scanning state
-        await act(async () => {
-          mockCodeScannerCallback!(
-            [
-              {
-                type: 'pdf-417',
-                value: 'SINGLE_CODE',
-                frame: { x: 30, y: 70, width: 340, height: 460 },
-                corners: [],
-              },
-            ],
-            { width: 1920, height: 1080 }
-          )
-        })
-      }
+      await scanFrame([pdf417, code39])
+      expect(onScanStateChange).toHaveBeenLastCalledWith('aligned')
+      expect(onScanStateChange).not.toHaveBeenCalledWith('locked')
     })
   })
 
   describe('Camera initialization', () => {
-    it('calls handleCameraInitialized when camera is ready', async () => {
+    it('applies the initial zoom once the camera session starts', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera {...defaultProps} initialZoom={2.5} />
+          <CodeScanningCamera {...defaultProps} initialZoom={10} />
         </BasicAppContext>
       )
 
-      // Wait for the onInitialized callback to be triggered
-      await waitFor(
-        () => {
-          // The mock triggers onInitialized after a timeout
-        },
-        { timeout: 100 }
-      )
+      // Above the device's maxZoom (8), so only the start handler's clamp can produce 8.
+      expect(screen.getByTestId('mock-camera').props.zoom).toBeUndefined()
+      await waitFor(() => expect(screen.getByTestId('mock-camera').props.zoom).toBe(8))
     })
   })
 
@@ -1955,7 +1335,7 @@ describe('CodeScanningCamera', () => {
         addContext: jest.fn(),
         toJSON: jest.fn(),
       }
-      mockEnsureAppError.mockReturnValueOnce(expectedAppError)
+      mockEnsureAppError.mockReturnValue(expectedAppError)
 
       await act(async () => {
         camera.props.onError(runtimeError)
@@ -2044,7 +1424,7 @@ describe('CodeScanningCamera', () => {
         addContext: jest.fn(),
         toJSON: jest.fn(),
       }
-      mockEnsureAppError.mockReturnValueOnce(expectedAppError)
+      mockEnsureAppError.mockReturnValue(expectedAppError)
 
       await act(async () => {
         camera.props.onError(runtimeError)
@@ -2063,8 +1443,6 @@ describe('CodeScanningCamera', () => {
   })
 
   describe('Recoverable camera runtime errors (regression: iOS unknown/unknown -12780 in 4.1.0)', () => {
-    const originalPlatform = Platform.OS
-
     const makeAppError = () => ({
       name: 'NormalizedAppError',
       message: 'normalized',
@@ -2085,8 +1463,6 @@ describe('CodeScanningCamera', () => {
 
     afterEach(() => {
       jest.useRealTimers()
-      Platform.OS = originalPlatform
-      mockEnsureAppError.mockImplementation(() => ({ name: 'AppError', message: 'mocked error' }))
     })
 
     it('lets VisionCamera restart the session after a single unknown/unknown error instead of failing over', async () => {
@@ -2196,32 +1572,10 @@ describe('CodeScanningCamera', () => {
   describe('Focus cycling restart storm (regression #4256/#4300)', () => {
     beforeEach(() => {
       jest.useFakeTimers()
-      // The module-level device mock factory returns a brand-new object on every call,
-      // so without pinning it, startFocusCycling's useCallback (deps include `device`)
-      // would get a new identity on every re-render regardless of cause — masking the
-      // exact thing under test here. Pin it to a single stable reference, matching how
-      // the real hook behaves when the underlying camera device hasn't changed.
-      mockedUseCameraDevice.mockReturnValue({
-        id: 'back',
-        supportsFocusMetering: true,
-        minZoom: 1,
-        maxZoom: 8,
-        neutralZoom: 1,
-        hasTorch: true,
-      })
     })
 
     afterEach(() => {
       jest.useRealTimers()
-      // Restore the default per-render factory for any tests outside this describe.
-      mockedUseCameraDevice.mockImplementation(() => ({
-        id: 'back',
-        supportsFocusMetering: true,
-        minZoom: 1,
-        maxZoom: 8,
-        neutralZoom: 1,
-        hasTorch: true,
-      }))
     })
 
     const mockFrame = { width: 1920, height: 1080 }
@@ -2249,19 +1603,10 @@ describe('CodeScanningCamera', () => {
       await act(async () => {
         jest.advanceTimersByTime(100)
       })
-      await act(async () => {
-        mockCodeScannerCallback!(
-          [
-            {
-              type: 'pdf-417',
-              value: 'FLIP_TO_ALIGNED',
-              frame: { x: 100, y: 200, width: 200, height: 50 },
-              corners: [],
-            },
-          ],
-          mockFrame
-        )
-      })
+      await scanFrame(
+        [{ type: 'pdf-417', value: 'FLIP_TO_ALIGNED', frame: { x: 100, y: 200, width: 200, height: 50 }, corners: [] }],
+        mockFrame
+      )
 
       // t=2200: advance 2100ms past that detection — the suppression window (2000ms) has
       // now lapsed — then send a blank frame. The single tracked reading (count 1) decays
@@ -2275,9 +1620,7 @@ describe('CodeScanningCamera', () => {
       await act(async () => {
         jest.advanceTimersByTime(2100)
       })
-      await act(async () => {
-        mockCodeScannerCallback!([], mockFrame)
-      })
+      await scanFrame([], mockFrame)
 
       expect(mockFocus.mock.calls).toHaveLength(callsAfterLayout)
 
@@ -2315,7 +1658,7 @@ describe('CodeScanningCamera', () => {
     })
 
     it('keeps the idle-nudge alive across a lock -> auto-confirm-rejected -> reset cycle (guards against stop-on-lock without a matching restart)', async () => {
-      mockOnCodeScanned.mockResolvedValueOnce(false)
+      mockOnCodeScanned.mockResolvedValue(false)
 
       const { getByTestId } = render(
         <BasicAppContext>
@@ -2340,11 +1683,7 @@ describe('CodeScanningCamera', () => {
       }
       // LOCK_READING_THRESHOLD (5) identical frames locks and auto-confirms; the mocked
       // `false` resolution rejects the scan, which resets back to 'scanning'.
-      for (let i = 0; i < 5; i++) {
-        await act(async () => {
-          mockCodeScannerCallback!([lockCode], mockFrame)
-        })
-      }
+      await scanFrames([lockCode], 5, mockFrame)
 
       await waitFor(() => {
         expect(mockOnCodeScanned).toHaveBeenCalled()
@@ -2375,7 +1714,6 @@ describe('CodeScanningCamera', () => {
 
     afterEach(() => {
       jest.useRealTimers()
-      Platform.OS = 'ios'
     })
 
     const mockFrame = { width: 640, height: 480 }
@@ -2401,21 +1739,13 @@ describe('CodeScanningCamera', () => {
 
       // pdf-417 validates (VALIDATION_THRESHOLD=3) and gets accumulated, but never reaches
       // LOCK_READING_THRESHOLD (5) on its own.
-      for (let i = 0; i < 3; i++) {
-        await act(async () => {
-          mockCodeScannerCallback!([pdf417Code], mockFrame)
-        })
-      }
+      await scanFrames([pdf417Code], 3, mockFrame)
       expect(mockOnCodeScanned).not.toHaveBeenCalled()
 
       // The pdf-417 drops out of frame; only the code-39 serial is read from here on. 5
       // frames locks on the serial alone (minCodesForAligned === 1 for the single-zone
       // BCSC_SN_SCAN_ZONES).
-      for (let i = 0; i < 5; i++) {
-        await act(async () => {
-          mockCodeScannerCallback!([serialCode], mockFrame)
-        })
-      }
+      await scanFrames([serialCode], 5, mockFrame)
 
       await waitFor(() => {
         expect(mockOnCodeScanned).toHaveBeenCalledWith(
@@ -2434,22 +1764,14 @@ describe('CodeScanningCamera', () => {
         </BasicAppContext>
       )
 
-      for (let i = 0; i < 3; i++) {
-        await act(async () => {
-          mockCodeScannerCallback!([pdf417Code], mockFrame)
-        })
-      }
+      await scanFrames([pdf417Code], 3, mockFrame)
 
       // ACCUMULATION_WINDOW_MS is 3000 on Android — advance past it before the serial locks.
       await act(async () => {
         jest.advanceTimersByTime(3100)
       })
 
-      for (let i = 0; i < 5; i++) {
-        await act(async () => {
-          mockCodeScannerCallback!([serialCode], mockFrame)
-        })
-      }
+      await scanFrames([serialCode], 5, mockFrame)
 
       await waitFor(() => {
         expect(mockOnCodeScanned).toHaveBeenCalled()
