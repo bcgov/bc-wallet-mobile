@@ -45,6 +45,15 @@ const both: Record<Platform, PlatformMode> = { ios: 'auto', android: 'auto' }
 const manual: Record<Platform, PlatformMode> = { ios: 'manual', android: 'manual' }
 const androidOnly: Record<Platform, PlatformMode> = { ios: 'na', android: 'auto' }
 
+/**
+ * An upgrade state-preservation wrapper: a one-describe spec per previous build whose `it`s live in the
+ * shared scenario module, so the titles are read from there (`sources`), the results from the wrapper.
+ */
+const upgradeWrapper = (wrapper: string, scenario: string): Proof => ({
+  file: spec(`upgrade/${wrapper}.spec.ts`),
+  sources: [spec(`upgrade/scenarios/${scenario}.scenario.ts`)],
+})
+
 const IN_PERSON_COMPLETE = 'completes verification in person and lands on verified Home'
 const SEND_VIDEO_APPROVED = 'is approved by the agent (scripted against the SIT review portal)'
 
@@ -406,15 +415,81 @@ export const UAT_CHECKLIST: CoverageSection[] = [
         note: 'lane exits early with a notice until BCSC-prev.* exists in Sauce storage → shows not run',
       },
       {
+        id: 'ext-upgrade-verified',
+        label: 'Upgrade keeps a verified account',
+        platforms: both,
+        proof: [
+          upgradeWrapper('upgrade-verified', 'verified'),
+          upgradeWrapper('upgrade-verified-v403', 'verified'),
+          // v3: the migration lane makes the same four asserts after its unlock.
+          {
+            file: spec('migration/migration.spec.ts'),
+            suite: 'Upgrade from v3: unlocking with the v3 PIN',
+            tests: [
+              'keeps the account verified: the Settings Profile row is present',
+              'reads back Account Details',
+              'opens the Services catalogue instead of the verify prompt',
+              'logs in with a pairing code — the migrated device credential still works server-side',
+            ],
+            sources: [spec('migration/v4-unlock.spec.ts')],
+          },
+        ],
+        note: 'nightly: the upgrade + upgrade403 lanes, and the migration lane for v3; verified state + a pairing-code login must survive',
+      },
+      {
+        id: 'ext-upgrade-pending-review',
+        label: 'Upgrade keeps a pending send-video review',
+        platforms: both,
+        proof: [upgradeWrapper('upgrade-send-video-pending', 'send-video-pending')],
+        note: 'nightly, own serial send-video upgrade lane (injection-off on Android); previous release only',
+      },
+      {
+        id: 'ext-upgrade-in-person-pending',
+        label: 'Upgrade keeps an unapproved in-person request',
+        platforms: both,
+        proof: [
+          upgradeWrapper('upgrade-in-person-pending', 'in-person-pending'),
+          upgradeWrapper('upgrade-in-person-pending-v403', 'in-person-pending'),
+          upgradeWrapper('upgrade-in-person-pending-v3', 'in-person-pending'),
+        ],
+        note: 'previous release + 4.0.3 dispatch-only (upgradeExtra / upgrade403Extra) → not run nightly; v3 nightly (upgradeV3)',
+      },
+      {
+        id: 'ext-upgrade-partial-nonbcsc',
+        label: 'Upgrade keeps partial non-BCSC progress',
+        platforms: both,
+        proof: [upgradeWrapper('upgrade-non-bcsc-partial', 'non-bcsc-partial')],
+        note: 'dispatch-only (upgradeExtra); completion deferred until the non-BCSC counter approval works → resume assert only; previous release only',
+      },
+      {
+        id: 'ext-upgrade-partial-resume',
+        label: 'Upgrade keeps a partially entered verification',
+        platforms: both,
+        proof: [
+          upgradeWrapper('upgrade-resume-serial', 'resume-serial'),
+          upgradeWrapper('upgrade-resume-capture', 'resume-capture'),
+          upgradeWrapper('upgrade-resume-serial-v403', 'resume-serial'),
+          upgradeWrapper('upgrade-resume-capture-v403', 'resume-capture'),
+        ],
+        note: "dispatch-only (upgradeExtra / upgrade403Extra) → shows not run nightly; not representable from v3: the current build never reads v3's typed-serial file, and a migrant's captured document is re-asked and cleaned up (no setup type recorded)",
+      },
+      {
         id: 'ext-upgrade-403',
         label: 'Upgrade from 4.0.3',
         platforms: both,
         proof: [{ file: spec('upgrade/upgrade-from-v403.spec.ts') }],
       },
       {
+        id: 'ext-upgrade-v3-unverified',
+        label: 'Upgrade from v3 with an unverified account',
+        platforms: both,
+        proof: [{ file: spec('upgrade/upgrade-from-v3.spec.ts') }],
+        note: 'nightly (upgradeV3); the v3 user who never added a card — the account and PIN survive and verification starts from the setup-type question',
+      },
+      {
         id: 'ext-migration-v3',
         label: 'Upgrade from v3 (migration)',
-        platforms: androidOnly,
+        platforms: both,
         proof: [
           {
             file: spec('migration/migration.spec.ts'),
@@ -425,7 +500,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
             ],
           },
         ],
-        note: 'nightly runs it on Android only',
+        note: 'nightly, one platform at a time beside the send-video lane',
       },
     ],
   },
@@ -512,11 +587,23 @@ export const OTHER_COVERAGE: CoverageSection[] = [
     title: 'Upgrades (separate lanes)',
     rows: [
       { id: 'j-upgrade', label: 'Upgrade from previous release', platforms: both, proof: [{ file: spec('upgrade/upgrade.spec.ts') }] },
+      { id: 'j-upgrade-verified', label: 'Upgrade: verified account survives', platforms: both, proof: [upgradeWrapper('upgrade-verified', 'verified')] },
+      { id: 'j-upgrade-send-video', label: 'Upgrade: pending send-video review survives', platforms: both, proof: [upgradeWrapper('upgrade-send-video-pending', 'send-video-pending')] },
+      { id: 'j-upgrade-in-person', label: 'Upgrade: unapproved in-person request survives', platforms: both, proof: [upgradeWrapper('upgrade-in-person-pending', 'in-person-pending')] },
+      { id: 'j-upgrade-non-bcsc', label: 'Upgrade: partial non-BCSC progress survives', platforms: both, proof: [upgradeWrapper('upgrade-non-bcsc-partial', 'non-bcsc-partial')] },
+      { id: 'j-upgrade-resume-serial', label: 'Upgrade: saved serial survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-serial', 'resume-serial')] },
+      { id: 'j-upgrade-resume-capture', label: 'Upgrade: captured document awaiting its number survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-capture', 'resume-capture')] },
       { id: 'j-upgrade-403', label: 'Upgrade from 4.0.3', platforms: both, proof: [{ file: spec('upgrade/upgrade-from-v403.spec.ts') }] },
+      { id: 'j-upgrade-403-verified', label: 'Upgrade from 4.0.3: verified account survives', platforms: both, proof: [upgradeWrapper('upgrade-verified-v403', 'verified')] },
+      { id: 'j-upgrade-403-in-person', label: 'Upgrade from 4.0.3: unapproved in-person request survives', platforms: both, proof: [upgradeWrapper('upgrade-in-person-pending-v403', 'in-person-pending')] },
+      { id: 'j-upgrade-403-resume-serial', label: 'Upgrade from 4.0.3: saved serial survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-serial-v403', 'resume-serial')] },
+      { id: 'j-upgrade-403-resume-capture', label: 'Upgrade from 4.0.3: captured document awaiting its number survives', platforms: both, proof: [upgradeWrapper('upgrade-resume-capture-v403', 'resume-capture')] },
+      { id: 'j-upgrade-v3-unverified', label: 'Upgrade from v3: unverified account survives, verification can start', platforms: both, proof: [{ file: spec('upgrade/upgrade-from-v3.spec.ts') }] },
+      { id: 'j-upgrade-v3-in-person', label: 'Upgrade from v3: unapproved in-person request survives', platforms: both, proof: [upgradeWrapper('upgrade-in-person-pending-v3', 'in-person-pending')] },
       {
         id: 'j-migration-v3-add-card',
         label: 'Upgrade from v3: set up on the v3 release',
-        platforms: androidOnly,
+        platforms: both,
         proof: [
           {
             file: spec('migration/migration.spec.ts'),
@@ -528,7 +615,7 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       {
         id: 'j-migration-upgrade',
         label: 'Upgrade from v3: install the current build',
-        platforms: androidOnly,
+        platforms: both,
         proof: [
           {
             file: spec('migration/migration.spec.ts'),
@@ -540,7 +627,7 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       {
         id: 'j-migration-v4-unlock',
         label: 'Upgrade from v3: unlock with the v3 PIN',
-        platforms: androidOnly,
+        platforms: both,
         proof: [
           {
             file: spec('migration/migration.spec.ts'),
