@@ -1,29 +1,32 @@
-import React from 'react'
+// The real module loads react-native-nitro-modules, whose native TurboModule
+// does not exist under jest. Mirrors the v5 API the app uses; tests that
+// exercise camera behaviour override this with their own jest.mock.
+const Camera = jest.fn(() => null)
 
-const Constants = {
-  device: {},
-  torch: {
-    on: 'on',
-    off: 'off',
-    auto: 'auto',
-  },
-  isActive: false,
-  codeScanner: {},
+const CommonResolutions = {
+  VGA_16_9: { width: 480, height: 854 },
+  FHD_16_9: { width: 1080, height: 1920 },
 }
 
-class Camera extends React.Component {
-  static Constants = Constants
-  render() {
-    return null
-  }
-}
+const permission = () => ({ hasPermission: true, requestPermission: jest.fn().mockResolvedValue(true) })
 
-Camera.Constants = Constants
 const useCameraDevice = jest.fn()
-const useCodeScanner = jest.fn()
-const useCameraFormat = jest.fn()
-const useCameraPermission = jest.fn(() => ({
-  hasPermission: true,
-  requestPermission: jest.fn(),
+const useCameraPermission = jest.fn(permission)
+const useMicrophonePermission = jest.fn(permission)
+const usePhotoOutput = jest.fn(() => ({
+  capturePhotoToFile: jest.fn(),
 }))
-export { Camera, useCameraDevice, useCameraFormat, useCameraPermission, useCodeScanner }
+const useVideoOutput = jest.fn(() => ({
+  setOutputSettings: jest.fn(),
+  createRecorder: jest.fn(),
+}))
+
+export {
+  Camera,
+  CommonResolutions,
+  useCameraDevice,
+  useCameraPermission,
+  useMicrophonePermission,
+  usePhotoOutput,
+  useVideoOutput,
+}

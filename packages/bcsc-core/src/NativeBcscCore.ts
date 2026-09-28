@@ -350,6 +350,10 @@ export interface Spec extends TurboModule {
     deviceToken: string | null
   ): Promise<string>;
   hashBase64(base64: string): Promise<string>;
+  /** Rewrites a recorded video into an MP4 container without re-encoding; see the {@link remuxVideoToMp4} wrapper. */
+  remuxVideoToMp4(path: string): Promise<string>;
+  /** Re-activates the audio session for video recording; see the {@link activateAudioSessionForRecording} wrapper. */
+  activateAudioSessionForRecording(): Promise<void>;
   removeAccount(): Promise<void>;
   createSignedJWT(claims: JWTClaims): Promise<string>;
 
