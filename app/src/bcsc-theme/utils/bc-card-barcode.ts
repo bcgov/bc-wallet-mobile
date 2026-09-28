@@ -8,6 +8,8 @@ export enum BCCardType {
   ComboDriversLicence = 'ComboDriversLicence',
   ComboLearnersLicence = 'ComboLearnersLicence',
   ComboNoviceLicence = 'ComboNoviceLicence',
+  /** Combo card whose licence class the prefix doesn't specify. */
+  Combo = 'Combo',
   BCID = 'BCID',
   BCSCNonPhoto = 'BCSCNonPhoto',
   BCSCPhoto = 'BCSCPhoto',
@@ -21,18 +23,21 @@ const CARD_TYPE_BY_DCN_PREFIX: Readonly<Record<string, BCCardType>> = {
   K: BCCardType.ComboDriversLicence,
   P: BCCardType.ComboLearnersLicence,
   H: BCCardType.ComboNoviceLicence,
+  J: BCCardType.Combo,
   Y: BCCardType.BCID,
   G: BCCardType.BCSCNonPhoto,
-  // Missing from ICBC's prefix table, but seen on real standalone non-photo cards. Every sample
-  // was issued to a minor; whether F is specific to minors' cards is TBD.
+  // Every real F sample was issued to a minor; whether F is specific to minors' cards is TBD.
   F: BCCardType.BCSCNonPhoto,
   C: BCCardType.BCSCPhoto,
+  // Listed as standalone with an unexplained qualifier; treated as a photo card like C.
+  A: BCCardType.BCSCPhoto,
 }
 
 const BC_SERVICES_CARD_TYPES: ReadonlySet<BCCardType> = new Set([
   BCCardType.ComboDriversLicence,
   BCCardType.ComboLearnersLicence,
   BCCardType.ComboNoviceLicence,
+  BCCardType.Combo,
   BCCardType.BCSCNonPhoto,
   BCCardType.BCSCPhoto,
 ])

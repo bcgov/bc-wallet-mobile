@@ -34,10 +34,12 @@ describe('parseDcn', () => {
     ['K00023254', BCCardType.ComboDriversLicence],
     ['P00023254', BCCardType.ComboLearnersLicence],
     ['H00023254', BCCardType.ComboNoviceLicence],
+    ['J00023254', BCCardType.Combo],
     ['Y00023254', BCCardType.BCID],
     ['G00023254', BCCardType.BCSCNonPhoto],
     ['F00023254', BCCardType.BCSCNonPhoto],
     ['C00023254', BCCardType.BCSCPhoto],
+    ['A00023254', BCCardType.BCSCPhoto],
   ])('maps %s to %s', (raw, cardType) => {
     expect(parseDcn(raw)).toEqual({ value: raw, prefix: raw[0], cardType, checkDigit: 4 })
   })
@@ -59,7 +61,7 @@ describe('parseDcn', () => {
   })
 
   it('parses an unmapped prefix as Unknown rather than rejecting it', () => {
-    expect(parseDcn('A12345678')?.cardType).toBe(BCCardType.Unknown)
+    expect(parseDcn('Z12345678')?.cardType).toBe(BCCardType.Unknown)
   })
 
   it.each([
@@ -80,6 +82,7 @@ describe('hasBCServicesCard', () => {
     [BCCardType.ComboDriversLicence, true],
     [BCCardType.ComboLearnersLicence, true],
     [BCCardType.ComboNoviceLicence, true],
+    [BCCardType.Combo, true],
     [BCCardType.BCSCNonPhoto, true],
     [BCCardType.BCSCPhoto, true],
     [BCCardType.DriversLicence, false],
