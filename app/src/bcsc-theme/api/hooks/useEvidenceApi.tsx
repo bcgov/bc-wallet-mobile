@@ -96,7 +96,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
    */
   const cancelRemindersOnTerminalStatus = useCallback(
     async (data: VerificationStatusResponseData): Promise<boolean> => {
-      if (data.status !== 'verified' && data.status !== 'cancelled') {
+      if (data.status !== VerificationRequestStatus.VERIFIED && data.status !== VerificationRequestStatus.CANCELLED) {
         return false
       }
       // doesn't throw

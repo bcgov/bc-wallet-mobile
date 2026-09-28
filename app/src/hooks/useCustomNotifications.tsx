@@ -36,7 +36,7 @@ export const useCustomNotifications = () => {
     // Keyed on `verified` like the VerificationSuccess route this card opens (see MainStack). The status
     // can outlive that flip — handleAccountSetup sets `verified` before cleanup that can throw — and the
     // card would then be a button to a route that is no longer registered (#4719)
-    if (verificationRequestStatus === 'verified' && !isVerified) {
+    if (verificationRequestStatus === VerificationRequestStatus.VERIFIED && !isVerified) {
       return [<VerifiedNotification key={CustomNotificationId.BCSCVerified} />]
     }
 

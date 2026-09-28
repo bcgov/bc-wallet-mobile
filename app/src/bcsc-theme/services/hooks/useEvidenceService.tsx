@@ -3,6 +3,7 @@ import useEvidenceApi, { VerificationStatusResponseData } from '@/bcsc-theme/api
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
+import { VerificationRequestStatus } from '@/constants'
 import { isAppError, isAxiosAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { showErrorAlert, useAlerts } from '@/hooks/useAlerts'
@@ -109,7 +110,7 @@ export const useEvidenceService = () => {
           // Return a default response indicating the request is cancelled
           return {
             id: verificationRequestId,
-            status: 'cancelled',
+            status: VerificationRequestStatus.CANCELLED,
           }
         }
 

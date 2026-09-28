@@ -48,7 +48,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
 
         await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
         navigation.navigate(BCSCScreens.VerificationSuccess)
-      } else if (status === 'cancelled') {
+      } else if (status === VerificationRequestStatus.CANCELLED) {
         navigation.navigate(BCSCScreens.CancelledReview, {
           agentReason: status_message,
         })
