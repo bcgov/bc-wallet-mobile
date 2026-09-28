@@ -23,7 +23,8 @@ const CARD_TYPE_BY_DCN_PREFIX: Readonly<Record<string, BCCardType>> = {
   H: BCCardType.ComboNoviceLicence,
   Y: BCCardType.BCID,
   G: BCCardType.BCSCNonPhoto,
-  // Missing from ICBC's prefix table, but seen on real standalone non-photo cards.
+  // Missing from ICBC's prefix table, but seen on real standalone non-photo cards. Every sample
+  // was issued to a minor; whether F is specific to minors' cards is TBD.
   F: BCCardType.BCSCNonPhoto,
   C: BCCardType.BCSCPhoto,
 }
