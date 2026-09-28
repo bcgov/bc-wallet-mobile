@@ -1,3 +1,4 @@
+import { JWK } from '@/bcsc-theme/types/jwk'
 import type { UploadLogContext } from '@/bcsc-theme/utils/media-format'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { AppError } from '@/errors/appError'
@@ -17,7 +18,6 @@ import {
 } from '../utils/axios-error-utils'
 import { isTokenExpired } from '../utils/token-expiry'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
-import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 import { loadPersistedJwk, persistJwk } from './jwk-cache'
@@ -37,6 +37,10 @@ const JWK_FETCH_RETRY_BASE_DELAY_MS = 500
 // across dashboards. A deterministic 4xx is a single, non-retried attempt and is left to log/track
 // normally, since it may indicate a real configuration problem worth surfacing distinctly.
 const JWK_FETCH_RETRYABLE_STATUS_CODES = [0, ...Array.from({ length: 100 }, (_, index) => 500 + index)]
+
+type JWKResponseData = {
+  keys: JWK[]
+}
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
