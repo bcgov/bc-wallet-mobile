@@ -425,6 +425,24 @@ describe('ServiceLogin', () => {
       await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
     })
 
+    it('should re-enable Continue without a second alert when the failure was already handled', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: false, handled: true })
+
+      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: mockLoginServerErrorAlert })
+
+      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
+      fireEvent.press(continueButton)
+
+      await waitFor(() => expect(continueButton).toBeEnabled())
+      expect(mockGetQuickLoginURL).toHaveBeenCalledTimes(1)
+      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
+
+      // A second tap goes through, proving the button is usable again
+      fireEvent.press(continueButton)
+      await waitFor(() => expect(mockGetQuickLoginURL).toHaveBeenCalledTimes(2))
+    })
+
     it('should show alert and not navigate when Linking.openURL throws', async () => {
       const quickLoginUrl = 'https://login.example.com/quick'
       const mockOpenURL = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('failed'))
