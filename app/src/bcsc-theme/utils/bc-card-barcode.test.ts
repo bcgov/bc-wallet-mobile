@@ -50,6 +50,13 @@ describe('parseDcn', () => {
     })
   })
 
+  it('accepts exactly the 20 prefix letters the DCN format allows', () => {
+    const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
+    const accepted = letters.filter((letter) => parseDcn(`${letter}00023254`) !== null)
+
+    expect(accepted).toEqual([...'ACEFGHJKLMNPRSTUWXYZ'])
+  })
+
   it('parses an unmapped prefix as Unknown rather than rejecting it', () => {
     expect(parseDcn('A12345678')?.cardType).toBe(BCCardType.Unknown)
   })
@@ -60,6 +67,7 @@ describe('parseDcn', () => {
     ['too few digits', 'S1234567'],
     ['too many digits', 'S123456789'],
     ['lowercase prefix', 's00023254'],
+    ...['B', 'D', 'I', 'O', 'Q', 'V'].map((letter) => [`excluded prefix ${letter}`, `${letter}00023254`]),
     ['non-zero padding', '12S00023254'],
   ])('returns null for %s', (_, raw) => {
     expect(parseDcn(raw)).toBeNull()

@@ -101,13 +101,15 @@ const TRACK_3 = {
 export const hasBCServicesCard = (cardType: BCCardType): boolean => BC_SERVICES_CARD_TYPES.has(cardType)
 
 /**
- * Parses a Document Control Number from the 1D barcode or from the 2D barcode's security field,
- * which left-pads the DCN with zeros.
+ * Parses a Document Control Number from the 1D barcode or from the 2D barcode's 11-character
+ * security field. The spec doesn't define the 2 characters beyond the 9-character DCN; specimen
+ * cards zero-pad them.
  *
- * @returns null when the value is not a DCN. An unrecognized prefix letter still parses, with card type `Unknown`.
+ * @returns null when the value is not a DCN. A valid prefix letter with no known card type parses as `Unknown`.
  */
 export const parseDcn = (raw: string): DocumentControlNumber | null => {
-  const match = /^0*([A-Z])(\d{7})(\d)$/.exec(raw.trim())
+  // B, D, I, O, Q and V are never used, as they don't laser-engrave legibly.
+  const match = /^0*([ACE-HJ-NPR-UW-Z])(\d{7})(\d)$/.exec(raw.trim())
 
   if (!match) {
     return null
