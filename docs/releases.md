@@ -145,6 +145,22 @@ ring-0 upload failed, so a run limited to one store via `targets` still gets
 tagged, and a retry after a partial failure re-runs it safely: the tag is left
 alone if it's already there.
 
+## The GitHub release
+
+The release object is still created by a person, and one thing rides on it:
+publishing a full `bcsc-v*` release runs **Publish Release E2E Builds** on its
+own, which attaches the shipped bcsc-dev binaries to the release as
+`BCSC-v<version>.apk` / `.ipa` and points the nightly e2e upgrade lane at them
+(see `RELEASE.md`). So create the release when the version ships, as a full
+release, on the Publish tag of the shipped build (`bcsc-v4.1.1-8677`). The run
+resolves the build from that tag — or, for a tag without a build number, from
+the newest Publish tag of the version — so a release created before the build
+reached ring-0 fails with a reminder and is re-run afterwards.
+
+A release wanted earlier, for an RC, is a pre-release: nothing runs for those.
+Flipping a pre-release to a full release later fires a different event, so the
+e2e builds are then published by hand.
+
 ## Branching a release
 
 `main` is always the next version. When a version is ready to stabilise, cut a
@@ -164,10 +180,10 @@ out to every TestFlight ring. A person submits it for Apple's review.
 **Releasing on Google Play.** Ring-4 puts the build on its closed track. A
 person promotes it to Production.
 
-**Publishing the e2e upgrade builds.** After a release ships, a person dispatches
-Publish Release E2E Builds for its tag and adds the version to the Refresh E2E
-Sauce Builds manifest, so the nightly upgrade lanes start from it. See
-`RELEASE.md`.
+**Listing a shipped version for the e2e refresh.** The e2e builds publish on
+their own when the release is published (above); the monthly Refresh E2E Sauce
+Builds run that keeps their Sauce copies alive still learns about a version
+from a manifest line a person adds. See `RELEASE.md`.
 
 The store steps are on the list to automate. None of these blocks a release today.
 
