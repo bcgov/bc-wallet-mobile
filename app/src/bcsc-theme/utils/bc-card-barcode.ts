@@ -26,7 +26,8 @@ const CARD_TYPE_BY_DCN_PREFIX: Readonly<Record<string, BCCardType>> = {
   Y: BCCardType.BCID,
   G: BCCardType.BCSCNonPhoto,
   C: BCCardType.BCSCPhoto,
-  // A, F and J are legacy prefixes, last issued in early 2022, so cards carrying them circulate until about 2027.
+  // A, F and J are legacy prefixes last issued around 2022-02-24, so they're expected to fall out of use on
+  // 2027-02-24 when the last of those 5-year cards expire.
   // A is listed as standalone with an unexplained qualifier; treated as a photo card like C.
   A: BCCardType.BCSCPhoto,
   F: BCCardType.BCSCNonPhoto,
