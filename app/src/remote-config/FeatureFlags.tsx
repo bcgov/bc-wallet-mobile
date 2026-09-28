@@ -1,3 +1,4 @@
+import { getInitialEnvironment, IASEnvironment } from '@/utils/environment'
 import { useCallback, useMemo } from 'react'
 import { getRemoteConfig, useRemoteConfig } from './RemoteConfig'
 import { RemoteConfig } from './remote-config-utils'
@@ -37,6 +38,13 @@ export const useFeatureFlags = () => {
        * */
       testFeatureEnabled() {
         return getFeatureFlag('debug.testFeature') && __DEV__
+      },
+      /**
+       * Crash reporting gate. Prod builds stay off until consent lands, and the kill flag turns it off remotely.
+       * @returns True if this build may send crash reports, false otherwise.
+       */
+      crashReportingEnabled() {
+        return getInitialEnvironment() !== IASEnvironment.PROD && !getFeatureFlag('kill.crashlytics')
       },
     }),
     [getFeatureFlag]

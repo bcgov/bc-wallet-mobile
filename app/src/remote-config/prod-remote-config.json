@@ -1,5 +1,6 @@
 {
   "featureFlags": {
-    "debug.testFeature": false
+    "debug.testFeature": false,
+    "kill.crashlytics": false
   }
 }
