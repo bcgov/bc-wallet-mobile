@@ -1,21 +1,21 @@
 diff --git a/build/logger.js b/build/logger.js
-index 7e9c252ba4d35eba614d8ac5362dba79e514a510..0c58b0e8665bc20703fed6f57af545431b54da94 100644
+index 51e28f4da697fafc068c86b6a4a5455d1bb47b28..77f6951ccc0906e9d5431552fd1040fc10375ae2 100644
 --- a/build/logger.js
 +++ b/build/logger.js
 @@ -27,14 +27,14 @@ class RemoteLogger extends core_1.AbstractBifoldLogger {
          // Standardized logging methods with consistent overloads
          this.test = (message, dataOrError, error) => {
              var _a, _b;
--            if (!this.isEnabled(core_2.LogLevel.debug))
-+            if (!this.isEnabled(core_2.LogLevel.test))
+-            if (!this.isEnabled(core_2.LogLevel.Debug))
++            if (!this.isEnabled(core_2.LogLevel.Test))
                  return;
              const { data, actualError } = this.parseLogArguments(dataOrError, error);
              (_b = (_a = this._log) === null || _a === void 0 ? void 0 : _a.test) === null || _b === void 0 ? void 0 : _b.call(_a, { message, data, error: actualError });
          };
          this.trace = (message, dataOrError, error) => {
              var _a, _b;
--            if (!this.isEnabled(core_2.LogLevel.debug))
-+            if (!this.isEnabled(core_2.LogLevel.trace))
+-            if (!this.isEnabled(core_2.LogLevel.Debug))
++            if (!this.isEnabled(core_2.LogLevel.Trace))
                  return;
              const { data, actualError } = this.parseLogArguments(dataOrError, error);
              (_b = (_a = this._log) === null || _a === void 0 ? void 0 : _a.trace) === null || _b === void 0 ? void 0 : _b.call(_a, { message, data, error: actualError });
@@ -24,9 +24,9 @@ index 7e9c252ba4d35eba614d8ac5362dba79e514a510..0c58b0e8665bc20703fed6f57af54543
                  this._sessionId = Math.floor(SESSION_ID_RANGE.MIN + Math.random() * (SESSION_ID_RANGE.MAX - SESSION_ID_RANGE.MIN + 1));
              }
 -            // Override to most verbose when remote logging active
--            this.logLevel = core_2.LogLevel.debug;
+-            this.logLevel = core_2.LogLevel.Debug;
 +            // Force the lowest level (test) so remote sessions keep full detail
-+            this.logLevel = core_2.LogLevel.test;
++            this.logLevel = core_2.LogLevel.Test;
          }
          else {
              this._sessionId = undefined;

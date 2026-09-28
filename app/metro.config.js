@@ -103,6 +103,16 @@ const config = mergeConfig(defaultConfig, {
     sourceExts: [...sourceExts, 'svg', 'cjs'],
     unstable_enablePackageExports: true,
     unstable_conditionNames: ['react-native', 'require', 'browser'],
+    resolveRequest: (context, moduleName, platform) => {
+      // @digitalcredentials/jsonld-signatures' imports expo-crypto. Redirect
+      // it to a local shim so the app does not pull in ExpoModulesCore
+      //
+      // TODO (bm): remove once we switch to Expo
+      if (moduleName === 'expo-crypto') {
+        return { type: 'sourceFile', filePath: path.join(__dirname, 'shims', 'expo-crypto.js') }
+      }
+      return context.resolveRequest(context, moduleName, platform)
+    },
   },
   watchFolders: combinedWatchFolders,
   cacheStores: [
