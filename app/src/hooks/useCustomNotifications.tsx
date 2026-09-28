@@ -7,6 +7,7 @@ import StartVerificationNotification from '@/bcsc-theme/features/notifications/S
 import VerifiedNotification from '@/bcsc-theme/features/notifications/VerifiedNotification'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
+import { VerificationRequestStatus } from '@/constants'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { JSX, useMemo } from 'react'
@@ -39,11 +40,11 @@ export const useCustomNotifications = () => {
       return [<VerifiedNotification key={CustomNotificationId.BCSCVerified} />]
     }
 
-    if (verificationRequestStatus === 'cancelled') {
+    if (verificationRequestStatus === VerificationRequestStatus.CANCELLED) {
       return [<CancelledReviewNotification key={CustomNotificationId.BCSCCancelledReview} />]
     }
 
-    if (verificationRequestStatus === 'pending') {
+    if (verificationRequestStatus === VerificationRequestStatus.PENDING) {
       return [<PendingReviewNotification key={CustomNotificationId.BCSCPendingReview} />]
     }
 

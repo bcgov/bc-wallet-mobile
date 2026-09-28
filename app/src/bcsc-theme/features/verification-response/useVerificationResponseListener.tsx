@@ -4,6 +4,7 @@ import {
   VerificationResponseNavigationEvent,
 } from '@/bcsc-theme/features/verification-response'
 import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
+import { VerificationRequestStatus } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect } from 'react'
@@ -57,16 +58,22 @@ export const useVerificationResponseListener = () => {
       const { status, status_message } = await evidenceService.getVerificationRequestStatus(verificationRequestId)
       logger.info(`[useVerificationResponseListener] Verification request status: ${status}`)
 
-      if (status === 'verified') {
+      if (status === VerificationRequestStatus.VERIFIED) {
         // Status is verified - fetch and update tokens
         await token.checkDeviceCodeStatus(deviceCode, userCode)
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['verified'] })
+        dispatch({
+          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
+          payload: [VerificationRequestStatus.VERIFIED],
+        })
         dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         return
       }
 
-      if (status === 'cancelled') {
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['cancelled'] })
+      if (status === VerificationRequestStatus.CANCELLED) {
+        dispatch({
+          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
+          payload: [VerificationRequestStatus.CANCELLED],
+        })
         dispatch({
           type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
           payload: [status_message],
@@ -75,8 +82,11 @@ export const useVerificationResponseListener = () => {
         return
       }
 
-      if (status === 'pending') {
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['pending'] })
+      if (status === VerificationRequestStatus.PENDING) {
+        dispatch({
+          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
+          payload: [VerificationRequestStatus.PENDING],
+        })
         dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         // Status is pending - user should check manually via the UI
         logger.info(`[useVerificationResponseListener] Verification status is '${status}', not navigating`)
