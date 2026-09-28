@@ -118,6 +118,16 @@ describe('Remote Config Utils', () => {
       )
       expect(fetchedConfig).toBeNull()
     })
+
+    it('should not kill crash reporting when the hosted config omits the flag', async () => {
+      const mockLogger: any = { error: jest.fn(), info: jest.fn() }
+
+      jest.spyOn(axios, 'get').mockResolvedValue({ data: MOCK_REMOTE_CONFIG })
+
+      const fetchedConfig = await fetchRemoteConfig(mockLogger)
+
+      expect(fetchedConfig?.featureFlags['kill.crashlytics']).toBe(false)
+    })
   })
 
   describe('RemoteConfigSchema', () => {
