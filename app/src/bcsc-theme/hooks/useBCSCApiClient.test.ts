@@ -1,81 +1,63 @@
+import { BCSCApiClientContext, BCSCApiClientContextType } from '@/bcsc-theme/contexts/BCSCApiClientContext'
 import { useBCSCApiClient, useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BasicAppContext } from '@mocks/helpers/app'
 import { renderHook } from '@testing-library/react-native'
-import React from 'react'
+import React, { PropsWithChildren } from 'react'
 
 jest.unmock('@/bcsc-theme/hooks/useBCSCApiClient')
 
-describe('BCSC API Client Hooks', () => {
-  beforeEach(() => {
-    jest.useFakeTimers()
-  })
+const withClientContext = (value: BCSCApiClientContextType) => {
+  const ClientContextWrapper = ({ children }: PropsWithChildren) =>
+    React.createElement(BCSCApiClientContext.Provider, { value }, children)
 
-  afterEach(() => {
-    jest.useRealTimers()
-  })
+  return ClientContextWrapper
+}
+
+describe('BCSC API Client Hooks', () => {
   describe('useBCSCApiClient', () => {
     it('should throw if used outside of BCSCApiClientProvider', () => {
-      try {
-        renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
-      } catch (error: any) {
-        expect(error.message).toContain('within a BCSCApiClientProvider')
-      }
+      expect(() => renderHook(() => useBCSCApiClient())).toThrow('must be used within a BCSCApiClientProvider')
     })
 
     it('should throw if BCSCClientProvider reports an error', () => {
-      const mockContext = { error: 'Test error', client: null, isClientReady: false }
+      const wrapper = withClientContext({ error: 'Test error', client: null, isClientReady: false })
 
-      jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
-
-      try {
-        renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
-      } catch (error: any) {
-        expect(error.message).toBe('BCSC client error: Test error')
-      }
+      expect(() => renderHook(() => useBCSCApiClient(), { wrapper })).toThrow('BCSC client error: Test error')
     })
 
     it('should throw if client is not ready', () => {
-      const mockContext = { error: null, client: null, isClientReady: false }
+      const wrapper = withClientContext({ error: null, client: null, isClientReady: false })
 
-      jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
-
-      try {
-        renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
-      } catch (error: any) {
-        expect(error.message).toContain('client not ready')
-      }
+      expect(() => renderHook(() => useBCSCApiClient(), { wrapper })).toThrow('BCSC client not ready')
     })
 
     it('should throw if client is undefined', () => {
-      const mockContext = { error: null, client: null, isClientReady: true }
+      const wrapper = withClientContext({ error: null, client: null, isClientReady: true })
 
-      jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
-
-      try {
-        renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
-      } catch (error: any) {
-        expect(error.message).toContain('client not ready')
-      }
+      expect(() => renderHook(() => useBCSCApiClient(), { wrapper })).toThrow('BCSC client not ready')
     })
 
     it('should return the client if ready and no errors', () => {
-      const mockClient = {}
-      const mockContext = { error: null, client: mockClient, isClientReady: true }
+      const mockClient = {} as BCSCApiClientContextType['client']
+      const wrapper = withClientContext({ error: null, client: mockClient, isClientReady: true })
 
-      jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
+      const { result } = renderHook(() => useBCSCApiClient(), { wrapper })
 
-      const { result } = renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
       expect(result.current).toBe(mockClient)
     })
   })
 
   describe('useBCSCApiClientState', () => {
-    it('should throw if used outside of BCSCApiClientProvider', () => {
-      try {
-        renderHook(() => useBCSCApiClientState(), { wrapper: BasicAppContext })
-      } catch (error: any) {
-        expect(error.message).toContain('within a BCSCApiClientProvider')
-      }
+    it('should return a default not-ready state when used outside of BCSCApiClientProvider', () => {
+      const { result } = renderHook(() => useBCSCApiClientState())
+
+      expect(result.current).toEqual({ client: null, isClientReady: false, error: null })
+    })
+
+    it('should return the provider context when inside a BCSCApiClientProvider', () => {
+      const context = { error: null, client: null, isClientReady: false }
+      const { result } = renderHook(() => useBCSCApiClientState(), { wrapper: withClientContext(context) })
+
+      expect(result.current).toBe(context)
     })
   })
 })

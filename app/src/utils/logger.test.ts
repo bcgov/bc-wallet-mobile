@@ -58,7 +58,7 @@ describe('createAppLogger', () => {
 
   it('exports a singleton logger using env log level', () => {
     expect(appLogger).toBeDefined()
-    expect((appLogger as unknown as { options: { logLevel: LogLevel } }).options.logLevel).toBe(LogLevel.warn)
+    expect((appLogger as unknown as { options: { logLevel: LogLevel } }).options.logLevel).toBe(LogLevel.Warn)
   })
 
   it('merges base labels, extra labels, and env-derived log level', () => {
@@ -77,7 +77,7 @@ describe('createAppLogger', () => {
         subsystem: 'demo',
       },
       autoDisableRemoteLoggingIntervalInMinutes,
-      logLevel: LogLevel.info,
+      logLevel: LogLevel.Info,
     })
   })
 
@@ -86,15 +86,15 @@ describe('createAppLogger', () => {
     RemoteLoggerMock.mockClear()
     createAppLogger()
 
-    expect(RemoteLoggerMock).toHaveBeenCalledWith(expect.objectContaining({ logLevel: LogLevel.debug }))
+    expect(RemoteLoggerMock).toHaveBeenCalledWith(expect.objectContaining({ logLevel: LogLevel.Debug }))
   })
 
   it('prefers explicit log level parameter over env config', () => {
     mockedConfig.LOG_LEVEL = 'fatal'
     RemoteLoggerMock.mockClear()
-    createAppLogger({}, LogLevel.error)
+    createAppLogger({}, LogLevel.Error)
 
-    expect(RemoteLoggerMock).toHaveBeenCalledWith(expect.objectContaining({ logLevel: LogLevel.error }))
+    expect(RemoteLoggerMock).toHaveBeenCalledWith(expect.objectContaining({ logLevel: LogLevel.Error }))
   })
 
   it('allows extra labels to override defaults', () => {
@@ -110,12 +110,12 @@ describe('createAppLogger', () => {
   })
 
   it.each([
-    ['fatal', LogLevel.fatal],
-    ['error', LogLevel.error],
-    ['warning', LogLevel.warn],
-    ['trace', LogLevel.trace],
-    ['test', LogLevel.test],
-    ['unknown', LogLevel.debug],
+    ['fatal', LogLevel.Fatal],
+    ['error', LogLevel.Error],
+    ['warning', LogLevel.Warn],
+    ['trace', LogLevel.Trace],
+    ['test', LogLevel.Test],
+    ['unknown', LogLevel.Debug],
   ])('maps env value %s to correct log level', (envValue, expectedLevel) => {
     mockedConfig.LOG_LEVEL = envValue
     RemoteLoggerMock.mockClear()

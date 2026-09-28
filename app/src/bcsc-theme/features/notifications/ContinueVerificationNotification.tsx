@@ -21,6 +21,7 @@ const ContinueVerificationNotification = () => {
       icon="information"
       iconColor={ColorPalette.brand.primary}
       hideIconCircle={true}
+      requiresServerStatus
       onPress={() => {
         secureActions.continueVerificationProcess()
       }}

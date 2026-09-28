@@ -12,8 +12,9 @@ import { bcsc, defineScreen } from '../screens/core/index.js'
  * Notifications → SecureApp → CreatePIN → the Setup Steps resting screen (the v3-like step list;
  * no VerifyPrompt or unverified tab bar existed yet).
  * The testIDs below are frozen copies of that release's values — most match today's registry,
- * but they are pinned here so current renames cannot break this walk.
- * Retire this module once 4.1.0 ships and becomes the previous release.
+ * but they are pinned here so current renames cannot break this walk. The verify half of the
+ * 4.0.3 walk lives in `flows/verify-v403.ts`.
+ * Retire this module (with `verify-v403.ts`) once 4.0.3 is out of the field.
  */
 
 // ── Frozen 4.0.3 screens ──
@@ -71,11 +72,24 @@ const SecureAppScreen = defineScreen({
 /**
  * The Setup Steps resting screen after PIN creation, anchored on the header settings menu — the
  * onboarding stack renders no header, so its appearance marks arrival in the app shell.
+ *
+ * Every step finishes by resetting back here. Row ids are the row TITLES (`Step 1`…`Step 5`, with
+ * the space); rows are linearly gated, so Step 2 stays disabled until the nickname (Step 1) is saved.
+ * `checkStatus` renders only while a send-video review is pending — 4.0.3's pending-review surface.
  */
-const SetupStepsScreen = defineScreen({
+export const SetupStepsV403Screen = defineScreen({
   self: bcsc('SettingsMenuButton'),
   menu: bcsc('SettingsMenuButton'),
+  links: {
+    step1: bcsc('Step 1'), // nickname
+    step2: bcsc('Step 2'), // ID → IdentitySelection
+    step3: bcsc('Step 3'), // address
+    step4: bcsc('Step 4'), // email
+    step5: bcsc('Step 5'), // verify → VerificationMethodSelection
+    checkStatus: bcsc('CheckStatus'),
+  },
 })
+const SetupStepsScreen = SetupStepsV403Screen
 
 /** PIN form; the confirm button was still the generic `Continue` (today: `CreatePIN`). */
 const CreatePinScreen = defineScreen({

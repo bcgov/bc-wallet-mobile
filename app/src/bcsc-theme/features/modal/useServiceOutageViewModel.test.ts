@@ -1,105 +1,99 @@
-import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
-import { openLink } from '@/utils/links'
-import * as Bifold from '@bifold/core'
-import { useRoute } from '@react-navigation/native'
-import { act, renderHook, waitFor } from '@testing-library/react-native'
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
+import { CONTACT_US_HELP_URL } from '@/constants'
+import { useNavigation } from '@react-navigation/native'
+import { act, renderHook } from '@testing-library/react-native'
 import useServiceOutageViewModel from './useServiceOutageViewModel'
 
-jest.mock('@/utils/links', () => ({
-  openLink: jest.fn(),
-}))
+const mockRefresh = jest.fn()
+let mockServerStatus: ReturnType<typeof makeServerStatus>
 
-jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
-const mockUseBCSCApiClientState = jest.mocked(useBCSCApiClientState)
-
-const mockGetServerStatus = jest.fn()
-jest.mock('@/bcsc-theme/api/hooks/useConfigApi', () => () => ({
-  getServerStatus: mockGetServerStatus,
-}))
-
-jest.mock('@/services/system-checks/ServerStatusSystemCheck')
-const MockServerStatusSystemCheck = jest.mocked(ServerStatusSystemCheck)
-
-jest.mock('@bifold/core', () => {
-  const actual = jest.requireActual('@bifold/core')
-  return {
-    ...actual,
-    useStore: jest.fn(),
-    useServices: jest.fn(),
-  }
+const makeServerStatus = (overrides: Record<string, unknown> = {}) => ({
+  isAvailable: false,
+  statusMessage: 'Server is down' as string | undefined,
+  contactLink: undefined,
+  serverStatus: null,
+  isChecking: false,
+  hasChecked: true,
+  refresh: mockRefresh,
+  ...overrides,
 })
 
-const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn(),
-}
-
-const mockDispatch = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockServerStatus,
+}))
 
 describe('useServiceOutageViewModel', () => {
+  let mockNavigation: ReturnType<typeof useNavigation> & {
+    getState: jest.Mock
+    canGoBack: jest.Mock
+    goBack: jest.Mock
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
-
-    const bifoldMock = jest.mocked(Bifold)
-    bifoldMock.useStore.mockReturnValue([{} as any, mockDispatch])
-    bifoldMock.useServices.mockReturnValue([mockLogger] as any)
-
-    mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true } as any)
-
-    jest
-      .mocked(useRoute)
-      .mockReturnValue({ params: { statusMessage: 'Server is down' }, key: 'test', name: 'ServiceOutage' as any })
+    mockNavigation = useNavigation() as never
+    mockNavigation.getState = jest.fn().mockReturnValue({ routes: [{ name: BCSCModals.ServiceOutage }], index: 0 })
+    mockNavigation.canGoBack = jest.fn().mockReturnValue(true)
+    mockRefresh.mockResolvedValue({ isAvailable: true, serverStatus: null })
+    mockServerStatus = makeServerStatus()
   })
 
-  it('returns localized text fields', () => {
+  it('returns localized text and the status message as content', () => {
     const { result } = renderHook(() => useServiceOutageViewModel())
 
     expect(result.current.headerText).toBe('BCSC.Modals.ServiceOutage.Header')
     expect(result.current.buttonText).toBe('BCSC.Modals.ServiceOutage.CheckAgainButton')
-    expect(result.current.learnMoreText).toBe('BCSC.Modals.ServiceOutage.LearnMore')
+    expect(result.current.skipVerificationText).toBe('BCSC.VerifyPrompt.SkipVerification')
+    expect(result.current.contentText).toEqual(['Server is down'])
+    expect(result.current.inTheMeantimeText).toBe('BCSC.Modals.ServiceOutage.InTheMeantime')
+    expect(result.current.needHelpPrefixText).toBe('BCSC.Modals.ServiceOutage.NeedHelpPrefix')
+    expect(result.current.contactUsLinkText).toBe('BCSC.Modals.ServiceOutage.ContactUsLink')
   })
 
-  it('uses route statusMessage for contentText', () => {
+  it('falls back to the default contact URL when the server does not provide one', () => {
     const { result } = renderHook(() => useServiceOutageViewModel())
 
-    expect(result.current.contentText).toEqual(['Server is down'])
+    expect(result.current.contactLink).toBe(CONTACT_US_HELP_URL)
   })
 
-  it('falls back to translation key when no statusMessage in route', () => {
-    jest.mocked(useRoute).mockReturnValue({ params: {}, key: 'test', name: 'ServiceOutage' as any })
+  it('uses the contact link from the server status when provided', () => {
+    mockServerStatus = makeServerStatus({ contactLink: 'https://example.com/contact-us.html' })
+
+    const { result } = renderHook(() => useServiceOutageViewModel())
+
+    expect(result.current.contactLink).toBe('https://example.com/contact-us.html')
+  })
+
+  it('falls back to a translation key when there is no status message', () => {
+    mockServerStatus = makeServerStatus({ statusMessage: undefined })
 
     const { result } = renderHook(() => useServiceOutageViewModel())
 
     expect(result.current.contentText).toEqual(['BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'])
   })
 
-  it('isCheckDisabled is false when client is ready and not checking', () => {
-    const { result } = renderHook(() => useServiceOutageViewModel())
-
-    expect(result.current.isCheckDisabled).toBe(false)
-  })
-
-  it('isCheckDisabled is true when client is not ready', () => {
-    mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: false } as any)
+  it('reflects isAvailable and isChecking from the provider', () => {
+    mockServerStatus = makeServerStatus({ isChecking: true })
 
     const { result } = renderHook(() => useServiceOutageViewModel())
 
+    expect(result.current.isAvailable).toBe(false)
     expect(result.current.isCheckDisabled).toBe(true)
   })
 
-  it('calls openLink with the help centre home URL', () => {
+  it('handleCheckAgain force-refreshes and dismisses the modal on recovery', async () => {
     const { result } = renderHook(() => useServiceOutageViewModel())
 
-    result.current.handleLearnMore()
+    await act(async () => {
+      await result.current.handleCheckAgain()
+    })
 
-    expect(openLink).toHaveBeenCalledWith('https://id.gov.bc.ca/static/help/topics.html?fromapp=1')
+    expect(mockRefresh).toHaveBeenCalledWith({ force: true })
+    expect(mockNavigation.goBack).toHaveBeenCalled()
   })
 
-  it('handleCheckAgain does nothing when client is not ready', async () => {
-    mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: false } as any)
+  it('handleCheckAgain stays put when the server is still unavailable', async () => {
+    mockRefresh.mockResolvedValue({ isAvailable: false, serverStatus: null })
 
     const { result } = renderHook(() => useServiceOutageViewModel())
 
@@ -107,23 +101,11 @@ describe('useServiceOutageViewModel', () => {
       await result.current.handleCheckAgain()
     })
 
-    expect(mockGetServerStatus).not.toHaveBeenCalled()
+    expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
-  it('handleCheckAgain calls onSuccess when server status is ok', async () => {
-    const mockOnSuccess = jest.fn()
-    const mockRunCheck = jest.fn().mockReturnValue(true)
-
-    MockServerStatusSystemCheck.mockImplementation(
-      () =>
-        ({
-          runCheck: mockRunCheck,
-          onSuccess: mockOnSuccess,
-          onFail: jest.fn(),
-        }) as any
-    )
-
-    mockGetServerStatus.mockResolvedValue({ status: 'ok', statusMessage: undefined })
+  it('handleCheckAgain does not go back when rendered inline (not the modal route)', async () => {
+    mockNavigation.getState = jest.fn().mockReturnValue({ routes: [{ name: 'VerifyPrompt' }], index: 0 })
 
     const { result } = renderHook(() => useServiceOutageViewModel())
 
@@ -131,83 +113,6 @@ describe('useServiceOutageViewModel', () => {
       await result.current.handleCheckAgain()
     })
 
-    expect(mockRunCheck).toHaveBeenCalled()
-    expect(mockOnSuccess).toHaveBeenCalled()
-  })
-
-  it('handleCheckAgain calls onFail when server status is not ok', async () => {
-    const mockOnFail = jest.fn()
-    const mockRunCheck = jest.fn().mockReturnValue(false)
-
-    MockServerStatusSystemCheck.mockImplementation(
-      () =>
-        ({
-          runCheck: mockRunCheck,
-          onSuccess: jest.fn(),
-          onFail: mockOnFail,
-        }) as any
-    )
-
-    mockGetServerStatus.mockResolvedValue({ status: 'unavailable', statusMessage: 'Maintenance' })
-
-    const { result } = renderHook(() => useServiceOutageViewModel())
-
-    await act(async () => {
-      await result.current.handleCheckAgain()
-    })
-
-    expect(mockOnFail).toHaveBeenCalled()
-  })
-
-  it('handleCheckAgain logs error on failure', async () => {
-    const error = new Error('Network error')
-    mockGetServerStatus.mockRejectedValue(error)
-
-    const { result } = renderHook(() => useServiceOutageViewModel())
-
-    await act(async () => {
-      await result.current.handleCheckAgain()
-    })
-
-    expect(mockLogger.error).toHaveBeenCalledWith('ServiceOutage: Failed to re-check server status', error)
-  })
-
-  it('handleCheckAgain sets isCheckDisabled during check', async () => {
-    let resolveStatus: (value: any) => void
-    mockGetServerStatus.mockReturnValue(
-      new Promise((resolve) => {
-        resolveStatus = resolve
-      })
-    )
-
-    const mockRunCheck = jest.fn().mockReturnValue(true)
-    MockServerStatusSystemCheck.mockImplementation(
-      () =>
-        ({
-          runCheck: mockRunCheck,
-          onSuccess: jest.fn(),
-          onFail: jest.fn(),
-        }) as any
-    )
-
-    const { result } = renderHook(() => useServiceOutageViewModel())
-
-    expect(result.current.isCheckDisabled).toBe(false)
-
-    let checkPromise: Promise<void>
-    act(() => {
-      checkPromise = result.current.handleCheckAgain()
-    })
-
-    await waitFor(() => {
-      expect(result.current.isCheckDisabled).toBe(true)
-    })
-
-    await act(async () => {
-      resolveStatus!({ status: 'ok' })
-      await checkPromise!
-    })
-
-    expect(result.current.isCheckDisabled).toBe(false)
+    expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 })

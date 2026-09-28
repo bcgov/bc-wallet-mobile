@@ -1,5 +1,6 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
@@ -14,7 +15,6 @@ import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSyst
 import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
 import { RefreshTokenExpiredSystemCheck } from '@/services/system-checks/RefreshTokenExpiredSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
-import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
@@ -85,6 +85,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { isNavigationReady } = useNavigationContainer()
   const accountContext = useContext(BCSCAccountContext)
   const { emitAlert } = useErrorAlert()
+  const { serverStatus: cachedServerStatus, refresh: refreshServerStatus } = useServerStatus()
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
   const appVersion = getVersion()
@@ -109,10 +110,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * @returns Array of system check strategies
    */
   const getStartupSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    // Server status banners are not cleared on startup so they persist across app restarts
-    // and remain visible for VPN users who bypass the blocking outage modal.
-
-    const serverStatus = await configApi.getServerStatus()
+    const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
     const systemChecks: SystemCheckStrategy[] = [
       new InstallIdSystemCheck(store.bcsc.installId, dispatch),
@@ -122,18 +120,23 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         Analytics,
         logger
       ),
-      new ServerStatusSystemCheck(serverStatus, utils, navigation),
-      new ServerClockSkewSystemCheck(serverStatus.serverTimestamp, new Date(), emitAlert, utils),
     ]
 
-    // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
-    if (isBCServicesCardBundle) {
-      systemChecks.push(new UpdateAppSystemCheck(serverStatus, navigation, utils))
+    // Clock-skew and update checks both need the server payload; skip them (rather than aborting
+    // the whole batch) if the status fetch failed.
+    if (serverStatus) {
+      systemChecks.push(new ServerClockSkewSystemCheck(serverStatus.serverTimestamp, new Date(), emitAlert, utils))
+
+      // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
+      if (isBCServicesCardBundle) {
+        systemChecks.push(new UpdateAppSystemCheck(serverStatus, navigation, utils))
+      }
     }
 
     return systemChecks
   }, [
-    configApi,
+    cachedServerStatus,
+    refreshServerStatus,
     dispatch,
     emitAlert,
     isBCServicesCardBundle,

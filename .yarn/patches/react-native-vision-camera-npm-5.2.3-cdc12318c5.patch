@@ -1,0 +1,79 @@
+diff --git a/lib/hooks/internal/useCameraController.d.ts b/lib/hooks/internal/useCameraController.d.ts
+index b1eb315922c9d911825e17468d682a96c9ac51f0..8440a3866f23b2e600ded9ab4843d598183a6809 100644
+--- a/lib/hooks/internal/useCameraController.d.ts
++++ b/lib/hooks/internal/useCameraController.d.ts
+@@ -8,7 +8,7 @@ import type { CameraSession } from '../../specs/session/CameraSession.nitro';
+ import type { CameraSessionConfig } from '../../specs/session/CameraSessionConfig.nitro';
+ import type { CameraSessionConfiguration } from '../../specs/session/CameraSessionConfiguration';
+ interface Config extends CameraSessionConfiguration {
+-    mirrorMode?: MirrorMode;
++    mirrorMode?: MirrorMode | ((output: CameraOutput) => MirrorMode);
+     constraints?: Constraint[];
+     onSessionConfigSelected?: (config: CameraSessionConfig) => void;
+     onError: (error: Error) => void;
+diff --git a/lib/hooks/internal/useCameraController.js b/lib/hooks/internal/useCameraController.js
+index 8ff5f4e0be123aa0143755d957f22faed0b6f8a1..1a3fefd63348a6af5f306a9ddba0ea9b3b0d3cc4 100644
+--- a/lib/hooks/internal/useCameraController.js
++++ b/lib/hooks/internal/useCameraController.js
+@@ -50,7 +50,8 @@ export function useCameraController(session, device, outputs, { mirrorMode = 'au
+                             input: device,
+                             outputs: stableOutputs.map((o) => ({
+                                 output: o,
+-                                mirrorMode: mirrorMode,
++                                // PATCH (bc-wallet-mobile): allow a per-output mirror mode
++                                mirrorMode: typeof mirrorMode === 'function' ? mirrorMode(o) : mirrorMode,
+                             })),
+                             constraints: stableConstraints,
+                             initialExposureBias: stableGetInitialExposureBias?.(),
+diff --git a/lib/hooks/useCamera.d.ts b/lib/hooks/useCamera.d.ts
+index 8a70d7925dc1083d86ffb07bc49e3eec3879ae07..a2c7037604b213dcfc8e03bca75d051e031b468e 100644
+--- a/lib/hooks/useCamera.d.ts
++++ b/lib/hooks/useCamera.d.ts
+@@ -77,7 +77,7 @@ export interface CameraProps extends CameraSessionConfiguration, CameraControlle
+      * @see {@linkcode CameraOutputConfiguration.mirrorMode}
+      * @default 'auto'
+      */
+-    mirrorMode?: MirrorMode;
++    mirrorMode?: MirrorMode | ((output: CameraOutput) => MirrorMode);
+     /**
+      * Sets the {@linkcode CameraController.zoom | zoom} value declaratively.
+      *
+diff --git a/src/hooks/internal/useCameraController.ts b/src/hooks/internal/useCameraController.ts
+index 1c0d5a7cb301b6259cf4332413adc1647880e1bb..be75c8c46c6b61983185dff9814d615fa0831e1e 100644
+--- a/src/hooks/internal/useCameraController.ts
++++ b/src/hooks/internal/useCameraController.ts
+@@ -12,7 +12,7 @@ import { useMemoizedArray } from './useMemoizedArray'
+ import { useStableCallback } from './useStableCallback'
+ 
+ interface Config extends CameraSessionConfiguration {
+-  mirrorMode?: MirrorMode
++  mirrorMode?: MirrorMode | ((output: CameraOutput) => MirrorMode)
+   constraints?: Constraint[]
+   onSessionConfigSelected?: (config: CameraSessionConfig) => void
+ 
+@@ -96,7 +96,9 @@ export function useCameraController(
+                 input: device,
+                 outputs: stableOutputs.map((o) => ({
+                   output: o,
+-                  mirrorMode: mirrorMode,
++                  // PATCH (bc-wallet-mobile): allow a per-output mirror mode (e.g. mirrored preview, un-mirrored photo/video)
++                  mirrorMode:
++                    typeof mirrorMode === 'function' ? mirrorMode(o) : mirrorMode,
+                 })),
+                 constraints: stableConstraints,
+                 initialExposureBias: stableGetInitialExposureBias?.(),
+diff --git a/src/hooks/useCamera.ts b/src/hooks/useCamera.ts
+index c8ef6e4f999bd1db203b2f9c25133efe4345da1c..fe0c1cff346c8a7624bf9f65c3815eb656432e6e 100644
+--- a/src/hooks/useCamera.ts
++++ b/src/hooks/useCamera.ts
+@@ -105,8 +105,9 @@ export interface CameraProps
+    *
+    * @see {@linkcode CameraOutputConfiguration.mirrorMode}
+    * @default 'auto'
++   * @note PATCH (bc-wallet-mobile): may also be a (memoized) function that returns the mode per output.
+    */
+-  mirrorMode?: MirrorMode
++  mirrorMode?: MirrorMode | ((output: CameraOutput) => MirrorMode)
+ 
+   // Declarative props
+   /**

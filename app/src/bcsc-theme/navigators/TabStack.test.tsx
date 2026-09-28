@@ -5,8 +5,13 @@ import React from 'react'
 
 import { FloatingScanButton } from '../features/scan'
 import { useCardStatus } from '../hooks/useCardStatus'
-import { BCSCScreens } from '../types/navigators'
+import { BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
+
+const mockUseServerStatus = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
 
 let capturedNavigatorProps: any
 let mockTabBarState: { index: number; routes: { key: string; name: string }[] }
@@ -108,6 +113,7 @@ describe('BCSCTabStack', () => {
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
 
     jest.mocked(useCardStatus).mockReturnValue({ isActivelyVerified: true, isExpired: false } as any)
+    mockUseServerStatus.mockReturnValue({ isAvailable: true })
   })
 
   it('renders without crashing', () => {
@@ -151,6 +157,79 @@ describe('BCSCTabStack', () => {
       // must land on a Home tab that still shows the FAB.
       rerender(<BCSCTabStack />)
       expect(activeTabNameSeenByFab()).toBe(BCSCScreens.Home)
+    })
+
+    // Regression: without switching the tab back to Home first, Services stays the focused tab
+    // underneath the verify prompt. Backing out of it would refocus Services, which fires this
+    // listener again and redirects right back - trapping the user in a loop.
+    it('switches the tab navigator back to Home before pushing the verify prompt', () => {
+      render(<BCSCTabStack />)
+
+      act(() => getListeners(BCSCScreens.Services).focus())
+
+      const calls = mockNavigation.navigate.mock.calls
+      const resetCallIndex = calls.findIndex(
+        ([name, params]) => name === BCSCStacks.Tab && (params as any)?.screen === BCSCScreens.Home
+      )
+      const destinationCallIndex = calls.findIndex(([name]) => name === BCSCScreens.MainVerifyPrompt)
+
+      expect(resetCallIndex).toBeGreaterThanOrEqual(0)
+      expect(destinationCallIndex).toBeGreaterThan(resetCallIndex)
+    })
+  })
+
+  describe('server outage gating', () => {
+    beforeEach(() => {
+      mockUseServerStatus.mockReturnValue({ isAvailable: false })
+    })
+
+    it('prevents the tab press and redirects to the outage screen', () => {
+      render(<BCSCTabStack />)
+      const event = { preventDefault: jest.fn() }
+
+      act(() => getListeners(BCSCScreens.Services).tabPress(event))
+
+      expect(event.preventDefault).toHaveBeenCalled()
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {})
+    })
+
+    it('redirects on Services focus, not just tab press', () => {
+      render(<BCSCTabStack />)
+
+      act(() => getListeners(BCSCScreens.Services).focus())
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {})
+    })
+
+    it('redirects to the outage screen even for an unverified account', () => {
+      // An outage explains why Services can't render regardless of verification status,
+      // so it should win over the verify-prompt/reverify redirects.
+      jest.mocked(useCardStatus).mockReturnValue({ isActivelyVerified: false, isExpired: true } as any)
+      render(<BCSCTabStack />)
+      const event = { preventDefault: jest.fn() }
+
+      act(() => getListeners(BCSCScreens.Services).tabPress(event))
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {})
+      expect(mockNavigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, expect.anything())
+    })
+
+    // Regression: without switching the tab back to Home first, Services stays the focused tab
+    // underneath the outage screen. Backing out of it would refocus Services, which fires this
+    // listener again and redirects right back - trapping the user in a loop.
+    it('switches the tab navigator back to Home before pushing the outage screen', () => {
+      render(<BCSCTabStack />)
+
+      act(() => getListeners(BCSCScreens.Services).focus())
+
+      const calls = mockNavigation.navigate.mock.calls
+      const resetCallIndex = calls.findIndex(
+        ([name, params]) => name === BCSCStacks.Tab && (params as any)?.screen === BCSCScreens.Home
+      )
+      const destinationCallIndex = calls.findIndex(([name]) => name === BCSCModals.ServiceOutage)
+
+      expect(resetCallIndex).toBeGreaterThanOrEqual(0)
+      expect(destinationCallIndex).toBeGreaterThan(resetCallIndex)
     })
   })
 

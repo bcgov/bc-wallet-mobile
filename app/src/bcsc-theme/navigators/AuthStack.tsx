@@ -1,5 +1,6 @@
 import { BCState } from '@/store'
-import { useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
+import { TestIds } from '@/test-ids/registry'
+import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -185,6 +186,8 @@ const AuthStack = (): React.ReactElement => {
         component={ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
+          headerLeft: createHeaderBackButton,
+          headerBackTestID: testIdWithKey(TestIds.common.back),
           gestureEnabled: false,
         }}
       />

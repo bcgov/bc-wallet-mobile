@@ -214,7 +214,10 @@ const mockStore = {
 
 describe('useBCAgentSetup', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    // clearMocks only clears call history, so the Agent factory and the ledger read
+    // have to be re-armed here or each test inherits the previous test's implementation.
+    jest.mocked(Agent).mockImplementation(() => createMockAgent())
+    jest.mocked(PersistentStorage.fetchValueForKey).mockResolvedValue(undefined)
 
     jest.mocked(useStoreBifold).mockReturnValue([mockStore as any, jest.fn()])
     jest
@@ -224,6 +227,7 @@ describe('useBCAgentSetup', () => {
 
   afterEach(() => {
     jest.useRealTimers()
+    jest.restoreAllMocks()
   })
 
   it('should initialize a new agent successfully', async () => {
@@ -238,7 +242,8 @@ describe('useBCAgentSetup', () => {
     })
 
     expect(Agent).toHaveBeenCalled()
-    expect(result.current.agent).toBeTruthy()
+    expect(result.current.agent?.initialize).toHaveBeenCalled()
+    expect(result.current.agent?.didcomm.mediationRecipient.initiateMessagePickup).toHaveBeenCalled()
   })
 
   it('should still create an agent when the cached ledger read never settles', async () => {
@@ -258,7 +263,8 @@ describe('useBCAgentSetup', () => {
     })
 
     expect(Agent).toHaveBeenCalled()
-    expect(result.current.agent).toBeTruthy()
+    expect(result.current.agent?.initialize).toHaveBeenCalled()
+    expect(result.current.agent?.didcomm.mediationRecipient.initiateMessagePickup).toHaveBeenCalled()
   })
 
   it('should restart existing agent if present', async () => {

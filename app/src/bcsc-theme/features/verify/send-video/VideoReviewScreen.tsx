@@ -19,14 +19,14 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { CommonActions } from '@react-navigation/native'
+import { CommonActions, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
+import { Image, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { OnLoadData } from 'react-native-video'
-import { Video, VideoRef } from 'react-native-video'
+import { Video, ViewType } from 'react-native-video'
 
 export const VerificationVideoCache = new MediaCache()
 
@@ -48,7 +48,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
-  const videoRef = useRef<VideoRef>(null)
+  const isFocused = useIsFocused()
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
   const { failedToReadFromLocalStorageAlert, videoPromptsMissingAlert } = useAlerts(navigation)
@@ -210,17 +210,23 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       <ThemedText variant={'headingFour'} style={styles.heading}>
         {t('BCSC.SendVideo.VideoReview.Heading')}
       </ThemedText>
-      <Video
-        ref={videoRef}
-        source={{ uri: videoPath }}
-        paused={paused}
-        audioOutput={'speaker'}
-        repeat
-        resizeMode={'cover'}
-        style={styles.video}
-        onLoad={(data) => onVideoLoad(data)}
-        disableAudioSessionManagement
-      />
+      {/* The screen keeps rendering through the exit transition, and on Android the player's view outlives it
+          and its audio plays on. Swapping in the still thumbnail as soon as the screen blurs avoids both. */}
+      {isFocused ? (
+        <Video
+          source={{ uri: videoPath }}
+          paused={paused}
+          audioOutput={'speaker'}
+          repeat
+          resizeMode={'cover'}
+          style={styles.video}
+          onLoad={(data) => onVideoLoad(data)}
+          disableAudioSessionManagement
+          viewType={ViewType.TEXTURE}
+        />
+      ) : (
+        <Image source={{ uri: `file://${videoThumbnailPath}` }} style={styles.video} resizeMode={'cover'} />
+      )}
       <TouchableOpacity
         style={styles.pauseButton}
         onPress={onTogglePause}

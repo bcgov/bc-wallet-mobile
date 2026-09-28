@@ -1,14 +1,6 @@
 import { Platform } from 'react-native'
-import {
-  AutoFocusSystem,
-  CameraDevice,
-  CameraDeviceFormat,
-  Code,
-  FormatFilter,
-  VideoStabilizationMode,
-} from 'react-native-vision-camera'
-
-import { PHOTO_RESOLUTION_1080P } from '@/constants'
+import { CameraDevice } from 'react-native-vision-camera'
+import { Barcode, BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
 
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
@@ -16,10 +8,38 @@ import { PHOTO_RESOLUTION_1080P } from '@/constants'
 export type Rect = { x: number; y: number; width: number; height: number }
 
 /**
- * Extended Code interface with position and orientation metadata
+ * Plain-object snapshot of a scanned barcode.
+ *
+ * VisionCamera v5 `Barcode`s are native hybrid objects (getters over native memory), so they
+ * can't be spread or held onto safely — their fields are copied out once, in the scan callback.
  */
-export interface EnhancedCode extends Code {
-  /** Position of the barcode in the camera frame */
+export interface ScannedCode {
+  /** Barcode format (e.g. 'code-39', 'pdf-417') */
+  type: BarcodeFormat
+  /** Decoded value, if the scanner could decode one */
+  value?: string
+  /** Bounding box relative to the scanned frame */
+  frame: Rect
+  /** Corner points relative to the scanned frame */
+  corners: { x: number; y: number }[]
+}
+
+/** Copy the fields we use off a native `Barcode` into a plain `ScannedCode`. */
+export const toScannedCode = (barcode: Barcode): ScannedCode => {
+  const { left, right, top, bottom } = barcode.boundingBox
+  return {
+    type: barcode.format,
+    value: barcode.rawValue ?? barcode.displayValue,
+    frame: { x: left, y: top, width: right - left, height: bottom - top },
+    corners: barcode.cornerPoints.map(({ x, y }) => ({ x, y })),
+  }
+}
+
+/**
+ * Extended code interface with position and orientation metadata
+ */
+export interface EnhancedCode extends ScannedCode {
+  /** Position of the barcode in camera container coordinates */
   position?: Rect
   /** Orientation of the barcode (horizontal or vertical) */
   orientation?: 'horizontal' | 'vertical'
@@ -44,100 +64,6 @@ export interface ScanZone {
 
 /** Collective scan state: scanning → aligned → locked */
 export type ScanState = 'scanning' | 'aligned' | 'locked'
-
-// ─── Camera Format Configurations ─────────────────────────────────────────────
-
-/**
- * Pre-defined camera format filters for different scanning scenarios.
- *
- * @see {@link node_modules/react-native-vision-camera/src/devices/getCameraFormat.ts} for the underlying format selection logic.
- */
-export const CameraFormat = {
-  /**
-   * Format optimized for barcode scanning (back camera, no selfie).
-   * Prioritizes high resolution and moderate frame rate for accurate detection
-   *
-   * Ideal format: 1080p + 30 FPS + non-HDR + stabilization
-   * Usecase: Scanning barcodes on ID cards.
-   */
-  CodeScanningFormat: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // High resolution for better barcode detection
-    {
-      videoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 30,
-    },
-    // Enable video stabilization for steadier scanning
-    {
-      videoStabilizationMode: 'auto',
-    },
-  ] satisfies FormatFilter[],
-  /**
-   * Format optimized for masked camera with barcode detection.
-   *
-   * Ideal format: 1080p + 60 FPS + non-HDR + stabilization
-   * Usecase: Capturing ID cards AND detecting barcodes in real-time.
-   */
-  MaskedWithBarcodeDetection: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // Use phase-detection autofocus for faster and more accurate focusing on barcodes
-    {
-      autoFocusSystem: 'phase-detection',
-    },
-    // High resolution for better barcode detection
-    {
-      videoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // High resolution for better photo quality when capturing the ID card
-    {
-      photoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 60,
-    },
-    // Enable video stabilization for steadier scanning
-    {
-      videoStabilizationMode: 'auto',
-    },
-  ] satisfies FormatFilter[],
-
-  /**
-   * Format optimized for capturing a still selfie (front camera, no barcode detection).
-   * Prioritizes photo resolution and quality over preview frame rate, since the output
-   * is a single still image that gets displayed full-screen and uploaded — unlike the
-   * barcode formats, there is no live scanning that needs high FPS.
-   *
-   * Ideal format: 1080p + 30 FPS + non-HDR
-   * Usecase: Capturing a selfie for identity verification or profile picture.
-   */
-  SelfiePhoto: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // High resolution for better selfie quality
-    {
-      photoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 30,
-    },
-  ] satisfies FormatFilter[],
-}
 
 // ─── Pure Utility Functions ───────────────────────────────────────────────────
 
@@ -167,53 +93,24 @@ export const calculateBarcodeOrientation = (corners?: { x: number; y: number }[]
 export const clampZoom = (target: number, min: number, max: number): number => Math.max(min, Math.min(target, max))
 
 /**
- * Expand a highlight bounding box on Android to include the quiet zones that
- * ML Kit's `boundingBox` omits. On other platforms the position is returned as-is.
+ * Transform a barcode box from scanner-frame space to preview container space.
  *
- * @param position Transformed barcode position in container coordinates
- * @param pad Padding in pixels to add on each side (default 8)
- * @returns Padded position on Android, original position on other platforms
- */
-export const getPaddedHighlightPosition = (position: Rect, pad: number = 8): Rect => {
-  if (Platform.OS !== 'android') {
-    return position
-  }
-  return {
-    x: position.x - pad,
-    y: position.y - pad,
-    width: position.width + pad * 2,
-    height: position.height + pad * 2,
-  }
-}
-
-/**
- * Transform coordinates from CodeScannerFrame space to preview container space.
+ * `cameraFrameWidth`/`cameraFrameHeight` are the scanner output's `currentResolution`, which is
+ * unrotated (sensor landscape) on both platforms. The box itself differs:
  *
- * Key platform differences (from VisionCamera v4 native source code):
+ * **iOS**: the scanner output passes ML Kit the raw landscape buffer without rotating it, so
+ *   the box is in landscape buffer pixels. Normalize, then rotate into portrait.
  *
- * **iOS** (`CameraSession+CodeScanner.swift`):
- *   - `CodeScannerFrame` = `device.activeFormat.videoDimensions` → always LANDSCAPE (e.g., 1920×1080)
- *   - `code.frame` = `AVMetadataObject.bounds` (normalized 0–1) × videoDimensions
- *   - `AVMetadataObject.bounds` are already orientation-corrected by AVFoundation:
- *     bounds.x = horizontal fraction (left→right), bounds.y = vertical fraction (top→bottom)
- *   - BUT VisionCamera scales them by landscape dims: x*1920, y*1080
- *   - This creates coordinates that are positionally correct but in a mismatched aspect ratio
- *   - Fix: Normalize back to 0–1 fractions, then remap to portrait frame dimensions
- *
- * **Android** (`CodeScannerPipeline.kt`):
- *   - `CodeScannerFrame` = `InputImage.width/height` → RAW (unrotated) dimensions (e.g., 640×480)
- *   - `code.frame` = ML Kit `Barcode.boundingBox` → in ROTATED (portrait) space (e.g., 480×640)
- *   - ML Kit applies `rotationDegrees` internally, returning bounding boxes in upright coords
- *   - But `InputImage.width/height` returns pre-rotation dimensions
- *   - Fix: Swap frame dimensions only (coordinates are already in portrait space)
+ * **Android**: ML Kit applies the image's `rotationDegrees`, so the box is already upright
+ *   (e.g. 3000×4000) while the resolution is not (4000×3000). Swap the frame dimensions only.
  *
  * With resizeMode="cover", the camera preview fills the container while maintaining
  * aspect ratio, center-cropping any overflow. We use Math.max(scaleX, scaleY) for
  * the uniform scale and compute centering offsets for the cropped dimension.
  *
- * @param frame Code bounding box in camera sensor coordinate space
- * @param cameraFrameWidth Width reported by CodeScannerFrame
- * @param cameraFrameHeight Height reported by CodeScannerFrame
+ * @param frame Code bounding box in scanner-frame coordinates
+ * @param cameraFrameWidth Width of the scanner output's `currentResolution`
+ * @param cameraFrameHeight Height of the scanner output's `currentResolution`
  * @param containerWidth Width of the camera preview container in pixels
  * @param containerHeight Height of the camera preview container in pixels
  * @param windowDimensions Current window dimensions, used to detect device orientation
@@ -242,23 +139,10 @@ export const transformBarcodeCoordinates = (
 
   if (isDevicePortrait) {
     if (Platform.OS === 'ios') {
-      // iOS: AVMetadataObject.bounds are in RAW landscape sensor space.
-      // VisionCamera scales normalized bounds (0–1) by videoDimensions:
-      //   code.x = bounds.x * size.width  (sensor long/short axis)
-      //   code.y = bounds.y * size.height  (sensor short/long axis)
-      //
-      // Normalizing by the SAME dimensions recovers the original 0–1 bounds,
-      // regardless of whether size.width > size.height or vice versa.
-      //
-      // For portrait display, from empirical testing:
-      //   bounds.x (sensor "X") corresponds to physical VERTICAL (top-to-bottom)
-      //   bounds.y (sensor "Y") corresponds to physical HORIZONTAL (right-to-left, inverted)
-      //
-      // Portrait mapping - sensor coordinates to display coordinates:
-      //   Empirically: boundsY maps to display X (but mirrored: 1-Y-H)
-      //                boundsX maps to display Y
-      const normX = fx / cameraFrameWidth // recovers bounds.x
-      const normY = fy / cameraFrameHeight // recovers bounds.y
+      // iOS: the box is in the raw landscape buffer. For the portrait back camera,
+      // buffer X runs top-to-bottom on screen and buffer Y runs right-to-left.
+      const normX = fx / cameraFrameWidth
+      const normY = fy / cameraFrameHeight
       const normW = fWidth / cameraFrameWidth
       const normH = fHeight / cameraFrameHeight
 
@@ -272,10 +156,7 @@ export const transformBarcodeCoordinates = (
       fWidth = normH * fw
       fHeight = normW * fh
     } else if (isFrameLandscape) {
-      // Android: ML Kit applies rotationDegrees internally and returns boundingBox
-      // in portrait coordinate space (e.g., 480×640), but InputImage.width/height
-      // (used for CodeScannerFrame) returns raw unrotated dimensions (e.g., 640×480).
-      // Just swap frame dimensions to match the bounding box coordinate space.
+      // Android: the box is already upright; only the resolution needs swapping.
       fw = cameraFrameHeight
       fh = cameraFrameWidth
     }
@@ -499,88 +380,28 @@ export const isRecoverableCameraRuntimeError = (
  * Mostly used for logging and debugging purposes.
  *
  * @param device The CameraDevice to get metadata for
- * @param format The CameraDeviceFormat to get metadata for
  * @returns An object containing the selected device and format, with deduplicated formats
  */
-export const getCameraMetadata = (device?: CameraDevice, format?: CameraDeviceFormat) => {
-  const cameraDevice = _removeDuplicateCameraFormats(device)
-
-  return {
-    selectedFormat: format ? _summarizeCameraFormat(format) : null,
-    selectedDevice: cameraDevice
-      ? {
-          ...cameraDevice,
-          formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
-        }
-      : null,
-  }
-}
-
-/**
- * Summarize a CameraDeviceFormat into a concise string for logging or debugging.
- *
- * @param format The CameraDeviceFormat to summarize
- * @returns A string summarizing the format's key properties
- */
-const _summarizeCameraFormat = (format: CameraDeviceFormat): string => {
-  // Maps the enumerated values to short strings for logging purposes
-  const autoFocusSystemMap: Record<AutoFocusSystem, string> = {
-    'contrast-detection': 'contrast',
-    'phase-detection': 'phase',
-    none: 'none',
-  }
-
-  const stabilizationMap: Record<VideoStabilizationMode, string> = {
-    auto: 'auto',
-    standard: 'std',
-    cinematic: 'cin',
-    off: 'off',
-    'cinematic-extended': 'cin-ext',
-  }
-
-  let hdr = [format.supportsVideoHdr ? 'vid' : null, format.supportsPhotoHdr ? 'photo' : null].filter(Boolean).join(',')
-
-  if (!hdr.length) {
-    hdr = 'none'
-  }
-
-  return [
-    `video:${format.videoWidth}x${format.videoHeight}`,
-    `photo:${format.photoWidth}x${format.photoHeight}`,
-    `fps:${format.maxFps}`,
-    `focus:${autoFocusSystemMap[format.autoFocusSystem]}`,
-    `stab:${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
-    `hdr:${hdr}`,
-  ].join(' ')
-}
-
-/**
- * Remove duplicate formats from a CameraDevice's formats array, preserving the first occurrence of each unique format.
- *
- * @param device The CameraDevice to deduplicate formats for
- * @returns A new CameraDevice with deduplicated formats, or undefined if the input device is undefined
- */
-const _removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevice | undefined => {
+export const getCameraMetadata = (device?: CameraDevice) => {
   if (!device) {
-    return
-  }
-
-  const seenFormats = new Map<string, CameraDeviceFormat>()
-
-  for (const format of device?.formats ?? []) {
-    // Ensures that formats with the same properties but in different orders are considered duplicates
-    const sortedFormat = Object.keys(format)
-      .sort((a, b) => a.localeCompare(b))
-      .map((key) => [key, format[key as keyof CameraDeviceFormat]])
-
-    const formatKey = JSON.stringify(sortedFormat)
-
-    if (!seenFormats.has(formatKey)) {
-      seenFormats.set(formatKey, format)
+    return {
+      selectedDevice: null,
     }
   }
 
-  return { ...device, formats: Array.from(seenFormats.values()) }
+  return {
+    selectedDevice: {
+      id: device.id,
+      name: device.name,
+      position: device.position,
+      hasFlash: device.hasFlash,
+      hasTorch: device.hasTorch,
+      supportsLowLightBoost: device.supportsLowLightBoost,
+      minZoom: device.minZoom,
+      maxZoom: device.maxZoom,
+      photoHDR: device.supportsPhotoHDR,
+    },
+  }
 }
 
 /**

@@ -81,3 +81,7 @@ describe('Services', () => {
     expect(tree).toMatchSnapshot()
   })
 })
+
+// The IAS-unavailable case now redirects away from the Services tab before it mounts, via
+// BCSCTabStack's screenListeners (see TabStack.test.tsx's "server outage gating" tests) rather
+// than a check inside Services itself.

@@ -6,6 +6,7 @@ import NonProdOverlay from './bcsc-theme/components/NonProdOverlay'
 import { BCSCApiClientProvider } from './bcsc-theme/contexts/BCSCApiClientContext'
 import { BCSCLoadingProvider } from './bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCStackProvider } from './bcsc-theme/contexts/BCSCStackContext'
+import { ServerStatusProvider } from './bcsc-theme/contexts/ServerStatusContext'
 
 const Root: React.FC = () => {
   const [store] = useStore<BCState>()
@@ -13,10 +14,12 @@ const Root: React.FC = () => {
   return store.mode === Mode.BCSC ? (
     <BCSCStackProvider>
       <BCSCApiClientProvider>
-        <BCSCLoadingProvider>
-          <BCSCRootStack />
-        </BCSCLoadingProvider>
-        <NonProdOverlay />
+        <ServerStatusProvider>
+          <BCSCLoadingProvider>
+            <BCSCRootStack />
+          </BCSCLoadingProvider>
+          <NonProdOverlay />
+        </ServerStatusProvider>
       </BCSCApiClientProvider>
     </BCSCStackProvider>
   ) : (

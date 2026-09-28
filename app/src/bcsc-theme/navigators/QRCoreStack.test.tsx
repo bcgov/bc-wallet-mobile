@@ -3,8 +3,13 @@ import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import { useCardStatus } from '../hooks/useCardStatus'
-import { BCSCQRCoreScreens, BCSCScreens } from '../types/navigators'
+import { BCSCModals, BCSCQRCoreScreens, BCSCScreens } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
+
+const mockUseServerStatus = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
 
 let capturedNavigatorProps: any
 
@@ -72,6 +77,7 @@ describe('QRCoreStack', () => {
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
 
     jest.mocked(useCardStatus).mockReturnValue({ isActivelyVerified: true, isExpired: false } as any)
+    mockUseServerStatus.mockReturnValue({ isAvailable: true })
   })
 
   it('renders without crashing', () => {
@@ -108,6 +114,25 @@ describe('QRCoreStack', () => {
       getListeners(BCSCQRCoreScreens.PairingCode).focus()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, { isExpired: true })
+    })
+
+    // Regression: without switching the tab back to Scanner first, PairingCode stays the focused
+    // tab underneath the verify prompt. Backing out of it would refocus PairingCode, which fires
+    // this same listener again and redirects right back - trapping the user in a loop.
+    it('switches the tab navigator back to Scanner before pushing the verify prompt', () => {
+      jest.mocked(useCardStatus).mockReturnValue({ isActivelyVerified: false, isExpired: false } as any)
+      render(<QRCoreStack />)
+
+      getListeners(BCSCQRCoreScreens.PairingCode).focus()
+
+      const calls = mockNavigation.navigate.mock.calls
+      const resetCallIndex = calls.findIndex(
+        ([name, params]) => name === BCSCScreens.QRCore && (params as any)?.screen === BCSCQRCoreScreens.Scanner
+      )
+      const destinationCallIndex = calls.findIndex(([name]) => name === BCSCScreens.MainVerifyPrompt)
+
+      expect(resetCallIndex).toBeGreaterThanOrEqual(0)
+      expect(destinationCallIndex).toBeGreaterThan(resetCallIndex)
     })
   })
 
@@ -152,6 +177,68 @@ describe('QRCoreStack', () => {
 
       expect(event.preventDefault).toHaveBeenCalled()
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, { isExpired: true })
+    })
+  })
+
+  describe('server outage gating', () => {
+    beforeEach(() => {
+      mockUseServerStatus.mockReturnValue({ isAvailable: false })
+    })
+
+    it('redirects to the outage screen on PairingCode focus', () => {
+      render(<QRCoreStack />)
+
+      getListeners(BCSCQRCoreScreens.PairingCode).focus()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {})
+    })
+
+    it('prevents the tab press and redirects to the outage screen', () => {
+      render(<QRCoreStack />)
+      const event = { preventDefault: jest.fn() }
+
+      getListeners(BCSCQRCoreScreens.PairingCode).tabPress(event)
+
+      expect(event.preventDefault).toHaveBeenCalled()
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {})
+    })
+
+    it('redirects to the outage screen even for an unverified account', () => {
+      // An outage explains why PairingCode can't render regardless of verification status,
+      // so it should win over the verify-prompt/reverify redirects.
+      jest.mocked(useCardStatus).mockReturnValue({ isActivelyVerified: false, isExpired: true } as any)
+      render(<QRCoreStack />)
+
+      getListeners(BCSCQRCoreScreens.PairingCode).focus()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {})
+      expect(mockNavigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, expect.anything())
+    })
+
+    it('does not redirect non-PairingCode routes', () => {
+      render(<QRCoreStack />)
+
+      getListeners(BCSCQRCoreScreens.Scanner).focus()
+
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+    })
+
+    // Regression: without switching the tab back to Scanner first, PairingCode stays the focused
+    // tab underneath the outage screen. Backing out of it would refocus PairingCode, which fires
+    // this same listener again and redirects right back - trapping the user in a loop.
+    it('switches the tab navigator back to Scanner before pushing the outage screen', () => {
+      render(<QRCoreStack />)
+
+      getListeners(BCSCQRCoreScreens.PairingCode).focus()
+
+      const calls = mockNavigation.navigate.mock.calls
+      const resetCallIndex = calls.findIndex(
+        ([name, params]) => name === BCSCScreens.QRCore && (params as any)?.screen === BCSCQRCoreScreens.Scanner
+      )
+      const destinationCallIndex = calls.findIndex(([name]) => name === BCSCModals.ServiceOutage)
+
+      expect(resetCallIndex).toBeGreaterThanOrEqual(0)
+      expect(destinationCallIndex).toBeGreaterThan(resetCallIndex)
     })
   })
 

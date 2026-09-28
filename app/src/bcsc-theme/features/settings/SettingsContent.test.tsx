@@ -1,8 +1,10 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, screen, within } from '@testing-library/react-native'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
 import React from 'react'
+import { Linking } from 'react-native'
 import { SettingsContent } from './SettingsContent'
 
 const tid = (key: string) => testIdWithKey(key)
@@ -12,6 +14,14 @@ const mockStatus = jest.fn()
 jest.mock('@/utils/PushNotificationsHelper', () => ({
   NotificationPermissionStatus: { DENIED: 'denied', GRANTED: 'granted', UNKNOWN: 'unknown', BLOCKED: 'blocked' },
   status: (...args: unknown[]) => mockStatus(...args),
+}))
+
+// The real singleton constructs a Snowplow tracker over native modules on opt-in/out.
+jest.mock('@/utils/analytics/analytics-singleton', () => ({
+  Analytics: {
+    initializeTracker: jest.fn().mockResolvedValue(undefined),
+    stopTracking: jest.fn(),
+  },
 }))
 
 const baseProps = {
@@ -39,7 +49,6 @@ const renderWithState = (override: Record<string, unknown> = {}) =>
 
 describe('SettingsContent', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
     mockStatus.mockResolvedValue('granted')
   })
 
@@ -90,11 +99,30 @@ describe('SettingsContent', () => {
     expect(await within(row).findByText('OFF')).toBeTruthy()
   })
 
-  it('renders the Analytics Opt-In row and accepts press without throwing', async () => {
+  it('flips the Analytics Opt-In row from OFF to ON when pressed', async () => {
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('AnalyticsOptIn'))
+    expect(within(row).getByText('OFF')).toBeTruthy()
+
     fireEvent.press(row)
-    expect(row).toBeTruthy()
+
+    expect(Analytics.initializeTracker).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(within(row).getByText('ON')).toBeTruthy()
+    })
+  })
+
+  it('flips the Analytics Opt-In row from ON to OFF when pressed', async () => {
+    renderWithState({ authentication: { didAuthenticate: true }, bcsc: { analyticsOptIn: true } })
+    const row = await screen.findByTestId(tid('AnalyticsOptIn'))
+    expect(within(row).getByText('ON')).toBeTruthy()
+
+    fireEvent.press(row)
+
+    expect(Analytics.stopTracking).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(within(row).getByText('OFF')).toBeTruthy()
+    })
   })
 
   it('invokes onHelp and onPrivacy from public rows', () => {
@@ -114,7 +142,6 @@ describe('SettingsContent', () => {
   })
 
   it('opens external URL rows (Feedback, Accessibility, TermsOfUse)', async () => {
-    const { Linking } = jest.requireActual('react-native')
     const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never)
     renderWithState()
     fireEvent.press(screen.getByTestId(tid('Feedback')))
@@ -160,11 +187,11 @@ describe('SettingsContent', () => {
     expect(screen.queryByTestId(tid('ResetWallet'))).toBeNull()
   })
 
-  it('renders the RemoveAccount row and accepts press without throwing', async () => {
+  it('renders the RemoveAccount row and invokes onRemoveAccount when pressed', async () => {
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('RemoveAccount'))
     fireEvent.press(row)
-    expect(row).toBeTruthy()
+    expect(baseProps.onRemoveAccount).toHaveBeenCalled()
   })
 
   it('hides the section content when its chevron is pressed, and shows it again on a second press', async () => {

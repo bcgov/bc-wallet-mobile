@@ -57,7 +57,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
   const [isInBackground, setIsInBackground] = useState(false)
-  const backendKeepAliveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const backendKeepAliveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevIsInBackgroundRef = useRef(false)
   const handleRemoteDisconnectRef = useRef<(() => Promise<void>) | null>(null)
   const abortedRef = useRef(false)

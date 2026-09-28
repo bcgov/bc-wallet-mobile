@@ -19,6 +19,11 @@ jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
   })),
 }))
 
+const mockUseServerStatus = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
+
 describe('ManualPairing', () => {
   let mockNavigation: any
   let alertSpy: any
@@ -27,6 +32,7 @@ describe('ManualPairing', () => {
     jest.clearAllMocks()
     mockNavigation = useNavigation()
     jest.mocked(useRoute).mockReturnValue({ params: {} } as ReturnType<typeof useRoute>)
+    mockUseServerStatus.mockReturnValue({ isAvailable: true })
     jest.useFakeTimers()
   })
 
@@ -48,6 +54,23 @@ describe('ManualPairing', () => {
     test('renders correctly', () => {
       const tree = renderScreen()
       expect(tree).toMatchSnapshot()
+    })
+  })
+
+  // The IAS-unavailable case now redirects away from the PairingCode tab before it mounts, via
+  // QRCoreStack's screenListeners (see QRCoreStack.test.tsx's "server outage gating" tests) rather
+  // than a check inside ManualPairing itself. The submission guard below still applies, since a
+  // pre-populated pairing code can auto-submit from an effect that runs regardless of focus.
+  describe('Submission during an outage', () => {
+    test('does not submit a pre-populated code while IAS is unavailable', async () => {
+      mockUseServerStatus.mockReturnValue({ isAvailable: false })
+      jest.mocked(useRoute).mockReturnValue({ params: { pairingCode: 'ABCDEF' } } as ReturnType<typeof useRoute>)
+
+      renderScreen()
+
+      await waitFor(() => {
+        expect(mockLoginByPairingCode).not.toHaveBeenCalled()
+      })
     })
   })
 

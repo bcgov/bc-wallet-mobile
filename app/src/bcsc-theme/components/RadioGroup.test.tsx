@@ -1,5 +1,5 @@
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { RadioGroup } from './RadioGroup'
 
@@ -32,9 +32,7 @@ describe('RadioGroup Component', () => {
         </BasicAppContext>
       )
 
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
+      expect(tree).toMatchSnapshot()
     })
 
     test('renders correctly with selected value', () => {
@@ -44,9 +42,7 @@ describe('RadioGroup Component', () => {
         </BasicAppContext>
       )
 
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
+      expect(tree).toMatchSnapshot()
     })
 
     test('renders correctly with mixed disabled options', () => {
@@ -62,9 +58,7 @@ describe('RadioGroup Component', () => {
         </BasicAppContext>
       )
 
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
+      expect(tree).toMatchSnapshot()
     })
 
     test('displays all option labels', () => {
@@ -223,9 +217,7 @@ describe('RadioGroup Component', () => {
         </BasicAppContext>
       )
 
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
+      expect(tree).toMatchSnapshot()
     })
 
     test('handles single option', () => {
@@ -237,9 +229,7 @@ describe('RadioGroup Component', () => {
         </BasicAppContext>
       )
 
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
+      expect(tree).toMatchSnapshot()
     })
 
     test('handles selectedValue that does not match any option', () => {
