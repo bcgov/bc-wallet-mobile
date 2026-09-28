@@ -23,6 +23,8 @@ const CARD_TYPE_BY_DCN_PREFIX: Readonly<Record<string, BCCardType>> = {
   H: BCCardType.ComboNoviceLicence,
   Y: BCCardType.BCID,
   G: BCCardType.BCSCNonPhoto,
+  // Missing from ICBC's prefix table, but seen on real standalone non-photo cards.
+  F: BCCardType.BCSCNonPhoto,
   C: BCCardType.BCSCPhoto,
 }
 

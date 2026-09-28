@@ -36,6 +36,7 @@ describe('parseDcn', () => {
     ['H00023254', BCCardType.ComboNoviceLicence],
     ['Y00023254', BCCardType.BCID],
     ['G00023254', BCCardType.BCSCNonPhoto],
+    ['F00023254', BCCardType.BCSCNonPhoto],
     ['C00023254', BCCardType.BCSCPhoto],
   ])('maps %s to %s', (raw, cardType) => {
     expect(parseDcn(raw)).toEqual({ value: raw, prefix: raw[0], cardType, checkDigit: 4 })
