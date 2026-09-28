@@ -1,4 +1,5 @@
 import { Mode } from '@/constants'
+import { useCrashReporting } from '@/hooks/useCrashReporting'
 import { BCState } from '@/store'
 import BCSCRootStack from '@bcsc-theme/navigators/RootStack'
 import { RootStack as BCWalletRootStack, useStore } from '@bifold/core'
@@ -10,6 +11,7 @@ import { ServerStatusProvider } from './bcsc-theme/contexts/ServerStatusContext'
 
 const Root: React.FC = () => {
   const [store] = useStore<BCState>()
+  useCrashReporting()
 
   return store.mode === Mode.BCSC ? (
     <BCSCStackProvider>
