@@ -2,7 +2,7 @@ import {
   BCCardBarcode,
   BCCardType,
   decodeBCCardBarcode,
-  hasBCServicesCard,
+  getCardTypeHint,
   parseDcn,
 } from '@/bcsc-theme/utils/bc-card-barcode'
 import {
@@ -27,30 +27,12 @@ const decode = (value: string): BCCardBarcode => {
 }
 
 describe('parseDcn', () => {
-  it.each([
-    ['S00023254', BCCardType.DriversLicence],
-    ['R00023254', BCCardType.LearnersLicence],
-    ['U00023254', BCCardType.NoviceLicence],
-    ['K00023254', BCCardType.ComboDriversLicence],
-    ['P00023254', BCCardType.ComboLearnersLicence],
-    ['H00023254', BCCardType.ComboNoviceLicence],
-    ['J00023254', BCCardType.Combo],
-    ['Y00023254', BCCardType.BCID],
-    ['G00023254', BCCardType.BCSCNonPhoto],
-    ['F00023254', BCCardType.BCSCNonPhoto],
-    ['C00023254', BCCardType.BCSCPhoto],
-    ['A00023254', BCCardType.BCSCPhoto],
-  ])('maps %s to %s', (raw, cardType) => {
-    expect(parseDcn(raw)).toEqual({ value: raw, prefix: raw[0], cardType, checkDigit: 4 })
+  it('splits a DCN into prefix and check digit', () => {
+    expect(parseDcn('S00023254')).toEqual({ value: 'S00023254', prefix: 'S', checkDigit: 4 })
   })
 
   it('strips the zero padding used in the 2D barcode security field', () => {
-    expect(parseDcn('00C00015303')).toEqual({
-      value: 'C00015303',
-      prefix: 'C',
-      cardType: BCCardType.BCSCPhoto,
-      checkDigit: 3,
-    })
+    expect(parseDcn('00C00015303')).toEqual({ value: 'C00015303', prefix: 'C', checkDigit: 3 })
   })
 
   it('accepts exactly the 20 prefix letters the DCN format allows', () => {
@@ -58,10 +40,6 @@ describe('parseDcn', () => {
     const accepted = letters.filter((letter) => parseDcn(`${letter}00023254`) !== null)
 
     expect(accepted).toEqual([...'ACEFGHJKLMNPRSTUWXYZ'])
-  })
-
-  it('parses an unmapped prefix as Unknown rather than rejecting it', () => {
-    expect(parseDcn('Z12345678')?.cardType).toBe(BCCardType.Unknown)
   })
 
   it.each([
@@ -77,29 +55,37 @@ describe('parseDcn', () => {
   })
 })
 
-describe('hasBCServicesCard', () => {
+describe('getCardTypeHint', () => {
   it.each([
-    [BCCardType.ComboDriversLicence, true],
-    [BCCardType.ComboLearnersLicence, true],
-    [BCCardType.ComboNoviceLicence, true],
-    [BCCardType.Combo, true],
-    [BCCardType.BCSCNonPhoto, true],
-    [BCCardType.BCSCPhoto, true],
-    [BCCardType.DriversLicence, false],
-    [BCCardType.LearnersLicence, false],
-    [BCCardType.NoviceLicence, false],
-    [BCCardType.BCID, false],
-    [BCCardType.Unknown, false],
-  ])('%s -> %s', (cardType, expected) => {
-    expect(hasBCServicesCard(cardType)).toBe(expected)
+    ['S00023254', BCCardType.DriversLicence],
+    ['R00023254', BCCardType.LearnersLicence],
+    ['U00023254', BCCardType.NoviceLicence],
+    ['K00023254', BCCardType.ComboDriversLicence],
+    ['P00023254', BCCardType.ComboLearnersLicence],
+    ['H00023254', BCCardType.ComboNoviceLicence],
+    ['J00023254', BCCardType.Combo],
+    ['Y00023254', BCCardType.BCID],
+    ['G00023254', BCCardType.BCSCNonPhoto],
+    ['F00023254', BCCardType.BCSCNonPhoto],
+    ['C00023254', BCCardType.BCSCPhoto],
+    ['A00023254', BCCardType.BCSCPhoto],
+  ])('hints %s is %s', (raw, cardType) => {
+    expect(getCardTypeHint(parseDcn(raw))).toBe(cardType)
+  })
+
+  it('hints Unknown for an unmapped prefix', () => {
+    expect(getCardTypeHint(parseDcn('Z12345678'))).toBe(BCCardType.Unknown)
+  })
+
+  it('hints Unknown when there is no DCN', () => {
+    expect(getCardTypeHint(null)).toBe(BCCardType.Unknown)
   })
 })
 
 describe('decodeBCCardBarcode', () => {
   it('decodes every field of a driver licence barcode', () => {
     expect(decodeBCCardBarcode(BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C)).toEqual({
-      cardType: BCCardType.DriversLicence,
-      dcn: { value: 'S00023254', prefix: 'S', cardType: BCCardType.DriversLicence, checkDigit: 4 },
+      dcn: { value: 'S00023254', prefix: 'S', checkDigit: 4 },
       province: 'BC',
       city: 'VICTORIA',
       surname: 'SPECIMEN',
@@ -122,17 +108,18 @@ describe('decodeBCCardBarcode', () => {
   })
 
   // #4699: this fixture was named as a combo card, but its DCN prefix and blank PHN mark a licence only.
-  it('classifies a licence with a serial-like DCN as a licence, not a BC Services Card', () => {
+  it('exposes the licence prefix and missing PHN of a licence with a serial-like DCN', () => {
     const decoded = decode(BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C)
 
-    expect(hasBCServicesCard(decoded.cardType)).toBe(false)
+    expect(getCardTypeHint(decoded.dcn)).toBe(BCCardType.DriversLicence)
+    expect(decoded.phn).toBeNull()
   })
 
   it('decodes a standalone BC Services Card photo card', () => {
     const decoded = decode(BC_DL_BARCODE_3_CARET)
 
     expect(decoded).toMatchObject({
-      cardType: BCCardType.BCSCPhoto,
+      dcn: { prefix: 'C' },
       surname: 'CPSIJSIT',
       givenNames: 'STANDALONE CITZ FOUR',
       cardNumber: '004023964',
@@ -145,7 +132,6 @@ describe('decodeBCCardBarcode', () => {
       eyeColour: null,
       phn: '9873904417',
     })
-    expect(hasBCServicesCard(decoded.cardType)).toBe(true)
   })
 
   it('reads an address that fills track 1 and so has no trailing caret', () => {
@@ -157,7 +143,6 @@ describe('decodeBCCardBarcode', () => {
     ['B', BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B, 'X', 57],
   ])('decodes legacy card %s whose security field holds no DCN', (_, barcode, sex, weightKg) => {
     expect(decode(barcode)).toMatchObject({
-      cardType: BCCardType.Unknown,
       dcn: null,
       phn: '9123456789',
       sex,
@@ -166,13 +151,13 @@ describe('decodeBCCardBarcode', () => {
   })
 
   it.each([
-    ['00K00023254', BCCardType.ComboDriversLicence],
-    ['00Y00023254', BCCardType.BCID],
-    ['00G00023254', BCCardType.BCSCNonPhoto],
-  ])('takes the card type from security field %s', (security, cardType) => {
+    ['00K00023254', 'K00023254'],
+    ['  Y00023254', 'Y00023254'],
+    ['00G00023254', 'G00023254'],
+  ])('reads the DCN from security field %j', (security, dcn) => {
     const barcode = withSecurityField(BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C, security)
 
-    expect(decode(barcode).cardType).toBe(cardType)
+    expect(decode(barcode).dcn?.value).toBe(dcn)
   })
 
   it('keeps multi-word surnames and given names intact', () => {

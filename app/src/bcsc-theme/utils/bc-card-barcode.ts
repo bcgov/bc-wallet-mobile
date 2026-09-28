@@ -1,5 +1,5 @@
 /**
- * Card type encoded by the letter prefix of a BC card's Document Control Number (DCN).
+ * Card type suggested by the letter prefix of a BC card's Document Control Number (DCN).
  */
 export enum BCCardType {
   DriversLicence = 'DriversLicence',
@@ -23,24 +23,15 @@ const CARD_TYPE_BY_DCN_PREFIX: Readonly<Record<string, BCCardType>> = {
   K: BCCardType.ComboDriversLicence,
   P: BCCardType.ComboLearnersLicence,
   H: BCCardType.ComboNoviceLicence,
-  J: BCCardType.Combo,
   Y: BCCardType.BCID,
   G: BCCardType.BCSCNonPhoto,
-  // Every real F sample was issued to a minor; whether F is specific to minors' cards is TBD.
-  F: BCCardType.BCSCNonPhoto,
   C: BCCardType.BCSCPhoto,
-  // Listed as standalone with an unexplained qualifier; treated as a photo card like C.
+  // A, F and J are legacy prefixes, last issued in early 2022, so cards carrying them circulate until about 2027.
+  // A is listed as standalone with an unexplained qualifier; treated as a photo card like C.
   A: BCCardType.BCSCPhoto,
+  F: BCCardType.BCSCNonPhoto,
+  J: BCCardType.Combo,
 }
-
-const BC_SERVICES_CARD_TYPES: ReadonlySet<BCCardType> = new Set([
-  BCCardType.ComboDriversLicence,
-  BCCardType.ComboLearnersLicence,
-  BCCardType.ComboNoviceLicence,
-  BCCardType.Combo,
-  BCCardType.BCSCNonPhoto,
-  BCCardType.BCSCPhoto,
-])
 
 export type BCCardSex = 'M' | 'F' | 'U' | 'X'
 
@@ -50,13 +41,11 @@ export interface DocumentControlNumber {
   /** The 9-character DCN, e.g. `S00023254`. */
   value: string
   prefix: string
-  cardType: BCCardType
   checkDigit: number
 }
 
 export interface BCCardBarcode {
-  /** `Unknown` when the DCN is absent, unreadable, or has an unmapped prefix. */
-  cardType: BCCardType
+  /** null when the security field holds no readable DCN, as on some older cards. */
   dcn: DocumentControlNumber | null
   province: string
   city: string
@@ -104,16 +93,20 @@ const TRACK_3 = {
 } as const satisfies Record<string, readonly [number, number]>
 
 /**
- * Whether the card type carries a BC Services Card, standalone or combined with a licence.
+ * Best guess at a card's type from its DCN prefix. Advisory only: the prefix list isn't confirmed
+ * complete, so don't route on it. `/device/barcodes` decides whether a card is a BC Services Card.
+ *
+ * @returns `Unknown` when there is no DCN or its prefix isn't mapped.
  */
-export const hasBCServicesCard = (cardType: BCCardType): boolean => BC_SERVICES_CARD_TYPES.has(cardType)
+export const getCardTypeHint = (dcn: DocumentControlNumber | null): BCCardType =>
+  (dcn && CARD_TYPE_BY_DCN_PREFIX[dcn.prefix]) ?? BCCardType.Unknown
 
 /**
  * Parses a Document Control Number from the 1D barcode or from the 2D barcode's 11-character
  * security field. The spec doesn't define the 2 characters beyond the 9-character DCN; specimen
  * cards zero-pad them.
  *
- * @returns null when the value is not a DCN. A valid prefix letter with no known card type parses as `Unknown`.
+ * @returns null when the value is not a DCN.
  */
 export const parseDcn = (raw: string): DocumentControlNumber | null => {
   // B, D, I, O, Q and V are never used, as they don't laser-engrave legibly.
@@ -129,7 +122,6 @@ export const parseDcn = (raw: string): DocumentControlNumber | null => {
   return {
     value: `${prefix}${number}${checkDigit}`,
     prefix,
-    cardType: CARD_TYPE_BY_DCN_PREFIX[prefix] ?? BCCardType.Unknown,
     checkDigit: Number(checkDigit),
   }
 }
@@ -157,7 +149,6 @@ export const decodeBCCardBarcode = (value: string): BCCardBarcode | null => {
   }
 
   return {
-    cardType: track3.dcn?.cardType ?? BCCardType.Unknown,
     ...track1.fields,
     ...track2.fields,
     ...track3,
