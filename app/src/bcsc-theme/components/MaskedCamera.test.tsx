@@ -83,6 +83,7 @@ jest.mock('@/contexts/ErrorAlertContext', () => {
 
 describe('MaskedCamera', () => {
   const mockOnPhotoTaken = jest.fn()
+  const mockPhotoOutput = {} as any
   let mockNavigation: ReturnType<typeof useNavigation>
 
   beforeEach(() => {
@@ -94,7 +95,12 @@ describe('MaskedCamera', () => {
   const renderCamera = () => {
     return render(
       <BasicAppContext>
-        <MaskedCamera navigation={mockNavigation as never} cameraFace="back" onPhotoTaken={mockOnPhotoTaken} />
+        <MaskedCamera
+          navigation={mockNavigation as never}
+          cameraFace="back"
+          onPhotoTaken={mockOnPhotoTaken}
+          photoOutput={mockPhotoOutput}
+        />
       </BasicAppContext>
     )
   }
@@ -190,6 +196,17 @@ describe('MaskedCamera', () => {
         'BCSC.CameraDisclosure.ErrorMessage',
         expectedAppError
       )
+    })
+  })
+
+  describe('Mirroring (regression for #4020)', () => {
+    it('saves the photo un-mirrored while leaving the preview to the default', () => {
+      const { getByTestId } = renderCamera()
+      const mirrorMode = getByTestId('mock-camera').props.mirrorMode
+
+      expect(mirrorMode(mockPhotoOutput)).toBe('off')
+      // Any other output is <Camera>'s internal preview, which keeps 'auto' (mirrored on the front camera)
+      expect(mirrorMode({})).toBe('auto')
     })
   })
 

@@ -411,9 +411,11 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       }
     }
 
+    setIsContinueDisabled(false)
+
+    // A handled result has already shown its own alert (e.g. missing JWK), so only alert here for unhandled errors
     if ('error' in result) {
       logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
-      setIsContinueDisabled(false)
       alerts.loginServerErrorAlert()
     }
   }, [getQuickLoginURL, logger, state.service, navigation, alerts, t, setIsContinueDisabled])

@@ -1,8 +1,15 @@
-import { getFileInfo, getPhotoMetadata, getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import {
+  getFileInfo,
+  getPhotoMetadata,
+  getVideoMetadata,
+  removeFileSafely,
+  toMp4VideoPath,
+} from '@/bcsc-theme/utils/file-info'
 import { DEFAULT_SELFIE_VIDEO_FILENAME, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import readFileInChunks from '@/utils/read-file'
 import { MockLogger } from '@bifold/core'
-import { hashBase64, saveEvidencePhoto } from 'react-native-bcsc-core'
+import { Platform } from 'react-native'
+import { hashBase64, remuxVideoToMp4, saveEvidencePhoto } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 
 jest.mock('react-native-fs', () => ({
@@ -33,6 +40,35 @@ const mockFileStat = (overrides: FileStatOverrides = {}) =>
   } as any)
 
 describe('File Info Utils', () => {
+  describe('toMp4VideoPath', () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('remuxes the recording on iOS and returns the MP4 path', async () => {
+      // VisionCamera v5 records QuickTime on iOS, which IAS rejects
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      jest.mocked(remuxVideoToMp4).mockResolvedValueOnce('/tmp/converted.mp4')
+
+      await expect(toMp4VideoPath('/tmp/recorded.mp4')).resolves.toBe('/tmp/converted.mp4')
+      expect(remuxVideoToMp4).toHaveBeenCalledWith('/tmp/recorded.mp4')
+    })
+
+    it('returns the recording unchanged on Android', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+
+      await expect(toMp4VideoPath('/tmp/recorded.mp4')).resolves.toBe('/tmp/recorded.mp4')
+      expect(remuxVideoToMp4).not.toHaveBeenCalled()
+    })
+
+    it('rejects when the iOS remux fails', async () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      jest.mocked(remuxVideoToMp4).mockRejectedValueOnce(new Error('export failed'))
+
+      await expect(toMp4VideoPath('/tmp/recorded.mp4')).rejects.toThrow('export failed')
+    })
+  })
+
   describe('getFileInfo', () => {
     it('should return filename, timestamp, and size from file stats', async () => {
       mockFileStat()

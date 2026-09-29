@@ -39,18 +39,30 @@ jest.mock('./AuthStack', () => ({
   __esModule: true,
   default: () => 'AuthStack',
 }))
+const mockMainStackRender = jest.fn()
 jest.mock('./MainStack', () => ({
   __esModule: true,
-  default: () => 'MainStack',
+  default: () => {
+    mockMainStackRender()
+    return 'MainStack'
+  },
 }))
 jest.mock('./OnboardingStack', () => ({
   __esModule: true,
   default: () => 'OnboardingStack',
 }))
-jest.mock('./VerifyStack', () => ({
-  __esModule: true,
-  default: () => 'VerifyStack',
-}))
+// Counts mounts, not renders: a remount is what re-runs VerifyStack's resume-step routing
+const mockVerifyStackMount = jest.fn()
+jest.mock('./VerifyStack', () => {
+  const { useEffect } = jest.requireActual('react')
+  const VerifyStackMock = () => {
+    useEffect(() => {
+      mockVerifyStackMount()
+    }, [])
+    return 'VerifyStack'
+  }
+  return { __esModule: true, default: VerifyStackMock }
+})
 jest.mock('../contexts/BCSCActivityContext', () => ({
   BCSCActivityProvider: ({ children }: any) => children,
 }))
@@ -387,6 +399,115 @@ describe('BCSCRootStack', () => {
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: 'bcsc/updateSecureVerifiedStatus' })
       )
+    })
+
+    describe('after the startup resume', () => {
+      const resumeDispatch = { type: 'bcsc/updateSecureVerifiedStatus', payload: [VerificationStatus.IN_PROGRESS] }
+
+      /**
+       * Cold-start harness whose dispatch lands in the mocked store. The render the resume effect
+       * triggers then sees IN_PROGRESS together with the evaluated flag, as React batches the two in
+       * the app. `apply` plays a store change made elsewhere, e.g. useLeaveVerification's UNVERIFIED.
+       */
+      const renderColdStart = (initial: Record<string, any>) => {
+        let state = initial
+        const dispatch = jest.fn((action: { type: string; payload?: any[] }) => {
+          if (action.type === 'bcsc/updateSecureVerifiedStatus') {
+            state = { ...state, bcscSecure: { ...state.bcscSecure, verifiedStatus: action.payload?.[0] } }
+          }
+        })
+        jest.mocked(Bifold.useStore).mockImplementation(() => [state, dispatch] as any)
+        const utils = render(<BCSCRootStack />)
+        const apply = (patch: (current: Record<string, any>) => Record<string, any>) => {
+          state = patch(state)
+          utils.rerender(<BCSCRootStack />)
+        }
+        return { ...utils, dispatch, apply }
+      }
+
+      const withStatus = (verifiedStatus: VerificationStatus) => (current: Record<string, any>) => ({
+        ...current,
+        bcscSecure: { ...current.bcscSecure, verifiedStatus },
+      })
+
+      it('mounts VerifyStack once on a cold-start resume, never showing Home in between', () => {
+        const { toJSON, dispatch } = renderColdStart(authedUnverified(false))
+
+        expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackMount).toHaveBeenCalledTimes(1)
+        expect(mockMainStackRender).not.toHaveBeenCalled()
+      })
+
+      it('returns a resumed user to MainStack when they leave verification', () => {
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(false))
+        expect(toJSON()).toBe('VerifyStack')
+
+        // Back arrow / "Back to home": useLeaveVerification moves status back out of IN_PROGRESS.
+        apply(withStatus(VerificationStatus.UNVERIFIED))
+
+        expect(toJSON()).toBe('MainStack')
+        // Leaving must not read as a resume still pending, or the user is pulled straight back.
+        expect(dispatch).toHaveBeenCalledTimes(1)
+      })
+
+      it('remounts VerifyStack when a restart resets the status and re-enters verification', () => {
+        const { toJSON, apply } = renderColdStart(authedUnverified(false))
+        expect(mockVerifyStackMount).toHaveBeenCalledTimes(1)
+
+        // useVerificationReset clears to UNVERIFIED, then continueVerificationProcess sets IN_PROGRESS.
+        apply(withStatus(VerificationStatus.UNVERIFIED))
+        expect(toJSON()).toBe('MainStack')
+        apply(withStatus(VerificationStatus.IN_PROGRESS))
+
+        expect(toJSON()).toBe('VerifyStack')
+        // A fresh mount is what re-runs the resume-step routing, landing on the first step.
+        expect(mockVerifyStackMount).toHaveBeenCalledTimes(2)
+      })
+
+      it('lets a user who skipped earlier start from the Home card and leave again', () => {
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(true))
+        expect(toJSON()).toBe('MainStack')
+        expect(dispatch).not.toHaveBeenCalled()
+
+        // "Start verification" on the Home card: verificationSkipped=false and IN_PROGRESS together.
+        apply((current) => ({
+          ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+          bcsc: { ...current.bcsc, verificationSkipped: false },
+        }))
+        expect(toJSON()).toBe('VerifyStack')
+
+        apply(withStatus(VerificationStatus.UNVERIFIED))
+
+        expect(toJSON()).toBe('MainStack')
+        expect(dispatch).not.toHaveBeenCalled()
+      })
+
+      it('resumes once an outage that blocked the cold-start resume clears', () => {
+        mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
+        const { toJSON, dispatch, rerender } = renderColdStart(authedUnverified(false))
+        expect(toJSON()).toBe('VerifyStack')
+        expect(dispatch).not.toHaveBeenCalled()
+
+        mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
+        rerender(<BCSCRootStack />)
+
+        expect(dispatch).toHaveBeenCalledTimes(1)
+        expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
+        expect(toJSON()).toBe('VerifyStack')
+      })
+
+      it('keeps a user who left on MainStack when an outage begins later in the session', () => {
+        const { toJSON, apply, rerender } = renderColdStart(authedUnverified(false))
+        apply(withStatus(VerificationStatus.UNVERIFIED))
+        expect(toJSON()).toBe('MainStack')
+
+        // The outage fallback prompt is a cold-start affordance; mid-session the banner covers it.
+        mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
+        rerender(<BCSCRootStack />)
+
+        expect(toJSON()).toBe('MainStack')
+      })
     })
   })
 

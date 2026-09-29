@@ -28,7 +28,15 @@ jest.mock('@/bcsc-theme/contexts/BCSCActivityContext', () => ({
 
 jest.mock('react-native-vision-camera', () => ({
   useCameraPermission: jest.fn(),
-  useCodeScanner: jest.fn((config: unknown) => config),
+}))
+
+// The scanner output is just the options object, so tests can call onBarcodeScanned directly.
+jest.mock('react-native-vision-camera-barcode-scanner', () => ({
+  useBarcodeScannerOutput: jest.fn((config: unknown) => config),
+}))
+
+jest.mock('@/bcsc-theme/components/utils/camera-output', () => ({
+  useEvidencePhotoOutput: jest.fn(() => ({})),
 }))
 
 // Stub the real camera UI out entirely: this suite exercises the screen's own state machine
@@ -228,7 +236,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(maskedCameraProps).not.toBeNull())
 
     await act(async () => {
-      await maskedCameraProps.codeScanner.onCodeScanned([])
+      await maskedCameraProps.codeScanner.onBarcodeScanned([])
     })
 
     expect(mockScanCard).not.toHaveBeenCalled()
@@ -243,12 +251,12 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(maskedCameraProps).not.toBeNull())
 
     await act(async () => {
-      await maskedCameraProps.codeScanner.onCodeScanned([{ value: 'abc' }])
+      await maskedCameraProps.codeScanner.onBarcodeScanned([{ format: 'code-39', displayValue: 'abc' }])
     })
     expect(mockScanCard).toHaveBeenCalledTimes(1)
 
     await act(async () => {
-      await maskedCameraProps.codeScanner.onCodeScanned([{ value: 'abc' }])
+      await maskedCameraProps.codeScanner.onBarcodeScanned([{ format: 'code-39', displayValue: 'abc' }])
     })
     expect(mockScanCard).toHaveBeenCalledTimes(1)
   })
@@ -331,7 +339,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(maskedCameraProps).not.toBeNull())
 
     await act(async () => {
-      await maskedCameraProps.codeScanner.onCodeScanned([{ value: 'dl' }])
+      await maskedCameraProps.codeScanner.onBarcodeScanned([{ format: 'code-39', displayValue: 'dl' }])
     })
 
     act(() => {
@@ -356,7 +364,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(maskedCameraProps).not.toBeNull())
 
     await act(async () => {
-      await maskedCameraProps.codeScanner.onCodeScanned([{ value: 'combo' }])
+      await maskedCameraProps.codeScanner.onBarcodeScanned([{ format: 'code-39', displayValue: 'combo' }])
     })
 
     act(() => {
@@ -395,7 +403,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(maskedCameraProps).not.toBeNull())
 
     await act(async () => {
-      await maskedCameraProps.codeScanner.onCodeScanned([{ value: 'combo' }])
+      await maskedCameraProps.codeScanner.onBarcodeScanned([{ format: 'code-39', displayValue: 'combo' }])
     })
 
     act(() => {

@@ -118,6 +118,11 @@ export const FIVE_MINUTES_IN_SECONDS = 5 * 60
  * screen indefinitely.
  */
 export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 4 * 1000
+/**
+ * Time to live for the in-memory IAS JWK cache (1 hour). Once expired, the next fetch goes back to the
+ * network so a server key rotation is picked up without an app restart.
+ */
+export const JWK_CACHE_TTL_MS = 60 * 60 * 1000
 
 // Notification constants
 /**

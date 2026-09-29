@@ -51,6 +51,7 @@ exports[`ScanSerial renders correctly 1`] = `
         onLayout={[Function]}
         style={
           {
+            "backgroundColor": "black",
             "flex": 1,
             "overflow": "hidden",
             "position": "relative",
@@ -59,16 +60,12 @@ exports[`ScanSerial renders correctly 1`] = `
         testID="camera-preview-container"
       >
         <VisionCamera
-          animatedProps={{}}
-          codeScanner={
-            {
-              "codeTypes": [
-                "code-39",
-                "code-128",
-                "pdf-417",
-              ],
-              "onCodeScanned": [Function],
-            }
+          constraints={
+            [
+              {
+                "fps": 30,
+              },
+            ]
           }
           device={
             {
@@ -80,10 +77,16 @@ exports[`ScanSerial renders correctly 1`] = `
               "supportsFocus": true,
             }
           }
-          format={{}}
+          getInitialZoom={[Function]}
           isActive={true}
           onError={[Function]}
-          onInitialized={[Function]}
+          onStarted={[Function]}
+          onStopped={[Function]}
+          outputs={
+            [
+              {},
+            ]
+          }
           ref={
             {
               "current": null,
@@ -96,8 +99,6 @@ exports[`ScanSerial renders correctly 1`] = `
             }
           }
           testID="vision-camera"
-          torch="off"
-          video={true}
         />
         <View
           style={
