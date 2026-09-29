@@ -54,8 +54,6 @@ const CITY_MAX_LENGTH = 13
 const NAME_MAX_LENGTH = 35
 const PROVINCE_PATTERN = /^[A-Z]{2}$/
 
-const YEARS_PER_CENTURY = 100
-
 const ISO_IIN_LENGTH = 6
 const CARD_NUMBER_MAX_LENGTH = 13
 const CARD_NUMBER_OVERFLOW_MAX_LENGTH = 5
@@ -270,7 +268,7 @@ const parseTrack3 = (value: string) => {
 
 const isSex = (value: string): value is BCCardSex => (SEX_VALUES as readonly string[]).includes(value)
 
-const currentCentury = (): number => Math.floor(new Date().getFullYear() / YEARS_PER_CENTURY)
+const currentCentury = (): number => Math.floor(new Date().getFullYear() / 100)
 
 const isMonth = (mm: string): boolean => Number(mm) >= 1 && Number(mm) <= 12
 
