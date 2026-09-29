@@ -8,6 +8,7 @@ export interface BCCardBarcode {
    * none, as on some older cards; their DCN is only in the 1D barcode.
    */
   dcn: string | null
+  /** The address's province, which can be outside BC; track 1's own province field is always `BC`. */
   province: string
   /** Full city name, recovered from the address when the 13-character city field truncates it. */
   city: string
@@ -48,6 +49,7 @@ const TRACK_2_FIELD_SEPARATOR = '='
 const TRACK_1_PROVINCE: FieldRange = [1, 3]
 const CITY_MAX_LENGTH = 13
 const NAME_MAX_LENGTH = 35
+const PROVINCE_PATTERN = /^[A-Z]{2}$/
 
 const YEARS_PER_CENTURY = 100
 
@@ -113,31 +115,34 @@ export const decodeBCCardBarcode = (value: string): BCCardBarcode | null => {
     return null
   }
 
+  const cityLine = parseCityLine(track1.fields.addressLines, track3.postalCode)
+
   return {
     ...track1.fields,
-    city: resolveCity(track1.fields.city, track1.fields.addressLines, track3.postalCode),
+    province: cityLine?.province ?? track1.fields.province,
+    city: resolveCity(track1.fields.city, cityLine?.city),
     ...track2.fields,
     ...track3,
   }
 }
 
-// The city field truncates at 13 characters without a separator, so a full field may be cut short.
-// The address's last line holds the whole name as `<city> <province>  <postal code>`.
-const resolveCity = (fieldCity: string, addressLines: string[], postalCode: string): string => {
-  const cityLine = addressLines.at(-1)
-  if (fieldCity.length < CITY_MAX_LENGTH || !cityLine || !postalCode) {
-    return fieldCity
-  }
-
-  const cityAndProvince = withoutTrailing(cityLine, postalCode)?.trim()
+// The address's last line reads `<city> <province>  <postal code>`, and its province can be outside BC.
+const parseCityLine = (addressLines: string[], postalCode: string): { city: string; province: string } | null => {
+  const line = addressLines.at(-1)
+  const cityAndProvince = line && postalCode ? withoutTrailing(line, postalCode)?.trim() : undefined
   const provinceSeparator = cityAndProvince?.lastIndexOf(' ') ?? -1
   if (!cityAndProvince || provinceSeparator === -1) {
-    return fieldCity
+    return null
   }
 
-  const lineCity = cityAndProvince.slice(0, provinceSeparator).trim()
-  return lineCity.startsWith(fieldCity) ? lineCity : fieldCity
+  const province = cityAndProvince.slice(provinceSeparator + 1)
+  const city = cityAndProvince.slice(0, provinceSeparator).trim()
+  return PROVINCE_PATTERN.test(province) && city ? { city, province } : null
 }
+
+// The city field truncates at 13 characters without a separator, so a full field may be cut short.
+const resolveCity = (fieldCity: string, lineCity: string | undefined): string =>
+  fieldCity.length === CITY_MAX_LENGTH && lineCity?.startsWith(fieldCity) ? lineCity : fieldCity
 
 // Removes `suffix` from the end of `line`, ignoring spaces in either; null when `line` doesn't end with it.
 const withoutTrailing = (line: string, suffix: string): string | null => {

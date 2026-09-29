@@ -147,6 +147,20 @@ describe('decodeBCCardBarcode', () => {
     expect(decode(barcode).city).toBe('NORTH VANCOUVER')
   })
 
+  it('takes the province from the address, which can be outside BC', () => {
+    const barcode = BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('%BCVICTORIA^', '%BCEDMONTON^')
+      .replace('VICTORIA BC  V8W 3Y8', 'EDMONTON AB  T5J 0N3')
+      .replace('0AV8W3Y8', '0AT5J0N3')
+
+    expect(decode(barcode)).toMatchObject({ province: 'AB', city: 'EDMONTON', postalCode: 'T5J0N3' })
+  })
+
+  it("falls back to track 1's province when the last address line doesn't end in the postal code", () => {
+    const barcode = BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('VICTORIA BC  V8W 3Y8', 'EDMONTON AB  T5J 0N3')
+
+    expect(decode(barcode).province).toBe('BC')
+  })
+
   it('keeps the city field when the last address line names a different city', () => {
     const barcode = BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('%BCVICTORIA^', '%BCNORTH VANCOUV')
 

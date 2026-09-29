@@ -230,6 +230,12 @@ describe('DriversLicenseBarcodeDecoder', () => {
           .replace('VICTORIA BC  V8W 3Y8', cityLine)
           .replace('0AV8W3Y8', `0A${postalCode}`)
 
+      it('reads a residential address outside BC', () => {
+        const decoded = decode(withCity('EDMONTON^', 'EDMONTON AB  T5J 0N3', 'T5J0N3'))
+
+        expect(decoded).toMatchObject({ city: 'edmonton', province: 'AB', postalCode: 'T5J0N3' })
+      })
+
       it('reads a 13-character city, which has no separator', () => {
         const decoded = decode(withCity('PRINCE RUPERT', 'PRINCE RUPERT BC  V8J 1A1', 'V8J1A1'))
 
