@@ -1,6 +1,6 @@
-export type BCCardSex = 'M' | 'F' | 'U' | 'X'
+const SEX_VALUES = ['M', 'F', 'U', 'X'] as const
 
-const SEX_VALUES: ReadonlySet<string> = new Set<BCCardSex>(['M', 'F', 'U', 'X'])
+export type BCCardSex = (typeof SEX_VALUES)[number]
 
 export interface BCCardBarcode {
   /**
@@ -182,7 +182,7 @@ const parseTrack3 = (value: string) => {
     cdsVersion: field(TRACK_3.cdsVersion),
     jurisdictionVersion: field(TRACK_3.jurisdictionVersion),
     postalCode: field(TRACK_3.postalCode),
-    sex: SEX_VALUES.has(sex) ? (sex as BCCardSex) : null,
+    sex: isSex(sex) ? sex : null,
     heightCm: optionalNumber(TRACK_3.height),
     weightKg: optionalNumber(TRACK_3.weight),
     hairColour: optional(TRACK_3.hairColour),
@@ -191,6 +191,8 @@ const parseTrack3 = (value: string) => {
     dcn: parseDcn(field(TRACK_3.security)),
   }
 }
+
+const isSex = (value: string): value is BCCardSex => (SEX_VALUES as readonly string[]).includes(value)
 
 const isMonth = (mm: string): boolean => Number(mm) >= 1 && Number(mm) <= 12
 
