@@ -33,10 +33,31 @@ export interface BCCardBarcode {
   jurisdictionVersion: string
 }
 
+type FieldRange = readonly [start: number, end: number]
+
+const TRACK_1_START_SENTINEL = '%'
+const TRACK_2_START_SENTINEL = ';'
+const TRACK_3_START_SENTINEL = '_%'
+const TRACK_END_SENTINEL = '?'
+const FIELD_SEPARATOR = '^'
+const SUBFIELD_SEPARATOR = '$'
+const TRACK_2_FIELD_SEPARATOR = '='
+
+// Track 1 opens with a fixed-width province, then variable-length city, name and address fields.
+const TRACK_1_PROVINCE: FieldRange = [1, 3]
 const CITY_MAX_LENGTH = 13
 const NAME_MAX_LENGTH = 35
 
-const TRACK_2_PATTERN = /^;(\d{6})(\d{1,13})=(\d{2})(\d{2})(\d{4})(\d{2})(\d{2})[^?]{1,5}\?/
+const ISO_IIN_LENGTH = 6
+const CARD_NUMBER_MAX_LENGTH = 13
+const CARD_NUMBER_OVERFLOW_MAX_LENGTH = 5
+
+// ;<IIN><card number>=<expiry YYMM><birth date YYYYMMDD><card number overflow>?
+const TRACK_2_PATTERN = new RegExp(
+  `^${TRACK_2_START_SENTINEL}(\\d{${ISO_IIN_LENGTH}})(\\d{1,${CARD_NUMBER_MAX_LENGTH}})${TRACK_2_FIELD_SEPARATOR}` +
+    `(\\d{2})(\\d{2})(\\d{4})(\\d{2})(\\d{2})` +
+    `[^${TRACK_END_SENTINEL}]{1,${CARD_NUMBER_OVERFLOW_MAX_LENGTH}}\\${TRACK_END_SENTINEL}`
+)
 
 // Track 3 is fixed-width; offsets are relative to its `_%` start sentinel.
 const TRACK_3_LENGTH = 82
@@ -51,7 +72,7 @@ const TRACK_3 = {
   eyeColour: [41, 44],
   idNumber: [44, 54],
   security: [70, 81],
-} as const satisfies Record<string, readonly [number, number]>
+} as const satisfies Record<string, FieldRange>
 
 /**
  * Parses a Document Control Number (the card serial number) from the 1D barcode or from the 2D
@@ -98,32 +119,34 @@ export const decodeBCCardBarcode = (value: string): BCCardBarcode | null => {
 
 // Variable-length track 1 fields end with `^` unless they fill their maximum length.
 const readCaretField = (value: string, start: number, maxLength: number): { field: string; next: number } => {
-  const caret = value.indexOf('^', start)
+  const separator = value.indexOf(FIELD_SEPARATOR, start)
 
-  if (caret !== -1 && caret - start <= maxLength) {
-    return { field: value.slice(start, caret), next: caret + 1 }
+  if (separator !== -1 && separator - start <= maxLength) {
+    return { field: value.slice(start, separator), next: separator + FIELD_SEPARATOR.length }
   }
 
   return { field: value.slice(start, start + maxLength), next: start + maxLength }
 }
 
 const parseTrack1 = (value: string) => {
-  if (!value.startsWith('%')) {
+  if (!value.startsWith(TRACK_1_START_SENTINEL)) {
     return null
   }
 
-  const province = value.slice(1, 3)
-  const city = readCaretField(value, 3, CITY_MAX_LENGTH)
+  const [provinceStart, provinceEnd] = TRACK_1_PROVINCE
+  const province = value.slice(provinceStart, provinceEnd)
+  const city = readCaretField(value, provinceEnd, CITY_MAX_LENGTH)
   const name = readCaretField(value, city.next, NAME_MAX_LENGTH)
 
-  const endSentinel = value.indexOf('?', name.next)
+  const endSentinel = value.indexOf(TRACK_END_SENTINEL, name.next)
   if (endSentinel === -1) {
     return null
   }
 
   // The address omits its trailing `^` only when it fills the rest of track 1.
-  const address = value.slice(name.next, endSentinel).replace(/\^$/, '')
-  const [rawSurname, ...rawGivenNames] = name.field.split('$')
+  const rawAddress = value.slice(name.next, endSentinel)
+  const address = rawAddress.endsWith(FIELD_SEPARATOR) ? rawAddress.slice(0, -FIELD_SEPARATOR.length) : rawAddress
+  const [rawSurname, ...rawGivenNames] = name.field.split(SUBFIELD_SEPARATOR)
 
   return {
     fields: {
@@ -132,11 +155,11 @@ const parseTrack1 = (value: string) => {
       surname: rawSurname.trim().replace(/,$/, '').trim(),
       givenNames: rawGivenNames.join(' ').trim(),
       addressLines: address
-        .split('$')
+        .split(SUBFIELD_SEPARATOR)
         .map((line) => line.trim())
         .filter(Boolean),
     },
-    end: endSentinel + 1,
+    end: endSentinel + TRACK_END_SENTINEL.length,
   }
 }
 
@@ -165,13 +188,17 @@ const parseTrack2 = (value: string) => {
 }
 
 const parseTrack3 = (value: string) => {
-  if (value.length !== TRACK_3_LENGTH || !value.startsWith('_%') || !value.endsWith('?')) {
+  if (
+    value.length !== TRACK_3_LENGTH ||
+    !value.startsWith(TRACK_3_START_SENTINEL) ||
+    !value.endsWith(TRACK_END_SENTINEL)
+  ) {
     return null
   }
 
-  const field = ([start, end]: readonly [number, number]) => value.slice(start, end).trim()
-  const optional = (range: readonly [number, number]) => field(range) || null
-  const optionalNumber = (range: readonly [number, number]) => {
+  const field = ([start, end]: FieldRange) => value.slice(start, end).trim()
+  const optional = (range: FieldRange) => field(range) || null
+  const optionalNumber = (range: FieldRange) => {
     const raw = field(range)
     return /^\d+$/.test(raw) ? Number(raw) : null
   }
