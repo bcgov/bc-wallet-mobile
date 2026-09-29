@@ -133,7 +133,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
       expect(() => decoder.decode(barcode)).toThrow()
     })
 
-    it('should correctly decode a 3-caret format barcode (no extra ^ before track separator)', () => {
+    it('should correctly decode an address that fills track 1, which has no trailing ^', () => {
       const decoder = new DriversLicenseBarcodeDecoder()
 
       const barcode: DriversLicenseBarcode = {
