@@ -9,7 +9,6 @@ import {
   getModel,
   getSystemName,
   getSystemVersion,
-  getUniqueId,
   getVersion,
 } from 'react-native-device-info'
 import { ReportProblem } from './logger'
@@ -21,7 +20,6 @@ jest.mock('react-native-device-info', () => ({
   getBuildNumber: jest.fn(() => '77'),
   getSystemName: jest.fn(() => 'iOS'),
   getSystemVersion: jest.fn(() => '18.0'),
-  getUniqueId: jest.fn(() => 'unique-device-id'),
   getDeviceId: jest.fn(() => 'iPhone15,2'),
   getModel: jest.fn(() => 'iPhone 15 Pro'),
 }))
@@ -158,7 +156,6 @@ describe('report-problem', () => {
         report_id: '7K2P-9XQF',
         install_id: 'f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f',
         session_id: 1234567890,
-        device_id: 'unique-device-id',
         message: 'Something went wrong',
         description: 'The app crashed when I tried to do X',
         code: 2800,

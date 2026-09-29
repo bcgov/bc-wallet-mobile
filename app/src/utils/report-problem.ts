@@ -11,7 +11,6 @@ import {
   getModel,
   getSystemName,
   getSystemVersion,
-  getUniqueId,
   getVersion,
 } from 'react-native-device-info'
 import { ReportProblem } from './logger'
@@ -78,7 +77,6 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
     report_id: reportId, // this report problem - ie: "7K2P-9XQF"
     install_id: problem.installId, // this app installation - ie: "f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f"
     session_id: problem.sessionId, // this remote logging session - ie: 1234567890
-    device_id: getUniqueId(),
 
     message: problem.title, // ie: "Something went wrong"
     description: problem.description, // ie: "The app crashed when I tried to do X"
