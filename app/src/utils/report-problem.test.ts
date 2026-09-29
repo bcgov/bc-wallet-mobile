@@ -8,6 +8,8 @@ import {
   getDeviceId,
   getModel,
   getSystemName,
+  getSystemVersion,
+  getUniqueId,
   getVersion,
 } from 'react-native-device-info'
 import { ReportProblem } from './logger'
@@ -18,6 +20,8 @@ jest.mock('react-native-device-info', () => ({
   getVersion: jest.fn(() => '1.2.3'),
   getBuildNumber: jest.fn(() => '77'),
   getSystemName: jest.fn(() => 'iOS'),
+  getSystemVersion: jest.fn(() => '18.0'),
+  getUniqueId: jest.fn(() => 'unique-device-id'),
   getDeviceId: jest.fn(() => 'iPhone15,2'),
   getModel: jest.fn(() => 'iPhone 15 Pro'),
 }))
@@ -103,12 +107,16 @@ describe('report-problem', () => {
       expect(result.streams[0].stream).toEqual({
         job: 'incident-report',
         level: 'error',
+        type: 'app_error',
+        report_id: '7K2P-9XQF',
+        session_id: 1234567890,
         environment: 'development',
         application: 'testapp',
         version: '1.2.3',
         build: '77',
         version_build: '1.2.3-77',
         system: 'ios',
+        os: '18.0',
         device: 'iPhone15,2',
         model: 'iPhone 15 Pro',
       })
@@ -117,8 +125,15 @@ describe('report-problem', () => {
       expect(getVersion).toHaveBeenCalled()
       expect(getBuildNumber).toHaveBeenCalled()
       expect(getSystemName).toHaveBeenCalled()
+      expect(getSystemVersion).toHaveBeenCalled()
       expect(getDeviceId).toHaveBeenCalled()
       expect(getModel).toHaveBeenCalled()
+    })
+
+    it('labels the stream as a user report when the problem code is 0', () => {
+      const result = createReportProblemLokiPayload('7K2P-9XQF', { ...baseProblem, code: 0 })
+
+      expect(result.streams[0].stream.type).toBe('user_report')
     })
 
     it('produces a single value entry with a nanosecond timestamp and JSON-encoded body', () => {
@@ -143,6 +158,7 @@ describe('report-problem', () => {
         report_id: '7K2P-9XQF',
         install_id: 'f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f',
         session_id: 1234567890,
+        device_id: 'unique-device-id',
         message: 'Something went wrong',
         description: 'The app crashed when I tried to do X',
         code: 2800,

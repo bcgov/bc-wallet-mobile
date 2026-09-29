@@ -1,6 +1,7 @@
 import { getNavigationBreadcrumbs } from '@/bcsc-theme/navigators/stack-utils'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppError } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios from 'axios'
 import {
@@ -9,6 +10,8 @@ import {
   getDeviceId,
   getModel,
   getSystemName,
+  getSystemVersion,
+  getUniqueId,
   getVersion,
 } from 'react-native-device-info'
 import { ReportProblem } from './logger'
@@ -75,6 +78,7 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
     report_id: reportId, // this report problem - ie: "7K2P-9XQF"
     install_id: problem.installId, // this app installation - ie: "f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f"
     session_id: problem.sessionId, // this remote logging session - ie: 1234567890
+    device_id: getUniqueId(),
 
     message: problem.title, // ie: "Something went wrong"
     description: problem.description, // ie: "The app crashed when I tried to do X"
@@ -91,12 +95,16 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
         stream: {
           job: LOKI_REPORT_PROBLEM_JOB,
           level: LOKI_REPORT_PROBLEM_LOG_LEVEL,
+          type: _getReportProblemType(problem),
+          report_id: reportId,
+          session_id: problem.sessionId,
           environment: __DEV__ ? 'development' : 'production',
           application: getApplicationName().toLowerCase(),
           version: getVersion(),
           build: getBuildNumber(),
           version_build: `${getVersion()}-${getBuildNumber()}`,
           system: getSystemName().toLowerCase(),
+          os: getSystemVersion(),
           device: getDeviceId(),
           model: getModel(),
         },
@@ -134,4 +142,17 @@ const _flattenAppError = (error?: AppError) => {
   flattened.error_json = error.toJSON()
 
   return flattened
+}
+
+/**
+ * Determines the type of the reported problem
+ * @param problem The reported problem
+ * @returns 'user_report' if the problem is a user report, 'app_error' if the problem is an app error
+ */
+const _getReportProblemType = (problem: ReportProblem) => {
+  if (problem.code === 0 || problem.error?.appEvent === AppEventCode.REPORT_PROBLEM) {
+    return 'user_report'
+  }
+
+  return 'app_error'
 }
