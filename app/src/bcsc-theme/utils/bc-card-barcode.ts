@@ -62,9 +62,9 @@ const CARD_NUMBER_OVERFLOW_MAX_LENGTH = 5
 
 // ;<IIN><card number>=<expiry YYMM><birth date YYYYMMDD><card number overflow>?
 const TRACK_2_PATTERN = new RegExp(
-  `^${TRACK_2_START_SENTINEL}(\\d{${ISO_IIN_LENGTH}})(\\d{1,${CARD_NUMBER_MAX_LENGTH}})${TRACK_2_FIELD_SEPARATOR}` +
-    `(\\d{2})(\\d{2})(\\d{4})(\\d{2})(\\d{2})` +
-    `[^${TRACK_END_SENTINEL}]{1,${CARD_NUMBER_OVERFLOW_MAX_LENGTH}}\\${TRACK_END_SENTINEL}`
+  String.raw`^${TRACK_2_START_SENTINEL}(\d{${ISO_IIN_LENGTH}})(\d{1,${CARD_NUMBER_MAX_LENGTH}})${TRACK_2_FIELD_SEPARATOR}` +
+    String.raw`(\d{2})(\d{2})(\d{4})(\d{2})(\d{2})` +
+    `[^${TRACK_END_SENTINEL}]{1,${CARD_NUMBER_OVERFLOW_MAX_LENGTH}}[${TRACK_END_SENTINEL}]`
 )
 
 // Track 3 is fixed-width; offsets are relative to its `_%` start sentinel.
