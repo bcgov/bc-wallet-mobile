@@ -407,11 +407,7 @@ export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLog
   return iceServers
 }
 
-export const createPeerConnection = (
-  localStream: MediaStream,
-  tokenResult: PexipTokenResult,
-  logger: BifoldLogger
-) => {
+export const createPeerConnection = (localStream: MediaStream, tokenResult: PexipTokenResult, logger: BifoldLogger) => {
   const iceServers = buildIceServers(tokenResult, logger)
   const peerConstraints: { iceServers: IceServer[]; iceTransportPolicy?: 'all' | 'relay' } = {
     iceServers,
