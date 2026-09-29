@@ -175,7 +175,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       setSystemVolume(result.volume)
     })
 
-    getInitialVolume()
+    void getInitialVolume()
 
     return () => {
       volumeListener?.remove()
@@ -231,7 +231,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   // kick off the process only once (flow state doesn't go back to idle)
   useEffect(() => {
     if (flowState === VideoCallFlowState.IDLE) {
-      startVideoCall()
+      void startVideoCall()
       // No-op: start() re-initialises audio routing immediately after. Removal tracked in #4471.
       InCallManager.setForceSpeakerphoneOn(false)
       InCallManager.start({ media: 'video', auto: true })
