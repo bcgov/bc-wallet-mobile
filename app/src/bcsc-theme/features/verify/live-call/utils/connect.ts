@@ -5,6 +5,7 @@ import {
   disconnectCall,
   newCandidate,
   refreshToken,
+  releaseToken,
   requestToken,
   withPin,
   withToken,
@@ -25,14 +26,19 @@ type IceServer = {
 // WebRTC Events need handlers even if we don't do anything with some of them
 const noop = () => {}
 
+type ConnectRequest = ConnectionRequest & {
+  onRemoteStream: (mediaStream: MediaStream) => void
+  onRemoteDisconnect: () => void
+}
+
+// resources acquired during setup that must be released if it fails part-way
+type AcquiredResources = {
+  token?: string
+  peerConnection?: RTCPeerConnection
+}
+
 // sets up the full Pexip and WebRTC connection
-export const connect = async (
-  req: ConnectionRequest & {
-    onRemoteStream: (mediaStream: MediaStream) => void
-    onRemoteDisconnect: () => void
-  },
-  logger: BifoldLogger
-): Promise<ConnectResult> => {
+export const connect = async (req: ConnectRequest, logger: BifoldLogger): Promise<ConnectResult> => {
   logger.info('Requesting user media (camera and microphone)...')
   const localStream = await mediaDevices.getUserMedia({
     audio: true,
@@ -42,6 +48,30 @@ export const connect = async (
     },
   })
 
+  const acquired: AcquiredResources = {}
+  try {
+    return await establishConnection(req, localStream, acquired, logger)
+  } catch (error) {
+    logger.warn('Connection setup failed, releasing acquired resources')
+    localStream.getTracks().forEach((track) => track.stop())
+    acquired.peerConnection?.close()
+    if (acquired.token) {
+      try {
+        await releaseInfinityToken(req, acquired.token)
+      } catch (releaseError) {
+        logger.error('Failed to release Pexip token after setup failure:', releaseError as Error)
+      }
+    }
+    throw error
+  }
+}
+
+const establishConnection = async (
+  req: ConnectRequest,
+  localStream: MediaStream,
+  acquired: AcquiredResources,
+  logger: BifoldLogger
+): Promise<ConnectResult> => {
   logger.info('Requesting Pexip Infinity token...')
   let response = await requestInfinityToken(req)
 
@@ -52,9 +82,11 @@ export const connect = async (
   const tokenResult: PexipTokenResult = response.data.result
   const participantUuid = tokenResult.participant_uuid
   let currentToken = tokenResult.token
+  acquired.token = currentToken
 
   logger.info('Creating WebRTC peer connection...')
   const peerConnection: RTCPeerConnection = await createPeerConnection(localStream, tokenResult, logger)
+  acquired.peerConnection = peerConnection
 
   let connectionEstablished = false
   let remoteStreamReceived = false
@@ -185,16 +217,26 @@ export const connect = async (
 
   const disconnectPexip = async () => {
     logger.info('Disconnecting from Pexip call...', { callUuid })
-    await disconnectCall({
-      fetcher: withToken(fetch, currentToken),
-      params: {
-        conferenceAlias: req.conferenceAlias,
-        participantUuid,
-        callUuid,
-      },
-      host: req.nodeUrl,
-    })
-    logger.info('Pexip call disconnected successfully')
+    try {
+      await disconnectCall({
+        fetcher: withToken(fetch, currentToken),
+        params: {
+          conferenceAlias: req.conferenceAlias,
+          participantUuid,
+          callUuid,
+        },
+        host: req.nodeUrl,
+      })
+      logger.info('Pexip call disconnected successfully')
+    } catch (error) {
+      logger.error('Failed to disconnect Pexip call:', error as Error)
+    }
+
+    // Disconnecting the call only drops the media; the participant stays in the
+    // conference until the token is released or expires
+    logger.info('Releasing Pexip token...')
+    await releaseInfinityToken(req, currentToken)
+    logger.info('Pexip token released successfully')
   }
 
   logger.info('Starting Pexip keep-alive timer', { intervalMs: KEEP_ALIVE_INTERVAL_MS })
@@ -321,6 +363,17 @@ const requestInfinityToken = async (request: ConnectionRequest): Promise<any> =>
   })
 
   return response
+}
+
+const releaseInfinityToken = async (request: ConnectionRequest, token: string) => {
+  return await releaseToken({
+    fetcher: withToken(fetch, token),
+    body: {},
+    params: {
+      conferenceAlias: request.conferenceAlias,
+    },
+    host: request.nodeUrl,
+  })
 }
 
 export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLogger): IceServer[] => {

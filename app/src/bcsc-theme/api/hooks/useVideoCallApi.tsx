@@ -89,6 +89,7 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
           Authorization: `Bearer ${token}`,
         },
         skipBearerAuth: true,
+        skipOnErrorHandler: true,
       })
       return data
     })
