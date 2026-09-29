@@ -297,11 +297,20 @@ describe('DriversLicenseBarcodeDecoder', () => {
         })
       })
 
-      it('sets the expiry to the last day of the month for a Feb 29 birthday', () => {
-        const decoded = decode(BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('=260119820104=', '=270219880229='))
+      it.each([
+        ['a non-leap year', '2702', '2027-02-28'],
+        ['a leap year', '2802', '2028-02-29'],
+      ])('sets a Feb 29 birthday expiring in %s to the last day of February', (_, expiry, expiryDate) => {
+        const decoded = decode(BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('=260119820104=', `=${expiry}19880229=`))
 
         expect(decoded.birthDate).toEqual(new Date('1988-02-29'))
-        expect(decoded.expiryDate).toEqual(new Date('2027-02-28'))
+        expect(decoded.expiryDate).toEqual(new Date(expiryDate))
+      })
+
+      it('sets the expiry to the last day of a 30-day month', () => {
+        const decoded = decode(BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('=260119820104=', '=270419850410='))
+
+        expect(decoded.expiryDate).toEqual(new Date('2027-04-30'))
       })
     })
 
