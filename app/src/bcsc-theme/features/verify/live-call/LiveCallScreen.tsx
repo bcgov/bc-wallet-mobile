@@ -31,7 +31,8 @@ type LiveCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.LiveCall>
 }
 
-const getCallVolume = (result: VolumeResult) =>
+// Android getVolume() still returns every stream, untyped since v2; the agent is heard on the call stream
+const getCallVolume = (result: VolumeResult & { call?: number }) =>
   Platform.OS === 'android' ? (result.call ?? result.volume) : result.volume
 
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
@@ -167,7 +168,11 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
 
     const volumeListener = VolumeManager.addVolumeListener((result) => {
-      setSystemVolume(getCallVolume(result))
+      // Android sends one event per changed stream
+      if (Platform.OS === 'android' && result.type !== 'call') {
+        return
+      }
+      setSystemVolume(result.volume)
     })
 
     getInitialVolume()
