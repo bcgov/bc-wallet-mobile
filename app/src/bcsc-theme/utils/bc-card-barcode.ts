@@ -1,53 +1,13 @@
-/**
- * Card type suggested by the letter prefix of a BC card's Document Control Number (DCN).
- */
-export enum BCCardType {
-  DriversLicence = 'DriversLicence',
-  LearnersLicence = 'LearnersLicence',
-  NoviceLicence = 'NoviceLicence',
-  ComboDriversLicence = 'ComboDriversLicence',
-  ComboLearnersLicence = 'ComboLearnersLicence',
-  ComboNoviceLicence = 'ComboNoviceLicence',
-  /** Combo card whose licence class the prefix doesn't specify. */
-  Combo = 'Combo',
-  BCID = 'BCID',
-  BCSCNonPhoto = 'BCSCNonPhoto',
-  BCSCPhoto = 'BCSCPhoto',
-  Unknown = 'Unknown',
-}
-
-const CARD_TYPE_BY_DCN_PREFIX: Readonly<Record<string, BCCardType>> = {
-  S: BCCardType.DriversLicence,
-  R: BCCardType.LearnersLicence,
-  U: BCCardType.NoviceLicence,
-  K: BCCardType.ComboDriversLicence,
-  P: BCCardType.ComboLearnersLicence,
-  H: BCCardType.ComboNoviceLicence,
-  Y: BCCardType.BCID,
-  G: BCCardType.BCSCNonPhoto,
-  C: BCCardType.BCSCPhoto,
-  // A, F and J are legacy prefixes last issued around 2022-02-24, so they're expected to fall out of use on
-  // 2027-02-24 when the last of those 5-year cards expire.
-  // A is listed as standalone with an unexplained qualifier; treated as a photo card like C.
-  A: BCCardType.BCSCPhoto,
-  F: BCCardType.BCSCNonPhoto,
-  J: BCCardType.Combo,
-}
-
 export type BCCardSex = 'M' | 'F' | 'U' | 'X'
 
 const SEX_VALUES: ReadonlySet<string> = new Set<BCCardSex>(['M', 'F', 'U', 'X'])
 
-export interface DocumentControlNumber {
-  /** The 9-character DCN, e.g. `S00023254`. */
-  value: string
-  prefix: string
-  checkDigit: number
-}
-
 export interface BCCardBarcode {
-  /** null when the security field holds no readable DCN, as on some older cards. */
-  dcn: DocumentControlNumber | null
+  /**
+   * The 9-character Document Control Number, e.g. `S00023254`. null when the security field holds
+   * none, as on some older cards; their DCN is only in the 1D barcode.
+   */
+  dcn: string | null
   province: string
   city: string
   surname: string
@@ -94,37 +54,17 @@ const TRACK_3 = {
 } as const satisfies Record<string, readonly [number, number]>
 
 /**
- * Best guess at a card's type from its DCN prefix. Advisory only: the prefix list isn't confirmed
- * complete, so don't route on it. `/device/barcodes` decides whether a card is a BC Services Card.
+ * Parses a Document Control Number (the card serial number) from the 1D barcode or from the 2D
+ * barcode's 11-character security field, which zero-pads the 9-character DCN.
  *
- * @returns `Unknown` when there is no DCN or its prefix isn't mapped.
+ * @returns the 9-character DCN, or null when the value is not one.
  */
-export const getCardTypeHint = (dcn: DocumentControlNumber | null): BCCardType =>
-  (dcn && CARD_TYPE_BY_DCN_PREFIX[dcn.prefix]) ?? BCCardType.Unknown
+export const parseDcn = (raw: string): string | null => {
+  // B, D, I, O, Q and V are never used, as they don't laser-engrave legibly. The check digit isn't
+  // validated: the spec says Modulus 10, but real cards satisfy no common variant.
+  const match = /^0*([ACE-HJ-NPR-UW-Z]\d{8})$/.exec(raw.trim())
 
-/**
- * Parses a Document Control Number from the 1D barcode or from the 2D barcode's 11-character
- * security field. The spec doesn't define the 2 characters beyond the 9-character DCN; specimen
- * cards zero-pad them.
- *
- * @returns null when the value is not a DCN.
- */
-export const parseDcn = (raw: string): DocumentControlNumber | null => {
-  // B, D, I, O, Q and V are never used, as they don't laser-engrave legibly.
-  const match = /^0*([ACE-HJ-NPR-UW-Z])(\d{7})(\d)$/.exec(raw.trim())
-
-  if (!match) {
-    return null
-  }
-
-  const [, prefix, number, checkDigit] = match
-
-  // Not validated: the spec says Modulus 10, but specimen cards satisfy neither Luhn nor common weighted variants.
-  return {
-    value: `${prefix}${number}${checkDigit}`,
-    prefix,
-    checkDigit: Number(checkDigit),
-  }
+  return match ? match[1] : null
 }
 
 /**
