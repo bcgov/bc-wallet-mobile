@@ -234,28 +234,28 @@ describe('createPeerConnection', () => {
     jest.clearAllMocks()
   })
 
-  it("should set iceTransportPolicy to 'nohost' on iOS", async () => {
+  it("should set iceTransportPolicy to 'nohost' on iOS", () => {
     Platform.OS = 'ios'
 
-    await createPeerConnection(mockLocalStream, baseTokenResult, mockLogger)
+    createPeerConnection(mockLocalStream, baseTokenResult, mockLogger)
 
     const config = (RTCPeerConnection as jest.Mock).mock.calls[0][0]
     expect(config.iceTransportPolicy).toBe('nohost')
   })
 
-  it('should not set iceTransportPolicy on Android', async () => {
+  it('should not set iceTransportPolicy on Android', () => {
     Platform.OS = 'android'
 
-    await createPeerConnection(mockLocalStream, baseTokenResult, mockLogger)
+    createPeerConnection(mockLocalStream, baseTokenResult, mockLogger)
 
     const config = (RTCPeerConnection as jest.Mock).mock.calls[0][0]
     expect(config.iceTransportPolicy).toBeUndefined()
   })
 
-  it('should include iceServers in configuration on all platforms', async () => {
+  it('should include iceServers in configuration on all platforms', () => {
     Platform.OS = 'android'
 
-    await createPeerConnection(
+    createPeerConnection(
       mockLocalStream,
       {
         ...baseTokenResult,
@@ -270,6 +270,11 @@ describe('createPeerConnection', () => {
 })
 
 describe('connect', () => {
+  const mockGetUserMedia = mediaDevices.getUserMedia as jest.Mock
+  const mockRequestToken = requestToken as jest.Mock
+  const mockCallsWebrtcParticipant = callsWebrtcParticipant as jest.Mock
+  const mockDisconnectCall = disconnectCall as jest.Mock
+  const mockReleaseToken = releaseToken as jest.Mock
   const track = { stop: jest.fn() }
   const localStream = { getTracks: jest.fn(() => [track]) }
   const request = {
@@ -284,14 +289,14 @@ describe('connect', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
-    ;(mediaDevices.getUserMedia as jest.Mock).mockResolvedValue(localStream)
-    ;(requestToken as jest.Mock).mockResolvedValue({ status: 200, data: { result: baseTokenResult } })
-    ;(callsWebrtcParticipant as jest.Mock).mockResolvedValue({
+    mockGetUserMedia.mockResolvedValue(localStream)
+    mockRequestToken.mockResolvedValue({ status: 200, data: { result: baseTokenResult } })
+    mockCallsWebrtcParticipant.mockResolvedValue({
       status: 200,
       data: { result: { call_uuid: 'call-uuid', sdp: 'answer-sdp' } },
     })
-    ;(disconnectCall as jest.Mock).mockResolvedValue({ status: 200 })
-    ;(releaseToken as jest.Mock).mockResolvedValue({ status: 200 })
+    mockDisconnectCall.mockResolvedValue({ status: 200 })
+    mockReleaseToken.mockResolvedValue({ status: 200 })
   })
 
   afterEach(() => {
@@ -315,7 +320,7 @@ describe('connect', () => {
   })
 
   it('still releases the Pexip token when the call disconnect fails', async () => {
-    ;(disconnectCall as jest.Mock).mockRejectedValue(new Error('network'))
+    mockDisconnectCall.mockRejectedValue(new Error('network'))
     const conn = await connect(request, mockLogger)
     conn.stopPexipKeepAlive()
 
@@ -325,7 +330,7 @@ describe('connect', () => {
   })
 
   it('releases the token, peer connection and local tracks when setup fails after acquiring a token', async () => {
-    ;(callsWebrtcParticipant as jest.Mock).mockResolvedValue({ status: 502, data: {} })
+    mockCallsWebrtcParticipant.mockResolvedValue({ status: 502, data: {} })
 
     await expect(connect(request, mockLogger)).rejects.toThrow()
 
@@ -335,7 +340,7 @@ describe('connect', () => {
   })
 
   it('stops local tracks without releasing a token when the token request fails', async () => {
-    ;(requestToken as jest.Mock).mockResolvedValue({ status: 403, data: {} })
+    mockRequestToken.mockResolvedValue({ status: 403, data: {} })
 
     await expect(connect(request, mockLogger)).rejects.toThrow()
 

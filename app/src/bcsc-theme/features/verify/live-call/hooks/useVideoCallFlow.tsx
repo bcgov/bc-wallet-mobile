@@ -425,9 +425,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         logger.info('Performing full cleanup due to background transition...')
         setCallEnded()
         cleanup()
-          .then(() => {
-            leaveCall()
-          })
+          .then(() => leaveCall())
           .catch((error) => {
             logger.error('Error during full cleanup background transition:', error)
           })

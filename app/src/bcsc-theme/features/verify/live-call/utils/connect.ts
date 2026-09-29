@@ -85,7 +85,7 @@ const establishConnection = async (
   acquired.token = currentToken
 
   logger.info('Creating WebRTC peer connection...')
-  const peerConnection: RTCPeerConnection = await createPeerConnection(localStream, tokenResult, logger)
+  const peerConnection: RTCPeerConnection = createPeerConnection(localStream, tokenResult, logger)
   acquired.peerConnection = peerConnection
 
   let connectionEstablished = false
@@ -407,7 +407,7 @@ export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLog
   return iceServers
 }
 
-export const createPeerConnection = async (
+export const createPeerConnection = (
   localStream: MediaStream,
   tokenResult: PexipTokenResult,
   logger: BifoldLogger
