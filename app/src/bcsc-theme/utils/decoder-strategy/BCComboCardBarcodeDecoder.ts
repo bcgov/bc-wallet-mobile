@@ -63,6 +63,7 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
       birthDate: decodedDriversLicense.birthDate,
       expiryDate: decodedDriversLicense.expiryDate,
       streetAddress: decodedDriversLicense.streetAddress,
+      streetAddress2: decodedDriversLicense.streetAddress2,
       postalCode: decodedDriversLicense.postalCode,
       city: decodedDriversLicense.city,
       province: decodedDriversLicense.province,

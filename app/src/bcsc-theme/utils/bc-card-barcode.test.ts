@@ -139,6 +139,20 @@ describe('decodeBCCardBarcode', () => {
     expect(decode(barcode)).toMatchObject({ city: 'PRINCE RUPERT', surname: 'SPECIMEN' })
   })
 
+  it('recovers a truncated city from the last address line', () => {
+    const barcode = BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('%BCVICTORIA^', '%BCNORTH VANCOUV')
+      .replace('VICTORIA BC  V8W 3Y8', 'NORTH VANCOUVER BC V7M1A1')
+      .replace('0AV8W3Y8', '0AV7M1A1')
+
+    expect(decode(barcode).city).toBe('NORTH VANCOUVER')
+  })
+
+  it('keeps the city field when the last address line names a different city', () => {
+    const barcode = BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('%BCVICTORIA^', '%BCNORTH VANCOUV')
+
+    expect(decode(barcode).city).toBe('NORTH VANCOUV')
+  })
+
   it('reads a 35-character name that has no terminating caret', () => {
     const name = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ,$JOHN AB'
     const barcode = BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('SPECIMEN,$TEST CARD^', name)

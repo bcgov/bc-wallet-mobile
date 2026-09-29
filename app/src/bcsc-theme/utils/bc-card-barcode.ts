@@ -9,6 +9,7 @@ export interface BCCardBarcode {
    */
   dcn: string | null
   province: string
+  /** Full city name, recovered from the address when the 13-character city field truncates it. */
   city: string
   surname: string
   givenNames: string
@@ -47,6 +48,8 @@ const TRACK_2_FIELD_SEPARATOR = '='
 const TRACK_1_PROVINCE: FieldRange = [1, 3]
 const CITY_MAX_LENGTH = 13
 const NAME_MAX_LENGTH = 35
+
+const YEARS_PER_CENTURY = 100
 
 const ISO_IIN_LENGTH = 6
 const CARD_NUMBER_MAX_LENGTH = 13
@@ -112,9 +115,46 @@ export const decodeBCCardBarcode = (value: string): BCCardBarcode | null => {
 
   return {
     ...track1.fields,
+    city: resolveCity(track1.fields.city, track1.fields.addressLines, track3.postalCode),
     ...track2.fields,
     ...track3,
   }
+}
+
+// The city field truncates at 13 characters without a separator, so a full field may be cut short.
+// The address's last line holds the whole name as `<city> <province>  <postal code>`.
+const resolveCity = (fieldCity: string, addressLines: string[], postalCode: string): string => {
+  const cityLine = addressLines.at(-1)
+  if (fieldCity.length < CITY_MAX_LENGTH || !cityLine || !postalCode) {
+    return fieldCity
+  }
+
+  const cityAndProvince = withoutTrailing(cityLine, postalCode)?.trim()
+  const provinceSeparator = cityAndProvince?.lastIndexOf(' ') ?? -1
+  if (!cityAndProvince || provinceSeparator === -1) {
+    return fieldCity
+  }
+
+  const lineCity = cityAndProvince.slice(0, provinceSeparator).trim()
+  return lineCity.startsWith(fieldCity) ? lineCity : fieldCity
+}
+
+// Removes `suffix` from the end of `line`, ignoring spaces in either; null when `line` doesn't end with it.
+const withoutTrailing = (line: string, suffix: string): string | null => {
+  const compactSuffix = suffix.replace(/ /g, '')
+  let end = line.length
+
+  for (let i = compactSuffix.length - 1; i >= 0; i--) {
+    while (end > 0 && line[end - 1] === ' ') {
+      end--
+    }
+    if (line[end - 1] !== compactSuffix[i]) {
+      return null
+    }
+    end--
+  }
+
+  return line.slice(0, end)
 }
 
 // Variable-length track 1 fields end with `^` unless they fill their maximum length.
@@ -179,8 +219,8 @@ const parseTrack2 = (value: string) => {
     fields: {
       isoIIN,
       cardNumber,
-      // YYMM expiry; cards issued this century expire this century.
-      expiry: `20${expiryYY}-${expiryMM}`,
+      // YYMM expiry; a card read this century expires this century.
+      expiry: `${currentCentury()}${expiryYY}-${expiryMM}`,
       birthDate: `${birthYYYY}-${birthMM}-${birthDD}`,
     },
     end: track.length,
@@ -220,6 +260,8 @@ const parseTrack3 = (value: string) => {
 }
 
 const isSex = (value: string): value is BCCardSex => (SEX_VALUES as readonly string[]).includes(value)
+
+const currentCentury = (): number => Math.floor(new Date().getFullYear() / YEARS_PER_CENTURY)
 
 const isMonth = (mm: string): boolean => Number(mm) >= 1 && Number(mm) <= 12
 

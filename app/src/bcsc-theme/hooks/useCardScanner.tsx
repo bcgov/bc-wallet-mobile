@@ -222,6 +222,7 @@ export const useCardScanner = () => {
         },
         address: {
           streetAddress: license.streetAddress,
+          streetAddress2: license.streetAddress2,
           postalCode: license.postalCode,
           city: license.city,
           province: license.province as ProvinceCode,
