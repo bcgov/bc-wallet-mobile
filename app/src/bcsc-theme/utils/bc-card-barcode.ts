@@ -150,7 +150,7 @@ const resolveCity = (fieldCity: string, lineCity: string | undefined): string =>
 
 // Removes `suffix` from the end of `line`, ignoring spaces in either; null when `line` doesn't end with it.
 const withoutTrailing = (line: string, suffix: string): string | null => {
-  const compactSuffix = suffix.replace(/ /g, '')
+  const compactSuffix = suffix.replaceAll(' ', '')
   let end = line.length
 
   for (let i = compactSuffix.length - 1; i >= 0; i--) {
