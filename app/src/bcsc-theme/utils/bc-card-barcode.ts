@@ -14,7 +14,10 @@ export interface BCCardBarcode {
   city: string
   surname: string
   givenNames: string
+  /** Every address line as encoded; the last is the city line (`<city> <province>  <postal code>`). */
   addressLines: string[]
+  /** The address lines before the city line; empty for a one-line address. */
+  streetAddressLines: string[]
   /** Issuer Identification Number; BC is `636028`. */
   isoIIN: string
   /** Licence number for a DL, ICBC client number or MoHS request number for a BCSC, BCID number for a BCID. */
@@ -119,6 +122,7 @@ export const decodeBCCardBarcode = (value: string): BCCardBarcode | null => {
 
   return {
     ...track1.fields,
+    streetAddressLines: track1.fields.addressLines.slice(0, -1),
     province: cityLine?.province ?? track1.fields.province,
     city: resolveCity(track1.fields.city, cityLine?.city),
     ...track2.fields,

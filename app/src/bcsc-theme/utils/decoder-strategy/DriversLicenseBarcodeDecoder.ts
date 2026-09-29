@@ -34,8 +34,7 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
 
 const toDriversLicenseMetadata = (card: BCCardBarcode): DriversLicenseMetadata => {
   const [firstName = '', ...middleNames] = card.givenNames.split(' ').filter(Boolean)
-  // The last address line holds the city, province and postal code; any lines before it are the street.
-  const [streetAddress = '', ...streetAddress2] = card.addressLines.slice(0, -1)
+  const [streetAddress = '', ...streetAddress2] = card.streetAddressLines
   const [birthYear, birthMonth, birthDay] = card.birthDate.split('-').map(Number)
   const [expiryYear, expiryMonth] = card.expiry.split('-').map(Number)
 

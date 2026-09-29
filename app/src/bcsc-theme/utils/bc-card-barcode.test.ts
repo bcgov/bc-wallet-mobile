@@ -58,6 +58,7 @@ describe('decodeBCCardBarcode', () => {
       surname: 'SPECIMEN',
       givenNames: 'TEST CARD',
       addressLines: ['910 GOVERNMENT ST', 'VICTORIA BC  V8W 3Y8'],
+      streetAddressLines: ['910 GOVERNMENT ST'],
       isoIIN: '636028',
       cardNumber: '2222222',
       expiry: '2026-01',
@@ -95,6 +96,15 @@ describe('decodeBCCardBarcode', () => {
 
   it('reads an address that fills track 1 and so has no trailing caret', () => {
     expect(decode(BC_DL_BARCODE_3_CARET).addressLines).toEqual(['910 GOVERNMENT ST', 'VICTORIA BC V8W 3Y5'])
+  })
+
+  it.each([
+    ['one-line', 'VICTORIA BC  V8W 3Y8', []],
+    ['three-line', 'UNIT 5$910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8', ['UNIT 5', '910 GOVERNMENT ST']],
+  ])('separates the street lines of a %s address from its city line', (_, address, streetAddressLines) => {
+    const barcode = BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8', address)
+
+    expect(decode(barcode).streetAddressLines).toEqual(streetAddressLines)
   })
 
   it.each([
