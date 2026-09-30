@@ -27,7 +27,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
   const { handleSuccessfulAuth } = useSecureActions()
-  const { deviceAuthenticationErrorAlert } = useAlerts(navigation)
+  const { deviceAuthenticationErrorAlert, problemWithAppAlert } = useAlerts(navigation)
 
   /**
    * Performs device authentication (biometric or passcode)
@@ -51,9 +51,9 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       // Unlocks the app using device authentication (biometric or passcode)
       const { success, walletKey } = await unlockWithDeviceSecurity('Unlock your app')
 
+      // Native resolves { success: false } only for a deliberate user cancel
       if (!success) {
-        logger.info('[Authentication:performDeviceAuth] Device authentication failed - user cancelled or auth failed')
-        // TODO: (MD) What should we do if the device authentication fails?
+        logger.info('[Authentication:performDeviceAuth] Device authentication cancelled')
         return
       }
 
@@ -120,9 +120,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       await performDeviceAuth()
     } catch (error) {
       const appError = mapNativeBcscError(error)
-      logger.error(`[Authentication:UnlockApp] Device authentication error [${appError.appEvent}]`, appError)
+      logger.error(`[Authentication:UnlockApp] Unlock error [${appError.appEvent}]`, appError)
+      problemWithAppAlert(appError)
     }
-  }, [logger, navigation, performDeviceAuth])
+  }, [logger, navigation, performDeviceAuth, problemWithAppAlert])
 
   return useMemo(() => ({ unlockApp, performDeviceAuth }), [unlockApp, performDeviceAuth])
 }

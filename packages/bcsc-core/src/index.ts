@@ -87,6 +87,14 @@ export const BcscNativeErrorCodes = {
   /** Failed to delete PIN */
   DELETE_PIN_FAILED: 'E_DELETE_PIN_FAILED',
 
+  // Device authentication
+  /**
+   * Non-cancel OS device auth failure during unlock
+   */
+  DEVICE_AUTH_FAILED: 'E_DEVICE_AUTH_FAILED',
+  /** Device auth can no longer be evaluated at unlock time (iOS-only) */
+  DEVICE_AUTH_UNAVAILABLE: 'E_DEVICE_AUTH_UNAVAILABLE',
+
   // Parsing
   /** JSON serialization failed in the native module */
   JSON_SERIALIZATION_FAILED: 'E_JSON_SERIALIZATION_FAILED',
@@ -839,8 +847,10 @@ export const setupDeviceSecurity = async (): Promise<import('./NativeBcscCore').
  *
  * @param reason Optional reason string for the biometric prompt
  * @returns A promise that resolves to unlock result containing:
- *   - success: Whether unlock succeeded
+ *   - success: Whether unlock succeeded; false ONLY when the user deliberately cancelled the prompt
  *   - walletKey: The PBKDF2-derived key (base64 encoded), only present on success
+ * @throws E_DEVICE_AUTH_FAILED for any non-cancel OS auth failure (lockout, system cancel, ...)
+ * @throws E_DEVICE_AUTH_UNAVAILABLE (iOS) when device auth can no longer be evaluated
  */
 export const unlockWithDeviceSecurity = async (
   reason?: string
