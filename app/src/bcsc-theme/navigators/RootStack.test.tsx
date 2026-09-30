@@ -8,13 +8,17 @@ import { useFcmService } from '../features/fcm'
 import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
 
+const mockIsClientReady = jest.fn()
+const mockIsNavigationReady = jest.fn()
+const mockEmitErrorModal = jest.fn()
+
 jest.mock('@bifold/core')
 jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({ emitErrorModal: jest.fn() }),
+  useErrorAlert: () => ({ emitErrorModal: mockEmitErrorModal }),
 }))
 jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
-  useNavigationContainer: () => ({ isNavigationReady: true }),
+  useNavigationContainer: () => ({ isNavigationReady: mockIsNavigationReady() }),
 }))
 jest.mock('../api/hooks/useInitializeAccountStatus')
 jest.mock('../api/hooks/useThirdPartyKeyboardWarning', () => ({
@@ -22,7 +26,7 @@ jest.mock('../api/hooks/useThirdPartyKeyboardWarning', () => ({
   default: jest.fn(),
 }))
 jest.mock('../hooks/useBCSCApiClient', () => ({
-  useBCSCApiClientState: () => ({ isClientReady: true }),
+  useBCSCApiClientState: () => ({ isClientReady: mockIsClientReady() }),
 }))
 jest.mock('../features/fcm', () => ({
   useFcmService: jest.fn(),
@@ -96,6 +100,8 @@ const mockProcessPendingChallenges = jest.fn()
 describe('BCSCRootStack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockIsClientReady.mockReturnValue(true)
+    mockIsNavigationReady.mockReturnValue(true)
     mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
 
     const mockLoadState = jest.fn()
@@ -134,128 +140,85 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
 
-    jest.requireMock('../hooks/useBCSCApiClient').useBCSCApiClientState = () => ({
-      isClientReady: false,
-    })
+    mockIsClientReady.mockReturnValue(false)
 
     const { toJSON } = render(<BCSCRootStack />)
 
     expect(toJSON()).toBe('LoadingScreen')
-
-    // Reset for other tests
-    jest.requireMock('../hooks/useBCSCApiClient').useBCSCApiClientState = () => ({
-      isClientReady: true,
-    })
   })
 
   it('renders LoadingScreen when isNavigationReady is false', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
 
-    jest.requireMock('@/contexts/NavigationContainerContext').useNavigationContainer = () => ({
-      isNavigationReady: false,
-    })
+    mockIsNavigationReady.mockReturnValue(false)
 
     const { toJSON } = render(<BCSCRootStack />)
 
     expect(toJSON()).toBe('LoadingScreen')
-
-    // Reset for other tests
-    jest.requireMock('@/contexts/NavigationContainerContext').useNavigationContainer = () => ({
-      isNavigationReady: true,
-    })
   })
 
-  it('renders OnboardingStack when hasAccount is false', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ bcsc: { hasAccount: false } }), mockDispatch] as any)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toBe('OnboardingStack')
-  })
-
-  it('renders AuthStack when hasAccount is true and didAuthenticate is false', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      mockStore({
-        bcsc: { hasAccount: true },
-        authentication: { didAuthenticate: false },
-      }),
-      mockDispatch,
-    ] as any)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toBe('AuthStack')
-  })
-
-  it('renders VerifyStack when authenticated and verification in progress', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      mockStore({
+  it.each<[string, Record<string, any>, string]>([
+    ['OnboardingStack when hasAccount is false', { bcsc: { hasAccount: false } }, 'OnboardingStack'],
+    [
+      'AuthStack when hasAccount is true and didAuthenticate is false',
+      { bcsc: { hasAccount: true }, authentication: { didAuthenticate: false } },
+      'AuthStack',
+    ],
+    [
+      'VerifyStack when authenticated and verification in progress',
+      {
         bcsc: { hasAccount: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: false, verifiedStatus: VerificationStatus.IN_PROGRESS },
-      }),
-      mockDispatch,
-    ] as any)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toBe('VerifyStack')
-  })
-
-  it('renders MainStack when authenticated and verified', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      mockStore({
-        bcsc: { hasAccount: true },
-        authentication: { didAuthenticate: true },
-        bcscSecure: { verified: true },
-      }),
-      mockDispatch,
-    ] as any)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toBe('MainStack')
-  })
-
-  it('renders VerifyStack when sessionRecoveryRequired is set, overriding the verified→Home routing', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      mockStore({
+      },
+      'VerifyStack',
+    ],
+    [
+      'MainStack when authenticated and verified',
+      { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true }, bcscSecure: { verified: true } },
+      'MainStack',
+    ],
+    [
+      'VerifyStack when sessionRecoveryRequired is set, overriding the verified→Home routing',
+      {
         bcsc: { hasAccount: true },
         authentication: { didAuthenticate: true },
         // verified:true would normally route to MainStack — recovery must take precedence.
         // (VerifyStack starts on the SessionRecovery screen when sessionRecoveryRequired is set.)
         bcscSecure: { verified: true, sessionRecoveryRequired: true },
-      }),
-      mockDispatch,
-    ] as any)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toBe('VerifyStack')
-  })
-
-  it('renders MainStack as fallback when verified is undefined', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      mockStore({
+      },
+      'VerifyStack',
+    ],
+    [
+      'MainStack as fallback when verified is undefined',
+      {
         // verificationSkipped:true is what the load-time migration stamps on every already-onboarded
         // install, so this "returning user" case never hits the undefined-means-show-the-prompt gate.
         bcsc: { hasAccount: true, verificationSkipped: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: undefined },
-      }),
-      mockDispatch,
-    ] as any)
+      },
+      'MainStack',
+    ],
+    [
+      'MainStack when an existing unverified account unlocks',
+      {
+        // The user is returning: the load-time migration stamped verificationSkipped:true on their
+        // already-onboarded state, so the prompt has passed them by. They start verification from the
+        // MainStack instead.
+        bcsc: { hasAccount: true, verificationSkipped: true },
+        authentication: { didAuthenticate: true },
+        bcscSecure: { verified: false },
+      },
+      'MainStack',
+    ],
+  ])('renders %s', (_name, overrides, expectedStack) => {
+    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(overrides), jest.fn()] as any)
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('MainStack')
+    expect(toJSON()).toBe(expectedStack)
   })
 
   it('renders VerifyStack (which opens on the verify prompt) when onboarding completes', () => {
@@ -284,25 +247,6 @@ describe('BCSCRootStack', () => {
     rerender(<BCSCRootStack />)
 
     expect(toJSON()).toBe('VerifyStack')
-  })
-
-  it('renders MainStack when an existing unverified account unlocks', () => {
-    const mockDispatch = jest.fn()
-    // The user is returning: the load-time migration stamped verificationSkipped:true on their
-    // already-onboarded state, so the prompt has passed them by. They start verification from the
-    // MainStack instead.
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      mockStore({
-        bcsc: { hasAccount: true, verificationSkipped: true },
-        authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false },
-      }),
-      mockDispatch,
-    ] as any)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toBe('MainStack')
   })
 
   describe('verificationSkipped routing', () => {
@@ -539,14 +483,9 @@ describe('BCSCRootStack', () => {
     const mockLoadState = jest.fn().mockImplementation(() => {
       throw mockError
     })
-    const mockEmitErrorModal = jest.fn()
 
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
     jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
-
-    jest.requireMock('@/contexts/ErrorAlertContext').useErrorAlert = () => ({
-      emitErrorModal: mockEmitErrorModal,
-    })
 
     render(<BCSCRootStack />)
 
@@ -570,17 +509,10 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
 
-    jest.requireMock('../hooks/useBCSCApiClient').useBCSCApiClientState = () => ({
-      isClientReady: false,
-    })
+    mockIsClientReady.mockReturnValue(false)
 
     render(<BCSCRootStack />)
 
     expect(mockProcessPendingChallenges).not.toHaveBeenCalled()
-
-    // Reset for other tests
-    jest.requireMock('../hooks/useBCSCApiClient').useBCSCApiClientState = () => ({
-      isClientReady: true,
-    })
   })
 })
