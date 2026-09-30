@@ -296,7 +296,7 @@ describe('connect', () => {
       data: { result: { call_uuid: 'call-uuid', sdp: 'answer-sdp' } },
     })
     mockDisconnectCall.mockResolvedValue({ status: 200 })
-    mockReleaseToken.mockResolvedValue({ status: 200 })
+    mockReleaseToken.mockResolvedValue({ status: 200, data: { status: 'success', result: true } })
   })
 
   afterEach(() => {
@@ -317,6 +317,22 @@ describe('connect', () => {
     expect(releaseToken).toHaveBeenCalledWith(
       expect.objectContaining({ params: { conferenceAlias: 'room' }, host: 'https://pexip.example.com' })
     )
+  })
+
+  it.each([
+    ['a 403', { status: 403, data: { status: 'failed', result: 'Forbidden' } }],
+    ['result: false', { status: 200, data: { status: 'success', result: false } }],
+  ])('logs a failed release when Pexip responds with %s', async (_, response) => {
+    mockReleaseToken.mockResolvedValue(response)
+    const conn = await connect(request, mockLogger)
+    conn.stopPexipKeepAlive()
+
+    await expect(conn.disconnectPexip()).resolves.toBeUndefined()
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Failed to release Pexip token:',
+      expect.objectContaining({ message: expect.stringContaining('Pexip did not release the token') })
+    )
+    expect(mockLogger.info).not.toHaveBeenCalledWith('Pexip token released successfully')
   })
 
   it('still releases the Pexip token when the call disconnect fails', async () => {

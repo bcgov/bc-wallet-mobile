@@ -182,6 +182,25 @@ describe('LiveCall', () => {
       tree.unmount()
     })
 
+    it('does not navigate if the screen unmounts while service hours are loading', async () => {
+      let resolveHours: (value: unknown) => void = () => {}
+      mockGetServiceHours.mockReturnValue(new Promise((resolve) => (resolveHours = resolve)))
+      mockUseVideoCallFlow.mockReturnValue({
+        ...defaultVideoCallFlowReturn,
+        flowState: VideoCallFlowState.CREATING_SESSION,
+        serviceUnavailable: { busy: true },
+      })
+
+      const tree = renderScreen()
+      tree.unmount()
+
+      await act(async () => {
+        resolveHours({ time_zone: 'America/Vancouver', regular_service_periods: [], service_unavailable_periods: [] })
+      })
+
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+    })
+
     it('still routes to CallBusyOrClosed when service hours fail to load', async () => {
       mockGetServiceHours.mockRejectedValue(new Error('network'))
       mockUseVideoCallFlow.mockReturnValue({

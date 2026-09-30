@@ -116,6 +116,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       return
     }
 
+    // the user can leave (e.g. cancel) while service hours are loading
+    let cancelled = false
+
     const showCallBusyOrClosed = async () => {
       let formattedHours: FormattedServicePeriod[] = []
       try {
@@ -123,6 +126,10 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       } catch (error) {
         // ServicePeriodList falls back to the default hours string when the list is empty
         logger.error('Error loading live call service hours:', error as Error)
+      }
+
+      if (cancelled) {
+        return
       }
 
       navigation.dispatch(
@@ -137,6 +144,10 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
 
     void showCallBusyOrClosed()
+
+    return () => {
+      cancelled = true
+    }
   }, [serviceUnavailable, videoCallApi, logger, navigation])
 
   // start crop delay timeout when call starts. the crop delay is to match the

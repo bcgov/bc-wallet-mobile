@@ -90,6 +90,7 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
         },
         skipBearerAuth: true,
         skipOnErrorHandler: true,
+        suppressStatusCodeLogs: [503, 553],
       })
       return data
     })

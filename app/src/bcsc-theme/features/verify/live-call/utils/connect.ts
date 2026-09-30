@@ -235,8 +235,12 @@ const establishConnection = async (
     // Disconnecting the call only drops the media; the participant stays in the
     // conference until the token is released or expires
     logger.info('Releasing Pexip token...')
-    await releaseInfinityToken(req, currentToken)
-    logger.info('Pexip token released successfully')
+    try {
+      await releaseInfinityToken(req, currentToken)
+      logger.info('Pexip token released successfully')
+    } catch (error) {
+      logger.error('Failed to release Pexip token:', error as Error)
+    }
   }
 
   logger.info('Starting Pexip keep-alive timer', { intervalMs: KEEP_ALIVE_INTERVAL_MS })
@@ -365,8 +369,8 @@ const requestInfinityToken = async (request: ConnectionRequest): Promise<any> =>
   return response
 }
 
-const releaseInfinityToken = async (request: ConnectionRequest, token: string) => {
-  return await releaseToken({
+const releaseInfinityToken = async (request: ConnectionRequest, token: string): Promise<void> => {
+  const response = await releaseToken({
     fetcher: withToken(fetch, token),
     body: {},
     params: {
@@ -374,6 +378,10 @@ const releaseInfinityToken = async (request: ConnectionRequest, token: string) =
     },
     host: request.nodeUrl,
   })
+
+  if (response.status !== 200 || !response.data.result) {
+    throw new Error(`Pexip did not release the token (status ${response.status})`)
+  }
 }
 
 export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLogger): IceServer[] => {
