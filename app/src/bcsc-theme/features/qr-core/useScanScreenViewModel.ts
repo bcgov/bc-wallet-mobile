@@ -1,3 +1,4 @@
+import useAccountTransfer from '@/bcsc-theme/features/account-transfer/transferee/useAccountTransfer'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
@@ -21,9 +22,10 @@ export interface UseScanScreenViewModelOptions {
    */
   onPairingCodeFound: (pairingCode: string) => void
   /**
-   * Called when a strategy returns `{ kind: 'account-transfer' }`.
+   * Called once the account transfer for a `{ kind: 'account-transfer' }` result has completed.
+   * The screen only navigates (typically to VerificationSuccess).
    */
-  onAccountTransferFound?: (transferToken: string) => void
+  onAccountTransferFound?: () => void
   strategies?: UriStrategy[]
 }
 
@@ -45,6 +47,7 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   // failed to initialize. Strategies tolerate a missing agent: PairingCodeStrategy
   // ignores it; DidCommOobStrategy returns `{ kind: 'unsupported', reason: 'AgentNotReady' }`.
   const { waitForAgent } = useBCSCAgent()
+  const { registerDevice, transferAccount } = useAccountTransfer()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   // Sent to the inviter as our label when we accept their invitation — they
@@ -94,8 +97,11 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
             onPairingCodeFound(result.pairingCode)
             break
           case 'account-transfer':
+            // Latch only after the transfer succeeds so failures surface as scan errors.
+            await registerDevice()
+            await transferAccount(value, result.transferToken)
             isNavigatingRef.current = true
-            onAccountTransferFound?.(result.transferToken)
+            onAccountTransferFound?.()
             break
           case 'unsupported':
             // BCSC v4.1 rejects OpenID and mediator URIs at the strategy layer; show a localized
@@ -148,6 +154,8 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
       onConnectionFound,
       onPairingCodeFound,
       onAccountTransferFound,
+      registerDevice,
+      transferAccount,
     ]
   )
 

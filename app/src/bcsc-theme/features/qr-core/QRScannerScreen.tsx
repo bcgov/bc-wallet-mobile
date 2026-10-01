@@ -28,8 +28,12 @@ const QRScannerScreen: React.FC = () => {
     [navigation]
   )
 
+  const onAccountTransferFound = useCallback(() => {
+    navigation.getParent<StackNavigationProp<BCSCMainStackParams>>()?.navigate(BCSCScreens.VerificationSuccess)
+  }, [navigation])
+
   const { isPermissionLoading, hasPermission, isProcessing, scanError, handleScan, dismissError, resetNavigationLock } =
-    useScanScreenViewModel({ onConnectionFound, onPairingCodeFound })
+    useScanScreenViewModel({ onConnectionFound, onPairingCodeFound, onAccountTransferFound })
 
   // QRCoreStack has `unmountOnBlur: false` so the scanner persists across the
   // ConnectionLoading round trip; reset the nav lock on each focus so the
