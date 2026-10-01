@@ -12,8 +12,9 @@ for tag in "${TAG_A}" "${TAG_B}"; do
   fi
 done
 
-# Order by commit date - not ancestry, tags aren't guaranteed to sit in a straight line. 
-# Every git command below addresses tags via refs/tags/ matching the validation above
+# Order by commit date - not ancestry, tags aren't guaranteed to sit in a straight line.
+# Every git command below addresses tags via refs/tags/, matching the validation
+# above, so a same-named branch can never shadow the tag.
 date_a=$(git log -1 --format=%ct "refs/tags/${TAG_A}")
 date_b=$(git log -1 --format=%ct "refs/tags/${TAG_B}")
 if [ "${date_a}" -le "${date_b}" ]; then
@@ -30,8 +31,9 @@ fi
 echo "older=${older}" >> "${GITHUB_OUTPUT}"
 echo "newer=${newer}" >> "${GITHUB_OUTPUT}"
 
-# Squash-only merge history. PR numbers come from the tail of each commit
-# `git log` runs outside the pipe so a real git failure will be reported
+# Squash-only merge history. PR numbers come from the tail of each commit subject"fix: ... (#4587)".
+# `git log` runs outside the pipe so a real git failure still trips `set -e`; 
+# `sed`/`sort` exit 0 even when nothing matches, so "no PRs found" is not mixed up with a git error.
 commit_subjects=$(git log --pretty=%s "refs/tags/${older}..refs/tags/${newer}")
 pr_numbers=$(printf '%s\n' "${commit_subjects}" \
   | sed -En 's/.*\(#([0-9]+)\)[[:space:]]*$/\1/p' \

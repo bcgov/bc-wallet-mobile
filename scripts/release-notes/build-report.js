@@ -9,8 +9,9 @@ module.exports = async ({ github, context, core }) => {
   const { owner, repo } = context.repo
   const here = `${owner}/${repo}`
 
-  // Project 108 = "BC Wallet" board. Sprint/Priority are looked up
-  // by field name, so a rename fails loudly instead of going blank.
+  // Project 108 = "BC Wallet" board. Sprint/Priority are looked up by field
+  // name via fieldValueByName, which returns null for an unknown name
+  // sprintFor/priorityFor fall back to '—' on a rename.
   const PROJECT_NUMBER = 108
   const SPRINT_FIELD_NAME = 'Sprint'
   const PRIORITY_FIELD_NAME = 'Priority'
@@ -140,7 +141,7 @@ module.exports = async ({ github, context, core }) => {
           .sort((a, b) => a - b)
           .map(prLink)
           .join(', ')
-        return `| ${issueLink(issue.number)} | ${priorityFor(issue)} | ${esc(issue.title)} | ${sprintFor(issue)} | ${prCell} |`
+        return `| ${issueLink(issue.number)} | ${esc(priorityFor(issue))} | ${esc(issue.title)} | ${esc(sprintFor(issue))} | ${prCell} |`
       })
       .join('\n')
     return `${header}\n${body}`
