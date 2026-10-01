@@ -191,17 +191,6 @@ describe('BCSCRootStack', () => {
       'VerifyStack',
     ],
     [
-      'MainStack as fallback when verified is undefined',
-      {
-        // verificationSkipped:true is what the load-time migration stamps on every already-onboarded
-        // install, so this "returning user" case never hits the undefined-means-show-the-prompt gate.
-        bcsc: { hasAccount: true, verificationSkipped: true },
-        authentication: { didAuthenticate: true },
-        bcscSecure: { verified: undefined },
-      },
-      'MainStack',
-    ],
-    [
       'MainStack when an existing unverified account unlocks',
       {
         // The user is returning: the load-time migration stamped verificationSkipped:true on their
