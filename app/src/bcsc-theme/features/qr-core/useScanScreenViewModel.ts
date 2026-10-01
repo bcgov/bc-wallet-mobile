@@ -6,7 +6,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCameraPermission } from 'react-native-vision-camera'
 
-import { DidCommOobStrategy, PairingCodeStrategy } from './uri-strategies'
+import { AccountTransferStrategy, DidCommOobStrategy, PairingCodeStrategy } from './uri-strategies'
 import type { UriStrategy } from './uri-strategies/types'
 
 export interface UseScanScreenViewModelOptions {
@@ -20,16 +20,20 @@ export interface UseScanScreenViewModelOptions {
    * routes the code into the pairing flow (typically the sibling PairingCode tab).
    */
   onPairingCodeFound: (pairingCode: string) => void
+  /**
+   * Called when a strategy returns `{ kind: 'account-transfer' }`.
+   */
+  onAccountTransferFound?: (transferToken: string) => void
   strategies?: UriStrategy[]
 }
 
 // Ordering matters: `Array.find` returns the first matching strategy. Both
 // strategies parse URLs with disjoint shapes (DIDComm OOB vs pairingqrcode.html),
 // so order is not load-bearing today; keep DIDComm first to match the original seam.
-const DEFAULT_STRATEGIES: UriStrategy[] = [DidCommOobStrategy, PairingCodeStrategy]
+const DEFAULT_STRATEGIES: UriStrategy[] = [DidCommOobStrategy, PairingCodeStrategy, AccountTransferStrategy]
 
 const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
-  const { onConnectionFound, onPairingCodeFound } = options
+  const { onConnectionFound, onPairingCodeFound, onAccountTransferFound } = options
   const strategies = useMemo(() => options.strategies ?? DEFAULT_STRATEGIES, [options.strategies])
   const { t } = useTranslation()
   // BCSC's own agent context, not Bifold's `useAgent` (which throws before the
@@ -89,6 +93,10 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
             isNavigatingRef.current = true
             onPairingCodeFound(result.pairingCode)
             break
+          case 'account-transfer':
+            isNavigatingRef.current = true
+            onAccountTransferFound?.(result.transferToken)
+            break
           case 'unsupported':
             // BCSC v4.1 rejects OpenID and mediator URIs at the strategy layer; show a localized
             // message keyed by reason so future strategies can add their own without changing this switch.
@@ -130,7 +138,17 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
         setIsProcessing(false)
       }
     },
-    [scanError, strategies, waitForAgent, logger, scanLabel, t, onConnectionFound, onPairingCodeFound]
+    [
+      scanError,
+      strategies,
+      waitForAgent,
+      logger,
+      scanLabel,
+      t,
+      onConnectionFound,
+      onPairingCodeFound,
+      onAccountTransferFound,
+    ]
   )
 
   const dismissError = useCallback(() => setScanError(null), [])

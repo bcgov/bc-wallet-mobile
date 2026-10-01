@@ -6,6 +6,7 @@ type AnyAgent = Agent | null | undefined | Promise<Agent | null | undefined>
 export type ScanResult =
   | { kind: 'connection'; oobRecordId: string }
   | { kind: 'pairing-code'; pairingCode: string }
+  | { kind: 'account-transfer'; transferToken: string }
   | { kind: 'unsupported'; reason: 'OpenID' | 'Mediator' | 'AgentNotReady' }
   | { kind: 'unrecognized' }
 
