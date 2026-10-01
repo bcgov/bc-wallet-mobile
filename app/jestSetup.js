@@ -83,8 +83,14 @@ jest.mock('react-native-safe-area-context', () => mockSafeAreaContext)
 jest.mock('@react-native-community/netinfo', () => mockRNCNetInfo)
 jest.mock('react-native-localize', () => mockRNLocalize)
 jest.mock('react-native-vision-camera', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require('./__mocks__/custom/react-native-camera')
 })
+jest.mock('react-native-vision-camera-barcode-scanner', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('./__mocks__/custom/react-native-vision-camera-barcode-scanner')
+})
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 jest.mock('react-native-permissions', () => require('react-native-permissions/mock'))
 jest.mock('react-native-splash-screen', () => ({}))
 jest.mock('react-native-orientation-locker', () => {
@@ -117,6 +123,9 @@ jest.mock('react-native-keyboard-controller', () => {
   const { ScrollView } = jest.requireActual('react-native')
   return {
     KeyboardAwareScrollView: ScrollView,
+    KeyboardEvents: {
+      addListener: () => ({ remove: () => {} }),
+    },
   }
 })
 

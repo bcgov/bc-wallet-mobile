@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
+import { VerificationRequestStatus } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -40,14 +41,14 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
       const { status, status_message } = await evidenceService.getVerificationRequestStatus(
         store.bcscSecure.verificationRequestId
       )
-      if (status === 'verified') {
+      if (status === VerificationRequestStatus.VERIFIED) {
         if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
           throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
         }
 
         await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
         navigation.navigate(BCSCScreens.VerificationSuccess)
-      } else if (status === 'cancelled') {
+      } else if (status === VerificationRequestStatus.CANCELLED) {
         navigation.navigate(BCSCScreens.CancelledReview, {
           agentReason: status_message,
         })

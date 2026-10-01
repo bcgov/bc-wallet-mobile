@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs')
 const path = require('path')
 const { getIndyLedgers, IndyLedger, writeIndyLedgersToFile } = require('@bifold/core/utils/ledger')

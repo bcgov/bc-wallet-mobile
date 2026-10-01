@@ -63,7 +63,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   })
   const lastLoadRef = useRef<AccountLoadDiagnostics | null>(null)
 
-  const { data, load, isLoading, refresh } = useDataLoader(
+  const { data, load, isLoading, isReady, error, refresh } = useDataLoader(
     () => {
       const { trigger, connectivity } = pendingLoadRef.current
       const diagnostics: AccountLoadDiagnostics = {
@@ -133,11 +133,13 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
 
   const refreshAccount = useCallback(() => startAccountLoad('manual'), [startAccountLoad])
 
+  const isInitialLoadPending = canLoadAccount && !isReady && error === undefined
+
   const accountContextValue = useMemo(() => {
     if (!data) {
       return {
         account: null,
-        isLoadingAccount: isLoading,
+        isLoadingAccount: isLoading || isInitialLoadPending,
         refreshAccount,
       }
     }
@@ -157,7 +159,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       isLoadingAccount: false,
       refreshAccount,
     }
-  }, [data, isLoading, refreshAccount])
+  }, [data, isLoading, isInitialLoadPending, refreshAccount])
 
   return <BCSCAccountContext.Provider value={accountContextValue}>{children}</BCSCAccountContext.Provider>
 }

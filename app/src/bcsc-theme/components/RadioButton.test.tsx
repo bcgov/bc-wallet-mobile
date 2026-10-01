@@ -1,5 +1,5 @@
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { RadioButton } from './RadioButton'
 
@@ -29,9 +29,7 @@ describe('RadioButton Component', () => {
         </BasicAppContext>
       )
 
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
+      expect(tree).toMatchSnapshot()
     })
 
     test('renders correctly when selected', () => {
@@ -41,9 +39,7 @@ describe('RadioButton Component', () => {
         </BasicAppContext>
       )
 
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
+      expect(tree).toMatchSnapshot()
     })
 
     test('renders correctly when disabled', () => {
@@ -53,9 +49,7 @@ describe('RadioButton Component', () => {
         </BasicAppContext>
       )
 
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
+      expect(tree).toMatchSnapshot()
     })
 
     test('renders correctly when selected and disabled', () => {
@@ -65,9 +59,7 @@ describe('RadioButton Component', () => {
         </BasicAppContext>
       )
 
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
+      expect(tree).toMatchSnapshot()
     })
 
     test('displays the correct label text', () => {

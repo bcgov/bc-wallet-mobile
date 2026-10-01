@@ -90,7 +90,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
           >
             BCSC.Address.Paragraph
           </Text>
-          <View>
+          <View
+            onLayout={[Function]}
+          >
             <Text
               maxFontSizeMultiplier={2}
               style={
@@ -240,7 +242,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
               </Text>
             </View>
           </View>
-          <View>
+          <View
+            onLayout={[Function]}
+          >
             <Text
               maxFontSizeMultiplier={2}
               style={
@@ -390,7 +394,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
               </Text>
             </View>
           </View>
-          <View>
+          <View
+            onLayout={[Function]}
+          >
             <Text
               maxFontSizeMultiplier={2}
               style={
@@ -540,7 +546,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
               </Text>
             </View>
           </View>
-          <View>
+          <View
+            onLayout={[Function]}
+          >
             <Text
               maxFontSizeMultiplier={2}
               style={
@@ -684,7 +692,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.ProvinceSubtext
             </Text>
           </View>
-          <View>
+          <View
+            onLayout={[Function]}
+          >
             <Text
               maxFontSizeMultiplier={2}
               style={

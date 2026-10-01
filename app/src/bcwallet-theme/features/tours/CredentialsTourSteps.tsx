@@ -1,3 +1,4 @@
+import MobilePhoneScanningLaptop from '@assets/img/mobile-phone-scanning-laptop.jpg'
 import { RenderProps, TourBox, TourStep, useTheme } from '@bifold/core'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,7 +26,7 @@ export const credentialsTourSteps: TourStep[] = [
           next={next}
         >
           <Image
-            source={require('@assets/img/mobile-phone-scanning-laptop.jpg')}
+            source={MobilePhoneScanningLaptop}
             resizeMode={'contain'}
             resizeMethod={'resize'}
             style={{

@@ -1,3 +1,4 @@
+import ProofRequestIllustration from '@assets/img/proof-request-illustration.png'
 import { RenderProps, TourBox, TourStep, useTheme } from '@bifold/core'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,7 +26,7 @@ export const proofRequestTourSteps: TourStep[] = [
           next={next}
         >
           <Image
-            source={require('@assets/img/proof-request-illustration.png')}
+            source={ProofRequestIllustration}
             resizeMode={'contain'}
             resizeMethod={'resize'}
             style={{

@@ -55,7 +55,8 @@ const useVerificationResponseViewModel = () => {
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
       setIsSettingUpAccount(false)
-      // RootStack swaps to MainStack on `verified` flip — no imperative navigate needed (#4368)
+      // No imperative navigate: the `verified` flip swaps VerifyStack for MainStack (#4368), and MainStack
+      // stops registering this screen once verified, so neither host is left showing it (#4719)
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`[handleAccountSetup] Failed to clean up verification process: ${errMessage}`)

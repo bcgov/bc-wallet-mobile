@@ -28,32 +28,32 @@ exports[`TakeVideoScreen renders correctly 1`] = `
     }
   >
     <View
-      audio={true}
       device={
         {
           "id": "mock-device",
         }
       }
-      format={
-        {
-          "fps": 24,
-          "videoHeight": 480,
-          "videoWidth": 640,
-        }
-      }
       isActive={false}
-      isMirrored={false}
+      mirrorMode={[Function]}
+      onConfigured={[Function]}
       onError={[Function]}
-      onInitialized={[Function]}
-      photo={true}
-      photoQualityBalance="speed"
+      outputs={
+        [
+          {
+            "capturePhotoToFile": [MockFunction],
+          },
+          {
+            "createRecorder": [MockFunction],
+            "setOutputSettings": [MockFunction],
+          },
+        ]
+      }
       style={
         {
           "flex": 1,
         }
       }
       testID="mock-camera"
-      video={true}
     />
     <View
       style={

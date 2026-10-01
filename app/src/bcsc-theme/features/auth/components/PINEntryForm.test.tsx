@@ -1,8 +1,8 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { setPIN } from 'react-native-bcsc-core'
-import { BasicAppContext } from '../../../../../__mocks__/helpers/app'
 import { PINEntryForm } from './PINEntryForm'
 
 jest.mock('react-native-bcsc-core', () => ({
@@ -41,10 +41,6 @@ jest.mock('@/bcsc-theme/api/hooks/useRegistrationApi', () => ({
 describe('PINEntryForm', () => {
   const mockSetPIN = jest.mocked(setPIN)
   const mockOnSuccess = jest.fn()
-
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
 
   it('renders correctly with create and confirm PIN fields', () => {
     const tree = render(
@@ -259,7 +255,10 @@ describe('PINEntryForm', () => {
     expect(mockOnSuccess).not.toHaveBeenCalled()
   })
 
-  it('shows error when first PIN is too short when pressing Continue', async () => {
+  it.each([
+    ['first', '123', '654321'],
+    ['second', '123456', '123'],
+  ])('shows error when %s PIN is too short when pressing Continue', async (_position, pin1, pin2) => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
@@ -269,30 +268,18 @@ describe('PINEntryForm', () => {
     )
 
     const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
-    fireEvent.changeText(inputs[0], '123') // Too short
-    fireEvent.changeText(inputs[1], '654321')
+    fireEvent.changeText(inputs[0], pin1)
+    fireEvent.changeText(inputs[1], pin2)
 
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    expect(mockSetPIN).not.toHaveBeenCalled()
-  })
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
+    fireEvent.press(button)
 
-  it('shows error when second PIN is too short when pressing Continue', async () => {
-    const tree = render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
-
-    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
-    fireEvent.changeText(inputs[0], '123456')
-    fireEvent.changeText(inputs[1], '123') // Too short
-
-    const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
-    fireEvent.press(checkbox)
+    await waitFor(() => {
+      expect(tree.getByText('BCSC.PIN.PINTooShort')).toBeTruthy()
+    })
 
     expect(mockSetPIN).not.toHaveBeenCalled()
   })

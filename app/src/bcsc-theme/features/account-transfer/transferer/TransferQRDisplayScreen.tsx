@@ -36,8 +36,8 @@ const TransferQRDisplayScreen: React.FC = () => {
   const [qrValue, setQRValue] = useState<string | null>(null)
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const attestationIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const attestationIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const completedRef = useRef(false)
   const isMountedRef = useRef(true)
   const [isLoading, setIsLoading] = useState(true)
@@ -125,7 +125,7 @@ const TransferQRDisplayScreen: React.FC = () => {
           stopAllPolling()
           navigation.navigate(BCSCScreens.TransferAccountSuccess)
         }
-      } catch (error) {
+      } catch {
         // Do nothing, a fail state from this endpoint just means the attestation hasn't been consumed yet
       }
     },

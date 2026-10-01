@@ -1,3 +1,4 @@
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { useNotifications } from '@/hooks/notifications'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { TestIds } from '@/test-ids/registry'
@@ -27,7 +28,7 @@ import Home from '../features/home/Home'
 import { FloatingScanButton } from '../features/scan'
 import Services from '../features/services/Services'
 import { useCardStatus } from '../hooks/useCardStatus'
-import { BCSCMainStackParams, BCSCScreens, BCSCTabStackParams } from '../types/navigators'
+import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks, BCSCTabStackParams } from '../types/navigators'
 
 const ScopedCredentialStack: React.FC = () => (
   <AgentReadyGate testID={testIdWithKey(TestIds.main.wallet.loading)}>
@@ -162,10 +163,37 @@ const BCSCTabStack: React.FC = () => {
   const { bottom: safeAreaBottom } = useSafeAreaInsets()
   const { t } = useTranslation()
   const { isActivelyVerified, isExpired } = useCardStatus()
+  const { isAvailable: isServerAvailable } = useServerStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const defaultStackOptions = useDefaultStackOptions(theme)
   // `setActiveTab` is a stable state setter, so the tab bar component is built once per mount.
   const tabBar = useMemo(() => createAnimatedTabBar(setActiveTab), [])
+
+  /**
+   * Redirects away from the Services tab when there is a server outage.
+   *
+   * @returns Whether a redirect was made so the caller can decide to `preventDefault()`
+   */
+  const redirectFromServicesTab = useCallback((): boolean => {
+    if (isServerAvailable && isActivelyVerified) {
+      return false
+    }
+
+    navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+
+    if (!isServerAvailable) {
+      logger.debug('[BCSCTabStack] Server unavailable, redirecting to ServiceOutage screen')
+      navigation.navigate(BCSCModals.ServiceOutage, {})
+    } else if (isExpired) {
+      logger.debug('[BCSCTabStack] User is expired, redirecting to Expired screen')
+      navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired })
+    } else {
+      logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
+      navigation.navigate(BCSCScreens.MainVerifyPrompt)
+    }
+
+    return true
+  }, [isServerAvailable, isActivelyVerified, isExpired, logger, navigation])
 
   const { TabTheme, ColorPalette, Spacing } = theme
 
@@ -192,29 +220,13 @@ const BCSCTabStack: React.FC = () => {
       <Tab.Navigator
         screenListeners={({ route }) => ({
           focus: () => {
-            // Hijack the focus event for the Services tab if the user is not verified
-            if (route.name === BCSCScreens.Services && !isActivelyVerified) {
-              if (isExpired) {
-                logger.debug('[BCSCTabStack] User is expired, redirecting to Expired screen')
-                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired })
-              } else {
-                logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
-                navigation.navigate(BCSCScreens.MainVerifyPrompt)
-              }
-              return
+            if (route.name === BCSCScreens.Services) {
+              redirectFromServicesTab()
             }
           },
           tabPress: (event) => {
-            // Hijack the tab press event for the Services tab if the user is not verified
-            if (route.name === BCSCScreens.Services && !isActivelyVerified) {
+            if (route.name === BCSCScreens.Services && redirectFromServicesTab()) {
               event.preventDefault() // Prevents navigation to the Services tab
-              if (isExpired) {
-                logger.debug('[BCSCTabStack] User is expired, redirecting to Expired screen')
-                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired })
-              } else {
-                logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
-                navigation.navigate(BCSCScreens.MainVerifyPrompt)
-              }
             }
           },
         })}

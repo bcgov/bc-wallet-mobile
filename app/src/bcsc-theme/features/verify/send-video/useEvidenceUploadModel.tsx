@@ -11,7 +11,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import type { MediaFormat } from '@/bcsc-theme/utils/media-format'
-import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
+import { normalizeMp4MajorBrand, sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { isAxiosAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
@@ -61,6 +61,12 @@ const useEvidenceUploadModel = (
 
       if (!videoBytes) {
         throw new Error('Cache missing video data')
+      }
+
+      // Must run before getVideoMetadata hashes the bytes, so the sha256 matches what is uploaded.
+      const rewrittenBrand = normalizeMp4MajorBrand(videoBytes)
+      if (rewrittenBrand) {
+        logger.info(`Rewrote selfie video MP4 brand from ${rewrittenBrand} to mp42`)
       }
 
       // Implausible-mtime substitution (#4338) lives inside getVideoMetadata now — see file-info.ts.

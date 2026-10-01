@@ -1,5 +1,5 @@
-import { JWK } from '@/bcsc-theme/api/hooks/useJwksApi'
 import { loadPersistedJwk, persistJwk } from '@/bcsc-theme/api/jwk-cache'
+import { JWK } from '@/bcsc-theme/types/jwk'
 import { BCLocalStorageKeys } from '@/store'
 import { PersistentStorage } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'

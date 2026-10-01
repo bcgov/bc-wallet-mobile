@@ -1,7 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import type { MediaFormat, MediaKind } from '@/bcsc-theme/utils/media-format'
 import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
-import { VIDEO_MP4_MIME_TYPE } from '@/constants'
+import { VerificationRequestStatus, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
@@ -37,7 +37,7 @@ export interface SendVerificationPayload {
 
 export interface VerificationStatusResponseData {
   id: string
-  status: 'pending' | 'verified' | 'cancelled'
+  status: VerificationRequestStatus
   status_message?: string
   avg_turnaround_time_message?: string
 }
@@ -96,7 +96,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
    */
   const cancelRemindersOnTerminalStatus = useCallback(
     async (data: VerificationStatusResponseData): Promise<boolean> => {
-      if (data.status !== 'verified' && data.status !== 'cancelled') {
+      if (data.status !== VerificationRequestStatus.VERIFIED && data.status !== VerificationRequestStatus.CANCELLED) {
         return false
       }
       // doesn't throw

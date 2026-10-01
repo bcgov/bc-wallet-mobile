@@ -1,6 +1,6 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
-import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
+import { useSelfiePhotoOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Spacing } from '@/bcwallet-theme/theme'
@@ -20,6 +20,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
   const { t } = useTranslation()
   const { hasPermission, requestPermission } = useCameraPermission()
   const { ColorPalette } = useTheme()
+  const photoOutput = useSelfiePhotoOutput()
   const handlePhotoTaken = async (path: string) => {
     // Navigate to photo review screen with the photo data
     navigation.navigate(BCSCScreens.PhotoReview, {
@@ -47,8 +48,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
         maskType={MaskType.OVAL}
         maskLineColor={ColorPalette.brand.highlight}
         onPhotoTaken={handlePhotoTaken}
-        cameraFormatFilter={CameraFormat.SelfiePhoto}
-        photoQualityBalance="quality"
+        photoOutput={photoOutput}
         maskLineWidth={Spacing.xs}
         maskOverlayOpacity={0.6}
       />

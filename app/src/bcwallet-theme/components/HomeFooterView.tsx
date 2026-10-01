@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-interface HomeFooterViewProps extends PropsWithChildren {}
+type HomeFooterViewProps = PropsWithChildren
 
 const HomeFooterView = ({ children }: HomeFooterViewProps) => {
   const { ColorPalette } = useTheme()

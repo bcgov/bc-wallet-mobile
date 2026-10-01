@@ -1,6 +1,7 @@
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCModals, BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { HelpCentreUrl } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -21,6 +22,17 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
   const { t } = useTranslation()
   const { account } = useAccount()
   const apiClient = useBCSCApiClient()
+  const { isAvailable: isServerAvailable } = useServerStatus()
+
+  // Wrap a settings action whose destination reads/writes IAS: during an outage it goes to the
+  // ServiceOutage screen instead of running `proceed`.
+  const guardServer = (proceed: () => void) => () => {
+    if (!isServerAvailable) {
+      navigation.navigate(BCSCModals.ServiceOutage, {})
+      return
+    }
+    proceed()
+  }
 
   const onContactUs = () => {
     navigation.navigate(BCSCScreens.MainWebView, {
@@ -44,13 +56,13 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
     navigation.navigate(BCSCScreens.MainDeveloper)
   }
 
-  const onEditNickname = () => {
+  const onEditNickname = guardServer(() => {
     navigation.navigate(BCSCScreens.EditNickname)
-  }
+  })
 
-  const onAccountDetails = () => {
+  const onAccountDetails = guardServer(() => {
     navigation.navigate(BCSCScreens.AccountDetails)
-  }
+  })
 
   const onForgetAllPairings = () => {
     navigation.navigate(BCSCScreens.ForgetAllPairings)
@@ -88,7 +100,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
     navigation.navigate(BCSCScreens.Contacts)
   }
 
-  const onAddDevice = () => {
+  const onAddDevice = guardServer(() => {
     if (account?.birthdate) {
       const birthdate = parseBirthdateToLocalDate(account.birthdate)
       const age = moment().diff(moment(birthdate), 'years')
@@ -98,7 +110,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       }
     }
     navigation.navigate(BCSCScreens.TransferAccountQRInformation)
-  }
+  })
 
   const onScanMyQR = () => {
     navigation.navigate(BCSCScreens.QRCore, { screen: BCSCQRCoreScreens.Display })

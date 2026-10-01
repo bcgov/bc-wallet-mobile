@@ -1,3 +1,4 @@
+import CredentialOfferIllustration from '@assets/img/credential-offer-illustration.png'
 import { RenderProps, TourBox, TourStep, useTheme } from '@bifold/core'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,7 +26,7 @@ export const credentialOfferTourSteps: TourStep[] = [
           next={next}
         >
           <Image
-            source={require('@assets/img/credential-offer-illustration.png')}
+            source={CredentialOfferIllustration}
             resizeMode={'contain'}
             resizeMethod={'resize'}
             style={{

@@ -1,7 +1,7 @@
+import { JWK } from '@/bcsc-theme/types/jwk'
 import { BCLocalStorageKeys } from '@/store'
 import { PersistentStorage } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import { JWK } from './hooks/useJwksApi'
 
 /**
  * Last-known-good JWK persisted to disk so a briefly-unavailable JWKS endpoint (or a cold-start
@@ -11,7 +11,7 @@ import { JWK } from './hooks/useJwksApi'
 export interface PersistedJwkRecord {
   baseURL: string
   jwk: JWK
-  fetchedAt: number // epoch ms, logging/diagnostics only — there is no TTL, this is network-first
+  fetchedAt: number // epoch ms, logging/diagnostics only — the persisted fallback has no time to live
 }
 
 /**

@@ -21,6 +21,7 @@ const CancelledReviewNotification = () => {
       icon="information"
       hideIconCircle={true}
       iconColor={ColorPalette.brand.primary}
+      requiresServerStatus
       onPress={() => navigation.navigate(BCSCScreens.MainCancelledReview, { agentReason })}
     />
   )

@@ -7,24 +7,13 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { AuthSettingsScreen } from './AuthSettingsScreen'
 
+// AuthSettingsScreen is a thin wrapper that hands SettingsContent the Auth stack's callbacks, so the
+// rendered tree itself is covered by SettingsContent.test.tsx. Only the stack wiring is asserted here.
 describe('AuthSettings', () => {
-  let mockNavigation: any
+  let mockNavigation: ReturnType<typeof useNavigation>
 
   beforeEach(() => {
     mockNavigation = useNavigation()
-    jest.clearAllMocks()
-  })
-
-  it('renders correctly', () => {
-    const tree = render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <AuthSettingsScreen navigation={mockNavigation as never} />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
-
-    expect(tree).toMatchSnapshot()
   })
 
   it('navigates to the Contact us WebView when Contact us is pressed', () => {

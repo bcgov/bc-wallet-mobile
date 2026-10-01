@@ -1,4 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
+import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
+import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
@@ -39,6 +42,9 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
+  // Startup seeds server status; the ServiceOutage screen's "Check again" force-refreshes it, so
+  // no on-focus re-check is needed here.
+  const { isAvailable, isChecking, serverStatus } = useServerStatus()
 
   const handleVerifyNow = useCallback(() => {
     onAnswered?.()
@@ -56,6 +62,16 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
     onAnswered?.()
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
   }, [dispatch, onAnswered])
+
+  if (serverStatus === null && isChecking) {
+    return <LoadingScreenContent />
+  }
+
+  // Rendered inline rather than navigated to: on a fresh launch this screen mounts in the same
+  // commit as VerifyStack, and a navigate from a mount effect is dropped by the navigator's init.
+  if (!isAvailable) {
+    return <ServiceOutage onSkipVerification={showSkip ? handleLater : undefined} />
+  }
 
   const controls = (
     <ControlContainer>

@@ -7,6 +7,7 @@ import StartVerificationNotification from '@/bcsc-theme/features/notifications/S
 import VerifiedNotification from '@/bcsc-theme/features/notifications/VerifiedNotification'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
+import { VerificationRequestStatus } from '@/constants'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { JSX, useMemo } from 'react'
@@ -27,20 +28,23 @@ export enum CustomNotificationId {
  * @returns An object containing an array of custom notifications to be displayed on the Home screen.
  */
 export const useCustomNotifications = () => {
-  const { needsVerification } = useVerificationStatus()
+  const { needsVerification, isVerified } = useVerificationStatus()
   const [store] = useStore<BCState>()
   const { verificationRequestStatus, verificationRequestId } = store.bcscSecure
 
   const customNotifications = useMemo((): JSX.Element[] => {
-    if (verificationRequestStatus === 'verified') {
+    // Keyed on `verified` like the VerificationSuccess route this card opens (see MainStack). The status
+    // can outlive that flip — handleAccountSetup sets `verified` before cleanup that can throw — and the
+    // card would then be a button to a route that is no longer registered (#4719)
+    if (verificationRequestStatus === VerificationRequestStatus.VERIFIED && !isVerified) {
       return [<VerifiedNotification key={CustomNotificationId.BCSCVerified} />]
     }
 
-    if (verificationRequestStatus === 'cancelled') {
+    if (verificationRequestStatus === VerificationRequestStatus.CANCELLED) {
       return [<CancelledReviewNotification key={CustomNotificationId.BCSCCancelledReview} />]
     }
 
-    if (verificationRequestStatus === 'pending') {
+    if (verificationRequestStatus === VerificationRequestStatus.PENDING) {
       return [<PendingReviewNotification key={CustomNotificationId.BCSCPendingReview} />]
     }
 
@@ -61,7 +65,7 @@ export const useCustomNotifications = () => {
     }
 
     return []
-  }, [verificationRequestStatus, verificationRequestId, needsVerification, store])
+  }, [verificationRequestStatus, verificationRequestId, needsVerification, isVerified, store])
 
   return useMemo(
     () => ({

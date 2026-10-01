@@ -377,6 +377,69 @@ describe('useEvidenceUploadModel', () => {
       })
     })
 
+    it('rewrites an isom video brand to mp42 before hashing and uploads the same bytes', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: plausiblePhotoMetadata,
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            additionalEvidenceData: [],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      // ftyp header written by VisionCamera v5 / Media3 on Android: major brand isom
+      const isomVideo = Buffer.from([
+        0x00,
+        0x00,
+        0x00,
+        0x1c,
+        ...Buffer.from('ftypisom'),
+        0x00,
+        0x02,
+        0x00,
+        0x00,
+        ...Buffer.from('isomiso2mp41'),
+      ])
+      jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
+      jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(isomVideo)
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+
+      let hashedBrand: string | undefined
+      jest.mocked(getVideoMetadata).mockImplementation(async (bytes: Buffer) => {
+        hashedBrand = bytes.subarray(8, 12).toString('ascii')
+        return { duration: 10 } as any
+      })
+
+      mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
+      mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+      mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
+      mockEvidenceApi.uploadVideoEvidenceBinary.mockResolvedValue(undefined)
+      mockEvidenceApi.sendVerificationRequest.mockResolvedValue({ id: 'req-123', status: 'pending' })
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(hashedBrand).toBe('mp42')
+      const uploadedVideo: Buffer = mockEvidenceApi.uploadVideoEvidenceBinary.mock.calls[0][1]
+      expect(uploadedVideo.subarray(8, 12).toString('ascii')).toBe('mp42')
+    })
+
     it('should emit fileUploadErrorAlert when video cache is missing', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([

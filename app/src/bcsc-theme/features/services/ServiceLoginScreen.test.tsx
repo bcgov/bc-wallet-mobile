@@ -32,6 +32,11 @@ jest.mock('./hooks/useServiceLoginState', () => ({
   useServiceLoginState: jest.fn(),
 }))
 
+const mockUseServerStatus = jest.fn()
+jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
+  useServerStatus: () => mockUseServerStatus(),
+}))
+
 import { useServiceLoginState } from './hooks/useServiceLoginState'
 
 const mockedUseServiceLoginState = useServiceLoginState as jest.MockedFunction<typeof useServiceLoginState>
@@ -76,6 +81,7 @@ describe('ServiceLogin', () => {
     })
     mockedUseQuickLoginURL.mockReturnValue(jest.fn())
     mockNavigation.canGoBack = jest.fn().mockReturnValue(false)
+    mockUseServerStatus.mockReturnValue({ isAvailable: true })
   })
 
   afterEach(() => {
@@ -93,6 +99,19 @@ describe('ServiceLogin', () => {
     )
 
     expect(tree).toMatchSnapshot()
+  })
+
+  it('renders the service outage screen when IAS is unavailable', () => {
+    mockUseServerStatus.mockReturnValue({ isAvailable: false })
+    mockedUseServiceLoginState.mockReturnValue({
+      state: { serviceTitle: 'Test Service', serviceInitiateLoginUri: 'https://login.example.com' },
+      isLoading: false,
+      serviceHydrated: true,
+    })
+
+    const { getByTestId } = renderScreen(mockNavigation)
+
+    expect(getByTestId(testIdWithKey('ServiceOutageCheckAgain'))).toBeTruthy()
   })
 
   describe('Render views', () => {
@@ -404,6 +423,24 @@ describe('ServiceLogin', () => {
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
 
       await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+    })
+
+    it('should re-enable Continue without a second alert when the failure was already handled', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: false, handled: true })
+
+      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: mockLoginServerErrorAlert })
+
+      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
+      fireEvent.press(continueButton)
+
+      await waitFor(() => expect(continueButton).toBeEnabled())
+      expect(mockGetQuickLoginURL).toHaveBeenCalledTimes(1)
+      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
+
+      // A second tap goes through, proving the button is usable again
+      fireEvent.press(continueButton)
+      await waitFor(() => expect(mockGetQuickLoginURL).toHaveBeenCalledTimes(2))
     })
 
     it('should show alert and not navigate when Linking.openURL throws', async () => {
