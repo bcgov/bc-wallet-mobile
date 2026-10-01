@@ -51,7 +51,7 @@ private fun describeBiometricError(
 ): String = if (errorCode == null) errorMessage else "${biometricErrorName(errorCode)} ($errorCode): $errorMessage"
 
 /**
- * Checks activity if it is busy and if so; returns the reaons, otherwise it returns null. 
+ * Checks activity if it is busy and if so; returns the reaons, otherwise it returns null.
  * Activity states can block or hang biometric prompts to the user
  */
 fun promptBlockedReason(activity: FragmentActivity): String? {
