@@ -17,11 +17,47 @@ enum class BiometricType(
     IRIS("iris"),
 }
 
-enum class DeviceAuthenticationResult {
-    SUCCESS,
-    FAILED,
-    CANCELLED,
-    ERROR,
+sealed class DeviceAuthenticationResult {
+    object Success : DeviceAuthenticationResult()
+
+    object Failed : DeviceAuthenticationResult()
+
+    data class Cancelled(
+        val errorCode: Int,
+        val errorMessage: String,
+        val deviceLocked: Boolean,
+    ) : DeviceAuthenticationResult()
+
+    data class Error(
+        val errorCode: Int?,
+        val errorMessage: String,
+        val deviceLocked: Boolean,
+    ) : DeviceAuthenticationResult()
+}
+
+/**
+ * Only an explicit user dismissal is a cancel. ERROR_USER_CANCELED also arrives when the OS
+ * lock screen takes over the prompt, so it counts as a cancel only while the device is unlocked.
+ */
+internal fun mapAuthenticationError(
+    errorCode: Int,
+    errString: CharSequence,
+    deviceLocked: Boolean,
+): DeviceAuthenticationResult {
+    val message = errString.toString()
+    return when {
+        errorCode == androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON -> {
+            DeviceAuthenticationResult.Cancelled(errorCode, message, deviceLocked)
+        }
+
+        errorCode == androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED && !deviceLocked -> {
+            DeviceAuthenticationResult.Cancelled(errorCode, message, deviceLocked)
+        }
+
+        else -> {
+            DeviceAuthenticationResult.Error(errorCode, message, deviceLocked)
+        }
+    }
 }
 
 interface DeviceAuthenticationService {
@@ -102,24 +138,21 @@ class DeviceAuthenticationServiceImpl(
                                 errString: CharSequence,
                             ) {
                                 super.onAuthenticationError(errorCode, errString)
-                                when (errorCode) {
-                                    androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED,
-                                    androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON,
-                                    -> {
-                                        callback(DeviceAuthenticationResult.CANCELLED)
-                                    }
-
-                                    else -> {
-                                        callback(DeviceAuthenticationResult.ERROR)
-                                    }
-                                }
+                                val deviceLocked = keyguardManager.isDeviceLocked
+                                val result = mapAuthenticationError(errorCode, errString, deviceLocked)
+                                Log.i(
+                                    TAG,
+                                    "onAuthenticationError code=$errorCode deviceLocked=$deviceLocked -> " +
+                                        result.javaClass.simpleName,
+                                )
+                                callback(result)
                             }
 
                             override fun onAuthenticationSucceeded(
                                 result: androidx.biometric.BiometricPrompt.AuthenticationResult,
                             ) {
                                 super.onAuthenticationSucceeded(result)
-                                callback(DeviceAuthenticationResult.SUCCESS)
+                                callback(DeviceAuthenticationResult.Success)
                             }
 
                             override fun onAuthenticationFailed() {
@@ -145,7 +178,8 @@ class DeviceAuthenticationServiceImpl(
 
                 biometricPrompt.authenticate(promptInfo)
             } catch (e: Exception) {
-                callback(DeviceAuthenticationResult.ERROR)
+                Log.e(TAG, "Failed to start biometric prompt", e)
+                callback(DeviceAuthenticationResult.Error(null, e.message ?: e.javaClass.simpleName, false))
             }
         }
     }

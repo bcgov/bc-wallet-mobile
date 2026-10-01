@@ -2409,9 +2409,10 @@ class BcscCore: NSObject {
       var error: NSError?
 
       guard LAContext.canPerformLocalAuthenticate(context: context, error: &error) else {
-        resolve([
-          "success": false,
-        ])
+        logger.error(
+          "unlockWithDeviceSecurity: cannot evaluate policy: code=\(error?.code ?? 0) message=\(error?.localizedDescription ?? "unknown")"
+        )
+        resolve(DeviceAuthFailure.unlockResult(for: error))
         return
       }
 
@@ -2421,10 +2422,11 @@ class BcscCore: NSObject {
           .deviceOwnerAuthentication, localizedReason: authReason
         )
       } catch {
-        logger.error("unlockWithDeviceSecurity: LAContext error: \(error.localizedDescription)")
-        resolve([
-          "success": false,
-        ])
+        let nsError = error as NSError
+        logger.error(
+          "unlockWithDeviceSecurity: LAContext error: code=\(nsError.code) message=\(error.localizedDescription)"
+        )
+        resolve(DeviceAuthFailure.unlockResult(for: error))
         return
       }
 
@@ -2467,9 +2469,7 @@ class BcscCore: NSObject {
           }
         }
       } else {
-        resolve([
-          "success": false,
-        ])
+        resolve(DeviceAuthFailure.unlockResult(for: nil))
       }
     }
   }

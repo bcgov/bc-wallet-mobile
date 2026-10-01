@@ -125,6 +125,11 @@ export enum BiometricType {
   OpticID = 'opticID',
 }
 
+export enum DeviceAuthFailureReason {
+  Cancelled = 'cancelled',
+  Error = 'error',
+}
+
 export type PINVerificationResult = {
   success: boolean;
   locked: boolean;
@@ -149,6 +154,10 @@ export type DeviceSecurityUnlockResult = {
   success: boolean;
   walletKey?: string; // PBKDF2 hash, only present on success
   migrated?: boolean; // true if this was a v3 user migration (PIN was just created)
+  failureReason?: DeviceAuthFailureReason; // set only when success is false
+  errorCode?: number; // Android: androidx BiometricPrompt ERROR_*; iOS: LAError.Code rawValue; absent if none
+  errorMessage?: string; // OS-provided description
+  deviceLocked?: boolean; // Android only: device was locked when the error arrived
 };
 
 export type NativeFilesScan = {

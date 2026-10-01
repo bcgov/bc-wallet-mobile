@@ -142,6 +142,8 @@ class BcscCoreModule internal constructor(
     reactContext: ReactApplicationContext,
     // Lets tests supply their own key source, so the decrypt path can run without a device keystore.
     private val keyPairSourceOverride: BcscKeyPairSource? = null,
+    // Lets tests drive the biometric callback without a real BiometricPrompt.
+    private val deviceAuthenticationServiceOverride: DeviceAuthenticationService? = null,
 ) : BcscCoreSpec(reactContext) {
     companion object {
         const val NAME = "BcscCore"
@@ -160,6 +162,10 @@ class BcscCoreModule internal constructor(
         // Notification channel constants
         private const val NOTIFICATION_CHANNEL_ID = "bcsc_foreground_notifications"
         private const val NOTIFICATION_CHANNEL_NAME = "BCSC Notifications"
+
+        // Values for DeviceSecurityUnlockResult.failureReason (DeviceAuthFailureReason in NativeBcscCore.ts)
+        internal const val DEVICE_AUTH_FAILURE_CANCELLED = "cancelled"
+        internal const val DEVICE_AUTH_FAILURE_ERROR = "error"
 
         // Auto-generated device-security PIN constants
         private const val AUTO_GENERATED_PIN_LENGTH = 6
@@ -2661,25 +2667,31 @@ class BcscCoreModule internal constructor(
                 subtitle,
             ) { result ->
                 when (result) {
-                    DeviceAuthenticationResult.SUCCESS -> {
+                    is DeviceAuthenticationResult.Success -> {
                         Log.d(NAME, "performDeviceAuthentication: success")
                         promise.resolve(true)
                     }
 
-                    DeviceAuthenticationResult.CANCELLED -> {
-                        Log.d(NAME, "performDeviceAuthentication: cancelled")
-                        promise.reject("E_DEVICE_AUTH_CANCELLED", "Device authentication was cancelled by user")
+                    is DeviceAuthenticationResult.Cancelled -> {
+                        Log.d(NAME, "performDeviceAuthentication: cancelled (code=${result.errorCode})")
+                        promise.reject(
+                            "E_DEVICE_AUTH_CANCELLED",
+                            "Device authentication was cancelled by user (code=${result.errorCode}): ${result.errorMessage}",
+                        )
                     }
 
-                    DeviceAuthenticationResult.FAILED -> {
+                    is DeviceAuthenticationResult.Failed -> {
                         // Intermediate biometric failure (e.g. wrong finger) — prompt is
                         // still open so do not settle the promise.
                         Log.d(NAME, "performDeviceAuthentication: intermediate biometric failure, awaiting retry")
                     }
 
-                    DeviceAuthenticationResult.ERROR -> {
-                        Log.e(NAME, "performDeviceAuthentication: failed")
-                        promise.reject("E_DEVICE_AUTH_ERROR", "Device authentication failed")
+                    is DeviceAuthenticationResult.Error -> {
+                        Log.e(NAME, "performDeviceAuthentication: failed (code=${result.errorCode})")
+                        promise.reject(
+                            "E_DEVICE_AUTH_ERROR",
+                            "Device authentication failed (code=${result.errorCode ?: "unknown"}): ${result.errorMessage}",
+                        )
                     }
                 }
             }
@@ -2970,87 +2982,126 @@ class BcscCoreModule internal constructor(
                 return
             }
 
-            // Perform device authentication
             val title = reason ?: "Authentication Required"
             val subtitle = "Please authenticate to unlock"
 
-            deviceAuthenticationService.performDeviceAuthentication(
-                activity,
-                title,
-                subtitle,
-            ) { authResult: DeviceAuthenticationResult ->
-                when (authResult) {
-                    DeviceAuthenticationResult.SUCCESS -> {
-                        try {
-                            backgroundExecutor.execute {
-                                try {
-                                    val hashResult = pinService.getPINHash(accountID)
-
-                                    if (hashResult != null) {
-                                        val result = Arguments.createMap()
-                                        result.putBoolean("success", true)
-                                        result.putString("walletKey", hashResult.first)
-                                        guarded.resolve(result)
-                                    } else {
-                                        // No PIN hash found - this is a v3 migration scenario
-                                        // User had device security but no random PIN. Generate one now.
-                                        val secureRandom = java.security.SecureRandom()
-                                        val pinDigits = StringBuilder()
-                                        for (i in 0 until AUTO_GENERATED_PIN_LENGTH) {
-                                            pinDigits.append(secureRandom.nextInt(DECIMAL_DIGIT_BOUND))
-                                        }
-                                        val pin = pinDigits.toString()
-
-                                        val hash = pinService.setupDeviceSecurityPIN(accountID, pin)
-
-                                        val result = Arguments.createMap()
-                                        result.putBoolean("success", true)
-                                        result.putString("walletKey", hash)
-                                        result.putBoolean("migrated", true)
-                                        guarded.resolve(result)
-                                    }
-                                } catch (e: Exception) {
-                                    guarded.reject(
-                                        "E_UNLOCK_DEVICE_SECURITY_ERROR",
-                                        "Error during unlock: ${e.message}",
-                                        e,
-                                    )
-                                }
-                            }
-                        } catch (e: RejectedExecutionException) {
-                            // Executor shut down while the prompt was open; settle so JS is not left pending.
-                            Log.w(NAME, "unlockWithDeviceSecurity: background executor unavailable, rejecting", e)
-                            guarded.reject(
-                                "E_UNLOCK_DEVICE_SECURITY_ERROR",
-                                "Unable to complete unlock: module is shutting down",
-                                e,
-                            )
-                        }
-                    }
-
-                    DeviceAuthenticationResult.CANCELLED -> {
-                        val result = Arguments.createMap()
-                        result.putBoolean("success", false)
-                        guarded.resolve(result)
-                    }
-
-                    DeviceAuthenticationResult.FAILED -> {
-                        // Intermediate biometric failure (e.g. wrong finger) — prompt is
-                        // still open so do not settle the promise.
-                        Log.d(NAME, "unlockWithDeviceSecurity: intermediate biometric failure, awaiting retry")
-                    }
-
-                    DeviceAuthenticationResult.ERROR -> {
-                        val result = Arguments.createMap()
-                        result.putBoolean("success", false)
-                        guarded.resolve(result)
-                    }
-                }
-            }
+            runDeviceSecurityUnlock(activity, accountID, title, subtitle, guarded)
         } catch (e: Exception) {
             Log.e(NAME, "unlockWithDeviceSecurity error: ${e.message}", e)
             guarded.reject("E_UNLOCK_DEVICE_SECURITY_ERROR", "Error unlocking with device security: ${e.message}", e)
         }
+    }
+
+    /** Resolves [guarded] with the unlock result; failures carry the native code for JS to act on. */
+    internal fun runDeviceSecurityUnlock(
+        activity: FragmentActivity,
+        accountID: String,
+        title: String,
+        subtitle: String,
+        guarded: GuardedPromise,
+    ) {
+        deviceAuthenticationService.performDeviceAuthentication(
+            activity,
+            title,
+            subtitle,
+        ) { authResult: DeviceAuthenticationResult ->
+            when (authResult) {
+                is DeviceAuthenticationResult.Success -> {
+                    try {
+                        backgroundExecutor.execute {
+                            try {
+                                val hashResult = pinService.getPINHash(accountID)
+
+                                if (hashResult != null) {
+                                    val result = Arguments.createMap()
+                                    result.putBoolean("success", true)
+                                    result.putString("walletKey", hashResult.first)
+                                    guarded.resolve(result)
+                                } else {
+                                    // No PIN hash found - this is a v3 migration scenario
+                                    // User had device security but no random PIN. Generate one now.
+                                    val secureRandom = java.security.SecureRandom()
+                                    val pinDigits = StringBuilder()
+                                    for (i in 0 until AUTO_GENERATED_PIN_LENGTH) {
+                                        pinDigits.append(secureRandom.nextInt(DECIMAL_DIGIT_BOUND))
+                                    }
+                                    val pin = pinDigits.toString()
+
+                                    val hash = pinService.setupDeviceSecurityPIN(accountID, pin)
+
+                                    val result = Arguments.createMap()
+                                    result.putBoolean("success", true)
+                                    result.putString("walletKey", hash)
+                                    result.putBoolean("migrated", true)
+                                    guarded.resolve(result)
+                                }
+                            } catch (e: Exception) {
+                                guarded.reject(
+                                    "E_UNLOCK_DEVICE_SECURITY_ERROR",
+                                    "Error during unlock: ${e.message}",
+                                    e,
+                                )
+                            }
+                        }
+                    } catch (e: RejectedExecutionException) {
+                        // Executor shut down while the prompt was open; settle so JS is not left pending.
+                        Log.w(NAME, "unlockWithDeviceSecurity: background executor unavailable, rejecting", e)
+                        guarded.reject(
+                            "E_UNLOCK_DEVICE_SECURITY_ERROR",
+                            "Unable to complete unlock: module is shutting down",
+                            e,
+                        )
+                    }
+                }
+
+                is DeviceAuthenticationResult.Cancelled -> {
+                    Log.w(NAME, "unlockWithDeviceSecurity: cancelled (code=${authResult.errorCode})")
+                    guarded.resolve(
+                        deviceAuthFailureMap(
+                            DEVICE_AUTH_FAILURE_CANCELLED,
+                            authResult.errorCode,
+                            authResult.errorMessage,
+                            authResult.deviceLocked,
+                        ),
+                    )
+                }
+
+                is DeviceAuthenticationResult.Failed -> {
+                    // Intermediate biometric failure (e.g. wrong finger) — prompt is
+                    // still open so do not settle the promise.
+                    Log.d(NAME, "unlockWithDeviceSecurity: intermediate biometric failure, awaiting retry")
+                }
+
+                is DeviceAuthenticationResult.Error -> {
+                    Log.w(NAME, "unlockWithDeviceSecurity: failed (code=${authResult.errorCode})")
+                    guarded.resolve(
+                        deviceAuthFailureMap(
+                            DEVICE_AUTH_FAILURE_ERROR,
+                            authResult.errorCode,
+                            authResult.errorMessage,
+                            authResult.deviceLocked,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    internal fun deviceAuthFailureMap(
+        failureReason: String,
+        errorCode: Int?,
+        errorMessage: String,
+        deviceLocked: Boolean,
+    ): WritableMap {
+        val result = Arguments.createMap()
+        result.putBoolean("success", false)
+        result.putString("failureReason", failureReason)
+        if (errorCode != null) {
+            result.putInt("errorCode", errorCode)
+        }
+        result.putString("errorMessage", errorMessage)
+        result.putBoolean("deviceLocked", deviceLocked)
+        return result
     }
 
     /**
@@ -4268,7 +4319,7 @@ class BcscCoreModule internal constructor(
 
     // Initialize authentication services
     private val deviceAuthenticationService: DeviceAuthenticationService by lazy {
-        DeviceAuthenticationServiceImpl(reactApplicationContext)
+        deviceAuthenticationServiceOverride ?: DeviceAuthenticationServiceImpl(reactApplicationContext)
     }
 
     private val pinService: PinService by lazy {

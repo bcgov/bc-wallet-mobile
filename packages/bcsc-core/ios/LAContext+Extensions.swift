@@ -22,6 +22,27 @@ enum BiometricType: String {
   case opticID
 }
 
+/// Builds the failure payload for `unlockWithDeviceSecurity`. Only an explicit user cancel is
+/// reported as "cancelled"; every other failure, including system interruptions, is "error".
+enum DeviceAuthFailure {
+  static func unlockResult(for error: Error?) -> [String: Any] {
+    var result: [String: Any] = ["success": false]
+
+    guard let error = error else {
+      result["failureReason"] = "error"
+      return result
+    }
+
+    let nsError = error as NSError
+    let isUserCancel = nsError.domain == LAError.errorDomain && nsError.code == LAError.userCancel.rawValue
+
+    result["failureReason"] = isUserCancel ? "cancelled" : "error"
+    result["errorCode"] = nsError.code
+    result["errorMessage"] = error.localizedDescription
+    return result
+  }
+}
+
 extension LAContext {
   @MainActor
   static func performLocalAuthenticate(reason: String = "Authentication required") async -> Bool {

@@ -702,7 +702,7 @@ export const clearAllKeychainData = async (): Promise<void> => {
 // MARK: - Authentication Methods
 
 // Export authentication types
-export { BiometricType } from './NativeBcscCore';
+export { BiometricType, DeviceAuthFailureReason } from './NativeBcscCore';
 export type {
   AccountLockStatus,
   DeviceSecurityUnlockResult,
@@ -841,6 +841,11 @@ export const setupDeviceSecurity = async (): Promise<import('./NativeBcscCore').
  * @returns A promise that resolves to unlock result containing:
  *   - success: Whether unlock succeeded
  *   - walletKey: The PBKDF2-derived key (base64 encoded), only present on success
+ *   - failureReason: Only when success is false. `cancelled` means the user explicitly dismissed
+ *     the prompt; `error` covers every other failure, including system interruptions.
+ *   - errorCode: Native code behind the failure (Android BiometricPrompt ERROR_*, iOS LAError code)
+ *   - errorMessage: OS-provided description of the failure
+ *   - deviceLocked: Android only. Whether the device was locked when the error arrived
  */
 export const unlockWithDeviceSecurity = async (
   reason?: string
