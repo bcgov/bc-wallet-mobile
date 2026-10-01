@@ -1,3 +1,4 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { useFcmService } from '@/bcsc-theme/features/fcm'
@@ -5,6 +6,7 @@ import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVi
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
 import { CROP_DELAY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
@@ -54,6 +56,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { liveCallHavingTroubleAlert, unknownErrorModal } = useAlerts(navigation)
   const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const { preventDoublePress } = usePreventDoublePress()
+  const { video: videoCallApi } = useApi()
 
   /**
    * Handles leaving the call by navigating to the appropriate screen based on the verification status.
@@ -98,6 +101,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const {
     flowState,
     videoCallError,
+    serviceUnavailable,
     localStream,
     remoteStream,
     isInBackground,
@@ -106,6 +110,46 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     retryConnection,
     setCallEnded,
   } = useVideoCallFlow(leaveCall)
+
+  // the backend rejects new sessions when all agents are busy or the service is closed
+  useEffect(() => {
+    if (!serviceUnavailable) {
+      return
+    }
+
+    // the user can leave (e.g. cancel) while service hours are loading
+    let cancelled = false
+
+    const showCallBusyOrClosed = async () => {
+      let formattedHours: FormattedServicePeriod[] = []
+      try {
+        formattedHours = formatServiceAndUnavailableHours(await videoCallApi.getServiceHours())
+      } catch (error) {
+        // ServicePeriodList falls back to the default hours string when the list is empty
+        logger.error('Error loading live call service hours:', error as Error)
+      }
+
+      if (cancelled) {
+        return
+      }
+
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [
+            { name: BCSCScreens.VerificationMethodSelection },
+            { name: BCSCScreens.CallBusyOrClosed, params: { busy: serviceUnavailable.busy, formattedHours } },
+          ],
+        })
+      )
+    }
+
+    void showCallBusyOrClosed()
+
+    return () => {
+      cancelled = true
+    }
+  }, [serviceUnavailable, videoCallApi, logger, navigation])
 
   // start crop delay timeout when call starts. the crop delay is to match the
   // current BCSC where the timer doesn't start until after 11 seconds. In

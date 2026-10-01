@@ -1,10 +1,11 @@
 import { BCSCActivityProvider } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { FcmService, FcmServiceProvider, FcmViewModel } from '@/bcsc-theme/features/fcm'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { CROP_DELAY_MS } from '@/constants'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { act, render } from '@testing-library/react-native'
+import { act, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Platform } from 'react-native'
 import { VolumeManager, VolumeResult } from 'react-native-volume-manager'
@@ -16,9 +17,20 @@ jest.mock('./hooks/useVideoCallFlow', () => ({
   default: (...args: unknown[]) => mockUseVideoCallFlow(...args),
 }))
 
+const mockGetServiceHours = jest.fn()
+jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    video: {
+      getServiceHours: mockGetServiceHours,
+    },
+  })),
+}))
+
 const defaultVideoCallFlowReturn = {
   flowState: VideoCallFlowState.IDLE,
   videoCallError: null,
+  serviceUnavailable: null,
   localStream: null,
   remoteStream: null,
   isInBackground: false,
@@ -132,6 +144,82 @@ describe('LiveCall', () => {
 
       // Overlay should no longer be rendered
       expect(tree.queryByText('BCSC.VideoCall.CallingAgent')).toBeNull()
+
+      tree.unmount()
+    })
+  })
+
+  describe('service unavailable', () => {
+    const renderScreen = () =>
+      render(
+        <BasicAppContext>
+          <BCSCActivityProvider>
+            <FcmServiceProvider service={new FcmService()} viewModel={mockFcmViewModel}>
+              <LiveCallScreen navigation={mockNavigation as never} />
+            </FcmServiceProvider>
+          </BCSCActivityProvider>
+        </BasicAppContext>
+      )
+
+    it.each([true, false])('routes to CallBusyOrClosed with busy=%s', async (busy) => {
+      mockGetServiceHours.mockResolvedValue({
+        time_zone: 'America/Vancouver',
+        regular_service_periods: [],
+        service_unavailable_periods: [],
+      })
+      mockUseVideoCallFlow.mockReturnValue({
+        ...defaultVideoCallFlowReturn,
+        flowState: VideoCallFlowState.CREATING_SESSION,
+        serviceUnavailable: { busy },
+      })
+
+      const tree = renderScreen()
+
+      await waitFor(() => expect(mockNavigation.dispatch).toHaveBeenCalled())
+      const action = mockNavigation.dispatch.mock.calls[0][0]
+      expect(action.payload.routes).toEqual([
+        { name: BCSCScreens.VerificationMethodSelection },
+        { name: BCSCScreens.CallBusyOrClosed, params: { busy, formattedHours: expect.any(Array) } },
+      ])
+
+      tree.unmount()
+    })
+
+    it('does not navigate if the screen unmounts while service hours are loading', async () => {
+      let resolveHours: (value: unknown) => void = () => {}
+      mockGetServiceHours.mockReturnValue(new Promise((resolve) => (resolveHours = resolve)))
+      mockUseVideoCallFlow.mockReturnValue({
+        ...defaultVideoCallFlowReturn,
+        flowState: VideoCallFlowState.CREATING_SESSION,
+        serviceUnavailable: { busy: true },
+      })
+
+      const tree = renderScreen()
+      tree.unmount()
+
+      await act(async () => {
+        resolveHours({ time_zone: 'America/Vancouver', regular_service_periods: [], service_unavailable_periods: [] })
+      })
+
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+    })
+
+    it('still routes to CallBusyOrClosed when service hours fail to load', async () => {
+      mockGetServiceHours.mockRejectedValue(new Error('network'))
+      mockUseVideoCallFlow.mockReturnValue({
+        ...defaultVideoCallFlowReturn,
+        flowState: VideoCallFlowState.CREATING_SESSION,
+        serviceUnavailable: { busy: true },
+      })
+
+      const tree = renderScreen()
+
+      await waitFor(() => expect(mockNavigation.dispatch).toHaveBeenCalled())
+      const action = mockNavigation.dispatch.mock.calls[0][0]
+      expect(action.payload.routes[1]).toEqual({
+        name: BCSCScreens.CallBusyOrClosed,
+        params: { busy: true, formattedHours: [] },
+      })
 
       tree.unmount()
     })
