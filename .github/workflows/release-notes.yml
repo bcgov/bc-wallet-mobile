@@ -56,7 +56,6 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check secrets are available
-        id: secrets-check
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
