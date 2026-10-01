@@ -106,8 +106,6 @@ describe('report-problem', () => {
         job: 'incident-report',
         level: 'error',
         type: 'app_error',
-        report_id: '7K2P-9XQF',
-        session_id: 1234567890,
         environment: 'development',
         application: 'testapp',
         version: '1.2.3',

@@ -94,8 +94,6 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
           job: LOKI_REPORT_PROBLEM_JOB,
           level: LOKI_REPORT_PROBLEM_LOG_LEVEL,
           type: _getReportProblemType(problem),
-          report_id: reportId,
-          session_id: problem.sessionId,
           environment: __DEV__ ? 'development' : 'production',
           application: getApplicationName().toLowerCase(),
           version: getVersion(),
