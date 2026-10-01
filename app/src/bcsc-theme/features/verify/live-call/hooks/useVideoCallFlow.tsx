@@ -22,6 +22,7 @@ import {
 import { clearIntervalIfExists } from '../utils/clearTimeoutIfExists'
 import { connect } from '../utils/connect'
 import createVideoCallError from '../utils/createVideoCallError'
+import { getVideoServiceUnavailability, VideoServiceUnavailability } from '../utils/serviceUnavailability'
 
 // Maps v4 error types to v3-compatible Snowplow error codes
 // so analytics are consistent across both platforms
@@ -38,6 +39,7 @@ const AnalyticsErrorCodeMap: Record<VideoCallErrorType, string> = {
 export interface VideoCallFlow {
   flowState: VideoCallFlowState
   videoCallError: VideoCallError | null
+  serviceUnavailable: VideoServiceUnavailability | null
   isInBackground: boolean
 
   localStream: MediaStream | null
@@ -54,6 +56,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const [session, setSession] = useState<VideoSession | null>(null)
   const [clientCallId, setClientCallId] = useState<string | null>(null)
   const [videoCallError, setVideoCallError] = useState<VideoCallError | null>(null)
+  const [serviceUnavailable, setServiceUnavailable] = useState<VideoServiceUnavailability | null>(null)
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
   const [isInBackground, setIsInBackground] = useState(false)
@@ -259,6 +262,13 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       setSession(newSession)
       return newSession
     } catch (error) {
+      const unavailability = getVideoServiceUnavailability(error)
+      if (unavailability) {
+        logger.info('Video service unavailable', { busy: unavailability.busy })
+        setServiceUnavailable(unavailability)
+        return null
+      }
+
       handleError(VideoCallErrorType.SESSION_FAILED, error as Error)
       return null
     }
@@ -415,9 +425,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         logger.info('Performing full cleanup due to background transition...')
         setCallEnded()
         cleanup()
-          .then(() => {
-            leaveCall()
-          })
+          .then(() => leaveCall())
           .catch((error) => {
             logger.error('Error during full cleanup background transition:', error)
           })
@@ -458,6 +466,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   return {
     flowState,
     videoCallError,
+    serviceUnavailable,
     localStream,
     remoteStream,
     isInBackground,
