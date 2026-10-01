@@ -1535,14 +1535,6 @@ const translation = {
     "DeviceAuthenticationError": {
       "Title": "Device Authentication Failed (FR)",
       "Description": "Unable to authenticate using the device's built-in authentication. (FR)"
-    },
-    "DeviceAuthenticationLockout": {
-      "Title": "Échec de l'authentification de l'appareil",
-      "Description": "Le déverrouillage s'est arrêté après trop de tentatives d'empreinte digitale ou de reconnaissance faciale. Touchez Continuer pour réessayer."
-    },
-    "DeviceAuthenticationInterrupted": {
-      "Title": "Échec de l'authentification de l'appareil",
-      "Description": "Le déverrouillage a été interrompu. Veuillez réessayer."
     }
   },
 }
