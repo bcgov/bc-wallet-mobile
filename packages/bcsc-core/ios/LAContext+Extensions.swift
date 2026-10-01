@@ -45,6 +45,43 @@ extension LAContext {
     return context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error)
   }
 
+  /// True only when the user deliberately dismissed the prompt
+  static func isUserCancellation(_ error: Error?) -> Bool {
+    guard let laError = error as? LAError else {
+      return false
+    }
+    return laError.code == .userCancel || laError.code == .userFallback
+  }
+
+  /// Log/report-friendly description, e.g. "LAError.systemCancel (-4): Cancelled by system".
+  static func describeAuthError(_ error: Error?) -> String {
+    guard let error = error else {
+      return "unknown error"
+    }
+    let nsError = error as NSError
+    guard nsError.domain == LAError.errorDomain else {
+      return "\(nsError.domain) (\(nsError.code)): \(nsError.localizedDescription)"
+    }
+    return "LAError.\(laErrorName(nsError.code)) (\(nsError.code)): \(nsError.localizedDescription)"
+  }
+
+  private static func laErrorName(_ code: Int) -> String {
+    switch LAError.Code(rawValue: code) {
+    case .authenticationFailed: return "authenticationFailed"
+    case .userCancel: return "userCancel"
+    case .userFallback: return "userFallback"
+    case .systemCancel: return "systemCancel"
+    case .passcodeNotSet: return "passcodeNotSet"
+    case .appCancel: return "appCancel"
+    case .invalidContext: return "invalidContext"
+    case .notInteractive: return "notInteractive"
+    case .biometryNotAvailable: return "biometryNotAvailable"
+    case .biometryNotEnrolled: return "biometryNotEnrolled"
+    case .biometryLockout: return "biometryLockout"
+    default: return "unknown"
+    }
+  }
+
   static func getBiometricType() -> BiometricType {
     let context = LAContext()
     var error: NSError?

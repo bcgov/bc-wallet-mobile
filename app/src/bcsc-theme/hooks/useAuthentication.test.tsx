@@ -57,6 +57,7 @@ describe('useAuthentication', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([{} as any, jest.fn()])
     jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
       deviceAuthenticationErrorAlert: jest.fn(),
+      problemWithAppAlert: jest.fn(),
     } as any)
   })
 
@@ -108,7 +109,7 @@ describe('useAuthentication', () => {
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
       const { result } = renderHook(() => useAuthentication(navigation))
 
-      // unlockApp swallows the error (no throw), but must log the mapped AppError with its distinct appEvent.
+      // unlockApp does not throw, but must log the mapped AppError with its distinct appEvent.
       await act(async () => {
         await result.current.unlockApp()
       })
@@ -117,6 +118,59 @@ describe('useAuthentication', () => {
         expect.stringContaining(AppEventCode.PIN_OPERATION_ERROR),
         expect.objectContaining({ appEvent: AppEventCode.PIN_OPERATION_ERROR })
       )
+    })
+
+    it('shows an error modal when unlockApp fails before device auth, instead of doing nothing', async () => {
+      const problemWithAppAlert = jest.fn()
+      jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
+        deviceAuthenticationErrorAlert: jest.fn(),
+        problemWithAppAlert,
+      } as any)
+      jest
+        .mocked(isAccountLocked)
+        .mockRejectedValue(Object.assign(new Error('native failure'), { code: 'E_IS_ACCOUNT_LOCKED_ERROR' }))
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+
+      expect(problemWithAppAlert).toHaveBeenCalledTimes(1)
+      expect(problemWithAppAlert).toHaveBeenCalledWith(
+        expect.objectContaining({ appEvent: AppEventCode.PIN_OPERATION_ERROR })
+      )
+      expect(navigation.navigate).not.toHaveBeenCalled()
+    })
+
+    it('surfaces a non-cancel native device auth failure with its OS error code', async () => {
+      const deviceAuthenticationErrorAlert = jest.fn()
+      jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
+        deviceAuthenticationErrorAlert,
+        problemWithAppAlert: jest.fn(),
+      } as any)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.DeviceAuth)
+      jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
+      jest.mocked(unlockWithDeviceSecurity).mockRejectedValue(
+        Object.assign(new Error('Device authentication failed: LAError.systemCancel (-4): Cancelled by system'), {
+          code: 'E_DEVICE_AUTH_FAILED',
+        })
+      )
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+
+      expect(deviceAuthenticationErrorAlert).toHaveBeenCalledTimes(1)
+      const appError = deviceAuthenticationErrorAlert.mock.calls[0][0] as AppError
+      expect(appError.appEvent).toBe(AppEventCode.DEVICE_AUTHENTICATION_ERROR)
+      expect(appError.technicalMessage).toContain('E_DEVICE_AUTH_FAILED')
+      expect(appError.technicalMessage).toContain('LAError.systemCancel (-4)')
     })
   })
 
