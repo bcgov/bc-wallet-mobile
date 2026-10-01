@@ -4087,6 +4087,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openwallet-foundation/askar-react-native@npm:0.6.1":
+  version: 0.6.1
+  resolution: "@openwallet-foundation/askar-react-native@npm:0.6.1"
+  dependencies:
+    "@openwallet-foundation/askar-shared": "npm:0.6.1"
+  peerDependencies:
+    react: ">= 16"
+    react-native: ">= 0.71"
+  checksum: 10c0/7b4c4e8e8f4529e4098b235e956756bcfeedbb469d77aad3983206f60e0e00cdda77be1bfa7489bacc6d0ab4daad46332474d97ba9b6ebde12475bdcfa09cd97
+  languageName: node
+  linkType: hard
+
 "@openwallet-foundation/askar-react-native@npm:0.6.1-alpha-20260720140434":
   version: 0.6.1-alpha-20260720140434
   resolution: "@openwallet-foundation/askar-react-native@npm:0.6.1-alpha-20260720140434"
@@ -7392,7 +7404,7 @@ __metadata:
     "@hyperledger/indy-vdr-react-native": "npm:0.3.1-dev.1"
     "@hyperledger/indy-vdr-shared": "npm:0.3.1-dev.1"
     "@notifee/react-native": "npm:~9.1.8"
-    "@openwallet-foundation/askar-react-native": "npm:0.6.1-alpha-20260720140434"
+    "@openwallet-foundation/askar-react-native": "npm:0.6.1"
     "@pexip/infinity-api": "npm:~19.1.2"
     "@react-native-async-storage/async-storage": "npm:~2.2.0"
     "@react-native-clipboard/clipboard": "npm:~1.16.3"
