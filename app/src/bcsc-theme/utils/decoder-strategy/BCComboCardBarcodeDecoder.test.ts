@@ -77,9 +77,9 @@ describe('BCComboCardBarcodeDecoder', () => {
         middleNames: 'card',
         lastName: 'specimen',
         birthDate: new Date('1982-01-04'),
-        expiryDate: new Date('2026-01-04'),
+        expiryDate: new Date('2026-01-31'),
         streetAddress: '910 government st',
-        postalCode: 'V8W 3Y8',
+        postalCode: 'V8W3Y8',
         city: 'victoria',
         province: 'BC',
       })

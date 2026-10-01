@@ -31,6 +31,15 @@ describe('buildBarcodePayload', () => {
     })
   })
 
+  it('joins a second street line with a newline', () => {
+    const [pdf417] = buildBarcodePayload(
+      null,
+      makeLicense({ streetAddress: 'UNIT 5', streetAddress2: '910 GOVERNMENT ST' })
+    )
+
+    expect(pdf417).toMatchObject({ address: { street_address: 'UNIT 5\n910 GOVERNMENT ST' } })
+  })
+
   it('should return a PDF_417 entry for a license only', () => {
     const result = buildBarcodePayload(null, makeLicense())
 

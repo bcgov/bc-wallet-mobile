@@ -65,6 +65,8 @@ export interface DriversLicenseMetadata {
   birthDate: Date
   expiryDate: Date
   streetAddress: string
+  /** Further street lines, when the address has more than one before the city line. */
+  streetAddress2?: string
   city: string
   province: string
   postalCode: string

@@ -621,4 +621,49 @@ describe('useCardScanner', () => {
       })
     })
   })
+
+  describe('handleScanDriversLicense', () => {
+    const license = {
+      licenseNumber: '2222222',
+      isoIIN: '636028',
+      firstName: 'test',
+      middleNames: 'card',
+      lastName: 'specimen',
+      birthDate: new Date('1982-01-04'),
+      expiryDate: new Date('2026-01-31'),
+      streetAddress: '910 government st',
+      city: 'victoria',
+      province: 'BC',
+      postalCode: 'V8W3Y8',
+    }
+
+    const renderWithMetadataSpy = () => {
+      const updateUserMetadata = jest.fn()
+      jest.mocked(useAuthorizationService).mockReturnValue({} as any)
+      jest.mocked(useSecureActions).mockReturnValue({ updateUserMetadata, updateUserInfo: jest.fn() } as any)
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, mockDispatch])
+      jest.mocked(Bifold).useServices.mockReturnValue([{ debug: jest.fn() } as any])
+
+      const hook = renderHook(() => useCardScanner())
+      return { handleScanDriversLicense: hook.result.current.handleScanDriversLicense, updateUserMetadata }
+    }
+
+    it('pre-fills a Canadian address', async () => {
+      const { handleScanDriversLicense, updateUserMetadata } = renderWithMetadataSpy()
+
+      await handleScanDriversLicense({ ...license, province: 'AB' })
+
+      expect(updateUserMetadata).toHaveBeenCalledWith(
+        expect.objectContaining({ address: expect.objectContaining({ province: 'AB', country: 'CA' }) })
+      )
+    })
+
+    it('leaves the address out when its province is not Canadian', async () => {
+      const { handleScanDriversLicense, updateUserMetadata } = renderWithMetadataSpy()
+
+      await handleScanDriversLicense({ ...license, city: 'seattle', province: 'WA', postalCode: '98101' })
+
+      expect(updateUserMetadata).toHaveBeenCalledWith({ name: { first: 'test', last: 'specimen', middle: 'card' } })
+    })
+  })
 })
