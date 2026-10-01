@@ -39,8 +39,8 @@ without one.
 
 Only an explicit user cancel from the device-auth prompt returns quietly. Any other native failure,
 including system interruptions, is logged with its native code and surfaced to the user with
-cause-specific copy: lockout tells them to unlock the phone with its PIN or passcode, an interruption
-tells them to try again, and anything else gets the generic message. Never fall through to a silent
+cause-specific copy: lockout says unlocking stopped after too many attempts, an interruption says
+it was interrupted, both ask them to try again, and anything else gets the generic message. Never fall through to a silent
 return when the reason is unknown.
 
 **Why:** a silent return leaves the user on the same screen with no explanation, which reads as an

@@ -1538,7 +1538,7 @@ const translation = {
     },
     "DeviceAuthenticationLockout": {
       "Title": "Falha na autenticação do dispositivo",
-      "Description": "Seu celular parou de aceitar sua impressão digital ou seu rosto após muitas tentativas. Desbloqueie o celular com o PIN ou a senha dele e tente novamente."
+      "Description": "O desbloqueio parou após muitas tentativas de impressão digital ou reconhecimento facial. Toque em Continuar para tentar novamente."
     },
     "DeviceAuthenticationInterrupted": {
       "Title": "Falha na autenticação do dispositivo",

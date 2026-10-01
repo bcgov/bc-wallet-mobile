@@ -1603,7 +1603,7 @@ const translation = {
     },
     "DeviceAuthenticationLockout": {
       "Title": "Device Authentication Failed",
-      "Description": "Your phone stopped accepting your fingerprint or face after too many attempts. Unlock your phone with its PIN or passcode, then try again."
+      "Description": "Unlocking stopped after too many fingerprint or face attempts. Tap Continue to try again."
     },
     "DeviceAuthenticationInterrupted": {
       "Title": "Device Authentication Failed",

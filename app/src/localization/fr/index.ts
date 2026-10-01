@@ -1538,7 +1538,7 @@ const translation = {
     },
     "DeviceAuthenticationLockout": {
       "Title": "Échec de l'authentification de l'appareil",
-      "Description": "Votre téléphone n'accepte plus votre empreinte digitale ou votre visage après trop de tentatives. Déverrouillez votre téléphone avec son NIP ou son code d'accès, puis réessayez."
+      "Description": "Le déverrouillage s'est arrêté après trop de tentatives d'empreinte digitale ou de reconnaissance faciale. Touchez Continuer pour réessayer."
     },
     "DeviceAuthenticationInterrupted": {
       "Title": "Échec de l'authentification de l'appareil",
