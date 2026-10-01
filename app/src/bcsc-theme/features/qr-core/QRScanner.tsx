@@ -2,16 +2,16 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { QRScannerFrame } from '@/bcsc-theme/components/QRScannerFrame'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { hitSlop } from '@/constants'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
 import { DismissiblePopupModal, QrCodeScanError, ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useCameraPermission } from 'react-native-vision-camera'
 
 export interface QRScannerProps {
-  isPermissionLoading: boolean
-  hasPermission: boolean
   isProcessing: boolean
   scanError: QrCodeScanError | null
   onScan: (value: string) => Promise<void>
@@ -22,17 +22,12 @@ export interface QRScannerProps {
  * Presentational QR scanner shared by every scan entry point. It owns the camera UI only; what a scanned
  * value means (strategies, API calls, navigation) belongs to the screen's ViewModel.
  */
-const QRScanner = ({
-  isPermissionLoading,
-  hasPermission,
-  isProcessing,
-  scanError,
-  onScan,
-  onDismissError,
-}: QRScannerProps) => {
+const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScannerProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const [torchActive, setTorchActive] = useState(false)
+  const { hasPermission, requestPermission } = useCameraPermission()
+  const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
 
   const styles = StyleSheet.create({
     container: { flex: 1 },

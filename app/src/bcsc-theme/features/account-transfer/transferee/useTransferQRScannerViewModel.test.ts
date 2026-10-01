@@ -28,10 +28,6 @@ const mockUseSecureActions = jest.mocked(useSecureActions)
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
 const mockUseBCSCApiClient = jest.mocked(useBCSCApiClient)
 
-jest.mock('@/hooks/useAutoRequestPermission', () => ({
-  useAutoRequestPermission: jest.fn(() => ({ isLoading: false })),
-}))
-
 jest.mock('@bifold/core', () => {
   const actual = jest.requireActual('@bifold/core')
   return {

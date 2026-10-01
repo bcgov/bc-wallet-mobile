@@ -1,11 +1,9 @@
 import useAccountTransfer from '@/bcsc-theme/features/account-transfer/transferee/useAccountTransfer'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { QrCodeScanError, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useCameraPermission } from 'react-native-vision-camera'
 
 import { AccountTransferStrategy, DidCommOobStrategy, PairingCodeStrategy } from './uri-strategies'
 import type { UriStrategy } from './uri-strategies/types'
@@ -54,8 +52,6 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   // see this name in their chat header. Mirrors the value shown by
   // `WalletNameDisplay` so the two ends agree.
   const scanLabel = useMemo(() => store.bcsc.selectedNickname || 'My Wallet', [store.bcsc.selectedNickname])
-  const { hasPermission, requestPermission } = useCameraPermission()
-  const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const [isProcessing, setIsProcessing] = useState(false)
   // TODO (MD): Swap this for AppError OR directly display BCSC error modal
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
@@ -168,8 +164,6 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   }, [])
 
   return {
-    isPermissionLoading,
-    hasPermission,
     isProcessing,
     scanError,
     handleScan,

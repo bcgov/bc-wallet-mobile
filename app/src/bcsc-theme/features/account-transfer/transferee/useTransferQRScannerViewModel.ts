@@ -1,23 +1,18 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { QrCodeScanError } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useCameraPermission } from 'react-native-vision-camera'
 import useAccountTransfer from './useAccountTransfer'
 
 const useTransferQRScannerViewModel = (navigation: StackNavigationProp<BCSCVerifyStackParams>) => {
   const { registerDevice, transferAccount } = useAccountTransfer()
   const [isLoading, setIsLoading] = useState(false)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
-  const { hasPermission, requestPermission } = useCameraPermission()
   const { t } = useTranslation()
   const registrationPromiseRef = useRef<Promise<void>>(Promise.resolve())
   const isProcessingRef = useRef(false)
   const isNavigatingRef = useRef(false)
-
-  const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
 
   useEffect(() => {
     registrationPromiseRef.current = registerDevice()
@@ -70,8 +65,6 @@ const useTransferQRScannerViewModel = (navigation: StackNavigationProp<BCSCVerif
 
   return {
     isLoading,
-    isPermissionLoading,
-    hasPermission,
     scanError,
     handleScan,
     dismissError,

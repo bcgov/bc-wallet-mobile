@@ -9,19 +9,9 @@ type TransferQRScannerScreenProps = {
 }
 
 const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navigation }) => {
-  const { isLoading, isPermissionLoading, hasPermission, scanError, handleScan, dismissError } =
-    useTransferQRScannerViewModel(navigation)
+  const { isLoading, scanError, handleScan, dismissError } = useTransferQRScannerViewModel(navigation)
 
-  return (
-    <QRScanner
-      isPermissionLoading={isPermissionLoading}
-      hasPermission={hasPermission}
-      isProcessing={isLoading}
-      scanError={scanError}
-      onScan={handleScan}
-      onDismissError={dismissError}
-    />
-  )
+  return <QRScanner isProcessing={isLoading} scanError={scanError} onScan={handleScan} onDismissError={dismissError} />
 }
 
 export default TransferQRScannerScreen

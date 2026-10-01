@@ -4,9 +4,6 @@ import type { UriStrategy } from './uri-strategies/types'
 import useScanScreenViewModel from './useScanScreenViewModel'
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
-jest.mock('react-native-vision-camera', () => ({
-  useCameraPermission: () => ({ hasPermission: true, requestPermission: jest.fn().mockResolvedValue(true) }),
-}))
 jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
   useBCSCAgent: () => ({ agent: { id: 'agent' }, waitForAgent: jest.fn().mockResolvedValue({ id: 'agent' }) }),
 }))
