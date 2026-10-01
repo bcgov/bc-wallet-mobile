@@ -57,7 +57,7 @@ export const connect = async (req: ConnectRequest, logger: BifoldLogger): Promis
     acquired.peerConnection?.close()
     if (acquired.token) {
       try {
-        await releaseInfinityToken(req, acquired.token)
+        await releaseInfinityToken(req, acquired.token, logger)
       } catch (releaseError) {
         logger.error('Failed to release Pexip token after setup failure:', releaseError as Error)
       }
@@ -236,8 +236,7 @@ const establishConnection = async (
     // conference until the token is released or expires
     logger.info('Releasing Pexip token...')
     try {
-      await releaseInfinityToken(req, currentToken)
-      logger.info('Pexip token released successfully')
+      await releaseInfinityToken(req, currentToken, logger)
     } catch (error) {
       logger.error('Failed to release Pexip token:', error as Error)
     }
@@ -369,7 +368,7 @@ const requestInfinityToken = async (request: ConnectionRequest): Promise<any> =>
   return response
 }
 
-const releaseInfinityToken = async (request: ConnectionRequest, token: string): Promise<void> => {
+const releaseInfinityToken = async (request: ConnectionRequest, token: string, logger: BifoldLogger): Promise<void> => {
   const response = await releaseToken({
     fetcher: withToken(fetch, token),
     body: {},
@@ -379,9 +378,17 @@ const releaseInfinityToken = async (request: ConnectionRequest, token: string): 
     host: request.nodeUrl,
   })
 
-  if (response.status !== 200 || !response.data.result) {
+  // 403: the token is no longer valid, so Pexip has already released it
+  if (response.status === 403) {
+    logger.info('Pexip token already released by the server')
+    return
+  }
+
+  if (!response.data.result) {
     throw new Error(`Pexip did not release the token (status ${response.status})`)
   }
+
+  logger.info('Pexip token released successfully')
 }
 
 export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLogger): IceServer[] => {

@@ -319,11 +319,18 @@ describe('connect', () => {
     )
   })
 
-  it.each([
-    ['a 403', { status: 403, data: { status: 'failed', result: 'Forbidden' } }],
-    ['result: false', { status: 200, data: { status: 'success', result: false } }],
-  ])('logs a failed release when Pexip responds with %s', async (_, response) => {
-    mockReleaseToken.mockResolvedValue(response)
+  it('treats a 403 release response as already released by the server', async () => {
+    mockReleaseToken.mockResolvedValue({ status: 403, data: { status: 'failed', result: 'Forbidden' } })
+    const conn = await connect(request, mockLogger)
+    conn.stopPexipKeepAlive()
+
+    await expect(conn.disconnectPexip()).resolves.toBeUndefined()
+    expect(mockLogger.info).toHaveBeenCalledWith('Pexip token already released by the server')
+    expect(mockLogger.error).not.toHaveBeenCalledWith('Failed to release Pexip token:', expect.anything())
+  })
+
+  it('logs a failed release when Pexip responds with result: false', async () => {
+    mockReleaseToken.mockResolvedValue({ status: 200, data: { status: 'success', result: false } })
     const conn = await connect(request, mockLogger)
     conn.stopPexipKeepAlive()
 
