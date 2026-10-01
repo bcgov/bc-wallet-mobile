@@ -16,9 +16,17 @@ module.exports = async ({ github, context, core }) => {
   const SPRINT_FIELD_NAME = 'Sprint'
   const PRIORITY_FIELD_NAME = 'Priority'
 
-  const esc = (s) => (s ?? '').replace(/\|/g, '\\|')
-  const issueLink = (n) => `[#${n}](https://github.com/${here}/issues/${n})`
-  const prLink = (n) => `[#${n}](https://github.com/${here}/pull/${n})`
+  // Escapes `\` and `|` so untrusted text can't break out of a Markdown table cell.
+  // e.g. esc('a\|b') returns 'a\\\|b', which a Markdown renderer displays as `a\|b`.
+  const esc = (s) => {
+    return (s ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|')
+  }
+  const issueLink = (n) => {
+    return `[#${n}](https://github.com/${here}/issues/${n})`
+  }
+  const prLink = (n) => {
+    return `[#${n}](https://github.com/${here}/pull/${n})`
+  }
 
   const prFragment = (alias) => `
     ${alias}: pullRequest(number: $${alias}) {
