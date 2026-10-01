@@ -23,6 +23,11 @@ export enum BiometricType {
   OpticID = 'opticID',
 }
 
+export enum DeviceAuthFailureReason {
+  Cancelled = 'cancelled',
+  Error = 'error',
+}
+
 export enum BCSCCardProcess {
   BCSCPhoto = 'IDIM L3 Remote BCSC Photo Identity Verification',
   BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',

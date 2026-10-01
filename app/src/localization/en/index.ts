@@ -1600,6 +1600,14 @@ const translation = {
     "DeviceAuthenticationError": {
       "Title": "Device Authentication Failed",
       "Description": "Unable to authenticate using the device's built-in authentication."
+    },
+    "DeviceAuthenticationLockout": {
+      "Title": "Device Authentication Failed",
+      "Description": "Your phone stopped accepting your fingerprint or face after too many attempts. Unlock your phone with its PIN or passcode, then try again."
+    },
+    "DeviceAuthenticationInterrupted": {
+      "Title": "Device Authentication Failed",
+      "Description": "Unlocking was interrupted. Try again."
     }
   },
 }

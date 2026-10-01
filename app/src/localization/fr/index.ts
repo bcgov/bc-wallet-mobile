@@ -1535,6 +1535,14 @@ const translation = {
     "DeviceAuthenticationError": {
       "Title": "Device Authentication Failed (FR)",
       "Description": "Unable to authenticate using the device's built-in authentication. (FR)"
+    },
+    "DeviceAuthenticationLockout": {
+      "Title": "Échec de l'authentification de l'appareil",
+      "Description": "Votre téléphone n'accepte plus votre empreinte digitale ou votre visage après trop de tentatives. Déverrouillez votre téléphone avec son NIP ou son code d'accès, puis réessayez."
+    },
+    "DeviceAuthenticationInterrupted": {
+      "Title": "Échec de l'authentification de l'appareil",
+      "Description": "Le déverrouillage a été interrompu. Veuillez réessayer."
     }
   },
 }

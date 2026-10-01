@@ -1238,6 +1238,28 @@ describe('useAlerts', () => {
         )
       })
     })
+
+    describe.each([
+      ['deviceAuthenticationLockoutAlert', 'DeviceAuthenticationLockout'],
+      ['deviceAuthenticationInterruptedAlert', 'DeviceAuthenticationInterrupted'],
+    ] as const)('%s', (alertName, key) => {
+      it('should show an error modal with the cause-specific copy and the shared device auth event', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitErrorModal = jest.fn()
+        jest
+          .spyOn(ErrorAlertContext, 'useErrorAlert')
+          .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+        result.current[alertName]()
+
+        expect(mockEmitErrorModal).toHaveBeenCalledWith(
+          `Alerts.${key}.Title`,
+          `Alerts.${key}.Description`,
+          expect.objectContaining({ appEvent: AppEventCode.DEVICE_AUTHENTICATION_ERROR })
+        )
+      })
+    })
   })
 
   describe('showErrorAlert', () => {

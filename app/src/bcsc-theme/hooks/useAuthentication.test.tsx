@@ -5,9 +5,11 @@ import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
+import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
   canPerformDeviceAuthentication,
+  DeviceAuthFailureReason,
   getAccountSecurityMethod,
   getHideDeviceAuthPrepFlag,
   isAccountLocked,
@@ -23,6 +25,7 @@ jest.mock('react-native-bcsc-core', () => ({
     PinWithDeviceAuth: 'app_pin_has_device_authn',
     DeviceAuth: 'device_authentication',
   },
+  DeviceAuthFailureReason: { Cancelled: 'cancelled', Error: 'error' },
   getAccountSecurityMethod: jest.fn(),
   getHideDeviceAuthPrepFlag: jest.fn(),
   isAccountLocked: jest.fn(),
@@ -57,6 +60,8 @@ describe('useAuthentication', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([{} as any, jest.fn()])
     jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
       deviceAuthenticationErrorAlert: jest.fn(),
+      deviceAuthenticationLockoutAlert: jest.fn(),
+      deviceAuthenticationInterruptedAlert: jest.fn(),
     } as any)
   })
 
@@ -188,10 +193,14 @@ describe('useAuthentication', () => {
       expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key')
     })
 
-    it('does not call handleSuccessfulAuth when device authentication fails or is cancelled', async () => {
+    it.each([
+      ['is cancelled', { success: false, failureReason: DeviceAuthFailureReason.Cancelled, errorCode: 10 }],
+      ['errors', { success: false, failureReason: DeviceAuthFailureReason.Error, errorCode: 5 }],
+      ['fails without a reason', { success: false }],
+    ])('does not call handleSuccessfulAuth when device authentication %s', async (_label, unlockResult) => {
       jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.DeviceAuth)
       jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
-      jest.mocked(unlockWithDeviceSecurity).mockResolvedValue({ success: false, walletKey: '' })
+      jest.mocked(unlockWithDeviceSecurity).mockResolvedValue(unlockResult)
 
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
       const { result } = renderHook(() => useAuthentication(navigation))
@@ -326,18 +335,181 @@ describe('useAuthentication', () => {
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.DeviceAuthAppReset)
     })
 
-    it('does not call handleSuccessfulAuth when device authentication is cancelled', async () => {
-      jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
-      jest.mocked(unlockWithDeviceSecurity).mockResolvedValue({ success: false, walletKey: '' })
+    describe('when unlockWithDeviceSecurity resolves success: false', () => {
+      const setup = () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn() }
+        const mockHandleSuccessfulAuth = jest.fn()
+        const mockStopLoading = jest.fn()
+        const alerts = {
+          deviceAuthenticationErrorAlert: jest.fn(),
+          deviceAuthenticationLockoutAlert: jest.fn(),
+          deviceAuthenticationInterruptedAlert: jest.fn(),
+        }
+        jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
+        jest.mocked(useSecureActionsModule.default).mockReturnValue({
+          handleSuccessfulAuth: mockHandleSuccessfulAuth,
+        } as any)
+        jest.mocked(BCSCLoadingContext.useLoadingScreen).mockReturnValue({
+          startLoading: jest.fn().mockReturnValue(mockStopLoading),
+        } as any)
+        jest.mocked(useAlertsModule.useAlerts).mockReturnValue(alerts as any)
+        jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
 
-      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
-      const { result } = renderHook(() => useAuthentication(navigation))
+        const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+        const { result } = renderHook(() => useAuthentication(navigation))
 
-      await act(async () => {
-        await result.current.performDeviceAuth()
+        return { mockLogger, mockHandleSuccessfulAuth, mockStopLoading, alerts, result }
+      }
+
+      const runWith = async (
+        unlockResult: Awaited<ReturnType<typeof unlockWithDeviceSecurity>>,
+        platform: 'ios' | 'android' = 'android'
+      ) => {
+        Platform.OS = platform
+        jest.mocked(unlockWithDeviceSecurity).mockResolvedValue(unlockResult)
+        const subject = setup()
+
+        await act(async () => {
+          await subject.result.current.performDeviceAuth()
+        })
+
+        return subject
+      }
+
+      const expectOnlyAlert = (
+        alerts: ReturnType<typeof setup>['alerts'],
+        called: keyof ReturnType<typeof setup>['alerts']
+      ) => {
+        Object.entries(alerts).forEach(([name, alert]) => {
+          if (name === called) {
+            expect(alert).toHaveBeenCalledTimes(1)
+          } else {
+            expect(alert).not.toHaveBeenCalled()
+          }
+        })
+      }
+
+      afterEach(() => {
+        Platform.OS = 'ios'
       })
 
-      expect(jest.mocked(useSecureActionsModule.default)().handleSuccessfulAuth).not.toHaveBeenCalled()
+      it('stays silent when the user cancelled', async () => {
+        const { mockLogger, mockHandleSuccessfulAuth, mockStopLoading, alerts } = await runWith({
+          success: false,
+          failureReason: DeviceAuthFailureReason.Cancelled,
+          errorCode: 10,
+          errorMessage: 'Authentication canceled',
+          deviceLocked: false,
+        })
+
+        expect(alerts.deviceAuthenticationErrorAlert).not.toHaveBeenCalled()
+        expect(alerts.deviceAuthenticationLockoutAlert).not.toHaveBeenCalled()
+        expect(alerts.deviceAuthenticationInterruptedAlert).not.toHaveBeenCalled()
+        expect(mockLogger.error).not.toHaveBeenCalled()
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('code=10'))
+        expect(mockHandleSuccessfulAuth).not.toHaveBeenCalled()
+        expect(mockStopLoading).toHaveBeenCalled()
+      })
+
+      it('logs the native code and shows the interrupted alert for a system interruption', async () => {
+        const { mockLogger, mockHandleSuccessfulAuth, mockStopLoading, alerts } = await runWith({
+          success: false,
+          failureReason: DeviceAuthFailureReason.Error,
+          errorCode: 5,
+          errorMessage: 'Fingerprint operation canceled.',
+          deviceLocked: false,
+        })
+
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('code=5'), expect.any(AppError))
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('message=Fingerprint operation canceled.'),
+          expect.any(AppError)
+        )
+        expectOnlyAlert(alerts, 'deviceAuthenticationInterruptedAlert')
+
+        const appError = alerts.deviceAuthenticationInterruptedAlert.mock.calls[0][0] as AppError
+        expect(appError).toBeInstanceOf(AppError)
+        expect(appError.appEvent).toBe(AppEventCode.DEVICE_AUTHENTICATION_ERROR)
+        expect(appError.technicalMessage).toContain('DEVICE_AUTH_5')
+        expect(appError.technicalMessage).toContain('Fingerprint operation canceled.')
+        expect(mockHandleSuccessfulAuth).not.toHaveBeenCalled()
+        expect(mockStopLoading).toHaveBeenCalled()
+      })
+
+      it.each([
+        ['android', 7, false],
+        ['android', 9, false],
+        ['android', 10, true],
+        ['ios', -8, undefined],
+      ] as const)(
+        'shows the lockout alert on %s for code %s (deviceLocked=%s)',
+        async (platform, errorCode, deviceLocked) => {
+          const { alerts } = await runWith(
+            {
+              success: false,
+              failureReason: DeviceAuthFailureReason.Error,
+              errorCode,
+              errorMessage: 'Too many attempts',
+              deviceLocked,
+            },
+            platform
+          )
+
+          expectOnlyAlert(alerts, 'deviceAuthenticationLockoutAlert')
+        }
+      )
+
+      it('logs a locked device on the Android code 10 keyguard path as an error', async () => {
+        const { mockLogger } = await runWith({
+          success: false,
+          failureReason: DeviceAuthFailureReason.Error,
+          errorCode: 10,
+          errorMessage: 'Authentication canceled',
+          deviceLocked: true,
+        })
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('deviceLocked=true'),
+          expect.any(AppError)
+        )
+      })
+
+      it('shows the interrupted alert for iOS systemCancel', async () => {
+        const { alerts } = await runWith(
+          {
+            success: false,
+            failureReason: DeviceAuthFailureReason.Error,
+            errorCode: -4,
+            errorMessage: 'System cancel',
+          },
+          'ios'
+        )
+
+        expectOnlyAlert(alerts, 'deviceAuthenticationInterruptedAlert')
+      })
+
+      it('shows the generic alert for any other native code', async () => {
+        const { mockLogger, alerts } = await runWith({
+          success: false,
+          failureReason: DeviceAuthFailureReason.Error,
+          errorCode: 11,
+          errorMessage: 'No biometrics enrolled',
+        })
+
+        expectOnlyAlert(alerts, 'deviceAuthenticationErrorAlert')
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('code=11'), expect.any(AppError))
+      })
+
+      it('shows the generic alert, never a silent return, when failureReason and code are missing', async () => {
+        const { mockLogger, mockHandleSuccessfulAuth, mockStopLoading, alerts } = await runWith({ success: false })
+
+        expectOnlyAlert(alerts, 'deviceAuthenticationErrorAlert')
+        const appError = alerts.deviceAuthenticationErrorAlert.mock.calls[0][0] as AppError
+        expect(appError.technicalMessage).toContain('DEVICE_AUTH_UNKNOWN')
+        expect(mockLogger.error).toHaveBeenCalled()
+        expect(mockHandleSuccessfulAuth).not.toHaveBeenCalled()
+        expect(mockStopLoading).toHaveBeenCalled()
+      })
     })
 
     it('logs error when device authentication throws', async () => {

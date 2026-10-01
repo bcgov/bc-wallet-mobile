@@ -1,12 +1,15 @@
 import { mapNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
+import { AppError, ErrorRegistry } from '@/errors'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
+import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
   canPerformDeviceAuthentication,
+  DeviceAuthFailureReason,
   getAccountSecurityMethod,
   getHideDeviceAuthPrepFlag,
   isAccountLocked,
@@ -14,6 +17,7 @@ import {
 } from 'react-native-bcsc-core'
 import { useLoadingScreen } from '../contexts/BCSCLoadingContext'
 import { BCSCAuthStackParams, BCSCScreens } from '../types/navigators'
+import { getDeviceAuthFailureCause } from './getDeviceAuthFailureCause'
 import useSecureActions from './useSecureActions'
 
 /**
@@ -27,7 +31,8 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
   const { handleSuccessfulAuth } = useSecureActions()
-  const { deviceAuthenticationErrorAlert } = useAlerts(navigation)
+  const { deviceAuthenticationErrorAlert, deviceAuthenticationLockoutAlert, deviceAuthenticationInterruptedAlert } =
+    useAlerts(navigation)
 
   /**
    * Performs device authentication (biometric or passcode)
@@ -49,26 +54,59 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       }
 
       // Unlocks the app using device authentication (biometric or passcode)
-      const { success, walletKey } = await unlockWithDeviceSecurity('Unlock your app')
+      const unlockResult = await unlockWithDeviceSecurity('Unlock your app')
 
-      if (!success) {
-        logger.info('[Authentication:performDeviceAuth] Device authentication failed - user cancelled or auth failed')
-        // TODO: (MD) What should we do if the device authentication fails?
+      if (!unlockResult.success) {
+        const { failureReason, errorCode, errorMessage, deviceLocked } = unlockResult
+
+        // Only an explicit user cancel is silent; everything else is surfaced so the user is not left on the screen
+        if (failureReason === DeviceAuthFailureReason.Cancelled) {
+          logger.info(`[Authentication:performDeviceAuth] Device authentication cancelled by user: code=${errorCode}`)
+          return
+        }
+
+        const failureCause = getDeviceAuthFailureCause(unlockResult, Platform.OS)
+        // technicalMessage reads cause.code, which carries the native code into "Show details" and error reports
+        const cause = Object.assign(new Error(errorMessage ?? 'Device authentication failed'), {
+          code: `DEVICE_AUTH_${errorCode ?? 'UNKNOWN'}`,
+        })
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.DEVICE_AUTHENTICATION_ERROR, { cause })
+
+        logger.error(
+          `[Authentication:performDeviceAuth] Device authentication failed [${appError.appEvent}] code=${errorCode} message=${errorMessage} deviceLocked=${deviceLocked} cause=${failureCause}`,
+          appError
+        )
+
+        const alertsByCause = {
+          lockout: deviceAuthenticationLockoutAlert,
+          interrupted: deviceAuthenticationInterruptedAlert,
+          generic: deviceAuthenticationErrorAlert,
+        }
+        alertsByCause[failureCause](appError)
         return
       }
 
+      const { walletKey } = unlockResult
       await handleSuccessfulAuth(walletKey)
       logger.info('[Authentication:performDeviceAuth] Device authentication successful')
     } catch (error) {
       // Note: a user cancel never lands here — unlockWithDeviceSecurity resolves
-      // { success: false } on cancel (both platforms), handled above.
+      // { success: false, failureReason: 'cancelled' } on cancel (both platforms), handled above.
       const appError = mapNativeBcscError(error)
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
     } finally {
       stopLoading?.()
     }
-  }, [handleSuccessfulAuth, loadingScreen, logger, navigation, deviceAuthenticationErrorAlert])
+  }, [
+    handleSuccessfulAuth,
+    loadingScreen,
+    logger,
+    navigation,
+    deviceAuthenticationErrorAlert,
+    deviceAuthenticationLockoutAlert,
+    deviceAuthenticationInterruptedAlert,
+  ])
 
   /**
    * Handles unlocking the app using the user selected authentication method.

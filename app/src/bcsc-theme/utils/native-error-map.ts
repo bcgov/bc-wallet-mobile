@@ -120,7 +120,8 @@ export const nativeBcscErrorMap: ReadonlyMap<string, ErrorDefinition> = new Map<
 
   // --- Device auth / security. NOTE: E_DEVICE_AUTH_CANCELLED is intentionally NOT mapped — a user
   // cancel is control flow, never surfaced as an error. Only Android's performDeviceAuthentication
-  // rejects it; unlockWithDeviceSecurity resolves { success: false } on cancel on both platforms. ---
+  // rejects it; unlockWithDeviceSecurity resolves { success: false, failureReason: 'cancelled' } on cancel on
+  // both platforms. ---
   ['E_CAN_DEVICE_AUTH_ERROR', ErrorRegistry.DEVICE_AUTH_UNAVAILABLE],
   ['E_NO_ACTIVITY', ErrorRegistry.DEVICE_AUTH_UNAVAILABLE],
   ['E_DEVICE_AUTH_ERROR', ErrorRegistry.DEVICE_SECURITY_SETUP_FAILED],

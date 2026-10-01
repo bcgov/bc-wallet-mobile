@@ -327,6 +327,14 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'SomethingWentWrong'),
       accountNotFoundAlert: _createBasicErrorModal(AppEventCode.ACCOUNT_NOT_FOUND, 'SomethingWentWrong'),
       deviceAuthenticationErrorAlert: _createBasicErrorModal(AppEventCode.DEVICE_AUTHENTICATION_ERROR, 'DeviceAuthenticationError'),
+      deviceAuthenticationLockoutAlert: _createBasicErrorModal(
+        AppEventCode.DEVICE_AUTHENTICATION_ERROR,
+        'DeviceAuthenticationLockout'
+      ),
+      deviceAuthenticationInterruptedAlert: _createBasicErrorModal(
+        AppEventCode.DEVICE_AUTHENTICATION_ERROR,
+        'DeviceAuthenticationInterrupted'
+      ),
       unsecuredNetworkAlert: _createBasicErrorModal(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork'),
       serverTimeoutAlert: _createBasicErrorModal(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout'),
       serverErrorAlert: _createBasicErrorModal(AppEventCode.SERVER_ERROR, 'ServerError'),

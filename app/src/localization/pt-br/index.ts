@@ -1535,6 +1535,14 @@ const translation = {
     "DeviceAuthenticationError": {
       "Title": "Device Authentication Failed (PT-BR)",
       "Description": "Unable to authenticate using the device's built-in authentication. (PT-BR)"
+    },
+    "DeviceAuthenticationLockout": {
+      "Title": "Falha na autenticação do dispositivo",
+      "Description": "Seu celular parou de aceitar sua impressão digital ou seu rosto após muitas tentativas. Desbloqueie o celular com o PIN ou a senha dele e tente novamente."
+    },
+    "DeviceAuthenticationInterrupted": {
+      "Title": "Falha na autenticação do dispositivo",
+      "Description": "O desbloqueio foi interrompido. Tente novamente."
     }
   },
 }

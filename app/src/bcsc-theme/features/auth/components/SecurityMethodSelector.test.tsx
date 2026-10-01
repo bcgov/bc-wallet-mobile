@@ -305,6 +305,33 @@ describe('SecurityMethodSelector', () => {
       expect(mockOnDeviceAuthPress).not.toHaveBeenCalled()
     })
 
+    // Code 10 while the device is locked now rejects E_DEVICE_AUTH_ERROR instead of E_DEVICE_AUTH_CANCELLED.
+    it.each([
+      ['E_DEVICE_AUTH_CANCELLED', 'Device authentication was cancelled by user (code=10): Authentication canceled'],
+      ['E_DEVICE_AUTH_ERROR', 'Device authentication failed (code=10): Authentication canceled'],
+    ])('treats a %s rejection as a failed attempt and stays interactive', async (code, message) => {
+      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
+      mockPerformDeviceAuthentication.mockRejectedValue(Object.assign(new Error(message), { code }))
+
+      const tree = renderSubject()
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
+      })
+
+      fireEvent.press(tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton')))
+
+      await waitFor(() => {
+        expect(mockPerformDeviceAuthentication).toHaveBeenCalled()
+      })
+
+      expect(mockOnDeviceAuthPress).not.toHaveBeenCalled()
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
+      })
+    })
+
     it('handles onDeviceAuthPress error gracefully', async () => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
       mockPerformDeviceAuthentication.mockResolvedValue(true)
