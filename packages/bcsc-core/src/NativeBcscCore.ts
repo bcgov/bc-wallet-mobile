@@ -149,6 +149,7 @@ export type DeviceSecurityUnlockResult = {
   success: boolean;
   walletKey?: string; // PBKDF2 hash, only present on success
   migrated?: boolean; // true if this was a v3 user migration (PIN was just created)
+  reason?: string; // why success is false (e.g. "LAError.userCancel (-2): ..."), for logging only
 };
 
 export type NativeFilesScan = {

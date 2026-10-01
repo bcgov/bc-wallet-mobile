@@ -2424,6 +2424,7 @@ class BcscCore: NSObject {
         if LAContext.isUserCancellation(error) {
           resolve([
             "success": false,
+            "reason": LAContext.describeAuthError(error),
           ])
           return
         }
@@ -2475,6 +2476,7 @@ class BcscCore: NSObject {
       } else {
         resolve([
           "success": false,
+          "reason": "evaluatePolicy returned false without an error",
         ])
       }
     }

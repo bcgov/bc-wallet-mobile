@@ -23,8 +23,13 @@ sealed class DeviceAuthenticationResult {
     /** biometric failure (e.g. wrong finger) — the prompt stays open. */
     object Failed : DeviceAuthenticationResult()
 
-    /** user deliberately dismissed the prompt. */
-    object Cancelled : DeviceAuthenticationResult()
+    /** user deliberately dismissed the prompt. [errorCode] is ERROR_USER_CANCELED or ERROR_NEGATIVE_BUTTON. */
+    data class Cancelled(
+        val errorCode: Int,
+        val errorMessage: String,
+    ) : DeviceAuthenticationResult() {
+        fun describe(): String = describeBiometricError(errorCode, errorMessage)
+    }
 
     /**
      * Terminal failure that is NOT a user cancel (lockout, system cancel, hardware unavailable,
@@ -36,9 +41,28 @@ sealed class DeviceAuthenticationResult {
         val errorMessage: String,
     ) : DeviceAuthenticationResult() {
         /** Log/report-friendly description: "ERROR_LOCKOUT (7): Too many attempts". */
-        fun describe(): String =
-            if (errorCode == null) errorMessage else "${biometricErrorName(errorCode)} ($errorCode): $errorMessage"
+        fun describe(): String = describeBiometricError(errorCode, errorMessage)
     }
+}
+
+private fun describeBiometricError(
+    errorCode: Int?,
+    errorMessage: String,
+): String = if (errorCode == null) errorMessage else "${biometricErrorName(errorCode)} ($errorCode): $errorMessage"
+
+/**
+ * Checks activity if it is busy and if so; returns the reaons, otherwise it returns null. 
+ * Activity states can block or hang biometric prompts to the user
+ */
+fun promptBlockedReason(activity: FragmentActivity): String? {
+    val isFinishing = activity.isFinishing
+    val isDestroyed = activity.isDestroyed
+    val isStateSaved = activity.supportFragmentManager.isStateSaved
+    if (!isFinishing && !isDestroyed && !isStateSaved) {
+        return null
+    }
+    return "Prompt not shown: lifecycle=${activity.lifecycle.currentState.name}, stateSaved=$isStateSaved, " +
+        "finishing=$isFinishing, destroyed=$isDestroyed"
 }
 
 /** Human-readable name for a BiometricPrompt ERROR_* code */
@@ -127,6 +151,13 @@ class DeviceAuthenticationServiceImpl(
         // BiometricPrompt must be created and used on the main UI thread
         activity.runOnUiThread {
             try {
+                val blockedReason = promptBlockedReason(activity)
+                if (blockedReason != null) {
+                    Log.w(TAG, blockedReason)
+                    callback(DeviceAuthenticationResult.Error(null, blockedReason))
+                    return@runOnUiThread
+                }
+
                 val biometricPrompt =
                     androidx.biometric.BiometricPrompt(
                         activity,
@@ -142,7 +173,7 @@ class DeviceAuthenticationServiceImpl(
                                     androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED,
                                     androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON,
                                     -> {
-                                        callback(DeviceAuthenticationResult.Cancelled)
+                                        callback(DeviceAuthenticationResult.Cancelled(errorCode, errString.toString()))
                                     }
 
                                     else -> {

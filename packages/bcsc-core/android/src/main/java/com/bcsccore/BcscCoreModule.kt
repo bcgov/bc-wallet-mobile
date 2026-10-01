@@ -2666,8 +2666,8 @@ class BcscCoreModule internal constructor(
                         promise.resolve(true)
                     }
 
-                    DeviceAuthenticationResult.Cancelled -> {
-                        Log.d(NAME, "performDeviceAuthentication: cancelled")
+                    is DeviceAuthenticationResult.Cancelled -> {
+                        Log.d(NAME, "performDeviceAuthentication: cancelled: ${result.describe()}")
                         promise.reject("E_DEVICE_AUTH_CANCELLED", "Device authentication was cancelled by user")
                     }
 
@@ -3029,9 +3029,10 @@ class BcscCoreModule internal constructor(
                         }
                     }
 
-                    DeviceAuthenticationResult.Cancelled -> {
+                    is DeviceAuthenticationResult.Cancelled -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
+                        result.putString("reason", authResult.describe())
                         guarded.resolve(result)
                     }
 
