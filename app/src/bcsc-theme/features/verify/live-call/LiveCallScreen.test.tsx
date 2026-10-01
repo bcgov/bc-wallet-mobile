@@ -7,6 +7,8 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Platform } from 'react-native'
+import { VolumeManager, VolumeResult } from 'react-native-volume-manager'
 import LiveCallScreen from './LiveCallScreen'
 
 const mockUseVideoCallFlow = jest.fn()
@@ -146,6 +148,7 @@ describe('LiveCall', () => {
       tree.unmount()
     })
   })
+
   describe('service unavailable', () => {
     const renderScreen = () =>
       render(
@@ -217,6 +220,72 @@ describe('LiveCall', () => {
         name: BCSCScreens.CallBusyOrClosed,
         params: { busy: true, formattedHours: [] },
       })
+
+      tree.unmount()
+    })
+  })
+
+  describe('low volume banner', () => {
+    const originalOS = Platform.OS
+
+    const renderInCall = () => {
+      mockUseVideoCallFlow.mockReturnValue({
+        ...defaultVideoCallFlowReturn,
+        flowState: VideoCallFlowState.IN_CALL,
+      })
+
+      return render(
+        <BasicAppContext>
+          <BCSCActivityProvider>
+            <FcmServiceProvider service={new FcmService()} viewModel={mockFcmViewModel}>
+              <LiveCallScreen navigation={mockNavigation as never} />
+            </FcmServiceProvider>
+          </BCSCActivityProvider>
+        </BasicAppContext>
+      )
+    }
+
+    const emitVolume = (result: VolumeResult) => {
+      const listener = jest.mocked(VolumeManager.addVolumeListener).mock.lastCall![0]
+      act(() => listener(result))
+    }
+
+    afterEach(() => {
+      Platform.OS = originalOS
+    })
+
+    it('uses the call stream for the initial volume on Android', async () => {
+      Platform.OS = 'android'
+      jest.mocked(VolumeManager.getVolume).mockResolvedValueOnce({ volume: 1, call: 0.1 } as VolumeResult)
+
+      const tree = renderInCall()
+
+      expect(await tree.findByText('BCSC.VideoCall.Banners.VolumeLow')).toBeTruthy()
+
+      tree.unmount()
+    })
+
+    it('ignores volume events for other streams on Android', async () => {
+      Platform.OS = 'android'
+      const tree = renderInCall()
+      await act(async () => {})
+
+      emitVolume({ volume: 0.1, type: 'music' })
+      expect(tree.queryByText('BCSC.VideoCall.Banners.VolumeLow')).toBeNull()
+
+      emitVolume({ volume: 0.1, type: 'call' })
+      expect(tree.getByText('BCSC.VideoCall.Banners.VolumeLow')).toBeTruthy()
+
+      tree.unmount()
+    })
+
+    it('uses every volume event on iOS', async () => {
+      Platform.OS = 'ios'
+      const tree = renderInCall()
+      await act(async () => {})
+
+      emitVolume({ volume: 0.1 })
+      expect(tree.getByText('BCSC.VideoCall.Banners.VolumeLow')).toBeTruthy()
 
       tree.unmount()
     })

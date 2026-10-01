@@ -7496,7 +7496,7 @@ __metadata:
     react-native-video: "patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch"
     react-native-vision-camera: "patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch"
     react-native-vision-camera-barcode-scanner: "npm:^5.2.3"
-    react-native-volume-manager: "npm:~1.10.0"
+    react-native-volume-manager: "npm:~2.2.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:13.16.1"
     react-native-worklets: "npm:0.10.1"
@@ -16006,13 +16006,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-volume-manager@npm:~1.10.0":
-  version: 1.10.0
-  resolution: "react-native-volume-manager@npm:1.10.0"
+"react-native-volume-manager@npm:~2.2.0":
+  version: 2.2.0
+  resolution: "react-native-volume-manager@npm:2.2.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/2b338fa4b12b9af267c2da7ee18afa4f9fa83abad8af46265b0ec071e96318e419582bbc5091327e6345dea2a30d7ed696c4bc6a36a911f79538087b4b96c72c
+  checksum: 10c0/8807b4c10a1cf091417d8c0fcc2bf86f58dba2ab42b1508337548ae4ff7e0682410cb230ac53430148d6f01aaa70af357a32ca41b64deee96ce1bde01abace47
   languageName: node
   linkType: hard
 
