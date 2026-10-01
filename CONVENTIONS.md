@@ -34,3 +34,14 @@ site removed while the key lingers.
 `BulletedInstructionsScreen`) or from server data, so no key can be passed. Those are listed in the
 registry test's `KNOWN_UNREFERENCED` with the reason; don't add to that list to silence a failure
 without one.
+
+## Device Auth Failures: Only an explicit cancel is silent
+
+Only an explicit user cancel from the device-auth prompt returns quietly. Any other native failure,
+including system interruptions, is logged with its native code and surfaced to the user with
+cause-specific copy: lockout tells them to unlock the phone with its PIN or passcode, an interruption
+tells them to try again, and anything else gets the generic message. Never fall through to a silent
+return when the reason is unknown.
+
+**Why:** a silent return leaves the user on the same screen with no explanation, which reads as an
+unlock loop (#4749).
