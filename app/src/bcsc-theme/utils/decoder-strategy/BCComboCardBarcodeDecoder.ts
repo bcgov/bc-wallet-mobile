@@ -69,6 +69,8 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
   }
 
   private parseBcscSerial(value: string): string | null {
-    return decodeBCCardBarcode(value)?.dcn ?? null
+    const card = decodeBCCardBarcode(value)
+
+    return 'source' in card ? null : card.dcn
   }
 }

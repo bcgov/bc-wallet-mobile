@@ -14,8 +14,8 @@ const withSecurityField = (barcode: string, security: string) => `${barcode.slic
 
 const decode = (value: string): BCCardBarcode => {
   const decoded = decodeBCCardBarcode(value)
-  if (!decoded) {
-    throw new Error(`expected ${value} to decode`)
+  if ('source' in decoded) {
+    throw new Error(`expected ${value} to decode, got ${decoded.reason}`)
   }
   return decoded
 }
@@ -163,11 +163,17 @@ describe('decodeBCCardBarcode', () => {
     ['an empty value', ''],
     ['a 1D serial', 'S00023254'],
     ['a missing track 1 start sentinel', BC_DL_BARCODE_S.slice(1)],
+  ])('reports %s as unsupported', (_, value) => {
+    expect(decodeBCCardBarcode(value)).toEqual({ source: 'failure', reason: 'unsupported' })
+  })
+
+  it.each([
+    ['no end sentinel after the name', BC_DL_BARCODE_S.replaceAll('?', '')],
     ['a missing track 2', BC_DL_BARCODE_S.replace(/;[^?]*\?/, '')],
     ['a truncated track 3', BC_DL_BARCODE_S.replace('00S00023254?', 'S00023254?')],
     ['an expiry month of 13', BC_DL_BARCODE_S.replace('=2601', '=2613')],
     ['a birth day of 00', BC_DL_BARCODE_S.replace('19820104', '19820100')],
-  ])('returns null for %s', (_, value) => {
-    expect(decodeBCCardBarcode(value)).toBeNull()
+  ])('reports %s as damaged', (_, value) => {
+    expect(decodeBCCardBarcode(value)).toEqual({ source: 'failure', reason: 'damaged' })
   })
 })

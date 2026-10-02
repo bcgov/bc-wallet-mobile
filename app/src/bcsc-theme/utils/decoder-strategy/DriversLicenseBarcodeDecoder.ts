@@ -18,13 +18,15 @@ import {
 export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
   canDecode(barcode: ScanableCode): barcode is DriversLicenseBarcode {
     return (
-      barcode.type === 'pdf-417' && typeof barcode.value === 'string' && decodeBCCardBarcode(barcode.value) !== null
+      barcode.type === 'pdf-417' &&
+      typeof barcode.value === 'string' &&
+      !('source' in decodeBCCardBarcode(barcode.value))
     )
   }
 
   decode(barcode: DriversLicenseBarcode): DriversLicenseDecodedBarcode {
-    const card = barcode.type === 'pdf-417' ? decodeBCCardBarcode(barcode.value) : null
-    if (!card) {
+    const card = decodeBCCardBarcode(barcode.value)
+    if ('source' in card) {
       throw new Error("Failed to decode driver's license barcode. Did you forget to check if it can be decoded?")
     }
 

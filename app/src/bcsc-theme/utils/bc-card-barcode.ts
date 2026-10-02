@@ -40,6 +40,15 @@ export interface BCCardBarcode {
   jurisdictionVersion: string
 }
 
+/**
+ * Why a value did not decode. `unsupported`: not in the BC card 3-track layout. `damaged`: starts like
+ * one, but a track is malformed or cut short.
+ */
+export interface CardBarcodeFailure {
+  source: 'failure'
+  reason: 'damaged' | 'unsupported'
+}
+
 type FieldRange = readonly [start: number, end: number]
 
 const TRACK_1_START_SENTINEL = '%'
@@ -86,22 +95,26 @@ const TRACK_3 = {
  * Decodes the PDF-417 barcode on a BC driver's licence, BCID, BC Services Card or combo card.
  * These use ICBC's 3-track magnetic stripe layout rather than the AAMVA 2016 PDF-417 format.
  *
- * @returns null when the value is not a well-formed BC card barcode.
+ * @returns the decoded card, or a {@link CardBarcodeFailure} saying why the value did not decode.
  */
-export const decodeBCCardBarcode = (value: string): BCCardBarcode | null => {
+export const decodeBCCardBarcode = (value: string): BCCardBarcode | CardBarcodeFailure => {
+  if (!value.startsWith(TRACK_1_START_SENTINEL)) {
+    return { source: 'failure', reason: 'unsupported' }
+  }
+
   const track1 = parseTrack1(value)
   if (!track1) {
-    return null
+    return { source: 'failure', reason: 'damaged' }
   }
 
   const track2 = parseTrack2(value.slice(track1.end))
   if (!track2) {
-    return null
+    return { source: 'failure', reason: 'damaged' }
   }
 
   const track3 = parseTrack3(value.slice(track1.end + track2.end))
   if (!track3) {
-    return null
+    return { source: 'failure', reason: 'damaged' }
   }
 
   const cityLine = parseCityLine(track1.fields.addressLines, track3.postalCode)
@@ -164,10 +177,6 @@ const readCaretField = (value: string, start: number, maxLength: number): { fiel
 }
 
 const parseTrack1 = (value: string) => {
-  if (!value.startsWith(TRACK_1_START_SENTINEL)) {
-    return null
-  }
-
   const [provinceStart, provinceEnd] = TRACK_1_PROVINCE
   const province = value.slice(provinceStart, provinceEnd)
   const city = readCaretField(value, provinceEnd, CITY_MAX_LENGTH)
