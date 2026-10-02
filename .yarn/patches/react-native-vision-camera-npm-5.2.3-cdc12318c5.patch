@@ -1,3 +1,84 @@
+diff --git a/ios/Hybrid Objects/HybridCameraSession.swift b/ios/Hybrid Objects/HybridCameraSession.swift
+index c74356e3e16d61c85522c74e7577eb4a0d95515f..7d917e6c5fe896cc026ee9bb1cc3803d6d262236 100644
+--- a/ios/Hybrid Objects/HybridCameraSession.swift	
++++ b/ios/Hybrid Objects/HybridCameraSession.swift	
+@@ -33,11 +33,32 @@ final class HybridCameraSession: HybridCameraSessionSpec {
+     return session.isRunning
+   }
+ 
++  // PATCH (bc-wallet-mobile): run session mutations only after the main queue has drained what was
++  // already pending. React Native mounts and unmounts the preview view on the main queue, and while a
++  // preview layer is attached AVFoundation blocks on the main thread inside stopRunning and
++  // commitConfiguration (9 s timeout on iOS 26, none on iOS 18). If the main thread is then inside
++  // CoreAnimation's layerDidBecomeVisible: (called with the CA tree lock held) waiting for the session
++  // lock, the app hangs for good; every <Camera> unmount used to race this. Ordering the mutation after
++  // the pending main-thread work keeps the two from overlapping without ever blocking the main thread.
++  private static func afterMainOnSessionQueue<T>(_ run: @escaping @Sendable () throws -> T) -> Promise<T> {
++    let promise = Promise<T>()
++    DispatchQueue.main.async {
++      Self.queue.async {
++        do {
++          promise.resolve(withResult: try run())
++        } catch {
++          promise.reject(withError: error)
++        }
++      }
++    }
++    return promise
++  }
++
+   // pragma MARK: Configuration
+   func configure(connections: [CameraSessionConnection], config: CameraSessionConfiguration?)
+     -> Promise<[any HybridCameraControllerSpec]>
+   {
+-    return Promise.parallel(Self.queue) {
++    return Self.afterMainOnSessionQueue {
+       guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
+         throw RuntimeError.error(withMessage: "Camera Permission not yet granted!")
+       }
+@@ -212,7 +233,7 @@ final class HybridCameraSession: HybridCameraSessionSpec {
+ 
+   // pragma MARK: Start/Stop
+   func start() -> Promise<Void> {
+-    return Promise.parallel(Self.queue) {
++    return Self.afterMainOnSessionQueue {
+       if self.session.isRunning {
+         return
+       }
+@@ -221,7 +242,7 @@ final class HybridCameraSession: HybridCameraSessionSpec {
+   }
+ 
+   func stop() -> Promise<Void> {
+-    return Promise.parallel(Self.queue) {
++    return Self.afterMainOnSessionQueue {
+       if !self.session.isRunning {
+         return
+       }
+diff --git a/ios/Hybrid Objects/Views/HybridPreviewView.swift b/ios/Hybrid Objects/Views/HybridPreviewView.swift
+index 00d753251eb9108c01f376bb78896ac9ad7891e4..ae83b58b541f100b0051be58d7357ca3a35fccac 100644
+--- a/ios/Hybrid Objects/Views/HybridPreviewView.swift	
++++ b/ios/Hybrid Objects/Views/HybridPreviewView.swift	
+@@ -124,7 +124,19 @@ final class HybridPreviewView: HybridPreviewViewSpec {
+   }
+ 
+   private func updatePreviewLayer() {
+-    DispatchQueue.main.async {
++    // PATCH (bc-wallet-mobile): inline when already on the main thread. React Native sets view props
++    // on the main thread inside its mount transaction, so the layer then joins the tree in the same
++    // transaction that inserts the view, before any session mutation queued afterwards (see
++    // HybridCameraSession.afterMainOnSessionQueue) can attach a session to it.
++    if Thread.isMainThread {
++      updatePreviewLayerOnMain()
++    } else {
++      DispatchQueue.main.async { self.updatePreviewLayerOnMain() }
++    }
++  }
++
++  private func updatePreviewLayerOnMain() {
++    do {
+       if let previewLayer = self.previewLayer {
+         // Remove all sublayers that are not our AVCaptureVideoPreviewLayer
+         self.view.layer.sublayers?.removeAll { $0 != previewLayer }
 diff --git a/lib/hooks/internal/useCameraController.d.ts b/lib/hooks/internal/useCameraController.d.ts
 index b1eb315922c9d911825e17468d682a96c9ac51f0..8440a3866f23b2e600ded9ab4843d598183a6809 100644
 --- a/lib/hooks/internal/useCameraController.d.ts

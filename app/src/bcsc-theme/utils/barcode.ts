@@ -28,7 +28,8 @@ export const buildBarcodePayload = (
       birthdate: license.birthDate ? formatDate(license.birthDate) : '',
       expires: license.expiryDate ? formatDate(license.expiryDate) : '',
       address: {
-        street_address: license.streetAddress ?? '',
+        // Lines joined the way the residential address form joins them on submit.
+        street_address: [license.streetAddress, license.streetAddress2].filter(Boolean).join('\n'),
         locality: license.city ?? '',
         province: license.province ?? '',
         postal_code: license.postalCode ?? '',
