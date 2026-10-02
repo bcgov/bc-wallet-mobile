@@ -123,6 +123,9 @@ jest.mock('react-native-keyboard-controller', () => {
   const { ScrollView } = jest.requireActual('react-native')
   return {
     KeyboardAwareScrollView: ScrollView,
+    KeyboardEvents: {
+      addListener: () => ({ remove: () => {} }),
+    },
   }
 })
 

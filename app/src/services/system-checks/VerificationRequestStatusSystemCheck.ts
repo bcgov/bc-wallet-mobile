@@ -1,4 +1,5 @@
 import { VerificationStatusResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { VerificationRequestStatus } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
@@ -15,7 +16,7 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
   private readonly getVerificationRequestStatus: () => Promise<VerificationStatusResponseData>
   private readonly checkDeviceCodeStatus: () => Promise<unknown>
   private readonly utils: SystemCheckUtils
-  private status: 'pending' | 'cancelled' | 'verified' | null = null
+  private status: VerificationRequestStatus | null = null
   private statusMessage: string | undefined = undefined
 
   constructor(
@@ -31,7 +32,7 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
   async runCheck(): Promise<boolean> {
     const { status, status_message } = await this.getVerificationRequestStatus()
 
-    if (status === 'pending' || status === 'cancelled') {
+    if (status === VerificationRequestStatus.PENDING || status === VerificationRequestStatus.CANCELLED) {
       this.status = status
       this.statusMessage = status_message
       return false
@@ -39,7 +40,7 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
 
     // 'verified' — mirror the push notification (useVerificationResponseListener)
     await this.checkDeviceCodeStatus()
-    this.status = 'verified'
+    this.status = VerificationRequestStatus.VERIFIED
     return true
   }
 

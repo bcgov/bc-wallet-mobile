@@ -40,6 +40,15 @@ const conflictError = new AppError(
   }
 )
 
+const busyError = new AppError(
+  'Call volume reached',
+  { category: ErrorCategory.GENERAL, appEvent: AppEventCode.GENERAL, statusCode: 2000 },
+  {
+    cause: new AxiosError('Call volume reached', 'ERR_BAD_RESPONSE', undefined, undefined, { status: 553 } as any),
+    track: false,
+  }
+)
+
 describe('useVideoCallFlow', () => {
   const video = { createVideoSession: jest.fn(), endVideoSession: jest.fn(), updateVideoCallStatus: jest.fn() }
   const uploadSelfiePhoto = jest.fn()
@@ -99,6 +108,40 @@ describe('useVideoCallFlow', () => {
     expect(processAdditionalEvidence).not.toHaveBeenCalled()
     expect(uploadEvidenceBinaries).not.toHaveBeenCalled()
     expect(video.createVideoSession).not.toHaveBeenCalled()
+  })
+
+  it('ignores a busy reply to session creation that arrives after the user cancelled', async () => {
+    uploadSelfiePhoto.mockResolvedValueOnce(undefined)
+    const session = deferred()
+    video.createVideoSession.mockReturnValueOnce(session.promise)
+    const { result } = renderHook(() => useVideoCallFlow(jest.fn()))
+    let pending!: Promise<void>
+    await act(async () => {
+      pending = result.current.startVideoCall()
+    })
+    expect(result.current.flowState).toBe(VideoCallFlowState.CREATING_SESSION)
+    await act(async () => {
+      await result.current.cleanup()
+    })
+
+    await act(async () => {
+      session.reject(busyError)
+      await pending
+    })
+
+    expect(result.current.serviceUnavailable).toBeNull()
+  })
+
+  it('still reports a busy service when setup was not cancelled', async () => {
+    uploadSelfiePhoto.mockResolvedValueOnce(undefined)
+    video.createVideoSession.mockRejectedValueOnce(busyError)
+    const { result } = renderHook(() => useVideoCallFlow(jest.fn()))
+
+    await act(async () => {
+      await result.current.startVideoCall()
+    })
+
+    expect(result.current.serviceUnavailable).toEqual({ busy: true })
   })
 
   it('still recovers from a 409 when setup was not cancelled', async () => {

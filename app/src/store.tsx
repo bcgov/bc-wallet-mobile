@@ -1,4 +1,4 @@
-import { Mode } from '@/constants'
+import { Mode, VerificationRequestStatus } from '@/constants'
 import {
   reducer as bifoldReducer,
   State as BifoldState,
@@ -177,7 +177,7 @@ export interface BCSCSecureState {
   /** SHA hash for verification request */
   verificationRequestSha?: string
   /** Status of a submitted verification request, as last reported by the server */
-  verificationRequestStatus?: 'pending' | 'cancelled' | 'verified'
+  verificationRequestStatus?: VerificationRequestStatus
   /** Optional message accompanying a cancelled verification request */
   verificationRequestStatusMessage?: string
   /** Available verification options from authorization request */

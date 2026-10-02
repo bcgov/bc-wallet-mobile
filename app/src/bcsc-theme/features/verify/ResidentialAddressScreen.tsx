@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { DropdownWithValidation } from '@/bcsc-theme/components/DropdownWithValidation'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { PROVINCE_OPTIONS } from '@/bcsc-theme/utils/address-utils'
 import { TestIds } from '@/test-ids/registry'
@@ -14,12 +15,18 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
-import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { TextInput } from 'react-native'
-import useResidentialAddressModel from './_models/useResidentialAddressModel'
+import useResidentialAddressModel, { ResidentialAddressFormState } from './_models/useResidentialAddressModel'
 
 type ResidentialAddressScreenProps = StackScreenProps<BCSCVerifyStackParams, BCSCScreens.ResidentialAddress>
+
+const FIELD_ORDER: (keyof ResidentialAddressFormState)[] = [
+  'streetAddress',
+  'streetAddress2',
+  'city',
+  'province',
+  'postalCode',
+]
 
 /**
  * Screen for collecting residential address information from the user.
@@ -30,9 +37,12 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
-  const postalCodeRef = useRef<TextInput>(null)
+  const { scrollViewRef, inputRefs, onFieldLayout, focusFirstInvalidField } = useFocusFirstInvalidField(FIELD_ORDER)
 
-  const { formState, formErrors, isSubmitting, handleChange, handleSubmit } = useResidentialAddressModel({ navigation })
+  const { formState, formErrors, isSubmitting, handleChange, handleSubmit } = useResidentialAddressModel({
+    navigation,
+    onInvalidSubmit: focusFirstInvalidField,
+  })
 
   const labelProps = { color: ColorPalette.brand.primary }
 
@@ -56,6 +66,7 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
       keyboardActive
       padded={false}
       controls={controls}
+      scrollViewRef={scrollViewRef}
       scrollViewContainerStyle={{
         flexGrow: 1,
         gap: Spacing.sm,
@@ -66,6 +77,7 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
       <ThemedText>{t('BCSC.Address.Paragraph')}</ThemedText>
 
       <InputWithValidation
+        ref={inputRefs.streetAddress}
         id={'streetAddress1'}
         label={t('BCSC.Address.StreetAddressLabel')}
         labelProps={labelProps}
@@ -73,9 +85,11 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         onChange={(value) => handleChange('streetAddress', value)}
         error={formErrors.streetAddress}
         textInputProps={{ autoCorrect: false, autoComplete: 'address-line1', textContentType: 'streetAddressLine1' }}
+        onLayout={onFieldLayout('streetAddress')}
       />
 
       <InputWithValidation
+        ref={inputRefs.streetAddress2}
         id={'streetAddress2'}
         label={t('BCSC.Address.StreetAddress2Label')}
         labelProps={labelProps}
@@ -83,9 +97,11 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         onChange={(value) => handleChange('streetAddress2', value)}
         error={formErrors.streetAddress2}
         textInputProps={{ autoCorrect: false, autoComplete: 'address-line2', textContentType: 'streetAddressLine2' }}
+        onLayout={onFieldLayout('streetAddress2')}
       />
 
       <InputWithValidation
+        ref={inputRefs.city}
         id={'city'}
         label={t('BCSC.Address.CityLabel')}
         labelProps={labelProps}
@@ -93,6 +109,7 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         onChange={(value) => handleChange('city', value)}
         error={formErrors.city}
         textInputProps={{ autoCorrect: false, autoComplete: 'postal-address-locality', textContentType: 'addressCity' }}
+        onLayout={onFieldLayout('city')}
       />
 
       <DropdownWithValidation
@@ -105,16 +122,17 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         onModalClose={() => {
           if (!formState.postalCode) {
             // Focus the postal code input after the province dropdown is closed, if postal code is empty
-            postalCodeRef.current?.focus()
+            inputRefs.postalCode.current?.focus()
           }
         }}
         error={formErrors.province}
         placeholder={t('BCSC.Address.ProvincePlaceholder')}
         subtext={t('BCSC.Address.ProvinceSubtext')}
+        onLayout={onFieldLayout('province')}
       />
 
       <InputWithValidation
-        ref={postalCodeRef}
+        ref={inputRefs.postalCode}
         id={'postalCode'}
         label={t('BCSC.Address.PostalCodeLabel')}
         labelProps={labelProps}
@@ -128,6 +146,7 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
           autoComplete: 'postal-code',
           textContentType: 'postalCode',
         }}
+        onLayout={onFieldLayout('postalCode')}
       />
     </ScreenWrapper>
   )

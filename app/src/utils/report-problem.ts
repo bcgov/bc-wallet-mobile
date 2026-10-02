@@ -1,6 +1,7 @@
 import { getNavigationBreadcrumbs } from '@/bcsc-theme/navigators/stack-utils'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppError } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios from 'axios'
 import {
@@ -9,6 +10,7 @@ import {
   getDeviceId,
   getModel,
   getSystemName,
+  getSystemVersion,
   getVersion,
 } from 'react-native-device-info'
 import { ReportProblem } from './logger'
@@ -91,12 +93,14 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
         stream: {
           job: LOKI_REPORT_PROBLEM_JOB,
           level: LOKI_REPORT_PROBLEM_LOG_LEVEL,
+          type: _getReportProblemType(problem),
           environment: __DEV__ ? 'development' : 'production',
           application: getApplicationName().toLowerCase(),
           version: getVersion(),
           build: getBuildNumber(),
           version_build: `${getVersion()}-${getBuildNumber()}`,
           system: getSystemName().toLowerCase(),
+          os: getSystemVersion(),
           device: getDeviceId(),
           model: getModel(),
         },
@@ -134,4 +138,17 @@ const _flattenAppError = (error?: AppError) => {
   flattened.error_json = error.toJSON()
 
   return flattened
+}
+
+/**
+ * Determines the type of the reported problem
+ * @param problem The reported problem
+ * @returns 'user_report' if the problem is a user report, 'app_error' if the problem is an app error
+ */
+const _getReportProblemType = (problem: ReportProblem) => {
+  if (problem.code === 0 || problem.error?.appEvent === AppEventCode.REPORT_PROBLEM) {
+    return 'user_report'
+  }
+
+  return 'app_error'
 }
