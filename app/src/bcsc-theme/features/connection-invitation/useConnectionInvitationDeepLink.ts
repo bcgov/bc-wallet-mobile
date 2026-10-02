@@ -3,12 +3,11 @@ import { TOKENS, useServices } from '@bifold/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Toast from 'react-native-toast-message'
-
 import { BCSCMainStackParams, BCSCScreens } from '../../types/navigators'
-import { DidCommOobStrategy } from '../qr-core/uri-strategies'
+import { useDidCommOobQRCodeStrategy } from '../qr-core/qr-code-strategies/useDidCommOobQRCodeStrategy'
 import { useConnectionInvitationService } from './ConnectionInvitationServiceContext'
 
 /**
@@ -29,6 +28,15 @@ export const useConnectionInvitationDeepLink = (): void => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null)
+
+  const onConnectionFound = useCallback(
+    (oobRecordId: string) => {
+      navigation.navigate(BCSCScreens.ConnectionLoading, { oobRecordId: oobRecordId })
+    },
+    [navigation]
+  )
+
+  const didCommOobStrategy = useDidCommOobQRCodeStrategy(onConnectionFound)
 
   useEffect(() => service.onInvitation(({ url }) => setInvitationUrl(url)), [service])
 
@@ -69,24 +77,8 @@ export const useConnectionInvitationDeepLink = (): void => {
       }
 
       try {
-        const result = await DidCommOobStrategy.handle(invitationUrl, { agent, logger })
-        if (cancelled) {
-          return
-        }
+        await didCommOobStrategy.handle(invitationUrl)
         setInvitationUrl(null)
-
-        switch (result.kind) {
-          case 'connection':
-            navigation.navigate(BCSCScreens.ConnectionLoading, { oobRecordId: result.oobRecordId })
-            break
-          case 'unsupported':
-            Toast.show({ type: 'error', text1: t(`BCSC.Scan.Unsupported.${result.reason}`) })
-            break
-          default:
-            logger.warn(`[ConnectionInvitationDeepLink] invitation not actionable: ${result.kind}`)
-            Toast.show({ type: 'error', text1: t('BCSC.Scan.InvalidConnectionInvitation') })
-            break
-        }
       } catch (err) {
         if (cancelled) {
           return
@@ -102,5 +94,5 @@ export const useConnectionInvitationDeepLink = (): void => {
     return () => {
       cancelled = true
     }
-  }, [invitationUrl, agent, loading, navigation, logger, t])
+  }, [invitationUrl, agent, loading, navigation, logger, t, didCommOobStrategy])
 }
