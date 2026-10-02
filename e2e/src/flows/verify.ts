@@ -851,22 +851,66 @@ export async function exerciseInCallControls(): Promise<void> {
 
 export type LiveCallExit = 'cancelled' | 'ended'
 
+type LiveCallExitControl = { screen: typeof LiveCallScreen | typeof LiveCallLoadingScreen; exit: LiveCallExit }
+
+/** The exit the call has reached, `undefined` while it is still leaving. Throws on a wrong destination. */
+async function reachedLiveCallExit(requestedExit: LiveCallExit | undefined): Promise<LiveCallExit | undefined> {
+  if (await VerificationSuccessScreen.isPresent(500)) {
+    throw new Error(
+      'The live call ended VERIFIED (VerificationSuccess) — an SIT agent approved the request. ' +
+        'Record the changed Test Harness queue behavior and extend the journey to full completion.'
+    )
+  }
+  if (await VerifyNotCompleteScreen.isPresent(500)) {
+    if (requestedExit === 'cancelled') {
+      throw new Error('Cancelling call setup reached VerifyNotComplete instead of StartCall')
+    }
+    return 'ended'
+  }
+  return undefined
+}
+
+async function availableLiveCallExit(connected: boolean, waiting: boolean): Promise<LiveCallExitControl | undefined> {
+  if (connected) {
+    return { screen: LiveCallScreen, exit: 'ended' }
+  }
+  if (waiting && (await LiveCallLoadingScreen.isVisible('cancel'))) {
+    return { screen: LiveCallLoadingScreen, exit: 'cancelled' }
+  }
+  return undefined
+}
+
+/** Taps EndCall or the delayed Cancel; `undefined` means nothing was tapped and the screen should be re-read. */
+async function requestLiveCallExit(connected: boolean, waiting: boolean): Promise<LiveCallExit | undefined> {
+  const control = await availableLiveCallExit(connected, waiting)
+  if (!control) {
+    return undefined
+  }
+  try {
+    await control.screen.tapWhenEnabled('primary', 1_000)
+    return control.exit
+  } catch (error) {
+    // The agent can answer or hang up between the presence check and the tap. Retry only if that face left.
+    if (await control.screen.isPresent(500)) {
+      throw error
+    }
+    return undefined
+  }
+}
+
+async function liveCallExitTimeout(requestedExit: LiveCallExit | undefined): Promise<Error> {
+  const destination = requestedExit === 'cancelled' ? 'StartCall' : 'VerifyNotComplete'
+  return new Error(`Leaving the live call did not reach ${destination}. On screen: ${await describeCurrentScreen()}`)
+}
+
 /** Returns the observed exit: Cancel returns to StartCall; an ended, unverified call reaches VerifyNotComplete. */
 export async function leaveLiveCall(): Promise<LiveCallExit> {
   let requestedExit: LiveCallExit | undefined
   let deadline = Date.now() + Timeouts.APP_LAUNCH
   for (;;) {
-    if (await VerificationSuccessScreen.isPresent(500)) {
-      throw new Error(
-        'The live call ended VERIFIED (VerificationSuccess) — an SIT agent approved the request. ' +
-          'Record the changed Test Harness queue behavior and extend the journey to full completion.'
-      )
-    }
-    if (await VerifyNotCompleteScreen.isPresent(500)) {
-      if (requestedExit === 'cancelled') {
-        throw new Error('Cancelling call setup reached VerifyNotComplete instead of StartCall')
-      }
-      return 'ended'
+    const reached = await reachedLiveCallExit(requestedExit)
+    if (reached) {
+      return reached
     }
 
     const connected = await LiveCallScreen.isPresent(500)
@@ -877,30 +921,14 @@ export async function leaveLiveCall(): Promise<LiveCallExit> {
     }
 
     if (!requestedExit) {
-      const action = connected
-        ? { screen: LiveCallScreen, exit: 'ended' as const }
-        : waiting && (await LiveCallLoadingScreen.isVisible('cancel'))
-          ? { screen: LiveCallLoadingScreen, exit: 'cancelled' as const }
-          : undefined
-      if (action) {
-        try {
-          await action.screen.tapWhenEnabled('primary', 1_000)
-          requestedExit = action.exit
-          // Cleanup includes network requests; give the destination its own budget after the delayed button.
-          deadline = Date.now() + Timeouts.APP_LAUNCH
-        } catch (error) {
-          // The agent can answer or hang up between the presence check and the tap. Retry only if that face left.
-          if (await action.screen.isPresent(500)) {
-            throw error
-          }
-        }
+      requestedExit = await requestLiveCallExit(connected, waiting)
+      if (requestedExit) {
+        // Cleanup includes network requests; give the destination its own budget after the delayed button.
+        deadline = Date.now() + Timeouts.APP_LAUNCH
       }
     }
     if (Date.now() > deadline) {
-      throw new Error(
-        `Leaving the live call did not reach ${requestedExit === 'cancelled' ? 'StartCall' : 'VerifyNotComplete'}. ` +
-          `On screen: ${await describeCurrentScreen()}`
-      )
+      throw await liveCallExitTimeout(requestedExit)
     }
   }
 }
