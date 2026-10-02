@@ -416,7 +416,6 @@ export const UAT_CHECKLIST: CoverageSection[] = [
             tests: ['has developer mode off by default: the Developer options row is absent'],
           },
           { file: spec('upgrade/upgrade.spec.ts'), tests: [DEV_MODE_OFF_AFTER_UPGRADE] },
-          { file: spec('upgrade/upgrade-from-v403.spec.ts'), tests: [DEV_MODE_OFF_AFTER_UPGRADE] },
           { ...upgradeWrapper('upgrade-verified', 'verified'), tests: [DEV_MODE_OFF_AFTER_UPGRADE] },
           { ...upgradeWrapper('upgrade-verified-v403', 'verified'), tests: [DEV_MODE_OFF_AFTER_UPGRADE] },
           {
