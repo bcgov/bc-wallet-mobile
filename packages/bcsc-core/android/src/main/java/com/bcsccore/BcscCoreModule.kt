@@ -2661,25 +2661,32 @@ class BcscCoreModule internal constructor(
                 subtitle,
             ) { result ->
                 when (result) {
-                    DeviceAuthenticationResult.SUCCESS -> {
+                    DeviceAuthenticationResult.Success -> {
                         Log.d(NAME, "performDeviceAuthentication: success")
                         promise.resolve(true)
                     }
 
-                    DeviceAuthenticationResult.CANCELLED -> {
-                        Log.d(NAME, "performDeviceAuthentication: cancelled")
+                    is DeviceAuthenticationResult.Cancelled -> {
+                        Log.d(NAME, "performDeviceAuthentication: cancelled: ${result.describe()}")
                         promise.reject("E_DEVICE_AUTH_CANCELLED", "Device authentication was cancelled by user")
                     }
 
-                    DeviceAuthenticationResult.FAILED -> {
+                    DeviceAuthenticationResult.Failed -> {
                         // Intermediate biometric failure (e.g. wrong finger) — prompt is
                         // still open so do not settle the promise.
                         Log.d(NAME, "performDeviceAuthentication: intermediate biometric failure, awaiting retry")
                     }
 
-                    DeviceAuthenticationResult.ERROR -> {
-                        Log.e(NAME, "performDeviceAuthentication: failed")
-                        promise.reject("E_DEVICE_AUTH_ERROR", "Device authentication failed")
+                    is DeviceAuthenticationResult.Unavailable -> {
+                        val detail = result.describe()
+                        Log.e(NAME, "performDeviceAuthentication: failed: $detail")
+                        promise.reject("E_DEVICE_AUTH_ERROR", "Device authentication failed: $detail")
+                    }
+
+                    is DeviceAuthenticationResult.Error -> {
+                        val detail = result.describe()
+                        Log.e(NAME, "performDeviceAuthentication: failed: $detail")
+                        promise.reject("E_DEVICE_AUTH_ERROR", "Device authentication failed: $detail")
                     }
                 }
             }
@@ -2980,7 +2987,7 @@ class BcscCoreModule internal constructor(
                 subtitle,
             ) { authResult: DeviceAuthenticationResult ->
                 when (authResult) {
-                    DeviceAuthenticationResult.SUCCESS -> {
+                    DeviceAuthenticationResult.Success -> {
                         try {
                             backgroundExecutor.execute {
                                 try {
@@ -3028,22 +3035,29 @@ class BcscCoreModule internal constructor(
                         }
                     }
 
-                    DeviceAuthenticationResult.CANCELLED -> {
+                    is DeviceAuthenticationResult.Cancelled -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
+                        result.putString("reason", authResult.describe())
                         guarded.resolve(result)
                     }
 
-                    DeviceAuthenticationResult.FAILED -> {
+                    DeviceAuthenticationResult.Failed -> {
                         // Intermediate biometric failure (e.g. wrong finger) — prompt is
                         // still open so do not settle the promise.
                         Log.d(NAME, "unlockWithDeviceSecurity: intermediate biometric failure, awaiting retry")
                     }
 
-                    DeviceAuthenticationResult.ERROR -> {
-                        val result = Arguments.createMap()
-                        result.putBoolean("success", false)
-                        guarded.resolve(result)
+                    is DeviceAuthenticationResult.Unavailable -> {
+                        val detail = authResult.describe()
+                        Log.w(NAME, "unlockWithDeviceSecurity: device authentication unavailable: $detail")
+                        guarded.reject("E_DEVICE_AUTH_UNAVAILABLE", "Device authentication unavailable: $detail")
+                    }
+
+                    is DeviceAuthenticationResult.Error -> {
+                        val detail = authResult.describe()
+                        Log.e(NAME, "unlockWithDeviceSecurity: device authentication failed: $detail")
+                        guarded.reject("E_DEVICE_AUTH_FAILED", "Device authentication failed: $detail")
                     }
                 }
             }

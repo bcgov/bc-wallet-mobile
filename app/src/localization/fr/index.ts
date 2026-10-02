@@ -382,7 +382,8 @@ const translation = {
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
-      "AuthenticateToSecure": "Authenticate to secure your app (FR)"
+      "AuthenticateToSecure": "Authenticate to secure your app (FR)",
+      "UnlockPrompt": "Unlock your app (FR)"
     },
     "AppReset": {
       "Title": "App reset for security (FR)",

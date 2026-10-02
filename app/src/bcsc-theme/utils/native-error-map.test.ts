@@ -117,6 +117,11 @@ describe('native-error-map', () => {
     it('does not map E_DEVICE_AUTH_CANCELLED (user cancel is control flow, not an error)', () => {
       expect(nativeBcscErrorMap.get('E_DEVICE_AUTH_CANCELLED')).toBeUndefined()
     })
+
+    it('maps non-cancel unlock failures to device auth definitions', () => {
+      expect(nativeBcscErrorMap.get('E_DEVICE_AUTH_FAILED')).toBe(ErrorRegistry.DEVICE_AUTHENTICATION_ERROR)
+      expect(nativeBcscErrorMap.get('E_DEVICE_AUTH_UNAVAILABLE')).toBe(ErrorRegistry.DEVICE_AUTH_UNAVAILABLE)
+    })
   })
 
   describe('mapNativeBcscError', () => {
