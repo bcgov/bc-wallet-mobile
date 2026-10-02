@@ -1,4 +1,4 @@
-import useVerificationResponseViewModel from '@/bcsc-theme/features/verify/_models/useVerificationResponseViewModel'
+import useVerificationResponseViewModel from '@/bcsc-theme/features/verify/useVerificationResponseViewModel'
 import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRegistrationService'
 import * as useTokenServiceModule from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCDispatchAction, BCState } from '@/store'
