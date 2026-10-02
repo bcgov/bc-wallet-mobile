@@ -84,7 +84,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       // wrong. Show the error; the user can retry. The pre-prompt canPerformDeviceAuthentication()
       // check handles a truly unsecured device.
       const appError = mapNativeBcscError(error)
-      logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
+      logger.error(`[Authentication:runDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
     } finally {
       stopLoading?.()

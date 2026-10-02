@@ -640,6 +640,40 @@ describe('useAuthentication', () => {
 
       expect(unlockWithDeviceSecurity).toHaveBeenCalledTimes(2)
     })
+
+    it('allows a new attempt after the post-auth unlock (hydration) fails', async () => {
+      const mockAlert = jest.fn()
+      jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
+        deviceAuthenticationErrorAlert: jest.fn(),
+        problemWithAppAlert: mockAlert,
+      } as any)
+      const mockHandleSuccessfulAuth = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('hydration failed'))
+        .mockResolvedValueOnce(undefined)
+      jest.mocked(useSecureActionsModule.default).mockReturnValue({
+        handleSuccessfulAuth: mockHandleSuccessfulAuth,
+      } as any)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.DeviceAuth)
+      jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
+      jest.mocked(unlockWithDeviceSecurity).mockResolvedValue({ success: true, walletKey: 'key' })
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+
+      // The second tap re-prompts and re-runs the unlock; only the first failure is alerted
+      expect(unlockWithDeviceSecurity).toHaveBeenCalledTimes(2)
+      expect(mockHandleSuccessfulAuth).toHaveBeenCalledTimes(2)
+      expect(mockHandleSuccessfulAuth).toHaveBeenNthCalledWith(2, 'key')
+      expect(mockAlert).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('loading state', () => {
