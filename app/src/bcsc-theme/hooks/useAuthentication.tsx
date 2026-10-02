@@ -28,7 +28,7 @@ import useSecureActions from './useSecureActions'
 export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackParams>) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const loadingScreen = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
   const { handleSuccessfulAuth } = useSecureActions()
   const { deviceAuthenticationErrorAlert, problemWithAppAlert } = useAlerts(navigation)
   const isAuthInProgressRef = useRef(false)
@@ -55,9 +55,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
    */
   const runDeviceAuth = useCallback(async () => {
     let stopLoading
+    let stopStartupLoading
 
     try {
-      stopLoading = loadingScreen.startLoading()
+      stopLoading = startLoading()
 
       // Check if they have changed their device auth settings
       const deviceAuthAvailable = await canPerformDeviceAuthentication()
@@ -79,6 +80,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       }
 
       await completeUnlock(walletKey)
+      // The startup message waits for auth to succeed; the OS prompt sits over the generic overlay.
+      stopStartupLoading = startLoading(t('BCSC.Loading.AppStartup'))
+      await handleSuccessfulAuth(walletKey)
+      logger.info('[Authentication:performDeviceAuth] Device authentication successful')
     } catch (error) {
       // Never route to app reset from a prompt error: the OS code is a single-call signal and can be
       // wrong. Show the error; the user can retry. The pre-prompt canPerformDeviceAuthentication()
@@ -87,9 +92,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       logger.error(`[Authentication:runDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
     } finally {
+      stopStartupLoading?.()
       stopLoading?.()
     }
-  }, [completeUnlock, loadingScreen, logger, navigation, deviceAuthenticationErrorAlert, t])
+  }, [handleSuccessfulAuth, completeUnlock, startLoading, t, logger, navigation, deviceAuthenticationErrorAlert])
 
   /**
    * Runs `action` unless an unlock is already in progress, releasing the guard when it settles.
