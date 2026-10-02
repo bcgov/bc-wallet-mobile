@@ -57,23 +57,43 @@ describe('ScanSerialScreen onCodeScanned', () => {
     )
 
     const unknownCode: ScanableCode = { type: 'unknown', value: 'UNKNOWN-VALUE-1' }
+    const serial: ScanableCode = { type: 'code-39', value: 'K12345678' }
     const licence: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_S }
     const damaged: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_S.replace('00S00023254?', 'S00023254?') }
 
-    let accepted: void | boolean = undefined
+    let firstBatch: void | boolean = undefined
     await act(async () => {
-      accepted = await mockCamera.onCodeScanned?.([unknownCode, licence, damaged])
+      firstBatch = await mockCamera.onCodeScanned?.([unknownCode, serial, damaged])
     })
 
-    // The licence gives a birth date but no serial, so the camera keeps scanning.
-    expect(accepted).toBe(false)
+    // The serial is captured but there is no birth date yet, so the camera keeps scanning.
+    expect(firstBatch).toBe(false)
     expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
     expect(mockHandleScanComboCard).not.toHaveBeenCalled()
 
+    let secondBatch: void | boolean = undefined
+    await act(async () => {
+      secondBatch = await mockCamera.onCodeScanned?.([licence])
+    })
+
+    expect(secondBatch).toBe(true)
+    expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: new Date(1982, 0, 4) })
+    expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
+
     const loggedArguments = JSON.stringify(debugSpy.mock.calls)
-    for (const sensitive of ['UNKNOWN-VALUE-1', BC_DL_BARCODE_S, 'S00023254', 'SPECIMEN', 'specimen', '2222222']) {
+    for (const sensitive of [
+      'UNKNOWN-VALUE-1',
+      'K12345678',
+      BC_DL_BARCODE_S,
+      'S00023254',
+      'SPECIMEN',
+      'specimen',
+      '2222222',
+    ]) {
       expect(loggedArguments).not.toContain(sensitive)
     }
+    expect(loggedArguments).toContain('"source":"1d"')
+    expect(loggedArguments).toContain('"source":"pdf417"')
     expect(loggedArguments).toContain('"reason":"damaged"')
   })
 })

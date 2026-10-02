@@ -3,17 +3,13 @@ import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuth
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BC_DL_BARCODE_NO_DCN_A, BC_DL_BARCODE_S } from '@/bcsc-theme/utils/__fixtures__/barcodes'
 import { ScanableCode } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-
-const BC_DL_BARCODE_NO_DCN_A =
-  "%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
-const BC_DL_BARCODE_S =
-  '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU                          00S00023254?'
 
 jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
@@ -337,10 +333,11 @@ describe('useCardScanner', () => {
       const notASerial: ScanableCode = { type: 'code-39', value: '123456789' }
       const damaged: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_S.replace('00S00023254?', 'S00023254?') }
 
-      await scanCard([licenceWithSerial, notASerial, damaged], handleCardData)
+      await scanCard([licenceWithSerial, serial1D, notASerial, damaged], handleCardData)
 
       const logged = JSON.stringify(debug.mock.calls)
       expect(logged).toContain('"source":"pdf417"')
+      expect(logged).toContain('"source":"1d"')
       expect(logged).toContain('"reason":"unsupported"')
       expect(logged).toContain('"reason":"damaged"')
       for (const sensitive of [

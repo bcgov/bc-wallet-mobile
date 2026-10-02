@@ -9,7 +9,7 @@ import {
   BC_DL_BARCODE_NO_DCN_A,
   BC_DL_BARCODE_NO_DCN_B,
   BC_DL_BARCODE_S,
-  VALID_BC_DL_BARCODES,
+  VALID_BC_CARD_BARCODES,
 } from '@/bcsc-theme/utils/__fixtures__/barcodes'
 import {
   decodeCardBarcode,
@@ -68,7 +68,7 @@ describe('decodeCardBarcode', () => {
       })
     })
 
-    it.each(VALID_BC_DL_BARCODES)('decodes every shared fixture as a PDF-417 card: %s', (barcode) => {
+    it.each(VALID_BC_CARD_BARCODES)('decodes every shared fixture as a PDF-417 card: %s', (barcode) => {
       expect(decodeCardBarcode(pdf417(barcode)).source).toBe('pdf417')
     })
 

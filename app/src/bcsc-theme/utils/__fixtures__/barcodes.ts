@@ -2,8 +2,9 @@
  * Shared PDF-417 fixtures for the card barcode suites. All values are BC "SPECIMEN"
  * test cards, not real credentials.
  *
- * Names give the card type and the prefix letter of the DCN in the security field; NO_DCN
- * means that field holds none.
+ * The base fixtures are named for the card type and the prefix letter of the DCN in the security
+ * field; NO_DCN means that field holds none. The name-parsing variants derived from the legacy
+ * card (MULTIWORD_LASTNAME, MONONYM) are named for what they vary and also hold no DCN.
  *
  * Only the one value containing a backslash uses String.raw; the rest are plain
  * strings so the tag is a signal rather than noise.
@@ -47,7 +48,7 @@ export const BC_DL_BARCODE_MONONYM =
 export const BC_DL_BARCODE_MONONYM_NO_DOLLAR =
   "%BCVICTORIA^CHER,^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
 
-export const VALID_BC_DL_BARCODES = [
+export const VALID_BC_CARD_BARCODES = [
   BC_DL_BARCODE_NO_DCN_A,
   BC_DL_BARCODE_NO_DCN_B,
   BC_DL_BARCODE_S,
