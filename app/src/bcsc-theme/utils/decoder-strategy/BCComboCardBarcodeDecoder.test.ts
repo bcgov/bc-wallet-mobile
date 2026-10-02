@@ -1,9 +1,9 @@
 import { BCComboCardBarcodeDecoder } from '@/bcsc-theme/utils/decoder-strategy/BCComboCardBarcodeDecoder'
 import { DriversLicenseBarcode, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import {
-  BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
-  BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
-  BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+  BC_DL_BARCODE_NO_DCN_A,
+  BC_DL_BARCODE_NO_DCN_B,
+  BC_DL_BARCODE_S,
 } from '@/bcsc-theme/utils/__fixtures__/barcodes'
 
 describe('BCComboCardBarcodeDecoder', () => {
@@ -13,7 +13,7 @@ describe('BCComboCardBarcodeDecoder', () => {
 
       const barcode: DriversLicenseBarcode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+        value: BC_DL_BARCODE_S,
       }
 
       expect(decoder.canDecode(barcode)).toBe(true)
@@ -23,7 +23,7 @@ describe('BCComboCardBarcodeDecoder', () => {
       const decoder = new BCComboCardBarcodeDecoder()
       const barcode: ScanableCode = {
         type: 'unknown',
-        value: BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+        value: BC_DL_BARCODE_S,
       }
 
       expect(decoder.canDecode(barcode)).toBe(false)
@@ -43,14 +43,14 @@ describe('BCComboCardBarcodeDecoder', () => {
       const decoder = new BCComboCardBarcodeDecoder()
       const barcode: DriversLicenseBarcode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+        value: BC_DL_BARCODE_NO_DCN_A,
       }
 
       expect(decoder.canDecode(barcode)).toBe(false)
 
       const barcodeB: DriversLicenseBarcode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
+        value: BC_DL_BARCODE_NO_DCN_B,
       }
 
       expect(decoder.canDecode(barcodeB)).toBe(false)
@@ -63,7 +63,7 @@ describe('BCComboCardBarcodeDecoder', () => {
 
       const barcode: DriversLicenseBarcode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+        value: BC_DL_BARCODE_S,
       }
 
       const decoded = decoder.decode(barcode)

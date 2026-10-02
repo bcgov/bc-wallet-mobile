@@ -1,10 +1,10 @@
 import { DriversLicenseBarcode, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { DriversLicenseBarcodeDecoder } from '@/bcsc-theme/utils/decoder-strategy/DriversLicenseBarcodeDecoder'
 import {
-  BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
-  BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
-  BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
-  BC_DL_BARCODE_3_CARET,
+  BC_DL_BARCODE_NO_DCN_A,
+  BC_DL_BARCODE_NO_DCN_B,
+  BC_DL_BARCODE_S,
+  BC_BCSC_BARCODE_C,
   BC_DL_BARCODE_MONONYM,
   BC_DL_BARCODE_MONONYM_NO_DOLLAR,
   BC_DL_BARCODE_MULTIWORD_LASTNAME_NO_MIDDLE,
@@ -29,7 +29,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
       const decoder = new DriversLicenseBarcodeDecoder()
       const barcode: ScanableCode = {
         type: 'unknown',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+        value: BC_DL_BARCODE_NO_DCN_A,
       }
 
       expect(decoder.canDecode(barcode)).toBe(false)
@@ -52,7 +52,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       const barcode: DriversLicenseBarcode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+        value: BC_DL_BARCODE_NO_DCN_A,
       }
 
       const decoded = decoder.decode(barcode)
@@ -77,7 +77,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
       const decoder = new DriversLicenseBarcodeDecoder()
       const barcode: DriversLicenseBarcode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
+        value: BC_DL_BARCODE_NO_DCN_B,
       }
 
       const decoded = decoder.decode(barcode)
@@ -102,7 +102,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
       const decoder = new DriversLicenseBarcodeDecoder()
       const barcode: DriversLicenseBarcode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+        value: BC_DL_BARCODE_S,
       }
 
       const decoded = decoder.decode(barcode)
@@ -138,7 +138,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       const barcode: DriversLicenseBarcode = {
         type: 'pdf-417',
-        value: BC_DL_BARCODE_3_CARET,
+        value: BC_BCSC_BARCODE_C,
       }
 
       const decoded = decoder.decode(barcode)
@@ -226,7 +226,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
       }
 
       const withCity = (fieldCity: string, cityLine: string, postalCode: string) =>
-        BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('%BCVICTORIA^', `%BC${fieldCity}`)
+        BC_DL_BARCODE_S.replace('%BCVICTORIA^', `%BC${fieldCity}`)
           .replace('VICTORIA BC  V8W 3Y8', cityLine)
           .replace('0AV8W3Y8', `0A${postalCode}`)
 
@@ -256,7 +256,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       it('reads a 35-character name, which has no separator', () => {
         const name = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ,$JOHN AB'
-        const decoded = decode(BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('SPECIMEN,$TEST CARD^', name))
+        const decoded = decode(BC_DL_BARCODE_S.replace('SPECIMEN,$TEST CARD^', name))
 
         expect(decoded).toMatchObject({
           lastName: 'abcdefghijklmnopqrstuvwxyz',
@@ -268,7 +268,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       it('reads a one-line address', () => {
         const decoded = decode(
-          BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8', 'VICTORIA BC  V8W 3Y8')
+          BC_DL_BARCODE_S.replace('910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8', 'VICTORIA BC  V8W 3Y8')
         )
 
         expect(decoded).toMatchObject({ streetAddress: '', city: 'victoria', province: 'BC', postalCode: 'V8W3Y8' })
@@ -282,7 +282,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       it('reads a three-line address', () => {
         const decoded = decode(
-          BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace(
+          BC_DL_BARCODE_S.replace(
             '910 GOVERNMENT ST$VICTORIA',
             'UNIT 5$910 GOVERNMENT ST$VICTORIA'
           )
@@ -301,14 +301,14 @@ describe('DriversLicenseBarcodeDecoder', () => {
         ['a non-leap year', '2702', '2027-02-28'],
         ['a leap year', '2802', '2028-02-29'],
       ])('sets a Feb 29 birthday expiring in %s to the last day of February', (_, expiry, expiryDate) => {
-        const decoded = decode(BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('=260119820104=', `=${expiry}19880229=`))
+        const decoded = decode(BC_DL_BARCODE_S.replace('=260119820104=', `=${expiry}19880229=`))
 
         expect(decoded.birthDate).toEqual(new Date('1988-02-29'))
         expect(decoded.expiryDate).toEqual(new Date(expiryDate))
       })
 
       it('sets the expiry to the last day of a 30-day month', () => {
-        const decoded = decode(BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C.replace('=260119820104=', '=270419850410='))
+        const decoded = decode(BC_DL_BARCODE_S.replace('=260119820104=', '=270419850410='))
 
         expect(decoded.expiryDate).toEqual(new Date('2027-04-30'))
       })
@@ -327,7 +327,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
         const decoder = new DriversLicenseBarcodeDecoder()
         const barcode: DriversLicenseBarcode = {
           type: 'pdf-417',
-          value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
+          value: BC_DL_BARCODE_NO_DCN_B,
         }
 
         const decoded = decoder.decode(barcode)

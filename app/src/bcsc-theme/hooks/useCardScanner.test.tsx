@@ -10,9 +10,9 @@ import * as navigation from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
-const BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A =
+const BC_DL_BARCODE_NO_DCN_A =
   "%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
-const BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C =
+const BC_DL_BARCODE_S =
   '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU                          00S00023254?'
 
 jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
@@ -89,7 +89,7 @@ describe('useCardScanner', () => {
       }
       const mockBarcode: ScanableCode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+        value: BC_DL_BARCODE_S,
       }
       const mockHandleCardData = jest.fn()
 
@@ -135,7 +135,7 @@ describe('useCardScanner', () => {
       }
       const mockBarcode: ScanableCode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+        value: BC_DL_BARCODE_NO_DCN_A,
       }
       const mockHandleCardData = jest.fn()
 
@@ -180,7 +180,7 @@ describe('useCardScanner', () => {
       }
       const mockDLBarcode: ScanableCode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+        value: BC_DL_BARCODE_NO_DCN_A,
       }
       const mockBCSCBarcode: ScanableCode = {
         type: 'code-39',
@@ -237,7 +237,7 @@ describe('useCardScanner', () => {
       }
       const pdf417DL: ScanableCode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+        value: BC_DL_BARCODE_NO_DCN_A,
       }
       const mockHandleCardData = jest.fn()
 
