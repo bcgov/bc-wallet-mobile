@@ -9,8 +9,8 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
-import { getLiveCallVideoQueue } from '../live-call/utils/videoDestinations'
-import { VerificationVideoCache } from '../send-video/VideoReviewScreen'
+import { getLiveCallVideoQueue } from './live-call/utils/videoDestinations'
+import { VerificationVideoCache } from './send-video/VideoReviewScreen'
 
 type useVerificationMethodModelProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationMethodSelection>

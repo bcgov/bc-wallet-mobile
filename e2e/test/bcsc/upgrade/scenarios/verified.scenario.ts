@@ -2,6 +2,7 @@ import { Timeouts } from '../../../../src/constants.js'
 import { unlockWithPin } from '../../../../src/flows/auth.js'
 import {
   expectAccountDetailsReadBack,
+  expectDeveloperModeOffInSettings,
   expectServicesCatalogueOpens,
   expectVerifiedInSettings,
   loginWithPairingCode,
@@ -18,8 +19,9 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  *
  * A lost credential (or a verified account read back as unverified) is the worst thing an update can
  * do to a real user, and the base upgrade spec only checks the PIN + auto-lock survive. After the swap
- * this asserts verified Home: Settings shows the Profile row, AccountDetails reads back, the Services
- * tab opens the catalogue (not the verify prompt), and one pairing-code login succeeds server-side.
+ * this asserts verified Home: Settings shows the Profile row and still no Developer options row,
+ * AccountDetails reads back, the Services tab opens the catalogue (not the verify prompt), and one
+ * pairing-code login succeeds server-side.
  *
  * `prev` drives the previous build (its onboarding and verify screens differ per release); the
  * binary-swap proof itself lives in the base upgrade spec, so this spends its budget on the state.
@@ -66,6 +68,11 @@ export function defineVerifiedUpgrade(prev: PrevBuild): void {
     // The Profile row (→ AccountDetails) is verified-gated, so its presence proves the account is
     // still verified after the swap — not merely that the app unlocked.
     await expectVerifiedInSettings()
+  })
+
+  it('keeps developer mode off across the upgrade: the Developer options row is absent', async () => {
+    // Never turned on before the swap, so the persisted preference must read back as off.
+    await expectDeveloperModeOffInSettings()
   })
 
   it('reads back Account Details', async () => {

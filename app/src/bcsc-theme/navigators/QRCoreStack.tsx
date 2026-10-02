@@ -1,7 +1,7 @@
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
-import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
+import QRScannerScreen from '@/bcsc-theme/features/qr-core/QRScannerScreen'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import {
   BCSCMainStackParams,
@@ -158,7 +158,7 @@ const QRCoreStack: React.FC = () => {
       >
         <Tab.Screen
           name={BCSCQRCoreScreens.Scanner}
-          component={QRScanner}
+          component={QRScannerScreen}
           options={{
             title: t('Scan.ScanQRCode'),
             tabBarIconStyle: styles.tabBarIcon,

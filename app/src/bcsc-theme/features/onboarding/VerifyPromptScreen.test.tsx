@@ -102,6 +102,7 @@ describe('VerifyPromptScreen', () => {
 
       const tree = renderScreen()
 
+      expect(tree.getByText('BCSC.Loading.DefaultMessage')).toBeTruthy()
       expect(tree.queryByTestId('com.ariesbifold:id/Continue')).toBeNull()
       expect(useNavigation().navigate).not.toHaveBeenCalled()
     })

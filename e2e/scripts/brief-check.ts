@@ -8,8 +8,9 @@
  *
  * Self-test: `scripts/fixtures/brief/` holds hand-written reports covering the bail cascade (reported
  * and unreported), runtime skips (and the reporter's doubled skip), a retried suite, a failed before()
- * hook, a worker with no session, the migration orchestrator's shared file and the a11y baseline — each
- * asserted below.
+ * hook, a worker with no session, a session Sauce terminated (0-byte JUnit + session records, one that
+ * died in a hook so its record never noticed), the
+ * migration orchestrator's shared file and the a11y baseline — each asserted below.
  *
  *   yarn brief:check        exit 1 on any problem, listed on stderr
  */
@@ -114,12 +115,12 @@ function cellOf(model: BriefModel, id: string, platform: Platform): CellResult {
 
 function selfTest(): void {
   const reportDirs = resolveReportDirs([FIXTURES])
-  assert.equal(reportDirs.length, 3, 'three fixture report dirs')
+  assert.equal(reportDirs.length, 4, 'four fixture report dirs')
   const model = buildBrief({
     reportDirs,
     baselinePath: join(FIXTURES, 'a11y-baseline.json'),
     title: 'fixture',
-    lanes: [{ name: 'regression', result: 'success' }, { name: 'upgrade', result: 'success' }],
+    lanes: [{ name: 'regression', result: 'success' }, { name: 'upgrade', result: 'success' }, { name: 'send-video', result: 'success' }],
     now: new Date('2026-08-28T07:00:00Z'),
   })
 
@@ -190,8 +191,33 @@ function selfTest(): void {
   const settingsFailure = model.failures.find((entry) => entry.file.endsWith('settings.journey.ts'))
   assert.equal(settingsFailure?.blockedAfter, 6 + settingsUnreported.length)
   assert.equal(model.failures.find((entry) => entry.kind === 'hook')?.suite, 'Wallet journey: DIDComm credential lifecycle')
-  // lanes: upgrade produced no reports
-  assert.deepEqual(model.lanes.map((lane) => lane.hasReports), [true, false])
+  // a session Sauce terminated leaves a 0-byte JUnit: the journey is rebuilt from its session record —
+  // the checkpoint it died on fails, the rest of the file is blocked, and the failure links the Sauce job
+  const approvedTitles = specTitles('test/bcsc/verify/send-video-approved.journey.ts')?.its ?? []
+  const approved = cellOf(model, 'j-send-video-approved', 'ios')
+  assert.deepEqual([approved.status, approved.passed, approved.failed, approved.blocked, approved.listed], ['fail', 2, 1, approvedTitles.length - 3, approvedTitles.length])
+  const lostFailure = model.failures.find((entry) => entry.file.endsWith('send-video-approved.journey.ts'))
+  assert.deepEqual([lostFailure?.terminated, lostFailure?.jobUrl], [true, 'https://app.saucelabs.com/tests/aaaa0002aaaa0002aaaa0002aaaa0002'])
+  // every attempt is listed with its job: both died there, while the non-photo journey passed on its retry
+  const outcomesOf = (file: string) => model.sessions.find((group) => group.platform === 'ios' && group.file.endsWith(file))?.attempts.map((attempt) => attempt.outcome)
+  assert.deepEqual(outcomesOf('send-video-approved.journey.ts'), ['lost', 'lost'])
+  assert.deepEqual(outcomesOf('send-video-non-photo.journey.ts'), ['fail', 'pass'])
+  const nonPhoto = cellOf(model, 'j-send-video-non-photo', 'ios')
+  assert.deepEqual([nonPhoto.status, nonPhoto.passed], ['pass', 8])
+  // a 0-byte JUnit alone marks the worker's last attempt terminated: this one died in a hook, so its record
+  // closed normally with no failed checkpoint and no `lost` — still 🔌, with the rest of the file blocked
+  const cancelledTitles = specTitles('test/bcsc/verify/send-video-cancelled.journey.ts')?.its ?? []
+  const cancelled = cellOf(model, 'j-send-video-cancelled', 'ios')
+  assert.deepEqual([cancelled.status, cancelled.passed, cancelled.failed, cancelled.blocked, cancelled.listed], ['fail', 2, 0, cancelledTitles.length - 2, cancelledTitles.length])
+  assert.deepEqual(outcomesOf('send-video-cancelled.journey.ts'), ['lost'])
+  const hookLost = model.failures.find((entry) => entry.file.endsWith('send-video-cancelled.journey.ts'))
+  assert.deepEqual([hookLost?.kind, hookLost?.terminated, hookLost?.blockedAfter, hookLost?.jobUrl], ['hook', true, cancelledTitles.length - 2, 'https://app.saucelabs.com/tests/aaaa0005aaaa0005aaaa0005aaaa0005'])
+  assert.ok(model.warnings.some((warning) => warning.startsWith('2 iOS journey(s) lost their session')), 'the lost-session warning counts the hook death')
+  // a suite with no session record (the older fixtures) carries no job link
+  assert.equal(model.failures.find((entry) => entry.file.endsWith('settings.journey.ts'))?.jobUrl, undefined)
+  // lanes: upgrade produced no reports; send-video's job passed but its reports hold a lost session
+  assert.deepEqual(model.lanes.map((lane) => lane.hasReports), [true, false, true])
+  assert.deepEqual(model.lanes.map((lane) => lane.failedSuites > 0), [true, false, true])
   // a11y: known vs NEW against the baseline
   const ios = model.a11y.find((summary) => summary.platform === 'ios')
   assert.equal(ios?.errorScreens.length, 2)
@@ -213,7 +239,7 @@ function selfTest(): void {
   )
 
   const markdown = renderMarkdown(model)
-  for (const heading of ['### UAT checklist', '### Failures (4)', '### Accessibility', '### Legend']) {
+  for (const heading of ['### UAT checklist', '### Failures (6)', '<summary>Sessions (3 journeys · 5 attempts)</summary>', '🔌 session terminated', 'send-video ❌ (job ✅)', '### Accessibility', '### Legend']) {
     assert.ok(markdown.includes(heading), `markdown has ${heading}`)
   }
 }

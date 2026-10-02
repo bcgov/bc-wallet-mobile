@@ -7496,7 +7496,7 @@ __metadata:
     react-native-video: "patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch"
     react-native-vision-camera: "patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch"
     react-native-vision-camera-barcode-scanner: "npm:^5.2.3"
-    react-native-volume-manager: "npm:~1.10.0"
+    react-native-volume-manager: "npm:~2.2.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:13.16.1"
     react-native-worklets: "npm:0.10.1"
@@ -15993,7 +15993,7 @@ __metadata:
 
 "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch":
   version: 5.2.3
-  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch::version=5.2.3&hash=0edc8c"
+  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch::version=5.2.3&hash=005937"
   peerDependencies:
     react: "*"
     react-native: "*"
@@ -16002,17 +16002,17 @@ __metadata:
   peerDependenciesMeta:
     react-native-nitro-modules:
       optional: true
-  checksum: 10c0/428c5be406d7a6219359aaba7dc81fd2d763e4805fa36574bc7708a9dda2b3932cfd3b368344ae8fb889f13cca001600d3f571e4c8ecc2857eb08e84bbb14c7a
+  checksum: 10c0/9e9a32fc634636d70254de02a3c97f8cd774162d0539772a117cbf38dd49a92b1e13084800c69c4014c0734ef574671336139557203fe698e77d0f2ce2943403
   languageName: node
   linkType: hard
 
-"react-native-volume-manager@npm:~1.10.0":
-  version: 1.10.0
-  resolution: "react-native-volume-manager@npm:1.10.0"
+"react-native-volume-manager@npm:~2.2.0":
+  version: 2.2.0
+  resolution: "react-native-volume-manager@npm:2.2.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/2b338fa4b12b9af267c2da7ee18afa4f9fa83abad8af46265b0ec071e96318e419582bbc5091327e6345dea2a30d7ed696c4bc6a36a911f79538087b4b96c72c
+  checksum: 10c0/8807b4c10a1cf091417d8c0fcc2bf86f58dba2ab42b1508337548ae4ff7e0682410cb230ac53430148d6f01aaa70af357a32ca41b64deee96ce1bde01abace47
   languageName: node
   linkType: hard
 

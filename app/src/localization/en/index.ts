@@ -373,7 +373,7 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online",
-      "AppStartup": "Getting your BC Services Card app ready..."
+      "AppStartup": "Getting your BC Services Card App ready..."
     },
     "AccountLanding": {
       "Title": "BC Services Card",
@@ -1078,6 +1078,7 @@ const translation = {
         "PreparingVideo": "Preparing your photo and video for verification",
         "PreparingDocuments": "Preparing additional documents",
         "UploadingInformation": "Uploading your documents securely",
+        "UploadingFiles": "Uploading your files",
         "FinalizingVerification": "Finalizing your request"
       }
     },
@@ -1183,6 +1184,7 @@ const translation = {
       "TransferAccount": "Add device",
     },
     "TransferInstructions": {
+      "AddingDevice": "Adding this device...",
       "Title": "Scan your QR code to add your device",
       "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner.",
       "Step2": "Choose <b>‘Add another device'</b> to get your QR code.",

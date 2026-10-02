@@ -1,58 +1,33 @@
-import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
-import { QRScannerFrame } from '@/bcsc-theme/components/QRScannerFrame'
-import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DismissiblePopupModal, ScanCamera } from '@bifold/core'
+import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React from 'react'
-import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
-import useTransferQRScannerViewModel from './useTransferQRScannerViewModel'
+import { default as React, useCallback, useMemo } from 'react'
+import { useAccountTransferQRCodeStrategy } from '../../qr-core/qr-code-strategies/useAccountTransferQRCodeStrategy'
+import { useQRScanner } from '../../qr-core/useQRScanner'
 
 type TransferQRScannerScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams>
 }
 
-const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navigation }) => {
-  const { t } = useTranslation()
-  const { isLoading, isPermissionLoading, hasPermission, scanError, handleScan, dismissError } =
-    useTransferQRScannerViewModel(navigation)
+/**
+ * TransferQRScannerScreen is a React component that renders a QR scanner for account transfer.
+ * When a QR code is successfully scanned, it navigates to the VerificationSuccess screen.
+ * @param props - The props for the TransferQRScannerScreen component.
+ * @returns A React element that renders the QR scanner for account transfer.
+ */
+const TransferQRScannerScreen = ({ navigation }: TransferQRScannerScreenProps) => {
+  const verificationSuccess = useCallback(() => {
+    navigation.navigate(BCSCScreens.VerificationSuccess)
+  }, [navigation])
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-  })
+  const accountTransferQRCodeStrategy = useAccountTransferQRCodeStrategy(verificationSuccess)
 
-  if (isPermissionLoading) {
-    return <LoadingScreen />
-  }
+  const strategies = useMemo(() => [accountTransferQRCodeStrategy], [accountTransferQRCodeStrategy])
 
-  if (!hasPermission) {
-    return <PermissionDisabled permissionType="camera" />
-  }
-
-  if (isLoading) {
-    return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-  }
+  const { isProcessing, scanError, handleScan, dismissError } = useQRScanner(strategies)
 
   return (
-    <View style={styles.container}>
-      {/* Camera preview + bifold's unlabeled tap-to-focus Pressable: nothing here for a screen reader. */}
-      <View style={StyleSheet.absoluteFill} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
-      </View>
-      <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
-      {scanError && (
-        <DismissiblePopupModal
-          title={t('BCSC.Scan.ErrorDetails')}
-          description={scanError.message}
-          onCallToActionLabel={t('BCSC.Scan.Dismiss')}
-          onCallToActionPressed={dismissError}
-          onDismissPressed={dismissError}
-        />
-      )}
-    </View>
+    <QRScanner isProcessing={isProcessing} scanError={scanError} onScan={handleScan} onDismissError={dismissError} />
   )
 }
 
