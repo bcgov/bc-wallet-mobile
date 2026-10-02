@@ -49,7 +49,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     debugSpy.mockRestore()
   })
 
-  it('skips an unknown code and keeps scanning instead of treating the card as non-BCSC', async () => {
+  it('skips an unknown code without a non-BCSC reroute, then hands a complete card to handleScanComboCard', async () => {
     render(
       <BasicAppContext>
         <ScanSerialScreen navigation={useNavigation() as never} />

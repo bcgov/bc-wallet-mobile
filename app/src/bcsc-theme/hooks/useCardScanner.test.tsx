@@ -342,6 +342,7 @@ describe('useCardScanner', () => {
       expect(logged).toContain('"reason":"damaged"')
       for (const sensitive of [
         BC_DL_BARCODE_S,
+        'K12345678',
         '123456789',
         'S00023254',
         'SPECIMEN',
