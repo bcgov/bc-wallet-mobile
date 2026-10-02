@@ -1,5 +1,7 @@
 import type { A11yPlatformSummary } from './a11y-summary.js'
 import type { CellResult, EvaluatedSection, FailureDetail, PlatformTotals } from './evaluate.js'
+import { laneOf, type AttemptOutcome, type SessionGroup } from './sessions.js'
+import { specTitles } from './spec-titles.js'
 import { PLATFORM_LABEL, PLATFORMS, type Platform, type RunnerError } from './types.js'
 
 /** Pure: a brief model → the markdown GitHub renders as the run summary (and the artifact page). */
@@ -9,6 +11,8 @@ export interface LaneResult {
   /** GitHub job result: success | failure | cancelled | skipped. */
   result: string
   hasReports: boolean
+  /** Suites in the lane's reports that failed or lost their session — an advisory lane's job stays green through those. */
+  failedSuites: number
 }
 
 export interface BriefModel {
@@ -21,6 +25,8 @@ export interface BriefModel {
   uat: EvaluatedSection[]
   other: EvaluatedSection[]
   failures: FailureDetail[]
+  /** Every attempt of every journey, with its Sauce job. */
+  sessions: SessionGroup[]
   a11y: A11yPlatformSummary[]
   baselineGeneratedAt?: string
   warnings: string[]
@@ -39,6 +45,7 @@ const SYMBOL: Record<CellResult['status'], string> = {
 }
 
 const LANE_SYMBOL: Record<string, string> = { success: '✅', failure: '❌', cancelled: '⛔', skipped: '⏭️' }
+const ATTEMPT_SYMBOL: Record<AttemptOutcome, string> = { pass: '✅', fail: '❌', lost: '🔌' }
 const FAILURES_SHOWN = 30
 
 /** Markdown table cells cannot hold `|` or newlines. */
@@ -122,7 +129,12 @@ function renderHeader(model: BriefModel): string[] {
   const runLink = model.runUrl ? ` · [run](${model.runUrl})` : ''
   const out = [`## ${model.title} · ${model.generatedAt}${runLink}`, '']
   if (model.lanes.length) {
-    const lanes = model.lanes.map((lane) => `${lane.name} ${LANE_SYMBOL[lane.result] ?? lane.result}${lane.hasReports ? '' : ' (no reports)'}`)
+    const lanes = model.lanes.map((lane) => {
+      const job = LANE_SYMBOL[lane.result] ?? lane.result
+      // The reports outrank the job result: an advisory lane's job is green whatever its journeys did.
+      const status = lane.failedSuites && lane.result === 'success' ? `❌ (job ${job})` : job
+      return `${lane.name} ${status}${lane.hasReports ? '' : ' (no reports)'}`
+    })
     out.push(`Lanes: ${lanes.join(' · ')}`, '')
   }
   return out
@@ -160,10 +172,29 @@ function renderFailures(model: BriefModel): string[] {
   for (const failure of model.failures.slice(0, FAILURES_SHOWN)) {
     const blocked = failure.blockedAfter ? ` (${failure.blockedAfter} later checkpoints blocked)` : ''
     const checkpoint = failure.kind === 'hook' ? failure.checkpoint : `\`${failure.checkpoint}\``
-    out.push(`- **${PLATFORM_LABEL[failure.platform]} · ${failure.suite}** → ${checkpoint} — ${failure.message}${blocked}`)
+    const terminated = failure.terminated ? ' · 🔌 session terminated' : ''
+    const job = failure.jobUrl ? ` · [Sauce job](${failure.jobUrl})` : ''
+    out.push(`- **${PLATFORM_LABEL[failure.platform]} · ${failure.suite}** → ${checkpoint} — ${failure.message}${blocked}${terminated}${job}`)
   }
   if (model.failures.length > FAILURES_SHOWN) out.push(`- …and ${model.failures.length - FAILURES_SHOWN} more in brief.json`)
   if (model.failures.length) out.push('')
+  return out
+}
+
+/** One row per journey and lane: every attempt in order, each linked to its Sauce job. */
+function renderSessions(model: BriefModel): string[] {
+  if (!model.sessions.length) return []
+  const attempts = model.sessions.reduce((n, group) => n + group.attempts.length, 0)
+  const out = ['<details>', `<summary>Sessions (${model.sessions.length} journeys · ${attempts} attempts)</summary>`, '', '| Lane | Platform | Journey | Attempts |', '| --- | --- | --- | --- |']
+  for (const group of model.sessions) {
+    const journey = specTitles(group.file)?.describes[0] ?? group.file
+    const cells = group.attempts.map((attempt, index) => {
+      const label = `${ATTEMPT_SYMBOL[attempt.outcome]} ${index + 1}`
+      return attempt.jobUrl ? `[${label}](${attempt.jobUrl})` : label
+    })
+    out.push(`| ${cell(laneOf(group.source))} | ${PLATFORM_LABEL[group.platform]} | ${cell(journey)} | ${cells.join(' · ')} |`)
+  }
+  out.push('', '</details>', '')
   return out
 }
 
@@ -183,7 +214,7 @@ function renderLegend(model: BriefModel): string[] {
   return [
     '### Legend',
     '',
-    '✅ pass · ❌ fail · ⛔ blocked (an earlier checkpoint in the file failed — mochaOpts.bail) · ⏭️ skipped at runtime (env/data gate) · ⬜ not run (no result in these reports) · ➖ n/a on this platform · 📝 manual (UAT-owned)',
+    '✅ pass · ❌ fail · ⛔ blocked (an earlier checkpoint in the file failed — mochaOpts.bail) · ⏭️ skipped at runtime (env/data gate) · ⬜ not run (no result in these reports) · ➖ n/a on this platform · 📝 manual (UAT-owned) · 🔌 session terminated mid-journey (the app stopped answering the driver)',
     '',
     'Cells show `passed/listed` and tallies when not everything listed passed. The map behind the rows is `e2e/src/brief/coverage-map.ts`.',
     '',
@@ -210,6 +241,7 @@ export function renderMarkdown(model: BriefModel): string {
     '</details>',
     '',
     ...renderFailures(model),
+    ...renderSessions(model),
     ...renderA11ySection(model),
     ...renderLegend(model),
   ].join('\n')
