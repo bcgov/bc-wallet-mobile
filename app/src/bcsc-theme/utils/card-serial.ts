@@ -13,9 +13,7 @@ export const parseDcn = (raw: string): string | null => {
 }
 
 /**
- * The check the app applies to a serial read from a 1D barcode (Code 39 or Code 128). It is looser
- * than {@link parseDcn}: BCSC serials `usually` are 1 letter followed by 8 digits (e.g. A12345678),
- * but this accepts any letters followed by digits, up to 9 characters in all.
+ * The 1D (Code 39 / Code 128) serial check: letters then digits, at most 9 characters. Looser than {@link parseDcn}.
  *
  * @returns the value unchanged, or null when it does not match.
  */
