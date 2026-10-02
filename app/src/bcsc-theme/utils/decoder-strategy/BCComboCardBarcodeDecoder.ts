@@ -1,4 +1,4 @@
-import { isBCSCSerial } from './BCServicesCardBarcodeDecoder'
+import { decodeBCCardBarcode } from '../bc-card-barcode'
 import {
   BCServicesComboCardDecodedBarcode,
   DecodedCodeKind,
@@ -7,8 +7,6 @@ import {
   ScanableCode,
 } from './DecoderStrategy'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
-
-const BCSC_SERIAL_LENGTH = 9
 
 /**
  * Decoder for BC Services Combo Card PDF-417 barcodes.
@@ -63,6 +61,7 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
       birthDate: decodedDriversLicense.birthDate,
       expiryDate: decodedDriversLicense.expiryDate,
       streetAddress: decodedDriversLicense.streetAddress,
+      streetAddress2: decodedDriversLicense.streetAddress2,
       postalCode: decodedDriversLicense.postalCode,
       city: decodedDriversLicense.city,
       province: decodedDriversLicense.province,
@@ -70,19 +69,6 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
   }
 
   private parseBcscSerial(value: string): string | null {
-    const rawSerial = value.split(' ').at(-1)
-
-    if (!rawSerial) {
-      return null
-    }
-
-    const bcscSerial = rawSerial.replace('?', '').slice(-BCSC_SERIAL_LENGTH)
-
-    // BCSC serials start with a letter followed by numbers
-    if (!isBCSCSerial(bcscSerial)) {
-      return null
-    }
-
-    return bcscSerial
+    return decodeBCCardBarcode(value)?.dcn ?? null
   }
 }

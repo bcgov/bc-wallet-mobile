@@ -1,4 +1,4 @@
-import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { getProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
 import { BCState } from '@/store'
@@ -214,19 +214,25 @@ export const useCardScanner = () => {
    */
   const handleScanDriversLicense = useCallback(
     async (license: DriversLicenseMetadata) => {
+      const province = getProvinceCode(license.province)
+
       await updateUserMetadata({
         name: {
           first: license.firstName,
           last: license.lastName,
           middle: license.middleNames,
         },
-        address: {
-          streetAddress: license.streetAddress,
-          postalCode: license.postalCode,
-          city: license.city,
-          province: license.province as ProvinceCode,
-          country: 'CA', // currently we only support Canada licenses
-        },
+        // Only Canadian addresses are supported; leave any other address for the user to enter.
+        ...(province && {
+          address: {
+            streetAddress: license.streetAddress,
+            streetAddress2: license.streetAddress2,
+            postalCode: license.postalCode,
+            city: license.city,
+            province,
+            country: 'CA' as const,
+          },
+        }),
       })
 
       // Save birthdate from barcode so downstream screens can prepopulate

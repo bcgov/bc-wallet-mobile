@@ -140,7 +140,7 @@
     "react-native-video": "patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch",
     "react-native-vision-camera": "patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch",
     "react-native-vision-camera-barcode-scanner": "^5.2.3",
-    "react-native-volume-manager": "~1.10.0",
+    "react-native-volume-manager": "~2.2.0",
     "react-native-webrtc": "~124.0.6",
     "react-native-webview": "13.16.1",
     "react-native-worklets": "0.10.1",
