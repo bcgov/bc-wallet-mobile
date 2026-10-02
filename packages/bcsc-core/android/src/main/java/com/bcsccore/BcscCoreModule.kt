@@ -2677,6 +2677,12 @@ class BcscCoreModule internal constructor(
                         Log.d(NAME, "performDeviceAuthentication: intermediate biometric failure, awaiting retry")
                     }
 
+                    is DeviceAuthenticationResult.Unavailable -> {
+                        val detail = result.describe()
+                        Log.e(NAME, "performDeviceAuthentication: failed: $detail")
+                        promise.reject("E_DEVICE_AUTH_ERROR", "Device authentication failed: $detail")
+                    }
+
                     is DeviceAuthenticationResult.Error -> {
                         val detail = result.describe()
                         Log.e(NAME, "performDeviceAuthentication: failed: $detail")
@@ -3040,6 +3046,12 @@ class BcscCoreModule internal constructor(
                         // Intermediate biometric failure (e.g. wrong finger) — prompt is
                         // still open so do not settle the promise.
                         Log.d(NAME, "unlockWithDeviceSecurity: intermediate biometric failure, awaiting retry")
+                    }
+
+                    is DeviceAuthenticationResult.Unavailable -> {
+                        val detail = authResult.describe()
+                        Log.w(NAME, "unlockWithDeviceSecurity: device authentication unavailable: $detail")
+                        guarded.reject("E_DEVICE_AUTH_UNAVAILABLE", "Device authentication unavailable: $detail")
                     }
 
                     is DeviceAuthenticationResult.Error -> {

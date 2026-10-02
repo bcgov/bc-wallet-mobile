@@ -32,6 +32,17 @@ sealed class DeviceAuthenticationResult {
     }
 
     /**
+     * No device credential or biometrics are set up.
+     * [errorCode] is ERROR_NO_DEVICE_CREDENTIAL, ERROR_NO_BIOMETRICS or ERROR_HW_NOT_PRESENT.
+     */
+    data class Unavailable(
+        val errorCode: Int,
+        val errorMessage: String,
+    ) : DeviceAuthenticationResult() {
+        fun describe(): String = describeBiometricError(errorCode, errorMessage)
+    }
+
+    /**
      * Terminal failure that is NOT a user cancel (lockout, system cancel, hardware unavailable,
      * prompt could not be shown, ...). [errorCode] is the BiometricPrompt ERROR_* constant, or
      * null when the prompt threw before it could report one.
@@ -64,6 +75,24 @@ fun promptBlockedReason(activity: FragmentActivity): String? {
     return "Prompt not shown: lifecycle=${activity.lifecycle.currentState.name}, stateSaved=$isStateSaved, " +
         "finishing=$isFinishing, destroyed=$isDestroyed"
 }
+
+/** Classifies a terminal BiometricPrompt error by what the user can do about it */
+internal fun classifyAuthError(
+    errorCode: Int,
+    errString: CharSequence,
+): DeviceAuthenticationResult =
+    when (errorCode) {
+        androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED,
+        androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+        -> DeviceAuthenticationResult.Cancelled(errorCode, errString.toString())
+
+        androidx.biometric.BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL,
+        androidx.biometric.BiometricPrompt.ERROR_NO_BIOMETRICS,
+        androidx.biometric.BiometricPrompt.ERROR_HW_NOT_PRESENT,
+        -> DeviceAuthenticationResult.Unavailable(errorCode, errString.toString())
+
+        else -> DeviceAuthenticationResult.Error(errorCode, errString.toString())
+    }
 
 /** Human-readable name for a BiometricPrompt ERROR_* code */
 fun biometricErrorName(errorCode: Int): String =
@@ -169,17 +198,7 @@ class DeviceAuthenticationServiceImpl(
                                 errString: CharSequence,
                             ) {
                                 super.onAuthenticationError(errorCode, errString)
-                                when (errorCode) {
-                                    androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED,
-                                    androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON,
-                                    -> {
-                                        callback(DeviceAuthenticationResult.Cancelled(errorCode, errString.toString()))
-                                    }
-
-                                    else -> {
-                                        callback(DeviceAuthenticationResult.Error(errorCode, errString.toString()))
-                                    }
-                                }
+                                callback(classifyAuthError(errorCode, errString))
                             }
 
                             override fun onAuthenticationSucceeded(

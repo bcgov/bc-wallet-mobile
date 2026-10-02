@@ -53,6 +53,14 @@ extension LAContext {
     return laError.code == .userCancel || laError.code == .userFallback
   }
 
+  /// True when no device passcode is set, so device auth cannot be performed at all
+  static func isAuthUnavailable(_ error: Error?) -> Bool {
+    guard let laError = error as? LAError else {
+      return false
+    }
+    return laError.code == .passcodeNotSet
+  }
+
   /// Log/report-friendly description, e.g. "LAError.systemCancel (-4): Cancelled by system".
   static func describeAuthError(_ error: Error?) -> String {
     guard let error = error else {

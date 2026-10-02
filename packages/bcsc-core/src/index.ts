@@ -92,7 +92,7 @@ export const BcscNativeErrorCodes = {
    * Non-cancel OS device auth failure during unlock
    */
   DEVICE_AUTH_FAILED: 'E_DEVICE_AUTH_FAILED',
-  /** Device auth can no longer be evaluated at unlock time (iOS-only) */
+  /** No device passcode/biometrics are set up at unlock time (e.g. removed since the last check) */
   DEVICE_AUTH_UNAVAILABLE: 'E_DEVICE_AUTH_UNAVAILABLE',
 
   // Parsing
@@ -850,7 +850,7 @@ export const setupDeviceSecurity = async (): Promise<import('./NativeBcscCore').
  *   - success: Whether unlock succeeded; false ONLY when the user deliberately cancelled the prompt
  *   - walletKey: The PBKDF2-derived key (base64 encoded), only present on success
  * @throws E_DEVICE_AUTH_FAILED for any non-cancel OS auth failure (lockout, system cancel, ...)
- * @throws E_DEVICE_AUTH_UNAVAILABLE (iOS) when device auth can no longer be evaluated
+ * @throws E_DEVICE_AUTH_UNAVAILABLE when no device passcode/biometrics are set up
  */
 export const unlockWithDeviceSecurity = async (
   reason?: string

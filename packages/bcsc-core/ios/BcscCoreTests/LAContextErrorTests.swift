@@ -29,6 +29,20 @@ final class LAContextErrorTests: XCTestCase {
     XCTAssertFalse(LAContext.isUserCancellation(nil))
   }
 
+  // MARK: - isAuthUnavailable
+
+  func testPasscodeNotSetIsUnavailable() {
+    XCTAssertTrue(LAContext.isAuthUnavailable(LAError(.passcodeNotSet)))
+  }
+
+  func testOtherErrorsAreNotUnavailable() {
+    XCTAssertFalse(LAContext.isAuthUnavailable(LAError(.userCancel)))
+    XCTAssertFalse(LAContext.isAuthUnavailable(LAError(.systemCancel)))
+    XCTAssertFalse(LAContext.isAuthUnavailable(LAError(.biometryLockout)))
+    XCTAssertFalse(LAContext.isAuthUnavailable(NSError(domain: "other", code: LAError.passcodeNotSet.rawValue)))
+    XCTAssertFalse(LAContext.isAuthUnavailable(nil))
+  }
+
   // MARK: - describeAuthError
 
   func testDescribeLAErrorIncludesNameAndCode() {

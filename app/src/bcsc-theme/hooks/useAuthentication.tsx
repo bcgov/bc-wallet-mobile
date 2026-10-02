@@ -4,12 +4,15 @@ import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AccountSecurityMethod,
+  BcscNativeErrorCodes,
   canPerformDeviceAuthentication,
   getAccountSecurityMethod,
   getHideDeviceAuthPrepFlag,
   isAccountLocked,
+  isBcscNativeError,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
 import { useLoadingScreen } from '../contexts/BCSCLoadingContext'
@@ -24,6 +27,7 @@ import useSecureActions from './useSecureActions'
  * @returns An object containing authentication actions (currently only `unlockApp`)
  */
 export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackParams>) => {
+  const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
   const { handleSuccessfulAuth } = useSecureActions()
@@ -37,7 +41,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
     async (walletKey?: string) => {
       try {
         await handleSuccessfulAuth(walletKey)
-        logger.info('[Authentication:performDeviceAuth] Device authentication successful')
+        logger.info('[Authentication:completeUnlock] Device authentication successful')
       } catch (error) {
         const appError = mapNativeBcscError(error)
         logger.error(`[Authentication:completeUnlock] Post-auth unlock error [${appError.appEvent}]`, appError)
@@ -67,7 +71,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
       // Unlocks the app using device authentication (biometric or passcode)
       logger.info('[Authentication:performDeviceAuth] Requesting device authentication')
-      const { success, walletKey, reason } = await unlockWithDeviceSecurity('Unlock your app')
+      const { success, walletKey, reason } = await unlockWithDeviceSecurity(t('BCSC.Security.UnlockPrompt'))
 
       // Native resolves { success: false } only for a deliberate user cancel
       if (!success) {
@@ -79,51 +83,60 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
       await completeUnlock(walletKey)
     } catch (error) {
-      // Note: a user cancel never lands here — unlockWithDeviceSecurity resolves
-      // { success: false } on cancel (both platforms), handled above.
+      // Passcode/biometrics removed since the availability check above
+      if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.DEVICE_AUTH_UNAVAILABLE) {
+        logger.warn(
+          `[Authentication:performDeviceAuth] Device auth unavailable at prompt, navigating to DeviceAuthAppReset: ${error.message}`
+        )
+        navigation.navigate(BCSCScreens.DeviceAuthAppReset)
+        return
+      }
+
       const appError = mapNativeBcscError(error)
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
     } finally {
       stopLoading?.()
     }
-  }, [completeUnlock, loadingScreen, logger, navigation, deviceAuthenticationErrorAlert])
+  }, [completeUnlock, loadingScreen, logger, navigation, deviceAuthenticationErrorAlert, t])
+
+  /**
+   * Runs `action` unless an unlock is already in progress, releasing the guard when it settles.
+   *
+   * Note: the guard is per hook instance, so it only de-duplicates taps within one screen.
+   */
+  const withAuthGuard = useCallback(
+    async (tag: string, action: () => Promise<void>) => {
+      if (isAuthInProgressRef.current) {
+        // Logged so a stuck in-flight unlock can never look like "tapping does nothing" with no trace
+        logger.warn(`[Authentication:${tag}] Ignored: an unlock is already in progress`)
+        return
+      }
+
+      isAuthInProgressRef.current = true
+      try {
+        await action()
+      } finally {
+        isAuthInProgressRef.current = false
+      }
+    },
+    [logger]
+  )
 
   /**
    * Performs device authentication (biometric or passcode). Ignored if an unlock is already in progress.
    *
    * @returns Promise that resolves when the device auth process is complete
    */
-  const performDeviceAuth = useCallback(async () => {
-    if (isAuthInProgressRef.current) {
-      // Logged so a stuck in-flight unlock can never look like "tapping does nothing" with no trace
-      logger.warn('[Authentication:performDeviceAuth] Ignored: an unlock is already in progress')
-      return
-    }
-
-    isAuthInProgressRef.current = true
-    try {
-      await runDeviceAuth()
-    } finally {
-      isAuthInProgressRef.current = false
-    }
-  }, [logger, runDeviceAuth])
+  const performDeviceAuth = useCallback(
+    () => withAuthGuard('performDeviceAuth', runDeviceAuth),
+    [withAuthGuard, runDeviceAuth]
+  )
 
   /**
-   * Handles unlocking the app using the user selected authentication method.
-   * If device auth is setup and available, biometrics will be used.
-   * Otherwise, it will navigate to the PIN screen.
-   *
-   * @returns Promise that resolves when the unlock process is complete
+   * Unlocks the app with the user selected authentication method, without the in-flight guard.
    */
-  const unlockApp = useCallback(async () => {
-    if (isAuthInProgressRef.current) {
-      // Logged so a stuck in-flight unlock can never look like "tapping does nothing" with no trace
-      logger.warn('[Authentication:UnlockApp] Ignored: an unlock is already in progress')
-      return
-    }
-
-    isAuthInProgressRef.current = true
+  const runUnlockApp = useCallback(async () => {
     try {
       const accountSecurityMethod = await getAccountSecurityMethod()
       logger.info(`[Authentication:UnlockApp] Unlock requested, security method: ${accountSecurityMethod}`)
@@ -171,10 +184,17 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       const appError = mapNativeBcscError(error)
       logger.error(`[Authentication:UnlockApp] Unlock error [${appError.appEvent}]`, appError)
       problemWithAppAlert(appError)
-    } finally {
-      isAuthInProgressRef.current = false
     }
   }, [logger, navigation, runDeviceAuth, problemWithAppAlert])
+
+  /**
+   * Handles unlocking the app using the user selected authentication method.
+   * If device auth is setup and available, biometrics will be used.
+   * Otherwise, it will navigate to the PIN screen. Ignored if an unlock is already in progress.
+   *
+   * @returns Promise that resolves when the unlock process is complete
+   */
+  const unlockApp = useCallback(() => withAuthGuard('UnlockApp', runUnlockApp), [withAuthGuard, runUnlockApp])
 
   return useMemo(() => ({ unlockApp, performDeviceAuth }), [unlockApp, performDeviceAuth])
 }

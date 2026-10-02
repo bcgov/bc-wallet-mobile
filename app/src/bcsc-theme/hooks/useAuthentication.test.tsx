@@ -28,6 +28,7 @@ jest.mock('react-native-bcsc-core', () => ({
   isAccountLocked: jest.fn(),
   canPerformDeviceAuthentication: jest.fn(),
   unlockWithDeviceSecurity: jest.fn(),
+  BcscNativeErrorCodes: jest.requireActual('../../../__mocks__/react-native-bcsc-core').BcscNativeErrorCodes,
   // Delegate to the central manual mock so the predicate can't drift from the real implementation.
   isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
 }))
@@ -238,7 +239,7 @@ describe('useAuthentication', () => {
         await result.current.unlockApp()
       })
 
-      expect(unlockWithDeviceSecurity).toHaveBeenCalledWith('Unlock your app')
+      expect(unlockWithDeviceSecurity).toHaveBeenCalledWith('BCSC.Security.UnlockPrompt')
       expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key')
     })
 
@@ -366,7 +367,7 @@ describe('useAuthentication', () => {
         await result.current.performDeviceAuth()
       })
 
-      expect(unlockWithDeviceSecurity).toHaveBeenCalledWith('Unlock your app')
+      expect(unlockWithDeviceSecurity).toHaveBeenCalledWith('BCSC.Security.UnlockPrompt')
       expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key')
     })
 
@@ -381,6 +382,55 @@ describe('useAuthentication', () => {
       })
 
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.DeviceAuthAppReset)
+    })
+
+    it('navigates to DeviceAuthAppReset, without an error modal, when the prompt reports device auth unavailable', async () => {
+      const deviceAuthenticationErrorAlert = jest.fn()
+      jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
+        deviceAuthenticationErrorAlert,
+        problemWithAppAlert: jest.fn(),
+      } as any)
+      jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
+      jest.mocked(unlockWithDeviceSecurity).mockRejectedValue(
+        Object.assign(new Error('Device authentication unavailable: ERROR_NO_DEVICE_CREDENTIAL (14): No PIN set'), {
+          code: 'E_DEVICE_AUTH_UNAVAILABLE',
+        })
+      )
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.performDeviceAuth()
+      })
+
+      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.DeviceAuthAppReset)
+      expect(deviceAuthenticationErrorAlert).not.toHaveBeenCalled()
+    })
+
+    it('shows an error modal, not the reset flow, for other errors in the DEVICE_AUTH_UNAVAILABLE group', async () => {
+      // E_NO_ACTIVITY shares the DEVICE_AUTH_UNAVAILABLE definition but is not an unenrolled device
+      const deviceAuthenticationErrorAlert = jest.fn()
+      jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
+        deviceAuthenticationErrorAlert,
+        problemWithAppAlert: jest.fn(),
+      } as any)
+      jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
+      jest
+        .mocked(unlockWithDeviceSecurity)
+        .mockRejectedValue(
+          Object.assign(new Error('No FragmentActivity available for authentication'), { code: 'E_NO_ACTIVITY' })
+        )
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.performDeviceAuth()
+      })
+
+      expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(deviceAuthenticationErrorAlert).toHaveBeenCalledTimes(1)
     })
 
     it('does not call handleSuccessfulAuth when device authentication is cancelled', async () => {
@@ -527,6 +577,50 @@ describe('useAuthentication', () => {
       })
 
       expect(unlockWithDeviceSecurity).toHaveBeenCalledTimes(1)
+    })
+
+    it.each([
+      [
+        'DeviceAuthInfo',
+        () => {
+          jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.DeviceAuth)
+          jest.mocked(getHideDeviceAuthPrepFlag).mockResolvedValue(false)
+        },
+      ],
+      [
+        'EnterPIN',
+        () => {
+          jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+          jest.mocked(isAccountLocked).mockResolvedValue({ locked: false, remainingTime: 0 })
+        },
+      ],
+      [
+        'Lockout',
+        () => {
+          jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+          jest.mocked(isAccountLocked).mockResolvedValue({ locked: true, remainingTime: 60 })
+        },
+      ],
+      [
+        'an unlock error',
+        () => {
+          jest.mocked(getAccountSecurityMethod).mockRejectedValue(new Error('storage failure'))
+        },
+      ],
+    ])('allows a new unlockApp attempt after an early return to %s', async (_, arrange) => {
+      arrange()
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+
+      expect(getAccountSecurityMethod).toHaveBeenCalledTimes(2)
     })
 
     it('allows a new attempt after the previous one fails', async () => {
