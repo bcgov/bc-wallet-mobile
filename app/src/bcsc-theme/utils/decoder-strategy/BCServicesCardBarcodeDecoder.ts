@@ -1,3 +1,4 @@
+import { parseLooseSerial } from '@/bcsc-theme/utils/card-serial'
 import {
   BCServicesCardBarcode,
   BCServicesCardDecodedBarcode,
@@ -20,7 +21,7 @@ export class BCServicesCardBarcodeDecoder implements DecoderStrategy {
     return (
       (barcode.type === 'code-39' || barcode.type === 'code-128') &&
       typeof barcode.value === 'string' &&
-      isBCSCSerial(barcode.value)
+      parseLooseSerial(barcode.value) !== null
     )
   }
 
@@ -35,20 +36,4 @@ export class BCServicesCardBarcodeDecoder implements DecoderStrategy {
       bcscSerial: barcode.value,
     }
   }
-}
-
-/**
- * Validates if a given serial number matches the BCSC serial format.
- * BCSC serial numbers `usually` consists of 1 letter followed by 8 digits (e.g., A12345678).
- *
- * Rules:
- * 	- Starts with one or more letters (A-Z, a-z)
- * 	- Followed by one or more digits (0-9)
- * 	- Total length must not exceed 9 characters
- *
- * @param serial - The serial number to validate.
- * @returns True if the serial number is valid, false otherwise.
- */
-export const isBCSCSerial = (serial: string): boolean => {
-  return /^[A-Za-z]+\d+$/.test(serial) && serial.length <= 9
 }

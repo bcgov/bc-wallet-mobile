@@ -1,3 +1,5 @@
+import { parseDcn } from '@/bcsc-theme/utils/card-serial'
+
 const SEX_VALUES = ['M', 'F', 'U', 'X'] as const
 
 export type BCCardSex = (typeof SEX_VALUES)[number]
@@ -79,20 +81,6 @@ const TRACK_3 = {
   idNumber: [44, 54],
   security: [70, 81],
 } as const satisfies Record<string, FieldRange>
-
-/**
- * Parses a Document Control Number (the card serial number) from the 1D barcode or from the 2D
- * barcode's 11-character security field, which zero-pads the 9-character DCN.
- *
- * @returns the 9-character DCN, or null when the value is not one.
- */
-export const parseDcn = (raw: string): string | null => {
-  // B, D, I, O, Q and V are never used, as they don't laser-engrave legibly. The check digit isn't
-  // validated: the spec says Modulus 10, but real cards satisfy no common variant.
-  const match = /^0*([ACE-HJ-NPR-UW-Z]\d{8})$/.exec(raw.trim())
-
-  return match ? match[1] : null
-}
 
 /**
  * Decodes the PDF-417 barcode on a BC driver's licence, BCID, BC Services Card or combo card.

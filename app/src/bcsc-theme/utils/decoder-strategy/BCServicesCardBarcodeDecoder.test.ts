@@ -1,7 +1,4 @@
-import {
-  BCServicesCardBarcodeDecoder,
-  isBCSCSerial,
-} from '@/bcsc-theme/utils/decoder-strategy/BCServicesCardBarcodeDecoder'
+import { BCServicesCardBarcodeDecoder } from '@/bcsc-theme/utils/decoder-strategy/BCServicesCardBarcodeDecoder'
 import {
   BCServicesCardBarcode,
   DecodedCodeKind,
@@ -9,22 +6,6 @@ import {
 } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 
 describe('BCServicesCardBarcodeDecoder', () => {
-  describe('isBCSCSerial', () => {
-    it.each([
-      ['A12345678', true, '1 letter followed by 8 digits'],
-      ['AB1234567', true, 'multiple letters followed by digits'],
-      ['a12345678', true, 'lowercase letter followed by digits'],
-      ['ABC1234', true, 'multiple letters and digits'],
-      ['123456789', false, 'no leading letter'],
-      ['A1234@678', false, 'special characters'],
-      ['A1234567890', false, 'too long'],
-      ['', false, 'empty serial'],
-      ['ABCDEFGH', false, 'only letters'],
-      ['12345678', false, 'only digits'],
-    ])('isBCSCSerial(%s) -> %s (%s)', (serial, expected) => {
-      expect(isBCSCSerial(serial)).toBe(expected)
-    })
-  })
   describe('canDecode', () => {
     it('should return true for a valid BCSC serial Code 128 barcode', () => {
       const decoder = new BCServicesCardBarcodeDecoder()

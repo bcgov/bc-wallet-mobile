@@ -1,13 +1,13 @@
-import { BCCardBarcode, decodeBCCardBarcode, parseDcn } from '@/bcsc-theme/utils/bc-card-barcode'
 import {
-  BC_DL_BARCODE_NO_DCN_A,
-  BC_DL_BARCODE_NO_DCN_B,
-  BC_DL_BARCODE_S,
   BC_BCSC_BARCODE_C,
   BC_DL_BARCODE_MONONYM,
   BC_DL_BARCODE_MONONYM_NO_DOLLAR,
   BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE,
+  BC_DL_BARCODE_NO_DCN_A,
+  BC_DL_BARCODE_NO_DCN_B,
+  BC_DL_BARCODE_S,
 } from '@/bcsc-theme/utils/__fixtures__/barcodes'
+import { BCCardBarcode, decodeBCCardBarcode } from '@/bcsc-theme/utils/bc-card-barcode'
 
 // The 11-character security field sits immediately before the closing '?'.
 const withSecurityField = (barcode: string, security: string) => `${barcode.slice(0, -12)}${security}?`
@@ -19,35 +19,6 @@ const decode = (value: string): BCCardBarcode => {
   }
   return decoded
 }
-
-describe('parseDcn', () => {
-  it('reads a bare DCN from the 1D barcode', () => {
-    expect(parseDcn('S00023254')).toBe('S00023254')
-  })
-
-  it('strips the zero padding used in the 2D barcode security field', () => {
-    expect(parseDcn('00C00015303')).toBe('C00015303')
-  })
-
-  it('accepts exactly the 20 prefix letters the DCN format allows', () => {
-    const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
-    const accepted = letters.filter((letter) => parseDcn(`${letter}00023254`) !== null)
-
-    expect(accepted).toEqual([...'ACEFGHJKLMNPRSTUWXYZ'])
-  })
-
-  it.each([
-    ['empty', ''],
-    ['legacy encoded security field', "E$''C(R2S6L"],
-    ['too few digits', 'S1234567'],
-    ['too many digits', 'S123456789'],
-    ['lowercase prefix', 's00023254'],
-    ...['B', 'D', 'I', 'O', 'Q', 'V'].map((letter) => [`excluded prefix ${letter}`, `${letter}00023254`]),
-    ['non-zero padding', '12S00023254'],
-  ])('returns null for %s', (_, raw) => {
-    expect(parseDcn(raw)).toBeNull()
-  })
-})
 
 describe('decodeBCCardBarcode', () => {
   it('decodes every field of a driver licence barcode', () => {
