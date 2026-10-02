@@ -8,6 +8,7 @@ import type { Frameworks } from '@wdio/types'
 import dotenv from 'dotenv'
 import { getE2EConfig } from '../src/e2eConfig.js'
 import { acceptSystemAlert } from '../src/helpers/alerts.js'
+import { recordSessionEnd, recordSessionStart, recordTestResult } from '../src/helpers/session-record.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -225,7 +226,9 @@ export const config: WebdriverIO.Config = {
    * swallowed. No-op on Android; simulators/emulators don't show it (the short wait just elapses).
    * Best-effort: a stuck prompt must never fail the whole session.
    */
-  before: async () => {
+  before: async (_capabilities, specs) => {
+    // First thing, so the record exists even if the session dies before its first checkpoint.
+    recordSessionStart(browser.capabilities as Record<string, unknown>, specs, browser.sessionId)
     // Android (UiAutomator2): React Native's JS thread is essentially never "idle" from the
     // accessibility framework's perspective, so the driver's implicit waitForIdle burns its full
     // timeout (default ~10s) before AND after every interaction — turning each tap into a ~10s
@@ -247,7 +250,13 @@ export const config: WebdriverIO.Config = {
   },
 
   afterTest: async (test, _context, result) => {
+    recordTestResult(test, result)
     if (wasSkipped(result)) return // a skip has no failure to capture
     await captureFailureScreenshot(test, result)
+  },
+
+  // Runs before the runner deletes the session, so the record closes even when Sauce already killed it.
+  after: async (result) => {
+    recordSessionEnd(result)
   },
 }
