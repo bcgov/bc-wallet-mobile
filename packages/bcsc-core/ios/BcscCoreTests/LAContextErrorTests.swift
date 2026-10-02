@@ -14,7 +14,7 @@ final class LAContextErrorTests: XCTestCase {
   }
 
   func testSystemCancelIsNotCancellation() {
-    // Must surface to the user: previously collapsed into { success: false } and left them stuck
+    // The system dismissed the prompt, not the user, so it must surface as an error
     XCTAssertFalse(LAContext.isUserCancellation(LAError(.systemCancel)))
   }
 

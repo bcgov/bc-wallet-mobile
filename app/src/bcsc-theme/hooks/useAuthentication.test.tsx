@@ -121,7 +121,7 @@ describe('useAuthentication', () => {
       )
     })
 
-    it('shows an error modal when unlockApp fails before device auth, instead of doing nothing', async () => {
+    it('shows an error modal when unlockApp fails before device auth', async () => {
       const problemWithAppAlert = jest.fn()
       jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
         deviceAuthenticationErrorAlert: jest.fn(),

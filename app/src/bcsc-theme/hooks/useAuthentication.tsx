@@ -19,10 +19,11 @@ import useSecureActions from './useSecureActions'
 
 /**
  * Hook that provides authentication actions for the BCSC auth flow, including:
- * - unlockApp: Handles unlocking the app using the configured authentication method (device auth, biometrics or PIN)
+ * - unlockApp: Handles unlocking the app using the configured authentication method (device auth or PIN)
+ * - performDeviceAuth: Prompts for device authentication (biometric or passcode) and completes the unlock
  *
  * @param navigation The navigation prop for navigating between auth screens
- * @returns An object containing authentication actions (currently only `unlockApp`)
+ * @returns An object containing `unlockApp` and `performDeviceAuth`
  */
 export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackParams>) => {
   const { t } = useTranslation()
@@ -62,20 +63,18 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       const deviceAuthAvailable = await canPerformDeviceAuthentication()
 
       if (!deviceAuthAvailable) {
-        logger.info('[Authentication:performDeviceAuth] Device auth unavailable, navigating to DeviceAuthAppReset')
+        logger.info('[Authentication:runDeviceAuth] Device auth unavailable, navigating to DeviceAuthAppReset')
         navigation.navigate(BCSCScreens.DeviceAuthAppReset)
         return
       }
 
       // Unlocks the app using device authentication (biometric or passcode)
-      logger.info('[Authentication:performDeviceAuth] Requesting device authentication')
+      logger.info('[Authentication:runDeviceAuth] Requesting device authentication')
       const { success, walletKey, reason } = await unlockWithDeviceSecurity(t('BCSC.Security.UnlockPrompt'))
 
       // Native resolves { success: false } only for a deliberate user cancel
       if (!success) {
-        logger.info(
-          `[Authentication:performDeviceAuth] Device authentication cancelled: ${reason ?? 'no reason given'}`
-        )
+        logger.info(`[Authentication:runDeviceAuth] Device authentication cancelled: ${reason ?? 'no reason given'}`)
         return
       }
 
@@ -181,8 +180,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
   /**
    * Handles unlocking the app using the user selected authentication method.
-   * If device auth is setup and available, biometrics will be used.
-   * Otherwise, it will navigate to the PIN screen. Ignored if an unlock is already in progress.
+   * - PIN: EnterPIN, or Lockout if locked.
+   * - Device auth: DeviceAuthInfo (unless dismissed), DeviceAuthAppReset if unavailable, else the OS prompt.
+   *
+   * Ignored if an unlock is already in progress.
    *
    * @returns Promise that resolves when the unlock process is complete
    */

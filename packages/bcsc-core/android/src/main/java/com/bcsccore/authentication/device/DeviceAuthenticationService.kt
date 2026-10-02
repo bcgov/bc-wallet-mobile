@@ -20,7 +20,7 @@ enum class BiometricType(
 sealed class DeviceAuthenticationResult {
     object Success : DeviceAuthenticationResult()
 
-    /** biometric failure (e.g. wrong finger) — the prompt stays open. */
+    /** Biometric attempt failed (e.g. wrong finger) — the prompt stays open. */
     object Failed : DeviceAuthenticationResult()
 
     /** user deliberately dismissed the prompt. [errorCode] is ERROR_USER_CANCELED or ERROR_NEGATIVE_BUTTON. */
@@ -32,7 +32,7 @@ sealed class DeviceAuthenticationResult {
     }
 
     /**
-     * No device credential or biometrics are set up.
+     * Device auth cannot be performed on this device (nothing enrolled or no hardware).
      * [errorCode] is ERROR_NO_DEVICE_CREDENTIAL, ERROR_NO_BIOMETRICS or ERROR_HW_NOT_PRESENT.
      */
     data class Unavailable(
@@ -62,8 +62,8 @@ private fun describeBiometricError(
 ): String = if (errorCode == null) errorMessage else "${biometricErrorName(errorCode)} ($errorCode): $errorMessage"
 
 /**
- * Checks activity if it is busy and if so; returns the reaons, otherwise it returns null.
- * Activity states can block or hang biometric prompts to the user
+ * Returns why a BiometricPrompt cannot be shown on [activity] right now, or null if it can.
+ * A finishing, destroyed or state-saved activity would otherwise fail or hang the prompt.
  */
 fun promptBlockedReason(activity: FragmentActivity): String? {
     val isFinishing = activity.isFinishing

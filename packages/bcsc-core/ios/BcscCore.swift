@@ -2481,10 +2481,12 @@ class BcscCore: NSObject {
           }
         }
       } else {
-        resolve([
-          "success": false,
-          "reason": "evaluatePolicy returned false without an error",
-        ])
+        logger.error("unlockWithDeviceSecurity: evaluatePolicy returned false without an error")
+        reject(
+          "E_DEVICE_AUTH_FAILED",
+          "Device authentication failed: evaluatePolicy returned false without an error",
+          nil
+        )
       }
     }
   }
