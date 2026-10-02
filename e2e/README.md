@@ -629,8 +629,12 @@ _Two rules, both learned the hard way:_
    it decodes as a silently WRONG serial._
 
 _`scripts/generate-scan-assets.mjs` writes `assets/images/scan/card_<persona>.png` — one combo-card
-back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. Rerun it
-after changing a payload or size; it prints px-per-module for every code it writes._
+back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. The PDF-417
+carries ICBC's 3-track layout exactly as the app's spec-based parser demands it — track 3 is a fixed
+82-character block whose security field zero-pads the serial — because the parser rejects the whole
+code when any track is malformed, and then the live scanner never reads the card and the reroute never
+fires. Rerun the script after changing a payload or size; it prints px-per-module and px-per-row for
+every code it writes._
 
 _The cards are generated rather than photographed because the serial screen needs BOTH codes — the
 serial from the 1D code-39 and the birthdate from the PDF-417 — matching the same persona. The shared
