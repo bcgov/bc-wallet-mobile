@@ -1,6 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
-import useVerificationMethodModel from '@/bcsc-theme/features/verify/_models/useVerificationMethodModel'
+import useVerificationMethodModel from '@/bcsc-theme/features/verify/useVerificationMethodModel'
 import { VerificationVideoCache } from '@/bcsc-theme/features/verify/send-video/VideoReviewScreen'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'

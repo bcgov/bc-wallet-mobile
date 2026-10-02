@@ -3,10 +3,10 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
-import useVerificationMethodModel from './_models/useVerificationMethodModel'
+import useVerificationMethodModel from './useVerificationMethodModel'
 import VerificationMethodSelectionScreen from './VerificationMethodSelectionScreen'
 
-jest.mock('./_models/useVerificationMethodModel')
+jest.mock('./useVerificationMethodModel')
 
 describe('VerificationMethodSelection', () => {
   let mockNavigation: any

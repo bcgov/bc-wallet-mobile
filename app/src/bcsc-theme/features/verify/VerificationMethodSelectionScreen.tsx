@@ -7,7 +7,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet } from 'react-native'
-import useVerificationMethodModel from './_models/useVerificationMethodModel'
+import useVerificationMethodModel from './useVerificationMethodModel'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
 import ServicePeriodList from './live-call/components/ServicePeriodList'
 
