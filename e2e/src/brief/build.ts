@@ -5,7 +5,7 @@ import { OTHER_COVERAGE, UAT_CHECKLIST } from './coverage-map.js'
 import { collectFailures, evaluateSections, platformTotals, type SpecTitleLookup } from './evaluate.js'
 import { loadJunitReports } from './junit.js'
 import type { BriefModel, LaneResult } from './render.js'
-import { applySessions, groupAttempts, loadSessions, type SessionGroup } from './sessions.js'
+import { applySessions, groupAttempts, loadSessions, markTerminated, type SessionGroup } from './sessions.js'
 import { specTitles } from './spec-titles.js'
 import { PLATFORM_LABEL, PLATFORMS, type Platform, type ReportDir, type SuiteResult } from './types.js'
 
@@ -97,7 +97,9 @@ export function buildBrief(options: BuildOptions): BriefModel {
   if (!reportDirs.length) warnings.push('No report directories found — nothing to summarize.')
 
   const junit = loadJunitReports(reportDirs)
-  const sessions = groupAttempts(loadSessions(reportDirs))
+  const attempts = loadSessions(reportDirs)
+  markTerminated(attempts, junit.emptyFiles)
+  const sessions = groupAttempts(attempts)
   applySessions(junit.results, sessions)
   warnings.push(...sessionWarnings(sessions, junit.emptyFiles))
   const a11y = loadA11yReports(reportDirs)

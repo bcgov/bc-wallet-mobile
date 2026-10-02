@@ -8,7 +8,8 @@
  *
  * Self-test: `scripts/fixtures/brief/` holds hand-written reports covering the bail cascade (reported
  * and unreported), runtime skips (and the reporter's doubled skip), a retried suite, a failed before()
- * hook, a worker with no session, a session Sauce terminated (0-byte JUnit + session records), the
+ * hook, a worker with no session, a session Sauce terminated (0-byte JUnit + session records, one that
+ * died in a hook so its record never noticed), the
  * migration orchestrator's shared file and the a11y baseline — each asserted below.
  *
  *   yarn brief:check        exit 1 on any problem, listed on stderr
@@ -202,6 +203,15 @@ function selfTest(): void {
   assert.deepEqual(outcomesOf('send-video-non-photo.journey.ts'), ['fail', 'pass'])
   const nonPhoto = cellOf(model, 'j-send-video-non-photo', 'ios')
   assert.deepEqual([nonPhoto.status, nonPhoto.passed], ['pass', 8])
+  // a 0-byte JUnit alone marks the worker's last attempt terminated: this one died in a hook, so its record
+  // closed normally with no failed checkpoint and no `lost` — still 🔌, with the rest of the file blocked
+  const cancelledTitles = specTitles('test/bcsc/verify/send-video-cancelled.journey.ts')?.its ?? []
+  const cancelled = cellOf(model, 'j-send-video-cancelled', 'ios')
+  assert.deepEqual([cancelled.status, cancelled.passed, cancelled.failed, cancelled.blocked, cancelled.listed], ['fail', 2, 0, cancelledTitles.length - 2, cancelledTitles.length])
+  assert.deepEqual(outcomesOf('send-video-cancelled.journey.ts'), ['lost'])
+  const hookLost = model.failures.find((entry) => entry.file.endsWith('send-video-cancelled.journey.ts'))
+  assert.deepEqual([hookLost?.kind, hookLost?.terminated, hookLost?.blockedAfter, hookLost?.jobUrl], ['hook', true, cancelledTitles.length - 2, 'https://app.saucelabs.com/tests/aaaa0005aaaa0005aaaa0005aaaa0005'])
+  assert.ok(model.warnings.some((warning) => warning.startsWith('2 iOS journey(s) lost their session')), 'the lost-session warning counts the hook death')
   // a suite with no session record (the older fixtures) carries no job link
   assert.equal(model.failures.find((entry) => entry.file.endsWith('settings.journey.ts'))?.jobUrl, undefined)
   // lanes: upgrade produced no reports; send-video's job passed but its reports hold a lost session
@@ -216,7 +226,7 @@ function selfTest(): void {
   assert.deepEqual([birthdate?.newErrors, birthdate?.inBaseline, birthdate?.warnings], [1, false, 1])
 
   const markdown = renderMarkdown(model)
-  for (const heading of ['### UAT checklist', '### Failures (5)', '<summary>Sessions (2 journeys · 4 attempts)</summary>', '🔌 session terminated', 'send-video ❌ (job ✅)', '### Accessibility', '### Legend']) {
+  for (const heading of ['### UAT checklist', '### Failures (6)', '<summary>Sessions (3 journeys · 5 attempts)</summary>', '🔌 session terminated', 'send-video ❌ (job ✅)', '### Accessibility', '### Legend']) {
     assert.ok(markdown.includes(heading), `markdown has ${heading}`)
   }
 }

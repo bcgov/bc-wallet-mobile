@@ -25,7 +25,7 @@ export interface SessionAttempt {
   outcome: AttemptOutcome
   jobUrl?: string
   device?: string
-  /** The error that reported the session gone, for a lost attempt. */
+  /** Why the attempt counts as lost: the error that reported the session gone, or its empty JUnit. */
   lost?: string
   tests: SessionTestRecord[]
 }
@@ -105,6 +105,25 @@ export function groupAttempts(attempts: SessionAttempt[]): SessionGroup[] {
   return [...groups.values()]
     .map((group) => ({ ...group, attempts: [...group.attempts].sort(byStart) }))
     .sort((a, b) => a.source.localeCompare(b.source) || a.file.localeCompare(b.file))
+}
+
+/**
+ * A 0-byte JUnit means the runner's teardown threw on a dead session before the reporter wrote, so the
+ * worker's last attempt was terminated — even when the record never saw the error (it surfaced in a
+ * hook, or between two checkpoints) and closed as an ordinary pass or fail.
+ */
+export function markTerminated(attempts: SessionAttempt[], emptyFiles: { source: string; cid: string }[]): void {
+  const lastStart = new Map(emptyFiles.map((file) => [`${file.source}|${file.cid}`, '']))
+  for (const attempt of attempts) {
+    const key = `${attempt.source}|${attempt.cid}`
+    const seen = lastStart.get(key)
+    if (seen !== undefined && attempt.startedAt > seen) lastStart.set(key, attempt.startedAt)
+  }
+  for (const attempt of attempts) {
+    if (lastStart.get(`${attempt.source}|${attempt.cid}`) !== attempt.startedAt || attempt.outcome === 'lost') continue
+    attempt.outcome = 'lost'
+    attempt.lost = "died outside a checkpoint (the worker's JUnit is empty)"
+  }
 }
 
 /**
