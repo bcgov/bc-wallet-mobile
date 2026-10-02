@@ -3,7 +3,7 @@ import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuth
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { ScanableCode } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
@@ -264,6 +264,96 @@ describe('useCardScanner', () => {
           licenseNumber: '2222222',
         })
       )
+    })
+  })
+
+  describe('scanCard with several codes', () => {
+    const renderScanCard = () => {
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
+      const debug = jest.fn()
+
+      jest.mocked(useAuthorizationService).mockReturnValue({ authorizeDevice: jest.fn() } as any)
+      jest.mocked(useSecureActions).mockReturnValue({
+        updateUserInfo: jest.fn(),
+        updateDeviceCodes: jest.fn(),
+        updateCardProcess: jest.fn(),
+        updateVerificationOptions: jest.fn(),
+      } as any)
+      jest.mocked(Bifold).useStore.mockReturnValue([mockState, mockDispatch])
+      jest.mocked(Bifold).useServices.mockReturnValue([{ debug } as any])
+
+      return { scanCard: renderHook(() => useCardScanner()).result.current.scanCard, debug }
+    }
+
+    const licenceWithSerial: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_S }
+    const licenceWithoutSerial: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_NO_DCN_A }
+    const serial1D: ScanableCode = { type: 'code-39', value: 'K12345678' }
+
+    it('takes the 1D serial when it is read after a PDF-417 that holds a DCN, and keeps the DCN on the licence', async () => {
+      const { scanCard } = renderScanCard()
+      const handleCardData = jest.fn()
+
+      await scanCard([licenceWithSerial, serial1D], handleCardData)
+
+      expect(handleCardData).toHaveBeenCalledTimes(1)
+      expect(handleCardData).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ licenseNumber: '2222222', bcscSerial: 'S00023254' })
+      )
+    })
+
+    it('takes the PDF-417 DCN when it is read after the 1D serial', async () => {
+      const { scanCard } = renderScanCard()
+      const handleCardData = jest.fn()
+
+      await scanCard([serial1D, licenceWithSerial], handleCardData)
+
+      expect(handleCardData).toHaveBeenCalledTimes(1)
+      expect(handleCardData).toHaveBeenCalledWith(
+        'S00023254',
+        expect.objectContaining({ licenseNumber: '2222222', bcscSerial: 'S00023254' })
+      )
+    })
+
+    it('replaces the licence with a later PDF-417 that has no DCN, without clearing the captured serial', async () => {
+      const { scanCard } = renderScanCard()
+      const handleCardData = jest.fn()
+
+      await scanCard([licenceWithSerial, licenceWithoutSerial], handleCardData)
+
+      expect(handleCardData).toHaveBeenCalledTimes(1)
+      const [serial, licence] = handleCardData.mock.calls[0]
+      expect(serial).toBe('S00023254')
+      expect(licence).toMatchObject({ birthDate: new Date('1970-09-06') })
+      expect(licence).not.toHaveProperty('bcscSerial')
+    })
+
+    it('logs the barcode type and result, not the scanned contents', async () => {
+      const { scanCard, debug } = renderScanCard()
+      const handleCardData = jest.fn()
+      const notASerial: ScanableCode = { type: 'code-39', value: '123456789' }
+      const damaged: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_S.replace('00S00023254?', 'S00023254?') }
+
+      await scanCard([licenceWithSerial, notASerial, damaged], handleCardData)
+
+      const logged = JSON.stringify(debug.mock.calls)
+      expect(logged).toContain('"source":"pdf417"')
+      expect(logged).toContain('"reason":"unsupported"')
+      expect(logged).toContain('"reason":"damaged"')
+      for (const sensitive of [
+        BC_DL_BARCODE_S,
+        '123456789',
+        'S00023254',
+        'SPECIMEN',
+        'specimen',
+        '2222222',
+        'V8W3Y8',
+      ]) {
+        expect(logged).not.toContain(sensitive)
+      }
     })
   })
 

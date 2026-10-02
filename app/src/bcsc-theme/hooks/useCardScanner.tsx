@@ -13,11 +13,11 @@ import { useAuthorizationService } from '../services/hooks/useAuthorizationServi
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 import { buildBarcodePayload } from '../utils/barcode'
 import {
-  DecodedCodeKind,
-  decodeScannedCode,
+  decodeCardBarcode,
   DriversLicenseMetadata,
   ScanableCode,
-} from '../utils/decoder-strategy/DecoderStrategy'
+  toDriversLicenseMetadata,
+} from '../utils/card-barcode-decoder'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 import { useDeviceAuthorizationRecovery } from './useDeviceAuthorizationRecovery'
 import { useSecureActions } from './useSecureActions'
@@ -291,34 +291,36 @@ export const useCardScanner = () => {
 
       // Combo cards have two barcodes, so we need to process all scanned codes
       // to ensure we capture both the serial and license metadata if present
-      let licenseMetadata: DriversLicenseMetadata | null = null
+      // Until the serial comes from the 1D only, a 2D DCN still sets it, and callers see it on the licence too.
+      let licenseMetadata: (DriversLicenseMetadata & { bcscSerial?: string }) | null = null
       let bcscSerial: string | null = null
 
       for (const code of barcodes) {
         if (__DEV__) {
-          logger.debug(`[CardScanner] decoding barcode`, { code: code })
+          logger.debug(`[CardScanner] decoding barcode`, { type: code.type })
         }
-        const decodedCode = decodeScannedCode(code, logger)
+        const decoded = decodeCardBarcode(code)
 
-        if (!decodedCode) {
+        if (decoded.source === 'failure') {
           // This is usually from a barcode that was partially out of frame
-          logger.debug(`[CardScanner] Failed to decode scanned barcode`, { failedBarcode: code })
+          logger.debug(`[CardScanner] Failed to decode scanned barcode`, { type: code.type, reason: decoded.reason })
           continue
         }
 
-        logger.debug(`[CardScanner] Decoded barcode metadata:`, { decodedBarcode: decodedCode })
+        logger.debug(`[CardScanner] Decoded barcode metadata:`, { type: code.type, source: decoded.source })
 
-        // Extract the decoded metadata
-        switch (decodedCode.kind) {
-          case DecodedCodeKind.BCServicesComboCardCardBarcode:
-            bcscSerial = decodedCode.bcscSerial
-            licenseMetadata = decodedCode
+        switch (decoded.source) {
+          case 'pdf417': {
+            const license = toDriversLicenseMetadata(decoded.card)
+            const { dcn } = decoded.card
+            if (dcn) {
+              bcscSerial = dcn
+            }
+            licenseMetadata = dcn ? { ...license, bcscSerial: dcn } : license
             break
-          case DecodedCodeKind.DriversLicenseBarcode:
-            licenseMetadata = decodedCode
-            break
-          case DecodedCodeKind.BCServicesCardBarcode:
-            bcscSerial = decodedCode.bcscSerial
+          }
+          case '1d':
+            bcscSerial = decoded.serial
             break
         }
       }
