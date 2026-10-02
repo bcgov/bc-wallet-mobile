@@ -850,7 +850,7 @@ export const setupDeviceSecurity = async (): Promise<import('./NativeBcscCore').
  *   - success: Whether unlock succeeded; false ONLY when the user deliberately cancelled the prompt
  *   - walletKey: The PBKDF2-derived key (base64 encoded), only present on success
  * @throws E_DEVICE_AUTH_FAILED for any non-cancel OS auth failure (lockout, system cancel, ...)
- * @throws E_DEVICE_AUTH_UNAVAILABLE when no device passcode/biometrics are set up
+ * @throws E_DEVICE_AUTH_UNAVAILABLE when the OS reports no passcode/biometrics at prompt time
  */
 export const unlockWithDeviceSecurity = async (
   reason?: string

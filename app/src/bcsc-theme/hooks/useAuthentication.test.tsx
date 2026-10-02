@@ -384,7 +384,7 @@ describe('useAuthentication', () => {
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.DeviceAuthAppReset)
     })
 
-    it('navigates to DeviceAuthAppReset, without an error modal, when the prompt reports device auth unavailable', async () => {
+    it('shows an error modal, not the reset flow, when the prompt reports device auth unavailable', async () => {
       const deviceAuthenticationErrorAlert = jest.fn()
       jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
         deviceAuthenticationErrorAlert,
@@ -404,8 +404,8 @@ describe('useAuthentication', () => {
         await result.current.performDeviceAuth()
       })
 
-      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.DeviceAuthAppReset)
-      expect(deviceAuthenticationErrorAlert).not.toHaveBeenCalled()
+      expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(deviceAuthenticationErrorAlert).toHaveBeenCalledTimes(1)
     })
 
     it('shows an error modal, not the reset flow, for other errors in the DEVICE_AUTH_UNAVAILABLE group', async () => {

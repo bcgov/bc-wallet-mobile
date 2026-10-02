@@ -7,12 +7,10 @@ import { useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AccountSecurityMethod,
-  BcscNativeErrorCodes,
   canPerformDeviceAuthentication,
   getAccountSecurityMethod,
   getHideDeviceAuthPrepFlag,
   isAccountLocked,
-  isBcscNativeError,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
 import { useLoadingScreen } from '../contexts/BCSCLoadingContext'
@@ -83,15 +81,9 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
       await completeUnlock(walletKey)
     } catch (error) {
-      // Passcode/biometrics removed since the availability check above
-      if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.DEVICE_AUTH_UNAVAILABLE) {
-        logger.warn(
-          `[Authentication:performDeviceAuth] Device auth unavailable at prompt, navigating to DeviceAuthAppReset: ${error.message}`
-        )
-        navigation.navigate(BCSCScreens.DeviceAuthAppReset)
-        return
-      }
-
+      // Never route to app reset from a prompt error: the OS code is a single-call signal and can be
+      // wrong. Show the error; the user can retry. The pre-prompt canPerformDeviceAuthentication()
+      // check handles a truly unsecured device.
       const appError = mapNativeBcscError(error)
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
