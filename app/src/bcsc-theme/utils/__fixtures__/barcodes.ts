@@ -17,6 +17,14 @@ export const BC_DL_BARCODE_NO_DCN_B = String.raw`%BCVICTORIA^SPECIMEN,$TEST CARD
 export const BC_DL_BARCODE_S =
   '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU                          00S00023254?'
 
+// Built from the S specimen above (K DCN plus a health number), not captured from a real card.
+export const BC_COMBO_BARCODE_K =
+  '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU9123456789                00K00023254?'
+
+// Built from the S specimen above (Y DCN, no health number), not captured from a real card.
+export const BC_BCID_BARCODE_Y =
+  '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU                          00Y00023254?'
+
 // 3-caret format (no extra ^ before track separator) — some real-world cards use this variant
 export const BC_BCSC_BARCODE_C =
   '%BCVICTORIA^CPSIJSIT,$STANDALONE CITZ FOUR^910 GOVERNMENT ST$VICTORIA BC V8W 3Y5?;636028004023964=270419850410=?_%0AV8W3Y5                     F            9873904417                00C00015303?'
@@ -44,6 +52,8 @@ export const VALID_BC_DL_BARCODES = [
   BC_DL_BARCODE_NO_DCN_B,
   BC_DL_BARCODE_S,
   BC_BCSC_BARCODE_C,
+  BC_COMBO_BARCODE_K,
+  BC_BCID_BARCODE_Y,
   BC_DL_BARCODE_MULTIWORD_LASTNAME_NO_MIDDLE,
   BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE,
   BC_DL_BARCODE_MONONYM,

@@ -1,20 +1,16 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-import { BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
+import { DriversLicenseMetadata, ScanableCode } from '../card-barcode-decoder'
 import { BCComboCardBarcodeDecoder } from './BCComboCardBarcodeDecoder'
 import { BCServicesCardBarcodeDecoder } from './BCServicesCardBarcodeDecoder'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
+
+export type { DriversLicenseMetadata, ScanableCode }
 
 // Enum representing the kinds of decoded codes
 export enum DecodedCodeKind {
   DriversLicenseBarcode = 'DriversLicenseBarcode',
   BCServicesCardBarcode = 'BCServicesCardBarcode',
   BCServicesComboCardCardBarcode = 'BCServicesComboCardCardBarcode',
-}
-
-// Stub interface representing a scanned code ie: barcode or qr code
-export interface ScanableCode {
-  type: BarcodeFormat | 'unknown'
-  value?: string
 }
 
 export type DecodedCode =
@@ -55,23 +51,6 @@ export interface BCServicesCardBarcode {
 export interface BCServicesCardDecodedBarcode {
   kind: DecodedCodeKind.BCServicesCardBarcode
   bcscSerial: string
-}
-
-export interface DriversLicenseMetadata {
-  licenseNumber: string
-  firstName: string
-  middleNames: string
-  lastName: string
-  birthDate: Date
-  expiryDate: Date
-  streetAddress: string
-  /** Further street lines, when the address has more than one before the city line. */
-  streetAddress2?: string
-  city: string
-  province: string
-  postalCode: string
-  /** Issuer Identification Number from AAMVA track 2 (e.g. BC = '636028'). */
-  isoIIN: string
 }
 
 export interface DriversLicenseDecodedBarcode extends DriversLicenseMetadata {
