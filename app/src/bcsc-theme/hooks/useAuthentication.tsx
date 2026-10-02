@@ -79,11 +79,9 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
         return
       }
 
-      await completeUnlock(walletKey)
       // The startup message waits for auth to succeed; the OS prompt sits over the generic overlay.
       stopStartupLoading = startLoading(t('BCSC.Loading.AppStartup'))
-      await handleSuccessfulAuth(walletKey)
-      logger.info('[Authentication:performDeviceAuth] Device authentication successful')
+      await completeUnlock(walletKey)
     } catch (error) {
       // Never route to app reset from a prompt error: the OS code is a single-call signal and can be
       // wrong. Show the error; the user can retry. The pre-prompt canPerformDeviceAuthentication()
@@ -95,7 +93,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       stopStartupLoading?.()
       stopLoading?.()
     }
-  }, [handleSuccessfulAuth, completeUnlock, startLoading, t, logger, navigation, deviceAuthenticationErrorAlert])
+  }, [completeUnlock, startLoading, t, logger, navigation, deviceAuthenticationErrorAlert])
 
   /**
    * Runs `action` unless an unlock is already in progress, releasing the guard when it settles.
