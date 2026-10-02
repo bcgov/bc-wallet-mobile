@@ -5,7 +5,7 @@ import { openSettings } from '../../../src/flows/main.js'
 import { skipToHome } from '../../../src/flows/onboarding.js'
 import { rowShowsWord } from '../../../src/helpers/a11y.js'
 import { installCurrentBuildOverRunningApp, relaunchAfterInstall } from '../../../src/helpers/app-install.js'
-import { readSettingsVersionFooter } from '../../../src/helpers/developer.js'
+import { expectDeveloperModeHidden, readSettingsVersionFooter } from '../../../src/helpers/developer.js'
 import { annotate } from '../../../src/helpers/sauce.js'
 import { AutoLockScreen, SettingsRowIds, SettingsScreen, TabBar } from '../../../src/screens/main.js'
 
@@ -70,6 +70,11 @@ describe('Upgrade from previous release', () => {
     await openSettings()
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     assert.ok(await rowShowsWord(SettingsRowIds.autoLock, '3 min'), 'Auto Lock should survive the upgrade')
+  })
+
+  it('keeps developer mode off across the upgrade: the Developer options row is absent', async () => {
+    // Settings is still open from the Auto Lock check; the mode was never turned on before the swap.
+    await expectDeveloperModeHidden()
   })
 
   it('runs the current build, not the previous one', async () => {

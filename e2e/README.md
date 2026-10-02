@@ -834,7 +834,7 @@ e2e/
 │       │   └── under-12.journey.ts          # under-12 persona: restricted method set + transfer age gate
 │       ├── main/
 │       │   ├── unverified-main.journey.ts   # unverified tab / QRCore gating
-│       │   ├── settings.journey.ts          # settings rows, change-PIN, auto-lock, reset/remove account
+│       │   ├── settings.journey.ts          # settings rows, developer mode off, change-PIN, auto-lock, reset/remove account
 │       │   └── wallet.journey.ts            # DIDComm credential lifecycle + populated Contacts (issuer tenant)
 │       │
 │       ├── scan/                            # card-barcode scanning — Android + Sauce only (--suite scan; in regression)
