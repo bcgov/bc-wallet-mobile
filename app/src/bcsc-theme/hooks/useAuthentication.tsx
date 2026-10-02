@@ -4,6 +4,7 @@ import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AccountSecurityMethod,
   canPerformDeviceAuthentication,
@@ -25,7 +26,8 @@ import useSecureActions from './useSecureActions'
  */
 export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackParams>) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const loadingScreen = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
+  const { t } = useTranslation()
   const { handleSuccessfulAuth } = useSecureActions()
   const { deviceAuthenticationErrorAlert } = useAlerts(navigation)
 
@@ -36,9 +38,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
    */
   const performDeviceAuth = useCallback(async () => {
     let stopLoading
+    let stopStartupLoading
 
     try {
-      stopLoading = loadingScreen.startLoading()
+      stopLoading = startLoading()
 
       // Check if they have changed their device auth settings
       const deviceAuthAvailable = await canPerformDeviceAuthentication()
@@ -57,6 +60,8 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
         return
       }
 
+      // The startup message waits for auth to succeed; the OS prompt sits over the generic overlay.
+      stopStartupLoading = startLoading(t('BCSC.Loading.AppStartup'))
       await handleSuccessfulAuth(walletKey)
       logger.info('[Authentication:performDeviceAuth] Device authentication successful')
     } catch (error) {
@@ -66,9 +71,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
     } finally {
+      stopStartupLoading?.()
       stopLoading?.()
     }
-  }, [handleSuccessfulAuth, loadingScreen, logger, navigation, deviceAuthenticationErrorAlert])
+  }, [handleSuccessfulAuth, startLoading, t, logger, navigation, deviceAuthenticationErrorAlert])
 
   /**
    * Handles unlocking the app using the user selected authentication method.
