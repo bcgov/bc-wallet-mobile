@@ -68,7 +68,7 @@ const suiteFailed = (suite: SuiteResult): boolean =>
 function sessionWarnings(sessions: SessionGroup[], emptyFiles: { source: string; cid: string }[]): string[] {
   const warnings: string[] = []
   for (const platform of PLATFORMS) {
-    const lost = sessions.filter((group) => group.platform === platform && group.attempts[group.attempts.length - 1].outcome === 'lost').length
+    const lost = sessions.filter((group) => group.platform === platform && group.attempts.at(-1)?.outcome === 'lost').length
     if (lost) warnings.push(`${lost} ${PLATFORM_LABEL[platform]} journey(s) lost their session mid-run (the app stopped answering the driver) — rebuilt from the session records and marked 🔌 below.`)
   }
   const recorded = new Set(sessions.flatMap((group) => group.attempts.map((attempt) => `${attempt.source}|${attempt.cid}`)))

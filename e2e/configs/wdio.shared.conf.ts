@@ -256,7 +256,7 @@ export const config: WebdriverIO.Config = {
   },
 
   // Runs before the runner deletes the session, so the record closes even when Sauce already killed it.
-  after: async (result) => {
+  after: (result) => {
     recordSessionEnd(result)
   },
 }

@@ -82,14 +82,18 @@ export function recordSessionStart(capabilities: Record<string, unknown>, specs:
   save()
 }
 
+type HookTestResult = Frameworks.TestResult & { skipped?: boolean }
+
+const statusOf = (result: HookTestResult): SessionTestRecord['status'] => {
+  if (result.skipped) return 'skipped'
+  return result.passed ? 'pass' : 'fail'
+}
+
 /** The `afterTest` hook: one line per checkpoint, and the first error that says the session is gone. */
-export function recordTestResult(
-  test: { parent?: string; title: string },
-  result: Frameworks.TestResult & { skipped?: boolean }
-): void {
+export function recordTestResult(test: { parent?: string; title: string }, result: HookTestResult): void {
   if (!current) return
   const error = result.error?.message ?? (result.error ? String(result.error) : undefined)
-  const status = result.skipped ? 'skipped' : result.passed ? 'pass' : 'fail'
+  const status = statusOf(result)
   const message = status === 'fail' ? (error ?? 'failed').split('\n')[0].trim().slice(0, MESSAGE_MAX) : undefined
   current.record.tests.push({ suite: test.parent ?? '', title: test.title, status, ...(message && { message }) })
   if (status === 'fail' && error && LOST_SESSION.test(error) && !current.record.lost) current.record.lost = message

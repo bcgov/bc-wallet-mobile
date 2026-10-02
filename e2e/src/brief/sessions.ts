@@ -138,7 +138,7 @@ export function suitesFromAttempt(attempt: SessionAttempt): SuiteResult[] {
     })
   )
   if (terminated && !attempt.tests.some(failedTest)) {
-    suites[suites.length - 1].hookFailures.push({
+    suites.at(-1)?.hookFailures.push({
       title: '"session" hook',
       message: `Session terminated mid-journey: ${attempt.lost ?? 'no checkpoint result reached the reporter'}`,
     })
@@ -153,7 +153,8 @@ export function suitesFromAttempt(attempt: SessionAttempt): SuiteResult[] {
  */
 export function applySessions(results: RunResults, groups: SessionGroup[]): void {
   for (const group of groups) {
-    const last = group.attempts[group.attempts.length - 1]
+    const last = group.attempts.at(-1)
+    if (!last) continue // never empty (see groupAttempts); narrows .at()'s type
     const run = results[group.platform] ?? { platform: group.platform, suites: [], sources: [] }
     const own = run.suites.filter((suite) => suite.file === group.file && suite.source === group.source)
     if (!own.length) {
