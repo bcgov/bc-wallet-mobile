@@ -39,10 +39,8 @@ const CARDS = [
 const EXPIRY_YYMM = '2601'
 
 /**
- * AAMVA 3-track payload per `DriversLicenseBarcodeDecoder`: track 1 carries the name/address, track 2
- * `;IIN+licence=YYMM(expiry)YYYYMMDD(birth)=`, and `BCComboCardBarcodeDecoder` reads the BCSC serial
- * off the final space-separated token. Kept as short as the parsers allow — payload length drives
- * PDF-417 row count, and fewer rows means fatter modules on the injected frame.
+ * 3-track payload modelled on the BC card layout, with the BCSC serial as the final token. Kept short:
+ * payload length drives PDF-417 row count, and fewer rows means fatter modules on the injected frame.
  */
 function aamvaPayload({ lastName, firstName, serial, birthDate }) {
   return (
