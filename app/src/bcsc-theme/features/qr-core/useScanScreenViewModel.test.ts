@@ -7,12 +7,6 @@ jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k
 jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
   useBCSCAgent: () => ({ agent: { id: 'agent' }, waitForAgent: jest.fn().mockResolvedValue({ id: 'agent' }) }),
 }))
-const mockRegisterDevice = jest.fn().mockResolvedValue(undefined)
-const mockTransferAccount = jest.fn().mockResolvedValue(undefined)
-jest.mock('@/bcsc-theme/features/account-transfer/transferee/useAccountTransfer', () => ({
-  __esModule: true,
-  default: () => ({ registerDevice: mockRegisterDevice, transferAccount: mockTransferAccount }),
-}))
 jest.mock('@bifold/core', () => {
   // Mirrors @bifold/core's real QrCodeScanError shape (see packages/core/src/types/error.ts):
   // constructor(message?, data?, details?); `data` is the offending value, `details` is the
@@ -244,44 +238,6 @@ describe('useScanScreenViewModel', () => {
     })
     expect(strat.handle).toHaveBeenCalledTimes(1)
     expect(onPairingCodeFound).toHaveBeenCalledTimes(1)
-  })
-
-  it('transfers the account then calls onAccountTransferFound on account-transfer result', async () => {
-    const onAccountTransferFound = jest.fn()
-    const strat = mkStrategy(true, { kind: 'account-transfer', transferToken: 'tok' })
-    const { result } = renderHook(() =>
-      useScanScreenViewModel({
-        onConnectionFound: jest.fn(),
-        onPairingCodeFound: jest.fn(),
-        onAccountTransferFound,
-        strategies: [strat],
-      })
-    )
-    await act(async () => {
-      await result.current.handleScan('https://x/static/selfsetup.html?tok')
-    })
-    expect(mockRegisterDevice).toHaveBeenCalled()
-    expect(mockTransferAccount).toHaveBeenCalledWith('https://x/static/selfsetup.html?tok', 'tok')
-    expect(onAccountTransferFound).toHaveBeenCalledTimes(1)
-  })
-
-  it('shows a scan error and does not navigate when the account transfer fails', async () => {
-    mockTransferAccount.mockRejectedValueOnce(new Error('boom'))
-    const onAccountTransferFound = jest.fn()
-    const strat = mkStrategy(true, { kind: 'account-transfer', transferToken: 'tok' })
-    const { result } = renderHook(() =>
-      useScanScreenViewModel({
-        onConnectionFound: jest.fn(),
-        onPairingCodeFound: jest.fn(),
-        onAccountTransferFound,
-        strategies: [strat],
-      })
-    )
-    await act(async () => {
-      await result.current.handleScan('https://x/static/selfsetup.html?tok')
-    })
-    expect(onAccountTransferFound).not.toHaveBeenCalled()
-    expect(result.current.scanError).not.toBeNull()
   })
 
   it('dismissError clears scanError', async () => {

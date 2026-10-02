@@ -13,7 +13,10 @@ import { QRCodeStrategy } from '../useQRScanner'
 
 const TRANSFER_QR_PATH = /selfsetup\.html$/i
 
-export const useAccountTransferQRCodeStrategy = (): QRCodeStrategy => {
+/**
+ * Creates a QRCodeStrategy for handling account transfer QR codes.
+ */
+export const useAccountTransferQRCodeStrategy = (onSuccess: () => void): QRCodeStrategy => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { deviceAttestation, authorization, token } = useApi()
@@ -51,7 +54,7 @@ export const useAccountTransferQRCodeStrategy = (): QRCodeStrategy => {
         return
       }
 
-      logger.error('[useAccountTransfer]: Device registration failed', { error })
+      logger.error('[useAccountTransferQRCodeStrategy]: Device registration failed', { error })
     }
   }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo, logger])
 
@@ -119,8 +122,10 @@ export const useAccountTransferQRCodeStrategy = (): QRCodeStrategy => {
 
       await registerDevice()
       await transferAccount(uri, transferToken)
+
+      onSuccess()
     },
-    [logger, registerDevice, t, transferAccount]
+    [logger, onSuccess, registerDevice, t, transferAccount]
   )
 
   return useMemo(() => ({ matches, handle }), [matches, handle])

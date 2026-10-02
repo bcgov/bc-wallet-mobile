@@ -1,11 +1,12 @@
-import useAccountTransfer from '@/bcsc-theme/features/account-transfer/transferee/useAccountTransfer'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { QrCodeScanError, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useCameraPermission } from 'react-native-vision-camera'
 
-import { AccountTransferStrategy, DidCommOobStrategy, PairingCodeStrategy } from './uri-strategies'
+import { DidCommOobStrategy, PairingCodeStrategy } from './uri-strategies'
 import type { UriStrategy } from './uri-strategies/types'
 
 export interface UseScanScreenViewModelOptions {
@@ -19,21 +20,16 @@ export interface UseScanScreenViewModelOptions {
    * routes the code into the pairing flow (typically the sibling PairingCode tab).
    */
   onPairingCodeFound: (pairingCode: string) => void
-  /**
-   * Called once the account transfer for a `{ kind: 'account-transfer' }` result has completed.
-   * The screen only navigates (typically to VerificationSuccess).
-   */
-  onAccountTransferFound?: () => void
   strategies?: UriStrategy[]
 }
 
 // Ordering matters: `Array.find` returns the first matching strategy. Both
 // strategies parse URLs with disjoint shapes (DIDComm OOB vs pairingqrcode.html),
 // so order is not load-bearing today; keep DIDComm first to match the original seam.
-const DEFAULT_STRATEGIES: UriStrategy[] = [DidCommOobStrategy, PairingCodeStrategy, AccountTransferStrategy]
+const DEFAULT_STRATEGIES: UriStrategy[] = [DidCommOobStrategy, PairingCodeStrategy]
 
 const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
-  const { onConnectionFound, onPairingCodeFound, onAccountTransferFound } = options
+  const { onConnectionFound, onPairingCodeFound } = options
   const strategies = useMemo(() => options.strategies ?? DEFAULT_STRATEGIES, [options.strategies])
   const { t } = useTranslation()
   // BCSC's own agent context, not Bifold's `useAgent` (which throws before the
@@ -45,13 +41,14 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   // failed to initialize. Strategies tolerate a missing agent: PairingCodeStrategy
   // ignores it; DidCommOobStrategy returns `{ kind: 'unsupported', reason: 'AgentNotReady' }`.
   const { waitForAgent } = useBCSCAgent()
-  const { registerDevice, transferAccount } = useAccountTransfer()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   // Sent to the inviter as our label when we accept their invitation — they
   // see this name in their chat header. Mirrors the value shown by
   // `WalletNameDisplay` so the two ends agree.
   const scanLabel = useMemo(() => store.bcsc.selectedNickname || 'My Wallet', [store.bcsc.selectedNickname])
+  const { hasPermission, requestPermission } = useCameraPermission()
+  const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const [isProcessing, setIsProcessing] = useState(false)
   // TODO (MD): Swap this for AppError OR directly display BCSC error modal
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
@@ -91,13 +88,6 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
           case 'pairing-code':
             isNavigatingRef.current = true
             onPairingCodeFound(result.pairingCode)
-            break
-          case 'account-transfer':
-            // Latch only after the transfer succeeds so failures surface as scan errors.
-            await registerDevice()
-            await transferAccount(value, result.transferToken)
-            isNavigatingRef.current = true
-            onAccountTransferFound?.()
             break
           case 'unsupported':
             // BCSC v4.1 rejects OpenID and mediator URIs at the strategy layer; show a localized
@@ -140,19 +130,7 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
         setIsProcessing(false)
       }
     },
-    [
-      scanError,
-      strategies,
-      waitForAgent,
-      logger,
-      scanLabel,
-      t,
-      onConnectionFound,
-      onPairingCodeFound,
-      onAccountTransferFound,
-      registerDevice,
-      transferAccount,
-    ]
+    [scanError, strategies, waitForAgent, logger, scanLabel, t, onConnectionFound, onPairingCodeFound]
   )
 
   const dismissError = useCallback(() => setScanError(null), [])
@@ -164,6 +142,8 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   }, [])
 
   return {
+    isPermissionLoading,
+    hasPermission,
     isProcessing,
     scanError,
     handleScan,
