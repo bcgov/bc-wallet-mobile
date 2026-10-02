@@ -7,7 +7,7 @@ import {
   BC_DL_BARCODE_MONONYM,
   BC_DL_BARCODE_MONONYM_NO_DOLLAR,
   BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE,
-} from '@/bcsc-theme/utils/decoder-strategy/__fixtures__/barcodes'
+} from '@/bcsc-theme/utils/__fixtures__/barcodes'
 
 // The 11-character security field sits immediately before the closing '?'.
 const withSecurityField = (barcode: string, security: string) => `${barcode.slice(0, -12)}${security}?`

@@ -4,7 +4,7 @@ import {
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
   BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
-} from '@/bcsc-theme/utils/decoder-strategy/__fixtures__/barcodes'
+} from '@/bcsc-theme/utils/__fixtures__/barcodes'
 
 describe('BCComboCardBarcodeDecoder', () => {
   describe('canDecode', () => {

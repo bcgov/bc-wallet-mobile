@@ -10,7 +10,7 @@ import {
   BC_DL_BARCODE_MULTIWORD_LASTNAME_NO_MIDDLE,
   BC_DL_BARCODE_MULTIWORD_LASTNAME_WITH_MIDDLE,
   VALID_BC_DL_BARCODES,
-} from '@/bcsc-theme/utils/decoder-strategy/__fixtures__/barcodes'
+} from '@/bcsc-theme/utils/__fixtures__/barcodes'
 
 describe('DriversLicenseBarcodeDecoder', () => {
   describe('canDecode', () => {

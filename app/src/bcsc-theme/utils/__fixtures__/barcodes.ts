@@ -1,5 +1,5 @@
 /**
- * Shared PDF-417 fixtures for the decoder-strategy suites. All values are BC "SPECIMEN"
+ * Shared PDF-417 fixtures for the card barcode suites. All values are BC "SPECIMEN"
  * test cards, not real credentials.
  *
  * Only the one value containing a backslash uses String.raw; the rest are plain
