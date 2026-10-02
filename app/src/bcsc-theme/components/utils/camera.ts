@@ -254,7 +254,7 @@ export const isCodeAlignedWithZones = (
  *
  * All identified (non-empty value) codes qualify for these transitions — position
  * on screen is not a gate. Card identity is validated downstream by decoding
- * content (`useCardScanner` → `decodeScannedCode`); a scan that decodes to a
+ * content (`useCardScanner` → `decodeCardBarcode`); a scan that decodes to a
  * DL-only card with no BCSC serial is rejected there via the `onCodeScanned`
  * `false` return, which resets the scanner. `isAligned` is still computed per
  * code (see `enhanceSingleCode`) but only drives focus-cycle prioritisation and
