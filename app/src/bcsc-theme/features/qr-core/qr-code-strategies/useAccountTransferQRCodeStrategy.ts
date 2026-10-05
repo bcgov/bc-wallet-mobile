@@ -16,7 +16,20 @@ const TRANSFER_QR_PATH = /selfsetup\.html$/i
 /**
  * Creates a QRCodeStrategy for handling account transfer QR codes.
  */
-export const useAccountTransferQRCodeStrategy = (onSuccess: () => void): QRCodeStrategy => {
+export const useAccountTransferQRCodeStrategy = (
+  /**
+   * Callback function to be called when the account transfer is successful.
+   * ie: Navigate to the "Verification Success" screen.
+   * @returns void
+   */
+  onSuccess: () => void,
+  /**
+   * Callback function to be called when the account is already verified.
+   * ie: Navigate to the "Already Verified" screen
+   * @returns void
+   */
+  onAlreadyVerified?: () => void
+): QRCodeStrategy => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { deviceAttestation, authorization, token } = useApi()
@@ -104,7 +117,7 @@ export const useAccountTransferQRCodeStrategy = (onSuccess: () => void): QRCodeS
       apiClient.tokens = deviceToken
       await updateTokens({ refreshToken: deviceToken.refresh_token, accessToken: deviceToken.access_token })
     },
-    [t, deviceAttestation, token, apiClient, updateTokens]
+    [deviceAttestation, token, apiClient, updateTokens, t]
   )
 
   const matches = useCallback((uri: string): boolean => {
@@ -120,12 +133,17 @@ export const useAccountTransferQRCodeStrategy = (onSuccess: () => void): QRCodeS
         throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'))
       }
 
+      if (store.bcscSecure.verified && onAlreadyVerified) {
+        onAlreadyVerified()
+        return
+      }
+
       await registerDevice()
       await transferAccount(uri, transferToken)
 
       onSuccess()
     },
-    [logger, onSuccess, registerDevice, t, transferAccount]
+    [logger, onAlreadyVerified, onSuccess, registerDevice, store.bcscSecure.verified, t, transferAccount]
   )
 
   return useMemo(() => ({ matches, handle }), [matches, handle])

@@ -40,7 +40,7 @@ export const usePairingCodeQRCodeStrategy = (onSuccess: (pairingCode: string) =>
 
       onSuccess(code)
     },
-    [t]
+    [onSuccess, t]
   )
 
   return useMemo(() => ({ matches, handle }), [matches, handle])

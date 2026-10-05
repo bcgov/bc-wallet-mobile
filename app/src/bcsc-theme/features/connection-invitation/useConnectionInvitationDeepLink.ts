@@ -17,9 +17,6 @@ import { useConnectionInvitationService } from './ConnectionInvitationServiceCon
  * the shared DIDComm OOB strategy once the agent is ready, and navigates to the
  * Connection screen. Must be mounted inside the agent scope (it reads
  * {@link useBCSCAgent}).
- *
- * Convergence: deep-link and QR-scanned invitations both run through
- * {@link DidCommOobStrategy} and land on the same `ConnectionLoading` screen.
  */
 export const useConnectionInvitationDeepLink = (): void => {
   const service = useConnectionInvitationService()

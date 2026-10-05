@@ -29,9 +29,6 @@ jest.mock('@credo-ts/didcomm', () => ({
   DidCommMediatorPickupStrategy: { PickUpV2LiveMode: 'PickUpV2LiveMode' },
 }))
 jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({ useBCSCAgent: () => mockAgentState }))
-jest.mock('../qr-core/uri-strategies', () => ({
-  DidCommOobStrategy: { handle: (...args: unknown[]) => mockHandle(...args) },
-}))
 jest.mock('./ConnectionInvitationServiceContext', () => ({ useConnectionInvitationService: () => mockService }))
 
 const INVITATION_URL = 'bcwallet://aries_connection_invitation?oob=eyJhbGciOi'
