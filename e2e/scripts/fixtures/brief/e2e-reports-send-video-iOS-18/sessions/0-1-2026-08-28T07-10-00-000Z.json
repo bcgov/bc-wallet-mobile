@@ -1,0 +1,21 @@
+{
+  "cid": "0-1",
+  "specs": ["test/bcsc/verify/send-video-non-photo.journey.ts"],
+  "sessionId": "33333333-3333-4333-8333-333333333333",
+  "capabilities": {
+    "platformName": "iOS",
+    "appium:deviceName": "iPhone 14",
+    "appium:platformVersion": "18",
+    "testobject_device_name": "iPhone_14_18_real_us",
+    "testobject_test_report_url": "https://app.saucelabs.com/tests/aaaa0003aaaa0003aaaa0003aaaa0003"
+  },
+  "startedAt": "2026-08-28T07:10:00.000Z",
+  "endedAt": "2026-08-28T07:20:10.000Z",
+  "failures": 1,
+  "tests": [
+    { "suite": "Verified journey: non-photo card, send video", "title": "clears the review queue before submitting", "status": "pass" },
+    { "suite": "Verified journey: non-photo card, send video", "title": "onboards to the verify prompt", "status": "pass" },
+    { "suite": "Verified journey: non-photo card, send video", "title": "enters the non-photo serial and submits the birthdate", "status": "pass" },
+    { "suite": "Verified journey: non-photo card, send video", "title": "adds the required photo ID", "status": "fail", "message": "element (\"-ios predicate string:label CONTAINS \\\"provide additional ID\\\"\") still not displayed after 20000ms" }
+  ]
+}

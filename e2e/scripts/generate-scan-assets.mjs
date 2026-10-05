@@ -35,18 +35,34 @@ const CARDS = [
   { persona: 'daphne', lastName: 'BLAKE', firstName: 'DAPHNE', serial: 'C26444539', birthDate: '19800922' },
 ]
 
-/** Expiry (YYMM) in AAMVA track 2. Any future date works — the app reads only the birthdate here. */
+/** Expiry (YYMM) in track 2. Any future date works — the app reads only the birthdate here. */
 const EXPIRY_YYMM = '2601'
 
+/** Fixed-width field: space-padded, never longer. */
+const fixed = (text, width) => text.padEnd(width).slice(0, width)
+
 /**
- * 3-track payload modelled on the BC card layout, with the BCSC serial as the final token. Kept short:
- * payload length drives PDF-417 row count, and fewer rows means fatter modules on the injected frame.
+ * The PDF-417 payload in ICBC's 3-track layout, which is what the app's spec-based parser accepts —
+ * track 1 `%<province><city>^<last>,$<first>^<street>$<city line>^?`, track 2 `;<IIN><card
+ * number>=<YYMM expiry><YYYYMMDD birth>=?`, and track 3 an 82-character fixed-width block whose
+ * security field (offset 70) zero-pads the card serial. The parser rejects the whole code when any
+ * track is malformed, so the synthetic fields (licence number, address, physical traits) only need to
+ * be well-formed; `/device/barcodes` matches on the serial and birthdate.
  */
-function aamvaPayload({ lastName, firstName, serial, birthDate }) {
-  return (
-    `%BCVICTORIA^${lastName},$${firstName}^910 GOVERNMENT ST$VICTORIA BC V8W 3Y8^?` +
-    `;6360282222222=${EXPIRY_YYMM}${birthDate}=?_ 00${serial}?`
-  )
+function cardPayload({ lastName, firstName, serial, birthDate }) {
+  const postalCode = 'V8W 3Y8'
+  const track1 = `%BCVICTORIA^${lastName},$${firstName}^910 GOVERNMENT ST$VICTORIA BC  ${postalCode}^?`
+  const track2 = `;6360282222222=${EXPIRY_YYMM}${birthDate}=?`
+  const track3 =
+    '_%0A' +
+    fixed(postalCode.replace(' ', ''), 11) +
+    fixed('', 16) +
+    'M180 80BRNBLU' +
+    fixed('', 10) + // PHN: none on a licence
+    fixed('', 16) +
+    fixed(`00${serial}`, 11) +
+    '?'
+  return track1 + track2 + track3
 }
 
 /**
@@ -56,7 +72,8 @@ function aamvaPayload({ lastName, firstName, serial, birthDate }) {
  */
 async function barcodeAtWidth(opts, targetWidth) {
   const raw = await bwipjs.toBuffer({ backgroundcolor: 'FFFFFF', ...opts })
-  return sharp(raw).resize({ width: targetWidth, kernel: 'nearest' }).toBuffer()
+  const { height: rawHeight = 0 } = await sharp(raw).metadata()
+  return { image: await sharp(raw).resize({ width: targetWidth, kernel: 'nearest' }).toBuffer(), rawHeight }
 }
 
 /**
@@ -72,12 +89,15 @@ async function barcodeAtWidth(opts, targetWidth) {
 async function buildCard(card) {
   const pdfColumns = 4
   const pdfWidth = Math.round(0.92 * CARD_W)
-  // Squash to the real card's band height. Only row height changes — module WIDTH, which sets
-  // decodability, is untouched, and the remaining rows stay far above MLKit's few-pixel minimum.
-  const pdf417 = await sharp(
-    await barcodeAtWidth({ bcid: 'pdf417', text: aamvaPayload(card), scale: 6, columns: pdfColumns }, pdfWidth)
+  // Squash to a card-like band. Only row height changes — module WIDTH, which sets decodability, is
+  // untouched — and the band is tall enough that the 3-track payload's rows stay well above MLKit's
+  // few-pixel minimum (the generator prints px per row).
+  const { image: rawPdf417, rawHeight: rawPdfH } = await barcodeAtWidth(
+    { bcid: 'pdf417', text: cardPayload(card), scale: 6, columns: pdfColumns },
+    pdfWidth
   )
-    .resize({ width: pdfWidth, height: Math.round(0.22 * CARD_H), fit: 'fill' })
+  const pdf417 = await sharp(rawPdf417)
+    .resize({ width: pdfWidth, height: Math.round(0.3 * CARD_H), fit: 'fill' })
     .toBuffer()
   // Code-39 at its NATIVE scale — no resampling at all, because a blurred bar merges and this
   // symbology has no checksum to catch it (an early run silently read C2644539 for C26444539).
@@ -93,10 +113,12 @@ async function buildCard(card) {
   const { width: serW = 0, height: serH = 0 } = await sharp(serialCode).metadata()
   // Modules across a PDF-417 row: start + left indicator + data + right indicator + stop.
   const modulesAcross = 8 + 17 + pdfColumns * 17 + 17 + 9
+  // bwip-js draws rows 3 modules tall at `scale` px per module before the band squash.
+  const pdfRows = Math.round(rawPdfH / (3 * 6))
   // A 9-character code-39 with its two 10-module quiet zones spans 163 modules.
   console.log(
-    `  pdf417 ${pdfW}x${pdfH} (${pdfColumns} cols, ${(pdfW / modulesAcross).toFixed(1)}px/module)` +
-      `, serial ${serW}x${serH} (${(serW / 163).toFixed(1)}px/module)`
+    `  pdf417 ${pdfW}x${pdfH} (${pdfColumns} cols, ${(pdfW / modulesAcross).toFixed(1)}px/module, ` +
+      `${pdfRows} rows at ${(pdfH / pdfRows).toFixed(1)}px/row), serial ${serW}x${serH} (${(serW / 163).toFixed(1)}px/module)`
   )
 
   return sharp({ create: { width: CARD_W, height: CARD_H, channels: 3, background: { r: 255, g: 255, b: 255 } } })

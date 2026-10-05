@@ -50,6 +50,9 @@ export interface FailureDetail {
   /** Checkpoints the failure blocked behind it in the same file. */
   blockedAfter: number
   kind: 'test' | 'hook'
+  jobUrl?: string
+  /** The session was terminated at this checkpoint (the app stopped answering the driver). */
+  terminated?: boolean
 }
 
 export interface PlatformTotals {
@@ -216,13 +219,14 @@ export function collectFailures(results: RunResults, titlesOf: SpecTitleLookup =
       // Bail's unreported remainder lands on the failing checkpoint, or on the hook when nothing ran.
       const unreported = unreportedTitles(titlesOf(suite.file) ?? [], reportedByFile.get(suite.file) ?? []).length
       const failedTest = suite.tests.some((test) => test.status === 'fail')
+      const where = { platform: suite.platform, file: suite.file, suite: suite.title, jobUrl: suite.jobUrl, terminated: suite.terminated }
       for (const hook of suite.hookFailures) {
-        failures.push({ platform: suite.platform, file: suite.file, suite: suite.title, checkpoint: hook.title, message: hook.message, blockedAfter: failedTest ? 0 : unreported, kind: 'hook' })
+        failures.push({ ...where, checkpoint: hook.title, message: hook.message, blockedAfter: failedTest ? 0 : unreported, kind: 'hook' })
       }
       suite.tests.forEach((test, index) => {
         if (test.status !== 'fail') return
         const blockedAfter = suite.tests.slice(index + 1).filter((later) => later.status === 'blocked').length + unreported
-        failures.push({ platform: suite.platform, file: suite.file, suite: suite.title, checkpoint: test.name, message: test.message ?? 'failed', blockedAfter, kind: 'test' })
+        failures.push({ ...where, checkpoint: test.name, message: test.message ?? 'failed', blockedAfter, kind: 'test' })
       })
     }
   }
