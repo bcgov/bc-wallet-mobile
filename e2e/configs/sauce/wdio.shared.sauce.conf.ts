@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 import type { Options } from '@wdio/types'
 import dotenv from 'dotenv'
+import { recordTestResult } from '../../src/helpers/session-record.js'
 import { config as baseConfig, captureFailureScreenshot, wasSkipped } from '../wdio.shared.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -120,6 +121,7 @@ const sauceRdcOptions = {
  * `Promise.all`, and `afterSession` runs after the session is deleted.
  */
 config.afterTest = async function (test, _context, result) {
+  recordTestResult(test, result)
   if (wasSkipped(result)) {
     result.passed = true
   }

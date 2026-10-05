@@ -1,55 +1,33 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { QRScannerFrame } from '@/bcsc-theme/components/QRScannerFrame'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { hitSlop } from '@/constants'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
-import { DismissiblePopupModal, ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useState } from 'react'
+import { DismissiblePopupModal, QrCodeScanError, ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useCameraPermission } from 'react-native-vision-camera'
 
-import useScanScreenViewModel from './useScanScreenViewModel'
+export interface QRScannerProps {
+  isProcessing: boolean
+  scanError: QrCodeScanError | null
+  onScan: (value: string) => Promise<void>
+  onDismissError: () => void
+}
 
-const QRScanner: React.FC = () => {
+/**
+ * Presentational QR scanner shared by every scan entry point. It owns the camera UI only; what a scanned
+ * value means (strategies, API calls, navigation) belongs to the screen's ViewModel.
+ */
+const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScannerProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
-  const navigation = useNavigation<BottomTabNavigationProp<BCSCQRCoreTabParams>>()
   const [torchActive, setTorchActive] = useState(false)
-
-  const onConnectionFound = useCallback(
-    (oobRecordId: string) => {
-      // QRScanner sits inside QRCoreStack (a tab navigator); ConnectionLoading
-      // lives on MainStack, so escape up via getParent before navigating.
-      navigation
-        .getParent<StackNavigationProp<BCSCMainStackParams>>()
-        ?.navigate(BCSCScreens.ConnectionLoading, { oobRecordId })
-    },
-    [navigation]
-  )
-
-  const onPairingCodeFound = useCallback(
-    (pairingCode: string) => {
-      navigation.navigate(BCSCQRCoreScreens.PairingCode, { pairingCode })
-    },
-    [navigation]
-  )
-
-  const { isPermissionLoading, hasPermission, isProcessing, scanError, handleScan, dismissError, resetNavigationLock } =
-    useScanScreenViewModel({ onConnectionFound, onPairingCodeFound })
-
-  // QRCoreStack has `unmountOnBlur: false` so the scanner persists across the
-  // ConnectionLoading round trip; reset the nav lock on each focus so the
-  // user can scan again after completing a flow.
-  useFocusEffect(
-    useCallback(() => {
-      resetNavigationLock()
-    }, [resetNavigationLock])
-  )
+  const { hasPermission, requestPermission } = useCameraPermission()
+  const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
 
   const styles = StyleSheet.create({
     container: { flex: 1 },
@@ -81,11 +59,11 @@ const QRScanner: React.FC = () => {
 
   // ScanCamera owns the camera-frame dedupe (hasFiredRef + cameraActive). If we
   // unmount it while processing, those reset on remount and the same QR — still
-  // in the user's frame — re-fires, queuing a duplicate connection. Overlay the
-  // spinner instead so the dedupe state survives the in-flight strategy.handle.
+  // in the user's frame — re-fires, queuing a duplicate scan. Overlay the
+  // spinner instead so the dedupe state survives the in-flight handler.
   return (
     <View style={styles.container}>
-      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} torchActive={torchActive} error={scanError} />
+      <ScanCamera handleCodeScan={onScan} enableCameraOnError={true} torchActive={torchActive} error={scanError} />
       <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
       <TouchableOpacity
         style={styles.torchButton}
@@ -107,8 +85,8 @@ const QRScanner: React.FC = () => {
           title={t('BCSC.Scan.ErrorDetails')}
           description={scanError.message}
           onCallToActionLabel={t('BCSC.Scan.Dismiss')}
-          onCallToActionPressed={dismissError}
-          onDismissPressed={dismissError}
+          onCallToActionPressed={onDismissError}
+          onDismissPressed={onDismissError}
         />
       )}
     </View>

@@ -37,7 +37,7 @@ jest.mock('../hooks/useSystemChecks', () => ({
   useSystemChecks: jest.fn(),
 }))
 jest.mock('../contexts/BCSCLoadingContext', () => ({
-  LoadingScreen: () => 'LoadingScreen',
+  LoadingScreen: 'LoadingScreen',
 }))
 jest.mock('./AuthStack', () => ({
   __esModule: true,
@@ -121,7 +121,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('LoadingScreen')
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
   })
 
   it('renders LoadingScreen when initializingAccount is true', () => {
@@ -133,7 +133,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('LoadingScreen')
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
   })
 
   it('renders LoadingScreen when isClientReady is false', () => {
@@ -144,7 +144,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('LoadingScreen')
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
   })
 
   it('renders LoadingScreen when isNavigationReady is false', () => {
@@ -155,7 +155,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('LoadingScreen')
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
   })
 
   it.each<[string, Record<string, any>, string]>([
@@ -315,7 +315,7 @@ describe('BCSCRootStack', () => {
 
       const { toJSON } = render(<BCSCRootStack />)
 
-      expect(toJSON()).toBe('LoadingScreen')
+      expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: 'bcsc/updateSecureVerifiedStatus' })
       )

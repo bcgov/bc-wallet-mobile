@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { Timeouts } from '../constants.js'
+import { expectDeveloperModeHidden } from '../helpers/developer.js'
 import { fetchPairingCode } from '../helpers/pairing-code.js'
 import {
   AccountDetailsScreen,
@@ -43,6 +44,18 @@ export async function expectVerifiedInSettings(): Promise<void> {
     await SettingsScreen.isVisible('profile'),
     'the Settings Profile row is verified-gated and should be present for a verified account'
   )
+  await SettingsScreen.back.tap()
+  await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * Assert developer mode is off, from Home: open Settings, scroll to the footer, the Developer options
+ * row must be absent, back to Home. Shared by the upgrade + migration lanes.
+ */
+export async function expectDeveloperModeOffInSettings(): Promise<void> {
+  await openSettings()
+  await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await expectDeveloperModeHidden()
   await SettingsScreen.back.tap()
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }

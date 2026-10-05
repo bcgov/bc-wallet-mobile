@@ -629,8 +629,12 @@ _Two rules, both learned the hard way:_
    it decodes as a silently WRONG serial._
 
 _`scripts/generate-scan-assets.mjs` writes `assets/images/scan/card_<persona>.png` — one combo-card
-back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. Rerun it
-after changing a payload or size; it prints px-per-module for every code it writes._
+back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. The PDF-417
+carries ICBC's 3-track layout exactly as the app's spec-based parser demands it — track 3 is a fixed
+82-character block whose security field zero-pads the serial — because the parser rejects the whole
+code when any track is malformed, and then the live scanner never reads the card and the reroute never
+fires. Rerun the script after changing a payload or size; it prints px-per-module and px-per-row for
+every code it writes._
 
 _The cards are generated rather than photographed because the serial screen needs BOTH codes — the
 serial from the 1D code-39 and the birthdate from the PDF-417 — matching the same persona. The shared
@@ -698,6 +702,9 @@ Every nightly run ends with a **brief** — one page on the run's Summary tab (a
 | ⬜ not run | no result for it in these reports (lane not run, spec not scheduled, worker never got a session) |
 | ➖ n/a | not applicable on that platform (e.g. card-barcode scanning on iOS) |
 | 📝 manual | proved by the UAT team, not automation — the manual script is linked |
+| 🔌 session terminated | Sauce killed the session mid-journey, almost always because the app stopped answering the driver (a hung main thread); the checkpoint it died on fails and the rest of the file is blocked |
+
+Every failure links its Sauce job, and the **Sessions** table lists every journey's attempts in order (`❌ 1 · ✅ 2`), each linked to its job — the retry that `specFileRetries` buys is visible there rather than hidden behind the final result. Both come from `reports/sessions/*.json`, one record per WebDriver session that the config hooks write as the journey runs (spec, device, Sauce job, every checkpoint's outcome). That record is also what stands in for the JUnit of a session Sauce terminated: the reporter writes its XML only when the worker ends, and the runner's session teardown throws first on a dead session, leaving a 0-byte file — without the record such a journey would read ⬜, as if it had never run. That 0-byte file is itself proof of a terminated session: the worker's last attempt reads 🔌 even when it died in a hook and its record closed as an ordinary failure. The lane line reads from the reports too: an advisory lane (`continue-on-error`) shows `❌ (job ✅)` when its job passed but a journey did not.
 
 Cells show `passed/listed` plus tallies when not everything listed passed (`✅ 4/5 ⏭1`). The rows come from `src/brief/coverage-map.ts` — each UAT row names the spec files and exact `it` titles that prove it, per platform — and `yarn brief:check` (the brief job runs it first) fails when a listed title no longer exists or a journey under `test/bcsc/` is not mapped, so renaming a checkpoint means updating the map. `smoke.spec.ts` is the PR gate and has no row: the nightly never schedules it.
 
@@ -762,6 +769,7 @@ e2e/
 │   │   ├── evaluate.ts                      # row × platform → pass/fail/blocked/skipped/not-run/n-a/manual
 │   │   ├── a11y-summary.ts                  # latest audit per platform vs a11y-baseline.json (NEW vs known)
 │   │   ├── render.ts                        # the markdown GitHub shows as the run summary
+│   │   ├── sessions.ts                      # session records → attempts + Sauce job links; rebuilds journeys whose session died
 │   │   └── build.ts                         # report dirs → brief model (the CLI and the self-test share it)
 │   │
 │   ├── test-ids/
@@ -790,7 +798,8 @@ e2e/
 │   │   ├── email.ts                         # temp-inbox email verification helper
 │   │   ├── gestures.ts                      # swipe, scroll, tap-at-coordinate wrappers
 │   │   ├── pairing-code.ts                  # mint pairing codes / deep links against SIT
-│   │   └── sauce.ts                         # SauceLabs-specific utilities (detection, annotations)
+│   │   ├── sauce.ts                         # SauceLabs-specific utilities (detection, annotations)
+│   │   └── session-record.ts                # one reports/sessions/*.json per WebDriver session (spec, device, Sauce job, checkpoints)
 │   │
 │   └── screens/                             # action-based screen-object DSL, one file per stack
 │       ├── core/
@@ -834,7 +843,7 @@ e2e/
 │       │   └── under-12.journey.ts          # under-12 persona: restricted method set + transfer age gate
 │       ├── main/
 │       │   ├── unverified-main.journey.ts   # unverified tab / QRCore gating
-│       │   ├── settings.journey.ts          # settings rows, change-PIN, auto-lock, reset/remove account
+│       │   ├── settings.journey.ts          # settings rows, developer mode off, change-PIN, auto-lock, reset/remove account
 │       │   └── wallet.journey.ts            # DIDComm credential lifecycle + populated Contacts (issuer tenant)
 │       │
 │       ├── scan/                            # card-barcode scanning — Android + Sauce only (--suite scan; in regression)

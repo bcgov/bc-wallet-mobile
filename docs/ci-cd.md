@@ -95,3 +95,4 @@ was expected fails that job rather than passing quietly.
 | `scanner.yml` | Scans for known malicious packages |
 | `update-ledgers.yml` | Keeps Indy ledger config current |
 | `maintenance.yml` | Nightly housekeeping |
+| `release-notes.yml` | On-demand release notes Discussion, from two tags |
