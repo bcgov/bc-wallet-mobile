@@ -137,6 +137,13 @@ export const TestIds = {
     pinInput: {
       visibilitySuffix: 'VisibilityButton',
     },
+    /** `WaitingScreenContent` appends these to its `testIDKey`, falling back to `key` when none was passed,
+     *  so the always-mounted loading overlay and a screen's own waiting view never share ids. */
+    waitingScreen: {
+      key: 'WaitingScreenContent',
+      viewportSuffix: 'Viewport',
+      statusSuffix: 'Status',
+    },
     /** Title-derived row ids. `SectionButton` strips whitespace from the title; `CardButton` does not. */
     cardButtonPrefix: 'CardButton-',
     sectionButtonPrefix: 'SectionButton-',
@@ -393,6 +400,7 @@ export const TestIds = {
     },
     /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
     evidenceUploading: {
+      screen: 'UploadingScreen',
       cancelUpload: 'CancelUpload',
     },
     /** `SuccessfullySent` — the post-upload confirmation. `goToHome` is the screen's ONLY way out:
@@ -433,6 +441,7 @@ export const TestIds = {
      *  agent answers, and CallErrorView's pair on a failed setup. The "Call ended" processing view
      *  has no ids. */
     liveCall: {
+      loadingScreen: 'LiveCallLoadingScreen',
       cancel: 'Cancel',
       mute: 'Mute',
       video: 'Video',
