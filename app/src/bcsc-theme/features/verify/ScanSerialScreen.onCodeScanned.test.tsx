@@ -13,6 +13,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { useFocusEffect } from '@react-navigation/native'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
+import { Rect } from 'react-native-svg'
 import ScanSerialScreen from './ScanSerialScreen'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
@@ -436,6 +437,63 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
   })
 
+  describe('while a hook call is still in flight', () => {
+    const deferred = () => {
+      let resolve: () => void = () => undefined
+      const promise = new Promise<void>((res) => {
+        resolve = res
+      })
+      return { promise, resolve }
+    }
+
+    // The framing outline turns green once the screen locks; it only renders after the container is laid out.
+    const outlineColor = (screen: ReturnType<typeof renderScreen>) => {
+      return screen.UNSAFE_getAllByType(Rect).find((rect) => rect.props.stroke)?.props.stroke
+    }
+
+    const layOut = (screen: ReturnType<typeof renderScreen>) => {
+      const container = screen.UNSAFE_root.findAll((node) => typeof node.props.onLayout === 'function')[0]
+      act(() => {
+        container.props.onLayout({ nativeEvent: { layout: { width: 300, height: 500 } } })
+      })
+    }
+
+    // Starts a scan without awaiting it, so the test can act while the hook call is pending.
+    const startScan = (codes: ScanableCode[]) => {
+      let pending: Promise<void | boolean> = Promise.resolve()
+      act(() => {
+        pending = mockCamera.onCodeScanned?.(codes) ?? Promise.resolve()
+      })
+      return pending
+    }
+
+    it.each([
+      ['a completed pair', [serial, licence], mockHandleScanComboCard],
+      ['a non-BCSC reroute', [damaged], mockHandleScanNonBcsc],
+    ])('locks for %s before the hook call settles', async (_, codes, hook) => {
+      const screen = renderScreen()
+      layOut(screen)
+      const before = outlineColor(screen)
+      expect(before).not.toBe('#00FF00')
+      const inFlight = deferred()
+      hook.mockReturnValueOnce(inFlight.promise)
+
+      const first = startScan(codes)
+
+      expect(hook).toHaveBeenCalledTimes(1)
+      expect(outlineColor(screen)).toBe('#00FF00')
+      expect(await scan([serial, licence])).toBe(true)
+      expect(await scan([damaged])).toBe(true)
+      expect(mockHandleScanComboCard.mock.calls.length + mockHandleScanNonBcsc.mock.calls.length).toBe(1)
+
+      await act(async () => {
+        inFlight.resolve()
+        await first
+      })
+      expect(await first).toBe(true)
+    })
+  })
+
   describe('logging', () => {
     it('never logs the serial, the card number, the health number or the raw barcode', async () => {
       renderScreen()
@@ -446,6 +504,40 @@ describe('ScanSerialScreen onCodeScanned', () => {
       for (const sensitive of ['K00023254', '9123456789', 'K12345678', BC_COMBO_BARCODE_K]) {
         expect(loggedArguments).not.toContain(sensitive)
       }
+    })
+
+    it('logs each decoded barcode with its type and source only', async () => {
+      renderScreen()
+
+      await scan([serial, pdf417(BC_COMBO_BARCODE_K)])
+
+      expect(debugSpy).toHaveBeenCalledWith('[DecodeBarcodes] Decoded barcode metadata:', {
+        type: 'code-39',
+        source: '1d',
+      })
+      expect(debugSpy).toHaveBeenCalledWith('[DecodeBarcodes] Decoded barcode metadata:', {
+        type: 'pdf-417',
+        source: 'pdf417',
+      })
+    })
+
+    it('logs a failed decode with its type and reason only', async () => {
+      renderScreen()
+
+      await scan([damaged])
+
+      expect(debugSpy).toHaveBeenCalledWith('[DecodeBarcodes] Failed to decode barcode', {
+        type: 'pdf-417',
+        reason: 'damaged',
+      })
+    })
+
+    it('logs that an unknown barcode was skipped, with no payload', async () => {
+      renderScreen()
+
+      await scan([unknown])
+
+      expect(debugSpy).toHaveBeenCalledWith('[DecodeBarcodes] Skipping unknown barcode')
     })
   })
 })
