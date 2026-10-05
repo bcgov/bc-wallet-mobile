@@ -18,7 +18,7 @@ import { View } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createStackHeader } from '../components/NavigationHeaders'
 import { useAccount } from '../contexts/BCSCAccountContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
@@ -214,7 +214,7 @@ const MainStack: React.FC = () => {
             headerBackTitleVisible: false,
             headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
             headerLeft: createHeaderBackButton,
-            header: createHeaderWithoutBanner,
+            header: createStackHeader,
             headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
           }}
         >

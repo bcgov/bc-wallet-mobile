@@ -40,28 +40,28 @@ export const HeaderDropShadow = () => {
   )
 }
 
-export const createHeaderWithoutBanner = (props: StackHeaderProps) => (
+export const createStackHeader = (props: StackHeaderProps) => (
   <View>
     <HeaderDropShadow />
     <Header {...props} />
   </View>
 )
 
-export const createTabHeaderWithoutBanner = ({ route, options, layout }: BottomTabHeaderProps) => (
-  <HeaderWithoutBanner route={route} options={options} layout={layout} />
+export const createTabHeader = ({ route, options, layout }: BottomTabHeaderProps) => (
+  <TabHeader route={route} options={options} layout={layout} />
 )
 
-export const createStackHeaderWithoutBanner = ({ route, options, layout }: StackHeaderProps) => (
-  <HeaderWithoutBanner route={route} options={options} layout={layout} />
+export const createTabStyleStackHeader = ({ route, options, layout }: StackHeaderProps) => (
+  <TabHeader route={route} options={options} layout={layout} />
 )
 
-type HeaderWithoutBannerProps = {
+type TabHeaderProps = {
   route: { name: string }
   options: HeaderOptions
   layout: Layout
 }
 
-const HeaderWithoutBanner = ({ route, options, layout }: HeaderWithoutBannerProps) => (
+const TabHeader = ({ route, options, layout }: TabHeaderProps) => (
   <ElementsHeader
     {...options}
     layout={layout}
