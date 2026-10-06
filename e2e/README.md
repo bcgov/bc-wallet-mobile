@@ -578,8 +578,8 @@ path CI already uses)._
 | _Platform_ | _Format (surface)_ | _Verdict_ | _Evidence (Sauce job)_ | _Notes / mitigation_ |
 | --- | --- | --- | --- | --- |
 | Android | PDF-417 (evidence capture — live scanner behind the shutter) | ✅ WORKS | `8819e61675d340b4afa096d6ed886adf`, `ed55eb7cd49e4cf2a3a6240b1b516323` | _Pixel 7 Pro / Android 14; decoded an injected card back and rerouted the flow — why `COMBO_CARD_BARCODE_MASKS` exists_ |
-| Android | Code-39 + PDF-417 (serial-scan screen) — full decode | ⚠️ WORKS BUT RACY | `94241d04…`, `88d9f8d377584709a40183aebfe66245` | _Proven: with a purpose-built card the app reached `VerificationCardError` showing the serial AND the birthdate it had decoded — only reachable after both codes decode, pair and hit the backend. Not yet CI-reliable: the screen reroutes to the non-BCSC flow on ANY value-less barcode detection (see below), which usually wins the race. Blocker is app behaviour, not image quality — CI keeps manual serial entry meanwhile_ |
-| Android | Non-BCSC reroute at the serial screen | ✅ WORKS (deterministic) | same jobs | _An unrecognised/undecodable code at `ScanSerial` routes to DualIdentificationRequired within seconds, every run — an edge case previously untestable_ |
+| Android | Code-39 + PDF-417 (serial-scan screen) — full decode | ⚠️ DECODE PROVEN, HAPPY PATH NOT YET RE-PROVEN | `94241d04…`, `88d9f8d377584709a40183aebfe66245` | _Proven: with a purpose-built card the app reached `VerificationCardError` showing the serial AND the birthdate it had decoded — only reachable after both codes decode, pair and hit the backend. That run was racy because the screen then rerouted to the non-BCSC flow on any failed read. It no longer does (a failed read keeps scanning, see below), and the screen now asks `/device/barcodes` instead of `/device/authorization`. `serial-scanner.journey.ts` drives that path; it has not yet passed on Sauce, so the serial-scan happy path stays unproven_ |
+| Android | Non-BCSC reroute at the serial screen | ⚠️ CHANGED, NOT YET RE-PROVEN | `94241d04…`, `88d9f8d377584709a40183aebfe66245` | _An unrecognised or undecodable code at `ScanSerial` used to route to DualIdentificationRequired within seconds; it now keeps scanning. The reroute follows `card_not_found` from `/device/barcodes` (a licence, for example) or a PDF-417 positively recognised as another issuer's AAMVA card. Unit tests cover both; no journey does_ |
 | Android | QR (FAB scanner) | ✅ WORKS | `a6f63e6f9f674fab95eea0f560918234` | _junk QR → "not recognized" popup AND pairing QR → full strategy pipeline, both first try; transfer-in scanning shares the same camera component_ |
 | iOS | QR (FAB scanner) | ✅ WORKS | `d7ea2c3c39c548a8a7ddc422d2c32714` | _Sauce's synthesized QR metadata reaches the vision-camera delegate: junk QR → "not recognized" popup AND pairing QR → full strategy pipeline_ |
 | iOS | Code-39 / PDF-417 (any surface) | ❌ DEAD (structural) | `d7ea2c3c39c548a8a7ddc422d2c32714`, `e7214db3895d4d67bb05d053e38e6350`, `3b6691b413534c2299051991a0dc85e5` (serial: bare code-39, bare PDF-417, card back), `56f3c3775264490c8d92bf98465fd066` (evidence capture) | _Proven, not just documented: the injected card is plainly VISIBLE and sharp in the iOS preview, and code-39/PDF-417 still never fire, while QR fires reliably from the same image. iOS decodes in the OS (`AVCaptureMetadataOutput`) and Sauce only synthesizes QR metadata, so no rotation/clarity/size change can ever help. Mitigation: manual serial entry_ |
@@ -590,20 +590,22 @@ _What that buys CI today, split by what each platform can actually do:_
   unrecognised QR and asserts the scan-error popup; `verified-combined.journey.ts` injects a QR
   carrying a freshly minted pairing code and asserts the app logs in and names the service._
 - **_Card barcodes, Android only_** _(the `scan` suite): the non-BCSC → BCSC reroutes, one journey per
-  card type plus one on the second ID, and the serial scanner's unrecognised-code path. The reroute
-  journeys are the end-to-end proof that Android reads a card barcode off an injected frame — decode →
-  decoder strategy → `/device/barcodes` → navigation._
+  card type plus one on the second ID, and the serial scanner's happy path (a real card scanned at the
+  serial screen). The reroute journeys are the end-to-end proof that Android reads a card barcode off an
+  injected frame — decode → decoder strategy → `/device/barcodes` → navigation._
 
-_Still NOT automated: the serial-scan HAPPY path (scan your own card and get authorized). It is dead on
-iOS and racy on Android — the screen reroutes on any value-less detection before a clean read lands —
-so both platforms keep manual serial entry. See the app-behaviour note at the end of this section._
+_Still NOT proven on Sauce: the serial-scan happy path (scan your own card and get authorized).
+`serial-scanner.journey.ts` now drives it, but it has not passed there yet, and it is dead on iOS —
+so both platforms keep manual serial entry in the journeys that need an authorized device. See the
+app-behaviour note at the end of this section._
 
 #### _Injecting a scan target_
 
 _Use `injectScanTarget` for a committed asset and `injectQrCode` for a payload only known at runtime
 (a live pairing code). Both centre the code on a frame-aspect white canvas — which doubles as an
 oversized quiet zone — and both must run **before** the scanner opens: swapping the image into a live
-camera leaves transition frames carrying only part of it, which the scanner reads as a malformed code._
+camera leaves transition frames carrying only part of it, which the scanner reads as a malformed code
+(the serial screen now keeps scanning past such a read, but the rule still holds elsewhere)._
 
 ```typescript
 import { injectQrCode, injectScanTarget } from '../../src/helpers/camera.js'
@@ -641,16 +643,13 @@ serial from the 1D code-39 and the birthdate from the PDF-417 — matching the s
 `dl_*.jpg` template's own 1D codes encode the design default `S00021029`, which would authorize a
 nonexistent card._
 
-> **_App behaviour that limits this (worth its own ticket):_** `ScanSerialScreen` reroutes to the
-> non-BCSC ("two government-issued IDs") flow the instant any scanned code fails to decode, guarded
-> only by "nothing captured yet". Since the vision-camera patch enables ML Kit's
-> `enableAllPotentialBarcodes()` and `ScanSerialScreen.onCodeScanned`'s decode loop does not filter
-> value-less codes, a partial detection triggers it — so a real user whose card is still half-aligned can be bounced out of the
-> BCSC flow before the scanner ever gets a clean read. Seven purpose-built image variants across six
-> device sessions (varying geometry, sharpness, module size, orientation and injection ordering) all
-> reroute within seconds, so this is not an image problem. Skipping value-less codes in
-> that loop — the same guard it already applies to `type === 'unknown'` — would fix the
-> user-facing behaviour and make this screen testable by injection._
+> **_App behaviour that used to limit this (now changed):_** `ScanSerialScreen` rerouted to the
+> non-BCSC ("two government-issued IDs") flow the instant any scanned code failed to decode, so a partial
+> detection bounced a half-aligned card out of the BCSC flow before the scanner got a clean read. A
+> damaged or unrecognised read now keeps scanning, and a serial plus card pair is sent to
+> `/device/barcodes`, which decides: a match continues setup and `card_not_found` continues the other-ID
+> flow. A torn transition frame therefore no longer sends the person off this screen. Caveat: the
+> serial-scan happy path is not yet proven on Sauce — treat `serial-scanner.journey.ts` as unproven until it passes there._
 
 ### Device authentication (Sauce device-lock lane)
 
@@ -851,7 +850,7 @@ e2e/
 │       │   ├── reroute-non-photo-card.journey.ts # … a real non-photo card
 │       │   ├── reroute-combined-card.journey.ts  # … a real combined card
 │       │   ├── reroute-second-id.journey.ts # … on the second ID
-│       │   ├── serial-scanner.journey.ts    # an unrecognised barcode at the serial scanner
+│       │   ├── serial-scanner.journey.ts    # a real card scanned at the serial scanner continues to setup
 │       │   └── reroute-context.ts           # shared arrange for the reroute journeys
 │       │
 │       ├── a11y/
