@@ -93,8 +93,8 @@ jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
 jest.mock('../components/HeaderBackButton', () => ({
   createHeaderBackButton: jest.fn(() => null),
 }))
-jest.mock('../components/HeaderWithBanner', () => ({
-  createHeaderWithoutBanner: jest.fn(() => null),
+jest.mock('../components/NavigationHeaders', () => ({
+  createStackHeader: jest.fn(() => null),
 }))
 jest.mock('./stack-utils', () => ({
   getDefaultModalOptions: jest.fn(() => ({})),
