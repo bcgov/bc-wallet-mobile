@@ -1,7 +1,9 @@
-import { act, render } from '@testing-library/react-native'
+import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 
 import { AppEventCode } from '@/events/appEventCode'
+import { TestIds } from '@/test-ids/registry'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import MaskedCamera from './MaskedCamera'
@@ -92,17 +94,20 @@ describe('MaskedCamera', () => {
     mockNavigation = useNavigation()
   })
 
-  const renderCamera = () => {
-    return render(
-      <BasicAppContext>
-        <MaskedCamera
-          navigation={mockNavigation as never}
-          cameraFace="back"
-          onPhotoTaken={mockOnPhotoTaken}
-          photoOutput={mockPhotoOutput}
-        />
-      </BasicAppContext>
-    )
+  const cameraElement = (props: Partial<React.ComponentProps<typeof MaskedCamera>> = {}) => (
+    <BasicAppContext>
+      <MaskedCamera
+        navigation={mockNavigation as never}
+        cameraFace="back"
+        onPhotoTaken={mockOnPhotoTaken}
+        photoOutput={mockPhotoOutput}
+        {...props}
+      />
+    </BasicAppContext>
+  )
+
+  const renderCamera = (props: Partial<React.ComponentProps<typeof MaskedCamera>> = {}) => {
+    return render(cameraElement(props))
   }
 
   describe('Camera runtime error handling', () => {
@@ -235,6 +240,31 @@ describe('MaskedCamera', () => {
       // The gate deactivates on KNOWN background states rather than activating only on a
       // known-active one, so an unexpected value can't strand the camera off permanently.
       expect(getByTestId('mock-camera').props.isActive).toBe(true)
+    })
+  })
+
+  describe('Paused by the parent (isActive)', () => {
+    it('stops the camera and hides its controls while paused', () => {
+      const { getByTestId, queryByTestId } = renderCamera({ isActive: false })
+
+      expect(getByTestId('mock-camera').props.isActive).toBe(false)
+      expect(queryByTestId(testIdWithKey(TestIds.shared.maskedCamera.takePhoto))).toBeNull()
+      expect(queryByTestId(testIdWithKey(TestIds.shared.maskedCamera.cancel))).toBeNull()
+      expect(queryByTestId(testIdWithKey(TestIds.shared.maskedCamera.toggleFlash))).toBeNull()
+    })
+
+    it('turns the torch off when paused, so it does not come back on with the camera', async () => {
+      const { getByTestId, rerender } = renderCamera()
+      await act(async () => {
+        getByTestId('mock-camera').props.onStarted()
+      })
+      fireEvent.press(getByTestId(testIdWithKey(TestIds.shared.maskedCamera.toggleFlash)))
+      expect(getByTestId('mock-camera').props.torchMode).toBe('on')
+
+      rerender(cameraElement({ isActive: false }))
+      rerender(cameraElement({ isActive: true }))
+
+      expect(getByTestId('mock-camera').props.torchMode).toBe('off')
     })
   })
 })
