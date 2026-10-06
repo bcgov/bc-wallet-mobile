@@ -1,3 +1,4 @@
+import { PlayIntegrityCloudProjects } from '@/constants'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
 import { confirmModulusRegistered } from '@/bcsc-theme/utils/jwk-modulus'
@@ -141,7 +142,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           }
         )
         logger.debug('Received nonce for Android Play Integrity attestation')
-        attestation = await googleAttestation(nonce)
+        attestation = await googleAttestation(nonce, PlayIntegrityCloudProjects.ias)
         logger.debug('Android Play Integrity attestation complete')
       }
     } catch (err) {

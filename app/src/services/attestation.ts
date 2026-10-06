@@ -1,4 +1,4 @@
-import { AttestationRestrictions, Mode } from '@/constants'
+import { AttestationRestrictions, Mode, PlayIntegrityCloudProjects } from '@/constants'
 import { getErrorDefinition } from '@/errors'
 import {
   AbstractBifoldLogger,
@@ -28,11 +28,14 @@ import {
 import { BCAgent } from '@utils/bc-agent-modules'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
-import { DeviceEventEmitter, Platform } from 'react-native'
+import { DeviceEventEmitter, EmitterSubscription, Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { getBuildNumber, getBundleId, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
+// Covers the whole exchange after the DRPC response: credential offer, acceptance
+// and presentation of the triggering proof.
+const attestationCompletionTimeoutInMs = 30000
 
 // subscription type from agent events (TODO: add type export from Credo)
 type AgentSubscription = ReturnType<ReturnType<Agent['events']['observable']>['subscribe']>
@@ -195,6 +198,10 @@ export class AttestationMonitor implements AttestationMonitorI {
   }
 
   public start(agent: BCAgent): void {
+    // Idempotent: a workflow can restart this monitor more than once, and
+    // overwriting live subscription handles would leak handlers that can never
+    // be unsubscribed.
+    this.stop()
     this.agent = agent
 
     this.proofSubscription = this.agent?.events
@@ -208,7 +215,9 @@ export class AttestationMonitor implements AttestationMonitorI {
 
   public stop(): void {
     this.proofSubscription?.unsubscribe()
+    this.proofSubscription = undefined
     this.offerSubscription?.unsubscribe()
+    this.offerSubscription = undefined
   }
 
   public requestAttestationCredential = async (): Promise<void> => {
@@ -229,22 +238,58 @@ export class AttestationMonitor implements AttestationMonitorI {
    * own the exchange themselves (see AutoCredentialMonitor) and need to decide what
    * to do when attestation can't be obtained.
    */
-  public attemptAttestationForProof = async (proof: DidCommProofExchangeRecord): Promise<boolean> => {
+  public attemptAttestationForProof = async (
+    proof: DidCommProofExchangeRecord,
+    timeoutInMs: number = attestationCompletionTimeoutInMs
+  ): Promise<boolean> => {
     this._proofRequest = proof
     this.startWorkflow()
 
+    // The DRPC response is only halfway: the credential offer still has to arrive,
+    // and this monitor's offer subscription accepts it and then presents `proof`.
+    // Resolve on the terminal event so a later failure is reported to the caller,
+    // which would otherwise leave the proof unanswered and the UI waiting.
+    let settle: (obtained: boolean) => void = () => undefined
+    const outcome = new Promise<boolean>((resolve) => {
+      settle = resolve
+    })
+
+    const subscriptions: EmitterSubscription[] = []
+    let timer: ReturnType<typeof setTimeout> | undefined
+
+    const finish = (obtained: boolean) => {
+      if (timer) {
+        clearTimeout(timer)
+        timer = undefined
+      }
+      subscriptions.splice(0).forEach((subscription) => subscription.remove())
+      settle(obtained)
+    }
+
+    subscriptions.push(
+      DeviceEventEmitter.addListener(AttestationEventTypes.Completed, () => finish(true)),
+      DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleOffer, () => finish(false)),
+      DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleProof, () => finish(false)),
+      DeviceEventEmitter.addListener(AttestationEventTypes.FailedRequestCredential, () => finish(false))
+    )
+
+    timer = setTimeout(() => {
+      this.log?.warn('Attestation did not complete before the timeout')
+      this.stopWorkflow(AttestationEventTypes.FailedRequestCredential)
+      finish(false)
+    }, timeoutInMs)
+
     try {
       await this.runAttestationFlow()
-      // Deliberately leaves the workflow open: the credential offer still has to
-      // arrive, and this monitor's own offer subscription accepts it and then
-      // presents `proof`. Clearing state here would strand both.
-      return true
     } catch (error) {
       this.log?.error('Failed to fetch attestation credential', error as Error)
 
       this.stopWorkflow(AttestationEventTypes.FailedRequestCredential, error as Error)
+      finish(false)
       return false
     }
+
+    return outcome
   }
 
   /** Throws on any failure; callers decide how to report it. */
@@ -672,7 +717,7 @@ export class AttestationMonitor implements AttestationMonitorI {
 
     let tokenString: string
     try {
-      tokenString = await googleAttestation(nonce)
+      tokenString = await googleAttestation(nonce, PlayIntegrityCloudProjects.attestationController)
     } catch (error) {
       const bifoldError = new BifoldError(
         'Google Attestation Error',

@@ -40,6 +40,11 @@ export const AttestationRestrictions: { [key: string]: CredentialRestrictionEnvi
   },
 } as const
 
+export const PlayIntegrityCloudProjects = {
+  attestationController: '270607296846',
+  ias: '1050427621187',
+} as const
+
 export const appleAppStoreUrl = 'https://apps.apple.com/ca/app/bc-wallet/id1587380443'
 export const googlePlayStoreUrl = 'https://play.google.com/store/apps/details?id=ca.bc.gov.BCWallet&hl=en-CA'
 export const appHelpUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
