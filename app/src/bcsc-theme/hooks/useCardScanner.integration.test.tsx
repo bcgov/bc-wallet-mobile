@@ -149,6 +149,13 @@ describe('useCardScanner against the real client chain', () => {
     nav.navigate.mockImplementation((name: string) => {
       jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name } as any)
     })
+    // The global policies move the user with dispatch(CommonActions.reset(...)).
+    nav.dispatch.mockImplementation((action: { payload?: { routes?: { name: string }[] } }) => {
+      const target = action.payload?.routes?.[0]?.name
+      if (target) {
+        jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name: target } as any)
+      }
+    })
     nav.reset.mockImplementation(({ routes }: { routes: { name: string }[] }) => {
       jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name: routes[0].name } as any)
     })
@@ -241,6 +248,7 @@ describe('useCardScanner against the real client chain', () => {
     expect(left).toBe(true)
     expect(mockCycleRegistration).toHaveBeenCalledTimes(1)
     expect(requests).toHaveLength(2)
+    expect(mockAlerts.invalidRegistrationRequestAlert).toHaveBeenCalledTimes(1)
     // The only reset is the one into setup after the retry matched, never one to the resume route.
     expect(nav.reset).toHaveBeenCalledTimes(1)
     expect(nav.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: BCSCScreens.VerificationMethodSelection }] })
