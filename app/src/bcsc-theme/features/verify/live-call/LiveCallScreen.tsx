@@ -1,3 +1,4 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { useFcmService } from '@/bcsc-theme/features/fcm'
@@ -5,6 +6,7 @@ import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVi
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
 import { CROP_DELAY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
@@ -31,7 +33,16 @@ type LiveCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.LiveCall>
 }
 
-const getCallVolume = (result: VolumeResult) =>
+const CALL_SETUP_PROGRESS = {
+  [VideoCallFlowState.IDLE]: 0,
+  [VideoCallFlowState.UPLOADING_DOCUMENTS]: 0,
+  [VideoCallFlowState.CREATING_SESSION]: 25,
+  [VideoCallFlowState.CONNECTING_WEBRTC]: 50,
+  [VideoCallFlowState.WAITING_FOR_AGENT]: 75,
+}
+
+// Android getVolume() still returns every stream, untyped since v2; the agent is heard on the call stream
+const getCallVolume = (result: VolumeResult & { call?: number }) =>
   Platform.OS === 'android' ? (result.call ?? result.volume) : result.volume
 
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
@@ -46,13 +57,14 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const [callStartTime, setCallStartTime] = useState<number | null>(null)
   const [callTimer, setCallTimer] = useState<string>('')
   const [systemVolume, setSystemVolume] = useState<number>(1)
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const timerIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cropDelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tokenService = useTokenService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { liveCallHavingTroubleAlert, unknownErrorModal } = useAlerts(navigation)
   const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const { preventDoublePress } = usePreventDoublePress()
+  const { video: videoCallApi } = useApi()
 
   /**
    * Handles leaving the call by navigating to the appropriate screen based on the verification status.
@@ -97,6 +109,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const {
     flowState,
     videoCallError,
+    serviceUnavailable,
     localStream,
     remoteStream,
     isInBackground,
@@ -105,6 +118,46 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     retryConnection,
     setCallEnded,
   } = useVideoCallFlow(leaveCall)
+
+  // the backend rejects new sessions when all agents are busy or the service is closed
+  useEffect(() => {
+    if (!serviceUnavailable) {
+      return
+    }
+
+    // the user can leave (e.g. cancel) while service hours are loading
+    let cancelled = false
+
+    const showCallBusyOrClosed = async () => {
+      let formattedHours: FormattedServicePeriod[] = []
+      try {
+        formattedHours = formatServiceAndUnavailableHours(await videoCallApi.getServiceHours())
+      } catch (error) {
+        // ServicePeriodList falls back to the default hours string when the list is empty
+        logger.error('Error loading live call service hours:', error as Error)
+      }
+
+      if (cancelled) {
+        return
+      }
+
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [
+            { name: BCSCScreens.VerificationMethodSelection },
+            { name: BCSCScreens.CallBusyOrClosed, params: { busy: serviceUnavailable.busy, formattedHours } },
+          ],
+        })
+      )
+    }
+
+    void showCallBusyOrClosed()
+
+    return () => {
+      cancelled = true
+    }
+  }, [serviceUnavailable, videoCallApi, logger, navigation])
 
   // start crop delay timeout when call starts. the crop delay is to match the
   // current BCSC where the timer doesn't start until after 11 seconds. In
@@ -167,10 +220,14 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
 
     const volumeListener = VolumeManager.addVolumeListener((result) => {
-      setSystemVolume(getCallVolume(result))
+      // Android sends one event per changed stream
+      if (Platform.OS === 'android' && result.type !== 'call') {
+        return
+      }
+      setSystemVolume(result.volume)
     })
 
-    getInitialVolume()
+    void getInitialVolume()
 
     return () => {
       volumeListener?.remove()
@@ -226,7 +283,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   // kick off the process only once (flow state doesn't go back to idle)
   useEffect(() => {
     if (flowState === VideoCallFlowState.IDLE) {
-      startVideoCall()
+      void startVideoCall()
       // No-op: start() re-initialises audio routing immediately after. Removal tracked in #4471.
       InCallManager.setForceSpeakerphoneOn(false)
       InCallManager.start({ media: 'video', auto: true })
@@ -266,6 +323,11 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         return t('BCSC.VideoCall.CallStates.Initializing')
     }
   }, [flowState, videoCallError, t])
+
+  const handleCancelCall = useCallback(async () => {
+    await cleanup()
+    navigation.navigate(BCSCScreens.StartCall)
+  }, [cleanup, navigation])
 
   // when the user presses the end call button
   const handleEndCall = useCallback(async () => {
@@ -369,7 +431,13 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   }
 
   if (flowState !== VideoCallFlowState.IN_CALL) {
-    return <CallLoadingView onCancel={handleEndCall} message={stateMessage || undefined} />
+    return (
+      <CallLoadingView
+        onCancel={handleCancelCall}
+        message={stateMessage || undefined}
+        progressPercent={CALL_SETUP_PROGRESS[flowState]}
+      />
+    )
   }
 
   return (

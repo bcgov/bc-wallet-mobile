@@ -1,7 +1,7 @@
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
-import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
+import QRScannerScreen from '@/bcsc-theme/features/qr-core/QRScannerScreen'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import {
   BCSCMainStackParams,
@@ -24,7 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { HeaderBackButton } from '../components/HeaderBackButton'
-import { createTabHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createTabHeader } from '../components/NavigationHeaders'
 
 type TabBarIconProps = {
   focused: boolean
@@ -148,17 +148,17 @@ const QRCoreStack: React.FC = () => {
           tabBarStyle: TabTheme.tabBarStyle,
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
-          // Show the header's own (native) shadow. TabHeaderWithoutBanner draws no drop-shadow caster,
+          // Show the header's own (native) shadow. TabHeader draws no drop-shadow caster,
           // so this native shadow — tuned via HEADER_SHADOW — is the single header shadow.
           headerShadowVisible: true,
-          header: createTabHeaderWithoutBanner,
+          header: createTabHeader,
           headerTitleAlign: 'center',
           headerLeft: createQRBackButton(),
         }}
       >
         <Tab.Screen
           name={BCSCQRCoreScreens.Scanner}
-          component={QRScanner}
+          component={QRScannerScreen}
           options={{
             title: t('Scan.ScanQRCode'),
             tabBarIconStyle: styles.tabBarIcon,

@@ -1,7 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
-import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
@@ -64,7 +64,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   }, [dispatch, onAnswered])
 
   if (serverStatus === null && isChecking) {
-    return <LoadingScreenContent />
+    return <WaitingScreenContent message={t('BCSC.Loading.DefaultMessage')} />
   }
 
   // Rendered inline rather than navigated to: on a fresh launch this screen mounts in the same

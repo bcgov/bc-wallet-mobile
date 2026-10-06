@@ -1,7 +1,8 @@
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, screen } from '@testing-library/react-native'
-import React, { useState } from 'react'
+import React, { createRef, useState } from 'react'
+import { TextInput } from 'react-native'
 import DateInput from './DateInput'
 
 const defaultProps = {
@@ -72,6 +73,12 @@ describe('DateInput Component', () => {
     test('does not show the error element when no error provided', () => {
       renderDefault()
       expect(screen.queryByTestId(testIdWithKey('birthdate-error'))).toBeNull()
+    })
+
+    test('exposes the underlying TextInput through ref', () => {
+      const ref = createRef<TextInput>()
+      renderDefault({ ref })
+      expect(ref.current?.props.testID).toBe(testIdWithKey('birthdate-input'))
     })
   })
 

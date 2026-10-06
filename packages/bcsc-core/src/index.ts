@@ -193,8 +193,8 @@ export enum BCSCAccountType {
 
 export interface KeyPair {
   id: string; // 'id' for platform neutrality
-  public: string;
-  private?: string; // may not be available in secure hardware
+  publicKey: string;
+  privateKey?: string; // may not be available in secure hardware
   privateKeyAvailable: string; // Indicates if the private key exists,
   // even if not extractable
 }
@@ -610,6 +610,34 @@ export const createPreVerificationJWT = async (deviceCode: string, clientID: str
 
 export const hashBase64 = async (base64: string): Promise<string> => {
   return BcscCore.hashBase64(base64);
+};
+
+/**
+ * Copies a recorded video into a real MP4 container, without re-encoding, and deletes the original.
+ *
+ * iOS: VisionCamera v5 records QuickTime even when asked for MP4, which IAS rejects. Android: the
+ * recording is already MP4, so the same path is returned unchanged.
+ *
+ * @param path Path (or file:// URI) of the recorded video
+ * @returns Path of the MP4 file, in the same form (path or file:// URI) as the input
+ * @throws If the video can't be read or exported
+ */
+export const remuxVideoToMp4 = async (path: string): Promise<string> => {
+  return BcscCore.remuxVideoToMp4(path);
+};
+
+/**
+ * Sets the audio session up for video recording and activates it. Call before each recording.
+ *
+ * iOS: another component (e.g. a video player) can deactivate the shared audio session while the camera is
+ * running, and VisionCamera v5 only configures audio when the camera starts, so later recordings are silent.
+ * Keeps audio on the built-in route (no Bluetooth), avoiding the A/V offset buffered Bluetooth output adds.
+ * Android: no-op.
+ *
+ * @throws If the audio session can't be configured or activated
+ */
+export const activateAudioSessionForRecording = async (): Promise<void> => {
+  return BcscCore.activateAudioSessionForRecording();
 };
 
 /**

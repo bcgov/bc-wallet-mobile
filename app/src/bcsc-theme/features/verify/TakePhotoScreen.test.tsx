@@ -8,8 +8,9 @@ jest.mock('react-native-vision-camera', () => ({
   Camera: 'Camera',
   useCameraDevice: jest.fn().mockReturnValue({ id: 'mock-device' }),
   useCameraPermission: jest.fn().mockReturnValue({ hasPermission: true, requestPermission: jest.fn() }),
-  useCameraFormat: jest.fn().mockReturnValue({ videoWidth: 640, videoHeight: 480 }),
-  CameraRuntimeError: class extends Error {},
+  // Output hooks used by camera-output.tsx (useSelfiePhotoOutput)
+  CommonResolutions: { FHD_16_9: 'FHD_16_9' },
+  usePhotoOutput: jest.fn().mockReturnValue({ capturePhotoToFile: jest.fn() }),
 }))
 
 // MaskedCamera reads appStateStatus from BCSCActivityContext, which BasicAppContext doesn't provide.

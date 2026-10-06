@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, PIN_LENGTH } from '@/constants'
@@ -35,11 +36,13 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { handleSuccessfulAuth } = useSecureActions()
+  const { startLoading } = useLoadingScreen()
 
   const { Spacing } = useTheme()
 
   const verifyPINAndContinue = useCallback(
     async (pin: string) => {
+      let stopLoading: (() => void) | undefined
       try {
         setLoading(true)
         setErrorMessage(undefined)
@@ -59,6 +62,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         const { success, walletKey, locked, message } = await verifyPIN(pin)
 
         if (success) {
+          stopLoading = startLoading(t('BCSC.Loading.AppStartup'))
           await handleSuccessfulAuth(walletKey)
           logger.info('PIN verified successfully - navigating to main app')
         } else if (locked) {
@@ -75,10 +79,11 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         setErrorMessage('An error occurred while verifying the PIN.')
         logger.error(`PIN verification error: ${error}`)
       } finally {
+        stopLoading?.()
         setLoading(false)
       }
     },
-    [logger, handleSuccessfulAuth, navigation]
+    [logger, handleSuccessfulAuth, navigation, startLoading, t]
   )
 
   const onPressContinue = useCallback(async () => {
@@ -135,14 +140,15 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   return (
     <ScreenWrapper padded={false} keyboardActive controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <View style={{ gap: Spacing.sm }}>
-        <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.EnterPIN.Title')}</ThemedText>
         <PINInput
           testIDKey={TestIds.auth.enterPin.pin}
           onPINChange={handlePINChange}
           onPINComplete={handlePINComplete}
           errorMessage={errorMessage}
+          accessibilityLabel={a11yLabel(t('BCSC.EnterPIN.Title'))}
         />
-        <ThemedText variant={'caption'}>{`The one you chose to secure this app`}</ThemedText>
+        <ThemedText variant={'caption'}>{t('BCSC.EnterPIN.Description')}</ThemedText>
       </View>
     </ScreenWrapper>
   )

@@ -373,7 +373,7 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (FR)",
-      "AppStartup": "Getting your BC Services Card app ready... (FR)"
+      "AppStartup": "Getting your BC Services Card App ready... (FR)"
     },
     "AccountLanding": {
       "Title": "BC Services Card (FR)",
@@ -414,6 +414,10 @@ const translation = {
       "SettingUpAccount": "Setting up your account... (FR)",
       "FailedToSetPIN": "Failed to set PIN (FR)",
       "ErrorSettingPIN": "An error occurred while setting the PIN (FR)"
+    },
+    "EnterPIN": {
+      "Title": "Enter your 6-digit PIN (FR)",
+      "Description": "The one you chose to secure this app (FR)"
     },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN (FR)",
@@ -1074,6 +1078,7 @@ const translation = {
         "PreparingVideo": "Preparing your photo and video for verification (FR)",
         "PreparingDocuments": "Preparing additional documents (FR)",
         "UploadingInformation": "Uploading your documents securely (FR)",
+        "UploadingFiles": "Uploading your files (FR)",
         "FinalizingVerification": "Finalizing your request (FR)"
       }
     },
@@ -1122,6 +1127,7 @@ const translation = {
       "TransferAccount": "Add device (FR)",
     },
     "TransferInstructions": {
+      "AddingDevice": "Adding this device... (FR)",
       "Title": "Scan your QR code to add your device (FR)",
       "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner. (FR)",
       "Step2": "Choose <b>‘Add another device'</b> to get your QR code. (FR)",

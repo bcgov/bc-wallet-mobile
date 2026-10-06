@@ -6,7 +6,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createStackHeader } from '../components/NavigationHeaders'
 import { createOnboardingSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
@@ -53,7 +53,7 @@ const OnboardingStack = (): React.ReactElement => {
         headerBackAccessibilityLabel: t('Global.Back'),
         headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
         headerLeft: createHeaderBackButton,
-        header: createHeaderWithoutBanner,
+        header: createStackHeader,
         headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.OnboardingWebView }),
       }}
     >

@@ -1,0 +1,754 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useResidentialAddressModel from '@/bcsc-theme/features/verify/useResidentialAddressModel'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { AppError, ErrorCategory } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
+import { BCState } from '@/store'
+import * as Bifold from '@bifold/core'
+import { act, renderHook } from '@testing-library/react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
+
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+jest.mock('react-native-toast-message', () => ({
+  show: jest.fn(),
+}))
+jest.mock('@bifold/core', () => {
+  const actual = jest.requireActual('@bifold/core')
+  return {
+    ...actual,
+    useStore: jest.fn(),
+    useServices: jest.fn(),
+    useTheme: jest.fn(),
+  }
+})
+
+const mockEmitErrorModal = jest.fn()
+jest.mock('@/contexts/ErrorAlertContext', () => ({
+  useErrorAlert: jest.fn(() => ({
+    emitErrorModal: mockEmitErrorModal,
+    emitAlert: jest.fn(),
+  })),
+}))
+
+const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
+const mockUpdateDeviceCodes = jest.fn().mockResolvedValue(undefined)
+const mockUpdateVerificationOptions = jest.fn()
+const mockUpdateCardProcess = jest.fn()
+jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    updateUserMetadata: mockUpdateUserMetadata,
+    updateDeviceCodes: mockUpdateDeviceCodes,
+    updateVerificationOptions: mockUpdateVerificationOptions,
+    updateCardProcess: mockUpdateCardProcess,
+  })),
+}))
+
+// Transparent passthrough by default — its own recovery behavior is covered by
+// useDeviceAuthorizationRecovery.test.ts. Individual tests can override this mock to verify
+// this screen correctly wires the thunk/origin screen through to the shared hook.
+const mockAttemptWithRecovery = jest.fn((thunk: () => Promise<unknown>) => thunk())
+jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery', () => ({
+  useDeviceAuthorizationRecovery: jest.fn(() => mockAttemptWithRecovery),
+  useIsDeviceAuthorizationRecovering: jest.fn(() => false),
+}))
+
+describe('useResidentialAddressModel', () => {
+  const mockDispatch = jest.fn()
+  const mockLogger = {
+    error: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+  }
+  const mockNavigation = {
+    navigate: jest.fn(),
+    dispatch: jest.fn(),
+  } as any
+
+  const mockStore: any = {
+    bcsc: {},
+    bcscSecure: {
+      birthdate: new Date(1990, 0, 15),
+      deviceCode: null,
+      deviceCodeExpiresAt: null,
+      userMetadata: {
+        name: {
+          first: 'John',
+          last: 'Doe',
+          middle: 'M',
+        },
+        address: {
+          streetAddress: '123 Main St',
+          city: 'Vancouver',
+          province: 'BC',
+          postalCode: 'V6B 1A1',
+        },
+      },
+      additionalEvidenceData: [],
+    },
+  }
+
+  const mockAuthorizationApi = {
+    authorizeDeviceWithUnknownBCSC: jest.fn(),
+  }
+
+  const mockTheme = {
+    Spacing: { lg: 16 },
+  }
+
+  // Step 1 completes for a Non-BCSC user via two complete evidence items, which is what puts the
+  // resume route past the ID step. Without it `getResumeStepRoute` bounces back to AccountSetup.
+  const idStepComplete = {
+    cardProcess: BCSCCardProcess.NonBCSC,
+    additionalEvidenceData: [
+      { metadata: [{}], documentNumber: 'ID-1' },
+      { metadata: [{}], documentNumber: 'ID-2' },
+    ],
+  }
+
+  beforeEach(() => {
+    const useApiMock = jest.mocked(useApi)
+    useApiMock.mockReturnValue({
+      authorization: mockAuthorizationApi,
+    } as any)
+
+    const bifoldMock = jest.mocked(Bifold)
+    bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
+    bifoldMock.useServices.mockReturnValue([mockLogger] as any)
+    bifoldMock.useTheme.mockReturnValue(mockTheme as any)
+  })
+
+  describe('Initial state', () => {
+    it('should return initial form state from store', () => {
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      expect(result.current.formState).toEqual({
+        streetAddress: '123 Main St',
+        streetAddress2: '',
+        city: 'Vancouver',
+        province: 'BC',
+        postalCode: 'V6B 1A1',
+      })
+      expect(result.current.formErrors).toEqual({})
+      expect(result.current.isSubmitting).toBe(false)
+    })
+
+    it('should initialize streetAddress2 from store when present', () => {
+      const storeWithAddress2 = {
+        ...mockStore,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          userMetadata: {
+            ...mockStore.bcscSecure.userMetadata,
+            address: {
+              ...mockStore.bcscSecure.userMetadata.address,
+              streetAddress2: 'Apt 4B',
+            },
+          },
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithAddress2, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      expect(result.current.formState.streetAddress2).toBe('Apt 4B')
+    })
+
+    it('should return empty form state when no address in store', () => {
+      const storeWithoutAddress = {
+        bcscSecure: {
+          userMetadata: null,
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithoutAddress, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+      expect(result.current.formState).toEqual({
+        streetAddress: '',
+        streetAddress2: '',
+        city: '',
+        province: null,
+        postalCode: '',
+      })
+    })
+  })
+
+  describe('handleChange', () => {
+    it('should update form state when field changes', () => {
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      act(() => {
+        result.current.handleChange('streetAddress', '456 Oak Ave')
+      })
+
+      expect(result.current.formState.streetAddress).toBe('456 Oak Ave')
+    })
+
+    it('should clear field error when field changes', () => {
+      const storeWithEmptyAddress = {
+        bcscSecure: {
+          birthdate: new Date(1990, 0, 15),
+          userMetadata: {
+            name: { first: 'John', last: 'Doe' },
+            address: null,
+          },
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithEmptyAddress, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      // Trigger validation error by submitting empty form
+      act(() => {
+        result.current.handleSubmit()
+      })
+
+      expect(result.current.formErrors.streetAddress).toBeDefined()
+
+      // Change the field to clear the error
+      act(() => {
+        result.current.handleChange('streetAddress', 'New Address')
+      })
+
+      expect(result.current.formErrors.streetAddress).toBeUndefined()
+    })
+  })
+
+  describe('handleSubmit - onInvalidSubmit', () => {
+    it('should call onInvalidSubmit with the errors object on failed validation', async () => {
+      const onInvalidSubmit = jest.fn()
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation, onInvalidSubmit }))
+
+      act(() => {
+        result.current.handleChange('streetAddress', '')
+      })
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(onInvalidSubmit).toHaveBeenCalledTimes(1)
+      expect(onInvalidSubmit).toHaveBeenCalledWith(result.current.formErrors)
+    })
+
+    it('should not call onInvalidSubmit on a valid submit', async () => {
+      const onInvalidSubmit = jest.fn()
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation, onInvalidSubmit }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(onInvalidSubmit).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('handleSubmit - validation', () => {
+    it('should set validation errors for empty required fields', async () => {
+      const storeWithEmptyAddress = {
+        bcscSecure: {
+          birthdate: new Date(1990, 0, 15),
+          userMetadata: {
+            name: { first: 'John', last: 'Doe' },
+            address: null,
+          },
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithEmptyAddress, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(result.current.formErrors.streetAddress).toBeDefined()
+      expect(result.current.formErrors.city).toBeDefined()
+      expect(result.current.formErrors.province).toBeDefined()
+      expect(result.current.formErrors.postalCode).toBeDefined()
+      expect(mockUpdateUserMetadata).not.toHaveBeenCalled()
+    })
+
+    it('should set validation error for invalid postal code', async () => {
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      // D is never issued as a leading postal code letter
+      act(() => {
+        result.current.handleChange('postalCode', 'D1A 1A1')
+      })
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(result.current.formErrors.postalCode).toBeDefined()
+      expect(mockUpdateUserMetadata).not.toHaveBeenCalled()
+    })
+
+    it('should reject whitespace-only required fields rather than persisting empty strings', async () => {
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      act(() => {
+        result.current.handleChange('streetAddress', '   ')
+        result.current.handleChange('city', '   ')
+      })
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(result.current.formErrors.streetAddress).toBeDefined()
+      expect(result.current.formErrors.city).toBeDefined()
+      expect(mockUpdateUserMetadata).not.toHaveBeenCalled()
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('handleSubmit - device already authorized', () => {
+    it('should navigate to the email step when device is already authorized', async () => {
+      const storeWithDeviceCode = {
+        ...mockStore,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          ...idStepComplete,
+          deviceCode: 'existing-device-code',
+          deviceCodeExpiresAt: new Date(Date.now() + 3600000),
+        },
+      }
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithDeviceCode, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockUpdateUserMetadata).toHaveBeenCalledWith({
+        address: {
+          streetAddress: '123 Main St',
+          city: 'Vancouver',
+          province: 'BC',
+          postalCode: 'V6B 1A1',
+          country: 'CA',
+        },
+        name: {
+          first: 'John',
+          last: 'Doe',
+          middle: 'M',
+        },
+      })
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'PUSH',
+          payload: expect.objectContaining({ name: BCSCScreens.EnterEmail }),
+        })
+      )
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).not.toHaveBeenCalled()
+    })
+
+    it('should re-authorize (not short-circuit) when the device code is present but expired', async () => {
+      const mockDeviceAuth = {
+        device_code: 'fresh-device-code',
+        user_code: 'fresh-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call',
+        process: 'test-process',
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const storeWithExpiredDeviceCode = {
+        ...mockStore,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          deviceCode: 'expired-device-code',
+          deviceCodeExpiresAt: new Date(Date.now() - 3600000),
+        },
+      }
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithExpiredDeviceCode, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      // An expired code must NOT short-circuit; it falls through to mint a fresh code.
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalled()
+      expect(mockUpdateDeviceCodes).toHaveBeenCalledWith({
+        deviceCode: 'fresh-device-code',
+        userCode: 'fresh-user-code',
+        deviceCodeExpiresAt: expect.any(Date),
+      })
+    })
+  })
+
+  describe('handleSubmit - device authorization', () => {
+    it('should authorize device and dispatch codes on success', async () => {
+      const mockDeviceAuth = {
+        device_code: 'new-device-code',
+        user_code: 'new-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call back_check',
+        process: BCSCCardProcess.NonBCSC,
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, ...idStepComplete } },
+        mockDispatch,
+      ])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledWith({
+        firstName: 'John',
+        lastName: 'Doe',
+        birthdate: '1990-01-15',
+        middleNames: 'M',
+        address: {
+          streetAddress: '123 Main St',
+          city: 'Vancouver',
+          province: 'BC',
+          postalCode: 'V6B 1A1',
+        },
+      })
+
+      expect(mockUpdateUserMetadata).toHaveBeenCalledWith({
+        address: {
+          streetAddress: '123 Main St',
+          city: 'Vancouver',
+          province: 'BC',
+          postalCode: 'V6B 1A1',
+          country: 'CA',
+        },
+        name: {
+          first: 'John',
+          last: 'Doe',
+          middle: 'M',
+        },
+      })
+      expect(mockUpdateDeviceCodes).toHaveBeenCalledWith({
+        deviceCode: 'new-device-code',
+        userCode: 'new-user-code',
+        deviceCodeExpiresAt: expect.any(Date),
+      })
+      expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
+
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'PUSH',
+          payload: expect.objectContaining({ name: BCSCScreens.EnterEmail }),
+        })
+      )
+      expect(mockUpdateCardProcess).toHaveBeenCalledWith(BCSCCardProcess.NonBCSC)
+    })
+
+    it('should not persist codes or navigate when authorization is handled by an error policy', async () => {
+      // `null` means an error policy already handled the failure; the flow must stop silently.
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(null)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
+      expect(mockUpdateVerificationOptions).not.toHaveBeenCalled()
+      expect(mockUpdateCardProcess).not.toHaveBeenCalled()
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      expect(result.current.isSubmitting).toBe(false)
+    })
+
+    it('should send the same trimmed values it persists', async () => {
+      const mockDeviceAuth = {
+        device_code: 'new-device-code',
+        user_code: 'new-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call',
+        process: 'test-process',
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      // Padded input passes validation because the schema trims, so the payload must be trimmed too
+      act(() => {
+        result.current.handleChange('postalCode', ' V6B 1A1 ')
+        result.current.handleChange('city', ' Vancouver ')
+        result.current.handleChange('streetAddress', ' 123 Main St ')
+      })
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: {
+            streetAddress: '123 Main St',
+            city: 'Vancouver',
+            province: 'BC',
+            postalCode: 'V6B 1A1',
+          },
+        })
+      )
+
+      expect(mockUpdateUserMetadata).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: expect.objectContaining({ city: 'Vancouver', postalCode: 'V6B 1A1' }),
+        })
+      )
+    })
+
+    it('should merge streetAddress2 with newline when present', async () => {
+      const storeWithAddress2 = {
+        ...mockStore,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          userMetadata: {
+            ...mockStore.bcscSecure.userMetadata,
+            address: {
+              ...mockStore.bcscSecure.userMetadata.address,
+              streetAddress2: 'Apt 4B',
+            },
+          },
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithAddress2, mockDispatch])
+
+      const mockDeviceAuth = {
+        device_code: 'new-device-code',
+        user_code: 'new-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call',
+        process: 'test-process',
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: expect.objectContaining({
+            streetAddress: '123 Main St\nApt 4B',
+          }),
+        })
+      )
+    })
+
+    it('should not include newline when streetAddress2 is empty', async () => {
+      const mockDeviceAuth = {
+        device_code: 'new-device-code',
+        user_code: 'new-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call',
+        process: 'test-process',
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: expect.objectContaining({
+            streetAddress: '123 Main St',
+          }),
+        })
+      )
+    })
+
+    it('should set isSubmitting during authorization', async () => {
+      let resolveAuth: (value: any) => void
+      const authPromise = new Promise((resolve) => {
+        resolveAuth = resolve
+      })
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockReturnValue(authPromise)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      let submitPromise: Promise<void>
+      act(() => {
+        submitPromise = result.current.handleSubmit()
+      })
+
+      // Wait a tick to allow isSubmitting to be set
+      await act(async () => {
+        await Promise.resolve()
+      })
+
+      expect(result.current.isSubmitting).toBe(true)
+
+      await act(async () => {
+        resolveAuth!({
+          device_code: 'test',
+          user_code: 'test',
+          expires_in: 3600,
+          verification_options: 'video_call',
+        })
+        await submitPromise!
+      })
+
+      expect(result.current.isSubmitting).toBe(false)
+    })
+
+    it('should handle authorization error and show error modal', async () => {
+      const mockError = new Error('Authorization failed')
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockRejectedValue(mockError)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'ResidentialAddressScreen.handleSubmit -> device authorization failed',
+        { error: mockError }
+      )
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({ cause: mockError })
+      )
+      expect(result.current.isSubmitting).toBe(false)
+    })
+
+    it('should not show an error modal when the error was already handled by a global policy', async () => {
+      // e.g. alreadyRegisteredErrorPolicy already navigated the user off this screen — showing
+      // this screen's own modal on top of that would be confusing and wrong.
+      const handledError = new AppError(
+        'test error',
+        {
+          category: ErrorCategory.NETWORK,
+          appEvent: AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST,
+          statusCode: 2810,
+        },
+        { track: false }
+      )
+      handledError.handled = true
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockRejectedValue(handledError)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      expect(result.current.isSubmitting).toBe(false)
+    })
+
+    it('should throw error when birthdate is missing', async () => {
+      const storeWithoutBirthdate = {
+        bcscSecure: {
+          birthdate: null,
+          deviceCode: null,
+          deviceCodeExpiresAt: null,
+          userMetadata: {
+            name: { first: 'John', last: 'Doe' },
+            address: mockStore.bcscSecure.userMetadata.address,
+          },
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithoutBirthdate, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await expect(result.current.handleSubmit()).rejects.toThrow()
+      })
+    })
+
+    it('should throw error when user name is missing', async () => {
+      const storeWithoutName = {
+        bcscSecure: {
+          birthdate: new Date(1990, 0, 15),
+          deviceCode: null,
+          deviceCodeExpiresAt: null,
+          userMetadata: {
+            name: null,
+            address: mockStore.bcscSecure.userMetadata.address,
+          },
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithoutName, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await expect(result.current.handleSubmit()).rejects.toThrow()
+      })
+    })
+  })
+
+  describe('form state updates', () => {
+    it('should trim values when dispatching address metadata', async () => {
+      const storeWithDeviceCode = {
+        bcsc: {
+          ...mockStore.bcsc,
+        },
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          deviceCode: 'existing-device-code',
+          deviceCodeExpiresAt: new Date(Date.now() + 3600000),
+          userMetadata: {
+            name: mockStore.bcscSecure.userMetadata.name,
+            address: {
+              streetAddress: '  123 Main St  ',
+              city: '  Vancouver  ',
+              province: 'BC',
+              postalCode: '  V6B 1A1  ',
+            },
+          },
+        },
+      }
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithDeviceCode as BCState, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+      expect(mockUpdateUserMetadata).toHaveBeenCalledWith({
+        address: {
+          streetAddress: '123 Main St',
+          postalCode: 'V6B 1A1',
+          city: 'Vancouver',
+          province: 'BC',
+          country: 'CA',
+        },
+        name: {
+          first: 'John',
+          last: 'Doe',
+          middle: 'M',
+        },
+      })
+    })
+  })
+})

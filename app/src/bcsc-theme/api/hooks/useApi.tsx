@@ -4,7 +4,6 @@ import useAuthorizationApi from './useAuthorizationApi'
 import useConfigApi from './useConfigApi'
 import useDeviceAttestationApi from './useDeviceAttestationApi'
 import useEvidenceApi from './useEvidenceApi'
-import useJwksApi from './useJwksApi'
 import useMetadataApi from './useMetadataApi'
 import usePairingApi from './usePairingApi'
 import useRegistrationApi from './useRegistrationApi'
@@ -22,7 +21,6 @@ const useApi = () => {
   const user = useUserApi(apiClient)
   const evidence = useEvidenceApi(apiClient)
   const metadata = useMetadataApi(apiClient)
-  const jwks = useJwksApi(apiClient)
   const video = useVideoCallApi(apiClient)
   const deviceAttestation = useDeviceAttestationApi(apiClient)
 
@@ -36,11 +34,10 @@ const useApi = () => {
       user,
       evidence,
       metadata,
-      jwks,
       video,
       deviceAttestation,
     }),
-    [config, pairing, registration, authorization, token, user, evidence, metadata, jwks, video, deviceAttestation]
+    [config, pairing, registration, authorization, token, user, evidence, metadata, video, deviceAttestation]
   )
 }
 

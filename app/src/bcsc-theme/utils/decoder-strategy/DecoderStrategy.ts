@@ -1,5 +1,5 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-import { CodeType } from 'react-native-vision-camera'
+import { BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
 import { BCComboCardBarcodeDecoder } from './BCComboCardBarcodeDecoder'
 import { BCServicesCardBarcodeDecoder } from './BCServicesCardBarcodeDecoder'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
@@ -13,7 +13,7 @@ export enum DecodedCodeKind {
 
 // Stub interface representing a scanned code ie: barcode or qr code
 export interface ScanableCode {
-  type: CodeType | 'unknown'
+  type: BarcodeFormat | 'unknown'
   value?: string
 }
 
@@ -65,6 +65,8 @@ export interface DriversLicenseMetadata {
   birthDate: Date
   expiryDate: Date
   streetAddress: string
+  /** Further street lines, when the address has more than one before the city line. */
+  streetAddress2?: string
   city: string
   province: string
   postalCode: string

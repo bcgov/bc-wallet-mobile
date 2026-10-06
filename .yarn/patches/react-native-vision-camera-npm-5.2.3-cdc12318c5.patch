@@ -1,0 +1,173 @@
+diff --git a/ios/Extensions/AVFoundation/AVCaptureSession+addOutputWithNoConnections.swift b/ios/Extensions/AVFoundation/AVCaptureSession+addOutputWithNoConnections.swift
+index f76d97abd325adc179400329f037842fc025ab09..468f1dd177248ef0b10dcefaa105fc6183927fc5 100644
+--- a/ios/Extensions/AVFoundation/AVCaptureSession+addOutputWithNoConnections.swift
++++ b/ios/Extensions/AVFoundation/AVCaptureSession+addOutputWithNoConnections.swift
+@@ -31,7 +31,11 @@ extension AVCaptureSession {
+         throw RuntimeError.error(withMessage: "The given Preview Output \"\(previewLayer)\" is already connected to a different Camera Session!")
+       }
+       logger.info("Adding Preview \(previewLayer)...")
++      // PATCH (bc-wallet-mobile): setSessionWithNoConnection changes `session` without KVO. An observer
++      // registered while the layer had no session is then left stale, and `session = nil` throws.
++      previewLayer.willChangeValue(forKey: "session")
+       previewLayer.setSessionWithNoConnection(self)
++      previewLayer.didChangeValue(forKey: "session")
+     }
+   }
+ }
+diff --git a/ios/Hybrid Objects/HybridCameraSession.swift b/ios/Hybrid Objects/HybridCameraSession.swift
+index c74356e3e16d61c85522c74e7577eb4a0d95515f..4e940ae4c80749e2a1208a494fff0c44149892ef 100644
+--- a/ios/Hybrid Objects/HybridCameraSession.swift	
++++ b/ios/Hybrid Objects/HybridCameraSession.swift	
+@@ -33,11 +33,29 @@ final class HybridCameraSession: HybridCameraSessionSpec {
+     return session.isRunning
+   }
+ 
++  // PATCH (bc-wallet-mobile): queue session mutations behind what is already pending on the main queue.
++  // With a preview layer attached, AVFoundation waits for the main thread inside stopRunning and
++  // commitConfiguration (9 s timeout measured on iOS 26); a view mount or unmount running at that
++  // moment waits for the session lock in layerDidBecomeVisible:, and the UI stalls until the timeout.
++  private static func afterMainOnSessionQueue<T>(_ run: @escaping @Sendable () throws -> T) -> Promise<T> {
++    let promise = Promise<T>()
++    DispatchQueue.main.async {
++      Self.queue.async {
++        do {
++          promise.resolve(withResult: try run())
++        } catch {
++          promise.reject(withError: error)
++        }
++      }
++    }
++    return promise
++  }
++
+   // pragma MARK: Configuration
+   func configure(connections: [CameraSessionConnection], config: CameraSessionConfiguration?)
+     -> Promise<[any HybridCameraControllerSpec]>
+   {
+-    return Promise.parallel(Self.queue) {
++    return Self.afterMainOnSessionQueue {
+       guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
+         throw RuntimeError.error(withMessage: "Camera Permission not yet granted!")
+       }
+@@ -212,7 +230,7 @@ final class HybridCameraSession: HybridCameraSessionSpec {
+ 
+   // pragma MARK: Start/Stop
+   func start() -> Promise<Void> {
+-    return Promise.parallel(Self.queue) {
++    return Self.afterMainOnSessionQueue {
+       if self.session.isRunning {
+         return
+       }
+@@ -221,7 +239,7 @@ final class HybridCameraSession: HybridCameraSessionSpec {
+   }
+ 
+   func stop() -> Promise<Void> {
+-    return Promise.parallel(Self.queue) {
++    return Self.afterMainOnSessionQueue {
+       if !self.session.isRunning {
+         return
+       }
+diff --git a/ios/Hybrid Objects/Views/HybridPreviewView.swift b/ios/Hybrid Objects/Views/HybridPreviewView.swift
+index 00d753251eb9108c01f376bb78896ac9ad7891e4..ae83b58b541f100b0051be58d7357ca3a35fccac 100644
+--- a/ios/Hybrid Objects/Views/HybridPreviewView.swift	
++++ b/ios/Hybrid Objects/Views/HybridPreviewView.swift	
+@@ -124,7 +124,19 @@ final class HybridPreviewView: HybridPreviewViewSpec {
+   }
+ 
+   private func updatePreviewLayer() {
+-    DispatchQueue.main.async {
++    // PATCH (bc-wallet-mobile): inline when already on the main thread. React Native sets view props
++    // on the main thread inside its mount transaction, so the layer then joins the tree in the same
++    // transaction that inserts the view, before any session mutation queued afterwards (see
++    // HybridCameraSession.afterMainOnSessionQueue) can attach a session to it.
++    if Thread.isMainThread {
++      updatePreviewLayerOnMain()
++    } else {
++      DispatchQueue.main.async { self.updatePreviewLayerOnMain() }
++    }
++  }
++
++  private func updatePreviewLayerOnMain() {
++    do {
+       if let previewLayer = self.previewLayer {
+         // Remove all sublayers that are not our AVCaptureVideoPreviewLayer
+         self.view.layer.sublayers?.removeAll { $0 != previewLayer }
+diff --git a/lib/hooks/internal/useCameraController.d.ts b/lib/hooks/internal/useCameraController.d.ts
+index b1eb315922c9d911825e17468d682a96c9ac51f0..8440a3866f23b2e600ded9ab4843d598183a6809 100644
+--- a/lib/hooks/internal/useCameraController.d.ts
++++ b/lib/hooks/internal/useCameraController.d.ts
+@@ -8,7 +8,7 @@ import type { CameraSession } from '../../specs/session/CameraSession.nitro';
+ import type { CameraSessionConfig } from '../../specs/session/CameraSessionConfig.nitro';
+ import type { CameraSessionConfiguration } from '../../specs/session/CameraSessionConfiguration';
+ interface Config extends CameraSessionConfiguration {
+-    mirrorMode?: MirrorMode;
++    mirrorMode?: MirrorMode | ((output: CameraOutput) => MirrorMode);
+     constraints?: Constraint[];
+     onSessionConfigSelected?: (config: CameraSessionConfig) => void;
+     onError: (error: Error) => void;
+diff --git a/lib/hooks/internal/useCameraController.js b/lib/hooks/internal/useCameraController.js
+index 8ff5f4e0be123aa0143755d957f22faed0b6f8a1..1a3fefd63348a6af5f306a9ddba0ea9b3b0d3cc4 100644
+--- a/lib/hooks/internal/useCameraController.js
++++ b/lib/hooks/internal/useCameraController.js
+@@ -50,7 +50,8 @@ export function useCameraController(session, device, outputs, { mirrorMode = 'au
+                             input: device,
+                             outputs: stableOutputs.map((o) => ({
+                                 output: o,
+-                                mirrorMode: mirrorMode,
++                                // PATCH (bc-wallet-mobile): allow a per-output mirror mode
++                                mirrorMode: typeof mirrorMode === 'function' ? mirrorMode(o) : mirrorMode,
+                             })),
+                             constraints: stableConstraints,
+                             initialExposureBias: stableGetInitialExposureBias?.(),
+diff --git a/lib/hooks/useCamera.d.ts b/lib/hooks/useCamera.d.ts
+index 8a70d7925dc1083d86ffb07bc49e3eec3879ae07..a2c7037604b213dcfc8e03bca75d051e031b468e 100644
+--- a/lib/hooks/useCamera.d.ts
++++ b/lib/hooks/useCamera.d.ts
+@@ -77,7 +77,7 @@ export interface CameraProps extends CameraSessionConfiguration, CameraControlle
+      * @see {@linkcode CameraOutputConfiguration.mirrorMode}
+      * @default 'auto'
+      */
+-    mirrorMode?: MirrorMode;
++    mirrorMode?: MirrorMode | ((output: CameraOutput) => MirrorMode);
+     /**
+      * Sets the {@linkcode CameraController.zoom | zoom} value declaratively.
+      *
+diff --git a/src/hooks/internal/useCameraController.ts b/src/hooks/internal/useCameraController.ts
+index 1c0d5a7cb301b6259cf4332413adc1647880e1bb..be75c8c46c6b61983185dff9814d615fa0831e1e 100644
+--- a/src/hooks/internal/useCameraController.ts
++++ b/src/hooks/internal/useCameraController.ts
+@@ -12,7 +12,7 @@ import { useMemoizedArray } from './useMemoizedArray'
+ import { useStableCallback } from './useStableCallback'
+ 
+ interface Config extends CameraSessionConfiguration {
+-  mirrorMode?: MirrorMode
++  mirrorMode?: MirrorMode | ((output: CameraOutput) => MirrorMode)
+   constraints?: Constraint[]
+   onSessionConfigSelected?: (config: CameraSessionConfig) => void
+ 
+@@ -96,7 +96,9 @@ export function useCameraController(
+                 input: device,
+                 outputs: stableOutputs.map((o) => ({
+                   output: o,
+-                  mirrorMode: mirrorMode,
++                  // PATCH (bc-wallet-mobile): allow a per-output mirror mode (e.g. mirrored preview, un-mirrored photo/video)
++                  mirrorMode:
++                    typeof mirrorMode === 'function' ? mirrorMode(o) : mirrorMode,
+                 })),
+                 constraints: stableConstraints,
+                 initialExposureBias: stableGetInitialExposureBias?.(),
+diff --git a/src/hooks/useCamera.ts b/src/hooks/useCamera.ts
+index c8ef6e4f999bd1db203b2f9c25133efe4345da1c..fe0c1cff346c8a7624bf9f65c3815eb656432e6e 100644
+--- a/src/hooks/useCamera.ts
++++ b/src/hooks/useCamera.ts
+@@ -105,8 +105,9 @@ export interface CameraProps
+    *
+    * @see {@linkcode CameraOutputConfiguration.mirrorMode}
+    * @default 'auto'
++   * @note PATCH (bc-wallet-mobile): may also be a (memoized) function that returns the mode per output.
+    */
+-  mirrorMode?: MirrorMode
++  mirrorMode?: MirrorMode | ((output: CameraOutput) => MirrorMode)
+ 
+   // Declarative props
+   /**

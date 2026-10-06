@@ -1,5 +1,6 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { loadPersistedJwk, persistJwk } from '@/bcsc-theme/api/jwk-cache'
+import { JWK_CACHE_TTL_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -1063,6 +1064,84 @@ describe('BCSC Client', () => {
         expect(second).toEqual(mockJwk)
         // The network is retried on the second call too — the fallback never populated the in-memory cache.
         expect(getSpy).toHaveBeenCalledTimes(2)
+      })
+    })
+
+    describe('in-memory cache time to live', () => {
+      const startTime = 1_700_000_000_000
+      let nowSpy: jest.SpyInstance<number, []>
+
+      beforeEach(() => {
+        nowSpy = jest.spyOn(Date, 'now').mockReturnValue(startTime)
+      })
+
+      afterEach(() => {
+        nowSpy.mockRestore()
+      })
+
+      it('serves the cached key while it is within the time to live', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [mockJwk] } } as any)
+
+        await client.fetchJwk()
+        nowSpy.mockReturnValue(startTime + JWK_CACHE_TTL_MS - 1)
+        const result = await client.fetchJwk()
+
+        expect(result).toEqual(mockJwk)
+        expect(getSpy).toHaveBeenCalledTimes(1)
+      })
+
+      it('refetches from the network once the cached key has expired', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const rotatedJwk = { kty: 'RSA', kid: 'key-2' }
+        const getSpy = jest
+          .spyOn(client, 'get')
+          .mockResolvedValueOnce({ data: { keys: [mockJwk] } } as any)
+          .mockResolvedValueOnce({ data: { keys: [rotatedJwk] } } as any)
+
+        await client.fetchJwk()
+        nowSpy.mockReturnValue(startTime + JWK_CACHE_TTL_MS)
+        const result = await client.fetchJwk()
+
+        expect(result).toEqual(rotatedJwk)
+        expect(getSpy).toHaveBeenCalledTimes(2)
+        expect(persistJwk).toHaveBeenLastCalledWith('https://example.com', rotatedJwk, mockLogger)
+      })
+
+      it('restarts the time to live after a successful refetch', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [mockJwk] } } as any)
+
+        await client.fetchJwk()
+        const refetchTime = startTime + JWK_CACHE_TTL_MS
+        nowSpy.mockReturnValue(refetchTime)
+        await client.fetchJwk()
+        nowSpy.mockReturnValue(refetchTime + JWK_CACHE_TTL_MS - 1)
+        await client.fetchJwk()
+
+        expect(getSpy).toHaveBeenCalledTimes(2)
+      })
+
+      it('falls back to the persisted key when the refetch after expiry fails', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const clientError = { cause: { response: { status: 400 } } } as any
+        const getSpy = jest
+          .spyOn(client, 'get')
+          .mockResolvedValueOnce({ data: { keys: [mockJwk] } } as any)
+          .mockRejectedValueOnce(clientError)
+        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+
+        await client.fetchJwk()
+        nowSpy.mockReturnValue(startTime + JWK_CACHE_TTL_MS)
+        const result = await client.fetchJwk()
+
+        expect(result).toEqual(mockJwk)
+        expect(getSpy).toHaveBeenCalledTimes(2)
+        expect(loadPersistedJwk).toHaveBeenCalledWith('https://example.com', mockLogger)
       })
     })
 

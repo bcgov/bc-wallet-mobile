@@ -2,9 +2,11 @@ import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import * as ReactNavigationNative from '@react-navigation/native'
 import { useNavigation as useContextNavigation, useFocusEffect } from '@react-navigation/native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Image } from 'react-native'
 import VideoReviewScreen from './VideoReviewScreen'
 
 jest.mock('@/bcsc-theme/hooks/useVideoPrompts')
@@ -158,5 +160,16 @@ describe('VideoReview', () => {
       expect(event.preventDefault).toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
+  })
+
+  it('swaps the video for its thumbnail once the screen loses focus', () => {
+    // Otherwise the recording's audio plays over the next screen, and on Android its view lingers after it.
+    const isFocusedSpy = jest.spyOn(ReactNavigationNative, 'useIsFocused').mockReturnValue(false)
+
+    const tree = renderScreen()
+
+    expect(tree.UNSAFE_queryByProps({ repeat: true })).toBeNull()
+    expect(tree.UNSAFE_getByType(Image).props.source).toEqual({ uri: 'file://file://thumbnail.jpg' })
+    isFocusedSpy.mockRestore()
   })
 })
