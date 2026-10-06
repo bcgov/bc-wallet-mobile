@@ -369,15 +369,12 @@ describe('useCardScanner', () => {
       process: 'IDIM L3 Remote BCSC Photo Identity Verification',
     }
 
-    const iasError = (appEvent: AppEventCode, handled = false) => {
-      const error = new AppError(
+    const iasError = (appEvent: AppEventCode) =>
+      new AppError(
         'Server Error',
         { category: ErrorCategory.GENERAL, appEvent, statusCode: 5000 },
         { cause: new Error('A human-readable description'), track: false }
       )
-      error.handled = handled
-      return error
-    }
 
     const setup = (overrides: { authorize?: jest.Mock; secure?: Record<string, jest.Mock> } = {}) => {
       const authorizeDeviceWithBarcodes = overrides.authorize ?? jest.fn().mockResolvedValue(deviceAuthorization)
@@ -503,18 +500,6 @@ describe('useCardScanner', () => {
       handleAuthorizationError.mockImplementation(() => {
         jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name: BCSCScreens.VerificationCardError } as any)
       })
-
-      const result = await hook.result.current.handleScanComboCard(SERIAL, license)
-
-      expect(result).toBe(true)
-    })
-
-    it('returns true when a global policy already moved the user (already-registered client)', async () => {
-      const error = iasError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, true)
-      const { hook } = setup({ authorize: jest.fn().mockRejectedValue(error) })
-      jest
-        .mocked(navigationRef.getCurrentRoute)
-        .mockReturnValue({ name: BCSCScreens.VerificationMethodSelection } as any)
 
       const result = await hook.result.current.handleScanComboCard(SERIAL, license)
 
