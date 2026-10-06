@@ -4,11 +4,7 @@ import { StackHeaderProps, StackNavigationOptions } from '@react-navigation/stac
 import { render, screen } from '@testing-library/react-native'
 import React from 'react'
 import { Animated } from 'react-native'
-import {
-  createHeaderWithoutBanner,
-  createStackHeaderWithoutBanner,
-  createTabHeaderWithoutBanner,
-} from './HeaderWithBanner'
+import { createStackHeader, createTabHeader } from './NavigationHeaders'
 
 const ROUTE_NAME = 'Settings'
 
@@ -25,17 +21,12 @@ const headerProps = (options: StackNavigationOptions): StackHeaderProps =>
 
 const renderHeader = (header: React.ReactElement) => render(<BasicAppContext>{header}</BasicAppContext>)
 
-describe('HeaderWithBanner', () => {
+describe('NavigationHeaders', () => {
   describe.each([
-    ['createHeaderWithoutBanner', (options: StackNavigationOptions) => createHeaderWithoutBanner(headerProps(options))],
+    ['createStackHeader', (options: StackNavigationOptions) => createStackHeader(headerProps(options))],
     [
-      'createStackHeaderWithoutBanner',
-      (options: StackNavigationOptions) => createStackHeaderWithoutBanner(headerProps(options)),
-    ],
-    [
-      'createTabHeaderWithoutBanner',
-      (options: StackNavigationOptions) =>
-        createTabHeaderWithoutBanner(headerProps(options) as unknown as BottomTabHeaderProps),
+      'createTabHeader',
+      (options: StackNavigationOptions) => createTabHeader(headerProps(options) as unknown as BottomTabHeaderProps),
     ],
   ])('%s', (_name, createHeader) => {
     it('shows the title', () => {
