@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useResidentialAddressModel from '@/bcsc-theme/features/verify/_models/useResidentialAddressModel'
+import useResidentialAddressModel from '@/bcsc-theme/features/verify/useResidentialAddressModel'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'

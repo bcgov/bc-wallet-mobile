@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createStackHeader } from '../components/NavigationHeaders'
 import { createAuthSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
@@ -69,7 +69,7 @@ const AuthStack = (): React.ReactElement => {
         ...defaultStackOptions,
         headerShadowVisible: false,
         headerLeft: createHeaderBackButton,
-        header: createHeaderWithoutBanner,
+        header: createStackHeader,
         headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.AuthWebView }),
       }}
     >

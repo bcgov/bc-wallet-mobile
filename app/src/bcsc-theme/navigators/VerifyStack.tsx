@@ -1,4 +1,4 @@
-import { createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
+import { createStackHeader } from '@/bcsc-theme/components/NavigationHeaders'
 import { createProgressHeader } from '@/bcsc-theme/components/VerifyProgressHeader'
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
@@ -165,7 +165,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         headerLeft: createHeaderBackButton,
         headerBackTestID: testIdWithKey(TestIds.common.back),
         headerBackTitleVisible: false,
-        header: createHeaderWithoutBanner,
+        header: createStackHeader,
         headerRight: createVerifyHelpMenuButton({ showRestartVerification: true }),
       }}
     >

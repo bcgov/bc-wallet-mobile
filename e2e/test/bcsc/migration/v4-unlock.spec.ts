@@ -2,6 +2,7 @@ import { Timeouts } from '../../../src/constants.js'
 import { selectAccountLandingIfPresent } from '../../../src/flows/auth.js'
 import {
   expectAccountDetailsReadBack,
+  expectDeveloperModeOffInSettings,
   expectServicesCatalogueOpens,
   expectVerifiedInSettings,
   loginWithPairingCode,
@@ -40,10 +41,15 @@ describe('Upgrade from v3: unlocking with the v3 PIN', () => {
   })
 
   // The v3 account was verified in person before the upgrade, so v4 must read it back as verified —
-  // the same four checks the `verified` upgrade scenario makes on the other lineages, so this lane IS
-  // the verified × v3 cell. v3 already paid for the approval, so this is nearly free here.
+  // the same checks the `verified` upgrade scenario makes on the other lineages, so this lane IS the
+  // verified × v3 cell. v3 already paid for the approval, so this is nearly free here.
   it('keeps the account verified: the Settings Profile row is present', async () => {
     await expectVerifiedInSettings()
+  })
+
+  it('keeps developer mode off across the upgrade: the Developer options row is absent', async () => {
+    // v3 never wrote the preference, so the current build must read it back at its default.
+    await expectDeveloperModeOffInSettings()
   })
 
   it('reads back Account Details', async () => {
