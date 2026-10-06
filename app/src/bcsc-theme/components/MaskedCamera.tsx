@@ -36,8 +36,6 @@ type MaskedCameraProps = {
   maskOverlayOpacity?: number
   customPath?: string
   codeScanner?: CameraOutput
-  /** False pauses the camera and hides its controls, e.g. while a photo review covers it. */
-  isActive?: boolean
   onPhotoTaken: (path: string) => void
 }
 
@@ -53,7 +51,6 @@ const MaskedCamera = ({
   customPath,
   codeScanner,
   cameraFace = 'back',
-  isActive = true,
   onPhotoTaken,
 }: MaskedCameraProps) => {
   const { t } = useTranslation()
@@ -136,10 +133,10 @@ const MaskedCamera = ({
   })
 
   useEffect(() => {
-    if (!isFocused || !isActive) {
+    if (!isFocused) {
       setTorchEnabled(false)
     }
-  }, [isFocused, isActive])
+  }, [isFocused])
 
   useEffect(() => {
     navigation.setOptions({
@@ -206,7 +203,7 @@ const MaskedCamera = ({
         style={styles.camera}
         device={device}
         mirrorMode={mirrorMode}
-        isActive={isActive && isFocused && !isBackgroundedAppState(appStateStatus)}
+        isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
         onError={onError}
         outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
         torchMode={torchMode}
@@ -214,68 +211,64 @@ const MaskedCamera = ({
         onStarted={() => setCameraStarted(true)}
         onStopped={() => setCameraStarted(false)}
       />
-      {isActive && (
-        <>
-          {maskType && (
-            <SVGOverlay
-              maskType={maskType}
-              customPath={customPath}
-              strokeColor={maskLineColor ?? ColorPalette.brand.tertiary}
-              strokeWidth={maskLineWidth}
-              overlayOpacity={maskOverlayOpacity}
-            />
-          )}
-          <View style={styles.instructionText}>
-            {cameraLabel && (
-              <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
-                {cameraLabel}
-              </ThemedText>
-            )}
-            {cameraInstructions && (
-              <ThemedText
-                style={{
-                  color: 'white',
-                  textAlign: 'center',
-                }}
-                variant={'headingFour'}
-              >
-                {cameraInstructions}
-              </ThemedText>
-            )}
-          </View>
-          <View style={styles.controlsContainer}>
-            <TouchableOpacity
-              style={{ flex: 1 }}
-              onPress={handleCancel}
-              accessibilityLabel={t('BCSC.CameraDisclosure.CancelCamera')}
-              accessibilityRole="button"
-              testID={testIdWithKey(TestIds.shared.maskedCamera.cancel)}
-            >
-              <ThemedText style={{ color: ColorPalette.grayscale.white }}>{t('Global.Cancel')}</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.captureButton}
-              onPress={preventDoublePress(takeAndSavePhoto)}
-              accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
-              accessibilityRole="button"
-              testID={testIdWithKey(TestIds.shared.maskedCamera.takePhoto)}
-            ></TouchableOpacity>
-            {hasTorch ? (
-              <TouchableOpacity
-                style={{ flex: 1, alignItems: 'flex-end' }}
-                onPress={() => setTorchEnabled((prev) => !prev)}
-                accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
-                accessibilityRole="button"
-                testID={testIdWithKey(TestIds.shared.maskedCamera.toggleFlash)}
-              >
-                <Icon size={24} name={torchEnabled ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
-              </TouchableOpacity>
-            ) : (
-              <View style={{ flex: 1 }} />
-            )}
-          </View>
-        </>
+      {maskType && (
+        <SVGOverlay
+          maskType={maskType}
+          customPath={customPath}
+          strokeColor={maskLineColor ?? ColorPalette.brand.tertiary}
+          strokeWidth={maskLineWidth}
+          overlayOpacity={maskOverlayOpacity}
+        />
       )}
+      <View style={styles.instructionText}>
+        {cameraLabel && (
+          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
+            {cameraLabel}
+          </ThemedText>
+        )}
+        {cameraInstructions && (
+          <ThemedText
+            style={{
+              color: 'white',
+              textAlign: 'center',
+            }}
+            variant={'headingFour'}
+          >
+            {cameraInstructions}
+          </ThemedText>
+        )}
+      </View>
+      <View style={styles.controlsContainer}>
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={handleCancel}
+          accessibilityLabel={t('BCSC.CameraDisclosure.CancelCamera')}
+          accessibilityRole="button"
+          testID={testIdWithKey(TestIds.shared.maskedCamera.cancel)}
+        >
+          <ThemedText style={{ color: ColorPalette.grayscale.white }}>{t('Global.Cancel')}</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.captureButton}
+          onPress={preventDoublePress(takeAndSavePhoto)}
+          accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
+          accessibilityRole="button"
+          testID={testIdWithKey(TestIds.shared.maskedCamera.takePhoto)}
+        ></TouchableOpacity>
+        {hasTorch ? (
+          <TouchableOpacity
+            style={{ flex: 1, alignItems: 'flex-end' }}
+            onPress={() => setTorchEnabled((prev) => !prev)}
+            accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
+            accessibilityRole="button"
+            testID={testIdWithKey(TestIds.shared.maskedCamera.toggleFlash)}
+          >
+            <Icon size={24} name={torchEnabled ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ flex: 1 }} />
+        )}
+      </View>
     </View>
   )
 }
