@@ -492,6 +492,31 @@ describe('clientErrorPolicies', () => {
         expect(alreadyRegisteredErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
+      it('should match ERR_501_INVALID_REGISTRATION_REQUEST with "client is in invalid" on the barcodes endpoint', () => {
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
+        error.cause = new AxiosError('client is in invalid state')
+        const context = {
+          endpoint: '/api/device/barcodes/client-id',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+            barcodes: '/api/device/barcodes',
+          },
+        }
+        expect(alreadyRegisteredErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match on the barcodes endpoint when its URL is not configured', () => {
+        const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
+        error.cause = new AxiosError('client is in invalid state')
+        const context = {
+          endpoint: '/api/undefined',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(alreadyRegisteredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
       it('should NOT match ERR_501_INVALID_REGISTRATION_REQUEST without "client is in invalid" message', () => {
         const error = newError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
         error.cause = new AxiosError('some other message')

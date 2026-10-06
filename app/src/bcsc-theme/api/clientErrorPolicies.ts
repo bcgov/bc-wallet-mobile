@@ -370,13 +370,14 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Error policy for already registered device on device authorization endpoint
+// Error policy for already registered device on the device authorization and barcodes endpoints
 export const alreadyRegisteredErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return (
       error.appEvent === AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST &&
       Boolean(error.technicalMessage?.includes('client is in invalid')) &&
-      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+      (context.endpoint.includes(context.apiEndpoints.deviceAuthorization) ||
+        Boolean(context.apiEndpoints.barcodes && context.endpoint.includes(context.apiEndpoints.barcodes)))
     )
   },
   handle: (_error, context) => {
