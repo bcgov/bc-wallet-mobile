@@ -40,5 +40,12 @@ describe('NavigationHeaders', () => {
 
       expect(screen.getByRole('header', { name: ROUTE_NAME })).toBeTruthy()
     })
+
+    // A blank title used to mount an empty header Text that VoiceOver stopped on.
+    it('renders no title element for a blank title', () => {
+      renderHeader(createHeader({ title: '' }))
+
+      expect(screen.queryByRole('header')).toBeNull()
+    })
   })
 })

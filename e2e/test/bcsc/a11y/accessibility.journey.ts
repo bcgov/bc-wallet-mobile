@@ -49,8 +49,9 @@ import { TestIds } from '../../../src/test-ids/registry.js'
  * onboarding → verification entry → Home/Wallet/scanner → Settings and its sub-screens → relaunch and
  * unlock, running `auditScreen` on each screen once it is settled. On iOS that is Apple's audit engine;
  * on Android the page-source/screenshot heuristics — see `helpers/a11y-audit.ts` for what each can and
- * cannot see. Findings never fail a checkpoint: they land in Allure + `reports/a11y/`, and the terminal
- * checkpoint fails only if no audit could run (or under A11Y_AUDIT_STRICT=1).
+ * cannot see. Findings never fail the checkpoint that records them: they land in Allure + `reports/a11y/`,
+ * and the terminal checkpoint fails on a finding missing from `a11y-baseline.json` (fail-on-new), if no
+ * audit could run, or under A11Y_AUDIT_STRICT=1.
  *
  * Verified surfaces (Services, AccountDetails, Contacts, pairing) are not here — they cost an in-person
  * approval each, and belong as audit calls on the verified journeys once this lane has a baseline. The

@@ -2,6 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { TestIds } from '@/test-ids/registry'
+import { a11yLabel } from '@/utils/accessibility'
 import {
   Button,
   ButtonType,
@@ -221,6 +222,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
             onPINChange={handleCurrentPINChange}
             onPINComplete={handleCurrentPINComplete}
             errorMessage={currentPINError}
+            accessibilityLabel={a11yLabel(t('BCSC.ChangePIN.EnterCurrentPIN'))}
           />
         </View>
 
@@ -232,6 +234,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
             onPINChange={handleNewPINChange}
             onPINComplete={handleNewPINComplete}
             errorMessage={newPINError}
+            accessibilityLabel={a11yLabel(t('BCSC.ChangePIN.EnterNewPIN'))}
           />
         </View>
 
@@ -243,6 +246,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
             onPINChange={handleConfirmPINChange}
             onPINComplete={handleConfirmPINComplete}
             errorMessage={confirmPINError}
+            accessibilityLabel={a11yLabel(t('BCSC.ChangePIN.ReenterNewPIN'))}
           />
         </View>
 
