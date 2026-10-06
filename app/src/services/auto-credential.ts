@@ -1,4 +1,6 @@
 import { getDigitalServiceCardAccountProblem } from '@/bcsc-theme/utils/getDigitalServiceCardAccountProblem'
+import { AttestationRestrictions } from '@/constants'
+import { isProofRequestingAttestation } from '@/services/attestation'
 import { AbstractBifoldLogger, CredentialProvisioningEventTypes, CredentialProvisioningMonitor } from '@bifold/core'
 import {
   AnonCredsProofRequestRestriction,
@@ -15,8 +17,6 @@ import {
   DidCommProofState,
   DidCommProofStateChangedEvent,
 } from '@credo-ts/didcomm'
-import { AttestationRestrictions } from '@/constants'
-import { isProofRequestingAttestation } from '@/services/attestation'
 import { BCAgent } from '@utils/bc-agent-modules'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { DeviceEventEmitter } from 'react-native'
