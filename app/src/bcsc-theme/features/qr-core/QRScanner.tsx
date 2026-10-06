@@ -5,7 +5,8 @@ import { hitSlop } from '@/constants'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
 import { DismissiblePopupModal, QrCodeScanError, ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
-import React, { useState } from 'react'
+import { useFocusEffect } from '@react-navigation/core'
+import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -28,6 +29,8 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
   const [torchActive, setTorchActive] = useState(false)
   const { hasPermission, requestPermission } = useCameraPermission()
   const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
+  const [scannerKey, setScannerKey] = useState(0)
+  const hasFocused = useRef(false)
 
   const styles = StyleSheet.create({
     container: { flex: 1 },
@@ -50,6 +53,15 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
     },
   })
 
+  useFocusEffect(
+    useCallback(() => {
+      if (hasFocused.current) {
+        setScannerKey((prevKey) => prevKey + 1) // remount ScanCamera to clear its frozen state
+      }
+      hasFocused.current = true
+    }, [])
+  )
+
   if (isPermissionLoading) {
     return <LoadingScreen />
   }
@@ -63,7 +75,13 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
   // spinner instead so the dedupe state survives the in-flight handler.
   return (
     <View style={styles.container}>
-      <ScanCamera handleCodeScan={onScan} enableCameraOnError={true} torchActive={torchActive} error={scanError} />
+      <ScanCamera
+        key={scannerKey}
+        handleCodeScan={onScan}
+        enableCameraOnError={true}
+        torchActive={torchActive}
+        error={scanError}
+      />
       <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
       <TouchableOpacity
         style={styles.torchButton}

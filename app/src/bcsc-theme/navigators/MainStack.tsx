@@ -66,6 +66,7 @@ import { NotificationSettingsScreen } from '../features/settings/NotificationSet
 import { ProofRequestExpirationScreen } from '../features/settings/ProofRequestExpirationScreen'
 import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
 import { useVerificationResponseListener } from '../features/verification-response/useVerificationResponseListener'
+import AlreadyVerifiedSuccessScreen from '../features/verify/AlreadyVerifiedSuccessScreen'
 import CancelledReview from '../features/verify/send-video/CancelledReview'
 import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
@@ -530,6 +531,15 @@ const MainStack: React.FC = () => {
               })}
             />
           )}
+          {isVerified ? (
+            <Stack.Screen
+              name={BCSCScreens.AlreadyVerifiedSuccess}
+              component={AlreadyVerifiedSuccessScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+          ) : null}
           <Stack.Screen
             name={BCSCScreens.ReverifyAccount}
             component={ReverifyAccountScreen}

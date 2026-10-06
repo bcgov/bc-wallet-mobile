@@ -1,10 +1,4 @@
-import {
-  BCSCMainStackParams,
-  BCSCQRCoreScreens,
-  BCSCQRCoreTabParams,
-  BCSCScreens,
-  BCSCStacks,
-} from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -34,10 +28,7 @@ const QRScannerScreen: React.FC = () => {
   }, [navigation])
 
   const onAlreadyVerified = useCallback(() => {
-    navigation
-      .getParent<StackNavigationProp<BCSCMainStackParams>>()
-      // TODO (MD): Replace with a "Already Verified" screen
-      ?.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+    navigation.getParent<StackNavigationProp<BCSCMainStackParams>>()?.navigate(BCSCScreens.AlreadyVerifiedSuccess)
   }, [navigation])
 
   const onConnectionFound = useCallback(
@@ -60,7 +51,11 @@ const QRScannerScreen: React.FC = () => {
 
   const { isProcessing, scanError, handleScan, dismissError, resetLock } = useQRScanner(strategies)
 
-  useFocusEffect(useCallback(resetLock, [resetLock]))
+  useFocusEffect(
+    useCallback(() => {
+      resetLock()
+    }, [resetLock])
+  )
 
   return (
     <QRScanner isProcessing={isProcessing} scanError={scanError} onScan={handleScan} onDismissError={dismissError} />
