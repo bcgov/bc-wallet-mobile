@@ -2,9 +2,11 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceAuthorizationError } from '@/bcsc-theme/features/verify/deviceAuthorizationError'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { formatIasAxiosResponseError, getAppErrorFromAxiosError } from '@/bcsc-theme/utils/axios-error-utils'
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
+import { AxiosError } from 'axios'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 
@@ -149,6 +151,76 @@ describe('useAuthorizationService', () => {
         expect(error.handled).toBe(true)
       }
     )
+  })
+
+  describe('routing by event code from a real IAS response', () => {
+    const iasError = (code: string): AppError => {
+      const axiosError = new AxiosError('Request failed', 'ERR_BAD_REQUEST', undefined, null, {
+        status: 400,
+        data: { error: code, error_description: 'A human-readable description that never names the code' },
+        statusText: 'Bad Request',
+        headers: {} as any,
+        config: {} as any,
+      })
+      return getAppErrorFromAxiosError(formatIasAxiosResponseError(axiosError))
+    }
+
+    const scannedCard = { serial: 'C82643367', birthdate: '1995-12-17' }
+
+    const cases: Array<[AppEventCode, DeviceAuthorizationError, BCSCScreens]> = [
+      [AppEventCode.CARD_NOT_FOUND, DeviceAuthorizationError.MismatchedSerial, BCSCScreens.VerificationCardError],
+      [AppEventCode.INVALID_PARAMETER, DeviceAuthorizationError.InvalidParameter, BCSCScreens.VerificationCardError],
+      [AppEventCode.CARD_EXPIRED, DeviceAuthorizationError.CardExpired, BCSCScreens.VerificationCardError],
+      [AppEventCode.CARD_INACTIVE, DeviceAuthorizationError.CardInactive, BCSCScreens.DeviceAuthorizationError],
+      [AppEventCode.CARD_REPLACED, DeviceAuthorizationError.CardReplaced, BCSCScreens.DeviceAuthorizationError],
+      [AppEventCode.CARD_CANCELLED, DeviceAuthorizationError.CardCancelled, BCSCScreens.DeviceAuthorizationError],
+      [AppEventCode.CARD_RENEWED, DeviceAuthorizationError.CardRenewed, BCSCScreens.DeviceAuthorizationError],
+      [AppEventCode.CARD_PROBLEM, DeviceAuthorizationError.CardProblem, BCSCScreens.DeviceAuthorizationError],
+      [AppEventCode.ADDITIONAL_CARD, DeviceAuthorizationError.AdditionalCard, BCSCScreens.DeviceAuthorizationError],
+      [AppEventCode.UNDER_MINIMUM_AGE, DeviceAuthorizationError.UnderMinimumAge, BCSCScreens.DeviceAuthorizationError],
+      [
+        AppEventCode.TOO_MANY_MOBILE_CARDS,
+        DeviceAuthorizationError.TooManyMobileCards,
+        BCSCScreens.DeviceAuthorizationError,
+      ],
+    ]
+
+    it.each(cases)(
+      'routes %s to the right screen when the description does not name the code',
+      (code, type, screen) => {
+        const error = iasError(code)
+        const { result } = renderHook(() => useAuthorizationService())
+
+        result.current.handleAuthorizationError(error, scannedCard)
+
+        const expectedParams =
+          screen === BCSCScreens.VerificationCardError ? { errorType: type, scannedCard } : { errorType: type }
+        expect(mockNavigate).toHaveBeenCalledWith(screen, expectedParams)
+        expect(error.handled).toBe(true)
+      }
+    )
+
+    it('omits scannedCard from the params when none is given', () => {
+      const error = iasError(AppEventCode.CARD_NOT_FOUND)
+      const { result } = renderHook(() => useAuthorizationService())
+
+      result.current.handleAuthorizationError(error)
+
+      expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.VerificationCardError, {
+        errorType: DeviceAuthorizationError.MismatchedSerial,
+      })
+    })
+
+    it('still routes by technicalMessage when the event code is not in a table', () => {
+      const error = buildError('Request failed: card_inactive', AppEventCode.UNKNOWN_SERVER_ERROR)
+      const { result } = renderHook(() => useAuthorizationService())
+
+      result.current.handleAuthorizationError(error)
+
+      expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.DeviceAuthorizationError, {
+        errorType: DeviceAuthorizationError.CardInactive,
+      })
+    })
   })
 
   describe('alert fallback', () => {

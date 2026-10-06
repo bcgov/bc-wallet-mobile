@@ -214,7 +214,11 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.ManualSerial]: undefined
   [BCSCScreens.ScanSerial]: undefined
   [BCSCScreens.EnterBirthdate]: undefined
-  [BCSCScreens.VerificationCardError]: { errorType: DeviceAuthorizationError }
+  [BCSCScreens.VerificationCardError]: {
+    errorType: DeviceAuthorizationError
+    // Present for a scan; birthdate is YYYY-MM-DD. Manual entry omits it and the screen reads the store.
+    scannedCard?: { serial: string; birthdate: string }
+  }
   [BCSCScreens.DeviceAuthorizationError]: { errorType: DeviceAuthorizationError }
   [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }
