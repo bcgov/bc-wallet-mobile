@@ -427,8 +427,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     // "validated" status for the scan callback below (readingCount >=
     // VALIDATION_THRESHOLD, which differs by platform). Position is not a gate: a
     // successfully decoded barcode counts regardless of where it sits on screen.
-    // Card identity is validated downstream by decoding content (useCardScanner),
-    // which rejects non-BCSC scans and resets the scanner.
+    // Card identity is decided downstream, not here: the scan screens decode the content and,
+    // for a serial plus card, ask the server (useCardScanner).
     if (code.value) {
       const existing = barcodeReadings.current.get(key)
       if (existing && existing.value === code.value && existing.type === code.type) {

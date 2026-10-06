@@ -2,7 +2,12 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { decodeCardBarcode, ScanableCode, toDriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
+import {
+  decodeCardBarcode,
+  isOtherIssuerAamvaCard,
+  ScanableCode,
+  toDriversLicenseMetadata,
+} from '@/bcsc-theme/utils/card-barcode-decoder'
 import { CardScan, combineCardBarcodes, EMPTY_CARD_SCAN } from '@/bcsc-theme/utils/card-scan'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
@@ -184,7 +189,11 @@ const IdCardMaskOverlay: React.FC<IdCardMaskOverlayProps> = ({
 /**
  * Screen for scanning BC Services Card barcodes.
  * Camera fills the entire screen to fit a standard ID card (CR-80, ~85.6×53.98mm).
- * DL's are ignored, Combo, Photo, and Non-Photo cards are accepted
+ *
+ * Once it has a serial (1D) and a BC card (PDF-417) the server decides: a match continues setup and
+ * `card_not_found` (a licence, for example) continues the other-ID flow. A PDF-417 recognised as another
+ * issuer's licence or ID card goes to the other-ID flow directly. A damaged or unrecognised read keeps
+ * scanning. If the handler leaves the user here, the screen offers Try Again.
  */
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
@@ -275,6 +284,9 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       return true
     }
 
+    // Whether this batch held a PDF-417 that is positively another issuer's licence or ID card.
+    let sawOtherIssuerCard = false
+
     for (const code of barcodes) {
       if (code.type === 'unknown') {
         logger.debug('[DecodeBarcodes] Skipping unknown barcode')
@@ -286,15 +298,10 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       if (decoded.source === 'failure') {
         logger.debug('[DecodeBarcodes] Failed to decode barcode', { type: code.type, reason: decoded.reason })
 
-        if (!cardScanRef.current.serial && !cardScanRef.current.card) {
-          // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
-          isProcessingScan.current = true
-          setScanState('locked')
-          await settleScan(async () => {
-            await scanner.handleScanNonBcsc()
-            return true
-          })
-          return true
+        // A damaged or unrecognised read says nothing about the card, so keep scanning. Only a
+        // recognised card from another issuer is known not to be a BC Services Card.
+        if (code.type === 'pdf-417' && code.value && isOtherIssuerAamvaCard(code.value)) {
+          sawOtherIssuerCard = true
         }
         continue
       }
@@ -306,14 +313,24 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
     const { serial, card } = cardScanRef.current
     if (serial && card) {
-      // We have both the serial and the birthdate — lock the camera and handle the card.
+      // We have both the serial and the birthdate — lock the camera and ask the server about the card.
       isProcessingScan.current = true
       setScanState('locked')
       await settleScan(() => scanner.handleScanComboCard(serial, toDriversLicenseMetadata(card)))
       return true
     }
 
-    // Still missing the serial or the birthdate — tell CodeScanningCamera to
+    if (sawOtherIssuerCard) {
+      isProcessingScan.current = true
+      setScanState('locked')
+      await settleScan(async () => {
+        await scanner.handleScanNonBcsc()
+        return true
+      })
+      return true
+    }
+
+    // Still missing the serial or the card — tell CodeScanningCamera to
     // unlock and keep scanning instead of freezing on this one barcode.
     return false
   }

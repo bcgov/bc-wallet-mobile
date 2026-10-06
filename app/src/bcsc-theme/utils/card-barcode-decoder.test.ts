@@ -1,4 +1,6 @@
 import {
+  AAMVA_BC_ISSUER_BARCODE,
+  AAMVA_ONTARIO_BARCODE,
   BC_BCID_BARCODE_Y,
   BC_BCSC_BARCODE_C,
   BC_COMBO_BARCODE_K,
@@ -14,6 +16,7 @@ import {
 import {
   decodeCardBarcode,
   DriversLicenseMetadata,
+  isOtherIssuerAamvaCard,
   ScanableCode,
   toDriversLicenseMetadata,
 } from '@/bcsc-theme/utils/card-barcode-decoder'
@@ -124,6 +127,28 @@ describe('decodeCardBarcode', () => {
     ['qr-code', 'qr-code'],
   ] as const)('reports a %s code as unsupported', (_, type) => {
     expect(decodeCardBarcode({ type, value: 'A12345678' })).toEqual({ source: 'failure', reason: 'unsupported' })
+  })
+})
+
+describe('isOtherIssuerAamvaCard', () => {
+  it('is true for an AAMVA header with another issuer number', () => {
+    expect(isOtherIssuerAamvaCard(AAMVA_ONTARIO_BARCODE)).toBe(true)
+  })
+
+  it('is true for the AAMVA file type spelled out', () => {
+    expect(isOtherIssuerAamvaCard('@\n\u001e\rAAMVA636012090002DL00410278ZV03190008DLDAQ1234567\n')).toBe(true)
+  })
+
+  it.each([
+    ['an AAMVA header with the BC issuer number', AAMVA_BC_ISSUER_BARCODE],
+    ['a BC 3-track licence', BC_DL_BARCODE_S],
+    ['a BC 3-track combo card', BC_COMBO_BARCODE_K],
+    ['a bare serial', 'S00023254'],
+    ['a header missing its separators', '@ANSI 636012090002DL00410278ZV03190008DLDAQ1234567'],
+    ['a header with a short issuer number', '@\n\u001e\rANSI 63601'],
+    ['an empty value', ''],
+  ])('is false for %s', (_, value) => {
+    expect(isOtherIssuerAamvaCard(value)).toBe(false)
   })
 })
 

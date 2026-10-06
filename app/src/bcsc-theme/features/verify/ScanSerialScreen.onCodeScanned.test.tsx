@@ -1,4 +1,6 @@
 import {
+  AAMVA_BC_ISSUER_BARCODE,
+  AAMVA_ONTARIO_BARCODE,
   BC_BCID_BARCODE_Y,
   BC_BCSC_BARCODE_C,
   BC_COMBO_BARCODE_K,
@@ -60,6 +62,8 @@ const licence = pdf417(BC_DL_BARCODE_S)
 const otherLicence = pdf417(BC_DL_BARCODE_NO_DCN_A)
 const damaged = pdf417(BC_DL_BARCODE_S.replace('00S00023254?', 'S00023254?'))
 const unknown: ScanableCode = { type: 'unknown', value: 'UNKNOWN-VALUE-1' }
+// A recognised AAMVA card from another issuer: the one unreadable read that is known not to be a BC card.
+const otherIssuer = pdf417(AAMVA_ONTARIO_BARCODE)
 
 const SERIAL_BIRTH_DATE = new Date(1982, 0, 4)
 const OTHER_BIRTH_DATE = new Date(1970, 8, 6)
@@ -311,26 +315,34 @@ describe('ScanSerialScreen onCodeScanned', () => {
   describe('unreadable barcodes', () => {
     it.each([
       ['a damaged PDF-417', pdf417(BC_DL_BARCODE_S.replace('00S00023254?', 'S00023254?'))],
-      ['an AAMVA PDF-417', pdf417('@\n\u001e\rANSI 636028090002DL00410278ZV03190008DLDAQ1234567\n')],
+      ['an AAMVA PDF-417 with the BC issuer number', pdf417(AAMVA_BC_ISSUER_BARCODE)],
       ['a serial read as a PDF-417', pdf417('S00023254')],
       ['a code-39 of digits only', code39('123456789')],
       ['a code-39 with no value', code39(undefined)],
       ['a code-128 with an empty value', code128('')],
       ['a QR code', { type: 'qr-code', value: 'A12345678' } as ScanableCode],
-    ])('hands %s read first to the non-BCSC flow', async (_, unreadable) => {
+    ])('keeps scanning on %s read first, with no hook call', async (_, unreadable) => {
       renderScreen()
 
-      expect(await scan([unreadable])).toBe(true)
-      expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
+      expect(await scan([unreadable])).toBe(false)
+      expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
 
-    it('hands the card to the non-BCSC flow when an unreadable code comes before the serial, and never reads the serial', async () => {
+    it('keeps scanning when an unreadable code comes before the serial, then completes on the licence', async () => {
       renderScreen()
 
-      expect(await scan([damaged, serial])).toBe(true)
-      expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
+      expect(await scan([damaged, serial])).toBe(false)
+      expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+
+      expect(await scan([licence])).toBe(true)
+      expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
+      expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE })
+      )
     })
 
     it('ignores an unreadable code that comes after the serial, then completes on the licence', async () => {
@@ -364,12 +376,59 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
 
-    it('hands the card to the non-BCSC flow when an unreadable code follows an unknown one', async () => {
+    it('keeps scanning when an unreadable code follows an unknown one', async () => {
       renderScreen()
 
-      expect(await scan([unknown, damaged])).toBe(true)
+      expect(await scan([unknown, damaged])).toBe(false)
+      expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("another issuer's AAMVA card", () => {
+    it('hands the card to the non-BCSC flow when it is the first read', async () => {
+      renderScreen()
+
+      expect(await scan([otherIssuer])).toBe(true)
       expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it('hands the card to the non-BCSC flow after a serial is already held', async () => {
+      renderScreen()
+
+      expect(await scan([serial])).toBe(false)
+      expect(await scan([otherIssuer])).toBe(true)
+      expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it('hands the card to the non-BCSC flow after a BC card is already held', async () => {
+      renderScreen()
+
+      expect(await scan([licence])).toBe(false)
+      expect(await scan([otherIssuer])).toBe(true)
+      expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it('hands the card to the non-BCSC flow when it shares a batch with an incomplete pair', async () => {
+      renderScreen()
+
+      expect(await scan([serial, otherIssuer])).toBe(true)
+      expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
+      expect(mockHandleScanComboCard).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['before', [otherIssuer, serial, licence]],
+      ['after', [serial, licence, otherIssuer]],
+    ])('lets a complete pair win over an other-issuer card read %s it in the same batch', async (_, codes) => {
+      renderScreen()
+
+      expect(await scan(codes)).toBe(true)
+      expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
+      expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
     })
   })
 
@@ -387,7 +446,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     it('ignores every later batch after a non-BCSC reroute', async () => {
       renderScreen()
 
-      expect(await scan([damaged])).toBe(true)
+      expect(await scan([otherIssuer])).toBe(true)
       expect(await scan([serial, licence])).toBe(true)
       expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
@@ -473,7 +532,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     it('scans again after a non-BCSC reroute and Try Again', async () => {
       const screen = renderScreen()
 
-      expect(await scan([damaged])).toBe(true)
+      expect(await scan([otherIssuer])).toBe(true)
       tryAgain(screen)
 
       expect(await scan([serial, licence])).toBe(true)
@@ -572,7 +631,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
     it.each([
       ['a completed pair', [serial, licence], mockHandleScanComboCard],
-      ['a non-BCSC reroute', [damaged], mockHandleScanNonBcsc],
+      ['a non-BCSC reroute', [otherIssuer], mockHandleScanNonBcsc],
     ])('locks for %s before the hook call settles', async (_, codes, hook) => {
       const screen = renderScreen()
       layOut(screen)

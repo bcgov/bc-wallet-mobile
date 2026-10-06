@@ -58,6 +58,27 @@ export const decodeCardBarcode = (code: ScanableCode): DecodedCardBarcode => {
   }
 }
 
+const BC_ISSUER_NUMBER = '636028'
+
+// AAMVA header: compliance indicator, data separator, record separator and segment terminator, then
+// the file type and the issuer number.
+const AAMVA_HEADER_PREFIX = '@\n\u001e\r'
+const AAMVA_FILE_TYPE_AND_ISSUER = /^(?:ANSI |AAMVA)(\d{6})/
+
+/**
+ * Whether a PDF-417 value is positively an AAMVA licence or ID card issued by someone other than BC,
+ * e.g. another province or a US state. Such cards are not decoded here (they are not in the BC layout),
+ * but they are known not to be a BC Services Card, unlike a read that is merely unrecognised.
+ */
+export const isOtherIssuerAamvaCard = (value: string): boolean => {
+  if (!value.startsWith(AAMVA_HEADER_PREFIX)) {
+    return false
+  }
+
+  const issuer = AAMVA_FILE_TYPE_AND_ISSUER.exec(value.slice(AAMVA_HEADER_PREFIX.length))?.[1]
+  return issuer !== undefined && issuer !== BC_ISSUER_NUMBER
+}
+
 export const toDriversLicenseMetadata = (card: BCCardBarcode): DriversLicenseMetadata => {
   const [firstName = '', ...middleNames] = card.givenNames.split(' ').filter(Boolean)
   const [streetAddress = '', ...streetAddress2] = card.streetAddressLines
