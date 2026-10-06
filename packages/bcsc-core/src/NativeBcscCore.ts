@@ -556,6 +556,15 @@ export interface Spec extends TurboModule {
    * iOS does not support programmatically opening the keyboard selector.
    */
   openKeyboardSelector(): Promise<void>;
+
+  /**
+   * Checks if a Bluetooth audio output device (SCO headset, A2DP headset/speaker, or BLE headset
+   * on Android 12+) is currently connected on Android. Needs no Bluetooth permission.
+   * Not implemented natively on iOS; callers must use the `isBluetoothAudioConnected` wrapper.
+   *
+   * @returns true if a Bluetooth audio output is connected, otherwise (including on any error) false
+   */
+  isBluetoothAudioConnected(): Promise<boolean>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');
