@@ -66,9 +66,8 @@ const AAMVA_HEADER_PREFIX = '@\n\u001e\r'
 const AAMVA_FILE_TYPE_AND_ISSUER = /^(?:ANSI |AAMVA)(\d{6})/
 
 /**
- * Whether a PDF-417 value is positively an AAMVA licence or ID card issued by someone other than BC,
- * e.g. another province or a US state. Such cards are not decoded here (they are not in the BC layout),
- * but they are known not to be a BC Services Card, unlike a read that is merely unrecognised.
+ * Whether a PDF-417 is an AAMVA licence or ID card from an issuer other than BC (another province or
+ * a US state): known not to be a BC Services Card, unlike a read that is merely unrecognised.
  */
 export const isOtherIssuerAamvaCard = (value: string): boolean => {
   if (!value.startsWith(AAMVA_HEADER_PREFIX)) {

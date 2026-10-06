@@ -325,9 +325,7 @@ export const useCardScanner = () => {
         return
       }
 
-      // Combo cards have two barcodes, so we need to process all scanned codes
-      // to ensure we capture both the serial and license metadata if present.
-      // The serial comes from the 1D barcode only, never the PDF-417's DCN.
+      // Fold every read so a combo card yields both; the serial comes from the 1D only, never the DCN.
       const reads: DecodedCardBarcode[] = []
 
       for (const code of barcodes) {

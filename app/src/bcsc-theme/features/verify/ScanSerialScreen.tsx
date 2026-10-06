@@ -190,10 +190,8 @@ const IdCardMaskOverlay: React.FC<IdCardMaskOverlayProps> = ({
  * Screen for scanning BC Services Card barcodes.
  * Camera fills the entire screen to fit a standard ID card (CR-80, ~85.6×53.98mm).
  *
- * Once it has a serial (1D) and a BC card (PDF-417) the server decides: a match continues setup and
- * `card_not_found` (a licence, for example) continues the other-ID flow. A PDF-417 recognised as another
- * issuer's licence or ID card goes to the other-ID flow directly. A damaged or unrecognised read keeps
- * scanning. If the handler leaves the user here, the screen offers Try Again.
+ * A serial plus BC card pair is routed on the server's answer; another issuer's AAMVA card goes to the
+ * other-ID flow; any other unreadable code keeps scanning.
  */
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
@@ -209,8 +207,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   // steady-hold help text.
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
-  // Set when the scan handler leaves the user on this screen (an alert only, or a failed save), so the
-  // frozen camera offers "Try Again".
+  // The scan handler left the user here (an alert only, or a failed save), so offer "Try Again".
   const [scanNeedsRetry, setScanNeedsRetry] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
   // Reported by CodeScanningCamera once it has picked a device. Non-Pro iPads have no
@@ -284,7 +281,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       return true
     }
 
-    // Whether this batch held a PDF-417 that is positively another issuer's licence or ID card.
     let sawOtherIssuerCard = false
 
     for (const code of barcodes) {
