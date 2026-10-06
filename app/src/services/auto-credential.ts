@@ -15,6 +15,8 @@ import {
   DidCommProofState,
   DidCommProofStateChangedEvent,
 } from '@credo-ts/didcomm'
+import { AttestationRestrictions } from '@/constants'
+import { isProofRequestingAttestation } from '@/services/attestation'
 import { BCAgent } from '@utils/bc-agent-modules'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { DeviceEventEmitter } from 'react-native'
@@ -27,10 +29,12 @@ interface ProofRequestFormat {
   requested_predicates?: Record<string, AnonCredsRequestedPredicate>
 }
 
-/** Minimal shape of the always-on AttestationMonitor we need to pause. */
-interface PausableAttestationMonitor {
+/** The slice of the always-on AttestationMonitor this monitor drives. */
+interface CollaboratingAttestationMonitor {
   start: (agent: Agent) => void
   stop: () => void
+  /** Resolves true once the controller has accepted the attestation. */
+  attemptAttestationForProof?: (proof: DidCommProofExchangeRecord) => Promise<boolean>
 }
 
 /**
@@ -70,11 +74,11 @@ export interface AutoCredentialRule {
 export interface AutoCredentialMonitorOptions {
   rules: AutoCredentialRule[]
   /**
-   * Always-on AttestationMonitor. Paused for the duration of an auto-workflow
-   * so it can't race our filtered subscription trying to satisfy the (now
-   * optional) attestation proof the issuer sends during issuance.
+   * Always-on AttestationMonitor. Paused while a workflow runs so it can't race
+   * our filtered subscription, then driven explicitly when the issuer asks for
+   * attestation during issuance.
    */
-  attestationMonitor?: PausableAttestationMonitor
+  attestationMonitor?: CollaboratingAttestationMonitor
 }
 
 /**
@@ -94,7 +98,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   private agent?: BCAgent
   private readonly log?: AbstractBifoldLogger
   private readonly rules: AutoCredentialRule[]
-  private readonly attestationMonitor?: PausableAttestationMonitor
+  private readonly attestationMonitor?: CollaboratingAttestationMonitor
 
   // State for the active workflow (one at a time)
   private _workflowInProgress = false
@@ -200,6 +204,42 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._workflowProofSubscription = undefined
     this._workflowOfferSubscription?.unsubscribe()
     this._workflowOfferSubscription = undefined
+  }
+
+  /**
+   * Attempts to satisfy an attestation proof request the issuer sent mid-workflow.
+   *
+   * Attestation is optional server-side, so a failure here is not fatal — the caller
+   * declines with a problem report and issuance proceeds. On success the
+   * AttestationMonitor owns the rest: its offer subscription accepts the attestation
+   * credential and presents this proof, which is why it has to be running again
+   * before we delegate.
+   *
+   * @returns true if the attestation exchange was handed off successfully.
+   */
+  private async tryAttestation(proof: DidCommProofExchangeRecord): Promise<boolean> {
+    if (!this.agent || !this.attestationMonitor?.attemptAttestationForProof) {
+      return false
+    }
+
+    try {
+      if (!(await isProofRequestingAttestation(proof, this.agent, AttestationRestrictions))) {
+        return false
+      }
+    } catch (err) {
+      this.log?.warn('[AutoCredentialMonitor] Could not inspect proof for attestation', { error: err as Error })
+      return false
+    }
+
+    this.log?.info('[AutoCredentialMonitor] Issuer requested attestation, attempting to obtain a credential')
+    this.resumeAttestationMonitor()
+
+    const obtained = await this.attestationMonitor.attemptAttestationForProof(proof)
+    if (!obtained) {
+      this.log?.warn('[AutoCredentialMonitor] Attestation failed, declining with a problem report')
+    }
+
+    return obtained
   }
 
   private resumeAttestationMonitor(): void {
@@ -313,8 +353,9 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
    *   2. Get the issuer invitation URL from the rule (BCSC-initiated: POST
    *      /credentials/v1/person; static: literal from config).
    *   3. Receive the invitation. The didexchange connection completes async.
-   *   4. On any proof request the issuer sends over the new connection,
-   *      decline it (attestation is optional server-side).
+   *   4. On a proof request the issuer sends over the new connection, try to
+   *      satisfy it via attestation; decline with a problem report if that fails
+   *      (attestation is optional server-side).
    *   5. On credential offer, auto-accept; on credential done, complete.
    *
    * The original triggering proof request is left in `RequestReceived` state
@@ -343,10 +384,9 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       const connectionId = connectionRecord.id
       this._pendingConnectionId = connectionId
 
-      // Decline any proof the issuer sends on this connection. In the BCSC flow
-      // the issuer sends an (optional) attestation proof request that we can't
-      // satisfy from the wallet; declining lets the issuance proceed to the
-      // credential offer.
+      // The issuer sends an (optional) attestation proof request on this connection.
+      // Try to obtain an attestation credential for it; if that can't be done,
+      // decline so issuance still proceeds to the credential offer.
       this._workflowProofSubscription = this.agent.events
         .observable<DidCommProofStateChangedEvent>(DidCommProofEventTypes.ProofStateChanged)
         .subscribe(async ({ payload: { proofRecord } }) => {
@@ -363,6 +403,10 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
           }
 
           try {
+            if (await this.tryAttestation(proofRecord)) {
+              return
+            }
+
             await this.agent.didcomm.proofs.declineRequest({
               proofExchangeRecordId: proofRecord.id,
               sendProblemReport: true,

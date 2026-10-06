@@ -1,4 +1,4 @@
-import { AttestationRestrictions } from '@/constants'
+import { AttestationRestrictions, Mode } from '@/constants'
 import { getErrorDefinition } from '@/errors'
 import {
   AbstractBifoldLogger,
@@ -29,7 +29,8 @@ import { BCAgent } from '@utils/bc-agent-modules'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
 import { DeviceEventEmitter, Platform } from 'react-native'
-import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
+import { Config } from 'react-native-config'
+import { getBuildNumber, getBundleId, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 
@@ -211,6 +212,43 @@ export class AttestationMonitor implements AttestationMonitorI {
   }
 
   public requestAttestationCredential = async (): Promise<void> => {
+    this.startWorkflow()
+
+    try {
+      await this.runAttestationFlow()
+    } catch (error) {
+      this.log?.error('Failed to fetch attestation credential', error as Error)
+
+      this.stopWorkflow(AttestationEventTypes.FailedRequestCredential, error as Error)
+    }
+  }
+
+  /**
+   * Acquires an attestation credential for a specific proof request and reports
+   * whether it succeeded, rather than only emitting an event. Used by callers that
+   * own the exchange themselves (see AutoCredentialMonitor) and need to decide what
+   * to do when attestation can't be obtained.
+   */
+  public attemptAttestationForProof = async (proof: DidCommProofExchangeRecord): Promise<boolean> => {
+    this._proofRequest = proof
+    this.startWorkflow()
+
+    try {
+      await this.runAttestationFlow()
+      // Deliberately leaves the workflow open: the credential offer still has to
+      // arrive, and this monitor's own offer subscription accepts it and then
+      // presents `proof`. Clearing state here would strand both.
+      return true
+    } catch (error) {
+      this.log?.error('Failed to fetch attestation credential', error as Error)
+
+      this.stopWorkflow(AttestationEventTypes.FailedRequestCredential, error as Error)
+      return false
+    }
+  }
+
+  /** Throws on any failure; callers decide how to report it. */
+  private runAttestationFlow = async (): Promise<void> => {
     if (!this.agent || !this._proofRequest) {
       throw new BifoldError(
         'Attestation Service',
@@ -222,62 +260,54 @@ export class AttestationMonitor implements AttestationMonitorI {
 
     this.log?.info('Fetching attestation credential')
 
-    this.startWorkflow()
+    const invitationUrl = await invitationUrlFromRestrictions(this._proofRequest, this.agent, AttestationRestrictions)
+    if (!invitationUrl) {
+      throw new BifoldError(
+        'Attestation Service',
+        'Unable to connect to the attestation service.',
+        'No details provided.',
+        AttestationErrorCodes.FailedToConnectToAttestationAgent
+      )
+    }
 
-    try {
-      const invitationUrl = await invitationUrlFromRestrictions(this._proofRequest, this.agent, AttestationRestrictions)
-      if (!invitationUrl) {
-        throw new BifoldError(
-          'Attestation Service',
-          'Unable to connect to the attestation service.',
-          'No details provided.',
-          AttestationErrorCodes.FailedToConnectToAttestationAgent
-        )
-      }
+    const connection = await this.connectToAttestationAgent(invitationUrl)
+    if (!connection) {
+      throw new BifoldError(
+        'Attestation Service',
+        'Unable to connect to the attestation service.',
+        'No details provided.',
+        AttestationErrorCodes.FailedToConnectToAttestationAgent
+      )
+    }
 
-      const connection = await this.connectToAttestationAgent(invitationUrl)
-      if (!connection) {
-        throw new BifoldError(
-          'Attestation Service',
-          'Unable to connect to the attestation service.',
-          'No details provided.',
-          AttestationErrorCodes.FailedToConnectToAttestationAgent
-        )
-      }
+    const nonce = await this.fetchNonceForAttestation(connection)
+    if (!nonce) {
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the attestation service.',
+        'No details provided.',
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
 
-      const nonce = await this.fetchNonceForAttestation(connection)
-      if (!nonce) {
-        throw new BifoldError(
-          'Attestation Service',
-          'There was a problem with the attestation service.',
-          'No details provided.',
-          AttestationErrorCodes.FailedToFetchNonceForAttestation
-        )
-      }
+    const attestationObj = await this.generateAttestation(nonce)
+    if (!attestationObj) {
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the attestation service.',
+        'No details provided.',
+        AttestationErrorCodes.FailedToGenerateAttestation
+      )
+    }
 
-      const attestationObj = await this.generateAttestation(nonce)
-      if (!attestationObj) {
-        throw new BifoldError(
-          'Attestation Service',
-          'There was a problem with the attestation service.',
-          'No details provided.',
-          AttestationErrorCodes.FailedToGenerateAttestation
-        )
-      }
-
-      const result = await this.requestAttestation(connection, attestationObj)
-      if (result.status !== 'success') {
-        throw new BifoldError(
-          'Attestation Service',
-          'There was a problem with the attestation service.',
-          'No details provided.',
-          AttestationErrorCodes.FailedToValidateAttestation
-        )
-      }
-    } catch (error) {
-      this.log?.error('Failed to fetch attestation credential', error as Error)
-
-      this.stopWorkflow(AttestationEventTypes.FailedRequestCredential, error as Error)
+    const result = await this.requestAttestation(connection, attestationObj)
+    if (result.status !== 'success') {
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the attestation service.',
+        'No details provided.',
+        AttestationErrorCodes.FailedToValidateAttestation
+      )
     }
   }
 
@@ -292,7 +322,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     DeviceEventEmitter.emit(eventType, error)
   }
 
-  private readonly handleProofRequest = async (proofRequest: DidCommProofExchangeRecord): Promise<boolean> => {
+  public readonly handleProofRequest = async (proofRequest: DidCommProofExchangeRecord): Promise<boolean> => {
     if (!this.agent) {
       return false
     }
@@ -568,6 +598,12 @@ export class AttestationMonitor implements AttestationMonitorI {
     const common: Partial<AttestationRequestParams> = {
       app_version: `${getVersion()}-${getBuildNumber()}`,
       os_version: `${getSystemName()} ${getSystemVersion()}`,
+      app_id_hint: getBundleId(),
+    }
+
+    // BC Wallet stays on the controller's default (v1) until it is decommissioned.
+    if (Config.BUILD_TARGET === Mode.BCSC) {
+      common.credential_protocol = 'v2'
     }
 
     return common
