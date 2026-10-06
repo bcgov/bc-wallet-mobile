@@ -440,6 +440,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            redactRequestBody: true,
             uploadLogContext: {
               media_kind: 'document',
               media_stage: 'metadata',

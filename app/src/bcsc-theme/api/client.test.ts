@@ -197,6 +197,49 @@ describe('BCSC Client', () => {
     })
   })
 
+  describe('redactRequestBody', () => {
+    const body = { barcodes: [{ type: 'PDF_417', family_name: 'Dinkley' }] }
+
+    const loggedRequestData = async (
+      config: { redactRequestBody?: boolean },
+      adapter: (config: any) => Promise<any>
+    ) => {
+      const mockLogger = { error: jest.fn(), info: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      client.client.defaults.adapter = adapter
+
+      await expect(client.post('/device/barcodes/abc', body, { skipBearerAuth: true, ...config })).rejects.toBeDefined()
+
+      return mockLogger.error.mock.calls[0][1].cause.request.data
+    }
+
+    const rejectWithIasError = (config: any) =>
+      Promise.reject(
+        new AxiosError('Request failed', 'ERR_BAD_REQUEST', config, null, {
+          status: 400,
+          data: { error: 'card_not_found', error_description: 'Card not found' },
+          statusText: 'Bad Request',
+          headers: {} as any,
+          config,
+        })
+      )
+
+    const rejectWithNetworkError = (config: any) =>
+      Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config, null, undefined))
+
+    it('logs a redaction marker for a 400 IAS error', async () => {
+      expect(await loggedRequestData({ redactRequestBody: true }, rejectWithIasError)).toBe('[redacted]')
+    })
+
+    it('logs a redaction marker for a network error', async () => {
+      expect(await loggedRequestData({ redactRequestBody: true }, rejectWithNetworkError)).toBe('[redacted]')
+    })
+
+    it('logs the body unchanged when the flag is not set', async () => {
+      expect(await loggedRequestData({}, rejectWithIasError)).toContain('Dinkley')
+    })
+  })
+
   describe('getTokensForRefreshToken', () => {
     it('should return the promise if already exists', async () => {
       const mockLogger = createMockLogger()

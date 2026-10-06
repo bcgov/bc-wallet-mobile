@@ -42,6 +42,7 @@ describe('useAuthorizationApi', () => {
         {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
+          redactRequestBody: true,
         }
       )
     })
@@ -158,6 +159,7 @@ describe('useAuthorizationApi', () => {
         {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
+          redactRequestBody: true,
         }
       )
     })
@@ -239,7 +241,7 @@ describe('useAuthorizationApi', () => {
       endpoints: { barcodes: BARCODES_ENDPOINT },
     })
 
-    it('posts the barcodes to /device/barcodes/{clientID} as JSON with skipBearerAuth', async () => {
+    it('posts the barcodes to /device/barcodes/{clientID} as JSON with skipBearerAuth and a redacted log body', async () => {
       const apiClient = buildBarcodeApiClient()
       const api = renderAuthApi(apiClient as any)
       const barcodes = [
@@ -254,7 +256,7 @@ describe('useAuthorizationApi', () => {
       expect(apiClient.post).toHaveBeenCalledWith(
         `${BARCODES_ENDPOINT}/${FAKE_CLIENT_ID}`,
         { barcodes },
-        { headers: { 'Content-Type': 'application/json' }, skipBearerAuth: true }
+        { headers: { 'Content-Type': 'application/json' }, skipBearerAuth: true, redactRequestBody: true }
       )
     })
 

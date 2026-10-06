@@ -78,6 +78,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             skipBearerAuth: true,
+            redactRequestBody: true,
           }
         )
 
@@ -131,6 +132,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             skipBearerAuth: true,
+            redactRequestBody: true,
           }
         )
 
@@ -162,6 +164,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           {
             headers: { 'Content-Type': 'application/json' },
             skipBearerAuth: true,
+            redactRequestBody: true,
           }
         )
 
