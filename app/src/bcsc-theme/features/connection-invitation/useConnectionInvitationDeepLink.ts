@@ -3,7 +3,7 @@ import { TOKENS, useServices } from '@bifold/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Toast from 'react-native-toast-message'
 import { BCSCMainStackParams, BCSCScreens } from '../../types/navigators'
@@ -25,9 +25,14 @@ export const useConnectionInvitationDeepLink = (): void => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null)
+  const cancelledRef = useRef(false)
 
   const onConnectionFound = useCallback(
     (oobRecordId: string) => {
+      if (cancelledRef.current) {
+        return
+      }
+
       navigation.navigate(BCSCScreens.ConnectionLoading, { oobRecordId: oobRecordId })
     },
     [navigation]
@@ -43,7 +48,7 @@ export const useConnectionInvitationDeepLink = (): void => {
       return
     }
 
-    let cancelled = false
+    cancelledRef.current = false
 
     const accept = async () => {
       // Gating on 'ready' is necessary but not sufficient on cold start: the
@@ -77,7 +82,7 @@ export const useConnectionInvitationDeepLink = (): void => {
         await didCommOobStrategy.handle(invitationUrl)
         setInvitationUrl(null)
       } catch (err) {
-        if (cancelled) {
+        if (cancelledRef.current) {
           return
         }
         setInvitationUrl(null)
@@ -89,7 +94,7 @@ export const useConnectionInvitationDeepLink = (): void => {
     accept()
 
     return () => {
-      cancelled = true
+      cancelledRef.current = true
     }
   }, [invitationUrl, agent, loading, navigation, logger, t, didCommOobStrategy])
 }
