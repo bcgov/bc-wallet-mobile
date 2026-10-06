@@ -63,15 +63,25 @@ export const useCardScanner = () => {
   const { updateUserInfo, updateUserMetadata, updateDeviceCodes, updateCardProcess, updateVerificationOptions } =
     useSecureActions()
 
-  /**
-   * Applies a successful device authorization to secure storage and reroutes the
-   * user into the setup flow. Shared by the combo (serial + birthdate) and the
-   * barcodes (`/device/barcodes`) authorization paths.
-   *
-   * @param deviceAuth - The device authorization response from the backend.
-   */
-  const applyDeviceAuthorization = useCallback(
-    async (deviceAuth: DeviceAuthorizationResponse, scanned: { serial: string; birthdate?: Date }) => {
+  const requestBarcodeAuthorization = useCallback(
+    (bcscSerial: string, license: DriversLicenseMetadata): Promise<DeviceAuthorizationResponse> => {
+      logger.info('[CardScanner] Checking the scanned barcodes against /device/barcodes')
+
+      return attemptWithRecovery(
+        () =>
+          authorizationService.authorizeDeviceWithBarcodes(buildBarcodePayload(bcscSerial, license), {
+            skipErrorHandling: true,
+          }),
+        route.name
+      )
+    },
+    [authorizationService, attemptWithRecovery, route.name, logger]
+  )
+
+  // Only a match reaches this: the serial and birth date are not stored for a card the server did not match.
+  const saveMatchedCard = useCallback(
+    async (bcscSerial: string, license: DriversLicenseMetadata, deviceAuth: DeviceAuthorizationResponse) => {
+      await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
       await updateUserInfo({
         email: deviceAuth.verified_email,
         isEmailVerified: !!deviceAuth.verified_email,
@@ -92,8 +102,8 @@ export const useCardScanner = () => {
         ...store,
         bcscSecure: {
           ...store.bcscSecure,
-          serial: scanned.serial,
-          birthdate: scanned.birthdate,
+          serial: bcscSerial,
+          birthdate: license.birthDate,
           emailAddress: deviceAuth.verified_email,
           isEmailVerified: !!deviceAuth.verified_email,
           deviceCode: deviceAuth.device_code,
@@ -103,33 +113,9 @@ export const useCardScanner = () => {
         },
       }
       navigation.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] })
-    },
-    [updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions, navigation, store]
-  )
-
-  const requestBarcodeAuthorization = useCallback(
-    (bcscSerial: string, license: DriversLicenseMetadata): Promise<DeviceAuthorizationResponse> => {
-      logger.info('[CardScanner] Checking the scanned barcodes against /device/barcodes')
-
-      return attemptWithRecovery(
-        () =>
-          authorizationService.authorizeDeviceWithBarcodes(buildBarcodePayload(bcscSerial, license), {
-            skipErrorHandling: true,
-          }),
-        route.name
-      )
-    },
-    [authorizationService, attemptWithRecovery, route.name, logger]
-  )
-
-  // Only a match reaches this: the serial and birth date are not stored for a card the server did not match.
-  const saveMatchedCard = useCallback(
-    async (bcscSerial: string, license: DriversLicenseMetadata, deviceAuth: DeviceAuthorizationResponse) => {
-      await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
-      await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
       logger.info('[CardScanner] Scanned barcodes matched a BC Services Card; switching to setup')
     },
-    [updateUserInfo, applyDeviceAuthorization, logger]
+    [updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions, navigation, store, logger]
   )
 
   /**
