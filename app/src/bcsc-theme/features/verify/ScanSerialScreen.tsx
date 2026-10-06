@@ -200,6 +200,9 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   // steady-hold help text.
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
+  // Set when the scan handler leaves the user on this screen (an alert only, or a failed save), so the
+  // frozen camera offers "Try Again".
+  const [scanNeedsRetry, setScanNeedsRetry] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
   // Reported by CodeScanningCamera once it has picked a device. Non-Pro iPads have no
   // torch, and turning one on there makes VisionCamera throw `device/flash-unavailable`.
@@ -232,6 +235,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
   const retryCamera = useCallback(() => {
     setCameraFailed(false)
+    setScanNeedsRetry(false)
     setScanState('scanning')
     setCameraKey((prev) => prev + 1)
     // Reset the caches so we can scan again.
@@ -254,6 +258,18 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     }, [retryCamera])
   )
 
+  // Runs a handler that reports whether the user left this screen; if not (or it threw), offer "Try Again".
+  const settleScan = async (handler: () => Promise<boolean>) => {
+    try {
+      if (!(await handler())) {
+        setScanNeedsRetry(true)
+      }
+    } catch (error) {
+      logger.error('[ScanSerialScreen] Handling the scanned card failed', error as Error)
+      setScanNeedsRetry(true)
+    }
+  }
+
   const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
     if (isProcessingScan.current) {
       return true
@@ -274,7 +290,10 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
           // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
           isProcessingScan.current = true
           setScanState('locked')
-          await scanner.handleScanNonBcsc()
+          await settleScan(async () => {
+            await scanner.handleScanNonBcsc()
+            return true
+          })
           return true
         }
         continue
@@ -290,7 +309,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       // We have both the serial and the birthdate — lock the camera and handle the card.
       isProcessingScan.current = true
       setScanState('locked')
-      await scanner.handleScanComboCard(serial, { birthDate: toDriversLicenseMetadata(card).birthDate })
+      await settleScan(() => scanner.handleScanComboCard(serial, toDriversLicenseMetadata(card)))
       return true
     }
 
@@ -431,7 +450,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               onPress={goToManualEntry}
               buttonType={ButtonType.Primary}
             />
-            {cameraFailed ? (
+            {cameraFailed || scanNeedsRetry ? (
               <Button
                 title={t('BCSC.Scan.TryAgain')}
                 accessibilityLabel={t('BCSC.Scan.TryAgain')}

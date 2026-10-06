@@ -1278,9 +1278,9 @@ describe('useSecureActions', () => {
       expect(captureHydratedCardProcess()).toBe(BCSCCardProcess.NonBCSC)
     })
 
-    it('still infers NonBCSC when a failed combo-card scan left a stale serial (no deviceCode)', async () => {
-      // handleScanComboCard persists csn before attempting authorization, so a Non-BCSC session
-      // can carry a serial from that failed attempt (see resume-step-route.test.ts:51-58).
+    it('still infers NonBCSC when a failed manual-entry attempt left a stale serial (no deviceCode)', async () => {
+      // Manual entry persists csn before authorization, so a Non-BCSC session can carry a serial
+      // from an attempt that failed (see resume-step-route.test.ts:51-58).
       jest.mocked(getEvidence).mockResolvedValue(completeEvidence as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue({ csn: '123456789' } as any)
 

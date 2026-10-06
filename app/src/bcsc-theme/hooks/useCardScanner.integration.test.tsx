@@ -1,0 +1,210 @@
+import BCSCApiClient from '@/bcsc-theme/api/client'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useAuthorizationApi from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { DeviceAuthorizationError } from '@/bcsc-theme/features/verify/deviceAuthorizationError'
+import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
+import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
+import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BC_COMBO_BARCODE_K } from '@/bcsc-theme/utils/__fixtures__/barcodes'
+import { decodeCardBarcode, toDriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
+import { navigationRef } from '@/contexts/NavigationContainerContext'
+import { AccountSetupType } from '@/store'
+import * as Bifold from '@bifold/core'
+import * as navigation from '@react-navigation/native'
+import { renderHook } from '@testing-library/react-native'
+import { AxiosError } from 'axios'
+import { BCSCCardProcess, getAccount } from 'react-native-bcsc-core'
+
+// The chain under test runs for real: decoded fixture, payload builder, authorization api, a real
+// BCSCApiClient (adapter stubbed), IAS error mapping, authorization service and the scan handler.
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+jest.mock('@/bcsc-theme/hooks/useSecureActions')
+jest.mock('@/hooks/useAlerts', () => {
+  const alerts = new Proxy(
+    {},
+    { get: (target: Record<string, jest.Mock>, name: string) => (target[name] ??= jest.fn()) }
+  )
+  return { useAlerts: () => alerts, mockAlerts: alerts }
+})
+jest.mock('@/bcsc-theme/services/hooks/useRegistrationService', () => ({
+  useRegistrationService: () => ({ cycleRegistration: jest.fn() }),
+}))
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: jest.fn(), getCurrentRoute: jest.fn() },
+}))
+jest.mock('@react-navigation/native')
+jest.mock('@bifold/core')
+
+const { mockAlerts } = jest.requireMock('@/hooks/useAlerts') as { mockAlerts: Record<string, jest.Mock> }
+
+const CLIENT_ID = 'client-123'
+const SERIAL = 'K12345678'
+const DEVICE_AUTHORIZATION = {
+  device_code: 'test-device-code',
+  user_code: 'ABCD1234',
+  verified_email: 'test@example.com',
+  expires_in: 3600,
+  verification_options: 'video_call back_check',
+  process: 'IDIM L3 Remote BCSC Photo Identity Verification',
+}
+
+const decodedCard = () => {
+  const decoded = decodeCardBarcode({ type: 'pdf-417', value: BC_COMBO_BARCODE_K })
+  if (decoded.source !== 'pdf417') {
+    throw new Error('fixture did not decode')
+  }
+  return toDriversLicenseMetadata(decoded.card)
+}
+
+describe('useCardScanner against the real client chain', () => {
+  const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+  const secure = {
+    updateUserInfo: jest.fn(),
+    updateDeviceCodes: jest.fn(),
+    updateCardProcess: jest.fn(),
+    updateVerificationOptions: jest.fn(),
+  }
+  const nav = { navigate: jest.fn(), reset: jest.fn() }
+  const adapter = jest.fn()
+  const requests: { url?: string; body: any }[] = []
+
+  // The barcodes call sends JSON; the manual-entry call sends a form body, kept as the raw string.
+  const parseBody = (data?: string) => {
+    try {
+      return data ? JSON.parse(data) : undefined
+    } catch {
+      return data
+    }
+  }
+
+  const respondWith = (status: number, data: object) =>
+    adapter.mockImplementation((config: any) => {
+      requests.push({ url: config.url, body: parseBody(config.data) })
+      const response = { status, data, statusText: String(status), headers: {} as any, config }
+      return status < 400
+        ? Promise.resolve(response)
+        : Promise.reject(new AxiosError('Request failed', 'ERR_BAD_REQUEST', config, null, response))
+    })
+
+  const rejectWithIasError = (status: number, error: string) =>
+    respondWith(status, { error, error_description: 'A human-readable description that never names the code' })
+
+  const setup = () => {
+    const client = new BCSCApiClient('https://example.com', logger as any)
+    client.client.defaults.adapter = adapter
+    jest.mocked(useApi).mockImplementation(() => ({ authorization: useAuthorizationApi(client) }) as any)
+
+    return renderHook(() => ({ scanner: useCardScanner(), service: useAuthorizationService() })).result
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    requests.length = 0
+    Object.values(secure).forEach((fn) => fn.mockResolvedValue(undefined))
+    jest.mocked(getAccount).mockResolvedValue({ clientID: CLIENT_ID } as any)
+    jest.mocked(useSecureActions).mockReturnValue(secure as any)
+    jest.mocked(Bifold).useServices.mockReturnValue([logger as any])
+    jest
+      .mocked(Bifold)
+      .useStore.mockReturnValue([
+        { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } } as any,
+        jest.fn(),
+      ])
+    jest.mocked(navigation).useRoute.mockReturnValue({ name: BCSCScreens.ScanSerial } as any)
+    jest.mocked(navigation).useNavigation = jest.fn().mockReturnValue(nav)
+    jest.mocked(navigationRef.isReady).mockReturnValue(true)
+    jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name: BCSCScreens.ScanSerial } as any)
+    // Navigating changes the current route, as it does for the real container.
+    nav.navigate.mockImplementation((name: string) => {
+      jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name } as any)
+    })
+    nav.reset.mockImplementation(({ routes }: { routes: { name: string }[] }) => {
+      jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name: routes[0].name } as any)
+    })
+  })
+
+  it('posts both barcodes as JSON to /device/barcodes and saves only after a match', async () => {
+    respondWith(200, DEVICE_AUTHORIZATION)
+    const result = setup()
+
+    const left = await result.current.scanner.handleScanComboCard(SERIAL, decodedCard())
+
+    expect(left).toBe(true)
+    expect(requests).toHaveLength(1)
+    expect(requests[0].url).toBe(`https://example.com/device/barcodes/${CLIENT_ID}`)
+    expect(requests[0].body.barcodes).toEqual([
+      expect.objectContaining({ type: 'PDF_417', iso_iin: '636028', document_number: '2222222' }),
+      { type: 'CODE_128', value: SERIAL },
+    ])
+    expect(secure.updateUserInfo).toHaveBeenCalledWith({ serial: SERIAL, birthdate: decodedCard().birthDate })
+    expect(adapter.mock.invocationCallOrder[0]).toBeLessThan(secure.updateUserInfo.mock.invocationCallOrder[0])
+    expect(nav.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: BCSCScreens.VerificationMethodSelection }] })
+  })
+
+  it('never sends the health number or the raw barcode', async () => {
+    respondWith(200, DEVICE_AUTHORIZATION)
+    const result = setup()
+
+    await result.current.scanner.handleScanComboCard(SERIAL, decodedCard())
+
+    const sent = JSON.stringify(requests[0].body)
+    expect(sent).not.toContain('9123456789')
+    expect(sent).not.toContain(BC_COMBO_BARCODE_K)
+  })
+
+  it('continues the other-ID flow on card_not_found with no save, no alert and a redacted log body', async () => {
+    rejectWithIasError(400, 'card_not_found')
+    const result = setup()
+
+    const left = await result.current.scanner.handleScanComboCard(SERIAL, decodedCard())
+
+    expect(left).toBe(true)
+    expect(secure.updateCardProcess).toHaveBeenCalledWith(BCSCCardProcess.NonBCSC)
+    expect(nav.navigate).toHaveBeenCalledWith(BCSCScreens.DualIdentificationRequired)
+    expect(secure.updateUserInfo).not.toHaveBeenCalled()
+    expect(secure.updateDeviceCodes).not.toHaveBeenCalled()
+    Object.values(mockAlerts).forEach((alert) => expect(alert).not.toHaveBeenCalled())
+
+    const logged = JSON.stringify(logger.error.mock.calls)
+    expect(logged).toContain('[redacted]')
+    expect(logged).not.toMatch(/specimen/i)
+    expect(logged).not.toContain(SERIAL)
+  })
+
+  it('routes card_expired to the card error screen with the scanned card', async () => {
+    rejectWithIasError(400, 'card_expired')
+    const result = setup()
+
+    const left = await result.current.scanner.handleScanComboCard(SERIAL, decodedCard())
+
+    expect(left).toBe(true)
+    expect(nav.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationCardError, {
+      errorType: DeviceAuthorizationError.CardExpired,
+      scannedCard: { serial: SERIAL, birthdate: '1982-01-04' },
+    })
+    expect(secure.updateUserInfo).not.toHaveBeenCalled()
+  })
+
+  it('leaves the user on the screen, to try again, when the failure only raises an alert', async () => {
+    rejectWithIasError(500, 'server_error')
+    const result = setup()
+
+    const left = await result.current.scanner.handleScanComboCard(SERIAL, decodedCard())
+
+    expect(left).toBe(false)
+    expect(nav.navigate).not.toHaveBeenCalled()
+    expect(secure.updateUserInfo).not.toHaveBeenCalled()
+  })
+
+  it('still sends a manually entered serial that gets card_not_found to the card error screen', async () => {
+    rejectWithIasError(400, 'card_not_found')
+    const result = setup()
+
+    await expect(result.current.service.authorizeDevice(SERIAL, new Date(1982, 0, 4))).rejects.toBeDefined()
+
+    expect(nav.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationCardError, {
+      errorType: DeviceAuthorizationError.MismatchedSerial,
+    })
+  })
+})

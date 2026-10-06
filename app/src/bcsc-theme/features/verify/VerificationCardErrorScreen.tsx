@@ -8,6 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Image, Linking, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { BCSCScreens, BCSCVerifyStackParams } from '../../types/navigators'
+import { parseBirthdateToLocalDate } from '../../utils/birthdate'
 import { DeviceAuthorizationError } from './deviceAuthorizationError'
 
 const GET_BCSC_URL = 'https://www2.gov.bc.ca/gov/content?id=98CEBFB7201143378046AC4AE5F0B9DE'
@@ -28,6 +29,11 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
   const { params } = useRoute<RouteProp<BCSCVerifyStackParams, BCSCScreens.VerificationCardError>>()
 
   const errorType = params.errorType
+  // A scan passes what it submitted; manual entry passes nothing and the store holds what was typed.
+  const serial = params.scannedCard?.serial ?? store.bcscSecure.serial
+  const birthdate = params.scannedCard
+    ? parseBirthdateToLocalDate(params.scannedCard.birthdate)
+    : store.bcscSecure.birthdate
 
   const styles = StyleSheet.create({
     image: {
@@ -85,12 +91,10 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
       <ThemedText variant={'headingThree'}>{t('BCSC.MismatchedSerial.Heading')}</ThemedText>
       <ThemedText>{t('BCSC.MismatchedSerial.Description1')}</ThemedText>
       <View>
-        <ThemedText variant={'bold'}>
-          {t('BCSC.MismatchedSerial.SerialNumber', { serial: store.bcscSecure.serial })}
-        </ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.MismatchedSerial.SerialNumber', { serial })}</ThemedText>
         <ThemedText variant={'bold'}>
           {t('BCSC.MismatchedSerial.Birthdate', {
-            birthdate: store.bcscSecure.birthdate?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+            birthdate: birthdate?.toLocaleString(t('BCSC.LocaleStringFormat'), {
               month: 'long',
               day: 'numeric',
               year: 'numeric',

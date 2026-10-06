@@ -1,5 +1,6 @@
+import { BC_COMBO_BARCODE_K } from './__fixtures__/barcodes'
 import { buildBarcodePayload } from './barcode'
-import { DriversLicenseMetadata } from './card-barcode-decoder'
+import { decodeCardBarcode, DriversLicenseMetadata, toDriversLicenseMetadata } from './card-barcode-decoder'
 
 const makeLicense = (overrides?: Partial<DriversLicenseMetadata>): DriversLicenseMetadata => ({
   licenseNumber: '2222222',
@@ -109,5 +110,18 @@ describe('buildBarcodePayload', () => {
     const result = buildBarcodePayload(null, makeLicense({ isoIIN: '' }))
 
     expect(result[0]).toMatchObject({ iso_iin: '' })
+  })
+
+  it('carries neither the health number nor the raw barcode text for a decoded combo card', () => {
+    const decoded = decodeCardBarcode({ type: 'pdf-417', value: BC_COMBO_BARCODE_K })
+    if (decoded.source !== 'pdf417') {
+      throw new Error('fixture did not decode')
+    }
+
+    const payload = JSON.stringify(buildBarcodePayload('K00023254', toDriversLicenseMetadata(decoded.card)))
+
+    expect(payload).not.toContain('9123456789')
+    expect(payload).not.toContain(BC_COMBO_BARCODE_K)
+    expect(payload).not.toContain('phn')
   })
 })

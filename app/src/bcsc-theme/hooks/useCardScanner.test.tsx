@@ -5,6 +5,10 @@ import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthoriz
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BC_DL_BARCODE_NO_DCN_A, BC_DL_BARCODE_S } from '@/bcsc-theme/utils/__fixtures__/barcodes'
 import { ScanableCode } from '@/bcsc-theme/utils/card-barcode-decoder'
+import { navigationRef } from '@/contexts/NavigationContainerContext'
+import { AppError } from '@/errors/appError'
+import { ErrorCategory } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
 import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
@@ -16,6 +20,9 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions')
 jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery')
 jest.mock('@react-navigation/native')
 jest.mock('@bifold/core')
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: jest.fn(), getCurrentRoute: jest.fn() },
+}))
 
 const mockDispatch = jest.fn() // unused atp
 
@@ -356,208 +363,191 @@ describe('useCardScanner', () => {
   })
 
   describe('handleScanComboCard', () => {
-    it('should dispatch actions and navigate on successful device authorization', async () => {
-      const useAuthorizationServiceMock = jest.mocked(useAuthorizationService)
-      const bifoldMock = jest.mocked(Bifold)
-      const navigationMock = jest.mocked(navigation)
-      const useSecureActionsMock = jest.mocked(useSecureActions)
+    const SERIAL = 'S00023254'
+    const license: any = { birthDate: new Date(1970, 0, 1), isoIIN: '636028', licenseNumber: '2222222' }
+    const deviceAuthorization = {
+      device_code: 'test-device-code',
+      user_code: 'ABCD1234',
+      verified_email: 'test@example.com',
+      expires_in: 3600,
+      verification_options: 'video_call back_check',
+      process: 'IDIM L3 Remote BCSC Photo Identity Verification',
+    }
 
-      const mockState: any = {
-        bcsc: { accountSetupType: AccountSetupType.AddAccount },
-        bcscSecure: { additionalEvidenceData: [] },
-      }
-      const mockUpdateUserInfo = jest.fn()
-      const mockUpdateDeviceCodes = jest.fn()
-      const mockUpdateCardProcess = jest.fn()
-      const mockUpdateVerificationOptions = jest.fn()
-      const mockAuthorization: any = {
-        authorization: {
-          authorizeDevice: jest.fn().mockResolvedValue({
-            device_code: 'test-device-code',
-            user_code: 'ABCD1234',
-            verified_email: 'test@example.com',
-            expires_in: 3600,
-            verification_options: 'video_call back_check',
-            process: 'IDIM L3 Remote BCSC Photo Identity Verification',
-          }),
-        },
-      }
-      const mockNavigationReset = jest.fn()
+    const iasError = (appEvent: AppEventCode, handled = false) => {
+      const error = new AppError(
+        'Server Error',
+        { category: ErrorCategory.GENERAL, appEvent, statusCode: 5000 },
+        { cause: new Error('A human-readable description'), track: false }
+      )
+      error.handled = handled
+      return error
+    }
 
-      useAuthorizationServiceMock.mockReturnValue(mockAuthorization.authorization)
-      useSecureActionsMock.mockReturnValue({
-        updateUserInfo: mockUpdateUserInfo,
-        updateDeviceCodes: mockUpdateDeviceCodes,
-        updateCardProcess: mockUpdateCardProcess,
-        updateVerificationOptions: mockUpdateVerificationOptions,
+    const setup = (overrides: { authorize?: jest.Mock; secure?: Record<string, jest.Mock> } = {}) => {
+      const authorizeDeviceWithBarcodes = overrides.authorize ?? jest.fn().mockResolvedValue(deviceAuthorization)
+      const handleAuthorizationError = jest.fn()
+      const secure = {
+        updateUserInfo: jest.fn(),
+        updateDeviceCodes: jest.fn(),
+        updateCardProcess: jest.fn(),
+        updateVerificationOptions: jest.fn(),
+        ...overrides.secure,
+      }
+      const nav = { navigate: jest.fn(), reset: jest.fn() }
+      const logger = { debug: jest.fn(), info: jest.fn(), error: jest.fn() }
+
+      jest.mocked(useAuthorizationService).mockReturnValue({
+        authorizeDeviceWithBarcodes,
+        handleAuthorizationError,
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
-      navigationMock.useNavigation = jest.fn().mockReturnValue({
-        reset: mockNavigationReset,
-      })
-      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
+      jest.mocked(useSecureActions).mockReturnValue(secure as any)
+      jest.mocked(Bifold).useStore.mockReturnValue([
+        {
+          bcsc: { accountSetupType: AccountSetupType.AddAccount },
+          bcscSecure: { additionalEvidenceData: [] },
+        } as any,
+        mockDispatch,
+      ])
+      jest.mocked(navigation).useNavigation = jest.fn().mockReturnValue(nav)
+      jest.mocked(Bifold).useServices.mockReturnValue([logger as any])
+      jest.mocked(navigationRef.isReady).mockReturnValue(true)
+      jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name: BCSCScreens.ScanSerial } as any)
 
       const hook = renderHook(() => useCardScanner())
+      return { hook, authorizeDeviceWithBarcodes, handleAuthorizationError, secure, nav, logger }
+    }
 
-      const handleScanComboCard = hook.result.current.handleScanComboCard
+    it('saves the card, resets to the setup route and returns true on a match', async () => {
+      const { hook, authorizeDeviceWithBarcodes, secure, nav } = setup()
 
-      const mockBCSCSerial = 'S00023254'
-      const mockLicenseData: any = {
-        birthDate: new Date('1970-01-01'),
-      }
+      const result = await hook.result.current.handleScanComboCard(SERIAL, license)
 
-      await handleScanComboCard(mockBCSCSerial, mockLicenseData)
-
-      expect(mockUpdateUserInfo).toHaveBeenCalledWith({
-        serial: mockBCSCSerial,
-        birthdate: mockLicenseData.birthDate,
-      })
-      expect(mockUpdateUserInfo).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        isEmailVerified: true,
-      })
-      expect(mockUpdateDeviceCodes).toHaveBeenCalledWith({
+      expect(result).toBe(true)
+      expect(authorizeDeviceWithBarcodes).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'CODE_128', value: SERIAL }),
+          expect.objectContaining({ type: 'PDF_417', iso_iin: '636028' }),
+        ]),
+        { skipErrorHandling: true }
+      )
+      expect(secure.updateUserInfo).toHaveBeenCalledWith({ serial: SERIAL, birthdate: license.birthDate })
+      expect(secure.updateUserInfo).toHaveBeenCalledWith({ email: 'test@example.com', isEmailVerified: true })
+      expect(secure.updateDeviceCodes).toHaveBeenCalledWith({
         deviceCode: 'test-device-code',
         userCode: 'ABCD1234',
         deviceCodeExpiresAt: expect.any(Date),
       })
-      expect(mockUpdateCardProcess).toHaveBeenCalledWith('IDIM L3 Remote BCSC Photo Identity Verification')
-      expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
-      expect(mockNavigationReset).toHaveBeenCalledWith({
-        index: 0,
-        routes: [{ name: BCSCScreens.VerificationMethodSelection }],
-      })
-    })
-
-    it('should throw error if license birthdate is invalid', async () => {
-      const bifoldMock = jest.mocked(Bifold)
-      const useAuthorizationServiceMock = jest.mocked(useAuthorizationService)
-      const useSecureActionsMock = jest.mocked(useSecureActions)
-
-      const mockState: any = {
-        bcsc: { accountSetupType: AccountSetupType.AddAccount },
-        bcscSecure: { additionalEvidenceData: [] },
-      }
-      const mockAuthorization: any = {
-        authorization: {
-          authorizeDevice: jest.fn(),
-        },
-      }
-
-      useAuthorizationServiceMock.mockReturnValue(mockAuthorization.authorization)
-      useSecureActionsMock.mockReturnValue({
-        updateUserInfo: jest.fn(),
-        updateDeviceCodes: jest.fn(),
-        updateCardProcess: jest.fn(),
-        updateVerificationOptions: jest.fn(),
-      } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
-      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
-
-      const hook = renderHook(() => useCardScanner())
-
-      const handleScanComboCard = hook.result.current.handleScanComboCard
-
-      const mockBCSCSerial = 'S00023254'
-      const mockLicenseData: any = {
-        birthDate: new Date('Invalid Date'),
-      }
-
-      await expect(handleScanComboCard(mockBCSCSerial, mockLicenseData)).rejects.toThrow(
-        'handleScanComboCard: License birthdate is missing or invalid'
+      expect(secure.updateCardProcess).toHaveBeenCalledWith(deviceAuthorization.process)
+      expect(secure.updateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
+      expect(nav.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: BCSCScreens.VerificationMethodSelection }] })
+      // The serial is only saved once the server has matched the card.
+      expect(authorizeDeviceWithBarcodes.mock.invocationCallOrder[0]).toBeLessThan(
+        secure.updateUserInfo.mock.invocationCallOrder[0]
       )
     })
 
-    it('should throw error if license birthdate is missing', async () => {
-      const bifoldMock = jest.mocked(Bifold)
-      const useAuthorizationServiceMock = jest.mocked(useAuthorizationService)
-      const useSecureActionsMock = jest.mocked(useSecureActions)
-
-      const mockState: any = {
-        bcsc: { accountSetupType: AccountSetupType.AddAccount },
-        bcscSecure: { additionalEvidenceData: [] },
-      }
-      const mockAuthorization: any = {
-        authorization: {
-          authorizeDevice: jest.fn(),
-        },
-      }
-
-      useAuthorizationServiceMock.mockReturnValue(mockAuthorization.authorization)
-      useSecureActionsMock.mockReturnValue({
-        updateUserInfo: jest.fn(),
-        updateDeviceCodes: jest.fn(),
-        updateCardProcess: jest.fn(),
-        updateVerificationOptions: jest.fn(),
-      } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
-      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
-
-      const hook = renderHook(() => useCardScanner())
-
-      const handleScanComboCard = hook.result.current.handleScanComboCard
-
-      const mockBCSCSerial = 'S00023254'
-      const mockLicenseData: any = {
-        birthDate: undefined,
-      }
-
-      await expect(handleScanComboCard(mockBCSCSerial, mockLicenseData)).rejects.toThrow(
-        'handleScanComboCard: License birthdate is missing or invalid'
-      )
-    })
-
-    it('should call the authorization service (which owns error-screen navigation) and return true on failure', async () => {
-      const useAuthorizationServiceMock = jest.mocked(useAuthorizationService)
-      const bifoldMock = jest.mocked(Bifold)
-      const navigationMock = jest.mocked(navigation)
-      const useSecureActionsMock = jest.mocked(useSecureActions)
-
-      const mockState: any = {
-        bcsc: { accountSetupType: AccountSetupType.AddAccount },
-        bcscSecure: { additionalEvidenceData: [], cardProcess: undefined },
-      }
-      const mockUpdateUserInfo = jest.fn()
-      const mockAuthorizeDevice = jest.fn().mockRejectedValue(new Error('Authorization failed'))
-      const mockNavigationReset = jest.fn()
-      const mockNavigationNavigate = jest.fn()
-
-      useAuthorizationServiceMock.mockReturnValue({ authorizeDevice: mockAuthorizeDevice } as any)
-      useSecureActionsMock.mockReturnValue({
-        updateUserInfo: mockUpdateUserInfo,
-        updateDeviceCodes: jest.fn(),
-        updateCardProcess: jest.fn(),
-        updateVerificationOptions: jest.fn(),
-      } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
-      navigationMock.useNavigation = jest.fn().mockReturnValue({
-        navigate: mockNavigationNavigate,
-        reset: mockNavigationReset,
+    it('saves the other-ID card process before navigating on card_not_found, and stores nothing from the card', async () => {
+      const { hook, handleAuthorizationError, secure, nav } = setup({
+        authorize: jest.fn().mockRejectedValue(iasError(AppEventCode.CARD_NOT_FOUND)),
       })
-      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn(), error: jest.fn() } as any])
 
-      const hook = renderHook(() => useCardScanner())
+      const result = await hook.result.current.handleScanComboCard(SERIAL, license)
 
-      const handleScanComboCard = hook.result.current.handleScanComboCard
-
-      const mockBCSCSerial = 'S00023254'
-      const mockLicenseData: any = {
-        birthDate: new Date('1970-01-01'),
-      }
-
-      const result = await handleScanComboCard(mockBCSCSerial, mockLicenseData)
-
-      expect(mockUpdateUserInfo).toHaveBeenCalledWith({
-        serial: mockBCSCSerial,
-        birthdate: mockLicenseData.birthDate,
-      })
-      // Not the Non-BCSC flow, so the service's own error handling isn't skipped — the
-      // authorization service (not this hook) owns navigating to the right error screen.
-      expect(mockAuthorizeDevice).toHaveBeenCalledWith(mockBCSCSerial, mockLicenseData.birthDate, {
-        skipErrorHandling: false,
-      })
-      expect(mockNavigationNavigate).not.toHaveBeenCalled()
       expect(result).toBe(true)
+      expect(secure.updateCardProcess).toHaveBeenCalledWith(BCSCCardProcess.NonBCSC)
+      expect(nav.navigate).toHaveBeenCalledWith(BCSCScreens.DualIdentificationRequired)
+      expect(secure.updateCardProcess.mock.invocationCallOrder[0]).toBeLessThan(
+        nav.navigate.mock.invocationCallOrder[0]
+      )
+      expect(secure.updateUserInfo).not.toHaveBeenCalled()
+      expect(handleAuthorizationError).not.toHaveBeenCalled()
+      expect(nav.reset).not.toHaveBeenCalled()
+    })
+
+    it('does not navigate and returns false when saving the other-ID card process fails', async () => {
+      const { hook, nav, logger } = setup({
+        authorize: jest.fn().mockRejectedValue(iasError(AppEventCode.CARD_NOT_FOUND)),
+        secure: { updateCardProcess: jest.fn().mockRejectedValue(new Error('storage failed')) },
+      })
+
+      const result = await hook.result.current.handleScanComboCard(SERIAL, license)
+
+      expect(result).toBe(false)
+      expect(nav.navigate).not.toHaveBeenCalled()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('does not reset and returns false when a save fails after a match', async () => {
+      const { hook, nav, logger } = setup({
+        secure: { updateDeviceCodes: jest.fn().mockRejectedValue(new Error('storage failed')) },
+      })
+
+      const result = await hook.result.current.handleScanComboCard(SERIAL, license)
+
+      expect(result).toBe(false)
+      expect(nav.reset).not.toHaveBeenCalled()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('routes any other error through the authorization service with the scanned card, and returns false when it only alerts', async () => {
+      const error = iasError(AppEventCode.SERVER_ERROR)
+      const { hook, handleAuthorizationError, secure } = setup({ authorize: jest.fn().mockRejectedValue(error) })
+
+      const result = await hook.result.current.handleScanComboCard(SERIAL, license)
+
+      expect(handleAuthorizationError).toHaveBeenCalledWith(error, { serial: SERIAL, birthdate: '1970-01-01' })
+      expect(result).toBe(false)
+      expect(secure.updateUserInfo).not.toHaveBeenCalled()
+      expect(secure.updateCardProcess).not.toHaveBeenCalled()
+    })
+
+    it('returns true when the routed error moved the user off the scan screen', async () => {
+      const error = iasError(AppEventCode.CARD_EXPIRED)
+      const { hook, handleAuthorizationError } = setup({ authorize: jest.fn().mockRejectedValue(error) })
+      handleAuthorizationError.mockImplementation(() => {
+        jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name: BCSCScreens.VerificationCardError } as any)
+      })
+
+      const result = await hook.result.current.handleScanComboCard(SERIAL, license)
+
+      expect(result).toBe(true)
+    })
+
+    it('returns true when a global policy already moved the user (already-registered client)', async () => {
+      const error = iasError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, true)
+      const { hook } = setup({ authorize: jest.fn().mockRejectedValue(error) })
+      jest
+        .mocked(navigationRef.getCurrentRoute)
+        .mockReturnValue({ name: BCSCScreens.VerificationMethodSelection } as any)
+
+      const result = await hook.result.current.handleScanComboCard(SERIAL, license)
+
+      expect(result).toBe(true)
+    })
+
+    it('returns false without routing when the failure is not an AppError', async () => {
+      const { hook, handleAuthorizationError, logger } = setup({
+        authorize: jest.fn().mockRejectedValue(new Error('native failure')),
+      })
+
+      const result = await hook.result.current.handleScanComboCard(SERIAL, license)
+
+      expect(result).toBe(false)
+      expect(handleAuthorizationError).not.toHaveBeenCalled()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it.each([
+      ['invalid', new Date('Invalid Date')],
+      ['missing', undefined],
+    ])('should throw error if license birthdate is %s', async (_, birthDate) => {
+      const { hook, authorizeDeviceWithBarcodes } = setup()
+
+      await expect(hook.result.current.handleScanComboCard(SERIAL, { birthDate } as any)).rejects.toThrow(
+        'handleScanComboCard: License birthdate is missing or invalid'
+      )
+      expect(authorizeDeviceWithBarcodes).not.toHaveBeenCalled()
     })
   })
 
@@ -641,6 +631,9 @@ describe('useCardScanner', () => {
       expect(mockNavigationNavigate).toHaveBeenCalledWith(BCSCScreens.DualIdentificationRequired)
       // Downstream screens (EvidenceIDCollection, getResumeStepRoute) read the card process from the store
       expect(mockUpdateCardProcess).toHaveBeenCalledWith(BCSCCardProcess.NonBCSC)
+      expect(mockUpdateCardProcess.mock.invocationCallOrder[0]).toBeLessThan(
+        mockNavigationNavigate.mock.invocationCallOrder[0]
+      )
     })
   })
 
