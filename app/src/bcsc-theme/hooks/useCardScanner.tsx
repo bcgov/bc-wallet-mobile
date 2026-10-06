@@ -17,10 +17,12 @@ import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 import { buildBarcodePayload } from '../utils/barcode'
 import {
   decodeCardBarcode,
+  DecodedCardBarcode,
   DriversLicenseMetadata,
   ScanableCode,
   toDriversLicenseMetadata,
 } from '../utils/card-barcode-decoder'
+import { combineCardBarcodes, EMPTY_CARD_SCAN } from '../utils/card-scan'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 import { useDeviceAuthorizationRecovery } from './useDeviceAuthorizationRecovery'
 import { useSecureActions } from './useSecureActions'
@@ -324,10 +326,9 @@ export const useCardScanner = () => {
       }
 
       // Combo cards have two barcodes, so we need to process all scanned codes
-      // to ensure we capture both the serial and license metadata if present
-      // Until the serial comes from the 1D only, a 2D DCN still sets it, and callers see it on the licence too.
-      let licenseMetadata: (DriversLicenseMetadata & { bcscSerial?: string }) | null = null
-      let bcscSerial: string | null = null
+      // to ensure we capture both the serial and license metadata if present.
+      // The serial comes from the 1D barcode only, never the PDF-417's DCN.
+      const reads: DecodedCardBarcode[] = []
 
       for (const code of barcodes) {
         if (__DEV__) {
@@ -342,24 +343,12 @@ export const useCardScanner = () => {
         }
 
         logger.debug(`[CardScanner] Decoded barcode metadata:`, { type: code.type, source: decoded.source })
-
-        switch (decoded.source) {
-          case 'pdf417': {
-            const license = toDriversLicenseMetadata(decoded.card)
-            const { dcn } = decoded.card
-            if (dcn) {
-              bcscSerial = dcn
-            }
-            licenseMetadata = dcn ? { ...license, bcscSerial: dcn } : license
-            break
-          }
-          case '1d':
-            bcscSerial = decoded.serial
-            break
-        }
+        reads.push(decoded)
       }
 
-      await handleScannedCardData(bcscSerial, licenseMetadata)
+      const scan = combineCardBarcodes(EMPTY_CARD_SCAN, reads)
+
+      await handleScannedCardData(scan.serial, scan.card ? toDriversLicenseMetadata(scan.card) : null)
     },
     [logger]
   )

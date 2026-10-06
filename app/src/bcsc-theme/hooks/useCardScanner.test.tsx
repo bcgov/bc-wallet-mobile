@@ -76,7 +76,7 @@ describe('useCardScanner', () => {
       expect(mockHandleCardData).toHaveBeenNthCalledWith(1, 'K12345678', null)
     })
 
-    it('should handle combo card scan DL barcode only', async () => {
+    it('should handle a PDF-417 alone, taking no serial from its DCN', async () => {
       const useAuthorizationServiceMock = jest.mocked(useAuthorizationService)
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
@@ -114,12 +114,12 @@ describe('useCardScanner', () => {
 
       expect(mockHandleCardData).toHaveBeenNthCalledWith(
         1,
-        'S00023254',
+        null,
         expect.objectContaining({
           licenseNumber: '2222222',
-          bcscSerial: 'S00023254',
         })
       )
+      expect(mockHandleCardData.mock.calls[0][1]).not.toHaveProperty('bcscSerial')
     })
 
     it('should handle drivers license barcode scan', async () => {
@@ -295,33 +295,28 @@ describe('useCardScanner', () => {
     const licenceWithoutSerial: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_NO_DCN_A }
     const serial1D: ScanableCode = { type: 'code-39', value: 'K12345678' }
 
-    it('takes the 1D serial when it is read after a PDF-417 that holds a DCN, and keeps the DCN on the licence', async () => {
+    it('takes the 1D serial when it is read after a PDF-417 that holds a DCN', async () => {
       const { scanCard } = renderScanCard()
       const handleCardData = jest.fn()
 
       await scanCard([licenceWithSerial, serial1D], handleCardData)
 
       expect(handleCardData).toHaveBeenCalledTimes(1)
-      expect(handleCardData).toHaveBeenCalledWith(
-        'K12345678',
-        expect.objectContaining({ licenseNumber: '2222222', bcscSerial: 'S00023254' })
-      )
+      expect(handleCardData).toHaveBeenCalledWith('K12345678', expect.objectContaining({ licenseNumber: '2222222' }))
+      expect(handleCardData.mock.calls[0][1]).not.toHaveProperty('bcscSerial')
     })
 
-    it('takes the PDF-417 DCN when it is read after the 1D serial', async () => {
+    it('keeps the 1D serial when a PDF-417 that holds a DCN is read after it', async () => {
       const { scanCard } = renderScanCard()
       const handleCardData = jest.fn()
 
       await scanCard([serial1D, licenceWithSerial], handleCardData)
 
       expect(handleCardData).toHaveBeenCalledTimes(1)
-      expect(handleCardData).toHaveBeenCalledWith(
-        'S00023254',
-        expect.objectContaining({ licenseNumber: '2222222', bcscSerial: 'S00023254' })
-      )
+      expect(handleCardData).toHaveBeenCalledWith('K12345678', expect.objectContaining({ licenseNumber: '2222222' }))
     })
 
-    it('replaces the licence with a later PDF-417 that has no DCN, without clearing the captured serial', async () => {
+    it('replaces the licence with a later PDF-417 that has no DCN, leaving no serial', async () => {
       const { scanCard } = renderScanCard()
       const handleCardData = jest.fn()
 
@@ -329,7 +324,7 @@ describe('useCardScanner', () => {
 
       expect(handleCardData).toHaveBeenCalledTimes(1)
       const [serial, licence] = handleCardData.mock.calls[0]
-      expect(serial).toBe('S00023254')
+      expect(serial).toBeNull()
       expect(licence).toMatchObject({ birthDate: new Date('1970-09-06') })
       expect(licence).not.toHaveProperty('bcscSerial')
     })
