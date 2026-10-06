@@ -24,7 +24,7 @@ import { useSecureActions } from './useSecureActions'
 
 type DriversLicenseMetadataStub = { birthDate: Date }
 
-// One array for every render: a new one recreates the native scanner output and reconfigures the camera
+// One array shared across every render: a new array would recreate the native scanner output and reconfigure the camera
 const CARD_CODE_TYPES = [
   BC_SERVICES_CARD_BARCODE,
   OLD_BC_SERVICES_CARD_BARCODE,
