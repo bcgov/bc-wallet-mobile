@@ -79,13 +79,16 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
   // spinner instead so the dedupe state survives the in-flight handler.
   return (
     <View style={styles.container}>
-      <ScanCamera
-        key={scannerKey}
-        handleCodeScan={onScan}
-        enableCameraOnError={true}
-        torchActive={torchActive}
-        error={scanError}
-      />
+      {/* Camera preview + bifold's unlabeled tap-to-focus Pressable: nothing here for a screen reader. */}
+      <View style={StyleSheet.absoluteFill} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <ScanCamera
+          key={scannerKey}
+          handleCodeScan={onScan}
+          enableCameraOnError={true}
+          torchActive={torchActive}
+          error={scanError}
+        />
+      </View>
       <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
       <TouchableOpacity
         style={styles.torchButton}

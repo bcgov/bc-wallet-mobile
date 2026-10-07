@@ -79,7 +79,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) marks t
             BCSC.Onboarding.SecureAppOnboardingContent
           </Text>
           <View
-            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. BCSC.Settings.AppSecurity.DeviceAuth"
+            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. BCSC.Settings.AppSecurity.DeviceAuth"
             accessibilityState={
               {
                 "selected": true,

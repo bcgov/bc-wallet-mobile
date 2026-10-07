@@ -217,6 +217,20 @@ describe('useDidCommOobQRCodeStrategy', () => {
       )
     })
 
+    it('prefers an explicit invitationLabel over the nickname', async () => {
+      const { agent, spies } = makeAgent({ recordId: 'rec-1' })
+      useAgent(agent)
+      setNickname("Kjartan's iPhone")
+
+      const { result } = renderHook(() => useDidCommOobQRCodeStrategy(onSuccess, 'didcomm-oob-invitation'))
+      await result.current.handle(OOB_URI)
+
+      expect(spies.receiveInvitation).toHaveBeenCalledWith(
+        { id: 'inv-1', goalCode: undefined },
+        { label: 'didcomm-oob-invitation' }
+      )
+    })
+
     // Replaces the old "placeholder label when ctx.label is missing" test: the label now comes from the
     // store and defaults to the same name WalletNameDisplay shows.
     it('falls back to the default wallet name when no nickname is set', async () => {

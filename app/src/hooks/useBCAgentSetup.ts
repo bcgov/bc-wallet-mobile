@@ -30,7 +30,6 @@ import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/i
 import moment from 'moment'
 import { useCallback, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
-import { CachesDirectoryPath } from 'react-native-fs'
 
 const DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS = '90'
 const CONNECTION_COMPLETION_TIMEOUT_MS = 10000
@@ -109,7 +108,6 @@ const useBCAgentSetup = () => {
           txnCache: {
             capacity: 1000,
             expiryOffsetMs: 1000 * 60 * 60 * 24 * 7,
-            path: CachesDirectoryPath + '/txn-cache',
           },
           enableProxy: store.developer.enableProxy,
           proxyBaseUrl: Config.INDY_VDR_PROXY_URL,

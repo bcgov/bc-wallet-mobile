@@ -16,6 +16,7 @@ const mockAgent = {
 const mockAgentState: { agent: unknown; loading: boolean } = { agent: null, loading: true }
 let mockService: ConnectionInvitationService
 let mockOnSuccess: (oobRecordId: string) => void
+let mockStrategyLabel: string | undefined
 // handle resolves with the OOB record id, which the real strategy reports through its onSuccess callback
 const mockStrategy = {
   matches: jest.fn(),
@@ -38,8 +39,9 @@ jest.mock('@credo-ts/didcomm', () => ({
 jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({ useBCSCAgent: () => mockAgentState }))
 jest.mock('./ConnectionInvitationServiceContext', () => ({ useConnectionInvitationService: () => mockService }))
 jest.mock('../qr-core/qr-code-strategies/useDidCommOobQRCodeStrategy', () => ({
-  useDidCommOobQRCodeStrategy: (onSuccess: (oobRecordId: string) => void) => {
+  useDidCommOobQRCodeStrategy: (onSuccess: (oobRecordId: string) => void, label?: string) => {
     mockOnSuccess = onSuccess
+    mockStrategyLabel = label
     return mockStrategy
   },
 }))
@@ -63,6 +65,11 @@ describe('useConnectionInvitationDeepLink', () => {
     mockAgentState.agent = null
     mockAgentState.loading = true
     mockService = new ConnectionInvitationService({ info: jest.fn(), warn: jest.fn() } as any)
+  })
+
+  it('keeps the legacy didcomm-oob-invitation label for deep-link invitations', () => {
+    startWithReadyAgent()
+    expect(mockStrategyLabel).toBe('didcomm-oob-invitation')
   })
 
   it('defers a cold-start invitation until the agent is ready, then re-kicks pickup and navigates', async () => {

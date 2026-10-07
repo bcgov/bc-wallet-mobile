@@ -122,4 +122,20 @@ describe('QRScanner', () => {
     act(() => onFocus())
     expect(mockCameraMounted).toHaveBeenCalledTimes(2)
   })
+
+  // Remounting mid-scan resets ScanCamera's duplicate-scan guard, so the same QR in frame would fire again.
+  it('does not remount ScanCamera on refocus while a scan is processing', () => {
+    const { rerender } = render(<QRScanner {...defaultProps} />)
+    const onFocus = mockUseFocusEffect.mock.calls.at(-1)![0] as () => void
+
+    act(() => onFocus()) // first focus
+
+    rerender(<QRScanner {...defaultProps} isProcessing />)
+    act(() => onFocus())
+    expect(mockCameraMounted).toHaveBeenCalledTimes(1)
+
+    rerender(<QRScanner {...defaultProps} />)
+    act(() => onFocus())
+    expect(mockCameraMounted).toHaveBeenCalledTimes(2)
+  })
 })

@@ -24,6 +24,13 @@ import { useSecureActions } from './useSecureActions'
 
 type DriversLicenseMetadataStub = { birthDate: Date }
 
+// One array shared across every render: a new array would recreate the native scanner output and reconfigure the camera
+const CARD_CODE_TYPES = [
+  BC_SERVICES_CARD_BARCODE,
+  OLD_BC_SERVICES_CARD_BARCODE,
+  DRIVERS_LICENSE_BARCODE,
+] satisfies BarcodeFormat[]
+
 /**
  * Custom hook to handle card scanning logic for BCSC cards.
  *
@@ -338,11 +345,7 @@ export const useCardScanner = () => {
       handleScanBCServicesCard,
       handleScanDriversLicense,
       handleScanNonBcsc,
-      codeTypes: [
-        BC_SERVICES_CARD_BARCODE,
-        OLD_BC_SERVICES_CARD_BARCODE,
-        DRIVERS_LICENSE_BARCODE,
-      ] satisfies BarcodeFormat[],
+      codeTypes: CARD_CODE_TYPES,
     }),
     [
       handleCardScan,

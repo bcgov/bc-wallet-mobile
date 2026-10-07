@@ -40,7 +40,7 @@ interface GetBCAgentModulesOptions {
   walletKey: string
   indyNetworks: IndyVdrPoolConfig[]
   mediatorInvitationUrl?: string
-  txnCache?: { capacity: number; expiryOffsetMs: number; path?: string }
+  txnCache?: { capacity: number; expiryOffsetMs: number }
   enableProxy?: boolean
   proxyBaseUrl?: string
   proxyCacheSettings?: CacheSettings
@@ -50,7 +50,7 @@ interface GetBCAgentModulesOptions {
  * Constructs the modules to be used in the agent setup
  * @param indyNetworks
  * @param mediatorInvitationUrl determine which mediator to use
- * @param txnCache optional local cache config for indyvdr
+ * @param txnCache optional in-memory ledger transaction cache config for indyvdr
  * @param enableProxy boolean from the store to determine if proxy should be used
  * @param proxyBaseUrl URL of indy vdr proxy
  * @param proxyCacheSettings settings for above mentioned proxy client caching
@@ -69,11 +69,12 @@ export function getBCAgentModules({
   const indyCredentialFormat = new LegacyIndyDidCommCredentialFormatService()
   const indyProofFormat = new LegacyIndyDidCommProofFormatService()
 
+  // No `path`, so indy-vdr keeps the cache in memory. The on-disk (sled) store is read in full on
+  // every start, and a damaged or bloated file aborts the app natively (#4769).
   if (txnCache) {
     indyVdr.setLedgerTxnCache({
       capacity: txnCache.capacity,
       expiry_offset_ms: txnCache.expiryOffsetMs,
-      path: txnCache.path,
     })
   }
 
