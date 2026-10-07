@@ -33,7 +33,7 @@ const CHALLENGE_SOURCE_BY_PAIRING_SOURCE: Record<PairingPayload['source'], Chall
   fcm: 'push_notification',
   'deep-link': 'local_app_switch',
   manual: 'remote_pairing_code',
-  // v3 parity; remote_pairing_qr_code pending confirmation (#4757)
+  // Matches v3, which reported QR scans as remote_pairing_code
   qr: 'remote_pairing_code',
 }
 

@@ -35,7 +35,7 @@ const ManualPairing: React.FC = () => {
       const stopLoading = loadingScreen.startLoading()
       try {
         logger.info('Submitting pairing code.')
-        // QR-prefilled codes deliberately report remote_pairing_code for now (#4757)
+        // QR-prefilled codes report remote_pairing_code, as v3 did
         const serviceClient = await pairing.loginByPairingCode(pairingCode, 'remote_pairing_code')
 
         logger.info('Pairing code submitted successfully.')

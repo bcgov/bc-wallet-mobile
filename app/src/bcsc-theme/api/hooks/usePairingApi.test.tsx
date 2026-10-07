@@ -56,29 +56,32 @@ describe('usePairingApi', () => {
   })
 
   describe('loginByPairingCode', () => {
-    it('signs the pairing code and returns the client metadata', async () => {
-      const metadata = { transaction_id: 'txn-1', client_name: 'Test Client' }
-      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
-      mockApiClient.post.mockResolvedValue({ data: metadata })
+    it.each(['push_notification', 'local_app_switch', 'remote_pairing_code'] as const)(
+      'signs the pairing code with challenge source %s and returns the client metadata',
+      async (challengeSource) => {
+        const metadata = { transaction_id: 'txn-1', client_name: 'Test Client' }
+        ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+        mockApiClient.post.mockResolvedValue({ data: metadata })
 
-      const { result } = renderHook(() => usePairingApi(mockApiClient))
-      const response = await result.current.loginByPairingCode('pairing-code', 'push_notification')
+        const { result } = renderHook(() => usePairingApi(mockApiClient))
+        const response = await result.current.loginByPairingCode('pairing-code', challengeSource)
 
-      expect(signPairingCode).toHaveBeenCalledWith(
-        'pairing-code',
-        mockAccount.issuer,
-        mockAccount.clientID,
-        'mock-fcm-token',
-        'mock-device-token',
-        'push_notification'
-      )
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        `${mockApiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
-        { assertion: 'signed-assertion' },
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      )
-      expect(response).toEqual(metadata)
-    })
+        expect(signPairingCode).toHaveBeenCalledWith(
+          'pairing-code',
+          mockAccount.issuer,
+          mockAccount.clientID,
+          'mock-fcm-token',
+          'mock-device-token',
+          challengeSource
+        )
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          `${mockApiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
+          { assertion: 'signed-assertion' },
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        )
+        expect(response).toEqual(metadata)
+      }
+    )
 
     it('maps a native signPairingCode rejection through the native mapper', async () => {
       ;(signPairingCode as jest.Mock).mockRejectedValue(

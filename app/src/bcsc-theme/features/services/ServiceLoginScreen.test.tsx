@@ -289,7 +289,8 @@ describe('ServiceLogin', () => {
     const renderWithPairingCode = (
       mockLoginByPairingCode: jest.Mock,
       mockAlerts: Record<string, jest.Mock>,
-      challengeSource?: ChallengeSource
+      challengeSource?: ChallengeSource,
+      routeChallengeSource?: ChallengeSource
     ) => {
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
       jest.spyOn(useServiceLoginStateModule, 'useServiceLoginState').mockReturnValue({
@@ -307,6 +308,7 @@ describe('ServiceLogin', () => {
           pairingCode: 'ABC123',
           serviceTitle: 'Test Service',
           serviceClientId: 'test-client',
+          challengeSource: routeChallengeSource,
         },
       }
 
@@ -363,6 +365,14 @@ describe('ServiceLogin', () => {
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
 
       await waitFor(() => expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABC123', 'push_notification'))
+    })
+
+    it('hands the route challenge source to useServiceLoginState', () => {
+      renderWithPairingCode(jest.fn(), { loginServerErrorAlert: jest.fn() }, undefined, 'push_notification')
+
+      expect(useServiceLoginStateModule.useServiceLoginState).toHaveBeenCalledWith(
+        expect.objectContaining({ challengeSource: 'push_notification' })
+      )
     })
 
     it('falls back to remote_pairing_code when state has no challenge source', async () => {

@@ -362,9 +362,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
 
     try {
-      if (!state.challengeSource) {
-        logger.warn('ServiceLoginScreen: No challenge source in state, defaulting to remote_pairing_code')
-      }
       const client = await pairing.loginByPairingCode(code, state.challengeSource ?? 'remote_pairing_code')
 
       navigation.navigate(BCSCScreens.PairingConfirmation, {
