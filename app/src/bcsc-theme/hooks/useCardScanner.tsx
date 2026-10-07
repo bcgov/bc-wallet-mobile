@@ -239,11 +239,17 @@ export const useCardScanner = () => {
    *
    * @param bcscSerial - The serial decoded from the card's 1D barcode.
    * @param license - The metadata decoded from the card's PDF-417.
-   * @returns `true` when the user has been moved off the scan screen; `false` when they are still on it
-   * (an alert only, or a failed save) and the screen should offer another try.
+   * @param isCurrent - Whether this scan is still the latest. Checked once the answer arrives; if it is
+   * not, the answer is dropped with no save and no navigation, so a late answer cannot undo a newer scan.
+   * @returns `true` when the user has been moved off the scan screen (or the answer was dropped as stale);
+   * `false` when they are still on it (an alert only, or a failed save) and the screen should offer another try.
    */
   const handleScanComboCard = useCallback(
-    async (bcscSerial: string, license: DriversLicenseMetadata): Promise<boolean> => {
+    async (
+      bcscSerial: string,
+      license: DriversLicenseMetadata,
+      isCurrent: () => boolean = () => true
+    ): Promise<boolean> => {
       if (!license.birthDate || Number.isNaN(license.birthDate.getTime())) {
         // Should never happen, probably a decoder error
         throw new Error('handleScanComboCard: License birthdate is missing or invalid')
@@ -253,10 +259,19 @@ export const useCardScanner = () => {
       try {
         deviceAuth = await requestBarcodeAuthorization(bcscSerial, license)
       } catch (error) {
+        if (!isCurrent()) {
+          logger.debug('[CardScanner] Ignoring a failed answer for an earlier scan')
+          return true
+        }
         return handleBarcodeAuthorizationError(error, {
           serial: bcscSerial,
           birthdate: moment(license.birthDate).format('YYYY-MM-DD'),
         })
+      }
+
+      if (!isCurrent()) {
+        logger.debug('[CardScanner] Ignoring a match for an earlier scan')
+        return true
       }
 
       try {

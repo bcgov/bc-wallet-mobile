@@ -219,6 +219,9 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   // Whether the screen has already had focus once — see the focus effect below.
   const hasFocusedRef = useRef(false)
   const cardScanRef = useRef<CardScan>(EMPTY_CARD_SCAN)
+  // Bumped when a scan starts, on Try Again and when focus leaves or returns, so an answer that arrives
+  // for an earlier scan can tell it is stale and do nothing.
+  const scanGeneration = useRef(0)
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
@@ -247,6 +250,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     // Reset the caches so we can scan again.
     isProcessingScan.current = false
     cardScanRef.current = EMPTY_CARD_SCAN
+    scanGeneration.current += 1
   }, [])
 
   // Reset the scanner on re-entry (e.g. backing out of the next step) so a previous scan's
@@ -258,19 +262,32 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     useCallback(() => {
       if (!hasFocusedRef.current) {
         hasFocusedRef.current = true
-        return
+      } else {
+        retryCamera()
       }
-      retryCamera()
+
+      return () => {
+        scanGeneration.current += 1
+      }
     }, [retryCamera])
   )
 
   // Runs a handler that reports whether the user left this screen; if not (or it threw), offer "Try Again".
-  const settleScan = async (handler: () => Promise<boolean>) => {
+  // The handler gets an `isCurrent` check, and a scan that was superseded while it was pending is ignored.
+  const settleScan = async (handler: (isCurrent: () => boolean) => Promise<boolean>) => {
+    scanGeneration.current += 1
+    const generation = scanGeneration.current
+    const isCurrent = () => scanGeneration.current === generation
+
     try {
-      if (!(await handler())) {
+      if (!(await handler(isCurrent)) && isCurrent()) {
         setScanNeedsRetry(true)
       }
     } catch (error) {
+      if (!isCurrent()) {
+        logger.debug('[ScanSerialScreen] Ignoring a failed answer for an earlier scan')
+        return
+      }
       logger.error('[ScanSerialScreen] Handling the scanned card failed', error as Error)
       setScanNeedsRetry(true)
     }
@@ -312,7 +329,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       // We have both the serial and the birthdate — lock the camera and ask the server about the card.
       isProcessingScan.current = true
       setScanState('locked')
-      await settleScan(() => scanner.handleScanComboCard(serial, toDriversLicenseMetadata(card)))
+      await settleScan((isCurrent) => scanner.handleScanComboCard(serial, toDriversLicenseMetadata(card), isCurrent))
       return true
     }
 

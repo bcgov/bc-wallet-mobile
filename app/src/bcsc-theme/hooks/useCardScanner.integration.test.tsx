@@ -256,6 +256,81 @@ describe('useCardScanner against the real client chain', () => {
     expect(nav.dispatch).not.toHaveBeenCalled()
   })
 
+  describe('an answer that arrives after a newer scan', () => {
+    const OTHER_SERIAL = 'A06198657'
+
+    // The first request waits until `answer` is called; later requests respond at once.
+    const deferFirstRequest = (status: number, data: object, laterStatus: number, laterData: object) => {
+      let answer: () => void = () => undefined
+      adapter.mockImplementationOnce((config: any) => {
+        const respond = responder(status, data)
+        return new Promise((resolve, reject) => {
+          answer = () => respond(config).then(resolve, reject)
+        })
+      })
+      adapter.mockImplementation(responder(laterStatus, laterData))
+      return { answer: () => answer() }
+    }
+
+    it('does not let a late card_not_found overwrite the card process or navigation of a newer match', async () => {
+      const first = deferFirstRequest(400, iasErrorBody('card_not_found'), 200, DEVICE_AUTHORIZATION)
+      const result = setup()
+      let generation = 1
+      const isCurrentA = () => generation === 1
+
+      const scanA = result.current.scanner.handleScanComboCard(SERIAL, decodedCard(), isCurrentA)
+      // The person leaves and returns, then scans a card that matches.
+      generation = 2
+      const scanB = await result.current.scanner.handleScanComboCard(
+        OTHER_SERIAL,
+        decodedCard(),
+        () => generation === 2
+      )
+      expect(scanB).toBe(true)
+      expect(secure.updateCardProcess).toHaveBeenCalledWith(DEVICE_AUTHORIZATION.process)
+      expect(nav.reset).toHaveBeenCalledTimes(1)
+
+      first.answer()
+      const left = await scanA
+
+      expect(left).toBe(true)
+      expect(secure.updateCardProcess).not.toHaveBeenCalledWith(BCSCCardProcess.NonBCSC)
+      expect(secure.updateCardProcess).toHaveBeenCalledTimes(1)
+      expect(nav.navigate).not.toHaveBeenCalledWith(BCSCScreens.DualIdentificationRequired)
+      expect(nav.reset).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not save a late match for a scan that was superseded', async () => {
+      const first = deferFirstRequest(200, DEVICE_AUTHORIZATION, 400, iasErrorBody('card_not_found'))
+      const result = setup()
+      let generation = 1
+
+      const scanA = result.current.scanner.handleScanComboCard(SERIAL, decodedCard(), () => generation === 1)
+      generation = 2
+      await result.current.scanner.handleScanComboCard(OTHER_SERIAL, decodedCard(), () => generation === 2)
+      first.answer()
+      await scanA
+
+      expect(secure.updateUserInfo).not.toHaveBeenCalled()
+      expect(nav.reset).not.toHaveBeenCalled()
+    })
+
+    it('does not route a late error for a scan that was superseded', async () => {
+      const first = deferFirstRequest(400, iasErrorBody('card_expired'), 400, iasErrorBody('card_not_found'))
+      const result = setup()
+      let generation = 1
+
+      const scanA = result.current.scanner.handleScanComboCard(SERIAL, decodedCard(), () => generation === 1)
+      generation = 2
+      await result.current.scanner.handleScanComboCard(OTHER_SERIAL, decodedCard(), () => generation === 2)
+      nav.navigate.mockClear()
+      first.answer()
+      await scanA
+
+      expect(nav.navigate).not.toHaveBeenCalled()
+    })
+  })
+
   it('still sends a manually entered serial that gets card_not_found to the card error screen', async () => {
     rejectWithIasError(400, 'card_not_found')
     const result = setup()
