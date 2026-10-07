@@ -666,4 +666,22 @@ describe('useCardScanner', () => {
       expect(updateUserMetadata).toHaveBeenCalledWith({ name: { first: 'test', last: 'specimen', middle: 'card' } })
     })
   })
+
+  describe('codeTypes', () => {
+    it('keeps the same array when a store update rebuilds the scanner, so the camera keeps its scanner output', () => {
+      jest.mocked(useAuthorizationService).mockReturnValue({} as any)
+      jest.mocked(useSecureActions).mockReturnValue({} as any)
+      jest.mocked(Bifold).useServices.mockReturnValue([{ debug: jest.fn() } as any])
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, mockDispatch])
+
+      const hook = renderHook(() => useCardScanner())
+      const first = hook.result.current
+
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, mockDispatch])
+      hook.rerender({})
+
+      expect(hook.result.current).not.toBe(first)
+      expect(hook.result.current.codeTypes).toBe(first.codeTypes)
+    })
+  })
 })

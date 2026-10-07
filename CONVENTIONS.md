@@ -67,3 +67,14 @@ site removed while the key lingers.
 `BulletedInstructionsScreen`) or from server data, so no key can be passed. Those are listed in the
 registry test's `KNOWN_UNREFERENCED` with the reason; don't add to that list to silence a failure
 without one.
+
+## Cameras: outputs belong to one camera mount
+
+Create camera outputs (`usePhotoOutput`, `useBarcodeScannerOutput`, …) in the component that renders
+the `<Camera>`, or in a wrapper that mounts and unmounts with it, like `EvidenceCamera` in
+`EvidenceCaptureScreen`. Never create them in a parent that outlives the camera and hands them to its
+next mount.
+
+**Why:** every `<Camera>` mount creates a new capture session, and on iOS a session given an earlier
+session's outputs never starts or crashes the app. Keeping one camera mounted and pausing it with
+`isActive` instead was tried and rejected: on Android the paused preview failed to restart.
