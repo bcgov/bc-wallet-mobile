@@ -23,15 +23,17 @@ jest.mock('@/bcsc-theme/hooks/useDataLoader', () => ({
 let mockHasPendingPairing = false
 const mockConsumePending = jest.fn()
 const mockOnNavigationRequest = jest.fn()
-let navigationCallback: ((event: { params: { serviceTitle: string; pairingCode: string } }) => void) | null = null
+type NavigationEvent = { params: { serviceTitle: string; pairingCode: string; challengeSource?: string } }
+let navigationCallback: ((event: NavigationEvent) => void) | null = null
 
 jest.mock('../../pairing', () => ({
+  pairingPayloadToServiceLoginParams: jest.requireActual('../../pairing').pairingPayloadToServiceLoginParams,
   usePairingService: jest.fn(() => ({
     get hasPendingPairing() {
       return mockHasPendingPairing
     },
     consumePendingPairing: mockConsumePending,
-    onNavigationRequest: (callback: (event: { params: { serviceTitle: string; pairingCode: string } }) => void) => {
+    onNavigationRequest: (callback: (event: NavigationEvent) => void) => {
       navigationCallback = callback
       mockOnNavigationRequest(callback)
       return jest.fn() // unsubscribe function
@@ -67,6 +69,7 @@ describe('useServiceLoginState', () => {
         serviceClientId: undefined,
         serviceTitle: 'Example Service',
         pairingCode: 'PAIR-123',
+        challengeSource: 'local_app_switch',
         metadata,
         logger,
       })
@@ -74,6 +77,7 @@ describe('useServiceLoginState', () => {
 
     expect(result.current.state.serviceTitle).toBe('Example Service')
     expect(result.current.state.pairingCode).toBe('PAIR-123')
+    expect(result.current.state.challengeSource).toBe('local_app_switch')
     expect(result.current.serviceHydrated).toBe(false)
     expect(result.current.isLoading).toBe(false)
     expect(metadata.getClientMetadata).not.toHaveBeenCalled()
@@ -228,6 +232,17 @@ describe('useServiceLoginState', () => {
     expect(mockConsumePending).toHaveBeenCalledTimes(1)
   })
 
+  it('derives the challenge source from a consumed FCM pairing without leaking fromAppSwitch', async () => {
+    const metadata = { getClientMetadata: jest.fn() }
+    mockHasPendingPairing = true
+    mockConsumePending.mockReturnValue({ serviceTitle: 'Pending Service', pairingCode: 'PAIR-999', source: 'fcm' })
+
+    const { result } = renderHook(() => useServiceLoginState({ metadata, logger }))
+
+    await waitFor(() => expect(result.current.state.challengeSource).toBe('push_notification'))
+    expect(result.current.state).not.toHaveProperty('fromAppSwitch')
+  })
+
   it('ignores pending pairing when consume returns null', async () => {
     const metadata = { getClientMetadata: jest.fn() }
     mockHasPendingPairing = true
@@ -278,11 +293,13 @@ describe('useServiceLoginState', () => {
         params: {
           serviceTitle: 'BC Parks',
           pairingCode: 'DEEP-LINK-123',
+          challengeSource: 'local_app_switch',
         },
       })
     })
 
     await waitFor(() => expect(result.current.state.pairingCode).toBe('DEEP-LINK-123'))
+    expect(result.current.state.challengeSource).toBe('local_app_switch')
     expect(result.current.state.serviceTitle).toBe('BC Parks')
   })
 })

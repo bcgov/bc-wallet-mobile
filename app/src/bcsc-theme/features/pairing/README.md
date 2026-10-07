@@ -119,7 +119,7 @@ type PairingPayload = {
 
 type PairingNavigationEvent = {
   screen: 'ServiceLogin'
-  params: { serviceTitle: string; pairingCode: string }
+  params: { serviceTitle: string; pairingCode: string; fromAppSwitch?: boolean; challengeSource: ChallengeSource }
 }
 ```
 

@@ -177,7 +177,7 @@ describe('MainStack', () => {
   it('navigates to ServiceLogin when pairing service emits a navigation request', () => {
     render(<MainStack />)
 
-    const params = { serviceTitle: 'My Service', pairingCode: 'abc123' }
+    const params = { serviceTitle: 'My Service', pairingCode: 'abc123', challengeSource: 'push_notification' as const }
     capturedNavigationListener!({ screen: BCSCScreens.ServiceLogin, params })
 
     expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.ServiceLogin, params)
@@ -213,6 +213,25 @@ describe('MainStack', () => {
     render(<MainStack />)
 
     expect(PairingModule.pairingPayloadToServiceLoginParams).toHaveBeenCalledWith(payload)
+  })
+
+  it('seeds ServiceLogin initialParams with the challenge source of a pending FCM pairing (cold start)', () => {
+    const payload: PairingPayload = { serviceTitle: 'My Service', pairingCode: 'abc123', source: 'fcm' }
+    mockConsumePendingPairing.mockReturnValue(payload)
+    jest
+      .mocked(PairingModule.pairingPayloadToServiceLoginParams)
+      .mockImplementation(jest.requireActual('../features/pairing/types').pairingPayloadToServiceLoginParams)
+
+    const view = render(<MainStack />)
+
+    const serviceLogin = view
+      .UNSAFE_queryAllByType(jest.requireMock('@react-navigation/stack').Screen)
+      .find((screen) => screen.props.name === BCSCScreens.ServiceLogin)
+    expect(serviceLogin?.props.initialParams).toMatchObject({
+      serviceTitle: 'My Service',
+      pairingCode: 'abc123',
+      challengeSource: 'push_notification',
+    })
   })
 
   it('logs an error and skips pairingPayloadToServiceLoginParams when pending pairing is missing fields', () => {

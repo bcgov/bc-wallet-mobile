@@ -97,7 +97,7 @@ describe('ManualPairing', () => {
       fireEvent.changeText(codeInput, 'ABCDEF')
 
       await waitFor(() => {
-        expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF')
+        expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF', 'remote_pairing_code')
       })
     })
 
@@ -112,7 +112,7 @@ describe('ManualPairing', () => {
       fireEvent.changeText(codeInput, 'abcdef')
 
       await waitFor(() => {
-        expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF')
+        expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF', 'remote_pairing_code')
       })
     })
 
@@ -164,7 +164,7 @@ describe('ManualPairing', () => {
       renderScreen()
 
       await waitFor(() => {
-        expect(mockLoginByPairingCode).toHaveBeenCalledWith('SKGAZZ')
+        expect(mockLoginByPairingCode).toHaveBeenCalledWith('SKGAZZ', 'remote_pairing_code')
       })
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
         serviceId: 'ref-456',

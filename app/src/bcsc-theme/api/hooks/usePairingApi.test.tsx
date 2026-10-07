@@ -62,14 +62,15 @@ describe('usePairingApi', () => {
       mockApiClient.post.mockResolvedValue({ data: metadata })
 
       const { result } = renderHook(() => usePairingApi(mockApiClient))
-      const response = await result.current.loginByPairingCode('pairing-code')
+      const response = await result.current.loginByPairingCode('pairing-code', 'push_notification')
 
       expect(signPairingCode).toHaveBeenCalledWith(
         'pairing-code',
         mockAccount.issuer,
         mockAccount.clientID,
         'mock-fcm-token',
-        'mock-device-token'
+        'mock-device-token',
+        'push_notification'
       )
       expect(mockApiClient.post).toHaveBeenCalledWith(
         `${mockApiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
@@ -86,7 +87,7 @@ describe('usePairingApi', () => {
 
       const { result } = renderHook(() => usePairingApi(mockApiClient))
 
-      await expect(result.current.loginByPairingCode('pairing-code')).rejects.toMatchObject({
+      await expect(result.current.loginByPairingCode('pairing-code', 'push_notification')).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
       })
       expect(mockApiClient.post).not.toHaveBeenCalled()
@@ -97,7 +98,7 @@ describe('usePairingApi', () => {
 
       const { result } = renderHook(() => usePairingApi(mockApiClient))
 
-      await expect(result.current.loginByPairingCode('pairing-code')).rejects.toMatchObject({
+      await expect(result.current.loginByPairingCode('pairing-code', 'push_notification')).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
       })
       expect(mockApiClient.post).not.toHaveBeenCalled()
