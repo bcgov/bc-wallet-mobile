@@ -40,7 +40,7 @@ const TransferInstructionsScreen: React.FC = () => {
     <ScreenWrapper
       padded={false}
       controls={controls}
-      scrollViewContainerStyle={{ padding: Spacing.lg, gap: Spacing.md }}
+      scrollViewContainerStyle={{ padding: Spacing.lg, gap: Spacing.sm }}
     >
       <AddDeviceScanQr width="100%" height={207} />
       <ThemedText variant={'headingThree'}>{t('BCSC.TransferInstructions.Title')}</ThemedText>
