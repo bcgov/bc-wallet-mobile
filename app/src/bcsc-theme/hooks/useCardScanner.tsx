@@ -33,9 +33,7 @@ import { useSecureActions } from './useSecureActions'
  *
  * Paths:
  * 	1. Card has serial and license metadata (combo card both barcodes or 2025+ combo DL barcode)
- * 		 Outcome: POST /device/barcodes. A match saves the serial and birthdate and continues setup;
- * 		 `card_not_found` continues the other-ID (non-BCSC) flow; any other error goes through the
- * 		 authorization service.
+ * 		 Outcome: POST /device/barcodes; a match continues setup, card_not_found goes to the other-ID flow.
  *
  *  2. Card has serial but no license metadata (BCSC card with single barcode)
  *  	 Outcome: validate serial -> save serial ->? navigate to enter birthdate
@@ -104,19 +102,14 @@ export const useCardScanner = () => {
   )
 
   /**
-   * Non-BCSC flow handler: ask the backend whether the scanned barcodes belong
-   * to a real BC Services Card via POST `/device/barcodes`. The backend owns the
-   * discrimination (matching v3): a real BCSC is authorized and the user is
-   * rerouted into setup; any other card (PR card, passport, …) resolves to
-   * `false` so the caller keeps capturing it as evidence — no "Card not found".
+   * Asks `/device/barcodes` whether the scanned serial + card is a BC Services Card; a match resets to setup.
    *
    * Only call this when the card presents BOTH a serial (1D) and AAMVA (2D)
    * barcode — the only combination the backend can match.
    *
    * @param bcscSerial - The serial decoded from the card's 1D (CODE_128) barcode.
    * @param license - The metadata decoded from the card's 2D (PDF-417) barcode.
-   * @param isCurrent - Whether this scan is still the latest, checked once the answer arrives. A stale
-   * answer is dropped with no save and no navigation.
+   * @param isCurrent - Checked once the answer arrives; a stale answer saves nothing.
    * @returns true if the scanned card is a BC Services Card
    */
   const handleScanBarcodes = useCallback(
@@ -125,9 +118,7 @@ export const useCardScanner = () => {
       license: DriversLicenseMetadata,
       isCurrent: () => boolean = () => true
     ): Promise<boolean> => {
-      logger.info(
-        '[CardScanner] Non-BCSC flow: querying /device/barcodes to check if the scanned card is a BC Services Card'
-      )
+      logger.info('[CardScanner] Querying /device/barcodes for the scanned card')
 
       const deviceAuth = await attemptWithRecovery(
         () =>
@@ -207,17 +198,10 @@ export const useCardScanner = () => {
   }, [navigation, updateCardProcess])
 
   /**
-   * Handler for a scanned serial (1D) + BC card (PDF-417) pair: asks `/device/barcodes` and acts on the answer.
+   * Asks `/device/barcodes` about a scanned serial + card; card_not_found continues the other-ID flow.
    *
-   * - A match saves the serial and birth date, then resets to the setup route.
-   * - `card_not_found` continues to the other-ID (non-BCSC) flow.
-   * - Any other error goes through the authorization service.
-   *
-   * @param bcscSerial - The serial decoded from the card's 1D barcode.
-   * @param license - The metadata decoded from the card's PDF-417.
-   * @param isCurrent - Whether this scan is still the latest. Checked once the answer arrives; if it is
-   * not, the answer is dropped with no save, routing or navigation, so a late answer cannot undo a newer scan.
-   * @returns `true` when the answer was acted on, `false` when it was dropped as stale.
+   * @param isCurrent - Checked once the answer arrives; a stale answer does nothing.
+   * @returns `true` when acted on, `false` when dropped as stale.
    */
   const handleScanComboCard = useCallback(
     async (

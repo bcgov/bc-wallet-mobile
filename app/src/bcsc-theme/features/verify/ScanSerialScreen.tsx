@@ -210,8 +210,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   // Whether the screen has already had focus once — see the focus effect below.
   const hasFocusedRef = useRef(false)
   const cardScanRef = useRef<CardScan>(EMPTY_CARD_SCAN)
-  // Bumped when a scan starts, on Try Again and when focus leaves or returns, so an answer that arrives
-  // for an earlier scan can tell it is stale and do nothing.
+  // Bumped on each scan, Try Again and focus change so a late answer from an earlier scan is dropped.
   const scanGeneration = useRef(0)
 
   useEffect(() => {

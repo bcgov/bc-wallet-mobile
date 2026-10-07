@@ -405,7 +405,6 @@ describe('useCardScanner', () => {
       return { hook: renderHook(() => useCardScanner()), authorize, handleAuthorizationError, secure, nav, logger }
     }
 
-    // A request that resolves or rejects only when the test says so.
     const deferred = () => {
       let settle: { resolve: (value: unknown) => void; reject: (error: unknown) => void } = {
         resolve: () => undefined,
