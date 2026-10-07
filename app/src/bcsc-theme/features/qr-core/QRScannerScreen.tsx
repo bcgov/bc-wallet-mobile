@@ -11,6 +11,12 @@ import { useQRScanner } from './useQRScanner'
 
 /**
  * QRScannerScreen is a React component that renders a QR scanner for various QR code strategies.
+ *
+ * Compatible QR codes:
+ *  - Pairing code QR codes (e.g., for logging into a service)
+ *  - Account transfer QR codes (e.g., for transferring an account)
+ *  - DIDComm OOB QR codes (e.g., for establishing a VC connection)
+ *
  * @returns A React element that renders the QR scanner for various QR code strategies.
  */
 const QRScannerScreen: React.FC = () => {

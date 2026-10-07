@@ -32,7 +32,7 @@ export const useConnectionInvitationDeepLink = (): void => {
     foundRecordIdRef.current = oobRecordId
   }, [])
 
-  const didCommOobStrategy = useDidCommOobQRCodeStrategy(onConnectionFound)
+  const didCommOobStrategy = useDidCommOobQRCodeStrategy(onConnectionFound, 'didcomm-oob-invitation')
 
   useEffect(() => service.onInvitation(({ url }) => setInvitationUrl(url)), [service])
 

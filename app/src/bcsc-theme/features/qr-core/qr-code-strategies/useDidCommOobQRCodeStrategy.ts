@@ -19,13 +19,24 @@ const MEDIATOR_GOAL_CODE = 'aries.vc.mediate'
 /**
  * Creates a QRCodeStrategy for DIDComm out-of-band invitations. Calls onSuccess with the OOB record id.
  */
-export const useDidCommOobQRCodeStrategy = (onSuccess: (oobRecordId: string) => void): QRCodeStrategy => {
+export const useDidCommOobQRCodeStrategy = (
+  /**
+   * Callback invoked when a DIDComm OOB invitation is successfully processed.
+   * @param oobRecordId The ID of the out-of-band record created or reused.
+   * @returns void
+   */
+  onSuccess: (oobRecordId: string) => void,
+  /**
+   * Optional label to use for the connection; if not provided, the wallet's nickname will be used.
+   */
+  invitationLabel?: string
+): QRCodeStrategy => {
   const { t } = useTranslation()
   const { waitForAgent } = useBCSCAgent()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   // Sent to the inviter as our label; mirrors the name shown by `WalletNameDisplay`
-  const label = useMemo(() => store.bcsc.selectedNickname || 'My Wallet', [store.bcsc.selectedNickname])
+  const label = invitationLabel || store.bcsc.selectedNickname || 'My Wallet'
 
   const matches = useCallback((uri: string): boolean => {
     return (
@@ -70,9 +81,7 @@ export const useDidCommOobQRCodeStrategy = (onSuccess: (oobRecordId: string) => 
         return
       }
 
-      const { outOfBandRecord } = await agent.modules.didcomm.oob.receiveInvitation(invitation, {
-        label: label || 'didcomm-oob-invitation',
-      })
+      const { outOfBandRecord } = await agent.modules.didcomm.oob.receiveInvitation(invitation, { label })
 
       onSuccess(outOfBandRecord.id)
     },
