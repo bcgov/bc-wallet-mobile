@@ -1,5 +1,6 @@
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { AppError } from '@/errors'
+import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts } from '@/hooks/useAlerts'
 import { BifoldLogger } from '@bifold/core'
@@ -392,6 +393,21 @@ export const alreadyRegisteredErrorPolicy: ErrorHandlingPolicy = {
 
 // Error policy for device authorization endpoint (too many birthdate + serial attempts)
 // Handles 503 errors from deviceAuthorization endpoint, with or without retry-after header
+// `/device/barcodes` answers `{error: 'invalid_request', error_description: 'card_not_found'}`, which maps to
+// an unknown server error; the reason survives only as the error's technical message.
+export const isCardNotFoundError = (error: unknown): boolean =>
+  isAppError(error) &&
+  (error.appEvent === AppEventCode.CARD_NOT_FOUND || error.technicalMessage === AppEventCode.CARD_NOT_FOUND)
+
+// Error policy for card_not_found on the barcodes endpoint: an expected answer for any card that isn't a BC
+// Services Card. The card scanner routes it to the other-ID flow, so there is nothing to show here.
+export const cardNotFoundOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => isCardNotFoundError(error) && context.endpoint.includes(context.apiEndpoints.barcodes),
+  handle: (_error, context) => {
+    context.logger.info('[CardNotFoundOnBarcodesErrorPolicy] Scanned card is not a BC Services Card')
+  },
+}
+
 export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.cause.response?.status === 503 && context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
@@ -565,6 +581,7 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
 
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
+  cardNotFoundOnBarcodesErrorPolicy,
   alreadyRegisteredErrorPolicy,
   digitalServiceCardAccountUnavailableErrorPolicy,
   verificationSessionExpiredErrorPolicy,

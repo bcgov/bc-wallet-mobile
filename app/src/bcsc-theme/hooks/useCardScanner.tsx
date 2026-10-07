@@ -1,7 +1,6 @@
 import { getProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { isAppError } from '@/errors/appError'
-import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
@@ -9,6 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
+import { isCardNotFoundError } from '../api/clientErrorPolicies'
 import { DeviceAuthorizationResponse, DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { useAuthorizationService } from '../services/hooks/useAuthorizationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
@@ -22,12 +22,6 @@ import {
 import { getResumeStepRoute } from '../utils/resume-step-route'
 import { useDeviceAuthorizationRecovery } from './useDeviceAuthorizationRecovery'
 import { useSecureActions } from './useSecureActions'
-
-// `/device/barcodes` answers `{error: 'invalid_request', error_description: 'card_not_found'}`, which maps to
-// an unknown server error; the reason survives only as the error's technical message.
-const isCardNotFound = (error: unknown): boolean =>
-  isAppError(error) &&
-  (error.appEvent === AppEventCode.CARD_NOT_FOUND || error.technicalMessage === AppEventCode.CARD_NOT_FOUND)
 
 /**
  * Custom hook to handle card scanning logic for BCSC cards.
@@ -228,7 +222,7 @@ export const useCardScanner = () => {
           return false
         }
 
-        if (isCardNotFound(error)) {
+        if (isCardNotFoundError(error)) {
           // The endpoint's contract: card_not_found means the card is not a BC Services Card.
           await handleScanNonBcsc()
           return true
