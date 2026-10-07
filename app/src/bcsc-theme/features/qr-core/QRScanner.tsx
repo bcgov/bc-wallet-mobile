@@ -32,6 +32,10 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
   const [scannerKey, setScannerKey] = useState(0)
   const hasFocused = useRef(false)
 
+  // Ref to prevent stale closure issues in the focus effect
+  const isProcessingRef = useRef(isProcessing)
+  isProcessingRef.current = isProcessing
+
   const styles = StyleSheet.create({
     container: { flex: 1 },
     torchButton: {
@@ -55,7 +59,7 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
 
   useFocusEffect(
     useCallback(() => {
-      if (hasFocused.current) {
+      if (hasFocused.current && !isProcessingRef.current) {
         setScannerKey((prevKey) => prevKey + 1) // remount ScanCamera to clear its frozen state
       }
       hasFocused.current = true

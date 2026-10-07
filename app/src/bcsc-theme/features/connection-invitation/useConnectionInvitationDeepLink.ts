@@ -25,18 +25,12 @@ export const useConnectionInvitationDeepLink = (): void => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null)
-  const cancelledRef = useRef(false)
+  // Holds the record id reported by the strategy for the run currently in flight.
+  const foundRecordIdRef = useRef<string | null>(null)
 
-  const onConnectionFound = useCallback(
-    (oobRecordId: string) => {
-      if (cancelledRef.current) {
-        return
-      }
-
-      navigation.navigate(BCSCScreens.ConnectionLoading, { oobRecordId: oobRecordId })
-    },
-    [navigation]
-  )
+  const onConnectionFound = useCallback((oobRecordId: string) => {
+    foundRecordIdRef.current = oobRecordId
+  }, [])
 
   const didCommOobStrategy = useDidCommOobQRCodeStrategy(onConnectionFound)
 
@@ -48,7 +42,9 @@ export const useConnectionInvitationDeepLink = (): void => {
       return
     }
 
-    cancelledRef.current = false
+    // Owned by this run, so a newer run can never un-cancel it.
+    let cancelled = false
+    foundRecordIdRef.current = null
 
     const accept = async () => {
       // Gating on 'ready' is necessary but not sufficient on cold start: the
@@ -80,12 +76,19 @@ export const useConnectionInvitationDeepLink = (): void => {
 
       try {
         await didCommOobStrategy.handle(invitationUrl)
-        setInvitationUrl(null)
-      } catch (err) {
-        if (cancelledRef.current) {
+        if (cancelled) {
           return
         }
-        setInvitationUrl(null)
+        // Only clear our own URL; a newer invitation may already be queued.
+        setInvitationUrl((current) => (current === invitationUrl ? null : current))
+        if (foundRecordIdRef.current) {
+          navigation.navigate(BCSCScreens.ConnectionLoading, { oobRecordId: foundRecordIdRef.current })
+        }
+      } catch (err) {
+        if (cancelled) {
+          return
+        }
+        setInvitationUrl((current) => (current === invitationUrl ? null : current))
         logger.error(`[ConnectionInvitationDeepLink] failed to accept invitation: ${err}`)
         Toast.show({ type: 'error', text1: t('BCSC.Scan.InvalidConnectionInvitation') })
       }
@@ -94,7 +97,7 @@ export const useConnectionInvitationDeepLink = (): void => {
     accept()
 
     return () => {
-      cancelledRef.current = true
+      cancelled = true
     }
   }, [invitationUrl, agent, loading, navigation, logger, t, didCommOobStrategy])
 }
