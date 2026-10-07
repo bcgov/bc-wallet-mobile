@@ -9,7 +9,7 @@ enum ChallengeSource: String {
   case local_app_switch
   case push_notification
   case remote_pairing_code
-  case notValid
+  case remote_pairing_qr_code
 }
 
 enum DeviceInfoKeys {
@@ -1165,8 +1165,14 @@ class BcscCore: NSObject {
 
   func signPairingCode(
     _ code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?,
+    challengeSource: String,
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
+    guard let source = ChallengeSource(rawValue: challengeSource) else {
+      reject("E_INVALID_PARAMETERS", "Unsupported challenge source: \(challengeSource)", nil)
+      return
+    }
+
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
 
@@ -1182,7 +1188,7 @@ class BcscCore: NSObject {
       .claim(name: "iss", value: clientID)
       .claim(name: "iat", value: seconds)
       .claim(name: "challenge", value: code)
-      .claim(name: "challenge_source", value: ChallengeSource.remote_pairing_code.rawValue)
+      .claim(name: "challenge_source", value: source.rawValue)
       .claim(name: "apns_token", value: actualDeviceToken)
 
     // Add device info claims using consolidated method
