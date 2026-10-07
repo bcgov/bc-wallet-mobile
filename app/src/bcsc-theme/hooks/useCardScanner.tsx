@@ -23,6 +23,12 @@ import { getResumeStepRoute } from '../utils/resume-step-route'
 import { useDeviceAuthorizationRecovery } from './useDeviceAuthorizationRecovery'
 import { useSecureActions } from './useSecureActions'
 
+// `/device/barcodes` answers `{error: 'invalid_request', error_description: 'card_not_found'}`, which maps to
+// an unknown server error; the reason survives only as the error's technical message.
+const isCardNotFound = (error: unknown): boolean =>
+  isAppError(error) &&
+  (error.appEvent === AppEventCode.CARD_NOT_FOUND || error.technicalMessage === AppEventCode.CARD_NOT_FOUND)
+
 /**
  * Custom hook to handle card scanning logic for BCSC cards.
  *
@@ -222,7 +228,7 @@ export const useCardScanner = () => {
           return false
         }
 
-        if (isAppError(error) && error.appEvent === AppEventCode.CARD_NOT_FOUND) {
+        if (isCardNotFound(error)) {
           // The endpoint's contract: card_not_found means the card is not a BC Services Card.
           await handleScanNonBcsc()
           return true

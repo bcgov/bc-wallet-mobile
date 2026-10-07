@@ -4,6 +4,7 @@ import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BC_DL_BARCODE_NO_DCN_A, BC_DL_BARCODE_S } from '@/bcsc-theme/utils/__fixtures__/barcodes'
+import { formatIasAxiosResponseError, getAppErrorFromAxiosError } from '@/bcsc-theme/utils/axios-error-utils'
 import { ScanableCode } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
@@ -12,6 +13,7 @@ import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
+import { AxiosError, AxiosResponse } from 'axios'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
@@ -454,6 +456,29 @@ describe('useCardScanner', () => {
       expect(secure.updateUserInfo).not.toHaveBeenCalled()
       expect(handleAuthorizationError).not.toHaveBeenCalled()
       expect(nav.reset).not.toHaveBeenCalled()
+    })
+
+    it("continues the other-ID flow on the server's real card_not_found response", async () => {
+      // The 400 body `/device/barcodes` returns for a licence, run through the client's own conversion.
+      const response = {
+        status: 400,
+        data: { error: 'invalid_request', error_description: 'card_not_found' },
+      } as AxiosResponse
+      const axiosError = new AxiosError(
+        'Request failed with status code 400',
+        'ERR_BAD_REQUEST',
+        undefined,
+        {},
+        response
+      )
+      const appError = getAppErrorFromAxiosError(formatIasAxiosResponseError(axiosError))
+      const { hook, handleAuthorizationError, nav } = setup(jest.fn().mockRejectedValue(appError))
+
+      await hook.result.current.handleScanComboCard(SERIAL, license)
+
+      expect(appError.appEvent).not.toBe(AppEventCode.CARD_NOT_FOUND)
+      expect(nav.navigate).toHaveBeenCalledWith(BCSCScreens.DualIdentificationRequired)
+      expect(handleAuthorizationError).not.toHaveBeenCalled()
     })
 
     it('routes any other error through the authorization service', async () => {
