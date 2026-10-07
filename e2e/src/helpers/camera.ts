@@ -287,8 +287,9 @@ export async function injectQrCode(text: string, options: ScanTargetOptions = {}
  * ANDROID ONLY in effect: iOS decodes in the OS and Sauce synthesizes QR metadata only, so no injected
  * 1D code can ever fire there.
  *
- * The serial screen keeps scanning past a read it cannot resolve, so a code that is not a card (a stray
- * 1D code, say) leaves the screen open; only a serial plus card pair moves it on.
+ * UNLIKE {@link injectQrCode}, inject once the scanner is already up: the serial screen navigates on
+ * the first frame it cannot resolve to a BC Services Card, so a code waiting in the feed leaves the
+ * screen before a test can assert it ever opened.
  */
 export async function injectCode39(text: string, options: ScanTargetOptions = {}): Promise<void> {
   await injectScanTarget(await renderCode({ bcid: 'code39', text, height: 12 }, CODE39_TARGET_PX), options)

@@ -1305,7 +1305,7 @@ export async function chooseOtherIdPath(): Promise<void> {
 
 /**
  * Assert arrival on DualIdentificationRequired — reached by choosing OtherID, and also by the serial
- * scanner when `/device/barcodes` answers `card_not_found` or it reads another issuer's licence.
+ * scanner reading a code it cannot resolve to a BC Services Card.
  *
  * The screen's only CTA is the generic `Continue` (shared by ~10 screens), so its heading copy is the
  * only distinguishing marker.

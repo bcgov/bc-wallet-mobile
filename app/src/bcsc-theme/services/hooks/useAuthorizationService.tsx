@@ -30,12 +30,6 @@ const DEVICE_AUTHORIZATION_ERROR_MAP: Partial<Record<AppEventCode, DeviceAuthori
   [AppEventCode.TOO_MANY_MOBILE_CARDS]: DeviceAuthorizationError.TooManyMobileCards,
 }
 
-export interface ScannedCard {
-  serial: string
-  /** YYYY-MM-DD */
-  birthdate: string
-}
-
 export interface AuthorizationServiceCallOptions {
   /**
    * Skip this service's error handling and rethrow the error
@@ -98,15 +92,11 @@ export const useAuthorizationService = () => {
    * Matches a device authorization error and navigates to appropriate error screen
    * Anything not matched will emit a global alert
    *
-   * The error's `appEvent` (from the IAS `error` code) is the primary key. The `technicalMessage`
-   * substring match is only a fallback for errors whose event code is not in either table.
-   *
    * @param error - The error thrown by a device authorization api call.
-   * @param scannedCard - The card the user scanned, if any. Forwarded only to VerificationCardError so
-   *   it can show what was submitted rather than what is in the store.
+   * @param extraCardErrorMap - Additional VerificationCardError routing specific to the calling method.
    */
   const handleAuthorizationError = useCallback(
-    (error: unknown, scannedCard?: ScannedCard) => {
+    (error: unknown) => {
       if (isHandledAppError(error)) {
         // Already handled by a global client error policy (e.g. invalid_registration_request).
         return
@@ -116,25 +106,18 @@ export const useAuthorizationService = () => {
         return
       }
 
-      const cardErrorMap: Partial<Record<AppEventCode, DeviceAuthorizationError>> = {
+      const cardErrorMap = {
         [AppEventCode.CARD_NOT_FOUND]: DeviceAuthorizationError.MismatchedSerial,
         [AppEventCode.INVALID_PARAMETER]: DeviceAuthorizationError.InvalidParameter,
       }
-      const isMappedEvent = error.appEvent in cardErrorMap || error.appEvent in DEVICE_AUTHORIZATION_ERROR_MAP
-      const lookup = (map: Partial<Record<AppEventCode, DeviceAuthorizationError>>) =>
-        isMappedEvent ? map[error.appEvent] : findByTechnicalMessage(error.technicalMessage, map)
-
-      const cardErrorType = lookup(cardErrorMap)
+      const cardErrorType = findByTechnicalMessage(error.technicalMessage, cardErrorMap)
       if (cardErrorType) {
-        navigation.navigate(BCSCScreens.VerificationCardError, {
-          errorType: cardErrorType,
-          ...(scannedCard && { scannedCard }),
-        })
+        navigation.navigate(BCSCScreens.VerificationCardError, { errorType: cardErrorType })
         error.handled = true
         return
       }
 
-      const deviceAuthErrorType = lookup(DEVICE_AUTHORIZATION_ERROR_MAP)
+      const deviceAuthErrorType = findByTechnicalMessage(error.technicalMessage, DEVICE_AUTHORIZATION_ERROR_MAP)
       if (deviceAuthErrorType) {
         // Mark error as handled to prevent global alert
         error.handled = true
@@ -145,10 +128,7 @@ export const useAuthorizationService = () => {
           deviceAuthErrorType === DeviceAuthorizationError.InvalidParameter ||
           deviceAuthErrorType === DeviceAuthorizationError.CardExpired
         ) {
-          navigation.navigate(BCSCScreens.VerificationCardError, {
-            errorType: deviceAuthErrorType,
-            ...(scannedCard && { scannedCard }),
-          })
+          navigation.navigate(BCSCScreens.VerificationCardError, { errorType: deviceAuthErrorType })
           return
         }
         navigation.navigate(BCSCScreens.DeviceAuthorizationError, { errorType: deviceAuthErrorType })

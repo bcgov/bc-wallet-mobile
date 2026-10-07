@@ -2,12 +2,7 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import {
-  decodeCardBarcode,
-  isOtherIssuerAamvaCard,
-  ScanableCode,
-  toDriversLicenseMetadata,
-} from '@/bcsc-theme/utils/card-barcode-decoder'
+import { decodeCardBarcode, ScanableCode, toDriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { CardScan, combineCardBarcodes, EMPTY_CARD_SCAN } from '@/bcsc-theme/utils/card-scan'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
@@ -189,9 +184,7 @@ const IdCardMaskOverlay: React.FC<IdCardMaskOverlayProps> = ({
 /**
  * Screen for scanning BC Services Card barcodes.
  * Camera fills the entire screen to fit a standard ID card (CR-80, ~85.6×53.98mm).
- *
- * A serial plus BC card pair is routed on the server's answer; another issuer's AAMVA card goes to the
- * other-ID flow; any other unreadable code keeps scanning.
+ * DL's are ignored, Combo, Photo, and Non-Photo cards are accepted
  */
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
@@ -207,8 +200,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   // steady-hold help text.
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
-  // The scan handler left the user here (an alert only, or a failed save), so offer "Try Again".
-  const [scanNeedsRetry, setScanNeedsRetry] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
   // Reported by CodeScanningCamera once it has picked a device. Non-Pro iPads have no
   // torch, and turning one on there makes VisionCamera throw `device/flash-unavailable`.
@@ -244,7 +235,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
   const retryCamera = useCallback(() => {
     setCameraFailed(false)
-    setScanNeedsRetry(false)
     setScanState('scanning')
     setCameraKey((prev) => prev + 1)
     // Reset the caches so we can scan again.
@@ -272,33 +262,10 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     }, [retryCamera])
   )
 
-  // Runs a handler that reports whether the user left this screen; if not (or it threw), offer "Try Again".
-  // The handler gets an `isCurrent` check, and a scan that was superseded while it was pending is ignored.
-  const settleScan = async (handler: (isCurrent: () => boolean) => Promise<boolean>) => {
-    scanGeneration.current += 1
-    const generation = scanGeneration.current
-    const isCurrent = () => scanGeneration.current === generation
-
-    try {
-      if (!(await handler(isCurrent)) && isCurrent()) {
-        setScanNeedsRetry(true)
-      }
-    } catch (error) {
-      if (!isCurrent()) {
-        logger.debug('[ScanSerialScreen] Ignoring a failed answer for an earlier scan')
-        return
-      }
-      logger.error('[ScanSerialScreen] Handling the scanned card failed', error as Error)
-      setScanNeedsRetry(true)
-    }
-  }
-
   const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
     if (isProcessingScan.current) {
       return true
     }
-
-    let sawOtherIssuerCard = false
 
     for (const code of barcodes) {
       if (code.type === 'unknown') {
@@ -311,10 +278,12 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       if (decoded.source === 'failure') {
         logger.debug('[DecodeBarcodes] Failed to decode barcode', { type: code.type, reason: decoded.reason })
 
-        // A damaged or unrecognised read says nothing about the card, so keep scanning. Only a
-        // recognised card from another issuer is known not to be a BC Services Card.
-        if (code.type === 'pdf-417' && code.value && isOtherIssuerAamvaCard(code.value)) {
-          sawOtherIssuerCard = true
+        if (!cardScanRef.current.serial && !cardScanRef.current.card) {
+          // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
+          isProcessingScan.current = true
+          setScanState('locked')
+          await scanner.handleScanNonBcsc()
+          return true
         }
         continue
       }
@@ -326,24 +295,20 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
     const { serial, card } = cardScanRef.current
     if (serial && card) {
-      // We have both the serial and the birthdate — lock the camera and ask the server about the card.
+      // We have both the serial and the birthdate — lock the camera and handle the card.
       isProcessingScan.current = true
       setScanState('locked')
-      await settleScan((isCurrent) => scanner.handleScanComboCard(serial, toDriversLicenseMetadata(card), isCurrent))
+      scanGeneration.current += 1
+      const generation = scanGeneration.current
+      await scanner.handleScanComboCard(
+        serial,
+        toDriversLicenseMetadata(card),
+        () => scanGeneration.current === generation
+      )
       return true
     }
 
-    if (sawOtherIssuerCard) {
-      isProcessingScan.current = true
-      setScanState('locked')
-      await settleScan(async () => {
-        await scanner.handleScanNonBcsc()
-        return true
-      })
-      return true
-    }
-
-    // Still missing the serial or the card — tell CodeScanningCamera to
+    // Still missing the serial or the birthdate — tell CodeScanningCamera to
     // unlock and keep scanning instead of freezing on this one barcode.
     return false
   }
@@ -480,7 +445,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               onPress={goToManualEntry}
               buttonType={ButtonType.Primary}
             />
-            {cameraFailed || scanNeedsRetry ? (
+            {cameraFailed ? (
               <Button
                 title={t('BCSC.Scan.TryAgain')}
                 accessibilityLabel={t('BCSC.Scan.TryAgain')}
