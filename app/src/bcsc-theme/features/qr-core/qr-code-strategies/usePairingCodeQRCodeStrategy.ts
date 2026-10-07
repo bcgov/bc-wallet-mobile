@@ -31,7 +31,7 @@ export const usePairingCodeQRCodeStrategy = (onSuccess: (pairingCode: string) =>
   }, [])
 
   const handle = useCallback(
-    async (uri: string): Promise<void> => {
+    (uri: string) => {
       const code = extractPairingCode(uri)
 
       if (!code) {
