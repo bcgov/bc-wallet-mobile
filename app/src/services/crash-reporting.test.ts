@@ -12,9 +12,11 @@ describe('crash-reporting', () => {
     const defaultHandler = jest.fn()
     const crashlyticsHandler = jest.fn()
     let globalHandler: GlobalHandler
+    let crashlytics: { isCrashlyticsCollectionEnabled: boolean }
 
     beforeEach(() => {
       globalHandler = defaultHandler
+      crashlytics = { isCrashlyticsCollectionEnabled: true }
       Object.defineProperty(globalThis, 'ErrorUtils', {
         configurable: true,
         value: {
@@ -27,7 +29,7 @@ describe('crash-reporting', () => {
       // Creating the RNFB module installs its handler
       jest.mocked(getCrashlytics).mockImplementationOnce(() => {
         globalHandler = crashlyticsHandler
-        return {} as ReturnType<typeof getCrashlytics>
+        return crashlytics as ReturnType<typeof getCrashlytics>
       })
     })
 
@@ -48,6 +50,17 @@ describe('crash-reporting', () => {
       globalHandler(error, false)
 
       expect(defaultHandler).toHaveBeenCalledWith(error, false)
+      expect(crashlyticsHandler).not.toHaveBeenCalled()
+    })
+
+    it('leaves fatal errors to the default handler once collection is turned off', () => {
+      const error = new Error('fatal')
+
+      initCrashReporting()
+      crashlytics.isCrashlyticsCollectionEnabled = false
+      globalHandler(error, true)
+
+      expect(defaultHandler).toHaveBeenCalledWith(error, true)
       expect(crashlyticsHandler).not.toHaveBeenCalled()
     })
   })

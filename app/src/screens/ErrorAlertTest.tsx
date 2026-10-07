@@ -549,7 +549,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
           <Text style={styles.sectionHeader}>{'Crashlytics'}</Text>
           <Text style={styles.description}>
             {'Only reports when crash collection is on for this build (non-prod, not killed). ' +
-              'Collection changes apply from the next launch, and reports upload on the next launch.'}
+              'Turning it on applies from the next launch, and off from the one after. ' +
+              'Reports upload on the next launch.'}
           </Text>
           <View style={styles.buttonRow}>
             <Button
