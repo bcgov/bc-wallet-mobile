@@ -314,45 +314,6 @@ describe('Error Utils', () => {
       expect((details.response as { data: unknown }).data).toEqual({ error: 'nope' })
     })
 
-    it('logs a redaction marker instead of the request body when redactRequestBody is set', () => {
-      const error = {
-        name: 'AxiosError',
-        code: 'ERR_BAD_REQUEST',
-        message: 'Bad request',
-        config: {
-          method: 'post',
-          url: 'https://api.example.com/device/barcodes/abc',
-          data: { barcodes: [{ family_name: 'Dinkley' }] },
-          redactRequestBody: true,
-        },
-        response: { status: 400, statusText: 'Bad Request', data: { error: 'card_not_found' } },
-      } as any
-
-      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
-
-      expect((details.request as { data: unknown }).data).toBe('[redacted]')
-      expect(JSON.stringify(details)).not.toContain('Dinkley')
-      expect((details.response as { data: unknown }).data).toEqual({ error: 'card_not_found' })
-    })
-
-    it('redacts the request body for a network error too', () => {
-      const error = {
-        name: 'AxiosError',
-        code: 'ERR_NETWORK',
-        message: 'Network Error',
-        config: {
-          method: 'post',
-          url: 'https://api.example.com/x',
-          data: 'family_name=Dinkley',
-          redactRequestBody: true,
-        },
-      } as any
-
-      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
-
-      expect((details.request as { data: unknown }).data).toBe('[redacted]')
-    })
-
     it('strips the query string (signed-URL token) from the logged URL', () => {
       const error = {
         name: 'AxiosError',

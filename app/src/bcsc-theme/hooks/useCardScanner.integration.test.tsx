@@ -190,7 +190,7 @@ describe('useCardScanner against the real client chain', () => {
     expect(sent).not.toContain(BC_COMBO_BARCODE_K)
   })
 
-  it('continues the other-ID flow on card_not_found with no save, no alert and a redacted log body', async () => {
+  it('continues the other-ID flow on card_not_found with no save and no alert', async () => {
     rejectWithIasError(400, 'card_not_found')
     const result = setup()
 
@@ -202,11 +202,6 @@ describe('useCardScanner against the real client chain', () => {
     expect(secure.updateUserInfo).not.toHaveBeenCalled()
     expect(secure.updateDeviceCodes).not.toHaveBeenCalled()
     Object.values(mockAlerts).forEach((alert) => expect(alert).not.toHaveBeenCalled())
-
-    const logged = JSON.stringify(logger.error.mock.calls)
-    expect(logged).toContain('[redacted]')
-    expect(logged).not.toMatch(/specimen/i)
-    expect(logged).not.toContain(SERIAL)
   })
 
   it('routes card_expired to the card error screen with the scanned card', async () => {

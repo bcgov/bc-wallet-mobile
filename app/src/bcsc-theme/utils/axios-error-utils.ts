@@ -138,7 +138,7 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
     errorDetails.request = {
       headers: redactHeaders(options.error.config.headers),
       params: options.error.config.params,
-      data: options.error.config.redactRequestBody ? '[redacted]' : summarizeLoggedBody(options.error.config.data),
+      data: summarizeLoggedBody(options.error.config.data),
     }
   }
 

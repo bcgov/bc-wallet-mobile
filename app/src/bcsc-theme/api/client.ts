@@ -55,8 +55,6 @@ declare module 'axios' {
     _retriedAfter401?: boolean
     // Evidence-upload media fields; getAppErrorFromAxiosError copies them into AppError.context.
     uploadLogContext?: UploadLogContext
-    // Replaces the request body with a marker in failure logs, for bodies that carry personal data.
-    redactRequestBody?: boolean
   }
 }
 

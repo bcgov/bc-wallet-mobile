@@ -345,7 +345,6 @@ describe('useEvidenceApi - upload log context', () => {
     })
 
     const [, , config] = apiClient.post.mock.calls[0]
-    expect(config.redactRequestBody).toBe(true)
     expect(config.uploadLogContext).not.toHaveProperty('media_format')
     expect(config.uploadLogContext).toEqual({
       media_kind: 'document',
