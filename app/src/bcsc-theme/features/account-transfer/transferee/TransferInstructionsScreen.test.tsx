@@ -29,6 +29,19 @@ describe('TransferInstructionsScreen', () => {
     expect(tree).toMatchSnapshot()
   })
 
+  it('renders four numbered steps', () => {
+    const { getByText } = render(
+      <BasicAppContext>
+        <TransferInstructionsScreen />
+      </BasicAppContext>
+    )
+
+    for (const step of [1, 2, 3, 4]) {
+      expect(getByText(`${step}.`)).toBeTruthy()
+      expect(getByText(`BCSC.TransferInstructions.Step${step}`)).toBeTruthy()
+    }
+  })
+
   it('navigates to QR scan screen when Scan QR Code button is pressed', () => {
     const { getByTestId } = render(
       <BasicAppContext>
