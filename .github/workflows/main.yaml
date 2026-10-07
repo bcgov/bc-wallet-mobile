@@ -853,6 +853,14 @@ jobs:
         continue-on-error: true
         timeout-minutes: 10
         run: |
+          # Two uploads of one dSYM at once share a temp file and can break it; let the build phase's finish.
+          for _ in $(seq 60); do
+            pgrep -f 'upload-symbols --build-phase' > /dev/null || break
+            sleep 5
+          done
+          if pkill -f 'upload-symbols --build-phase'; then
+            echo "::warning::Stopped the build phase's dSYM upload, still running after 5 minutes"
+          fi
           app/ios/Pods/FirebaseCrashlytics/upload-symbols \
             -gsp app/ios/GoogleService-Info.plist \
             -p ios \
