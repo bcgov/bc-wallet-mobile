@@ -121,7 +121,7 @@
     "react-native-logs": "~5.1.0",
     "react-native-nitro-image": "^0.15.2",
     "react-native-nitro-modules": "^0.37.0",
-    "react-native-orientation-locker": "~1.6.0",
+    "react-native-orientation-locker": "patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch",
     "react-native-permissions": "~5.4.1",
     "react-native-qrcode-svg": "~6.2.0",
     "react-native-reanimated": "4.5.1",

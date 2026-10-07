@@ -1,0 +1,12 @@
+diff --git a/iOS/RCTOrientation/Orientation.m b/iOS/RCTOrientation/Orientation.m
+index 6045b2df19a21b0a6826fbc5bd9d4affa1cadafe..ab2c7431a335221f6f9ae31b7d07fc7b07dca33c 100644
+--- a/iOS/RCTOrientation/Orientation.m
++++ b/iOS/RCTOrientation/Orientation.m
+@@ -53,7 +53,6 @@ - (instancetype)init
+ - (void)dealloc
+ {
+     [[NSNotificationCenter defaultCenter] removeObserver:self];
+-    [self removeListeners:1];
+ }
+ 
+ - (UIInterfaceOrientation)getDeviceOrientation {
