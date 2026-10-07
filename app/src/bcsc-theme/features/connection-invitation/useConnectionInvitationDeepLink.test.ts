@@ -154,6 +154,46 @@ describe('useConnectionInvitationDeepLink', () => {
     expect(mockNavigate).toHaveBeenLastCalledWith(BCSCScreens.ConnectionLoading, { oobRecordId: 'rec-2' })
   })
 
+  describe('when a second invitation arrives while the first is still being handled', () => {
+    const SECOND_URL = 'bcwallet://aries_connection_invitation?oob=second'
+
+    const startOverlap = async () => {
+      const pending: Record<string, { resolve: (id: string) => void; reject: (e: Error) => void }> = {}
+      mockHandle.mockImplementation(
+        (uri: string) => new Promise<string>((resolve, reject) => (pending[uri] = { resolve, reject }))
+      )
+
+      startWithReadyAgent()
+      await deliverInvitation(INVITATION_URL)
+      await waitFor(() => expect(mockHandle).toHaveBeenCalledWith(INVITATION_URL))
+      await deliverInvitation(SECOND_URL)
+      await waitFor(() => expect(mockHandle).toHaveBeenCalledWith(SECOND_URL))
+
+      return pending
+    }
+
+    it('still navigates for the second invitation after the first succeeds', async () => {
+      const pending = await startOverlap()
+
+      await act(async () => pending[INVITATION_URL].resolve('rec-1'))
+      await act(async () => pending[SECOND_URL].resolve('rec-2'))
+
+      expect(mockNavigate).toHaveBeenCalledTimes(1)
+      expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.ConnectionLoading, { oobRecordId: 'rec-2' })
+    })
+
+    it('still navigates for the second invitation after the first fails, without a toast for the first', async () => {
+      const pending = await startOverlap()
+
+      await act(async () => pending[INVITATION_URL].reject(new Error('network')))
+      await act(async () => pending[SECOND_URL].resolve('rec-2'))
+
+      expect(mockToastShow).not.toHaveBeenCalled()
+      expect(mockNavigate).toHaveBeenCalledTimes(1)
+      expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.ConnectionLoading, { oobRecordId: 'rec-2' })
+    })
+  })
+
   it('does not navigate when the hook unmounts while the invitation is still being handled', async () => {
     let resolveHandle: (oobRecordId: string) => void = () => undefined
     mockHandle.mockReturnValue(new Promise<string>((resolve) => (resolveHandle = resolve)))
