@@ -3,6 +3,7 @@ import { isBluetoothAudioConnected } from 'react-native-bcsc-core'
 
 /**
  * Requests Bluetooth permission on Android 12 and above if Bluetooth audio is connected.
+ * NOTE: `adb shell pm revoke <package_name> android.permission.BLUETOOTH_CONNECT` can be used to revoke the permission for testing purposes.
  * @param logger - The logger instance to log warnings and errors.
  * @returns A promise that resolves to `true` if the permission is granted or not needed, and `false` otherwise.
  */
@@ -17,7 +18,7 @@ export async function requestBluetoothPermission(): Promise<boolean> {
  * Checks if the device requires Bluetooth permission (Android API 31+).
  * @returns `true` if the device requires Bluetooth permission, `false` otherwise.
  */
-export async function shouldRequestBluetoothPermission(): Promise<boolean> {
+export async function deviceRequiresBluetoothPermission(): Promise<boolean> {
   const needsRuntimePermission = Platform.OS === 'android' && Platform.Version >= 31
 
   if (!needsRuntimePermission) {

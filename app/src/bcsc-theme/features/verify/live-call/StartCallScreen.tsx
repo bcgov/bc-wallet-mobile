@@ -2,7 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { shouldRequestBluetoothPermission } from '@/bcsc-theme/utils/bluetooth'
+import { deviceRequiresBluetoothPermission } from '@/bcsc-theme/utils/bluetooth'
 import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -105,7 +105,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     }
 
     if (micPermissionGranted) {
-      const needsBluetoothPermission = await shouldRequestBluetoothPermission()
+      const needsBluetoothPermission = await deviceRequiresBluetoothPermission()
 
       navigation.navigate(needsBluetoothPermission ? BCSCScreens.BluetoothDisclosure : BCSCScreens.LiveCall)
       return
@@ -114,35 +114,6 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     setShowPermissionDisabled(true)
     setIsWaitingForPermissions(false)
   }
-
-  // const onPressStart = async () => {
-  //   setIsWaitingForPermissions(true)
-  //   if (hasMicrophonePermission) {
-  //     const needsBluetoothPermission = await shouldRequestBluetoothPermission()
-  //     if (needsBluetoothPermission) {
-  //       navigation.navigate(BCSCScreens.BluetoothPermission)
-  //       return
-  //     }
-  //     navigation.navigate(BCSCScreens.LiveCall)
-  //     return
-  //   }
-  //
-  //   if (!hasRequestedPermission.current) {
-  //     hasRequestedPermission.current = true
-  //     const granted = await requestMicrophonePermission()
-  //     if (granted) {
-  //       const needsBluetoothPermission = await shouldRequestBluetoothPermission()
-  //       if (needsBluetoothPermission) {
-  //         navigation.navigate(BCSCScreens.BluetoothPermission)
-  //         return
-  //       }
-  //       navigation.navigate(BCSCScreens.LiveCall)
-  //       return
-  //     }
-  //   }
-  //   setShowPermissionDisabled(true)
-  //   setIsWaitingForPermissions(false)
-  // }
 
   const handleImageError = (error: ImageErrorEvent) => {
     logger.error('[StartCallScreen] Error loading user photo for live call', { error })

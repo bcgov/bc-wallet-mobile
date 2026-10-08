@@ -1420,6 +1420,10 @@ const translation = {
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office?",
       "CannotVideoCall": "Cannot video call?"
     },
+    "BluetoothDisclosure": {
+      "Title": "Detect bluetooth devices",
+      "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device.",
+    },
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting",
