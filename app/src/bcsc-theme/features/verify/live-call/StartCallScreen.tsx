@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { shouldRequestBluetoothPermission } from '@/bcsc-theme/utils/bluetooth'
 import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -23,7 +24,7 @@ import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Image, ImageErrorEvent, StyleSheet, View } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
 import ServicePeriodList from './components/ServicePeriodList'
 
@@ -93,40 +94,55 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     },
   })
 
-  const requestBluetoothPermission = async () => {
-    // On Android 12+, BLUETOOTH_CONNECT must be requested at runtime.
-    // Without it, InCallManager's BluetoothManager silently fails to start
-    // and call audio always routes to the speaker instead of BT headsets.
-    try {
-      if (Platform.OS === 'android' && Platform.Version >= 31) {
-        await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT)
-      }
-    } catch (error) {
-      // Not a blocker — the call still works without Bluetooth
-      logger.warn('Failed to request Bluetooth permission', { error: error as Error })
-    }
-  }
-
   const onPressStart = async () => {
     setIsWaitingForPermissions(true)
-    if (hasMicrophonePermission) {
-      await requestBluetoothPermission()
-      navigation.navigate(BCSCScreens.LiveCall)
+
+    let micPermissionGranted = hasMicrophonePermission
+
+    if (!micPermissionGranted || !hasRequestedPermission.current) {
+      hasRequestedPermission.current = true
+      micPermissionGranted = await requestMicrophonePermission()
+    }
+
+    if (micPermissionGranted) {
+      const needsBluetoothPermission = await shouldRequestBluetoothPermission()
+
+      navigation.navigate(needsBluetoothPermission ? BCSCScreens.BluetoothDisclosure : BCSCScreens.LiveCall)
       return
     }
 
-    if (!hasRequestedPermission.current) {
-      hasRequestedPermission.current = true
-      const granted = await requestMicrophonePermission()
-      if (granted) {
-        await requestBluetoothPermission()
-        navigation.navigate(BCSCScreens.LiveCall)
-        return
-      }
-    }
     setShowPermissionDisabled(true)
     setIsWaitingForPermissions(false)
   }
+
+  // const onPressStart = async () => {
+  //   setIsWaitingForPermissions(true)
+  //   if (hasMicrophonePermission) {
+  //     const needsBluetoothPermission = await shouldRequestBluetoothPermission()
+  //     if (needsBluetoothPermission) {
+  //       navigation.navigate(BCSCScreens.BluetoothPermission)
+  //       return
+  //     }
+  //     navigation.navigate(BCSCScreens.LiveCall)
+  //     return
+  //   }
+  //
+  //   if (!hasRequestedPermission.current) {
+  //     hasRequestedPermission.current = true
+  //     const granted = await requestMicrophonePermission()
+  //     if (granted) {
+  //       const needsBluetoothPermission = await shouldRequestBluetoothPermission()
+  //       if (needsBluetoothPermission) {
+  //         navigation.navigate(BCSCScreens.BluetoothPermission)
+  //         return
+  //       }
+  //       navigation.navigate(BCSCScreens.LiveCall)
+  //       return
+  //     }
+  //   }
+  //   setShowPermissionDisabled(true)
+  //   setIsWaitingForPermissions(false)
+  // }
 
   const handleImageError = (error: ImageErrorEvent) => {
     logger.error('[StartCallScreen] Error loading user photo for live call', { error })
