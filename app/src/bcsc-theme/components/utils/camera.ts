@@ -304,11 +304,11 @@ export type AccumulatedCode = { code: EnhancedCode; timestamp: number }
  * before the lock — e.g. the birthdate-bearing PDF-417 on a combo card when the
  * easier code-39 serial alone satisfies the lock threshold first.
  *
- * Ordering: accumulated extras are returned FIRST, current-frame codes LAST. Callers
- * (`useCardScanner`'s decode loop) apply "later code wins" when the same kind of
- * data shows up twice, so putting the current frame last means a fresher reading
- * always overrides a stale accumulated one of the same decoded kind — ordering
- * alone resolves that conflict, no extra same-kind filtering is needed here. Only
+ * Ordering: accumulated extras are returned FIRST, current-frame codes LAST. The caller
+ * (`ScanSerialScreen.onCodeScanned`, via `combineCardBarcodes`) applies "later code wins"
+ * when the same kind of data shows up twice, so putting the current frame last means a
+ * fresher reading always overrides a stale accumulated one of the same decoded kind —
+ * ordering alone resolves that conflict, no extra same-kind filtering is needed here. Only
  * exact `${type}-${value}` duplicates against the current frame are dropped from
  * the accumulator; anything else (including a stale same-type/different-value
  * entry) is passed through and left for the ordering to resolve downstream.
