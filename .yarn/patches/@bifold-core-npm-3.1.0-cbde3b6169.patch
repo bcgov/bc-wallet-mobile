@@ -1,17 +1,20 @@
 diff --git a/lib/commonjs/components/animated/ButtonLoading.js b/lib/commonjs/components/animated/ButtonLoading.js
-index e8ba9266964b1713249e30f46b6265a5d74c4a88..5598d1fe8743c44f8176e124b2ad5b6f86deeea0 100644
+index e8ba9266964b1713249e30f46b6265a5d74c4a88..8677e410401a98b1868aec536547ba5451988843 100644
 --- a/lib/commonjs/components/animated/ButtonLoading.js
 +++ b/lib/commonjs/components/animated/ButtonLoading.js
-@@ -5,17 +5,27 @@ Object.defineProperty(exports, "__esModule", {
+@@ -4,18 +4,29 @@ Object.defineProperty(exports, "__esModule", {
+   value: true
  });
  exports.default = void 0;
- var _react = _interopRequireDefault(require("react"));
+-var _react = _interopRequireDefault(require("react"));
++var _react = _interopRequireWildcard(require("react"));
 +var _reactNative = require("react-native");
  var _LoadingSpinner = _interopRequireDefault(require("./LoadingSpinner"));
  var _theme = require("../../contexts/theme");
 +var _testable = require("../../utils/testable");
 +var _ButtonLabelColorContext = require("../buttons/ButtonLabelColorContext");
  function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
++function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function (e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
  const ButtonLoading = () => {
    const {
 -    ColorPalette
@@ -22,7 +25,7 @@ index e8ba9266964b1713249e30f46b6265a5d74c4a88..5598d1fe8743c44f8176e124b2ad5b6f
 -    size: 25,
 -    color: ColorPalette.brand.icon
 -  });
-+  const labelColor = (0, _ButtonLabelColorContext.useButtonLabelColor)();
++  const labelColor = (0, _react.useContext)(_ButtonLabelColorContext.ButtonLabelColorContext);
 +  return /*#__PURE__*/_react.default.createElement(_reactNative.View, {
 +    style: {
 +      marginRight: Spacing.sm
@@ -76,31 +79,30 @@ index 45ddf87be103c476c7fb3a297c05e644dd2b67ab..4482084188384a4e014d2dfd64252650
        textDecorationLine: 'underline'
 diff --git a/lib/commonjs/components/buttons/ButtonLabelColorContext.js b/lib/commonjs/components/buttons/ButtonLabelColorContext.js
 new file mode 100644
-index 0000000000000000000000000000000000000000..3ed599ce0b6c565dae9158af03ab017e21fa1be9
+index 0000000000000000000000000000000000000000..5ecca799a34b5cc07af69ad6f571f7f99b71e53f
 --- /dev/null
 +++ b/lib/commonjs/components/buttons/ButtonLabelColorContext.js
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,8 @@
 +"use strict";
 +
 +Object.defineProperty(exports, "__esModule", {
 +  value: true
 +});
-+exports.useButtonLabelColor = exports.ButtonLabelColorContext = void 0;
++exports.ButtonLabelColorContext = void 0;
 +var _react = require("react");
 +const ButtonLabelColorContext = exports.ButtonLabelColorContext = /*#__PURE__*/(0, _react.createContext)(undefined);
-+const useButtonLabelColor = () => (0, _react.useContext)(ButtonLabelColorContext);
-+exports.useButtonLabelColor = useButtonLabelColor;
 diff --git a/lib/module/components/animated/ButtonLoading.js b/lib/module/components/animated/ButtonLoading.js
-index 39ed18fdd0f4fe32753cb12a4aeb3d29a5933557..f2b66a4113ee464b111857dd19a99407c6ee31c5 100644
+index 39ed18fdd0f4fe32753cb12a4aeb3d29a5933557..1d1970236dda3fb656c9d2e0c656e35028e6d82c 100644
 --- a/lib/module/components/animated/ButtonLoading.js
 +++ b/lib/module/components/animated/ButtonLoading.js
 @@ -1,14 +1,24 @@
- import React from 'react';
+-import React from 'react';
++import React, { useContext } from 'react';
 +import { View } from 'react-native';
  import LoadingSpinner from './LoadingSpinner';
  import { useTheme } from '../../contexts/theme';
 +import { testIdWithKey } from '../../utils/testable';
-+import { useButtonLabelColor } from '../buttons/ButtonLabelColorContext';
++import { ButtonLabelColorContext } from '../buttons/ButtonLabelColorContext';
  const ButtonLoading = () => {
    const {
 -    ColorPalette
@@ -111,7 +113,7 @@ index 39ed18fdd0f4fe32753cb12a4aeb3d29a5933557..f2b66a4113ee464b111857dd19a99407
 -    size: 25,
 -    color: ColorPalette.brand.icon
 -  });
-+  const labelColor = useButtonLabelColor();
++  const labelColor = useContext(ButtonLabelColorContext);
 +  return /*#__PURE__*/React.createElement(View, {
 +    style: {
 +      marginRight: Spacing.sm
@@ -169,10 +171,9 @@ index 6e55bc067ed8441b9ef1a3ddbed151f1470c7b5d..65842aa745330326a4509a31d5af66c9
        textDecorationLine: 'underline'
 diff --git a/lib/module/components/buttons/ButtonLabelColorContext.js b/lib/module/components/buttons/ButtonLabelColorContext.js
 new file mode 100644
-index 0000000000000000000000000000000000000000..63e7a3fa66edeaa192fd7e356c1edc4f589e3f24
+index 0000000000000000000000000000000000000000..42073ca6e23644f4beb2ca81ac20caa8aca127bf
 --- /dev/null
 +++ b/lib/module/components/buttons/ButtonLabelColorContext.js
-@@ -0,0 +1,3 @@
-+import { createContext, useContext } from 'react';
+@@ -0,0 +1,2 @@
++import { createContext } from 'react';
 +export const ButtonLabelColorContext = /*#__PURE__*/createContext(undefined);
-+export const useButtonLabelColor = () => useContext(ButtonLabelColorContext);
