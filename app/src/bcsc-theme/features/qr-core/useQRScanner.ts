@@ -17,6 +17,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
   const lockedRef = useRef(false) // held while processing, and after success until the screen refocuses
+  const processingRef = useRef(false)
 
   /**
    * Handle errors that occur during QR code scanning.
@@ -51,6 +52,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
       }
 
       lockedRef.current = true
+      processingRef.current = true
       setIsProcessing(true)
 
       try {
@@ -65,6 +67,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
         lockedRef.current = false
         handleQRScanError(error, value)
       } finally {
+        processingRef.current = false
         setIsProcessing(false)
       }
     },
@@ -76,6 +79,9 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
 
   // Call from the screen's focus effect to unlock scanning after a completed flow.
   const resetLock = useCallback(() => {
+    if (processingRef.current) {
+      return // a refocus must not release a scan that is still running
+    }
     lockedRef.current = false
   }, [])
 
