@@ -56,7 +56,7 @@ describe('PairingService', () => {
     expect(navEvents).toHaveLength(1)
     expect(navEvents[0]).toMatchObject({
       screen: expect.stringContaining(BCSCScreens.ServiceLogin),
-      params: { serviceTitle: 'Test Service', pairingCode: 'CODE123', challengeSource: 'push_notification' },
+      params: { serviceTitle: 'Test Service', pairingCode: 'CODE123' },
     })
     expect(service.hasPendingPairing).toBe(false)
   })
@@ -99,7 +99,7 @@ describe('PairingService', () => {
     const request: PairingPayload = {
       serviceTitle: 'Test Service',
       pairingCode: 'CODE123',
-      source: 'fcm',
+      source: 'deep-link',
     }
 
     service.handlePairing(request)
@@ -113,7 +113,7 @@ describe('PairingService', () => {
 
     expect(navEvents).toHaveLength(1)
     expect(navEvents[0]).toMatchObject({
-      params: { serviceTitle: 'Test Service', pairingCode: 'CODE123', challengeSource: 'push_notification' },
+      params: { serviceTitle: 'Test Service', pairingCode: 'CODE123' },
     })
     expect(service.hasPendingPairing).toBe(false)
     expect(pendingStates).toEqual([false, true, false])

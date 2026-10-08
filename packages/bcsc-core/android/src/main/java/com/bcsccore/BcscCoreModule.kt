@@ -146,9 +146,6 @@ class BcscCoreModule internal constructor(
     companion object {
         const val NAME = "BcscCore"
 
-        private val CHALLENGE_SOURCES =
-            setOf("local_app_switch", "push_notification", "remote_pairing_code", "remote_pairing_qr_code")
-
         // Token type constants
         private const val TOKEN_TYPE_ACCESS = 0
         private const val TOKEN_TYPE_REFRESH = 1
@@ -1395,11 +1392,6 @@ class BcscCoreModule internal constructor(
         challengeSource: String,
         promise: Promise,
     ) {
-        if (challengeSource !in CHALLENGE_SOURCES) {
-            promise.reject("E_INVALID_PARAMETERS", "Unsupported challenge source: $challengeSource")
-            return
-        }
-
         try {
             // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""

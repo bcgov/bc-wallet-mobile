@@ -540,7 +540,6 @@ export type ChallengeSource =
  * @param deviceToken The APNS device token (iOS only).
  * @param challengeSource How the login was initiated; sent as the assertion's `challenge_source` claim.
  * @returns A promise that resolves to the signed assertion JWT, or null if an error occurs.
- * @throws Rejects with `E_INVALID_PARAMETERS` when `challengeSource` is not a supported value.
  */
 export const signPairingCode = async (
   code: string,

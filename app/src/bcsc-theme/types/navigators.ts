@@ -1,6 +1,6 @@
 import { Screens } from '@bifold/core'
 import { NavigatorScreenParams } from '@react-navigation/native'
-import { BCSCCardProcess, ChallengeSource, EvidenceType } from 'react-native-bcsc-core'
+import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { DeviceAuthorizationError } from '../features/verify/deviceAuthorizationError'
 import { BCSCReason } from '../utils/id-token'
 import { FormattedServicePeriod } from '../utils/service-hours-formatter'
@@ -289,7 +289,6 @@ export type BCSCMainStackParams = {
     serviceTitle?: string
     pairingCode?: string
     fromAppSwitch?: boolean
-    challengeSource?: ChallengeSource
   }
   [BCSCScreens.MainSettings]: undefined
   [BCSCScreens.MainPrivacyPolicy]: undefined

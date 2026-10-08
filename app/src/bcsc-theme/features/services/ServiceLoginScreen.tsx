@@ -279,7 +279,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   navigation,
   route,
 }: ServiceLoginScreenProps) => {
-  const { serviceClientId, serviceTitle, pairingCode, fromAppSwitch, challengeSource } = route.params ?? {}
+  const { serviceClientId, serviceTitle, pairingCode, fromAppSwitch } = route.params ?? {}
   const { t } = useTranslation()
   const { Spacing, ColorPalette, TextTheme, Buttons } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -292,7 +292,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     serviceClientId,
     serviceTitle,
     pairingCode,
-    challengeSource,
     metadata,
     logger,
   })
@@ -362,7 +361,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
 
     try {
-      const client = await pairing.loginByPairingCode(code, state.challengeSource ?? 'remote_pairing_code')
+      const client = await pairing.loginByPairingCode(code, fromAppSwitch ? 'local_app_switch' : 'push_notification')
 
       navigation.navigate(BCSCScreens.PairingConfirmation, {
         serviceId: client.client_ref_id,
@@ -376,16 +375,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
         alerts.loginServerErrorAlert()
       }
     }
-  }, [
-    state.pairingCode,
-    state.challengeSource,
-    pairing,
-    navigation,
-    logger,
-    alerts,
-    fromAppSwitch,
-    setIsContinueDisabled,
-  ])
+  }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled])
 
   /**
    * Handles quick login and navigation

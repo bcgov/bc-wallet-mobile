@@ -1,13 +1,11 @@
 import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useEffect, useReducer, useRef } from 'react'
-import type { ChallengeSource } from 'react-native-bcsc-core'
-import { pairingPayloadToServiceLoginParams, usePairingService } from '../../pairing'
+import { usePairingService } from '../../pairing'
 
 export type LocalState = {
   serviceTitle?: string
   pairingCode?: string
-  challengeSource?: ChallengeSource
   claimsDescription?: string
   privacyPolicyUri?: string
   serviceInitiateLoginUri?: string
@@ -31,7 +29,6 @@ type UseServiceLoginStateArgs = {
   serviceClientId?: string
   serviceTitle?: string
   pairingCode?: string
-  challengeSource?: ChallengeSource
   metadata: MetadataApi
   logger: Logger
 }
@@ -49,7 +46,6 @@ const initialState: LocalState = {
   claimsDescription: undefined,
   privacyPolicyUri: undefined,
   pairingCode: undefined,
-  challengeSource: undefined,
   service: undefined,
   serviceInitiateLoginUri: undefined,
   serviceClientUri: undefined,
@@ -59,7 +55,6 @@ export const useServiceLoginState = ({
   serviceClientId,
   serviceTitle: initialServiceTitle,
   pairingCode: initialPairingCode,
-  challengeSource: initialChallengeSource,
   metadata,
   logger,
 }: UseServiceLoginStateArgs): UseServiceLoginStateResult => {
@@ -68,7 +63,6 @@ export const useServiceLoginState = ({
     ...initialState,
     serviceTitle: initialServiceTitle,
     pairingCode: initialPairingCode,
-    challengeSource: initialChallengeSource,
   })
   const pendingConsumedRef = useRef(false)
 
@@ -154,8 +148,10 @@ export const useServiceLoginState = ({
     pendingConsumedRef.current = true
     logger.info(`ServiceLoginScreen: Consuming pending pairing for ${pending.serviceTitle}`)
 
-    const { serviceTitle, pairingCode, challengeSource } = pairingPayloadToServiceLoginParams(pending)
-    dispatch({ serviceTitle, pairingCode, challengeSource })
+    dispatch({
+      serviceTitle: pending.serviceTitle,
+      pairingCode: pending.pairingCode,
+    })
   }, [serviceClientId, logger, state.pairingCode, state.serviceTitle, pairingService])
 
   // Listen for live pairing events while the screen is mounted.
@@ -163,13 +159,12 @@ export const useServiceLoginState = ({
   // and a deep link arrives while they're still on ServiceLoginScreen.
   useEffect(() => {
     const unsubscribe = pairingService.onNavigationRequest((event) => {
-      const { serviceTitle, pairingCode, challengeSource } = event.params
+      const { serviceTitle, pairingCode } = event.params
       logger.info(`ServiceLoginScreen: Received live pairing event for ${serviceTitle}`)
 
       dispatch({
         serviceTitle,
         pairingCode,
-        challengeSource,
       })
     })
 

@@ -5,13 +5,6 @@ import LocalAuthentication
 import React
 import UserNotifications
 
-enum ChallengeSource: String {
-  case local_app_switch
-  case push_notification
-  case remote_pairing_code
-  case remote_pairing_qr_code
-}
-
 enum DeviceInfoKeys {
   static let systemName = "system_name"
   static let deviceName = "device_name"
@@ -1168,11 +1161,6 @@ class BcscCore: NSObject {
     challengeSource: String,
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
-    guard let source = ChallengeSource(rawValue: challengeSource) else {
-      reject("E_INVALID_PARAMETERS", "Unsupported challenge source: \(challengeSource)", nil)
-      return
-    }
-
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
 
@@ -1188,7 +1176,7 @@ class BcscCore: NSObject {
       .claim(name: "iss", value: clientID)
       .claim(name: "iat", value: seconds)
       .claim(name: "challenge", value: code)
-      .claim(name: "challenge_source", value: source.rawValue)
+      .claim(name: "challenge_source", value: challengeSource)
       .claim(name: "apns_token", value: actualDeviceToken)
 
     // Add device info claims using consolidated method
