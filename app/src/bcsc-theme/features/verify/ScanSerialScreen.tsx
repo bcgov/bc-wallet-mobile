@@ -2,7 +2,7 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { decodeBarcodes, DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { decodeCardBarcode, ScanableCode, toDriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
@@ -260,27 +260,36 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       return true
     }
 
-    const decodedBarcodes = decodeBarcodes(barcodes, logger)
-
-    for (const decoded of decodedBarcodes) {
-      if (!decoded && !bcscSerialRef.current && !birthDateRef.current) {
-        // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
-        isProcessingScan.current = true
-        setScanState('locked')
-        await scanner.handleScanNonBcsc()
-        return true
+    for (const code of barcodes) {
+      if (code.type === 'unknown') {
+        logger.debug('[DecodeBarcodes] Skipping unknown barcode')
+        continue
       }
 
-      switch (decoded?.kind) {
-        case DecodedCodeKind.BCServicesCardBarcode:
-          bcscSerialRef.current = decoded.bcscSerial
+      const decoded = decodeCardBarcode(code)
+
+      if (decoded.source === 'failure') {
+        logger.debug('[DecodeBarcodes] Failed to decode barcode', { type: code.type, reason: decoded.reason })
+
+        if (!bcscSerialRef.current && !birthDateRef.current) {
+          // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
+          isProcessingScan.current = true
+          setScanState('locked')
+          await scanner.handleScanNonBcsc()
+          return true
+        }
+        continue
+      }
+
+      logger.debug('[DecodeBarcodes] Decoded barcode metadata:', { type: code.type, source: decoded.source })
+
+      switch (decoded.source) {
+        case '1d':
+          bcscSerialRef.current = decoded.serial
           break
-        case DecodedCodeKind.BCServicesComboCardCardBarcode:
+        case 'pdf417':
           // Use the serial from the 1D barcode for safety (ie: Alberta DL + appended health number)
-          birthDateRef.current = decoded.birthDate
-          break
-        case DecodedCodeKind.DriversLicenseBarcode:
-          birthDateRef.current = decoded.birthDate
+          birthDateRef.current = toDriversLicenseMetadata(decoded.card).birthDate
           break
       }
     }

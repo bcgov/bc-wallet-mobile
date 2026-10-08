@@ -17,7 +17,7 @@ import { canInjectCardBarcodes, injectCode39 } from '../../../src/helpers/camera
  * green evidence-capture scan says nothing about it.
  *
  * A digits-only code is the right payload: it decodes cleanly yet matches no BCSC serial shape
- * (`letters then digits`) and no AAMVA licence, so every decoder declines it and the app treats the
+ * (`letters then digits`) and no AAMVA licence, so the decoder declines it and the app treats the
  * scan as "this is not a BC Services Card" — routing to the two-government-ID flow. That outcome is
  * stable whether or not the app later stops reacting to value-less partial detections, which a real
  * card's barcodes would trip first.
@@ -30,7 +30,7 @@ import { canInjectCardBarcodes, injectCode39 } from '../../../src/helpers/camera
  */
 
 /**
- * Digits only — no letter prefix, so it fails `isBCSCSerial` and is not a serial; not AAMVA either.
+ * Digits only — no letter prefix, so it fails `parseLooseSerial` and is not a serial; not AAMVA either.
  * Decodable on purpose: an UNdecodable code proves only that something was detected.
  */
 const NON_SERIAL_BARCODE = '123456789'

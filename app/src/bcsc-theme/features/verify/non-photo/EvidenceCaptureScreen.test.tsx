@@ -1,5 +1,5 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { DriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { isAxiosAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
