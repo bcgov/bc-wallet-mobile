@@ -1,5 +1,5 @@
 import { BarcodePayload } from 'react-native-bcsc-core'
-import { DriversLicenseMetadata } from './decoder-strategy/DecoderStrategy'
+import { DriversLicenseMetadata } from './card-barcode-decoder'
 
 export const buildBarcodePayload = (
   bcscSerial: string | null,
