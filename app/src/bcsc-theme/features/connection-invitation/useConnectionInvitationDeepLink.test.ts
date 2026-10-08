@@ -15,12 +15,11 @@ const mockAgent = {
 }
 const mockAgentState: { agent: unknown; loading: boolean } = { agent: null, loading: true }
 let mockService: ConnectionInvitationService
-let mockOnSuccess: (oobRecordId: string) => void
 let mockStrategyLabel: string | undefined
-// handle resolves with the OOB record id, which the real strategy reports through its onSuccess callback
 const mockStrategy = {
   matches: jest.fn(),
-  handle: async (uri: string) => mockOnSuccess(await mockHandle(uri)),
+  handle: jest.fn(),
+  handleOobRecordId: (uri: string) => mockHandle(uri),
 }
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
@@ -39,8 +38,7 @@ jest.mock('@credo-ts/didcomm', () => ({
 jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({ useBCSCAgent: () => mockAgentState }))
 jest.mock('./ConnectionInvitationServiceContext', () => ({ useConnectionInvitationService: () => mockService }))
 jest.mock('../qr-core/qr-code-strategies/useDidCommOobQRCodeStrategy', () => ({
-  useDidCommOobQRCodeStrategy: (onSuccess: (oobRecordId: string) => void, label?: string) => {
-    mockOnSuccess = onSuccess
+  useDidCommOobQRCodeStrategy: (_onSuccess: unknown, label?: string) => {
     mockStrategyLabel = label
     return mockStrategy
   },

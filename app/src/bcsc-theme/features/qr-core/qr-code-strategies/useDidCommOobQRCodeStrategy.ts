@@ -16,6 +16,11 @@ import { QRCodeStrategy } from '../useQRScanner'
 // Aries-standard goal code for mediator invitations; checked inline so we only parse the invitation once.
 const MEDIATOR_GOAL_CODE = 'aries.vc.mediate'
 
+// Extend the type to include the handleOobRecordId function (still satisfies QRCodeStrategy)
+type DidCommOobQRCodeStrategy = QRCodeStrategy & {
+  handleOobRecordId: (uri: string) => Promise<string>
+}
+
 /**
  * Creates a QRCodeStrategy for DIDComm out-of-band invitations. Calls onSuccess with the OOB record id.
  */
@@ -25,12 +30,12 @@ export const useDidCommOobQRCodeStrategy = (
    * @param oobRecordId The ID of the out-of-band record created or reused.
    * @returns void
    */
-  onSuccess: (oobRecordId: string) => void,
+  onSuccess?: (oobRecordId: string) => void,
   /**
    * Optional label to use for the connection; if not provided, the wallet's nickname will be used.
    */
   invitationLabel?: string
-): QRCodeStrategy => {
+): DidCommOobQRCodeStrategy => {
   const { t } = useTranslation()
   const { waitForAgent } = useBCSCAgent()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -47,8 +52,8 @@ export const useDidCommOobQRCodeStrategy = (
     )
   }, [])
 
-  const handle = useCallback(
-    async (uri: string): Promise<void> => {
+  const handleOobRecordId = useCallback(
+    async (uri: string): Promise<string> => {
       // agent may still be booting, so wait for it before proceeding
       const agent = await waitForAgent()
 
@@ -77,18 +82,25 @@ export const useDidCommOobQRCodeStrategy = (
       const existing = await agent.modules.didcomm.oob.findByReceivedInvitationId(invitation.id)
       if (existing) {
         logger.info(`[useDidCommOobQRCodeStrategy] reusing existing OOB record ${existing.id}`)
-        onSuccess(existing.id)
-        return
+        return existing.id
       }
 
       const { outOfBandRecord } = await agent.modules.didcomm.oob.receiveInvitation(invitation, { label })
 
-      onSuccess(outOfBandRecord.id)
+      return outOfBandRecord.id
     },
-    [waitForAgent, logger, label, onSuccess, t]
+    [waitForAgent, logger, label, t]
   )
 
-  return useMemo(() => ({ matches, handle }), [matches, handle])
+  const handle = useCallback(
+    async (uri: string): Promise<void> => {
+      const recordId = await handleOobRecordId(uri)
+      onSuccess?.(recordId)
+    },
+    [handleOobRecordId, onSuccess]
+  )
+
+  return useMemo(() => ({ matches, handle, handleOobRecordId }), [matches, handle, handleOobRecordId])
 }
 
 /**

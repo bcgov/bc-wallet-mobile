@@ -192,6 +192,31 @@ describe('useDidCommOobQRCodeStrategy', () => {
       expect(onSuccess).toHaveBeenCalledWith('rec-existing')
     })
 
+    it('handleOobRecordId returns the new record id without calling onSuccess', async () => {
+      const { agent } = makeAgent({ recordId: 'rec-42' })
+      useAgent(agent)
+
+      await expect(setup().handleOobRecordId(OOB_URI)).resolves.toBe('rec-42')
+      expect(onSuccess).not.toHaveBeenCalled()
+    })
+
+    it('handleOobRecordId returns the existing record id without calling onSuccess', async () => {
+      const { agent, spies } = makeAgent({ existingRecordId: 'rec-existing' })
+      useAgent(agent)
+
+      await expect(setup().handleOobRecordId(OOB_URI)).resolves.toBe('rec-existing')
+      expect(spies.receiveInvitation).not.toHaveBeenCalled()
+      expect(onSuccess).not.toHaveBeenCalled()
+    })
+
+    it('handle does not throw when onSuccess is omitted', async () => {
+      const { agent } = makeAgent({ recordId: 'rec-1' })
+      useAgent(agent)
+
+      const { result } = renderHook(() => useDidCommOobQRCodeStrategy())
+      await expect(result.current.handle(OOB_URI)).resolves.toBeUndefined()
+    })
+
     it('propagates receiveInvitation errors without calling onSuccess', async () => {
       const { agent, spies } = makeAgent()
       spies.receiveInvitation.mockRejectedValue(new Error('receive failed'))

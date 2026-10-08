@@ -3,7 +3,7 @@ import { TOKENS, useServices } from '@bifold/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Toast from 'react-native-toast-message'
 import { BCSCMainStackParams, BCSCScreens } from '../../types/navigators'
@@ -25,14 +25,8 @@ export const useConnectionInvitationDeepLink = (): void => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null)
-  // Holds the record id reported by the strategy for the run currently in flight.
-  const foundRecordIdRef = useRef<string | null>(null)
 
-  const onConnectionFound = useCallback((oobRecordId: string) => {
-    foundRecordIdRef.current = oobRecordId
-  }, [])
-
-  const didCommOobStrategy = useDidCommOobQRCodeStrategy(onConnectionFound, 'didcomm-oob-invitation')
+  const didCommOobStrategy = useDidCommOobQRCodeStrategy(undefined, 'didcomm-oob-invitation')
 
   useEffect(() => service.onInvitation(({ url }) => setInvitationUrl(url)), [service])
 
@@ -44,7 +38,6 @@ export const useConnectionInvitationDeepLink = (): void => {
 
     // Owned by this run, so a newer run can never un-cancel it.
     let cancelled = false
-    foundRecordIdRef.current = null
 
     const accept = async () => {
       // Gating on 'ready' is necessary but not sufficient on cold start: the
@@ -75,14 +68,16 @@ export const useConnectionInvitationDeepLink = (): void => {
       }
 
       try {
-        await didCommOobStrategy.handle(invitationUrl)
+        const foundRecordId = await didCommOobStrategy.handleOobRecordId(invitationUrl)
+
         if (cancelled) {
           return
         }
+
         // Only clear our own URL; a newer invitation may already be queued.
         setInvitationUrl((current) => (current === invitationUrl ? null : current))
-        if (foundRecordIdRef.current) {
-          navigation.navigate(BCSCScreens.ConnectionLoading, { oobRecordId: foundRecordIdRef.current })
+        if (foundRecordId) {
+          navigation.navigate(BCSCScreens.ConnectionLoading, { oobRecordId: foundRecordId })
         }
       } catch (err) {
         if (cancelled) {

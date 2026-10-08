@@ -66,7 +66,7 @@ describe('usePairingCodeQRCodeStrategy', () => {
   })
 
   it('throws an unrecognized error without calling onSuccess when no code can be extracted', async () => {
-    await expect(setup().handle('https://www.gov.bc.ca')).rejects.toThrow('BCSC.Scan.UnrecognizedQR')
+    expect(() => setup().handle('https://www.gov.bc.ca')).toThrow('BCSC.Scan.UnrecognizedQR')
 
     expect(onSuccess).not.toHaveBeenCalled()
   })
