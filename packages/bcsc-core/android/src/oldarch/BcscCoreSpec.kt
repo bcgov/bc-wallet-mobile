@@ -242,6 +242,8 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun openKeyboardSelector(promise: Promise)
 
+    abstract fun isBluetoothAudioConnected(promise: Promise)
+
     abstract fun getAllKeysWithPublicInfo(promise: Promise)
 
     abstract fun setActiveKeyAlias(

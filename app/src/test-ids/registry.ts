@@ -547,6 +547,12 @@ export const TestIds = {
       provinceOptionBC: 'province-option-BC',
       continue: 'ResidentialAddressContinue',
     },
+    /**
+     * `BluetoothDisclosure` — the pre-pairing primer. `continue` is the only control
+     */
+    bluetoothDisclosure: {
+      continue: 'Continue',
+    },
   },
 
   main: {

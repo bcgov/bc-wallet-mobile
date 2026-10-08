@@ -36,6 +36,7 @@ import { ProofRequestExpirationScreen } from '../features/settings/ProofRequestE
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
+import { BluetoothDisclosure } from '../features/verify/BluetoothDisclosure'
 import DeviceAuthorizationErrorScreen from '../features/verify/DeviceAuthorizationErrorScreen'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
@@ -439,6 +440,11 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       <Stack.Screen
         name={BCSCScreens.StartCall}
         component={StartCallScreen}
+        options={{ header: createProgressHeader(5, 60) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.BluetoothDisclosure}
+        component={BluetoothDisclosure}
         options={{ header: createProgressHeader(5, 60) }}
       />
       <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
