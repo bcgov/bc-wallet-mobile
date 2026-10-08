@@ -24,6 +24,7 @@ import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ChallengeSource } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { usePairingService } from '../pairing'
 import { LocalState, useServiceLoginState } from './hooks/useServiceLoginState'
@@ -361,7 +362,10 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
 
     try {
-      const client = await pairing.loginByPairingCode(code, fromAppSwitch ? 'local_app_switch' : 'push_notification')
+      const client = await pairing.loginByPairingCode(
+        code,
+        fromAppSwitch ? ChallengeSource.LocalAppSwitch : ChallengeSource.PushNotification
+      )
 
       navigation.navigate(BCSCScreens.PairingConfirmation, {
         serviceId: client.client_ref_id,

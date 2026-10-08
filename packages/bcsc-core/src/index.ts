@@ -525,11 +525,12 @@ export const getRefreshTokenRequestBody = async (
 };
 
 /** IAS `challenge_source` claim values; stored with the login transaction for Support Tools reporting. */
-export type ChallengeSource =
-  | 'local_app_switch'
-  | 'push_notification'
-  | 'remote_pairing_code'
-  | 'remote_pairing_qr_code';
+export enum ChallengeSource {
+  LocalAppSwitch = 'local_app_switch',
+  PushNotification = 'push_notification',
+  RemotePairingCode = 'remote_pairing_code',
+  RemotePairingQrCode = 'remote_pairing_qr_code',
+}
 
 /**
  * Signs a given pairing code.

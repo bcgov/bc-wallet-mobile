@@ -14,6 +14,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert, Linking } from 'react-native'
+import { ChallengeSource } from 'react-native-bcsc-core'
 import { ServiceLoginScreen } from './ServiceLoginScreen'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
@@ -353,8 +354,8 @@ describe('ServiceLogin', () => {
     })
 
     it.each([
-      { fromAppSwitch: true, expected: 'local_app_switch' },
-      { fromAppSwitch: undefined, expected: 'push_notification' },
+      { fromAppSwitch: true, expected: ChallengeSource.LocalAppSwitch },
+      { fromAppSwitch: undefined, expected: ChallengeSource.PushNotification },
     ])('reports $expected when fromAppSwitch is $fromAppSwitch', async ({ fromAppSwitch, expected }) => {
       const mockLoginByPairingCode = jest.fn().mockResolvedValue({ client_ref_id: 'test-client', client_name: 'Test' })
       const tree = renderWithPairingCode(mockLoginByPairingCode, { loginServerErrorAlert: jest.fn() }, fromAppSwitch)

@@ -12,6 +12,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, View } from 'react-native'
+import { ChallengeSource } from 'react-native-bcsc-core'
 
 const ManualPairing: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
@@ -36,7 +37,7 @@ const ManualPairing: React.FC = () => {
       try {
         logger.info('Submitting pairing code.')
         // QR-prefilled codes report remote_pairing_code, as v3 did
-        const serviceClient = await pairing.loginByPairingCode(pairingCode, 'remote_pairing_code')
+        const serviceClient = await pairing.loginByPairingCode(pairingCode, ChallengeSource.RemotePairingCode)
 
         logger.info('Pairing code submitted successfully.')
 

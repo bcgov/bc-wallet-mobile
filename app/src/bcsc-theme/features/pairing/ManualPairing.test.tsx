@@ -6,6 +6,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert } from 'react-native'
+import { ChallengeSource } from 'react-native-bcsc-core'
 import ManualPairing from './ManualPairing'
 
 const mockLoginByPairingCode = jest.fn()
@@ -97,7 +98,7 @@ describe('ManualPairing', () => {
       fireEvent.changeText(codeInput, 'ABCDEF')
 
       await waitFor(() => {
-        expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF', 'remote_pairing_code')
+        expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF', ChallengeSource.RemotePairingCode)
       })
     })
 
@@ -112,7 +113,7 @@ describe('ManualPairing', () => {
       fireEvent.changeText(codeInput, 'abcdef')
 
       await waitFor(() => {
-        expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF', 'remote_pairing_code')
+        expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF', ChallengeSource.RemotePairingCode)
       })
     })
 
@@ -164,7 +165,7 @@ describe('ManualPairing', () => {
       renderScreen()
 
       await waitFor(() => {
-        expect(mockLoginByPairingCode).toHaveBeenCalledWith('SKGAZZ', 'remote_pairing_code')
+        expect(mockLoginByPairingCode).toHaveBeenCalledWith('SKGAZZ', ChallengeSource.RemotePairingCode)
       })
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
         serviceId: 'ref-456',
