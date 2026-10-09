@@ -228,6 +228,26 @@ describe('NavigationContainerContext', () => {
         ])
       })
 
+      it('retains a full three-pass verification flow, including its entry point, without dropping anything', () => {
+        // Entry point plus three 7-screen passes is 22 entries: over the old cap of 15, well under the current one
+        capturedOnStateChange?.(stack(['AccountLanding']))
+
+        for (let pass = 0; pass < 3; pass++) {
+          capturedOnStateChange?.(stack(['AccountLanding', 'VO']))
+          capturedOnStateChange?.(stack(['AccountLanding', 'VO', 'Tips']))
+          capturedOnStateChange?.(stack(['AccountLanding', 'VO', 'Tips', 'Capture']))
+          capturedOnStateChange?.(stack(['AccountLanding', 'VO', 'Tips', 'Capture', 'Confirmation']))
+          capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall']))
+          capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall', 'LiveCall']))
+          capturedOnStateChange?.(stack(['VO', 'Incomplete']))
+        }
+
+        expect(MAX_VISITED_SCREENS).toBe(50)
+        expect(NAVIGATION_TRAIL.screens).toHaveLength(22)
+        expect(NAVIGATION_TRAIL.screens[0].name).toBe('AccountLanding')
+        expect(NAVIGATION_TRAIL.droppedCount).toBe(0)
+      })
+
       it('marks only the second Verify Options as back when the issue flow is replayed', () => {
         const attempt = () => {
           capturedOnStateChange?.(stack(['AccountLanding', 'VO']))
