@@ -40,32 +40,25 @@ export const getBaseScreenName = (screen: BCSCScreens | string): string => {
   return screen
 }
 
+type NavigationRoute = NavigationState['routes'][number]
+
+// A route only has a navigable nested state once its child navigator has been visited (ie: not a never-opened TabStack)
+const getNestedState = (route: NavigationRoute): NavigationState | undefined =>
+  route.state && route.state.index !== undefined && route.state.routes ? (route.state as NavigationState) : undefined
+
+const getRouteLeafName = (route: NavigationRoute): string => {
+  const nested = getNestedState(route)
+
+  return nested ? getCurrentStateScreenName(nested) : route.name
+}
+
 /**
  * Gets the current screen name from the navigation state, accounting for nested navigators.
  *
  * @param state - The navigation state object.
  * @returns The name of the current screen.
  */
-export const getCurrentStateScreenName = (state: NavigationState): string => {
-  const currentRoute = state.routes[state.index]
-
-  if (!currentRoute.state || currentRoute.state.index === undefined || !currentRoute.state.routes) {
-    // If there is no nested state (ie: TabStack), return the current route name
-    return currentRoute.name
-  }
-
-  return getCurrentStateScreenName(currentRoute.state as NavigationState)
-}
-
-const getRouteLeafName = (route: NavigationState['routes'][number]): string => {
-  const nested = route.state
-
-  if (!nested || nested.index === undefined || !nested.routes) {
-    return route.name
-  }
-
-  return getCurrentStateScreenName(nested as NavigationState)
-}
+export const getCurrentStateScreenName = (state: NavigationState): string => getRouteLeafName(state.routes[state.index])
 
 /**
  * Gets the raw (stack-prefixed) names of screens beneath the focused one in every stack on the focused path.
@@ -79,7 +72,7 @@ export const getRouteNamesBelowFocus = (state: NavigationState): string[] => {
   let current: NavigationState | undefined = state
 
   while (current) {
-    const focusedRoute: NavigationState['routes'][number] = current.routes[current.index]
+    const focusedRoute: NavigationRoute = current.routes[current.index]
 
     if (current.type === 'stack') {
       for (const route of current.routes.slice(0, current.index)) {
@@ -87,8 +80,7 @@ export const getRouteNamesBelowFocus = (state: NavigationState): string[] => {
       }
     }
 
-    const nested = focusedRoute.state
-    current = nested && nested.index !== undefined && nested.routes ? (nested as NavigationState) : undefined
+    current = getNestedState(focusedRoute)
   }
 
   return names
@@ -161,12 +153,14 @@ const renderTokens = (screens: VisitedScreen[]): string[] =>
  * @returns The formatted trail.
  */
 export const formatNavigationTrail = (screens: VisitedScreen[], droppedCount: number): string => {
-  if (droppedCount === 0) {
-    return renderTokens(screens).join(' > ')
+  if (screens.length === 0) {
+    return ''
   }
 
-  // The rest is collapsed separately so a block never spans the gap
-  return [renderScreen(screens[0]), `(${droppedCount} more)`, ...renderTokens(screens.slice(1))].join(' > ')
+  // The entry point is always shown on its own, and the rest is collapsed separately so no block spans it or the gap
+  const gap = droppedCount > 0 ? [`(${droppedCount} more)`] : []
+
+  return [renderScreen(screens[0]), ...gap, ...renderTokens(screens.slice(1))].join(' > ')
 }
 
 /**
