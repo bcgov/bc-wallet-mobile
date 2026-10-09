@@ -1,6 +1,5 @@
 import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
 import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import WelcomeIllustration from '@assets/img/welcome_phone.svg'
@@ -16,13 +15,10 @@ interface OnboardingIntroScreenProps {
    * screen (see the respective navigators).
    */
   onContinue?: () => void
-  /** Fired when the hidden developer-menu trigger activates (tap the illustration). */
-  onActivateDeveloper?: () => void
 }
 
 /**
- * Welcome/intro screen shown before the privacy/terms/PIN flow. Hosts the hidden developer-menu
- * trigger (tap the illustration) so dev/QA can reach the developer (IAS environment) menu.
+ * Welcome/intro screen shown before the privacy/terms/PIN flow.
  *
  * It appears in two navigators: as the first screen of OnboardingStack for new users, and once to
  * every already-onboarded user on launch via AuthStack's AuthIntro route (announcing the app
@@ -30,7 +26,7 @@ interface OnboardingIntroScreenProps {
  *
  * @returns {*} {React.ReactElement} The OnboardingIntroScreen component.
  */
-export const OnboardingIntroScreen = ({ onContinue, onActivateDeveloper }: OnboardingIntroScreenProps) => {
+export const OnboardingIntroScreen = ({ onContinue }: OnboardingIntroScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
@@ -69,11 +65,9 @@ export const OnboardingIntroScreen = ({ onContinue, onActivateDeveloper }: Onboa
         padding: Spacing.lg,
       }}
     >
-      <DeveloperModeTrigger onActivate={() => onActivateDeveloper?.()}>
-        <View style={styles.image}>
-          <WelcomeIllustration width={200} height={187} />
-        </View>
-      </DeveloperModeTrigger>
+      <View style={styles.image}>
+        <WelcomeIllustration width={200} height={187} />
+      </View>
       <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: ColorPalette.brand.primary }}>
         {t('BCSC.Onboarding.IntroTitle')}
       </ThemedText>
