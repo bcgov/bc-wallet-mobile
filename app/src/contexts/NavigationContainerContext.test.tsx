@@ -233,11 +233,11 @@ describe('NavigationContainerContext', () => {
           capturedOnStateChange?.(stack(['AccountLanding', 'VO']))
           capturedOnStateChange?.(stack(['AccountLanding', 'VO', 'Tips']))
           capturedOnStateChange?.(stack(['AccountLanding', 'VO', 'Tips', 'Capture']))
-          // PhotoReview resets to a stack ending on the call-progress screen
-          capturedOnStateChange?.(stack(['VO', 'Tips', 'Confirmation']))
+          capturedOnStateChange?.(stack(['AccountLanding', 'VO', 'Tips', 'Capture', 'Confirmation']))
+          // PhotoReview resets to [VO, Tips, StartCall]
           capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall']))
-          // LiveCall resets to [VO, Incomplete]
           capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall', 'LiveCall']))
+          // LiveCall resets to [VO, Incomplete]
           capturedOnStateChange?.(stack(['VO', 'Incomplete']))
         }
 
@@ -246,7 +246,7 @@ describe('NavigationContainerContext', () => {
         capturedOnStateChange?.(stack(['VO']))
         capturedOnStateChange?.(stack(['VO', 'Tips']))
         capturedOnStateChange?.(stack(['VO', 'Tips', 'Capture']))
-        capturedOnStateChange?.(stack(['VO', 'Tips', 'Confirmation']))
+        capturedOnStateChange?.(stack(['VO', 'Tips', 'Capture', 'Confirmation']))
         capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall']))
         capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall', 'LiveCall']))
         capturedOnStateChange?.(stack(['VO', 'Incomplete']))

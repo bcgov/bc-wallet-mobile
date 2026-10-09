@@ -68,9 +68,8 @@ const getRouteLeafName = (route: NavigationState['routes'][number]): string => {
 }
 
 /**
- * Gets the raw (stack-prefixed) names of the screens sitting beneath the focused screen, across
- * every stack navigator on the focused path. Tab and drawer levels contribute nothing because
- * switching tabs is a sideways move, not a return.
+ * Gets the raw (stack-prefixed) names of screens beneath the focused one in every stack on the focused path.
+ * Tab and drawer levels add nothing: switching tabs is a sideways move, not a return.
  *
  * @param state - The navigation state object.
  * @returns The route names beneath the focused screen, outermost stack first.
@@ -110,9 +109,8 @@ const hasSameNames = (screens: VisitedScreen[], a: number, b: number, length: nu
 }
 
 /**
- * Collapses adjacent repeated runs of screens (matched by name, shortest run first, left to right).
- * A block carries the entries of its last pass, so `isBack` reflects the most recent attempt.
- * Nested repeats inside a block are listed flat.
+ * Collapses adjacent repeated runs by name, shortest first; a block keeps its last pass's `isBack` flags.
+ * Not recursive: an inner repeat starting at the same position hides an outer repeat around it.
  */
 const collapseRepeats = (screens: VisitedScreen[]): Array<VisitedScreen | TrailBlock> => {
   const tokens: Array<VisitedScreen | TrailBlock> = []
@@ -155,9 +153,8 @@ const renderTokens = (screens: VisitedScreen[]): string[] =>
   )
 
 /**
- * Formats the recorded trail as a readable string: repeated flows collapse into `[a > b] xN`,
- * returning to an earlier screen reads `back to X`, and `(N more)` marks entries evicted after the
- * entry point. Text is plain English diagnostic output for the problem-report dashboard, not UI.
+ * Formats the trail: repeats collapse to `[a > b] xN`, returns read `back to X`, `(N more)` marks evicted entries.
+ * Diagnostic text for the problem-report dashboard, not UI, so it is not localized.
  *
  * @param screens - The recorded screens, oldest first; index 0 is the session entry point.
  * @param droppedCount - How many entries were evicted after the entry point.
@@ -173,12 +170,8 @@ export const formatNavigationTrail = (screens: VisitedScreen[], droppedCount: nu
 }
 
 /**
- * Formats a session's visited-screen history into a breadcrumb trail for error reports.
- *
- * A live NavigationState snapshot can't reconstruct "where the user came from" — React Navigation
- * prunes popped routes out of `state.routes` on back-navigation, so the trail has to be recorded
- * as navigation happens (see `NAVIGATION_TRAIL` in NavigationContainerContext) rather than
- * derived here from a single point-in-time state.
+ * Formats the session's recorded `NAVIGATION_TRAIL` into a breadcrumb trail for error reports.
+ * Recorded as navigation happens because React Navigation prunes popped routes from a live state snapshot.
  *
  * @returns A string representing the navigation breadcrumbs.
  */
