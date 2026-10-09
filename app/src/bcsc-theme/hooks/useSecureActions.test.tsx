@@ -931,6 +931,79 @@ describe('useSecureActions', () => {
     })
   })
 
+  // A failed unlock must leave nothing behind, so tapping Unlock again behaves like a first attempt.
+  describe('handleSuccessfulAuth retry after a hydration failure', () => {
+    const readError = () => Object.assign(new Error('native E_GET_ACCOUNT_ERROR'), { code: 'E_GET_ACCOUNT_ERROR' })
+    const mockGetTokensForRefreshToken = jest.fn()
+
+    beforeEach(() => {
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+      jest.mocked(getAccount).mockResolvedValue({ id: 'a', issuer: 'https://i', clientID: 'c' } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest
+        .mocked(getToken)
+        .mockImplementation(async (type: any) =>
+          type === TokenType.Refresh ? ({ id: 'r', type, token: 'stored-refresh', created: 0 } as any) : null
+        )
+      jest.mocked(setToken).mockResolvedValue(true)
+
+      mockGetTokensForRefreshToken.mockReset()
+      mockGetTokensForRefreshToken.mockResolvedValue({ refresh_token: 'fresh-refresh', access_token: 'fresh-access' })
+      jest.mocked(useBCSCApiClientModule.useBCSCApiClientState).mockReturnValue({
+        client: { getTokensForRefreshToken: mockGetTokensForRefreshToken } as any,
+        isClientReady: true,
+        error: undefined,
+      } as any)
+    })
+
+    it('leaves the store, keychain and server untouched when a native read fails', async () => {
+      jest.mocked(getAccount).mockRejectedValueOnce(readError())
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await expect(result.current.handleSuccessfulAuth('wallet-key')).rejects.toMatchObject({
+          appEvent: AppEventCode.NATIVE_STORAGE_READ_FAILED,
+        })
+      })
+
+      // No partial hydration, no wallet key, no SUCCESSFUL_AUTH: the user stays fully locked
+      expect(mockDispatch).not.toHaveBeenCalled()
+      expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
+      expect(setToken).not.toHaveBeenCalled()
+      expect(setAccount).not.toHaveBeenCalled()
+    })
+
+    it('unlocks normally when the user retries after a failed hydration', async () => {
+      jest.mocked(getAccount).mockRejectedValueOnce(readError())
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await expect(result.current.handleSuccessfulAuth('wallet-key')).rejects.toBeDefined()
+      })
+      await act(async () => {
+        await expect(result.current.handleSuccessfulAuth('wallet-key')).resolves.toBeUndefined()
+      })
+
+      // The retry re-reads storage from scratch and completes the full unlock sequence, in order
+      const actionTypes = mockDispatch.mock.calls.map(([action]) => action.type)
+      const hydrateIndex = actionTypes.indexOf(BCDispatchAction.HYDRATE_SECURE_STATE)
+      expect(hydrateIndex).toBeGreaterThan(-1)
+      expect(actionTypes.slice(hydrateIndex)).toEqual([
+        BCDispatchAction.HYDRATE_SECURE_STATE,
+        BCDispatchAction.UPDATE_SECURE_WALLET_KEY,
+        BCDispatchAction.SUCCESSFUL_AUTH,
+      ])
+      expect(getAccount).toHaveBeenCalledTimes(2)
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('stored-refresh')
+      expect(captureHydrateField('isHydrated')).toBe(true)
+      expect(captureHydrateField('refreshToken')).toBe('fresh-refresh')
+    })
+  })
+
   describe('updateVerified', () => {
     // Short-circuit after the dispatches; the credential-persistence branch is covered elsewhere.
     beforeEach(() => {
