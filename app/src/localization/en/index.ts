@@ -1213,6 +1213,12 @@ const translation = {
       "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID.",
       "ButtonText": "Continue"
     },
+    "AlreadyVerified": {
+      "Title": "You're already set!",
+      "Description": "The QR code scanned is for transferring an existing account to a new device. This device is already verified and ready to use.",
+      "ExtraText": "To access a website or service, scan the QR code shown on that website or service.",
+      "ButtonText": "Continue"
+    },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
       "Label": "Details from Service BC agent: \n{{reason}}",

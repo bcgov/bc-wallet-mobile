@@ -1156,6 +1156,12 @@ const translation = {
       "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID. (PT-BR)",
       "ButtonText": "Continue (PT-BR)"
     },
+    "AlreadyVerified": {
+      "Title": "You're already set! (PT-BR)",
+      "Description": "The QR code scanned is for transferring an existing account to a new device. This device is already verified and ready to use. (PT-BR)",
+      "ExtraText": "To access a website or service, scan the QR code shown on that website or service. (PT-BR)",
+      "ButtonText": "Continue (PT-BR)"
+    },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified (PT-BR)",
       "Label": "Details from Service BC agent: \n{{reason}} (PT-BR)",

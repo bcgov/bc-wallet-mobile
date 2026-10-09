@@ -1868,13 +1868,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/react-native-attestation@npm:3.1.0":
-  version: 3.1.0
-  resolution: "@bifold/react-native-attestation@npm:3.1.0"
+"@bifold/react-native-attestation@npm:3.1.2":
+  version: 3.1.2
+  resolution: "@bifold/react-native-attestation@npm:3.1.2"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/1379d4f5cbcf4d3a333d541c41842433a32097eee58e0cadabaca3491a664c5d422fbfd66da48e956ce6b66ac76f24699eaf2b561834c9d0d3d12cd5e82a18f3
+  checksum: 10c0/742fc56eb10344516876da43eb19fe181a6fdfbcc824d34a48c4a2e8940233da2196f19dfe78b85cab0e5a300c00910407c843fc3700f7b0c1ee35634d36564a
   languageName: node
   linkType: hard
 
@@ -7380,7 +7380,7 @@ __metadata:
     "@bifold/core": "npm:3.1.0"
     "@bifold/oca": "npm:3.1.0"
     "@bifold/react-hooks": "npm:3.1.0"
-    "@bifold/react-native-attestation": "npm:3.1.0"
+    "@bifold/react-native-attestation": "npm:3.1.2"
     "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.1.0#~/.yarn/patches/@bifold-remote-logs-npm-3.1.0-7e3e0ffb2c.patch"
     "@bifold/verifier": "npm:3.1.0"
     "@credo-ts/anoncreds": "npm:0.7.0"
@@ -7492,7 +7492,7 @@ __metadata:
     react-native-logs: "npm:~5.1.0"
     react-native-nitro-image: "npm:^0.15.2"
     react-native-nitro-modules: "npm:^0.37.0"
-    react-native-orientation-locker: "npm:~1.6.0"
+    react-native-orientation-locker: "patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch"
     react-native-permissions: "npm:~5.4.1"
     react-native-qrcode-svg: "npm:~6.2.0"
     react-native-reanimated: "npm:4.5.1"
@@ -15756,7 +15756,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-orientation-locker@npm:~1.6.0":
+"react-native-orientation-locker@npm:1.6.0":
   version: 1.6.0
   resolution: "react-native-orientation-locker@npm:1.6.0"
   peerDependencies:
@@ -15767,6 +15767,20 @@ __metadata:
     react-native-windows:
       optional: true
   checksum: 10c0/1c16a7d912043f2f7a7d97b071b14b3c1360b91d0dc8525a04025f915b52d7a66fe2dde1e9bdad62a94860f8dd5d905c8346fd25cadd3cfd476b9c3075995165
+  languageName: node
+  linkType: hard
+
+"react-native-orientation-locker@patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch":
+  version: 1.6.0
+  resolution: "react-native-orientation-locker@patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch::version=1.6.0&hash=ae69f6"
+  peerDependencies:
+    react: ">=16.13.1"
+    react-native: ">=0.63.2"
+    react-native-windows: ">=0.63.3"
+  peerDependenciesMeta:
+    react-native-windows:
+      optional: true
+  checksum: 10c0/89a0836640485dd3c0a154ca771a1465530221a2cbf445eb14c8c80cc5c4775aebea9772138e8325032f825f184959cc2df01992206ae94e707ebe2f665fb0d8
   languageName: node
   linkType: hard
 

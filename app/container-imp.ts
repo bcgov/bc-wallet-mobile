@@ -69,7 +69,7 @@ import PINExplainer from './src/screens/PINExplainer'
 import Preface from './src/screens/Preface'
 import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
-import { AttestationMonitor, allCredDefIds, noOpAttestationMonitor } from './src/services/attestation'
+import { AttestationMonitor, allCredDefIds } from './src/services/attestation'
 import { AutoCredentialMonitor } from './src/services/auto-credential'
 import { VersionCheckService } from './src/services/version'
 import {
@@ -119,11 +119,7 @@ export class AppContainer implements Container {
       shouldHandleProofRequestAutomatically: true,
     }
 
-    // Device attestation only runs on the BCWallet build target. BCSC builds
-    // can't produce an attestation blob our controller accepts, and their
-    // Person Credential flow bypasses attestation anyway.
-    const attestationMonitor =
-      Config.BUILD_TARGET === Mode.BCWallet ? new AttestationMonitor(this.logger, options) : noOpAttestationMonitor()
+    const attestationMonitor = new AttestationMonitor(this.logger, options)
     this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, attestationMonitor)
     this._container.registerInstance(
       TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,

@@ -11,6 +11,10 @@ import {
 import { credentialsMatchForProof } from '@utils/credentials'
 import { DeviceEventEmitter } from 'react-native'
 
+jest.mock('@/services/attestation', () => ({
+  isProofRequestingAttestation: jest.fn().mockResolvedValue(false),
+}))
+
 jest.mock('@utils/credentials', () => ({
   credentialsMatchForProof: jest.fn(),
 }))
@@ -98,9 +102,12 @@ const proofFormat = (credDefId: string) => ({
   },
 })
 
+const mockedIsProofRequestingAttestation = jest.requireMock('@/services/attestation')
+  .isProofRequestingAttestation as jest.Mock
+
 describe('AutoCredentialMonitor', () => {
   let agent: ReturnType<typeof createMockAgent>
-  let attestationMonitor: { start: jest.Mock; stop: jest.Mock }
+  let attestationMonitor: { start: jest.Mock; stop: jest.Mock; attemptAttestationForProof: jest.Mock }
   let emitSpy: jest.SpyInstance
 
   const buildMonitor = (rule = buildRule()) => {
@@ -115,7 +122,12 @@ describe('AutoCredentialMonitor', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     agent = createMockAgent()
-    attestationMonitor = { start: jest.fn(), stop: jest.fn() }
+    attestationMonitor = {
+      start: jest.fn(),
+      stop: jest.fn(),
+      attemptAttestationForProof: jest.fn().mockResolvedValue(false),
+    }
+    mockedIsProofRequestingAttestation.mockResolvedValue(false)
     emitSpy = jest.spyOn(DeviceEventEmitter, 'emit').mockImplementation(() => true)
   })
 
@@ -236,6 +248,53 @@ describe('AutoCredentialMonitor', () => {
         proofExchangeRecordId: 'issuer-proof',
         sendProblemReport: true,
       })
+    })
+
+    it('attempts attestation for an attestation proof and lets AttestationMonitor finish it', async () => {
+      mockedIsProofRequestingAttestation.mockResolvedValue(true)
+      attestationMonitor.attemptAttestationForProof.mockResolvedValue(true)
+      buildMonitor()
+      await triggerWorkflow()
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'attestation-proof', state: DidCommProofState.RequestReceived, connectionId: 'conn-1' },
+      })
+
+      expect(attestationMonitor.attemptAttestationForProof).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'attestation-proof' })
+      )
+      // restarted so its offer subscription can accept the attestation credential
+      expect(attestationMonitor.start).toHaveBeenCalled()
+      expect(agent.didcomm.proofs.declineRequest).not.toHaveBeenCalled()
+    })
+
+    it('declines with a problem report when attestation cannot be obtained', async () => {
+      mockedIsProofRequestingAttestation.mockResolvedValue(true)
+      attestationMonitor.attemptAttestationForProof.mockResolvedValue(false)
+      buildMonitor()
+      await triggerWorkflow()
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'attestation-proof', state: DidCommProofState.RequestReceived, connectionId: 'conn-1' },
+      })
+
+      expect(attestationMonitor.attemptAttestationForProof).toHaveBeenCalled()
+      expect(agent.didcomm.proofs.declineRequest).toHaveBeenCalledWith({
+        proofExchangeRecordId: 'attestation-proof',
+        sendProblemReport: true,
+      })
+    })
+
+    it('does not attempt attestation for proofs that are not requesting it', async () => {
+      buildMonitor()
+      await triggerWorkflow()
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'other-proof', state: DidCommProofState.RequestReceived, connectionId: 'conn-1' },
+      })
+
+      expect(attestationMonitor.attemptAttestationForProof).not.toHaveBeenCalled()
+      expect(agent.didcomm.proofs.declineRequest).toHaveBeenCalled()
     })
 
     it('ignores issuer proof requests on unrelated connections', async () => {
