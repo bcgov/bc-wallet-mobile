@@ -33,6 +33,11 @@ jest.mock('@/bcsc-theme/navigators/stack-utils', () => ({
   }),
   // Only matches the real helper for flat stacks; nested behaviour is covered in the .nested test
   getRouteNamesBelowFocus: jest.fn((state: any) => state.routes.slice(0, state.index).map((r: any) => r.name)),
+  isForwardPush: jest.fn((previous: any, next: any) => {
+    const beneath = next.routes[next.index - 1]
+
+    return beneath?.key !== undefined && beneath.key === previous.routes[previous.index].key
+  }),
 }))
 
 jest.mock('@bifold/core', () => ({
@@ -170,7 +175,10 @@ describe('NavigationContainerContext', () => {
     })
 
     describe('back navigation', () => {
-      const stack = (names: string[]) => ({ index: names.length - 1, routes: names.map((name) => ({ name })) })
+      const stack = (names: string[]) => ({
+        index: names.length - 1,
+        routes: names.map((name) => ({ name, key: name })),
+      })
       const isBackFlags = () => NAVIGATION_TRAIL.screens.map((screen) => screen.isBack)
 
       beforeEach(() => {

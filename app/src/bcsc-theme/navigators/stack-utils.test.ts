@@ -7,6 +7,7 @@ import {
   getCurrentStateScreenName,
   getNavigationBreadcrumbs,
   getRouteNamesBelowFocus,
+  isForwardPush,
 } from './stack-utils'
 
 const fresh = (name: string): VisitedScreen => ({ name, isBack: false })
@@ -226,6 +227,81 @@ describe('StackUtils', () => {
       const state = stackState([BCSCScreens.MainSettings, BCSCScreens.MainWebView])
 
       expect(getRouteNamesBelowFocus(state)).toEqual([`${BCSCStacks.Main} In App Settings`])
+    })
+  })
+
+  describe('isForwardPush', () => {
+    const keyed = (keys: string[], index = keys.length - 1, type = 'stack') =>
+      ({
+        type,
+        index,
+        routes: keys.map((key) => ({ name: key.split('#')[0], key })),
+      }) as unknown as NavigationState
+
+    it('is true for a plain push', () => {
+      expect(isForwardPush(keyed(['A#1']), keyed(['A#1', 'B#1']))).toBe(true)
+    })
+
+    it('is true when the pushed screen shares a name with one already beneath', () => {
+      expect(isForwardPush(keyed(['A#1', 'B#1']), keyed(['A#1', 'B#1', 'A#2']))).toBe(true)
+    })
+
+    it('is false going back', () => {
+      expect(isForwardPush(keyed(['A#1', 'B#1', 'C#1']), keyed(['A#1', 'B#1']))).toBe(false)
+    })
+
+    it('is false for a reset to an earlier step with new keys', () => {
+      expect(isForwardPush(keyed(['VO#1', 'Inc#1']), keyed(['VO#2']))).toBe(false)
+    })
+
+    it('is false for a reset onto a new, shallower screen', () => {
+      expect(isForwardPush(keyed(['VO#1', 'Tips#1', 'Call#1']), keyed(['VO#2', 'Inc#2']))).toBe(false)
+    })
+
+    it('is true for a push from inside a tab navigator onto the outer stack', () => {
+      const tab = (index: number) => ({
+        name: 'Tabs',
+        key: 'tabs',
+        state: {
+          type: 'tab',
+          index,
+          routes: [
+            { name: 'Home', key: 'home' },
+            { name: 'Wallet', key: 'wallet' },
+          ],
+        },
+      })
+      const previous = { type: 'stack', index: 0, routes: [tab(1)] } as unknown as NavigationState
+      const next = {
+        type: 'stack',
+        index: 1,
+        routes: [tab(1), { name: 'Settings', key: 'settings' }],
+      } as unknown as NavigationState
+
+      expect(isForwardPush(previous, next)).toBe(true)
+    })
+
+    it('is true for a push inside a nested stack and false for going back inside it', () => {
+      const nested = (keys: string[]) =>
+        ({
+          type: 'stack',
+          index: 0,
+          routes: [{ name: 'Outer', key: 'outer', state: keyed(keys) }],
+        }) as unknown as NavigationState
+
+      expect(isForwardPush(nested(['A#1']), nested(['A#1', 'A#2']))).toBe(true)
+      expect(isForwardPush(nested(['A#1', 'B#1']), nested(['A#1']))).toBe(false)
+    })
+
+    it('is false when routes have no keys', () => {
+      const unkeyed = (names: string[]) =>
+        ({
+          type: 'stack',
+          index: names.length - 1,
+          routes: names.map((name) => ({ name })),
+        }) as unknown as NavigationState
+
+      expect(isForwardPush(unkeyed(['A']), unkeyed(['A', 'B']))).toBe(false)
     })
   })
 
