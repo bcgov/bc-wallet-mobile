@@ -11,3 +11,9 @@ import moment from 'moment'
  */
 export const parseBirthdateToLocalDate = (value: string): Date =>
   moment(value, ['YYYY-MM-DD', 'YYYY/MM/DD', 'MMMM D, YYYY'], true).toDate()
+
+/**
+ * Format a birthdate as the `YYYY-MM-DD` string IAS expects, using the Date's LOCAL calendar day.
+ * Never use `toISOString()` here: it converts to UTC and shifts the day for non-UTC timezones.
+ */
+export const formatBirthdateForApi = (date: Date): string => moment(date).format('YYYY-MM-DD')
