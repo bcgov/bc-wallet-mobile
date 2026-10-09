@@ -39,7 +39,6 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
   const [navigationReady, setNavigationReady] = useState(false)
   const { NavigationTheme } = useTheme()
   const screenTransitionKeyRef = useRef<string>('')
-  const previousScreenRef = useRef<string | undefined>(undefined)
   const previousStateRef = useRef<NavigationState | undefined>(undefined)
 
   const navigationContext = useMemo(
@@ -62,11 +61,11 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
             return
           }
 
-          // Advance before any early exit so a state change that records nothing still moves the baseline
+          // Moves forward on every change, even ones that record nothing, so back detection compares adjacent states
           const previousState = previousStateRef.current
           previousStateRef.current = state
 
-          const previousScreenName = previousScreenRef.current
+          const previousScreenName = previousState && getBaseScreenName(getCurrentStateScreenName(previousState))
           const currentRouteName = getCurrentStateScreenName(state)
           const currentScreenName = getBaseScreenName(currentRouteName)
 
@@ -93,8 +92,6 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
               NAVIGATION_TRAIL.droppedCount += 1
             }
           }
-
-          previousScreenRef.current = currentScreenName
         }}
       >
         {children}
