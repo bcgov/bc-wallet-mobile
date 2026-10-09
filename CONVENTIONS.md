@@ -78,3 +78,14 @@ next mount.
 **Why:** every `<Camera>` mount creates a new capture session, and on iOS a session given an earlier
 session's outputs never starts or crashes the app. Keeping one camera mounted and pausing it with
 `isActive` instead was tried and rejected: on Android the paused preview failed to restart.
+
+## Buttons: loading spinner follows the label
+
+The spinner inside a `Button` takes the button's resolved label colour (including the disabled
+colour), is 24px, and sits left of the label with `Spacing.sm` between them. It comes from Bifold's
+`ButtonLoading` (`animatedComponents.ButtonLoading`) rendered as a `Button` child; don't hand-roll a
+spinner inside a button.
+
+**Why:** `ButtonLoading` used a fixed grey, which was unreadable on a blue Primary button. Bifold 3.1.3
+lets `Button` hand its label colour to the spinner, so every button type and theme stays legible
+without per-screen colour props (#4743).
