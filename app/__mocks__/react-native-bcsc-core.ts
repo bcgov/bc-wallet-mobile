@@ -23,6 +23,14 @@ export enum BiometricType {
   OpticID = 'opticID',
 }
 
+/** IAS `challenge_source` claim values; stored with the login transaction for Support Tools reporting. */
+export enum ChallengeSource {
+  LocalAppSwitch = 'local_app_switch',
+  PushNotification = 'push_notification',
+  RemotePairingCode = 'remote_pairing_code',
+  RemotePairingQrCode = 'remote_pairing_qr_code',
+}
+
 export enum BCSCCardProcess {
   BCSCPhoto = 'IDIM L3 Remote BCSC Photo Identity Verification',
   BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',

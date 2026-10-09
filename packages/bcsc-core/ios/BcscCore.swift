@@ -5,13 +5,6 @@ import LocalAuthentication
 import React
 import UserNotifications
 
-enum ChallengeSource: String {
-  case local_app_switch
-  case push_notification
-  case remote_pairing_code
-  case notValid
-}
-
 enum DeviceInfoKeys {
   static let systemName = "system_name"
   static let deviceName = "device_name"
@@ -1165,6 +1158,7 @@ class BcscCore: NSObject {
 
   func signPairingCode(
     _ code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?,
+    challengeSource: String,
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
     let hasOtherAccounts = false
@@ -1182,7 +1176,7 @@ class BcscCore: NSObject {
       .claim(name: "iss", value: clientID)
       .claim(name: "iat", value: seconds)
       .claim(name: "challenge", value: code)
-      .claim(name: "challenge_source", value: ChallengeSource.remote_pairing_code.rawValue)
+      .claim(name: "challenge_source", value: challengeSource)
       .claim(name: "apns_token", value: actualDeviceToken)
 
     // Add device info claims using consolidated method

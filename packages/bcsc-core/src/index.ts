@@ -524,6 +524,14 @@ export const getRefreshTokenRequestBody = async (
   return BcscCore.getRefreshTokenRequestBody(issuer, clientID, refreshToken);
 };
 
+/** IAS `challenge_source` claim values; stored with the login transaction for Support Tools reporting. */
+export enum ChallengeSource {
+  LocalAppSwitch = 'local_app_switch',
+  PushNotification = 'push_notification',
+  RemotePairingCode = 'remote_pairing_code',
+  RemotePairingQrCode = 'remote_pairing_qr_code',
+}
+
 /**
  * Signs a given pairing code.
  * @param code The pairing code string to sign.
@@ -531,17 +539,18 @@ export const getRefreshTokenRequestBody = async (
  * @param clientID The client ID for the OAuth application.
  * @param fcmDeviceToken The FCM device token for push notifications.
  * @param deviceToken The APNS device token (iOS only).
- * @returns A promise that resolves to a string containing the signature,
- *          or null if an error occurs. (Currently returns a mocked signature).
+ * @param challengeSource How the login was initiated; sent as the assertion's `challenge_source` claim.
+ * @returns A promise that resolves to the signed assertion JWT, or null if an error occurs.
  */
 export const signPairingCode = async (
   code: string,
   issuer: string,
   clientID: string,
   fcmDeviceToken: string,
-  deviceToken: string | null
+  deviceToken: string | null,
+  challengeSource: ChallengeSource
 ): Promise<string | null> => {
-  return BcscCore.signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken);
+  return BcscCore.signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken, challengeSource);
 };
 
 /**

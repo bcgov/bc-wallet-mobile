@@ -12,6 +12,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, View } from 'react-native'
+import { ChallengeSource } from 'react-native-bcsc-core'
 
 const ManualPairing: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
@@ -27,7 +28,7 @@ const ManualPairing: React.FC = () => {
   const { isAvailable: isServerAvailable } = useServerStatus()
 
   const onSubmit = useCallback(
-    async (pairingCode: string) => {
+    async (pairingCode: string, challengeSource: ChallengeSource) => {
       // no-op if the server is unavailable
       if (!isServerAvailable) {
         return
@@ -35,7 +36,7 @@ const ManualPairing: React.FC = () => {
       const stopLoading = loadingScreen.startLoading()
       try {
         logger.info('Submitting pairing code.')
-        const serviceClient = await pairing.loginByPairingCode(pairingCode)
+        const serviceClient = await pairing.loginByPairingCode(pairingCode, challengeSource)
 
         logger.info('Pairing code submitted successfully.')
 
@@ -72,7 +73,8 @@ const ManualPairing: React.FC = () => {
     const pre = route.params?.pairingCode
     if (pre?.length === PAIRING_CODE_LENGTH) {
       setCode(pre)
-      onSubmit(pre)
+      // Only QRScanner sets this param, so a pre-populated code is a QR scan
+      onSubmit(pre, ChallengeSource.RemotePairingQrCode)
       tabNavigation.setParams({ pairingCode: undefined })
     }
   }, [route.params?.pairingCode, onSubmit, tabNavigation])
@@ -86,7 +88,7 @@ const ManualPairing: React.FC = () => {
 
       // Auto submit
       if (cleanCode.length === PAIRING_CODE_LENGTH) {
-        onSubmit(cleanCode)
+        onSubmit(cleanCode, ChallengeSource.RemotePairingCode)
       }
     },
     [onSubmit]

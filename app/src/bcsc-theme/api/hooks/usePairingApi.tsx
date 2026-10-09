@@ -4,7 +4,7 @@ import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
-import { signPairingCode } from 'react-native-bcsc-core'
+import { ChallengeSource, signPairingCode } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
@@ -26,16 +26,17 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
    * Logs in a user using a pairing code and returns the client metadata.
    *
    * @param {string} code - The pairing code to use for login.
+   * @param {ChallengeSource} challengeSource - How the login was initiated; reported to IAS in the assertion.
    * @returns {*} {Promise<PairingCodeLoginClientMetadata>} A promise that resolves to the client metadata.
    */
   const loginByPairingCode = useCallback(
-    async (code: string) => {
+    async (code: string, challengeSource: ChallengeSource) => {
       return withAccount<PairingCodeLoginClientMetadata>(async (account) => {
         const { issuer, clientID } = account
         const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
         let signedCode: string | null
         try {
-          signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken)
+          signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken, challengeSource)
         } catch (error) {
           return throwNativeBcscError(error)
         }

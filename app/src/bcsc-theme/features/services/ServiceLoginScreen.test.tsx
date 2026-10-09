@@ -14,6 +14,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert, Linking } from 'react-native'
+import { ChallengeSource } from 'react-native-bcsc-core'
 import { ServiceLoginScreen } from './ServiceLoginScreen'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
@@ -285,7 +286,11 @@ describe('ServiceLogin', () => {
   describe('onContinueWithPairingCode error handling', () => {
     const mockedUseApi = useApi as jest.MockedFunction<typeof useApi>
 
-    const renderWithPairingCode = (mockLoginByPairingCode: jest.Mock, mockAlerts: Record<string, jest.Mock>) => {
+    const renderWithPairingCode = (
+      mockLoginByPairingCode: jest.Mock,
+      mockAlerts: Record<string, jest.Mock>,
+      fromAppSwitch?: boolean
+    ) => {
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
       jest.spyOn(useServiceLoginStateModule, 'useServiceLoginState').mockReturnValue({
         state: { pairingCode: 'ABC123', serviceTitle: 'Test Service' },
@@ -302,6 +307,7 @@ describe('ServiceLogin', () => {
           pairingCode: 'ABC123',
           serviceTitle: 'Test Service',
           serviceClientId: 'test-client',
+          fromAppSwitch,
         },
       }
 
@@ -345,6 +351,18 @@ describe('ServiceLogin', () => {
       const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
       fireEvent.press(continueButton)
       await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+    })
+
+    it.each([
+      { fromAppSwitch: true, expected: ChallengeSource.LocalAppSwitch },
+      { fromAppSwitch: undefined, expected: ChallengeSource.PushNotification },
+    ])('reports $expected when fromAppSwitch is $fromAppSwitch', async ({ fromAppSwitch, expected }) => {
+      const mockLoginByPairingCode = jest.fn().mockResolvedValue({ client_ref_id: 'test-client', client_name: 'Test' })
+      const tree = renderWithPairingCode(mockLoginByPairingCode, { loginServerErrorAlert: jest.fn() }, fromAppSwitch)
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+
+      await waitFor(() => expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABC123', expected))
     })
 
     it('should ignore a second press while a call is in-flight', async () => {

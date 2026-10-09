@@ -1389,6 +1389,7 @@ class BcscCoreModule internal constructor(
         clientID: String,
         fcmDeviceToken: String,
         deviceToken: String?,
+        challengeSource: String,
         promise: Promise,
     ) {
         try {
@@ -1407,7 +1408,7 @@ class BcscCoreModule internal constructor(
                     .issuer(clientID)
                     .issueTime(Date())
                     .claim("challenge", code)
-                    .claim("challenge_source", "remote_pairing_code") // Assuming this enum value
+                    .claim("challenge_source", challengeSource)
                     .claim("apns_token", actualDeviceToken)
                     .claim("fcm_device_token", fcmDeviceToken)
                     // Add device information claims
