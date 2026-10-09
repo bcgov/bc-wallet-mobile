@@ -3383,24 +3383,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/anoncreds-react-native@npm:0.4.1-alpha-20260609124337":
-  version: 0.4.1-alpha-20260609124337
-  resolution: "@hyperledger/anoncreds-react-native@npm:0.4.1-alpha-20260609124337"
+"@hyperledger/anoncreds-react-native@npm:0.4.1":
+  version: 0.4.1
+  resolution: "@hyperledger/anoncreds-react-native@npm:0.4.1"
   dependencies:
-    "@hyperledger/anoncreds-shared": "npm:0.4.1-alpha-20260609124337"
+    "@hyperledger/anoncreds-shared": "npm:0.4.1"
   peerDependencies:
     react: ">= 16"
     react-native: ">= 0.71"
-  checksum: 10c0/6ebd1a60bdbbd2e60c58650fa59b4f8939a7c7ca6d12f064c3ad3218d9bc6842d4ca6ce0d9029144c5d9aa8330b89ebd7f435bc375d4c8c864c94c8005ae606c
+  checksum: 10c0/aedb39b31421fada7d62742dc71d9cfb24baa2899c003caff16a8575ea69ac663ba84e7a98d7e2598b389035f7d8eb3f8835b5b8cacc26ce939b0bc98f4dd0cd
   languageName: node
   linkType: hard
 
-"@hyperledger/anoncreds-shared@npm:0.4.1-alpha-20260609124337":
-  version: 0.4.1-alpha-20260609124337
-  resolution: "@hyperledger/anoncreds-shared@npm:0.4.1-alpha-20260609124337"
+"@hyperledger/anoncreds-shared@npm:0.4.1":
+  version: 0.4.1
+  resolution: "@hyperledger/anoncreds-shared@npm:0.4.1"
   dependencies:
     tar: "npm:^7.4.3"
-  checksum: 10c0/32829768852112fef73c1dafd6e3a9b95ea9332edda90bb5046a457960d3f514310b6fd134a0413888ccb9dc4eafc37d04d6b5aef0643cbce6f2a6cc4bfa9947
+  checksum: 10c0/c51c32e4f2027fa633e783f17e00935c2d43fbe116cd525ab48ccb9de278f097d787d6937fb33710112fa2074abecb86e9145939a7bae7c7ff41ed8d1484f542
   languageName: node
   linkType: hard
 
@@ -7403,7 +7403,7 @@ __metadata:
     "@formatjs/intl-numberformat": "npm:~8.15.6"
     "@formatjs/intl-pluralrules": "npm:~5.4.6"
     "@formatjs/intl-relativetimeformat": "npm:~11.4.13"
-    "@hyperledger/anoncreds-react-native": "npm:0.4.1-alpha-20260609124337"
+    "@hyperledger/anoncreds-react-native": "npm:0.4.1"
     "@hyperledger/indy-vdr-react-native": "npm:0.3.1-dev.1"
     "@hyperledger/indy-vdr-shared": "npm:0.3.1-dev.1"
     "@notifee/react-native": "npm:~9.1.8"
