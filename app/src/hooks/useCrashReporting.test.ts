@@ -4,11 +4,13 @@ import { renderHook, waitFor } from '@testing-library/react-native'
 
 const mockLogger = { error: jest.fn() }
 let mockLoading = false
+let mockStateLoaded = true
 let mockEnabled = true
 
 jest.mock('@bifold/core', () => ({
   TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },
   useServices: () => [mockLogger],
+  useStore: () => [{ stateLoaded: mockStateLoaded }],
 }))
 
 jest.mock('@/remote-config/RemoteConfig', () => ({
@@ -26,11 +28,20 @@ jest.mock('@/services/crash-reporting', () => ({
 describe('useCrashReporting', () => {
   beforeEach(() => {
     mockLoading = false
+    mockStateLoaded = true
     mockEnabled = true
   })
 
   it('waits for remote config before applying the gate', () => {
     mockLoading = true
+
+    renderHook(() => useCrashReporting())
+
+    expect(setCrashReportingEnabled).not.toHaveBeenCalled()
+  })
+
+  it('waits for the stored state before applying the gate', () => {
+    mockStateLoaded = false
 
     renderHook(() => useCrashReporting())
 
