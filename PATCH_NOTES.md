@@ -32,7 +32,7 @@ New architecture support and turbomodule fixes. We should swap this library out 
 
 Turbomodule fixes. We should swap this library out soon, hasn't been updated in four years.
 
-#### @bifold-remote-logs-npm-3.1.0-7e3e0ffb2c.patch
+#### @bifold-remote-logs-npm-3.1.3-757c19c437.patch
 
 Gates `test`/`trace` log methods on their own levels instead of `debug` (so ledger lookups no longer flood the default dev log level), drops `console.trace` for the `trace` level (no more stack traces on routine logs), forces `LogLevel.Test` instead of `Debug` when remote logging is enabled (support sessions keep full detail), and tags `trace` lines with a `[TRACE]` console prefix so they stay distinguishable from `debug` in Metro. #4599
 
@@ -53,9 +53,3 @@ Three independent changes; drop each on its own once upstream ships an equivalen
 **Android:** `ReactExoplayerView` builds against media3 1.9.0, the version VisionCamera v5's CameraX forces app-wide (see `RNVideo_media3Version` in `app/android/build.gradle`).
 
 **iOS:** react-native-video never manages the audio session in this app. `AudioSessionManager` is force-disabled by default, and activation/deactivation respect that flag. A player registers, and configures the session for playback, in `init`, before its `disableAudioSessionManagement` prop is applied. Its `setActive(true/false)` calls also ignored the flag. On the selfie-video review screen, that silenced the camera's microphone, so every Retake recorded digital silence. Only `VideoReviewScreen` uses react-native-video.
-
-#### @bifold-core-npm-3.1.0-cbde3b6169.patch
-
-A `ButtonLoading` spinner now takes its colour from the `Button` it sits in (including the disabled label colour) instead of the fixed `brand.icon` grey, is 24px, and carries a `Spacing.sm` right margin so it clears the label. `Button` passes its resolved label colour down through a new `ButtonLabelColorContext`; `ButtonLoading` falls back to `brand.icon` outside a `Button`. Applied through root `resolutions` because `@bifold/remote-logs` depends on `@bifold/core@npm:3.1.0` directly. Drop this patch once the app moves to a Bifold release with the fix. #4743
-
-Upstream (Bifold `packages/core`): `src/components/buttons/Button.tsx` (provider around `children`), new `src/components/buttons/ButtonLabelColorContext.ts`, `src/components/animated/ButtonLoading.tsx`. The published package ships only `lib/commonjs` and `lib/module`, so the patch edits both.
