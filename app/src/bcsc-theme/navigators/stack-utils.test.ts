@@ -282,7 +282,7 @@ describe('StackUtils', () => {
       expect(formatNavigationTrail(screens, 0)).toBe('Start > [back to A > B] x2 > End')
     })
 
-    it('lists a trailing partial pass after the block', () => {
+    it('keeps the entry point out of a block that starts on its second screen', () => {
       const screens = [fresh('Home'), fresh('Settings'), back('Home'), fresh('Settings'), back('Home')]
 
       expect(formatNavigationTrail(screens, 0)).toBe('Home > [Settings > back to Home] x2')
