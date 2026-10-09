@@ -2,7 +2,8 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { decodeBarcodes, DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { decodeCardBarcode, ScanableCode, toDriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
+import { CardScan, combineCardBarcodes, EMPTY_CARD_SCAN } from '@/bcsc-theme/utils/card-scan'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
@@ -208,8 +209,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const isProcessingScan = useRef(false)
   // Whether the screen has already had focus once — see the focus effect below.
   const hasFocusedRef = useRef(false)
-  const bcscSerialRef = useRef<string | null>(null)
-  const birthDateRef = useRef<Date | null>(null)
+  const cardScanRef = useRef<CardScan>(EMPTY_CARD_SCAN)
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
@@ -236,8 +236,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     setCameraKey((prev) => prev + 1)
     // Reset the caches so we can scan again.
     isProcessingScan.current = false
-    bcscSerialRef.current = null
-    birthDateRef.current = null
+    cardScanRef.current = EMPTY_CARD_SCAN
   }, [])
 
   // Reset the scanner on re-entry (e.g. backing out of the next step) so a previous scan's
@@ -260,36 +259,38 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       return true
     }
 
-    const decodedBarcodes = decodeBarcodes(barcodes, logger)
-
-    for (const decoded of decodedBarcodes) {
-      if (!decoded && !bcscSerialRef.current && !birthDateRef.current) {
-        // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
-        isProcessingScan.current = true
-        setScanState('locked')
-        await scanner.handleScanNonBcsc()
-        return true
+    for (const code of barcodes) {
+      if (code.type === 'unknown') {
+        logger.debug('[DecodeBarcodes] Skipping unknown barcode')
+        continue
       }
 
-      switch (decoded?.kind) {
-        case DecodedCodeKind.BCServicesCardBarcode:
-          bcscSerialRef.current = decoded.bcscSerial
-          break
-        case DecodedCodeKind.BCServicesComboCardCardBarcode:
-          // Use the serial from the 1D barcode for safety (ie: Alberta DL + appended health number)
-          birthDateRef.current = decoded.birthDate
-          break
-        case DecodedCodeKind.DriversLicenseBarcode:
-          birthDateRef.current = decoded.birthDate
-          break
+      const decoded = decodeCardBarcode(code)
+
+      if (decoded.source === 'failure') {
+        logger.debug('[DecodeBarcodes] Failed to decode barcode', { type: code.type, reason: decoded.reason })
+
+        if (!cardScanRef.current.serial && !cardScanRef.current.card) {
+          // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
+          isProcessingScan.current = true
+          setScanState('locked')
+          await scanner.handleScanNonBcsc()
+          return true
+        }
+        continue
       }
+
+      logger.debug('[DecodeBarcodes] Decoded barcode metadata:', { type: code.type, source: decoded.source })
+
+      cardScanRef.current = combineCardBarcodes(cardScanRef.current, [decoded])
     }
 
-    if (bcscSerialRef.current && birthDateRef.current) {
+    const { serial, card } = cardScanRef.current
+    if (serial && card) {
       // We have both the serial and the birthdate — lock the camera and handle the card.
       isProcessingScan.current = true
       setScanState('locked')
-      await scanner.handleScanComboCard(bcscSerialRef.current, { birthDate: birthDateRef.current })
+      await scanner.handleScanComboCard(serial, { birthDate: toDriversLicenseMetadata(card).birthDate })
       return true
     }
 

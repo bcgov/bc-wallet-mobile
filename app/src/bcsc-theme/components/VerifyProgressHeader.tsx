@@ -1,7 +1,7 @@
 import { Header, StackHeaderProps } from '@react-navigation/stack'
 import React from 'react'
 import { View } from 'react-native'
-import { HeaderDropShadow } from './HeaderWithBanner'
+import { HeaderDropShadow } from './NavigationHeaders'
 
 const EMPTY_COLOR = '#D8D8D8'
 const FILL_COLOR = '#1E5189'

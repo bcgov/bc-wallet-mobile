@@ -1,18 +1,31 @@
+diff --git a/ios/Extensions/AVFoundation/AVCaptureSession+addOutputWithNoConnections.swift b/ios/Extensions/AVFoundation/AVCaptureSession+addOutputWithNoConnections.swift
+index f76d97abd325adc179400329f037842fc025ab09..468f1dd177248ef0b10dcefaa105fc6183927fc5 100644
+--- a/ios/Extensions/AVFoundation/AVCaptureSession+addOutputWithNoConnections.swift
++++ b/ios/Extensions/AVFoundation/AVCaptureSession+addOutputWithNoConnections.swift
+@@ -31,7 +31,11 @@ extension AVCaptureSession {
+         throw RuntimeError.error(withMessage: "The given Preview Output \"\(previewLayer)\" is already connected to a different Camera Session!")
+       }
+       logger.info("Adding Preview \(previewLayer)...")
++      // PATCH (bc-wallet-mobile): setSessionWithNoConnection changes `session` without KVO. An observer
++      // registered while the layer had no session is then left stale, and `session = nil` throws.
++      previewLayer.willChangeValue(forKey: "session")
+       previewLayer.setSessionWithNoConnection(self)
++      previewLayer.didChangeValue(forKey: "session")
+     }
+   }
+ }
 diff --git a/ios/Hybrid Objects/HybridCameraSession.swift b/ios/Hybrid Objects/HybridCameraSession.swift
-index c74356e3e16d61c85522c74e7577eb4a0d95515f..7d917e6c5fe896cc026ee9bb1cc3803d6d262236 100644
+index c74356e3e16d61c85522c74e7577eb4a0d95515f..4e940ae4c80749e2a1208a494fff0c44149892ef 100644
 --- a/ios/Hybrid Objects/HybridCameraSession.swift	
 +++ b/ios/Hybrid Objects/HybridCameraSession.swift	
-@@ -33,11 +33,32 @@ final class HybridCameraSession: HybridCameraSessionSpec {
+@@ -33,11 +33,29 @@ final class HybridCameraSession: HybridCameraSessionSpec {
      return session.isRunning
    }
  
-+  // PATCH (bc-wallet-mobile): run session mutations only after the main queue has drained what was
-+  // already pending. React Native mounts and unmounts the preview view on the main queue, and while a
-+  // preview layer is attached AVFoundation blocks on the main thread inside stopRunning and
-+  // commitConfiguration (9 s timeout on iOS 26, none on iOS 18). If the main thread is then inside
-+  // CoreAnimation's layerDidBecomeVisible: (called with the CA tree lock held) waiting for the session
-+  // lock, the app hangs for good; every <Camera> unmount used to race this. Ordering the mutation after
-+  // the pending main-thread work keeps the two from overlapping without ever blocking the main thread.
++  // PATCH (bc-wallet-mobile): queue session mutations behind what is already pending on the main queue.
++  // With a preview layer attached, AVFoundation waits for the main thread inside stopRunning and
++  // commitConfiguration (9 s timeout measured on iOS 26); a view mount or unmount running at that
++  // moment waits for the session lock in layerDidBecomeVisible:, and the UI stalls until the timeout.
 +  private static func afterMainOnSessionQueue<T>(_ run: @escaping @Sendable () throws -> T) -> Promise<T> {
 +    let promise = Promise<T>()
 +    DispatchQueue.main.async {
@@ -36,7 +49,7 @@ index c74356e3e16d61c85522c74e7577eb4a0d95515f..7d917e6c5fe896cc026ee9bb1cc3803d
        guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
          throw RuntimeError.error(withMessage: "Camera Permission not yet granted!")
        }
-@@ -212,7 +233,7 @@ final class HybridCameraSession: HybridCameraSessionSpec {
+@@ -212,7 +230,7 @@ final class HybridCameraSession: HybridCameraSessionSpec {
  
    // pragma MARK: Start/Stop
    func start() -> Promise<Void> {
@@ -45,7 +58,7 @@ index c74356e3e16d61c85522c74e7577eb4a0d95515f..7d917e6c5fe896cc026ee9bb1cc3803d
        if self.session.isRunning {
          return
        }
-@@ -221,7 +242,7 @@ final class HybridCameraSession: HybridCameraSessionSpec {
+@@ -221,7 +239,7 @@ final class HybridCameraSession: HybridCameraSessionSpec {
    }
  
    func stop() -> Promise<Void> {

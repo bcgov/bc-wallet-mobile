@@ -10,6 +10,14 @@ export type AttestationRequestParams = {
   os_version: string
   app_version: string
   key_id?: string // Apple only
+  /**
+   * Which issue-credential protocol to be issued over, v1 (legacy) or v2 (anoncreds endpoints)
+   */
+  credential_protocol?: 'v1' | 'v2'
+  /**
+   * hint as to which bundle ID / package name the request is sent from.
+   */
+  app_id_hint?: string
 }
 
 export type NonceDrpcResponse = DrpcResponseObject & {

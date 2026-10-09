@@ -1,7 +1,7 @@
 import { NAVIGATION_VISITED_SCREEN_NAMES } from '@/contexts/NavigationContainerContext'
 import { NavigationState } from '@react-navigation/native'
 import { StackNavigationOptions } from '@react-navigation/stack'
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createStackHeader } from '../components/NavigationHeaders'
 import { BCSCScreens, BCSCStacks } from '../types/navigators'
 
 /**
@@ -17,7 +17,7 @@ export function getDefaultModalOptions(title?: string): StackNavigationOptions {
     headerLeft: () => null,
     title: title,
     headerShadowVisible: false,
-    header: createHeaderWithoutBanner,
+    header: createStackHeader,
     gestureEnabled: true,
   }
 }

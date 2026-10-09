@@ -6,6 +6,7 @@ import { findByA11yLabel, rowShowsWord } from '../../../src/helpers/a11y.js'
 import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
 import { returnFromBrowserHandoff } from '../../../src/helpers/browser-handoff.js'
 import { getCurrentAppId } from '../../../src/helpers/deep-link.js'
+import { expectDeveloperModeHidden } from '../../../src/helpers/developer.js'
 import { expectWebViewOpen } from '../../../src/helpers/webview.js'
 import { BaseScreen } from '../../../src/screens/core/index.js'
 import {
@@ -79,6 +80,16 @@ describe('Main journey: settings', () => {
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     assert.equal(await SettingsScreen.isVisible('profile'), false, 'Profile is verified-gated')
     assert.equal(await SettingsScreen.isVisible('forgetPairings'), false, 'ForgetPairings is verified-gated')
+  })
+
+  it('has developer mode off by default: the Developer options row is absent', async () => {
+    // Only the hidden tap counter turns it on (`auth/auth-intro.journey.ts` does, on purpose).
+    await expectDeveloperModeHidden()
+    // The probe leaves the list at the footer; re-open Settings so the next checkpoints start from the top.
+    await SettingsScreen.back.tap()
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await HomeScreen.tap('menu')
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
   it('toggles Analytics Opt In and the row adornment tracks it', async () => {

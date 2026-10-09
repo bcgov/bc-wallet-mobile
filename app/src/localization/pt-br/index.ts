@@ -416,6 +416,10 @@ const translation = {
       "FailedToSetPIN": "Failed to set PIN (PT-BR)",
       "ErrorSettingPIN": "An error occurred while setting the PIN (PT-BR)"
     },
+    "EnterPIN": {
+      "Title": "Enter your 6-digit PIN (PT-BR)",
+      "Description": "The one you chose to secure this app (PT-BR)"
+    },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN (PT-BR)",
       "EnterCurrentPIN": "Enter your current PIN (PT-BR)",
@@ -1151,6 +1155,12 @@ const translation = {
       "Title": "Your identity has been verified (PT-BR)",
       "Description": "You're now able to access services with your verified identity. (PT-BR)",
       "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID. (PT-BR)",
+      "ButtonText": "Continue (PT-BR)"
+    },
+    "AlreadyVerified": {
+      "Title": "You're already set! (PT-BR)",
+      "Description": "The QR code scanned is for transferring an existing account to a new device. This device is already verified and ready to use. (PT-BR)",
+      "ExtraText": "To access a website or service, scan the QR code shown on that website or service. (PT-BR)",
       "ButtonText": "Continue (PT-BR)"
     },
     "CancelledVerification": {

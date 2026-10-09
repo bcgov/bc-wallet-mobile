@@ -70,6 +70,7 @@ export enum BCSCScreens {
   EvidenceUploading = 'Send Video Uploading',
   SuccessfullySent = 'Send Video Received Request Confirmation',
   VerificationSuccess = 'Setup Complete',
+  AlreadyVerifiedSuccess = 'Already Verified',
   ManualPairingCode = 'Login Device Pairing',
   PairingConfirmation = 'Login Complete with Paired Device',
   AdditionalIdentificationRequired = 'Photo ID Required',
@@ -321,6 +322,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
   [BCSCScreens.VerificationSuccess]: undefined
+  [BCSCScreens.AlreadyVerifiedSuccess]: undefined
   [BCSCScreens.MainCancelledReview]: { agentReason?: string }
   [BCSCScreens.MainVerifyPrompt]: undefined
 

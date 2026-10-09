@@ -7,6 +7,7 @@ import {
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { formatBirthdateForApi } from '@/bcsc-theme/utils/birthdate'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import {
   citySchema,
@@ -23,7 +24,6 @@ import { BCState, NonBCSCUserMetadata } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import moment from 'moment'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -199,7 +199,7 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
       const deviceAuthConfig = {
         firstName: store.bcscSecure.userMetadata.name.first,
         lastName: store.bcscSecure.userMetadata.name.last,
-        birthdate: moment(store.bcscSecure.birthdate).format('YYYY-MM-DD'),
+        birthdate: formatBirthdateForApi(store.bcscSecure.birthdate),
         middleNames: store.bcscSecure.userMetadata.name.middle,
         address: {
           streetAddress: mergedStreetAddress,

@@ -6,9 +6,8 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Toast from 'react-native-toast-message'
-
 import { BCSCMainStackParams, BCSCScreens } from '../../types/navigators'
-import { DidCommOobStrategy } from '../qr-core/uri-strategies'
+import { useDidCommOobQRCodeStrategy } from '../qr-core/qr-code-strategies/useDidCommOobQRCodeStrategy'
 import { useConnectionInvitationService } from './ConnectionInvitationServiceContext'
 
 /**
@@ -18,9 +17,6 @@ import { useConnectionInvitationService } from './ConnectionInvitationServiceCon
  * the shared DIDComm OOB strategy once the agent is ready, and navigates to the
  * Connection screen. Must be mounted inside the agent scope (it reads
  * {@link useBCSCAgent}).
- *
- * Convergence: deep-link and QR-scanned invitations both run through
- * {@link DidCommOobStrategy} and land on the same `ConnectionLoading` screen.
  */
 export const useConnectionInvitationDeepLink = (): void => {
   const service = useConnectionInvitationService()
@@ -30,6 +26,8 @@ export const useConnectionInvitationDeepLink = (): void => {
   const { t } = useTranslation()
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null)
 
+  const didCommOobStrategy = useDidCommOobQRCodeStrategy(undefined, 'didcomm-oob-invitation')
+
   useEffect(() => service.onInvitation(({ url }) => setInvitationUrl(url)), [service])
 
   useEffect(() => {
@@ -38,6 +36,7 @@ export const useConnectionInvitationDeepLink = (): void => {
       return
     }
 
+    // Owned by this run, so a newer run can never un-cancel it.
     let cancelled = false
 
     const accept = async () => {
@@ -69,29 +68,22 @@ export const useConnectionInvitationDeepLink = (): void => {
       }
 
       try {
-        const result = await DidCommOobStrategy.handle(invitationUrl, { agent, logger })
+        const foundRecordId = await didCommOobStrategy.handleOobRecordId(invitationUrl)
+
         if (cancelled) {
           return
         }
-        setInvitationUrl(null)
 
-        switch (result.kind) {
-          case 'connection':
-            navigation.navigate(BCSCScreens.ConnectionLoading, { oobRecordId: result.oobRecordId })
-            break
-          case 'unsupported':
-            Toast.show({ type: 'error', text1: t(`BCSC.Scan.Unsupported.${result.reason}`) })
-            break
-          default:
-            logger.warn(`[ConnectionInvitationDeepLink] invitation not actionable: ${result.kind}`)
-            Toast.show({ type: 'error', text1: t('BCSC.Scan.InvalidConnectionInvitation') })
-            break
+        // Only clear our own URL; a newer invitation may already be queued.
+        setInvitationUrl((current) => (current === invitationUrl ? null : current))
+        if (foundRecordId) {
+          navigation.navigate(BCSCScreens.ConnectionLoading, { oobRecordId: foundRecordId })
         }
       } catch (err) {
         if (cancelled) {
           return
         }
-        setInvitationUrl(null)
+        setInvitationUrl((current) => (current === invitationUrl ? null : current))
         logger.error(`[ConnectionInvitationDeepLink] failed to accept invitation: ${err}`)
         Toast.show({ type: 'error', text1: t('BCSC.Scan.InvalidConnectionInvitation') })
       }
@@ -102,5 +94,5 @@ export const useConnectionInvitationDeepLink = (): void => {
     return () => {
       cancelled = true
     }
-  }, [invitationUrl, agent, loading, navigation, logger, t])
+  }, [invitationUrl, agent, loading, navigation, logger, t, didCommOobStrategy])
 }

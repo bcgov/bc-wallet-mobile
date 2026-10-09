@@ -416,6 +416,10 @@ const translation = {
       "FailedToSetPIN": "Failed to set PIN (FR)",
       "ErrorSettingPIN": "An error occurred while setting the PIN (FR)"
     },
+    "EnterPIN": {
+      "Title": "Enter your 6-digit PIN (FR)",
+      "Description": "The one you chose to secure this app (FR)"
+    },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN (FR)",
       "EnterCurrentPIN": "Enter your current PIN (FR)",
@@ -1151,6 +1155,12 @@ const translation = {
       "Title": "Your identity has been verified (FR)",
       "Description": "You're now able to access services with your verified identity. (FR)",
       "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID. (FR)",
+      "ButtonText": "Continue (FR)"
+    },
+    "AlreadyVerified": {
+      "Title": "You're already set! (FR)",
+      "Description": "The QR code scanned is for transferring an existing account to a new device. This device is already verified and ready to use. (FR)",
+      "ExtraText": "To access a website or service, scan the QR code shown on that website or service. (FR)",
       "ButtonText": "Continue (FR)"
     },
     "CancelledVerification": {
