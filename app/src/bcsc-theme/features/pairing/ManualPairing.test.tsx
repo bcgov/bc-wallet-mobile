@@ -165,7 +165,7 @@ describe('ManualPairing', () => {
       renderScreen()
 
       await waitFor(() => {
-        expect(mockLoginByPairingCode).toHaveBeenCalledWith('SKGAZZ', ChallengeSource.RemotePairingCode)
+        expect(mockLoginByPairingCode).toHaveBeenCalledWith('SKGAZZ', ChallengeSource.RemotePairingQrCode)
       })
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
         serviceId: 'ref-456',
