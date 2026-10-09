@@ -7,8 +7,7 @@ import {
 import { renderHook } from '@testing-library/react-native'
 import { useContext } from 'react'
 
-// Unlike NavigationContainerContext.test.tsx, this suite uses the real stack-utils helpers so that
-// nested navigator states exercise the real back-navigation detection.
+// Uses the real stack-utils helpers so nested navigator states exercise real back detection.
 let capturedOnStateChange: ((state: any) => void) | undefined
 
 jest.mock('@react-navigation/native', () => ({
