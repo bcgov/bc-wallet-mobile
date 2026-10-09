@@ -48,7 +48,7 @@
     "@bifold/react-native-attestation": "3.1.2",
     "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.1.0#~/.yarn/patches/@bifold-remote-logs-npm-3.1.0-7e3e0ffb2c.patch",
     "@bifold/verifier": "3.1.0",
-    "@credo-ts/anoncreds": "0.7.0",
+    "@credo-ts/anoncreds": "0.7.2",
     "@credo-ts/askar": "0.7.0",
     "@credo-ts/core": "0.7.0",
     "@credo-ts/didcomm": "0.7.0",
