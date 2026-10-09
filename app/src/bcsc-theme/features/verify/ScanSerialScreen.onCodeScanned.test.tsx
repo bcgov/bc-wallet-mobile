@@ -81,6 +81,16 @@ const scan = async (codes: ScanableCode[]): Promise<void | boolean> => {
   return result
 }
 
+// Starts a scan whose handler stays pending, and returns the `isCurrent` check the screen gave it.
+const startPendingScan = (codes: ScanableCode[]) => {
+  mockHandleScanComboCard.mockReturnValueOnce(new Promise<boolean>(() => undefined))
+  act(() => {
+    void mockCamera.onCodeScanned?.(codes)
+  })
+  const isCurrent: () => boolean = mockHandleScanComboCard.mock.calls.at(-1)?.[2]
+  return isCurrent
+}
+
 describe('ScanSerialScreen onCodeScanned', () => {
   // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
   const debugSpy = jest.spyOn(bifoldLoggerInstance, 'debug').mockImplementation(() => undefined)
@@ -122,7 +132,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     expect(secondBatch).toBe(true)
-    expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: new Date(1982, 0, 4) })
+    expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+      'K12345678',
+      expect.objectContaining({ birthDate: new Date(1982, 0, 4) }),
+      expect.any(Function)
+    )
     expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
 
     const loggedArguments = JSON.stringify(debugSpy.mock.calls)
@@ -148,7 +162,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
       expect(await scan([serial, licence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: SERIAL_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
 
     it('completes when the licence comes before the serial in one batch', async () => {
@@ -156,7 +174,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
       expect(await scan([licence, serial])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: SERIAL_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE }),
+        expect.any(Function)
+      )
       expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
     })
 
@@ -166,7 +188,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(await scan([serial])).toBe(false)
       expect(await scan([licence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: SERIAL_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
 
     it('completes when the licence arrives first and the serial in a later batch', async () => {
@@ -175,7 +201,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(await scan([licence])).toBe(false)
       expect(await scan([serial])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: SERIAL_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
 
     it('keeps scanning on an empty batch', async () => {
@@ -211,7 +241,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(await scan([otherSerial])).toBe(false)
       expect(await scan([licence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('A06198657', { birthDate: SERIAL_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'A06198657',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
 
     it('replaces the card with the latest one read across batches', async () => {
@@ -221,7 +255,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(await scan([licence])).toBe(false)
       expect(await scan([serial])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: SERIAL_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
 
     it('treats a card with no card number in its security field like any other card', async () => {
@@ -230,7 +268,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(await scan([otherLicence])).toBe(false)
       expect(await scan([serial])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: OTHER_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: OTHER_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
   })
 
@@ -240,7 +282,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
       expect(await scan([serial, otherSerial, licence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('A06198657', { birthDate: SERIAL_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'A06198657',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
 
     it('uses the later card when two cards arrive before the serial', async () => {
@@ -248,7 +294,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
       expect(await scan([licence, otherLicence, serial])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: OTHER_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: OTHER_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
 
     it('decides once, after the whole batch, so later replacements win over an earlier complete pair', async () => {
@@ -256,7 +306,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
       expect(await scan([serial, licence, otherSerial, otherLicence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('A06198657', { birthDate: OTHER_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'A06198657',
+        expect.objectContaining({ birthDate: OTHER_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
   })
 
@@ -292,7 +346,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(await scan([licence])).toBe(true)
       expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: SERIAL_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
 
     it('ignores an unreadable code between the licence and the serial', async () => {
@@ -373,6 +431,27 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
     })
 
+    it('marks a pending scan stale once Try Again is pressed', () => {
+      const screen = renderScreen()
+      const isCurrent = startPendingScan([serial, licence])
+      expect(isCurrent()).toBe(true)
+
+      tryAgain(screen)
+
+      expect(isCurrent()).toBe(false)
+    })
+
+    it('marks a pending scan stale once a newer scan has started', () => {
+      const screen = renderScreen()
+      const earlier = startPendingScan([serial, licence])
+      tryAgain(screen)
+
+      const newer = startPendingScan([otherSerial, otherLicence])
+
+      expect(earlier()).toBe(false)
+      expect(newer()).toBe(true)
+    })
+
     it('scans again after a non-BCSC reroute and Try Again', async () => {
       const screen = renderScreen()
 
@@ -382,7 +461,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
       expect(await scan([serial, licence])).toBe(true)
       expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
-      expect(mockHandleScanComboCard).toHaveBeenCalledWith('K12345678', { birthDate: SERIAL_BIRTH_DATE })
+      expect(mockHandleScanComboCard).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ birthDate: SERIAL_BIRTH_DATE }),
+        expect.any(Function)
+      )
     })
 
     describe('when the screen regains focus', () => {
@@ -414,6 +497,16 @@ describe('ScanSerialScreen onCodeScanned', () => {
           }
         })
 
+      it('marks a pending scan stale once the screen loses and regains focus', () => {
+        renderScreen()
+        const isCurrent = startPendingScan([serial, licence])
+        expect(isCurrent()).toBe(true)
+
+        refocusScreen()
+
+        expect(isCurrent()).toBe(false)
+      })
+
       it('forgets a partial scan', async () => {
         renderScreen()
 
@@ -432,7 +525,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
         expect(await scan([otherSerial, otherLicence])).toBe(true)
         expect(mockHandleScanComboCard).toHaveBeenCalledTimes(2)
-        expect(mockHandleScanComboCard).toHaveBeenLastCalledWith('A06198657', { birthDate: OTHER_BIRTH_DATE })
+        expect(mockHandleScanComboCard).toHaveBeenLastCalledWith(
+          'A06198657',
+          expect.objectContaining({ birthDate: OTHER_BIRTH_DATE }),
+          expect.any(Function)
+        )
       })
     })
   })

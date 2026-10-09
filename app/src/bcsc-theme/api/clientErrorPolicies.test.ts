@@ -2,12 +2,14 @@ import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
+import { formatIasAxiosResponseError, getAppErrorFromAxiosError } from '../utils/axios-error-utils'
 import {
   alreadyRegisteredErrorPolicy,
   alreadyVerifiedErrorPolicy,
   attestationPollingErrorPolicy,
   AxiosAppError,
   birthdateLockoutErrorPolicy,
+  cardNotFoundOnBarcodesErrorPolicy,
   ClientErrorHandlingPolicies,
   digitalServiceCardAccountUnavailableErrorPolicy,
   emailVerificationCodeErrorPolicy,
@@ -552,6 +554,64 @@ describe('clientErrorPolicies', () => {
         expect(dispatchArgs.payload.index).toBe(0)
         expect(dispatchArgs.payload.routes).toEqual([resumeRoute])
       })
+    })
+  })
+
+  describe('cardNotFoundOnBarcodesErrorPolicy', () => {
+    // The 400 body `/device/barcodes` returns for a card that isn't a BC Services Card.
+    const cardNotFound = () =>
+      getAppErrorFromAxiosError(
+        formatIasAxiosResponseError(
+          new AxiosError('Request failed with status code 400', 'ERR_BAD_REQUEST', undefined, {}, {
+            status: 400,
+            data: { error: 'invalid_request', error_description: 'card_not_found' },
+          } as any)
+        )
+      ) as AxiosAppError
+    const barcodesContext = (endpoint: string) => ({ endpoint, apiEndpoints: { barcodes: '/api/device/barcodes' } })
+
+    it('matches the real card_not_found answer on the barcodes endpoint', () => {
+      expect(
+        cardNotFoundOnBarcodesErrorPolicy.matches(cardNotFound(), barcodesContext('/api/device/barcodes/abc') as any)
+      ).toBe(true)
+    })
+
+    it('matches an error already mapped to CARD_NOT_FOUND', () => {
+      expect(
+        cardNotFoundOnBarcodesErrorPolicy.matches(
+          newError(AppEventCode.CARD_NOT_FOUND),
+          barcodesContext('/api/device/barcodes/abc') as any
+        )
+      ).toBe(true)
+    })
+
+    it('does not match card_not_found on another endpoint', () => {
+      expect(cardNotFoundOnBarcodesErrorPolicy.matches(cardNotFound(), barcodesContext('/api/devicecode') as any)).toBe(
+        false
+      )
+    })
+
+    it('does not match a different error on the barcodes endpoint', () => {
+      expect(
+        cardNotFoundOnBarcodesErrorPolicy.matches(
+          newError(AppEventCode.CARD_EXPIRED),
+          barcodesContext('/api/device/barcodes/abc') as any
+        )
+      ).toBe(false)
+    })
+
+    it('is checked before the catch-all policies', () => {
+      const policy = ClientErrorHandlingPolicies.find((p) =>
+        p.matches(cardNotFound(), { ...barcodesContext('/api/device/barcodes/abc'), statusCode: 400 } as any)
+      )
+      expect(policy).toBe(cardNotFoundOnBarcodesErrorPolicy)
+    })
+
+    it('only logs, leaving routing to the card scanner', () => {
+      const context = { logger: { info: jest.fn() }, alerts: {}, navigation: { dispatch: jest.fn() } }
+      cardNotFoundOnBarcodesErrorPolicy.handle(cardNotFound(), context as any)
+      expect(context.logger.info).toHaveBeenCalled()
+      expect(context.navigation.dispatch).not.toHaveBeenCalled()
     })
   })
 

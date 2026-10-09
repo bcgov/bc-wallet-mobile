@@ -210,6 +210,8 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   // Whether the screen has already had focus once — see the focus effect below.
   const hasFocusedRef = useRef(false)
   const cardScanRef = useRef<CardScan>(EMPTY_CARD_SCAN)
+  // Bumped on each scan, Try Again and focus change so a late answer from an earlier scan is dropped.
+  const scanGeneration = useRef(0)
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
@@ -237,6 +239,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     // Reset the caches so we can scan again.
     isProcessingScan.current = false
     cardScanRef.current = EMPTY_CARD_SCAN
+    scanGeneration.current += 1
   }, [])
 
   // Reset the scanner on re-entry (e.g. backing out of the next step) so a previous scan's
@@ -248,9 +251,13 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     useCallback(() => {
       if (!hasFocusedRef.current) {
         hasFocusedRef.current = true
-        return
+      } else {
+        retryCamera()
       }
-      retryCamera()
+
+      return () => {
+        scanGeneration.current += 1
+      }
     }, [retryCamera])
   )
 
@@ -290,7 +297,13 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       // We have both the serial and the birthdate — lock the camera and handle the card.
       isProcessingScan.current = true
       setScanState('locked')
-      await scanner.handleScanComboCard(serial, { birthDate: toDriversLicenseMetadata(card).birthDate })
+      scanGeneration.current += 1
+      const generation = scanGeneration.current
+      await scanner.handleScanComboCard(
+        serial,
+        toDriversLicenseMetadata(card),
+        () => scanGeneration.current === generation
+      )
       return true
     }
 

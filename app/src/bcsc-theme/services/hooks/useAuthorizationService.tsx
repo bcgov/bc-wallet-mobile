@@ -220,7 +220,14 @@ export const useAuthorizationService = () => {
       authorizeDevice,
       authorizeDeviceWithUnknownBCSC,
       authorizeDeviceWithBarcodes,
+      handleAuthorizationError,
     }),
-    [authorizationApi, authorizeDevice, authorizeDeviceWithUnknownBCSC, authorizeDeviceWithBarcodes]
+    [
+      authorizationApi,
+      authorizeDevice,
+      authorizeDeviceWithUnknownBCSC,
+      authorizeDeviceWithBarcodes,
+      handleAuthorizationError,
+    ]
   )
 }

@@ -318,9 +318,8 @@ export type AccumulatedCode = { code: EnhancedCode; timestamp: number }
  * minor): if the user swaps to a *different* physical BCSC card mid-scan within the
  * window and the new card's serial locks before the prior card's PDF-417 expires,
  * the merge can pair a serial from card B with a birthdate from card A. This is
- * self-correcting — the backend rejects the mismatched serial+birthdate
- * (`VerificationCardError.MismatchedSerial` → retry), so it never produces an
- * incorrect authorization or corrupts data. Clearing on barcode-reading decay was
+ * self-correcting — the backend answers `card_not_found` (other-ID flow), so it
+ * never produces an incorrect authorization or corrupts data. Clearing on barcode-reading decay was
  * considered and rejected: that would defeat the feature, since carrying a
  * no-longer-visible barcode into the lock is precisely the point. A correct
  * card-identity-aware invalidation is deferred as out of scope.

@@ -1,6 +1,6 @@
 import { getProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
-import { isHandledAppError } from '@/errors/appError'
+import { isAppError } from '@/errors/appError'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
@@ -8,6 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
+import { isCardNotFoundError } from '../api/clientErrorPolicies'
 import { DeviceAuthorizationResponse, DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { useAuthorizationService } from '../services/hooks/useAuthorizationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
@@ -22,26 +23,17 @@ import { getResumeStepRoute } from '../utils/resume-step-route'
 import { useDeviceAuthorizationRecovery } from './useDeviceAuthorizationRecovery'
 import { useSecureActions } from './useSecureActions'
 
-type DriversLicenseMetadataStub = { birthDate: Date }
-
-// One array shared across every render: a new array would recreate the native scanner output and reconfigure the camera
-const CARD_CODE_TYPES = [
-  BC_SERVICES_CARD_BARCODE,
-  OLD_BC_SERVICES_CARD_BARCODE,
-  DRIVERS_LICENSE_BARCODE,
-] satisfies BarcodeFormat[]
-
 /**
  * Custom hook to handle card scanning logic for BCSC cards.
  *
  * API: Includes some oppioniated default handlers for common scanning scenarios.
  * 	- scanCard: Function to handle the scanning of a card.
- * 	- handleScanComboCard: Default function to handle combo card scanning (both BCSC serial and driver's license metadata).
+ * 	- handleScanComboCard: Asks `/device/barcodes` about a scanned serial + card and acts on the answer.
  * 	- handleScanBCServicesCard: Default function to handle BCSC card scanning (BCSC serial only).
  *
  * Paths:
  * 	1. Card has serial and license metadata (combo card both barcodes or 2025+ combo DL barcode)
- * 		 Outcome: validate serial -> save serial and birthdate (from license) ->? navigate to setup steps verification
+ * 		 Outcome: POST /device/barcodes; a match continues setup, card_not_found goes to the other-ID flow.
  *
  *  2. Card has serial but no license metadata (BCSC card with single barcode)
  *  	 Outcome: validate serial -> save serial ->? navigate to enter birthdate
@@ -110,79 +102,23 @@ export const useCardScanner = () => {
   )
 
   /**
-   * Default handler for combo card scanning (both BCSC serial and driver's license metadata).
-   *
-   * @param bcscSerial - The BCSC card serial number.
-   * @param license - The driver's license metadata.
-   * @returns `true` if authorization succeeded, `false` if silently skipped (Non-BCSC flow).
-   */
-  const handleScanComboCard = useCallback(
-    async (bcscSerial: string, license: DriversLicenseMetadataStub): Promise<boolean> => {
-      if (!license.birthDate || Number.isNaN(license.birthDate.getTime())) {
-        // Should never happen, probably a decoder error
-        throw new Error('handleScanComboCard: License birthdate is missing or invalid')
-      }
-
-      await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
-
-      const isNonBcscFlow = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
-
-      try {
-        // Skip error handling, any false authorization returned push the user into a Non BCSC flow
-        const deviceAuth = await attemptWithRecovery(
-          () =>
-            authorizationService.authorizeDevice(bcscSerial, license.birthDate, {
-              skipErrorHandling: isNonBcscFlow,
-            }),
-          route.name
-        )
-        await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
-        return true
-      } catch (error) {
-        if (isNonBcscFlow) {
-          logger.info('[CardScanner] Authorization failed in Non-BCSC flow, continuing silently', {
-            error: String(error),
-          })
-          return false
-        }
-
-        if (!isHandledAppError(error)) {
-          logger.error('Device authorization failed during combo card scan', error as Error)
-        }
-
-        return true
-      }
-    },
-    [
-      authorizationService,
-      attemptWithRecovery,
-      route.name,
-      updateUserInfo,
-      applyDeviceAuthorization,
-      logger,
-      store.bcscSecure.cardProcess,
-    ]
-  )
-
-  /**
-   * Non-BCSC flow handler: ask the backend whether the scanned barcodes belong
-   * to a real BC Services Card via POST `/device/barcodes`. The backend owns the
-   * discrimination (matching v3): a real BCSC is authorized and the user is
-   * rerouted into setup; any other card (PR card, passport, …) resolves to
-   * `false` so the caller keeps capturing it as evidence — no "Card not found".
+   * Asks `/device/barcodes` whether the scanned serial + card is a BC Services Card; a match resets to setup.
    *
    * Only call this when the card presents BOTH a serial (1D) and AAMVA (2D)
    * barcode — the only combination the backend can match.
    *
    * @param bcscSerial - The serial decoded from the card's 1D (CODE_128) barcode.
    * @param license - The metadata decoded from the card's 2D (PDF-417) barcode.
+   * @param isCurrent - Checked once the answer arrives; a stale answer saves nothing.
    * @returns true if the scanned card is a BC Services Card
    */
   const handleScanBarcodes = useCallback(
-    async (bcscSerial: string, license: DriversLicenseMetadata): Promise<boolean> => {
-      logger.info(
-        '[CardScanner] Non-BCSC flow: querying /device/barcodes to check if the scanned card is a BC Services Card'
-      )
+    async (
+      bcscSerial: string,
+      license: DriversLicenseMetadata,
+      isCurrent: () => boolean = () => true
+    ): Promise<boolean> => {
+      logger.info('[CardScanner] Querying /device/barcodes for the scanned card')
 
       const deviceAuth = await attemptWithRecovery(
         () =>
@@ -191,6 +127,12 @@ export const useCardScanner = () => {
           }),
         route.name
       )
+
+      if (!isCurrent()) {
+        logger.debug('[CardScanner] Ignoring a match for an earlier scan')
+        return false
+      }
+
       await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
       await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
       logger.info('[CardScanner] Scanned card matched a BC Services Card; switching to setup')
@@ -254,6 +196,47 @@ export const useCardScanner = () => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)
     await updateCardProcess(BCSCCardProcess.NonBCSC)
   }, [navigation, updateCardProcess])
+
+  /**
+   * Asks `/device/barcodes` about a scanned serial + card; card_not_found continues the other-ID flow.
+   *
+   * @param isCurrent - Checked once the answer arrives; a stale answer does nothing.
+   * @returns `true` when acted on, `false` when dropped as stale.
+   */
+  const handleScanComboCard = useCallback(
+    async (
+      bcscSerial: string,
+      license: DriversLicenseMetadata,
+      isCurrent: () => boolean = () => true
+    ): Promise<boolean> => {
+      if (!license.birthDate || Number.isNaN(license.birthDate.getTime())) {
+        // Should never happen, probably a decoder error
+        throw new Error('handleScanComboCard: License birthdate is missing or invalid')
+      }
+
+      try {
+        return await handleScanBarcodes(bcscSerial, license, isCurrent)
+      } catch (error) {
+        if (!isCurrent()) {
+          logger.debug('[CardScanner] Ignoring a failed answer for an earlier scan')
+          return false
+        }
+
+        if (isCardNotFoundError(error)) {
+          // The endpoint's contract: card_not_found means the card is not a BC Services Card.
+          await handleScanNonBcsc()
+          return true
+        }
+
+        if (!isAppError(error)) {
+          logger.error('[CardScanner] Checking the scanned barcodes failed', error as Error)
+        }
+        authorizationService.handleAuthorizationError(error)
+        return true
+      }
+    },
+    [authorizationService, handleScanBarcodes, handleScanNonBcsc, logger]
+  )
 
   /**
    * Starts the scanning process by setting the scan enabled flag.
@@ -347,7 +330,11 @@ export const useCardScanner = () => {
       handleScanBCServicesCard,
       handleScanDriversLicense,
       handleScanNonBcsc,
-      codeTypes: CARD_CODE_TYPES,
+      codeTypes: [
+        BC_SERVICES_CARD_BARCODE,
+        OLD_BC_SERVICES_CARD_BARCODE,
+        DRIVERS_LICENSE_BARCODE,
+      ] satisfies BarcodeFormat[],
     }),
     [
       handleCardScan,
