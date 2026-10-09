@@ -57,6 +57,7 @@ import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { createBifoldNavigationAdapter } from '../features/qr-core/BifoldNavigationAdapter'
 import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
+import { ServiceNoticeScreen } from '../features/service-notice/ServiceNoticeScreen'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
@@ -415,6 +416,11 @@ const MainStack: React.FC = () => {
               headerShown: true,
               title: route.params.title,
             })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ServiceNotice}
+            component={ServiceNoticeScreen}
+            options={{ headerShown: true }}
           />
           <Stack.Screen name={BCSCScreens.PairingConfirmation} component={PairingConfirmation} />
           <Stack.Screen

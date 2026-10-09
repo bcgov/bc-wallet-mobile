@@ -604,6 +604,18 @@ const translation = {
       "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code (PT-BR)",
       "ViewMessages": "View new messages (PT-BR)",
     },
+    "ServiceNotice": {
+      "Header": "Service notice (PT-BR)",
+      "NoticeUnavailable": "This notice isn't available right now. (PT-BR)",
+      "MobileCardHeading": "Setting up a mobile card? (PT-BR)",
+      "MobileCardDescription": "It may take longer to get your identity verified to set up your mobile card. (PT-BR)",
+      "MobileCardVideoCall": "Video call – it may take more than 5 minutes to speak to an agent (PT-BR)",
+      "MobileCardSendVideo": "Send video – it may take more than 3 days to get a response back (PT-BR)",
+      "LoginHeading": "Logging into a government service? (PT-BR)",
+      "LoginDescription": "Please be patient, it may take longer to log in. (PT-BR)",
+      "HaveQuestions": "Have questions? (PT-BR)",
+      "ContactUsLink": "Contact us (PT-BR)",
+    },
     "Steps": {
       "VerificationIDMissing": "Verification request ID is missing (PT-BR)",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (PT-BR)",
@@ -626,6 +638,7 @@ const translation = {
       },
       "ServerStatus": {
         "UnavailableBannerTitle": "Service Unavailable (PT-BR)",
+        "NoticeBannerTitle": "Service notice. Learn more. (PT-BR)",
       },
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available (PT-BR)",
