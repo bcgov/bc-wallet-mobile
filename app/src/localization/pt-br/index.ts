@@ -1132,7 +1132,7 @@ const translation = {
       "Title": "Open the BC Services Card app on your other device (PT-BR)",
       "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device. (PT-BR)",
       "Warning": "Do not scan with the camera app. (PT-BR)",
-      "GetQRCode": "Get QR Code (PT-BR)",
+      "GetQRCode": "Get QR code (PT-BR)",
     },
     "TransferInformation": {
       "Title": "Have this app on another device? (PT-BR)",
@@ -1142,9 +1142,10 @@ const translation = {
     "TransferInstructions": {
       "AddingDevice": "Adding this device... (PT-BR)",
       "Title": "Scan your QR code to add your device (PT-BR)",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner. (PT-BR)",
-      "Step2": "Choose <b>‘Add another device'</b> to get your QR code. (PT-BR)",
-      "Step3": "<b>Scan the QR code</b> that appears on your other device. (PT-BR)",
+      "Step1": "<b>On your other device</b>, open and unlock the BC Services Card app. (PT-BR)",
+      "Step2": "Tap the <b>menu ‘☰’</b> icon in the top left corner. (PT-BR)",
+      "Step3": "Choose <b>‘Add another device’</b> to get your QR code. (PT-BR)",
+      "Step4": "<b>Scan the QR code</b> that appears on your other device. (PT-BR)",
       "ScanQRCode": "Scan QR code (PT-BR)",
     },
     "QRDisplay": {
