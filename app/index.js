@@ -1,5 +1,6 @@
 // organize-imports-ignore
 import './src/polyfills/text-encoding' // spec-compliant TextEncoder/TextDecoder (must be first)
+import './src/services/rn-default-error-handler' // captures React Native's error handler before Crashlytics replaces it
 import 'react-native-gesture-handler'
 import 'reflect-metadata'
 

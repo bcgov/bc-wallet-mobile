@@ -1,3 +1,4 @@
+import { rnDefaultHandler } from '@/services/rn-default-error-handler'
 import {
   deleteUnsentReports,
   getCrashlytics,
@@ -8,8 +9,7 @@ import {
  * Installs the Crashlytics JS crash handler. Call once, before the app component registers.
  */
 export const initCrashReporting = (): void => {
-  const defaultHandler = ErrorUtils.getGlobalHandler()
-  // RNFB installs its handler when the module is first created
+  // RNFB installs its handler when its module first loads, so by now it is the global one
   const crashlytics = getCrashlytics()
   const crashlyticsHandler = ErrorUtils.getGlobalHandler()
 
@@ -21,7 +21,7 @@ export const initCrashReporting = (): void => {
       return
     }
 
-    defaultHandler(error, isFatal)
+    rnDefaultHandler(error, isFatal)
   })
 }
 
