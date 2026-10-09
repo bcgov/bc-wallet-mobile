@@ -40,30 +40,30 @@ export const HeaderDropShadow = () => {
   )
 }
 
-export const createHeaderWithoutBanner = (props: StackHeaderProps) => (
+/** A blank `title: ''` still mounts an empty header Text that VoiceOver stops on — render no title at all. */
+const withoutBlankTitle = <T extends HeaderOptions>(options: T, routeName: string): T =>
+  getHeaderTitle(options, routeName) === '' ? { ...options, headerTitle: () => null } : options
+
+export const createStackHeader = (props: StackHeaderProps) => (
   <View>
     <HeaderDropShadow />
-    <Header {...props} />
+    <Header {...props} options={withoutBlankTitle(props.options, props.route.name)} />
   </View>
 )
 
-export const createTabHeaderWithoutBanner = ({ route, options, layout }: BottomTabHeaderProps) => (
-  <HeaderWithoutBanner route={route} options={options} layout={layout} />
+export const createTabHeader = ({ route, options, layout }: BottomTabHeaderProps) => (
+  <TabHeader route={route} options={options} layout={layout} />
 )
 
-export const createStackHeaderWithoutBanner = ({ route, options, layout }: StackHeaderProps) => (
-  <HeaderWithoutBanner route={route} options={options} layout={layout} />
-)
-
-type HeaderWithoutBannerProps = {
+type TabHeaderProps = {
   route: { name: string }
   options: HeaderOptions
   layout: Layout
 }
 
-const HeaderWithoutBanner = ({ route, options, layout }: HeaderWithoutBannerProps) => (
+const TabHeader = ({ route, options, layout }: TabHeaderProps) => (
   <ElementsHeader
-    {...options}
+    {...withoutBlankTitle(options, route.name)}
     layout={layout}
     title={getHeaderTitle(options, route.name)}
     headerStyle={[options.headerStyle, HEADER_SHADOW]}

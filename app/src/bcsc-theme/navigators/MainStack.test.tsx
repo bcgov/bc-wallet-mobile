@@ -93,8 +93,8 @@ jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
 jest.mock('../components/HeaderBackButton', () => ({
   createHeaderBackButton: jest.fn(() => null),
 }))
-jest.mock('../components/HeaderWithBanner', () => ({
-  createHeaderWithoutBanner: jest.fn(() => null),
+jest.mock('../components/NavigationHeaders', () => ({
+  createStackHeader: jest.fn(() => null),
 }))
 jest.mock('./stack-utils', () => ({
   getDefaultModalOptions: jest.fn(() => ({})),
@@ -128,6 +128,7 @@ jest.mock('../features/modal/MandatoryUpdate', () => ({ MandatoryUpdate: 'Mandat
 jest.mock('../features/modal/ServiceOutage', () => ({ ServiceOutage: 'ServiceOutage' }))
 jest.mock('../features/pairing/ManualPairing', () => 'ManualPairingCode')
 jest.mock('../features/pairing/PairingConfirmation', () => 'PairingConfirmation')
+jest.mock('../features/service-notice/ServiceNoticeScreen', () => ({ ServiceNoticeScreen: 'ServiceNoticeScreen' }))
 jest.mock('../features/services/ServiceLoginScreen', () => ({ ServiceLoginScreen: 'ServiceLoginScreen' }))
 jest.mock('../features/settings/AutoLockScreen', () => ({ AutoLockScreen: 'AutoLockScreen' }))
 jest.mock('../features/settings/ForgetAllPairingsScreen', () => ({

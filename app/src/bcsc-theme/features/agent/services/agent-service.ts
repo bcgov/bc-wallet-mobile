@@ -9,7 +9,6 @@ import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr'
 import { agentDependencies } from '@credo-ts/react-native'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import moment from 'moment'
-import { CachesDirectoryPath } from 'react-native-fs'
 
 export interface AgentWalletSecret {
   id: string
@@ -130,7 +129,6 @@ export const buildAgent = (opts: BuildAgentOptions): Agent => {
       txnCache: {
         capacity: 1000,
         expiryOffsetMs: 1000 * 60 * 60 * 24 * 7,
-        path: CachesDirectoryPath + '/txn-cache',
       },
       enableProxy: opts.enableProxy,
       proxyBaseUrl: opts.proxyBaseUrl,

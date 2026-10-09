@@ -18,7 +18,7 @@ import { View } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createStackHeader } from '../components/NavigationHeaders'
 import { useAccount } from '../contexts/BCSCAccountContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
@@ -57,6 +57,7 @@ import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { createBifoldNavigationAdapter } from '../features/qr-core/BifoldNavigationAdapter'
 import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
+import { ServiceNoticeScreen } from '../features/service-notice/ServiceNoticeScreen'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
@@ -66,6 +67,7 @@ import { NotificationSettingsScreen } from '../features/settings/NotificationSet
 import { ProofRequestExpirationScreen } from '../features/settings/ProofRequestExpirationScreen'
 import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
 import { useVerificationResponseListener } from '../features/verification-response/useVerificationResponseListener'
+import AlreadyVerifiedSuccessScreen from '../features/verify/AlreadyVerifiedSuccessScreen'
 import CancelledReview from '../features/verify/send-video/CancelledReview'
 import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
@@ -214,7 +216,7 @@ const MainStack: React.FC = () => {
             headerBackTitleVisible: false,
             headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
             headerLeft: createHeaderBackButton,
-            header: createHeaderWithoutBanner,
+            header: createStackHeader,
             headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
           }}
         >
@@ -415,6 +417,11 @@ const MainStack: React.FC = () => {
               title: route.params.title,
             })}
           />
+          <Stack.Screen
+            name={BCSCScreens.ServiceNotice}
+            component={ServiceNoticeScreen}
+            options={{ headerShown: true }}
+          />
           <Stack.Screen name={BCSCScreens.PairingConfirmation} component={PairingConfirmation} />
           <Stack.Screen
             name={BCSCScreens.MainRemoveAccountConfirmation}
@@ -530,6 +537,15 @@ const MainStack: React.FC = () => {
               })}
             />
           )}
+          {isVerified ? (
+            <Stack.Screen
+              name={BCSCScreens.AlreadyVerifiedSuccess}
+              component={AlreadyVerifiedSuccessScreen}
+              options={() => ({
+                headerShown: true,
+              })}
+            />
+          ) : null}
           <Stack.Screen
             name={BCSCScreens.ReverifyAccount}
             component={ReverifyAccountScreen}

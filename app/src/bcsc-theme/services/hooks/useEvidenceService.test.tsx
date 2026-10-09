@@ -19,8 +19,7 @@ jest.mock('@bifold/core', () => ({
   TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },
   useServices: jest.fn(),
 }))
-// Avoids pulling in the real navigation stack (HeaderWithBanner -> NotificationBannerContainer -> store),
-// which requires native modules that aren't available under Jest.
+// Stubs navigationRef so this unit test doesn't load the real NavigationContainerContext.
 jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
 }))

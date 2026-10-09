@@ -565,6 +565,12 @@ export const TestIds = {
       savedServiceOpenPrefix: 'OpenService-',
       savedServiceRemovePrefix: 'RemoveService-',
     },
+    /** Service-notice detail, opened by the "Service notice" banner shown while IAS reports a status
+     *  message. That banner is a `warning` `AppBanner`, sharing its ids with the device-limit banner, so
+     *  select it by copy. AuthStack registers this screen too, for the same banner on account landing. */
+    serviceNotice: {
+      contactUs: 'ServiceNoticeContactUs',
+    },
     /** Services catalogue (verified-only; unverified taps redirect to MainVerifyPrompt). `search` is
      *  the always-present sticky-header catalogue search field — the "Services opened, not gated" marker. */
     services: {

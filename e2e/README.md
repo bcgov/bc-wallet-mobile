@@ -522,7 +522,7 @@ it('audits Settings', async () => {
 })
 
 it('reports the accessibility audit roll-up', async () => {
-  await reportA11ySummary() // terminal checkpoint: fails only if NO audit could run (or under A11Y_AUDIT_STRICT=1)
+  await reportA11ySummary() // terminal checkpoint: fails on a finding missing from a11y-baseline.json, or if NO audit could run
 })
 ```
 
@@ -531,9 +531,9 @@ What each platform can see is very different, and the report says which engine p
 | Platform | Engine | Checks | Blind spots |
 | --- | --- | --- | --- |
 | iOS 17+ | Apple's audit engine via `mobile: performAccessibilityAudit` (XCTest) | contrast, hit region, element description, traits, clipped text, dynamic type, parent/child, actions | screen-reader announcements and order |
-| Android | page-source + screenshot heuristics (`src/helpers/a11y-android.ts`) | tappable elements with no accessible name, unlabeled text fields, touch targets under 44dp (error under 24dp), text contrast under 4.5:1 sampled from the screenshot (regions the pushed screen covers are skipped, not flagged) | roles/traits, focus order, live regions, anything semantic — there is no Appium-native audit engine for Android (Google's ATF is in-process only) |
+| Android | page-source + screenshot heuristics (`src/helpers/a11y-android.ts`), over the tree TalkBack sees (views marked not important for accessibility are dropped) | tappable elements with no accessible name, unlabeled text fields, touch targets under 44dp (error under 24dp; a row clipped at a scroll edge is skipped), text contrast under 4.5:1 sampled from the screenshot (regions the pushed screen covers are skipped, not flagged) | roles/traits, focus order, live regions, anything semantic — there is no Appium-native audit engine for Android (Google's ATF is in-process only) |
 
-Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) that `a11y-baseline.json` is keyed on — the nightly brief tags findings missing from it as NEW (see **Nightly brief** under CI/CD). Neither engine can assert VoiceOver/TalkBack behaviour — that pass stays manual with the UAT team.
+Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) that `a11y-baseline.json` is keyed on. A finding missing from the baseline is NEW: the roll-up checkpoint fails on it when the baseline knows the screen (fail-on-new, either severity), and the nightly brief tags it (see **Nightly brief** under CI/CD). A screen the baseline has never seen is reported, not gated, until the baseline is regenerated; a baseline with no section for the platform (or none at all) fails the roll-up outright, since nothing would gate. Neither engine can assert VoiceOver/TalkBack behaviour — that pass stays manual with the UAT team.
 
 ```bash
 # The whole lane locally (one cheap unverified session, ~20 screens)
@@ -541,7 +541,8 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite a11y
 yarn wdio configs/local/wdio.android.local.emu.conf.ts --suite a11y
 
 A11Y_AUDIT_TYPES=contrast,hitRegion   # iOS: narrow the audit types (default: all)
-A11Y_AUDIT_STRICT=1                    # fail the roll-up on error-severity findings
+A11Y_AUDIT_FAIL_ON_NEW=0               # report findings missing from a11y-baseline.json instead of failing the roll-up (default: fail)
+A11Y_AUDIT_STRICT=1                    # fail the roll-up on error-severity findings, known or not
 ```
 
 ### _Camera Image Injection_
@@ -715,7 +716,7 @@ yarn brief:check                                               # the coverage ma
 yarn a11y:baseline --reports reports                           # re-snapshot the known a11y findings after triage
 ```
 
-The accessibility section lists only screens with errors, per platform, with how many findings are NEW versus `a11y-baseline.json` (platform → screen → issue `signature`). A screen the baseline has never seen shows all its findings as NEW and says so. The baseline is report-only: regenerate it once the findings are triaged, and review its diff like code.
+The accessibility section lists only screens with errors, per platform, with how many findings are NEW versus `a11y-baseline.json` (platform → screen → issue `signature`). A screen the baseline has never seen shows all its findings as NEW and says so. The baseline gates the lane — a NEW finding on a screen it knows fails the roll-up checkpoint (`A11Y_AUDIT_FAIL_ON_NEW=0` to report only) — so regenerate it once the findings are triaged, and review its diff like code.
 
 ## _Local App Binaries_
 

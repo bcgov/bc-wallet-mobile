@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createStackHeader } from '../components/NavigationHeaders'
 import { createAuthSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
@@ -20,6 +20,7 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { OnboardingIntroScreen } from '../features/onboarding/OnboardingIntroScreen'
+import { ServiceNoticeScreen } from '../features/service-notice/ServiceNoticeScreen'
 import { AuthPrivacyPolicyScreen } from '../features/settings/AuthPrivacyPolicyScreen'
 import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
@@ -69,7 +70,7 @@ const AuthStack = (): React.ReactElement => {
         ...defaultStackOptions,
         headerShadowVisible: false,
         headerLeft: createHeaderBackButton,
-        header: createHeaderWithoutBanner,
+        header: createStackHeader,
         headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.AuthWebView }),
       }}
     >
@@ -133,6 +134,13 @@ const AuthStack = (): React.ReactElement => {
         options={({ route }) => ({
           title: route.params.title,
         })}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ServiceNotice}
+        component={ServiceNoticeScreen}
+        options={{
+          title: '',
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.AuthPrivacyPolicy}
