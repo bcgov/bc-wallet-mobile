@@ -1,6 +1,6 @@
 import {
   MAX_VISITED_SCREENS,
-  NAVIGATION_VISITED_SCREEN_NAMES,
+  NAVIGATION_TRAIL,
   NavigationContainerContext,
   NavigationContainerProvider,
   useNavigationContainer,
@@ -31,6 +31,8 @@ jest.mock('@/bcsc-theme/navigators/stack-utils', () => ({
     const route = state?.routes?.[state.index]
     return route?.name
   }),
+  // Only matches the real helper for flat stacks; nested behaviour is covered in the .nested test
+  getRouteNamesBelowFocus: jest.fn((state: any) => state.routes.slice(0, state.index).map((r: any) => r.name)),
 }))
 
 jest.mock('@bifold/core', () => ({
@@ -54,7 +56,8 @@ describe('NavigationContainerContext', () => {
     jest.clearAllMocks()
     capturedOnReady = undefined
     capturedOnStateChange = undefined
-    NAVIGATION_VISITED_SCREEN_NAMES.length = 0
+    NAVIGATION_TRAIL.screens.length = 0
+    NAVIGATION_TRAIL.droppedCount = 0
   })
 
   it('should have isNavigationReady as false by default', () => {
@@ -121,16 +124,19 @@ describe('NavigationContainerContext', () => {
       expect(Analytics.trackScreenEvent).toHaveBeenNthCalledWith(2, 'SettingsScreen', 'HomeScreen')
     })
 
-    it('should append each newly visited screen to visitedScreenNames', () => {
+    it('should append each newly visited screen to the navigation trail', () => {
       renderHook(() => useContext(NavigationContainerContext), { wrapper })
 
       capturedOnStateChange?.({ index: 0, routes: [{ name: 'HomeScreen' }] })
       capturedOnStateChange?.({ index: 0, routes: [{ name: 'SettingsScreen' }] })
 
-      expect(NAVIGATION_VISITED_SCREEN_NAMES).toEqual(['HomeScreen', 'SettingsScreen'])
+      expect(NAVIGATION_TRAIL.screens).toEqual([
+        { name: 'HomeScreen', isBack: false },
+        { name: 'SettingsScreen', isBack: false },
+      ])
     })
 
-    it('should not append to visitedScreenNames for a duplicate consecutive transition', () => {
+    it('should not append to the navigation trail for a duplicate consecutive transition', () => {
       renderHook(() => useContext(NavigationContainerContext), { wrapper })
 
       const state = { index: 0, routes: [{ name: 'HomeScreen' }] }
@@ -142,10 +148,10 @@ describe('NavigationContainerContext', () => {
       capturedOnStateChange?.(state)
       capturedOnStateChange?.(state)
 
-      expect(NAVIGATION_VISITED_SCREEN_NAMES).toEqual(['HomeScreen'])
+      expect(NAVIGATION_TRAIL.screens).toEqual([{ name: 'HomeScreen', isBack: false }])
     })
 
-    it('should cap visitedScreenNames at the most recent MAX_VISITED_SCREENS screens', () => {
+    it('should keep the entry point and count dropped entries once MAX_VISITED_SCREENS is exceeded', () => {
       renderHook(() => useContext(NavigationContainerContext), { wrapper })
 
       const totalScreens = MAX_VISITED_SCREENS + 5
@@ -154,11 +160,101 @@ describe('NavigationContainerContext', () => {
         capturedOnStateChange?.({ index: 0, routes: [{ name: `Screen${i}` }] })
       }
 
-      expect(NAVIGATION_VISITED_SCREEN_NAMES).toHaveLength(MAX_VISITED_SCREENS)
-      expect(NAVIGATION_VISITED_SCREEN_NAMES[0]).toBe(`Screen${totalScreens - MAX_VISITED_SCREENS}`)
-      expect(NAVIGATION_VISITED_SCREEN_NAMES[NAVIGATION_VISITED_SCREEN_NAMES.length - 1]).toBe(
-        `Screen${totalScreens - 1}`
-      )
+      const { screens, droppedCount } = NAVIGATION_TRAIL
+
+      expect(screens).toHaveLength(MAX_VISITED_SCREENS)
+      expect(screens[0].name).toBe('Screen0')
+      expect(screens[1].name).toBe(`Screen${totalScreens - MAX_VISITED_SCREENS + 1}`)
+      expect(screens[screens.length - 1].name).toBe(`Screen${totalScreens - 1}`)
+      expect(droppedCount).toBe(5)
+    })
+
+    describe('back navigation', () => {
+      const stack = (names: string[]) => ({ index: names.length - 1, routes: names.map((name) => ({ name })) })
+      const isBackFlags = () => NAVIGATION_TRAIL.screens.map((screen) => screen.isBack)
+
+      beforeEach(() => {
+        renderHook(() => useContext(NavigationContainerContext), { wrapper })
+      })
+
+      it('records the first state as a fresh arrival', () => {
+        capturedOnStateChange?.(stack(['Home']))
+
+        expect(isBackFlags()).toEqual([false])
+      })
+
+      it('marks returning with the back button as back', () => {
+        capturedOnStateChange?.(stack(['Home']))
+        capturedOnStateChange?.(stack(['Home', 'Settings']))
+        capturedOnStateChange?.(stack(['Home']))
+
+        expect(NAVIGATION_TRAIL.screens).toEqual([
+          { name: 'Home', isBack: false },
+          { name: 'Settings', isBack: false },
+          { name: 'Home', isBack: true },
+        ])
+      })
+
+      it('marks a reset to an earlier step as back', () => {
+        capturedOnStateChange?.(stack(['VO', 'Inc']))
+        capturedOnStateChange?.(stack(['VO']))
+
+        expect(isBackFlags()).toEqual([false, true])
+      })
+
+      it('marks a reset to a new, shallower screen as fresh', () => {
+        capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall', 'LiveCall']))
+        capturedOnStateChange?.(stack(['VO', 'Inc']))
+
+        expect(isBackFlags()).toEqual([false, false])
+      })
+
+      it('marks a swap to a different set of routes as fresh', () => {
+        capturedOnStateChange?.(stack(['Auth', 'EnterPIN']))
+        capturedOnStateChange?.(stack(['Main']))
+
+        expect(isBackFlags()).toEqual([false, false])
+      })
+
+      it('advances the baseline even when a state change records nothing', () => {
+        capturedOnStateChange?.(stack(['Home', 'Settings']))
+        // Same focused screen: nothing is recorded, but Help now sits beneath Settings
+        capturedOnStateChange?.(stack(['Home', 'Help', 'Settings']))
+        capturedOnStateChange?.(stack(['Home', 'Help']))
+
+        expect(NAVIGATION_TRAIL.screens).toEqual([
+          { name: 'Settings', isBack: false },
+          { name: 'Help', isBack: true },
+        ])
+      })
+
+      it('marks only the second Verify Options as back when the issue flow is replayed', () => {
+        const attempt = () => {
+          capturedOnStateChange?.(stack(['AccountLanding', 'VO']))
+          capturedOnStateChange?.(stack(['AccountLanding', 'VO', 'Tips']))
+          capturedOnStateChange?.(stack(['AccountLanding', 'VO', 'Tips', 'Capture']))
+          // PhotoReview resets to a stack ending on the call-progress screen
+          capturedOnStateChange?.(stack(['VO', 'Tips', 'Confirmation']))
+          capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall']))
+          // LiveCall resets to [VO, Incomplete]
+          capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall', 'LiveCall']))
+          capturedOnStateChange?.(stack(['VO', 'Incomplete']))
+        }
+
+        attempt()
+        // VerifyNotComplete resets to [VO]
+        capturedOnStateChange?.(stack(['VO']))
+        capturedOnStateChange?.(stack(['VO', 'Tips']))
+        capturedOnStateChange?.(stack(['VO', 'Tips', 'Capture']))
+        capturedOnStateChange?.(stack(['VO', 'Tips', 'Confirmation']))
+        capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall']))
+        capturedOnStateChange?.(stack(['VO', 'Tips', 'StartCall', 'LiveCall']))
+        capturedOnStateChange?.(stack(['VO', 'Incomplete']))
+
+        const backNames = NAVIGATION_TRAIL.screens.filter((screen) => screen.isBack).map((screen) => screen.name)
+
+        expect(backNames).toEqual(['VO'])
+      })
     })
   })
 
