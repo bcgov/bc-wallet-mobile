@@ -271,9 +271,9 @@ describe('StackUtils', () => {
     it('counts three passes as x3', () => {
       const pass = (first: VisitedScreen) => [first, fresh('B')]
 
-      expect(formatNavigationTrail([...pass(fresh('A')), ...pass(back('A')), ...pass(back('A'))], 0)).toBe(
-        '[back to A > B] x3'
-      )
+      expect(
+        formatNavigationTrail([fresh('Start'), ...pass(fresh('A')), ...pass(back('A')), ...pass(back('A'))], 0)
+      ).toBe('Start > [back to A > B] x3')
     })
 
     it('collapses a repeat in the middle of the trail', () => {
@@ -285,20 +285,33 @@ describe('StackUtils', () => {
     it('lists a trailing partial pass after the block', () => {
       const screens = [fresh('Home'), fresh('Settings'), back('Home'), fresh('Settings'), back('Home')]
 
-      expect(formatNavigationTrail(screens, 0)).toBe('[back to Home > Settings] x2 > back to Home')
+      expect(formatNavigationTrail(screens, 0)).toBe('Home > [Settings > back to Home] x2')
+    })
+
+    it('never folds the entry point into a block when nothing was dropped', () => {
+      const screens = [
+        fresh('Home'),
+        fresh('Settings'),
+        back('Home'),
+        fresh('Settings'),
+        back('Home'),
+        fresh('Settings'),
+      ]
+
+      expect(formatNavigationTrail(screens, 0)).toBe('Home > [Settings > back to Home] x2 > Settings')
     })
 
     it('shows the flags of the last pass inside a block', () => {
-      const screens = [fresh('A'), fresh('B'), back('A'), back('B')]
+      const screens = [fresh('Start'), fresh('A'), fresh('B'), back('A'), back('B')]
 
-      expect(formatNavigationTrail(screens, 0)).toBe('[back to A > back to B] x2')
+      expect(formatNavigationTrail(screens, 0)).toBe('Start > [back to A > back to B] x2')
     })
 
     it('lists a repeat nested inside a repeated block flat', () => {
       const run = ['A', 'X', 'Y', 'X', 'Y', 'Z']
-      const screens = [...run.map(fresh), ...run.map(fresh)]
+      const screens = [fresh('Start'), ...run.map(fresh), ...run.map(fresh)]
 
-      expect(formatNavigationTrail(screens, 0)).toBe('[A > X > Y > X > Y > Z] x2')
+      expect(formatNavigationTrail(screens, 0)).toBe('Start > [A > X > Y > X > Y > Z] x2')
     })
 
     it('marks the gap after the entry point and never spans a block across it', () => {
