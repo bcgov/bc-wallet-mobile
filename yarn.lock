@@ -7476,7 +7476,7 @@ __metadata:
     react-native-logs: "npm:~5.1.0"
     react-native-nitro-image: "npm:^0.15.2"
     react-native-nitro-modules: "npm:^0.37.0"
-    react-native-orientation-locker: "npm:~1.6.0"
+    react-native-orientation-locker: "patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch"
     react-native-permissions: "npm:~5.4.1"
     react-native-qrcode-svg: "npm:~6.2.0"
     react-native-reanimated: "npm:4.5.1"
@@ -15740,7 +15740,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-orientation-locker@npm:~1.6.0":
+"react-native-orientation-locker@npm:1.6.0":
   version: 1.6.0
   resolution: "react-native-orientation-locker@npm:1.6.0"
   peerDependencies:
@@ -15751,6 +15751,20 @@ __metadata:
     react-native-windows:
       optional: true
   checksum: 10c0/1c16a7d912043f2f7a7d97b071b14b3c1360b91d0dc8525a04025f915b52d7a66fe2dde1e9bdad62a94860f8dd5d905c8346fd25cadd3cfd476b9c3075995165
+  languageName: node
+  linkType: hard
+
+"react-native-orientation-locker@patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch":
+  version: 1.6.0
+  resolution: "react-native-orientation-locker@patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch::version=1.6.0&hash=ae69f6"
+  peerDependencies:
+    react: ">=16.13.1"
+    react-native: ">=0.63.2"
+    react-native-windows: ">=0.63.3"
+  peerDependenciesMeta:
+    react-native-windows:
+      optional: true
+  checksum: 10c0/89a0836640485dd3c0a154ca771a1465530221a2cbf445eb14c8c80cc5c4775aebea9772138e8325032f825f184959cc2df01992206ae94e707ebe2f665fb0d8
   languageName: node
   linkType: hard
 
