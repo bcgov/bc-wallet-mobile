@@ -12,8 +12,15 @@ import useServiceNoticeViewModel from './useServiceNoticeViewModel'
  * @returns {*} {React.ReactElement} The ServiceNoticeScreen component.
  */
 export const ServiceNoticeScreen = (): React.ReactElement => {
-  const { headerText, messageText, sections, haveQuestionsText, contactUsLinkText, handleContactUs } =
-    useServiceNoticeViewModel()
+  const {
+    headerText,
+    messageText,
+    sections,
+    haveQuestionsText,
+    contactUsLinkText,
+    contactUsLinkHint,
+    handleContactUs,
+  } = useServiceNoticeViewModel()
   const { Spacing } = useTheme()
 
   const styles = StyleSheet.create({
@@ -48,6 +55,8 @@ export const ServiceNoticeScreen = (): React.ReactElement => {
         <Link
           linkText={contactUsLinkText}
           onPress={handleContactUs}
+          // @ts-expect-error Bifold's Link drops its typed textProps; untyped props like this reach the text
+          accessibilityHint={contactUsLinkHint}
           testID={testIdWithKey(TestIds.main.serviceNotice.contactUs)}
         />
       </View>

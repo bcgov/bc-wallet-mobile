@@ -40,7 +40,7 @@ const useServiceNoticeViewModel = () => {
   )
 
   const handleContactUs = useCallback(() => {
-    openLink(contactLink ?? CONTACT_US_HELP_URL)
+    void openLink(contactLink ?? CONTACT_US_HELP_URL)
   }, [contactLink])
 
   return {
@@ -49,6 +49,7 @@ const useServiceNoticeViewModel = () => {
     sections,
     haveQuestionsText: t('BCSC.ServiceNotice.HaveQuestions'),
     contactUsLinkText: t('BCSC.ServiceNotice.ContactUsLink'),
+    contactUsLinkHint: t('Global.A11y.OpensInBrowser'),
     handleContactUs,
   }
 }

@@ -36,6 +36,7 @@ describe('useServiceNoticeViewModel', () => {
     expect(result.current.messageText).toBe('Scheduled maintenance on Saturday')
     expect(result.current.haveQuestionsText).toBe('BCSC.ServiceNotice.HaveQuestions')
     expect(result.current.contactUsLinkText).toBe('BCSC.ServiceNotice.ContactUsLink')
+    expect(result.current.contactUsLinkHint).toBe('Global.A11y.OpensInBrowser')
   })
 
   it('adds the fixed guidance sections under the notice', () => {

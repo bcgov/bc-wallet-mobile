@@ -20,6 +20,7 @@ jest.mock('./useServiceNoticeViewModel', () => () => ({
   ],
   haveQuestionsText: 'Have questions?',
   contactUsLinkText: 'Contact us',
+  contactUsLinkHint: 'This opens in browser',
   handleContactUs: mockHandleContactUs,
 }))
 
@@ -49,6 +50,14 @@ describe('ServiceNoticeScreen', () => {
     expect(getByText('Send video – it may take more than 3 days')).toBeTruthy()
     expect(getByText('Logging into a government service?')).toBeTruthy()
     expect(getByText('Please be patient.')).toBeTruthy()
+  })
+
+  it('tells screen readers that Contact us opens the browser', () => {
+    const { getByTestId } = renderScreen()
+
+    expect(getByTestId(testIdWithKey(TestIds.main.serviceNotice.contactUs)).props.accessibilityHint).toBe(
+      'This opens in browser'
+    )
   })
 
   it('calls handleContactUs when Contact us is pressed', () => {
