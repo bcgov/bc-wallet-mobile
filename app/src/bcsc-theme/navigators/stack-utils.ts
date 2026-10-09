@@ -60,6 +60,18 @@ const getRouteLeafName = (route: NavigationRoute): string => {
  */
 export const getCurrentStateScreenName = (state: NavigationState): string => getRouteLeafName(state.routes[state.index])
 
+// The navigators on the focused path, outermost first
+const getFocusedStates = (state: NavigationState): NavigationState[] => {
+  const states: NavigationState[] = []
+
+  for (let current: NavigationState | undefined = state; current; ) {
+    states.push(current)
+    current = getNestedState(current.routes[current.index])
+  }
+
+  return states
+}
+
 /**
  * Gets the raw (stack-prefixed) names of screens beneath the focused one in every stack on the focused path.
  * Tab and drawer levels add nothing: switching tabs is a sideways move, not a return.
@@ -67,23 +79,25 @@ export const getCurrentStateScreenName = (state: NavigationState): string => get
  * @param state - The navigation state object.
  * @returns The route names beneath the focused screen, outermost stack first.
  */
-export const getRouteNamesBelowFocus = (state: NavigationState): string[] => {
-  const names: string[] = []
-  let current: NavigationState | undefined = state
+export const getRouteNamesBelowFocus = (state: NavigationState): string[] =>
+  getFocusedStates(state)
+    .filter((navigator) => navigator.type === 'stack')
+    .flatMap((navigator) => navigator.routes.slice(0, navigator.index).map(getRouteLeafName))
 
-  while (current) {
-    const focusedRoute: NavigationRoute = current.routes[current.index]
+/**
+ * Whether `next` is a forward push: the route directly beneath the newly focused screen is one that was
+ * already on the previous focused path. Goes back and resets to an earlier step leave no such route beneath.
+ *
+ * @param previous - The navigation state before the change.
+ * @param next - The navigation state after the change.
+ * @returns True when the user moved forward onto a new route, even one whose name is already in the stack.
+ */
+export const isForwardPush = (previous: NavigationState, next: NavigationState): boolean => {
+  const previousKeys = new Set(getFocusedStates(previous).map((navigator) => navigator.routes[navigator.index].key))
+  const holder = getFocusedStates(next).pop()
+  const beneath = holder?.type === 'stack' && holder.index > 0 ? holder.routes[holder.index - 1] : undefined
 
-    if (current.type === 'stack') {
-      for (const route of current.routes.slice(0, current.index)) {
-        names.push(getRouteLeafName(route))
-      }
-    }
-
-    current = getNestedState(focusedRoute)
-  }
-
-  return names
+  return beneath?.key !== undefined && previousKeys.has(beneath.key)
 }
 
 type TrailBlock = { screens: VisitedScreen[]; count: number }

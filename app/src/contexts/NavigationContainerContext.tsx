@@ -2,6 +2,7 @@ import {
   getBaseScreenName,
   getCurrentStateScreenName,
   getRouteNamesBelowFocus,
+  isForwardPush,
 } from '@/bcsc-theme/navigators/stack-utils'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
@@ -81,9 +82,12 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
           // Update the visited screens list only if the current screen is different from the last visited screen
           const { screens } = NAVIGATION_TRAIL
           if (currentScreenName && screens[screens.length - 1]?.name !== currentScreenName) {
-            // Raw (stack-prefixed) names are compared so same-named screens in different stacks never match
+            // Raw (stack-prefixed) names are compared so same-named screens in different stacks never match.
+            // A forward push of a screen already in the stack is not a return.
             const isBack =
-              previousState !== undefined && getRouteNamesBelowFocus(previousState).includes(currentRouteName)
+              previousState !== undefined &&
+              !isForwardPush(previousState, state) &&
+              getRouteNamesBelowFocus(previousState).includes(currentRouteName)
 
             screens.push({ name: currentScreenName, isBack })
             if (screens.length > MAX_VISITED_SCREENS) {
