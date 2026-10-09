@@ -20,6 +20,7 @@ export const RemoteConfigSchema = z.looseObject({
   featureFlags: z.looseObject({
     // TODO (FF): Remove this test feature when feature flagging fully enabled
     'debug.testFeature': z.boolean().catch(false),
+    'kill.crashlytics': z.boolean().catch(false),
     // 'kill.featureX': z.boolean(),
     // 'release.featureY': z.boolean(),
     // 'experimental.featureZ': z.boolean(),
@@ -30,6 +31,7 @@ export const RemoteConfigSchema = z.looseObject({
 const StrictRemoteConfigSchema = z.strictObject({
   featureFlags: z.strictObject({
     'debug.testFeature': z.boolean(),
+    'kill.crashlytics': z.boolean(),
   }),
 })
 

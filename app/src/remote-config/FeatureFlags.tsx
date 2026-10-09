@@ -1,3 +1,6 @@
+import { BCState } from '@/store'
+import { getInitialEnvironment, IASEnvironment } from '@/utils/environment'
+import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { getRemoteConfig, useRemoteConfig } from './RemoteConfig'
 import { RemoteConfig } from './remote-config-utils'
@@ -12,7 +15,9 @@ export type FeatureGates = ReturnType<typeof useFeatureFlags>['featureGates']
  */
 export const useFeatureFlags = () => {
   const remoteConfig = useRemoteConfig()
+  const [store] = useStore<BCState>()
   const featureFlags = remoteConfig.getValue('featureFlags')
+  const apiBaseUrl = store.developer.environment.iasApiBaseUrl
 
   /**
    * Get the value of a feature flag.
@@ -38,8 +43,21 @@ export const useFeatureFlags = () => {
       testFeatureEnabled() {
         return getFeatureFlag('debug.testFeature') && __DEV__
       },
+      /**
+       * Crash reporting gate. Prod builds, and any build switched to prod, stay off until consent lands,
+       * and the kill flag turns it off remotely.
+       * @returns True if this build may send crash reports, false otherwise.
+       */
+      crashReportingEnabled() {
+        // By API URL: the stored environment is a copy, and older builds stored it under other names
+        return (
+          getInitialEnvironment() !== IASEnvironment.PROD &&
+          apiBaseUrl !== IASEnvironment.PROD.iasApiBaseUrl &&
+          !getFeatureFlag('kill.crashlytics')
+        )
+      },
     }),
-    [getFeatureFlag]
+    [apiBaseUrl, getFeatureFlag]
   )
 
   return useMemo(

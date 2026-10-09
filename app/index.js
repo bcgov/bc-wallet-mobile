@@ -1,5 +1,6 @@
 // organize-imports-ignore
 import './src/polyfills/text-encoding' // spec-compliant TextEncoder/TextDecoder (must be first)
+import './src/services/rn-default-error-handler' // captures React Native's error handler before Crashlytics replaces it
 import 'react-native-gesture-handler'
 import 'reflect-metadata'
 
@@ -23,6 +24,7 @@ import { AppRegistry, LogBox } from 'react-native'
 
 import App from './App'
 import { name as appName } from './app.json'
+import { initCrashReporting } from './src/services/crash-reporting'
 
 LogBox.ignoreLogs([
   // For Credo deps that are still very new
@@ -30,5 +32,7 @@ LogBox.ignoreLogs([
   // Ignore metro open debugger log
   'Open debugger to view warnings.',
 ])
+
+initCrashReporting()
 
 AppRegistry.registerComponent(appName, () => App)
