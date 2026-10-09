@@ -20,6 +20,7 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { OnboardingIntroScreen } from '../features/onboarding/OnboardingIntroScreen'
+import { ServiceNoticeScreen } from '../features/service-notice/ServiceNoticeScreen'
 import { AuthPrivacyPolicyScreen } from '../features/settings/AuthPrivacyPolicyScreen'
 import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
@@ -133,6 +134,13 @@ const AuthStack = (): React.ReactElement => {
         options={({ route }) => ({
           title: route.params.title,
         })}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ServiceNotice}
+        component={ServiceNoticeScreen}
+        options={{
+          title: '',
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.AuthPrivacyPolicy}

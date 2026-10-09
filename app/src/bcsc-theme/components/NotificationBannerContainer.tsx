@@ -1,11 +1,17 @@
+import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { openLink } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useRef, useState } from 'react'
 import { View } from 'react-native'
 import { setMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
+
+/** The container renders on Home (MainStack) and account landing (AuthStack); both register this route. */
+type ServiceNoticeParamList = Pick<BCSCMainStackParams & BCSCAuthStackParams, BCSCScreens.ServiceNotice>
 
 interface NotificationBannerContainerProps {
   onManageDevices: () => void
@@ -20,6 +26,7 @@ interface NotificationBannerContainerProps {
  */
 export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }: NotificationBannerContainerProps) => {
   const [store, dispatch] = useStore<BCState>()
+  const navigation = useNavigation<StackNavigationProp<ServiceNoticeParamList>>()
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
 
@@ -31,10 +38,11 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
       return setDevicesModalVisible(true)
     }
 
-    if (
-      (banner.id === BCSCBanner.IAS_SERVER_NOTIFICATION || banner.id === BCSCBanner.IAS_SERVER_UNAVAILABLE) &&
-      typeof banner.metadata?.contactLink === 'string'
-    ) {
+    if (banner.id === BCSCBanner.IAS_SERVER_NOTIFICATION) {
+      return navigation.navigate(BCSCScreens.ServiceNotice)
+    }
+
+    if (banner.id === BCSCBanner.IAS_SERVER_UNAVAILABLE && typeof banner.metadata?.contactLink === 'string') {
       openLink(banner.metadata.contactLink)
     }
 

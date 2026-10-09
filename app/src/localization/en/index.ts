@@ -604,6 +604,18 @@ const translation = {
       "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code",
       "ViewMessages": "View new messages",
     },
+    "ServiceNotice": {
+      "Header": "Service notice",
+      "NoticeUnavailable": "This notice isn't available right now.",
+      "MobileCardHeading": "Setting up a mobile card?",
+      "MobileCardDescription": "It may take longer to get your identity verified to set up your mobile card.",
+      "MobileCardVideoCall": "Video call – it may take more than 5 minutes to speak to an agent",
+      "MobileCardSendVideo": "Send video – it may take more than 3 days to get a response back",
+      "LoginHeading": "Logging into a government service?",
+      "LoginDescription": "Please be patient, it may take longer to log in.",
+      "HaveQuestions": "Have questions?",
+      "ContactUsLink": "Contact us",
+    },
     "Steps": {
       "VerificationIDMissing": "Verification request ID is missing",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification",
@@ -626,6 +638,7 @@ const translation = {
       },
       "ServerStatus": {
         "UnavailableBannerTitle": "Service Unavailable",
+        "NoticeBannerTitle": "Service notice. Learn more.",
       },
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available",

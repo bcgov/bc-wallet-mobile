@@ -159,16 +159,16 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
 
     dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
     if (serverStatus.statusMessage) {
+      // A fixed one-line summary: the message itself can run long enough to fill the screen, so it
+      // is shown on the ServiceNotice screen the banner opens instead.
       dispatch({
         type: BCDispatchAction.ADD_BANNER_MESSAGE,
         payload: [
           {
             id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-            title: undefined,
-            description: serverStatus.statusMessage,
-            type: 'info',
+            title: t('BCSC.SystemChecks.ServerStatus.NoticeBannerTitle'),
+            type: 'warning',
             dismissible: false,
-            metadata: { contactLink: serverStatus.contactLink },
           },
         ],
       })
