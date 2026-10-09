@@ -86,6 +86,6 @@ colour), is 24px, and sits left of the label with `Spacing.sm` between them. It 
 `ButtonLoading` (`animatedComponents.ButtonLoading`) rendered as a `Button` child; don't hand-roll a
 spinner inside a button.
 
-**Why:** `ButtonLoading` used a fixed grey, which was unreadable on a blue Primary button. The yarn
-patch on `@bifold/core` (see `PATCH_NOTES.md`) lets `Button` hand its label colour to the spinner, so
-every button type and theme stays legible without per-screen colour props (#4743).
+**Why:** `ButtonLoading` used a fixed grey, which was unreadable on a blue Primary button. Bifold 3.1.3
+lets `Button` hand its label colour to the spinner, so every button type and theme stays legible
+without per-screen colour props (#4743).
