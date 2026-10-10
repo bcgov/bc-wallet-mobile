@@ -176,6 +176,35 @@ describe('useDeviceAuthorizationRecovery', () => {
       expect(result.current.isRecovering).toBe(false)
     })
 
+    it('reports isRecovering while the registration is in flight', async () => {
+      let finishRegistration: () => void = () => {}
+      mockEnsureRegistered.mockReturnValue(
+        new Promise<void>((resolve) => {
+          finishRegistration = resolve
+        })
+      )
+      const thunk = jest
+        .fn()
+        .mockRejectedValueOnce(accountError(ErrorRegistry.ACCOUNT_NOT_REGISTERED))
+        .mockResolvedValueOnce('recovered')
+      const { result } = renderHook(() => useHarness())
+
+      let attempt!: Promise<unknown>
+      await act(async () => {
+        attempt = result.current.attemptWithRecovery(thunk, 'ResidentialAddress')
+        await Promise.resolve()
+      })
+
+      expect(result.current.isRecovering).toBe(true)
+
+      await act(async () => {
+        finishRegistration()
+        await attempt
+      })
+
+      expect(result.current.isRecovering).toBe(false)
+    })
+
     it.each([true, false])(
       'rethrows the registration failure as the same object with handled=%s kept, without retrying',
       async (handled) => {

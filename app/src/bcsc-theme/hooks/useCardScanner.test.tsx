@@ -586,7 +586,8 @@ describe('useCardScanner', () => {
         mockDispatch,
       ])
       jest.mocked(navigation).useNavigation = jest.fn().mockReturnValue({ reset: mockNavigationReset })
-      jest.mocked(Bifold).useServices.mockReturnValue([{ debug: jest.fn(), error: jest.fn(), warn: jest.fn() } as any])
+      const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      jest.mocked(Bifold).useServices.mockReturnValue([logger as any])
       jest.mocked(useAlerts).mockReturnValue({ accountNotFoundAlert: jest.fn() } as any)
       jest
         .mocked(useRegistrationService)
@@ -598,7 +599,7 @@ describe('useCardScanner', () => {
           jest.requireActual('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery').useDeviceAuthorizationRecovery()
         )
 
-      return { hook: renderHook(() => useCardScanner()), mockNavigationReset }
+      return { hook: renderHook(() => useCardScanner()), mockNavigationReset, logger }
     }
 
     const notRegisteredError = () =>
@@ -633,11 +634,14 @@ describe('useCardScanner', () => {
       registrationFailure.handled = true
       mockEnsureRegistered.mockRejectedValue(registrationFailure)
       const authorizeDevice = jest.fn().mockRejectedValue(notRegisteredError())
-      const { hook, mockNavigationReset } = setup(authorizeDevice)
+      const { hook, mockNavigationReset, logger } = setup(authorizeDevice)
 
       const result = await hook.result.current.handleScanComboCard('S00023254', licenseData)
 
       expect(result).toBe(true)
+      expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+      // The rethrown error was the already-handled registration failure, not the raw guard error
+      expect(logger.error).not.toHaveBeenCalled()
       expect(authorizeDevice).toHaveBeenCalledTimes(1)
       expect(mockNavigationReset).not.toHaveBeenCalled()
     })
