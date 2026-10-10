@@ -135,6 +135,9 @@ describe('errorRegistry', () => {
       // General/Registration Errors (2800-2899)
       expect(ErrorRegistry.GENERAL_ERROR.statusCode).toBeGreaterThanOrEqual(2800)
       expect(ErrorRegistry.GENERAL_ERROR.statusCode).toBeLessThan(2900)
+      expect(ErrorRegistry.ACCOUNT_NOT_REGISTERED.statusCode).toBe(2836)
+      expect(ErrorRegistry.ACCOUNT_NOT_REGISTERED.statusCode).toBeGreaterThanOrEqual(2800)
+      expect(ErrorRegistry.ACCOUNT_NOT_REGISTERED.statusCode).toBeLessThan(2900)
 
       // Wallet/Agent Errors (2900-2999)
       expect(ErrorRegistry.STATE_LOAD_ERROR.statusCode).toBeGreaterThanOrEqual(2900)

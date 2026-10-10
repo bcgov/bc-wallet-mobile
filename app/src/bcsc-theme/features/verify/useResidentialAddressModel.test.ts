@@ -1,7 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useResidentialAddressModel from '@/bcsc-theme/features/verify/useResidentialAddressModel'
+import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { AppError, ErrorCategory } from '@/errors'
+import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
@@ -51,6 +52,14 @@ const mockAttemptWithRecovery = jest.fn((thunk: () => Promise<unknown>) => thunk
 jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery', () => ({
   useDeviceAuthorizationRecovery: jest.fn(() => mockAttemptWithRecovery),
   useIsDeviceAuthorizationRecovering: jest.fn(() => false),
+}))
+
+const mockEnsureRegistered = jest.fn()
+jest.mock('@/bcsc-theme/services/hooks/useRegistrationService', () => ({
+  useRegistrationService: jest.fn(() => ({ ensureRegistered: mockEnsureRegistered, cycleRegistration: jest.fn() })),
+}))
+jest.mock('@/hooks/useAlerts', () => ({
+  useAlerts: jest.fn(() => ({ accountNotFoundAlert: jest.fn() })),
 }))
 
 describe('useResidentialAddressModel', () => {
@@ -659,6 +668,87 @@ describe('useResidentialAddressModel', () => {
 
       expect(mockEmitErrorModal).not.toHaveBeenCalled()
       expect(result.current.isSubmitting).toBe(false)
+    })
+
+    describe('device registered late (stuck account)', () => {
+      const notRegisteredError = () =>
+        new AppError('No account found. Please register first.', ErrorRegistry.ACCOUNT_NOT_REGISTERED, { track: false })
+
+      beforeEach(() => {
+        // The real recovery hook, so the screen is exercised against the actual register-then-retry behaviour
+        jest
+          .mocked(useDeviceAuthorizationRecovery)
+          .mockImplementation(() =>
+            jest.requireActual('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery').useDeviceAuthorizationRecovery()
+          )
+        mockEmitErrorModal.mockClear()
+        mockNavigation.dispatch.mockClear()
+        mockEnsureRegistered.mockReset()
+      })
+
+      afterEach(() => {
+        jest.mocked(useDeviceAuthorizationRecovery).mockImplementation(() => mockAttemptWithRecovery as any)
+      })
+
+      it('registers the device, retries, and continues to the next step', async () => {
+        mockEnsureRegistered.mockResolvedValue(undefined)
+        mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockReset()
+        mockAuthorizationApi.authorizeDeviceWithUnknownBCSC
+          .mockRejectedValueOnce(notRegisteredError())
+          .mockResolvedValueOnce({
+            device_code: 'new-device-code',
+            user_code: 'new-user-code',
+            expires_in: 3600,
+            verification_options: 'video_call back_check',
+            process: BCSCCardProcess.NonBCSC,
+          })
+        jest
+          .mocked(Bifold)
+          .useStore.mockReturnValue([
+            { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, ...idStepComplete } },
+            mockDispatch,
+          ])
+
+        const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+        await act(async () => {
+          await result.current.handleSubmit()
+        })
+
+        expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+        expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledTimes(2)
+        expect(mockNavigation.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'PUSH',
+            payload: expect.objectContaining({ name: BCSCScreens.EnterEmail }),
+          })
+        )
+      })
+
+      it('shows no connection-error modal and re-enables submit when registration fails', async () => {
+        // ensureRegistered has already alerted and marked its error handled
+        const registrationFailure = new AppError(
+          'registration failed',
+          { category: ErrorCategory.NETWORK, appEvent: AppEventCode.NO_INTERNET, statusCode: 2100 },
+          { track: false }
+        )
+        registrationFailure.handled = true
+        mockEnsureRegistered.mockRejectedValue(registrationFailure)
+        mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockReset()
+        mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockRejectedValue(notRegisteredError())
+
+        const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+        await act(async () => {
+          await result.current.handleSubmit()
+        })
+
+        expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+        expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledTimes(1)
+        expect(mockEmitErrorModal).not.toHaveBeenCalled()
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(result.current.isSubmitting).toBe(false)
+      })
     })
 
     it('should throw error when birthdate is missing', async () => {

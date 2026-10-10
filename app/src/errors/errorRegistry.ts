@@ -1145,6 +1145,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.GENERAL,
     message: 'WebView request returned a non-2xx HTTP response',
   },
+  ACCOUNT_NOT_REGISTERED: {
+    statusCode: 2836,
+    appEvent: AppEventCode.ACCOUNT_NOT_REGISTERED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Device account exists but is not registered with the server (no client ID)',
+  },
 
   // ============================================
   // Wallet/Agent Errors (2900-2999)
