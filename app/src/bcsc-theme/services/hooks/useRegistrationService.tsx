@@ -1,6 +1,7 @@
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { isAppError } from '@/errors/appError'
+import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts, useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
@@ -54,13 +55,18 @@ export const useRegistrationService = () => {
   const [store] = useStore<BCState>()
   const alerts = useAlerts(navigation)
 
+  /** @returns whether a mapped registration alert was shown */
   const emitRegistrationAlert = useCallback(
-    (error: unknown) => {
-      if (isAppError(error)) {
-        // Pass the error through so the alert logs it (with its cause) instead of
-        // manufacturing a fresh cause-less AppError from the event code alone.
-        getRegistrationAlertMap(alerts)[error.appEvent]?.(error)
+    (error: unknown): boolean => {
+      if (!isAppError(error)) {
+        return false
       }
+
+      // Pass the error through so the alert logs it (with its cause) instead of
+      // manufacturing a fresh cause-less AppError from the event code alone.
+      const showAlert = getRegistrationAlertMap(alerts)[error.appEvent]
+      showAlert?.(error)
+      return Boolean(showAlert)
     },
     [alerts]
   )
@@ -119,6 +125,9 @@ export const useRegistrationService = () => {
    * If the account is already registered, it does nothing.
    * If the account is not registered, it registers the account with the backend.
    *
+   * On failure it shows at most one alert, for the error it rethrows (none if a client policy
+   * already handled that error), and rethrows it marked as `handled`.
+   *
    * @returns Promise resolving when the account is ensured to be registered
    * */
   const ensureRegistered = useCallback(async () => {
@@ -128,11 +137,22 @@ export const useRegistrationService = () => {
     }
 
     // 2. Register the account with the backend
-    const securityMethod = await getAccountSecurityMethod()
+    try {
+      const securityMethod = await getAccountSecurityMethod()
 
-    // Note: Fetches registration access token and updates the account's `clientID`
-    await register(securityMethod)
-  }, [register, store.bcscSecure.registrationAccessToken])
+      // Note: Fetches registration access token and updates the account's `clientID`
+      await registrationApi.register(securityMethod)
+    } catch (error) {
+      const appError = ensureAppError(error, AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE)
+      // e.g. NO_INTERNET maps to no registration alert and no client policy, so fall back to a generic one
+      if (!appError.handled && !emitRegistrationAlert(appError)) {
+        alerts.clientRegistrationFailureAlert(appError)
+      }
+      appError.handled = true
+
+      throw appError
+    }
+  }, [alerts, registrationApi, emitRegistrationAlert, store.bcscSecure.registrationAccessToken])
 
   /**
    * Deletes the current IAS client registration and creates a fresh one, keeping the same

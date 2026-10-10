@@ -1,4 +1,5 @@
 import * as useRegistrationApiModule from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import { initialState } from '@/store'
@@ -793,6 +794,78 @@ describe('useRegistrationService', () => {
       // Rejection must propagate so callers (e.g. useDataLoader) can route it to onError
       await expect(result.current.ensureRegistered()).rejects.toThrow(mockError)
       expect(clientRegistrationFailureAlert).toHaveBeenCalledWith(mockError)
+    })
+
+    describe('failure alerts', () => {
+      const setup = (register: jest.Mock, alerts: Record<string, jest.Mock>) => {
+        jest.mocked(getAccountSecurityMethod).mockResolvedValue('app_pin_no_device_authn' as any)
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue({ register } as any)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(alerts as any)
+
+        return renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+      }
+
+      it('wraps a plain Error, alerts once and rethrows it as handled', async () => {
+        const clientRegistrationFailureAlert = jest.fn()
+        const { result } = setup(jest.fn().mockRejectedValue(new Error('boom')), { clientRegistrationFailureAlert })
+
+        const thrown = await result.current.ensureRegistered().catch((error) => error)
+
+        expect(thrown).toBeInstanceOf(AppError)
+        expect(thrown.handled).toBe(true)
+        expect(clientRegistrationFailureAlert).toHaveBeenCalledTimes(1)
+      })
+
+      it('alerts once and does not register when reading the security method fails', async () => {
+        const clientRegistrationFailureAlert = jest.fn()
+        const register = jest.fn()
+        const { result } = setup(register, { clientRegistrationFailureAlert })
+        jest.mocked(getAccountSecurityMethod).mockRejectedValue(new Error('no security method'))
+
+        await expect(result.current.ensureRegistered()).rejects.toBeInstanceOf(AppError)
+
+        expect(register).not.toHaveBeenCalled()
+        expect(clientRegistrationFailureAlert).toHaveBeenCalledTimes(1)
+      })
+
+      it('falls back to the generic alert for an error with no mapped alert (NO_INTERNET)', async () => {
+        const clientRegistrationFailureAlert = jest.fn()
+        const noInternet = mockAppError(AppEventCode.NO_INTERNET)
+        const { result } = setup(jest.fn().mockRejectedValue(noInternet), { clientRegistrationFailureAlert })
+
+        const thrown = await result.current.ensureRegistered().catch((error) => error)
+
+        expect(thrown).toBe(noInternet)
+        expect(noInternet.handled).toBe(true)
+        expect(clientRegistrationFailureAlert).toHaveBeenCalledTimes(1)
+        expect(clientRegistrationFailureAlert).toHaveBeenCalledWith(noInternet)
+      })
+
+      it('shows only the mapped alert, not the fallback', async () => {
+        const clientRegistrationFailureAlert = jest.fn()
+        const clientRegistrationNullAlert = jest.fn()
+        const mapped = mockAppError(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
+        const { result } = setup(jest.fn().mockRejectedValue(mapped), {
+          clientRegistrationFailureAlert,
+          clientRegistrationNullAlert,
+        })
+
+        await expect(result.current.ensureRegistered()).rejects.toBe(mapped)
+
+        expect(clientRegistrationNullAlert).toHaveBeenCalledTimes(1)
+        expect(clientRegistrationFailureAlert).not.toHaveBeenCalled()
+      })
+
+      it('shows no alert when the error was already handled by a client policy', async () => {
+        const clientRegistrationFailureAlert = jest.fn()
+        const alreadyHandled = mockAppError(AppEventCode.NO_INTERNET)
+        alreadyHandled.handled = true
+        const { result } = setup(jest.fn().mockRejectedValue(alreadyHandled), { clientRegistrationFailureAlert })
+
+        await expect(result.current.ensureRegistered()).rejects.toBe(alreadyHandled)
+
+        expect(clientRegistrationFailureAlert).not.toHaveBeenCalled()
+      })
     })
   })
 
