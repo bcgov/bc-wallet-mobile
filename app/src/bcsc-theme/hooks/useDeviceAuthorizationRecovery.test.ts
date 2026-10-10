@@ -4,7 +4,7 @@ import {
 } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
-import { AppError, ErrorCategory } from '@/errors'
+import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -19,6 +19,7 @@ jest.mock('@bifold/core', () => {
 })
 
 const mockCycleRegistration = jest.fn()
+const mockEnsureRegistered = jest.fn()
 const mockLogger = { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() }
 
 // Renders both hooks together so tests can observe the module-level isRecovering flag
@@ -27,6 +28,9 @@ const useHarness = () => ({
   attemptWithRecovery: useDeviceAuthorizationRecovery(),
   isRecovering: useIsDeviceAuthorizationRecovering(),
 })
+
+const accountError = (identity: typeof ErrorRegistry.ACCOUNT_NOT_REGISTERED) =>
+  new AppError('No account found. Please register first.', identity, { track: false })
 
 const alreadyRegisteredError = () => {
   const error = new AppError(
@@ -41,7 +45,9 @@ const alreadyRegisteredError = () => {
 describe('useDeviceAuthorizationRecovery', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.mocked(useRegistrationService).mockReturnValue({ cycleRegistration: mockCycleRegistration } as any)
+    jest
+      .mocked(useRegistrationService)
+      .mockReturnValue({ cycleRegistration: mockCycleRegistration, ensureRegistered: mockEnsureRegistered } as any)
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
     jest.mocked(navigationRef.isReady).mockReturnValue(true)
   })
@@ -145,5 +151,114 @@ describe('useDeviceAuthorizationRecovery', () => {
     // retry — but we already tried the one thing it offers and it didn't help. Un-marking it
     // is what lets the caller's own catch actually surface something instead of going silent.
     expect(secondError.handled).toBe(false)
+  })
+
+  describe('device account exists but is not registered', () => {
+    it('registers once, retries once and returns the value', async () => {
+      mockEnsureRegistered.mockResolvedValue(undefined)
+      const thunk = jest
+        .fn()
+        .mockRejectedValueOnce(accountError(ErrorRegistry.ACCOUNT_NOT_REGISTERED))
+        .mockResolvedValueOnce('recovered')
+      const { result } = renderHook(() => useHarness())
+
+      await act(async () => {
+        await expect(result.current.attemptWithRecovery(thunk, 'ResidentialAddress')).resolves.toBe('recovered')
+      })
+
+      expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+      expect(thunk).toHaveBeenCalledTimes(2)
+      expect(mockCycleRegistration).not.toHaveBeenCalled()
+      expect(result.current.isRecovering).toBe(false)
+    })
+
+    it('reports isRecovering while the registration is in flight', async () => {
+      let finishRegistration: () => void = () => {}
+      mockEnsureRegistered.mockReturnValue(
+        new Promise<void>((resolve) => {
+          finishRegistration = resolve
+        })
+      )
+      const thunk = jest
+        .fn()
+        .mockRejectedValueOnce(accountError(ErrorRegistry.ACCOUNT_NOT_REGISTERED))
+        .mockResolvedValueOnce('recovered')
+      const { result } = renderHook(() => useHarness())
+
+      let attempt!: Promise<unknown>
+      await act(async () => {
+        attempt = result.current.attemptWithRecovery(thunk, 'ResidentialAddress')
+        await Promise.resolve()
+      })
+
+      expect(result.current.isRecovering).toBe(true)
+
+      await act(async () => {
+        finishRegistration()
+        await attempt
+      })
+
+      expect(result.current.isRecovering).toBe(false)
+    })
+
+    it.each([true, false])(
+      'rethrows the registration failure as the same object with handled=%s kept, without retrying',
+      async (handled) => {
+        const registrationFailure = alreadyRegisteredError()
+        registrationFailure.handled = handled
+        mockEnsureRegistered.mockRejectedValue(registrationFailure)
+        const thunk = jest.fn().mockRejectedValue(accountError(ErrorRegistry.ACCOUNT_NOT_REGISTERED))
+        const { result } = renderHook(() => useHarness())
+
+        await act(async () => {
+          await expect(result.current.attemptWithRecovery(thunk, 'ResidentialAddress')).rejects.toBe(
+            registrationFailure
+          )
+        })
+
+        expect(registrationFailure.handled).toBe(handled)
+        expect(thunk).toHaveBeenCalledTimes(1)
+        expect(result.current.isRecovering).toBe(false)
+      }
+    )
+
+    it.each([
+      ['ACCOUNT_NOT_REGISTERED', () => accountError(ErrorRegistry.ACCOUNT_NOT_REGISTERED)],
+      ['ERR_501', () => alreadyRegisteredError()],
+    ])('propagates a retry failure (%s) once, without a second registration or a cycle', async (_name, makeError) => {
+      mockEnsureRegistered.mockResolvedValue(undefined)
+      jest.mocked(navigationRef.getCurrentRoute).mockReturnValue({ name: 'ResidentialAddress', key: 'k' } as any)
+      const retryError = makeError()
+      const handledBefore = retryError.handled
+      const thunk = jest
+        .fn()
+        .mockRejectedValueOnce(accountError(ErrorRegistry.ACCOUNT_NOT_REGISTERED))
+        .mockRejectedValueOnce(retryError)
+      const { result } = renderHook(() => useHarness())
+
+      await act(async () => {
+        await expect(result.current.attemptWithRecovery(thunk, 'ResidentialAddress')).rejects.toBe(retryError)
+      })
+
+      expect(retryError.handled).toBe(handledBefore)
+      expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+      expect(mockCycleRegistration).not.toHaveBeenCalled()
+      expect(thunk).toHaveBeenCalledTimes(2)
+      expect(result.current.isRecovering).toBe(false)
+    })
+  })
+
+  describe('no device account at all', () => {
+    it('passes the plain no-account error through untouched, without registering or retrying', async () => {
+      const noAccount = new Error('No account found. Please register first.')
+      const thunk = jest.fn().mockRejectedValue(noAccount)
+      const { result } = renderHook(() => useDeviceAuthorizationRecovery())
+
+      await expect(result.current(thunk, 'ResidentialAddress')).rejects.toBe(noAccount)
+
+      expect(mockEnsureRegistered).not.toHaveBeenCalled()
+      expect(mockCycleRegistration).not.toHaveBeenCalled()
+      expect(thunk).toHaveBeenCalledTimes(1)
+    })
   })
 })
