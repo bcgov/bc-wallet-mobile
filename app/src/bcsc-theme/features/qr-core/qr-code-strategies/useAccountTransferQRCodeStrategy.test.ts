@@ -4,7 +4,6 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
-import { useAlerts } from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
 import { QrCodeScanError } from '@bifold/core'
 import { renderHook } from '@testing-library/react-native'
@@ -26,7 +25,6 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions')
 const mockUseSecureActions = jest.mocked(useSecureActions)
 
 jest.mock('@/bcsc-theme/services/hooks/useRegistrationService')
-jest.mock('@/hooks/useAlerts')
 const mockEnsureRegistered = jest.fn()
 
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
@@ -117,7 +115,6 @@ describe('useAccountTransferQRCodeStrategy', () => {
     jest
       .mocked(useRegistrationService)
       .mockReturnValue({ ensureRegistered: mockEnsureRegistered, cycleRegistration: jest.fn() } as any)
-    jest.mocked(useAlerts).mockReturnValue({ accountNotFoundAlert: jest.fn() } as any)
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([{ bcscSecure: {} } as any, jest.fn()])

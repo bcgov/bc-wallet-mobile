@@ -58,9 +58,6 @@ const mockEnsureRegistered = jest.fn()
 jest.mock('@/bcsc-theme/services/hooks/useRegistrationService', () => ({
   useRegistrationService: jest.fn(() => ({ ensureRegistered: mockEnsureRegistered, cycleRegistration: jest.fn() })),
 }))
-jest.mock('@/hooks/useAlerts', () => ({
-  useAlerts: jest.fn(() => ({ accountNotFoundAlert: jest.fn() })),
-}))
 
 describe('useResidentialAddressModel', () => {
   const mockDispatch = jest.fn()

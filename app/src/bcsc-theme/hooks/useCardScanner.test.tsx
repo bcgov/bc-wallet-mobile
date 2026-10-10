@@ -8,7 +8,6 @@ import { BC_DL_BARCODE_NO_DCN_A, BC_DL_BARCODE_S } from '@/bcsc-theme/utils/__fi
 import { ScanableCode } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
-import { useAlerts } from '@/hooks/useAlerts'
 import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
@@ -19,7 +18,6 @@ jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
 jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery')
 jest.mock('@react-navigation/native')
-jest.mock('@/hooks/useAlerts')
 jest.mock('@/bcsc-theme/services/hooks/useRegistrationService')
 const mockEnsureRegistered = jest.fn()
 jest.mock('@bifold/core')
@@ -588,7 +586,6 @@ describe('useCardScanner', () => {
       jest.mocked(navigation).useNavigation = jest.fn().mockReturnValue({ reset: mockNavigationReset })
       const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() }
       jest.mocked(Bifold).useServices.mockReturnValue([logger as any])
-      jest.mocked(useAlerts).mockReturnValue({ accountNotFoundAlert: jest.fn() } as any)
       jest
         .mocked(useRegistrationService)
         .mockReturnValue({ ensureRegistered: mockEnsureRegistered, cycleRegistration: jest.fn() } as any)

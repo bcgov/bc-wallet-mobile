@@ -3,9 +3,7 @@ import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { isAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
-import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
-import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useSyncExternalStore } from 'react'
 
 // Module state rather than component state
@@ -34,12 +32,10 @@ export const useIsDeviceAuthorizationRecovering = () => useSyncExternalStore(sub
 
 /**
  * Wraps one device-authorization call: registers an unregistered device or cycles an ERR_501 conflict,
- * then retries once. A missing account is alerted and rethrown as handled; other errors pass through.
+ * then retries once. Other errors, including a missing account, pass through.
  */
 export const useDeviceAuthorizationRecovery = () => {
   const { cycleRegistration, ensureRegistered } = useRegistrationService()
-  const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const { accountNotFoundAlert } = useAlerts(navigation)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const attemptWithRecovery = useCallback(
@@ -47,14 +43,6 @@ export const useDeviceAuthorizationRecovery = () => {
       try {
         return await action()
       } catch (firstError) {
-        if (isAppError(firstError, AppEventCode.ACCOUNT_NOT_FOUND)) {
-          if (!firstError.handled) {
-            accountNotFoundAlert(firstError)
-          }
-          firstError.handled = true
-          throw firstError
-        }
-
         // Temporary account: the first server call is where a device that failed setup registers
         if (isAppError(firstError, AppEventCode.ACCOUNT_NOT_REGISTERED)) {
           setRecovering(true)
@@ -97,7 +85,7 @@ export const useDeviceAuthorizationRecovery = () => {
         }
       }
     },
-    [accountNotFoundAlert, cycleRegistration, ensureRegistered, logger]
+    [cycleRegistration, ensureRegistered, logger]
   )
 
   return attemptWithRecovery

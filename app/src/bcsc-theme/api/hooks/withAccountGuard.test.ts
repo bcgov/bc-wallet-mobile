@@ -1,6 +1,5 @@
 import { withAccount } from '@/bcsc-theme/api/hooks/withAccountGuard'
 import { AppError, isAppError } from '@/errors/appError'
-import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { getAccount } from 'react-native-bcsc-core'
 
@@ -17,15 +16,14 @@ describe('withAccount', () => {
     jest.clearAllMocks()
   })
 
-  it('throws ACCOUNT_NOT_FOUND, without running the wrapped function, when there is no account', async () => {
+  it('throws the plain no-account Error, without running the wrapped function, when there is no account', async () => {
     jest.mocked(getAccount).mockResolvedValue(null)
 
-    const error = (await withAccount(fn).catch((e) => e)) as AppError
+    const error = (await withAccount(fn).catch((e) => e)) as Error
 
-    expect(isAppError(error, AppEventCode.ACCOUNT_NOT_FOUND)).toBe(true)
-    expect(error.statusCode).toBe(ErrorRegistry.ACCOUNT_NOT_FOUND.statusCode)
+    expect(error).toBeInstanceOf(Error)
+    expect(isAppError(error)).toBe(false)
     expect(error.message).toBe('No account found. Please register first.')
-    expect(trackSpy).not.toHaveBeenCalled()
     expect(fn).not.toHaveBeenCalled()
   })
 

@@ -6,12 +6,10 @@ import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrat
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
-import { useAlerts } from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 
 jest.mock('@/bcsc-theme/services/hooks/useRegistrationService')
-jest.mock('@/hooks/useAlerts')
 jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: jest.fn(), getCurrentRoute: jest.fn() },
 }))
@@ -22,7 +20,6 @@ jest.mock('@bifold/core', () => {
 
 const mockCycleRegistration = jest.fn()
 const mockEnsureRegistered = jest.fn()
-const mockAccountNotFoundAlert = jest.fn()
 const mockLogger = { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() }
 
 // Renders both hooks together so tests can observe the module-level isRecovering flag
@@ -32,7 +29,7 @@ const useHarness = () => ({
   isRecovering: useIsDeviceAuthorizationRecovering(),
 })
 
-const accountError = (identity: typeof ErrorRegistry.ACCOUNT_NOT_REGISTERED | typeof ErrorRegistry.ACCOUNT_NOT_FOUND) =>
+const accountError = (identity: typeof ErrorRegistry.ACCOUNT_NOT_REGISTERED) =>
   new AppError('No account found. Please register first.', identity, { track: false })
 
 const alreadyRegisteredError = () => {
@@ -51,7 +48,6 @@ describe('useDeviceAuthorizationRecovery', () => {
     jest
       .mocked(useRegistrationService)
       .mockReturnValue({ cycleRegistration: mockCycleRegistration, ensureRegistered: mockEnsureRegistered } as any)
-    jest.mocked(useAlerts).mockReturnValue({ accountNotFoundAlert: mockAccountNotFoundAlert } as any)
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
     jest.mocked(navigationRef.isReady).mockReturnValue(true)
   })
@@ -253,16 +249,13 @@ describe('useDeviceAuthorizationRecovery', () => {
   })
 
   describe('no device account at all', () => {
-    it('alerts once, marks the error handled and rethrows it without registering or retrying', async () => {
-      const notFound = accountError(ErrorRegistry.ACCOUNT_NOT_FOUND)
-      const thunk = jest.fn().mockRejectedValue(notFound)
+    it('passes the plain no-account error through untouched, without registering or retrying', async () => {
+      const noAccount = new Error('No account found. Please register first.')
+      const thunk = jest.fn().mockRejectedValue(noAccount)
       const { result } = renderHook(() => useDeviceAuthorizationRecovery())
 
-      await expect(result.current(thunk, 'ResidentialAddress')).rejects.toBe(notFound)
+      await expect(result.current(thunk, 'ResidentialAddress')).rejects.toBe(noAccount)
 
-      expect(mockAccountNotFoundAlert).toHaveBeenCalledTimes(1)
-      expect(mockAccountNotFoundAlert).toHaveBeenCalledWith(notFound)
-      expect(notFound.handled).toBe(true)
       expect(mockEnsureRegistered).not.toHaveBeenCalled()
       expect(mockCycleRegistration).not.toHaveBeenCalled()
       expect(thunk).toHaveBeenCalledTimes(1)
