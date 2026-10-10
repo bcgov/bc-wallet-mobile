@@ -33,14 +33,8 @@ const getRecoverySnapshot = () => isRecovering
 export const useIsDeviceAuthorizationRecovering = () => useSyncExternalStore(subscribeToRecovery, getRecoverySnapshot)
 
 /**
- * Wraps a single device-authorization call, with two recoveries:
- * - Device account exists but was never registered with the server: registers it, then retries once.
- *   `ensureRegistered` alerts on its own failure; that error and any retry failure pass through unchanged.
- * - Device already registered conflict: if the reset really was a no-op, cycles the IAS registration
- *   and retries the call once.
- * No device account at all is alerted, marked handled and rethrown, never auto-registered.
- * Every other error, and the case where the global policy already moved the user elsewhere,
- * passes through unchanged.
+ * Wraps one device-authorization call: registers an unregistered device or cycles an ERR_501 conflict,
+ * then retries once. A missing account is alerted and rethrown as handled; other errors pass through.
  */
 export const useDeviceAuthorizationRecovery = () => {
   const { cycleRegistration, ensureRegistered } = useRegistrationService()
