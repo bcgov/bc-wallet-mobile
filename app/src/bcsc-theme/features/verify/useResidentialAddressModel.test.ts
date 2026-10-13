@@ -1,6 +1,6 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useResidentialAddressModel from '@/bcsc-theme/features/verify/useResidentialAddressModel'
 import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
+import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
@@ -9,7 +9,7 @@ import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
-jest.mock('@/bcsc-theme/api/hooks/useApi')
+jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
 jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
 }))
@@ -114,10 +114,7 @@ describe('useResidentialAddressModel', () => {
   }
 
   beforeEach(() => {
-    const useApiMock = jest.mocked(useApi)
-    useApiMock.mockReturnValue({
-      authorization: mockAuthorizationApi,
-    } as any)
+    jest.mocked(useAuthorizationService).mockReturnValue(mockAuthorizationApi as any)
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])

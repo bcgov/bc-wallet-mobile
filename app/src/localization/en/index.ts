@@ -1162,6 +1162,11 @@ const translation = {
         "Description": "You must be 12 years old or older to set up a mobile card.",
         "ButtonText": ""
       },
+      "OverMaximumAge": {
+        "Heading": "Check your birth date",
+        "Description": "Over maximum age. Make sure the year is correct, then try again.",
+        "ButtonText": ""
+      },
       "TooManyMobileCards": {
         "Heading": "App is on too many of your devices",
         "Description": "You may only have the app on five mobile devices at a time.\n\nIf you deleted the app from a device without resetting it first, then it will still count as one of your devices.\n\nYou need to remove at least one of the devices from your account.",
@@ -1351,6 +1356,7 @@ const translation = {
       "BirthDateSubtext": "Enter your birth date",
       "BirthDateError": "Please enter a valid birth date (YYYY/MM/DD)",
       "BirthDateAgeError": "You must be {{ minimumAge }} years or older to set up a mobile card",
+      "BirthDateMaxAgeError": "Over maximum age. Check your birthdate year is correct",
       "BirthDatePickerLabel": "Select birth date",
       "BirthDatePickerAccessibilityLabel": "Birth date picker",
       "MiddleNamesLabel": "Middle names",

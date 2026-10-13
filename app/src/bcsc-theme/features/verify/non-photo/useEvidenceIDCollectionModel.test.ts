@@ -1,4 +1,5 @@
 import { renderHook } from '@testing-library/react-native'
+import moment from 'moment'
 import useEvidenceIDCollectionModel, { EvidenceCollectionFormState } from './useEvidenceIDCollectionModel'
 
 // Minimal translation stub: echo the key back so we can assert on which error fired.
@@ -27,6 +28,7 @@ describe('useEvidenceIDCollectionModel', () => {
         values: { ...baseValues, firstName: '' },
         personalInfoRequired: true,
         minimumAge: 19,
+        maximumAge: 120,
         t,
       })
 
@@ -41,6 +43,7 @@ describe('useEvidenceIDCollectionModel', () => {
         values: { ...baseValues, firstName: '', lastName: '' },
         personalInfoRequired: true,
         minimumAge: 19,
+        maximumAge: 120,
         t,
       })
 
@@ -54,6 +57,7 @@ describe('useEvidenceIDCollectionModel', () => {
         values: { ...baseValues, lastName: '   ' },
         personalInfoRequired: true,
         minimumAge: 19,
+        maximumAge: 120,
         t,
       })
 
@@ -72,6 +76,7 @@ describe('useEvidenceIDCollectionModel', () => {
         },
         personalInfoRequired: true,
         minimumAge: 19,
+        maximumAge: 120,
         t,
       })
 
@@ -92,10 +97,35 @@ describe('useEvidenceIDCollectionModel', () => {
         },
         personalInfoRequired: true,
         minimumAge: 19,
+        maximumAge: 120,
         t,
       })
 
       expect(errors).toEqual({})
+    })
+
+    describe('maximum age', () => {
+      const yearsAgo = (years: number) => moment().subtract(years, 'years').format('YYYY/MM/DD')
+      const validateBirthDate = (birthDate: string) =>
+        getValidateEvidence()({
+          values: { ...baseValues, birthDate },
+          personalInfoRequired: true,
+          minimumAge: 19,
+          maximumAge: 120,
+          t,
+        }).birthDate
+
+      it('accepts a birth date exactly at the maximum age, as the server does', () => {
+        expect(validateBirthDate(yearsAgo(120))).toBeUndefined()
+      })
+
+      it('rejects a birth date over the maximum age', () => {
+        expect(validateBirthDate(yearsAgo(121))).toBe('BCSC.EvidenceIDCollection.BirthDateMaxAgeError')
+      })
+
+      it('rejects a mistyped year', () => {
+        expect(validateBirthDate('1095/06/15')).toBe('BCSC.EvidenceIDCollection.BirthDateMaxAgeError')
+      })
     })
 
     it('skips personal info validation entirely when not required', () => {
@@ -105,6 +135,7 @@ describe('useEvidenceIDCollectionModel', () => {
         values: { documentNumber: '', firstName: '', lastName: '', middleNames: '', birthDate: '' },
         personalInfoRequired: false,
         minimumAge: 19,
+        maximumAge: 120,
         t,
       })
 

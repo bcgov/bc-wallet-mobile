@@ -1,4 +1,5 @@
-import { formatBirthdateForApi, parseBirthdateToLocalDate } from './birthdate'
+import moment from 'moment'
+import { ageInYears, formatBirthdateForApi, parseBirthdateToLocalDate } from './birthdate'
 
 describe('parseBirthdateToLocalDate', () => {
   // Asserting local Date components keeps these assertions TZ-invariant —
@@ -58,5 +59,17 @@ describe('formatBirthdateForApi', () => {
     ['January 1, 2000', '2000-01-01'],
   ])('round-trips %s through parseBirthdateToLocalDate', (input, expected) => {
     expect(formatBirthdateForApi(parseBirthdateToLocalDate(input))).toBe(expected)
+  })
+})
+
+describe('ageInYears', () => {
+  const yearsAgo = (years: number) => moment().startOf('day').subtract(years, 'years').toDate()
+
+  it('counts a birthday that falls today as a completed year', () => {
+    expect(ageInYears(yearsAgo(120))).toBe(120)
+  })
+
+  it('does not count a birthday that is still to come this year', () => {
+    expect(ageInYears(moment(yearsAgo(121)).add(1, 'day').toDate())).toBe(120)
   })
 })
