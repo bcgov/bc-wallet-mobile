@@ -30,7 +30,7 @@ describe('VerifyPromptScreen', () => {
   const bcscWrites = () =>
     storeSpy.mock.calls.filter(([key]) => key === BCLocalStorageKeys.BCSC).map(([, value]) => value)
 
-  it('persists verificationSkipped=false and advances when the user chooses to verify now', async () => {
+  it('persists verificationSkipped=false, marks verification started and advances when the user chooses to verify now', async () => {
     const onAnswered = jest.fn()
     const onContinue = jest.fn()
     const tree = renderScreen({ onAnswered, onContinue })
@@ -42,9 +42,10 @@ describe('VerifyPromptScreen', () => {
     expect(onAnswered).toHaveBeenCalledTimes(1)
     expect(onContinue).toHaveBeenCalledTimes(1)
     expect(bcscWrites()).toContainEqual(expect.objectContaining({ verificationSkipped: false }))
+    expect(bcscWrites()).toContainEqual(expect.objectContaining({ verificationStarted: true }))
   })
 
-  it('persists verificationSkipped=true when the user skips verification', async () => {
+  it('persists verificationSkipped=true without starting verification when the user skips', async () => {
     const onAnswered = jest.fn()
     const tree = renderScreen({ onAnswered })
 
@@ -54,6 +55,7 @@ describe('VerifyPromptScreen', () => {
 
     expect(onAnswered).toHaveBeenCalledTimes(1)
     expect(bcscWrites()).toContainEqual(expect.objectContaining({ verificationSkipped: true }))
+    expect(bcscWrites()).not.toContainEqual(expect.objectContaining({ verificationStarted: true }))
   })
 
   it('hides the skip button when showSkip is false (main-app entry)', () => {
@@ -61,6 +63,19 @@ describe('VerifyPromptScreen', () => {
 
     expect(tree.queryByTestId('com.ariesbifold:id/SkipVerification')).toBeNull()
     expect(tree.getByTestId('com.ariesbifold:id/Continue')).toBeTruthy()
+  })
+
+  it('marks verification started from the main-app entry without answering the onboarding prompt', async () => {
+    const tree = renderScreen({ showSkip: false })
+
+    await act(async () => {
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/Continue'))
+    })
+
+    // Reached from Home after skipping: entering verification here must not turn a skipper into a
+    // first-time verifier
+    expect(bcscWrites()).toContainEqual(expect.objectContaining({ verificationStarted: true }))
+    expect(bcscWrites()).not.toContainEqual(expect.objectContaining({ verificationSkipped: false }))
   })
 
   describe('during an IAS outage', () => {

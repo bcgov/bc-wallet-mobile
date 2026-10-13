@@ -2,7 +2,8 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
-import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -42,21 +43,23 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
+  const { continueVerificationProcess } = useSecureActions()
   // Startup seeds server status; the ServiceOutage screen's "Check again" force-refreshes it, so
   // no on-focus re-check is needed here.
   const { isAvailable, isChecking, serverStatus } = useServerStatus()
 
   const handleVerifyNow = useCallback(() => {
     onAnswered?.()
-    dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
-      payload: [VerificationStatus.IN_PROGRESS],
-    })
-    // Verification is now in progress, which keeps VerifyStack mounted, so onContinue can navigate
-    // within it for a normal slide transition.
+    // Only a copy that offers Skip is answering the prompt. The main-app copy is entered from Home, so
+    // it leaves the answer given after onboarding as it was
+    if (showSkip) {
+      dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
+    }
+    // Entering verification sets it in progress, which keeps VerifyStack mounted, so onContinue can
+    // navigate within it for a normal slide transition.
+    continueVerificationProcess()
     onContinue?.()
-  }, [dispatch, onAnswered, onContinue])
+  }, [continueVerificationProcess, dispatch, onAnswered, onContinue, showSkip])
 
   const handleLater = useCallback(() => {
     onAnswered?.()
