@@ -225,7 +225,7 @@ function main() {
 
 # App metadata
 APP_NAME="BC Services Card"
-APP_VERSION="4.1.0"
+APP_VERSION="4.2.0"
 BUILD_TARGET="bcsc"
 
 # Android
