@@ -17,12 +17,101 @@ enum class BiometricType(
     IRIS("iris"),
 }
 
-enum class DeviceAuthenticationResult {
-    SUCCESS,
-    FAILED,
-    CANCELLED,
-    ERROR,
+sealed class DeviceAuthenticationResult {
+    object Success : DeviceAuthenticationResult()
+
+    /** Biometric attempt failed (e.g. wrong finger) — the prompt stays open. */
+    object Failed : DeviceAuthenticationResult()
+
+    /** user deliberately dismissed the prompt. [errorCode] is ERROR_USER_CANCELED or ERROR_NEGATIVE_BUTTON. */
+    data class Cancelled(
+        val errorCode: Int,
+        val errorMessage: String,
+    ) : DeviceAuthenticationResult() {
+        fun describe(): String = describeBiometricError(errorCode, errorMessage)
+    }
+
+    /**
+     * Device auth cannot be performed on this device (nothing enrolled or no hardware).
+     * [errorCode] is ERROR_NO_DEVICE_CREDENTIAL, ERROR_NO_BIOMETRICS or ERROR_HW_NOT_PRESENT.
+     */
+    data class Unavailable(
+        val errorCode: Int,
+        val errorMessage: String,
+    ) : DeviceAuthenticationResult() {
+        fun describe(): String = describeBiometricError(errorCode, errorMessage)
+    }
+
+    /**
+     * Terminal failure that is NOT a user cancel (lockout, system cancel, hardware unavailable,
+     * prompt could not be shown, ...). [errorCode] is the BiometricPrompt ERROR_* constant, or
+     * null when the prompt threw before it could report one.
+     */
+    data class Error(
+        val errorCode: Int?,
+        val errorMessage: String,
+    ) : DeviceAuthenticationResult() {
+        /** Log/report-friendly description: "ERROR_LOCKOUT (7): Too many attempts". */
+        fun describe(): String = describeBiometricError(errorCode, errorMessage)
+    }
 }
+
+private fun describeBiometricError(
+    errorCode: Int?,
+    errorMessage: String,
+): String = if (errorCode == null) errorMessage else "${biometricErrorName(errorCode)} ($errorCode): $errorMessage"
+
+/**
+ * Returns why a BiometricPrompt cannot be shown on [activity] right now, or null if it can.
+ * A finishing, destroyed or state-saved activity would otherwise fail or hang the prompt.
+ */
+fun promptBlockedReason(activity: FragmentActivity): String? {
+    val isFinishing = activity.isFinishing
+    val isDestroyed = activity.isDestroyed
+    val isStateSaved = activity.supportFragmentManager.isStateSaved
+    if (!isFinishing && !isDestroyed && !isStateSaved) {
+        return null
+    }
+    return "Prompt not shown: lifecycle=${activity.lifecycle.currentState.name}, stateSaved=$isStateSaved, " +
+        "finishing=$isFinishing, destroyed=$isDestroyed"
+}
+
+/** Classifies a terminal BiometricPrompt error by what the user can do about it */
+internal fun classifyAuthError(
+    errorCode: Int,
+    errString: CharSequence,
+): DeviceAuthenticationResult =
+    when (errorCode) {
+        androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED,
+        androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+        -> DeviceAuthenticationResult.Cancelled(errorCode, errString.toString())
+
+        androidx.biometric.BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL,
+        androidx.biometric.BiometricPrompt.ERROR_NO_BIOMETRICS,
+        androidx.biometric.BiometricPrompt.ERROR_HW_NOT_PRESENT,
+        -> DeviceAuthenticationResult.Unavailable(errorCode, errString.toString())
+
+        else -> DeviceAuthenticationResult.Error(errorCode, errString.toString())
+    }
+
+/** Human-readable name for a BiometricPrompt ERROR_* code */
+fun biometricErrorName(errorCode: Int): String =
+    when (errorCode) {
+        androidx.biometric.BiometricPrompt.ERROR_HW_UNAVAILABLE -> "ERROR_HW_UNAVAILABLE"
+        androidx.biometric.BiometricPrompt.ERROR_UNABLE_TO_PROCESS -> "ERROR_UNABLE_TO_PROCESS"
+        androidx.biometric.BiometricPrompt.ERROR_TIMEOUT -> "ERROR_TIMEOUT"
+        androidx.biometric.BiometricPrompt.ERROR_NO_SPACE -> "ERROR_NO_SPACE"
+        androidx.biometric.BiometricPrompt.ERROR_CANCELED -> "ERROR_CANCELED"
+        androidx.biometric.BiometricPrompt.ERROR_LOCKOUT -> "ERROR_LOCKOUT"
+        androidx.biometric.BiometricPrompt.ERROR_VENDOR -> "ERROR_VENDOR"
+        androidx.biometric.BiometricPrompt.ERROR_LOCKOUT_PERMANENT -> "ERROR_LOCKOUT_PERMANENT"
+        androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED -> "ERROR_USER_CANCELED"
+        androidx.biometric.BiometricPrompt.ERROR_NO_BIOMETRICS -> "ERROR_NO_BIOMETRICS"
+        androidx.biometric.BiometricPrompt.ERROR_HW_NOT_PRESENT -> "ERROR_HW_NOT_PRESENT"
+        androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON -> "ERROR_NEGATIVE_BUTTON"
+        androidx.biometric.BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL -> "ERROR_NO_DEVICE_CREDENTIAL"
+        else -> "ERROR_UNKNOWN"
+    }
 
 interface DeviceAuthenticationService {
     fun canPerformDeviceAuthentication(): Boolean
@@ -91,6 +180,13 @@ class DeviceAuthenticationServiceImpl(
         // BiometricPrompt must be created and used on the main UI thread
         activity.runOnUiThread {
             try {
+                val blockedReason = promptBlockedReason(activity)
+                if (blockedReason != null) {
+                    Log.w(TAG, blockedReason)
+                    callback(DeviceAuthenticationResult.Error(null, blockedReason))
+                    return@runOnUiThread
+                }
+
                 val biometricPrompt =
                     androidx.biometric.BiometricPrompt(
                         activity,
@@ -102,24 +198,14 @@ class DeviceAuthenticationServiceImpl(
                                 errString: CharSequence,
                             ) {
                                 super.onAuthenticationError(errorCode, errString)
-                                when (errorCode) {
-                                    androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED,
-                                    androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON,
-                                    -> {
-                                        callback(DeviceAuthenticationResult.CANCELLED)
-                                    }
-
-                                    else -> {
-                                        callback(DeviceAuthenticationResult.ERROR)
-                                    }
-                                }
+                                callback(classifyAuthError(errorCode, errString))
                             }
 
                             override fun onAuthenticationSucceeded(
                                 result: androidx.biometric.BiometricPrompt.AuthenticationResult,
                             ) {
                                 super.onAuthenticationSucceeded(result)
-                                callback(DeviceAuthenticationResult.SUCCESS)
+                                callback(DeviceAuthenticationResult.Success)
                             }
 
                             override fun onAuthenticationFailed() {
@@ -145,7 +231,13 @@ class DeviceAuthenticationServiceImpl(
 
                 biometricPrompt.authenticate(promptInfo)
             } catch (e: Exception) {
-                callback(DeviceAuthenticationResult.ERROR)
+                // e.g. IllegalStateException when the FragmentManager has already saved state
+                callback(
+                    DeviceAuthenticationResult.Error(
+                        null,
+                        "Failed to show biometric prompt: ${e.javaClass.simpleName}: ${e.message}",
+                    ),
+                )
             }
         }
     }

@@ -7,6 +7,7 @@ import { AppError } from '@/errors'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
 import { useAlerts } from '@/hooks/useAlerts'
 import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useTheme } from '@bifold/core'
+import { crash, getCrashlytics, recordError } from '@react-native-firebase/crashlytics'
 import { useNavigation } from '@react-navigation/native'
 import { AxiosError } from 'axios'
 import React from 'react'
@@ -367,6 +368,13 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     emitAlert(title, body, { actions: [{ text: t('Global.Okay'), style: 'default' }] })
   }
 
+  // Thrown from a timer so it reaches the global handler as a fatal error
+  const triggerJsCrash = () => {
+    setTimeout(() => {
+      throw new Error('Crashlytics JS crash test')
+    }, 0)
+  }
+
   return (
     <ScreenWrapper scrollable={false} edges={['top']}>
       <View style={styles.header}>
@@ -532,6 +540,43 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
               testID="error-boundary-trigger"
               buttonType={ButtonType.Primary}
               onPress={() => setThrowInRender(true)}
+            />
+          </View>
+        </View>
+
+        {/* Crashlytics */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'Crashlytics'}</Text>
+          <Text style={styles.description}>
+            {'Only reports when crash collection is on for this build (non-prod, not killed). ' +
+              'Turning it on applies from the next launch, and off from the one after. ' +
+              'Reports upload on the next launch.'}
+          </Text>
+          <View style={styles.buttonRow}>
+            <Button
+              title={'Native crash'}
+              accessibilityLabel={'Trigger a native crash'}
+              testID={'crashlytics-native-crash'}
+              buttonType={ButtonType.Secondary}
+              onPress={() => crash(getCrashlytics())}
+            />
+          </View>
+          <View style={styles.buttonRow}>
+            <Button
+              title={'JS crash'}
+              accessibilityLabel={'Trigger a fatal JavaScript error'}
+              testID={'crashlytics-js-crash'}
+              buttonType={ButtonType.Secondary}
+              onPress={triggerJsCrash}
+            />
+          </View>
+          <View style={styles.buttonRow}>
+            <Button
+              title={'Record non-fatal'}
+              accessibilityLabel={'Record a non-fatal error'}
+              testID={'crashlytics-non-fatal'}
+              buttonType={ButtonType.Secondary}
+              onPress={() => recordError(getCrashlytics(), new Error('Crashlytics non-fatal test'), 'crashlytics.test')}
             />
           </View>
         </View>

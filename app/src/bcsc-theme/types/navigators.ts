@@ -112,6 +112,7 @@ export enum BCSCScreens {
   TransferAccountQRInformation = 'QR Get Overview',
   TransferAccountSuccess = 'QR Code Scan Complete',
   ServiceLogin = 'Login Request',
+  ServiceNotice = 'Service Notice',
   EditNickname = 'Change Account Nickname',
   AccountDetails = 'Account Details',
   AccountSetup = 'Start Setup',
@@ -277,6 +278,7 @@ export type BCSCTabStackParams = {
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
   [BCSCScreens.MainWebView]: { url: string; title: string }
+  [BCSCScreens.ServiceNotice]: undefined
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.MainRemoveAccountConfirmation]: undefined
@@ -344,6 +346,7 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.DeviceAuthAppReset]: undefined
   [BCSCScreens.AuthSettings]: undefined
   [BCSCScreens.AuthWebView]: { url: string; title: string }
+  [BCSCScreens.ServiceNotice]: undefined
   [BCSCScreens.AuthPrivacyPolicy]: undefined
   [BCSCScreens.AuthDeveloper]: undefined
 

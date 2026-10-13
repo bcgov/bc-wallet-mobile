@@ -565,6 +565,12 @@ export const TestIds = {
       savedServiceOpenPrefix: 'OpenService-',
       savedServiceRemovePrefix: 'RemoveService-',
     },
+    /** Service-notice detail, opened by the "Service notice" banner shown while IAS reports a status
+     *  message. That banner is a `warning` `AppBanner`, sharing its ids with the device-limit banner, so
+     *  select it by copy. AuthStack registers this screen too, for the same banner on account landing. */
+    serviceNotice: {
+      contactUs: 'ServiceNoticeContactUs',
+    },
     /** Services catalogue (verified-only; unverified taps redirect to MainVerifyPrompt). `search` is
      *  the always-present sticky-header catalogue search field — the "Services opened, not gated" marker. */
     services: {
@@ -956,11 +962,10 @@ export const TestIds = {
   /**
    * The hidden Developer (IAS) menu — ONE shared `Developer` screen registered per stack
    * (`OnboardingDeveloper` / `AuthDeveloper` / `VerifyDeveloper` / `MainDeveloper`). Reached only via
-   * the Settings version footer (`helpers/developer.ts`); the app's `DeveloperCounter` trigger is
-   * hidden from the accessibility tree and cannot be selected. `Testing` rows are BCSC-mode only.
+   * the Settings version footer (`helpers/developer.ts`). `Testing` rows are BCSC-mode only.
    */
   developer: {
-    /** Tap counter on the settings version row (`DeveloperModeTrigger`) that unlocks developer mode. */
+    /** BC Wallet Preface tap counter that unlocks developer mode. */
     counter: 'DeveloperCounter',
     /** Always-rendered first row — the reliable "Developer screen mounted" marker. */
     toggleDeveloper: 'ToggleDeveloper',

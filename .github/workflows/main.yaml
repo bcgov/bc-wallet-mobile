@@ -846,6 +846,26 @@ jobs:
             echo "Copied $(find jsassets/assets -type f | wc -l | tr -d ' ') iOS asset files into archive"
           fi
 
+      # The Xcode build phase uploads dSYMs in the background and hides failures, so upload
+      # them again and wait. Only on branches Publish ships from; never fail the build over it.
+      - name: Upload dSYMs to Crashlytics
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
+        continue-on-error: true
+        timeout-minutes: 10
+        run: |
+          # Two uploads of one dSYM at once share a temp file and can break it; let the build phase's finish.
+          for _ in $(seq 60); do
+            pgrep -f 'upload-symbols --build-phase' > /dev/null || break
+            sleep 5
+          done
+          if pkill -f 'upload-symbols --build-phase'; then
+            echo "::warning::Stopped the build phase's dSYM upload, still running after 5 minutes"
+          fi
+          app/ios/Pods/FirebaseCrashlytics/upload-symbols \
+            -gsp app/ios/GoogleService-Info.plist \
+            -p ios \
+            BCWallet.xcarchive/dSYMs
+
       - name: Show ccache stats
         if: always()
         run: ccache --show-stats || true

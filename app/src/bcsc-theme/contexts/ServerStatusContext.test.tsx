@@ -1,5 +1,6 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -134,5 +135,25 @@ describe('ServerStatusProvider', () => {
         payload: [expect.objectContaining({ id: BCSCBanner.IAS_SERVER_UNAVAILABLE })],
       })
     )
+  })
+
+  it('summarizes a service notice in a one-line warning banner, leaving the message to the notice screen', async () => {
+    mockGetServerStatus.mockResolvedValue({ status: 'ok', statusMessage: 'Scheduled maintenance on Saturday' })
+
+    const { result } = renderProvider()
+    await waitFor(() => expect(result.current.hasChecked).toBe(true))
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.ADD_BANNER_MESSAGE,
+      payload: [
+        {
+          id: BCSCBanner.IAS_SERVER_NOTIFICATION,
+          title: 'BCSC.SystemChecks.ServerStatus.NoticeBannerTitle',
+          type: 'warning',
+          dismissible: false,
+        },
+      ],
+    })
+    expect(result.current.statusMessage).toBe('Scheduled maintenance on Saturday')
   })
 })
