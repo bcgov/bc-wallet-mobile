@@ -2,26 +2,31 @@ import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction } from '@/store'
+import { isNewerVersion } from '@/utils/version'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
  * Checks if the application needs to be updated.
  *
+ * `serverStatus.minVersion` is a build number. `serverStatus.supportedVersions` lists only the versions marked GA
+ * in the support tools for the current platform.
+ *
  * Rules for determining update status (in logical order):
  *
- *   No update:
- *    A. App build is greater than or equal to min build
- *      ie: app: [3.0.0-101], minBuild: [100] => **no update** (build greater than)
- *      ie: app: [3.0.0-101], minBuild: [101] => **no update** (build equal to)
- *
  *   Mandatory update:
- *    A. App build is less than min build and app version is *not* supported
- *      ie: app: [3.0.1-99], minBuild: [100], supported: [3.0.0] => **mandatory update** (version not supported)
+ *    A. App build is less than min build. The supported versions play no part.
+ *      ie: app: [3.0.1-99], minBuild: [100] => **mandatory update**
  *
  *   Optional update:
- *    A. App build is less than min build and app version **is** supported
- *      ie: app: [3.0.0-99], minBuild: [100], supported: [3.0.0] => **optional update** (version supported)
+ *    A. App build is not below min build and a supported version is newer than the app version
+ *      ie: app: [3.0.0-101], minBuild: [100], supported: [3.0.0, 3.1.0] => **optional update** (banner)
+ *
+ *   No update:
+ *    A. App build is not below min build and no supported version is newer than the app version
+ *      ie: app: [3.1.0-101], minBuild: [100], supported: [3.0.0, 3.1.0] => **no update**
+ *
+ * To force an upgrade, raise the min build.
  *
  * @see {MandatoryUpdate.tsx} for the modal displayed during a mandatory update.
  *
@@ -44,57 +49,68 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
   }
 
   /**
-   * Runs the app version check to verify the app does not need an update.
+   * Runs the app build check against the server's minimum build.
    *
-   * @returns {*} {boolean} - A boolean indicating if the app should be updated.
+   * @returns {*} {boolean} - False when the app build is below the minimum build (mandatory update).
    */
   runCheck() {
-    this.utils.logger.info('UpdateAppSystemCheck', {
-      minVersion: this.serverStatus.minVersionNumber,
-      maxVersion: this.serverStatus.supportedVersions.at(-1),
+    this.utils.logger.info('[UpdateAppSystemCheck] server status', {
       appVersion: this.appVersion,
-      minBuild: this.serverStatus.minVersion,
       appBuild: this.appBuild,
+      // Server field names, verbatim: `minVersion` is the build-number floor, `minVersionNumber` is semver
+      minVersion: this.serverStatus.minVersion,
+      minVersionNumber: this.serverStatus.minVersionNumber,
       supportedVersions: this.serverStatus.supportedVersions,
     })
 
-    return this.appBuild >= Number(this.serverStatus.minVersion)
+    // Negated so a missing or non-numeric minVersion (NaN) fails open instead of blocking every user
+    return !(this.appBuild < Number(this.serverStatus.minVersion))
   }
 
   /**
-   * Handles the failure of the server status check by dispatching an error banner message.
+   * Handles a build below the minimum build by navigating to the blocking update modal.
    *
    * @returns {*} {void}
    */
   onFail() {
-    const appVersionSupported = this.serverStatus.supportedVersions.includes(this.appVersion)
-
-    // App version not supported => force mandatory update
-    if (!appVersionSupported) {
-      return this.navigation.navigate(BCSCModals.MandatoryUpdate)
-    }
-
-    // Optional update available
-    return this.utils.dispatch({
-      type: BCDispatchAction.ADD_BANNER_MESSAGE,
-      payload: [
-        {
-          id: BCSCBanner.APP_UPDATE_AVAILABLE,
-          title: this.utils.translation('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'),
-          type: 'info',
-          variant: 'warning',
-          dismissible: true,
-        },
-      ],
+    this.utils.logger.info('[UpdateAppSystemCheck] result: mandatory update', {
+      appBuild: this.appBuild,
+      minVersion: this.serverStatus.minVersion,
     })
+    this.navigation.navigate(BCSCModals.MandatoryUpdate)
   }
 
   /**
-   * Handles the success of the server status check by removing the error banner message if it exists.
+   * Handles a build at or above the minimum build: shows the update banner when a supported version is newer than
+   * the app version, otherwise removes it.
    *
    * @returns {*} {void}
    */
   onSuccess() {
+    const { supportedVersions } = this.serverStatus
+    const versions: unknown[] = Array.isArray(supportedVersions) ? supportedVersions : []
+    const updateAvailable = versions.some((v) => typeof v === 'string' && isNewerVersion(v, this.appVersion))
+
+    if (updateAvailable) {
+      this.utils.logger.info('[UpdateAppSystemCheck] result: optional update', { appVersion: this.appVersion })
+      this.utils.dispatch({
+        type: BCDispatchAction.ADD_BANNER_MESSAGE,
+        payload: [
+          {
+            id: BCSCBanner.APP_UPDATE_AVAILABLE,
+            title: this.utils.translation('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'),
+            type: 'info',
+            dismissible: true,
+          },
+        ],
+      })
+      return
+    }
+
+    this.utils.logger.info('[UpdateAppSystemCheck] result: no update', {
+      appVersion: this.appVersion,
+      appBuild: this.appBuild,
+    })
     this.utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.APP_UPDATE_AVAILABLE] })
   }
 }

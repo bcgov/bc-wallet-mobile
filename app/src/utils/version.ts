@@ -43,3 +43,30 @@ export const isVersionAtLeast = (minVersion: string): boolean => {
 
   return true // all segments equal
 }
+
+/**
+ * True when `candidate` is strictly newer than `current`. Compares dot-separated numeric segments,
+ * treating missing segments as 0 ("4.2" equals "4.2.0"). False if either side has an empty or
+ * non-numeric segment (e.g. "", "4.x", "4.2.0-rc1").
+ */
+export const isNewerVersion = (candidate: string, current: string): boolean => {
+  const candidateParts = candidate.split('.')
+  const currentParts = current.split('.')
+
+  if (![...candidateParts, ...currentParts].every((part) => /^\d+$/.test(part))) {
+    return false
+  }
+
+  const length = Math.max(candidateParts.length, currentParts.length)
+
+  for (let i = 0; i < length; i++) {
+    const candidateSegment = Number(candidateParts[i] ?? 0)
+    const currentSegment = Number(currentParts[i] ?? 0)
+
+    if (candidateSegment !== currentSegment) {
+      return candidateSegment > currentSegment
+    }
+  }
+
+  return false
+}
