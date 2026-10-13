@@ -745,32 +745,6 @@ describe('useResidentialAddressModel', () => {
       })
     })
 
-    it('logs only the birth year when the server returns over_maximum_age', async () => {
-      const overMaxAgeError = new AppError(
-        'test error',
-        {
-          category: ErrorCategory.CREDENTIAL,
-          appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-          statusCode: 2209,
-        },
-        { cause: new Error('over_maximum_age'), track: false }
-      )
-      // The authorization service marks it handled after routing to the error screen
-      overMaxAgeError.handled = true
-      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockRejectedValue(overMaxAgeError)
-
-      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
-
-      await act(async () => {
-        await result.current.handleSubmit()
-      })
-
-      expect(mockLogger.warn).toHaveBeenCalledWith('ResidentialAddressScreen.handleSubmit -> over_maximum_age', {
-        birthYear: 1990,
-      })
-      expect(mockEmitErrorModal).not.toHaveBeenCalled()
-    })
-
     it('should throw error when birthdate is missing', async () => {
       const storeWithoutBirthdate = {
         bcscSecure: {

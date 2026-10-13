@@ -17,7 +17,7 @@ import {
   streetAddressSchema,
 } from '@/bcsc-theme/utils/validation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { isAppError, isHandledAppError } from '@/errors/appError'
+import { isHandledAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCState, NonBCSCUserMetadata } from '@/store'
@@ -246,13 +246,6 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
       const nextStep = getResumeStepRoute(predictedStore)
       navigation.dispatch(StackActions.push(nextStep.name, nextStep.params))
     } catch (error) {
-      if (isAppError(error) && error.technicalMessage?.includes(AppEventCode.OVER_MAXIMUM_AGE)) {
-        logger.warn('ResidentialAddressScreen.handleSubmit -> over_maximum_age', {
-          // Year only: the full birthdate is PII
-          birthYear: store.bcscSecure.birthdate.getFullYear(),
-        })
-      }
-
       if (isHandledAppError(error)) {
         return
       }
