@@ -208,7 +208,7 @@ describe('UpdateAppSystemCheck', () => {
       ['null', null],
       ['not an array', '4.2.0'],
     ])('NoUpdate: removes the banner when supportedVersions is %s', (_label, supportedVersions) => {
-      const { mockUtils } = supportedVersions === undefined ? run(undefined) : run(supportedVersions)
+      const { mockUtils } = run(supportedVersions)
 
       expect(mockUtils.dispatch).toHaveBeenCalledWith(removeBanner)
     })
