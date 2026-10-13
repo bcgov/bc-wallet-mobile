@@ -114,15 +114,25 @@ export interface BCSCState {
    * choice survives an app restart:
    * - `undefined` — not answered yet (fresh install, or after a factory reset). RootStack shows the
    *   prompt.
-   * - `false` — the user chose to start verification but has not finished. RootStack routes straight
-   *   into VerifyStack on every launch until they verify.
-   * - `true` — the user chose to skip, OR verification completed. RootStack routes to the home stack.
+   * - `false` — the user chose to verify at the prompt, or upgraded from v3 (which offered no skip): a
+   *   first-time verifier.
+   * - `true` — the user chose to skip, OR verification completed.
    *
-   * Set `true` automatically when `bcscSecure.verified` flips true (see UPDATE_SECURE_VERIFIED), and
-   * reset to `undefined` by CLEAR_BCSC. Intentionally on plain (AsyncStorage) state, not secure
-   * state, so an app uninstall clears it — iOS Keychain-backed secure state would survive a reinstall.
+   * Only the prompt answers it: starting verification later from Home leaves it alone, so it still tells
+   * a first-time verifier from one who skipped. Whether a launch resumes verification is
+   * `verificationStarted`, not this. Set `true` when verification completes (see updateVerified) and
+   * reset to `undefined` by CLEAR_BCSC. Intentionally on plain (AsyncStorage) state, not secure state, so
+   * an app uninstall clears it — iOS Keychain-backed secure state would survive a reinstall.
    */
   verificationSkipped?: boolean
+  /**
+   * Whether the user has entered identity verification (the prompt's Continue, a Home card, a renewal, a
+   * restart) and not finished it, whether or not they skipped the prompt first. RootStack resumes a
+   * started, unfinished verification at its last incomplete step on every launch. Cleared when
+   * verification completes (see updateVerified) and by CLEAR_BCSC. Plain state for the same reason as
+   * `verificationSkipped`.
+   */
+  verificationStarted?: boolean
 }
 
 export enum VerificationStatus {
@@ -319,6 +329,7 @@ enum BCSCDispatchAction {
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
   RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
   SET_VERIFICATION_SKIPPED = 'bcsc/setVerificationSkipped',
+  SET_VERIFICATION_STARTED = 'bcsc/setVerificationStarted',
 }
 
 enum ModeDispatchAction {
@@ -365,22 +376,26 @@ export const initialBCSCState: BCSCState = {
   analyticsOptIn: false,
 }
 
+// The fields migrateBCSCState may add, kept in its return type even when T is inferred from a narrow
+// literal that never mentions them (e.g. `{ reportUUID: 'x' }` in tests)
+type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'>
+
 /**
- * Migrates a persisted BCSC state blob on load. Two idempotent, read-side migrations:
+ * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
  * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
  *   have launched on >= v4.1.
- * - Onboarded installs that predate `verificationSkipped`: a missing value is treated as "not skipped"
- *   (`false`) so an unverified user resumes verification rather than seeing the post-onboarding verify
- *   prompt. v3 upgrades have no persisted blob yet and are handled in useInitializeAccountStatus.
+ * - Onboarded installs that predate `verificationSkipped`: a missing value is stamped "skipped" (`true`)
+ *   so an upgrading install lands on Home rather than on the post-onboarding verify prompt. v3 upgrades
+ *   have no persisted blob yet and are handled in useInitializeAccountStatus.
+ * - Onboarded installs that predate `verificationStarted`: launches resumed whoever had stored
+ *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
+ *   count as started.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
-  // `& { installId?: string; verificationSkipped?: boolean }` keeps these fields in the return type
-  // even when T is inferred from a narrow literal that never mentions them (e.g. `{ reportUUID: 'x' }`
-  // in tests).
-): { bcsc: Omit<T, 'reportUUID'> & { installId?: string; verificationSkipped?: boolean }; migrated: boolean } => {
+): { bcsc: Omit<T, 'reportUUID'> & MigratedBCSCFields; migrated: boolean } => {
   const { reportUUID, ...rest } = persisted
-  let bcsc: Omit<T, 'reportUUID'> & { installId?: string; verificationSkipped?: boolean } = rest
+  let bcsc: Omit<T, 'reportUUID'> & MigratedBCSCFields = rest
   let migrated = false
 
   if (reportUUID !== undefined) {
@@ -390,6 +405,11 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
 
   if (bcsc.hasAccount === true && bcsc.verificationSkipped === undefined) {
     bcsc = { ...bcsc, verificationSkipped: true }
+    migrated = true
+  }
+
+  if (bcsc.hasAccount === true && bcsc.verificationStarted === undefined) {
+    bcsc = { ...bcsc, verificationStarted: bcsc.verificationSkipped === false }
     migrated = true
   }
 
@@ -856,6 +876,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.SET_VERIFICATION_SKIPPED: {
       const verificationSkipped: boolean | undefined = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, verificationSkipped }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.SET_VERIFICATION_STARTED: {
+      const verificationStarted: boolean | undefined = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, verificationStarted }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

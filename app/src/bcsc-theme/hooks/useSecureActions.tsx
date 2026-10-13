@@ -472,7 +472,12 @@ export const useSecureActions = () => {
         payload: [verified],
       })
       if (verified) {
-        // set flag as "skipped" so the user isn't routed to reverify
+        // Verification is finished: nothing is left to resume on launch, and the user is no longer a
+        // first-time verifier (a later re-verification, e.g. a renewal, starts from Home)
+        dispatch({
+          type: BCDispatchAction.SET_VERIFICATION_STARTED,
+          payload: [false],
+        })
         dispatch({
           type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
           payload: [true],
@@ -517,7 +522,15 @@ export const useSecureActions = () => {
     [dispatch, logger, store.bcscSecure.cardProcess]
   )
 
+  /**
+   * Enters (or re-enters) the verification flow: RootStack shows the VerifyStack while verification is
+   * IN_PROGRESS, and marking it started makes every later launch resume it until the user is verified.
+   */
   const continueVerificationProcess = useCallback(() => {
+    dispatch({
+      type: BCDispatchAction.SET_VERIFICATION_STARTED,
+      payload: [true],
+    })
     dispatch({
       type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
       payload: [VerificationStatus.IN_PROGRESS],
