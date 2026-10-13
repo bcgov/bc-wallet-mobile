@@ -9,7 +9,7 @@ import {
   leaveVerificationToHome,
   reachVerificationMethod,
   resumeVerification,
-  startVerification,
+  skipPromptAndStartFromHome,
 } from '../../../src/flows/verify.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import {
@@ -41,7 +41,7 @@ describe('Verified journey: photo card', () => {
   })
 
   it('enters the photo serial and submits the birthdate', async () => {
-    await startVerification()
+    await skipPromptAndStartFromHome()
     await chooseAddAccount()
     await enterSerialManually(getTestUser())
     await enterBirthdate(getTestUser())

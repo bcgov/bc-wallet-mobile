@@ -11,7 +11,7 @@ import {
   leaveVerificationToHome,
   reachVerificationMethod,
   resumeVerification,
-  startVerification,
+  skipPromptAndStartFromHome,
 } from '../../../src/flows/verify.js'
 import { findByA11yLabel } from '../../../src/helpers/a11y.js'
 import { acceptAppAlert } from '../../../src/helpers/alerts.js'
@@ -173,7 +173,7 @@ describe('Verified journey: combined card', () => {
   })
 
   it('enters the combined serial and submits the birthdate', async () => {
-    await startVerification()
+    await skipPromptAndStartFromHome()
     await chooseAddAccount()
     await enterSerialManually(getTestUser())
     await enterBirthdate(getTestUser())
