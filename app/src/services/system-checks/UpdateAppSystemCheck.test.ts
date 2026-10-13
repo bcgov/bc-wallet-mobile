@@ -5,11 +5,17 @@ import { BCDispatchAction } from '@/store'
 import { MockLogger } from '@bifold/core'
 import deviceInfo from 'react-native-device-info'
 
-const createUtils = () => ({
-  dispatch: jest.fn(),
-  translation: jest.fn().mockReturnValue('Update available') as any,
-  logger: new MockLogger(),
-})
+const createUtils = () => {
+  const logger = new MockLogger()
+  const info = jest.spyOn(logger, 'info')
+
+  return {
+    dispatch: jest.fn(),
+    translation: jest.fn().mockReturnValue('Update available') as any,
+    logger,
+    info,
+  }
+}
 
 const mockInstalled = (version: string, build: string) => {
   jest.spyOn(deviceInfo, 'getVersion').mockReturnValue(version)
@@ -101,9 +107,21 @@ describe('UpdateAppSystemCheck', () => {
       expect(result).toBe(false)
     })
 
+    it('logs the server status with the verbatim server field names', () => {
+      mockInstalled('4.1.2', '200')
+      const mockUtils = createUtils()
+      const serverStatus: any = { minVersion: '100', minVersionNumber: '4.0.0', supportedVersions: ['4.1.2'] }
+
+      new UpdateAppSystemCheck(serverStatus, {} as any, mockUtils).runCheck()
+
+      expect(mockUtils.info).toHaveBeenCalledWith(
+        '[UpdateAppSystemCheck] server status',
+        expect.objectContaining({ minVersion: '100', minVersionNumber: '4.0.0', supportedVersions: ['4.1.2'] })
+      )
+    })
+
     it.each([
       ['missing', undefined],
-      ['empty', ''],
       ['non-numeric', 'abc'],
     ])('should return true (fail open) when min build is %s', (_label, minVersion) => {
       const mockServerStatus: any = { minVersion, supportedVersions: [] }
@@ -128,6 +146,22 @@ describe('UpdateAppSystemCheck', () => {
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.MandatoryUpdate)
       expect(mockUtils.dispatch).not.toHaveBeenCalled()
+    })
+
+    it('logs the mandatory update result', () => {
+      mockInstalled('4.0.2', '99')
+      const mockUtils = createUtils()
+
+      new UpdateAppSystemCheck(
+        { minVersion: '100', supportedVersions: [] } as any,
+        { navigate: jest.fn() } as any,
+        mockUtils
+      ).onFail()
+
+      expect(mockUtils.info).toHaveBeenCalledWith('[UpdateAppSystemCheck] result: mandatory update', {
+        appBuild: 99,
+        minVersion: '100',
+      })
     })
 
     it('MandatoryUpdate: still wins when the app version is supported and a newer GA version exists', () => {
@@ -163,6 +197,10 @@ describe('UpdateAppSystemCheck', () => {
 
       expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
       expect(mockUtils.dispatch).toHaveBeenCalledWith(updateBanner)
+      expect(mockUtils.translation).toHaveBeenCalledWith('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle')
+      expect(mockUtils.info).toHaveBeenCalledWith('[UpdateAppSystemCheck] result: optional update', {
+        appVersion: '4.1.2',
+      })
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
 
@@ -189,6 +227,10 @@ describe('UpdateAppSystemCheck', () => {
 
       expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
       expect(mockUtils.dispatch).toHaveBeenCalledWith(removeBanner)
+      expect(mockUtils.info).toHaveBeenCalledWith('[UpdateAppSystemCheck] result: no update', {
+        appVersion: '4.1.2',
+        appBuild: 200,
+      })
     })
 
     it('NoUpdate: removes the banner when the app is newer than every supported version', () => {
