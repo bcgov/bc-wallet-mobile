@@ -418,6 +418,25 @@ describe('BCSCRootStack', () => {
         expect(dispatch).toHaveBeenCalledTimes(1)
       })
 
+      it('returns a first-time verifier who walked back to the prompt and skips to MainStack', () => {
+        const { toJSON, dispatch, apply, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
+        expect(toJSON()).toBe('VerifyStack')
+
+        // Back from the first step replaced onto the prompt (still IN_PROGRESS). Its Skip answers the
+        // prompt, records the skip and leaves the flow (useLeaveVerification) in one press.
+        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+        apply((current) => ({
+          ...withStatus(VerificationStatus.UNVERIFIED)(current),
+          bcsc: { ...current.bcsc, verificationSkipped: true },
+        }))
+
+        expect(toJSON()).toBe('MainStack')
+        // Started stays set, but the resume was already evaluated: nothing pulls them back in this session.
+        rerender(<BCSCRootStack />)
+        expect(toJSON()).toBe('MainStack')
+        expect(dispatch).toHaveBeenCalledTimes(1)
+      })
+
       it('remounts VerifyStack when a restart resets the status and re-enters verification', () => {
         const { toJSON, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         expect(mockVerifyStackMount).toHaveBeenCalledTimes(1)

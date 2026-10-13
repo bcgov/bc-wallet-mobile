@@ -2,6 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
+import { useLeaveVerification } from '@/bcsc-theme/hooks/useLeaveVerification'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -13,10 +14,10 @@ import { View } from 'react-native'
 import { Edges } from 'react-native-safe-area-context'
 
 /**
- * One-time prompt shown after onboarding completes (PIN created) and before the
- * user enters the main app. Lets them choose to start identity verification now
- * or defer it until later. Also reachable from the main app (without the skip
- * button) for a user who deferred.
+ * Prompt shown after onboarding completes (PIN created) and before the user enters the main app.
+ * Lets them choose to start identity verification now or defer it until later. It stays the root of
+ * the verify stack for a user who chose to verify, so backing out of the first step returns here.
+ * Also reachable from the main app (without the skip button) for a user who deferred.
  */
 interface VerifyPromptScreenProps {
   showSkip?: boolean
@@ -44,6 +45,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { continueVerificationProcess } = useSecureActions()
+  const leaveVerification = useLeaveVerification()
   // Startup seeds server status; the ServiceOutage screen's "Check again" force-refreshes it, so
   // no on-focus re-check is needed here.
   const { isAvailable, isChecking, serverStatus } = useServerStatus()
@@ -64,7 +66,11 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const handleLater = useCallback(() => {
     onAnswered?.()
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
-  }, [dispatch, onAnswered])
+    // A first-time verifier who walked back here from the first step is still IN_PROGRESS, which alone
+    // keeps VerifyStack mounted; skipping is their way to Home, so leave the flow as well (a no-op at the
+    // fresh prompt, where nothing is in progress yet). Progress is kept for the Home card
+    leaveVerification()
+  }, [dispatch, leaveVerification, onAnswered])
 
   if (serverStatus === null && isChecking) {
     return <WaitingScreenContent message={t('BCSC.Loading.DefaultMessage')} />
@@ -124,7 +130,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
           t('BCSC.VerifyPrompt.Bullet4'),
         ].map((line, i) => (
           <View key={i} style={{ flexDirection: 'row' }}>
-            <ThemedText style={{ marginHorizontal: Spacing.sm }}>{'\u2022'}</ThemedText>
+            <ThemedText style={{ marginHorizontal: Spacing.sm }}>{'•'}</ThemedText>
             <ThemedText style={{ flex: 1 }}>{line}</ThemedText>
           </View>
         ))}
