@@ -34,6 +34,10 @@ const useEvidenceIDCollectionModel = () => {
     return moment().diff(moment(canonicalBirthDate, 'YYYY-MM-DD', true), 'years') >= minimumAge
   }, [])
 
+  const isWithinMaximumAge = useCallback((canonicalBirthDate: string, maximumAge: number): boolean => {
+    return moment().diff(moment(canonicalBirthDate, 'YYYY-MM-DD', true), 'years') <= maximumAge
+  }, [])
+
   const isDocumentNumberValid = useCallback(
     (value: string, documentReferenceInputMask?: string, onInvalidMask?: (error: Error) => void): boolean => {
       if (!documentReferenceInputMask && !value) {
@@ -65,6 +69,7 @@ const useEvidenceIDCollectionModel = () => {
       personalInfoRequired,
       documentReferenceInputMask,
       minimumAge,
+      maximumAge,
       t,
       onInvalidMask,
     }: {
@@ -72,6 +77,7 @@ const useEvidenceIDCollectionModel = () => {
       personalInfoRequired: boolean
       documentReferenceInputMask?: string
       minimumAge: number
+      maximumAge: number
       t: TranslationFn
       onInvalidMask?: (error: Error) => void
     }): EvidenceCollectionFormErrors => {
@@ -110,6 +116,10 @@ const useEvidenceIDCollectionModel = () => {
         errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateAgeError', { minimumAge })
       }
 
+      if (isBirthDateValid && !isWithinMaximumAge(canonicalBirthDate, maximumAge)) {
+        errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateMaxAgeError')
+      }
+
       const middleNamesErrorKey = firstErrorKey(middleNamesSchema, values.middleNames)
       if (middleNamesErrorKey) {
         errors.middleNames = t(middleNamesErrorKey)
@@ -117,13 +127,14 @@ const useEvidenceIDCollectionModel = () => {
 
       return errors
     },
-    [isCanonicalBirthDateValid, isDocumentNumberValid, isOfMinimumAge, toCanonicalBirthDate]
+    [isCanonicalBirthDateValid, isDocumentNumberValid, isOfMinimumAge, isWithinMaximumAge, toCanonicalBirthDate]
   )
 
   return {
     toCanonicalBirthDate,
     isCanonicalBirthDateValid,
     isOfMinimumAge,
+    isWithinMaximumAge,
     isDocumentNumberValid,
     validateEvidence,
   }

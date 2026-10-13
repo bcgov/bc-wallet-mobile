@@ -1,10 +1,10 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import {
   useDeviceAuthorizationRecovery,
   useIsDeviceAuthorizationRecovering,
 } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { formatBirthdateForApi } from '@/bcsc-theme/utils/birthdate'
@@ -17,7 +17,7 @@ import {
   streetAddressSchema,
 } from '@/bcsc-theme/utils/validation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { isHandledAppError } from '@/errors/appError'
+import { isAppError, isHandledAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCState, NonBCSCUserMetadata } from '@/store'
@@ -57,7 +57,7 @@ type useResidentialAddressModelProps = {
 const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResidentialAddressModelProps) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { authorization } = useApi()
+  const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorModal } = useErrorAlert()
   const { updateCardProcess, updateUserMetadata, updateDeviceCodes, updateVerificationOptions } = useSecureActions()
@@ -182,8 +182,8 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
     // making the assumption that the user metadata has been previously saved ie: Step 1
     if (!store.bcscSecure.birthdate || !store.bcscSecure.userMetadata?.name) {
       logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected', {
-        birthdate: store.bcscSecure.birthdate,
-        name: store.bcscSecure.userMetadata?.name,
+        hasBirthdate: Boolean(store.bcscSecure.birthdate),
+        hasName: Boolean(store.bcscSecure.userMetadata?.name),
       })
 
       throw new Error(t('BCSC.Address.MissingPrerequisiteAttributes'))
@@ -210,7 +210,7 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
       }
 
       const deviceAuth = await attemptWithRecovery(
-        () => authorization.authorizeDeviceWithUnknownBCSC(deviceAuthConfig),
+        () => authorizationService.authorizeDeviceWithUnknownBCSC(deviceAuthConfig),
         BCSCScreens.ResidentialAddress
       )
 
@@ -246,6 +246,13 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
       const nextStep = getResumeStepRoute(predictedStore)
       navigation.dispatch(StackActions.push(nextStep.name, nextStep.params))
     } catch (error) {
+      if (isAppError(error) && error.technicalMessage?.includes(AppEventCode.OVER_MAXIMUM_AGE)) {
+        logger.warn('ResidentialAddressScreen.handleSubmit -> over_maximum_age', {
+          // Year only: the full birthdate is PII
+          birthYear: store.bcscSecure.birthdate.getFullYear(),
+        })
+      }
+
       if (isHandledAppError(error)) {
         return
       }
@@ -269,7 +276,7 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
     attemptWithRecovery,
     emitErrorModal,
     t,
-    authorization,
+    authorizationService,
     updateDeviceCodes,
     updateVerificationOptions,
     updateCardProcess,

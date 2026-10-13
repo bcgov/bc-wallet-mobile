@@ -187,6 +187,7 @@ export const USER_REPORT_ERROR_CODE = 0
 
 // Validation constants
 export const MINIMUM_VERIFICATION_AGE = 12
+export const MAXIMUM_VERIFICATION_AGE = 120
 
 // Analytics constants
 export const ANALYTICS_APP_ID_PREFIX = 'Snowplow_standalone_IDIMapp_'

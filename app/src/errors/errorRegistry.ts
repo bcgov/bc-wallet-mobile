@@ -461,6 +461,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.CREDENTIAL,
     message: "Individual's age is below the minimum required for remote verification",
   },
+  OVER_MAXIMUM_AGE: {
+    statusCode: 2319,
+    appEvent: AppEventCode.OVER_MAXIMUM_AGE,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.CREDENTIAL,
+    message: "Individual's age is above the maximum allowed for remote verification",
+  },
   TOO_MANY_MOBILE_CARDS: {
     statusCode: 2318,
     appEvent: AppEventCode.TOO_MANY_MOBILE_CARDS,

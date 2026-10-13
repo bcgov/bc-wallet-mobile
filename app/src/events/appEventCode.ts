@@ -134,6 +134,7 @@ export enum AppEventCode {
   CARD_PROBLEM = 'card_problem',
   ADDITIONAL_CARD = 'additional_card',
   UNDER_MINIMUM_AGE = 'under_minimum_age',
+  OVER_MAXIMUM_AGE = 'over_maximum_age',
   TOO_MANY_MOBILE_CARDS = 'too_many_mobile_cards',
   AUTHORIZATION_PENDING = 'authorization_pending',
   RATE_IN_APP_STORE = 'rate_in_app_store',

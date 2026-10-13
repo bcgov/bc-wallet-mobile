@@ -1,6 +1,6 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useResidentialAddressModel from '@/bcsc-theme/features/verify/useResidentialAddressModel'
 import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
+import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
@@ -9,7 +9,7 @@ import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
-jest.mock('@/bcsc-theme/api/hooks/useApi')
+jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
 jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
 }))
@@ -114,10 +114,7 @@ describe('useResidentialAddressModel', () => {
   }
 
   beforeEach(() => {
-    const useApiMock = jest.mocked(useApi)
-    useApiMock.mockReturnValue({
-      authorization: mockAuthorizationApi,
-    } as any)
+    jest.mocked(useAuthorizationService).mockReturnValue(mockAuthorizationApi as any)
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
@@ -746,6 +743,32 @@ describe('useResidentialAddressModel', () => {
         expect(mockNavigation.dispatch).not.toHaveBeenCalled()
         expect(result.current.isSubmitting).toBe(false)
       })
+    })
+
+    it('logs only the birth year when the server returns over_maximum_age', async () => {
+      const overMaxAgeError = new AppError(
+        'test error',
+        {
+          category: ErrorCategory.CREDENTIAL,
+          appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+          statusCode: 2209,
+        },
+        { cause: new Error('over_maximum_age'), track: false }
+      )
+      // The authorization service marks it handled after routing to the error screen
+      overMaxAgeError.handled = true
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockRejectedValue(overMaxAgeError)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockLogger.warn).toHaveBeenCalledWith('ResidentialAddressScreen.handleSubmit -> over_maximum_age', {
+        birthYear: 1990,
+      })
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
     })
 
     it('should throw error when birthdate is missing', async () => {
