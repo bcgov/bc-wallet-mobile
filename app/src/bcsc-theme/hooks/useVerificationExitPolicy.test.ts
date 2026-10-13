@@ -17,7 +17,7 @@ describe('useVerificationExitPolicy', () => {
 
     const { result } = renderHook(() => useVerificationExitPolicy())
 
-    expect(result.current).toEqual({ isFirstTimeVerifier: true, showBackToHomeMenuRow: false })
+    expect(result.current).toEqual({ isFirstTimeVerifier: true, showBackToHomeMenuRow: false, isDeveloperMode: false })
   })
 
   it('offers Back to home to a user who skipped the prompt', () => {
@@ -25,7 +25,7 @@ describe('useVerificationExitPolicy', () => {
 
     const { result } = renderHook(() => useVerificationExitPolicy())
 
-    expect(result.current).toEqual({ isFirstTimeVerifier: false, showBackToHomeMenuRow: true })
+    expect(result.current).toEqual({ isFirstTimeVerifier: false, showBackToHomeMenuRow: true, isDeveloperMode: false })
   })
 
   it('treats an unanswered prompt as deferred (its own buttons are the exits)', () => {
@@ -33,7 +33,7 @@ describe('useVerificationExitPolicy', () => {
 
     const { result } = renderHook(() => useVerificationExitPolicy())
 
-    expect(result.current).toEqual({ isFirstTimeVerifier: false, showBackToHomeMenuRow: true })
+    expect(result.current).toEqual({ isFirstTimeVerifier: false, showBackToHomeMenuRow: true, isDeveloperMode: false })
   })
 
   it('shows Back to home to a first-time verifier in developer mode without changing their kind', () => {
@@ -41,6 +41,6 @@ describe('useVerificationExitPolicy', () => {
 
     const { result } = renderHook(() => useVerificationExitPolicy())
 
-    expect(result.current).toEqual({ isFirstTimeVerifier: true, showBackToHomeMenuRow: true })
+    expect(result.current).toEqual({ isFirstTimeVerifier: true, showBackToHomeMenuRow: true, isDeveloperMode: true })
   })
 })

@@ -36,26 +36,24 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorModal } = useErrorAlert()
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
-  // Focus, foreground, the review push and the button can all ask for a check at once; one at a time
-  // is enough, the next trigger fetches the latest status anyway
+  // Focus, foreground, the review push and the button can all ask for a check at once. One runs at a
+  // time; a trigger that arrives mid-flight is coalesced into a single follow-up check, so a decision
+  // that lands while a stale "pending" response is still in the air is not dropped
   const checkInFlightRef = useRef(false)
+  const queuedCheckRef = useRef<CheckStatusOptions | undefined>(undefined)
   const { cancelVerificationRequestAlert } = useAlerts(navigation)
   // Only these fields decide the check, so unrelated secure-state writes don't change its identity (the
   // pending screen re-checks whenever it does)
   const { verificationRequestId, deviceCode, userCode } = store.bcscSecure
   const verified = isUserVerified(store.bcscSecure)
 
-  const handleCheckStatus = useCallback(
-    async ({ surfaceErrors = false }: CheckStatusOptions = {}) => {
-      if (checkInFlightRef.current) {
-        return
-      }
-      checkInFlightRef.current = true
-      setIsCheckingStatus(true)
+  /** One status check. Never throws: a failure is logged, and shown only when asked. */
+  const runStatusCheck = useCallback(
+    async ({ surfaceErrors = false }: CheckStatusOptions): Promise<'decided' | 'pending' | 'failed'> => {
       try {
         if (verified) {
           navigation.navigate(BCSCScreens.VerificationSuccess)
-          return
+          return 'decided'
         }
 
         if (!verificationRequestId) {
@@ -70,13 +68,18 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
 
           await token.checkDeviceCodeStatus(deviceCode, userCode)
           navigation.navigate(BCSCScreens.VerificationSuccess)
-        } else if (status === VerificationRequestStatus.CANCELLED) {
+          return 'decided'
+        }
+
+        if (status === VerificationRequestStatus.CANCELLED) {
           navigation.navigate(BCSCScreens.CancelledReview, {
             agentReason: status_message,
           })
-        } else {
-          navigation.navigate(BCSCScreens.PendingReview)
+          return 'decided'
         }
+
+        navigation.navigate(BCSCScreens.PendingReview)
+        return 'pending'
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         logger.error(`[useVerificationPendingActions] Failed to check status: ${message}`)
@@ -87,9 +90,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
             ensureAppError(error, AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION)
           )
         }
-      } finally {
-        checkInFlightRef.current = false
-        setIsCheckingStatus(false)
+        return 'failed'
       }
     },
     [
@@ -104,6 +105,32 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
       logger,
       emitErrorModal,
     ]
+  )
+
+  const handleCheckStatus = useCallback(
+    async ({ surfaceErrors = false }: CheckStatusOptions = {}) => {
+      if (checkInFlightRef.current) {
+        // Remember that a fresh check is wanted; a manual press among the triggers keeps its right to be told
+        queuedCheckRef.current = { surfaceErrors: surfaceErrors || Boolean(queuedCheckRef.current?.surfaceErrors) }
+        return
+      }
+      checkInFlightRef.current = true
+      setIsCheckingStatus(true)
+      try {
+        const outcome = await runStatusCheck({ surfaceErrors })
+        const queued = queuedCheckRef.current
+        queuedCheckRef.current = undefined
+        // A decided check has already navigated on; a queued trigger could only re-fetch the same decision
+        if (queued && outcome !== 'decided') {
+          await runStatusCheck(queued)
+        }
+      } finally {
+        queuedCheckRef.current = undefined
+        checkInFlightRef.current = false
+        setIsCheckingStatus(false)
+      }
+    },
+    [runStatusCheck]
   )
 
   const handleCancelVerification = useCallback(async () => {

@@ -93,7 +93,8 @@ without per-screen colour props (#4743).
 ## Verification flow exits: first-time vs deferred verifiers
 
 The onboarding "Verify your account" prompt decides who may leave the verify flow, through the persisted
-`bcsc.verificationSkipped` flag that only the prompt writes (`useVerificationExitPolicy`):
+`bcsc.verificationSkipped` flag: while the account is unverified only the prompt writes it, and finishing
+verification sets it to `true` so a later renewal re-enters as a deferred verifier (`useVerificationExitPolicy`):
 
 - **First-time verifier** (Continue at the prompt, or a v3 upgrade mid-verification): the flow is their whole
   app. The help menu has no "Back to home", the back arrow at the beginning of the stack `replace`s onto the
@@ -107,9 +108,11 @@ Rules that keep this consistent:
 
 - `useLeaveVerification` is the only way out of the flow. Never navigate to Home from a verify screen.
 - `createVerifyHeaderBackButton` (`components/VerifyHeaderBackButton.tsx`) is the single owner of Android
-  hardware back on every verify screen that shows a header; hide it with `hidden`, don't register a second
-  `BackHandler` on the screen (RN runs the newest handler first, so two owners race). Screens with
-  `headerShown: false` own their own.
+  hardware back on a verify screen that shows a header: every route that can be a resumed initial route
+  uses it, including arrow-less ones (hidden behind the settings button on method selection), so hardware
+  back never falls through to the OS. Hide it with `hidden`; don't register a second `BackHandler` on the
+  screen (RN runs the newest handler first, so two owners race). Screens with `headerShown: false` own
+  their own.
 - Gate help-menu rows in the factory (`createVerifyHelpMenuButton`), never inside a row component:
   `ListButtonGroup` positions every element child, so a row rendering `null` still takes a slot.
 - From the prompt, `push` the resume step; never `replace` the prompt away. A screen that `replace`s back onto

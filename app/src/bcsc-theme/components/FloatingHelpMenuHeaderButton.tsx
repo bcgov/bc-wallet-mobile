@@ -134,13 +134,21 @@ const GiveFeedbackListButton = ({ onClose, position }: MenuRowProps) => {
  * "Back to home" menu row (verify flow only). Leaves the in-progress verification and returns to
  * the app home screen, keeping progress so the user can resume later (see {@link useLeaveVerification}).
  * Offered per {@link useVerificationExitPolicy}: not to a first-time verifier, unless developer mode is on.
+ * `onLeave` runs with the menu's close, before the flow is left (the prompt uses it to count itself answered).
  */
-const BackToHomeListButton = ({ onClose, position }: MenuRowProps) => {
+const BackToHomeListButton = ({ onClose, onLeave, position }: MenuRowProps & { onLeave?: () => void }) => {
   const { t } = useTranslation()
   const leaveVerification = useLeaveVerification()
 
+  const handlePress = useCallback(() => {
+    leaveVerification(() => {
+      onClose()
+      onLeave?.()
+    })
+  }, [leaveVerification, onClose, onLeave])
+
   return (
-    <ListButton position={position} onPress={() => leaveVerification(onClose)}>
+    <ListButton position={position} onPress={handlePress}>
       {t('BCSC.HelpMenu.BackToHome')}
     </ListButton>
   )
@@ -227,11 +235,14 @@ export type VerifyHelpMenuButtonOptions = {
    */
   showRestartVerification?: boolean
   /**
-   * Offer the "Back to home" row at all. Off for the verify prompt, whose own Continue and Skip are
-   * its exits; elsewhere the row still depends on the exit policy (no first-time verifier sees it,
-   * developer mode always does).
+   * Whether the "Back to home" row is offered. `true` (the default) follows the exit policy: every
+   * deferred verifier, and developer mode. `'developerOnly'` is for the verify prompt, whose own
+   * Continue and Skip are its exits: only a tester gets the row there, as an escape hatch that leaves
+   * the prompt unanswered. `false` never offers it.
    */
-  showBackToHome?: boolean
+  showBackToHome?: boolean | 'developerOnly'
+  /** Runs when "Back to home" is pressed, before the flow is left; the prompt counts itself answered. */
+  onLeave?: () => void
 }
 
 /**
@@ -248,18 +259,21 @@ export type VerifyHelpMenuButtonOptions = {
 export const createVerifyHelpMenuButton = ({
   showRestartVerification = false,
   showBackToHome = true,
+  onLeave,
 }: VerifyHelpMenuButtonOptions = {}) => {
   const VerifyHelpMenuHeaderRight = () => {
     const floatingHelpMenuRef = useRef<FloatingHelpMenuRef>(null)
     const closeMenu = useCallback(() => floatingHelpMenuRef.current?.close(), [])
     const reportProblem = useReportProblem(floatingHelpMenuRef)
-    const { showBackToHomeMenuRow } = useVerificationExitPolicy()
+    const { showBackToHomeMenuRow, isDeveloperMode } = useVerificationExitPolicy()
+    const offerBackToHome =
+      showBackToHome === 'developerOnly' ? isDeveloperMode : showBackToHome && showBackToHomeMenuRow
 
     return (
       <>
         <FloatingHelpMenuButton ref={floatingHelpMenuRef} icon={DEFAULT_HELP_ICON}>
           <ReportProblemListButton onPress={reportProblem.open} />
-          {showBackToHome && showBackToHomeMenuRow && <BackToHomeListButton onClose={closeMenu} />}
+          {offerBackToHome && <BackToHomeListButton onClose={closeMenu} onLeave={onLeave} />}
           {showRestartVerification && <RestartVerificationListButton onClose={closeMenu} />}
         </FloatingHelpMenuButton>
         <ReportProblemModal visible={reportProblem.visible} onClose={reportProblem.hide} />

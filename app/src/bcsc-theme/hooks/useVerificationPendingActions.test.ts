@@ -139,34 +139,89 @@ describe('useVerificationPendingActions', () => {
       )
     })
 
-    it('runs one check at a time and reports while it is in flight', async () => {
-      let resolveStatus: (value: { status: VerificationRequestStatus }) => void = () => undefined
-      getVerificationRequestStatusMock.mockReturnValue(
-        new Promise((resolve) => {
-          resolveStatus = resolve
+    describe('overlapping triggers', () => {
+      /** A first fetch that stays in flight until the test settles it. */
+      const holdFirstFetch = () => {
+        let settle: (value: { status: VerificationRequestStatus }) => void = () => undefined
+        getVerificationRequestStatusMock.mockReturnValueOnce(
+          new Promise((resolve) => {
+            settle = resolve
+          })
+        )
+        return (value: { status: VerificationRequestStatus }) => settle(value)
+      }
+
+      it('coalesces triggers that arrive mid-check into one follow-up check, so a late decision is not lost', async () => {
+        const settleFirstFetch = holdFirstFetch()
+        const { result } = renderHook(() => useVerificationPendingActions(navigation))
+
+        let first: Promise<void> = Promise.resolve()
+        act(() => {
+          first = result.current.handleCheckStatus()
         })
-      )
-      const { result } = renderHook(() => useVerificationPendingActions(navigation))
+        expect(result.current.isCheckingStatus).toBe(true)
 
-      let first: Promise<void> = Promise.resolve()
-      act(() => {
-        first = result.current.handleCheckStatus()
+        // The focus check is still awaiting a stale response when the push and a foreground both ask again
+        await act(async () => {
+          await result.current.handleCheckStatus()
+          await result.current.handleCheckStatus()
+        })
+        expect(getVerificationRequestStatusMock).toHaveBeenCalledTimes(1)
+
+        // The stale response settles as pending; exactly one follow-up fetch serves the queued triggers
+        await act(async () => {
+          settleFirstFetch({ status: VerificationRequestStatus.PENDING })
+          await first
+        })
+
+        expect(getVerificationRequestStatusMock).toHaveBeenCalledTimes(2)
+        expect(result.current.isCheckingStatus).toBe(false)
+        expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
       })
-      expect(result.current.isCheckingStatus).toBe(true)
 
-      // Focus, foreground, push and the button can overlap; the second request is dropped
-      await act(async () => {
-        await result.current.handleCheckStatus()
+      it('skips the follow-up when the check in flight already found the decision', async () => {
+        const settleFirstFetch = holdFirstFetch()
+        const { result } = renderHook(() => useVerificationPendingActions(navigation))
+
+        let first: Promise<void> = Promise.resolve()
+        act(() => {
+          first = result.current.handleCheckStatus()
+        })
+        await act(async () => {
+          await result.current.handleCheckStatus()
+        })
+
+        await act(async () => {
+          settleFirstFetch({ status: VerificationRequestStatus.VERIFIED })
+          await first
+        })
+
+        expect(getVerificationRequestStatusMock).toHaveBeenCalledTimes(1)
+        expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+        expect(result.current.isCheckingStatus).toBe(false)
       })
-      expect(getVerificationRequestStatusMock).toHaveBeenCalledTimes(1)
 
-      await act(async () => {
-        resolveStatus({ status: VerificationRequestStatus.PENDING })
-        await first
+      it('keeps a queued manual press entitled to see a failure', async () => {
+        const settleFirstFetch = holdFirstFetch()
+        getVerificationRequestStatusMock.mockRejectedValueOnce(new Error('status boom'))
+        const { result } = renderHook(() => useVerificationPendingActions(navigation))
+
+        let first: Promise<void> = Promise.resolve()
+        act(() => {
+          first = result.current.handleCheckStatus() // automatic (focus)
+        })
+        await act(async () => {
+          await result.current.handleCheckStatus({ surfaceErrors: true }) // the button, queued behind it
+        })
+
+        await act(async () => {
+          settleFirstFetch({ status: VerificationRequestStatus.PENDING })
+          await first
+        })
+
+        expect(getVerificationRequestStatusMock).toHaveBeenCalledTimes(2)
+        expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
       })
-
-      expect(result.current.isCheckingStatus).toBe(false)
-      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
     })
   })
 

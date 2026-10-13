@@ -85,6 +85,27 @@ describe('createVerifyHelpMenuButton', () => {
     expect(screen.queryByText(BACK_TO_HOME)).toBeNull()
   })
 
+  describe("the verify prompt's developer-only Back to home", () => {
+    it('is hidden from a normal user, whoever they are', () => {
+      openMenu(UNANSWERED, { showBackToHome: 'developerOnly' })
+
+      expect(screen.queryByText(BACK_TO_HOME)).toBeNull()
+    })
+
+    it('is offered in developer mode and counts the prompt answered before leaving', () => {
+      const onLeave = jest.fn()
+      openMenu(withDeveloperMode(UNANSWERED), { showBackToHome: 'developerOnly', onLeave })
+
+      fireEvent.press(screen.getByText(BACK_TO_HOME))
+
+      // useLeaveVerification runs the callback (close the menu, answer the prompt) before it leaves
+      expect(mockLeaveVerification).toHaveBeenCalledTimes(1)
+      const [beforeLeave] = mockLeaveVerification.mock.calls[0] as [() => void]
+      beforeLeave()
+      expect(onLeave).toHaveBeenCalledTimes(1)
+    })
+  })
+
   it('shows Restart only once verification is underway', () => {
     openMenu(DEFERRED)
 

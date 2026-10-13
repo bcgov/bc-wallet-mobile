@@ -20,6 +20,8 @@ export type VerificationExitPolicy = {
    * mode so a tester can always get out. Arrows and hardware back ignore developer mode.
    */
   showBackToHomeMenuRow: boolean
+  /** Developer mode is on: a tester's escape hatches (such as Back to home on the prompt) are offered. */
+  isDeveloperMode: boolean
 }
 
 export const useVerificationExitPolicy = (): VerificationExitPolicy => {
@@ -30,10 +32,12 @@ export const useVerificationExitPolicy = (): VerificationExitPolicy => {
   return useMemo(() => {
     // `undefined` (prompt not answered yet) only occurs on the prompt itself, whose exits are its own buttons
     const isFirstTimeVerifier = verificationSkipped === false
+    const isDeveloperMode = Boolean(developerModeEnabled)
 
     return {
       isFirstTimeVerifier,
-      showBackToHomeMenuRow: !isFirstTimeVerifier || Boolean(developerModeEnabled),
+      showBackToHomeMenuRow: !isFirstTimeVerifier || isDeveloperMode,
+      isDeveloperMode,
     }
   }, [verificationSkipped, developerModeEnabled])
 }
