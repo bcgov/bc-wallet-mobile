@@ -419,7 +419,9 @@ export class AppContainer implements Container {
       bcsc.showAccountExpiryNotification = undefined
       bcsc.showCardRenewalNotification = undefined
       // Recomputed each launch by UpdateAppSystemCheck; a stale persisted one would outlive an update if the status fetch fails
-      bcsc.bannerMessages = bcsc.bannerMessages?.filter((banner) => banner.id !== BCSCBanner.APP_UPDATE_AVAILABLE)
+      if (Array.isArray(bcsc.bannerMessages)) {
+        bcsc.bannerMessages = bcsc.bannerMessages.filter((banner) => banner.id !== BCSCBanner.APP_UPDATE_AVAILABLE)
+      }
 
       if (bcscMigration.migrated) {
         // Write back under the new field name so subsequent launches skip this mapping. Deferred until
