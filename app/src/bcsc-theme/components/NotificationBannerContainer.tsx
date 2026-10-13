@@ -47,7 +47,7 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
     }
 
     if (banner.id === BCSCBanner.APP_UPDATE_AVAILABLE) {
-      openLink(getBCSCAppStoreUrl())
+      void openLink(getBCSCAppStoreUrl())
     }
 
     const message = store.bcsc.bannerMessages.find((banner) => banner.id === bannerId)
