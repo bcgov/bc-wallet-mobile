@@ -284,8 +284,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   useEffect(() => {
     if (flowState === VideoCallFlowState.IDLE) {
       void startVideoCall()
-      // No-op: start() re-initialises audio routing immediately after. Removal tracked in #4471.
-      InCallManager.setForceSpeakerphoneOn(false)
       InCallManager.start({ media: 'video', auto: true })
     }
   }, [flowState, startVideoCall])

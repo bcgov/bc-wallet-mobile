@@ -382,7 +382,8 @@ const translation = {
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
-      "AuthenticateToSecure": "Authenticate to secure your app (FR)"
+      "AuthenticateToSecure": "Authenticate to secure your app (FR)",
+      "UnlockPrompt": "Unlock your app (FR)"
     },
     "AppReset": {
       "Title": "App reset for security (FR)",
@@ -604,6 +605,18 @@ const translation = {
       "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code (FR)",
       "ViewMessages": "View new messages (FR)",
     },
+    "ServiceNotice": {
+      "Header": "Service notice (FR)",
+      "NoticeUnavailable": "This notice isn't available right now. (FR)",
+      "MobileCardHeading": "Setting up a mobile card? (FR)",
+      "MobileCardDescription": "It may take longer to get your identity verified to set up your mobile card. (FR)",
+      "MobileCardVideoCall": "Video call – it may take more than 5 minutes to speak to an agent (FR)",
+      "MobileCardSendVideo": "Send video – it may take more than 3 days to get a response back (FR)",
+      "LoginHeading": "Logging into a government service? (FR)",
+      "LoginDescription": "Please be patient, it may take longer to log in. (FR)",
+      "HaveQuestions": "Have questions? (FR)",
+      "ContactUsLink": "Contact us (FR)",
+    },
     "Steps": {
       "VerificationIDMissing": "Verification request ID is missing (FR)",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (FR)",
@@ -626,6 +639,7 @@ const translation = {
       },
       "ServerStatus": {
         "UnavailableBannerTitle": "Service Unavailable (FR)",
+        "NoticeBannerTitle": "Service notice. Learn more. (FR)",
       },
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available (FR)",
@@ -1119,7 +1133,7 @@ const translation = {
       "Title": "Open the BC Services Card app on your other device (FR)",
       "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device. (FR)",
       "Warning": "Do not scan with the camera app. (FR)",
-      "GetQRCode": "Get QR Code (FR)",
+      "GetQRCode": "Get QR code (FR)",
     },
     "TransferInformation": {
       "Title": "Have this app on another device? (FR)",
@@ -1129,9 +1143,10 @@ const translation = {
     "TransferInstructions": {
       "AddingDevice": "Adding this device... (FR)",
       "Title": "Scan your QR code to add your device (FR)",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner. (FR)",
-      "Step2": "Choose <b>‘Add another device'</b> to get your QR code. (FR)",
-      "Step3": "<b>Scan the QR code</b> that appears on your other device. (FR)",
+      "Step1": "<b>On your other device</b>, open and unlock the BC Services Card app. (FR)",
+      "Step2": "Tap the <b>menu ‘☰’</b> icon in the top left corner. (FR)",
+      "Step3": "Choose <b>‘Add another device’</b> to get your QR code. (FR)",
+      "Step4": "<b>Scan the QR code</b> that appears on your other device. (FR)",
       "ScanQRCode": "Scan QR code (FR)",
     },
     "QRDisplay": {
@@ -1154,6 +1169,12 @@ const translation = {
       "Title": "Your identity has been verified (FR)",
       "Description": "You're now able to access services with your verified identity. (FR)",
       "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID. (FR)",
+      "ButtonText": "Continue (FR)"
+    },
+    "AlreadyVerified": {
+      "Title": "You're already set! (FR)",
+      "Description": "The QR code scanned is for transferring an existing account to a new device. This device is already verified and ready to use. (FR)",
+      "ExtraText": "To access a website or service, scan the QR code shown on that website or service. (FR)",
       "ButtonText": "Continue (FR)"
     },
     "CancelledVerification": {

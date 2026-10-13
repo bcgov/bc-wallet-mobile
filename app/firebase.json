@@ -3,6 +3,9 @@
     "messaging_ios_auto_register_for_remote_messages": true,
     "messaging_ios_foreground_presentation_options": [],
     "messaging_android_notification_channel_id": "default",
-    "messaging_android_headless_task_timeout": 60000
+    "messaging_android_headless_task_timeout": 60000,
+    "crashlytics_auto_collection_enabled": false,
+    "crashlytics_debug_enabled": false,
+    "crashlytics_javascript_exception_handler_chaining_enabled": false
   }
 }

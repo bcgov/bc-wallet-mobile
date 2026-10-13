@@ -75,9 +75,11 @@ describe('extractTransferToken', () => {
 
 describe('useAccountTransferQRCodeStrategy', () => {
   const onSuccess = jest.fn()
+  const onAlreadyVerified = jest.fn()
   let mockApiClient: { tokens: unknown }
 
-  const setup = () => renderHook(() => useAccountTransferQRCodeStrategy(onSuccess)).result.current
+  const setup = (alreadyVerifiedHandler?: () => void) =>
+    renderHook(() => useAccountTransferQRCodeStrategy(onSuccess, alreadyVerifiedHandler)).result.current
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -175,6 +177,43 @@ describe('useAccountTransferQRCodeStrategy', () => {
       expect(mockLogger.error).toHaveBeenCalled()
       expect(mockVerifyAttestation).not.toHaveBeenCalled()
       expect(onSuccess).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('already verified', () => {
+    beforeEach(() => {
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: { verified: true } } as any, jest.fn()])
+    })
+
+    it('calls onAlreadyVerified and leaves the wallet untouched', async () => {
+      await setup(onAlreadyVerified).handle(validQrValue)
+
+      expect(onAlreadyVerified).toHaveBeenCalledTimes(1)
+      expect(onSuccess).not.toHaveBeenCalled()
+      expect(mockAuthorizeDevice).not.toHaveBeenCalled()
+      expect(mockUpdateUserInfo).not.toHaveBeenCalled()
+      expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
+      expect(getAccount).not.toHaveBeenCalled()
+      expect(createDeviceSignedJWT).not.toHaveBeenCalled()
+      expect(mockVerifyAttestation).not.toHaveBeenCalled()
+      expect(mockDeviceToken).not.toHaveBeenCalled()
+      expect(mockUpdateTokens).not.toHaveBeenCalled()
+      expect(mockApiClient.tokens).toBeNull()
+    })
+
+    it('still rejects a transfer QR with no token before checking verification', async () => {
+      await expect(setup(onAlreadyVerified).handle('https://example.com/selfsetup.html')).rejects.toMatchObject({
+        message: 'BCSC.Scan.UnrecognizedQR',
+      })
+
+      expect(onAlreadyVerified).not.toHaveBeenCalled()
+    })
+
+    it('runs the normal transfer when no onAlreadyVerified handler is provided', async () => {
+      await setup().handle(validQrValue)
+
+      expect(mockVerifyAttestation).toHaveBeenCalled()
+      expect(onSuccess).toHaveBeenCalledTimes(1)
     })
   })
 

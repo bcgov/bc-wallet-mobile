@@ -643,14 +643,14 @@ serial from the 1D code-39 and the birthdate from the PDF-417 — matching the s
 nonexistent card._
 
 > **_App behaviour that limits this (worth its own ticket):_** `ScanSerialScreen` reroutes to the
-> non-BCSC ("two government-issued IDs") flow the instant any scanned code decodes to `null`, guarded
+> non-BCSC ("two government-issued IDs") flow the instant any scanned code fails to decode, guarded
 > only by "nothing captured yet". Since the vision-camera patch enables ML Kit's
-> `enableAllPotentialBarcodes()` and `decodeBarcodes` does not filter value-less codes, a partial
-> detection triggers it — so a real user whose card is still half-aligned can be bounced out of the
+> `enableAllPotentialBarcodes()` and `ScanSerialScreen.onCodeScanned`'s decode loop does not filter
+> value-less codes, a partial detection triggers it — so a real user whose card is still half-aligned can be bounced out of the
 > BCSC flow before the scanner ever gets a clean read. Seven purpose-built image variants across six
 > device sessions (varying geometry, sharpness, module size, orientation and injection ordering) all
 > reroute within seconds, so this is not an image problem. Skipping value-less codes in
-> `decodeBarcodes` — the same guard it already applies to `type === 'unknown'` — would fix the
+> that loop — the same guard it already applies to `type === 'unknown'` — would fix the
 > user-facing behaviour and make this screen testable by injection._
 
 ### Device authentication (Sauce device-lock lane)

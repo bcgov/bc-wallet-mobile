@@ -1,4 +1,4 @@
-import { parseBirthdateToLocalDate } from './birthdate'
+import { formatBirthdateForApi, parseBirthdateToLocalDate } from './birthdate'
 
 describe('parseBirthdateToLocalDate', () => {
   // Asserting local Date components keeps these assertions TZ-invariant —
@@ -34,5 +34,29 @@ describe('parseBirthdateToLocalDate', () => {
   it('returns Invalid Date for unparseable input (strict mode)', () => {
     expect(Number.isNaN(parseBirthdateToLocalDate('not-a-date').getTime())).toBe(true)
     expect(Number.isNaN(parseBirthdateToLocalDate('2000-13-01').getTime())).toBe(true)
+  })
+})
+
+describe('formatBirthdateForApi', () => {
+  // Dates are built from local components so these hold under any TZ.
+  it('zero-pads a local-midnight date', () => {
+    expect(formatBirthdateForApi(new Date(2000, 0, 5))).toBe('2000-01-05')
+  })
+
+  it('keeps a late-evening local time on the same calendar day', () => {
+    expect(formatBirthdateForApi(new Date(2000, 0, 1, 23, 59, 59))).toBe('2000-01-01')
+  })
+
+  it('formats a leap day', () => {
+    expect(formatBirthdateForApi(new Date(2000, 1, 29))).toBe('2000-02-29')
+  })
+
+  it.each([
+    ['1995-12-17', '1995-12-17'],
+    ['2000-02-29', '2000-02-29'],
+    ['2000/01/05', '2000-01-05'],
+    ['January 1, 2000', '2000-01-01'],
+  ])('round-trips %s through parseBirthdateToLocalDate', (input, expected) => {
+    expect(formatBirthdateForApi(parseBirthdateToLocalDate(input))).toBe(expected)
   })
 })

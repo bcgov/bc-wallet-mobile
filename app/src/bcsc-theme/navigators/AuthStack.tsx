@@ -20,6 +20,7 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { OnboardingIntroScreen } from '../features/onboarding/OnboardingIntroScreen'
+import { ServiceNoticeScreen } from '../features/service-notice/ServiceNoticeScreen'
 import { AuthPrivacyPolicyScreen } from '../features/settings/AuthPrivacyPolicyScreen'
 import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
@@ -35,15 +36,7 @@ import { getDefaultModalOptions } from './stack-utils'
  */
 const AuthIntroScreen = (): React.ReactElement => {
   const navigation = useNavigation<StackNavigationProp<BCSCAuthStackParams>>()
-  return (
-    <OnboardingIntroScreen
-      onContinue={() => navigation.replace(BCSCScreens.AccountLanding)}
-      // Same hidden developer trigger the onboarding intro exposes. AuthStack already registers the
-      // Developer screen (AuthDeveloper), so returning users can reach it (e.g. the "Reset Welcome
-      // Intro" dev tool) from the intro before unlocking.
-      onActivateDeveloper={() => navigation.navigate(BCSCScreens.AuthDeveloper)}
-    />
-  )
+  return <OnboardingIntroScreen onContinue={() => navigation.replace(BCSCScreens.AccountLanding)} />
 }
 
 /**
@@ -133,6 +126,13 @@ const AuthStack = (): React.ReactElement => {
         options={({ route }) => ({
           title: route.params.title,
         })}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ServiceNotice}
+        component={ServiceNoticeScreen}
+        options={{
+          title: '',
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.AuthPrivacyPolicy}

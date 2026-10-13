@@ -35,52 +35,17 @@ exports[`OnboardingIntro renders correctly 1`] = `
   >
     <View>
       <View
-        accessibilityElementsHidden={true}
-        accessibilityState={
+        style={
           {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
+            "alignItems": "center",
+            "marginTop": 40,
           }
         }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={false}
-        collapsable={false}
-        focusable={true}
-        importantForAccessibility="no-hide-descendants"
-        onBlur={[Function]}
-        onClick={[Function]}
-        onFocus={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        testID="com.ariesbifold:id/DeveloperCounter"
       >
-        <View
-          style={
-            {
-              "alignItems": "center",
-              "marginTop": 40,
-            }
-          }
-        >
-          <
-            height={187}
-            width={200}
-          />
-        </View>
+        <
+          height={187}
+          width={200}
+        />
       </View>
       <Text
         maxFontSizeMultiplier={2}

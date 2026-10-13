@@ -57,6 +57,9 @@ jest.mock('../features/modal/MandatoryUpdate', () => ({
 jest.mock('../features/modal/ServiceOutage', () => ({
   ServiceOutage: 'ServiceOutage',
 }))
+jest.mock('../features/service-notice/ServiceNoticeScreen', () => ({
+  ServiceNoticeScreen: 'ServiceNoticeScreen',
+}))
 jest.mock('../features/settings/AuthPrivacyPolicyScreen', () => ({
   AuthPrivacyPolicyScreen: 'AuthPrivacyPolicyScreen',
 }))
@@ -97,6 +100,7 @@ describe('AuthStack', () => {
       BCSCScreens.DeviceAuthAppReset,
       BCSCScreens.AuthSettings,
       BCSCScreens.AuthWebView,
+      BCSCScreens.ServiceNotice,
       BCSCScreens.AuthPrivacyPolicy,
       BCSCScreens.AuthDeveloper,
       BCSCScreens.PairingConfirmation,

@@ -2,24 +2,25 @@ import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreen
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback } from 'react'
-
+import React, { useCallback, useMemo } from 'react'
+import { useAccountTransferQRCodeStrategy } from './qr-code-strategies/useAccountTransferQRCodeStrategy'
+import { useDidCommOobQRCodeStrategy } from './qr-code-strategies/useDidCommOobQRCodeStrategy'
+import { usePairingCodeQRCodeStrategy } from './qr-code-strategies/usePairingCodeQRCodeStrategy'
 import QRScanner from './QRScanner'
-import useScanScreenViewModel from './useScanScreenViewModel'
+import { useQRScanner } from './useQRScanner'
 
+/**
+ * QRScannerScreen is a React component that renders a QR scanner for various QR code strategies.
+ *
+ * Compatible QR codes:
+ *  - Pairing code QR codes (e.g., for logging into a service)
+ *  - Account transfer QR codes (e.g., for transferring an account)
+ *  - DIDComm OOB QR codes (e.g., for establishing a VC connection)
+ *
+ * @returns A React element that renders the QR scanner for various QR code strategies.
+ */
 const QRScannerScreen: React.FC = () => {
   const navigation = useNavigation<BottomTabNavigationProp<BCSCQRCoreTabParams>>()
-
-  const onConnectionFound = useCallback(
-    (oobRecordId: string) => {
-      // QRScannerScreen sits inside QRCoreStack (a tab navigator); ConnectionLoading
-      // lives on MainStack, so escape up via getParent before navigating.
-      navigation
-        .getParent<StackNavigationProp<BCSCMainStackParams>>()
-        ?.navigate(BCSCScreens.ConnectionLoading, { oobRecordId })
-    },
-    [navigation]
-  )
 
   const onPairingCodeFound = useCallback(
     (pairingCode: string) => {
@@ -28,18 +29,38 @@ const QRScannerScreen: React.FC = () => {
     [navigation]
   )
 
-  const { isProcessing, scanError, handleScan, dismissError, resetNavigationLock } = useScanScreenViewModel({
-    onConnectionFound,
-    onPairingCodeFound,
-  })
+  const onAccountTransferSuccess = useCallback(() => {
+    navigation.getParent<StackNavigationProp<BCSCMainStackParams>>()?.navigate(BCSCScreens.VerificationSuccess)
+  }, [navigation])
 
-  // QRCoreStack has `unmountOnBlur: false` so the scanner persists across the
-  // ConnectionLoading round trip; reset the nav lock on each focus so the
-  // user can scan again after completing a flow.
+  const onAlreadyVerified = useCallback(() => {
+    navigation.getParent<StackNavigationProp<BCSCMainStackParams>>()?.navigate(BCSCScreens.AlreadyVerifiedSuccess)
+  }, [navigation])
+
+  const onConnectionFound = useCallback(
+    (oobRecordId: string) => {
+      navigation.getParent<StackNavigationProp<BCSCMainStackParams>>()?.navigate(BCSCScreens.ConnectionLoading, {
+        oobRecordId,
+      })
+    },
+    [navigation]
+  )
+
+  const pairingCodeQRCodeStrategy = usePairingCodeQRCodeStrategy(onPairingCodeFound)
+  const accountTransferQRCodeStrategy = useAccountTransferQRCodeStrategy(onAccountTransferSuccess, onAlreadyVerified)
+  const didCommOobQRCodeStrategy = useDidCommOobQRCodeStrategy(onConnectionFound)
+
+  const strategies = useMemo(
+    () => [pairingCodeQRCodeStrategy, accountTransferQRCodeStrategy, didCommOobQRCodeStrategy],
+    [accountTransferQRCodeStrategy, didCommOobQRCodeStrategy, pairingCodeQRCodeStrategy]
+  )
+
+  const { isProcessing, scanError, handleScan, dismissError, resetLock } = useQRScanner(strategies)
+
   useFocusEffect(
     useCallback(() => {
-      resetNavigationLock()
-    }, [resetNavigationLock])
+      resetLock()
+    }, [resetLock])
   )
 
   return (
