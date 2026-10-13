@@ -1,5 +1,6 @@
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
+import { isAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { TOKENS, useServices } from '@bifold/core'
@@ -30,13 +31,11 @@ const getRecoverySnapshot = () => isRecovering
 export const useIsDeviceAuthorizationRecovering = () => useSyncExternalStore(subscribeToRecovery, getRecoverySnapshot)
 
 /**
- * Wraps a single device-authorization call: on that specific conflict, if the reset really was a
- * no-op, cycles the IAS registration and retries the call once.
- * Every other error, and the case where the global policy already moved the user elsewhere
- * passes through unchanged.
+ * Wraps one device-authorization call: registers an unregistered device or cycles an ERR_501 conflict,
+ * then retries once. Other errors, including a missing account, pass through.
  */
 export const useDeviceAuthorizationRecovery = () => {
-  const { cycleRegistration } = useRegistrationService()
+  const { cycleRegistration, ensureRegistered } = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const attemptWithRecovery = useCallback(
@@ -44,6 +43,17 @@ export const useDeviceAuthorizationRecovery = () => {
       try {
         return await action()
       } catch (firstError) {
+        // Temporary account: the first server call is where a device that failed setup registers
+        if (isAppError(firstError, AppEventCode.ACCOUNT_NOT_REGISTERED)) {
+          setRecovering(true)
+          try {
+            await ensureRegistered()
+            return await action()
+          } finally {
+            setRecovering(false)
+          }
+        }
+
         // Error is not a registration error, throw as normal
         const appError = ensureAppError(firstError, AppEventCode.DEVICE_AUTHORIZATION_ERROR)
         if (appError.appEvent !== AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST) {
@@ -75,7 +85,7 @@ export const useDeviceAuthorizationRecovery = () => {
         }
       }
     },
-    [cycleRegistration, logger]
+    [cycleRegistration, ensureRegistered, logger]
   )
 
   return attemptWithRecovery

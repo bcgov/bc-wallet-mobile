@@ -209,6 +209,7 @@ export enum AppEventCode {
   AUTO_CRED_ACCOUNT_DEACTIVATED = 'auto_cred_account_deactivated',
   // Account Errors
   ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
+  ACCOUNT_NOT_REGISTERED = 'account_not_registered', // Non-IAS error code
   // Native module errors (#3419) — distinct codes for bcsc-core native rejections
   TOKEN_SAVE_FAILED = 'token_save_failed', // Non-IAS error code
   TOKEN_DELETE_FAILED = 'token_delete_failed', // Non-IAS error code
