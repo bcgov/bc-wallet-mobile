@@ -5,7 +5,7 @@ import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import { BCDispatchAction } from '@/store'
+import { BCDispatchAction, VerificationStatus } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import {
@@ -1010,7 +1010,7 @@ describe('useSecureActions', () => {
       jest.mocked(getAccount).mockResolvedValue(null as any)
     })
 
-    it('dispatches UPDATE_SECURE_VERIFIED and latches SET_VERIFICATION_SKIPPED=true when verified', async () => {
+    it('dispatches UPDATE_SECURE_VERIFIED, ends the started verification and latches SET_VERIFICATION_SKIPPED=true when verified', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       await act(async () => {
@@ -1021,13 +1021,18 @@ describe('useSecureActions', () => {
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [true],
       })
+      // Nothing is left to resume on launch: an expired card later is renewed from Home
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.SET_VERIFICATION_STARTED,
+        payload: [false],
+      })
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
         payload: [true],
       })
     })
 
-    it('leaves SET_VERIFICATION_SKIPPED alone when marking unverified', async () => {
+    it('leaves both verification flags alone when marking unverified', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       await act(async () => {
@@ -1038,6 +1043,42 @@ describe('useSecureActions', () => {
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [false],
       })
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
+      )
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_STARTED })
+      )
+    })
+  })
+
+  describe('continueVerificationProcess', () => {
+    it('marks verification started and in progress', () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      act(() => {
+        result.current.continueVerificationProcess()
+      })
+
+      // Started makes every later launch resume the flow; IN_PROGRESS shows it now
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.SET_VERIFICATION_STARTED,
+        payload: [true],
+      })
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
+        payload: [VerificationStatus.IN_PROGRESS],
+      })
+    })
+
+    it('leaves the answer to the verify prompt alone', () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      act(() => {
+        result.current.continueVerificationProcess()
+      })
+
+      // Entering from Home (a card, a renewal) is not answering the onboarding prompt
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
       )

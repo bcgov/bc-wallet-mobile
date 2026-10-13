@@ -1,6 +1,5 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore, useTheme } from '@bifold/core'
+import { useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationActionCard from './NotificationActionCard'
 
@@ -13,7 +12,6 @@ const StartVerificationNotification = () => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
   const secureActions = useSecureActions()
-  const [, dispatch] = useStore<BCState>()
 
   return (
     <NotificationActionCard
@@ -25,7 +23,8 @@ const StartVerificationNotification = () => {
       hideIconCircle={true}
       requiresServerStatus
       onPress={() => {
-        dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
+        // Marks verification started, so a relaunch resumes it. The user's answer to the onboarding
+        // prompt (verificationSkipped) is left as it was: starting from Home is not answering it
         secureActions.continueVerificationProcess()
       }}
     />
