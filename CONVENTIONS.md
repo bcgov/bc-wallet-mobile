@@ -89,3 +89,32 @@ spinner inside a button.
 **Why:** `ButtonLoading` used a fixed grey, which was unreadable on a blue Primary button. Bifold 3.1.3
 lets `Button` hand its label colour to the spinner, so every button type and theme stays legible
 without per-screen colour props (#4743).
+
+## Verification flow exits: first-time vs deferred verifiers
+
+The onboarding "Verify your account" prompt decides who may leave the verify flow, through the persisted
+`bcsc.verificationSkipped` flag that only the prompt writes (`useVerificationExitPolicy`):
+
+- **First-time verifier** (Continue at the prompt, or a v3 upgrade mid-verification): the flow is their whole
+  app. The help menu has no "Back to home", the back arrow at the beginning of the stack `replace`s onto the
+  prompt (which has no arrow and swallows Android back), the pending review has no arrow and polls for the
+  agent's decision itself (focus, foreground, the review push, "Check status"), and the post-submit screen
+  continues to the pending review. Skip on the prompt is the one way to Home and makes them deferred.
+- **Deferred verifier** (Skip at some point, re-entering from the Home card): keeps every exit, progress
+  kept. Developer mode shows "Back to home" to everyone; arrows ignore it.
+
+Rules that keep this consistent:
+
+- `useLeaveVerification` is the only way out of the flow. Never navigate to Home from a verify screen.
+- `createVerifyHeaderBackButton` (`components/VerifyHeaderBackButton.tsx`) is the single owner of Android
+  hardware back on every verify screen that shows a header; hide it with `hidden`, don't register a second
+  `BackHandler` on the screen (RN runs the newest handler first, so two owners race). Screens with
+  `headerShown: false` own their own.
+- Gate help-menu rows in the factory (`createVerifyHelpMenuButton`), never inside a row component:
+  `ListButtonGroup` positions every element child, so a row rendering `null` still takes a slot.
+- From the prompt, `push` the resume step; never `replace` the prompt away. A screen that `replace`s back onto
+  the prompt relies on its `animationTypeForReplace: 'pop'`.
+
+**Why:** many people install the app only to verify their BC Services Card; an unverified Home is a dead end
+for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
+alone because starting from the Home card must not turn a skipper into a first-time verifier.
