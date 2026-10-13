@@ -1,5 +1,5 @@
+import { ageInYears, parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { firstErrorKey, firstNameSchema, lastNameSchema, middleNamesSchema } from '@/bcsc-theme/utils/validation'
-import moment from 'moment'
 import { useCallback } from 'react'
 
 export type EvidenceCollectionFormState = {
@@ -31,11 +31,11 @@ const useEvidenceIDCollectionModel = () => {
   }, [])
 
   const isOfMinimumAge = useCallback((canonicalBirthDate: string, minimumAge: number): boolean => {
-    return moment().diff(moment(canonicalBirthDate, 'YYYY-MM-DD', true), 'years') >= minimumAge
+    return ageInYears(parseBirthdateToLocalDate(canonicalBirthDate)) >= minimumAge
   }, [])
 
   const isWithinMaximumAge = useCallback((canonicalBirthDate: string, maximumAge: number): boolean => {
-    return moment().diff(moment(canonicalBirthDate, 'YYYY-MM-DD', true), 'years') <= maximumAge
+    return ageInYears(parseBirthdateToLocalDate(canonicalBirthDate)) <= maximumAge
   }, [])
 
   const isDocumentNumberValid = useCallback(
