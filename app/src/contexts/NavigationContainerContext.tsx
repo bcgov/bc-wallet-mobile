@@ -18,7 +18,7 @@ export interface VisitedScreen {
   isBack: boolean
 }
 
-export const MAX_VISITED_SCREENS = 50
+export const MAX_VISITED_SCREENS = 15
 
 export const NAVIGATION_TRAIL: { screens: VisitedScreen[]; droppedCount: number } = {
   screens: [],
