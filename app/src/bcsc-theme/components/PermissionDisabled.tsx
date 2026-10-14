@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Linking, Platform, StyleSheet, View } from 'react-native'
 import { ControlContainer } from './ControlContainer'
 
-export type PermissionType = 'camera' | 'microphone' | 'notifications' | 'cameraAndMicrophone'
+export type PermissionType = 'camera' | 'microphone' | 'notifications' | 'cameraAndMicrophone' | 'bluetooth'
 
 type PermissionDisabledProps = {
   permissionType: PermissionType

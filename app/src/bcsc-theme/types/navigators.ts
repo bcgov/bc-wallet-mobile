@@ -266,7 +266,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.VerifyRemoveAccountConfirmation]: undefined
-  [BCSCScreens.BluetoothDisclosure]: undefined
+  [BCSCScreens.BluetoothDisclosure]: { onContinue: (hasBluetooth: boolean) => void }
 }
 
 export type BCSCTabStackParams = {
