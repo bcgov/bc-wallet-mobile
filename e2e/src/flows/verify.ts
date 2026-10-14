@@ -20,6 +20,7 @@ import {
   tapHelpMenuRow,
 } from '../helpers/help-menu.js'
 import { describeCurrentScreen, probeAnyScreen, reachCameraScreen, type ScreenProbe } from '../helpers/screens.js'
+import { bcsc } from '../screens/core/appId.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
 import type { ScreenPresence } from '../screens/core/defineScreen.js'
 import { AppErrorModal } from '../screens/errors.js'
@@ -61,6 +62,7 @@ import {
   VideoTooLongScreen,
 } from '../screens/verify.js'
 import { clearQueuedSubmission, hasQueuedSubmission, markSubmissionQueued } from '../support/send-video-queue.js'
+import { TestIds } from '../test-ids/registry.js'
 import { backgroundAppFor } from './auth.js'
 
 /**
@@ -212,7 +214,9 @@ export async function enterSerialManually(user: TestUser): Promise<void> {
 export async function enterBirthdate(user: TestUser): Promise<void> {
   await EnterBirthdateScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   await EnterBirthdateScreen.fill('birthdate', user.dob, { tapFirst: true })
-  await engine.dismissKeyboard()
+  // The number pad has no key that closes it; the inert field label does (three Continue-under-the-
+  // keyboard failures in a week, all on an iPhone 14 Pro).
+  await engine.dismissKeyboard({ tapToDismiss: bcsc(TestIds.verify.enterBirthdate.label) })
   await EnterBirthdateScreen.tapWhenEnabled('primary')
 }
 
@@ -570,7 +574,10 @@ type ReviewSettleStatus = 'verified' | 'cancelled' | 'pending'
  * request so the caller can decide whether to keep polling or give up.
  */
 async function waitForReviewSettleStatus(): Promise<ReviewSettleStatus> {
-  const settleBy = Date.now() + Timeouts.SCREEN_TRANSITION
+  // The status re-check behind the re-entry is a network round trip, so the decision screen gets the
+  // launch budget rather than a plain transition's.
+  const settleBy = Date.now() + Timeouts.APP_LAUNCH
+  let reenteredFromHome = false
   for (;;) {
     if (await VerificationSuccessScreen.isPresent(1_000)) {
       return 'verified'
@@ -580,6 +587,15 @@ async function waitForReviewSettleStatus(): Promise<ReviewSettleStatus> {
     }
     if (await PendingReviewScreen.isPresent(1_000)) {
       return 'pending' // still pending — leave and come back for another status check
+    }
+    // A decided request can swap the stack back to Home with the verified "Finish up" card instead of
+    // landing on the decision screen (seen on Android, twice in a week). The card is the way back in —
+    // taken once, after which the outcome is watched for again.
+    if (!reenteredFromHome && (await HomeNotificationCard.isPresent(1_000))) {
+      reenteredFromHome = true
+      console.log('[verify] Home re-mounted with its verification card while settling — re-entering through it')
+      await HomeNotificationCard.tapToNavigate('primary')
+      continue
     }
     if (Date.now() > settleBy) {
       throw new Error(
