@@ -1,9 +1,11 @@
 import { TEST_PIN, Timeouts } from '../constants.js'
+import { isAppErrorShowing, readAppErrorDetails } from '../helpers/app-error.js'
 import { isBiometricPromptShowing, matchBiometric } from '../helpers/biometrics.js'
 import { getCurrentAppId } from '../helpers/deep-link.js'
 import { describeCurrentScreen } from '../helpers/screens.js'
 import { AccountLandingScreen, ConfirmDeviceAuthScreen, EnterPINScreen } from '../screens/auth.js'
 import type { ScreenPresence } from '../screens/core/defineScreen.js'
+import { AppErrorModal } from '../screens/errors.js'
 import { HomeScreen } from '../screens/main.js'
 import { OnboardingIntroScreen } from '../screens/onboarding.js'
 
@@ -165,21 +167,51 @@ export async function unlockWithDeviceAuth(
   await HomeScreen.expectVisible(Timeouts.APP_LAUNCH)
 }
 
+/** How the app surfaced a failed match — logged by the journey, and asserted where the platform's path is known. */
+export type FailedDeviceAuthSurface = 'prompt' | 'screen' | 'error-modal'
+
 /**
- * Recover from a failed device-auth match the way a user does. Sauce's `=false` settles the prompt as
- * a terminal failure on both platforms (measured: the prompt closes and the app is back on the screen
- * that raised it — the interstitial, or AccountLanding once that is hidden), so the unlock is
- * re-raised from there; a prompt that stayed open is simply answered again. Ends on Home.
+ * Recover from a failed device-auth match the way a user does, and say how the app surfaced it.
+ *
+ * Sauce's `=false` settles the prompt as a terminal failure on both platforms. iOS lands back on the
+ * screen that raised the prompt (the interstitial, or AccountLanding once that is hidden); Android
+ * since #4792 (`fix: surface device auth errors`) classifies the prompt's error code as a hard error
+ * and raises the app's error modal — "Device Authentication Failed" — over that screen. Either way the
+ * unlock is re-raised from the screen underneath, after closing the modal: its details (the
+ * BiometricPrompt code) go to the log, the one place that says what the injected failure looked like
+ * to the app. A prompt that stayed open is simply answered again. Ends on Home.
  */
-export async function recoverFromFailedDeviceAuth(): Promise<void> {
-  if (!(await isBiometricPromptShowing())) {
-    if (await AccountLandingScreen.isPresent(Timeouts.ELEMENT_VISIBLE)) {
-      await AccountLandingScreen.tap('primary')
-    }
-    if (await ConfirmDeviceAuthScreen.isPresent(Timeouts.ELEMENT_VISIBLE)) {
-      await ConfirmDeviceAuthScreen.tap('primary')
-    }
+export async function recoverFromFailedDeviceAuth(): Promise<FailedDeviceAuthSurface> {
+  if (await isBiometricPromptShowing()) {
+    await matchBiometric()
+    await HomeScreen.expectVisible(Timeouts.APP_LAUNCH)
+    return 'prompt'
+  }
+  const surface: FailedDeviceAuthSurface = (await closeDeviceAuthErrorModal()) ? 'error-modal' : 'screen'
+  if (await AccountLandingScreen.isPresent(Timeouts.ELEMENT_VISIBLE)) {
+    await AccountLandingScreen.tap('primary')
+  }
+  if (await ConfirmDeviceAuthScreen.isPresent(Timeouts.ELEMENT_VISIBLE)) {
+    await ConfirmDeviceAuthScreen.tap('primary')
   }
   await matchBiometric()
   await HomeScreen.expectVisible(Timeouts.APP_LAUNCH)
+  return surface
+}
+
+/** Close the app's error modal if the failed match raised one; true when it did. */
+async function closeDeviceAuthErrorModal(): Promise<boolean> {
+  if (!(await isAppErrorShowing())) return false
+  const details = await readAppErrorDetails()
+  console.log(`[device-auth] The failed match raised the app error modal${details ? ` (${details})` : ''} — closing it`)
+  await AppErrorModal.tap('primary') // the X: the one control the modal always renders
+  const closedBy = Date.now() + Timeouts.SCREEN_TRANSITION
+  while (await isAppErrorShowing()) {
+    if (Date.now() > closedBy) {
+      throw new Error(
+        `The app error modal stayed up after its close button was tapped. On screen: ${await describeCurrentScreen()}`
+      )
+    }
+  }
+  return true
 }
