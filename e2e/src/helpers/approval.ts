@@ -2,6 +2,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { TestUsers } from '../constants.js'
 import { clearQueuedSubmission } from '../support/send-video-queue.js'
+import { withDriverKeepalive } from './driver-keepalive.js'
 import { type PersonaLabel, personaLabel } from './redact.js'
 
 /**
@@ -17,9 +18,6 @@ function normalizeBirthdate(value: string): string {
 }
 
 const loginModuleUrl = pathToFileURL(resolve(dirname(fileURLToPath(import.meta.url)), '../../scripts/login.mjs')).href
-
-/** Appium idles a session out at `newCommandTimeout` (180 s); a cheap command this often keeps it alive through Node-only work. */
-const KEEPALIVE_INTERVAL_MS = 45_000
 
 /** Default budget for a drain: generous for a full queue, well inside mocha's 600 s test/hook timeout. */
 const DRAIN_TIMEOUT_MS = 150_000
@@ -146,19 +144,6 @@ function currentPlatform(): 'ios' | 'android' | undefined {
   return driver.isIOS ? 'ios' : 'android'
 }
 
-/** Run portal round trips without the Appium session idling out underneath them. */
-async function withDriverKeepalive<T>(work: () => Promise<T>): Promise<T> {
-  if (typeof driver === 'undefined') return work()
-  const timer = setInterval(() => {
-    driver.getWindowSize().catch(() => undefined)
-  }, KEEPALIVE_INTERVAL_MS)
-  try {
-    return await work()
-  } finally {
-    clearInterval(timer)
-  }
-}
-
 /**
  * Approve an in-person verification request by driving the IDCheck portal in-process.
  *
@@ -170,12 +155,14 @@ async function withDriverKeepalive<T>(work: () => Promise<T>): Promise<T> {
  * @param input - Flow selector + per-flow inputs
  * @param timeoutMs - Budget for the WHOLE chain (a browser sign-in when no session is cached yet, then
  *   ~10 sequential SIT round trips), not per request — so a thin budget always expires on the last one,
- *   `approve`, whatever was actually slow. The per-step `[idcheck]` timings tell them apart.
+ *   `approve`, whatever was actually slow. The per-step `[idcheck]` timings tell them apart. Sized for a
+ *   cold sign-in that waits out a TOTP window (parity) and resubmits one code (up to ~75 s) plus the
+ *   round trips.
  */
 export async function approveInPersonRequest(
   formattedCode: string,
   input: ApproveInPersonInput,
-  timeoutMs = 90_000
+  timeoutMs = 120_000
 ): Promise<void> {
   const code = formattedCode.replaceAll(/[\s-]/g, '')
   if (!/^[A-Za-z0-9]{8}$/.test(code)) {
