@@ -596,7 +596,7 @@ async function settleReview(settleBy: number, reenteredFromHome: boolean): Promi
     cancelled: CancelledReviewScreen,
     pending: PendingReviewScreen, // still queued — the caller leaves and comes back for another status check
     // A landing only the first time: once taken, a Home that shows the card again is just Home.
-    card: reenteredFromHome ? async () => false : HomeNotificationCard,
+    card: reenteredFromHome ? () => Promise.resolve(false) : HomeNotificationCard,
   }
   const landed = await probeAnyScreen(candidates, REVIEW_SETTLE_ROUND_MS)
   if (landed === 'verified' || landed === 'cancelled' || landed === 'pending') {
