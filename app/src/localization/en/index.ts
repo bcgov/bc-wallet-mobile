@@ -1437,7 +1437,7 @@ const translation = {
       "CannotVideoCall": "Cannot video call?"
     },
     "BluetoothDisclosure": {
-      "Title": "Detect bluetooth devices",
+      "Title": "Detect Bluetooth devices",
       "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device.",
     },
   },
