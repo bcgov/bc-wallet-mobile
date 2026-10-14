@@ -37,6 +37,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { CookieJar } from 'tough-cookie'
+import { withDriverKeepalive } from './driver-keepalive.js'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const APP_ENV_PATH = path.resolve(SCRIPT_DIR, '../../../app/.env')
@@ -216,20 +217,26 @@ class MintStepError extends Error {
   }
 }
 
-/** Run the whole mint again on a retryable step failure — every attempt opens a fresh transaction. */
+/**
+ * Run the whole mint again on a retryable step failure — every attempt opens a fresh transaction. The
+ * attempts and their waits can add up to well past Sauce's 90 s idle limit, so the whole retry runs
+ * under the driver keepalive (a no-op outside a wdio session).
+ */
 async function withMintRetry<T>(what: string, mint: () => Promise<T>): Promise<T> {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      return await mint()
-    } catch (err) {
-      if (!(err instanceof MintStepError && err.retryable && attempt < MINT_ATTEMPTS)) throw err
-      const delayMs = MINT_RETRY_DELAY_MS * attempt
-      console.warn(
-        `[pairing-code] ${what} attempt ${attempt}/${MINT_ATTEMPTS} failed (${err.message}); retrying in ${delayMs}ms`
-      )
-      await new Promise((resolve) => setTimeout(resolve, delayMs))
+  return withDriverKeepalive(async () => {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await mint()
+      } catch (err) {
+        if (!(err instanceof MintStepError && err.retryable && attempt < MINT_ATTEMPTS)) throw err
+        const delayMs = MINT_RETRY_DELAY_MS * attempt
+        console.warn(
+          `[pairing-code] ${what} attempt ${attempt}/${MINT_ATTEMPTS} failed (${err.message}); retrying in ${delayMs}ms`
+        )
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
+      }
     }
-  }
+  })
 }
 
 /** Undici's bare "fetch failed" hides the socket error in `cause`; our abort is the mint timeout. */

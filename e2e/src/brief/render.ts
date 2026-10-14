@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto'
+import type { SessionTestRecord } from '../helpers/session-record.js'
 import type { A11yPlatformSummary } from './a11y-summary.js'
 import type { CellResult, EvaluatedSection, FailureDetail, PlatformTotals } from './evaluate.js'
-import { laneOf, type AttemptOutcome, type SessionGroup } from './sessions.js'
+import { laneOf, type AttemptOutcome, type SessionAttempt, type SessionGroup } from './sessions.js'
 import { specTitles } from './spec-titles.js'
 import { PLATFORM_LABEL, PLATFORMS, type Platform, type RunnerError } from './types.js'
 
@@ -195,6 +196,13 @@ function renderFailures(model: BriefModel): string[] {
   return out
 }
 
+/** How a rescued journey's first attempt went: the lost session, the failed checkpoint, or a hook. */
+function firstAttemptSummary(first: SessionAttempt, failed: SessionTestRecord | undefined): string {
+  if (first.outcome === 'lost') return `🔌 ${first.lost ?? 'session terminated'}`
+  if (!failed) return 'failed outside a checkpoint (a hook)'
+  return `\`${failed.title}\` — ${failed.message?.split('\n')[0] ?? 'no message'}`
+}
+
 /**
  * The journeys `specFileRetries` rescued: the first attempt's failure, with its device and the device
  * the retry landed on. A flake absorbed by a retry is still a flake — unseen here, it costs the suite
@@ -213,12 +221,7 @@ function renderRetried(model: BriefModel): string[] {
     const last = group.attempts.at(-1)
     const journey = specTitles(group.file)?.describes[0] ?? group.file
     const failed = first.tests.find((test) => test.status === 'fail')
-    const what =
-      first.outcome === 'lost'
-        ? `🔌 ${first.lost ?? 'session terminated'}`
-        : failed
-          ? `\`${failed.title}\` — ${failed.message?.split('\n')[0] ?? 'no message'}`
-          : 'failed outside a checkpoint (a hook)'
+    const what = firstAttemptSummary(first, failed)
     const sig = failed ? ` · sig \`${failureSignature(group.platform, group.file, failed.title)}\`` : ''
     const job = first.jobUrl ? ` · [job](${first.jobUrl})` : ''
     out.push(

@@ -183,7 +183,8 @@ export async function approveInPersonRequest(
   const startedAt = Date.now()
 
   try {
-    await approveInPersonLogin(loginInput, { signal: controller.signal })
+    // The chain can outlast Sauce's 90 s idle limit: a cold sign-in waiting out a TOTP window, a resubmitted code.
+    await withDriverKeepalive(() => approveInPersonLogin(loginInput, { signal: controller.signal }))
   } catch (error: unknown) {
     const elapsedMs = Date.now() - startedAt
     const message = error instanceof Error ? error.message : String(error)

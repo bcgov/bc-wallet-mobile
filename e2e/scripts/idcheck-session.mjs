@@ -441,7 +441,7 @@ async function launchPersistentBrowserContext(userDataDir, headed) {
  *   the one-shot steps already taken, so a page that lingers is not acted on twice
  * @property {number} codeSubmissions
  * @property {number} codeSubmittedAt
- * @property {number} passwordRetries empty-password submits typed again so far
+ * @property {number} emptySubmitRetries empty-password submits typed again so far
  */
 
 /**
@@ -463,7 +463,7 @@ async function driveSignIn(page, credentials) {
     done: { picker: false, user: false, password: false, kmsi: false, anotherWay: false, pushLogged: false },
     codeSubmissions: 0,
     codeSubmittedAt: 0,
-    passwordRetries: 0,
+    emptySubmitRetries: 0,
   }
   let lastKnownPageAt = Date.now()
   let lastNavAt = Date.now()
@@ -472,12 +472,14 @@ async function driveSignIn(page, credentials) {
   })
 
   for (;;) {
-    if (Date.now() > drive.deadline) {
-      throw new Error(`[idcheck sign-in] timed out ${await describePage(page, credentials.user)}`)
-    }
+    // Arrival before expiry: a sign-in that completed while the driver waited out a TOTP window is a
+    // success, never a timeout.
     const url = currentUrl(page)
     if (url && isIdcheckPage(url)) {
       return finishOnIdcheck(page, url, drive)
+    }
+    if (Date.now() > drive.deadline) {
+      throw new Error(`[idcheck sign-in] timed out ${await describePage(page, credentials.user)}`)
     }
     if (await reactToPage(page, url, drive, lastNavAt)) {
       lastKnownPageAt = Date.now()
@@ -571,14 +573,19 @@ async function assertNoEntraVerdict(page, drive) {
     // race on our side, not a verdict on the credential. The password branch types it again.
     if (/enter your password/i.test(text)) {
       if (!drive.done.password) return // the retry is queued — reactToMicrosoftPage types it next
-      if (drive.passwordRetries < PASSWORD_RETRIES) {
-        drive.passwordRetries++
+      if (drive.emptySubmitRetries < PASSWORD_RETRIES) {
+        drive.emptySubmitRetries++
         drive.done.password = false
+        // The counter and the budget are all this line carries — never the credential.
         console.log(
-          `[idcheck] [~] Entra saw an empty password submit ("${text}") — typing it again (${drive.passwordRetries}/${PASSWORD_RETRIES})`
+          `[idcheck] [~] Entra answered an empty submit — typing the password again (${drive.emptySubmitRetries}/${PASSWORD_RETRIES})`
         )
         return
       }
+      // Still the race, not a verdict: an exhausted retry budget must not count toward the lockout latch.
+      throw new Error(
+        `[idcheck sign-in] the password field would not keep its value through ${PASSWORD_RETRIES} retries ${await describePage(page, drive.credentials.user)}`
+      )
     }
     throw entraError(`[idcheck sign-in] password rejected for ${drive.maskedUser}: ${text}`)
   }
@@ -707,7 +714,13 @@ async function submitVerificationCode(page, drive) {
  * @param {Drive} drive
  */
 async function submitTotpCode(page, drive) {
-  await waitForFreshTotpWindow(page, drive.codeSubmittedAt)
+  if (!(await waitForFreshTotpWindow(page, drive.codeSubmittedAt))) {
+    // Entra accepted the code already in flight while this waited: the loop sees the arrival next, and
+    // the wait was ours, so the arrival gets a budget of its own rather than an expiry.
+    console.log('[idcheck] [~] the code page moved on while waiting for a window — nothing to resubmit')
+    drive.deadline = Date.now() + SIGN_IN_TIMEOUT_MS
+    return
+  }
   await submitCode(page, totpCode(drive.credentials.totpSecret))
   drive.method = 'totp'
   drive.codeSubmissions++
@@ -835,18 +848,29 @@ async function promptForCode() {
 }
 
 /**
- * Sleeps until a code minted now is safe — see {@link totpMintDelayMs}.
+ * Sleeps until a code minted now is safe — see {@link totpMintDelayMs} — unless the page moves on
+ * first: a code still in flight can succeed during the wait, and filling a code input that is no
+ * longer there would turn that success into a locator timeout.
  *
  * @param {import('playwright-core').Page} page
  * @param {number} lastSubmittedAtMs 0 before the first submission
+ * @returns {Promise<boolean>} whether the code page is still showing, so a code may be submitted
  */
 async function waitForFreshTotpWindow(page, lastSubmittedAtMs) {
   const parity = readTotpWindowParity()
   const delayMs = totpMintDelayMs(Date.now(), lastSubmittedAtMs, parity)
   if (delayMs > 0) {
-    console.log(`[idcheck] [~] waiting ${delayMs}ms for a fresh TOTP window${parity ? ` (${parity} windows)` : ''}`)
-    await page.waitForTimeout(delayMs)
+    const lane = parity ? ` (${parity} windows)` : ''
+    console.log(`[idcheck] [~] waiting ${delayMs}ms for a fresh TOTP window${lane}`)
+    try {
+      // Resolves as soon as the code input goes away; a TimeoutError means it stayed the whole wait.
+      await page.locator('input[name="otc"]').first().waitFor({ state: 'hidden', timeout: delayMs })
+      return false
+    } catch (error) {
+      if (error?.name !== 'TimeoutError') throw error
+    }
   }
+  return visible(page, 'input[name="otc"]')
 }
 
 /**

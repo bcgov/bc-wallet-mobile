@@ -203,15 +203,15 @@ export async function recoverFromFailedDeviceAuth(): Promise<FailedDeviceAuthSur
 async function closeDeviceAuthErrorModal(): Promise<boolean> {
   if (!(await isAppErrorShowing())) return false
   const details = await readAppErrorDetails()
-  console.log(`[device-auth] The failed match raised the app error modal${details ? ` (${details})` : ''} — closing it`)
+  const detail = details ? ` (${details})` : ''
+  console.log(`[device-auth] The failed match raised the app error modal${detail} — closing it`)
   await AppErrorModal.tap('primary') // the X: the one control the modal always renders
-  const closedBy = Date.now() + Timeouts.SCREEN_TRANSITION
-  while (await isAppErrorShowing()) {
-    if (Date.now() > closedBy) {
-      throw new Error(
-        `The app error modal stayed up after its close button was tapped. On screen: ${await describeCurrentScreen()}`
-      )
-    }
+  try {
+    await driver.waitUntil(async () => !(await isAppErrorShowing()), { timeout: Timeouts.SCREEN_TRANSITION })
+  } catch {
+    throw new Error(
+      `The app error modal stayed up after its close button was tapped. On screen: ${await describeCurrentScreen()}`
+    )
   }
   return true
 }

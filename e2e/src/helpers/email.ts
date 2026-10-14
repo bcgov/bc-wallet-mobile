@@ -136,5 +136,6 @@ export async function getEmailConfirmationCode(
     console.warn(`[email] ${lastCodelessBody} — polling again`)
   }
 
-  throw new Error(`Email confirmation code timeout exceeded${lastCodelessBody ? ` (last: ${lastCodelessBody})` : ''}`)
+  const lastSeen = lastCodelessBody ? ` (last: ${lastCodelessBody})` : ''
+  throw new Error(`Email confirmation code timeout exceeded${lastSeen}`)
 }
