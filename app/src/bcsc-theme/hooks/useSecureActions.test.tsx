@@ -518,6 +518,24 @@ describe('useSecureActions', () => {
       )
     })
 
+    it('hydrates securityMethod from the account record', async () => {
+      jest.mocked(getAccount).mockResolvedValue({
+        ...baseAccount,
+        issuer: 'https://idsit.gov.bc.ca',
+        clientID: 'existing-client-id',
+        securityMethod: AccountSecurityMethod.DeviceAuth,
+      } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null)
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydrateField('securityMethod')).toBe(AccountSecurityMethod.DeviceAuth)
+    })
+
     it('does not call setAccount when account already has issuer and clientID', async () => {
       jest.mocked(getAccount).mockResolvedValue({
         ...baseAccount,

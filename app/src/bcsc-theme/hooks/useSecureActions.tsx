@@ -1147,6 +1147,7 @@ export const useSecureActions = () => {
         userCode: authRequest?.userCode,
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
         cardProcess: hydrateCardProcess(authRequest, cleanedEvidence),
+        securityMethod: account?.securityMethod,
 
         ...effectiveTokens,
 
