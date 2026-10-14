@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { A11yPlatformSummary } from './a11y-summary.js'
 import type { CellResult, EvaluatedSection, FailureDetail, PlatformTotals } from './evaluate.js'
 import { laneOf, type AttemptOutcome, type SessionGroup } from './sessions.js'
@@ -47,6 +48,18 @@ const SYMBOL: Record<CellResult['status'], string> = {
 const LANE_SYMBOL: Record<string, string> = { success: '✅', failure: '❌', cancelled: '⛔', skipped: '⏭️' }
 const ATTEMPT_SYMBOL: Record<AttemptOutcome, string> = { pass: '✅', fail: '❌', lost: '🔌' }
 const FAILURES_SHOWN = 30
+
+/**
+ * A stable id for a failure across nights — the platform, the file and the checkpoint, never the message
+ * (it carries timings and devices). `grep sig` over a fortnight of briefs is the flake tally.
+ */
+export function failureSignature(platform: Platform, file: string, checkpoint: string): string {
+  const title = checkpoint
+    .replaceAll(/[^a-z0-9]+/gi, ' ')
+    .trim()
+    .toLowerCase()
+  return createHash('sha1').update(`${platform}|${file}|${title}`).digest('hex').slice(0, 8)
+}
 
 /** Markdown table cells cannot hold `|` or newlines. */
 function cell(text: string): string {
@@ -174,10 +187,45 @@ function renderFailures(model: BriefModel): string[] {
     const checkpoint = failure.kind === 'hook' ? failure.checkpoint : `\`${failure.checkpoint}\``
     const terminated = failure.terminated ? ' · 🔌 session terminated' : ''
     const job = failure.jobUrl ? ` · [Sauce job](${failure.jobUrl})` : ''
-    out.push(`- **${PLATFORM_LABEL[failure.platform]} · ${failure.suite}** → ${checkpoint} — ${failure.message}${blocked}${terminated}${job}`)
+    const sig = ` · sig \`${failureSignature(failure.platform, failure.file, failure.checkpoint)}\``
+    out.push(`- **${PLATFORM_LABEL[failure.platform]} · ${failure.suite}** → ${checkpoint} — ${failure.message}${blocked}${terminated}${job}${sig}`)
   }
   if (model.failures.length > FAILURES_SHOWN) out.push(`- …and ${model.failures.length - FAILURES_SHOWN} more in brief.json`)
   if (model.failures.length) out.push('')
+  return out
+}
+
+/**
+ * The journeys `specFileRetries` rescued: the first attempt's failure, with its device and the device
+ * the retry landed on. A flake absorbed by a retry is still a flake — unseen here, it costs the suite
+ * five to ten minutes of device time a night and is noticed only once it fails twice.
+ */
+function renderRetried(model: BriefModel): string[] {
+  const rescued = model.sessions.filter((group) => group.attempts.length > 1 && group.attempts.at(-1)?.outcome === 'pass')
+  const out = [`### Retried and passed (${rescued.length})`, '']
+  if (!rescued.length) {
+    out.push('None — every journey either passed first time or failed outright.', '')
+    return out
+  }
+  out.push('| Lane | Platform | Journey | First attempt | Device → retried on |', '| --- | --- | --- | --- | --- |')
+  for (const group of rescued) {
+    const first = group.attempts[0]
+    const last = group.attempts.at(-1)
+    const journey = specTitles(group.file)?.describes[0] ?? group.file
+    const failed = first.tests.find((test) => test.status === 'fail')
+    const what =
+      first.outcome === 'lost'
+        ? `🔌 ${first.lost ?? 'session terminated'}`
+        : failed
+          ? `\`${failed.title}\` — ${failed.message?.split('\n')[0] ?? 'no message'}`
+          : 'failed outside a checkpoint (a hook)'
+    const sig = failed ? ` · sig \`${failureSignature(group.platform, group.file, failed.title)}\`` : ''
+    const job = first.jobUrl ? ` · [job](${first.jobUrl})` : ''
+    out.push(
+      `| ${cell(laneOf(group.source))} | ${PLATFORM_LABEL[group.platform]} | ${cell(journey)} | ${cell(what)}${sig}${job} | ${cell(first.device ?? '?')} → ${cell(last?.device ?? '?')} |`
+    )
+  }
+  out.push('')
   return out
 }
 
@@ -241,6 +289,7 @@ export function renderMarkdown(model: BriefModel): string {
     '</details>',
     '',
     ...renderFailures(model),
+    ...renderRetried(model),
     ...renderSessions(model),
     ...renderA11ySection(model),
     ...renderLegend(model),
