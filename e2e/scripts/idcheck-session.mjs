@@ -811,20 +811,28 @@ async function riskPageText(page) {
  * @param {string} value
  */
 async function submitField(page, selector, value) {
-  const field = page.locator(selector).first()
-  // Entra re-renders a field as its view settles, which can wipe a value typed a moment too early:
-  // only a fill the field still holds is submitted.
-  for (let attempt = 1; ; attempt++) {
-    await field.fill(value)
-    if ((await field.inputValue().catch(() => '')) === value) break
-    if (attempt >= FIELD_FILL_ATTEMPTS) {
-      throw new Error(
-        `[idcheck sign-in] ${selector} would not keep its value — the page re-rendered it ${attempt} times`
-      )
-    }
-    await page.waitForTimeout(FIELD_SETTLE_MS)
-  }
+  await fillUntilHeld(page, selector, value, 1)
   await page.locator('#idSIButton9').first().click()
+}
+
+/**
+ * Fill, then read the value back: Entra re-renders a field as its view settles, which can wipe a value
+ * typed a moment too early, so only a fill the field still holds is submitted.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {string} selector
+ * @param {string} value
+ * @param {number} attempt
+ */
+async function fillUntilHeld(page, selector, value, attempt) {
+  const field = page.locator(selector).first()
+  await field.fill(value)
+  if ((await field.inputValue().catch(() => '')) === value) return
+  if (attempt >= FIELD_FILL_ATTEMPTS) {
+    throw new Error(`[idcheck sign-in] ${selector} would not keep its value — the page re-rendered it ${attempt} times`)
+  }
+  await page.waitForTimeout(FIELD_SETTLE_MS)
+  return fillUntilHeld(page, selector, value, attempt + 1)
 }
 
 /** @param {import('playwright-core').Page} page @param {string} code */

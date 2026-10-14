@@ -223,20 +223,22 @@ class MintStepError extends Error {
  * under the driver keepalive (a no-op outside a wdio session).
  */
 async function withMintRetry<T>(what: string, mint: () => Promise<T>): Promise<T> {
-  return withDriverKeepalive(async () => {
-    for (let attempt = 1; ; attempt++) {
-      try {
-        return await mint()
-      } catch (err) {
-        if (!(err instanceof MintStepError && err.retryable && attempt < MINT_ATTEMPTS)) throw err
-        const delayMs = MINT_RETRY_DELAY_MS * attempt
-        console.warn(
-          `[pairing-code] ${what} attempt ${attempt}/${MINT_ATTEMPTS} failed (${err.message}); retrying in ${delayMs}ms`
-        )
-        await new Promise((resolve) => setTimeout(resolve, delayMs))
-      }
-    }
-  })
+  return withDriverKeepalive(() => mintAttempt(what, mint, 1))
+}
+
+/** One attempt; a retryable step failure schedules the next after a growing wait. */
+async function mintAttempt<T>(what: string, mint: () => Promise<T>, attempt: number): Promise<T> {
+  try {
+    return await mint()
+  } catch (err) {
+    if (!(err instanceof MintStepError && err.retryable && attempt < MINT_ATTEMPTS)) throw err
+    const delayMs = MINT_RETRY_DELAY_MS * attempt
+    console.warn(
+      `[pairing-code] ${what} attempt ${attempt}/${MINT_ATTEMPTS} failed (${err.message}); retrying in ${delayMs}ms`
+    )
+    await new Promise((resolve) => setTimeout(resolve, delayMs))
+    return mintAttempt(what, mint, attempt + 1)
+  }
 }
 
 /** Undici's bare "fetch failed" hides the socket error in `cause`; our abort is the mint timeout. */
