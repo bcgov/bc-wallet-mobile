@@ -1,7 +1,7 @@
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
-import { signPairingCode } from 'react-native-bcsc-core'
+import { ChallengeSource, signPairingCode } from 'react-native-bcsc-core'
 import usePairingApi from './usePairingApi'
 import { withAccount } from './withAccountGuard'
 
@@ -26,6 +26,7 @@ jest.mock('@bifold/core', () => ({
 
 jest.mock('react-native-bcsc-core', () => ({
   signPairingCode: jest.fn(),
+  ChallengeSource: jest.requireActual('../../../../__mocks__/react-native-bcsc-core').ChallengeSource,
   // Delegate to the central manual mock so the predicate can't drift from the real implementation.
   isBcscNativeError: jest.requireActual('../../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
 }))
@@ -56,28 +57,32 @@ describe('usePairingApi', () => {
   })
 
   describe('loginByPairingCode', () => {
-    it('signs the pairing code and returns the client metadata', async () => {
-      const metadata = { transaction_id: 'txn-1', client_name: 'Test Client' }
-      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
-      mockApiClient.post.mockResolvedValue({ data: metadata })
+    it.each(Object.values(ChallengeSource))(
+      'signs the pairing code with challenge source %s and returns the client metadata',
+      async (challengeSource) => {
+        const metadata = { transaction_id: 'txn-1', client_name: 'Test Client' }
+        ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+        mockApiClient.post.mockResolvedValue({ data: metadata })
 
-      const { result } = renderHook(() => usePairingApi(mockApiClient))
-      const response = await result.current.loginByPairingCode('pairing-code')
+        const { result } = renderHook(() => usePairingApi(mockApiClient))
+        const response = await result.current.loginByPairingCode('pairing-code', challengeSource)
 
-      expect(signPairingCode).toHaveBeenCalledWith(
-        'pairing-code',
-        mockAccount.issuer,
-        mockAccount.clientID,
-        'mock-fcm-token',
-        'mock-device-token'
-      )
-      expect(mockApiClient.post).toHaveBeenCalledWith(
-        `${mockApiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
-        { assertion: 'signed-assertion' },
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-      )
-      expect(response).toEqual(metadata)
-    })
+        expect(signPairingCode).toHaveBeenCalledWith(
+          'pairing-code',
+          mockAccount.issuer,
+          mockAccount.clientID,
+          'mock-fcm-token',
+          'mock-device-token',
+          challengeSource
+        )
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          `${mockApiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
+          { assertion: 'signed-assertion' },
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        )
+        expect(response).toEqual(metadata)
+      }
+    )
 
     it('maps a native signPairingCode rejection through the native mapper', async () => {
       ;(signPairingCode as jest.Mock).mockRejectedValue(
@@ -86,7 +91,9 @@ describe('usePairingApi', () => {
 
       const { result } = renderHook(() => usePairingApi(mockApiClient))
 
-      await expect(result.current.loginByPairingCode('pairing-code')).rejects.toMatchObject({
+      await expect(
+        result.current.loginByPairingCode('pairing-code', ChallengeSource.PushNotification)
+      ).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
       })
       expect(mockApiClient.post).not.toHaveBeenCalled()
@@ -97,7 +104,9 @@ describe('usePairingApi', () => {
 
       const { result } = renderHook(() => usePairingApi(mockApiClient))
 
-      await expect(result.current.loginByPairingCode('pairing-code')).rejects.toMatchObject({
+      await expect(
+        result.current.loginByPairingCode('pairing-code', ChallengeSource.PushNotification)
+      ).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
       })
       expect(mockApiClient.post).not.toHaveBeenCalled()
