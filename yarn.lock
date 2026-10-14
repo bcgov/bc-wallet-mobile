@@ -2349,6 +2349,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@credo-ts/didcomm@patch:@credo-ts/didcomm@npm%3A0.7.0#~/.yarn/patches/@credo-ts-didcomm-npm-0.7.0-e7c274e2fd.patch":
+  version: 0.7.0
+  resolution: "@credo-ts/didcomm@patch:@credo-ts/didcomm@npm%3A0.7.0#~/.yarn/patches/@credo-ts-didcomm-npm-0.7.0-e7c274e2fd.patch::version=0.7.0&hash=293e77"
+  dependencies:
+    "@credo-ts/core": "npm:0.7.0"
+    class-transformer: "npm:0.5.1"
+    class-validator: "npm:^0.14.3"
+    luxon: "npm:^3.7.2"
+    query-string: "npm:^9.3.1"
+    rxjs: "npm:^7.8.2"
+  checksum: 10c0/a515b166771aec2e0834a85fa17f2eeea6ffffbb895f4cc2e39bb088a741ad21c4906ee3e35a9efae5f08959cff1ee3c9ffba1692803b6cc5a220f6ed7b16794
+  languageName: node
+  linkType: hard
+
 "@credo-ts/drpc@npm:0.7.0":
   version: 0.7.0
   resolution: "@credo-ts/drpc@npm:0.7.0"
