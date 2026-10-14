@@ -167,7 +167,6 @@ export enum BCSCScreens {
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
   ConnectionLoading = 'BCSCConnectionLoading',
   QRCore = 'QRCore',
-  BluetoothDisclosure = 'Bluetooth Disclosure',
 }
 
 export enum BCSCQRCoreScreens {
@@ -268,7 +267,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.VerifyRemoveAccountConfirmation]: undefined
-  [BCSCScreens.BluetoothDisclosure]: { onContinue: (hasBluetooth: boolean) => void }
 }
 
 export type BCSCTabStackParams = {

@@ -1,6 +1,6 @@
 import { PermissionsAndroid, Platform } from 'react-native'
 import { isBluetoothAudioConnected } from 'react-native-bcsc-core'
-import { deviceRequiresBluetoothPermission, requestBluetoothPermission } from './bluetooth'
+import { deviceRequiresBluetoothPermission } from './bluetooth'
 
 jest.mock('react-native-bcsc-core', () => ({
   isBluetoothAudioConnected: jest.fn(),
@@ -8,7 +8,6 @@ jest.mock('react-native-bcsc-core', () => ({
 
 describe('bluetooth utils', () => {
   const mockIsBluetoothAudioConnected = jest.mocked(isBluetoothAudioConnected)
-  let requestSpy: jest.SpyInstance
   let checkSpy: jest.SpyInstance
 
   const setPlatform = (os: 'ios' | 'android', version: number | string) => {
@@ -18,30 +17,11 @@ describe('bluetooth utils', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    requestSpy = jest.spyOn(PermissionsAndroid, 'request')
     checkSpy = jest.spyOn(PermissionsAndroid, 'check')
   })
 
   afterEach(() => {
     jest.restoreAllMocks()
-  })
-
-  describe('requestBluetoothPermission', () => {
-    it('requests BLUETOOTH_CONNECT and returns true when granted', async () => {
-      requestSpy.mockResolvedValue(PermissionsAndroid.RESULTS.GRANTED)
-
-      await expect(requestBluetoothPermission()).resolves.toBe(true)
-      expect(requestSpy).toHaveBeenCalledWith(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT)
-    })
-
-    it.each([PermissionsAndroid.RESULTS.DENIED, PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN])(
-      'returns false when the result is %s',
-      async (result) => {
-        requestSpy.mockResolvedValue(result)
-
-        await expect(requestBluetoothPermission()).resolves.toBe(false)
-      }
-    )
   })
 
   describe('deviceRequiresBluetoothPermission', () => {

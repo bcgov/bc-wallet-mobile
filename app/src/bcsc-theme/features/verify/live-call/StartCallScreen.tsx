@@ -26,6 +26,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Image, ImageErrorEvent, StyleSheet, View } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
+import { BluetoothDisclosure } from '../BluetoothDisclosure'
 import ServicePeriodList from './components/ServicePeriodList'
 
 type StartCallScreenProps = {
@@ -41,6 +42,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
   const [showPermissionDisabled, setShowPermissionDisabled] = useState<'microphone' | 'bluetooth' | null>(null)
+  const [needsBluetoothPermission, setNeedsBluetoothPermission] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
   const { liveCallFileUploadAlert } = useAlerts(navigation)
@@ -95,6 +97,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   })
 
   const onPressStart = async () => {
+    setNeedsBluetoothPermission(false)
     setShowPermissionDisabled(null)
     setIsWaitingForPermissions(true)
 
@@ -115,25 +118,13 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
 
     const needsBluetoothPermission = await deviceRequiresBluetoothPermission()
 
-    if (!needsBluetoothPermission) {
-      // If the device does not require Bluetooth permission, we can proceed to the live call screen
-      navigation.navigate(BCSCScreens.LiveCall)
+    if (needsBluetoothPermission) {
+      // If the device requires Bluetooth permission, we need to show the Bluetooth disclosure screen
+      setNeedsBluetoothPermission(true)
       return
     }
 
-    navigation.navigate(BCSCScreens.BluetoothDisclosure, {
-      onContinue: (hasBluetooth) => {
-        if (hasBluetooth) {
-          // If the user grants Bluetooth permission, we can proceed to the live call screen
-          navigation.navigate(BCSCScreens.LiveCall)
-          return
-        }
-
-        // If the user denies Bluetooth permission, we cannot proceed with the call
-        setShowPermissionDisabled('bluetooth')
-        setIsWaitingForPermissions(false)
-      },
-    })
+    navigation.navigate(BCSCScreens.LiveCall)
   }
 
   const handleImageError = (error: ImageErrorEvent) => {
@@ -144,6 +135,23 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
 
   if (showPermissionDisabled) {
     return <PermissionDisabled permissionType={showPermissionDisabled} />
+  }
+
+  if (needsBluetoothPermission) {
+    return (
+      <BluetoothDisclosure
+        onContinue={(permissionGranted) => {
+          if (!permissionGranted) {
+            setShowPermissionDisabled('bluetooth')
+            setIsWaitingForPermissions(false)
+            return
+          }
+
+          // If the user grants Bluetooth permission, we can proceed to the live call screen
+          navigation.navigate(BCSCScreens.LiveCall)
+        }}
+      />
+    )
   }
 
   const controls = (
