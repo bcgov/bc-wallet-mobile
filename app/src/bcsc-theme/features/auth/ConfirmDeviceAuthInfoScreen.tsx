@@ -43,7 +43,7 @@ export const ConfirmDeviceAuthInfoScreen: React.FC<ConfirmDeviceAuthInfoScreenPr
         logger.error(`Failed to set hide device auth prep flag: ${errorMsg}`)
       }
     }
-    performDeviceAuth()
+    await performDeviceAuth()
   }, [checked, performDeviceAuth, logger])
 
   const controls = (

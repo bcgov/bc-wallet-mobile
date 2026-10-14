@@ -39,10 +39,12 @@ export const useInitializeAccountStatus = () => {
       // on a transient native read failure (see #3405 verification-loop fix)
       if (!store.bcsc.hasAccount) {
         // A native account with no persisted flag predates v4.1 (e.g. v3 ias-ios/ias-android upgrade).
-        // Set verificationSkipped=false so an unverified user resumes verification instead of seeing the verify prompt
-        // (which would send them back to the start).
+        // v3 had no way to skip setup, so carry the user over as a first-time verifier whose verification
+        // has started: an unverified user resumes it instead of seeing the verify prompt (which would
+        // send them back to the start).
         if (account && store.bcsc.verificationSkipped === undefined) {
           dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
+          dispatch({ type: BCDispatchAction.SET_VERIFICATION_STARTED, payload: [true] })
         }
         dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [Boolean(account)] })
       }

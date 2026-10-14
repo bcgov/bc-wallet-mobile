@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import React from 'react'
 
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
+import { useFocusEffect } from '@react-navigation/native'
 import { useCameraPermission } from 'react-native-vision-camera'
 import QRScanner from './QRScanner'
 
@@ -35,6 +36,8 @@ jest.mock('@/hooks/useAutoRequestPermission', () => ({ useAutoRequestPermission:
 
 const mockUseCameraPermission = useCameraPermission as jest.Mock
 const mockUseAutoRequestPermission = useAutoRequestPermission as jest.Mock
+const mockUseFocusEffect = useFocusEffect as jest.Mock
+const mockCameraMounted = jest.fn()
 
 const defaultProps = {
   isProcessing: false,
@@ -50,6 +53,13 @@ describe('QRScanner', () => {
     jest.clearAllMocks()
     mockUseCameraPermission.mockReturnValue({ hasPermission: true, requestPermission: jest.fn() })
     mockUseAutoRequestPermission.mockReturnValue({ isLoading: false })
+    // Counts real mounts so a key-driven remount of ScanCamera is observable
+    Bifold.ScanCamera.mockImplementation(() => {
+      React.useEffect(() => {
+        mockCameraMounted()
+      }, [])
+      return null
+    })
   })
 
   it('renders the scanner when camera permission is granted', () => {
@@ -97,5 +107,35 @@ describe('QRScanner', () => {
   it('keeps ScanCamera mounted while isProcessing is true', () => {
     render(<QRScanner {...defaultProps} isProcessing />)
     expect(Bifold.ScanCamera).toHaveBeenCalled()
+  })
+
+  // ScanCamera freezes itself after a scan, so only a refocus (not the first focus) may remount it.
+  it('remounts ScanCamera on refocus but not on the first focus', () => {
+    render(<QRScanner {...defaultProps} />)
+    expect(mockCameraMounted).toHaveBeenCalledTimes(1)
+
+    const onFocus = mockUseFocusEffect.mock.calls.at(-1)![0] as () => void
+
+    act(() => onFocus())
+    expect(mockCameraMounted).toHaveBeenCalledTimes(1)
+
+    act(() => onFocus())
+    expect(mockCameraMounted).toHaveBeenCalledTimes(2)
+  })
+
+  // Remounting mid-scan resets ScanCamera's duplicate-scan guard, so the same QR in frame would fire again.
+  it('does not remount ScanCamera on refocus while a scan is processing', () => {
+    const { rerender } = render(<QRScanner {...defaultProps} />)
+    const onFocus = mockUseFocusEffect.mock.calls.at(-1)![0] as () => void
+
+    act(() => onFocus()) // first focus
+
+    rerender(<QRScanner {...defaultProps} isProcessing />)
+    act(() => onFocus())
+    expect(mockCameraMounted).toHaveBeenCalledTimes(1)
+
+    rerender(<QRScanner {...defaultProps} />)
+    act(() => onFocus())
+    expect(mockCameraMounted).toHaveBeenCalledTimes(2)
   })
 })

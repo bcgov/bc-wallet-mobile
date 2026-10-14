@@ -1,5 +1,5 @@
 import { buildBarcodePayload } from './barcode'
-import { DriversLicenseMetadata } from './decoder-strategy/DecoderStrategy'
+import { DriversLicenseMetadata } from './card-barcode-decoder'
 
 const makeLicense = (overrides?: Partial<DriversLicenseMetadata>): DriversLicenseMetadata => ({
   licenseNumber: '2222222',

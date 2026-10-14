@@ -1,6 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
+import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import * as Bifold from '@bifold/core'
 import { QrCodeScanError } from '@bifold/core'
 import { renderHook } from '@testing-library/react-native'
@@ -20,6 +23,9 @@ const mockUpdateDeviceCodes = jest.fn()
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
 const mockUseSecureActions = jest.mocked(useSecureActions)
+
+jest.mock('@/bcsc-theme/services/hooks/useRegistrationService')
+const mockEnsureRegistered = jest.fn()
 
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
 const mockUseBCSCApiClient = jest.mocked(useBCSCApiClient)
@@ -75,9 +81,11 @@ describe('extractTransferToken', () => {
 
 describe('useAccountTransferQRCodeStrategy', () => {
   const onSuccess = jest.fn()
+  const onAlreadyVerified = jest.fn()
   let mockApiClient: { tokens: unknown }
 
-  const setup = () => renderHook(() => useAccountTransferQRCodeStrategy(onSuccess)).result.current
+  const setup = (alreadyVerifiedHandler?: () => void) =>
+    renderHook(() => useAccountTransferQRCodeStrategy(onSuccess, alreadyVerifiedHandler)).result.current
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -103,6 +111,10 @@ describe('useAccountTransferQRCodeStrategy', () => {
     } as any)
 
     mockUseBCSCApiClient.mockReturnValue(mockApiClient as any)
+
+    jest
+      .mocked(useRegistrationService)
+      .mockReturnValue({ ensureRegistered: mockEnsureRegistered, cycleRegistration: jest.fn() } as any)
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([{ bcscSecure: {} } as any, jest.fn()])
@@ -164,6 +176,48 @@ describe('useAccountTransferQRCodeStrategy', () => {
       expect(onSuccess).toHaveBeenCalled()
     })
 
+    describe('device account exists but is not registered (stuck account)', () => {
+      const notRegisteredError = () =>
+        new AppError('No account found. Please register first.', ErrorRegistry.ACCOUNT_NOT_REGISTERED, {
+          track: false,
+        })
+
+      it('registers the device, retries the authorization once and stores the device code', async () => {
+        mockEnsureRegistered.mockResolvedValue(undefined)
+        mockAuthorizeDevice.mockRejectedValueOnce(notRegisteredError()).mockResolvedValueOnce(mockDeviceAuth)
+
+        await setup().handle(validQrValue)
+
+        expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+        expect(mockAuthorizeDevice).toHaveBeenCalledTimes(2)
+        expect(mockUpdateDeviceCodes).toHaveBeenCalledWith(
+          expect.objectContaining({ deviceCode: mockDeviceAuth.device_code })
+        )
+        expect(mockVerifyAttestation).toHaveBeenCalledWith(
+          expect.objectContaining({ device_code: mockDeviceAuth.device_code })
+        )
+        expect(onSuccess).toHaveBeenCalled()
+      })
+
+      it('takes the handled early return, without logging a registration failure, when registering fails', async () => {
+        const registrationFailure = new AppError(
+          'registration failed',
+          { category: ErrorCategory.NETWORK, appEvent: AppEventCode.NO_INTERNET, statusCode: 2100 },
+          { track: false }
+        )
+        registrationFailure.handled = true
+        mockEnsureRegistered.mockRejectedValue(registrationFailure)
+        mockAuthorizeDevice.mockRejectedValue(notRegisteredError())
+
+        await expect(setup().handle(validQrValue)).rejects.toMatchObject({ details: 'BCSC.Scan.NoDeviceCodeFound' })
+
+        expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+        expect(mockAuthorizeDevice).toHaveBeenCalledTimes(1)
+        expect(mockLogger.error).not.toHaveBeenCalled()
+        expect(onSuccess).not.toHaveBeenCalled()
+      })
+    })
+
     it('throws when registration fails and no device code is available', async () => {
       mockAuthorizeDevice.mockRejectedValue(new Error('network'))
 
@@ -175,6 +229,43 @@ describe('useAccountTransferQRCodeStrategy', () => {
       expect(mockLogger.error).toHaveBeenCalled()
       expect(mockVerifyAttestation).not.toHaveBeenCalled()
       expect(onSuccess).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('already verified', () => {
+    beforeEach(() => {
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: { verified: true } } as any, jest.fn()])
+    })
+
+    it('calls onAlreadyVerified and leaves the wallet untouched', async () => {
+      await setup(onAlreadyVerified).handle(validQrValue)
+
+      expect(onAlreadyVerified).toHaveBeenCalledTimes(1)
+      expect(onSuccess).not.toHaveBeenCalled()
+      expect(mockAuthorizeDevice).not.toHaveBeenCalled()
+      expect(mockUpdateUserInfo).not.toHaveBeenCalled()
+      expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
+      expect(getAccount).not.toHaveBeenCalled()
+      expect(createDeviceSignedJWT).not.toHaveBeenCalled()
+      expect(mockVerifyAttestation).not.toHaveBeenCalled()
+      expect(mockDeviceToken).not.toHaveBeenCalled()
+      expect(mockUpdateTokens).not.toHaveBeenCalled()
+      expect(mockApiClient.tokens).toBeNull()
+    })
+
+    it('still rejects a transfer QR with no token before checking verification', async () => {
+      await expect(setup(onAlreadyVerified).handle('https://example.com/selfsetup.html')).rejects.toMatchObject({
+        message: 'BCSC.Scan.UnrecognizedQR',
+      })
+
+      expect(onAlreadyVerified).not.toHaveBeenCalled()
+    })
+
+    it('runs the normal transfer when no onAlreadyVerified handler is provided', async () => {
+      await setup().handle(validQrValue)
+
+      expect(mockVerifyAttestation).toHaveBeenCalled()
+      expect(onSuccess).toHaveBeenCalledTimes(1)
     })
   })
 

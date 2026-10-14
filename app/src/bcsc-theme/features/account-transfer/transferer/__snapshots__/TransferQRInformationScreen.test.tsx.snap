@@ -33,6 +33,10 @@ exports[`TransferQRInformationScreen Render tests render matches snapshot 1`] = 
     showsVerticalScrollIndicator={false}
   >
     <View>
+      <
+        height={207}
+        width="100%"
+      />
       <Text
         maxFontSizeMultiplier={2}
         style={

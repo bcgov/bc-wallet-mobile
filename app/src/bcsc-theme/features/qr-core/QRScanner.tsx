@@ -5,7 +5,8 @@ import { hitSlop } from '@/constants'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
 import { DismissiblePopupModal, QrCodeScanError, ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
-import React, { useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -28,6 +29,12 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
   const [torchActive, setTorchActive] = useState(false)
   const { hasPermission, requestPermission } = useCameraPermission()
   const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
+  const [scannerKey, setScannerKey] = useState(0)
+  const hasFocused = useRef(false)
+
+  // Ref to prevent stale closure issues in the focus effect
+  const isProcessingRef = useRef(isProcessing)
+  isProcessingRef.current = isProcessing
 
   const styles = StyleSheet.create({
     container: { flex: 1 },
@@ -50,6 +57,15 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
     },
   })
 
+  useFocusEffect(
+    useCallback(() => {
+      if (hasFocused.current && !isProcessingRef.current) {
+        setScannerKey((prevKey) => prevKey + 1) // remount ScanCamera to clear its frozen state
+      }
+      hasFocused.current = true
+    }, [])
+  )
+
   if (isPermissionLoading) {
     return <LoadingScreen />
   }
@@ -65,7 +81,13 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
     <View style={styles.container}>
       {/* Camera preview + bifold's unlabeled tap-to-focus Pressable: nothing here for a screen reader. */}
       <View style={StyleSheet.absoluteFill} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <ScanCamera handleCodeScan={onScan} enableCameraOnError={true} torchActive={torchActive} error={scanError} />
+        <ScanCamera
+          key={scannerKey}
+          handleCodeScan={onScan}
+          enableCameraOnError={true}
+          torchActive={torchActive}
+          error={scanError}
+        />
       </View>
       <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
       <TouchableOpacity

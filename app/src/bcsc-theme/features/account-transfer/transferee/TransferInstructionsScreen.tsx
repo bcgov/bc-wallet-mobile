@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
+import AddDeviceScanQr from '@assets/img/add-device-scan-qr.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -12,6 +13,7 @@ const STEP_KEYS = [
   'BCSC.TransferInstructions.Step1',
   'BCSC.TransferInstructions.Step2',
   'BCSC.TransferInstructions.Step3',
+  'BCSC.TransferInstructions.Step4',
 ] as const
 
 const TransferInstructionsScreen: React.FC = () => {
@@ -38,8 +40,9 @@ const TransferInstructionsScreen: React.FC = () => {
     <ScreenWrapper
       padded={false}
       controls={controls}
-      scrollViewContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg }}
+      scrollViewContainerStyle={{ padding: Spacing.lg, gap: Spacing.sm }}
     >
+      <AddDeviceScanQr width="100%" height={207} />
       <ThemedText variant={'headingThree'}>{t('BCSC.TransferInstructions.Title')}</ThemedText>
 
       {STEP_KEYS.map((stepKey, index) => (

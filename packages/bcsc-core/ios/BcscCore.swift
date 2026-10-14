@@ -5,13 +5,6 @@ import LocalAuthentication
 import React
 import UserNotifications
 
-enum ChallengeSource: String {
-  case local_app_switch
-  case push_notification
-  case remote_pairing_code
-  case notValid
-}
-
 enum DeviceInfoKeys {
   static let systemName = "system_name"
   static let deviceName = "device_name"
@@ -1165,6 +1158,7 @@ class BcscCore: NSObject {
 
   func signPairingCode(
     _ code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?,
+    challengeSource: String,
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
     let hasOtherAccounts = false
@@ -1182,7 +1176,7 @@ class BcscCore: NSObject {
       .claim(name: "iss", value: clientID)
       .claim(name: "iat", value: seconds)
       .claim(name: "challenge", value: code)
-      .claim(name: "challenge_source", value: ChallengeSource.remote_pairing_code.rawValue)
+      .claim(name: "challenge_source", value: challengeSource)
       .claim(name: "apns_token", value: actualDeviceToken)
 
     // Add device info claims using consolidated method
@@ -2409,9 +2403,9 @@ class BcscCore: NSObject {
       var error: NSError?
 
       guard LAContext.canPerformLocalAuthenticate(context: context, error: &error) else {
-        resolve([
-          "success": false,
-        ])
+        let detail = LAContext.describeAuthError(error)
+        logger.error("unlockWithDeviceSecurity: device auth unavailable: \(detail)")
+        reject("E_DEVICE_AUTH_UNAVAILABLE", "Device authentication unavailable: \(detail)", error)
         return
       }
 
@@ -2421,10 +2415,24 @@ class BcscCore: NSObject {
           .deviceOwnerAuthentication, localizedReason: authReason
         )
       } catch {
-        logger.error("unlockWithDeviceSecurity: LAContext error: \(error.localizedDescription)")
-        resolve([
-          "success": false,
-        ])
+        if LAContext.isUserCancellation(error) {
+          resolve([
+            "success": false,
+            "reason": LAContext.describeAuthError(error),
+          ])
+          return
+        }
+
+        let detail = LAContext.describeAuthError(error)
+
+        if LAContext.isAuthUnavailable(error) {
+          logger.error("unlockWithDeviceSecurity: device auth unavailable: \(detail)")
+          reject("E_DEVICE_AUTH_UNAVAILABLE", "Device authentication unavailable: \(detail)", error)
+          return
+        }
+
+        logger.error("unlockWithDeviceSecurity: LAContext error: \(detail)")
+        reject("E_DEVICE_AUTH_FAILED", "Device authentication failed: \(detail)", error)
         return
       }
 
@@ -2467,9 +2475,12 @@ class BcscCore: NSObject {
           }
         }
       } else {
-        resolve([
-          "success": false,
-        ])
+        logger.error("unlockWithDeviceSecurity: evaluatePolicy returned false without an error")
+        reject(
+          "E_DEVICE_AUTH_FAILED",
+          "Device authentication failed: evaluatePolicy returned false without an error",
+          nil
+        )
       }
     }
   }

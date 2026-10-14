@@ -2,23 +2,24 @@ import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { BC_DL_BARCODE_NO_DCN_A, BC_DL_BARCODE_S } from '@/bcsc-theme/utils/__fixtures__/barcodes'
+import { ScanableCode } from '@/bcsc-theme/utils/card-barcode-decoder'
+import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
-const BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A =
-  "%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
-const BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C =
-  '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU                          00S00023254?'
-
 jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
 jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery')
 jest.mock('@react-navigation/native')
+jest.mock('@/bcsc-theme/services/hooks/useRegistrationService')
+const mockEnsureRegistered = jest.fn()
 jest.mock('@bifold/core')
 
 const mockDispatch = jest.fn() // unused atp
@@ -89,7 +90,7 @@ describe('useCardScanner', () => {
       }
       const mockBarcode: ScanableCode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+        value: BC_DL_BARCODE_S,
       }
       const mockHandleCardData = jest.fn()
 
@@ -135,7 +136,7 @@ describe('useCardScanner', () => {
       }
       const mockBarcode: ScanableCode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+        value: BC_DL_BARCODE_NO_DCN_A,
       }
       const mockHandleCardData = jest.fn()
 
@@ -180,7 +181,7 @@ describe('useCardScanner', () => {
       }
       const mockDLBarcode: ScanableCode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+        value: BC_DL_BARCODE_NO_DCN_A,
       }
       const mockBCSCBarcode: ScanableCode = {
         type: 'code-39',
@@ -237,7 +238,7 @@ describe('useCardScanner', () => {
       }
       const pdf417DL: ScanableCode = {
         type: 'pdf-417',
-        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+        value: BC_DL_BARCODE_NO_DCN_A,
       }
       const mockHandleCardData = jest.fn()
 
@@ -264,6 +265,98 @@ describe('useCardScanner', () => {
           licenseNumber: '2222222',
         })
       )
+    })
+  })
+
+  describe('scanCard with several codes', () => {
+    const renderScanCard = () => {
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
+      const debug = jest.fn()
+
+      jest.mocked(useAuthorizationService).mockReturnValue({ authorizeDevice: jest.fn() } as any)
+      jest.mocked(useSecureActions).mockReturnValue({
+        updateUserInfo: jest.fn(),
+        updateDeviceCodes: jest.fn(),
+        updateCardProcess: jest.fn(),
+        updateVerificationOptions: jest.fn(),
+      } as any)
+      jest.mocked(Bifold).useStore.mockReturnValue([mockState, mockDispatch])
+      jest.mocked(Bifold).useServices.mockReturnValue([{ debug } as any])
+
+      return { scanCard: renderHook(() => useCardScanner()).result.current.scanCard, debug }
+    }
+
+    const licenceWithSerial: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_S }
+    const licenceWithoutSerial: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_NO_DCN_A }
+    const serial1D: ScanableCode = { type: 'code-39', value: 'K12345678' }
+
+    it('takes the 1D serial when it is read after a PDF-417 that holds a DCN, and keeps the DCN on the licence', async () => {
+      const { scanCard } = renderScanCard()
+      const handleCardData = jest.fn()
+
+      await scanCard([licenceWithSerial, serial1D], handleCardData)
+
+      expect(handleCardData).toHaveBeenCalledTimes(1)
+      expect(handleCardData).toHaveBeenCalledWith(
+        'K12345678',
+        expect.objectContaining({ licenseNumber: '2222222', bcscSerial: 'S00023254' })
+      )
+    })
+
+    it('takes the PDF-417 DCN when it is read after the 1D serial', async () => {
+      const { scanCard } = renderScanCard()
+      const handleCardData = jest.fn()
+
+      await scanCard([serial1D, licenceWithSerial], handleCardData)
+
+      expect(handleCardData).toHaveBeenCalledTimes(1)
+      expect(handleCardData).toHaveBeenCalledWith(
+        'S00023254',
+        expect.objectContaining({ licenseNumber: '2222222', bcscSerial: 'S00023254' })
+      )
+    })
+
+    it('replaces the licence with a later PDF-417 that has no DCN, without clearing the captured serial', async () => {
+      const { scanCard } = renderScanCard()
+      const handleCardData = jest.fn()
+
+      await scanCard([licenceWithSerial, licenceWithoutSerial], handleCardData)
+
+      expect(handleCardData).toHaveBeenCalledTimes(1)
+      const [serial, licence] = handleCardData.mock.calls[0]
+      expect(serial).toBe('S00023254')
+      expect(licence).toMatchObject({ birthDate: new Date('1970-09-06') })
+      expect(licence).not.toHaveProperty('bcscSerial')
+    })
+
+    it('logs the barcode type and result, not the scanned contents', async () => {
+      const { scanCard, debug } = renderScanCard()
+      const handleCardData = jest.fn()
+      const notASerial: ScanableCode = { type: 'code-39', value: '123456789' }
+      const damaged: ScanableCode = { type: 'pdf-417', value: BC_DL_BARCODE_S.replace('00S00023254?', 'S00023254?') }
+
+      await scanCard([licenceWithSerial, serial1D, notASerial, damaged], handleCardData)
+
+      const logged = JSON.stringify(debug.mock.calls)
+      expect(logged).toContain('"source":"pdf417"')
+      expect(logged).toContain('"source":"1d"')
+      expect(logged).toContain('"reason":"unsupported"')
+      expect(logged).toContain('"reason":"damaged"')
+      for (const sensitive of [
+        BC_DL_BARCODE_S,
+        'K12345678',
+        '123456789',
+        'S00023254',
+        'SPECIMEN',
+        'specimen',
+        '2222222',
+        'V8W3Y8',
+      ]) {
+        expect(logged).not.toContain(sensitive)
+      }
     })
   })
 
@@ -470,6 +563,84 @@ describe('useCardScanner', () => {
       })
       expect(mockNavigationNavigate).not.toHaveBeenCalled()
       expect(result).toBe(true)
+    })
+  })
+
+  describe('handleScanComboCard with a device registered late (stuck account)', () => {
+    const setup = (authorizeDevice: jest.Mock) => {
+      const mockNavigationReset = jest.fn()
+      jest.mocked(useAuthorizationService).mockReturnValue({ authorizeDevice } as any)
+      jest.mocked(useSecureActions).mockReturnValue({
+        updateUserInfo: jest.fn(),
+        updateDeviceCodes: jest.fn(),
+        updateCardProcess: jest.fn(),
+        updateVerificationOptions: jest.fn(),
+      } as any)
+      jest.mocked(Bifold).useStore.mockReturnValue([
+        {
+          bcsc: { accountSetupType: AccountSetupType.AddAccount },
+          bcscSecure: { additionalEvidenceData: [] },
+        } as any,
+        mockDispatch,
+      ])
+      jest.mocked(navigation).useNavigation = jest.fn().mockReturnValue({ reset: mockNavigationReset })
+      const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      jest.mocked(Bifold).useServices.mockReturnValue([logger as any])
+      jest
+        .mocked(useRegistrationService)
+        .mockReturnValue({ ensureRegistered: mockEnsureRegistered, cycleRegistration: jest.fn() } as any)
+      // The real recovery hook, so the scanner is exercised against the actual register-then-retry behaviour
+      jest
+        .mocked(useDeviceAuthorizationRecovery)
+        .mockImplementation(() =>
+          jest.requireActual('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery').useDeviceAuthorizationRecovery()
+        )
+
+      return { hook: renderHook(() => useCardScanner()), mockNavigationReset, logger }
+    }
+
+    const notRegisteredError = () =>
+      new AppError('No account found. Please register first.', ErrorRegistry.ACCOUNT_NOT_REGISTERED, { track: false })
+    const licenseData: any = { birthDate: new Date('1970-01-01') }
+
+    it('registers the device, retries the authorization and navigates on success', async () => {
+      mockEnsureRegistered.mockResolvedValue(undefined)
+      const authorizeDevice = jest.fn().mockRejectedValueOnce(notRegisteredError()).mockResolvedValueOnce({
+        device_code: 'test-device-code',
+        user_code: 'ABCD1234',
+        expires_in: 3600,
+        verification_options: 'video_call back_check',
+        process: 'IDIM L3 Remote BCSC Photo Identity Verification',
+      })
+      const { hook, mockNavigationReset } = setup(authorizeDevice)
+
+      const result = await hook.result.current.handleScanComboCard('S00023254', licenseData)
+
+      expect(result).toBe(true)
+      expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+      expect(authorizeDevice).toHaveBeenCalledTimes(2)
+      expect(mockNavigationReset).toHaveBeenCalledTimes(1)
+    })
+
+    it('resolves true without navigating when registration fails', async () => {
+      const registrationFailure = new AppError(
+        'registration failed',
+        { category: ErrorCategory.NETWORK, appEvent: AppEventCode.NO_INTERNET, statusCode: 2100 },
+        { track: false }
+      )
+      registrationFailure.handled = true
+      mockEnsureRegistered.mockRejectedValue(registrationFailure)
+      const authorizeDevice = jest.fn().mockRejectedValue(notRegisteredError())
+      const { hook, mockNavigationReset, logger } = setup(authorizeDevice)
+
+      const result = await hook.result.current.handleScanComboCard('S00023254', licenseData)
+
+      expect(result).toBe(true)
+      expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+      // The rethrown error was the already-handled registration failure, not the raw guard error
+      expect(logger.error).not.toHaveBeenCalled()
+      expect(authorizeDevice).toHaveBeenCalledTimes(1)
+      expect(mockNavigationReset).not.toHaveBeenCalled()
     })
   })
 

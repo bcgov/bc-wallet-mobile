@@ -1,5 +1,5 @@
+import { ageInYears, parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { firstErrorKey, firstNameSchema, lastNameSchema, middleNamesSchema } from '@/bcsc-theme/utils/validation'
-import moment from 'moment'
 import { useCallback } from 'react'
 
 export type EvidenceCollectionFormState = {
@@ -31,7 +31,11 @@ const useEvidenceIDCollectionModel = () => {
   }, [])
 
   const isOfMinimumAge = useCallback((canonicalBirthDate: string, minimumAge: number): boolean => {
-    return moment().diff(moment(canonicalBirthDate, 'YYYY-MM-DD', true), 'years') >= minimumAge
+    return ageInYears(parseBirthdateToLocalDate(canonicalBirthDate)) >= minimumAge
+  }, [])
+
+  const isWithinMaximumAge = useCallback((canonicalBirthDate: string, maximumAge: number): boolean => {
+    return ageInYears(parseBirthdateToLocalDate(canonicalBirthDate)) <= maximumAge
   }, [])
 
   const isDocumentNumberValid = useCallback(
@@ -65,6 +69,7 @@ const useEvidenceIDCollectionModel = () => {
       personalInfoRequired,
       documentReferenceInputMask,
       minimumAge,
+      maximumAge,
       t,
       onInvalidMask,
     }: {
@@ -72,6 +77,7 @@ const useEvidenceIDCollectionModel = () => {
       personalInfoRequired: boolean
       documentReferenceInputMask?: string
       minimumAge: number
+      maximumAge: number
       t: TranslationFn
       onInvalidMask?: (error: Error) => void
     }): EvidenceCollectionFormErrors => {
@@ -110,6 +116,10 @@ const useEvidenceIDCollectionModel = () => {
         errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateAgeError', { minimumAge })
       }
 
+      if (isBirthDateValid && !isWithinMaximumAge(canonicalBirthDate, maximumAge)) {
+        errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateMaxAgeError')
+      }
+
       const middleNamesErrorKey = firstErrorKey(middleNamesSchema, values.middleNames)
       if (middleNamesErrorKey) {
         errors.middleNames = t(middleNamesErrorKey)
@@ -117,13 +127,14 @@ const useEvidenceIDCollectionModel = () => {
 
       return errors
     },
-    [isCanonicalBirthDateValid, isDocumentNumberValid, isOfMinimumAge, toCanonicalBirthDate]
+    [isCanonicalBirthDateValid, isDocumentNumberValid, isOfMinimumAge, isWithinMaximumAge, toCanonicalBirthDate]
   )
 
   return {
     toCanonicalBirthDate,
     isCanonicalBirthDateValid,
     isOfMinimumAge,
+    isWithinMaximumAge,
     isDocumentNumberValid,
     validateEvidence,
   }

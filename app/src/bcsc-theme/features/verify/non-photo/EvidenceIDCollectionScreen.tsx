@@ -4,10 +4,10 @@ import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation
 import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
+import { formatBirthdateForApi, parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { normalizeForSubmission } from '@/bcsc-theme/utils/validation'
-import { MINIMUM_VERIFICATION_AGE } from '@/constants'
+import { MAXIMUM_VERIFICATION_AGE, MINIMUM_VERIFICATION_AGE } from '@/constants'
 import { BCState, NonBCSCUserMetadata } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -26,7 +26,6 @@ import {
 import { RouteProp, StackActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
-import moment from 'moment'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
@@ -95,7 +94,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     firstName: store.bcscSecure.userMetadata?.name?.first ?? '',
     middleNames: store.bcscSecure.userMetadata?.name?.middle ?? '',
     lastName: store.bcscSecure.userMetadata?.name?.last ?? '',
-    birthDate: store.bcscSecure.birthdate ? moment(store.bcscSecure.birthdate).format('YYYY-MM-DD') : '',
+    birthDate: store.bcscSecure.birthdate ? formatBirthdateForApi(store.bcscSecure.birthdate) : '',
   })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
@@ -130,6 +129,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         personalInfoRequired,
         documentReferenceInputMask: cardType.document_reference_input_mask,
         minimumAge: MINIMUM_VERIFICATION_AGE,
+        maximumAge: MAXIMUM_VERIFICATION_AGE,
         t,
         onInvalidMask: (error) =>
           logger.error(`Invalid regex pattern: ${cardType.document_reference_input_mask}`, error),

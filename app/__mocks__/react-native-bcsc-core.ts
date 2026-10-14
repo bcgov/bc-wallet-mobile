@@ -23,6 +23,14 @@ export enum BiometricType {
   OpticID = 'opticID',
 }
 
+/** IAS `challenge_source` claim values; stored with the login transaction for Support Tools reporting. */
+export enum ChallengeSource {
+  LocalAppSwitch = 'local_app_switch',
+  PushNotification = 'push_notification',
+  RemotePairingCode = 'remote_pairing_code',
+  RemotePairingQrCode = 'remote_pairing_qr_code',
+}
+
 export enum BCSCCardProcess {
   BCSCPhoto = 'IDIM L3 Remote BCSC Photo Identity Verification',
   BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',
@@ -73,6 +81,9 @@ export const BcscNativeErrorCodes = {
   INVALID_PARAMETERS: 'E_INVALID_PARAMETERS',
   SET_PIN_FAILED: 'E_SET_PIN_FAILED',
   DELETE_PIN_FAILED: 'E_DELETE_PIN_FAILED',
+  // Device authentication
+  DEVICE_AUTH_FAILED: 'E_DEVICE_AUTH_FAILED',
+  DEVICE_AUTH_UNAVAILABLE: 'E_DEVICE_AUTH_UNAVAILABLE',
   // Parsing
   JSON_SERIALIZATION_FAILED: 'E_JSON_SERIALIZATION_FAILED',
   FAILED_TO_PARSE_JWS: 'E_FAILED_TO_PARSE_JWS',

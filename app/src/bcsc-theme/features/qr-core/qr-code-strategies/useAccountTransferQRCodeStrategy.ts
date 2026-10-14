@@ -1,10 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
 import { BCState } from '@/store'
 import { QrCodeScanError, TOKENS, useServices, useStore } from '@bifold/core'
+import { useRoute } from '@react-navigation/native'
 import { useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
@@ -16,13 +18,29 @@ const TRANSFER_QR_PATH = /selfsetup\.html$/i
 /**
  * Creates a QRCodeStrategy for handling account transfer QR codes.
  */
-export const useAccountTransferQRCodeStrategy = (onSuccess: () => void): QRCodeStrategy => {
+export const useAccountTransferQRCodeStrategy = (
+  /**
+   * Callback function to be called when the account transfer is successful.
+   * ie: Navigate to the "Verification Success" screen.
+   * @returns void
+   */
+  onSuccess: () => void,
+  /**
+   * Callback function to be called when the account is already verified.
+   * ie: Navigate to the "Already Verified" screen
+   * @returns void
+   */
+  onAlreadyVerified?: () => void
+): QRCodeStrategy => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { deviceAttestation, authorization, token } = useApi()
   const apiClient = useBCSCApiClient()
   const { updateTokens, updateUserInfo, updateDeviceCodes } = useSecureActions()
   const [store] = useStore<BCState>()
+  // Shared by several scanner screens, so the origin screen for recovery is whichever one renders this hook
+  const route = useRoute()
+  const attemptWithRecovery = useDeviceAuthorizationRecovery()
   const deviceCodeRef = useRef<string | undefined>(store.bcscSecure.deviceCode)
 
   const registerDevice = useCallback(async () => {
@@ -33,7 +51,7 @@ export const useAccountTransferQRCodeStrategy = (onSuccess: () => void): QRCodeS
     }
 
     try {
-      const deviceAuth = await authorization.authorizeDevice()
+      const deviceAuth = await attemptWithRecovery(() => authorization.authorizeDevice(), route.name)
 
       const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
 
@@ -56,7 +74,15 @@ export const useAccountTransferQRCodeStrategy = (onSuccess: () => void): QRCodeS
 
       logger.error('[useAccountTransferQRCodeStrategy]: Device registration failed', { error })
     }
-  }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo, logger])
+  }, [
+    store.bcscSecure.deviceCode,
+    attemptWithRecovery,
+    authorization,
+    route.name,
+    updateDeviceCodes,
+    updateUserInfo,
+    logger,
+  ])
 
   const transferAccount = useCallback(
     async (value: string, transferToken: string) => {
@@ -104,7 +130,7 @@ export const useAccountTransferQRCodeStrategy = (onSuccess: () => void): QRCodeS
       apiClient.tokens = deviceToken
       await updateTokens({ refreshToken: deviceToken.refresh_token, accessToken: deviceToken.access_token })
     },
-    [t, deviceAttestation, token, apiClient, updateTokens]
+    [deviceAttestation, token, apiClient, updateTokens, t]
   )
 
   const matches = useCallback((uri: string): boolean => {
@@ -120,12 +146,17 @@ export const useAccountTransferQRCodeStrategy = (onSuccess: () => void): QRCodeS
         throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'))
       }
 
+      if (store.bcscSecure.verified && onAlreadyVerified) {
+        onAlreadyVerified()
+        return
+      }
+
       await registerDevice()
       await transferAccount(uri, transferToken)
 
       onSuccess()
     },
-    [logger, onSuccess, registerDevice, t, transferAccount]
+    [logger, onAlreadyVerified, onSuccess, registerDevice, store.bcscSecure.verified, t, transferAccount]
   )
 
   return useMemo(() => ({ matches, handle }), [matches, handle])

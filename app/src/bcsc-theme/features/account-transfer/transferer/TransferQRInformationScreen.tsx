@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
+import AddDeviceScanQr from '@assets/img/add-device-scan-qr.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -34,6 +35,7 @@ const TransferQRInformationScreen: React.FC = () => {
   )
   return (
     <ScreenWrapper controls={controls} padded={false} scrollViewContainerStyle={styles.contentContainer}>
+      <AddDeviceScanQr width="100%" height={207} />
       <ThemedText variant={'headingThree'}>{t('BCSC.TransferQRInformation.Title')}</ThemedText>
       <ThemedText>{t('BCSC.TransferQRInformation.Instructions')}</ThemedText>
       <ThemedText>{t('BCSC.TransferQRInformation.Warning')}</ThemedText>
