@@ -471,15 +471,14 @@ async function driveSignIn(page, credentials) {
     if (frame === page.mainFrame()) lastNavAt = Date.now()
   })
 
-  for (;;) {
+  // The deadline is the one exit that is not a return or a throw from inside the drive: it breaks
+  // out, and the page is described once, after the loop.
+  while (Date.now() <= drive.deadline) {
     // Arrival before expiry: a sign-in that completed while the driver waited out a TOTP window is a
     // success, never a timeout.
     const url = currentUrl(page)
     if (url && isIdcheckPage(url)) {
       return finishOnIdcheck(page, url, drive)
-    }
-    if (Date.now() > drive.deadline) {
-      throw new Error(`[idcheck sign-in] timed out ${await describePage(page, credentials.user)}`)
     }
     if (await reactToPage(page, url, drive, lastNavAt)) {
       lastKnownPageAt = Date.now()
@@ -488,6 +487,7 @@ async function driveSignIn(page, credentials) {
     }
     await page.waitForTimeout(POLL_INTERVAL_MS)
   }
+  throw new Error(`[idcheck sign-in] timed out ${await describePage(page, credentials.user)}`)
 }
 
 /**

@@ -28,9 +28,10 @@ export async function describeCurrentScreen(limit = 8): Promise<string> {
 
 /**
  * The element types a text-less iOS screen is described by, in the order they tell screens apart (a
- * camera is Images over Others; a webview is its own type). Queried one type at a time rather than
- * through the page source: on a camera screen WDA's full snapshot has hung for 60 s and taken the
- * session with it (Sauce ends a session whose command never answers — six journeys in one night).
+ * camera is Images over Others; a webview is its own type). Queried per type rather than through the
+ * page source: on a camera screen WDA's full snapshot has hung for 60 s and taken the session with it
+ * (Sauce ends a session whose command never answers — six journeys in one night). The queries are
+ * independent, so they are issued together; Appium runs a session's commands one at a time regardless.
  */
 const IOS_SILENT_SCREEN_TYPES = [
   'XCUIElementTypeImage',
@@ -43,12 +44,11 @@ const IOS_SILENT_SCREEN_TYPES = [
 async function describeSilentScreen(): Promise<string> {
   try {
     if (driver.isIOS) {
-      const counts: string[] = []
-      for (const type of IOS_SILENT_SCREEN_TYPES) {
-        const n = await $$(`-ios class chain:**/${type}`).length
-        if (n > 0) counts.push(`${type.replace('XCUIElementType', '')}×${n}`)
-      }
-      return counts.join(', ') || 'no elements'
+      const counts = await Promise.all(
+        IOS_SILENT_SCREEN_TYPES.map(async (type) => [type, await $$(`-ios class chain:**/${type}`).length] as const)
+      )
+      const present = counts.filter(([, n]) => n > 0).map(([type, n]) => `${type.replace('XCUIElementType', '')}×${n}`)
+      return present.join(', ') || 'no elements'
     }
     const source = await driver.getPageSource()
     const counts = new Map<string, number>()
