@@ -5,7 +5,7 @@
  * The same shape as the other two upgrade lanes (previous release → current, 4.0.3 → current):
  * set up on the old build, install the current one over it, prove the data survived. It keeps its
  * own suite because the old build is a different app lineage — its own binaries and testIDs
- * (`src/v3TestIDs.ts`) — and because it runs Android-only in CI.
+ * (`src/v3TestIDs.ts`). The nightly runs it on both platforms, one at a time, beside the send-video lane.
  *
  * Starts the v3 app, completes onboarding + in-person verification, then upgrades to v4 and
  * verifies the app unlocks with the PIN created in v3.
