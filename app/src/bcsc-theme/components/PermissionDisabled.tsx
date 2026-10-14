@@ -103,6 +103,24 @@ const translationKeys: Record<PermissionType, TranslationConfig> = {
       ],
     },
   },
+  bluetooth: {
+    title: 'BCSC.PermissionDisabled.BluetoothTitle',
+    description: 'BCSC.PermissionDisabled.BluetoothDescription',
+    steps: {
+      ios: [
+        'BCSC.PermissionDisabled.Bluetooth.iOS.Step1',
+        'BCSC.PermissionDisabled.Bluetooth.iOS.Step2',
+        'BCSC.PermissionDisabled.Bluetooth.iOS.Step3',
+      ],
+      android: [
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step1',
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step2',
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step3',
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step4',
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step5',
+      ],
+    },
+  },
 }
 
 export const PermissionDisabled = ({

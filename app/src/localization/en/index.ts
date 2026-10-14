@@ -901,6 +901,22 @@ const translation = {
       "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps:",
       "CameraAndMicrophoneTitle": "Camera & Microphone Disabled",
       "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video.",
+      "BluetoothTitle": "Nearby Devices Disabled",
+      "BluetoothDescription": "Follow these steps to allow access to nearby devices so you can use a connected Bluetooth headset or speaker during the call.",
+      "Bluetooth": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Bluetooth'",
+          "Step3": "3. Return to the app to continue",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Permissions'",
+          "Step3": "3. Tap 'Nearby devices'",
+          "Step4": "4. Select 'Allow'",
+          "Step5": "5. Return to the app to continue",
+        },
+      },
       "Camera": {
         "iOS": {
           "Step1": "1. Tap 'Open Settings' below",
