@@ -102,6 +102,7 @@ export async function getEmailConfirmationCode(
 
   const newerThan = afterMailId ? ` newer than mail ${afterMailId}` : ''
   console.log(`Waiting for email confirmation code${newerThan}...`)
+  let lastCodelessBody = ''
   while (Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, interval))
 
@@ -128,9 +129,12 @@ export async function getEmailConfirmationCode(
       return confirmationCodeMatch[1]
     }
 
-    // Never the body: it is the message that carries the code.
-    throw new Error(`Confirmation code not found in the ${emailContent.mail_body.length}-character email body`)
+    // The provider lists a message before its body is fetchable and answers with a placeholder (an
+    // 11-character body, no code — three journeys in one night); the next poll usually carries the
+    // message, so keep polling. Never the body itself: it is the message that carries the code.
+    lastCodelessBody = `mail ${mailId(email)} came back as a ${emailContent.mail_body.length}-character body without a code`
+    console.warn(`[email] ${lastCodelessBody} — polling again`)
   }
 
-  throw new Error('Email confirmation code timeout exceeded')
+  throw new Error(`Email confirmation code timeout exceeded${lastCodelessBody ? ` (last: ${lastCodelessBody})` : ''}`)
 }

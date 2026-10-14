@@ -57,8 +57,12 @@ const IOS_USER_AGENT =
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36'
 const DEFAULT_TIMEOUT_MS = 20_000
-/** Whole-mint attempts before a transport failure is the checkpoint's: SIT drops a connection now and then. */
-const MINT_ATTEMPTS = 3
+/**
+ * Whole-mint attempts before a transport failure is the checkpoint's. The runner's connects to SIT time
+ * out in bursts (5–17 `UND_ERR_CONNECT_TIMEOUT` a night; three in a row killed a journey once), so the
+ * wait between attempts grows: 5 s, 10 s, 15 s, 20 s.
+ */
+const MINT_ATTEMPTS = 5
 const MINT_RETRY_DELAY_MS = 5_000
 
 export type DeepLinkPlatform = 'ios' | 'android'
@@ -219,8 +223,11 @@ async function withMintRetry<T>(what: string, mint: () => Promise<T>): Promise<T
       return await mint()
     } catch (err) {
       if (!(err instanceof MintStepError && err.retryable && attempt < MINT_ATTEMPTS)) throw err
-      console.warn(`[pairing-code] ${what} attempt ${attempt}/${MINT_ATTEMPTS} failed (${err.message}); retrying in ${MINT_RETRY_DELAY_MS}ms`)
-      await new Promise((resolve) => setTimeout(resolve, MINT_RETRY_DELAY_MS))
+      const delayMs = MINT_RETRY_DELAY_MS * attempt
+      console.warn(
+        `[pairing-code] ${what} attempt ${attempt}/${MINT_ATTEMPTS} failed (${err.message}); retrying in ${delayMs}ms`
+      )
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
     }
   }
 }
