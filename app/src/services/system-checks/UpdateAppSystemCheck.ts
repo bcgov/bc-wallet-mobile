@@ -63,8 +63,13 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
       supportedVersions: this.serverStatus.supportedVersions,
     })
 
-    // Negated so a missing or non-numeric minVersion (NaN) fails open instead of blocking every user
-    return !(this.appBuild < Number(this.serverStatus.minVersion))
+    const minBuild = Number(this.serverStatus.minVersion)
+    // Fail open: a missing or non-numeric minimum must not block every user
+    if (Number.isNaN(minBuild)) {
+      return true
+    }
+
+    return this.appBuild >= minBuild
   }
 
   /**
