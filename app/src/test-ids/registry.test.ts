@@ -39,6 +39,7 @@ const KNOWN_UNREFERENCED = [
   'TestIds.verify.manualSerial.serialSubtext',
   'TestIds.verify.enterBirthdate.birthdatePressable',
   'TestIds.verify.enterBirthdate.birthdateInput',
+  'TestIds.verify.enterBirthdate.label',
   'TestIds.verify.enterEmail.inputPressable',
   'TestIds.verify.enterEmail.input',
   'TestIds.verify.methodSelection.settingsMenu',

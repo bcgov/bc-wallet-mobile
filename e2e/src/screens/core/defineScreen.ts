@@ -206,8 +206,16 @@ export class Screen<S extends ScreenSpec> {
     destination: ScreenPresence,
     options?: TapToNavigateOptions
   ): Promise<void> {
+    await this.tapIdToReach(this.roleId(role), destination, options)
+  }
+
+  private async tapIdToReach(
+    testId: TestId,
+    destination: ScreenPresence,
+    options?: TapToNavigateOptions
+  ): Promise<void> {
     try {
-      await this.engine.tapToNavigate(resolveTestId(this.roleId(role)), {
+      await this.engine.tapToNavigate(resolveTestId(testId), {
         ...options,
         scroll: this.spec.scroll,
         arrivedAt: () => destination.isPresent(DESTINATION_PROBE_MS),
@@ -301,6 +309,16 @@ export class Screen<S extends ScreenSpec> {
   /** Tap a named link. */
   async link(name: LinkKeys<S>): Promise<void> {
     await this.engine.tapByTestId(resolveTestId(this.namedId('links', name)), undefined, this.spec.scroll)
+  }
+
+  /**
+   * Tap a named link and confirm `destination` mounted, re-tapping a swallowed tap — {@link tapToReach}
+   * for links. Prefer it over {@link link} wherever the destination is known: a tap react-navigation
+   * discards mid-transition is retried, and a build on which the link never navigates fails here,
+   * naming the screen it stayed on, instead of a scroll hunt later naming the destination's first control.
+   */
+  async linkToReach(name: LinkKeys<S>, destination: ScreenPresence, options?: TapToNavigateOptions): Promise<void> {
+    await this.tapIdToReach(this.namedId('links', name), destination, options)
   }
 
   /** Scroll a named link into view (no tap). */
