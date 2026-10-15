@@ -89,3 +89,16 @@ spinner inside a button.
 **Why:** `ButtonLoading` used a fixed grey, which was unreadable on a blue Primary button. Bifold 3.1.3
 lets `Button` hand its label colour to the spinner, so every button type and theme stays legible
 without per-screen colour props (#4743).
+
+## Mediator: MEDIATOR_URL wins only when it changes
+
+The build's `MEDIATOR_URL` is the default mediator. On load it replaces the previously recorded URL
+(a new build) but never a mediator picked in developer mode under an unchanged URL, so switching
+survives restarts. The URL last reconciled with is recorded in local storage. BC Wallet switches
+through Bifold's Configure mediator screen (sign-out, agent restart); BC Services Card switches in
+place from its own developer-mode Settings row (default mediator and message pickup move on the live
+agent, the device token follows, and a failed switch puts the previous mediator back).
+
+**Why:** Always forcing `MEDIATOR_URL` silently disabled developer-mode mediator switching (the
+selection reverted on the next launch), while never forcing it kept an upgraded app on a retired
+mediator.
