@@ -15,6 +15,18 @@ import java.lang.reflect.Type
 import java.util.TimeZone
 
 /**
+ * v3 `providers` records that the v4 storage can retire without touching the v3 file. Each
+ * record has its own marker so retiring one (e.g. the authorization request) leaves the other
+ * (the registration token) readable.
+ */
+enum class V3ProviderRecord(
+    val markerFileName: String,
+) {
+    AUTHORIZATION_REQUEST("v3_authorization_request_retired"),
+    REGISTRATION_TOKEN("v3_registration_token_retired"),
+}
+
+/**
  * Native-compatible storage that matches the ias-android storage format.
  * This enables rollback capability between bcsc-core and native ias-android.
  *
@@ -550,6 +562,39 @@ class NativeCompatibleStorage(
         return if (file.exists()) file.delete() else true
     }
 
+    private fun getV3RetiredMarker(
+        issuerName: String,
+        accountUuid: String,
+        record: V3ProviderRecord,
+    ): File = File(context.filesDir, issuerName + File.separator + accountUuid + File.separator + record.markerFileName)
+
+    /**
+     * Stops a v3 `providers` record from being re-imported once v4 has replaced or deleted its copy.
+     * The v3 file is kept. Idempotent; creates `{issuerName}/{accountUuid}/` if needed.
+     *
+     * @return false if the marker can't be created
+     */
+    fun retireV3ProviderRecord(
+        issuerName: String,
+        accountUuid: String,
+        record: V3ProviderRecord,
+    ): Boolean {
+        val marker = getV3RetiredMarker(issuerName, accountUuid, record)
+        return try {
+            marker.parentFile?.mkdirs()
+            marker.exists() || marker.createNewFile() || marker.exists()
+        } catch (e: Exception) {
+            Log.e(TAG, "retireV3ProviderRecord: Failed to create marker for $record", e)
+            false
+        }
+    }
+
+    private fun isV3ProviderRecordRetired(
+        issuerName: String,
+        accountUuid: String,
+        record: V3ProviderRecord,
+    ): Boolean = getV3RetiredMarker(issuerName, accountUuid, record).exists()
+
     /**
      * Reads the registration access token from the V3 providers file.
      *
@@ -561,6 +606,11 @@ class NativeCompatibleStorage(
         issuerName: String,
         accountUuid: String,
     ): String? {
+        if (isV3ProviderRecordRetired(issuerName, accountUuid, V3ProviderRecord.REGISTRATION_TOKEN)) {
+            Log.d(TAG, "readRegistrationTokenFromV3Provider: v3 registration token retired; skipping")
+            return null
+        }
+
         val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
         val providerFile = File(context.filesDir, providerPath)
 
@@ -605,6 +655,11 @@ class NativeCompatibleStorage(
         issuerName: String,
         accountUuid: String,
     ): NativeAuthorizationRequest? {
+        if (isV3ProviderRecordRetired(issuerName, accountUuid, V3ProviderRecord.AUTHORIZATION_REQUEST)) {
+            Log.d(TAG, "readAuthorizationRequestFromV3Provider: v3 authorization request retired; skipping")
+            return null
+        }
+
         // V3 stores provider at: {filesDir}/{issuerName}/{accountUuid}/providers
         val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
         val providerFile = File(context.filesDir, providerPath)

@@ -112,6 +112,7 @@ import com.bcsccore.storage.NativeAddress
 import com.bcsccore.storage.NativeRequestStatus
 import com.bcsccore.storage.NativeAuthorizationMethod
 import com.bcsccore.storage.NativeClientMetadata
+import com.bcsccore.storage.V3ProviderRecord
 
 // TODO: (al) - refactor to use readFirstAccountEncryptedFile function
 // TODO: (al) - refactor to remove file names and use AccountFileName enum
@@ -899,6 +900,15 @@ class BcscCoreModule internal constructor(
             }
 
             val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+
+            // Retire the v3 fallback before the early return below; otherwise a later setToken(Refresh)
+            // could recreate a tokens file with no idToken and reopen the fallback.
+            if (tokenType == TOKEN_TYPE_REGISTRATION &&
+                !nativeStorage.retireV3ProviderRecord(issuerName, accountId, V3ProviderRecord.REGISTRATION_TOKEN)
+            ) {
+                promise.reject("E_TOKEN_DELETE_ERROR", "Error deleting token: could not retire v3 record")
+                return
+            }
 
             // Read existing tokens
             val existingTokens = nativeStorage.readTokens(issuerName, accountId)
@@ -3415,6 +3425,16 @@ class BcscCoreModule internal constructor(
             }
 
             val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+
+            // Retire the v3 copy first so a failed v4 delete can't bring the old v3 record back on the next unlock.
+            if (!nativeStorage.retireV3ProviderRecord(issuerName, accountId, V3ProviderRecord.AUTHORIZATION_REQUEST)) {
+                promise.reject(
+                    "E_DELETE_AUTH_REQUEST_ERROR",
+                    "Error deleting authorization request: could not retire v3 record",
+                )
+                return
+            }
+
             val success = nativeStorage.deleteAuthorizationRequest(issuerName, accountId)
 
             Log.d(NAME, "deleteAuthorizationRequest: ${if (success) "Successfully deleted" else "Failed to delete"}")
