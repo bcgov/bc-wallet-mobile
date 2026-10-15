@@ -484,6 +484,7 @@ const translation = {
         "Contacts": "Contacts (PT-BR)",
         "ScanQR": "Scan my QR code (PT-BR)",
         "SendProofRequest": "Send a proof request (PT-BR)",
+        "ConfigureMediator": "Configure mediator (PT-BR)",
         "ProofRequests": "Proof Requests (PT-BR)",
       },
       "AppSecurity": {
@@ -702,6 +703,11 @@ const translation = {
       "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again. (PT-BR)",
       "PrimaryAction": "Reset (PT-BR)",
       "Resetting": "Resetting… (PT-BR)"
+    },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator (PT-BR)",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (PT-BR)",
+      "ScanButton": "Scan mediator QR code (PT-BR)"
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (PT-BR)",

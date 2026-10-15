@@ -685,6 +685,8 @@ export const TestIds = {
       forgetPairings: 'ForgetPairings',
       scanQr: 'ScanQR',
       sendProofRequest: 'SendProofRequest',
+      // Developer-mode only: opens the mediator picker
+      configureMediator: 'ConfigureMediator',
       // Collapsible-section toggle — rendered once PER section, so this id repeats down the screen.
       sectionHeaderChevron: 'SectionHeaderChevron',
     },
@@ -743,6 +745,12 @@ export const TestIds = {
      *  native "Success"/OK alert fires, then it returns to Settings. */
     forgetPairingsScreen: {
       confirm: 'ForgetAllPairings',
+    },
+    /** Developer-mode mediator picker. Rows compose from the mediator label (the invitation's label,
+     *  or its host without the payload); `scan` opens the QR scanner, whose hand-off lands back here. */
+    configureMediator: {
+      mediatorRowPrefix: 'MediatorRow-',
+      scan: 'ScanMediator',
     },
     /** Edit-nickname form (verified-only; `InputWithValidation` id 'accountNickname'). Validation is
      *  length-only — there is no duplicate-nickname check. Saving updates the Profile-card name. */

@@ -40,6 +40,14 @@ describe('MainSettingsScreen', () => {
     jest.mocked(useBCSCApiClient).mockReturnValue({ endpoints: { accountDevices: 'https://devices.example' } } as never)
   })
 
+  it('navigates to the mediator picker when Configure mediator is triggered', () => {
+    renderScreen()
+
+    settingsProps.onConfigureMediator()
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.ConfigureMediator)
+  })
+
   it('navigates to the Contact us WebView when Contact us is triggered', () => {
     renderScreen()
 

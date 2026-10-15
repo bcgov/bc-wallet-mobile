@@ -141,6 +141,32 @@ describe('SettingsContent', () => {
     expect(await screen.findByTestId(tid('DeveloperMode'))).toBeTruthy()
   })
 
+  it('shows the Configure mediator row in developer mode and invokes onConfigureMediator', async () => {
+    const onConfigureMediator = jest.fn()
+    render(
+      <BasicAppContext
+        initialStateOverride={
+          { authentication: { didAuthenticate: true }, preferences: { developerModeEnabled: true } } as never
+        }
+      >
+        <BCSCLoadingProvider>
+          <SettingsContent {...baseProps} onConfigureMediator={onConfigureMediator} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    fireEvent.press(await screen.findByTestId(tid('ConfigureMediator')))
+
+    expect(onConfigureMediator).toHaveBeenCalled()
+  })
+
+  it('hides the Configure mediator row outside developer mode', async () => {
+    renderWithState({ authentication: { didAuthenticate: true } })
+
+    expect(await screen.findByTestId(tid('ResetWallet'))).toBeTruthy()
+    expect(screen.queryByTestId(tid('ConfigureMediator'))).toBeNull()
+  })
+
   it('opens external URL rows (Feedback, Accessibility, TermsOfUse)', async () => {
     const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never)
     renderWithState()

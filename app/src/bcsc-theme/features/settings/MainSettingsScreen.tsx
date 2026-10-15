@@ -116,6 +116,10 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
     navigation.navigate(BCSCScreens.QRCore, { screen: BCSCQRCoreScreens.Display })
   }
 
+  const onConfigureMediator = () => {
+    navigation.navigate(BCSCScreens.ConfigureMediator)
+  }
+
   const onMyDevices = () => {
     navigation.navigate(BCSCScreens.MainWebView, {
       url: apiClient.endpoints.accountDevices,
@@ -143,6 +147,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       onAddDevice={onAddDevice}
       onMyDevices={onMyDevices}
       onScanMyQR={onScanMyQR}
+      onConfigureMediator={onConfigureMediator}
     />
   )
 }
