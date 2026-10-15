@@ -685,19 +685,22 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   ): Promise<void> {
     if (await isVisible()) return
 
-    // An open keyboard both hides the lower half of the screen and turns the swipes below into
-    // glide-typed garbage in the focused field — clear it before the first swipe. Often the target
-    // is visible right after, no scrolling needed.
-    await this.hideAndroidKeyboardIfShown()
+    // An open keyboard hides the lower half of the screen, and when the target sits OUTSIDE the form's
+    // scroll view (ActionScreenLayout's Continue footer) no swipe can bring it back — so close the
+    // keyboard before the first swipe, on both platforms. Android also glide-types a swipe over the keys
+    // into the focused field. On iOS the old 0.5 band happened to land on empty scroll-view area, which
+    // RN's default `keyboardShouldPersistTaps` turns into a dismiss; the keyboard-aware band below lost
+    // that accident (observed: the wallet journey's contact rename, Continue never found in 6 swipes).
+    // Often the target is visible right after, no scrolling needed. A keyboard that will not close
+    // (an iOS number pad has no key for it) stays up, and the band moves above it.
+    const keyboardUp = (await driver.isKeyboardShown().catch(() => false)) && !(await this.dismissKeyboard())
     if (await isVisible()) return
 
     const scrollFraction = 0.25
     const settlePauseMs = 150
-    // iOS number pads carry no key that closes them, so a keyboard can still be up here. On a small
-    // device the default band (37–62% of the height) lies inside the keys, where a swipe moves nothing —
-    // the hunt then "fails" on a control that sits just under the fold (a 12 Mini's Create PIN). Swipe
-    // through the upper part of the screen while a keyboard is showing.
-    const keyboardUp = driver.isIOS && (await driver.isKeyboardShown().catch(() => false))
+    // On a small device the default band (37–62% of the height) lies inside the keys, where a swipe
+    // moves nothing — the hunt then "fails" on a control that sits just under the fold (a 12 Mini's
+    // Create PIN). Swipe through the upper part of the screen while a keyboard is showing.
     const bandCenterY = keyboardUp ? 0.3 : 0.5
 
     for (let i = 0; i < maxScrolls; i++) {
