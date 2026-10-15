@@ -1090,9 +1090,7 @@ export const useSecureActions = () => {
           const message = error instanceof Error ? error.message : String(error)
           logger.error(`[hydrateSecureState] Failed to refresh tokens with stored refresh token: ${message}`)
 
-          // Retries the refresh once after a recovery strategy runs, logging success/failure
-          // under a consistent label. Shared by the 'recovered' and 'no_match' branches below
-          // so the retry-and-log pattern isn't duplicated per strategy.
+          // Retries the refresh once after a recovery strategy, logging under a shared label.
           const retryRefreshAfter = async (strategyLabel: string): Promise<TokenResponse | null> => {
             try {
               const tokens = await apiClient.getTokensForRefreshToken(refreshToken)

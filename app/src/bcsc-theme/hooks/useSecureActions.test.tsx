@@ -876,7 +876,6 @@ describe('useSecureActions', () => {
     })
   })
 
-  // #4645: a keychain write failure while hydrating used to abort an already-successful unlock.
   const b64url = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url')
   const makeRegistrationToken = (payload: object) => `${b64url({ alg: 'RS256' })}.${b64url(payload)}.sig`
 
@@ -1272,6 +1271,7 @@ describe('useSecureActions', () => {
     })
   })
 
+  // #4645: a keychain write failure while hydrating used to abort an already-successful unlock.
   describe('hydrateSecureState token write-back failure (#4645)', () => {
     const keychainError = () => Object.assign(new Error('native E_TOKEN_SAVE_FAILED'), { code: 'E_TOKEN_SAVE_FAILED' })
 

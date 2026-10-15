@@ -15,9 +15,7 @@ import java.lang.reflect.Type
 import java.util.TimeZone
 
 /**
- * v3 `providers` records that the v4 storage can retire without touching the v3 file. Each
- * record has its own marker so retiring one (e.g. the authorization request) leaves the other
- * (the registration token) readable.
+ * v3 `providers` records v4 can retire without touching the v3 file; each has its own marker.
  */
 enum class V3ProviderRecord(
     val markerFileName: String,
@@ -569,10 +567,8 @@ class NativeCompatibleStorage(
     ): File = File(context.filesDir, issuerName + File.separator + accountUuid + File.separator + record.markerFileName)
 
     /**
-     * Stops a v3 `providers` record from being re-imported once v4 has replaced or deleted its copy.
-     * The v3 file is kept. Idempotent; creates `{issuerName}/{accountUuid}/` if needed.
-     *
-     * @return false if the marker can't be created
+     * Stops a v3 `providers` record being re-imported; the v3 file is kept. Idempotent.
+     * Returns false if the marker can't be created.
      */
     fun retireV3ProviderRecord(
         issuerName: String,
