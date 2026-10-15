@@ -1011,7 +1011,7 @@ export const useSecureActions = () => {
       // Switches the account to the client ID the registration token was issued for, but only after the
       // server confirms that registration. Returns whether the local clientID now equals the token's.
       const repairClientIdDrift = async (): Promise<boolean> => {
-        // Narrowing only: driftDetected already guarantees these.
+        // Narrowing only: the enclosing refresh branch guarantees apiClient, driftDetected the rest.
         if (!apiClient || !account || !issuer || !tokenClientID || !registrationAccessToken) {
           return false
         }
