@@ -2841,13 +2841,15 @@ class BcscCoreModule internal constructor(
     /**
      * Gets the security method for the current account.
      * Matches TypeScript: getAccountSecurityMethod(): Promise<AccountSecurityMethod>
+     * Rejects with E_ACCOUNT_NOT_FOUND when no account exists, matching iOS: a defaulted method
+     * would let callers register or unlock with a method the user never set up.
      */
     @ReactMethod
     override fun getAccountSecurityMethod(promise: Promise) {
         try {
             val account = resolveFirstAccount()
             if (account == null) {
-                promise.resolve("device_authentication") // Default
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
                 return
             }
 

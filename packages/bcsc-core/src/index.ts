@@ -806,6 +806,7 @@ export const setAccountSecurityMethod = async (
 /**
  * Gets the security method for the current account.
  * @returns A promise that resolves to the security method string
+ * @throws E_ACCOUNT_NOT_FOUND when no account exists (both platforms); there is no default method
  */
 export const getAccountSecurityMethod = async (): Promise<import('./NativeBcscCore').AccountSecurityMethod> => {
   return BcscCore.getAccountSecurityMethod();
