@@ -1,5 +1,6 @@
 import { jwtDecode } from 'jwt-decode'
 import BCSCApiClient from '../api/client'
+import { fetchRegistrationView } from './key-recovery'
 
 export const REGISTRATION_CONFIRMATION_TIMEOUT_MS = 5000
 
@@ -35,15 +36,11 @@ export const confirmRegistrationClientId = async (
   registrationAccessToken: string
 ): Promise<RegistrationConfirmation> => {
   try {
-    const { data } = await apiClient.get<{ client_id?: unknown; registration_access_token?: unknown }>(
-      `${apiClient.endpoints.registration}/${clientId}`,
-      {
-        skipBearerAuth: true,
-        // A rejected probe must not raise the global error popup this check exists to stop.
-        skipOnErrorHandler: true,
-        headers: { Authorization: `Bearer ${registrationAccessToken}` },
-        timeout: REGISTRATION_CONFIRMATION_TIMEOUT_MS,
-      }
+    const { data } = await fetchRegistrationView(
+      apiClient,
+      clientId,
+      registrationAccessToken,
+      REGISTRATION_CONFIRMATION_TIMEOUT_MS
     )
 
     const rotated = data?.registration_access_token
