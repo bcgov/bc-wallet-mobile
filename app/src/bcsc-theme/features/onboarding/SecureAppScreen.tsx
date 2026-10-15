@@ -9,7 +9,13 @@ import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AccountSecurityMethod, setAccount, setupDeviceSecurity } from 'react-native-bcsc-core'
+import {
+  AccountSecurityMethod,
+  getAccount,
+  setAccount,
+  setAccountSecurityMethod,
+  setupDeviceSecurity,
+} from 'react-native-bcsc-core'
 
 interface SecureAppScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSecureApp>
@@ -28,16 +34,24 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
-      // IMPORTANT: Account must exist before setting up device security.
-      await setAccount({
-        clientID: TEMPORARY_ACCOUNT_CLIENT_ID,
-        issuer: client.endpoints.issuer,
-        securityMethod: AccountSecurityMethod.DeviceAuth,
-      })
+      // IMPORTANT: Account must exist before setting up device security. An existing account is kept as is,
+      // because overwriting it with the placeholder would wipe its client ID.
+      const account = await getAccount()
+      if (!account) {
+        await setAccount({
+          clientID: TEMPORARY_ACCOUNT_CLIENT_ID,
+          issuer: client.endpoints.issuer,
+          securityMethod: AccountSecurityMethod.DeviceAuth,
+        })
+      }
 
       // Now setup device security (generates random PIN and stores it securely)
       const { success, walletKey } = await setupDeviceSecurity()
       if (success) {
+        if (account) {
+          await setAccountSecurityMethod(AccountSecurityMethod.DeviceAuth)
+        }
+
         // Complete onboarding with the wallet key
         await handleSuccessfulAuth(walletKey)
         logger.info('Device security setup completed successfully')
