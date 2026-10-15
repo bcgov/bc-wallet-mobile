@@ -961,9 +961,8 @@ export const useSecureActions = () => {
       const tokenClientID = getRegistrationTokenClientId(registrationAccessToken)
 
       if (account && (!issuer || !clientID)) {
-        // Account is missing issuer or clientID - this prevents token refresh from working.
-        // The registration token's `aud` is the client ID it was issued for; the authorization request
-        // (which can be re-imported from old v3 storage) is only a fallback when there is no token.
+        // A missing issuer or clientID breaks refresh. Prefer the registration token's `aud`; the
+        // authorization request (possibly re-imported from v3) is the fallback only when there is no token.
         const clientIDSource = registrationAccessToken ? 'registration token' : 'authorization request'
         logger.warn(
           `[hydrateSecureState] Account missing required fields: issuer=${!issuer ? 'MISSING' : 'OK'}, clientID=${!clientID ? 'MISSING' : 'OK'}. Attempting recovery (clientID source: ${clientIDSource}).`
