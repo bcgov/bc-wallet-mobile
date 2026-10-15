@@ -968,11 +968,14 @@ describe('useSecureActions', () => {
 
   describe('hydrateSecureState client ID drift repair (#4868)', () => {
     const originalPlatform = Platform.OS
-    const REG_TOKEN = makeRegistrationToken({ aud: 'A', iss: 'idp' })
+    // Realistic client IDs, so the no-leak check below can't pass just because the IDs are short.
+    const OLD_ID = 'b5a1c3d2-7e44-4f0a-9d21-3c8a6f1e5b70'
+    const NEW_ID = '0f8e2d41-93ab-4c6e-b7d5-a1c4e9f2036b'
+    const REG_TOKEN = makeRegistrationToken({ aud: NEW_ID, iss: 'idp' })
     const account = {
       id: 'account-1',
       issuer: 'https://idsit.gov.bc.ca',
-      clientID: 'B',
+      clientID: OLD_ID,
       displayName: 'Test User',
     }
     const mockGetTokensForRefreshToken = jest.fn()
@@ -997,10 +1000,14 @@ describe('useSecureActions', () => {
       })
     }
 
-    const driftLogLines = () =>
+    // Every logger call at every level, serialized with its extra arguments. The pre-existing end-of-hydrate
+    // `Hydrated secure data` debug dump prints the whole secure state and is out of scope here, so it is skipped.
+    const allLoggedText = () =>
       [mockLogger.info, mockLogger.warn, mockLogger.error, mockLogger.debug]
-        .flatMap((fn) => fn.mock.calls.map(([message]) => String(message)))
-        .filter((message) => message.includes('client_id_drift'))
+        .flatMap((fn) => fn.mock.calls)
+        .filter(([message]) => !String(message).startsWith('Hydrated secure data'))
+        .map((args) => JSON.stringify(args, (_key, value) => (value instanceof Error ? value.message : value)))
+        .join('\n')
 
     beforeEach(() => {
       Platform.OS = 'android'
@@ -1047,10 +1054,10 @@ describe('useSecureActions', () => {
 
         await hydrate()
 
-        expect(confirmRegistrationClientId).toHaveBeenCalledWith(expect.anything(), 'A', REG_TOKEN)
+        expect(confirmRegistrationClientId).toHaveBeenCalledWith(expect.anything(), NEW_ID, REG_TOKEN)
         expect(setAccount).toHaveBeenCalledWith({
           ...account,
-          clientID: 'A',
+          clientID: NEW_ID,
           securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
         })
         expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(2)
@@ -1068,7 +1075,7 @@ describe('useSecureActions', () => {
 
         await hydrate()
 
-        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), 'A', REG_TOKEN, expect.anything())
+        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), NEW_ID, REG_TOKEN, expect.anything())
       })
 
       it('keeps the stored client ID for key recovery when the server does not confirm', async () => {
@@ -1080,7 +1087,7 @@ describe('useSecureActions', () => {
 
         expect(setAccount).not.toHaveBeenCalled()
         expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
-        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), 'B', REG_TOKEN, expect.anything())
+        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, REG_TOKEN, expect.anything())
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('reason=request_failed http_status=403'))
       })
 
@@ -1113,14 +1120,14 @@ describe('useSecureActions', () => {
       })
 
       it('does not confirm when the stored client ID already matches the token', async () => {
-        jest.mocked(getAccount).mockResolvedValue({ ...account, clientID: 'A' } as any)
+        jest.mocked(getAccount).mockResolvedValue({ ...account, clientID: NEW_ID } as any)
         mockGetTokensForRefreshToken.mockRejectedValue(new Error('401'))
         jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
 
         await hydrate()
 
         expect(confirmRegistrationClientId).not.toHaveBeenCalled()
-        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), 'A', REG_TOKEN, expect.anything())
+        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), NEW_ID, REG_TOKEN, expect.anything())
       })
 
       it('does not confirm when the token client ID is unreadable', async () => {
@@ -1144,7 +1151,7 @@ describe('useSecureActions', () => {
         expect(setAccount).not.toHaveBeenCalled()
       })
 
-      it('does not confirm when the API client is not ready', async () => {
+      it('skips the refresh, and so the repair, when the API client is not ready', async () => {
         jest.mocked(useBCSCApiClientModule.useBCSCApiClientState).mockReturnValue({
           client: { getTokensForRefreshToken: mockGetTokensForRefreshToken } as any,
           isClientReady: false,
@@ -1192,7 +1199,7 @@ describe('useSecureActions', () => {
 
         expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'rotated')
         expect(setAccount).not.toHaveBeenCalled()
-        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), 'B', 'rotated', expect.anything())
+        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, 'rotated', expect.anything())
       })
 
       it('does not switch the client ID when the rotated token cannot be persisted', async () => {
@@ -1219,7 +1226,9 @@ describe('useSecureActions', () => {
         await hydrate()
 
         expect(setAccount).not.toHaveBeenCalled()
-        expect(setToken).not.toHaveBeenCalledWith(TokenType.Registration, 'rotated')
+        // The only registration token write is the end-of-hydrate write-back of the original token.
+        const registrationWrites = jest.mocked(setToken).mock.calls.filter(([type]) => type === TokenType.Registration)
+        expect(registrationWrites).toEqual([[TokenType.Registration, REG_TOKEN]])
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('reason=request_failed http_status=none'))
         expect(mockDispatch.mock.calls.some(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)).toBe(
           true
@@ -1233,11 +1242,12 @@ describe('useSecureActions', () => {
 
         await hydrate()
 
-        const logged = driftLogLines().join('\n')
+        const logged = allLoggedText()
         expect(logged).toContain('client_id_drift_repaired')
         expect(logged).not.toContain('rotated-secret')
         expect(logged).not.toContain(REG_TOKEN)
-        expect(logged).not.toMatch(/\b[AB]\b/)
+        expect(logged).not.toContain(OLD_ID)
+        expect(logged).not.toContain(NEW_ID)
       })
 
       it('trusts the stored client ID and retries the refresh when setAccount rejects after saving', async () => {
@@ -1246,7 +1256,7 @@ describe('useSecureActions', () => {
         jest
           .mocked(getAccount)
           .mockResolvedValueOnce(account as any)
-          .mockResolvedValue({ ...account, clientID: 'A' } as any)
+          .mockResolvedValue({ ...account, clientID: NEW_ID } as any)
 
         await hydrate()
 
@@ -1266,7 +1276,7 @@ describe('useSecureActions', () => {
         await hydrate()
 
         expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
-        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), 'B', REG_TOKEN, expect.anything())
+        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, REG_TOKEN, expect.anything())
       })
     })
   })

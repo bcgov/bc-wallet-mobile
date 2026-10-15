@@ -1011,8 +1011,8 @@ export const useSecureActions = () => {
       // Switches the account to the client ID the registration token was issued for, but only after the
       // server confirms that registration. Returns whether the local clientID now equals the token's.
       const repairClientIdDrift = async (): Promise<boolean> => {
-        if (!apiClient || !isClientReady || !account || !issuer || !tokenClientID || !registrationAccessToken) {
-          logger.warn('[hydrateSecureState] event=client_id_drift_rejected reason=client_not_ready')
+        // Narrowing only: driftDetected already guarantees these.
+        if (!apiClient || !account || !issuer || !tokenClientID || !registrationAccessToken) {
           return false
         }
 
