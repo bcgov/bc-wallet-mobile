@@ -3,6 +3,11 @@ name: Verify Allowlist Connectivity
 # Manual-only workflow. Confirms the large runner has network reach to the
 # ID Broker / IDcheck endpoints whose firewalls have been opened for the
 # runner's egress IP ranges (20.10.68.0/28 and 130.131.47.80/28).
+#
+# It also probes the two SIT hops the e2e pairing-code mint opens
+# (e2e/src/helpers/pairing-code.ts) and reports TCP/TLS handshake times, so
+# that when the nightly's mint reports UND_ERR_CONNECT_TIMEOUT a stalled
+# handshake can be told from a dropped SYN, from the runner's own egress.
 
 on:
   workflow_dispatch:
@@ -93,6 +98,9 @@ jobs:
             "iddev /idcheck|iddev.gov.bc.ca|/idcheck"
             "support.iddev|support.iddev.gov.bc.ca|/"
             "idsit /idcheck|idsit.gov.bc.ca|/idcheck"
+            # the pairing-code mint's first two hops; a bare GET answers 200 and 400 — any code proves reach
+            "idsit /demo/rp1/login|idsit.gov.bc.ca|/demo/rp1/login"
+            "idsit /login/saml2|idsit.gov.bc.ca|/login/saml2"
             "support.idsit|support.idsit.gov.bc.ca|/"
             # the IDcheck sign-in hops (BC Gov SSO, then Entra ID) — public, but the approval depends on them
             "sso dev.loginproxy|dev.loginproxy.gov.bc.ca|/auth/realms/standard/.well-known/openid-configuration"
@@ -149,11 +157,13 @@ jobs:
             fi
 
             # ---- HTTPS -------------------------------------------------------
-            if HTTP_CODE=$(curl -4 -sS -o /dev/null -w "%{http_code}" \
+            # Handshake timings ride along: undici's 10 s connect timeout spans TCP + TLS, and these
+            # tell a slow TLS handshake from a dropped SYN.
+            if CURL_OUT=$(curl -4 -sS -o /dev/null -w "%{http_code} %{time_connect} %{time_appconnect}" \
               --max-time 15 --connect-timeout 10 \
               -A "bcgov-connectivity-check/1.0" \
               "$URL" 2>/dev/null); then
-              :
+              read -r HTTP_CODE T_TCP T_TLS <<< "$CURL_OUT"
             else
               HTTP_CODE="000"
             fi
@@ -161,7 +171,7 @@ jobs:
               HTTPS_CELL="❌ no response"
               HTTPS_OK=0
             else
-              HTTPS_CELL="✅ HTTP ${HTTP_CODE}"
+              HTTPS_CELL="✅ HTTP ${HTTP_CODE} (tcp ${T_TCP}s, tls ${T_TLS}s)"
               HTTPS_OK=1
             fi
             echo "HTTPS: $HTTPS_CELL"

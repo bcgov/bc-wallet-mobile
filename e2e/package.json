@@ -72,6 +72,7 @@
     "sharp": "^0.34.5",
     "tough-cookie": "^6.0.1",
     "tsx": "^4.0.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "undici": "^7.19.0"
   }
 }
