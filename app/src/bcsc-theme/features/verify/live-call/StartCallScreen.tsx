@@ -29,6 +29,8 @@ import { useMicrophonePermission } from 'react-native-vision-camera'
 import { BluetoothDisclosure } from '../BluetoothDisclosure'
 import ServicePeriodList from './components/ServicePeriodList'
 
+type CallStatus = 'idle' | 'checkPermissions' | 'bluetoothDisclosure' | 'bluetoothDenied' | 'microphoneDenied'
+
 type StartCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.StartCall>
 }
@@ -41,14 +43,12 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { video: videoCallApi } = useApi()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
-  const [showPermissionDisabled, setShowPermissionDisabled] = useState<'microphone' | 'bluetooth' | null>(null)
-  const [needsBluetoothPermission, setNeedsBluetoothPermission] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
   const { liveCallFileUploadAlert } = useAlerts(navigation)
-  const [isWaitingForPermissions, setIsWaitingForPermissions] = useState(false)
   const [formattedHours, setFormattedHours] = useState<FormattedServicePeriod[]>([])
   const [hoursLoading, setHoursLoading] = useState(true)
+  const [status, setStatus] = useState<CallStatus>('idle')
 
   useEffect(() => {
     videoCallApi
@@ -62,12 +62,9 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       .finally(() => setHoursLoading(false))
   }, [videoCallApi, logger])
 
-  // Reset the start button's loading state whenever the screen regains focus. Pressing "Start call"
-  // sets this flag and pushes LiveCall without unmounting this screen, so on returning here (e.g. via
-  // the live-call back button) the flag would otherwise stay true and leave the button disabled.
   useFocusEffect(
     useCallback(() => {
-      setIsWaitingForPermissions(false)
+      setStatus('idle')
     }, [])
   )
 
@@ -97,9 +94,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   })
 
   const onPressStart = async () => {
-    setNeedsBluetoothPermission(false)
-    setShowPermissionDisabled(null)
-    setIsWaitingForPermissions(true)
+    setStatus('checkPermissions')
 
     let micPermissionGranted = hasMicrophonePermission
 
@@ -111,8 +106,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
 
     if (!micPermissionGranted) {
       // If the user denies microphone permission, we cannot proceed with the call
-      setShowPermissionDisabled('microphone')
-      setIsWaitingForPermissions(false)
+      setStatus('microphoneDenied')
       return
     }
 
@@ -120,7 +114,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
 
     if (needsBluetoothPermission) {
       // If the device requires Bluetooth permission, we need to show the Bluetooth disclosure screen
-      setNeedsBluetoothPermission(true)
+      setStatus('bluetoothDisclosure')
       return
     }
 
@@ -133,21 +127,22 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     liveCallFileUploadAlert()
   }
 
-  if (showPermissionDisabled) {
-    return <PermissionDisabled permissionType={showPermissionDisabled} />
+  if (status === 'microphoneDenied') {
+    return <PermissionDisabled permissionType={'microphone'} />
   }
 
-  if (needsBluetoothPermission) {
+  if (status === 'bluetoothDenied') {
+    return <PermissionDisabled permissionType={'bluetooth'} />
+  }
+
+  if (status === 'bluetoothDisclosure') {
     return (
       <BluetoothDisclosure
         onContinue={(permissionGranted) => {
           if (!permissionGranted) {
-            setShowPermissionDisabled('bluetooth')
-            setIsWaitingForPermissions(false)
-            return
+            return setStatus('bluetoothDenied')
           }
-
-          // If the user grants Bluetooth permission, we can proceed to the live call screen
+          // If the user grants Bluetooth permission, we can proceed to the live call
           navigation.navigate(BCSCScreens.LiveCall)
         }}
       />
@@ -161,10 +156,10 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
         title={t('BCSC.VideoCall.StartCall')}
         accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
         onPress={onPressStart}
-        disabled={isWaitingForPermissions}
+        disabled={status !== 'idle'}
         testID={testIdWithKey(TestIds.verify.startCall.start)}
       >
-        {isWaitingForPermissions && <ButtonLoading />}
+        {status === 'checkPermissions' && <ButtonLoading />}
       </Button>
     </ControlContainer>
   )
