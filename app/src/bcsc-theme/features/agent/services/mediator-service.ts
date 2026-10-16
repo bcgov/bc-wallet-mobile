@@ -64,7 +64,8 @@ const routeThrough = async (agent: Agent, mediation: DidCommMediationRecord, log
  * Switches the wallet to the mediator behind `mediatorUrl` on the running agent. Mediation is
  * requested on first use; a mediator used before is re-selected. A failure after the default moved
  * puts the previous mediator back, so a rejected switch leaves nothing half-switched. The caller
- * persists the choice.
+ * persists the choice. Connections made earlier keep routing through their original mediator, which
+ * is no longer picked up from, the same as after a restart.
  */
 export const switchMediator = async (
   agent: Agent,

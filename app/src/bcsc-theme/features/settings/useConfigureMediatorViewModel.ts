@@ -64,7 +64,7 @@ export const useConfigureMediatorViewModel = (scannedMediatorUri?: string) => {
         dispatch({ type: DispatchAction.SET_SELECTED_MEDIATOR, payload: [url] })
       } finally {
         if (usePushNotifications) {
-          activate(agent).catch((error) =>
+          await activate(agent).catch((error) =>
             logger.warn(`Push notification registration after the mediator switch failed: ${error}`)
           )
         }

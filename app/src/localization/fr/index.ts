@@ -214,6 +214,7 @@ const translation = {
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
     "SwitchTheme": "Switch theme (FR)",
     "SelectedMediator": "Selected mediator (FR)",
+    "MediatorSection": "Mediator (FR)",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes (FR)",
       "OneHour": "1 hour (FR)",

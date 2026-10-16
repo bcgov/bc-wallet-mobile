@@ -152,6 +152,34 @@ describe('useConfigureMediatorViewModel', () => {
     expect(result.current.switchingTo).toBeNull()
   })
 
+  it('keeps the picker locked until the device token is registered with the new mediator', async () => {
+    let registered!: () => void
+    jest.mocked(activate).mockImplementation(() => new Promise<void>((resolve) => (registered = resolve)))
+    const { result } = renderHook(() => useConfigureMediatorViewModel())
+
+    act(() => {
+      result.current.selectMediator(other)
+    })
+    await waitFor(() => expect(activate).toHaveBeenCalledWith(agent))
+    expect(result.current.switchingTo).toBe(other)
+
+    await act(async () => registered())
+
+    expect(result.current.switchingTo).toBeNull()
+  })
+
+  it('finishes the switch when registering the device token afterwards fails', async () => {
+    jest.mocked(activate).mockRejectedValue(new Error('mediator unreachable'))
+    const { result } = renderHook(() => useConfigureMediatorViewModel())
+
+    await act(() => result.current.selectMediator(other))
+
+    expect(mockDispatch).toHaveBeenCalledWith({ type: DispatchAction.SET_SELECTED_MEDIATOR, payload: [other] })
+    expect(mockLogger.warn).toHaveBeenCalled()
+    expect(mockFailedToSwitchMediatorAlert).not.toHaveBeenCalled()
+    expect(result.current.switchingTo).toBeNull()
+  })
+
   it('alerts when the agent is not available', async () => {
     mockWaitForAgent.mockResolvedValue(null)
     const { result } = renderHook(() => useConfigureMediatorViewModel())
