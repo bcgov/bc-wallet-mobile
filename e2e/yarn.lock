@@ -4087,6 +4087,7 @@ __metadata:
     tough-cookie: "npm:^6.0.1"
     tsx: "npm:^4.0.0"
     typescript: "npm:~5.9.2"
+    undici: "npm:^7.19.0"
   languageName: unknown
   linkType: soft
 
