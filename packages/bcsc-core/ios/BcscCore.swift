@@ -3916,6 +3916,14 @@ class BcscCore: NSObject {
     resolve(nil)
   }
 
+  func isBluetoothAudioConnected(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    // Bluetooth audio detection is not implemented on iOS yet, null means unknown
+    logger.log("isBluetoothAudioConnected: Not implemented yet on iOS")
+    resolve(nil)
+  }
+
   // Support for the new architecture (Fabric)
   #if RCT_NEW_ARCH_ENABLED
     @objc

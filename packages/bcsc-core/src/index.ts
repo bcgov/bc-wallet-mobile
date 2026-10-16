@@ -1287,15 +1287,12 @@ export const openAndroidKeyboardSelector = async (): Promise<void> => {
 /**
  * Checks if a Bluetooth audio output device (headset, or A2DP speaker) is currently connected on Android.
  * Needs no Bluetooth permission, so it can run before deciding whether to ask for one.
- * iOS is not implemented and always resolves null without calling native code.
+ * iOS is not implemented yet and always resolves null.
  *
- * @returns True if a Bluetooth audio output is connected, false if not, or null if the platform is not Android
+ * @returns True if a Bluetooth audio output is connected, false if not, or null if unknown (iOS)
+ * @throws If detection fails, so callers can tell "no headset" from "detection failed"
  */
 export const isBluetoothAudioConnected = async (): Promise<boolean | null> => {
-  if (Platform.OS !== 'android') {
-    return null;
-  }
-
   return BcscCore.isBluetoothAudioConnected();
 };
 

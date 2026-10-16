@@ -24,7 +24,7 @@ import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Image, ImageErrorEvent, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, AppState, Image, ImageErrorEvent, StyleSheet, View } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
 import { BluetoothDisclosure } from '../BluetoothDisclosure'
 import ServicePeriodList from './components/ServicePeriodList'
@@ -45,7 +45,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     useMicrophonePermission()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
-  const { liveCallFileUploadAlert } = useAlerts(navigation)
+  const { liveCallFileUploadAlert, unknownErrorModal } = useAlerts(navigation)
   const [formattedHours, setFormattedHours] = useState<FormattedServicePeriod[]>([])
   const [hoursLoading, setHoursLoading] = useState(true)
   const [status, setStatus] = useState<CallStatus>('idle')
@@ -67,6 +67,26 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       setStatus('idle')
     }, [])
   )
+
+  useEffect(() => {
+    // Opening Settings backgrounds the app without blurring this screen, so useFocusEffect never fires on return
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') {
+        return
+      }
+
+      setStatus((current) => {
+        // If the user denied microphone or Bluetooth permission, we need to reset the status to 'idle' so they can try again
+        if (current === 'microphoneDenied' || current === 'bluetoothDenied') {
+          return 'idle'
+        }
+
+        return current
+      })
+    })
+
+    return () => subscription.remove()
+  }, [])
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
@@ -110,7 +130,13 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       return
     }
 
-    const needsBluetoothPermission = await deviceRequiresBluetoothPermission()
+    let needsBluetoothPermission = false
+    try {
+      needsBluetoothPermission = await deviceRequiresBluetoothPermission()
+    } catch (error) {
+      // Bluetooth detection is best-effort, the call still works without it
+      logger.error('[StartCallScreen] Error detecting Bluetooth audio, continuing without the prompt', error as Error)
+    }
 
     if (needsBluetoothPermission) {
       // If the device requires Bluetooth permission, we need to show the Bluetooth disclosure screen

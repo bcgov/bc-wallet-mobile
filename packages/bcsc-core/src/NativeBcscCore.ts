@@ -562,11 +562,11 @@ export interface Spec extends TurboModule {
   /**
    * Checks if a Bluetooth audio output device (SCO headset, A2DP headset/speaker, or BLE headset
    * on Android 12+) is currently connected on Android. Needs no Bluetooth permission.
-   * Not implemented natively on iOS; callers must use the `isBluetoothAudioConnected` wrapper.
+   * iOS is a stub that always resolves null.
    *
-   * @returns true if a Bluetooth audio output is connected, otherwise (including on any error) false
+   * @returns true if a Bluetooth audio output is connected, false if not, null on iOS. Rejects if detection fails (E_AUDIO_SERVICE_UNAVAILABLE, E_BLUETOOTH_AUDIO_CHECK_ERROR)
    */
-  isBluetoothAudioConnected(): Promise<boolean>;
+  isBluetoothAudioConnected(): Promise<boolean | null>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');

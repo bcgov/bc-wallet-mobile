@@ -1,9 +1,11 @@
+import { AppError } from '@/errors'
 import { PermissionsAndroid, Platform } from 'react-native'
 import { isBluetoothAudioConnected } from 'react-native-bcsc-core'
 import { deviceRequiresBluetoothPermission } from './bluetooth'
 
 jest.mock('react-native-bcsc-core', () => ({
   isBluetoothAudioConnected: jest.fn(),
+  isBcscNativeError: (error: unknown) => error instanceof Error && 'code' in error,
 }))
 
 describe('bluetooth utils', () => {
@@ -63,6 +65,16 @@ describe('bluetooth utils', () => {
       mockIsBluetoothAudioConnected.mockResolvedValue(true)
 
       await expect(deviceRequiresBluetoothPermission()).resolves.toBe(true)
+    })
+
+    it('throws a mapped error when Bluetooth audio detection fails', async () => {
+      setPlatform('android', 33)
+      checkSpy.mockResolvedValue(false)
+      mockIsBluetoothAudioConnected.mockRejectedValue(
+        Object.assign(new Error('boom'), { code: 'E_BLUETOOTH_AUDIO_CHECK_ERROR' })
+      )
+
+      await expect(deviceRequiresBluetoothPermission()).rejects.toBeInstanceOf(AppError)
     })
   })
 })

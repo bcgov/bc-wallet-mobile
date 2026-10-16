@@ -4975,7 +4975,7 @@ class BcscCoreModule internal constructor(
         try {
             val audioManager = reactApplicationContext.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
             if (audioManager == null) {
-                promise.resolve(false)
+                promise.reject("E_AUDIO_SERVICE_UNAVAILABLE", "AudioManager is not available on this device")
                 return
             }
 
@@ -4988,7 +4988,7 @@ class BcscCoreModule internal constructor(
             promise.resolve(isConnected)
         } catch (e: Exception) {
             Log.e(NAME, "isBluetoothAudioConnected: ${e.message}", e)
-            promise.resolve(false) // Best-effort detection, never block the caller
+            promise.reject("E_BLUETOOTH_AUDIO_CHECK_ERROR", "Error checking Bluetooth audio output: ${e.message}", e)
         }
     }
 

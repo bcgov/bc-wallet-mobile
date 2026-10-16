@@ -105,6 +105,16 @@ describe('StartCall', () => {
       await waitFor(() => expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.LiveCall))
     })
 
+    it('navigates to LiveCall when Bluetooth detection fails', async () => {
+      mockMicrophone(true)
+      mockDeviceRequiresBluetoothPermission.mockRejectedValue(new Error('detection failed'))
+      const { getByTestId } = renderScreen()
+
+      fireEvent.press(getByTestId(startTestId))
+
+      await waitFor(() => expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.LiveCall))
+    })
+
     it('shows the Bluetooth disclosure when Bluetooth permission is needed', async () => {
       mockMicrophone(true)
       mockDeviceRequiresBluetoothPermission.mockResolvedValue(true)

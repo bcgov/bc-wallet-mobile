@@ -96,22 +96,23 @@ class BcscCoreModuleBluetoothTest {
     // MARK: - Edge cases
 
     @Test
-    fun `resolves false when AudioManager is unavailable`() {
+    fun `rejects when AudioManager is unavailable`() {
         every { mockReactContext.getSystemService(Context.AUDIO_SERVICE) } returns null
 
         module.isBluetoothAudioConnected(mockPromise)
 
-        verify { mockPromise.resolve(false) }
+        verify { mockPromise.reject("E_AUDIO_SERVICE_UNAVAILABLE", any<String>()) }
+        verify(exactly = 0) { mockPromise.resolve(any()) }
     }
 
     @Test
-    fun `resolves false instead of rejecting when listing devices throws`() {
-        every { mockAudioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS) } throws
-            RuntimeException("service unavailable")
+    fun `rejects instead of resolving false when listing devices throws`() {
+        val cause = RuntimeException("service unavailable")
+        every { mockAudioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS) } throws cause
 
         module.isBluetoothAudioConnected(mockPromise)
 
-        verify { mockPromise.resolve(false) }
-        verify(exactly = 0) { mockPromise.reject(any<String>(), any<String>(), any<Throwable>()) }
+        verify { mockPromise.reject("E_BLUETOOTH_AUDIO_CHECK_ERROR", any<String>(), cause) }
+        verify(exactly = 0) { mockPromise.resolve(any()) }
     }
 }

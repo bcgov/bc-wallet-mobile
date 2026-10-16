@@ -1,5 +1,6 @@
 import { PermissionsAndroid, Platform } from 'react-native'
 import { isBluetoothAudioConnected } from 'react-native-bcsc-core'
+import { throwNativeBcscError } from './native-error-map'
 
 /**
  * Checks if the device requires Bluetooth permission (Android API 31+).
@@ -8,6 +9,7 @@ import { isBluetoothAudioConnected } from 'react-native-bcsc-core'
  *   adb shell pm clear-permission-flags ca.bc.gov.id.servicescard.dev android.permission.BLUETOOTH_CONNECT user-set user-fixed
  *   `
  * @returns `true` if the device requires Bluetooth permission, `false` otherwise.
+ * @throws A mapped native error if Bluetooth audio detection fails; callers decide whether that is critical.
  */
 export async function deviceRequiresBluetoothPermission(): Promise<boolean> {
   const needsRuntimePermission = Platform.OS === 'android' && Platform.Version >= 31
@@ -24,7 +26,13 @@ export async function deviceRequiresBluetoothPermission(): Promise<boolean> {
     return false
   }
 
-  const bluetoothAudioConnected = await isBluetoothAudioConnected()
+  let bluetoothAudioConnected: boolean | null = null
+
+  try {
+    bluetoothAudioConnected = await isBluetoothAudioConnected()
+  } catch (error) {
+    return throwNativeBcscError(error)
+  }
 
   if (!bluetoothAudioConnected) {
     // No Bluetooth audio connected, so no need to request permission

@@ -10,7 +10,7 @@ import {
   useServices,
   useTheme,
 } from '@bifold/core'
-import React from 'react'
+import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PermissionsAndroid, StyleSheet } from 'react-native'
 
@@ -27,6 +27,7 @@ export const BluetoothDisclosure = ({ onContinue }: BluetoothDisclosureProps) =>
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const processingRef = useRef(false)
 
   const styles = StyleSheet.create({
     title: {
@@ -35,6 +36,11 @@ export const BluetoothDisclosure = ({ onContinue }: BluetoothDisclosureProps) =>
   })
 
   const onPressContinue = async () => {
+    if (processingRef.current) {
+      return
+    }
+
+    processingRef.current = true
     let permissionStatus = PermissionsAndroid.RESULTS.DENIED
     try {
       permissionStatus = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT)
