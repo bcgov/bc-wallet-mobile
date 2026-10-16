@@ -24,6 +24,7 @@ const mockLogger = {
 }
 
 const OOB_URI = 'https://x?oob=foo'
+const SHORT_URI = 'https://issuer.example.com/abc123'
 
 const makeAgent = (
   overrides?: Partial<{ goalCode?: string; throwOnParse: boolean; recordId: string; existingRecordId: string | null }>
@@ -78,12 +79,19 @@ describe('useDidCommOobQRCodeStrategy', () => {
       expect(setup().matches('https://example.com/url/pres_exch/123e4567-e89b-12d3-a456-426614174000')).toBe(true)
     })
 
-    it('does not match unrelated URLs', () => {
+    it('matches bare http(s) URLs so Credo can resolve them as short URLs', () => {
       const { matches } = setup()
 
-      expect(matches('https://www.gov.bc.ca')).toBe(false)
-      expect(matches('https://example.com/url/pres_exch/not-a-uuid')).toBe(false)
+      expect(matches(SHORT_URI)).toBe(true)
+      expect(matches('http://localhost:8020/abc123')).toBe(true)
+    })
+
+    it('does not match non-URL values', () => {
+      const { matches } = setup()
+
       expect(matches('not a url')).toBe(false)
+      expect(matches('ABC123')).toBe(false)
+      expect(matches('ftp://example.com/abc123')).toBe(false)
     })
   })
 
@@ -157,6 +165,28 @@ describe('useDidCommOobQRCodeStrategy', () => {
 
       await expect(setup().handle(OOB_URI)).rejects.toThrow('parse failed')
 
+      expect(onSuccess).not.toHaveBeenCalled()
+    })
+
+    it('accepts a short URL invitation', async () => {
+      const { agent, spies } = makeAgent({ recordId: 'rec-short' })
+      useAgent(agent)
+
+      await setup().handle(SHORT_URI)
+
+      expect(spies.parseInvitation).toHaveBeenCalledWith(SHORT_URI)
+      expect(onSuccess).toHaveBeenCalledWith('rec-short')
+    })
+
+    it('throws unrecognized when a bare URL does not resolve to an invitation', async () => {
+      const { agent, spies } = makeAgent({ throwOnParse: true })
+      useAgent(agent)
+
+      const result = setup().handle(SHORT_URI)
+
+      await expect(result).rejects.toBeInstanceOf(QrCodeScanError)
+      await expect(result).rejects.toMatchObject({ message: 'BCSC.Scan.UnrecognizedQR' })
+      expect(spies.receiveInvitation).not.toHaveBeenCalled()
       expect(onSuccess).not.toHaveBeenCalled()
     })
 

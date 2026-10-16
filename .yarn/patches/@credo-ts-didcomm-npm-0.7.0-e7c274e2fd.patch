@@ -1,0 +1,21 @@
+diff --git a/build/util/parseInvitation.mjs b/build/util/parseInvitation.mjs
+index 30f36f9495c7ee4cad31599b63b9fe2412cff9d2..4a11fefc9230266f4c9ce4eda04bb4951b470941 100644
+--- a/build/util/parseInvitation.mjs
++++ b/build/util/parseInvitation.mjs
+@@ -20,12 +20,14 @@ const fetchShortUrl = async (invitationUrl, dependencies) => {
+ 			headers: {
+ 				Accept: "application/json",
+ 				"Content-Type": "application/json"
+-			}
++			},
++			signal: abortController.signal
+ 		});
+ 	} catch (error) {
+ 		throw new CredoError(`Get request failed on provided url: ${error.message}`, { cause: error });
++	} finally {
++		clearTimeout(id);
+ 	}
+-	clearTimeout(id);
+ 	return response;
+ };
+ /**
