@@ -10,14 +10,13 @@ import { useTranslation } from 'react-i18next'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { useLeaveVerification } from '../hooks/useLeaveVerification'
 import { useRestartVerification } from '../hooks/useRestartVerification'
+import { useVerificationExitPolicy } from '../hooks/useVerificationExitPolicy'
 import { BCSCScreens } from '../types/navigators'
 import FloatingHelpMenu, { FloatingHelpMenuRef } from './FloatingHelpMenu'
 import { ListButton, ListButtonGroup, ListButtonProps } from './ListButton'
 import { ReportProblemModal } from './ReportProblemModal'
 
-// Header trigger icons. Every stack uses the question-mark help icon except the verification flow,
-// whose menu also offers navigation actions ("Back to home", "Restart") and so reads better as a
-// vertical-ellipsis "more options" affordance.
+// Header trigger icon. Every stack, the verification flow included, uses the question-mark help icon.
 const DEFAULT_HELP_ICON = 'help-circle-outline'
 
 type FloatingHelpMenuButtonProps = {
@@ -134,13 +133,22 @@ const GiveFeedbackListButton = ({ onClose, position }: MenuRowProps) => {
 /**
  * "Back to home" menu row (verify flow only). Leaves the in-progress verification and returns to
  * the app home screen, keeping progress so the user can resume later (see {@link useLeaveVerification}).
+ * Offered per {@link useVerificationExitPolicy}: not to a first-time verifier, unless developer mode is on.
+ * `onLeave` runs with the menu's close, before the flow is left (the prompt uses it to count itself answered).
  */
-const BackToHomeListButton = ({ onClose, position }: MenuRowProps) => {
+const BackToHomeListButton = ({ onClose, onLeave, position }: MenuRowProps & { onLeave?: () => void }) => {
   const { t } = useTranslation()
   const leaveVerification = useLeaveVerification()
 
+  const handlePress = useCallback(() => {
+    leaveVerification(() => {
+      onClose()
+      onLeave?.()
+    })
+  }, [leaveVerification, onClose, onLeave])
+
   return (
-    <ListButton position={position} onPress={() => leaveVerification(onClose)}>
+    <ListButton position={position} onPress={handlePress}>
       {t('BCSC.HelpMenu.BackToHome')}
     </ListButton>
   )
@@ -184,7 +192,7 @@ export type FloatingHelpMenuButtonOptions = {
  * article in the stack's WebView screen), "Give feedback", and "Report a problem".
  *
  * The verification flow uses {@link createVerifyHelpMenuButton} instead, which offers a different
- * set of actions and a different trigger icon.
+ * set of actions.
  *
  * @param options - The stack's WebView screen and the optional help centre article for "Learn More".
  * @returns A React component that renders the help menu button.
@@ -226,27 +234,46 @@ export type VerifyHelpMenuButtonOptions = {
    * hasn't started yet), on for the rest of the flow.
    */
   showRestartVerification?: boolean
+  /**
+   * Whether the "Back to home" row is offered. `true` (the default) follows the exit policy: every
+   * deferred verifier, and developer mode. `'developerOnly'` is for the verify prompt, whose own
+   * Continue and Skip are its exits: only a tester gets the row there, as an escape hatch that leaves
+   * the prompt unanswered. `false` never offers it.
+   */
+  showBackToHome?: boolean | 'developerOnly'
+  /** Runs when "Back to home" is pressed, before the flow is left; the prompt counts itself answered. */
+  onLeave?: () => void
 }
 
 /**
- * Factory for the verification flow's help menu button. Uses the vertical-ellipsis trigger icon and
- * offers "Report a problem", "Back to home" (leave the flow, keeping progress), and — once
- * verification is underway — "Restart verification process".
+ * Factory for the verification flow's help menu button. Offers "Report a problem", "Back to home"
+ * (leave the flow, keeping progress; see {@link useVerificationExitPolicy} for who gets it), and —
+ * once verification is underway — "Restart verification process".
  *
- * @param options - Whether to show the "Restart verification process" row.
+ * Rows are gated here rather than inside the row components: ListButtonGroup positions every element
+ * child, so a row rendering `null` would still take a slot and break the group's border rounding.
+ *
+ * @param options - Which optional rows this screen offers.
  * @returns A React component that renders the verification help menu button.
  */
-export const createVerifyHelpMenuButton = ({ showRestartVerification = false }: VerifyHelpMenuButtonOptions = {}) => {
+export const createVerifyHelpMenuButton = ({
+  showRestartVerification = false,
+  showBackToHome = true,
+  onLeave,
+}: VerifyHelpMenuButtonOptions = {}) => {
   const VerifyHelpMenuHeaderRight = () => {
     const floatingHelpMenuRef = useRef<FloatingHelpMenuRef>(null)
     const closeMenu = useCallback(() => floatingHelpMenuRef.current?.close(), [])
     const reportProblem = useReportProblem(floatingHelpMenuRef)
+    const { showBackToHomeMenuRow, isDeveloperMode } = useVerificationExitPolicy()
+    const offerBackToHome =
+      showBackToHome === 'developerOnly' ? isDeveloperMode : showBackToHome && showBackToHomeMenuRow
 
     return (
       <>
         <FloatingHelpMenuButton ref={floatingHelpMenuRef} icon={DEFAULT_HELP_ICON}>
           <ReportProblemListButton onPress={reportProblem.open} />
-          <BackToHomeListButton onClose={closeMenu} />
+          {offerBackToHome && <BackToHomeListButton onClose={closeMenu} onLeave={onLeave} />}
           {showRestartVerification && <RestartVerificationListButton onClose={closeMenu} />}
         </FloatingHelpMenuButton>
         <ReportProblemModal visible={reportProblem.visible} onClose={reportProblem.hide} />
