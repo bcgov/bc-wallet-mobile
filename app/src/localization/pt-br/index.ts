@@ -213,6 +213,8 @@ const translation = {
     "EnableProxy": "Enable proxy (PT-BR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
     "SwitchTheme": "Switch theme (PT-BR)",
+    "SelectedMediator": "Selected mediator (PT-BR)",
+    "MediatorSection": "Mediator (PT-BR)",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes (PT-BR)",
       "OneHour": "1 hour (PT-BR)",
@@ -702,6 +704,11 @@ const translation = {
       "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again. (PT-BR)",
       "PrimaryAction": "Reset (PT-BR)",
       "Resetting": "Resetting… (PT-BR)"
+    },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator (PT-BR)",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (PT-BR)",
+      "ScanButton": "Scan mediator QR code (PT-BR)"
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (PT-BR)",

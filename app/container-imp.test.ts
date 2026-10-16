@@ -1,5 +1,6 @@
-import { DispatchAction, PersistentStorage, TOKENS } from '@bifold/core'
+import { DispatchAction, LocalStorageKeys, PersistentStorage, TOKENS } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
+import { Config } from 'react-native-config'
 import { AppContainer } from './container-imp'
 import { BCLocalStorageKeys } from './src/store'
 
@@ -118,5 +119,97 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     const state = dispatch.mock.calls[0][0].payload[0]
     expect(state.bcsc.installId).toBe('already-migrated')
     expect(storeValueForKeySpy).not.toHaveBeenCalled()
+  })
+})
+
+describe('AppContainer TOKENS.LOAD_STATE (mediator preferences vs MEDIATOR_URL)', () => {
+  const previous = 'https://mediator.example/invite?oob=previous'
+  const current = 'https://mediator.example/invite?oob=current'
+  const custom = 'https://mediator-dev.example/invite?oob=custom'
+
+  let storeValueForKeySpy: jest.SpyInstance
+  let storeCalls: { key: unknown; value: unknown }[]
+
+  const loadPreferences = async () => {
+    const { registrations } = buildContainer()
+    const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
+    const dispatch = jest.fn()
+
+    await loadState(dispatch)
+    // The write-back is not awaited by LOAD_STATE; let its chain settle before asserting on it
+    await new Promise((resolve) => setImmediate(resolve))
+
+    return dispatch.mock.calls[0][0].payload[0].preferences
+  }
+
+  beforeEach(() => {
+    mockStoredValues = {}
+    storeCalls = []
+    Config.MEDIATOR_URL = current
+    jest
+      .spyOn(PersistentStorage.prototype, 'getValueForKey')
+      .mockImplementation((key: string) => Promise.resolve(mockStoredValues[key] as never))
+    storeValueForKeySpy = jest
+      .spyOn(PersistentStorage, 'storeValueForKey')
+      .mockImplementation((key: unknown, value: unknown) => {
+        storeCalls.push({ key, value: JSON.parse(JSON.stringify(value)) })
+        return Promise.resolve(undefined)
+      })
+  })
+
+  afterEach(() => {
+    delete Config.MEDIATOR_URL
+    jest.restoreAllMocks()
+  })
+
+  it('adopts MEDIATOR_URL over a persisted selection when no URL was recorded, and records both', async () => {
+    mockStoredValues[LocalStorageKeys.Preferences] = { selectedMediator: previous, availableMediators: [previous] }
+
+    const preferences = await loadPreferences()
+
+    expect(preferences.selectedMediator).toBe(current)
+    expect(preferences.availableMediators).toEqual([current])
+    expect(storeCalls).toEqual([
+      { key: LocalStorageKeys.Preferences, value: expect.objectContaining({ selectedMediator: current }) },
+      { key: BCLocalStorageKeys.MediatorUrl, value: current },
+    ])
+  })
+
+  it('keeps a mediator picked in developer mode while MEDIATOR_URL is unchanged', async () => {
+    mockStoredValues[BCLocalStorageKeys.MediatorUrl] = current
+    mockStoredValues[LocalStorageKeys.Preferences] = { selectedMediator: custom, availableMediators: [current, custom] }
+
+    const preferences = await loadPreferences()
+
+    expect(preferences.selectedMediator).toBe(custom)
+    expect(preferences.availableMediators).toEqual([current, custom])
+    expect(storeValueForKeySpy).not.toHaveBeenCalled()
+  })
+
+  it('moves a user on the previous default to a changed MEDIATOR_URL', async () => {
+    mockStoredValues[BCLocalStorageKeys.MediatorUrl] = previous
+    mockStoredValues[LocalStorageKeys.Preferences] = {
+      selectedMediator: previous,
+      availableMediators: [previous, custom],
+    }
+
+    const preferences = await loadPreferences()
+
+    expect(preferences.selectedMediator).toBe(current)
+    expect(preferences.availableMediators).toEqual([current, custom])
+    expect(storeCalls.map(({ key }) => key)).toEqual([LocalStorageKeys.Preferences, BCLocalStorageKeys.MediatorUrl])
+  })
+
+  it('leaves the recorded URL alone when the preferences cannot be written', async () => {
+    mockStoredValues[BCLocalStorageKeys.MediatorUrl] = previous
+    mockStoredValues[LocalStorageKeys.Preferences] = { selectedMediator: previous, availableMediators: [previous] }
+    storeValueForKeySpy.mockImplementation((key: unknown) => {
+      storeCalls.push({ key, value: undefined })
+      return key === LocalStorageKeys.Preferences ? Promise.reject(new Error('disk full')) : Promise.resolve(undefined)
+    })
+
+    await loadPreferences()
+
+    expect(storeCalls.map(({ key }) => key)).toEqual([LocalStorageKeys.Preferences])
   })
 })

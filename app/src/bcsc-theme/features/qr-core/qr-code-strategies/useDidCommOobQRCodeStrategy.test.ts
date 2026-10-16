@@ -54,8 +54,14 @@ describe('useDidCommOobQRCodeStrategy', () => {
 
   const useAgent = (agent: unknown) => mockWaitForAgent.mockResolvedValue(agent)
 
-  const setNickname = (selectedNickname?: string) =>
-    jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: { selectedNickname } } as any, jest.fn()])
+  const setStore = (selectedNickname?: string, developerModeEnabled = false) =>
+    jest
+      .mocked(Bifold)
+      .useStore.mockReturnValue([
+        { bcsc: { selectedNickname }, preferences: { developerModeEnabled } } as any,
+        jest.fn(),
+      ])
+  const setNickname = (selectedNickname?: string) => setStore(selectedNickname)
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -137,6 +143,43 @@ describe('useDidCommOobQRCodeStrategy', () => {
 
       expect(spies.receiveInvitation).not.toHaveBeenCalled()
       expect(onSuccess).not.toHaveBeenCalled()
+    })
+
+    describe('mediator invitations with a developer-mode hand-off', () => {
+      const onMediatorInvitation = jest.fn()
+      const setupWithHandOff = () =>
+        renderHook(() => useDidCommOobQRCodeStrategy(onSuccess, { onMediatorInvitation })).result.current
+
+      it('hands the invitation over in developer mode without creating a connection', async () => {
+        setStore(undefined, true)
+        const { agent, spies } = makeAgent({ goalCode: 'aries.vc.mediate' })
+        useAgent(agent)
+
+        await expect(setupWithHandOff().handle(OOB_URI)).resolves.toBeUndefined()
+
+        expect(onMediatorInvitation).toHaveBeenCalledWith(OOB_URI)
+        expect(spies.receiveInvitation).not.toHaveBeenCalled()
+        expect(onSuccess).not.toHaveBeenCalled()
+      })
+
+      it('still rejects the invitation outside developer mode', async () => {
+        const { agent } = makeAgent({ goalCode: 'aries.vc.mediate' })
+        useAgent(agent)
+
+        await expect(setupWithHandOff().handle(OOB_URI)).rejects.toMatchObject({
+          message: 'BCSC.Scan.Unsupported.Mediator',
+        })
+
+        expect(onMediatorInvitation).not.toHaveBeenCalled()
+      })
+
+      it('rejects the invitation in developer mode when nothing handles it', async () => {
+        setStore(undefined, true)
+        const { agent } = makeAgent({ goalCode: 'aries.vc.mediate' })
+        useAgent(agent)
+
+        await expect(setup().handle(OOB_URI)).rejects.toMatchObject({ message: 'BCSC.Scan.Unsupported.Mediator' })
+      })
     })
 
     it('throws unrecognized when the invitation cannot be parsed', async () => {
@@ -247,7 +290,9 @@ describe('useDidCommOobQRCodeStrategy', () => {
       useAgent(agent)
       setNickname("Kjartan's iPhone")
 
-      const { result } = renderHook(() => useDidCommOobQRCodeStrategy(onSuccess, 'didcomm-oob-invitation'))
+      const { result } = renderHook(() =>
+        useDidCommOobQRCodeStrategy(onSuccess, { invitationLabel: 'didcomm-oob-invitation' })
+      )
       await result.current.handle(OOB_URI)
 
       expect(spies.receiveInvitation).toHaveBeenCalledWith(

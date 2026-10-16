@@ -1,5 +1,7 @@
 import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
+import { mediatorLabel } from '@/bcsc-theme/features/agent/services/mediator-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Switch } from '@/components/Switch'
 import { BCThemeNames, Mode } from '@/constants'
 import { useFeatureFlags } from '@/remote-config/FeatureFlags'
@@ -21,10 +23,10 @@ import {
   useTheme,
 } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import React, { ReactNode, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter, StyleSheet, View } from 'react-native'
+import { DeviceEventEmitter, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import { deleteToken, TokenType } from 'react-native-bcsc-core'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -127,6 +129,45 @@ const RowDetail: React.FC<{ label: string; value: string }> = ({ label, value })
         {value}
       </ThemedText>
     </ThemedText>
+  )
+}
+
+/** BC Services Card entry to the mediator picker, which is registered in the main stack only. */
+const ConfigureMediatorSection: React.FC<{ style: StyleProp<ViewStyle> }> = ({ style }) => {
+  const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
+  const [store] = useStore<BCState>()
+  const navigation = useNavigation()
+  const route = useRoute()
+
+  if (route.name !== BCSCScreens.MainDeveloper) {
+    return null
+  }
+
+  return (
+    <>
+      <SectionHeader icon={'hub'} title={t('Developer.MediatorSection')} />
+      <View style={style}>
+        <ListButtonGroup>
+          <ListButton
+            onPress={() => navigation.navigate(BCSCScreens.ConfigureMediator as never)}
+            accessibilityLabel={t('BCSC.ConfigureMediator.ScreenTitle')}
+            testID={testIdWithKey(TestIds.developer.configureMediator)}
+          >
+            <Row
+              title={t('BCSC.ConfigureMediator.ScreenTitle')}
+              endAdornment={<Icon name="chevron-right" size={24} color={ColorPalette.brand.primary} />}
+              subContent={
+                <RowDetail
+                  label={t('Developer.SelectedMediator')}
+                  value={mediatorLabel(store.preferences.selectedMediator)}
+                />
+              }
+            />
+          </ListButton>
+        </ListButtonGroup>
+      </View>
+    </>
   )
 }
 
@@ -581,6 +622,8 @@ const Developer: React.FC = () => {
           />
         </ListButtonGroup>
       </View>
+
+      <ConfigureMediatorSection style={styles.sectionContainer} />
 
       {BCSCMode ? (
         <>
