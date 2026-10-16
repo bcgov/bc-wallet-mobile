@@ -515,6 +515,37 @@ describe('BCSCRootStack', () => {
 
         expect(toJSON()).toBe('MainStack')
       })
+
+      it('offers the prompt again when the account is removed and onboarding is redone in the same session', () => {
+        // Fresh install: onboarding, then the prompt once the PIN is created (SUCCESSFUL_AUTH)
+        const { toJSON, dispatch, apply } = renderColdStart(mockStore())
+        expect(toJSON()).toBe('OnboardingStack')
+        apply((current) => ({ ...current, bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }))
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
+
+        // Skip, then start verification from the Home card
+        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+        apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
+        expect(toJSON()).toBe('MainStack')
+        apply((current) => ({
+          ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+          bcsc: { ...current.bcsc, verificationStarted: true },
+        }))
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(false)
+
+        // Remove account (useFactoryReset): CLEAR_BCSC, CLEAR_SECURE_STATE and DID_AUTHENTICATE false, with
+        // RootStack still mounted
+        apply(() => mockStore())
+        expect(toJSON()).toBe('OnboardingStack')
+
+        // Onboarding again: the prompt is due like on a fresh install, and no resume is pending
+        apply((current) => ({ ...current, bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }))
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
+        expect(dispatch).not.toHaveBeenCalled()
+      })
     })
   })
 
