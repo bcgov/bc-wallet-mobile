@@ -4,11 +4,13 @@
  *
  * @param fraction - portion of screen height to cover (0–1, default 0.25)
  * @param durationMs - swipe duration; slower = more reliable (default 500)
+ * @param centerY - the band's centre as a fraction of screen height (default 0.5); raise it above a
+ *   keyboard that cannot be closed, where a swipe through the keys moves nothing
  */
-export async function swipeUpBy(fraction = 0.25, durationMs = 500): Promise<void> {
+export async function swipeUpBy(fraction = 0.25, durationMs = 500, centerY = 0.5): Promise<void> {
   const half = fraction / 2
-  const from = { x: 0.5, y: 0.5 + half }
-  const to = { x: 0.5, y: 0.5 - half }
+  const from = { x: 0.5, y: centerY + half }
+  const to = { x: 0.5, y: centerY - half }
   if (driver.isIOS) {
     await swipeIosFromTo(from, to, durationMs)
   } else {
@@ -21,11 +23,12 @@ export async function swipeUpBy(fraction = 0.25, durationMs = 500): Promise<void
  *
  * @param fraction - portion of screen height to cover (0–1, default 0.25)
  * @param durationMs - swipe duration; slower = more reliable (default 500)
+ * @param centerY - the band's centre as a fraction of screen height (default 0.5) — see {@link swipeUpBy}
  */
-export async function swipeDownBy(fraction = 0.25, durationMs = 500): Promise<void> {
+export async function swipeDownBy(fraction = 0.25, durationMs = 500, centerY = 0.5): Promise<void> {
   const half = fraction / 2
-  const from = { x: 0.5, y: 0.5 - half }
-  const to = { x: 0.5, y: 0.5 + half }
+  const from = { x: 0.5, y: centerY - half }
+  const to = { x: 0.5, y: centerY + half }
   if (driver.isIOS) {
     await swipeIosFromTo(from, to, durationMs)
   } else {

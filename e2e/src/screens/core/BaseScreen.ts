@@ -693,16 +693,22 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
 
     const scrollFraction = 0.25
     const settlePauseMs = 150
+    // iOS number pads carry no key that closes them, so a keyboard can still be up here. On a small
+    // device the default band (37–62% of the height) lies inside the keys, where a swipe moves nothing —
+    // the hunt then "fails" on a control that sits just under the fold (a 12 Mini's Create PIN). Swipe
+    // through the upper part of the screen while a keyboard is showing.
+    const keyboardUp = driver.isIOS && (await driver.isKeyboardShown().catch(() => false))
+    const bandCenterY = keyboardUp ? 0.3 : 0.5
 
     for (let i = 0; i < maxScrolls; i++) {
-      await swipeUpBy(scrollFraction)
+      await swipeUpBy(scrollFraction, undefined, bandCenterY)
       await driver.pause(settlePauseMs)
       if (await isVisible()) return
     }
 
     if (directions === 'both') {
       for (let i = 0; i < maxScrolls * 2; i++) {
-        await swipeDownBy(scrollFraction)
+        await swipeDownBy(scrollFraction, undefined, bandCenterY)
         await driver.pause(settlePauseMs)
         if (await isVisible()) return
       }

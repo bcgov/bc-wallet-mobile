@@ -16,6 +16,7 @@ import { Timeouts } from '../../../src/constants.js'
 import { skipToHome } from '../../../src/flows/onboarding.js'
 import { findByA11yLabel } from '../../../src/helpers/a11y.js'
 import { dispatchDeepLink, getCurrentAppId } from '../../../src/helpers/deep-link.js'
+import { withDriverKeepalive } from '../../../src/helpers/driver-keepalive.js'
 import { NOTIFICATION_TITLES, tapNotificationCard } from '../../../src/helpers/notifications.js'
 import { describeCurrentScreen } from '../../../src/helpers/screens.js'
 import { BaseScreen } from '../../../src/screens/core/index.js'
@@ -114,7 +115,11 @@ describe('Wallet journey: DIDComm credential lifecycle', () => {
     // The issuer-side record reaching active IS the connection assert — it proves the wallet
     // received the invitation, exchanged DIDs, and (as a side effect) that a contact now exists,
     // without touching the verification-gated Contacts UI.
-    ;({ connectionId } = await waitForConnectionActive({ invitationMsgId: invitation.invitationMsgId }))
+    // Issuer-side polls are Node-only work; without a keepalive Sauce closes the session after 90 s of
+    // WebDriver silence (seen once, mid-journey, on a slow issuance).
+    ;({ connectionId } = await withDriverKeepalive(() =>
+      waitForConnectionActive({ invitationMsgId: invitation.invitationMsgId })
+    ))
   })
 
   it('receives the credential offer and accepts it', async () => {
@@ -125,7 +130,7 @@ describe('Wallet journey: DIDComm credential lifecycle', () => {
     // phase and a fast issuance swaps straight past it. The issuer-side wait is the better tap
     // diagnostic anyway — a swallowed Accept leaves the exchange at offer-sent, which it names. It
     // also unsticks a non-auto-issuing instance (the client issues at request-received).
-    await waitForCredExState(acceptedCredExId, 'done')
+    await withDriverKeepalive(() => waitForCredExState(acceptedCredExId, 'done'))
     await CredentialOfferAcceptModal.waitFor('added', Timeouts.DIDCOMM_DELIVERY)
     // Modal confirms use tapToNavigate: RN Modals slide in from below and UiAutomator can hold the
     // below-screen entrance bounds, silently missing a plain tap — re-tap until the modal is gone.
@@ -174,7 +179,7 @@ describe('Wallet journey: DIDComm credential lifecycle', () => {
     // Sending includes building the non-revocation proof (tails fetch) — allow the DIDComm budget.
     await ProofSentModal.waitFor('sent', Timeouts.DIDCOMM_DELIVERY)
     // The core assert of the journey: the ISSUER's agent cryptographically verified what was shared.
-    const { verified } = await waitForPresentationVerified(presExId)
+    const { verified } = await withDriverKeepalive(() => waitForPresentationVerified(presExId))
     assert.equal(verified, true, 'issuer-side verification of the shared proof failed')
     await ProofSentModal.tapToNavigate('primary') // Back to Home (modal — see the accept checkpoint)
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -191,7 +196,7 @@ describe('Wallet journey: DIDComm credential lifecycle', () => {
     await DeclineOfferModal.expectVisible(Timeouts.SCREEN_TRANSITION)
     await DeclineOfferModal.tapToNavigate('primary') // → declineOffer + problem report, resets to Home
     // The problem report surfaces issuer-side as the exchange abandoning.
-    await waitForCredExState(declinedCredExId, 'abandoned')
+    await withDriverKeepalive(() => waitForCredExState(declinedCredExId, 'abandoned'))
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

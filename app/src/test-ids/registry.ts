@@ -301,6 +301,8 @@ export const TestIds = {
     enterBirthdate: {
       birthdatePressable: 'birthDate-pressable',
       birthdateInput: 'birthDate-input',
+      /** The field's label (InputWithValidation `<id>-label`): inert, so e2e taps it to close the number pad. */
+      label: 'birthDate-label',
       continue: 'Continue',
     },
     /** `BirthdateLockout` — too many wrong birthdates. `close` just goes back; there is no header. */

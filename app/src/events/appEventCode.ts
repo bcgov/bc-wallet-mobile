@@ -134,6 +134,7 @@ export enum AppEventCode {
   CARD_PROBLEM = 'card_problem',
   ADDITIONAL_CARD = 'additional_card',
   UNDER_MINIMUM_AGE = 'under_minimum_age',
+  OVER_MAXIMUM_AGE = 'over_maximum_age',
   TOO_MANY_MOBILE_CARDS = 'too_many_mobile_cards',
   AUTHORIZATION_PENDING = 'authorization_pending',
   RATE_IN_APP_STORE = 'rate_in_app_store',
@@ -209,6 +210,7 @@ export enum AppEventCode {
   AUTO_CRED_ACCOUNT_DEACTIVATED = 'auto_cred_account_deactivated',
   // Account Errors
   ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
+  ACCOUNT_NOT_REGISTERED = 'account_not_registered', // Non-IAS error code
   // Native module errors (#3419) — distinct codes for bcsc-core native rejections
   TOKEN_SAVE_FAILED = 'token_save_failed', // Non-IAS error code
   TOKEN_DELETE_FAILED = 'token_delete_failed', // Non-IAS error code

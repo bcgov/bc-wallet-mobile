@@ -1,10 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
 import { BCState } from '@/store'
 import { QrCodeScanError, TOKENS, useServices, useStore } from '@bifold/core'
+import { useRoute } from '@react-navigation/native'
 import { useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
@@ -36,6 +38,9 @@ export const useAccountTransferQRCodeStrategy = (
   const apiClient = useBCSCApiClient()
   const { updateTokens, updateUserInfo, updateDeviceCodes } = useSecureActions()
   const [store] = useStore<BCState>()
+  // Shared by several scanner screens, so the origin screen for recovery is whichever one renders this hook
+  const route = useRoute()
+  const attemptWithRecovery = useDeviceAuthorizationRecovery()
   const deviceCodeRef = useRef<string | undefined>(store.bcscSecure.deviceCode)
 
   const registerDevice = useCallback(async () => {
@@ -46,7 +51,7 @@ export const useAccountTransferQRCodeStrategy = (
     }
 
     try {
-      const deviceAuth = await authorization.authorizeDevice()
+      const deviceAuth = await attemptWithRecovery(() => authorization.authorizeDevice(), route.name)
 
       const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
 
@@ -69,7 +74,15 @@ export const useAccountTransferQRCodeStrategy = (
 
       logger.error('[useAccountTransferQRCodeStrategy]: Device registration failed', { error })
     }
-  }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo, logger])
+  }, [
+    store.bcscSecure.deviceCode,
+    attemptWithRecovery,
+    authorization,
+    route.name,
+    updateDeviceCodes,
+    updateUserInfo,
+    logger,
+  ])
 
   const transferAccount = useCallback(
     async (value: string, transferToken: string) => {
