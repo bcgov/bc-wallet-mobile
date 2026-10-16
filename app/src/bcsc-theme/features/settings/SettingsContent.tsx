@@ -67,7 +67,6 @@ interface SettingsContentProps {
   onRemoveAccount?: () => void
   onScanMyQR?: () => void
   onSendProofRequest?: () => void
-  onConfigureMediator?: () => void
   onAddDevice?: () => void
   onMyDevices?: () => void
   // TODO (bm): stubs
@@ -239,7 +238,6 @@ interface AuthenticatedSectionProps {
   onContacts?: () => void
   onScanMyQR?: () => void
   onSendProofRequest?: () => void
-  onConfigureMediator?: () => void
   onNotifications?: () => void
   onAddDevice?: () => void
   onMyDevices?: () => void
@@ -261,7 +259,6 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   onContacts,
   onScanMyQR,
   onSendProofRequest,
-  onConfigureMediator,
   onNotifications,
   onAddDevice,
   onMyDevices,
@@ -332,15 +329,6 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
                     testID={testIdWithKey(TestIds.main.settings.sendProofRequest)}
                   >
                     {t('BCSC.Settings.Features.SendProofRequest')}
-                  </ListButton>
-                ) : null,
-                developerModeEnabled ? (
-                  <ListButton
-                    key="mediator"
-                    onPress={onConfigureMediator ?? noop}
-                    testID={testIdWithKey(TestIds.main.settings.configureMediator)}
-                  >
-                    {t('BCSC.Settings.Features.ConfigureMediator')}
                   </ListButton>
                 ) : null,
               ]}
@@ -524,7 +512,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   onContacts,
   onScanMyQR,
   onSendProofRequest,
-  onConfigureMediator,
   onNotifications,
   onAddDevice,
   onMyDevices,
@@ -630,7 +617,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           onContacts={onContacts}
           onScanMyQR={onScanMyQR}
           onSendProofRequest={onSendProofRequest}
-          onConfigureMediator={onConfigureMediator}
           onNotifications={onNotifications}
           onAddDevice={onAddDevice}
           onMyDevices={onMyDevices}

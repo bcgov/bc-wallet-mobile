@@ -213,6 +213,7 @@ const translation = {
     "EnableProxy": "Enable proxy (PT-BR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
     "SwitchTheme": "Switch theme (PT-BR)",
+    "SelectedMediator": "Selected mediator (PT-BR)",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes (PT-BR)",
       "OneHour": "1 hour (PT-BR)",
@@ -484,7 +485,6 @@ const translation = {
         "Contacts": "Contacts (PT-BR)",
         "ScanQR": "Scan my QR code (PT-BR)",
         "SendProofRequest": "Send a proof request (PT-BR)",
-        "ConfigureMediator": "Configure mediator (PT-BR)",
         "ProofRequests": "Proof Requests (PT-BR)",
       },
       "AppSecurity": {

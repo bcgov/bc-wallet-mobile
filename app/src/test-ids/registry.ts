@@ -685,8 +685,6 @@ export const TestIds = {
       forgetPairings: 'ForgetPairings',
       scanQr: 'ScanQR',
       sendProofRequest: 'SendProofRequest',
-      // Developer-mode only: opens the mediator picker
-      configureMediator: 'ConfigureMediator',
       // Collapsible-section toggle — rendered once PER section, so this id repeats down the screen.
       sectionHeaderChevron: 'SectionHeaderChevron',
     },
@@ -996,6 +994,8 @@ export const TestIds = {
     toggleRemoteLogging: 'ToggleRemoteLoggingSwitch',
     toggleEnableProxy: 'ToggleEnableProxy',
     toggleTheme: 'ToggleTheme',
+    /** BCSC only, main stack only: opens the mediator picker. */
+    configureMediator: 'ConfigureMediator',
     /** Raises a deliberate error so the ErrorInfoCard path can be exercised by hand. */
     errorAlertTest: 'ErrorAlertTest',
     fetchPersonCredentialTest: 'FetchPersonCredentialTest',
