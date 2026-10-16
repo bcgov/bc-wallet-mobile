@@ -9,6 +9,7 @@ import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Platform } from 'react-native'
 import {
   AccountFlags,
   BarcodePayload,
@@ -49,6 +50,11 @@ import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
+import {
+  confirmRegistrationClientId,
+  getErrorHttpStatus,
+  getRegistrationTokenClientId,
+} from '../utils/registration-token'
 import { isTokenExpired } from '../utils/token-expiry'
 import { stripDisallowedNameCharacters } from '../utils/validation'
 import { useBCSCApiClientState } from './useBCSCApiClient'
@@ -946,7 +952,7 @@ export const useSecureActions = () => {
       ])
 
       const refreshToken = refreshTokenObj?.token
-      const registrationAccessToken = registrationAccessTokenObj?.token
+      let registrationAccessToken = registrationAccessTokenObj?.token
       const accessToken = accessTokenObj?.token
 
       if (!credential && refreshToken) {
@@ -956,40 +962,115 @@ export const useSecureActions = () => {
 
       let issuer = account?.issuer
       let clientID = account?.clientID
+      const tokenClientID = getRegistrationTokenClientId(registrationAccessToken)
 
       if (account && (!issuer || !clientID)) {
-        // Account is missing issuer or clientID - this prevents token refresh from working.
-        // Recover from authRequest, which preserves these fields from older v3 storage during migration.
+        // A missing issuer or clientID breaks refresh. Prefer the registration token's `aud`; the
+        // authorization request (possibly re-imported from v3) is the fallback only when there is no token.
+        const clientIDSource = registrationAccessToken ? 'registration token' : 'authorization request'
         logger.warn(
-          `[hydrateSecureState] Account missing required fields: issuer=${!issuer ? 'MISSING' : 'OK'}, clientID=${!clientID ? 'MISSING' : 'OK'}. Attempting recovery from authorization request.`
+          `[hydrateSecureState] Account missing required fields: issuer=${!issuer ? 'MISSING' : 'OK'}, clientID=${!clientID ? 'MISSING' : 'OK'}. Attempting recovery (clientID source: ${clientIDSource}).`
         )
 
-        if (authRequest) {
-          try {
-            issuer = issuer || authRequest.issuer
-            clientID = clientID || authRequest.clientID
+        try {
+          issuer = issuer || authRequest?.issuer
+          clientID = clientID || (registrationAccessToken ? tokenClientID : authRequest?.clientID)
 
-            if (issuer && clientID) {
-              const securityMethod = await getAccountSecurityMethod()
-              const updatedAccount = {
-                ...account,
-                issuer,
-                clientID,
-                securityMethod,
-              }
-              logger.info('[hydrateSecureState] Recovered issuer/clientID from authorization request; updating account')
-              await setAccount(updatedAccount)
-            } else {
-              logger.warn(
-                `[hydrateSecureState] Could not recover account fields from authorization request: issuer=${issuer ? 'OK' : 'MISSING'}, clientID=${clientID ? 'OK' : 'MISSING'}`
-              )
+          if (issuer && clientID) {
+            const securityMethod = await getAccountSecurityMethod()
+            const updatedAccount = {
+              ...account,
+              issuer,
+              clientID,
+              securityMethod,
             }
-          } catch (error) {
+            logger.info(
+              `[hydrateSecureState] Recovered issuer/clientID (clientID source: ${clientIDSource}); updating account`
+            )
+            await setAccount(updatedAccount)
+          } else {
             logger.warn(
-              `[hydrateSecureState] Failed to update account with recovered values: ${error instanceof Error ? error.message : String(error)}`
+              `[hydrateSecureState] Could not recover account fields: issuer=${issuer ? 'OK' : 'MISSING'}, clientID=${clientID ? 'OK' : 'MISSING'}`
             )
           }
+        } catch (error) {
+          logger.warn(
+            `[hydrateSecureState] Failed to update account with recovered values: ${error instanceof Error ? error.message : String(error)}`
+          )
         }
+      }
+
+      // Android only: iOS keeps its tokens in the keychain under the client ID, so switching the ID
+      // there would make every stored token unreadable.
+      const driftDetected = Boolean(
+        Platform.OS === 'android' &&
+          account &&
+          issuer &&
+          clientID &&
+          tokenClientID &&
+          registrationAccessToken &&
+          clientID !== tokenClientID
+      )
+
+      // Switches the account to the client ID the registration token was issued for, but only after the
+      // server confirms that registration. Returns whether the local clientID now equals the token's.
+      const repairClientIdDrift = async (): Promise<boolean> => {
+        // Narrowing only: the enclosing refresh branch guarantees apiClient, driftDetected the rest.
+        if (!apiClient || !account || !issuer || !tokenClientID || !registrationAccessToken) {
+          return false
+        }
+
+        logger.warn(
+          '[hydrateSecureState] event=client_id_drift_detected stored client ID differs from registration token'
+        )
+        const confirmation = await confirmRegistrationClientId(apiClient, tokenClientID, registrationAccessToken)
+
+        // The server revokes the old token when it rotates, so persist the new one whatever the outcome.
+        if (confirmation.status !== 'request_failed' && confirmation.newRegistrationAccessToken) {
+          registrationAccessToken = confirmation.newRegistrationAccessToken
+          try {
+            await updateTokens({ registrationAccessToken })
+          } catch {
+            logger.error('[hydrateSecureState] event=client_id_drift_rejected reason=persist_failed')
+            return false
+          }
+        }
+
+        if (confirmation.status !== 'confirmed') {
+          const httpStatus = confirmation.status === 'request_failed' ? (confirmation.httpStatus ?? 'none') : 'none'
+          logger.warn(
+            `[hydrateSecureState] event=client_id_drift_rejected reason=${confirmation.status} http_status=${httpStatus}`
+          )
+          return false
+        }
+
+        try {
+          await setAccount({
+            ...account,
+            issuer,
+            clientID: tokenClientID,
+            securityMethod: await getAccountSecurityMethod(),
+          })
+          clientID = tokenClientID
+        } catch {
+          // Android can save the account and then fail on the issuer file, so trust what is stored.
+          try {
+            clientID = (await getAccount())?.clientID ?? clientID
+          } catch {
+            logger.error('[hydrateSecureState] event=client_id_drift_rejected reason=persist_failed')
+            return false
+          }
+        }
+
+        if (clientID !== tokenClientID) {
+          logger.error('[hydrateSecureState] event=client_id_drift_rejected reason=persist_failed')
+          return false
+        }
+
+        logger.info(
+          '[hydrateSecureState] event=client_id_drift_repaired account client ID now matches registration token'
+        )
+        return true
       }
 
       let freshTokens: TokenResponse | null = null
@@ -1012,9 +1093,7 @@ export const useSecureActions = () => {
           const message = error instanceof Error ? error.message : String(error)
           logger.error(`[hydrateSecureState] Failed to refresh tokens with stored refresh token: ${message}`)
 
-          // Retries the refresh once after a recovery strategy runs, logging success/failure
-          // under a consistent label. Shared by the 'recovered' and 'no_match' branches below
-          // so the retry-and-log pattern isn't duplicated per strategy.
+          // Retries the refresh once after a recovery strategy, logging under a shared label.
           const retryRefreshAfter = async (strategyLabel: string): Promise<TokenResponse | null> => {
             try {
               const tokens = await apiClient.getTokensForRefreshToken(refreshToken)
@@ -1033,35 +1112,43 @@ export const useSecureActions = () => {
             logger.error(
               '[hydrateSecureState] event=refresh_token_rejected server rejected a locally-valid refresh token (invalid_token); skipping key recovery'
             )
-          } else if (clientID && registrationAccessToken) {
-            logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
-            const recovery = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
-            recoveredRegistrationAccessToken = recovery.newRegistrationAccessToken
+          } else {
+            // Only a 401 (unknown client at /device/token) says the stored client ID is bad;
+            // network, timeout and 5xx failures don't, so those go straight to key recovery.
+            if (driftDetected && getErrorHttpStatus(error) === 401 && (await repairClientIdDrift())) {
+              freshTokens = await retryRefreshAfter('client id repair')
+            }
 
-            if (recovery.status === 'recovered') {
-              freshTokens = await retryRefreshAfter('key recovery')
-            } else if (recovery.status === 'no_match') {
-              logger.info(
-                '[hydrateSecureState] No local key matches server jwks; attempting to re-register the newest local key...'
-              )
-              const reRegisterResult = await reRegisterNewestKey(
-                apiClient,
-                clientID,
-                recoveredRegistrationAccessToken ?? registrationAccessToken,
-                logger
-              )
-              recoveredRegistrationAccessToken =
-                reRegisterResult.newRegistrationAccessToken ?? recoveredRegistrationAccessToken
+            if (!freshTokens && clientID && registrationAccessToken) {
+              logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
+              const recovery = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
+              recoveredRegistrationAccessToken = recovery.newRegistrationAccessToken
 
-              if (reRegisterResult.success) {
-                freshTokens = await retryRefreshAfter('re-registration')
-              } else {
-                logger.warn(
-                  '[hydrateSecureState] Re-registration of newest local key did not succeed; tokens remain stale.'
+              if (recovery.status === 'recovered') {
+                freshTokens = await retryRefreshAfter('key recovery')
+              } else if (recovery.status === 'no_match') {
+                logger.info(
+                  '[hydrateSecureState] No local key matches server jwks; attempting to re-register the newest local key...'
                 )
+                const reRegisterResult = await reRegisterNewestKey(
+                  apiClient,
+                  clientID,
+                  recoveredRegistrationAccessToken ?? registrationAccessToken,
+                  logger
+                )
+                recoveredRegistrationAccessToken =
+                  reRegisterResult.newRegistrationAccessToken ?? recoveredRegistrationAccessToken
+
+                if (reRegisterResult.success) {
+                  freshTokens = await retryRefreshAfter('re-registration')
+                } else {
+                  logger.warn(
+                    '[hydrateSecureState] Re-registration of newest local key did not succeed; tokens remain stale.'
+                  )
+                }
+              } else {
+                logger.warn('[hydrateSecureState] Key recovery did not occur or did not succeed; tokens remain stale.')
               }
-            } else {
-              logger.warn('[hydrateSecureState] Key recovery did not occur or did not succeed; tokens remain stale.')
             }
           }
         }
