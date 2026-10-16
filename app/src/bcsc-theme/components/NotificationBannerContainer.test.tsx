@@ -1,8 +1,17 @@
+import { BCState } from '@/store'
+import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
+import { useStore } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
+import { Text } from 'react-native'
 import { BCSCBanner, BCSCBannerMessage } from './AppBanner'
 import { NotificationBannerContainer } from './NotificationBannerContainer'
+
+jest.mock('@/utils/links', () => ({
+  openLink: jest.fn(),
+  getBCSCAppStoreUrl: jest.fn(() => 'https://example.com/store'),
+}))
 
 const deviceLimitBanner: BCSCBannerMessage = {
   id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
@@ -16,6 +25,20 @@ const serverNotificationBanner: BCSCBannerMessage = {
   title: 'Server notification',
   type: 'info',
   dismissible: true,
+}
+
+const updateAvailableBanner: BCSCBannerMessage = {
+  id: BCSCBanner.APP_UPDATE_AVAILABLE,
+  title: 'Update available',
+  type: 'info',
+  dismissible: true,
+}
+
+const updateAvailableState = { bcsc: { bannerMessages: [updateAvailableBanner] } } as unknown as Partial<BCState>
+
+const StoredBannerIds = () => {
+  const [store] = useStore<BCState>()
+  return <Text testID="stored-banner-ids">{store.bcsc.bannerMessages.map((banner) => banner.id).join(',')}</Text>
 }
 
 describe('NotificationBannerContainer', () => {
@@ -85,5 +108,22 @@ describe('NotificationBannerContainer', () => {
 
     fireEvent.press(tree.getByText('Server notification'))
     expect(tree.queryByText('Server notification')).toBeNull()
+  })
+
+  it('opens the app store and removes the banner when the update banner is pressed', () => {
+    const tree = render(
+      <BasicAppContext initialStateOverride={updateAvailableState}>
+        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[updateAvailableBanner]} />
+        <StoredBannerIds />
+      </BasicAppContext>
+    )
+
+    expect(tree.getByTestId('stored-banner-ids').props.children).toBe(BCSCBanner.APP_UPDATE_AVAILABLE)
+
+    fireEvent.press(tree.getByText('Update available'))
+
+    expect(getBCSCAppStoreUrl).toHaveBeenCalled()
+    expect(openLink).toHaveBeenCalledWith('https://example.com/store')
+    expect(tree.getByTestId('stored-banner-ids').props.children).toBe('')
   })
 })

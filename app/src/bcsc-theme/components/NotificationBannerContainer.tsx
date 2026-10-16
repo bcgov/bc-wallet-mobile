@@ -1,5 +1,5 @@
 import { BCDispatchAction, BCState } from '@/store'
-import { openLink } from '@/utils/links'
+import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { View } from 'react-native'
@@ -36,6 +36,10 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
       typeof banner.metadata?.contactLink === 'string'
     ) {
       openLink(banner.metadata.contactLink)
+    }
+
+    if (banner.id === BCSCBanner.APP_UPDATE_AVAILABLE) {
+      void openLink(getBCSCAppStoreUrl())
     }
 
     const message = store.bcsc.bannerMessages.find((banner) => banner.id === bannerId)
