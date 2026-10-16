@@ -108,6 +108,8 @@ jobs:
           )
 
           OVERALL=0
+          # curl's %{time_*} fields are seconds with six decimals; "is it non-zero" without bc.
+          positive() { awk -v t="${1:-0}" 'BEGIN { exit !(t + 0 > 0) }'; }
           SUMMARY="$RUNNER_TEMP/summary.md"
           {
             echo "## Allowlist Connectivity Verification"
@@ -158,21 +160,38 @@ jobs:
 
             # ---- HTTPS -------------------------------------------------------
             # Handshake timings ride along: undici's 10 s connect timeout spans TCP + TLS, and these
-            # tell a slow TLS handshake from a dropped SYN.
-            if CURL_OUT=$(curl -4 -sS -o /dev/null -w "%{http_code} %{time_connect} %{time_appconnect}" \
+            # tell a slow TLS handshake from a dropped SYN. curl prints the write-out on a failed
+            # transfer too, and the exit code alone cannot tell those apart (28 either way): TCP up
+            # with no TLS leaves time_connect set and time_appconnect at 0, a dropped SYN leaves
+            # both at 0 — so the write-out is parsed on both paths and the cell is classified from it.
+            CURL_RC=0
+            CURL_OUT=$(curl -4 -sS -o /dev/null -w "%{http_code} %{time_connect} %{time_appconnect}" \
               --max-time 15 --connect-timeout 10 \
               -A "bcgov-connectivity-check/1.0" \
-              "$URL" 2>/dev/null); then
-              read -r HTTP_CODE T_TCP T_TLS <<< "$CURL_OUT"
-            else
-              HTTP_CODE="000"
-            fi
-            if [[ "$HTTP_CODE" == "000" ]]; then
-              HTTPS_CELL="❌ no response"
-              HTTPS_OK=0
-            else
-              HTTPS_CELL="✅ HTTP ${HTTP_CODE} (tcp ${T_TCP}s, tls ${T_TLS}s)"
+              "$URL" 2>/dev/null) || CURL_RC=$?
+            read -r HTTP_CODE T_TCP T_TLS <<< "$CURL_OUT"
+            HTTP_CODE="${HTTP_CODE:-000}"; T_TCP="${T_TCP:-0}"; T_TLS="${T_TLS:-0}"
+            case "$CURL_RC" in
+              0) CURL_WHY="" ;;
+              6) CURL_WHY="DNS failed" ;;
+              7) CURL_WHY="connection refused" ;;
+              28) CURL_WHY="timed out" ;;
+              35) CURL_WHY="TLS handshake failed" ;;
+              *) CURL_WHY="curl exit ${CURL_RC}" ;;
+            esac
+            if [[ "$HTTP_CODE" != "000" ]]; then
+              # Any status code proves reach — even one curl then gave up on (max-time mid-body).
+              HTTPS_CELL="✅ HTTP ${HTTP_CODE} (tcp ${T_TCP}s, tls ${T_TLS}s${CURL_WHY:+; $CURL_WHY})"
               HTTPS_OK=1
+            else
+              HTTPS_OK=0
+              if positive "$T_TLS"; then
+                HTTPS_CELL="❌ no response after TLS (tcp ${T_TCP}s, tls ${T_TLS}s; ${CURL_WHY})"
+              elif positive "$T_TCP"; then
+                HTTPS_CELL="❌ TLS handshake stalled (tcp ${T_TCP}s; ${CURL_WHY})"
+              else
+                HTTPS_CELL="❌ no TCP connection (${CURL_WHY})"
+              fi
             fi
             echo "HTTPS: $HTTPS_CELL"
 
