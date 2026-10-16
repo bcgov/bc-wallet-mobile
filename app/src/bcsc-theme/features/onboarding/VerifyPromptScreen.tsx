@@ -130,7 +130,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
           t('BCSC.VerifyPrompt.Bullet4'),
         ].map((line, i) => (
           <View key={i} style={{ flexDirection: 'row' }}>
-            <ThemedText style={{ marginHorizontal: Spacing.sm }}>{'•'}</ThemedText>
+            <ThemedText style={{ marginHorizontal: Spacing.sm }}>{'\u2022'}</ThemedText>
             <ThemedText style={{ flex: 1 }}>{line}</ThemedText>
           </View>
         ))}

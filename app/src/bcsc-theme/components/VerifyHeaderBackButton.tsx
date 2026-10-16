@@ -88,8 +88,9 @@ export const createVerifyHeaderBackButton = (
     return <HeaderBackButton {...props} onPress={handlePressBack} />
   }
 
-  // The stack header calls `headerLeft` as a plain function during its own render, so the hooks above
-  // need a component boundary of their own to be safe against a route changing its headerLeft
+  // The stack header calls `headerLeft` as a plain function during its own render, so returning
+  // VerifyBackButton itself would run its hooks inside the header. This wrapper gives them a component
+  // boundary of their own, safe against a route changing its headerLeft
   const VerifyHeaderBackButton = (props: HeaderBackButtonProps) => <VerifyBackButton {...props} />
 
   return VerifyHeaderBackButton
