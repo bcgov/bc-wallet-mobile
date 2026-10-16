@@ -45,7 +45,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     useMicrophonePermission()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
-  const { liveCallFileUploadAlert, unknownErrorModal } = useAlerts(navigation)
+  const { liveCallFileUploadAlert } = useAlerts(navigation)
   const [formattedHours, setFormattedHours] = useState<FormattedServicePeriod[]>([])
   const [hoursLoading, setHoursLoading] = useState(true)
   const [status, setStatus] = useState<CallStatus>('idle')
