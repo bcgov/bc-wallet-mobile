@@ -8,6 +8,12 @@ export type RegistrationConfirmation =
   | { status: 'confirmed' | 'client_id_mismatch'; newRegistrationAccessToken?: string }
   | { status: 'request_failed'; httpStatus?: number }
 
+/** HTTP status carried on an AppError's context; undefined for network errors, timeouts and non-HTTP errors. */
+export const getErrorHttpStatus = (error: unknown): number | undefined => {
+  const httpStatus = (error as { context?: { http_status?: unknown } } | null)?.context?.http_status
+  return typeof httpStatus === 'number' ? httpStatus : undefined
+}
+
 /**
  * Client ID the registration access token was issued for (its `aud`). Returns undefined when `aud`
  * is missing, malformed or multi-valued. Never throws. These tokens carry no `exp`, so expiry is not checked.
@@ -51,7 +57,6 @@ export const confirmRegistrationClientId = async (
       newRegistrationAccessToken,
     }
   } catch (error) {
-    const httpStatus = (error as { context?: { http_status?: unknown } } | null)?.context?.http_status
-    return { status: 'request_failed', httpStatus: typeof httpStatus === 'number' ? httpStatus : undefined }
+    return { status: 'request_failed', httpStatus: getErrorHttpStatus(error) }
   }
 }

@@ -50,7 +50,11 @@ import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
-import { confirmRegistrationClientId, getRegistrationTokenClientId } from '../utils/registration-token'
+import {
+  confirmRegistrationClientId,
+  getErrorHttpStatus,
+  getRegistrationTokenClientId,
+} from '../utils/registration-token'
 import { isTokenExpired } from '../utils/token-expiry'
 import { stripDisallowedNameCharacters } from '../utils/validation'
 import { useBCSCApiClientState } from './useBCSCApiClient'
@@ -1109,8 +1113,9 @@ export const useSecureActions = () => {
               '[hydrateSecureState] event=refresh_token_rejected server rejected a locally-valid refresh token (invalid_token); skipping key recovery'
             )
           } else {
-            // A refresh with the stored client ID just failed, so it is safe to try the token's client ID.
-            if (driftDetected && (await repairClientIdDrift())) {
+            // Only a 401 (unknown client at /device/token) says the stored client ID is bad;
+            // network, timeout and 5xx failures don't, so those go straight to key recovery.
+            if (driftDetected && getErrorHttpStatus(error) === 401 && (await repairClientIdDrift())) {
               freshTokens = await retryRefreshAfter('client id repair')
             }
 

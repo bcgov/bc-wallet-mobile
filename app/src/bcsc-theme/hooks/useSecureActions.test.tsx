@@ -979,6 +979,11 @@ describe('useSecureActions', () => {
       displayName: 'Test User',
     }
     const mockGetTokensForRefreshToken = jest.fn()
+    const refreshError = (httpStatus?: number, code?: string) =>
+      Object.assign(new Error(`refresh failed ${httpStatus ?? code ?? ''}`), {
+        code,
+        context: { http_status: httpStatus },
+      })
 
     const mockStoredTokens = (tokens: { refresh?: string; registration?: string } = {}) => {
       const { refresh = 'stale-refresh-token', registration = REG_TOKEN } = tokens
@@ -1048,7 +1053,7 @@ describe('useSecureActions', () => {
 
       it('switches to the token client ID when the refresh fails and the server confirms, then retries the refresh', async () => {
         mockGetTokensForRefreshToken
-          .mockRejectedValueOnce(new Error('401'))
+          .mockRejectedValueOnce(refreshError(401))
           .mockResolvedValueOnce({ refresh_token: 'new-refresh', access_token: 'new-access' })
         jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'confirmed' })
 
@@ -1069,7 +1074,7 @@ describe('useSecureActions', () => {
       })
 
       it('runs key recovery with the token client ID when the retry after the repair still fails', async () => {
-        mockGetTokensForRefreshToken.mockRejectedValue(new Error('401'))
+        mockGetTokensForRefreshToken.mockRejectedValue(refreshError(401))
         jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'confirmed' })
         jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
 
@@ -1079,7 +1084,7 @@ describe('useSecureActions', () => {
       })
 
       it('keeps the stored client ID for key recovery when the server does not confirm', async () => {
-        mockGetTokensForRefreshToken.mockRejectedValue(new Error('401'))
+        mockGetTokensForRefreshToken.mockRejectedValue(refreshError(401))
         jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'request_failed', httpStatus: 403 })
         jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
 
@@ -1089,6 +1094,24 @@ describe('useSecureActions', () => {
         expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
         expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, REG_TOKEN, expect.anything())
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('reason=request_failed http_status=403'))
+      })
+
+      it.each([
+        ['a network error', refreshError()],
+        ['a timeout', refreshError(undefined, 'ECONNABORTED')],
+        ['a 500', refreshError(500)],
+        ['a 503', refreshError(503)],
+        ['a 403', refreshError(403)],
+      ])('does not confirm when the refresh fails with %s', async (_label, error) => {
+        mockGetTokensForRefreshToken.mockRejectedValue(error)
+        jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'confirmed' })
+        jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+
+        await hydrate()
+
+        expect(confirmRegistrationClientId).not.toHaveBeenCalled()
+        expect(setAccount).not.toHaveBeenCalled()
+        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, REG_TOKEN, expect.anything())
       })
 
       it('does not confirm when the server rejected the refresh token as invalid_token', async () => {
@@ -1121,7 +1144,7 @@ describe('useSecureActions', () => {
 
       it('does not confirm when the stored client ID already matches the token', async () => {
         jest.mocked(getAccount).mockResolvedValue({ ...account, clientID: NEW_ID } as any)
-        mockGetTokensForRefreshToken.mockRejectedValue(new Error('401'))
+        mockGetTokensForRefreshToken.mockRejectedValue(refreshError(401))
         jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
 
         await hydrate()
@@ -1132,7 +1155,7 @@ describe('useSecureActions', () => {
 
       it('does not confirm when the token client ID is unreadable', async () => {
         mockStoredTokens({ registration: makeRegistrationToken({ iss: 'idp' }) })
-        mockGetTokensForRefreshToken.mockRejectedValue(new Error('401'))
+        mockGetTokensForRefreshToken.mockRejectedValue(refreshError(401))
         jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
 
         await hydrate()
@@ -1142,7 +1165,7 @@ describe('useSecureActions', () => {
 
       it('does not confirm on iOS', async () => {
         Platform.OS = 'ios'
-        mockGetTokensForRefreshToken.mockRejectedValue(new Error('401'))
+        mockGetTokensForRefreshToken.mockRejectedValue(refreshError(401))
         jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
 
         await hydrate()
@@ -1168,7 +1191,7 @@ describe('useSecureActions', () => {
     describe('outcomes', () => {
       beforeEach(() => {
         mockGetTokensForRefreshToken
-          .mockRejectedValueOnce(new Error('401'))
+          .mockRejectedValueOnce(refreshError(401))
           .mockResolvedValue({ refresh_token: 'new-refresh', access_token: 'new-access' })
         jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
       })
