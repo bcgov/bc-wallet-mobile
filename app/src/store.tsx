@@ -13,10 +13,11 @@ import { AccountSecurityMethod, BCSCCardProcess, EvidenceMetadata, PhotoMetadata
 import Config from 'react-native-config'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
-import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
+import { VerificationPrompt, VerificationStatusResponseData } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
+import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from './bcsc-theme/utils/verification-status'
 import { appLogger } from './utils/logger'
 
 export type RemoteDebuggingState = {
@@ -333,6 +334,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFICATION_REQUEST_SHA = 'bcsc/updateSecureVerificationRequestSha',
   UPDATE_SECURE_VERIFICATION_REQUEST_STATUS = 'bcsc/updateSecureVerificationRequestStatus',
   UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE = 'bcsc/updateSecureVerificationRequestStatusMessage',
+  VERIFICATION_STATUS_RECEIVED = 'bcsc/verificationStatusReceived',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
   UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus', //controls whether the VerifyStack or the MainStack are displayed
@@ -769,6 +771,26 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE: {
       const verificationRequestStatusMessage = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, verificationRequestStatusMessage }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.VERIFICATION_STATUS_RECEIVED: {
+      const received: Partial<Pick<VerificationStatusResponseData, 'status' | 'status_message'>> =
+        (action?.payload || []).pop() ?? {}
+      const verificationRequestStatus = interpretVerificationStatus(received.status)
+      // Never store an unrecognised status; the caller asks the token endpoint instead
+      if (verificationRequestStatus === UNKNOWN_VERIFICATION_STATUS) {
+        return state
+      }
+      // Only the cancelled banner shows the message
+      const verificationRequestStatusMessage =
+        verificationRequestStatus === VerificationRequestStatus.CANCELLED ? received.status_message : undefined
+      if (
+        verificationRequestStatus === state.bcscSecure.verificationRequestStatus &&
+        verificationRequestStatusMessage === state.bcscSecure.verificationRequestStatusMessage
+      ) {
+        return state
+      }
+      const bcscSecure = { ...state.bcscSecure, verificationRequestStatus, verificationRequestStatusMessage }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_OPTIONS: {
