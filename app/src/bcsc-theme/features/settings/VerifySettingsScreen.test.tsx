@@ -5,9 +5,14 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
+import { AccountSecurityMethod } from 'react-native-bcsc-core'
 import { VerifySettingsScreen } from './VerifySettingsScreen'
 
-const authenticatedState = { authentication: { didAuthenticate: true } } as never
+// A PIN account, so the authenticated snapshot keeps the Change PIN row.
+const authenticatedState = {
+  authentication: { didAuthenticate: true },
+  bcscSecure: { securityMethod: AccountSecurityMethod.PinWithDeviceAuth },
+} as never
 
 describe('VerifySettings', () => {
   let mockNavigation: any

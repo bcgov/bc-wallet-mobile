@@ -25,7 +25,6 @@ import {
   EvidenceType,
   getAccount,
   getAccountFlags,
-  getAccountSecurityMethod,
   getAuthorizationRequest,
   getCredential,
   getEvidence,
@@ -970,13 +969,8 @@ export const useSecureActions = () => {
             clientID = clientID || authRequest.clientID
 
             if (issuer && clientID) {
-              const securityMethod = await getAccountSecurityMethod()
-              const updatedAccount = {
-                ...account,
-                issuer,
-                clientID,
-                securityMethod,
-              }
+              // The account record already carries its security method, so only the recovered fields change.
+              const updatedAccount = { ...account, issuer, clientID }
               logger.info('[hydrateSecureState] Recovered issuer/clientID from authorization request; updating account')
               await setAccount(updatedAccount)
             } else {
@@ -1147,6 +1141,7 @@ export const useSecureActions = () => {
         userCode: authRequest?.userCode,
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
         cardProcess: hydrateCardProcess(authRequest, cleanedEvidence),
+        securityMethod: account?.securityMethod,
 
         ...effectiveTokens,
 

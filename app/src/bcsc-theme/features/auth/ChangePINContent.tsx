@@ -1,7 +1,8 @@
 import { ChangePINForm } from '@/bcsc-theme/features/auth/components/ChangePINForm'
 import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
-import { TOKENS, useServices } from '@bifold/core'
+import { BCDispatchAction, BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AccountSecurityMethod, canPerformDeviceAuthentication, setAccountSecurityMethod } from 'react-native-bcsc-core'
@@ -28,6 +29,7 @@ export const ChangePINContent = ({
   const { t } = useTranslation()
   const walletService = useWalletService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [, dispatch] = useStore<BCState>()
 
   // Handler for when user is changing their existing PIN
   const handleChangePINSuccess = useCallback(
@@ -44,16 +46,18 @@ export const ChangePINContent = ({
   const handleCreatePINSuccess = useCallback(
     async (result: PINEntryResult) => {
       const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
-      await setAccountSecurityMethod(
-        isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth
-      )
+      const method = isDeviceAuthAvailable
+        ? AccountSecurityMethod.PinWithDeviceAuth
+        : AccountSecurityMethod.PinNoDeviceAuth
+      await setAccountSecurityMethod(method)
+      dispatch({ type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD, payload: [method] })
 
       logger.info('Switched to PIN security method')
 
       await walletService.rotateWalletKey(result.walletKey)
       onCreatePINSuccess()
     },
-    [logger, walletService, onCreatePINSuccess]
+    [logger, walletService, onCreatePINSuccess, dispatch]
   )
 
   // Render ChangePINForm when changing existing PIN, PINEntryForm when switching from Device Auth

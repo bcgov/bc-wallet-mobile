@@ -479,10 +479,10 @@ export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<vo
 };
 
 /**
- * Retrieves the current account information.
+ * Retrieves the current account information, including its security method.
  * @returns A promise that resolves to an Account object if an account exists, otherwise null.
  */
-export const getAccount = async (): Promise<Omit<NativeAccount, 'securityMethod'> | null> => {
+export const getAccount = async (): Promise<NativeAccount | null> => {
   return BcscCore.getAccount();
 };
 
@@ -806,6 +806,7 @@ export const setAccountSecurityMethod = async (
 /**
  * Gets the security method for the current account.
  * @returns A promise that resolves to the security method string
+ * @throws E_ACCOUNT_NOT_FOUND when no account exists (both platforms); there is no default method
  */
 export const getAccountSecurityMethod = async (): Promise<import('./NativeBcscCore').AccountSecurityMethod> => {
   return BcscCore.getAccountSecurityMethod();
