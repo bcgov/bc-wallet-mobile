@@ -1,11 +1,13 @@
+import { AppEventCode } from '@/events/appEventCode'
 import { VerificationRequestStatusSystemCheck } from '@/services/system-checks/VerificationRequestStatusSystemCheck'
-import { SystemCheckUtils } from '@/services/system-checks/system-checks'
+import { runSystemChecks, SystemCheckUtils } from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
+import { mockAppError } from '@mocks/helpers/error'
 
 const makeUtils = (): SystemCheckUtils => ({
   dispatch: jest.fn(),
   translation: jest.fn() as any,
-  logger: {} as any,
+  logger: { warn: jest.fn(), error: jest.fn() } as any,
 })
 
 const makeStatus = (status: string, status_message?: string) => jest.fn().mockResolvedValue({ status, status_message })
@@ -68,14 +70,38 @@ describe('VerificationRequestStatusSystemCheck', () => {
       await expect(check.runCheck()).rejects.toThrow('token exchange failed')
     })
 
-    it('returns true for any other status value', async () => {
+    it.each([AppEventCode.AUTHORIZATION_PENDING, AppEventCode.VERIFY_NOT_COMPLETE])(
+      'returns false for an unrecognised status when the exchange rejects with %s',
+      async (code) => {
+        const checkDeviceCodeStatus = jest.fn().mockRejectedValue(mockAppError(code))
+        const utils = makeUtils()
+        const check = new VerificationRequestStatusSystemCheck(makeStatus('expired'), checkDeviceCodeStatus, utils)
+
+        await expect(check.runCheck()).resolves.toBe(false)
+        expect(checkDeviceCodeStatus).toHaveBeenCalledTimes(1)
+        expect(utils.logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining("Unrecognised verification status 'expired'")
+        )
+      }
+    )
+
+    it('returns true for an unrecognised status when the exchange resolves', async () => {
+      const checkDeviceCodeStatus = makeCheckDeviceCodeStatus()
+      const check = new VerificationRequestStatusSystemCheck(makeStatus('expired'), checkDeviceCodeStatus, makeUtils())
+
+      await expect(check.runCheck()).resolves.toBe(true)
+      expect(checkDeviceCodeStatus).toHaveBeenCalledTimes(1)
+    })
+
+    it('rejects for an unrecognised status when the exchange fails with ALREADY_VERIFIED', async () => {
+      const error = mockAppError(AppEventCode.ALREADY_VERIFIED)
       const check = new VerificationRequestStatusSystemCheck(
-        makeStatus('unknown'),
-        makeCheckDeviceCodeStatus(),
+        makeStatus('expired'),
+        jest.fn().mockRejectedValue(error),
         makeUtils()
       )
 
-      await expect(check.runCheck()).resolves.toBe(true)
+      await expect(check.runCheck()).rejects.toBe(error)
     })
   })
 
@@ -144,16 +170,18 @@ describe('VerificationRequestStatusSystemCheck', () => {
       })
     })
 
-    it('dispatches null status when called before runCheck', () => {
+    it('leaves the stored status untouched after an unrecognised status', async () => {
       const utils = makeUtils()
-      const check = new VerificationRequestStatusSystemCheck(makeStatus('pending'), makeCheckDeviceCodeStatus(), utils)
+      const check = new VerificationRequestStatusSystemCheck(
+        makeStatus('expired'),
+        jest.fn().mockRejectedValue(mockAppError(AppEventCode.AUTHORIZATION_PENDING)),
+        utils
+      )
 
+      await check.runCheck()
       check.onFail()
 
-      expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-        payload: [null],
-      })
+      expect(utils.dispatch).not.toHaveBeenCalled()
     })
   })
 
@@ -161,6 +189,19 @@ describe('VerificationRequestStatusSystemCheck', () => {
     it('sets the verification request status to verified, same as the push notification path', async () => {
       const utils = makeUtils()
       const check = new VerificationRequestStatusSystemCheck(makeStatus('verified'), makeCheckDeviceCodeStatus(), utils)
+
+      await check.runCheck()
+      check.onSuccess()
+
+      expect(utils.dispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
+        payload: ['verified'],
+      })
+    })
+
+    it('sets verified when the exchange confirmed an unrecognised status', async () => {
+      const utils = makeUtils()
+      const check = new VerificationRequestStatusSystemCheck(makeStatus('expired'), makeCheckDeviceCodeStatus(), utils)
 
       await check.runCheck()
       check.onSuccess()

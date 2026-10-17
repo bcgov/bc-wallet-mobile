@@ -2,6 +2,8 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
+import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from '@/bcsc-theme/utils/verification-status'
+import { isVerifiedByTokenExchange } from '@/bcsc-theme/utils/verification-token-exchange'
 import { VerificationRequestStatus } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
@@ -60,7 +62,9 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
           throw new Error(t('BCSC.Steps.VerificationIDMissing'))
         }
 
-        const { status, status_message } = await evidenceService.getVerificationRequestStatus(verificationRequestId)
+        const { status: rawStatus, status_message } =
+          await evidenceService.getVerificationRequestStatus(verificationRequestId)
+        const status = interpretVerificationStatus(rawStatus)
         if (status === VerificationRequestStatus.VERIFIED) {
           if (!deviceCode || !userCode) {
             throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
@@ -76,6 +80,21 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
             agentReason: status_message,
           })
           return 'decided'
+        }
+
+        if (status === UNKNOWN_VERIFICATION_STATUS) {
+          logger.warn(
+            `[useVerificationPendingActions] Unrecognised verification status '${rawStatus}'; asking the token endpoint`
+          )
+          if (!deviceCode || !userCode) {
+            throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
+          }
+
+          const exchanged = await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))
+          if (exchanged) {
+            navigation.navigate(BCSCScreens.VerificationSuccess)
+            return 'decided'
+          }
         }
 
         navigation.navigate(BCSCScreens.PendingReview)

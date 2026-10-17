@@ -1,9 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { VerificationRequestStatus } from '@/constants'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
+import { mockAppError } from '@mocks/helpers/error'
 import { act, renderHook } from '@testing-library/react-native'
 import { useEvidenceService } from '../services/hooks/useEvidenceService'
 import useSecureActions from './useSecureActions'
@@ -109,6 +111,64 @@ describe('useVerificationPendingActions', () => {
       })
 
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
+    })
+
+    describe('unrecognised status', () => {
+      const checkStatus = async () => {
+        const { result } = renderHook(() => useVerificationPendingActions(navigation))
+        await act(async () => {
+          await result.current.handleCheckStatus()
+        })
+      }
+
+      beforeEach(() => {
+        getVerificationRequestStatusMock.mockResolvedValue({ status: 'expired' })
+      })
+
+      it('moves on to the success screen when the token exchange issues tokens', async () => {
+        await checkStatus()
+
+        expect(checkDeviceCodeStatusMock).toHaveBeenCalledWith('device-code', 'user-code')
+        expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+        expect(loggerMock.warn).toHaveBeenCalledWith(
+          expect.stringContaining("Unrecognised verification status 'expired'")
+        )
+      })
+
+      it.each([AppEventCode.AUTHORIZATION_PENDING, AppEventCode.VERIFY_NOT_COMPLETE])(
+        'stays on the pending review when the exchange rejects with %s',
+        async (code) => {
+          checkDeviceCodeStatusMock.mockRejectedValue(mockAppError(code))
+
+          await checkStatus()
+
+          expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
+          expect(navigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+        }
+      )
+
+      it('does not navigate when the exchange fails with ALREADY_VERIFIED', async () => {
+        checkDeviceCodeStatusMock.mockRejectedValue(mockAppError(AppEventCode.ALREADY_VERIFIED))
+
+        await checkStatus()
+
+        expect(navigation.navigate).not.toHaveBeenCalled()
+        expect(loggerMock.error).toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
+      })
+
+      it('does not exchange when the device or user code is missing', async () => {
+        jest
+          .mocked(Bifold)
+          .useStore.mockReturnValue([
+            { bcscSecure: { verificationRequestId: 'request-id', userCode: 'user-code' } } as any,
+            dispatchMock,
+          ])
+
+        await checkStatus()
+
+        expect(checkDeviceCodeStatusMock).not.toHaveBeenCalled()
+        expect(navigation.navigate).not.toHaveBeenCalled()
+      })
     })
 
     it('only logs a failed automatic check', async () => {

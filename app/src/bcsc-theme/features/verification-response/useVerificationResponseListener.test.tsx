@@ -1,5 +1,7 @@
 import { VerificationResponseService } from '@/bcsc-theme/features/verification-response'
+import { AppEventCode } from '@/events/appEventCode'
 import { useNavigation } from '@mocks/@react-navigation/native'
+import { mockAppError } from '@mocks/helpers/error'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { BCSCScreens } from '../../types/navigators'
 import { useVerificationResponseListener } from './useVerificationResponseListener'
@@ -253,6 +255,67 @@ describe('useVerificationResponseListener', () => {
       expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
     })
 
+    it.each([AppEventCode.AUTHORIZATION_PENDING, AppEventCode.VERIFY_NOT_COMPLETE])(
+      'should leave state unchanged when the exchange for an unrecognised status rejects with %s',
+      async (code) => {
+        mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'expired' })
+        mockCheckDeviceCodeStatus.mockRejectedValueOnce(mockAppError(code))
+
+        renderHook(() => useVerificationResponseListener())
+
+        act(() => {
+          mockVerificationResponseService.handleRequestReviewed()
+        })
+
+        await waitFor(() => {
+          expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
+        })
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining("Unrecognised verification status 'expired'")
+        )
+        expect(mockStoreDispatch).not.toHaveBeenCalled()
+        expect(mockLogger.error).not.toHaveBeenCalled()
+      }
+    )
+
+    it('should store verified when the exchange for an unrecognised status resolves', async () => {
+      mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'expired' })
+
+      renderHook(() => useVerificationResponseListener())
+
+      act(() => {
+        mockVerificationResponseService.handleRequestReviewed()
+      })
+
+      await waitFor(() => {
+        expect(mockStoreDispatch).toHaveBeenCalledWith({
+          type: 'bcsc/updateSecureVerificationRequestStatus',
+          payload: ['verified'],
+        })
+      })
+
+      expect(mockCheckDeviceCodeStatus).toHaveBeenCalledTimes(1)
+      expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
+    })
+
+    it('should store nothing and log the error when an unrecognised status fails with ALREADY_VERIFIED', async () => {
+      mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'expired' })
+      mockCheckDeviceCodeStatus.mockRejectedValueOnce(mockAppError(AppEventCode.ALREADY_VERIFIED))
+
+      renderHook(() => useVerificationResponseListener())
+
+      act(() => {
+        mockVerificationResponseService.handleRequestReviewed()
+      })
+
+      await waitFor(() => {
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to handle request reviewed'))
+      })
+
+      expect(mockStoreDispatch).not.toHaveBeenCalled()
+    })
+
     it('should not proceed if verificationRequestId is missing', async () => {
       // Override the store mock for this test
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -278,6 +341,7 @@ describe('useVerificationResponseListener', () => {
       })
 
       expect(mockGetVerificationRequestStatus).not.toHaveBeenCalled()
+      expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
     })
 
     it('should not proceed if deviceCode is missing', async () => {
@@ -306,6 +370,7 @@ describe('useVerificationResponseListener', () => {
       })
 
       expect(mockGetVerificationRequestStatus).not.toHaveBeenCalled()
+      expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
     })
 
     it('should log when request reviewed event is received', async () => {

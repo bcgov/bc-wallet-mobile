@@ -4,13 +4,16 @@ import {
   VerificationResponseNavigationEvent,
 } from '@/bcsc-theme/features/verification-response'
 import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
+import { interpretVerificationStatus } from '@/bcsc-theme/utils/verification-status'
+import { isVerifiedByTokenExchange } from '@/bcsc-theme/utils/verification-token-exchange'
 import { VerificationRequestStatus } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect } from 'react'
 
 /**
- * Hook that listens for verification response push notifications and navigates accordingly.
+ * Hook that listens for verification response push notifications and records the reviewed status in the
+ * store. It does not navigate.
  *
  * This hook should be used in the VerifyStack navigator to handle the case where a user
  * receives a push notification indicating their verification has been reviewed.
@@ -19,11 +22,12 @@ import { useCallback, useEffect } from 'react'
  *
  * Request reviewed (send-video): The notification indicates the video was reviewed.
  *    - First checks verification status via API
- *    - If status is 'verified', fetches tokens via checkDeviceCodeStatus, then navigates to success
- *    - If status is 'cancelled', navigates to CancelledReview with the agent reason
- *    - If status is 'pending', does not navigate (user should check manually)
+ *    - If status is 'verified', fetches tokens via checkDeviceCodeStatus, then records verified
+ *    - If status is 'cancelled', records it with the agent reason
+ *    - If status is 'pending', records it (user should check manually)
+ *    - If status is unrecognised, the token exchange decides whether it is verified
  *
- * Token fetching happens in this hook before navigation. VerificationSuccessScreen handles
+ * Token fetching happens in this hook before verified is recorded. VerificationSuccessScreen handles
  * final account setup (marking verified, metadata cleanup, registration update).
  * This follows the same pattern as the "Check Status" button on PendingReviewScreen.
  */
@@ -55,8 +59,10 @@ export const useVerificationResponseListener = () => {
 
       // Check the verification request status (same as Check Status button)
       logger.info('[useVerificationResponseListener] Checking verification request status')
-      const { status, status_message } = await evidenceService.getVerificationRequestStatus(verificationRequestId)
-      logger.info(`[useVerificationResponseListener] Verification request status: ${status}`)
+      const { status: rawStatus, status_message } =
+        await evidenceService.getVerificationRequestStatus(verificationRequestId)
+      logger.info(`[useVerificationResponseListener] Verification request status: ${rawStatus}`)
+      const status = interpretVerificationStatus(rawStatus)
 
       if (status === VerificationRequestStatus.VERIFIED) {
         // Status is verified - fetch and update tokens
@@ -91,6 +97,17 @@ export const useVerificationResponseListener = () => {
         // Status is pending - user should check manually via the UI
         logger.info(`[useVerificationResponseListener] Verification status is '${status}', not navigating`)
         return
+      }
+
+      logger.warn(
+        `[useVerificationResponseListener] Unrecognised verification status '${rawStatus}'; asking the token endpoint`
+      )
+      if (await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))) {
+        dispatch({
+          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
+          payload: [VerificationRequestStatus.VERIFIED],
+        })
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
