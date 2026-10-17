@@ -3,7 +3,8 @@ import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { TOKENS, useServices } from '@bifold/core'
+import { BCDispatchAction, BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -27,7 +28,11 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert } = useErrorAlert()
-  const [currentMethod, setCurrentMethod] = useState<AccountSecurityMethod | null>(null)
+  const [store, dispatch] = useStore<BCState>()
+  // Secure state already knows the method, so the current-method marker shows on the first render.
+  const [currentMethod, setCurrentMethod] = useState<AccountSecurityMethod | null>(
+    store.bcscSecure.securityMethod ?? null
+  )
   const walletService = useWalletService()
 
   useEffect(() => {
@@ -57,6 +62,7 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
 
       await setAccountSecurityMethod(AccountSecurityMethod.DeviceAuth)
       setCurrentMethod(AccountSecurityMethod.DeviceAuth)
+      dispatch({ type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD, payload: [AccountSecurityMethod.DeviceAuth] })
       logger.info('Successfully switched to device authentication')
 
       await walletService.rotateWalletKey(walletKey)
@@ -67,7 +73,7 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
       logger.error(`Error setting account security method: ${appError.technicalMessage ?? appError.message}`)
       emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
     }
-  }, [logger, walletService, onDeviceAuthSuccess, emitAlert, t])
+  }, [logger, walletService, onDeviceAuthSuccess, emitAlert, t, dispatch])
 
   return (
     <SecurityMethodSelector

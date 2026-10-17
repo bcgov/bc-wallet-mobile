@@ -1046,7 +1046,7 @@ class BcscCore: NSObject {
         "id": acc.id,
         "issuer": acc.issuer,
         "clientID": acc.clientID,
-        // "_securityMethod": acc._securityMethod, // Question (Al): why is this commented out?
+        "securityMethod": acc.securityMethod.rawValue,
         "displayName": acc.displayName,
         "didPostNicknameToServer": acc.didPostNicknameToServer,
         "nickname": acc.nickname,
