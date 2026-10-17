@@ -915,6 +915,22 @@ const translation = {
       "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps: (PT-BR)",
       "CameraAndMicrophoneTitle": "Camera & Microphone Disabled (PT-BR)",
       "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video. (PT-BR)",
+      "BluetoothTitle": "Nearby Devices Disabled (PT-BR)",
+      "BluetoothDescription": "Follow these steps to allow access to nearby devices so you can use a connected Bluetooth headset or speaker during the call. (PT-BR)",
+      "Bluetooth": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (PT-BR)",
+          "Step2": "2. Tap 'Bluetooth' (PT-BR)",
+          "Step3": "3. Return to the app to continue (PT-BR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (PT-BR)",
+          "Step2": "2. Tap 'Permissions' (PT-BR)",
+          "Step3": "3. Tap 'Nearby devices' (PT-BR)",
+          "Step4": "4. Select 'Allow' (PT-BR)",
+          "Step5": "5. Return to the app to continue (PT-BR)",
+        },
+      },
       "Camera": {
         "iOS": {
           "Step1": "1. Tap 'Open Settings' below (PT-BR)",
@@ -1375,6 +1391,10 @@ const translation = {
       "CannotSendVideo": "Cannot send a video? (PT-BR)",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (PT-BR)",
       "CannotVideoCall": "Cannot video call? (PT-BR)"
+    },
+    "BluetoothDisclosure": {
+      "Title": "Detect bluetooth devices (PT-BR)",
+      "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device. (PT-BR)",
     },
   },
   "RemoteLogging": {
