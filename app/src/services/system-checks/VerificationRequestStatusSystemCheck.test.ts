@@ -106,10 +106,14 @@ describe('VerificationRequestStatusSystemCheck', () => {
   })
 
   describe('onFail', () => {
-    it('dispatches the captured pending status', async () => {
+    it.each([
+      ['pending', 'Waiting for review'],
+      ['cancelled', 'Review was cancelled'],
+      ['pending', undefined],
+    ])('dispatches one event with the captured %s status and message %s', async (status, message) => {
       const utils = makeUtils()
       const check = new VerificationRequestStatusSystemCheck(
-        makeStatus('pending', 'Waiting for review'),
+        makeStatus(status, message),
         makeCheckDeviceCodeStatus(),
         utils
       )
@@ -117,56 +121,10 @@ describe('VerificationRequestStatusSystemCheck', () => {
       await check.runCheck()
       check.onFail()
 
+      expect(utils.dispatch).toHaveBeenCalledTimes(1)
       expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-        payload: ['pending'],
-      })
-    })
-
-    it('dispatches the captured cancelled status', async () => {
-      const utils = makeUtils()
-      const check = new VerificationRequestStatusSystemCheck(
-        makeStatus('cancelled', 'Review was cancelled'),
-        makeCheckDeviceCodeStatus(),
-        utils
-      )
-
-      await check.runCheck()
-      check.onFail()
-
-      expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-        payload: ['cancelled'],
-      })
-    })
-
-    it('dispatches the captured status_message', async () => {
-      const utils = makeUtils()
-      const check = new VerificationRequestStatusSystemCheck(
-        makeStatus('pending', 'Some message'),
-        makeCheckDeviceCodeStatus(),
-        utils
-      )
-
-      await check.runCheck()
-      check.onFail()
-
-      expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-        payload: ['Some message'],
-      })
-    })
-
-    it('dispatches undefined status_message when none is returned', async () => {
-      const utils = makeUtils()
-      const check = new VerificationRequestStatusSystemCheck(makeStatus('pending'), makeCheckDeviceCodeStatus(), utils)
-
-      await check.runCheck()
-      check.onFail()
-
-      expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-        payload: [undefined],
+        type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+        payload: [{ status, status_message: message }],
       })
     })
 
@@ -186,42 +144,30 @@ describe('VerificationRequestStatusSystemCheck', () => {
   })
 
   describe('onSuccess', () => {
-    it('sets the verification request status to verified, same as the push notification path', async () => {
+    it('dispatches one verified event, same as the push notification path', async () => {
       const utils = makeUtils()
       const check = new VerificationRequestStatusSystemCheck(makeStatus('verified'), makeCheckDeviceCodeStatus(), utils)
 
       await check.runCheck()
       check.onSuccess()
 
+      expect(utils.dispatch).toHaveBeenCalledTimes(1)
       expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-        payload: ['verified'],
+        type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+        payload: [{ status: 'verified' }],
       })
     })
 
-    it('sets verified when the exchange confirmed an unrecognised status', async () => {
+    it('dispatches verified when the exchange confirmed an unrecognised status', async () => {
       const utils = makeUtils()
       const check = new VerificationRequestStatusSystemCheck(makeStatus('expired'), makeCheckDeviceCodeStatus(), utils)
 
-      await check.runCheck()
-      check.onSuccess()
+      await expect(runSystemChecks([check], utils.logger)).resolves.toEqual([true])
 
+      expect(utils.dispatch).toHaveBeenCalledTimes(1)
       expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-        payload: ['verified'],
-      })
-    })
-
-    it('clears the verification request status message', async () => {
-      const utils = makeUtils()
-      const check = new VerificationRequestStatusSystemCheck(makeStatus('verified'), makeCheckDeviceCodeStatus(), utils)
-
-      await check.runCheck()
-      check.onSuccess()
-
-      expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-        payload: [undefined],
+        type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+        payload: [{ status: 'verified' }],
       })
     })
   })

@@ -61,6 +61,14 @@ describe('useVerificationPendingActions', () => {
   })
 
   describe('handleCheckStatus', () => {
+    const expectOneStatusReceived = (payload: { status: string; status_message?: string }) => {
+      expect(dispatchMock).toHaveBeenCalledTimes(1)
+      expect(dispatchMock).toHaveBeenCalledWith({
+        type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+        payload: [payload],
+      })
+    }
+
     it('goes straight to the success screen when the user is already verified', async () => {
       jest
         .mocked(Bifold)
@@ -86,6 +94,7 @@ describe('useVerificationPendingActions', () => {
       expect(getVerificationRequestStatusMock).toHaveBeenCalledWith('request-id')
       expect(checkDeviceCodeStatusMock).toHaveBeenCalledWith('device-code', 'user-code')
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+      expectOneStatusReceived({ status: VerificationRequestStatus.VERIFIED })
     })
 
     it('moves on to the cancelled review, with the agent reason, once the review is rejected', async () => {
@@ -101,6 +110,8 @@ describe('useVerificationPendingActions', () => {
 
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.CancelledReview, { agentReason: 'Video too dark' })
       expect(checkDeviceCodeStatusMock).not.toHaveBeenCalled()
+      expectOneStatusReceived({ status: VerificationRequestStatus.CANCELLED, status_message: 'Video too dark' })
+      expect(dispatchMock.mock.invocationCallOrder[0]).toBeLessThan(navigation.navigate.mock.invocationCallOrder[0])
     })
 
     it('stays on the pending review while the request is still pending', async () => {
@@ -111,6 +122,7 @@ describe('useVerificationPendingActions', () => {
       })
 
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
+      expectOneStatusReceived({ status: VerificationRequestStatus.PENDING })
     })
 
     describe('unrecognised status', () => {
@@ -130,6 +142,7 @@ describe('useVerificationPendingActions', () => {
 
         expect(checkDeviceCodeStatusMock).toHaveBeenCalledWith('device-code', 'user-code')
         expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+        expectOneStatusReceived({ status: VerificationRequestStatus.VERIFIED })
         expect(loggerMock.warn).toHaveBeenCalledWith(
           expect.stringContaining("Unrecognised verification status 'expired'")
         )
@@ -144,6 +157,7 @@ describe('useVerificationPendingActions', () => {
 
           expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
           expect(navigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+          expect(dispatchMock).not.toHaveBeenCalled()
         }
       )
 
@@ -153,6 +167,7 @@ describe('useVerificationPendingActions', () => {
         await checkStatus()
 
         expect(navigation.navigate).not.toHaveBeenCalled()
+        expect(dispatchMock).not.toHaveBeenCalled()
         expect(loggerMock.error).toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
       })
 
@@ -182,6 +197,7 @@ describe('useVerificationPendingActions', () => {
       expect(loggerMock.error).toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
       expect(mockEmitErrorModal).not.toHaveBeenCalled()
       expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(dispatchMock).not.toHaveBeenCalled()
     })
 
     it('tells the user when a manual Check status fails, so silence never reads as "still pending"', async () => {
@@ -302,6 +318,14 @@ describe('useVerificationPendingActions', () => {
       })
       expect(dispatchMock).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
+        payload: [undefined],
+      })
+      expect(dispatchMock).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
+        payload: [undefined],
+      })
+      expect(dispatchMock).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
         payload: [undefined],
       })
       expect(updateAccountFlagsMock).toHaveBeenCalledWith({ userSubmittedVerificationVideo: false })

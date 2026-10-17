@@ -68,32 +68,26 @@ export const useVerificationResponseListener = () => {
         // Status is verified - fetch and update tokens
         await token.checkDeviceCodeStatus(deviceCode, userCode)
         dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-          payload: [VerificationRequestStatus.VERIFIED],
+          type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+          payload: [{ status: VerificationRequestStatus.VERIFIED }],
         })
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         return
       }
 
       if (status === VerificationRequestStatus.CANCELLED) {
         dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-          payload: [VerificationRequestStatus.CANCELLED],
+          type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+          payload: [{ status: VerificationRequestStatus.CANCELLED, status_message }],
         })
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-          payload: [status_message],
-        })
-        logger.info('[useVerificationResponseListener] Verification request cancelled, navigating to CancelledReview')
+        logger.info('[useVerificationResponseListener] Verification request cancelled, recorded status')
         return
       }
 
       if (status === VerificationRequestStatus.PENDING) {
         dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-          payload: [VerificationRequestStatus.PENDING],
+          type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+          payload: [{ status: VerificationRequestStatus.PENDING }],
         })
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         // Status is pending - user should check manually via the UI
         logger.info(`[useVerificationResponseListener] Verification status is '${status}', not navigating`)
         return
@@ -104,10 +98,9 @@ export const useVerificationResponseListener = () => {
       )
       if (await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))) {
         dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-          payload: [VerificationRequestStatus.VERIFIED],
+          type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+          payload: [{ status: VerificationRequestStatus.VERIFIED }],
         })
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)

@@ -94,6 +94,15 @@ jest.mock('@/bcsc-theme/features/verification-response', () => {
   }
 })
 
+// One event per result, so the pending screen and the Home banner can never disagree
+const expectStatusReceived = (payload: { status: string; status_message?: string }) => {
+  expect(mockStoreDispatch).toHaveBeenCalledTimes(1)
+  expect(mockStoreDispatch).toHaveBeenCalledWith({
+    type: 'bcsc/verificationStatusReceived',
+    payload: [payload],
+  })
+}
+
 describe('useVerificationResponseListener', () => {
   const mockNavigationDispatch = useNavigation().dispatch
 
@@ -137,14 +146,11 @@ describe('useVerificationResponseListener', () => {
       expect(mockVerificationResponseService.hasPendingApproval).toBe(false)
     })
 
-    expect(mockStoreDispatch).toHaveBeenCalledWith({
-      type: 'bcsc/updateSecureVerificationRequestStatus',
-      payload: ['verified'],
-    })
+    expectStatusReceived({ status: 'verified' })
   })
 
   describe('request_reviewed (send-video verification)', () => {
-    it('should fetch tokens and record the verified status, clearing any stale status message', async () => {
+    it('should fetch tokens, then record one verified status event', async () => {
       mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'verified' })
 
       renderHook(() => useVerificationResponseListener())
@@ -164,16 +170,25 @@ describe('useVerificationResponseListener', () => {
         expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
       })
       await waitFor(() => {
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatus',
-          payload: ['verified'],
-        })
-        // A previous cancellation reason must not survive into the success screen
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatusMessage',
-          payload: [undefined],
-        })
+        expectStatusReceived({ status: 'verified' })
       })
+    })
+
+    it('should record nothing when the token exchange fails on a verified status', async () => {
+      mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'verified' })
+      mockCheckDeviceCodeStatus.mockRejectedValueOnce(new Error('exchange failed'))
+
+      renderHook(() => useVerificationResponseListener())
+
+      act(() => {
+        mockVerificationResponseService.handleRequestReviewed()
+      })
+
+      await waitFor(() => {
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('exchange failed'))
+      })
+
+      expect(mockStoreDispatch).not.toHaveBeenCalled()
     })
 
     it('should record the cancelled status and the agent reason', async () => {
@@ -193,14 +208,7 @@ describe('useVerificationResponseListener', () => {
       })
 
       await waitFor(() => {
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatus',
-          payload: ['cancelled'],
-        })
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatusMessage',
-          payload: ['Face does not match'],
-        })
+        expectStatusReceived({ status: 'cancelled', status_message: 'Face does not match' })
       })
       expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
     })
@@ -215,14 +223,7 @@ describe('useVerificationResponseListener', () => {
       })
 
       await waitFor(() => {
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatus',
-          payload: ['cancelled'],
-        })
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatusMessage',
-          payload: [undefined],
-        })
+        expectStatusReceived({ status: 'cancelled', status_message: undefined })
       })
       expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
     })
@@ -241,14 +242,7 @@ describe('useVerificationResponseListener', () => {
       })
 
       await waitFor(() => {
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatus',
-          payload: ['pending'],
-        })
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatusMessage',
-          payload: [undefined],
-        })
+        expectStatusReceived({ status: 'pending' })
       })
 
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining("status is 'pending', not navigating"))
@@ -289,10 +283,7 @@ describe('useVerificationResponseListener', () => {
       })
 
       await waitFor(() => {
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatus',
-          payload: ['verified'],
-        })
+        expectStatusReceived({ status: 'verified' })
       })
 
       expect(mockCheckDeviceCodeStatus).toHaveBeenCalledTimes(1)
@@ -434,10 +425,7 @@ describe('useVerificationResponseListener', () => {
       })
 
       await waitFor(() => {
-        expect(mockStoreDispatch).toHaveBeenCalledWith({
-          type: 'bcsc/updateSecureVerificationRequestStatus',
-          payload: ['verified'],
-        })
+        expectStatusReceived({ status: 'verified' })
       })
 
       expect(mockNavigationDispatch).not.toHaveBeenCalled()

@@ -71,11 +71,19 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
           }
 
           await token.checkDeviceCodeStatus(deviceCode, userCode)
+          dispatch({
+            type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+            payload: [{ status: VerificationRequestStatus.VERIFIED }],
+          })
           navigation.navigate(BCSCScreens.VerificationSuccess)
           return 'decided'
         }
 
         if (status === VerificationRequestStatus.CANCELLED) {
+          dispatch({
+            type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+            payload: [{ status: VerificationRequestStatus.CANCELLED, status_message }],
+          })
           navigation.navigate(BCSCScreens.CancelledReview, {
             agentReason: status_message,
           })
@@ -92,11 +100,21 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
 
           const exchanged = await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))
           if (exchanged) {
+            dispatch({
+              type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+              payload: [{ status: VerificationRequestStatus.VERIFIED }],
+            })
             navigation.navigate(BCSCScreens.VerificationSuccess)
             return 'decided'
           }
         }
 
+        if (status !== UNKNOWN_VERIFICATION_STATUS) {
+          dispatch({
+            type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+            payload: [{ status: VerificationRequestStatus.PENDING }],
+          })
+        }
         navigation.navigate(BCSCScreens.PendingReview)
         return 'pending'
       } catch (error) {
@@ -123,6 +141,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
       token,
       logger,
       emitErrorModal,
+      dispatch,
     ]
   )
 
@@ -166,6 +185,9 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
         dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
         dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
+        // The request no longer exists, so a recorded pending status must not outlive it on Home
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         await updateAccountFlags({
           userSubmittedVerificationVideo: false,
         }).catch((error) => {

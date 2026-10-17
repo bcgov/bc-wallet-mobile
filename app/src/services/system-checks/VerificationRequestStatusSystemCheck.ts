@@ -42,7 +42,6 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
       if (!(await isVerifiedByTokenExchange(this.checkDeviceCodeStatus))) {
         return false
       }
-      this.status = VerificationRequestStatus.VERIFIED
       return true
     }
 
@@ -54,7 +53,6 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
 
     // 'verified' — mirror the push notification (useVerificationResponseListener)
     await this.checkDeviceCodeStatus()
-    this.status = VerificationRequestStatus.VERIFIED
     return true
   }
 
@@ -65,24 +63,16 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
     }
 
     this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-      payload: [this.status],
-    })
-    this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-      payload: [this.statusMessage],
+      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+      payload: [{ status: this.status, status_message: this.statusMessage }],
     })
   }
 
   onSuccess() {
     // Setting status to 'verified' surfaces the VerifiedNotification banner on Home screen
     this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-      payload: [this.status],
-    })
-    this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-      payload: [undefined],
+      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+      payload: [{ status: VerificationRequestStatus.VERIFIED }],
     })
   }
 }
