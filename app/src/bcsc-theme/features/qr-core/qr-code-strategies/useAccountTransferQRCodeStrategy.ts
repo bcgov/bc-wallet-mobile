@@ -2,13 +2,15 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
-import { isHandledAppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors'
+import { isAppError, isHandledAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
-import { QrCodeScanError, TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useRoute } from '@react-navigation/native'
 import { useCallback, useMemo, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 import { QRCodeStrategy } from '../useQRScanner'
@@ -32,7 +34,6 @@ export const useAccountTransferQRCodeStrategy = (
    */
   onAlreadyVerified?: () => void
 ): QRCodeStrategy => {
-  const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { deviceAttestation, authorization, token } = useApi()
   const apiClient = useBCSCApiClient()
@@ -43,6 +44,10 @@ export const useAccountTransferQRCodeStrategy = (
   const attemptWithRecovery = useDeviceAuthorizationRecovery()
   const deviceCodeRef = useRef<string | undefined>(store.bcscSecure.deviceCode)
 
+  const step = useRef('accountTransfer')
+
+  const updateStep = (newStep: string) => (step.current = newStep)
+
   const registerDevice = useCallback(async () => {
     // we already have a device code, no need to authorize again
     if (store.bcscSecure.deviceCode) {
@@ -50,50 +55,40 @@ export const useAccountTransferQRCodeStrategy = (
       return
     }
 
-    try {
-      const deviceAuth = await attemptWithRecovery(() => authorization.authorizeDevice(), route.name)
+    updateStep('deviceAuthorization')
+    const deviceAuth = await attemptWithRecovery(() => authorization.authorizeDevice(), route.name)
 
-      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
+    const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
 
-      await updateUserInfo({
-        email: deviceAuth.verified_email || BCSC_EMAIL_NOT_PROVIDED,
-        isEmailVerified: !!deviceAuth.verified_email,
-      })
+    updateStep('updateUserInfo')
+    await updateUserInfo({
+      email: deviceAuth.verified_email || BCSC_EMAIL_NOT_PROVIDED,
+      isEmailVerified: !!deviceAuth.verified_email,
+    })
 
-      await updateDeviceCodes({
-        deviceCode: deviceAuth.device_code,
-        userCode: deviceAuth.user_code,
-        deviceCodeExpiresAt: expiresAt,
-      })
+    updateStep('updateDeviceCodes')
+    await updateDeviceCodes({
+      deviceCode: deviceAuth.device_code,
+      userCode: deviceAuth.user_code,
+      deviceCodeExpiresAt: expiresAt,
+    })
 
-      deviceCodeRef.current = deviceAuth.device_code
-    } catch (error) {
-      if (isHandledAppError(error)) {
-        return
-      }
-
-      logger.error('[useAccountTransferQRCodeStrategy]: Device registration failed', { error })
-    }
-  }, [
-    store.bcscSecure.deviceCode,
-    attemptWithRecovery,
-    authorization,
-    route.name,
-    updateDeviceCodes,
-    updateUserInfo,
-    logger,
-  ])
+    deviceCodeRef.current = deviceAuth.device_code
+  }, [store.bcscSecure.deviceCode, attemptWithRecovery, authorization, route.name, updateDeviceCodes, updateUserInfo])
 
   const transferAccount = useCallback(
-    async (value: string, transferToken: string) => {
+    async (transferToken: string) => {
+      updateStep('getAccount')
       const account = await getAccount()
+
       if (!account) {
-        throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAccountFound'))
+        throw toAppError(new Error('Account not found'), ErrorRegistry.ACCOUNT_TRANSFER_ERROR)
       }
 
       // ias tokens expect times in seconds since epoch
       const timeInSeconds = Math.floor(Date.now() / 1000)
 
+      updateStep('createDeviceSignedJWT')
       const newDeviceJWT = await createDeviceSignedJWT({
         aud: account.issuer,
         iss: account.clientID,
@@ -103,12 +98,14 @@ export const useAccountTransferQRCodeStrategy = (
         jti: uuid.v4().toString(),
       })
 
+      updateStep('getDeviceCode')
       const deviceCode = deviceCodeRef.current
       if (!deviceCode) {
-        throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoDeviceCodeFound'))
+        throw toAppError(new Error('Device code not found'), ErrorRegistry.ACCOUNT_TRANSFER_ERROR)
       }
 
       // Attest: verify the new device
+      updateStep('verifyAttestation')
       const response = await deviceAttestation.verifyAttestation({
         client_id: account.clientID,
         device_code: deviceCode,
@@ -117,10 +114,11 @@ export const useAccountTransferQRCodeStrategy = (
       })
 
       if (!response) {
-        throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAttestationResponse'))
+        throw toAppError(new Error('Attestation was not accepted'), ErrorRegistry.ACCOUNT_TRANSFER_ERROR)
       }
 
       // fetch tokens for the new device
+      updateStep('getDeviceToken')
       const deviceToken = await token.deviceToken({
         client_id: account.clientID,
         device_code: deviceCode,
@@ -128,9 +126,11 @@ export const useAccountTransferQRCodeStrategy = (
       })
 
       apiClient.tokens = deviceToken
+
+      updateStep('updateTokens')
       await updateTokens({ refreshToken: deviceToken.refresh_token, accessToken: deviceToken.access_token })
     },
-    [deviceAttestation, token, apiClient, updateTokens, t]
+    [deviceAttestation, token, apiClient, updateTokens]
   )
 
   const matches = useCallback((uri: string): boolean => {
@@ -139,24 +139,45 @@ export const useAccountTransferQRCodeStrategy = (
 
   const handle = useCallback(
     async (uri: string): Promise<void> => {
-      const transferToken = extractTransferToken(uri)
+      try {
+        updateStep('extractTransferToken')
+        const transferToken = extractTransferToken(uri)
 
-      if (!transferToken) {
-        logger.warn('[useAccountTransferQRCodeStrategy] matched but failed to extract transferToken')
-        throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'))
+        if (!transferToken) {
+          logger.warn('[useAccountTransferQRCodeStrategy] matched but failed to extract transferToken')
+          throw toAppError(new Error('Unable to extract transfer token from uri'), ErrorRegistry.ACCOUNT_TRANSFER_ERROR)
+        }
+
+        if (store.bcscSecure.verified && onAlreadyVerified) {
+          updateStep('alreadyVerified')
+          onAlreadyVerified()
+          return
+        }
+
+        step.current = 'registerDevice'
+        await registerDevice()
+
+        step.current = 'transferAccount'
+        await transferAccount(transferToken)
+
+        updateStep('success')
+        onSuccess()
+      } catch (error) {
+        if (isHandledAppError(error)) {
+          return
+        }
+
+        // Use the app error if it is already an account transfer QR code failure
+        const appError = isAppError(error, AppEventCode.ACCOUNT_TRANSFER_ERROR)
+          ? error
+          : toAppError(error, ErrorRegistry.ACCOUNT_TRANSFER_ERROR)
+
+        appError.addContext({ accountTransferFailedStep: step.current })
+
+        throw appError
       }
-
-      if (store.bcscSecure.verified && onAlreadyVerified) {
-        onAlreadyVerified()
-        return
-      }
-
-      await registerDevice()
-      await transferAccount(uri, transferToken)
-
-      onSuccess()
     },
-    [logger, onAlreadyVerified, onSuccess, registerDevice, store.bcscSecure.verified, t, transferAccount]
+    [logger, onAlreadyVerified, onSuccess, registerDevice, store.bcscSecure.verified, transferAccount]
   )
 
   return useMemo(() => ({ matches, handle }), [matches, handle])

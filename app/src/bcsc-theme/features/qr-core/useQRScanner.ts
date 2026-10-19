@@ -1,3 +1,5 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError } from '@/errors'
 import { QrCodeScanError } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +20,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
   const lockedRef = useRef(false) // held while processing, and after success until the screen refocuses
   const processingRef = useRef(false)
+  const { emitErrorModal } = useErrorAlert()
 
   /**
    * Handle errors that occur during QR code scanning.
@@ -27,6 +30,15 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
    */
   const handleQRScanError = useCallback(
     (error: unknown, value: string) => {
+      if (error instanceof AppError) {
+        // If the error is an unhandled AppError, show a modal with the error details.
+        return emitErrorModal(
+          t('BCSC.Scan.FailedToScanQrCodeTitle'),
+          t('BCSC.Scan.FailedToScanQrCodeDescription'),
+          error
+        )
+      }
+
       let scanError: QrCodeScanError
       if (error instanceof QrCodeScanError) {
         scanError = error
@@ -35,9 +47,10 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
       } else {
         scanError = new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, String(error))
       }
+
       setScanError(scanError)
     },
-    [t]
+    [emitErrorModal, t]
   )
 
   /**
