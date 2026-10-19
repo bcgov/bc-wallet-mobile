@@ -99,6 +99,7 @@ const mockStore = (overrides: Record<string, any> = {}) => ({
 })
 
 const mockProcessPendingChallenges = jest.fn()
+const mockSetCardExpired = jest.fn()
 
 // RootStack asks for the state loader; the real FcmCardExpirySync (via useAccountPhase) asks for the logger
 const mockLogger = { info: jest.fn() }
@@ -122,7 +123,7 @@ describe('BCSCRootStack', () => {
     })
     jest.mocked(useFcmService).mockReturnValue({
       service: {},
-      viewModel: { processPendingChallenges: mockProcessPendingChallenges, setCardExpired: jest.fn() },
+      viewModel: { processPendingChallenges: mockProcessPendingChallenges, setCardExpired: mockSetCardExpired },
     } as any)
   })
 
@@ -596,6 +597,26 @@ describe('BCSCRootStack', () => {
       'Error.ProblemDescription',
       toAppError(mockError, ErrorRegistry.STATE_LOAD_ERROR)
     )
+  })
+
+  it('tells FCM the card is expired when the stored refresh token expires', () => {
+    const verified = { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([mockStore({ ...verified, bcscSecure: { verified: true } }), jest.fn()] as any)
+
+    const { rerender } = render(<BCSCRootStack />)
+    expect(mockSetCardExpired).toHaveBeenLastCalledWith(false)
+
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([
+        mockStore({ ...verified, bcscSecure: { verified: true, refreshTokenExpired: true } }),
+        jest.fn(),
+      ] as any)
+    rerender(<BCSCRootStack />)
+
+    expect(mockSetCardExpired).toHaveBeenLastCalledWith(true)
   })
 
   it('processPendingChallenges is called when api client is ready', () => {
