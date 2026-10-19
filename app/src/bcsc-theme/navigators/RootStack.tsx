@@ -52,6 +52,16 @@ const useVerificationRouting = (appReady: boolean) => {
   // the verify flow produces exactly that state on purpose.
   const [resumeEvaluated, setResumeEvaluated] = useState(false)
 
+  // Removing the account (factory reset) leaves RootStack mounted, so these session flags must follow the
+  // account: a user who answered the prompt, removed the account and onboarded again is due the prompt
+  // like a fresh install
+  useEffect(() => {
+    if (store.bcsc.hasAccount === false) {
+      setVerifyPromptAnswered(false)
+      setResumeEvaluated(false)
+    }
+  }, [store.bcsc.hasAccount])
+
   // Has an account, is unlocked and needs no session recovery: Home or Verify is the next screen
   const signedIn =
     store.bcsc.hasAccount &&
