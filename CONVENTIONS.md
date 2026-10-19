@@ -90,6 +90,17 @@ spinner inside a button.
 lets `Button` hand its label colour to the spinner, so every button type and theme stays legible
 without per-screen colour props (#4743).
 
+## Settings: rows are decided before the first render
+
+Facts that decide whether a settings row exists, such as the account security method behind
+"Change PIN", live in secure state (`store.bcscSecure`): hydrated from the native account record at
+launch and updated wherever the user changes them. A screen reads them synchronously; it never reads
+them natively on focus and re-renders, and a row whose gate is still unknown stays hidden.
+
+**Why:** the settings sections animate layout changes (`LinearTransition`), so a row that appears or
+disappears after mount slides every row below it. "Change PIN" rendered on a default and was dropped
+once the native read reported device auth, so the whole list jumped on every open of Settings.
+
 ## Verification flow exits: first-time vs deferred verifiers
 
 The onboarding "Verify your account" prompt decides who may leave the verify flow, through the persisted

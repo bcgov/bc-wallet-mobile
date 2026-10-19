@@ -152,6 +152,16 @@ describe('reducer', () => {
     expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
   })
 
+  it('UPDATE_SECURE_SECURITY_METHOD stores the method on secure state without persisting it', () => {
+    const result = reducer(initialState, {
+      type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD,
+      payload: ['device_authentication'],
+    })
+
+    expect(result.bcscSecure.securityMethod).toBe('device_authentication')
+    expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
+  })
+
   it('CLEAR_BCSC resets verificationSkipped to undefined', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
     const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })

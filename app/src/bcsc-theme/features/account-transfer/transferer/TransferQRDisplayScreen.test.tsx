@@ -3,7 +3,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { act, render, waitFor } from '@testing-library/react-native'
 import { jwtDecode } from 'jwt-decode'
 import React from 'react'
-import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import { BCSCScreens } from '../../../types/navigators'
 import TransferQRDisplayScreen from './TransferQRDisplayScreen'
 
@@ -33,6 +33,7 @@ const mockAccount = {
   id: 'mock-account-id',
   issuer: 'https://idsit.gov.bc.ca/device/',
   clientID: 'mock-client-id',
+  securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
 }
 
 // Resolves manually so a test can hold a getAccount() call "in flight" and control exactly

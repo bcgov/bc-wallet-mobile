@@ -3,7 +3,7 @@ import { VerificationStatus } from '@/store'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
 import { act, renderHook } from '@testing-library/react-native'
-import { deleteToken, getAccount, getAccountSecurityMethod, TokenType } from 'react-native-bcsc-core'
+import { deleteToken, getAccount, TokenType } from 'react-native-bcsc-core'
 import * as useRegistrationServiceModule from '../services/hooks/useRegistrationService'
 import * as useSecureActionsModule from './useSecureActions'
 import { useVerificationReset } from './useVerificationReset'
@@ -18,7 +18,6 @@ jest.mock('@/hooks/useAlerts', () => ({
 jest.mock('react-native-bcsc-core', () => ({
   deleteToken: jest.fn(),
   getAccount: jest.fn(),
-  getAccountSecurityMethod: jest.fn(),
   isAccountRegistered: jest.fn().mockReturnValue(true),
   TokenType: {
     Refresh: 'Refresh',
@@ -57,6 +56,7 @@ describe('useVerificationReset', () => {
       {
         bcscSecure: {
           walletKey: 'wallet-key',
+          securityMethod: 'device_authentication',
           registrationAccessToken: 'registration-token',
           savedServices: ['service-a', 'service-b'],
         },
@@ -76,8 +76,7 @@ describe('useVerificationReset', () => {
       deleteRegistration: mockDeleteRegistration,
       createRegistration: mockCreateRegistration,
     } as any)
-    jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-id' } as any)
-    jest.mocked(getAccountSecurityMethod).mockResolvedValue('device_authentication' as any)
+    jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-id', securityMethod: 'device_authentication' } as any)
     jest.mocked(deleteToken).mockResolvedValue(true)
   })
 
@@ -91,13 +90,13 @@ describe('useVerificationReset', () => {
     expect(mockClearSecureState).toHaveBeenCalledWith({
       isHydrated: true,
       walletKey: 'wallet-key',
+      securityMethod: 'device_authentication',
       registrationAccessToken: 'registration-token',
       verified: false,
       verifiedStatus: VerificationStatus.UNVERIFIED,
     })
     expect(getAccount).toHaveBeenCalledTimes(1)
     expect(mockDeleteRegistration).toHaveBeenCalledWith('registration-token', 'client-id')
-    expect(getAccountSecurityMethod).toHaveBeenCalledTimes(1)
     expect(mockDeleteVerificationData).toHaveBeenCalledTimes(1)
     expect(deleteToken).toHaveBeenCalledTimes(3)
     expect(deleteToken).toHaveBeenNthCalledWith(1, TokenType.Access)
