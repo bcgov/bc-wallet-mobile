@@ -100,6 +100,14 @@ const mockStore = (overrides: Record<string, any> = {}) => ({
 
 const mockProcessPendingChallenges = jest.fn()
 
+// RootStack asks for the state loader; the real FcmCardExpirySync (via useAccountPhase) asks for the logger
+const mockLogger = { info: jest.fn() }
+const mockServices = (loadState: jest.Mock) =>
+  jest
+    .mocked(Bifold.useServices)
+    .mockImplementation(((tokens: string[]) =>
+      tokens.map((token) => (token === Bifold.TOKENS.UTIL_LOGGER ? mockLogger : loadState))) as any)
+
 describe('BCSCRootStack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -108,7 +116,7 @@ describe('BCSCRootStack', () => {
     mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
 
     const mockLoadState = jest.fn()
-    jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
+    mockServices(mockLoadState)
     jest.mocked(useInitializeAccountStatusModule.useInitializeAccountStatus).mockReturnValue({
       initializingAccount: false,
     })
@@ -553,7 +561,7 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     const mockLoadState = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
-    jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
+    mockServices(mockLoadState)
 
     render(<BCSCRootStack />)
 
@@ -564,7 +572,7 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     const mockLoadState = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: true }), mockDispatch] as any)
-    jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
+    mockServices(mockLoadState)
 
     render(<BCSCRootStack />)
 
@@ -579,7 +587,7 @@ describe('BCSCRootStack', () => {
     })
 
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
-    jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
+    mockServices(mockLoadState)
 
     render(<BCSCRootStack />)
 

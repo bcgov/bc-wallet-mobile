@@ -92,8 +92,6 @@ export interface BCSCState {
   deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
   hasSeenOnboardingIntro?: boolean
-  showAccountExpiryNotification?: boolean
-  showCardRenewalNotification?: boolean
   acceptedTermsOfUseVersion?: string
   installId?: string // Unique identifier for this app install (not a per-report id); preserved across CLEAR_BCSC
   /** ISO timestamp of the last automatic key-rotation attempt (success or failure), used to
@@ -329,8 +327,6 @@ enum BCSCDispatchAction {
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
   DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
-  SET_ACCOUNT_EXPIRY_NOTIFICATION = 'bcsc/setAccountExpiryNotification',
-  SET_CARD_RENEWAL_NOTIFICATION = 'bcsc/setCardRenewalNotification',
   SET_INSTALL_ID = 'bcsc/setInstallId',
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
   RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
@@ -831,22 +827,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCDispatchAction.UPDATE_CREDENTIAL_METADATA: {
       const credentialMetadata = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, credentialMetadata }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION: {
-      const show = ((action?.payload || []).pop() ?? false) as boolean
-      const bcsc = { ...state.bcsc, showAccountExpiryNotification: show }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION: {
-      const show = ((action?.payload || []).pop() ?? false) as boolean
-      const bcsc = { ...state.bcsc, showCardRenewalNotification: show }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

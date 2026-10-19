@@ -5,6 +5,7 @@ import ContinueVerificationNotification from '@/bcsc-theme/features/notification
 import PendingReviewNotification from '@/bcsc-theme/features/notifications/PendingReviewNotification'
 import StartVerificationNotification from '@/bcsc-theme/features/notifications/StartVerificationNotification'
 import VerifiedNotification from '@/bcsc-theme/features/notifications/VerifiedNotification'
+import { useAccountPhase } from '@/bcsc-theme/hooks/useAccountPhase'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
 import { VerificationRequestStatus } from '@/constants'
@@ -30,6 +31,7 @@ export enum CustomNotificationId {
 export const useCustomNotifications = () => {
   const { needsVerification, isVerified } = useVerificationStatus()
   const [store] = useStore<BCState>()
+  const accountPhase = useAccountPhase()
   const { verificationRequestStatus, verificationRequestId } = store.bcscSecure
 
   const customNotifications = useMemo((): JSX.Element[] => {
@@ -56,16 +58,21 @@ export const useCustomNotifications = () => {
       return [<StartVerificationNotification key={CustomNotificationId.BCSCStartVerification} />]
     }
 
-    if (store.bcsc.showAccountExpiryNotification) {
+    if (accountPhase.phase === 'expired') {
       return [<CardExpiryNotification key={CustomNotificationId.AccountExpired} />]
     }
 
-    if (store.bcsc.showCardRenewalNotification) {
-      return [<CardRenewalNotification key={CustomNotificationId.AccountRenewalAvailable} />]
+    if (accountPhase.phase === 'expiringSoon') {
+      return [
+        <CardRenewalNotification
+          key={CustomNotificationId.AccountRenewalAvailable}
+          expiresAt={accountPhase.expiresAt}
+        />,
+      ]
     }
 
     return []
-  }, [verificationRequestStatus, verificationRequestId, needsVerification, isVerified, store])
+  }, [verificationRequestStatus, verificationRequestId, needsVerification, isVerified, accountPhase, store])
 
   return useMemo(
     () => ({

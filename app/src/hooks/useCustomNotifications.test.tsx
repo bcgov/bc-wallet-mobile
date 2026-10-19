@@ -4,6 +4,7 @@ import { CustomNotificationId, useCustomNotifications } from './useCustomNotific
 const mockUseStore = jest.fn()
 const mockUseVerificationStatus = jest.fn()
 const mockComputeSetupStepCompletion = jest.fn()
+const mockUseAccountPhase = jest.fn()
 
 jest.mock('@bifold/core', () => ({
   useStore: () => mockUseStore(),
@@ -11,6 +12,10 @@ jest.mock('@bifold/core', () => ({
 
 jest.mock('@/bcsc-theme/hooks/useVerificationStatus', () => ({
   useVerificationStatus: () => mockUseVerificationStatus(),
+}))
+
+jest.mock('@/bcsc-theme/hooks/useAccountPhase', () => ({
+  useAccountPhase: () => mockUseAccountPhase(),
 }))
 
 jest.mock('@/bcsc-theme/utils/setup-step-completion', () => ({
@@ -28,10 +33,9 @@ jest.mock(
 jest.mock('@/bcsc-theme/features/notifications/CardExpiryNotification', () => 'CardExpiryNotification')
 jest.mock('@/bcsc-theme/features/notifications/CardRenewalNotification', () => 'CardRenewalNotification')
 
-const buildStore = (bcscSecure: object, bcsc: object = {}) => [
-  { bcscSecure, bcsc: { showAccountExpiryNotification: false, showCardRenewalNotification: false, ...bcsc } },
-  jest.fn(),
-]
+const buildStore = (bcscSecure: object) => [{ bcscSecure, bcsc: {} }, jest.fn()]
+
+const expiresAt = new Date('2026-10-22T00:00:00.000Z')
 
 const baseVerificationStatus = {
   needsVerification: false,
@@ -59,6 +63,7 @@ describe('useCustomNotifications', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockUseVerificationStatus.mockReturnValue(baseVerificationStatus)
+    mockUseAccountPhase.mockReturnValue({ phase: 'none' })
     mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: null, verificationRequestId: null }))
     mockComputeSetupStepCompletion.mockReturnValue(buildIdStepCompletion(false))
   })
@@ -90,12 +95,8 @@ describe('useCustomNotifications', () => {
 
   it('falls through to the notifications of a verified user when the verified status is stale', () => {
     mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
-    mockUseStore.mockReturnValue(
-      buildStore(
-        { verificationRequestStatus: 'verified', verificationRequestId: 'req-1' },
-        { showAccountExpiryNotification: true }
-      )
-    )
+    mockUseAccountPhase.mockReturnValue({ phase: 'expired' })
+    mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: 'verified', verificationRequestId: 'req-1' }))
 
     const { result } = renderHook(() => useCustomNotifications())
 
@@ -193,27 +194,8 @@ describe('useCustomNotifications', () => {
   })
 
   describe('CardExpiryNotification', () => {
-    it('is shown when showAccountExpiryNotification is true', () => {
-      mockUseStore.mockReturnValue(
-        buildStore(
-          { verificationRequestStatus: null, verificationRequestId: null },
-          { showAccountExpiryNotification: true }
-        )
-      )
-
-      const { result } = renderHook(() => useCustomNotifications())
-
-      expect(result.current.customNotifications).toHaveLength(1)
-      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.AccountExpired)
-    })
-
-    it('takes priority over CardRenewalNotification when both are true', () => {
-      mockUseStore.mockReturnValue(
-        buildStore(
-          { verificationRequestStatus: null, verificationRequestId: null },
-          { showAccountExpiryNotification: true, showCardRenewalNotification: true }
-        )
-      )
+    it('is shown when the account phase is expired', () => {
+      mockUseAccountPhase.mockReturnValue({ phase: 'expired' })
 
       const { result } = renderHook(() => useCustomNotifications())
 
@@ -222,12 +204,8 @@ describe('useCustomNotifications', () => {
     })
 
     it('is not shown when verification status takes priority', () => {
-      mockUseStore.mockReturnValue(
-        buildStore(
-          { verificationRequestStatus: 'verified', verificationRequestId: null },
-          { showAccountExpiryNotification: true }
-        )
-      )
+      mockUseAccountPhase.mockReturnValue({ phase: 'expired' })
+      mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: 'verified', verificationRequestId: null }))
 
       const { result } = renderHook(() => useCustomNotifications())
 
@@ -236,28 +214,32 @@ describe('useCustomNotifications', () => {
   })
 
   describe('CardRenewalNotification', () => {
-    it('is shown when showCardRenewalNotification is true and showAccountExpiryNotification is false', () => {
-      mockUseStore.mockReturnValue(
-        buildStore(
-          { verificationRequestStatus: null, verificationRequestId: null },
-          { showCardRenewalNotification: true }
-        )
-      )
+    it('is shown with the expiry date when the account phase is expiringSoon', () => {
+      mockUseAccountPhase.mockReturnValue({ phase: 'expiringSoon', expiresAt })
 
       const { result } = renderHook(() => useCustomNotifications())
 
       expect(result.current.customNotifications).toHaveLength(1)
       expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.AccountRenewalAvailable)
+      expect(result.current.customNotifications[0].props.expiresAt).toBe(expiresAt)
+    })
+
+    it.each([
+      ['active', { phase: 'active', expiresAt }],
+      ['unknown', { phase: 'unknown' }],
+      ['none', { phase: 'none' }],
+    ])('shows nothing when the account phase is %s', (_name, phase) => {
+      mockUseAccountPhase.mockReturnValue(phase)
+      mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(0)
     })
 
     it('is not shown when needsVerification takes priority', () => {
+      mockUseAccountPhase.mockReturnValue({ phase: 'expiringSoon', expiresAt })
       mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, needsVerification: true })
-      mockUseStore.mockReturnValue(
-        buildStore(
-          { verificationRequestStatus: null, verificationRequestId: null },
-          { showCardRenewalNotification: true }
-        )
-      )
 
       const { result } = renderHook(() => useCustomNotifications())
 
