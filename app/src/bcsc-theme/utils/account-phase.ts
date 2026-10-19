@@ -22,15 +22,8 @@ export const daysUntil = (date: Date, now: Date): number =>
   moment(date).startOf('day').diff(moment(now).startOf('day'), 'days')
 
 /**
- * The single definition of a card's expiry phase.
- *
- * - `none`: not verified, so there is no card to expire
- * - `unknown`: verified, but no usable date and no server signal (e.g. the account has not loaded)
- * - `expired`: the server or hydration says so, or the expiry date is today or past
- * - `expiringSoon`: within the renewal window, up to the day before expiry
- * - `active`: otherwise
- *
- * Server signals win over the date because they hold even when the account never loads.
+ * The single definition of a card's expiry phase. Server signals win over the date because they hold
+ * even when the account never loads; `unknown` means verified with no usable date and no signal.
  */
 export const getAccountPhase = (facts: ExpiryFacts, now: Date): AccountPhase => {
   const { isVerified, expiredByServer, credentialExpired, cardExpiresAt } = facts

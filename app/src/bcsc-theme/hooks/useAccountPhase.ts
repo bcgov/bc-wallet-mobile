@@ -5,14 +5,12 @@ import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useEffect, useMemo } from 'react'
 
-// Several components call this hook; keying on the logger keeps one line per change, not one per caller.
+// Module-level so many callers log once per change; keyed by logger so each container (and test) starts fresh.
 const lastLoggedPhase = new WeakMap<object, string>()
 
 /**
- * The card's expiry phase, derived on every store or account change and never stored.
- * It is not refreshed when the day rolls over; it re-derives the next time the store or account changes.
- *
- * Logs one info line when the phase changes. Must be used inside BCSCAccountProvider.
+ * The card's expiry phase, re-derived on store or account change (not at day rollover) and never stored.
+ * Logs one info line per phase change. Must be used inside BCSCAccountProvider.
  */
 export const useAccountPhase = (): AccountPhase => {
   const [store] = useStore<BCState>()
