@@ -11,10 +11,6 @@ import { createPreVerificationJWT, EvidenceType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
-export interface EvidenceApiOptions {
-  skipOnErrorHandler?: boolean
-}
-
 export interface VerificationPrompt {
   id: number
   prompt: string
@@ -239,17 +235,14 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
 
   /**
    * Submits the uploaded evidence for review.
-   * TODO (MD): deprecate `options` once all callsites use `useEvidenceService` instead of `useEvidenceApi`.
    * @param verificationRequestId - The ID of the verification request to submit.
    * @param payload - The upload URIs and the sha256 the recording was issued against.
-   * @param options - Optional configuration for the API call.
    * @returns Promise resolving to the verification submit response data.
    */
   const sendVerificationRequest = useCallback(
     async (
       verificationRequestId: string,
-      payload: SendVerificationPayload,
-      options?: EvidenceApiOptions
+      payload: SendVerificationPayload
     ): Promise<VerificationSubmitResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
@@ -261,7 +254,8 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-            skipOnErrorHandler: options?.skipOnErrorHandler,
+            // Note: Errors handled in `useEvidenceService`
+            skipOnErrorHandler: true,
           }
         )
         const isTerminal = await cancelRemindersOnTerminalStatus(data)
@@ -294,14 +288,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
   )
 
   /**
-   * Fetches the status of a verification request by its ID and handles errors appropriately.
-   * TODO (MD): deprecate `options` once all callsites use `useEvidenceService` instead of `useEvidenceApi`.
+   * Fetches the status of a verification request by its ID.
    * @param verificationRequestId - The ID of the verification request to check.
-   * @param options - Optional configuration for the API call.
    * @returns Promise resolving to the verification status response data.
    */
   const getVerificationRequestStatus = useCallback(
-    async (verificationRequestId: string, options?: EvidenceApiOptions): Promise<VerificationStatusResponseData> => {
+    async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.get<VerificationStatusResponseData>(
@@ -311,7 +303,8 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-            skipOnErrorHandler: options?.skipOnErrorHandler,
+            // Note: Errors handled in `useEvidenceService`
+            skipOnErrorHandler: true,
           }
         )
         await cancelRemindersOnTerminalStatus(data)

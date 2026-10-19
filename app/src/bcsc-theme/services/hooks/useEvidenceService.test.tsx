@@ -176,7 +176,7 @@ describe('useEvidenceService', () => {
   })
 
   describe('getVerificationRequestStatus', () => {
-    it('should call evidenceApi.getVerificationRequestStatus with skipOnErrorHandler and return the data', async () => {
+    it('should call evidenceApi.getVerificationRequestStatus and return the data', async () => {
       const mockData = { id: 'verification-id', status: 'verified' }
       mockEvidenceApi.getVerificationRequestStatus.mockResolvedValue(mockData)
 
@@ -184,9 +184,7 @@ describe('useEvidenceService', () => {
 
       const data = await result.current.getVerificationRequestStatus('verification-id')
 
-      expect(mockEvidenceApi.getVerificationRequestStatus).toHaveBeenCalledWith('verification-id', {
-        skipOnErrorHandler: true,
-      })
+      expect(mockEvidenceApi.getVerificationRequestStatus).toHaveBeenCalledWith('verification-id')
       expect(data).toEqual(mockData)
     })
 
@@ -258,16 +256,14 @@ describe('useEvidenceService', () => {
     const conflictError = () => axiosAppError(409, AppEventCode.CONFLICT, 2114)
     const sessionExpiredError = () => axiosAppError(401, AppEventCode.ERR_210_UNAUTHORIZED, 2110)
 
-    it('passes skipOnErrorHandler and returns the submit response', async () => {
+    it('submits through the API and returns the submit response', async () => {
       mockEvidenceApi.sendVerificationRequest.mockResolvedValue(submitted)
 
       const { result } = renderHook(() => useEvidenceService())
 
       const data = await result.current.sendVerificationRequest('verification-id', payload)
 
-      expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('verification-id', payload, {
-        skipOnErrorHandler: true,
-      })
+      expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('verification-id', payload)
       expect(mockEvidenceApi.getVerificationRequestStatus).not.toHaveBeenCalled()
       expect(data).toEqual(submitted)
     })
@@ -283,9 +279,7 @@ describe('useEvidenceService', () => {
 
         const data = await result.current.sendVerificationRequest('verification-id', payload)
 
-        expect(mockEvidenceApi.getVerificationRequestStatus).toHaveBeenCalledWith('verification-id', {
-          skipOnErrorHandler: true,
-        })
+        expect(mockEvidenceApi.getVerificationRequestStatus).toHaveBeenCalledWith('verification-id')
         expect(data).toEqual(readBack)
         expect(mockServerErrorAlert).not.toHaveBeenCalled()
         expect(mockUnknownErrorModal).not.toHaveBeenCalled()

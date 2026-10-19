@@ -111,8 +111,7 @@ export const useEvidenceService = () => {
   const getVerificationRequestStatus = useCallback(
     async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {
       try {
-        // TODO (MD): Drop the `skipOnErrorHandler` option once useEvidenceApi.getVerificationRequestStatus applies this by default
-        return await evidenceApi.getVerificationRequestStatus(verificationRequestId, { skipOnErrorHandler: true })
+        return await evidenceApi.getVerificationRequestStatus(verificationRequestId)
       } catch (error) {
         if (isAxiosAppError(error, 404)) {
           // If the verification request is not found, it means it has already been deleted or does not exist.
@@ -147,7 +146,7 @@ export const useEvidenceService = () => {
   const findSubmittedVerification = useCallback(
     async (verificationRequestId: string): Promise<VerificationStatusResponseData | undefined> => {
       try {
-        const data = await evidenceApi.getVerificationRequestStatus(verificationRequestId, { skipOnErrorHandler: true })
+        const data = await evidenceApi.getVerificationRequestStatus(verificationRequestId)
 
         if (!KNOWN_VERIFICATION_REQUEST_STATUSES.includes(data?.status)) {
           logger.warn(
@@ -176,10 +175,10 @@ export const useEvidenceService = () => {
    * record is submitted, not failed, so a 500 is followed by a read-back and the status stands in for the
    * submit response. The original error is surfaced only when the server has no record of the submission.
    *
-   * Errors are handled here instead of by the global client policies (`skipOnErrorHandler`): a 401 routes to
-   * the session-expired modal and an app-update-required error to its alert, both marked `handled`. A 409
-   * (registration already approved), a dropped connection and non-API errors are rethrown untouched because
-   * the upload model owns their recovery and copy.
+   * Errors are handled here instead of by the global client policies, which the API call opts out of: a 401
+   * routes to the session-expired modal and an app-update-required error to its alert, both marked `handled`.
+   * A 409 (registration already approved), a dropped connection and non-API errors are rethrown untouched
+   * because the upload model owns their recovery and copy.
    *
    * @param verificationRequestId - The ID of the verification request to submit.
    * @param payload - The upload URIs and the sha256 the recording was issued against.
@@ -191,7 +190,7 @@ export const useEvidenceService = () => {
       payload: SendVerificationPayload
     ): Promise<VerificationSubmitResponseData> => {
       try {
-        return await evidenceApi.sendVerificationRequest(verificationRequestId, payload, { skipOnErrorHandler: true })
+        return await evidenceApi.sendVerificationRequest(verificationRequestId, payload)
       } catch (error) {
         if (isAxiosAppError(error, 409)) {
           throw error

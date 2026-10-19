@@ -354,7 +354,7 @@ describe('useEvidenceApi - upload log context', () => {
   })
 })
 
-describe('useEvidenceApi - submit error handling opt-out', () => {
+describe('useEvidenceApi - error handling opt-out', () => {
   const submitPayload = { upload_uris: ['u1'], sha256: 'sha' }
   const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
   const mockStore: any = { bcsc: {}, bcscSecure: { deviceCode: 'test-device-code' } }
@@ -376,11 +376,11 @@ describe('useEvidenceApi - submit error handling opt-out', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore as Bifold.State, jest.fn()])
   })
 
-  it('forwards skipOnErrorHandler to the submit PUT so the service can handle its errors', async () => {
+  it('opts the submit PUT out of the global error handling; useEvidenceService owns its errors', async () => {
     const result = renderApi()
 
     await act(async () => {
-      await result.current.sendVerificationRequest('v1', submitPayload, { skipOnErrorHandler: true })
+      await result.current.sendVerificationRequest('v1', submitPayload)
     })
 
     expect(apiClient.put).toHaveBeenCalledWith(
@@ -390,14 +390,17 @@ describe('useEvidenceApi - submit error handling opt-out', () => {
     )
   })
 
-  it('leaves the global error handling on when no options are passed', async () => {
+  it('opts the status GET out of the global error handling; useEvidenceService owns its errors', async () => {
+    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending' } })
     const result = renderApi()
 
     await act(async () => {
-      await result.current.sendVerificationRequest('v1', submitPayload)
+      await result.current.getVerificationRequestStatus('v1')
     })
 
-    const [, , config] = apiClient.put.mock.calls[0]
-    expect(config.skipOnErrorHandler).toBeUndefined()
+    expect(apiClient.get).toHaveBeenCalledWith(
+      'https://example.test/evidence/v1/verifications/v1',
+      expect.objectContaining({ skipBearerAuth: true, skipOnErrorHandler: true })
+    )
   })
 })
