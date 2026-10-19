@@ -561,7 +561,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.ACCOUNT_TRANSFER_ERROR,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.VERIFICATION,
-    message: 'Account transfer failed — error during account transfer process',
+    message: 'Account transfer failed — error during transfer process',
   },
 
   // ============================================
