@@ -9,6 +9,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Alert } from 'react-native'
 import { useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 import TakeVideoScreen from './TakeVideoScreen'
 
@@ -70,6 +71,75 @@ const storeWithPrompts = {
     ],
   },
 } as any
+
+type RecordingCallbacks = Parameters<ReturnType<typeof visionCamera.useVisionCamera>['startRecordingVideo']>[0]
+
+// Renders the screen with a mocked recorder and runs the countdown (by default all of it, so the
+// first prompt is showing)
+const startRecordingScreen = async (navigation: ReturnType<typeof useNavigation>, countdownMs = 3000) => {
+  let recordingCallbacks: RecordingCallbacks | undefined
+  const recorder = {
+    takePhoto: jest.fn().mockResolvedValue({ filePath: '/tmp/thumbnail.jpg' }),
+    startRecordingVideo: jest.fn(async (callbacks: RecordingCallbacks) => {
+      recordingCallbacks = callbacks
+    }),
+    stopRecordingVideo: jest.fn(),
+    cancelRecordingVideo: jest.fn().mockResolvedValue(undefined),
+  }
+  const realUseVisionCamera = jest.requireActual('@/bcsc-theme/hooks/useVisionCamera').useVisionCamera
+  jest.spyOn(visionCamera, 'useVisionCamera').mockImplementation((options) => ({
+    ...realUseVisionCamera(options),
+    cameraRef: { current: {} },
+    ...recorder,
+  }))
+
+  const makeTree = () => (
+    <BasicAppContext initialStateOverride={storeWithPrompts}>
+      <TakeVideoScreen navigation={navigation as never} />
+    </BasicAppContext>
+  )
+  const screen = render(makeTree())
+
+  act(() => {
+    screen.getByTestId('mock-camera').props.onConfigured()
+    // The mock camera never starts on its own; without this the 8 s not-ready timeout fires mid-test
+    screen.getByTestId('mock-camera').props.onStarted()
+  })
+  // useFocusEffect is a no-op mock, so run the latest focus callback by hand to start the countdown
+  const focusCallback = jest.mocked(useFocusEffect).mock.calls.at(-1)![0]
+  act(() => {
+    focusCallback()
+  })
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(countdownMs)
+  })
+
+  // A new element each time, so React re-renders the screen with the latest mocked app state
+  const rerender = () => screen.rerender(makeTree())
+
+  return { screen, rerender, recorder, getRecordingCallbacks: () => recordingCallbacks! }
+}
+
+const nextPromptButton = (screen: ReturnType<typeof render>) =>
+  screen.getByTestId(testIdWithKey(TestIds.verify.takeVideo.nextPrompt))
+
+const advanceSeconds = async (seconds: number) => {
+  await act(async () => {
+    await jest.advanceTimersByTimeAsync(seconds * 1000)
+  })
+}
+
+// Shows both prompts for long enough and presses Done, like a user finishing the recording
+const recordUntilDone = async (screen: ReturnType<typeof render>) => {
+  await advanceSeconds(2)
+  await act(async () => {
+    fireEvent.press(nextPromptButton(screen))
+  })
+  await advanceSeconds(4)
+  await act(async () => {
+    fireEvent.press(nextPromptButton(screen))
+  })
+}
 
 describe('TakeVideoScreen', () => {
   beforeEach(() => {
@@ -162,18 +232,6 @@ describe('TakeVideoScreen', () => {
 
   describe('Cancel while the recording is still converting to MP4', () => {
     const startAndFinishRecording = async (navigation: ReturnType<typeof useNavigation>) => {
-      let recordingCallbacks: Parameters<ReturnType<typeof visionCamera.useVisionCamera>['startRecordingVideo']>[0]
-      const realUseVisionCamera = jest.requireActual('@/bcsc-theme/hooks/useVisionCamera').useVisionCamera
-      jest.spyOn(visionCamera, 'useVisionCamera').mockImplementation((options) => ({
-        ...realUseVisionCamera(options),
-        cameraRef: { current: {} },
-        takePhoto: jest.fn().mockResolvedValue({ filePath: '/tmp/thumbnail.jpg' }),
-        startRecordingVideo: jest.fn(async (callbacks) => {
-          recordingCallbacks = callbacks
-        }),
-        cancelRecordingVideo: jest.fn(),
-      }))
-
       let resolveConversion!: (path: string) => void
       jest.mocked(toMp4VideoPath).mockReturnValue(
         new Promise((resolve) => {
@@ -181,29 +239,14 @@ describe('TakeVideoScreen', () => {
         })
       )
 
-      const screen = render(
-        <BasicAppContext initialStateOverride={storeWithPrompts}>
-          <TakeVideoScreen navigation={navigation as never} />
-        </BasicAppContext>
-      )
+      const { screen, getRecordingCallbacks } = await startRecordingScreen(navigation)
+      await recordUntilDone(screen)
 
       act(() => {
-        screen.getByTestId('mock-camera').props.onConfigured()
-      })
-      // useFocusEffect is a no-op mock, so run the latest focus callback by hand to start the countdown
-      const focusCallback = jest.mocked(useFocusEffect).mock.calls.at(-1)![0]
-      act(() => {
-        focusCallback()
-      })
-      await act(async () => {
-        await jest.advanceTimersByTimeAsync(3000)
-      })
-
-      act(() => {
-        recordingCallbacks!.onRecordingFinished({
+        getRecordingCallbacks().onRecordingFinished({
           filePath: '/tmp/recording.mov',
           reason: 'stopped',
-          duration: 5,
+          duration: 6,
           fileSize: 100,
         } as never)
       })
@@ -411,6 +454,171 @@ describe('TakeVideoScreen', () => {
       // The gate deactivates on KNOWN background states rather than activating only on a
       // known-active one, so an unexpected value can't strand the camera off permanently.
       expect(getByTestId('mock-camera').props.isActive).toBe(true)
+    })
+  })
+
+  describe('Camera interruptions', () => {
+    it('covers the preview while the session is interrupted and removes the cover when it ends', () => {
+      const overlayTestId = testIdWithKey(TestIds.shared.cameraInterrupted.overlay)
+      const navigation = useNavigation()
+      const { getByTestId, queryByTestId } = render(
+        <BasicAppContext initialStateOverride={storeWithPrompts}>
+          <TakeVideoScreen navigation={navigation as never} />
+        </BasicAppContext>
+      )
+
+      act(() => {
+        getByTestId('mock-camera').props.onInterruptionStarted('unknown')
+      })
+      expect(getByTestId(overlayTestId)).toBeTruthy()
+
+      act(() => {
+        getByTestId('mock-camera').props.onInterruptionEnded()
+      })
+      expect(queryByTestId(overlayTestId)).toBeNull()
+    })
+  })
+
+  describe('Leaving the app mid-recording and the 6 second minimum', () => {
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    const finishRecording = (getRecordingCallbacks: () => RecordingCallbacks) =>
+      act(() => {
+        getRecordingCallbacks().onRecordingFinished({
+          filePath: '/tmp/recording.mov',
+          reason: 'stopped',
+          duration: 3,
+          fileSize: 100,
+        } as never)
+      })
+
+    it('keeps Done disabled until 6 seconds have been recorded', async () => {
+      const navigation = useNavigation()
+      const { screen, recorder } = await startRecordingScreen(navigation)
+
+      await advanceSeconds(2)
+      await act(async () => {
+        fireEvent.press(nextPromptButton(screen))
+      })
+      // The last prompt has been shown for its 2 seconds, but only 4 seconds are recorded
+      await advanceSeconds(2)
+      expect(nextPromptButton(screen).props.accessibilityState).toEqual(expect.objectContaining({ disabled: true }))
+
+      await advanceSeconds(2)
+      expect(nextPromptButton(screen).props.accessibilityState).toEqual(expect.objectContaining({ disabled: false }))
+      await act(async () => {
+        fireEvent.press(nextPromptButton(screen))
+      })
+      expect(recorder.stopRecordingVideo).toHaveBeenCalled()
+    })
+
+    it('discards a recording that ends before the user presses Done and asks them to record again', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert')
+      const navigation = useNavigation()
+      const { getRecordingCallbacks } = await startRecordingScreen(navigation)
+
+      await advanceSeconds(3)
+      await act(async () => {
+        await finishRecording(getRecordingCallbacks)
+      })
+
+      expect(removeFileSafely).toHaveBeenCalledWith('/tmp/recording.mov', expect.anything())
+      expect(removeFileSafely).toHaveBeenCalledWith('/tmp/thumbnail.jpg', expect.anything())
+      expect(alertSpy).toHaveBeenCalledWith(
+        'BCSC.SendVideo.TakeVideo.RecordingInterrupted',
+        'BCSC.SendVideo.TakeVideo.RecordingInterruptedDescription'
+      )
+      expect(navigation.goBack).toHaveBeenCalled()
+      expect(navigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.VideoReview, expect.anything())
+      expect(toMp4VideoPath).not.toHaveBeenCalled()
+    })
+
+    const setAppState = (appStateStatus: string, rerender: () => void) => {
+      mockUseBCSCActivity.mockReturnValue({ appStateStatus })
+      rerender()
+    }
+
+    it('throws the recording away and returns to the instructions once the app is active again', async () => {
+      const navigation = useNavigation()
+      const { screen, rerender, recorder } = await startRecordingScreen(navigation)
+      await advanceSeconds(2)
+
+      setAppState('background', rerender)
+      await act(async () => {})
+
+      expect(recorder.cancelRecordingVideo).toHaveBeenCalledTimes(1)
+      expect(removeFileSafely).toHaveBeenCalledWith('/tmp/thumbnail.jpg', expect.anything())
+      expect(screen.getByTestId('mock-camera').props.isActive).toBe(false)
+      // Not yet: the instructions screen loads new prompts, which shouldn't run while the app is suspended
+      expect(navigation.goBack).not.toHaveBeenCalled()
+
+      setAppState('active', rerender)
+
+      expect(navigation.goBack).toHaveBeenCalledTimes(1)
+      expect(navigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.VideoReview, expect.anything())
+    })
+
+    it('also throws the attempt away when the app goes inactive (e.g. Control Center on iOS)', async () => {
+      const navigation = useNavigation()
+      const { rerender, recorder } = await startRecordingScreen(navigation)
+
+      setAppState('inactive', rerender)
+      await act(async () => {})
+      setAppState('active', rerender)
+
+      expect(recorder.cancelRecordingVideo).toHaveBeenCalledTimes(1)
+      expect(navigation.goBack).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not start recording when the app leaves the foreground during the countdown', async () => {
+      const navigation = useNavigation()
+      const { rerender, recorder } = await startRecordingScreen(navigation, 1000)
+
+      setAppState('background', rerender)
+      await advanceSeconds(3)
+
+      expect(recorder.takePhoto).not.toHaveBeenCalled()
+      expect(recorder.startRecordingVideo).not.toHaveBeenCalled()
+
+      setAppState('active', rerender)
+      expect(navigation.goBack).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores the recording ending on its own after the attempt was thrown away', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert')
+      const navigation = useNavigation()
+      const { rerender, getRecordingCallbacks } = await startRecordingScreen(navigation)
+
+      setAppState('background', rerender)
+      await act(async () => {})
+      // v5 ends the recording when the camera session stops, which can land after the cancel
+      await act(async () => {
+        await finishRecording(getRecordingCallbacks)
+      })
+
+      expect(alertSpy).not.toHaveBeenCalled()
+      expect(navigation.goBack).not.toHaveBeenCalled()
+
+      setAppState('active', rerender)
+      expect(navigation.goBack).toHaveBeenCalledTimes(1)
+    })
+
+    it('stays on screen when the app is backgrounded before a recording attempt starts', async () => {
+      mockUseBCSCActivity.mockReturnValue({ appStateStatus: 'background' })
+      const navigation = useNavigation()
+      const makeTree = () => (
+        <BasicAppContext initialStateOverride={storeWithPrompts}>
+          <TakeVideoScreen navigation={navigation as never} />
+        </BasicAppContext>
+      )
+      const screen = render(makeTree())
+
+      mockUseBCSCActivity.mockReturnValue({ appStateStatus: 'active' })
+      screen.rerender(makeTree())
+
+      expect(navigation.goBack).not.toHaveBeenCalled()
     })
   })
 })

@@ -910,6 +910,9 @@ const translation = {
       "CancelCamera": "Cancel camera",
       "TakePhoto": "Take photo",
       "ToggleFlash": "Toggle flash",
+      "CameraInterrupted": "Camera paused",
+      "CameraInterruptedMessage": "The camera is in use by another app or is temporarily unavailable. It will resume on its own when it's available.",
+      "CameraNotReady": "The camera isn't ready yet. Please try again.",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings",
@@ -1070,6 +1073,8 @@ const translation = {
       "TakeVideo": {
         "RecordingError": "Recording error",
         "RecordingErrorDescription": "There was an issue with the recording. Please try again.",
+        "RecordingInterrupted": "Recording interrupted",
+        "RecordingInterruptedDescription": "The recording stopped before you finished. Please record your video again.",
         "CameraPermissionRequired": "Camera Permission Required",
         "CameraPermissionRequiredDescription": "Please enable camera permission to take a photo.",
         "MicrophonePermissionRequired": "Microphone Permission Required",

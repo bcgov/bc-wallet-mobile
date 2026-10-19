@@ -79,6 +79,22 @@ next mount.
 session's outputs never starts or crashes the app. Keeping one camera mounted and pausing it with
 `isActive` instead was tried and rejected: on Android the paused preview failed to restart.
 
+## Cameras: an interrupted or stopped camera is not a broken one
+
+Pass `useCameraInterruption` to every `<Camera>` and render `CameraInterruptedOverlay` while it
+reports an interruption. Only allow photo capture while the session has started and isn't
+interrupted. A capture that still loses that race (`isCameraNotReadyCaptureError`) gets an inline
+"try again" notice, not the camera error modal; a second one in a row gets the modal. Wait out a
+single recoverable runtime error with `useRecoverableCameraError` before failing over. Pass the
+screen's camera error handler to `useCameraNotReadyTimeout`, so a camera that stays unstarted or
+interrupted for 8 seconds still reaches the error modal (camera screens have no help menu, so that
+modal is the user's only way to report).
+
+**Why:** VisionCamera v5 reports a camera held by another app as an interruption that CameraX retries,
+not as an error, and iOS restarts the session after a media services reset (our patch). Without
+this the preview sits black with no explanation, or the user sees "camera broken" for a camera that
+is about to come back.
+
 ## Buttons: loading spinner follows the label
 
 The spinner inside a `Button` takes the button's resolved label colour (including the disabled

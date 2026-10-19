@@ -23,8 +23,10 @@ import { BarcodeFormat, TargetBarcodeFormat, useBarcodeScannerOutput } from 'rea
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import { useCameraInterruption, useCameraNotReadyTimeout, useRecoverableCameraError } from '../hooks/useCameraRecovery'
 import { isCameraControlCanceledError } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
+import CameraInterruptedOverlay from './CameraInterruptedOverlay'
 import {
   AccumulatedCode,
   EnhancedCode,
@@ -37,7 +39,6 @@ import {
   determineScanState,
   getCameraMetadata,
   isCodeAlignedWithZones,
-  isRecoverableCameraRuntimeError,
   mergeLockedCodesWithAccumulated,
   toScannedCode,
   transformBarcodeCoordinates,
@@ -50,14 +51,6 @@ export type { EnhancedCode, ScanZone }
  * A 3× pinch covers the entire min→max zoom range.
  */
 const PINCH_SCALE_FULL_ZOOM = 3
-
-/**
- * How long after a recoverable camera runtime error a repeat still counts as the same
- * failure. VisionCamera restarts the capture session itself after an iOS runtime error
- * and a failed restart posts another one immediately, so a repeat inside this window
- * means recovery did not work and the camera should fail over.
- */
-const RECOVERABLE_ERROR_WINDOW_MS = 10_000
 
 export interface CodeScanningCameraProps {
   /**
@@ -194,6 +187,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const { appStateStatus, pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const camera = useRef<CameraRef>(null)
   const [cameraStarted, setCameraStarted] = useState(false)
+  const { isInterrupted, interruptionReason, onInterruptionStarted, onInterruptionEnded, clearInterruption } =
+    useCameraInterruption('CodeScanningCamera')
+  const shouldAwaitRecovery = useRecoverableCameraError()
   const [torchEnabled, setTorchEnabled] = useState(false)
   // When `torchActive`/`onToggleTorch` are provided, the parent owns torch state.
   const isTorchOn = torchActive ?? torchEnabled
@@ -850,6 +846,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const handleCameraStarted = useCallback(() => {
     logger.debug('Camera started', cameraMetadata)
     setCameraStarted(true)
+    clearInterruption()
 
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true
@@ -858,13 +855,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       setZoomDisplay(targetZoom)
       logger.debug('Zoom applied after initialization', { zoom: targetZoom })
     }
-  }, [logger, cameraMetadata, getEffectiveZoom, initialZoom, zoom])
+  }, [logger, cameraMetadata, getEffectiveZoom, initialZoom, zoom, clearInterruption])
 
   const handleCameraStopped = useCallback(() => setCameraStarted(false), [])
-
-  // When the last recoverable runtime error (see isRecoverableCameraRuntimeError) arrived,
-  // so a repeat inside RECOVERABLE_ERROR_WINDOW_MS is escalated instead of waited out again.
-  const lastRecoverableErrorAtRef = useRef<number | null>(null)
 
   const handleCameraError = useCallback(
     (error: Error) => {
@@ -884,30 +877,29 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
       const appError = getCameraError(error)
 
-      if (isRecoverableCameraRuntimeError(error as { code?: string })) {
-        const now = Date.now()
-        const previousAt = lastRecoverableErrorAtRef.current
-        lastRecoverableErrorAtRef.current = now
-
-        if (previousAt === null || now - previousAt > RECOVERABLE_ERROR_WINDOW_MS) {
-          // VisionCamera restarts the capture session itself after an iOS runtime error, so a
-          // single one is not a dead camera — failing over here would unmount a camera that is
-          // about to come back. A failed restart posts another runtime error right away, which
-          // lands inside the window and falls through to the fatal path below.
-          logger.warn(
-            '[CodeScanningCamera] recoverable runtime error, waiting for the camera session to restart',
-            appError.toJSON()
-          )
-          return
-        }
+      if (shouldAwaitRecovery(error)) {
+        // The session restarts itself, so failing over here would unmount a camera that is about
+        // to come back. A failed restart lands inside the window and falls through to the fatal path.
+        logger.warn(
+          '[CodeScanningCamera] recoverable runtime error, waiting for the camera session to restart',
+          appError.toJSON()
+        )
+        return
       }
 
       logger.error('[CodeScanningCamera] runtime error', appError.toJSON())
       emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), appError)
       onError?.(error)
     },
-    [appStateStatus, emitErrorModal, t, getCameraError, onError, logger]
+    [appStateStatus, emitErrorModal, t, getCameraError, onError, logger, shouldAwaitRecovery]
   )
+
+  useCameraNotReadyTimeout({
+    shouldBeRunning: Boolean(device) && hasPermission && isFocused && !isBackgroundedAppState(appStateStatus),
+    isStarted: cameraStarted,
+    interruptionReason,
+    onTimeout: handleCameraError,
+  })
 
   const handleSaveScanZones = useCallback(() => {
     if (!containerSize) {
@@ -1156,6 +1148,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           torchMode={hasTorch && cameraStarted ? (isTorchOn ? 'on' : 'off') : undefined}
           onStarted={handleCameraStarted}
           onStopped={handleCameraStopped}
+          onInterruptionStarted={onInterruptionStarted}
+          onInterruptionEnded={onInterruptionEnded}
           onError={handleCameraError}
           resizeMode="cover"
         />
@@ -1228,6 +1222,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           )}
         </View>
       )}
+
+      {isInterrupted && <CameraInterruptedOverlay />}
 
       {/* Locked state action buttons — scanning is paused, user must confirm */}
       {scanState === 'locked' && (ENABLE_MANUAL_CONFIRM || enableScanZones) && (

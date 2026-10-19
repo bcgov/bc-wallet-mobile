@@ -46,6 +46,9 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
       getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onInterruptionEnded={[Function]}
+      onInterruptionStarted={[Function]}
+      onStarted={[Function]}
       onStopped={[Function]}
       outputs={
         [
@@ -311,6 +314,9 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
       getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onInterruptionEnded={[Function]}
+      onInterruptionStarted={[Function]}
+      onStarted={[Function]}
       onStopped={[Function]}
       outputs={
         [
@@ -576,6 +582,9 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
       getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onInterruptionEnded={[Function]}
+      onInterruptionStarted={[Function]}
+      onStarted={[Function]}
       onStopped={[Function]}
       outputs={
         [
@@ -841,6 +850,9 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
       getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onInterruptionEnded={[Function]}
+      onInterruptionStarted={[Function]}
+      onStarted={[Function]}
       onStopped={[Function]}
       outputs={
         [
@@ -1106,6 +1118,9 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
       getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onInterruptionEnded={[Function]}
+      onInterruptionStarted={[Function]}
+      onStarted={[Function]}
       onStopped={[Function]}
       outputs={
         [
@@ -1371,6 +1386,9 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
       getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onInterruptionEnded={[Function]}
+      onInterruptionStarted={[Function]}
+      onStarted={[Function]}
       onStopped={[Function]}
       outputs={
         [
@@ -1636,6 +1654,9 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
       getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onInterruptionEnded={[Function]}
+      onInterruptionStarted={[Function]}
+      onStarted={[Function]}
       onStopped={[Function]}
       outputs={
         [
@@ -1901,6 +1922,9 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
       getInitialZoom={[Function]}
       isActive={true}
       onError={[Function]}
+      onInterruptionEnded={[Function]}
+      onInterruptionStarted={[Function]}
+      onStarted={[Function]}
       onStopped={[Function]}
       outputs={
         [
