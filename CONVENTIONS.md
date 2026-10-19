@@ -135,3 +135,21 @@ Rules that keep this consistent:
 **Why:** many people install the app only to verify their BC Services Card; an unverified Home is a dead end
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
 alone because starting from the Home card must not turn a skipper into a first-time verifier.
+
+## Derived state: compute it from its inputs, don't store a flag
+
+State that follows from other state is derived on read through a rule, a selector and a hook, never saved as a
+flag that something has to remember to set and clear. The card expiry phase is the example:
+
+- `getAccountPhase` (`bcsc-theme/utils/account-phase.ts`) is the only definition of "expired" and "expiring soon".
+- `selectAccountPhase` (`bcsc-theme/selectors/account.ts`) reads its inputs: `bcscSecure.verified`, the ID token
+  `bcscReason`, `bcscSecure.refreshTokenExpired`, and the account's `account_expiration_date`.
+- `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
+  `useCustomNotifications` (Home notices) both read it, so they cannot disagree.
+
+The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
+from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
+store or account change.
+
+**Why:** the saved `showAccountExpiryNotification` / `showCardRenewalNotification` flags were only written at
+startup and cleared by hand, so a failed account load or a missed reset left a stale renewal notice (#4866, #4878).
