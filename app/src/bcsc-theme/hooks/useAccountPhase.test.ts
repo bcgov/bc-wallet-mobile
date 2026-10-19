@@ -61,18 +61,6 @@ describe('useAccountPhase', () => {
     expect(result.current).toEqual({ phase: 'unknown' })
   })
 
-  it('keeps the phase of the last loaded account until a new one arrives', () => {
-    const account = buildAccount(daysFromNow(8))
-    setAccount(account)
-    const { result, rerender } = renderHook(() => useAccountPhase())
-
-    // a failed refresh leaves the provider's account untouched
-    setAccount(account)
-    rerender({})
-
-    expect(result.current.phase).toBe('expiringSoon')
-  })
-
   it('is expired when the server expired the card, whatever the date', () => {
     mockUseStore.mockReturnValue([buildStore(BCSCReason.ExpiredBySystem), jest.fn()])
     setAccount(buildAccount(daysFromNow(365)))

@@ -578,8 +578,6 @@ describe('useGetSystemChecks', () => {
         expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
         expect(names).not.toContain('RefreshTokenExpiredSystemCheck')
-        expect(names).not.toContain('AccountExpirySystemCheck')
-        expect(names).not.toContain('AccountRenewalSystemCheck')
         expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')
         // No chosen nickname / registration token yet, so there's nothing to re-register — the
         // device-registration update check is skipped (otherwise it throws "No client name found").

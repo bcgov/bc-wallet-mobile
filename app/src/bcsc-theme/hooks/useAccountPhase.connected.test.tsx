@@ -113,6 +113,8 @@ describe('card expiry notices, from the account provider to Home', () => {
     mockGetUserMetadata.mockRejectedValueOnce(new Error('offline'))
     reloadAccount()
     await waitFor(() => expect(mockGetUserMetadata).toHaveBeenCalledTimes(2))
+    // let the loader's rejection and its error state update land before asserting
+    await act(async () => {})
 
     expect(notificationKeys(result.current.notifications)).toEqual(['AccountRenewalAvailable'])
   })
