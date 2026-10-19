@@ -16,7 +16,6 @@ import {
   EvidenceMetadata,
   getAccount,
   getAccountFlags,
-  getAccountSecurityMethod,
   getAuthorizationRequest,
   getCredential,
   getEvidence,
@@ -60,7 +59,6 @@ jest.mock('react-native-bcsc-core', () => ({
   isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
   getAccount: jest.fn(),
   getAccountFlags: jest.fn(),
-  getAccountSecurityMethod: jest.fn(),
   getAuthorizationRequest: jest.fn(),
   getCredential: jest.fn(),
   getEvidence: jest.fn(),
@@ -482,6 +480,7 @@ describe('useSecureActions', () => {
       id: 'account-1',
       issuer: '',
       clientID: '',
+      securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
       displayName: 'Test User',
     }
 
@@ -491,10 +490,9 @@ describe('useSecureActions', () => {
       jest.mocked(getEvidence).mockResolvedValue([] as any)
       jest.mocked(getCredential).mockResolvedValue(null as any)
       jest.mocked(getSavedServices).mockResolvedValue([] as any)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
     })
 
-    it('recovers issuer/clientID from authorization request and updates account', async () => {
+    it('recovers issuer/clientID from authorization request and updates account, keeping its security method', async () => {
       jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue({
         issuer: 'https://idsit.gov.bc.ca',
@@ -507,7 +505,6 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(getAccountSecurityMethod).toHaveBeenCalled()
       expect(setAccount).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'account-1',
@@ -516,6 +513,24 @@ describe('useSecureActions', () => {
           securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
         })
       )
+    })
+
+    it('hydrates securityMethod from the account record', async () => {
+      jest.mocked(getAccount).mockResolvedValue({
+        ...baseAccount,
+        issuer: 'https://idsit.gov.bc.ca',
+        clientID: 'existing-client-id',
+        securityMethod: AccountSecurityMethod.DeviceAuth,
+      } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null)
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydrateField('securityMethod')).toBe(AccountSecurityMethod.DeviceAuth)
     })
 
     it('does not call setAccount when account already has issuer and clientID', async () => {
@@ -676,7 +691,6 @@ describe('useSecureActions', () => {
       jest.mocked(getEvidence).mockResolvedValue([] as any)
       jest.mocked(getCredential).mockResolvedValue(null as any)
       jest.mocked(getSavedServices).mockResolvedValue([] as any)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
       jest.mocked(getAccount).mockResolvedValue(account as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
       jest.mocked(getToken).mockImplementation(async (type: any) => {
@@ -777,7 +791,6 @@ describe('useSecureActions', () => {
       jest.mocked(getEvidence).mockResolvedValue([] as any)
       jest.mocked(getCredential).mockResolvedValue(null as any)
       jest.mocked(getSavedServices).mockResolvedValue([] as any)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
       jest.mocked(getAccount).mockResolvedValue(account as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
       jest.mocked(getToken).mockImplementation(async (type: any) => {
@@ -879,7 +892,6 @@ describe('useSecureActions', () => {
       jest.mocked(getEvidence).mockResolvedValue([] as any)
       jest.mocked(getCredential).mockResolvedValue(null as any)
       jest.mocked(getSavedServices).mockResolvedValue([] as any)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
       jest.mocked(getAccount).mockResolvedValue({ id: 'a', issuer: 'https://i', clientID: 'c' } as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
       jest

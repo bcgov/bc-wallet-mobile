@@ -30,6 +30,17 @@
  * mobile-Safari User-Agent — that combination causes the demo site to
  * select the LOCAL_APP_SWITCH device path and embed a `handlerURI` in the
  * response.
+ *
+ * All five hops ride ONE keep-alive connection (`sitDispatcher`). Node's
+ * global fetch would put hop 2 on a fresh socket — its pool still counts
+ * hop 1's connection as busy when the next request is dispatched a tick
+ * later — and SIT's edge penalises exactly that second connection: on
+ * 2026-10-15 all 20 mint attempts across both lanes connected fine for hop
+ * 1, then hit undici's 10 s connect timeout on hop 2, while hops 3–5
+ * (which reuse hop 2's socket) never failed. The site allows reuse
+ * (`Keep-Alive: timeout=5, max=100`), so one connection carries the whole
+ * mint; a retry after the growing wait finds it closed and connects
+ * afresh, as hop 1 always did.
  */
 import { type CheerioAPI, load } from 'cheerio'
 import makeFetchCookie from 'fetch-cookie'
@@ -37,6 +48,8 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { CookieJar } from 'tough-cookie'
+import { Agent, fetch as undiciFetch } from 'undici'
+import { withDriverKeepalive } from './driver-keepalive.js'
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url))
 const APP_ENV_PATH = path.resolve(SCRIPT_DIR, '../../../app/.env')
@@ -57,8 +70,21 @@ const IOS_USER_AGENT =
 const ANDROID_USER_AGENT =
   'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36'
 const DEFAULT_TIMEOUT_MS = 20_000
-/** Whole-mint attempts before a transport failure is the checkpoint's: SIT drops a connection now and then. */
-const MINT_ATTEMPTS = 3
+/**
+ * One connection per process for every SIT hop (see the file header): `connections: 1` makes undici
+ * queue the next hop onto the live socket instead of opening another, and after the server's 5 s idle
+ * close it simply reconnects. fetch-cookie wraps this exactly as it wrapped the global `fetch`.
+ */
+const sitDispatcher = new Agent({ connections: 1 })
+const sitFetch = (input: Parameters<typeof undiciFetch>[0], init?: Parameters<typeof undiciFetch>[1]) =>
+  undiciFetch(input, { ...init, dispatcher: sitDispatcher })
+type SitResponse = Awaited<ReturnType<typeof sitFetch>>
+/**
+ * Whole-mint attempts before a transport failure is the checkpoint's. The runner's connects to SIT time
+ * out in bursts (5–17 `UND_ERR_CONNECT_TIMEOUT` a night; three in a row killed a journey once), so the
+ * wait between attempts grows: 5 s, 10 s, 15 s, 20 s.
+ */
+const MINT_ATTEMPTS = 5
 const MINT_RETRY_DELAY_MS = 5_000
 
 export type DeepLinkPlatform = 'ios' | 'android'
@@ -93,7 +119,7 @@ interface CardtapTransactionContext {
   transactionId: string
   entryUrl: string
   clientName: string
-  fetchWithCookies: typeof fetch
+  fetchWithCookies: typeof sitFetch
   signal: AbortSignal
   userAgent: string
 }
@@ -212,16 +238,27 @@ class MintStepError extends Error {
   }
 }
 
-/** Run the whole mint again on a retryable step failure — every attempt opens a fresh transaction. */
+/**
+ * Run the whole mint again on a retryable step failure — every attempt opens a fresh transaction. The
+ * attempts and their waits can add up to well past Sauce's 90 s idle limit, so the whole retry runs
+ * under the driver keepalive (a no-op outside a wdio session).
+ */
 async function withMintRetry<T>(what: string, mint: () => Promise<T>): Promise<T> {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      return await mint()
-    } catch (err) {
-      if (!(err instanceof MintStepError && err.retryable && attempt < MINT_ATTEMPTS)) throw err
-      console.warn(`[pairing-code] ${what} attempt ${attempt}/${MINT_ATTEMPTS} failed (${err.message}); retrying in ${MINT_RETRY_DELAY_MS}ms`)
-      await new Promise((resolve) => setTimeout(resolve, MINT_RETRY_DELAY_MS))
-    }
+  return withDriverKeepalive(() => mintAttempt(what, mint, 1))
+}
+
+/** One attempt; a retryable step failure schedules the next after a growing wait. */
+async function mintAttempt<T>(what: string, mint: () => Promise<T>, attempt: number): Promise<T> {
+  try {
+    return await mint()
+  } catch (err) {
+    if (!(err instanceof MintStepError && err.retryable && attempt < MINT_ATTEMPTS)) throw err
+    const delayMs = MINT_RETRY_DELAY_MS * attempt
+    console.warn(
+      `[pairing-code] ${what} attempt ${attempt}/${MINT_ATTEMPTS} failed (${err.message}); retrying in ${delayMs}ms`
+    )
+    await new Promise((resolve) => setTimeout(resolve, delayMs))
+    return mintAttempt(what, mint, attempt + 1)
   }
 }
 
@@ -263,7 +300,7 @@ async function mintCardtapTransaction({
 }: MintTransactionOptions): Promise<CardtapTransactionContext> {
   assertSitEnv()
   const jar = new CookieJar()
-  const fetchWithCookies = makeFetchCookie(fetch, jar)
+  const fetchWithCookies = makeFetchCookie(sitFetch, jar)
   const headers = baseHeaders(userAgent)
 
   // 1. Demo RP login page — server returns an auto-submit SAML form.
@@ -395,7 +432,7 @@ function baseHeaders(userAgent: string): Record<string, string> {
   }
 }
 
-async function readBodyOrThrow(step: string, response: Response): Promise<string> {
+async function readBodyOrThrow(step: string, response: SitResponse): Promise<string> {
   const body = await transport(step, () => response.text())
   if (!response.ok) {
     const snippet = body.slice(0, 200).replaceAll(/\s+/g, ' ').trim()

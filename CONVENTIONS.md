@@ -105,3 +105,14 @@ picked up from, the same as after an agent restart.
 **Why:** Always forcing `MEDIATOR_URL` silently disabled developer-mode mediator switching (the
 selection reverted on the next launch), while never forcing it kept an upgraded app on a retired
 mediator.
+
+## Settings: rows are decided before the first render
+
+Facts that decide whether a settings row exists, such as the account security method behind
+"Change PIN", live in secure state (`store.bcscSecure`): hydrated from the native account record at
+launch and updated wherever the user changes them. A screen reads them synchronously; it never reads
+them natively on focus and re-renders, and a row whose gate is still unknown stays hidden.
+
+**Why:** the settings sections animate layout changes (`LinearTransition`), so a row that appears or
+disappears after mount slides every row below it. "Change PIN" rendered on a default and was dropped
+once the native read reported device auth, so the whole list jumped on every open of Settings.

@@ -2,6 +2,7 @@ import { DispatchAction, LocalStorageKeys, PersistentStorage, TOKENS } from '@bi
 import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
 import { Config } from 'react-native-config'
 import { AppContainer } from './container-imp'
+import { BCSCBanner } from './src/bcsc-theme/components/AppBanner'
 import { BCLocalStorageKeys } from './src/store'
 
 // LOAD_STATE-level regression test for the reportUUID -> installId migration (issue #4325):
@@ -119,6 +120,45 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     const state = dispatch.mock.calls[0][0].payload[0]
     expect(state.bcsc.installId).toBe('already-migrated')
     expect(storeValueForKeySpy).not.toHaveBeenCalled()
+  })
+
+  it('drops a persisted update-available banner on load but keeps other banners', async () => {
+    const serviceNotice = {
+      id: BCSCBanner.IAS_SERVER_NOTIFICATION,
+      title: 'Notice',
+      type: 'warning',
+      dismissible: false,
+    }
+    mockStoredValues[BCLocalStorageKeys.BCSC] = {
+      appVersion: '1.0.0',
+      installId: 'already-migrated',
+      bannerMessages: [
+        { id: BCSCBanner.APP_UPDATE_AVAILABLE, title: 'Update available', type: 'info', dismissible: true },
+        serviceNotice,
+      ],
+    }
+
+    const { registrations } = buildContainer()
+    const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
+    const dispatch = jest.fn()
+
+    await loadState(dispatch)
+
+    const state = dispatch.mock.calls[0][0].payload[0]
+    expect(state.bcsc.bannerMessages).toEqual([serviceNotice])
+  })
+
+  it('keeps the empty bannerMessages default when the persisted state has none', async () => {
+    mockStoredValues[BCLocalStorageKeys.BCSC] = { appVersion: '1.0.0', installId: 'already-migrated' }
+
+    const { registrations } = buildContainer()
+    const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
+    const dispatch = jest.fn()
+
+    await loadState(dispatch)
+
+    const state = dispatch.mock.calls[0][0].payload[0]
+    expect(state.bcsc.bannerMessages).toEqual([])
   })
 })
 

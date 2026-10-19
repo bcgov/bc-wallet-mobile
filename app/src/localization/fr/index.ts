@@ -922,6 +922,22 @@ const translation = {
       "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps: (FR)",
       "CameraAndMicrophoneTitle": "Camera & Microphone Disabled (FR)",
       "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video. (FR)",
+      "BluetoothTitle": "Nearby Devices Disabled (FR)",
+      "BluetoothDescription": "Follow these steps to allow access to nearby devices so you can use a connected Bluetooth headset or speaker during the call. (FR)",
+      "Bluetooth": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Bluetooth' (FR)",
+          "Step3": "3. Return to the app to continue (FR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Permissions' (FR)",
+          "Step3": "3. Tap 'Nearby devices' (FR)",
+          "Step4": "4. Select 'Allow' (FR)",
+          "Step5": "5. Return to the app to continue (FR)",
+        },
+      },
       "Camera": {
         "iOS": {
           "Step1": "1. Tap 'Open Settings' below (FR)",
@@ -1382,6 +1398,10 @@ const translation = {
       "CannotSendVideo": "Cannot send a video? (FR)",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (FR)",
       "CannotVideoCall": "Cannot video call? (FR)"
+    },
+    "BluetoothDisclosure": {
+      "Title": "Detect bluetooth devices (FR)",
+      "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device. (FR)",
     },
   },
   "RemoteLogging": {

@@ -33,6 +33,7 @@ import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
 
+import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import EmptyWalletList from '@/bcsc-theme/components/EmptyWalletList'
 import { createFloatingHelpMenuButton } from '@/bcsc-theme/components/FloatingHelpMenuHeaderButton'
 import { CredentialDetailsSubHeader } from '@/bcsc-theme/features/credentials/CredentialDetailsSubHeader'
@@ -420,6 +421,10 @@ export class AppContainer implements Container {
       bcsc.videoDuration = undefined
       bcsc.showAccountExpiryNotification = undefined
       bcsc.showCardRenewalNotification = undefined
+      // Recomputed each launch by UpdateAppSystemCheck; a stale persisted one would outlive an update if the status fetch fails
+      if (Array.isArray(bcsc.bannerMessages)) {
+        bcsc.bannerMessages = bcsc.bannerMessages.filter((banner) => banner.id !== BCSCBanner.APP_UPDATE_AVAILABLE)
+      }
 
       if (bcscMigration.migrated) {
         // Write back under the new field name so subsequent launches skip this mapping. Deferred until

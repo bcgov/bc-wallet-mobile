@@ -1,7 +1,8 @@
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { isAppError } from '@/errors/appError'
+import { AppError, isAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts, useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
@@ -159,21 +160,26 @@ export const useRegistrationService = () => {
    * security method
    *
    * @returns Promise<void>
+   * @throws AppError `ACCOUNT_NOT_FOUND` when there is no native account to take the security method from
    */
   const cycleRegistration = useCallback(async () => {
     const account = await getAccount()
+    if (!account) {
+      // The record carries the security method the new registration keeps, so there is nothing to cycle without it.
+      throw AppError.fromErrorDefinition(ErrorRegistry.ACCOUNT_NOT_FOUND)
+    }
+
     let registrationAccessToken = store.bcscSecure.registrationAccessToken
     if (!registrationAccessToken) {
       const nativeToken = await getToken(TokenType.Registration)
       registrationAccessToken = nativeToken?.token
     }
 
-    if (registrationAccessToken && account?.clientID) {
+    if (registrationAccessToken && account.clientID) {
       await registrationApi.deleteRegistration(registrationAccessToken, account.clientID)
     }
 
-    const securityMethod = await getAccountSecurityMethod()
-    await registrationApi.createRegistration(securityMethod)
+    await registrationApi.createRegistration(account.securityMethod)
   }, [registrationApi, store.bcscSecure.registrationAccessToken])
 
   return useMemo(

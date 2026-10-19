@@ -8,7 +8,7 @@ import {
   ReducerAction,
 } from '@bifold/core'
 import { getInitialEnvironment, IASEnvironment } from '@utils/environment'
-import { BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
@@ -220,6 +220,11 @@ export interface BCSCSecureState {
   // === Security ===
   /** PBKDF2 hash of PIN used for Askar wallet encryption */
   walletKey?: string
+  /**
+   * How the app unlocks (PIN or device auth), mirrored from the native account record so screens
+   * can read it on their first render. Hydrated at launch; updated when the user switches method.
+   */
+  securityMethod?: AccountSecurityMethod
 
   hasDismissedExpiryAlert?: boolean
 
@@ -317,6 +322,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
   UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus', //controls whether the VerifyStack or the MainStack are displayed
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
+  UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
@@ -722,6 +728,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {
       const [walletKey] = action.payload as [string | undefined]
       const bcscSecure = { ...state.bcscSecure, walletKey }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_SECURITY_METHOD: {
+      const securityMethod = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, securityMethod }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA: {

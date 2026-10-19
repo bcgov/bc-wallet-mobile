@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { deviceRequiresBluetoothPermission } from '@/bcsc-theme/utils/bluetooth'
 import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -23,9 +24,12 @@ import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, AppState, Image, ImageErrorEvent, StyleSheet, View } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
+import { BluetoothDisclosure } from '../BluetoothDisclosure'
 import ServicePeriodList from './components/ServicePeriodList'
+
+type CallStatus = 'idle' | 'checkPermissions' | 'bluetoothDisclosure' | 'bluetoothDenied' | 'microphoneDenied'
 
 type StartCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.StartCall>
@@ -39,13 +43,12 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { video: videoCallApi } = useApi()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
-  const [showPermissionDisabled, setShowPermissionDisabled] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
   const { liveCallFileUploadAlert } = useAlerts(navigation)
-  const [isWaitingForPermissions, setIsWaitingForPermissions] = useState(false)
   const [formattedHours, setFormattedHours] = useState<FormattedServicePeriod[]>([])
   const [hoursLoading, setHoursLoading] = useState(true)
+  const [status, setStatus] = useState<CallStatus>('idle')
 
   useEffect(() => {
     videoCallApi
@@ -59,14 +62,31 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       .finally(() => setHoursLoading(false))
   }, [videoCallApi, logger])
 
-  // Reset the start button's loading state whenever the screen regains focus. Pressing "Start call"
-  // sets this flag and pushes LiveCall without unmounting this screen, so on returning here (e.g. via
-  // the live-call back button) the flag would otherwise stay true and leave the button disabled.
   useFocusEffect(
     useCallback(() => {
-      setIsWaitingForPermissions(false)
+      setStatus('idle')
     }, [])
   )
+
+  useEffect(() => {
+    // Opening Settings backgrounds the app without blurring this screen, so useFocusEffect never fires on return
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'active') {
+        return
+      }
+
+      setStatus((current) => {
+        // If the user denied microphone or Bluetooth permission, we need to reset the status to 'idle' so they can try again
+        if (current === 'microphoneDenied' || current === 'bluetoothDenied') {
+          return 'idle'
+        }
+
+        return current
+      })
+    })
+
+    return () => subscription.remove()
+  }, [])
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
@@ -93,39 +113,38 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     },
   })
 
-  const requestBluetoothPermission = async () => {
-    // On Android 12+, BLUETOOTH_CONNECT must be requested at runtime.
-    // Without it, InCallManager's BluetoothManager silently fails to start
-    // and call audio always routes to the speaker instead of BT headsets.
-    try {
-      if (Platform.OS === 'android' && Platform.Version >= 31) {
-        await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT)
-      }
-    } catch (error) {
-      // Not a blocker — the call still works without Bluetooth
-      logger.warn('Failed to request Bluetooth permission', { error: error as Error })
-    }
-  }
-
   const onPressStart = async () => {
-    setIsWaitingForPermissions(true)
-    if (hasMicrophonePermission) {
-      await requestBluetoothPermission()
-      navigation.navigate(BCSCScreens.LiveCall)
+    setStatus('checkPermissions')
+
+    let micPermissionGranted = hasMicrophonePermission
+
+    if (!micPermissionGranted && !hasRequestedPermission.current) {
+      // Request microphone permission only once per screen mount
+      hasRequestedPermission.current = true
+      micPermissionGranted = await requestMicrophonePermission()
+    }
+
+    if (!micPermissionGranted) {
+      // If the user denies microphone permission, we cannot proceed with the call
+      setStatus('microphoneDenied')
       return
     }
 
-    if (!hasRequestedPermission.current) {
-      hasRequestedPermission.current = true
-      const granted = await requestMicrophonePermission()
-      if (granted) {
-        await requestBluetoothPermission()
-        navigation.navigate(BCSCScreens.LiveCall)
-        return
-      }
+    let needsBluetoothPermission = false
+    try {
+      needsBluetoothPermission = await deviceRequiresBluetoothPermission()
+    } catch (error) {
+      // Bluetooth detection is best-effort, the call still works without it
+      logger.error('[StartCallScreen] Error detecting Bluetooth audio, continuing without the prompt', error as Error)
     }
-    setShowPermissionDisabled(true)
-    setIsWaitingForPermissions(false)
+
+    if (needsBluetoothPermission) {
+      // If the device requires Bluetooth permission, we need to show the Bluetooth disclosure screen
+      setStatus('bluetoothDisclosure')
+      return
+    }
+
+    navigation.navigate(BCSCScreens.LiveCall)
   }
 
   const handleImageError = (error: ImageErrorEvent) => {
@@ -134,8 +153,26 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     liveCallFileUploadAlert()
   }
 
-  if (showPermissionDisabled) {
-    return <PermissionDisabled permissionType="microphone" />
+  if (status === 'microphoneDenied') {
+    return <PermissionDisabled permissionType={'microphone'} />
+  }
+
+  if (status === 'bluetoothDenied') {
+    return <PermissionDisabled permissionType={'bluetooth'} />
+  }
+
+  if (status === 'bluetoothDisclosure') {
+    return (
+      <BluetoothDisclosure
+        onContinue={(permissionGranted) => {
+          if (!permissionGranted) {
+            return setStatus('bluetoothDenied')
+          }
+          // If the user grants Bluetooth permission, we can proceed to the live call
+          navigation.navigate(BCSCScreens.LiveCall)
+        }}
+      />
+    )
   }
 
   const controls = (
@@ -145,10 +182,10 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
         title={t('BCSC.VideoCall.StartCall')}
         accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
         onPress={onPressStart}
-        disabled={isWaitingForPermissions}
+        disabled={status !== 'idle'}
         testID={testIdWithKey(TestIds.verify.startCall.start)}
       >
-        {isWaitingForPermissions && <ButtonLoading />}
+        {status === 'checkPermissions' && <ButtonLoading />}
       </Button>
     </ControlContainer>
   )

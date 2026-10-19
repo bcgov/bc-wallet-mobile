@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/core'
 import { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { useCallback } from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
-import { deleteToken, getAccountSecurityMethod, TokenType } from 'react-native-bcsc-core'
+import { deleteToken, TokenType } from 'react-native-bcsc-core'
 import { withAccount } from '../api/hooks/withAccountGuard'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useSecureActions } from './useSecureActions'
@@ -17,7 +17,7 @@ import { useSecureActions } from './useSecureActions'
  *
  * Reset sequence:
  *   1. Clears the in-memory secure store, marking the device as unverified
- *   2. In parallel: fetches the account security method and deletes the existing IAS registration
+ *   2. Deletes the existing IAS registration
  *   3. Deletes all verification data and tokens from native storage
  *   4. Creates a new IAS registration, writing the new account data
  *
@@ -80,6 +80,8 @@ export const useVerificationReset = () => {
         clearSecureState({
           isHydrated: true, // this is set to true on app load and shouldn't change during the reset
           walletKey: store.bcscSecure.walletKey,
+          // re-registration keeps the same method but only writes it natively, so the store's copy is kept too
+          securityMethod: store.bcscSecure.securityMethod,
           // this token is used to clean up other verification data, a new one is saved once the device is registered again
           registrationAccessToken: store.bcscSecure.registrationAccessToken,
           verified: false, // device is no longer verified
@@ -92,16 +94,10 @@ export const useVerificationReset = () => {
         dispatch({ type: BCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION, payload: [false] })
         dispatch({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [false] })
 
-        logger.info(
-          '[useVerificationReset] Secure state cleared. Deleting IAS registration and fetching security method...'
-        )
+        logger.info('[useVerificationReset] Secure state cleared. Deleting IAS registration...')
 
-        const [securityMethod] = await Promise.all([
-          // Get original security method for registering the device again
-          getAccountSecurityMethod(),
-          // Delete old account registration in IAS
-          deleteRegistration(account.clientID),
-        ])
+        // Delete old account registration in IAS
+        await deleteRegistration(account.clientID)
 
         // Delete verification data from native storage (credential, auth request, account flags, additional evidence, tokens)
         await deleteVerificationData()
@@ -112,9 +108,9 @@ export const useVerificationReset = () => {
         ])
         logger.info('[useVerificationReset] Verification data and refresh token deleted from native storage')
 
-        // Register device again with original security method
+        // Register device again with the original security method from the native account record
         logger.info('[useVerificationReset] Creating new IAS registration...')
-        const temp = await registrationService.createRegistration(securityMethod)
+        const temp = await registrationService.createRegistration(account.securityMethod)
         temp.client_id &&
           logger.info(`[useVerificationReset] New registration created with client_id: ${temp.client_id}`)
         logger.info('[useVerificationReset] New IAS registration created. Renewal reset complete.')
@@ -129,6 +125,7 @@ export const useVerificationReset = () => {
   }, [
     store.bcscSecure.registrationAccessToken,
     store.bcscSecure.walletKey,
+    store.bcscSecure.securityMethod,
     logger,
     dispatch,
     clearSecureState,
