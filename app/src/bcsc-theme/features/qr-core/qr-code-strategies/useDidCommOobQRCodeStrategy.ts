@@ -1,4 +1,5 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { isDidCommInvitationCandidate } from '@/bcsc-theme/utils/didcomm-invitation'
 import { BCState } from '@/store'
 import {
   isDidCommInvitation,
@@ -44,12 +45,7 @@ export const useDidCommOobQRCodeStrategy = (
   const label = invitationLabel || store.bcsc.selectedNickname || 'My Wallet'
 
   const matches = useCallback((uri: string): boolean => {
-    return (
-      isDidCommInvitation(uri) ||
-      isOpenIdCredentialOffer(uri) ||
-      isOpenIdPresentationRequest(uri) ||
-      isVcAuthnLogin(uri)
-    )
+    return isDidCommInvitationCandidate(uri) || isOpenIdCredentialOffer(uri) || isOpenIdPresentationRequest(uri)
   }, [])
 
   const handleOobRecordId = useCallback(
@@ -66,8 +62,18 @@ export const useDidCommOobQRCodeStrategy = (
         throw new QrCodeScanError(t('BCSC.Scan.Unsupported.OpenID'), uri)
       }
 
-      // TODO (MD): Fully type the agent and it's modules
-      const invitation = await agent.modules.didcomm.oob.parseInvitation(uri)
+      let invitation
+      try {
+        // TODO (MD): Fully type the agent and it's modules
+        invitation = await agent.modules.didcomm.oob.parseInvitation(uri)
+      } catch (error) {
+        if (isDidCommInvitation(uri)) {
+          throw error
+        }
+        // Bare URL that didn't resolve to an invitation, most likely an ordinary web link
+        logger.warn(`[useDidCommOobQRCodeStrategy] URL did not resolve to an OOB invitation: ${error}`)
+        throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), uri, String(error))
+      }
       if (!invitation) {
         logger.warn('[useDidCommOobQRCodeStrategy] could not parse OOB invitation')
         throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), uri)
@@ -101,25 +107,4 @@ export const useDidCommOobQRCodeStrategy = (
   )
 
   return useMemo(() => ({ matches, handle, handleOobRecordId }), [matches, handle, handleOobRecordId])
-}
-
-/**
- * Checks if a given URI is a VC Authn login URI.
- *
- * @example https://example.com/url/pres_exch/123e4567-e89b-12d3-a456-426614174000
- *
- * @param uri The URI to check
- * @returns True if the URI is a VC Authn URI, false otherwise
- */
-function isVcAuthnLogin(uri: string): boolean {
-  let url: URL
-  const vcauthnRegex = /^\/url\/pres_exch\/[0-9a-f-]{36}\/?$/i
-
-  try {
-    url = new URL(uri)
-  } catch {
-    return false
-  }
-
-  return vcauthnRegex.test(url.pathname)
 }
