@@ -353,3 +353,51 @@ describe('useEvidenceApi - upload log context', () => {
     })
   })
 })
+
+describe('useEvidenceApi - submit error handling opt-out', () => {
+  const submitPayload = { upload_uris: ['u1'], sha256: 'sha' }
+  const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
+  const mockStore: any = { bcsc: {}, bcscSecure: { deviceCode: 'test-device-code' } }
+
+  const apiClient: any = {
+    endpoints: { evidence: 'https://example.test/evidence' },
+    get: jest.fn(),
+    put: jest.fn(),
+    post: jest.fn(),
+    logger: mockLogger,
+  }
+
+  const renderApi = () => renderHook(() => useEvidenceApi(apiClient)).result
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending' } })
+    ;(getAccount as jest.Mock).mockResolvedValue({ clientID: 'client-id', issuer: 'issuer' })
+    jest.mocked(Bifold.useStore).mockReturnValue([mockStore as Bifold.State, jest.fn()])
+  })
+
+  it('forwards skipOnErrorHandler to the submit PUT so the service can handle its errors', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.sendVerificationRequest('v1', submitPayload, { skipOnErrorHandler: true })
+    })
+
+    expect(apiClient.put).toHaveBeenCalledWith(
+      'https://example.test/evidence/v1/verifications/v1',
+      submitPayload,
+      expect.objectContaining({ skipBearerAuth: true, skipOnErrorHandler: true })
+    )
+  })
+
+  it('leaves the global error handling on when no options are passed', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.sendVerificationRequest('v1', submitPayload)
+    })
+
+    const [, , config] = apiClient.put.mock.calls[0]
+    expect(config.skipOnErrorHandler).toBeUndefined()
+  })
+})

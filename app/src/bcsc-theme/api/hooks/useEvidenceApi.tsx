@@ -237,10 +237,19 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
     [_getDeviceCode, apiClient]
   )
 
+  /**
+   * Submits the uploaded evidence for review.
+   * TODO (MD): deprecate `options` once all callsites use `useEvidenceService` instead of `useEvidenceApi`.
+   * @param verificationRequestId - The ID of the verification request to submit.
+   * @param payload - The upload URIs and the sha256 the recording was issued against.
+   * @param options - Optional configuration for the API call.
+   * @returns Promise resolving to the verification submit response data.
+   */
   const sendVerificationRequest = useCallback(
     async (
       verificationRequestId: string,
-      payload: SendVerificationPayload
+      payload: SendVerificationPayload,
+      options?: EvidenceApiOptions
     ): Promise<VerificationSubmitResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
@@ -252,6 +261,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            skipOnErrorHandler: options?.skipOnErrorHandler,
           }
         )
         const isTerminal = await cancelRemindersOnTerminalStatus(data)

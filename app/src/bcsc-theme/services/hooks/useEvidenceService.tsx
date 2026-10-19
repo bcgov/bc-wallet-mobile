@@ -1,5 +1,9 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
-import useEvidenceApi, { VerificationStatusResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import useEvidenceApi, {
+  SendVerificationPayload,
+  VerificationStatusResponseData,
+  VerificationSubmitResponseData,
+} from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
@@ -10,6 +14,9 @@ import { showErrorAlert, useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions, NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
+
+/** The statuses this app understands; a read-back naming anything else is not trusted. */
+const KNOWN_VERIFICATION_REQUEST_STATUSES: readonly string[] = Object.values(VerificationRequestStatus)
 
 /**
  * Service layer hook for evidence api.
@@ -26,30 +33,37 @@ export const useEvidenceService = () => {
   const alerts = useAlerts(navigation)
 
   /**
-   * Handles errors from evidence API calls and emits the appropriate actions
+   * Handles errors from evidence API calls and emits the appropriate actions.
+   * An `AppError` is marked `handled` once surfaced, so a caller that checks the flag shows nothing more.
    *
    * @param error - The error object
    * @returns void
    */
   const handleEvidenceApiError = useCallback(
     (error: unknown): void => {
-      if (isAxiosAppError(error, 401)) {
-        return navigation.dispatch(
-          CommonActions.navigate({
-            name: BCSCModals.VerificationSessionExpired,
-          })
-        )
-      }
+      try {
+        if (isAxiosAppError(error, 401)) {
+          return navigation.dispatch(
+            CommonActions.navigate({
+              name: BCSCModals.VerificationSessionExpired,
+            })
+          )
+        }
 
-      if (isAppError(error, AppEventCode.IOS_APP_UPDATE_REQUIRED)) {
-        return alerts.appUpdateRequiredAlert()
-      }
+        if (isAppError(error, AppEventCode.IOS_APP_UPDATE_REQUIRED)) {
+          return alerts.appUpdateRequiredAlert()
+        }
 
-      if (isAppError(error, AppEventCode.ANDROID_APP_UPDATE_REQUIRED)) {
-        return alerts.appUpdateRequiredAlert()
-      }
+        if (isAppError(error, AppEventCode.ANDROID_APP_UPDATE_REQUIRED)) {
+          return alerts.appUpdateRequiredAlert()
+        }
 
-      showErrorAlert(error, alerts)
+        showErrorAlert(error, alerts)
+      } finally {
+        if (isAppError(error)) {
+          error.handled = true
+        }
+      }
     },
     [alerts, navigation]
   )
@@ -122,12 +136,99 @@ export const useEvidenceService = () => {
     [evidenceApi, handleEvidenceApiError, logger, updateVerificationRequest]
   )
 
+  /**
+   * Reads a verification request back after a failed submit, without alerting or touching the stored
+   * request: a 404 or a failed read means the server has no record of the submission, and the original
+   * submit error is the one to surface.
+   *
+   * @param verificationRequestId - The ID of the verification request to read back.
+   * @returns Promise resolving to the status data when the server has the request on record, otherwise undefined.
+   */
+  const findSubmittedVerification = useCallback(
+    async (verificationRequestId: string): Promise<VerificationStatusResponseData | undefined> => {
+      try {
+        const data = await evidenceApi.getVerificationRequestStatus(verificationRequestId, { skipOnErrorHandler: true })
+
+        if (!KNOWN_VERIFICATION_REQUEST_STATUSES.includes(data?.status)) {
+          logger.warn(
+            `[useEvidenceService] Read-back of verification request ${verificationRequestId} returned an unrecognised status; surfacing the original submit error`
+          )
+          return undefined
+        }
+
+        return data
+      } catch (error) {
+        logger.warn(
+          `[useEvidenceService] Read-back of verification request ${verificationRequestId} failed; surfacing the original submit error`,
+          { error }
+        )
+        return undefined
+      }
+    },
+    [evidenceApi, logger]
+  )
+
+  /**
+   * Submits the uploaded evidence for review.
+   *
+   * IAS answers 500 (a duplicate-row error) when the id was already submitted: by an earlier attempt, or by
+   * a PUT that succeeded before the app was killed and could record it (#4673). A request the server has on
+   * record is submitted, not failed, so a 500 is followed by a read-back and the status stands in for the
+   * submit response. The original error is surfaced only when the server has no record of the submission.
+   *
+   * Errors are handled here instead of by the global client policies (`skipOnErrorHandler`): a 401 routes to
+   * the session-expired modal and an app-update-required error to its alert, both marked `handled`. A 409
+   * (registration already approved), a dropped connection and non-API errors are rethrown untouched because
+   * the upload model owns their recovery and copy.
+   *
+   * @param verificationRequestId - The ID of the verification request to submit.
+   * @param payload - The upload URIs and the sha256 the recording was issued against.
+   * @returns Promise resolving to the submit response, or to the read-back status when the request was already on record.
+   */
+  const sendVerificationRequest = useCallback(
+    async (
+      verificationRequestId: string,
+      payload: SendVerificationPayload
+    ): Promise<VerificationSubmitResponseData> => {
+      try {
+        return await evidenceApi.sendVerificationRequest(verificationRequestId, payload, { skipOnErrorHandler: true })
+      } catch (error) {
+        if (isAxiosAppError(error, 409)) {
+          throw error
+        }
+
+        if (isAxiosAppError(error, 500)) {
+          const submitted = await findSubmittedVerification(verificationRequestId)
+
+          if (submitted) {
+            logger.info(
+              `[useEvidenceService] Submit of verification request ${verificationRequestId} returned 500 but the request is already ${submitted.status}; continuing as submitted`
+            )
+            return submitted
+          }
+        }
+
+        if (isAppError(error, AppEventCode.NO_INTERNET)) {
+          throw error
+        }
+
+        if (isAppError(error)) {
+          handleEvidenceApiError(error)
+        }
+
+        throw error
+      }
+    },
+    [evidenceApi, findSubmittedVerification, handleEvidenceApiError, logger]
+  )
+
   return useMemo(
     () => ({
       ...evidenceApi, // Spread the base API to include all its methods
       cancelVerificationRequest,
       getVerificationRequestStatus,
+      sendVerificationRequest,
     }),
-    [cancelVerificationRequest, evidenceApi, getVerificationRequestStatus]
+    [cancelVerificationRequest, evidenceApi, getVerificationRequestStatus, sendVerificationRequest]
   )
 }
