@@ -20,20 +20,15 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { isHandledAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCState, NonBCSCUserMetadata } from '@/store'
+import { BCState, NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-export type ResidentialAddressFormState = {
-  streetAddress: string
-  streetAddress2: string
-  city: string
-  province: ProvinceCode | null
-  postalCode: string
-}
+/** The form's values, kept as the session draft in the same shape (see ResidentialAddressDraft). */
+export type ResidentialAddressFormState = ResidentialAddressDraft
 
 export type ResidentialAddressFormErrors = {
   streetAddress?: string
@@ -60,19 +55,44 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
   const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorModal } = useErrorAlert()
-  const { updateCardProcess, updateUserMetadata, updateDeviceCodes, updateVerificationOptions } = useSecureActions()
+  const {
+    updateCardProcess,
+    updateUserMetadata,
+    updateDeviceCodes,
+    updateVerificationOptions,
+    updateResidentialAddressDraft,
+  } = useSecureActions()
   const attemptWithRecovery = useDeviceAuthorizationRecovery()
   const isRecovering = useIsDeviceAuthorizationRecovering()
 
-  const [formState, setFormState] = useState<ResidentialAddressFormState>({
-    streetAddress: store.bcscSecure.userMetadata?.address?.streetAddress ?? '',
-    streetAddress2: store.bcscSecure.userMetadata?.address?.streetAddress2 ?? '',
-    city: store.bcscSecure.userMetadata?.address?.city ?? '',
-    province: store.bcscSecure.userMetadata?.address?.province ?? null,
-    postalCode: store.bcscSecure.userMetadata?.address?.postalCode ?? '',
+  const [formState, setFormState] = useState<ResidentialAddressFormState>(() => {
+    // Stepping back and forward through the flow remounts this screen, so what the user typed this
+    // session (the draft) wins over what they last submitted. A lock drops the draft with the rest of
+    // the secure state, so after an unlock only a submitted address comes back (#4745).
+    if (store.bcscSecure.residentialAddressDraft) {
+      return store.bcscSecure.residentialAddressDraft
+    }
+
+    const address = store.bcscSecure.userMetadata?.address
+    return {
+      streetAddress: address?.streetAddress ?? '',
+      streetAddress2: address?.streetAddress2 ?? '',
+      city: address?.city ?? '',
+      province: address?.province ?? null,
+      postalCode: address?.postalCode ?? '',
+    }
   })
   const [formErrors, setFormErrors] = useState<ResidentialAddressFormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // The draft is written when the screen loses focus (back, forward, settings), not per keystroke
+  // (every store consumer would re-render while typing) and not on unmount (a lock unmounts the whole
+  // stack without a blur, and an unmount write would land after the clear and resurrect the input).
+  useEffect(() => {
+    return navigation.addListener('blur', () => {
+      updateResidentialAddressDraft(formState)
+    })
+  }, [navigation, formState, updateResidentialAddressDraft])
 
   /**
    * Handles changes to the form fields.

@@ -69,6 +69,21 @@ export interface NonBCSCUserMetadata {
   }
 }
 
+/**
+ * The residential address form as the user last left it, kept in memory for the signed-in session
+ * so a trip back through the verify flow brings their unsaved input back (#4745). Partial, untrimmed
+ * and unvalidated: it is never sent anywhere and never written to native storage, so it is dropped
+ * with the rest of the secure state on lock, logout or a verification reset. Only a submitted
+ * address (`NonBCSCUserMetadata.address`) outlives the session.
+ */
+export interface ResidentialAddressDraft {
+  streetAddress: string
+  streetAddress2: string
+  city: string
+  province: ProvinceCode | null
+  postalCode: string
+}
+
 export interface BCSCState {
   appVersion: string
   appBuildNumber: string
@@ -196,6 +211,8 @@ export interface BCSCSecureState {
   // === Non-BCSC User Metadata ===
   /** Metadata for users verifying with non-BCSC cards (name, address) */
   userMetadata?: NonBCSCUserMetadata
+  /** In memory only: the address form as the user left it this session (see ResidentialAddressDraft) */
+  residentialAddressDraft?: ResidentialAddressDraft
 
   // === Account Flags (flattened) ===
   /** Whether user chose to skip email verification */
@@ -305,6 +322,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateSecureDeviceCodeExpiresAt',
   UPDATE_SECURE_CARD_PROCESS = 'bcsc/updateSecureCardProcess',
   UPDATE_SECURE_USER_METADATA = 'bcsc/updateSecureUserMetadata',
+  UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT = 'bcsc/updateSecureResidentialAddressDraft',
   UPDATE_SECURE_REFRESH_TOKEN = 'bcsc/updateSecureRefreshToken',
   UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateSecureRegistrationAccessToken',
   UPDATE_SECURE_ACCESS_TOKEN = 'bcsc/updateSecureAccessToken',
@@ -636,6 +654,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_USER_METADATA: {
       const userMetadata = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, userMetadata }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT: {
+      const residentialAddressDraft: ResidentialAddressDraft | undefined = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, residentialAddressDraft }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN: {

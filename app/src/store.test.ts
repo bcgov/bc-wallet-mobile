@@ -162,6 +162,37 @@ describe('reducer', () => {
     expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
   })
 
+  describe('UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT (#4745)', () => {
+    const draft = { streetAddress: '123 Main St', streetAddress2: '', city: '', province: null, postalCode: '' }
+
+    it('keeps the draft on secure state without persisting anything', () => {
+      const result = reducer(initialState, {
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+
+      expect(result.bcscSecure.residentialAddressDraft).toEqual(draft)
+      expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+    })
+
+    it('discards the draft when dispatched without one', () => {
+      const state = { ...initialState, bcscSecure: { ...initialState.bcscSecure, residentialAddressDraft: draft } }
+      const result = reducer(state, {
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [undefined],
+      })
+
+      expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
+    })
+
+    it('is dropped with the rest of the secure state on lock or logout', () => {
+      const state = { ...initialState, bcscSecure: { ...initialState.bcscSecure, residentialAddressDraft: draft } }
+      const result = reducer(state, { type: BCDispatchAction.CLEAR_SECURE_STATE })
+
+      expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
+    })
+  })
+
   it('CLEAR_BCSC resets verificationSkipped to undefined', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
     const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })
