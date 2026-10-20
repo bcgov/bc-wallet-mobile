@@ -44,6 +44,7 @@ import { activate, deactivate, setup, status } from '@utils/PushNotificationsHel
 import { IASEnvironment } from '@utils/environment'
 import { expirationOverrideInMinutes } from '@utils/expiration'
 import { createAppLogger } from '@utils/logger'
+import { reconcileMediatorPreferences } from '@utils/mediator-preferences'
 import { TFunction } from 'i18next'
 import { buildDigitalServicesCardCredentialRule } from './src/bcsc-theme/services/digitalServicesCardProvisioner'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
@@ -381,6 +382,7 @@ export class AppContainer implements Container {
       let { environment, remoteDebugging, enableProxy, enableAppToAppPersonFlow } = initialState.developer
       let bcsc = initialState.bcsc
       let mode = initialState.mode
+      let recordedMediatorUrl: string | undefined
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -402,6 +404,7 @@ export class AppContainer implements Container {
         loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
         loadState<BCSCState>(BCLocalStorageKeys.BCSC, (val) => (bcsc = val)),
         loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
+        loadState<string>(BCLocalStorageKeys.MediatorUrl, (val) => (recordedMediatorUrl = val)),
       ])
 
       // One-time, idempotent read-side migration: maps a legacy `reportUUID` forward to `installId`
@@ -432,18 +435,27 @@ export class AppContainer implements Container {
         })
       }
 
-      const preferencesState = { ...initialState.preferences, ...preferences }
-
-      if (Config.MEDIATOR_URL) {
-        preferencesState.selectedMediator = Config.MEDIATOR_URL
-        if (!preferencesState.availableMediators?.includes(Config.MEDIATOR_URL)) {
-          preferencesState.availableMediators = [Config.MEDIATOR_URL, ...(preferencesState.availableMediators ?? [])]
-        }
+      // A new MEDIATOR_URL replaces the previous default; an unchanged one keeps a mediator picked in
+      // developer mode selected across launches.
+      const mediator = reconcileMediatorPreferences(
+        { ...initialState.preferences, ...preferences },
+        Config.MEDIATOR_URL,
+        recordedMediatorUrl
+      )
+      const { mediatorUrlToRecord } = mediator
+      if (mediatorUrlToRecord) {
+        // The preferences land first and the URL is recorded only once they did, so a failed write leaves
+        // the record stale and the reconciliation re-runs next launch
+        PersistentStorage.storeValueForKey<PreferencesState>(LocalStorageKeys.Preferences, mediator.preferences)
+          .then(() => PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.MediatorUrl, mediatorUrlToRecord))
+          .catch((error) => {
+            this.logger.error('Failed to record the reconciled mediator preferences', error)
+          })
       }
 
       const state = {
         loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },
-        preferences: preferencesState,
+        preferences: mediator.preferences,
         migration: { ...initialState.migration, ...migration },
         tours: { ...initialState.tours, ...tours },
         onboarding: { ...initialState.onboarding, ...onboarding },

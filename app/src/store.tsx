@@ -434,6 +434,8 @@ export enum BCLocalStorageKeys {
   BCSC = 'BCSC',
   Mode = 'Mode',
   CachedJWK = 'CachedJWK',
+  /** MEDIATOR_URL the mediator preferences were last reconciled with */
+  MediatorUrl = 'MediatorUrl',
 }
 
 export const initialState: BCState = {
