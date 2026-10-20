@@ -55,7 +55,7 @@ const QRScannerScreen: React.FC = () => {
     [accountTransferQRCodeStrategy, didCommOobQRCodeStrategy, pairingCodeQRCodeStrategy]
   )
 
-  const { isProcessing, scanError, handleScan, dismissError, resetLock } = useQRScanner(strategies)
+  const { isProcessing, scanError, handleScan, dismissError, resetLock, scannerKey } = useQRScanner(strategies)
 
   useFocusEffect(
     useCallback(() => {
@@ -64,7 +64,13 @@ const QRScannerScreen: React.FC = () => {
   )
 
   return (
-    <QRScanner isProcessing={isProcessing} scanError={scanError} onScan={handleScan} onDismissError={dismissError} />
+    <QRScanner
+      key={scannerKey}
+      isProcessing={isProcessing}
+      scanError={scanError}
+      onScan={handleScan}
+      onDismissError={dismissError}
+    />
   )
 }
 
