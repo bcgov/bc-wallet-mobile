@@ -11,6 +11,7 @@ import { useContext } from 'react'
 
 let capturedOnReady: (() => void) | undefined
 let capturedOnStateChange: ((state: any) => void) | undefined
+let mockRootState: any
 
 jest.mock('@react-navigation/native', () => ({
   NavigationContainer: ({ children, onReady, onStateChange }: any) => {
@@ -19,6 +20,7 @@ jest.mock('@react-navigation/native', () => ({
     return <>{children}</>
   },
   createNavigationContainerRef: jest.fn(() => ({
+    getRootState: jest.fn(() => mockRootState),
     current: {
       getCurrentRoute: jest.fn(() => ({ name: undefined })),
     },
@@ -61,6 +63,7 @@ describe('NavigationContainerContext', () => {
     jest.clearAllMocks()
     capturedOnReady = undefined
     capturedOnStateChange = undefined
+    mockRootState = undefined
     NAVIGATION_TRAIL.screens.length = 0
     NAVIGATION_TRAIL.droppedCount = 0
   })
@@ -81,6 +84,44 @@ describe('NavigationContainerContext', () => {
     })
 
     expect(result.current?.isNavigationReady).toBe(true)
+  })
+
+  describe('onReady', () => {
+    it('records the initial screen, which onStateChange never reports', () => {
+      mockRootState = { index: 0, routes: [{ name: 'Splash', key: 'Splash' }] }
+      renderHook(() => useContext(NavigationContainerContext), { wrapper })
+
+      act(() => {
+        capturedOnReady?.()
+      })
+
+      expect(NAVIGATION_TRAIL.screens).toEqual([{ name: 'Splash', isBack: false }])
+    })
+
+    it('uses the initial state as the baseline for back detection', () => {
+      mockRootState = { index: 1, routes: [{ name: 'Home', key: 'Home' }, { name: 'Settings', key: 'Settings' }] }
+      renderHook(() => useContext(NavigationContainerContext), { wrapper })
+
+      act(() => {
+        capturedOnReady?.()
+      })
+      capturedOnStateChange?.({ index: 0, routes: [{ name: 'Home', key: 'Home' }] })
+
+      expect(NAVIGATION_TRAIL.screens).toEqual([
+        { name: 'Settings', isBack: false },
+        { name: 'Home', isBack: true },
+      ])
+    })
+
+    it('records nothing when the root state is not available', () => {
+      renderHook(() => useContext(NavigationContainerContext), { wrapper })
+
+      act(() => {
+        capturedOnReady?.()
+      })
+
+      expect(NAVIGATION_TRAIL.screens).toEqual([])
+    })
   })
 
   describe('onStateChange', () => {

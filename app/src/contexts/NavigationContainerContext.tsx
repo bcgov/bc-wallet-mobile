@@ -25,6 +25,31 @@ export const NAVIGATION_TRAIL: { screens: VisitedScreen[]; droppedCount: number 
   droppedCount: 0,
 }
 
+const recordVisit = (previousState: NavigationState | undefined, state: NavigationState) => {
+  const currentRouteName = getCurrentStateScreenName(state)
+  const currentScreenName = getBaseScreenName(currentRouteName)
+
+  // Update the visited screens list only if the current screen is different from the last visited screen
+  const { screens } = NAVIGATION_TRAIL
+  if (!currentScreenName || screens[screens.length - 1]?.name === currentScreenName) {
+    return
+  }
+
+  // Raw (stack-prefixed) names are compared so same-named screens in different stacks never match.
+  // A forward push of a screen already in the stack is not a return.
+  const isBack =
+    previousState !== undefined &&
+    !isForwardPush(previousState, state) &&
+    getRouteNamesBelowFocus(previousState).includes(currentRouteName)
+
+  screens.push({ name: currentScreenName, isBack })
+  if (screens.length > MAX_VISITED_SCREENS) {
+    // Index 0 is the session entry point and is never evicted
+    screens.splice(1, 1)
+    NAVIGATION_TRAIL.droppedCount += 1
+  }
+}
+
 export interface NavigationContainerContextType {
   isNavigationReady: boolean
 }
@@ -55,6 +80,13 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
         ref={navigationRef}
         theme={NavigationTheme}
         onReady={() => {
+          // onStateChange skips the initial render, so the entry screen is recorded here
+          const initialState = navigationRef.getRootState()
+          if (initialState) {
+            previousStateRef.current = initialState
+            recordVisit(undefined, initialState)
+          }
+
           setNavigationReady(true)
         }}
         onStateChange={async (state) => {
@@ -79,23 +111,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
             screenTransitionKeyRef.current = screenTransitionKey
           }
 
-          // Update the visited screens list only if the current screen is different from the last visited screen
-          const { screens } = NAVIGATION_TRAIL
-          if (currentScreenName && screens[screens.length - 1]?.name !== currentScreenName) {
-            // Raw (stack-prefixed) names are compared so same-named screens in different stacks never match.
-            // A forward push of a screen already in the stack is not a return.
-            const isBack =
-              previousState !== undefined &&
-              !isForwardPush(previousState, state) &&
-              getRouteNamesBelowFocus(previousState).includes(currentRouteName)
-
-            screens.push({ name: currentScreenName, isBack })
-            if (screens.length > MAX_VISITED_SCREENS) {
-              // Index 0 is the session entry point and is never evicted
-              screens.splice(1, 1)
-              NAVIGATION_TRAIL.droppedCount += 1
-            }
-          }
+          recordVisit(previousState, state)
         }}
       >
         {children}
