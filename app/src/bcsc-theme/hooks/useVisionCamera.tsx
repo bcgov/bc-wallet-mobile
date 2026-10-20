@@ -18,6 +18,10 @@ interface StartRecordingCallbacks {
   onRecordingFinished: (recording: {
     filePath: string
     reason: RecordingFinishedReason
+    /**
+     * Seconds recorded, as the recorder reported just before `stopRecordingVideo()`. A recording that
+     * ended without that call reports whatever the recorder gives afterwards, which may be 0.
+     */
     duration: number
     fileSize: number
   }) => void
@@ -41,6 +45,8 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
   const device = useCameraDevice(position, deviceFilter)
   const cameraRef = useRef<CameraRef>(null)
   const recorderRef = useRef<Recorder>(null)
+  // VisionCamera reports `recordedDuration` as 0 once recording has stopped, so it is read before stopping
+  const recordedDurationAtStopRef = useRef<number | null>(null)
 
   /**
    * THOUGHT: Should this component be responsible for requesting permissions?
@@ -93,12 +99,13 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
       // Note: Video output settings must be set before creating the recorder
       videoOutput.setOutputSettings({ codec: DEFAULT_VIDEO_OUTPUT_CODEC })
       recorderRef.current = await videoOutput.createRecorder({})
+      recordedDurationAtStopRef.current = null
 
       await recorderRef.current.startRecording((filePath, reason) => {
         options.onRecordingFinished({
           filePath,
           reason,
-          duration: recorderRef.current?.recordedDuration ?? -1,
+          duration: recordedDurationAtStopRef.current ?? recorderRef.current?.recordedDuration ?? -1,
           fileSize: recorderRef.current?.recordedFileSize ?? -1,
         })
 
@@ -121,6 +128,7 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
 
     logger.debug('[Camera] Stopping video recording')
 
+    recordedDurationAtStopRef.current = recorderRef.current.recordedDuration
     await recorderRef.current.stopRecording()
   }, [logger])
 

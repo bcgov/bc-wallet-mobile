@@ -76,10 +76,18 @@ type RecordingCallbacks = Parameters<ReturnType<typeof visionCamera.useVisionCam
 
 // Renders the screen with a mocked recorder and runs the countdown (by default all of it, so the
 // first prompt is showing)
-const startRecordingScreen = async (navigation: ReturnType<typeof useNavigation>, countdownMs = 3000) => {
+const startRecordingScreen = async (
+  navigation: ReturnType<typeof useNavigation>,
+  countdownMs = 3000,
+  { thumbnailDelayMs = 0 } = {}
+) => {
   let recordingCallbacks: RecordingCallbacks | undefined
+  const thumbnail = { filePath: '/tmp/thumbnail.jpg' }
   const recorder = {
-    takePhoto: jest.fn().mockResolvedValue({ filePath: '/tmp/thumbnail.jpg' }),
+    takePhoto:
+      thumbnailDelayMs > 0
+        ? jest.fn(() => new Promise((resolve) => setTimeout(() => resolve(thumbnail), thumbnailDelayMs)))
+        : jest.fn().mockResolvedValue(thumbnail),
     startRecordingVideo: jest.fn(async (callbacks: RecordingCallbacks) => {
       recordingCallbacks = callbacks
     }),
@@ -337,14 +345,13 @@ describe('TakeVideoScreen', () => {
       jest.restoreAllMocks()
     })
 
-    it('stops the timer, discards the thumbnail and goes back', async () => {
+    it('never starts the timer, discards the thumbnail and goes back', async () => {
       const setIntervalSpy = jest.spyOn(global, 'setInterval')
-      const clearIntervalSpy = jest.spyOn(global, 'clearInterval')
       const navigation = useNavigation()
       const screen = await startRecordingThatFails(navigation)
 
-      const timerCall = setIntervalSpy.mock.calls.findIndex(([, delay]) => delay === 1000)
-      expect(clearIntervalSpy).toHaveBeenCalledWith(setIntervalSpy.mock.results[timerCall].value)
+      // The timer only starts once recording has begun, which it never did
+      expect(setIntervalSpy.mock.calls.some(([, delay]) => delay === 1000)).toBe(false)
       expect(navigation.goBack).toHaveBeenCalled()
       expect(removeFileSafely).toHaveBeenCalledWith('/tmp/thumbnail.jpg', expect.anything())
       expect(screen.queryByTestId(testIdWithKey(TestIds.verify.takeVideo.cancel))).toBeNull()
@@ -619,6 +626,74 @@ describe('TakeVideoScreen', () => {
       screen.rerender(makeTree())
 
       expect(navigation.goBack).not.toHaveBeenCalled()
+    })
+
+    it('starts the prompts and timer only once recording begins, not during a slow thumbnail capture', async () => {
+      const navigation = useNavigation()
+      const { screen, recorder } = await startRecordingScreen(navigation, 3000, { thumbnailDelayMs: 2000 })
+
+      // Countdown done, thumbnail still being captured: not recording yet
+      expect(recorder.startRecordingVideo).not.toHaveBeenCalled()
+      expect(screen.queryByText('Say your name')).toBeNull()
+      expect(screen.queryByTestId(testIdWithKey(TestIds.verify.takeVideo.nextPrompt))).toBeNull()
+
+      await advanceSeconds(2)
+      expect(recorder.startRecordingVideo).toHaveBeenCalled()
+      expect(screen.getByText('Say your name')).toBeTruthy()
+      expect(screen.getByText('00:00')).toBeTruthy()
+
+      await advanceSeconds(2)
+      await act(async () => {
+        fireEvent.press(nextPromptButton(screen))
+      })
+      // 6 s since the countdown ended, but only 4 s recorded: Done stays disabled
+      await advanceSeconds(2)
+      expect(nextPromptButton(screen).props.accessibilityState).toEqual(expect.objectContaining({ disabled: true }))
+
+      await advanceSeconds(2)
+      expect(nextPromptButton(screen).props.accessibilityState).toEqual(expect.objectContaining({ disabled: false }))
+    })
+
+    it('discards a recording the recorder measured under 6 seconds, even after Done', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert')
+      const navigation = useNavigation()
+      const { screen, getRecordingCallbacks } = await startRecordingScreen(navigation)
+      await recordUntilDone(screen)
+
+      await act(async () => {
+        getRecordingCallbacks().onRecordingFinished({
+          filePath: '/tmp/recording.mov',
+          reason: 'stopped',
+          duration: 4,
+          fileSize: 100,
+        } as never)
+      })
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        'BCSC.SendVideo.TakeVideo.RecordingInterrupted',
+        'BCSC.SendVideo.TakeVideo.RecordingInterruptedDescription'
+      )
+      expect(removeFileSafely).toHaveBeenCalledWith('/tmp/recording.mov', expect.anything())
+      expect(toMp4VideoPath).not.toHaveBeenCalled()
+      expect(navigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.VideoReview, expect.anything())
+    })
+
+    it('falls back to the timer when the recorder reports no duration', async () => {
+      const navigation = useNavigation()
+      const { screen, getRecordingCallbacks } = await startRecordingScreen(navigation)
+      await recordUntilDone(screen)
+
+      await act(async () => {
+        getRecordingCallbacks().onRecordingFinished({
+          filePath: '/tmp/recording.mov',
+          reason: 'stopped',
+          duration: 0,
+          fileSize: 100,
+        } as never)
+      })
+
+      expect(toMp4VideoPath).toHaveBeenCalledWith('/tmp/recording.mov')
+      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VideoReview, expect.anything())
     })
   })
 })

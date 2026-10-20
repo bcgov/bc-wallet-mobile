@@ -272,10 +272,6 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       return
     }
 
-    setRecordingInProgress(true)
-    setPrompt(prompts[0])
-    startTimer() // Start the timer when recording begins
-
     if (!cameraRef.current) {
       logger.error('Camera reference is null, cannot start recording')
       return
@@ -287,8 +283,6 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     } catch (error) {
       // Without this catch a failure here (e.g. device out of disk space) is an unhandled
       // rejection that leaves the screen stuck on the countdown with no controls.
-      stopTimer()
-      setRecordingInProgress(false)
       if (abandonedRef.current) {
         return
       }
@@ -333,11 +327,21 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           recordingAttemptActiveRef.current = false
           setPrompt('')
 
-          if (!stopRequestedRef.current || elapsedTimeRef.current < MIN_SELFIE_VIDEO_DURATION_SECONDS) {
-            // The recording ended before the user pressed Done, so it is missing prompts: never send it for review
+          // The recorder's own measurement; the timer (which also counts from the start of recording) is
+          // only a fallback, so a recorder that can't report a duration doesn't block every submission
+          const recordedSeconds = video.duration > 0 ? video.duration : elapsedTimeRef.current
+          if (video.duration <= 0) {
+            logger.warn('[TakeVideoScreen] Recorder reported no duration, using the timer', {
+              timerSeconds: elapsedTimeRef.current,
+            })
+          }
+
+          if (!stopRequestedRef.current || recordedSeconds < MIN_SELFIE_VIDEO_DURATION_SECONDS) {
+            // The recording ended before the user pressed Done, or is too short to hold every prompt:
+            // never send it for review
             logger.warn('[TakeVideoScreen] Recording ended early, discarding it', {
               reason: video.reason,
-              recordedSeconds: elapsedTimeRef.current,
+              recordedSeconds,
               stopRequested: stopRequestedRef.current,
             })
             setRecordingInProgress(false)
@@ -392,6 +396,15 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       // The app may have left the foreground while the recorder was starting, before there was one to cancel
       if (abandonedRef.current) {
         await cancelRecordingVideo().catch(() => undefined)
+        return
+      }
+
+      // Recording has begun (or already ended, if a callback fired first). Only now show the first prompt
+      // and start counting, so the thumbnail capture and recorder startup don't count as recorded time.
+      if (recordingAttemptActiveRef.current) {
+        setRecordingInProgress(true)
+        setPrompt(prompts[0])
+        startTimer()
       }
     } catch (error) {
       // The recorder failed to start, so neither callback will fire: clean up here or the timer
