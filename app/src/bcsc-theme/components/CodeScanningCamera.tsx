@@ -263,18 +263,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     height: number
   } | null>(null)
 
-  /**
-   * Select the optimal camera device for barcode scanning
-   * Prioritizes devices with better focus capabilities and macro support for dense PDF-417 codes
-   */
-  const device = useCameraDevice(cameraType, {
-    physicalDevices: Platform.select({
-      // On iOS, prefer telephoto for better zoom/focus on dense barcodes, then ultra-wide for focus control
-      ios: ['telephoto', 'ultra-wide-angle', 'wide-angle'],
-      // On Android, prefer wide-angle camera
-      android: ['wide-angle'],
-    }),
-  })
+  // as of rnvc v5, default camera selection is now more effective than requesting specific formats
+  const device = useCameraDevice(cameraType)
 
   // Never ask the native camera for a torch the device doesn't have. VisionCamera throws
   // `device/flash-unavailable` (surfaced through onError) instead of ignoring it, and iPads
