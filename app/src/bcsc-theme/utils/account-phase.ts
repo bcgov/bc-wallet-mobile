@@ -11,11 +11,19 @@ export interface ExpiryFacts {
   cardExpiresAt?: Date
 }
 
+export enum AccountPhaseType {
+  None = 'none',
+  Unknown = 'unknown',
+  Expired = 'expired',
+  ExpiringSoon = 'expiringSoon',
+  Active = 'active',
+}
+
 export type AccountPhase =
-  | { phase: 'none' }
-  | { phase: 'unknown' }
-  | { phase: 'expired'; expiresAt?: Date }
-  | { phase: 'expiringSoon' | 'active'; expiresAt: Date }
+  | { phase: AccountPhaseType.None }
+  | { phase: AccountPhaseType.Unknown }
+  | { phase: AccountPhaseType.Expired; expiresAt?: Date }
+  | { phase: AccountPhaseType.ExpiringSoon | AccountPhaseType.Active; expiresAt: Date }
 
 /** Whole calendar days from `now` to `date`; 0 means the same day, negative means past. */
 const daysUntil = (date: Date, now: Date): number =>
@@ -29,28 +37,28 @@ export const getAccountPhase = (facts: ExpiryFacts, now: Date): AccountPhase => 
   const { isVerified, expiredByServer, credentialExpired, cardExpiresAt } = facts
 
   if (!isVerified) {
-    return { phase: 'none' }
+    return { phase: AccountPhaseType.None }
   }
 
   const hasDate = cardExpiresAt !== undefined && !Number.isNaN(cardExpiresAt.getTime())
 
   if (expiredByServer || credentialExpired) {
-    return hasDate ? { phase: 'expired', expiresAt: cardExpiresAt } : { phase: 'expired' }
+    return hasDate ? { phase: AccountPhaseType.Expired, expiresAt: cardExpiresAt } : { phase: AccountPhaseType.Expired }
   }
 
   if (!hasDate) {
-    return { phase: 'unknown' }
+    return { phase: AccountPhaseType.Unknown }
   }
 
   const days = daysUntil(cardExpiresAt, now)
 
   if (days <= 0) {
-    return { phase: 'expired', expiresAt: cardExpiresAt }
+    return { phase: AccountPhaseType.Expired, expiresAt: cardExpiresAt }
   }
 
   if (days <= ACCOUNT_EXPIRATION_WARNING_DAYS) {
-    return { phase: 'expiringSoon', expiresAt: cardExpiresAt }
+    return { phase: AccountPhaseType.ExpiringSoon, expiresAt: cardExpiresAt }
   }
 
-  return { phase: 'active', expiresAt: cardExpiresAt }
+  return { phase: AccountPhaseType.Active, expiresAt: cardExpiresAt }
 }

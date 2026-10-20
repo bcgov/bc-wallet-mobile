@@ -7,6 +7,7 @@ import StartVerificationNotification from '@/bcsc-theme/features/notifications/S
 import VerifiedNotification from '@/bcsc-theme/features/notifications/VerifiedNotification'
 import { useAccountPhase } from '@/bcsc-theme/hooks/useAccountPhase'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
+import { AccountPhaseType } from '@/bcsc-theme/utils/account-phase'
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
 import { VerificationRequestStatus } from '@/constants'
 import { BCState } from '@/store'
@@ -58,11 +59,11 @@ export const useCustomNotifications = () => {
       return [<StartVerificationNotification key={CustomNotificationId.BCSCStartVerification} />]
     }
 
-    if (accountPhase.phase === 'expired') {
+    if (accountPhase.phase === AccountPhaseType.Expired) {
       return [<CardExpiryNotification key={CustomNotificationId.AccountExpired} />]
     }
 
-    if (accountPhase.phase === 'expiringSoon') {
+    if (accountPhase.phase === AccountPhaseType.ExpiringSoon) {
       return [
         <CardRenewalNotification
           key={CustomNotificationId.AccountRenewalAvailable}

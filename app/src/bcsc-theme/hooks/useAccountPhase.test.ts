@@ -1,4 +1,5 @@
 import { BCSCAccount, useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { AccountPhaseType } from '@/bcsc-theme/utils/account-phase'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState } from '@/store'
 import { renderHook } from '@testing-library/react-native'
@@ -40,12 +41,12 @@ describe('useAccountPhase', () => {
   it('drops the renewal phase when the account reloads with a renewed expiry date', () => {
     setAccount(buildAccount(daysFromNow(8)))
     const { result, rerender } = renderHook(() => useAccountPhase())
-    expect(result.current.phase).toBe('expiringSoon')
+    expect(result.current.phase).toBe(AccountPhaseType.ExpiringSoon)
 
     setAccount(buildAccount(daysFromNow(365)))
     rerender({})
 
-    expect(result.current.phase).toBe('active')
+    expect(result.current.phase).toBe(AccountPhaseType.Active)
   })
 
   it('is unknown for a verified user whose account has not loaded', () => {
@@ -53,7 +54,7 @@ describe('useAccountPhase', () => {
 
     const { result } = renderHook(() => useAccountPhase())
 
-    expect(result.current).toEqual({ phase: 'unknown' })
+    expect(result.current).toEqual({ phase: AccountPhaseType.Unknown })
   })
 
   it('is expired when the server expired the card, whatever the date', () => {
@@ -62,6 +63,6 @@ describe('useAccountPhase', () => {
 
     const { result } = renderHook(() => useAccountPhase())
 
-    expect(result.current.phase).toBe('expired')
+    expect(result.current.phase).toBe(AccountPhaseType.Expired)
   })
 })

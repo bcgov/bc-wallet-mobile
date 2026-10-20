@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { AccountPhaseType } from '../utils/account-phase'
 import { useAccountPhase } from './useAccountPhase'
 import { useVerificationStatus } from './useVerificationStatus'
 
@@ -16,7 +17,7 @@ export const useCardStatus = () => {
   const { phase } = useAccountPhase()
 
   return useMemo(() => {
-    const isExpired = phase === 'expired'
+    const isExpired = phase === AccountPhaseType.Expired
 
     return {
       ...verificationStatus,

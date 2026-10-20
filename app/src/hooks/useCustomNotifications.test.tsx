@@ -1,3 +1,4 @@
+import { AccountPhaseType } from '@/bcsc-theme/utils/account-phase'
 import { renderHook } from '@testing-library/react-native'
 import { CustomNotificationId, useCustomNotifications } from './useCustomNotifications'
 
@@ -63,7 +64,7 @@ describe('useCustomNotifications', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockUseVerificationStatus.mockReturnValue(baseVerificationStatus)
-    mockUseAccountPhase.mockReturnValue({ phase: 'none' })
+    mockUseAccountPhase.mockReturnValue({ phase: AccountPhaseType.None })
     mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: null, verificationRequestId: null }))
     mockComputeSetupStepCompletion.mockReturnValue(buildIdStepCompletion(false))
   })
@@ -95,7 +96,7 @@ describe('useCustomNotifications', () => {
 
   it('falls through to the notifications of a verified user when the verified status is stale', () => {
     mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
-    mockUseAccountPhase.mockReturnValue({ phase: 'expired' })
+    mockUseAccountPhase.mockReturnValue({ phase: AccountPhaseType.Expired })
     mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: 'verified', verificationRequestId: 'req-1' }))
 
     const { result } = renderHook(() => useCustomNotifications())
@@ -195,7 +196,7 @@ describe('useCustomNotifications', () => {
 
   describe('CardExpiryNotification', () => {
     it('is shown when the account phase is expired', () => {
-      mockUseAccountPhase.mockReturnValue({ phase: 'expired' })
+      mockUseAccountPhase.mockReturnValue({ phase: AccountPhaseType.Expired })
 
       const { result } = renderHook(() => useCustomNotifications())
 
@@ -204,7 +205,7 @@ describe('useCustomNotifications', () => {
     })
 
     it('is not shown when verification status takes priority', () => {
-      mockUseAccountPhase.mockReturnValue({ phase: 'expired' })
+      mockUseAccountPhase.mockReturnValue({ phase: AccountPhaseType.Expired })
       mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: 'verified', verificationRequestId: null }))
 
       const { result } = renderHook(() => useCustomNotifications())
@@ -215,7 +216,7 @@ describe('useCustomNotifications', () => {
 
   describe('CardRenewalNotification', () => {
     it('is shown with the expiry date when the account phase is expiringSoon', () => {
-      mockUseAccountPhase.mockReturnValue({ phase: 'expiringSoon', expiresAt })
+      mockUseAccountPhase.mockReturnValue({ phase: AccountPhaseType.ExpiringSoon, expiresAt })
 
       const { result } = renderHook(() => useCustomNotifications())
 
@@ -225,9 +226,9 @@ describe('useCustomNotifications', () => {
     })
 
     it.each([
-      ['active', { phase: 'active', expiresAt }],
-      ['unknown', { phase: 'unknown' }],
-      ['none', { phase: 'none' }],
+      ['active', { phase: AccountPhaseType.Active, expiresAt }],
+      ['unknown', { phase: AccountPhaseType.Unknown }],
+      ['none', { phase: AccountPhaseType.None }],
     ])('shows nothing when the account phase is %s', (_name, phase) => {
       mockUseAccountPhase.mockReturnValue(phase)
       mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
@@ -238,7 +239,7 @@ describe('useCustomNotifications', () => {
     })
 
     it('is not shown when needsVerification takes priority', () => {
-      mockUseAccountPhase.mockReturnValue({ phase: 'expiringSoon', expiresAt })
+      mockUseAccountPhase.mockReturnValue({ phase: AccountPhaseType.ExpiringSoon, expiresAt })
       mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, needsVerification: true })
 
       const { result } = renderHook(() => useCustomNotifications())
