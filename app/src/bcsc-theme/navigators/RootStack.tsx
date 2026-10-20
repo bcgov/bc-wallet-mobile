@@ -19,7 +19,6 @@ import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
-import { daysUntil } from '../utils/account-phase'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
@@ -31,21 +30,16 @@ import VerifyStack from './VerifyStack'
 // Must live inside BCSCAccountProvider.
 const FcmCardExpirySync: React.FC = () => {
   const { isExpired } = useCardStatus()
-  const accountPhase = useAccountPhase()
   const fcmService = useFcmService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { phase } = accountPhase
+  const { phase } = useAccountPhase()
 
   useEffect(() => {
     fcmService.viewModel.setCardExpired(isExpired)
   }, [isExpired, fcmService.viewModel])
 
   useEffect(() => {
-    const expiresAt = 'expiresAt' in accountPhase ? accountPhase.expiresAt : undefined
-    const detail = expiresAt ? `, ${daysUntil(expiresAt, new Date())} days remaining` : ''
-    logger.info(`[RootStack] Card expiry phase: ${phase}${detail}`)
-    // Keyed on the phase alone: the day count is only for the line logged at the change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    logger.info(`[RootStack] Card expiry phase: ${phase}`)
   }, [phase, logger])
 
   return null

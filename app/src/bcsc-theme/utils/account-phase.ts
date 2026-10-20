@@ -18,7 +18,7 @@ export type AccountPhase =
   | { phase: 'expiringSoon' | 'active'; expiresAt: Date }
 
 /** Whole calendar days from `now` to `date`; 0 means the same day, negative means past. */
-export const daysUntil = (date: Date, now: Date): number =>
+const daysUntil = (date: Date, now: Date): number =>
   moment(date).startOf('day').diff(moment(now).startOf('day'), 'days')
 
 /**

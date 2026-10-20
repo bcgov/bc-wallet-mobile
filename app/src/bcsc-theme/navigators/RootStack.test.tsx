@@ -638,7 +638,7 @@ describe('BCSCRootStack', () => {
       expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: unknown'])
     })
 
-    it('includes the days remaining when the account has an expiry date', () => {
+    it('logs only the phase, never a day count or date that would reveal the card expiry', () => {
       const inEightDays = new Date()
       inEightDays.setDate(inEightDays.getDate() + 8)
       mockAccount = { account_expiration_date: inEightDays }
@@ -646,7 +646,8 @@ describe('BCSCRootStack', () => {
 
       render(<BCSCRootStack />)
 
-      expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: expiringSoon, 8 days remaining'])
+      expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: expiringSoon'])
+      expect(String(phaseLogs()[0])).not.toMatch(/\d/)
     })
 
     it('logs again when the phase changes, and not on a re-render with the same phase', () => {
