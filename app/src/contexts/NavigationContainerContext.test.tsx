@@ -99,7 +99,13 @@ describe('NavigationContainerContext', () => {
     })
 
     it('uses the initial state as the baseline for back detection', () => {
-      mockRootState = { index: 1, routes: [{ name: 'Home', key: 'Home' }, { name: 'Settings', key: 'Settings' }] }
+      mockRootState = {
+        index: 1,
+        routes: [
+          { name: 'Home', key: 'Home' },
+          { name: 'Settings', key: 'Settings' },
+        ],
+      }
       renderHook(() => useContext(NavigationContainerContext), { wrapper })
 
       act(() => {
