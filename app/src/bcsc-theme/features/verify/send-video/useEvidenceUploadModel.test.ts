@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
+import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { AppError, ErrorCategory } from '@/errors'
@@ -24,6 +25,7 @@ const deferred = <T>() => {
 }
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
+jest.mock('@/bcsc-theme/services/hooks/useEvidenceService')
 jest.mock('@/utils/read-file')
 jest.mock('@/bcsc-theme/utils/file-info', () => ({
   getVideoMetadata: jest.fn(),
@@ -141,8 +143,11 @@ describe('useEvidenceUploadModel', () => {
     bifoldMock.useStore.mockReturnValue([baseStore as BCState, jest.fn()])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
 
+    // useEvidenceUpload (additional evidence) still reads the raw API; the model's own calls go through the
+    // service, which spreads the same API in production
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({ evidence: mockEvidenceApi } as any)
+    jest.mocked(useEvidenceService).mockReturnValue(mockEvidenceApi as any)
   })
 
   describe('isReady', () => {
@@ -870,6 +875,134 @@ describe('useEvidenceUploadModel', () => {
 
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
       expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
+    })
+
+    describe('when the submit is reconciled against the server record (see useEvidenceService)', () => {
+      const arrangeReadySend = () => {
+        jest.mocked(Bifold).useStore.mockReturnValue([
+          {
+            ...baseStore,
+            bcsc: {
+              ...baseStore.bcsc,
+              photoPath: '/photo.jpg',
+              videoPath: '/video.mp4',
+              videoDuration: 10,
+              prompts: [{ text: 'smile' }],
+              photoMetadata: plausiblePhotoMetadata,
+            },
+            bcscSecure: {
+              ...baseStore.bcscSecure,
+              verificationRequestId: 'req-123',
+              verificationRequestSha: 'sha-456',
+              additionalEvidenceData: [],
+            },
+          } as BCState,
+          jest.fn(),
+        ])
+
+        jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
+        jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+        jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
+        mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
+        mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+        mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
+        mockEvidenceApi.uploadVideoEvidenceBinary.mockResolvedValue(undefined)
+      }
+
+      it('submits through the evidence service rather than the raw API', async () => {
+        arrangeReadySend()
+        const serviceSend = jest.fn().mockResolvedValue({ id: 'req-123', status: 'pending' })
+        jest
+          .mocked(useEvidenceService)
+          .mockReturnValue({ ...mockEvidenceApi, sendVerificationRequest: serviceSend } as any)
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(serviceSend).toHaveBeenCalledWith('req-123', {
+          upload_uris: ['photo-uri', 'video-uri'],
+          sha256: 'sha-456',
+        })
+        expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
+      })
+
+      it('continues to SuccessfullySent with the read-back turnaround message when the request was already pending', async () => {
+        arrangeReadySend()
+        mockEvidenceApi.sendVerificationRequest.mockResolvedValue({
+          id: 'req-123',
+          status: 'pending',
+          avg_turnaround_time_message: 'within 2 business days',
+        })
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: true })
+        expect(Navigation.CommonActions.reset).toHaveBeenCalledWith(
+          expect.objectContaining({
+            routes: [
+              { name: BCSCScreens.SuccessfullySent, params: { avgTurnaroundTimeMessage: 'within 2 business days' } },
+            ],
+          })
+        )
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+      })
+
+      it('routes to CancelledReview with the agent reason instead of the success screen when the request was already cancelled', async () => {
+        arrangeReadySend()
+        mockEvidenceApi.sendVerificationRequest.mockResolvedValue({
+          id: 'req-123',
+          status: 'cancelled',
+          status_message: 'Video too dark',
+        })
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(Navigation.CommonActions.reset).toHaveBeenCalledWith(
+          expect.objectContaining({
+            routes: [{ name: BCSCScreens.CancelledReview, params: { agentReason: 'Video too dark' } }],
+          })
+        )
+        expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+        expect(result.current.progressPercent).toBe(100)
+      })
+
+      it('shows no second modal when the service already surfaced the finalization failure', async () => {
+        arrangeReadySend()
+        const surfacedError = new AppError(
+          'Server error',
+          { category: ErrorCategory.NETWORK, appEvent: AppEventCode.SERVER_ERROR, statusCode: 2101 },
+          { track: false }
+        )
+        surfacedError.handled = true
+        mockEvidenceApi.sendVerificationRequest.mockRejectedValue(surfacedError)
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Error during evidence upload process'),
+          surfacedError
+        )
+      })
     })
 
     it('should process additional evidence and include in upload', async () => {
