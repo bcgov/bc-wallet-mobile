@@ -128,9 +128,10 @@ Rules that keep this consistent:
   `ListButtonGroup` positions every element child, so a row rendering `null` still takes a slot.
 - From the prompt, `push` the resume step; never `replace` the prompt away. A screen that `replace`s back onto
   the prompt relies on its `animationTypeForReplace: 'pop'`.
-- RootStack never remounts on a factory reset, so its once-per-session routing state (prompt answered,
-  startup resume evaluated) is reset when `hasAccount` turns false: removing the account and onboarding
-  again offers the prompt like a fresh install.
+- RootStack never remounts on a factory reset or a lock, so its once-per-session routing state (prompt
+  answered, resume evaluated) is reset when `hasAccount` or `didAuthenticate` turns false: removing the
+  account and onboarding again offers the prompt like a fresh install, and an unlock resumes a started
+  verification like a relaunch does (the lock clears the secure state, in-progress status included).
 
 **Why:** many people install the app only to verify their BC Services Card; an unverified Home is a dead end
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
