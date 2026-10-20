@@ -114,36 +114,44 @@ const hasSameNames = (screens: VisitedScreen[], a: number, b: number, length: nu
   return true
 }
 
+const countRepeats = (screens: VisitedScreen[], index: number, period: number): number => {
+  let count = 1
+  while (
+    index + (count + 1) * period <= screens.length &&
+    hasSameNames(screens, index, index + count * period, period)
+  ) {
+    count++
+  }
+
+  return count
+}
+
 /**
- * Collapses adjacent repeated runs by name, shortest first; a block keeps its last pass's `isBack` flags.
- * Not recursive: an inner repeat starting at the same position hides an outer repeat around it.
+ * Collapses adjacent repeated runs by name; a block keeps its last pass's `isBack` flags.
+ * At each position the period covering the longest span wins, so an outer repeat beats an inner one at
+ * the same start; ties go to the shortest period. Not recursive: the inner repeat is then listed flat.
  */
 const collapseRepeats = (screens: VisitedScreen[]): Array<VisitedScreen | TrailBlock> => {
   const tokens: Array<VisitedScreen | TrailBlock> = []
   let index = 0
 
   while (index < screens.length) {
-    const maxPeriod = Math.floor((screens.length - index) / 2)
-    let period = 1
+    let best = { period: 0, count: 1 }
 
-    while (period <= maxPeriod && !hasSameNames(screens, index, index + period, period)) {
-      period++
+    for (let period = 1; period <= Math.floor((screens.length - index) / 2); period++) {
+      const count = countRepeats(screens, index, period)
+      if (count > 1 && count * period > best.count * best.period) {
+        best = { period, count }
+      }
     }
 
-    if (period > maxPeriod) {
+    if (best.period === 0) {
       tokens.push(screens[index])
       index += 1
       continue
     }
 
-    let count = 2
-    while (
-      index + (count + 1) * period <= screens.length &&
-      hasSameNames(screens, index, index + count * period, period)
-    ) {
-      count++
-    }
-
+    const { period, count } = best
     tokens.push({ screens: screens.slice(index + (count - 1) * period, index + count * period), count })
     index += count * period
   }

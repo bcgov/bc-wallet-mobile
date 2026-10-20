@@ -390,6 +390,19 @@ describe('StackUtils', () => {
       expect(formatNavigationTrail(screens, 0)).toBe('Start > [A > X > Y > X > Y > Z] x2')
     })
 
+    it('prefers an outer repeat over an inner repeat that starts at the same screen', () => {
+      const run = ['A', 'B', 'A', 'B', 'C']
+      const screens = [fresh('Start'), ...run.map(fresh), ...run.map(fresh)]
+
+      expect(formatNavigationTrail(screens, 0)).toBe('Start > [A > B > A > B > C] x2')
+    })
+
+    it('prefers the shortest period when two periods cover the same span', () => {
+      const screens = [fresh('Start'), fresh('A'), fresh('A'), fresh('A'), fresh('A')]
+
+      expect(formatNavigationTrail(screens, 0)).toBe('Start > [A] x4')
+    })
+
     it('marks the gap after the entry point and never spans a block across it', () => {
       const screens = [fresh('A'), fresh('B'), back('A'), fresh('B')]
 
