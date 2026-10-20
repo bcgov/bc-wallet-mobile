@@ -204,7 +204,7 @@ describe('useSecureActions', () => {
     })
   })
 
-  describe('updateResidentialAddressDraft (#4745)', () => {
+  describe('updateResidentialAddressDraft', () => {
     it('keeps the draft in the store only, writing nothing to native storage', () => {
       const draft = { streetAddress: '123 Main St', streetAddress2: '', city: '', province: null, postalCode: '' }
       const { result } = renderHook(() => useSecureActions())

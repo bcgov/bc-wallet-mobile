@@ -468,7 +468,7 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Keep the residential address form as the user left it, in memory only (#4745). Unlike the other
+   * Keep the residential address form as the user left it, in memory only. Unlike the other
    * updates here nothing is written to native storage: the draft lives for the signed-in session and
    * is dropped with the rest of the secure state on lock, logout or a verification reset, so only a
    * submitted address (see updateUserMetadata) survives. Pass undefined to discard it.

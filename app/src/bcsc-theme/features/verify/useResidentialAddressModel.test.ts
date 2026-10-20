@@ -72,7 +72,6 @@ describe('useResidentialAddressModel', () => {
   const mockNavigation = {
     navigate: jest.fn(),
     dispatch: jest.fn(),
-    addListener: jest.fn(() => jest.fn()),
   } as any
 
   const mockStore: any = {
@@ -182,7 +181,7 @@ describe('useResidentialAddressModel', () => {
     })
   })
 
-  // #4745: stepping back and forward remounts the screen, so unsaved input is kept as a session draft
+  // Stepping back and forward remounts the screen, so unsaved input is kept as a session draft
   describe('session draft', () => {
     const draft = {
       streetAddress: '456 Oak Ave',
@@ -190,12 +189,6 @@ describe('useResidentialAddressModel', () => {
       city: 'Victoria',
       province: null,
       postalCode: '',
-    }
-
-    /** The blur listener re-registers with the latest form, so the last one registered is live. */
-    const lastBlurListener = (): (() => void) => {
-      const blurCalls = mockNavigation.addListener.mock.calls.filter(([event]: [string]) => event === 'blur')
-      return blurCalls[blurCalls.length - 1][1]
     }
 
     it('seeds the form from the session draft rather than the submitted address', () => {
@@ -210,17 +203,17 @@ describe('useResidentialAddressModel', () => {
       expect(result.current.formState).toEqual(draft)
     })
 
-    it('keeps the form as the user left it when the screen loses focus', () => {
-      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+    it('keeps the form as the user left it when the screen unmounts, not per keystroke', () => {
+      const { result, unmount } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
       act(() => {
         result.current.handleChange('city', 'Victoria')
       })
       expect(mockUpdateResidentialAddressDraft).not.toHaveBeenCalled()
 
-      act(() => {
-        lastBlurListener()()
-      })
+      // Popping back, a stack reset and leaving for Home all unmount the screen; the last of them fires
+      // no navigation blur, so the unmount is the one moment every exit shares
+      unmount()
 
       expect(mockUpdateResidentialAddressDraft).toHaveBeenCalledTimes(1)
       expect(mockUpdateResidentialAddressDraft).toHaveBeenCalledWith({
@@ -230,17 +223,6 @@ describe('useResidentialAddressModel', () => {
         province: 'BC',
         postalCode: 'V6B 1A1',
       })
-    })
-
-    it('does not write the draft when the screen unmounts, only stops listening', () => {
-      const unsubscribe = jest.fn()
-      mockNavigation.addListener.mockReturnValueOnce(unsubscribe)
-
-      const { unmount } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
-      unmount()
-
-      expect(unsubscribe).toHaveBeenCalledTimes(1)
-      expect(mockUpdateResidentialAddressDraft).not.toHaveBeenCalled()
     })
   })
 

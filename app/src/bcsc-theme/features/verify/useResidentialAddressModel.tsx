@@ -24,7 +24,7 @@ import { BCState, NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 /** The form's values, kept as the session draft in the same shape (see ResidentialAddressDraft). */
@@ -66,9 +66,10 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
   const isRecovering = useIsDeviceAuthorizationRecovering()
 
   const [formState, setFormState] = useState<ResidentialAddressFormState>(() => {
-    // Stepping back and forward through the flow remounts this screen, so what the user typed this
-    // session (the draft) wins over what they last submitted. A lock drops the draft with the rest of
-    // the secure state, so after an unlock only a submitted address comes back (#4745).
+    // Stepping back and forward through the flow, or leaving for Home and resuming, remounts this
+    // screen, so what the user typed this session (the draft) wins over what they last submitted. A
+    // lock drops the draft with the rest of the secure state, so after an unlock only a submitted
+    // address comes back.
     if (store.bcscSecure.residentialAddressDraft) {
       return store.bcscSecure.residentialAddressDraft
     }
@@ -85,14 +86,21 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
   const [formErrors, setFormErrors] = useState<ResidentialAddressFormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // The draft is written when the screen loses focus (back, forward, settings), not per keystroke
-  // (every store consumer would re-render while typing) and not on unmount (a lock unmounts the whole
-  // stack without a blur, and an unmount write would land after the clear and resurrect the input).
+  // The latest form, for the unmount write below, so that write neither re-registers nor runs per keystroke.
+  const formStateRef = useRef(formState)
+  formStateRef.current = formState
+
+  // The draft is written when the screen unmounts, which is every way off it that remounts it later:
+  // popping back, a stack reset, and leaving for Home ("Back to home" in the help menu, or back at the
+  // beginning of the stack, unmounts the whole stack with no blur). Not per keystroke: every store
+  // consumer would re-render while typing. A lock or a verification reset also unmounts the stack, right
+  // after clearing the secure state; that write lands on the cleared state and the reducer drops it
+  // (see UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT), so after an unlock only a submitted address comes back.
   useEffect(() => {
-    return navigation.addListener('blur', () => {
-      updateResidentialAddressDraft(formState)
-    })
-  }, [navigation, formState, updateResidentialAddressDraft])
+    return () => {
+      updateResidentialAddressDraft(formStateRef.current)
+    }
+  }, [updateResidentialAddressDraft])
 
   /**
    * Handles changes to the form fields.

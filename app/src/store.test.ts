@@ -162,11 +162,16 @@ describe('reducer', () => {
     expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
   })
 
-  describe('UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT (#4745)', () => {
+  describe('UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT', () => {
     const draft = { streetAddress: '123 Main St', streetAddress2: '', city: '', province: null, postalCode: '' }
+    // The address step follows the name step, so a verification in memory always carries userMetadata
+    const verifying = {
+      ...initialState,
+      bcscSecure: { ...initialState.bcscSecure, userMetadata: { name: { first: 'John', last: 'Doe' } } },
+    }
 
     it('keeps the draft on secure state without persisting anything', () => {
-      const result = reducer(initialState, {
+      const result = reducer(verifying, {
         type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
         payload: [draft],
       })
@@ -176,7 +181,7 @@ describe('reducer', () => {
     })
 
     it('discards the draft when dispatched without one', () => {
-      const state = { ...initialState, bcscSecure: { ...initialState.bcscSecure, residentialAddressDraft: draft } }
+      const state = { ...verifying, bcscSecure: { ...verifying.bcscSecure, residentialAddressDraft: draft } }
       const result = reducer(state, {
         type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
         payload: [undefined],
@@ -186,8 +191,20 @@ describe('reducer', () => {
     })
 
     it('is dropped with the rest of the secure state on lock or logout', () => {
-      const state = { ...initialState, bcscSecure: { ...initialState.bcscSecure, residentialAddressDraft: draft } }
+      const state = { ...verifying, bcscSecure: { ...verifying.bcscSecure, residentialAddressDraft: draft } }
       const result = reducer(state, { type: BCDispatchAction.CLEAR_SECURE_STATE })
+
+      expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
+    })
+
+    it('refuses a draft written after the secure state was cleared, so a lock or reset cannot bring it back', () => {
+      // The address screen writes its draft as it unmounts, and a lock or a verification reset unmounts
+      // it by clearing the secure state first, so the write arrives on the cleared state
+      const cleared = reducer(verifying, { type: BCDispatchAction.CLEAR_SECURE_STATE })
+      const result = reducer(cleared, {
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
 
       expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
     })

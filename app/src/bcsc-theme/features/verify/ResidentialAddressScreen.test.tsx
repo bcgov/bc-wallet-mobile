@@ -69,7 +69,7 @@ describe('ResidentialAddress', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  // #4745: a remount after stepping back shows what the user typed, not the last submitted address
+  // A remount after stepping back shows what the user typed, not the last submitted address
   it('fills the form from the session draft', () => {
     const tree = render(
       <BasicAppContext

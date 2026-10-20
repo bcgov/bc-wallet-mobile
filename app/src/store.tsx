@@ -71,10 +71,11 @@ export interface NonBCSCUserMetadata {
 
 /**
  * The residential address form as the user last left it, kept in memory for the signed-in session
- * so a trip back through the verify flow brings their unsaved input back (#4745). Partial, untrimmed
+ * so a trip back through the verify flow brings their unsaved input back. Partial, untrimmed
  * and unvalidated: it is never sent anywhere and never written to native storage, so it is dropped
- * with the rest of the secure state on lock, logout or a verification reset. Only a submitted
- * address (`NonBCSCUserMetadata.address`) outlives the session.
+ * with the rest of the secure state on lock, logout or a verification reset, and a write that lands
+ * after such a clear is refused (see the reducer). Only a submitted address
+ * (`NonBCSCUserMetadata.address`) outlives the session.
  */
 export interface ResidentialAddressDraft {
   streetAddress: string
@@ -657,7 +658,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT: {
-      const residentialAddressDraft: ResidentialAddressDraft | undefined = (action?.payload || []).pop() ?? undefined
+      const draft: ResidentialAddressDraft | undefined = (action?.payload || []).pop() ?? undefined
+      // A draft is a pending edit of userMetadata.address, so it is only kept while that record is in
+      // memory. The address screen writes its draft as it unmounts, and a lock or a verification reset
+      // unmounts it by clearing the secure state first: that write lands here after the clear and must
+      // not bring the input back.
+      const residentialAddressDraft = state.bcscSecure.userMetadata ? draft : undefined
       const bcscSecure = { ...state.bcscSecure, residentialAddressDraft }
       return { ...state, bcscSecure }
     }
