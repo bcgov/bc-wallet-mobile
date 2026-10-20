@@ -1,7 +1,11 @@
 import CameraInterruptedOverlay from '@/bcsc-theme/components/CameraInterruptedOverlay'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { getCameraMetadata } from '@/bcsc-theme/components/utils/camera'
-import { useSelfiePhotoOutput, useSelfieVideoOutput } from '@/bcsc-theme/components/utils/camera-output'
+import {
+  PREVIEW_IMPLEMENTATION_MODE,
+  useSelfiePhotoOutput,
+  useSelfieVideoOutput,
+} from '@/bcsc-theme/components/utils/camera-output'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import {
@@ -562,6 +566,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           ref={cameraRef}
           style={styles.camera}
           device={device}
+          implementationMode={PREVIEW_IMPLEMENTATION_MODE}
           mirrorMode={mirrorMode}
           outputs={[photoOutput, videoOutput]}
           // Also deactivate while the app is backgrounded/inactive, same as CodeScanningCamera and

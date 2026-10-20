@@ -33,6 +33,7 @@ exports[`TakeVideoScreen renders correctly 1`] = `
           "id": "mock-device",
         }
       }
+      implementationMode="compatible"
       isActive={false}
       mirrorMode={[Function]}
       onConfigured={[Function]}

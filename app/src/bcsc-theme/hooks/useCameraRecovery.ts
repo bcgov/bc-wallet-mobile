@@ -2,6 +2,8 @@ import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { InterruptionReason } from 'react-native-vision-camera'
 import { isRecoverableCameraRuntimeError } from '../components/utils/camera'
+// Note: uncomment the following line to simulate camera errors
+// import { useSimulatedCameraInterruption } from './useCameraEventSimulation'
 
 // A repeat of a recoverable runtime error inside this window means the session failed to restart
 export const RECOVERABLE_ERROR_WINDOW_MS = 10_000
@@ -35,6 +37,9 @@ export const useCameraInterruption = (logTag: string) => {
   }, [logTag, logger])
 
   const clearInterruption = useCallback(() => setInterruptionReason(null), [])
+
+  // Note: uncomment the following line to simulate camera errors
+  // useSimulatedCameraInterruption(onInterruptionStarted, onInterruptionEnded)
 
   return {
     isInterrupted: interruptionReason !== null,

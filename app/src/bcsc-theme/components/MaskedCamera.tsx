@@ -20,11 +20,18 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, CameraOutput, CameraPhotoOutput, MirrorMode } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+// Note: uncomment the following lines to simulate camera errors
+// import {
+//   SIMULATE_CAMERA_EVENTS,
+//   throwIfSimulatingNotReadyCapture,
+//   useSimulatedMediaServicesResets,
+// } from '../hooks/useCameraEventSimulation'
 import { useCameraInterruption, useCameraNotReadyTimeout, useRecoverableCameraError } from '../hooks/useCameraRecovery'
 import { isCameraControlCanceledError, useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import CameraInterruptedOverlay from './CameraInterruptedOverlay'
 import { getCameraMetadata, isCameraNotReadyCaptureError } from './utils/camera'
+import { PREVIEW_IMPLEMENTATION_MODE } from './utils/camera-output'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -186,6 +193,9 @@ const MaskedCamera = ({
     [appStateStatus, cameraMetadata, emitErrorModal, logger, shouldAwaitRecovery, t]
   )
 
+  // Note: uncomment the following line to simulate camera errors
+  // useSimulatedMediaServicesResets(onError)
+
   useCameraNotReadyTimeout({
     shouldBeRunning: Boolean(device) && isFocused && !isBackgroundedAppState(appStateStatus),
     isStarted: cameraStarted,
@@ -215,6 +225,8 @@ const MaskedCamera = ({
     setShowNotReadyNotice(false)
 
     try {
+      // Note: uncomment the following line to simulate camera errors
+      // throwIfSimulatingNotReadyCapture()
       const photo = await takePhoto()
       consecutiveNotReadyCapturesRef.current = 0
       onPhotoTaken(photo.filePath)
@@ -248,6 +260,7 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
+        implementationMode={PREVIEW_IMPLEMENTATION_MODE}
         mirrorMode={mirrorMode}
         isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
         onError={onError}
@@ -255,6 +268,7 @@ const MaskedCamera = ({
         torchMode={torchMode}
         onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
         onStarted={() => {
+          // Note: to simulate camera errors, replace `true` with `!SIMULATE_CAMERA_EVENTS.neverStarts`
           setCameraStarted(true)
           clearInterruption()
           setShowNotReadyNotice(false)

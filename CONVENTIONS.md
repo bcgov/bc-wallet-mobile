@@ -88,7 +88,9 @@ interrupted. A capture that still loses that race (`isCameraNotReadyCaptureError
 single recoverable runtime error with `useRecoverableCameraError` before failing over. Pass the
 screen's camera error handler to `useCameraNotReadyTimeout`, so a camera that stays unstarted or
 interrupted for 8 seconds still reaches the error modal (camera screens have no help menu, so that
-modal is the user's only way to report).
+modal is the user's only way to report). To see these states without a failing camera, follow the
+"Note: ... to simulate camera errors" comments in `MaskedCamera.tsx` and `useCameraRecovery.ts`,
+then switch on the dev-only flags in `app/src/bcsc-theme/hooks/useCameraEventSimulation.ts`.
 
 **Why:** VisionCamera v5 reports a camera held by another app as an interruption that CameraX retries,
 not as an error, and iOS restarts the session after a media services reset (our patch). Without

@@ -35,6 +35,7 @@ exports[`TakePhoto renders correctly 1`] = `
           "id": "mock-device",
         }
       }
+      implementationMode="compatible"
       isActive={true}
       mirrorMode={[Function]}
       onConfigured={[Function]}

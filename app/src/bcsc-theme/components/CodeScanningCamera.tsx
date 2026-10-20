@@ -43,6 +43,7 @@ import {
   toScannedCode,
   transformBarcodeCoordinates,
 } from './utils/camera'
+import { PREVIEW_IMPLEMENTATION_MODE } from './utils/camera-output'
 
 export type { EnhancedCode, ScanZone }
 
@@ -1152,6 +1153,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           onInterruptionEnded={onInterruptionEnded}
           onError={handleCameraError}
           resizeMode="cover"
+          implementationMode={PREVIEW_IMPLEMENTATION_MODE}
         />
 
         {/* Overlay container for the focus indicator */}
