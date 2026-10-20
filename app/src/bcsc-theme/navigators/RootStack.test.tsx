@@ -8,6 +8,7 @@ import { useFcmService } from '../features/fcm'
 import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
 
+let mockAccount: { account_expiration_date: Date } | null = null
 const mockIsClientReady = jest.fn()
 const mockIsNavigationReady = jest.fn()
 const mockEmitErrorModal = jest.fn()
@@ -75,7 +76,7 @@ jest.mock('../contexts/BCSCActivityContext', () => ({
 }))
 jest.mock('../contexts/BCSCAccountContext', () => ({
   BCSCAccountProvider: ({ children }: any) => children,
-  useAccount: () => ({ account: null }),
+  useAccount: () => ({ account: mockAccount }),
 }))
 jest.mock('../contexts/BCSCIdTokenContext', () => ({
   BCSCIdTokenProvider: ({ children }: any) => children,
@@ -101,7 +102,7 @@ const mockStore = (overrides: Record<string, any> = {}) => ({
 const mockProcessPendingChallenges = jest.fn()
 const mockSetCardExpired = jest.fn()
 
-// RootStack asks for the state loader; the real FcmCardExpirySync (via useAccountPhase) asks for the logger
+// RootStack asks for the state loader; the real FcmCardExpirySync asks for the logger
 const mockLogger = { info: jest.fn() }
 const mockServices = (loadState: jest.Mock) =>
   jest
@@ -112,6 +113,7 @@ const mockServices = (loadState: jest.Mock) =>
 describe('BCSCRootStack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockAccount = null
     mockIsClientReady.mockReturnValue(true)
     mockIsNavigationReady.mockReturnValue(true)
     mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
@@ -617,6 +619,49 @@ describe('BCSCRootStack', () => {
     rerender(<BCSCRootStack />)
 
     expect(mockSetCardExpired).toHaveBeenLastCalledWith(true)
+  })
+
+  describe('card expiry phase logging', () => {
+    const verified = { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }
+    const useVerifiedStore = (secure: object) =>
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue([mockStore({ ...verified, bcscSecure: { verified: true, ...secure } }), jest.fn()] as any)
+    const phaseLogs = () =>
+      mockLogger.info.mock.calls.map(([message]) => message).filter((m) => String(m).includes('Card expiry phase'))
+
+    it('logs the phase once on first render', () => {
+      useVerifiedStore({})
+
+      render(<BCSCRootStack />)
+
+      expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: unknown'])
+    })
+
+    it('includes the days remaining when the account has an expiry date', () => {
+      const inEightDays = new Date()
+      inEightDays.setDate(inEightDays.getDate() + 8)
+      mockAccount = { account_expiration_date: inEightDays }
+      useVerifiedStore({})
+
+      render(<BCSCRootStack />)
+
+      expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: expiringSoon, 8 days remaining'])
+    })
+
+    it('logs again when the phase changes, and not on a re-render with the same phase', () => {
+      useVerifiedStore({})
+      const { rerender } = render(<BCSCRootStack />)
+
+      useVerifiedStore({})
+      rerender(<BCSCRootStack />)
+      expect(phaseLogs()).toHaveLength(1)
+
+      useVerifiedStore({ refreshTokenExpired: true })
+      rerender(<BCSCRootStack />)
+
+      expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: unknown', '[RootStack] Card expiry phase: expired'])
+    })
   })
 
   it('processPendingChallenges is called when api client is ready', () => {

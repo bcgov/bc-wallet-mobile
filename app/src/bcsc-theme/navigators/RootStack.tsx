@@ -14,25 +14,39 @@ import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useServerStatus } from '../contexts/ServerStatusContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
+import { useAccountPhase } from '../hooks/useAccountPhase'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { daysUntil } from '../utils/account-phase'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
 
-// Keeps FcmViewModel in sync with card expiry so it can drop challenges for expired users.
+// Keeps FcmViewModel in sync with card expiry so it can drop challenges for expired users, and logs the
+// card expiry phase when it changes (rendered once, so one line per change).
 // Must live inside BCSCAccountProvider.
 const FcmCardExpirySync: React.FC = () => {
   const { isExpired } = useCardStatus()
+  const accountPhase = useAccountPhase()
   const fcmService = useFcmService()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { phase } = accountPhase
 
   useEffect(() => {
     fcmService.viewModel.setCardExpired(isExpired)
   }, [isExpired, fcmService.viewModel])
+
+  useEffect(() => {
+    const expiresAt = 'expiresAt' in accountPhase ? accountPhase.expiresAt : undefined
+    const detail = expiresAt ? `, ${daysUntil(expiresAt, new Date())} days remaining` : ''
+    logger.info(`[RootStack] Card expiry phase: ${phase}${detail}`)
+    // Keyed on the phase alone: the day count is only for the line logged at the change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, logger])
 
   return null
 }

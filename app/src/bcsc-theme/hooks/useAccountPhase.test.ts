@@ -4,13 +4,10 @@ import { BCState } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 import { useAccountPhase } from './useAccountPhase'
 
-let mockLogger = { info: jest.fn() }
 const mockUseStore = jest.fn()
 
 jest.mock('@bifold/core', () => ({
-  TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },
   useStore: () => mockUseStore(),
-  useServices: () => [mockLogger],
 }))
 jest.mock('@/bcsc-theme/contexts/BCSCAccountContext', () => ({ useAccount: jest.fn() }))
 
@@ -37,8 +34,6 @@ const setAccount = (account: BCSCAccount | null) => {
 describe('useAccountPhase', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Each test gets its own logger identity, which is what the change-dedupe is keyed on
-    mockLogger = { info: jest.fn() }
     mockUseStore.mockReturnValue([buildStore(), jest.fn()])
   })
 
@@ -68,51 +63,5 @@ describe('useAccountPhase', () => {
     const { result } = renderHook(() => useAccountPhase())
 
     expect(result.current.phase).toBe('expired')
-  })
-
-  describe('logging', () => {
-    it('logs the phase and days remaining once, with no personal details', () => {
-      setAccount(buildAccount(daysFromNow(8)))
-
-      const { rerender } = renderHook(() => useAccountPhase())
-      rerender({})
-
-      expect(mockLogger.info).toHaveBeenCalledTimes(1)
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[useAccountPhase] Card expiry phase: expiringSoon, 8 days remaining'
-      )
-    })
-
-    it('logs again when the phase changes', () => {
-      setAccount(buildAccount(daysFromNow(8)))
-      const { rerender } = renderHook(() => useAccountPhase())
-
-      setAccount(buildAccount(daysFromNow(365)))
-      rerender({})
-
-      expect(mockLogger.info).toHaveBeenCalledTimes(2)
-      expect(mockLogger.info).toHaveBeenLastCalledWith(
-        '[useAccountPhase] Card expiry phase: active, 365 days remaining'
-      )
-    })
-
-    it('logs without a day count when there is no date', () => {
-      setAccount(null)
-
-      renderHook(() => useAccountPhase())
-
-      expect(mockLogger.info).toHaveBeenCalledWith('[useAccountPhase] Card expiry phase: unknown')
-    })
-
-    it('logs once when several components use the hook at the same time', () => {
-      setAccount(buildAccount(daysFromNow(8)))
-
-      renderHook(() => {
-        useAccountPhase()
-        useAccountPhase()
-      })
-
-      expect(mockLogger.info).toHaveBeenCalledTimes(1)
-    })
   })
 })
