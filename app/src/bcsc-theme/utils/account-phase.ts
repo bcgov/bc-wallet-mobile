@@ -12,7 +12,9 @@ export interface ExpiryFacts {
 }
 
 export enum AccountPhaseType {
+  /** Not verified, so there is no card to judge */
   None = 'none',
+  /** Verified, but no server signal and no usable expiry date (account not loaded, fetch failed, or bad date) */
   Unknown = 'unknown',
   Expired = 'expired',
   ExpiringSoon = 'expiringSoon',
