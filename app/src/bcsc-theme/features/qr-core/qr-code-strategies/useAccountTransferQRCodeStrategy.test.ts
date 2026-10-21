@@ -198,7 +198,7 @@ describe('useAccountTransferQRCodeStrategy', () => {
         expect(onSuccess).toHaveBeenCalled()
       })
 
-      it('rethrows a handled registration failure, which shows no error modal and logs nothing', async () => {
+      it('rethrows a handled registration failure, which shows no error modal but is still logged', async () => {
         const registrationFailure = new AppError(
           'registration failed',
           { category: ErrorCategory.NETWORK, appEvent: AppEventCode.NO_INTERNET, statusCode: 2100 },
@@ -214,7 +214,7 @@ describe('useAccountTransferQRCodeStrategy', () => {
         expect(strategy.toErrorModal?.(registrationFailure)).toBeNull()
         expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
         expect(mockAuthorizeDevice).toHaveBeenCalledTimes(1)
-        expect(mockLogger.error).not.toHaveBeenCalled()
+        expect(mockLogger.error).toHaveBeenCalledTimes(1)
         expect(onSuccess).not.toHaveBeenCalled()
       })
     })
@@ -351,12 +351,12 @@ describe('useAccountTransferQRCodeStrategy', () => {
   })
 
   describe('toErrorModal', () => {
-    it('returns null for an error that was already handled elsewhere', () => {
+    it('returns null, but still logs, for an error that was already handled elsewhere', () => {
       const handledError = new AppError('handled', ErrorRegistry.ACCOUNT_NOT_REGISTERED, { track: false })
       handledError.handled = true
 
       expect(setup().toErrorModal?.(handledError)).toBeNull()
-      expect(mockLogger.error).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalledTimes(1)
     })
 
     it('wraps an unexpected error with the failing step and the account transfer copy', async () => {

@@ -277,12 +277,14 @@ export const videoSessionErrorPolicy: ErrorHandlingPolicy = {
 // Error policy for attestation status polling — 404 is expected while the attestation
 // has not yet been created by another device's verifyAttestation call.
 // 400 is expected when the JTI has already been consumed but the polling happens
-// additional times before the 2xx response is processed
+// additional times before the 2xx response is processed.
+// Only matches the polling URL (`{attestation}/{jwtID}`), never the submission POST to `{attestation}` itself:
+// a failed submission must surface its error, and this policy only logs while still marking the error handled.
 export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
     return (
       (context.statusCode === 404 || context.statusCode === 400) &&
-      context.endpoint.includes(context.apiEndpoints.attestation)
+      context.endpoint.startsWith(`${context.apiEndpoints.attestation}/`)
     )
   },
   handle: (_error, context) => {
