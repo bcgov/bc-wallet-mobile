@@ -248,7 +248,7 @@ describe('AppError', () => {
       })
     })
 
-    it('should include the HTTP status and endpoint in the tracked message when present', () => {
+    it('should include the HTTP status and route template, not the raw path, in the tracked message', () => {
       const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
 
       const identity = {
@@ -258,14 +258,20 @@ describe('AppError', () => {
       }
       // track: false so the constructor's auto-track doesn't fire before the request context is added
       const error = new AppError('Not found', identity, { cause: { response: { status: 404 } }, track: false })
-      error.addContext({ http_url: '/device/userinfo', http_method: 'GET' })
+      error.addContext({
+        http_url: '/evidence/v1/verifications/MTIzNA',
+        http_route: '/evidence/v1/verifications/{id}',
+        http_method: 'GET',
+      })
 
       error.track()
 
+      expect(trackErrorEventSpy).toHaveBeenCalledTimes(1)
       expect(trackErrorEventSpy).toHaveBeenCalledWith({
         code: AppEventCode.NOT_FOUND,
-        message: `[${error.code}] HTTP 404 GET /device/userinfo Not found`,
+        message: `[${error.code}] HTTP 404 GET /evidence/v1/verifications/{id} Not found`,
       })
+      expect(trackErrorEventSpy.mock.calls[0][0].message).not.toContain('MTIzNA')
     })
   })
 

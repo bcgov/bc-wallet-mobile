@@ -297,6 +297,23 @@ describe('Error Utils', () => {
         )
       })
 
+      it('replaces IPv6 literals: bracketed, bare, compressed, scoped and IPv4-mapped', () => {
+        expect(messageFor('Failed to connect to id.example.com/[2001:db8:1234::42]:443')).toBe(
+          'Network Error: Failed to connect to <host>/<host>:443'
+        )
+        expect(messageFor('Failed to connect to /[2001:0db8:0000:0000:0000:ff00:0042:8329]:443')).toBe(
+          'Network Error: Failed to connect to /<host>:443'
+        )
+        expect(messageFor('Failed to connect to /[::ffff:203.0.113.10]:443')).toBe(
+          'Network Error: Failed to connect to /<host>:443'
+        )
+        expect(
+          messageFor(
+            'failed to connect to id.example.com/2001:db8::1 (port 443) from /fe80::1%wlan0 (port 51234) after 10000ms'
+          )
+        ).toBe('Network Error: failed to connect to <host>/<host> (port 443) from /<host> (port 51234) after 10000ms')
+      })
+
       it('keeps the simple name of a package-qualified Java exception', () => {
         expect(messageFor('javax.net.ssl.SSLHandshakeException: Handshake failed')).toBe(
           'Network Error: SSLHandshakeException: Handshake failed'

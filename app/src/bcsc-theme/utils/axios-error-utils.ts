@@ -57,18 +57,23 @@ const TLS_FAILURE_PATTERN =
 
 // "javax.net.ssl.SSLHandshakeException" → "SSLHandshakeException"; a package path would otherwise read as a hostname
 const JAVA_PACKAGE_PREFIX_PATTERN = /\b(?:[a-z_][a-z0-9_]*\.)+(?=[A-Z])/g
+// IPv6 literals, bracketed or bare: two or more hex groups, so compressed ("::1"), scoped ("fe80::1%wlan0")
+// and IPv4-mapped ("::ffff:203.0.113.10") forms all match. Android's connect timeout names the device's
+// own address ("… from /fe80::1%wlan0 (port 51234) …"), not just the server's.
+const IPV6_PATTERN = /\[?(?:[0-9a-f]{0,4}:){2,7}(?:\d{1,3}(?:\.\d{1,3}){3}|[0-9a-f]{0,4})(?:%[a-z0-9_-]+)?\]?/gi
 // IPv4 addresses and dotted hostnames
 const HOST_OR_IP_PATTERN = /\b(?:\d{1,3}\.){3}\d{1,3}\b|\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b/gi
 
 /**
  * Make a native error string safe for the modal, remote logs and incident reports: first line only
  * (Android appends the certificate dump on the following lines), hostnames and IP addresses replaced,
- * whitespace collapsed, length capped.
+ * whitespace collapsed, length capped. IPv6 goes first so an IPv4-mapped address is one literal, not two.
  */
 const redactNativeReason = (text: string): string =>
   text
     .split(/\r?\n/)[0]
     .replace(JAVA_PACKAGE_PREFIX_PATTERN, '')
+    .replace(IPV6_PATTERN, '<host>')
     .replace(HOST_OR_IP_PATTERN, '<host>')
     .replace(/\s+/g, ' ')
     .trim()
