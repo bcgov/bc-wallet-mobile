@@ -1,6 +1,5 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import * as Bifold from '@bifold/core'
-import { QrCodeScanError } from '@bifold/core'
 import { renderHook } from '@testing-library/react-native'
 import { useDidCommOobQRCodeStrategy } from './useDidCommOobQRCodeStrategy'
 
@@ -88,13 +87,12 @@ describe('useDidCommOobQRCodeStrategy', () => {
   })
 
   describe('handle', () => {
-    it('throws AgentNotReady when the agent is unavailable', async () => {
+    it('throws when the agent is unavailable', async () => {
       useAgent(null)
 
       const result = setup().handle(OOB_URI)
 
-      await expect(result).rejects.toBeInstanceOf(QrCodeScanError)
-      await expect(result).rejects.toMatchObject({ message: 'BCSC.Scan.Unsupported.AgentNotReady' })
+      await expect(result).rejects.toThrow('Agent is not ready')
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
@@ -123,8 +121,7 @@ describe('useDidCommOobQRCodeStrategy', () => {
 
       const result = setup().handle(uri)
 
-      await expect(result).rejects.toBeInstanceOf(QrCodeScanError)
-      await expect(result).rejects.toMatchObject({ message: 'BCSC.Scan.Unsupported.OpenID' })
+      await expect(result).rejects.toThrow('OpenID URI rejected - AnonCreds only wallet')
       expect(spies.parseInvitation).not.toHaveBeenCalled()
       expect(onSuccess).not.toHaveBeenCalled()
     })
@@ -133,17 +130,17 @@ describe('useDidCommOobQRCodeStrategy', () => {
       const { agent, spies } = makeAgent({ goalCode: 'aries.vc.mediate' })
       useAgent(agent)
 
-      await expect(setup().handle(OOB_URI)).rejects.toMatchObject({ message: 'BCSC.Scan.Unsupported.Mediator' })
+      await expect(setup().handle(OOB_URI)).rejects.toThrow('Mediator invitation rejected - BCSC uses .env mediator')
 
       expect(spies.receiveInvitation).not.toHaveBeenCalled()
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
-    it('throws unrecognized when the invitation cannot be parsed', async () => {
+    it('throws when the invitation cannot be parsed', async () => {
       const { agent, spies } = makeAgent({ goalCode: '__noparse__' })
       useAgent(agent)
 
-      await expect(setup().handle(OOB_URI)).rejects.toMatchObject({ message: 'BCSC.Scan.UnrecognizedQR' })
+      await expect(setup().handle(OOB_URI)).rejects.toThrow('Could not parse OOB invitation')
 
       expect(spies.parseInvitation).toHaveBeenCalledTimes(1)
       expect(spies.receiveInvitation).not.toHaveBeenCalled()

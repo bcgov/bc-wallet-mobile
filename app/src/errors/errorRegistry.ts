@@ -142,6 +142,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.CAMERA,
     message: 'Camera runtime error — check device camera permissions and availability',
   },
+  CREDENTIAL_QR_SCAN_FAILED: {
+    statusCode: 2003,
+    appEvent: AppEventCode.CREDENTIAL_QR_SCAN_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CAMERA,
+    message: 'Credential QR code scan failed — unable to extract credential data from QR code',
+  },
 
   // ============================================
   // Network Errors (2100-2199)

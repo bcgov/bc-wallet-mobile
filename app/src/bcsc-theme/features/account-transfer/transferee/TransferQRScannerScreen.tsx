@@ -24,11 +24,9 @@ const TransferQRScannerScreen = ({ navigation }: TransferQRScannerScreenProps) =
 
   const strategies = useMemo(() => [accountTransferQRCodeStrategy], [accountTransferQRCodeStrategy])
 
-  const { isProcessing, scanError, handleScan, dismissError } = useQRScanner(strategies)
+  const { isProcessing, handleScan } = useQRScanner(strategies)
 
-  return (
-    <QRScanner isProcessing={isProcessing} scanError={scanError} onScan={handleScan} onDismissError={dismissError} />
-  )
+  return <QRScanner isProcessing={isProcessing} onScan={handleScan} />
 }
 
 export default TransferQRScannerScreen
