@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import React from 'react'
 
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { useFocusEffect } from '@react-navigation/native'
 import { useCameraPermission } from 'react-native-vision-camera'
@@ -30,6 +31,9 @@ jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
 }))
 
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon')
+jest.mock('@/contexts/ErrorAlertContext', () => ({
+  useErrorAlert: jest.fn(() => ({ isErrorModalVisible: false })),
+}))
 
 jest.mock('react-native-vision-camera', () => ({ useCameraPermission: jest.fn() }))
 jest.mock('@/hooks/useAutoRequestPermission', () => ({ useAutoRequestPermission: jest.fn() }))
@@ -136,6 +140,20 @@ describe('QRScanner', () => {
 
     rerender(<QRScanner {...defaultProps} />)
     act(() => onFocus())
+    expect(mockCameraMounted).toHaveBeenCalledTimes(2)
+  })
+
+  // ScanCamera freezes itself after a scan, so closing any global error modal has to remount it.
+  it('remounts ScanCamera only once the error modal closes', () => {
+    const mockUseErrorAlert = jest.mocked(useErrorAlert)
+    mockUseErrorAlert.mockReturnValue({ isErrorModalVisible: true } as unknown as ReturnType<typeof useErrorAlert>)
+
+    const { rerender } = render(<QRScanner {...defaultProps} />)
+    rerender(<QRScanner {...defaultProps} />)
+    expect(mockCameraMounted).toHaveBeenCalledTimes(1) // still open, so still frozen
+
+    mockUseErrorAlert.mockReturnValue({ isErrorModalVisible: false } as unknown as ReturnType<typeof useErrorAlert>)
+    rerender(<QRScanner {...defaultProps} />)
     expect(mockCameraMounted).toHaveBeenCalledTimes(2)
   })
 })

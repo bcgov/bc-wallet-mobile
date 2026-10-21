@@ -195,7 +195,7 @@ describe('useQRScanner', () => {
     expect(result.current.scanError).toBeNull()
   })
 
-  it('emits the strategy error modal with a retry action that remounts the scanner', async () => {
+  it('emits the strategy error modal instead of setting a scan error', async () => {
     const thrown = new Error('boom')
     const appError = { message: 'wrapped' } as AppError
     const toErrorModal = jest.fn().mockReturnValue({ error: appError, title: 'Title', description: 'Description' })
@@ -207,14 +207,8 @@ describe('useQRScanner', () => {
     })
 
     expect(toErrorModal).toHaveBeenCalledWith(thrown)
-    expect(emitErrorModal).toHaveBeenCalledWith('Title', 'Description', appError, {
-      action: { text: 'Global.Retry', onPress: expect.any(Function) },
-    })
+    expect(emitErrorModal).toHaveBeenCalledWith('Title', 'Description', appError)
     expect(result.current.scanError).toBeNull()
-
-    const initialKey = result.current.scannerKey
-    act(() => emitErrorModal.mock.calls[0][3].action.onPress())
-    expect(result.current.scannerKey).toBe(initialKey + 1)
   })
 
   it('shows nothing when the strategy reports the error as already handled', async () => {
