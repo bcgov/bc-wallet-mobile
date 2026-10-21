@@ -151,14 +151,13 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.NO_INTERNET,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
-    // NOTE: This maps from axios `ERR_NETWORK` (no HTTP response) only when the native reason could
-    // not be classified more specifically; see bcsc-theme/utils/transport-failure.ts. A rejected
-    // certificate becomes UNSECURED_NETWORK (2103), a timeout SERVER_TIMEOUT (2102), a dropped
-    // connection PROBLEM_WITH_CONNECTION (2104). What is left is the device being offline, a DNS
-    // lookup failing, or an unrecognised native string: `context.transport_failure` carries the
-    // token and `context.net_*` a NetInfo snapshot. No reachability probe is run.
+    // NOTE: This maps from axios `ERR_NETWORK`, which means the request failed at the transport
+    // layer with no HTTP response — NOT necessarily that the device is offline. It also covers
+    // DNS failures and connection resets against a specific host; a rejected certificate is
+    // classified as UNSECURED_NETWORK (2103) instead (see getAppErrorFromAxiosError). Avoid
+    // implying a reachability probe was run (none is).
     message:
-      'Network request failed before a response was received — device offline, DNS lookup failed, or unclassified transport error',
+      'Network request failed before a response was received — device offline, or DNS/connection error on the target host',
   },
   SERVER_ERROR: {
     statusCode: 2101,

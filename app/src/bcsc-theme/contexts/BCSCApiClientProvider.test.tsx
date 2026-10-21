@@ -375,7 +375,7 @@ describe('BCSCApiClientProvider', () => {
     // The response interceptor classifies a rejected certificate as UNSECURED_NETWORK but keeps the
     // no-response axios cause, so discovery must fail open exactly like the historical no_internet error
     const mockError = AppError.fromErrorDefinition(ErrorRegistry.UNSECURED_NETWORK, {
-      cause: new AxiosError('Network Error: tls_hostname_mismatch', 'ERR_NETWORK'),
+      cause: new AxiosError('Network Error: Hostname <host> not verified:', 'ERR_NETWORK'),
       track: false,
     })
 

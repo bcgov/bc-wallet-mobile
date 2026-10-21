@@ -1,9 +1,5 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import {
-  NATIVE_TRANSPORT_FAILURE_SAMPLES,
-  NativeTransportFailureSample,
-} from '@/bcsc-theme/utils/__fixtures__/transport-failures'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
@@ -102,7 +98,6 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     { key: 'SERVER_ERROR', description: 'Server-side error' },
     { key: 'SERVER_TIMEOUT', description: 'Request timeout error' },
     { key: 'UNSECURED_NETWORK', description: 'Certificate rejected before any response (TLS)' },
-    { key: 'PROBLEM_WITH_CONNECTION', description: 'Connection dropped or reset during the request' },
     { key: 'INVALID_QR_CODE', description: 'QR code scanning error' },
     { key: 'LOGIN_REJECTED_401', description: 'Authentication unauthorized' },
     { key: 'FORBIDDEN', description: 'HTTP 403 — authenticated but not permitted' },
@@ -278,52 +273,26 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   /**
-   * Real transport failures through the real client: each URL makes the platform's networking stack
-   * fail before any HTTP response, so the whole path runs — the response interceptor classifies the
-   * native reason, the global policy picks the modal ("Unsecured Network" for the TLS rows) and
-   * "Report this problem" carries the redacted detail. badssl.com reproduces each certificate problem
-   * on both platforms; the connect-timeout address is unroutable and can take a minute on iOS.
+   * Real certificate failures through the real client: badssl.com rejects each request in the TLS
+   * handshake, so the whole path runs — the response interceptor reads the native reason, the global
+   * policy shows the "Unsecured Network" modal and the Debug line carries the reason with the host
+   * redacted. Works on both platforms.
    */
-  const requestLiveTransportFailure = async (url: string) => {
+  const requestLiveTlsFailure = async (url: string) => {
     onBack() // close the dev modal so the resulting error modal is visible
 
     try {
       await client.get(url, { skipBearerAuth: true })
     } catch (error) {
       // The response interceptor has already classified, logged and surfaced the failure
-      logger.debug('Live transport failure request finished', { error })
+      logger.debug('Live TLS failure request finished', { error })
     }
   }
 
-  const liveTransportFailureCallbacks: Record<string, () => void> = {
-    tls_hostname_mismatch: () => requestLiveTransportFailure('https://wrong.host.badssl.com/'),
-    tls_expired_certificate: () => requestLiveTransportFailure('https://expired.badssl.com/'),
-    tls_self_signed: () => requestLiveTransportFailure('https://self-signed.badssl.com/'),
-    tls_untrusted_root: () => requestLiveTransportFailure('https://untrusted-root.badssl.com/'),
-    dns_unresolved: () => requestLiveTransportFailure('https://nonexistent.invalid/'),
-    connection_refused: () => requestLiveTransportFailure('https://127.0.0.1:1/'),
-    connect_timeout: () => requestLiveTransportFailure('https://10.255.255.1/'),
-  }
-
-  /**
-   * The same classification without leaving the device: rejects the request with the exact AxiosError
-   * shape React Native produces for each known native error string, so every reason token and its
-   * redaction can be checked on any network, airplane mode included.
-   */
-  const injectTransportFailure = async (sample: NativeTransportFailureSample) => {
-    const id = client.client.interceptors.request.use((config) => {
-      client.client.interceptors.request.eject(id)
-      // What RN leaves on the XMLHttpRequest: the native reason in responseText of a text-type request
-      throw new AxiosError('Network Error', sample.code, config, { responseType: '', responseText: sample.text })
-    })
-
-    onBack()
-
-    try {
-      await client.get(`${client.endpoints.cardTap}/v3/terms`, { skipBearerAuth: true })
-    } catch (error) {
-      logger.debug(`Injected transport failure ${sample.id}`, { error })
-    }
+  const liveTlsFailureCallbacks: Record<string, () => void> = {
+    wrong_host: () => requestLiveTlsFailure('https://wrong.host.badssl.com/'),
+    expired: () => requestLiveTlsFailure('https://expired.badssl.com/'),
+    untrusted_root: () => requestLiveTlsFailure('https://untrusted-root.badssl.com/'),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {
@@ -546,39 +515,19 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>{'Transport failures (live)'}</Text>
+          <Text style={styles.sectionHeader}>{'TLS failure (live)'}</Text>
           <Text style={styles.description}>
-            {'Real requests the platform rejects before any response: certificate problems via badssl.com, an ' +
-              'unresolvable host, a refused port and an unroutable address (slow). Expect "Unsecured Network" ' +
-              '(2103) for the TLS rows; check the token in the details and the redacted detail in the report.'}
+            {'Real requests badssl.com rejects in the TLS handshake. Expect the "Unsecured Network" modal (2103); ' +
+              'Show Details carries the native reason with the host redacted.'}
           </Text>
-          {Object.keys(liveTransportFailureCallbacks).map((key) => (
+          {Object.keys(liveTlsFailureCallbacks).map((key) => (
             <View key={key} style={styles.buttonRow}>
               <Button
                 title={key}
-                accessibilityLabel={`Request a live transport failure ${key}`}
-                testID={`transport-live-${key}`}
+                accessibilityLabel={`Request a live TLS failure ${key}`}
+                testID={`tls-live-${key}`}
                 buttonType={ButtonType.Secondary}
-                onPress={liveTransportFailureCallbacks[key]}
-              />
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>{'Transport failures (simulated)'}</Text>
-          <Text style={styles.description}>
-            {'Replays each known native error string through the real client without touching the network, ' +
-              'so every reason token and its redaction can be checked offline.'}
-          </Text>
-          {NATIVE_TRANSPORT_FAILURE_SAMPLES.map((sample) => (
-            <View key={sample.id} style={styles.buttonRow}>
-              <Button
-                title={`${sample.id} → ${sample.reason}`}
-                accessibilityLabel={`Inject transport failure ${sample.id}`}
-                testID={`transport-sim-${sample.id}`}
-                buttonType={ButtonType.Secondary}
-                onPress={() => injectTransportFailure(sample)}
+                onPress={liveTlsFailureCallbacks[key]}
               />
             </View>
           ))}

@@ -28,13 +28,6 @@ const FLATTENED_APP_ERROR_CONTEXT_KEYS = new Set([
   'http_status',
   'http_response_size',
   'http_request_size',
-  // Why a request failed before any response (host-free token and redacted native reason) and the
-  // connectivity snapshot taken at that moment
-  'transport_failure',
-  'transport_detail',
-  'net_connected',
-  'net_reachable',
-  'net_type',
 ])
 
 /**

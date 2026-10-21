@@ -6,7 +6,7 @@ import { AxiosError } from 'axios'
 import {
   formatAxiosErrorForLogger,
   formatIasAxiosResponseError,
-  formatTransportAxiosError,
+  formatNetworkAxiosError,
   getAppErrorFromAxiosError,
   getAxiosErrorDefinition,
   isNetworkError,
@@ -195,8 +195,8 @@ describe('Error Utils', () => {
       })
     })
 
-    describe('transport failures (no response)', () => {
-      it('maps a rejected certificate to UNSECURED_NETWORK with the token and redacted detail in context', () => {
+    describe('network errors (no response)', () => {
+      it('maps a rejected certificate to UNSECURED_NETWORK and keeps the host out of what it carries', () => {
         const error = new AxiosError(
           'Network Error',
           'ERR_NETWORK',
@@ -204,45 +204,25 @@ describe('Error Utils', () => {
           xhrWith(TLS_NATIVE_TEXT)
         )
 
-        const appError = getAppErrorFromAxiosError(formatTransportAxiosError(error))
+        const appError = getAppErrorFromAxiosError(formatNetworkAxiosError(error))
 
         expect(appError.appEvent).toBe(AppEventCode.UNSECURED_NETWORK)
         expect(appError.statusCode).toBe(ErrorRegistry.UNSECURED_NETWORK.statusCode)
-        expect(appError.context).toMatchObject({
-          http_url: '/cardtap/v3/terms',
-          transport_failure: 'tls_hostname_mismatch',
-          transport_detail: 'Hostname <host> not verified:',
-        })
-        expect(appError.technicalMessage).toBe('Network Error: tls_hostname_mismatch')
+        expect(appError.context).toMatchObject({ http_url: '/cardtap/v3/terms' })
+        expect(appError.technicalMessage).toBe('Network Error: Hostname <host> not verified:')
         expect(JSON.stringify(appError.toJSON())).not.toContain('example.com')
       })
 
-      it('classifies on its own when the format step did not run', () => {
-        const error = new AxiosError('Network Error', 'ERR_NETWORK', undefined, xhrWith('Connection reset'))
+      it('keeps NO_INTERNET for a failure with no native text', () => {
+        const appError = getAppErrorFromAxiosError(
+          formatNetworkAxiosError(new AxiosError('Network Error', 'ERR_NETWORK'))
+        )
 
-        const appError = getAppErrorFromAxiosError(error)
-
-        expect(appError.appEvent).toBe(AppEventCode.PROBLEM_WITH_CONNECTION)
-        expect(appError.context.transport_failure).toBe('connection_reset')
-        // Without the format step the cause keeps its generic message
+        expect(appError.appEvent).toBe(AppEventCode.NO_INTERNET)
         expect(appError.technicalMessage).toBe('Network Error')
       })
 
-      it('maps an Android call timeout reported as a network error to SERVER_TIMEOUT', () => {
-        const error = new AxiosError('Network Error', 'ERR_NETWORK', undefined, xhrWith('timeout'))
-
-        expect(getAppErrorFromAxiosError(error).appEvent).toBe(AppEventCode.SERVER_TIMEOUT)
-      })
-
-      it('keeps NO_INTERNET for a failure with no native text', () => {
-        const appError = getAppErrorFromAxiosError(new AxiosError('Network Error', 'ERR_NETWORK'))
-
-        expect(appError.appEvent).toBe(AppEventCode.NO_INTERNET)
-        expect(appError.context.transport_failure).toBe('unknown')
-        expect(appError.context.transport_detail).toBeUndefined()
-      })
-
-      it('keeps NO_INTERNET for an unresolvable host', () => {
+      it('keeps NO_INTERNET for an unresolvable host, with the reason on the message', () => {
         const error = new AxiosError(
           'Network Error',
           'ERR_NETWORK',
@@ -250,80 +230,129 @@ describe('Error Utils', () => {
           xhrWith('Unable to resolve host "id.example.com": No address associated with hostname')
         )
 
-        const appError = getAppErrorFromAxiosError(error)
+        const appError = getAppErrorFromAxiosError(formatNetworkAxiosError(error))
 
         expect(appError.appEvent).toBe(AppEventCode.NO_INTERNET)
-        expect(appError.context.transport_failure).toBe('dns_unresolved')
-        expect(appError.context.transport_detail).toBe(
-          'Unable to resolve host "<host>": No address associated with hostname'
+        expect(appError.technicalMessage).toBe(
+          'Network Error: Unable to resolve host "<host>": No address associated with hostname'
         )
       })
     })
   })
 
-  describe('formatTransportAxiosError', () => {
-    it('classifies a no-response failure and replaces the generic message with the reason token', () => {
+  describe('formatNetworkAxiosError', () => {
+    it('replaces the bare message with the redacted native reason and keeps the code', () => {
       const error = new AxiosError('Network Error', 'ERR_NETWORK', undefined, xhrWith(TLS_NATIVE_TEXT))
 
-      const formatted = formatTransportAxiosError(error)
+      const formatted = formatNetworkAxiosError(error)
 
-      expect(formatted.transportFailure).toEqual({
-        kind: 'tls',
-        reason: 'tls_hostname_mismatch',
-        detail: 'Hostname <host> not verified:',
-      })
-      expect(formatted.message).toBe('Network Error: tls_hostname_mismatch')
+      expect(formatted.message).toBe('Network Error: Hostname <host> not verified:')
       expect(formatted.code).toBe('ERR_NETWORK')
-    })
-
-    it('leaves the message alone when the native text is not recognised', () => {
-      const error = new AxiosError(
-        'Network Error',
-        'ERR_NETWORK',
-        undefined,
-        xhrWith('Le certificat de ce serveur est invalide.')
-      )
-
-      const formatted = formatTransportAxiosError(error)
-
-      expect(formatted.message).toBe('Network Error')
-      expect(formatted.transportFailure).toEqual({
-        kind: 'unknown',
-        reason: 'unknown',
-        detail: 'Le certificat de ce serveur est invalide.',
-      })
-    })
-
-    it("keeps axios' own timeout message", () => {
-      const formatted = formatTransportAxiosError(new AxiosError('timeout of 10000ms exceeded', 'ECONNABORTED'))
-
-      expect(formatted.message).toBe('timeout of 10000ms exceeded')
-      expect(formatted.transportFailure?.kind).toBe('timeout')
     })
 
     it('is idempotent', () => {
       const error = new AxiosError('Network Error', 'ERR_NETWORK', undefined, xhrWith(TLS_NATIVE_TEXT))
 
-      const once = formatTransportAxiosError(error)
-      const twice = formatTransportAxiosError(once)
+      formatNetworkAxiosError(formatNetworkAxiosError(error))
 
-      expect(twice.message).toBe('Network Error: tls_hostname_mismatch')
-      expect(twice.transportFailure).toBe(once.transportFailure)
+      expect(error.message).toBe('Network Error: Hostname <host> not verified:')
     })
 
-    it('does nothing to an error that carries a response', () => {
-      const error = new AxiosError('Request failed', 'ERR_BAD_RESPONSE', undefined, xhrWith(TLS_NATIVE_TEXT), {
+    it('leaves a response error and an axios timeout alone', () => {
+      const responseError = new AxiosError('Request failed', 'ERR_BAD_RESPONSE', undefined, xhrWith(TLS_NATIVE_TEXT), {
         status: 500,
         data: {},
       } as any)
+      const timeout = new AxiosError(
+        'timeout of 10000ms exceeded',
+        'ECONNABORTED',
+        undefined,
+        xhrWith('Read timed out')
+      )
 
-      expect(formatTransportAxiosError(error).transportFailure).toBeUndefined()
-      expect(error.message).toBe('Request failed')
+      expect(formatNetworkAxiosError(responseError).message).toBe('Request failed')
+      expect(formatNetworkAxiosError(timeout).message).toBe('timeout of 10000ms exceeded')
+    })
+
+    it('does not read a binary response type, where RN stores nothing and the getter throws', () => {
+      const request = {
+        responseType: 'arraybuffer',
+        get responseText(): string {
+          throw new Error('responseText is only available for text responses')
+        },
+      }
+
+      const formatted = formatNetworkAxiosError(new AxiosError('Network Error', 'ERR_NETWORK', undefined, request))
+
+      expect(formatted.message).toBe('Network Error')
+    })
+
+    describe('redaction', () => {
+      const messageFor = (text: string) =>
+        formatNetworkAxiosError(new AxiosError('Network Error', 'ERR_NETWORK', undefined, xhrWith(text))).message
+
+      it('replaces hostnames and IP addresses', () => {
+        expect(messageFor('Failed to connect to id.example.com/203.0.113.10:443')).toBe(
+          'Network Error: Failed to connect to <host>/<host>:443'
+        )
+      })
+
+      it('keeps the simple name of a package-qualified Java exception', () => {
+        expect(messageFor('javax.net.ssl.SSLHandshakeException: Handshake failed')).toBe(
+          'Network Error: SSLHandshakeException: Handshake failed'
+        )
+      })
+
+      it('keeps the first line only, collapses whitespace and caps the length', () => {
+        expect(messageFor(TLS_NATIVE_TEXT)).toBe('Network Error: Hostname <host> not verified:')
+        expect(messageFor('  spaced   out \t text  ')).toBe('Network Error: spaced out text')
+        expect(messageFor('x'.repeat(250))).toHaveLength('Network Error: '.length + 200)
+      })
+    })
+  })
+
+  describe('TLS detection', () => {
+    const appEventFor = (text: string) =>
+      getAppErrorFromAxiosError(
+        formatNetworkAxiosError(new AxiosError('Network Error', 'ERR_NETWORK', undefined, xhrWith(text)))
+      ).appEvent
+
+    it.each([
+      // Android (OkHttp / Conscrypt)
+      'Unacceptable certificate: CN=COMODO RSA Certification Authority, O=COMODO CA Limited, L=Salford, ST=Greater Manchester, C=GB',
+      TLS_NATIVE_TEXT,
+      'java.security.cert.CertPathValidatorException: Trust anchor for certification path not found.',
+      'Chain validation failed',
+      'Certificate pinning failure!\n  Peer certificate chain:\n    sha256/abc=: CN=id.example.com',
+      'Pin verification failed',
+      'Error while executing request: SSLHandshakeException',
+      'javax.net.ssl.SSLHandshakeException: Handshake failed',
+      // iOS (NSURLError)
+      'The certificate for this server is invalid. You might be connecting to a server that is pretending to be “id.example.com” which could put your confidential information at risk.',
+      'The certificate for this server has expired. You might be connecting to a server that is pretending to be “id.example.com” which could put your confidential information at risk.',
+      'The certificate for this server was signed by an unknown certifying authority. You might be connecting to a server that is pretending to be “id.example.com” which could put your confidential information at risk.',
+      'An SSL error has occurred and a secure connection to the server cannot be made.',
+      'Le certificat de ce serveur est invalide.',
+    ])('classifies %j as UNSECURED_NETWORK', (text) => {
+      expect(appEventFor(text)).toBe(AppEventCode.UNSECURED_NETWORK)
+    })
+
+    it.each([
+      // Conscrypt reports plain connection drops with TLS vocabulary
+      'Read error: ssl=0x7b3c8a1200: I/O error during system call, Software caused connection abort',
+      'SSL handshake aborted: ssl=0x7b3c8a1200: I/O error during system call, Connection reset by peer',
+      'Unable to resolve host "id.example.com": No address associated with hostname',
+      'timeout',
+      'Failed to connect to id.example.com/203.0.113.10:443',
+      'The request timed out.',
+      'The Internet connection appears to be offline.',
+    ])('keeps %j as NO_INTERNET', (text) => {
+      expect(appEventFor(text)).toBe(AppEventCode.NO_INTERNET)
     })
   })
 
   describe('isNetworkError', () => {
-    const networkCause = () => new AxiosError('Network Error: tls_hostname_mismatch', 'ERR_NETWORK')
+    const networkCause = () => new AxiosError('Network Error: Hostname <host> not verified:', 'ERR_NETWORK')
 
     it('is true for an axios error that got no response', () => {
       expect(isNetworkError(new AxiosError('Network Error', 'ERR_NETWORK'))).toBe(true)
@@ -335,16 +364,16 @@ describe('Error Utils', () => {
       expect(isNetworkError(new AxiosError('Request failed', 'ERR_BAD_RESPONSE'))).toBe(false)
     })
 
-    // The fail-open paths (client discovery, JWK retries, device count) must treat every classified
-    // transport failure like the historical no_internet error
-    it.each([ErrorRegistry.UNSECURED_NETWORK, ErrorRegistry.SERVER_TIMEOUT, ErrorRegistry.PROBLEM_WITH_CONNECTION])(
-      'is true for a $appEvent AppError whose cause is a network error',
-      (definition) => {
-        const appError = AppError.fromErrorDefinition(definition, { cause: networkCause(), track: false })
+    // The fail-open paths (client discovery, JWK retries, device count) must treat a rejected
+    // certificate like the historical no_internet error
+    it('is true for an UNSECURED_NETWORK AppError whose cause is a network error', () => {
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.UNSECURED_NETWORK, {
+        cause: networkCause(),
+        track: false,
+      })
 
-        expect(isNetworkError(appError)).toBe(true)
-      }
-    )
+      expect(isNetworkError(appError)).toBe(true)
+    })
 
     it('is true for NO_INTERNET even without a cause', () => {
       expect(isNetworkError(AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, { track: false }))).toBe(true)
@@ -358,7 +387,7 @@ describe('Error Utils', () => {
     })
 
     it('walks a re-wrapped cause chain', () => {
-      const inner = AppError.fromErrorDefinition(ErrorRegistry.PROBLEM_WITH_CONNECTION, {
+      const inner = AppError.fromErrorDefinition(ErrorRegistry.UNSECURED_NETWORK, {
         cause: networkCause(),
         track: false,
       })
@@ -432,20 +461,9 @@ describe('Error Utils', () => {
       expect(errorDefinition?.appEvent).toBe('server_timeout')
     })
 
-    it('ETIMEDOUT should resolve to SERVER_TIMEOUT AppError', () => {
-      expect(getAxiosErrorDefinition('ETIMEDOUT')?.appEvent).toBe('server_timeout')
-    })
-
-    // axios collapses every no-response failure into ERR_NETWORK; the transport classification
-    // tells a rejected certificate, a timeout and a dropped connection apart from being offline
-    it.each([
-      ['tls', AppEventCode.UNSECURED_NETWORK],
-      ['timeout', AppEventCode.SERVER_TIMEOUT],
-      ['connection', AppEventCode.PROBLEM_WITH_CONNECTION],
-      ['offline', AppEventCode.NO_INTERNET],
-      ['unknown', AppEventCode.NO_INTERNET],
-    ] as const)('NETWORK_ERROR classified as %s should resolve to appEvent "%s"', (kind, expectedAppEvent) => {
-      expect(getAxiosErrorDefinition('ERR_NETWORK', undefined, kind)?.appEvent).toBe(expectedAppEvent)
+    // axios collapses every no-response failure into ERR_NETWORK; a rejected certificate is the one case told apart
+    it('NETWORK_ERROR from a rejected certificate should resolve to UNSECURED_NETWORK AppError', () => {
+      expect(getAxiosErrorDefinition('ERR_NETWORK', undefined, true)?.appEvent).toBe('unsecured_network')
     })
 
     it('BAD_REQUEST without a status should resolve to BAD_REQUEST AppError', () => {

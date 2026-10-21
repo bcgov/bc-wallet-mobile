@@ -249,11 +249,6 @@ describe('clientErrorPolicies', () => {
         expect(globalAlertErrorPolicy.matches(error, {} as any)).toBeFalsy()
       })
 
-      it('should NOT match problem_with_connection (handled by the calling screen)', () => {
-        const error = newError('problem_with_connection')
-        expect(globalAlertErrorPolicy.matches(error, {} as any)).toBeFalsy()
-      })
-
       it('should NOT match other errors', () => {
         const error = newError('some_other_error')
         expect(globalAlertErrorPolicy.matches(error, {} as any)).toBeFalsy()

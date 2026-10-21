@@ -181,11 +181,6 @@ describe('report-problem', () => {
             http_status: 500,
             http_response_size: 42,
             http_request_size: 0,
-            transport_failure: 'tls_hostname_mismatch',
-            transport_detail: 'Hostname <host> not verified:',
-            net_connected: true,
-            net_reachable: null,
-            net_type: 'wifi',
             not_allow_listed: 'should be dropped',
           },
         }
@@ -205,11 +200,6 @@ describe('report-problem', () => {
         http_status: 500,
         http_response_size: 42,
         http_request_size: 0,
-        transport_failure: 'tls_hostname_mismatch',
-        transport_detail: 'Hostname <host> not verified:',
-        net_connected: true,
-        net_reachable: null,
-        net_type: 'wifi',
       })
       expect(body).not.toHaveProperty('not_allow_listed')
       expect(body.error_json).toEqual(error.toJSON())
@@ -228,8 +218,6 @@ describe('report-problem', () => {
       expect(body).toHaveProperty('screen', 'HomeScreen')
       expect(body).not.toHaveProperty('http_route')
       expect(body).not.toHaveProperty('http_status')
-      expect(body).not.toHaveProperty('transport_failure')
-      expect(body).not.toHaveProperty('net_connected')
     })
   })
 })

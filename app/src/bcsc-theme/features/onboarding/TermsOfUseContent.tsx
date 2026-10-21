@@ -69,9 +69,9 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
       logger.error('Failed to fetch Terms of Use', normalizedError)
       setError(true)
 
-      // The API client's global policy has already shown the modal for this failure (an unsecured
-      // network, a timeout); emitting again would replace it with the less specific "check your
-      // connection" copy. The Retry state above is all this screen adds in that case.
+      // The API client's global policy has already shown the modal for this failure (a rejected
+      // certificate shows "Unsecured Network"); emitting again would replace it with the less
+      // specific "check your connection" copy. The Retry state above is all this screen adds then.
       if (isHandledAppError(err)) {
         return
       }
