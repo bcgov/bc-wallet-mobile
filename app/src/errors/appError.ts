@@ -184,7 +184,7 @@ export class AppError extends Error {
     // every 4xx into a single code, so without this the dashboard cannot tell 400/401/403/404 apart — nor
     // which endpoint produced the error.
     const httpStatus = (this.cause as { response?: { status?: number } } | undefined)?.response?.status
-    const request = [this.context?.method, this.context?.url].filter(Boolean).join(' ')
+    const request = [this.context?.http_method, this.context?.http_url].filter(Boolean).join(' ')
     const context = [httpStatus ? `HTTP ${httpStatus}` : undefined, request || undefined].filter(Boolean).join(' ')
 
     Analytics.trackErrorEvent({

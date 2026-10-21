@@ -256,9 +256,9 @@ describe('AppError', () => {
         appEvent: AppEventCode.NOT_FOUND,
         statusCode: 2113,
       }
-      // track: false so the constructor's auto-track doesn't fire before url/method are added
+      // track: false so the constructor's auto-track doesn't fire before the request context is added
       const error = new AppError('Not found', identity, { cause: { response: { status: 404 } }, track: false })
-      error.addContext({ url: '/device/userinfo', method: 'GET' })
+      error.addContext({ http_url: '/device/userinfo', http_method: 'GET' })
 
       error.track()
 
