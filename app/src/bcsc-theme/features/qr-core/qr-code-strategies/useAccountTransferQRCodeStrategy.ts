@@ -60,8 +60,8 @@ export const useAccountTransferQRCodeStrategy = (
     }
 
     updateStep('deviceAuthorization')
-    registeredDuringScan.current = true
     const deviceAuth = await attemptWithRecovery(() => authorization.authorizeDevice(), route.name)
+    registeredDuringScan.current = true
 
     const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
 
@@ -160,7 +160,6 @@ export const useAccountTransferQRCodeStrategy = (
   const handle = useCallback(
     async (uri: string): Promise<void> => {
       updateStep('startAccountTransfer')
-      registeredDuringScan.current = false
 
       const transferToken = extractTransferToken(uri)
       if (!transferToken) {
@@ -193,10 +192,6 @@ export const useAccountTransferQRCodeStrategy = (
    */
   const toErrorModal = useCallback(
     (error: unknown) => {
-      if (isHandledAppError(error)) {
-        return null
-      }
-
       const appError = ensureAppError(error, AppEventCode.ACCOUNT_TRANSFER_ERROR)
 
       appError.addContext({
@@ -205,6 +200,11 @@ export const useAccountTransferQRCodeStrategy = (
       })
 
       logger.error('[useAccountTransferQRCodeStrategy] Error during account transfer', appError)
+
+      if (isHandledAppError(error)) {
+        logger.debug('[useAccountTransferQRCodeStrategy] Account transfer error previously handled')
+        return null
+      }
 
       return {
         error: appError,
