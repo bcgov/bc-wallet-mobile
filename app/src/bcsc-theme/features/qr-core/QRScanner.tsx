@@ -2,11 +2,12 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { QRScannerFrame } from '@/bcsc-theme/components/QRScannerFrame'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { hitSlop } from '@/constants'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
 import { DismissiblePopupModal, QrCodeScanError, ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -30,6 +31,8 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
   const { hasPermission, requestPermission } = useCameraPermission()
   const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const [scannerKey, setScannerKey] = useState(0)
+  const { isErrorModalVisible } = useErrorAlert()
+  const modalWasVisibleRef = useRef(false)
   const hasFocused = useRef(false)
 
   // Ref to prevent stale closure issues in the focus effect
@@ -65,6 +68,13 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
       hasFocused.current = true
     }, [])
   )
+
+  useEffect(() => {
+    if (modalWasVisibleRef.current && !isErrorModalVisible) {
+      setScannerKey((prevKey) => prevKey + 1) // remount ScanCamera to clear its frozen state
+    }
+    modalWasVisibleRef.current = isErrorModalVisible
+  }, [isErrorModalVisible])
 
   if (isPermissionLoading) {
     return <LoadingScreen />

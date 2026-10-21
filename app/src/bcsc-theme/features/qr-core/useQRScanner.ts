@@ -19,7 +19,6 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
   const { t } = useTranslation()
   const [isProcessing, setIsProcessing] = useState(false)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
-  const [scannerKey, setScannerKey] = useState(0) // used to remount the scanner when an error occurs
   const lockedRef = useRef(false) // held while processing, and after success until the screen refocuses
   const processingRef = useRef(false)
   const { emitErrorModal, isErrorModalVisible } = useErrorAlert()
@@ -44,14 +43,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
         return
       } else if (errorModal) {
         // strategy has provided a custom error modal to show
-        return emitErrorModal(errorModal.title, errorModal.description, errorModal.error, {
-          action: {
-            text: t('Global.Retry'),
-            onPress: () => {
-              setScannerKey((prevKey) => prevKey + 1) // remount the scanner to clear its frozen state
-            },
-          },
-        })
+        return emitErrorModal(errorModal.title, errorModal.description, errorModal.error)
       }
       // TODO (MD): Remove these legacy paths once all strategies have been updated to use toErrorModal
       else if (error instanceof QrCodeScanError) {
@@ -110,5 +102,5 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
     lockedRef.current = false
   }, [])
 
-  return { handleScan, isProcessing, scanError, dismissError, resetLock, scannerKey }
+  return { handleScan, isProcessing, scanError, dismissError, resetLock }
 }
