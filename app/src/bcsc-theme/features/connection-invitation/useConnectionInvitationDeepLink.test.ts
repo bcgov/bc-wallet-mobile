@@ -38,8 +38,8 @@ jest.mock('@credo-ts/didcomm', () => ({
 jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({ useBCSCAgent: () => mockAgentState }))
 jest.mock('./ConnectionInvitationServiceContext', () => ({ useConnectionInvitationService: () => mockService }))
 jest.mock('../qr-core/qr-code-strategies/useDidCommOobQRCodeStrategy', () => ({
-  useDidCommOobQRCodeStrategy: (_onSuccess: unknown, label?: string) => {
-    mockStrategyLabel = label
+  useDidCommOobQRCodeStrategy: (_onSuccess: unknown, options?: { invitationLabel?: string }) => {
+    mockStrategyLabel = options?.invitationLabel
     return mockStrategy
   },
 }))

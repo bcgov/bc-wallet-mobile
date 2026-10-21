@@ -213,6 +213,8 @@ const translation = {
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchTheme": "Switch theme",
+    "SelectedMediator": "Selected mediator",
+    "MediatorSection": "Mediator",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes",
       "OneHour": "1 hour",
@@ -703,6 +705,11 @@ const translation = {
       "PrimaryAction": "Reset",
       "Resetting": "Resetting…"
     },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list.",
+      "ScanButton": "Scan mediator QR code"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices?",
       "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step.",
@@ -917,6 +924,22 @@ const translation = {
       "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps:",
       "CameraAndMicrophoneTitle": "Camera & Microphone Disabled",
       "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video.",
+      "BluetoothTitle": "Nearby Devices Disabled",
+      "BluetoothDescription": "Follow these steps to allow access to nearby devices so you can use a connected Bluetooth headset or speaker during the call.",
+      "Bluetooth": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Bluetooth'",
+          "Step3": "3. Return to the app to continue",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Permissions'",
+          "Step3": "3. Tap 'Nearby devices'",
+          "Step4": "4. Select 'Allow'",
+          "Step5": "5. Return to the app to continue",
+        },
+      },
       "Camera": {
         "iOS": {
           "Step1": "1. Tap 'Open Settings' below",
@@ -1448,6 +1471,10 @@ const translation = {
       "CannotSendVideo": "Cannot send a video?",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office?",
       "CannotVideoCall": "Cannot video call?"
+    },
+    "BluetoothDisclosure": {
+      "Title": "Detect Bluetooth devices",
+      "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device.",
     },
   },
   "RemoteLogging": {

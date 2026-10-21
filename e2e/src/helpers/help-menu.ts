@@ -15,7 +15,13 @@ import { TestIds } from '../test-ids/registry.js'
 
 /** Verify-flow menu rows (`BCSC.HelpMenu.*`). Copy-matched — see the module note. */
 export const HelpMenuRows = {
-  /** Leaves the flow for Home, KEEPING progress (`useLeaveVerification`). */
+  /** On every verify menu; the anchor that proves the menu has opened. */
+  reportProblem: 'Report a problem',
+  /**
+   * Leaves the flow for Home, KEEPING progress (`useLeaveVerification`). Offered to a deferred
+   * verifier (Skip at the prompt, then the Home card) and in developer mode; never to a first-time
+   * verifier (Continue at the prompt), and never on the verify prompt itself.
+   */
   backToHome: 'Back to home',
   /** Confirm-then-wipe (`useRestartVerification`); hidden on the initial verify prompt. */
   restartVerification: 'Restart verification process',
@@ -38,7 +44,7 @@ const engine = new BaseScreen()
  * turn every selector below into a miss.
  */
 function nonBreaking(label: string): string {
-  return label.replaceAll(' ', '\u00A0')
+  return label.replaceAll(' ', ' ')
 }
 
 /**
@@ -61,6 +67,31 @@ function rowSelectors(label: string): string[] {
   ]
 }
 
+/** The first displayed candidate for a row, or undefined when none is on screen right now. */
+async function findDisplayedRow(label: string): Promise<ReturnType<typeof $> | undefined> {
+  for (const selector of rowSelectors(label)) {
+    const row = $(selector)
+    if (await row.isDisplayed().catch(() => false)) {
+      return row
+    }
+  }
+  return undefined
+}
+
+/** Wait for a row to be displayed, polling out the modal's slide-in. */
+async function waitForRow(label: string, timeout: number): Promise<ReturnType<typeof $>> {
+  const deadline = Date.now() + timeout
+  do {
+    const row = await findDisplayedRow(label)
+    if (row) {
+      return row
+    }
+    await driver.pause(250)
+  } while (Date.now() < deadline)
+
+  throw new Error(`Help-menu row "${label}" did not appear within ${timeout}ms — is the menu open?`)
+}
+
 /** Open the floating help menu from whichever screen is showing. */
 export async function openHelpMenu(): Promise<void> {
   await engine.tapByTestId(bcsc(TestIds.common.help))
@@ -71,20 +102,24 @@ export async function openHelpMenu(): Promise<void> {
  * coordinates is silently swallowed on Android (see {@link BaseScreen.waitForSteadyPosition}).
  */
 export async function tapHelpMenuRow(label: string, timeout: number = Timeouts.SCREEN_TRANSITION): Promise<void> {
-  const deadline = Date.now() + timeout
-  do {
-    for (const selector of rowSelectors(label)) {
-      const row = $(selector)
-      if (await row.isDisplayed().catch(() => false)) {
-        await engine.waitForSteadyPosition(row)
-        await row.click()
-        return
-      }
-    }
-    await driver.pause(250)
-  } while (Date.now() < deadline)
+  const row = await waitForRow(label, timeout)
+  await engine.waitForSteadyPosition(row)
+  await row.click()
+}
 
-  throw new Error(`Help-menu row "${label}" did not appear within ${timeout}ms — is the menu open?`)
+/**
+ * Assert the open menu does NOT offer a row. Waits for the always-present "Report a problem" row
+ * first, so an absent row is never mistaken for a menu that has not slid in yet. Leaves the menu open
+ * for the caller to close.
+ */
+export async function expectHelpMenuRowAbsent(
+  label: string,
+  timeout: number = Timeouts.ELEMENT_VISIBLE
+): Promise<void> {
+  await waitForRow(HelpMenuRows.reportProblem, timeout)
+  if (await findDisplayedRow(label)) {
+    throw new Error(`Help-menu row "${label}" is offered here, but this user must not have it`)
+  }
 }
 
 /** Close the help menu via its X. Needed after a row that leaves the menu up (e.g. a cancelled alert). */

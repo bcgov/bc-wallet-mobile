@@ -213,6 +213,8 @@ const translation = {
     "EnableProxy": "Enable proxy (FR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
     "SwitchTheme": "Switch theme (FR)",
+    "SelectedMediator": "Selected mediator (FR)",
+    "MediatorSection": "Mediator (FR)",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes (FR)",
       "OneHour": "1 hour (FR)",
@@ -703,6 +705,11 @@ const translation = {
       "PrimaryAction": "Reset (FR)",
       "Resetting": "Resetting… (FR)"
     },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator (FR)",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (FR)",
+      "ScanButton": "Scan mediator QR code (FR)"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (FR)",
       "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step. (FR)",
@@ -917,6 +924,22 @@ const translation = {
       "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps: (FR)",
       "CameraAndMicrophoneTitle": "Camera & Microphone Disabled (FR)",
       "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video. (FR)",
+      "BluetoothTitle": "Nearby Devices Disabled (FR)",
+      "BluetoothDescription": "Follow these steps to allow access to nearby devices so you can use a connected Bluetooth headset or speaker during the call. (FR)",
+      "Bluetooth": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Bluetooth' (FR)",
+          "Step3": "3. Return to the app to continue (FR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Permissions' (FR)",
+          "Step3": "3. Tap 'Nearby devices' (FR)",
+          "Step4": "4. Select 'Allow' (FR)",
+          "Step5": "5. Return to the app to continue (FR)",
+        },
+      },
       "Camera": {
         "iOS": {
           "Step1": "1. Tap 'Open Settings' below (FR)",
@@ -1377,6 +1400,10 @@ const translation = {
       "CannotSendVideo": "Cannot send a video? (FR)",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (FR)",
       "CannotVideoCall": "Cannot video call? (FR)"
+    },
+    "BluetoothDisclosure": {
+      "Title": "Detect bluetooth devices (FR)",
+      "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device. (FR)",
     },
   },
   "RemoteLogging": {

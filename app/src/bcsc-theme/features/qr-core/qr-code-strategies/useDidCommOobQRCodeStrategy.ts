@@ -1,4 +1,5 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { isDidCommInvitationCandidate } from '@/bcsc-theme/utils/didcomm-invitation'
 import { BCState } from '@/store'
 import {
   isDidCommInvitation,
@@ -16,9 +17,17 @@ import { QRCodeStrategy } from '../useQRScanner'
 // Aries-standard goal code for mediator invitations; checked inline so we only parse the invitation once.
 const MEDIATOR_GOAL_CODE = 'aries.vc.mediate'
 
-// Extend the type to include the handleOobRecordId function (still satisfies QRCodeStrategy)
+// Extend the type to include the handleOobRecordId function (still satisfies QRCodeStrategy).
+// It resolves to undefined when the invitation was handed to another handler instead of accepted.
 type DidCommOobQRCodeStrategy = QRCodeStrategy & {
-  handleOobRecordId: (uri: string) => Promise<string>
+  handleOobRecordId: (uri: string) => Promise<string | undefined>
+}
+
+export interface DidCommOobQRCodeStrategyOptions {
+  /** Label sent to the inviter; defaults to the wallet's nickname. */
+  invitationLabel?: string
+  /** Receives a mediator invitation instead of it being rejected, while developer mode is on. */
+  onMediatorInvitation?: (uri: string) => void
 }
 
 /**
@@ -31,10 +40,7 @@ export const useDidCommOobQRCodeStrategy = (
    * @returns void
    */
   onSuccess?: (oobRecordId: string) => void,
-  /**
-   * Optional label to use for the connection; if not provided, the wallet's nickname will be used.
-   */
-  invitationLabel?: string
+  { invitationLabel, onMediatorInvitation }: DidCommOobQRCodeStrategyOptions = {}
 ): DidCommOobQRCodeStrategy => {
   const { t } = useTranslation()
   const { waitForAgent } = useBCSCAgent()
@@ -44,16 +50,11 @@ export const useDidCommOobQRCodeStrategy = (
   const label = invitationLabel || store.bcsc.selectedNickname || 'My Wallet'
 
   const matches = useCallback((uri: string): boolean => {
-    return (
-      isDidCommInvitation(uri) ||
-      isOpenIdCredentialOffer(uri) ||
-      isOpenIdPresentationRequest(uri) ||
-      isVcAuthnLogin(uri)
-    )
+    return isDidCommInvitationCandidate(uri) || isOpenIdCredentialOffer(uri) || isOpenIdPresentationRequest(uri)
   }, [])
 
   const handleOobRecordId = useCallback(
-    async (uri: string): Promise<string> => {
+    async (uri: string): Promise<string | undefined> => {
       // agent may still be booting, so wait for it before proceeding
       const agent = await waitForAgent()
 
@@ -66,14 +67,29 @@ export const useDidCommOobQRCodeStrategy = (
         throw new QrCodeScanError(t('BCSC.Scan.Unsupported.OpenID'), uri)
       }
 
-      // TODO (MD): Fully type the agent and it's modules
-      const invitation = await agent.modules.didcomm.oob.parseInvitation(uri)
+      let invitation
+      try {
+        // TODO (MD): Fully type the agent and it's modules
+        invitation = await agent.modules.didcomm.oob.parseInvitation(uri)
+      } catch (error) {
+        if (isDidCommInvitation(uri)) {
+          throw error
+        }
+        // Bare URL that didn't resolve to an invitation, most likely an ordinary web link
+        logger.warn(`[useDidCommOobQRCodeStrategy] URL did not resolve to an OOB invitation: ${error}`)
+        throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), uri, String(error))
+      }
       if (!invitation) {
         logger.warn('[useDidCommOobQRCodeStrategy] could not parse OOB invitation')
         throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), uri)
       }
 
       if (invitation.goalCode === MEDIATOR_GOAL_CODE) {
+        if (store.preferences.developerModeEnabled && onMediatorInvitation) {
+          logger.info('[useDidCommOobQRCodeStrategy] mediator invitation handed to the developer-mode mediator picker')
+          onMediatorInvitation(uri)
+          return undefined
+        }
         logger.info('[useDidCommOobQRCodeStrategy] mediator invitation rejected (BCSC uses .env mediator)')
         throw new QrCodeScanError(t('BCSC.Scan.Unsupported.Mediator'), uri)
       }
@@ -89,37 +105,18 @@ export const useDidCommOobQRCodeStrategy = (
 
       return outOfBandRecord.id
     },
-    [waitForAgent, logger, label, t]
+    [waitForAgent, logger, label, t, store.preferences.developerModeEnabled, onMediatorInvitation]
   )
 
   const handle = useCallback(
     async (uri: string): Promise<void> => {
       const recordId = await handleOobRecordId(uri)
-      onSuccess?.(recordId)
+      if (recordId) {
+        onSuccess?.(recordId)
+      }
     },
     [handleOobRecordId, onSuccess]
   )
 
   return useMemo(() => ({ matches, handle, handleOobRecordId }), [matches, handle, handleOobRecordId])
-}
-
-/**
- * Checks if a given URI is a VC Authn login URI.
- *
- * @example https://example.com/url/pres_exch/123e4567-e89b-12d3-a456-426614174000
- *
- * @param uri The URI to check
- * @returns True if the URI is a VC Authn URI, false otherwise
- */
-function isVcAuthnLogin(uri: string): boolean {
-  let url: URL
-  const vcauthnRegex = /^\/url\/pres_exch\/[0-9a-f-]{36}\/?$/i
-
-  try {
-    url = new URL(uri)
-  } catch {
-    return false
-  }
-
-  return vcauthnRegex.test(url.pathname)
 }
