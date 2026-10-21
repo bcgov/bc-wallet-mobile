@@ -23,6 +23,7 @@ const mockLogger = {
 }
 
 const OOB_URI = 'https://x?oob=foo'
+const SHORT_URI = 'https://issuer.example.com/abc123'
 
 const makeAgent = (
   overrides?: Partial<{ goalCode?: string; throwOnParse: boolean; recordId: string; existingRecordId: string | null }>
@@ -53,8 +54,14 @@ describe('useDidCommOobQRCodeStrategy', () => {
 
   const useAgent = (agent: unknown) => mockWaitForAgent.mockResolvedValue(agent)
 
-  const setNickname = (selectedNickname?: string) =>
-    jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: { selectedNickname } } as any, jest.fn()])
+  const setStore = (selectedNickname?: string, developerModeEnabled = false) =>
+    jest
+      .mocked(Bifold)
+      .useStore.mockReturnValue([
+        { bcsc: { selectedNickname }, preferences: { developerModeEnabled } } as any,
+        jest.fn(),
+      ])
+  const setNickname = (selectedNickname?: string) => setStore(selectedNickname)
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -77,12 +84,19 @@ describe('useDidCommOobQRCodeStrategy', () => {
       expect(setup().matches('https://example.com/url/pres_exch/123e4567-e89b-12d3-a456-426614174000')).toBe(true)
     })
 
-    it('does not match unrelated URLs', () => {
+    it('matches bare http(s) URLs so Credo can resolve them as short URLs', () => {
       const { matches } = setup()
 
-      expect(matches('https://www.gov.bc.ca')).toBe(false)
-      expect(matches('https://example.com/url/pres_exch/not-a-uuid')).toBe(false)
+      expect(matches(SHORT_URI)).toBe(true)
+      expect(matches('http://localhost:8020/abc123')).toBe(true)
+    })
+
+    it('does not match non-URL values', () => {
+      const { matches } = setup()
+
       expect(matches('not a url')).toBe(false)
+      expect(matches('ABC123')).toBe(false)
+      expect(matches('ftp://example.com/abc123')).toBe(false)
     })
   })
 
@@ -136,6 +150,43 @@ describe('useDidCommOobQRCodeStrategy', () => {
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
+    describe('mediator invitations with a developer-mode hand-off', () => {
+      const onMediatorInvitation = jest.fn()
+      const setupWithHandOff = () =>
+        renderHook(() => useDidCommOobQRCodeStrategy(onSuccess, { onMediatorInvitation })).result.current
+
+      it('hands the invitation over in developer mode without creating a connection', async () => {
+        setStore(undefined, true)
+        const { agent, spies } = makeAgent({ goalCode: 'aries.vc.mediate' })
+        useAgent(agent)
+
+        await expect(setupWithHandOff().handle(OOB_URI)).resolves.toBeUndefined()
+
+        expect(onMediatorInvitation).toHaveBeenCalledWith(OOB_URI)
+        expect(spies.receiveInvitation).not.toHaveBeenCalled()
+        expect(onSuccess).not.toHaveBeenCalled()
+      })
+
+      it('still rejects the invitation outside developer mode', async () => {
+        const { agent } = makeAgent({ goalCode: 'aries.vc.mediate' })
+        useAgent(agent)
+
+        await expect(setupWithHandOff().handle(OOB_URI)).rejects.toThrow(
+          'Mediator invitation rejected - BCSC uses .env mediator'
+        )
+
+        expect(onMediatorInvitation).not.toHaveBeenCalled()
+      })
+
+      it('rejects the invitation in developer mode when nothing handles it', async () => {
+        setStore(undefined, true)
+        const { agent } = makeAgent({ goalCode: 'aries.vc.mediate' })
+        useAgent(agent)
+
+        await expect(setup().handle(OOB_URI)).rejects.toThrow('Mediator invitation rejected - BCSC uses .env mediator')
+      })
+    })
+
     it('throws when the invitation cannot be parsed', async () => {
       const { agent, spies } = makeAgent({ goalCode: '__noparse__' })
       useAgent(agent)
@@ -154,6 +205,25 @@ describe('useDidCommOobQRCodeStrategy', () => {
 
       await expect(setup().handle(OOB_URI)).rejects.toThrow('parse failed')
 
+      expect(onSuccess).not.toHaveBeenCalled()
+    })
+
+    it('accepts a short URL invitation', async () => {
+      const { agent, spies } = makeAgent({ recordId: 'rec-short' })
+      useAgent(agent)
+
+      await setup().handle(SHORT_URI)
+
+      expect(spies.parseInvitation).toHaveBeenCalledWith(SHORT_URI)
+      expect(onSuccess).toHaveBeenCalledWith('rec-short')
+    })
+
+    it('throws when a bare URL does not resolve to an invitation', async () => {
+      const { agent, spies } = makeAgent({ throwOnParse: true })
+      useAgent(agent)
+
+      await expect(setup().handle(SHORT_URI)).rejects.toThrow('URL did not resolve to an OOB invitation')
+      expect(spies.receiveInvitation).not.toHaveBeenCalled()
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
@@ -244,7 +314,9 @@ describe('useDidCommOobQRCodeStrategy', () => {
       useAgent(agent)
       setNickname("Kjartan's iPhone")
 
-      const { result } = renderHook(() => useDidCommOobQRCodeStrategy(onSuccess, 'didcomm-oob-invitation'))
+      const { result } = renderHook(() =>
+        useDidCommOobQRCodeStrategy(onSuccess, { invitationLabel: 'didcomm-oob-invitation' })
+      )
       await result.current.handle(OOB_URI)
 
       expect(spies.receiveInvitation).toHaveBeenCalledWith(

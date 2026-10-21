@@ -26,7 +26,7 @@ export const useConnectionInvitationDeepLink = (): void => {
   const { t } = useTranslation()
   const [invitationUrl, setInvitationUrl] = useState<string | null>(null)
 
-  const didCommOobStrategy = useDidCommOobQRCodeStrategy(undefined, 'didcomm-oob-invitation')
+  const didCommOobStrategy = useDidCommOobQRCodeStrategy(undefined, { invitationLabel: 'didcomm-oob-invitation' })
 
   useEffect(() => service.onInvitation(({ url }) => setInvitationUrl(url)), [service])
 

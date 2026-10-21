@@ -44,6 +44,7 @@ describe('QRScannerScreen', () => {
   let onTransferSuccess: () => void
   let onAlreadyVerified: () => void
   let onConnectionFound: (id: string) => void
+  let onMediatorInvitation: (uri: string) => void
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -57,8 +58,9 @@ describe('QRScannerScreen', () => {
       onAlreadyVerified = verified
       return { matches: () => false, handle: jest.fn() }
     })
-    ;(useDidCommOobQRCodeStrategy as jest.Mock).mockImplementation((cb) => {
+    ;(useDidCommOobQRCodeStrategy as jest.Mock).mockImplementation((cb, options) => {
       onConnectionFound = cb
+      onMediatorInvitation = options.onMediatorInvitation
       return { matches: () => false, handle: jest.fn() }
     })
   })
@@ -81,6 +83,14 @@ describe('QRScannerScreen', () => {
     render(<QRScannerScreen />)
     onConnectionFound('oob-1')
     expect(mockParentNavigate).toHaveBeenCalledWith(BCSCScreens.ConnectionLoading, { oobRecordId: 'oob-1' })
+  })
+
+  it('navigates the parent stack to the mediator picker with a scanned mediator invitation', () => {
+    render(<QRScannerScreen />)
+    onMediatorInvitation('https://mediator.example/invite?oob=abc')
+    expect(mockParentNavigate).toHaveBeenCalledWith(BCSCScreens.ConfigureMediator, {
+      scannedMediatorUri: 'https://mediator.example/invite?oob=abc',
+    })
   })
 
   it('releases the scan lock on refocus after a completed scan', async () => {

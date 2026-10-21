@@ -12,6 +12,9 @@ import { useCallback } from 'react'
  * can pick up where they left off via the home screen's "continue verification" notification (which
  * dispatches IN_PROGRESS again).
  *
+ * Only a deferred verifier (or developer mode) is offered this exit; see
+ * {@link useVerificationExitPolicy} for who gets which way out.
+ *
  * @returns {(onLeave?: () => void) => void} Callback that leaves the flow. The optional `onLeave`
  * runs first (e.g. to close the menu the action was triggered from).
  */

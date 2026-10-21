@@ -12,7 +12,6 @@ import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
   getAccount,
-  getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
   isAccountRegistered,
@@ -340,12 +339,10 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
         logger.info('Completed registration update request')
         try {
-          const securityMethod = await getAccountSecurityMethod()
-
           await setAccount({
             clientID: updatedRegistrationData?.client_id,
             issuer: apiClient.endpoints.issuer,
-            securityMethod,
+            securityMethod: account.securityMethod,
             nickname: selectedNickname,
             didPostNicknameToServer: true,
           })
