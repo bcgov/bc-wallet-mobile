@@ -465,7 +465,7 @@ describe('BCSCRootStack', () => {
 
         apply(withStatus(VerificationStatus.UNVERIFIED))
 
-        // In session, leaving lands on Home; only the next cold start resumes them.
+        // In session, leaving lands on Home; only the next cold start or unlock resumes them.
         expect(toJSON()).toBe('MainStack')
         expect(dispatch).not.toHaveBeenCalled()
       })
@@ -545,6 +545,110 @@ describe('BCSCRootStack', () => {
         expect(toJSON()).toBe('VerifyStack')
         expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
         expect(dispatch).not.toHaveBeenCalled()
+      })
+
+      /**
+       * The inactivity timeout's logout(): CLEAR_SECURE_STATE puts the secure state back to its initial
+       * values (the memory-only IN_PROGRESS with it), then DID_AUTHENTICATE false. The unlock hydrates the
+       * status from the credential (UNVERIFIED for an unverified user) before SUCCESSFUL_AUTH.
+       */
+      const lock = (current: Record<string, any>) => ({
+        ...current,
+        bcscSecure: { verified: false, verifiedStatus: VerificationStatus.UNVERIFIED },
+        authentication: { didAuthenticate: false },
+      })
+      const unlock = (current: Record<string, any>) => ({
+        ...current,
+        bcscSecure: { ...current.bcscSecure, isHydrated: true },
+        authentication: { didAuthenticate: true },
+      })
+      /**
+       * Continue on the prompt (VerifyPromptScreen.handleVerifyNow): the answer, verificationSkipped=false,
+       * started and IN_PROGRESS are one event handler, so they land in one render.
+       */
+      const continueOnPrompt = (apply: ReturnType<typeof renderColdStart>['apply']) =>
+        act(() => {
+          mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered()
+          apply((current) => ({
+            ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+            bcsc: { ...current.bcsc, verificationSkipped: false, verificationStarted: true },
+          }))
+        })
+
+      it('resumes a started verification after an unlock, never showing Home in between', () => {
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
+        expect(toJSON()).toBe('VerifyStack')
+
+        apply(lock)
+        expect(toJSON()).toBe('AuthStack')
+        apply(unlock)
+
+        // The lock took IN_PROGRESS with the secure state, so the unlock resumes like a relaunch does
+        expect(dispatch).toHaveBeenCalledTimes(2)
+        expect(dispatch).toHaveBeenLastCalledWith(resumeDispatch)
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockMainStackRender).not.toHaveBeenCalled()
+        // A fresh mount re-runs the resume-step routing against the hydrated state
+        expect(mockVerifyStackMount).toHaveBeenCalledTimes(2)
+      })
+
+      it('resumes a first-time verifier who locked mid-flow at their step, not at the prompt or Home', () => {
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(UNANSWERED))
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
+
+        continueOnPrompt(apply)
+        expect(toJSON()).toBe('VerifyStack')
+        expect(dispatch).not.toHaveBeenCalled()
+
+        apply(lock)
+        apply(unlock)
+
+        expect(dispatch).toHaveBeenCalledTimes(1)
+        expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(false)
+        expect(mockMainStackRender).not.toHaveBeenCalled()
+      })
+
+      it('falls back to the verify prompt when the unlock happens during an outage, even once answered', () => {
+        const { toJSON, dispatch, apply, rerender } = renderColdStart(authedUnverified(UNANSWERED))
+        continueOnPrompt(apply)
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(false)
+
+        apply(lock)
+        mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
+        apply(unlock)
+
+        // The resume is held off, and the prompt's Skip is the way to Home again, as on a cold start
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
+        expect(dispatch).not.toHaveBeenCalled()
+
+        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+        apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
+        expect(toJSON()).toBe('MainStack')
+
+        mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
+        rerender(<BCSCRootStack />)
+        expect(toJSON()).toBe('MainStack')
+        expect(dispatch).not.toHaveBeenCalled()
+      })
+
+      it('resumes a deferred verifier who left for Home on the next unlock, who can leave again', () => {
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(SKIPPED_THEN_STARTED))
+        apply(withStatus(VerificationStatus.UNVERIFIED))
+        expect(toJSON()).toBe('MainStack')
+
+        apply(lock)
+        apply(unlock)
+
+        // Started is what an unlock resumes, as a relaunch does; every exit is still theirs
+        expect(dispatch).toHaveBeenCalledTimes(2)
+        expect(toJSON()).toBe('VerifyStack')
+
+        apply(withStatus(VerificationStatus.UNVERIFIED))
+        expect(toJSON()).toBe('MainStack')
+        expect(dispatch).toHaveBeenCalledTimes(2)
       })
     })
   })
