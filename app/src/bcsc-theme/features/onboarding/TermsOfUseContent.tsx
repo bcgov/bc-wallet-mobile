@@ -4,6 +4,7 @@ import { ContentShadow } from '@/bcsc-theme/components/ContentShadow'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { createTermsOfUseHtml, stripOuterDocumentTags } from '@/bcsc-theme/utils/webview-utils'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { isHandledAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { TestIds } from '@/test-ids/registry'
@@ -67,6 +68,14 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
       const normalizedError = err instanceof Error ? err : new Error(String(err))
       logger.error('Failed to fetch Terms of Use', normalizedError)
       setError(true)
+
+      // The API client's global policy has already shown the modal for this failure (an unsecured
+      // network, a timeout); emitting again would replace it with the less specific "check your
+      // connection" copy. The Retry state above is all this screen adds in that case.
+      if (isHandledAppError(err)) {
+        return
+      }
+
       // using translation tools directly causes an infinite re render loop
       // pass in the translated strings to avoid this
       emitErrorModal(

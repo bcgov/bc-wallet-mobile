@@ -14,10 +14,12 @@ import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from '
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
+  formatTransportAxiosError,
   getAppErrorFromAxiosError,
   isNetworkError,
 } from '../utils/axios-error-utils'
 import { isTokenExpired } from '../utils/token-expiry'
+import { getNetworkSnapshot } from '../utils/transport-failure'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
@@ -189,11 +191,19 @@ class BCSCApiClient {
         return this.client.request(originalConfig)
       }
 
-      // 1. Format the error - update error code and message properties from IAS response
-      const error = formatIasAxiosResponseError(_error)
+      // 1. Format the error: an IAS error body (there is a response) or a transport failure (there is
+      // none); the two are mutually exclusive
+      const error = formatTransportAxiosError(formatIasAxiosResponseError(_error))
 
       // 2. Convert the axios error into an AppError
       const appError = getAppErrorFromAxiosError(error)
+
+      // 2b. No response came back: attach a connectivity snapshot so logs and incident reports can tell
+      // "device offline" from "host unreachable / certificate rejected". Must precede the log line,
+      // the onError callback and the throw so every consumer sees it.
+      if (error.transportFailure) {
+        appError.addContext(await getNetworkSnapshot())
+      }
 
       const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
       const statusCode = error.response?.status ?? 0

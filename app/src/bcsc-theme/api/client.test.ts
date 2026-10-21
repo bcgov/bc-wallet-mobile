@@ -8,6 +8,7 @@ import { BCSCEventTypes } from '@/events/eventTypes'
 import { localization } from '@/localization'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { initLanguages } from '@bifold/core'
+import NetInfo from '@react-native-community/netinfo'
 import { AxiosError } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { DeviceEventEmitter } from 'react-native'
@@ -467,6 +468,102 @@ describe('BCSC Client', () => {
 
       await expect(client.get('/endpoint', { skipBearerAuth: true })).rejects.toThrow()
       expect(mockLogger.error).toHaveBeenCalledWith('[BCSCApiClient] Error handler threw', handlerError)
+    })
+
+    describe('transport failures (no response)', () => {
+      const TLS_NATIVE_TEXT =
+        'Hostname id.example.com not verified:\n    certificate: sha256/abc=\n    subjectAltNames: [other.example.com]'
+
+      // What React Native leaves on the XMLHttpRequest axios attaches to the error: the native
+      // reason in responseText, for a text-type request
+      const rejectWithNativeText = (code: string, responseText: string) => (config: any) =>
+        Promise.reject(new AxiosError('Network Error', code, config, { responseType: '', responseText }))
+
+      beforeEach(() => {
+        jest
+          .mocked(NetInfo.fetch)
+          .mockResolvedValue({ type: 'wifi', isConnected: true, isInternetReachable: true } as any)
+      })
+
+      it('classifies a rejected certificate as UNSECURED_NETWORK and keeps the host out of what it carries', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://id.example.com', mockLogger as any)
+        const onError = jest.fn()
+        client.setErrorHandler(onError)
+        client.client.defaults.adapter = rejectWithNativeText('ERR_NETWORK', TLS_NATIVE_TEXT)
+
+        let caught: AppError | undefined
+        try {
+          await client.get('/cardtap/v3/terms', { skipBearerAuth: true })
+        } catch (error) {
+          caught = error as AppError
+        }
+
+        expect(caught).toBeInstanceOf(AppError)
+        expect(caught?.appEvent).toBe(AppEventCode.UNSECURED_NETWORK)
+        expect(caught?.technicalMessage).toBe('Network Error: tls_hostname_mismatch')
+        expect(caught?.context).toMatchObject({
+          http_route: '/cardtap/v3/terms',
+          transport_failure: 'tls_hostname_mismatch',
+          transport_detail: 'Hostname <host> not verified:',
+          net_connected: true,
+          net_reachable: true,
+          net_type: 'wifi',
+        })
+        expect(onError).toHaveBeenCalledWith(caught, expect.objectContaining({ statusCode: 0 }))
+
+        // The interceptor's log line carries the token and the redacted detail, never the native string
+        const [, logged] = mockLogger.error.mock.calls[0]
+        expect(logged.cause.message).toBe('Network Error: tls_hostname_mismatch')
+        expect(logged.context.transport_detail).toBe('Hostname <host> not verified:')
+        expect(JSON.stringify(logged.context)).not.toContain('example.com')
+      })
+
+      it('still reports NO_INTERNET, with the connectivity snapshot, when the request carries no native text', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://id.example.com', mockLogger as any)
+        client.client.defaults.adapter = (config: any) =>
+          Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config, null, undefined))
+
+        await expect(client.get('/endpoint', { skipBearerAuth: true })).rejects.toMatchObject({
+          appEvent: AppEventCode.NO_INTERNET,
+          context: expect.objectContaining({ transport_failure: 'unknown', net_connected: true }),
+        })
+      })
+
+      it('maps an Android call timeout reported as a network error to SERVER_TIMEOUT', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://id.example.com', mockLogger as any)
+        client.client.defaults.adapter = rejectWithNativeText('ERR_NETWORK', 'timeout')
+
+        await expect(client.get('/endpoint', { skipBearerAuth: true })).rejects.toMatchObject({
+          appEvent: AppEventCode.SERVER_TIMEOUT,
+          context: expect.objectContaining({ transport_failure: 'timeout' }),
+        })
+      })
+
+      it('surfaces the error without a snapshot when NetInfo is unavailable', async () => {
+        jest.mocked(NetInfo.fetch).mockRejectedValueOnce(new Error('native module unavailable'))
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://id.example.com', mockLogger as any)
+        client.client.defaults.adapter = rejectWithNativeText('ERR_NETWORK', 'Connection reset')
+
+        const request = client.get('/endpoint', { skipBearerAuth: true })
+
+        await expect(request).rejects.toMatchObject({ appEvent: AppEventCode.PROBLEM_WITH_CONNECTION })
+        await expect(request).rejects.not.toHaveProperty('context.net_connected')
+      })
+
+      it('leaves a response error untouched', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://id.example.com', mockLogger as any)
+        client.client.defaults.adapter = rejectWithStatus(503, 'Service Unavailable')
+
+        await expect(client.get('/endpoint', { skipBearerAuth: true })).rejects.toMatchObject({
+          appEvent: AppEventCode.SERVER_ERROR,
+          context: expect.not.objectContaining({ transport_failure: expect.anything() }),
+        })
+      })
     })
   })
 
@@ -970,6 +1067,29 @@ describe('BCSC Client', () => {
         expect(mockLogger.error).toHaveBeenCalledTimes(1)
         expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch JWK'))
         expect(trackErrorEventSpy).not.toHaveBeenCalled()
+      })
+
+      it('retries a rejected certificate like any other network error', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        // Classified as UNSECURED_NETWORK by the interceptor; the no-response cause keeps it retryable
+        client.client.defaults.adapter = (config: any) =>
+          Promise.reject(
+            new AxiosError('Network Error', 'ERR_NETWORK', config, {
+              responseType: '',
+              responseText: 'Hostname example.com not verified:',
+            })
+          )
+        const axiosGetSpy = jest.spyOn(client.client, 'get')
+        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+
+        const resultPromise = client.fetchJwk()
+        await jest.advanceTimersByTimeAsync(500)
+        await jest.advanceTimersByTimeAsync(1000)
+        const result = await resultPromise
+
+        expect(axiosGetSpy).toHaveBeenCalledTimes(3)
+        expect(result).toEqual(mockJwk)
       })
 
       it('succeeds on a retry, caching and persisting the fresh key', async () => {

@@ -72,8 +72,12 @@ type ErrorHandlingPolicy = {
 // ----------------------------------------
 
 // HTTP alert map for network and server errors that can occur on multiple endpoints (client metadata fetch, device authorization, token, etc.)
+// NO_INTERNET and PROBLEM_WITH_CONNECTION are deliberately absent: the calling screen owns those modals.
 const _getHTTPAlertMap = (alerts?: AppAlerts) => {
   return new Map([
+    // Also reached by a transport-level TLS failure (certificate rejected before any response; see
+    // utils/transport-failure.ts). This entry is the single place the planned "secure connection
+    // failed" locked state plugs into: swap the handler here, never add TLS handling at call sites.
     [AppEventCode.UNSECURED_NETWORK, alerts?.unsecuredNetworkAlert],
     [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutAlert],
     [AppEventCode.SERVER_ERROR, alerts?.serverErrorAlert],

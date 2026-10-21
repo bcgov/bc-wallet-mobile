@@ -3,9 +3,11 @@ import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AppEventCode, isAppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
 import z from 'zod'
+import { classifyTransportFailure, TransportFailure, TransportFailureKind } from './transport-failure'
 
 enum AxiosErrorCode {
-  // Unable to connect to the server (e.g. no internet, CORS issues, DNS errors)
+  // The request left the device and no HTTP response came back: offline, DNS, TLS, a dropped
+  // connection, or (Android) a configured timeout. transport-failure.ts tells them apart.
   NETWORK_ERROR = 'ERR_NETWORK',
   // The request was made but the server responded with a 4xx status code (client error)
   BAD_REQUEST = 'ERR_BAD_REQUEST',
@@ -13,6 +15,8 @@ enum AxiosErrorCode {
   BAD_RESPONSE = 'ERR_BAD_RESPONSE',
   // The request was made but was aborted (e.g. timeout, cancellation)
   ECONNABORTED = 'ECONNABORTED',
+  // The request timed out, reported this way only when axios' clarifyTimeoutError transitional flag is on
+  ETIMEDOUT = 'ETIMEDOUT',
 }
 
 interface LogAxiosErrorOptions {
@@ -38,6 +42,42 @@ export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosE
   }
 
   return axiosError
+}
+
+export type TransportAxiosError = AxiosError & { transportFailure?: TransportFailure }
+
+/**
+ * Response-interceptor sibling of {@link formatIasAxiosResponseError} for the opposite case: no response
+ * came back at all. Classifies the failure once from the native reason React Native left on the
+ * request object, attaches it, and replaces the generic "Network Error" message with the host-free
+ * reason token, so `AppError.technicalMessage` (the modal's Debug line), `toJSON().cause` and the
+ * logger carry the token and never the raw native string. The axios `code` is left untouched because
+ * {@link isNetworkError} and the error policies key off it. Idempotent; leaves the message alone when
+ * nothing could be classified.
+ *
+ * @param axiosError - The axios error to classify
+ * @returns The same error, with `transportFailure` attached when it is a no-response failure
+ */
+export const formatTransportAxiosError = (axiosError: AxiosError): TransportAxiosError => {
+  const error = axiosError as TransportAxiosError
+
+  if (error.transportFailure) {
+    return error
+  }
+
+  const transportFailure = classifyTransportFailure(error)
+
+  if (!transportFailure) {
+    return error
+  }
+
+  error.transportFailure = transportFailure
+
+  if (error.code === AxiosErrorCode.NETWORK_ERROR && transportFailure.kind !== 'unknown') {
+    error.message = `Network Error: ${transportFailure.reason}`
+  }
+
+  return error
 }
 
 /**
@@ -159,18 +199,28 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
 }
 
 /**
- * Determines if the provided error is a network error.
+ * Determines if the provided error is a network error: the request produced no HTTP response.
+ *
+ * This is what the fail-open paths (client discovery, the JWK retry loop, the device count check)
+ * rely on, so it holds for every transport failure whatever registry code it was classified into
+ * (TLS, timeout, dropped connection): the ERR_NETWORK cause is kept on the AppError and is found by
+ * walking the cause chain of re-wrapped errors.
  *
  * @param {unknown} error - The error to check
+ * @param depth - Recursion guard for the cause chain
  * @returns {*} {boolean} True if the error is a network error, false otherwise.
  */
-export const isNetworkError = (error: unknown): boolean => {
+export const isNetworkError = (error: unknown, depth = 0): boolean => {
+  if (depth > 10) {
+    return false
+  }
+
   if (error instanceof AxiosError) {
     return (error as any)?.isNetworkError === true || error.code === AxiosErrorCode.NETWORK_ERROR
   }
 
   if (error instanceof AppError) {
-    return error.appEvent === AppEventCode.NO_INTERNET
+    return error.appEvent === AppEventCode.NO_INTERNET || isNetworkError(error.cause, depth + 1)
   }
 
   return false
@@ -209,18 +259,44 @@ const getClientErrorDefinitionFromStatus = (status?: number): ErrorDefinition =>
 }
 
 /**
+ * Resolves a no-response failure to the registry entry for what actually went wrong on the wire.
+ * Without a classification the historical NO_INTERNET mapping stands.
+ *
+ * @param transportKind - The classification from transport-failure.ts, when one was made
+ * @returns The ErrorDefinition for the kind of transport failure
+ */
+const getTransportErrorDefinition = (transportKind?: TransportFailureKind): ErrorDefinition => {
+  switch (transportKind) {
+    case 'tls':
+      return ErrorRegistry.UNSECURED_NETWORK
+    case 'timeout':
+      return ErrorRegistry.SERVER_TIMEOUT
+    case 'connection':
+      return ErrorRegistry.PROBLEM_WITH_CONNECTION
+    default:
+      return ErrorRegistry.NO_INTERNET
+  }
+}
+
+/**
  * Maps Axios error codes to predefined AppError definitions based on the application's error registry.
  *
  * @param errorCode - The error code from an AxiosError to map to an AppError definition
  * @param status - The HTTP response status, used to disambiguate the collapsed `ERR_BAD_REQUEST` (4xx) code
+ * @param transportKind - The transport failure classification, used to disambiguate the collapsed `ERR_NETWORK` code
  * @returns An ErrorDefinition from the ErrorRegistry if a mapping exists, or null if no mapping is found
  */
-export const getAxiosErrorDefinition = (errorCode?: string, status?: number): ErrorDefinition | null => {
+export const getAxiosErrorDefinition = (
+  errorCode?: string,
+  status?: number,
+  transportKind?: TransportFailureKind
+): ErrorDefinition | null => {
   switch (errorCode) {
     case AxiosErrorCode.ECONNABORTED:
+    case AxiosErrorCode.ETIMEDOUT:
       return ErrorRegistry.SERVER_TIMEOUT
     case AxiosErrorCode.NETWORK_ERROR:
-      return ErrorRegistry.NO_INTERNET
+      return getTransportErrorDefinition(transportKind)
     case AxiosErrorCode.BAD_REQUEST:
       return getClientErrorDefinitionFromStatus(status)
     case AxiosErrorCode.BAD_RESPONSE:
@@ -244,8 +320,11 @@ export const getAxiosErrorDefinition = (errorCode?: string, status?: number): Er
  */
 export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   const errorCode = error.code
+  // Attached by formatTransportAxiosError in the response interceptor; classified here for direct callers
+  const transportFailure = (error as TransportAxiosError).transportFailure ?? classifyTransportFailure(error)
   const errorDefinition =
-    getAxiosErrorDefinition(errorCode, error.response?.status) ?? getErrorDefinitionFromAppEventCode(errorCode)
+    getAxiosErrorDefinition(errorCode, error.response?.status, transportFailure?.kind) ??
+    getErrorDefinitionFromAppEventCode(errorCode)
 
   const statusCode = error.response?.status ?? 0
   const track = !(error.config?.suppressStatusCodeLogs ?? []).includes(statusCode)
@@ -265,6 +344,10 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
       http_status: error.response?.status,
       http_response_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.response?.data),
       http_request_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.config?.data),
+      // Why a no-response failure happened (host-free token) and the redacted native reason. Both reach
+      // the incident report; only the token reaches the error modal, through the cause's message.
+      transport_failure: transportFailure?.reason,
+      transport_detail: transportFailure?.detail,
       // TODO (MD): Remove this (uploadLogContext) from the config and inject directly into the
       // error at the service layer to prevent the config from being polluted with api specific details.
 

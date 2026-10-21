@@ -1,4 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -106,6 +108,33 @@ describe('TermsOfUseContent', () => {
 
     expect(tree.getByText('Alerts.TermsOfUseLoadFailed.Title')).toBeTruthy()
     expect(tree.getByText('Alerts.TermsOfUseLoadFailed.Description')).toBeTruthy()
+  })
+
+  it('keeps only the retry state when the API client already showed a modal for the failure', async () => {
+    // A certificate rejected before any response: the client's global policy has shown the
+    // "Unsecured Network" modal and marked the error handled before it reaches this screen
+    const handledError = AppError.fromErrorDefinition(ErrorRegistry.UNSECURED_NETWORK, { track: false })
+    handledError.handled = true
+    const useApiMock = jest.mocked(useApi)
+    useApiMock.mockReturnValue({
+      config: {
+        getTermsOfUse: jest.fn().mockRejectedValue(handledError),
+        getServerStatus: jest.fn(),
+      },
+    } as any)
+
+    const tree = render(
+      <BasicAppContext>
+        <TermsOfUseContent onAccept={jest.fn()} />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      expect(tree.getByTestId(testIdWithKey('RetryTermsOfUse'))).toBeTruthy()
+    })
+
+    expect(tree.queryByText('Alerts.TermsOfUseLoadFailed.Title')).toBeNull()
+    expect(tree.queryByText('Alerts.TermsOfUseLoadFailed.Description')).toBeNull()
   })
 
   it('shows the error modal and retry button when the terms response has empty HTML', async () => {
