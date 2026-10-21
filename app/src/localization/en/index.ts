@@ -818,7 +818,7 @@ const translation = {
       "FeatureUnavailable": "This action isn't available yet.",
       "AccountTransferErrorTitle": "Unable to add device",
       "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it.",
-      "UnrecognizedQRDescription": "Scan a BC Wallet or account transfer QR code and try again.",
+      "UnrecognizedQRDescription": "We couldn't recognize this QR code. Make sure it's meant for this app. If it is, report this error.",
       "CredentialQRScanFailedTitle": "Unable to process invitation",
       "CredentialQRScanFailedDescription": "Try scanning the invitation QR code again. If the problem continues, report it.",
       "Unsupported": {

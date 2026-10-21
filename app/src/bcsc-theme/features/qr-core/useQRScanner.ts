@@ -39,7 +39,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
         return emitErrorModal(
           t('BCSC.Scan.UnrecognizedQR'),
           t('BCSC.Scan.UnrecognizedQRDescription'),
-          AppError.fromErrorDefinition(ErrorRegistry.INVALID_QR_CODE, { context: { qrCode: value } })
+          AppError.fromErrorDefinition(ErrorRegistry.INVALID_QR_CODE, { context: describeQRCode(value) })
         )
       }
 
@@ -50,7 +50,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
       try {
         await strategy.handle(value) // success: lock stays held
       } catch (error) {
-        lockedRef.current = false
+        lockedRef.current = false // failure: unlock to allow retry
         const modal = strategy.toErrorModal?.(error)
 
         if (modal) {
@@ -73,4 +73,21 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
   }, [])
 
   return { handleScan, isProcessing, resetLock }
+}
+
+/**
+ * Describes a QR code value by extracting its scheme, length, and presence of query or fragment components.
+ * NOTE: Doesn't expose the actual value to avoid logging sensitive information.
+ * @param value - The QR code value to describe.
+ * @returns An object containing the scheme, length, and flags for query and fragment presence.
+ */
+function describeQRCode(value: string) {
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(value)?.[1]?.toLowerCase() ?? 'none'
+
+  return {
+    qrScheme: scheme,
+    qrLength: value.length,
+    qrHasQuery: value.includes('?'),
+    qrHasFragment: value.includes('#'),
+  }
 }
