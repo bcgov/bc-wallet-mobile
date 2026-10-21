@@ -100,3 +100,6 @@ app/fastlane/Preview.html
 app/fastlane/screenshots
 app/fastlane/test_output
 app/fastlane/.env
+
+# C++ build artifacts
+.cxx
