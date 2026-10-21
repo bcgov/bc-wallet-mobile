@@ -3,9 +3,6 @@ import { renderHook } from '@testing-library/react-native'
 import { extractPairingCode, usePairingCodeQRCodeStrategy } from './usePairingCodeQRCodeStrategy'
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
-jest.mock('@bifold/core', () => ({
-  QrCodeScanError: class QrCodeScanError extends Error {},
-}))
 
 const DEMO_URL = 'https://idsit.gov.bc.ca/static/pairingqrcode.html#SKGAZZ'
 
@@ -65,8 +62,8 @@ describe('usePairingCodeQRCodeStrategy', () => {
     expect(onSuccess).toHaveBeenCalledWith('SKGAZZ')
   })
 
-  it('throws an unrecognized error without calling onSuccess when no code can be extracted', async () => {
-    expect(() => setup().handle('https://www.gov.bc.ca')).toThrow('BCSC.Scan.UnrecognizedQR')
+  it('throws without calling onSuccess when no code can be extracted', async () => {
+    expect(() => setup().handle('https://www.gov.bc.ca')).toThrow('Invalid pairing code QR')
 
     expect(onSuccess).not.toHaveBeenCalled()
   })

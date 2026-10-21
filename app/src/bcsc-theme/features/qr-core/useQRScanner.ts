@@ -39,7 +39,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
         return emitErrorModal(
           t('BCSC.Scan.UnrecognizedQR'),
           t('BCSC.Scan.UnrecognizedQRDescription'),
-          AppError.fromErrorDefinition(ErrorRegistry.INVALID_QR_CODE, { cause: value })
+          AppError.fromErrorDefinition(ErrorRegistry.INVALID_QR_CODE, { context: { qrCode: value } })
         )
       }
 

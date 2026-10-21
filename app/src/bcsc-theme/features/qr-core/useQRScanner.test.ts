@@ -1,30 +1,16 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import type { AppError } from '@/errors'
+import { AppError } from '@/errors'
 import { act, renderHook } from '@testing-library/react-native'
 
 import { QRCodeStrategy, useQRScanner } from './useQRScanner'
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 jest.mock('@/contexts/ErrorAlertContext', () => ({ useErrorAlert: jest.fn() }))
-jest.mock('@bifold/core', () => {
-  class QrCodeScanError extends Error {
-    public data?: string
-    public details?: string
-    public constructor(message?: string, data?: string, details?: string) {
-      super(message)
-      this.data = data
-      this.details = details
-    }
-  }
-  return { QrCodeScanError }
-})
-
-const { QrCodeScanError } = jest.requireMock('@bifold/core')
 
 const mkStrategy = (
   matches: boolean,
   handle: jest.Mock = jest.fn().mockResolvedValue(undefined),
-  toErrorModal?: QRCodeStrategy['toErrorModal']
+  toErrorModal: QRCodeStrategy['toErrorModal'] = jest.fn().mockReturnValue(null)
 ): QRCodeStrategy => ({
   matches: jest.fn(() => matches),
   handle,
@@ -43,18 +29,17 @@ const renderScanner = (strategies: QRCodeStrategy[], { isErrorModalVisible = fal
 describe('useQRScanner', () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it('starts idle with no error', () => {
+  it('starts idle', () => {
     const { result } = renderScanner([])
 
     expect(result.current.isProcessing).toBe(false)
-    expect(result.current.scanError).toBeNull()
   })
 
   it('calls handle on the first matching strategy only', async () => {
     const first = mkStrategy(false)
     const second = mkStrategy(true)
     const third = mkStrategy(true)
-    const { result } = renderScanner([first, second, third])
+    const { result, emitErrorModal } = renderScanner([first, second, third])
 
     await act(async () => {
       await result.current.handleScan('qr')
@@ -63,19 +48,38 @@ describe('useQRScanner', () => {
     expect(first.handle).not.toHaveBeenCalled()
     expect(second.handle).toHaveBeenCalledWith('qr')
     expect(third.handle).not.toHaveBeenCalled()
-    expect(result.current.scanError).toBeNull()
+    expect(emitErrorModal).not.toHaveBeenCalled()
   })
 
-  it('sets an unrecognized error when no strategy matches', async () => {
-    const { result } = renderScanner([mkStrategy(false)])
+  it('emits an unrecognized QR modal when no strategy matches', async () => {
+    const { result, emitErrorModal } = renderScanner([mkStrategy(false)])
 
     await act(async () => {
       await result.current.handleScan('qr')
     })
 
-    expect(result.current.scanError?.message).toBe('BCSC.Scan.UnrecognizedQR')
-    expect(result.current.scanError?.data).toBe('qr')
+    expect(emitErrorModal).toHaveBeenCalledWith(
+      'BCSC.Scan.UnrecognizedQR',
+      'BCSC.Scan.UnrecognizedQRDescription',
+      expect.any(AppError)
+    )
     expect(result.current.isProcessing).toBe(false)
+  })
+
+  it('does not lock scanning when no strategy matches', async () => {
+    const handle = jest.fn().mockResolvedValue(undefined)
+    const unmatched = mkStrategy(false, handle)
+    const { result } = renderScanner([unmatched])
+
+    await act(async () => {
+      await result.current.handleScan('qr')
+    })
+    jest.mocked(unmatched.matches).mockReturnValue(true)
+    await act(async () => {
+      await result.current.handleScan('qr')
+    })
+
+    expect(handle).toHaveBeenCalledTimes(1)
   })
 
   it('sets isProcessing while a handler is in flight', async () => {
@@ -136,66 +140,7 @@ describe('useQRScanner', () => {
     expect(handle).toHaveBeenCalledTimes(2)
   })
 
-  it('preserves a QrCodeScanError thrown by a strategy', async () => {
-    const error = new QrCodeScanError('custom', 'qr', 'details')
-    const handle = jest.fn().mockRejectedValue(error)
-    const { result } = renderScanner([mkStrategy(true, handle)])
-
-    await act(async () => {
-      await result.current.handleScan('qr')
-    })
-
-    expect(result.current.scanError).toBe(error)
-  })
-
-  it('wraps other errors as an invalid QR error with the error text as details', async () => {
-    const handle = jest.fn().mockRejectedValue(new Error('boom'))
-    const { result } = renderScanner([mkStrategy(true, handle)])
-
-    await act(async () => {
-      await result.current.handleScan('qr')
-    })
-
-    expect(result.current.scanError?.message).toBe('BCSC.Scan.InvalidQrCode')
-    expect(result.current.scanError?.data).toBe('qr')
-    expect(result.current.scanError?.details).toContain('boom')
-  })
-
-  it('releases the lock after a failure so the user can scan again', async () => {
-    const handle = jest.fn().mockRejectedValueOnce(new Error('boom')).mockResolvedValue(undefined)
-    const { result } = renderScanner([mkStrategy(true, handle)])
-
-    await act(async () => {
-      await result.current.handleScan('qr')
-    })
-    act(() => result.current.dismissError())
-    await act(async () => {
-      await result.current.handleScan('qr')
-    })
-
-    expect(handle).toHaveBeenCalledTimes(2)
-    expect(result.current.scanError).toBeNull()
-  })
-
-  it('ignores scans while an error is showing, and dismissError clears it', async () => {
-    const handle = jest.fn().mockRejectedValue(new Error('boom'))
-    const { result } = renderScanner([mkStrategy(true, handle)])
-
-    await act(async () => {
-      await result.current.handleScan('qr')
-    })
-    expect(result.current.scanError).not.toBeNull()
-
-    await act(async () => {
-      await result.current.handleScan('qr')
-    })
-    expect(handle).toHaveBeenCalledTimes(1)
-
-    act(() => result.current.dismissError())
-    expect(result.current.scanError).toBeNull()
-  })
-
-  it('emits the strategy error modal instead of setting a scan error', async () => {
+  it('emits the strategy error modal when the strategy throws', async () => {
     const thrown = new Error('boom')
     const appError = { message: 'wrapped' } as AppError
     const toErrorModal = jest.fn().mockReturnValue({ error: appError, title: 'Title', description: 'Description' })
@@ -208,7 +153,6 @@ describe('useQRScanner', () => {
 
     expect(toErrorModal).toHaveBeenCalledWith(thrown)
     expect(emitErrorModal).toHaveBeenCalledWith('Title', 'Description', appError)
-    expect(result.current.scanError).toBeNull()
   })
 
   it('shows nothing when the strategy reports the error as already handled', async () => {
@@ -220,11 +164,19 @@ describe('useQRScanner', () => {
     })
 
     expect(emitErrorModal).not.toHaveBeenCalled()
-    expect(result.current.scanError).toBeNull()
+  })
+
+  it('releases the lock after a failure so the user can scan again', async () => {
+    const handle = jest.fn().mockRejectedValueOnce(new Error('boom')).mockResolvedValue(undefined)
+    const { result } = renderScanner([mkStrategy(true, handle)])
 
     await act(async () => {
       await result.current.handleScan('qr')
     })
+    await act(async () => {
+      await result.current.handleScan('qr')
+    })
+
     expect(handle).toHaveBeenCalledTimes(2)
   })
 
