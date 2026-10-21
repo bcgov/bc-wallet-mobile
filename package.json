@@ -73,7 +73,7 @@
     "protobufjs": "7.5.5",
     "axios": "1.15.0",
     "metro": "0.83.7",
-    "shell-quote": "1.8.4",
+    "shell-quote": "1.11.0",
     "@credo-ts/anoncreds@npm:0.7.0": "patch:@credo-ts/anoncreds@npm%3A0.7.0#~/.yarn/patches/@credo-ts-anoncreds-npm-0.7.0-757752e5ca.patch",
     "@credo-ts/anoncreds@npm:^0.6.1": "patch:@credo-ts/anoncreds@npm%3A0.7.0#~/.yarn/patches/@credo-ts-anoncreds-npm-0.7.0-757752e5ca.patch",
     "@credo-ts/core@npm:^0.6.1": "0.7.0",
