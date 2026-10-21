@@ -6,7 +6,6 @@ import {
   BC_DL_BARCODE_S,
 } from '@/bcsc-theme/utils/__fixtures__/barcodes'
 import { ScanableCode } from '@/bcsc-theme/utils/card-barcode-decoder'
-import { TestIds } from '@/test-ids/registry'
 import { bifoldLoggerInstance, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -268,7 +267,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
       ['a code-39 of digits only', code39('123456789')],
       ['a code-39 with no value', code39(undefined)],
       ['a code-128 with an empty value', code128('')],
-      ['a QR code', { type: 'qr-code', value: 'A12345678' } as ScanableCode],
+      ['a QR code', { type: 'qr', value: 'A12345678' } as ScanableCode],
     ])('hands %s read first to the non-BCSC flow', async (_, unreadable) => {
       renderScreen()
 
@@ -350,7 +349,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
       act(() => {
         mockCamera.onError?.()
       })
-      fireEvent.press(getByTestId(testIdWithKey(TestIds.verify.scanSerial.retryCamera)))
+      fireEvent.press(getByTestId(testIdWithKey('RetryCamera')))
     }
 
     it('forgets the serial on Try Again', async () => {
@@ -452,7 +451,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     }
 
     const layOut = (screen: ReturnType<typeof renderScreen>) => {
-      const container = screen.UNSAFE_root.findAll((node) => typeof node.props.onLayout === 'function')[0]
+      const container = screen.UNSAFE_root.findAll((node: any) => typeof node.props.onLayout === 'function')[0]
       act(() => {
         container.props.onLayout({ nativeEvent: { layout: { width: 300, height: 500 } } })
       })

@@ -51,7 +51,7 @@ describe('combineCardBarcodes', () => {
   it('keeps what earlier calls captured across a batch of only failures', () => {
     const afterSerial = combineCardBarcodes(EMPTY_CARD_SCAN, [serialRead])
     const afterFailures = combineCardBarcodes(afterSerial, [
-      read({ type: 'qr-code', value: 'A12345678' }),
+      read({ type: 'qr', value: 'A12345678' }),
       read({ type: 'code-39', value: '123456789' }),
     ])
     const afterCard = combineCardBarcodes(afterFailures, [licenceRead])
@@ -70,7 +70,7 @@ describe('combineCardBarcodes', () => {
       ],
       ['a code-39 of digits only', { type: 'code-39', value: '123456789' }],
       ['a code-39 with no value', { type: 'code-39' }],
-      ['a QR code', { type: 'qr-code', value: 'A12345678' }],
+      ['a QR code', { type: 'qr', value: 'A12345678' }],
     ]
 
     it.each(failures)('leaves an empty scan empty for %s', (_, code) => {

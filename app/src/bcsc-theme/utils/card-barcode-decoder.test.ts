@@ -121,7 +121,7 @@ describe('decodeCardBarcode', () => {
 
   it.each([
     ['unknown', 'unknown'],
-    ['qr-code', 'qr-code'],
+    ['qr', 'qr'],
   ] as const)('reports a %s code as unsupported', (_, type) => {
     expect(decodeCardBarcode({ type, value: 'A12345678' })).toEqual({ source: 'failure', reason: 'unsupported' })
   })
