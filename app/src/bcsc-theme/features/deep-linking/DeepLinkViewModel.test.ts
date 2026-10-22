@@ -5,7 +5,7 @@ import { DeepLinkPayload } from './services/deep-linking'
 
 // Wholesale-mock @bifold/core (same approach as useScanScreenViewModel.test.ts):
 // the real module is heavy (React Native + Credo) and awkward to load under jest.
-// At runtime this ViewModel only uses isDidCommInvitation — AbstractBifoldLogger is
+// At runtime this ViewModel only uses isDidCommInvitation (via didcomm-invitation utils) — AbstractBifoldLogger is
 // a type-only import and is erased — so stubbing just this export is sufficient.
 jest.mock('@bifold/core', () => ({
   isDidCommInvitation: jest.fn(),
@@ -184,6 +184,25 @@ describe('DeepLinkViewModel', () => {
       source: 'deep-link',
     })
     expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+  })
+
+  it('delegates bare https deep links to ConnectionInvitationService as short URL invitations', () => {
+    mockIsDidCommInvitation.mockReturnValue(false)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
+
+    viewModel.initialize()
+    const rawUrl = 'https://issuer.example.com/abc123'
+    capturedHandler?.({ rawUrl, host: 'issuer.example.com', path: '/abc123' })
+
+    expect(mockConnectionInvitationService.handleInvitation).toHaveBeenCalledWith({
+      url: rawUrl,
+      source: 'deep-link',
+    })
   })
 
   it('does not route non-invitation, non-pairing deep links to either service', () => {

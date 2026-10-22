@@ -394,6 +394,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       failedToRetrieveStringResourceAlert: _createBasicErrorModal(AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE, 'SomethingWentWrong'),
       invalidUrlAlert: _createBasicErrorModal(AppEventCode.ERR_500_INVALID_URL, 'SomethingWentWrong'),
       failedToRotateWalletKeyAlert: _createBasicErrorModal(AppEventCode.WALLET_KEY_ROTATION_ERROR, 'SomethingWentWrong'),
+      failedToSwitchMediatorAlert: _createBasicErrorModal(AppEventCode.MEDIATOR_SWITCH_ERROR, 'SomethingWentWrong'),
       invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'SomethingWentWrong'),
       registrationKeyNotConfirmedAlert: _createBasicErrorModal(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED, 'SomethingWentWrong'),
     }),

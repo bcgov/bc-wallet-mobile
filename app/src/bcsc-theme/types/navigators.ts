@@ -138,6 +138,7 @@ export enum BCSCScreens {
   MainDeveloper = `${BCSCStacks.Main} Developer`,
   MainAutoLock = 'BCSCMainAutoLock',
   ProofRequestExpiry = 'BCSCProofRequestExpiry',
+  ConfigureMediator = 'BCSCConfigureMediator',
   MainNotificationSettings = 'BCSCMainNotificationSettings',
   MainAppSecurity = `${BCSCStacks.Main} App Security Setting`,
   MainChangePIN = `${BCSCStacks.Main} Change PIN`,
@@ -300,6 +301,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainDeveloper]: undefined
   [BCSCScreens.MainAutoLock]: undefined
   [BCSCScreens.ProofRequestExpiry]: undefined
+  [BCSCScreens.ConfigureMediator]: { scannedMediatorUri?: string } | undefined
   [BCSCScreens.MainNotificationSettings]: undefined
   [BCSCScreens.MainAppSecurity]: undefined
   [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined

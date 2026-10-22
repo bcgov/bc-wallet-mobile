@@ -1198,6 +1198,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.WALLET,
     message: 'Wallet key rotation error — check current key and new key validity',
   },
+  MEDIATOR_SWITCH_ERROR: {
+    statusCode: 2904,
+    appEvent: AppEventCode.MEDIATOR_SWITCH_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.WALLET,
+    message: 'Switching the wallet to another mediator failed — the previous mediator stays in use',
+  },
 
   // ============================================
   // Connection/BCID Errors (3000-3099)

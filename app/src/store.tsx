@@ -8,7 +8,7 @@ import {
   ReducerAction,
 } from '@bifold/core'
 import { getInitialEnvironment, IASEnvironment } from '@utils/environment'
-import { BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
@@ -67,6 +67,22 @@ export interface NonBCSCUserMetadata {
     province: ProvinceCode
     country: 'CA' // currently we only support Canada
   }
+}
+
+/**
+ * The residential address form as the user last left it, kept in memory for the signed-in session
+ * so a trip back through the verify flow brings their unsaved input back. Partial, untrimmed
+ * and unvalidated: it is never sent anywhere and never written to native storage, so it is dropped
+ * with the rest of the secure state on lock, logout or a verification reset, and a write that lands
+ * after such a clear is refused (see the reducer). Only a submitted address
+ * (`NonBCSCUserMetadata.address`) outlives the session.
+ */
+export interface ResidentialAddressDraft {
+  streetAddress: string
+  streetAddress2: string
+  city: string
+  province: ProvinceCode | null
+  postalCode: string
 }
 
 export interface BCSCState {
@@ -196,6 +212,8 @@ export interface BCSCSecureState {
   // === Non-BCSC User Metadata ===
   /** Metadata for users verifying with non-BCSC cards (name, address) */
   userMetadata?: NonBCSCUserMetadata
+  /** In memory only: the address form as the user left it this session (see ResidentialAddressDraft) */
+  residentialAddressDraft?: ResidentialAddressDraft
 
   // === Account Flags (flattened) ===
   /** Whether user chose to skip email verification */
@@ -220,6 +238,11 @@ export interface BCSCSecureState {
   // === Security ===
   /** PBKDF2 hash of PIN used for Askar wallet encryption */
   walletKey?: string
+  /**
+   * How the app unlocks (PIN or device auth), mirrored from the native account record so screens
+   * can read it on their first render. Hydrated at launch; updated when the user switches method.
+   */
+  securityMethod?: AccountSecurityMethod
 
   hasDismissedExpiryAlert?: boolean
 
@@ -300,6 +323,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateSecureDeviceCodeExpiresAt',
   UPDATE_SECURE_CARD_PROCESS = 'bcsc/updateSecureCardProcess',
   UPDATE_SECURE_USER_METADATA = 'bcsc/updateSecureUserMetadata',
+  UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT = 'bcsc/updateSecureResidentialAddressDraft',
   UPDATE_SECURE_REFRESH_TOKEN = 'bcsc/updateSecureRefreshToken',
   UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateSecureRegistrationAccessToken',
   UPDATE_SECURE_ACCESS_TOKEN = 'bcsc/updateSecureAccessToken',
@@ -317,6 +341,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
   UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus', //controls whether the VerifyStack or the MainStack are displayed
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
+  UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
@@ -428,6 +453,8 @@ export enum BCLocalStorageKeys {
   BCSC = 'BCSC',
   Mode = 'Mode',
   CachedJWK = 'CachedJWK',
+  /** MEDIATOR_URL the mediator preferences were last reconciled with */
+  MediatorUrl = 'MediatorUrl',
 }
 
 export const initialState: BCState = {
@@ -632,6 +659,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = { ...state.bcscSecure, userMetadata }
       return { ...state, bcscSecure }
     }
+    case BCSCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT: {
+      const draft: ResidentialAddressDraft | undefined = (action?.payload || []).pop() ?? undefined
+      // A draft is a pending edit of userMetadata.address, so it is only kept while that record is in
+      // memory. The address screen writes its draft as it unmounts, and a lock or a verification reset
+      // unmounts it by clearing the secure state first: that write lands here after the clear and must
+      // not bring the input back.
+      const residentialAddressDraft = state.bcscSecure.userMetadata ? draft : undefined
+      const bcscSecure = { ...state.bcscSecure, residentialAddressDraft }
+      return { ...state, bcscSecure }
+    }
     case BCSCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN: {
       const refreshToken = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, refreshToken }
@@ -720,6 +757,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {
       const [walletKey] = action.payload as [string | undefined]
       const bcscSecure = { ...state.bcscSecure, walletKey }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_SECURITY_METHOD: {
+      const securityMethod = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, securityMethod }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA: {

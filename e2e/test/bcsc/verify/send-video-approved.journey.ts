@@ -8,6 +8,7 @@ import {
   clearReviewQueueBeforeSubmit,
   enterBirthdate,
   enterSerialManually,
+  expectPendingReviewLocked,
   reachVerificationMethod,
   resumeVerification,
   startVerification,
@@ -24,7 +25,7 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * that finishes on an agent's decision rather than on a button the user presses.
  *
  * One ordered session: onboard → manual serial → birthdate → method selection → the full capture chain
- * (selfie photo, prompted recording, upload) → Home, then the REAL agent approval, scripted against the
+ * (selfie photo, prompted recording, upload) → the pending review, then the REAL agent approval, scripted against the
  * IDCheck SIT review portal (`reviewSendVideoRequest`; needs the `IDCHECK_*` credentials on an allowlisted
  * runner), then the app's own status re-check → VerificationSuccess and verified Home.
  *
@@ -71,11 +72,9 @@ describe('Verified journey: send video, approved', () => {
     // has to route back to the status screen, rather than the in-memory flag carrying it.
     await unlockWithPin(TEST_PIN, { relaunch: true, landing: 'any' })
     await resumeVerification(PendingReviewScreen, Timeouts.APP_LAUNCH)
-    await PendingReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    // Back marks the account unverified rather than popping, which returns the stack to Home — where
-    // the decision wait below starts.
-    await PendingReviewScreen.back.tap()
-    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // A first-time verifier (Continue at the prompt) cannot leave the pending review — no back arrow, no
+    // Back to home — so the decision wait below polls from here with Check status.
+    await expectPendingReviewLocked()
   })
 
   it('is approved by the agent (scripted against the SIT review portal)', async () => {
