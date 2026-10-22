@@ -564,8 +564,12 @@ _Two rules, both learned the hard way:_
    it decodes as a silently WRONG serial._
 
 _`scripts/generate-scan-assets.mjs` writes `assets/images/scan/card_<persona>.png` — one combo-card
-back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. Rerun it
-after changing a payload or size; it prints px-per-module for every code it writes._
+back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. The PDF-417
+carries ICBC's 3-track layout exactly as the app's spec-based parser demands it — track 3 is a fixed
+82-character block whose security field zero-pads the serial — because the parser rejects the whole
+code when any track is malformed, and then the live scanner never reads the card and the reroute never
+fires. Rerun the script after changing a payload or size; it prints px-per-module and px-per-row for
+every code it writes._
 
 _The cards are generated rather than photographed because the serial screen needs BOTH codes — the
 serial from the 1D code-39 and the birthdate from the PDF-417 — matching the same persona. The shared
@@ -573,14 +577,14 @@ serial from the 1D code-39 and the birthdate from the PDF-417 — matching the s
 nonexistent card._
 
 > **_App behaviour that limits this (worth its own ticket):_** `ScanSerialScreen` reroutes to the
-> non-BCSC ("two government-issued IDs") flow the instant any scanned code decodes to `null`, guarded
+> non-BCSC ("two government-issued IDs") flow the instant any scanned code fails to decode, guarded
 > only by "nothing captured yet". Since the vision-camera patch enables ML Kit's
-> `enableAllPotentialBarcodes()` and `decodeBarcodes` does not filter value-less codes, a partial
-> detection triggers it — so a real user whose card is still half-aligned can be bounced out of the
+> `enableAllPotentialBarcodes()` and `ScanSerialScreen.onCodeScanned`'s decode loop does not filter
+> value-less codes, a partial detection triggers it — so a real user whose card is still half-aligned can be bounced out of the
 > BCSC flow before the scanner ever gets a clean read. Seven purpose-built image variants across six
 > device sessions (varying geometry, sharpness, module size, orientation and injection ordering) all
 > reroute within seconds, so this is not an image problem. Skipping value-less codes in
-> `decodeBarcodes` — the same guard it already applies to `type === 'unknown'` — would fix the
+> that loop — the same guard it already applies to `type === 'unknown'` — would fix the
 > user-facing behaviour and make this screen testable by injection._
 
 ## _CI/CD_

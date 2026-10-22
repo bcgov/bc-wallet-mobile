@@ -1,5 +1,4 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
@@ -88,9 +87,6 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       marginTop: Spacing.xxl,
       alignItems: 'center',
     },
-    pressableArea: {
-      width: '100%',
-    },
   })
 
   useFocusEffect(
@@ -178,14 +174,9 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         padding: Spacing.lg,
       }}
     >
-      <DeveloperModeTrigger
-        onActivate={() => navigation.navigate(BCSCScreens.VerifyDeveloper)}
-        style={styles.pressableArea}
-      >
-        <View style={styles.image}>
-          <AddDeviceHands width={250} height={250} />
-        </View>
-      </DeveloperModeTrigger>
+      <View style={styles.image}>
+        <AddDeviceHands width={250} height={250} />
+      </View>
       <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: ColorPalette.brand.primary }}>
         {t('BCSC.AccountSetup.Title')}
       </ThemedText>

@@ -46,57 +46,17 @@ exports[`AccountSetup renders correctly 1`] = `
       >
         <View>
           <View
-            accessibilityElementsHidden={true}
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={false}
-            collapsable={false}
-            focusable={true}
-            importantForAccessibility="no-hide-descendants"
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
             style={
               {
-                "width": "100%",
+                "alignItems": "center",
+                "marginTop": 40,
               }
             }
-            testID="com.ariesbifold:id/DeveloperCounter"
           >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "marginTop": 40,
-                }
-              }
-            >
-              <
-                height={250}
-                width={250}
-              />
-            </View>
+            <
+              height={250}
+              width={250}
+            />
           </View>
           <Text
             maxFontSizeMultiplier={2}

@@ -65,10 +65,7 @@ const OnboardingStack = (): React.ReactElement => {
         }}
       >
         {({ navigation }) => (
-          <OnboardingIntroScreen
-            onContinue={() => navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)}
-            onActivateDeveloper={() => navigation.navigate(BCSCScreens.OnboardingDeveloper)}
-          />
+          <OnboardingIntroScreen onContinue={() => navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)} />
         )}
       </Stack.Screen>
       <Stack.Screen
