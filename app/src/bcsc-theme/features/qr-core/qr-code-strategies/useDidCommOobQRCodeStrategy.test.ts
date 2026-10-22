@@ -1,4 +1,6 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { AppError, ErrorRegistry } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import * as Bifold from '@bifold/core'
 import { renderHook } from '@testing-library/react-native'
 import { useDidCommOobQRCodeStrategy } from './useDidCommOobQRCodeStrategy'
@@ -292,6 +294,48 @@ describe('useDidCommOobQRCodeStrategy', () => {
       await expect(setup().handle(OOB_URI)).rejects.toThrow('receive failed')
 
       expect(onSuccess).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('toErrorModal', () => {
+    it('wraps a plain error as a credential QR scan failure that keeps the original as its cause', () => {
+      const thrown = new Error('Mediator invitation rejected - BCSC uses .env mediator')
+
+      const modal = setup().toErrorModal(thrown)
+
+      expect(modal?.error).toBeInstanceOf(AppError)
+      expect(modal?.error.appEvent).toBe(AppEventCode.CREDENTIAL_QR_SCAN_FAILED)
+      expect(modal?.error.cause).toBe(thrown)
+      expect(modal?.title).toBe('BCSC.Scan.CredentialQRScanFailedTitle')
+      expect(modal?.description).toBe('BCSC.Scan.CredentialQRScanFailedDescription')
+    })
+
+    it('passes an existing AppError through unchanged', () => {
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.INVALID_QR_CODE)
+
+      expect(setup().toErrorModal(appError)?.error).toBe(appError)
+    })
+
+    it('logs the error', () => {
+      const thrown = new Error('boom')
+
+      setup().toErrorModal(thrown)
+
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('useDidCommOobQRCodeStrategy'), thrown)
+    })
+
+    it('builds a modal for an error thrown by handle', async () => {
+      useAgent(makeAgent({ goalCode: 'aries.vc.mediate' }).agent)
+      const strategy = setup()
+
+      let thrown: unknown
+      try {
+        await strategy.handle(OOB_URI)
+      } catch (error) {
+        thrown = error
+      }
+
+      expect(strategy.toErrorModal(thrown)?.error.appEvent).toBe(AppEventCode.CREDENTIAL_QR_SCAN_FAILED)
     })
   })
 

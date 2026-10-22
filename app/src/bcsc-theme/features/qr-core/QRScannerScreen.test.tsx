@@ -13,7 +13,11 @@ const mockNavigate = jest.fn()
 const mockParentNavigate = jest.fn()
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
-jest.mock('@bifold/core', () => ({ Screens: {} }))
+jest.mock('@bifold/core', () => ({
+  Screens: {},
+  TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },
+  useServices: () => [{ warn: jest.fn() }],
+}))
 jest.mock('@/contexts/ErrorAlertContext', () => {
   const emitErrorModal = jest.fn()
   return { useErrorAlert: () => ({ emitErrorModal, isErrorModalVisible: false }) }
@@ -118,5 +122,60 @@ describe('QRScannerScreen', () => {
     expect(pairingHandle).toHaveBeenCalledTimes(1)
 
     await act(async () => finish())
+  })
+
+  // The OOB strategy matches every http(s) URL, so it must stay after the more specific strategies.
+  describe('strategy order', () => {
+    const PAIRING_URL = 'https://example.com/pair#ABC123'
+    const TRANSFER_URL = 'https://example.com/transfer'
+    const OTHER_URL = 'https://example.com/invite'
+
+    const mockOverlappingStrategies = () => {
+      const handles = { pairing: jest.fn(), transfer: jest.fn(), oob: jest.fn() }
+      ;(usePairingCodeQRCodeStrategy as jest.Mock).mockReturnValue({
+        matches: (u: string) => u === PAIRING_URL,
+        handle: handles.pairing,
+      })
+      ;(useAccountTransferQRCodeStrategy as jest.Mock).mockReturnValue({
+        matches: (u: string) => u === TRANSFER_URL,
+        handle: handles.transfer,
+      })
+      ;(useDidCommOobQRCodeStrategy as jest.Mock).mockReturnValue({
+        matches: (u: string) => u.startsWith('https://'),
+        handle: handles.oob,
+      })
+      return handles
+    }
+
+    it('routes a pairing code URL to the pairing strategy, not the OOB strategy', async () => {
+      const handles = mockOverlappingStrategies()
+      render(<QRScannerScreen />)
+
+      await act(async () => latestProps().onScan(PAIRING_URL))
+
+      expect(handles.pairing).toHaveBeenCalledWith(PAIRING_URL)
+      expect(handles.oob).not.toHaveBeenCalled()
+    })
+
+    it('routes an account transfer URL to the transfer strategy, not the OOB strategy', async () => {
+      const handles = mockOverlappingStrategies()
+      render(<QRScannerScreen />)
+
+      await act(async () => latestProps().onScan(TRANSFER_URL))
+
+      expect(handles.transfer).toHaveBeenCalledWith(TRANSFER_URL)
+      expect(handles.oob).not.toHaveBeenCalled()
+    })
+
+    it('routes any other URL to the OOB strategy', async () => {
+      const handles = mockOverlappingStrategies()
+      render(<QRScannerScreen />)
+
+      await act(async () => latestProps().onScan(OTHER_URL))
+
+      expect(handles.oob).toHaveBeenCalledWith(OTHER_URL)
+      expect(handles.pairing).not.toHaveBeenCalled()
+      expect(handles.transfer).not.toHaveBeenCalled()
+    })
   })
 })

@@ -1,5 +1,6 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError, ErrorRegistry } from '@/errors'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -16,6 +17,7 @@ export type QRCodeStrategy = {
  */
 export const useQRScanner = (strategies: QRCodeStrategy[]) => {
   const { t } = useTranslation()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isProcessing, setIsProcessing] = useState(false)
   const lockedRef = useRef(false) // held while processing, and after success until the screen refocuses
   const processingRef = useRef(false)
@@ -36,6 +38,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
 
       if (!strategy) {
         // NOTE: This will help us identify missing and misconfigured strategies
+        logger.warn('[useQRScanner] No strategy matched scanned QR code', describeQRCode(value))
         return emitErrorModal(
           t('BCSC.Scan.UnrecognizedQR'),
           t('BCSC.Scan.UnrecognizedQRDescription'),
@@ -61,7 +64,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
         setIsProcessing(false)
       }
     },
-    [isErrorModalVisible, strategies, emitErrorModal, t]
+    [isErrorModalVisible, strategies, logger, emitErrorModal, t]
   )
 
   // Call from the screen's focus effect to unlock scanning after a completed flow.

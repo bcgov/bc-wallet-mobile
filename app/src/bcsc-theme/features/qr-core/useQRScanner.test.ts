@@ -1,11 +1,16 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
+import { useServices } from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 
 import { QRCodeStrategy, useQRScanner } from './useQRScanner'
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 jest.mock('@/contexts/ErrorAlertContext', () => ({ useErrorAlert: jest.fn() }))
+jest.mock('@bifold/core', () => ({
+  TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },
+  useServices: jest.fn(),
+}))
 
 const mkStrategy = (
   matches: boolean,
@@ -17,8 +22,11 @@ const mkStrategy = (
   toErrorModal,
 })
 
+const mockLogger = { warn: jest.fn() }
+
 const renderScanner = (strategies: QRCodeStrategy[], { isErrorModalVisible = false } = {}) => {
   const emitErrorModal = jest.fn()
+  jest.mocked(useServices).mockReturnValue([mockLogger] as unknown as ReturnType<typeof useServices>)
   jest
     .mocked(useErrorAlert)
     .mockReturnValue({ emitErrorModal, isErrorModalVisible } as unknown as ReturnType<typeof useErrorAlert>)
@@ -64,6 +72,20 @@ describe('useQRScanner', () => {
       expect.any(AppError)
     )
     expect(result.current.isProcessing).toBe(false)
+  })
+
+  it('logs a safe description of the QR code when no strategy matches, never the value', async () => {
+    const { result } = renderScanner([mkStrategy(false)])
+
+    await act(async () => {
+      await result.current.handleScan('https://example.com/path?token=secret')
+    })
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('No strategy matched'),
+      expect.objectContaining({ qrScheme: 'https', qrHasQuery: true })
+    )
+    expect(JSON.stringify(mockLogger.warn.mock.calls)).not.toContain('secret')
   })
 
   it('does not lock scanning when no strategy matches', async () => {
