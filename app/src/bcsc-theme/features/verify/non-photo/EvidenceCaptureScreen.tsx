@@ -8,6 +8,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { buildBarcodePayload } from '@/bcsc-theme/utils/barcode'
 import { DriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
+import { isSameCardSerial } from '@/bcsc-theme/utils/card-serial'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { isAxiosAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
@@ -66,6 +67,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { cardType } = route.params
   const [store] = useStore<BCState>()
   const isNonBCSCFlow = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
+  const isNonPhotoBcscFlow = store.bcscSecure.cardProcess === BCSCCardProcess.BCSCNonPhoto
   const { clearAdditionalEvidence, updateEvidenceMetadata, truncateEvidence } = useSecureActions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
@@ -81,7 +83,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   // stops below), so the backend only needs to be asked once per card.
   const barcodesCheckedRef = useRef(false)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-  const { failedToReadFromLocalStorageAlert, documentExpiredAlert } = useAlerts(navigation)
+  const { failedToReadFromLocalStorageAlert, documentExpiredAlert, bcscCardAlreadyAddedAlert } = useAlerts(navigation)
   const scannerOptions: BarcodeScannerOutputOptions = {
     barcodeFormats: scanner.codeTypes,
     onBarcodeScanned: async (codes) => {
@@ -186,6 +188,29 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
 
         // Note: Card not found is a valid error - continue with the evidence capture flow
       }
+    }
+
+    /**
+     * Non-Photo BCSC flow only: the additional photo ID must be a different document from the
+     * BC Services Card already registered on this device. Nothing stops that card from being
+     * photographed again under a photo-ID type such as BCID, which would submit a request whose
+     * only photo ID is the non-photo card itself (#4894). Its serial — the 1D barcode, or the
+     * PDF-417's DCN — gives it away, so the entry is dropped before anything is stored and the
+     * user is sent back to the list to choose another ID.
+     */
+    if (isNonPhotoBcscFlow && isSameCardSerial(bcscSerialRef.current, store.bcscSecure.serial)) {
+      await truncateEvidence(
+        store.bcscSecure.additionalEvidenceData,
+        store.bcscSecure.additionalEvidenceData.length - 1
+      )
+      // merge keeps the list's photo filter as the user left it
+      navigation.navigate({
+        name: BCSCScreens.EvidenceTypeList,
+        params: { cardProcess: BCSCCardProcess.BCSCNonPhoto },
+        merge: true,
+      })
+      bcscCardAlreadyAddedAlert()
+      return
     }
 
     /**

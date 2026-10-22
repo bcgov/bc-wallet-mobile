@@ -127,6 +127,7 @@ export enum AppEventCode {
   CARD_NOT_FOUND = 'card_not_found',
   CARD_INACTIVE = 'card_inactive',
   CARD_EXPIRED = 'card_expired',
+  EVIDENCE_BCSC_CARD_ALREADY_ADDED = 'evidence_bcsc_card_already_added', // Non-IAS error code — the registered BC Services Card scanned again as the additional photo ID
   CARD_REPLACED = 'card_replaced',
   CARD_CANCELLED = 'card_cancelled',
   CARD_RENEWED = 'card_renewed',
