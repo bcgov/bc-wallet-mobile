@@ -7,7 +7,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { formatBirthdateForApi, parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { normalizeForSubmission } from '@/bcsc-theme/utils/validation'
-import { MINIMUM_VERIFICATION_AGE } from '@/constants'
+import { MAXIMUM_VERIFICATION_AGE, MINIMUM_VERIFICATION_AGE } from '@/constants'
 import { BCState, NonBCSCUserMetadata } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -129,6 +129,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         personalInfoRequired,
         documentReferenceInputMask: cardType.document_reference_input_mask,
         minimumAge: MINIMUM_VERIFICATION_AGE,
+        maximumAge: MAXIMUM_VERIFICATION_AGE,
         t,
         onInvalidMask: (error) =>
           logger.error(`Invalid regex pattern: ${cardType.document_reference_input_mask}`, error),

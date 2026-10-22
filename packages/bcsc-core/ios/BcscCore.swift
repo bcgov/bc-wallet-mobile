@@ -5,13 +5,6 @@ import LocalAuthentication
 import React
 import UserNotifications
 
-enum ChallengeSource: String {
-  case local_app_switch
-  case push_notification
-  case remote_pairing_code
-  case notValid
-}
-
 enum DeviceInfoKeys {
   static let systemName = "system_name"
   static let deviceName = "device_name"
@@ -1053,7 +1046,7 @@ class BcscCore: NSObject {
         "id": acc.id,
         "issuer": acc.issuer,
         "clientID": acc.clientID,
-        // "_securityMethod": acc._securityMethod, // Question (Al): why is this commented out?
+        "securityMethod": acc.securityMethod.rawValue,
         "displayName": acc.displayName,
         "didPostNicknameToServer": acc.didPostNicknameToServer,
         "nickname": acc.nickname,
@@ -1165,6 +1158,7 @@ class BcscCore: NSObject {
 
   func signPairingCode(
     _ code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?,
+    challengeSource: String,
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
     let hasOtherAccounts = false
@@ -1182,7 +1176,7 @@ class BcscCore: NSObject {
       .claim(name: "iss", value: clientID)
       .claim(name: "iat", value: seconds)
       .claim(name: "challenge", value: code)
-      .claim(name: "challenge_source", value: ChallengeSource.remote_pairing_code.rawValue)
+      .claim(name: "challenge_source", value: challengeSource)
       .claim(name: "apns_token", value: actualDeviceToken)
 
     // Add device info claims using consolidated method
@@ -3919,6 +3913,14 @@ class BcscCore: NSObject {
     // iOS doesn't provide a public API to open the keyboard selector
     // resolve immediately
     logger.log("openKeyboardSelector: Unsupported on iOS")
+    resolve(nil)
+  }
+
+  func isBluetoothAudioConnected(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    // Bluetooth audio detection is not implemented on iOS yet, null means unknown
+    logger.log("isBluetoothAudioConnected: Not implemented yet on iOS")
     resolve(nil)
   }
 

@@ -12,8 +12,8 @@ import {
   listEvidenceTypeRowIds,
   resendEmailCode,
   resumeVerification,
+  skipPromptAndStartFromHome,
   startEmailVerification,
-  startVerification,
   submitEmailCode,
   submitEvidenceIdCollection,
 } from '../../../src/flows/verify.js'
@@ -72,7 +72,7 @@ describe('Verified journey: non-bcsc card', () => {
   })
 
   it('captures the first ID and rejects an under-12 birthdate on its form', async () => {
-    await startVerification()
+    await skipPromptAndStartFromHome()
     await chooseAddAccount()
     await captureFirstNonBcscDocument(getTestUser(), FIRST_DOC_MATCH)
 

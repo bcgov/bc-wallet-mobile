@@ -353,3 +353,54 @@ describe('useEvidenceApi - upload log context', () => {
     })
   })
 })
+
+describe('useEvidenceApi - error handling opt-out', () => {
+  const submitPayload = { upload_uris: ['u1'], sha256: 'sha' }
+  const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
+  const mockStore: any = { bcsc: {}, bcscSecure: { deviceCode: 'test-device-code' } }
+
+  const apiClient: any = {
+    endpoints: { evidence: 'https://example.test/evidence' },
+    get: jest.fn(),
+    put: jest.fn(),
+    post: jest.fn(),
+    logger: mockLogger,
+  }
+
+  const renderApi = () => renderHook(() => useEvidenceApi(apiClient)).result
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending' } })
+    ;(getAccount as jest.Mock).mockResolvedValue({ clientID: 'client-id', issuer: 'issuer' })
+    jest.mocked(Bifold.useStore).mockReturnValue([mockStore as Bifold.State, jest.fn()])
+  })
+
+  it('opts the submit PUT out of the global error handling; useEvidenceService owns its errors', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.sendVerificationRequest('v1', submitPayload)
+    })
+
+    expect(apiClient.put).toHaveBeenCalledWith(
+      'https://example.test/evidence/v1/verifications/v1',
+      submitPayload,
+      expect.objectContaining({ skipBearerAuth: true, skipOnErrorHandler: true })
+    )
+  })
+
+  it('opts the status GET out of the global error handling; useEvidenceService owns its errors', async () => {
+    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending' } })
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.getVerificationRequestStatus('v1')
+    })
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      'https://example.test/evidence/v1/verifications/v1',
+      expect.objectContaining({ skipBearerAuth: true, skipOnErrorHandler: true })
+    )
+  })
+})

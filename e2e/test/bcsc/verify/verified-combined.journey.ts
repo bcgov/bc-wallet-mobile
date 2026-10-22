@@ -11,7 +11,7 @@ import {
   leaveVerificationToHome,
   reachVerificationMethod,
   resumeVerification,
-  startVerification,
+  skipPromptAndStartFromHome,
 } from '../../../src/flows/verify.js'
 import { findByA11yLabel } from '../../../src/helpers/a11y.js'
 import { acceptAppAlert } from '../../../src/helpers/alerts.js'
@@ -173,7 +173,7 @@ describe('Verified journey: combined card', () => {
   })
 
   it('enters the combined serial and submits the birthdate', async () => {
-    await startVerification()
+    await skipPromptAndStartFromHome()
     await chooseAddAccount()
     await enterSerialManually(getTestUser())
     await enterBirthdate(getTestUser())
@@ -512,8 +512,11 @@ describe('Verified journey: combined card', () => {
   it('verified: edits the account nickname and it persists on the profile card', async () => {
     await HomeScreen.tap('menu')
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await SettingsScreen.link('editProfile') // pencil in the (verified-only) ProfileCard → EditNickname
-    await EditNicknameScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // The pencil in the (verified-only) ProfileCard → EditNickname, as a confirmed-arrival tap: a tap the
+    // app discards mid-transition is re-tapped, and a build on which the pencil never navigates (Android
+    // from build 8944 — the tap reaches the view and nothing follows; red every nightly since) fails
+    // HERE naming Settings, rather than a scroll hunt later naming the nickname field.
+    await SettingsScreen.linkToReach('editProfile', EditNicknameScreen)
     await EditNicknameScreen.fill('nickname', NEW_NICKNAME) // NB may need a clear first if the field pre-fills
     await EditNicknameScreen.tap('primary') // SaveAndContinue → goBack to Settings
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)

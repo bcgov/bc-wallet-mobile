@@ -1,14 +1,15 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useResidentialAddressModel from '@/bcsc-theme/features/verify/useResidentialAddressModel'
+import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
+import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { AppError, ErrorCategory } from '@/errors'
+import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
-jest.mock('@/bcsc-theme/api/hooks/useApi')
+jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
 jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
 }))
@@ -34,6 +35,7 @@ const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
 const mockUpdateDeviceCodes = jest.fn().mockResolvedValue(undefined)
 const mockUpdateVerificationOptions = jest.fn()
 const mockUpdateCardProcess = jest.fn()
+const mockUpdateResidentialAddressDraft = jest.fn()
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
@@ -41,6 +43,7 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
     updateDeviceCodes: mockUpdateDeviceCodes,
     updateVerificationOptions: mockUpdateVerificationOptions,
     updateCardProcess: mockUpdateCardProcess,
+    updateResidentialAddressDraft: mockUpdateResidentialAddressDraft,
   })),
 }))
 
@@ -51,6 +54,11 @@ const mockAttemptWithRecovery = jest.fn((thunk: () => Promise<unknown>) => thunk
 jest.mock('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery', () => ({
   useDeviceAuthorizationRecovery: jest.fn(() => mockAttemptWithRecovery),
   useIsDeviceAuthorizationRecovering: jest.fn(() => false),
+}))
+
+const mockEnsureRegistered = jest.fn()
+jest.mock('@/bcsc-theme/services/hooks/useRegistrationService', () => ({
+  useRegistrationService: jest.fn(() => ({ ensureRegistered: mockEnsureRegistered, cycleRegistration: jest.fn() })),
 }))
 
 describe('useResidentialAddressModel', () => {
@@ -108,10 +116,7 @@ describe('useResidentialAddressModel', () => {
   }
 
   beforeEach(() => {
-    const useApiMock = jest.mocked(useApi)
-    useApiMock.mockReturnValue({
-      authorization: mockAuthorizationApi,
-    } as any)
+    jest.mocked(useAuthorizationService).mockReturnValue(mockAuthorizationApi as any)
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
@@ -172,6 +177,51 @@ describe('useResidentialAddressModel', () => {
         city: '',
         province: null,
         postalCode: '',
+      })
+    })
+  })
+
+  // Stepping back and forward remounts the screen, so unsaved input is kept as a session draft
+  describe('session draft', () => {
+    const draft = {
+      streetAddress: '456 Oak Ave',
+      streetAddress2: 'Unit 2',
+      city: 'Victoria',
+      province: null,
+      postalCode: '',
+    }
+
+    it('seeds the form from the session draft rather than the submitted address', () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, residentialAddressDraft: draft } },
+        mockDispatch,
+      ])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      expect(result.current.formState).toEqual(draft)
+    })
+
+    it('keeps the form as the user left it when the screen unmounts, not per keystroke', () => {
+      const { result, unmount } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      act(() => {
+        result.current.handleChange('city', 'Victoria')
+      })
+      expect(mockUpdateResidentialAddressDraft).not.toHaveBeenCalled()
+
+      // Popping back, a stack reset and leaving for Home all unmount the screen; the last of them fires
+      // no navigation blur, so the unmount is the one moment every exit shares
+      unmount()
+
+      expect(mockUpdateResidentialAddressDraft).toHaveBeenCalledTimes(1)
+      expect(mockUpdateResidentialAddressDraft).toHaveBeenCalledWith({
+        streetAddress: '123 Main St',
+        streetAddress2: '',
+        city: 'Victoria',
+        province: 'BC',
+        postalCode: 'V6B 1A1',
       })
     })
   })
@@ -659,6 +709,87 @@ describe('useResidentialAddressModel', () => {
 
       expect(mockEmitErrorModal).not.toHaveBeenCalled()
       expect(result.current.isSubmitting).toBe(false)
+    })
+
+    describe('device registered late (stuck account)', () => {
+      const notRegisteredError = () =>
+        new AppError('No account found. Please register first.', ErrorRegistry.ACCOUNT_NOT_REGISTERED, { track: false })
+
+      beforeEach(() => {
+        // The real recovery hook, so the screen is exercised against the actual register-then-retry behaviour
+        jest
+          .mocked(useDeviceAuthorizationRecovery)
+          .mockImplementation(() =>
+            jest.requireActual('@/bcsc-theme/hooks/useDeviceAuthorizationRecovery').useDeviceAuthorizationRecovery()
+          )
+        mockEmitErrorModal.mockClear()
+        mockNavigation.dispatch.mockClear()
+        mockEnsureRegistered.mockReset()
+      })
+
+      afterEach(() => {
+        jest.mocked(useDeviceAuthorizationRecovery).mockImplementation(() => mockAttemptWithRecovery as any)
+      })
+
+      it('registers the device, retries, and continues to the next step', async () => {
+        mockEnsureRegistered.mockResolvedValue(undefined)
+        mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockReset()
+        mockAuthorizationApi.authorizeDeviceWithUnknownBCSC
+          .mockRejectedValueOnce(notRegisteredError())
+          .mockResolvedValueOnce({
+            device_code: 'new-device-code',
+            user_code: 'new-user-code',
+            expires_in: 3600,
+            verification_options: 'video_call back_check',
+            process: BCSCCardProcess.NonBCSC,
+          })
+        jest
+          .mocked(Bifold)
+          .useStore.mockReturnValue([
+            { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, ...idStepComplete } },
+            mockDispatch,
+          ])
+
+        const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+        await act(async () => {
+          await result.current.handleSubmit()
+        })
+
+        expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+        expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledTimes(2)
+        expect(mockNavigation.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'PUSH',
+            payload: expect.objectContaining({ name: BCSCScreens.EnterEmail }),
+          })
+        )
+      })
+
+      it('shows no connection-error modal and re-enables submit when registration fails', async () => {
+        // ensureRegistered has already alerted and marked its error handled
+        const registrationFailure = new AppError(
+          'registration failed',
+          { category: ErrorCategory.NETWORK, appEvent: AppEventCode.NO_INTERNET, statusCode: 2100 },
+          { track: false }
+        )
+        registrationFailure.handled = true
+        mockEnsureRegistered.mockRejectedValue(registrationFailure)
+        mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockReset()
+        mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockRejectedValue(notRegisteredError())
+
+        const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+        await act(async () => {
+          await result.current.handleSubmit()
+        })
+
+        expect(mockEnsureRegistered).toHaveBeenCalledTimes(1)
+        expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledTimes(1)
+        expect(mockEmitErrorModal).not.toHaveBeenCalled()
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(result.current.isSubmitting).toBe(false)
+      })
     })
 
     it('should throw error when birthdate is missing', async () => {

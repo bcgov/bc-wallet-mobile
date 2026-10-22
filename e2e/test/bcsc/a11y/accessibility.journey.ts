@@ -1,6 +1,6 @@
 import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
 import { relaunchApp, selectAccountLandingIfPresent, submitPin } from '../../../src/flows/auth.js'
-import { chooseAddAccount, leaveVerificationToHome, startVerification } from '../../../src/flows/verify.js'
+import { chooseAddAccount, leaveVerificationToHome, skipPromptAndStartFromHome } from '../../../src/flows/verify.js'
 import { auditScreen, reportA11ySummary } from '../../../src/helpers/a11y-audit.js'
 import { tapAtWindowPercent } from '../../../src/helpers/gestures.js'
 import { reachCameraScreen } from '../../../src/helpers/screens.js'
@@ -145,7 +145,7 @@ describe('Accessibility journey: automated audits over the core screens', () => 
   })
 
   it('audits the verification entry: account setup and identity selection', async () => {
-    await startVerification()
+    await skipPromptAndStartFromHome()
     await AccountSetupScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await auditScreen('AccountSetup')
     await chooseAddAccount()
@@ -156,7 +156,9 @@ describe('Accessibility journey: automated audits over the core screens', () => 
   it('audits the serial scanner, manual serial entry and the birthdate form, then leaves to Home', async () => {
     await IdentitySelectionScreen.tapToNavigate('primary')
     await reachCameraScreen('ScanSerial', () => ScanSerialScreen.isPresent(1_000))
-    await auditScreen('ScanSerial')
+    // Camera screens: the Android contrast sampler would read the live frame behind the text (the env
+    // ribbon flipped between 1.65:1 and clean night to night) — a verdict that depends on the light.
+    await auditScreen('ScanSerial', { skip: ['text-contrast'] })
     await ScanSerialScreen.tapToNavigate('primary')
     await ManualSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await auditScreen('ManualSerial')
@@ -193,7 +195,7 @@ describe('Accessibility journey: automated audits over the core screens', () => 
     await HomeScreen.link('scanFab')
     // Accept the camera permission whenever the OS raises it; the tab bar is the screen's marker.
     await reachCameraScreen('QRCore scanner', () => QRCoreScreen.isPresent(1_000))
-    await auditScreen('QRScanner')
+    await auditScreen('QRScanner', { skip: ['text-contrast'] }) // camera screen — see ScanSerial
     await QRCoreScreen.back.tap()
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })

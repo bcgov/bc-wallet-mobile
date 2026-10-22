@@ -213,6 +213,8 @@ const translation = {
     "EnableProxy": "Enable proxy (PT-BR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
     "SwitchTheme": "Switch theme (PT-BR)",
+    "SelectedMediator": "Selected mediator (PT-BR)",
+    "MediatorSection": "Mediator (PT-BR)",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes (PT-BR)",
       "OneHour": "1 hour (PT-BR)",
@@ -703,6 +705,11 @@ const translation = {
       "PrimaryAction": "Reset (PT-BR)",
       "Resetting": "Resetting… (PT-BR)"
     },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator (PT-BR)",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (PT-BR)",
+      "ScanButton": "Scan mediator QR code (PT-BR)"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (PT-BR)",
       "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
@@ -822,6 +829,8 @@ const translation = {
       "UnrecognizedQR": "QR code not recognized. (PT-BR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (PT-BR)",
       "FeatureUnavailable": "This action isn't available yet. (PT-BR)",
+      "AccountTransferErrorTitle": "Unable to add device (PT-BR)",
+      "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it. (PT-BR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (PT-BR)",
         "Mediator": "Mediator invitations aren't supported in BC Services Card. (PT-BR)",
@@ -903,6 +912,9 @@ const translation = {
       "CancelCamera": "Cancel camera (PT-BR)",
       "TakePhoto": "Take photo (PT-BR)",
       "ToggleFlash": "Toggle flash (PT-BR)",
+      "CameraInterrupted": "Camera paused (PT-BR)",
+      "CameraInterruptedMessage": "The camera is in use by another app or is temporarily unavailable. It will resume on its own when it's available. (PT-BR)",
+      "CameraNotReady": "The camera isn't ready yet. Please try again. (PT-BR)",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings (PT-BR)",
@@ -915,6 +927,22 @@ const translation = {
       "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps: (PT-BR)",
       "CameraAndMicrophoneTitle": "Camera & Microphone Disabled (PT-BR)",
       "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video. (PT-BR)",
+      "BluetoothTitle": "Nearby Devices Disabled (PT-BR)",
+      "BluetoothDescription": "Follow these steps to allow access to nearby devices so you can use a connected Bluetooth headset or speaker during the call. (PT-BR)",
+      "Bluetooth": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (PT-BR)",
+          "Step2": "2. Tap 'Bluetooth' (PT-BR)",
+          "Step3": "3. Return to the app to continue (PT-BR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (PT-BR)",
+          "Step2": "2. Tap 'Permissions' (PT-BR)",
+          "Step3": "3. Tap 'Nearby devices' (PT-BR)",
+          "Step4": "4. Select 'Allow' (PT-BR)",
+          "Step5": "5. Return to the app to continue (PT-BR)",
+        },
+      },
       "Camera": {
         "iOS": {
           "Step1": "1. Tap 'Open Settings' below (PT-BR)",
@@ -1047,6 +1075,8 @@ const translation = {
       "TakeVideo": {
         "RecordingError": "Recording error (PT-BR)",
         "RecordingErrorDescription": "There was an issue with the recording. Please try again. (PT-BR)",
+        "RecordingInterrupted": "Recording interrupted (PT-BR)",
+        "RecordingInterruptedDescription": "The recording stopped before you finished. Please record your video again. (PT-BR)",
         "CameraPermissionRequired": "Camera Permission Required (PT-BR)",
         "CameraPermissionRequiredDescription": "Please enable camera permission to take a photo. (PT-BR)",
         "MicrophonePermissionRequired": "Microphone Permission Required (PT-BR)",
@@ -1375,6 +1405,10 @@ const translation = {
       "CannotSendVideo": "Cannot send a video? (PT-BR)",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (PT-BR)",
       "CannotVideoCall": "Cannot video call? (PT-BR)"
+    },
+    "BluetoothDisclosure": {
+      "Title": "Detect bluetooth devices (PT-BR)",
+      "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device. (PT-BR)",
     },
   },
   "RemoteLogging": {

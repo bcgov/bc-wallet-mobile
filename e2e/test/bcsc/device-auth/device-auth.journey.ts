@@ -78,7 +78,14 @@ describe('Device-auth journey: onboarding, unlock and the security switch', () =
     if (await HomeScreen.isPresent(Timeouts.ELEMENT_VISIBLE)) {
       throw new Error('A failed device-auth match unlocked the app')
     }
-    await recoverFromFailedDeviceAuth()
+    const surface = await recoverFromFailedDeviceAuth()
+    console.log(`[device-auth] The failed match surfaced as: ${surface}`)
+    // Android delivers Sauce's injected failure as a BiometricPrompt error, which the app surfaces as its
+    // error modal since #4792 — the modal IS the expected UX there, and a build that stops raising it has
+    // changed the error path. iOS settles the prompt back onto the screen that raised it, modal-free.
+    if (driver.isAndroid) {
+      assert.equal(surface, 'error-modal', 'Android should surface the injected failure as the app error modal')
+    }
   })
 
   it('hides the interstitial once "do not show me this again" is ticked', async () => {

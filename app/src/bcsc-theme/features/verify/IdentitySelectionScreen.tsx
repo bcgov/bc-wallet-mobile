@@ -1,8 +1,9 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
+import { BCState, VerificationStatus } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import ScanExampleImage from '@assets/img/scan_example.png'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -26,22 +27,27 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   const [store] = useStore<BCState>()
   const { updateCardProcess, deleteScannedCardData: deleteCardInfo } = useSecureActions()
   const verificationReset = useVerificationReset()
+  const loadingScreen = useLoadingScreen()
 
   // Reset the card registration process when the user navigates back
   useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', async (event) => {
+    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
       if (
         (event.data.action.type === 'GO_BACK' || event.data.action.type === 'POP') &&
         store.bcscSecure.deviceCode &&
         store.bcscSecure.userCode
       ) {
-        // If the user has registered and backs out, reset the card registration process
-        await verificationReset()
+        // If the user has registered and backs out, reset the card registration process. The pop goes
+        // ahead (the setup question is beneath), so the reset keeps verification IN_PROGRESS rather than
+        // unmounting the flow to Home, and the overlay stops the user racing the re-registration from
+        // the setup question. A resumed initial route leaves by REPLACE, which keeps progress instead
+        const stopLoading = loadingScreen.startLoading()
+        verificationReset({ verifiedStatus: VerificationStatus.IN_PROGRESS }).finally(stopLoading)
       }
     })
 
     return unsubscribe
-  }, [verificationReset, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode])
+  }, [verificationReset, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode, loadingScreen])
 
   const onPressScan = useCallback(async () => {
     navigation.navigate(BCSCScreens.ScanSerial)

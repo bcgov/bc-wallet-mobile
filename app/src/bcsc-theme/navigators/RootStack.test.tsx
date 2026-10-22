@@ -1,7 +1,7 @@
 import { ErrorRegistry } from '@/errors'
 import { VerificationStatus } from '@/store'
 import * as Bifold from '@bifold/core'
-import { render } from '@testing-library/react-native'
+import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
 import { useFcmService } from '../features/fcm'
@@ -57,9 +57,12 @@ jest.mock('./OnboardingStack', () => ({
 }))
 // Counts mounts, not renders: a remount is what re-runs VerifyStack's resume-step routing
 const mockVerifyStackMount = jest.fn()
+// Records every render's props, so a test can answer the prompt the way VerifyPromptScreen would
+const mockVerifyStackProps = jest.fn()
 jest.mock('./VerifyStack', () => {
   const { useEffect } = jest.requireActual('react')
-  const VerifyStackMock = () => {
+  const VerifyStackMock = (props: any) => {
+    mockVerifyStackProps(props)
     useEffect(() => {
       mockVerifyStackMount()
     }, [])
@@ -193,10 +196,10 @@ describe('BCSCRootStack', () => {
     [
       'MainStack when an existing unverified account unlocks',
       {
-        // The user is returning: the load-time migration stamped verificationSkipped:true on their
-        // already-onboarded state, so the prompt has passed them by. They start verification from the
-        // MainStack instead.
-        bcsc: { hasAccount: true, verificationSkipped: true },
+        // The user is returning: the load-time migration stamped verificationSkipped:true and
+        // verificationStarted:false on their already-onboarded state, so the prompt has passed them by.
+        // They start verification from the MainStack instead.
+        bcsc: { hasAccount: true, verificationSkipped: true, verificationStarted: false },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: false },
       },
@@ -238,20 +241,25 @@ describe('BCSCRootStack', () => {
     expect(toJSON()).toBe('VerifyStack')
   })
 
-  describe('verificationSkipped routing', () => {
-    const authedUnverified = (
-      verificationSkipped: boolean | undefined,
-      verifiedStatus = VerificationStatus.UNVERIFIED
-    ) =>
+  describe('verification resume routing', () => {
+    type VerificationFlags = { verificationSkipped?: boolean; verificationStarted?: boolean }
+    // The prompt hasn't been answered yet (just onboarded)
+    const UNANSWERED: VerificationFlags = {}
+    const SKIPPED: VerificationFlags = { verificationSkipped: true, verificationStarted: false }
+    const CHOSE_TO_VERIFY: VerificationFlags = { verificationSkipped: false, verificationStarted: true }
+    // Skipped the prompt, then started from Home (the card, a gated tab's prompt, a renewal)
+    const SKIPPED_THEN_STARTED: VerificationFlags = { verificationSkipped: true, verificationStarted: true }
+
+    const authedUnverified = (flags: VerificationFlags, verifiedStatus = VerificationStatus.UNVERIFIED) =>
       mockStore({
-        bcsc: { hasAccount: true, verificationSkipped },
+        bcsc: { hasAccount: true, ...flags },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: false, verifiedStatus },
       })
 
     it('shows the verify prompt (VerifyStack) when verificationSkipped is undefined', () => {
       const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(undefined), mockDispatch] as any)
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(UNANSWERED), mockDispatch] as any)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -262,9 +270,9 @@ describe('BCSCRootStack', () => {
       )
     })
 
-    it('routes a skipped (true) unverified user straight to MainStack', () => {
+    it('routes a user who skipped and never started verification straight to MainStack', () => {
       const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(true), mockDispatch] as any)
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(SKIPPED), mockDispatch] as any)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -274,9 +282,9 @@ describe('BCSCRootStack', () => {
       )
     })
 
-    it('re-enters verification on a cold start when verificationSkipped is false and unfinished', () => {
+    it('re-enters verification on a cold start when it was started and is unfinished', () => {
       const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(false), mockDispatch] as any)
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
 
       const { toJSON, rerender } = render(<BCSCRootStack />)
 
@@ -289,15 +297,41 @@ describe('BCSCRootStack', () => {
       // Simulate that dispatch landing in the store.
       jest
         .mocked(Bifold.useStore)
-        .mockReturnValue([authedUnverified(false, VerificationStatus.IN_PROGRESS), mockDispatch] as any)
+        .mockReturnValue([authedUnverified(CHOSE_TO_VERIFY, VerificationStatus.IN_PROGRESS), mockDispatch] as any)
       rerender(<BCSCRootStack />)
 
       expect(toJSON()).toBe('VerifyStack')
     })
 
+    it('re-enters verification for a user who skipped the prompt but started verification later', () => {
+      const mockDispatch = jest.fn()
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(SKIPPED_THEN_STARTED), mockDispatch] as any)
+
+      render(<BCSCRootStack />)
+
+      // Started is what counts, not the answer to the prompt (#4691)
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: 'bcsc/updateSecureVerifiedStatus',
+        payload: [VerificationStatus.IN_PROGRESS],
+      })
+    })
+
+    it('leaves a deactivated card on MainStack even when verification was started', () => {
+      const mockDispatch = jest.fn()
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue([authedUnverified(CHOSE_TO_VERIFY, VerificationStatus.DEACTIVATED), mockDispatch] as any)
+
+      const { toJSON } = render(<BCSCRootStack />)
+
+      // An expired or cancelled card is renewed from Home, not resumed
+      expect(toJSON()).toBe('MainStack')
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
     it('only re-enters verification once per session (a later re-render does not re-dispatch)', () => {
       const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(false), mockDispatch] as any)
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
 
       const { rerender } = render(<BCSCRootStack />)
       expect(mockDispatch).toHaveBeenCalledTimes(1)
@@ -311,7 +345,7 @@ describe('BCSCRootStack', () => {
     it('holds the loading screen until the IAS status is known for a would-resume user', () => {
       const mockDispatch = jest.fn()
       mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: false })
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(false), mockDispatch] as any)
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -324,7 +358,7 @@ describe('BCSCRootStack', () => {
     it('falls back to the verify prompt (not the resume step) and does not resume during an outage', () => {
       const mockDispatch = jest.fn()
       mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(false), mockDispatch] as any)
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -364,7 +398,7 @@ describe('BCSCRootStack', () => {
       })
 
       it('mounts VerifyStack once on a cold-start resume, never showing Home in between', () => {
-        const { toJSON, dispatch } = renderColdStart(authedUnverified(false))
+        const { toJSON, dispatch } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
 
         expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
         expect(toJSON()).toBe('VerifyStack')
@@ -373,7 +407,7 @@ describe('BCSCRootStack', () => {
       })
 
       it('returns a resumed user to MainStack when they leave verification', () => {
-        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(false))
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         expect(toJSON()).toBe('VerifyStack')
 
         // Back arrow / "Back to home": useLeaveVerification moves status back out of IN_PROGRESS.
@@ -384,8 +418,27 @@ describe('BCSCRootStack', () => {
         expect(dispatch).toHaveBeenCalledTimes(1)
       })
 
+      it('returns a first-time verifier who walked back to the prompt and skips to MainStack', () => {
+        const { toJSON, dispatch, apply, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
+        expect(toJSON()).toBe('VerifyStack')
+
+        // Back from the first step replaced onto the prompt (still IN_PROGRESS). Its Skip answers the
+        // prompt, records the skip and leaves the flow (useLeaveVerification) in one press.
+        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+        apply((current) => ({
+          ...withStatus(VerificationStatus.UNVERIFIED)(current),
+          bcsc: { ...current.bcsc, verificationSkipped: true },
+        }))
+
+        expect(toJSON()).toBe('MainStack')
+        // Started stays set, but the resume was already evaluated: nothing pulls them back in this session.
+        rerender(<BCSCRootStack />)
+        expect(toJSON()).toBe('MainStack')
+        expect(dispatch).toHaveBeenCalledTimes(1)
+      })
+
       it('remounts VerifyStack when a restart resets the status and re-enters verification', () => {
-        const { toJSON, apply } = renderColdStart(authedUnverified(false))
+        const { toJSON, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         expect(mockVerifyStackMount).toHaveBeenCalledTimes(1)
 
         // useVerificationReset clears to UNVERIFIED, then continueVerificationProcess sets IN_PROGRESS.
@@ -399,18 +452,39 @@ describe('BCSCRootStack', () => {
       })
 
       it('lets a user who skipped earlier start from the Home card and leave again', () => {
-        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(true))
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(SKIPPED))
         expect(toJSON()).toBe('MainStack')
         expect(dispatch).not.toHaveBeenCalled()
 
-        // "Start verification" on the Home card: verificationSkipped=false and IN_PROGRESS together.
+        // "Start verification" on the Home card: verificationStarted=true and IN_PROGRESS together.
         apply((current) => ({
           ...withStatus(VerificationStatus.IN_PROGRESS)(current),
-          bcsc: { ...current.bcsc, verificationSkipped: false },
+          bcsc: { ...current.bcsc, verificationStarted: true },
         }))
         expect(toJSON()).toBe('VerifyStack')
 
         apply(withStatus(VerificationStatus.UNVERIFIED))
+
+        // In session, leaving lands on Home; only the next cold start or unlock resumes them.
+        expect(toJSON()).toBe('MainStack')
+        expect(dispatch).not.toHaveBeenCalled()
+      })
+
+      it('lets a started user who skips on the outage fallback reach Home and stay there once IAS recovers', () => {
+        mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
+        const { toJSON, dispatch, apply, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps).toHaveBeenLastCalledWith(expect.objectContaining({ showVerifyPrompt: true }))
+
+        // The outage screen's Skip: VerifyPromptScreen answers the prompt, then records the skip. Started
+        // stays set, so the answer alone has to settle the pending resume.
+        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+        apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
+
+        expect(toJSON()).toBe('MainStack')
+
+        mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
+        rerender(<BCSCRootStack />)
 
         expect(toJSON()).toBe('MainStack')
         expect(dispatch).not.toHaveBeenCalled()
@@ -418,7 +492,7 @@ describe('BCSCRootStack', () => {
 
       it('resumes once an outage that blocked the cold-start resume clears', () => {
         mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
-        const { toJSON, dispatch, rerender } = renderColdStart(authedUnverified(false))
+        const { toJSON, dispatch, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         expect(toJSON()).toBe('VerifyStack')
         expect(dispatch).not.toHaveBeenCalled()
 
@@ -431,7 +505,7 @@ describe('BCSCRootStack', () => {
       })
 
       it('keeps a user who left on MainStack when an outage begins later in the session', () => {
-        const { toJSON, apply, rerender } = renderColdStart(authedUnverified(false))
+        const { toJSON, apply, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         apply(withStatus(VerificationStatus.UNVERIFIED))
         expect(toJSON()).toBe('MainStack')
 
@@ -440,6 +514,141 @@ describe('BCSCRootStack', () => {
         rerender(<BCSCRootStack />)
 
         expect(toJSON()).toBe('MainStack')
+      })
+
+      it('offers the prompt again when the account is removed and onboarding is redone in the same session', () => {
+        // Fresh install: onboarding, then the prompt once the PIN is created (SUCCESSFUL_AUTH)
+        const { toJSON, dispatch, apply } = renderColdStart(mockStore())
+        expect(toJSON()).toBe('OnboardingStack')
+        apply((current) => ({ ...current, bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }))
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
+
+        // Skip, then start verification from the Home card
+        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+        apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
+        expect(toJSON()).toBe('MainStack')
+        apply((current) => ({
+          ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+          bcsc: { ...current.bcsc, verificationStarted: true },
+        }))
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(false)
+
+        // Remove account (useFactoryReset): CLEAR_BCSC, CLEAR_SECURE_STATE and DID_AUTHENTICATE false, with
+        // RootStack still mounted
+        apply(() => mockStore())
+        expect(toJSON()).toBe('OnboardingStack')
+
+        // Onboarding again: the prompt is due like on a fresh install, and no resume is pending
+        apply((current) => ({ ...current, bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }))
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
+        expect(dispatch).not.toHaveBeenCalled()
+      })
+
+      /**
+       * The inactivity timeout's logout(): CLEAR_SECURE_STATE puts the secure state back to its initial
+       * values (the memory-only IN_PROGRESS with it), then DID_AUTHENTICATE false. The unlock hydrates the
+       * status from the credential (UNVERIFIED for an unverified user) before SUCCESSFUL_AUTH.
+       */
+      const lock = (current: Record<string, any>) => ({
+        ...current,
+        bcscSecure: { verified: false, verifiedStatus: VerificationStatus.UNVERIFIED },
+        authentication: { didAuthenticate: false },
+      })
+      const unlock = (current: Record<string, any>) => ({
+        ...current,
+        bcscSecure: { ...current.bcscSecure, isHydrated: true },
+        authentication: { didAuthenticate: true },
+      })
+      /**
+       * Continue on the prompt (VerifyPromptScreen.handleVerifyNow): the answer, verificationSkipped=false,
+       * started and IN_PROGRESS are one event handler, so they land in one render.
+       */
+      const continueOnPrompt = (apply: ReturnType<typeof renderColdStart>['apply']) =>
+        act(() => {
+          mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered()
+          apply((current) => ({
+            ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+            bcsc: { ...current.bcsc, verificationSkipped: false, verificationStarted: true },
+          }))
+        })
+
+      it('resumes a started verification after an unlock, never showing Home in between', () => {
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
+        expect(toJSON()).toBe('VerifyStack')
+
+        apply(lock)
+        expect(toJSON()).toBe('AuthStack')
+        apply(unlock)
+
+        // The lock took IN_PROGRESS with the secure state, so the unlock resumes like a relaunch does
+        expect(dispatch).toHaveBeenCalledTimes(2)
+        expect(dispatch).toHaveBeenLastCalledWith(resumeDispatch)
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockMainStackRender).not.toHaveBeenCalled()
+        // A fresh mount re-runs the resume-step routing against the hydrated state
+        expect(mockVerifyStackMount).toHaveBeenCalledTimes(2)
+      })
+
+      it('resumes a first-time verifier who locked mid-flow at their step, not at the prompt or Home', () => {
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(UNANSWERED))
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
+
+        continueOnPrompt(apply)
+        expect(toJSON()).toBe('VerifyStack')
+        expect(dispatch).not.toHaveBeenCalled()
+
+        apply(lock)
+        apply(unlock)
+
+        expect(dispatch).toHaveBeenCalledTimes(1)
+        expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(false)
+        expect(mockMainStackRender).not.toHaveBeenCalled()
+      })
+
+      it('falls back to the verify prompt when the unlock happens during an outage, even once answered', () => {
+        const { toJSON, dispatch, apply, rerender } = renderColdStart(authedUnverified(UNANSWERED))
+        continueOnPrompt(apply)
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(false)
+
+        apply(lock)
+        mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
+        apply(unlock)
+
+        // The resume is held off, and the prompt's Skip is the way to Home again, as on a cold start
+        expect(toJSON()).toBe('VerifyStack')
+        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
+        expect(dispatch).not.toHaveBeenCalled()
+
+        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+        apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
+        expect(toJSON()).toBe('MainStack')
+
+        mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
+        rerender(<BCSCRootStack />)
+        expect(toJSON()).toBe('MainStack')
+        expect(dispatch).not.toHaveBeenCalled()
+      })
+
+      it('resumes a deferred verifier who left for Home on the next unlock, who can leave again', () => {
+        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(SKIPPED_THEN_STARTED))
+        apply(withStatus(VerificationStatus.UNVERIFIED))
+        expect(toJSON()).toBe('MainStack')
+
+        apply(lock)
+        apply(unlock)
+
+        // Started is what an unlock resumes, as a relaunch does; every exit is still theirs
+        expect(dispatch).toHaveBeenCalledTimes(2)
+        expect(toJSON()).toBe('VerifyStack')
+
+        apply(withStatus(VerificationStatus.UNVERIFIED))
+        expect(toJSON()).toBe('MainStack')
+        expect(dispatch).toHaveBeenCalledTimes(2)
       })
     })
   })

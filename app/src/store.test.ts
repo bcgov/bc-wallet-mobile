@@ -152,11 +152,98 @@ describe('reducer', () => {
     expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
   })
 
+  it('UPDATE_SECURE_SECURITY_METHOD stores the method on secure state without persisting it', () => {
+    const result = reducer(initialState, {
+      type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD,
+      payload: ['device_authentication'],
+    })
+
+    expect(result.bcscSecure.securityMethod).toBe('device_authentication')
+    expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
+  })
+
+  describe('UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT', () => {
+    const draft = { streetAddress: '123 Main St', streetAddress2: '', city: '', province: null, postalCode: '' }
+    // The address step follows the name step, so a verification in memory always carries userMetadata
+    const verifying = {
+      ...initialState,
+      bcscSecure: { ...initialState.bcscSecure, userMetadata: { name: { first: 'John', last: 'Doe' } } },
+    }
+
+    it('keeps the draft on secure state without persisting anything', () => {
+      const result = reducer(verifying, {
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+
+      expect(result.bcscSecure.residentialAddressDraft).toEqual(draft)
+      expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+    })
+
+    it('discards the draft when dispatched without one', () => {
+      const state = { ...verifying, bcscSecure: { ...verifying.bcscSecure, residentialAddressDraft: draft } }
+      const result = reducer(state, {
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [undefined],
+      })
+
+      expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
+    })
+
+    it('is dropped with the rest of the secure state on lock or logout', () => {
+      const state = { ...verifying, bcscSecure: { ...verifying.bcscSecure, residentialAddressDraft: draft } }
+      const result = reducer(state, { type: BCDispatchAction.CLEAR_SECURE_STATE })
+
+      expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
+    })
+
+    it('refuses a draft written after the secure state was cleared, so a lock or reset cannot bring it back', () => {
+      // The address screen writes its draft as it unmounts, and a lock or a verification reset unmounts
+      // it by clearing the secure state first, so the write arrives on the cleared state
+      const cleared = reducer(verifying, { type: BCDispatchAction.CLEAR_SECURE_STATE })
+      const result = reducer(cleared, {
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+
+      expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
+    })
+  })
+
   it('CLEAR_BCSC resets verificationSkipped to undefined', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
     const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })
 
     expect(result.bcsc.verificationSkipped).toBeUndefined()
+  })
+
+  it.each([
+    ['true (started)', true],
+    ['false (finished)', false],
+    ['undefined (reset)', undefined],
+  ])('SET_VERIFICATION_STARTED stores and persists %s', (_label, value) => {
+    const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationStarted: undefined } }
+    const result = reducer(state, { type: BCDispatchAction.SET_VERIFICATION_STARTED, payload: [value] })
+
+    expect(result.bcsc.verificationStarted).toBe(value)
+    expect(mockedStoreValueForKey).toHaveBeenCalledWith(
+      BCLocalStorageKeys.BCSC,
+      expect.objectContaining({ verificationStarted: value })
+    )
+  })
+
+  it('SET_VERIFICATION_STARTED leaves the answer to the verify prompt alone', () => {
+    const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: true } }
+    const result = reducer(state, { type: BCDispatchAction.SET_VERIFICATION_STARTED, payload: [true] })
+
+    expect(result.bcsc.verificationSkipped).toBe(true)
+  })
+
+  it('CLEAR_BCSC resets verificationStarted to undefined', () => {
+    const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationStarted: true } }
+    const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })
+
+    expect(result.bcsc.verificationStarted).toBeUndefined()
   })
 })
 
@@ -187,29 +274,58 @@ describe('migrateBCSCState', () => {
     expect(result).toEqual({ bcsc: {}, migrated: false })
   })
 
-  it('stamps verificationSkipped:true on an onboarded blob that predates the field', () => {
+  it('stamps verificationSkipped:true (and so not started) on an onboarded blob that predates both fields', () => {
     const result = migrateBCSCState({ hasAccount: true })
 
-    expect(result).toEqual({ bcsc: { hasAccount: true, verificationSkipped: true }, migrated: true })
+    expect(result).toEqual({
+      bcsc: { hasAccount: true, verificationSkipped: true, verificationStarted: false },
+      migrated: true,
+    })
   })
 
   it.each([true, false])('leaves an existing verificationSkipped (%s) untouched', (verificationSkipped) => {
-    const result = migrateBCSCState({ hasAccount: true, verificationSkipped })
+    const result = migrateBCSCState({ hasAccount: true, verificationSkipped, verificationStarted: false })
 
-    expect(result).toEqual({ bcsc: { hasAccount: true, verificationSkipped }, migrated: false })
+    expect(result).toEqual({
+      bcsc: { hasAccount: true, verificationSkipped, verificationStarted: false },
+      migrated: false,
+    })
   })
 
-  it('does not stamp verificationSkipped when there is no account yet (fresh install)', () => {
+  it.each([
+    // Continue on the prompt or Start on the Home card: launches already resumed these users
+    ['started', false, true],
+    ['not started', true, false],
+  ])(
+    'carries a blob that predates verificationStarted over as %s when verificationSkipped is %s',
+    (_label, verificationSkipped, verificationStarted) => {
+      const result = migrateBCSCState({ hasAccount: true, verificationSkipped })
+
+      expect(result).toEqual({ bcsc: { hasAccount: true, verificationSkipped, verificationStarted }, migrated: true })
+    }
+  )
+
+  it('leaves an existing verificationStarted untouched', () => {
+    // Skipped the prompt, then started from Home: the skip answer must not reset the start
+    const result = migrateBCSCState({ hasAccount: true, verificationSkipped: true, verificationStarted: true })
+
+    expect(result).toEqual({
+      bcsc: { hasAccount: true, verificationSkipped: true, verificationStarted: true },
+      migrated: false,
+    })
+  })
+
+  it('does not stamp either verification flag when there is no account yet (fresh install)', () => {
     const result = migrateBCSCState({ hasAccount: false })
 
     expect(result).toEqual({ bcsc: { hasAccount: false }, migrated: false })
   })
 
-  it('applies both the reportUUID and verificationSkipped migrations together', () => {
+  it('applies the reportUUID and verification-flag migrations together', () => {
     const result = migrateBCSCState({ hasAccount: true, reportUUID: 'x' })
 
     expect(result).toEqual({
-      bcsc: { hasAccount: true, installId: 'x', verificationSkipped: true },
+      bcsc: { hasAccount: true, installId: 'x', verificationSkipped: true, verificationStarted: false },
       migrated: true,
     })
     expect(result.bcsc).not.toHaveProperty('reportUUID')

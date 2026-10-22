@@ -3,7 +3,7 @@ PODS:
     - React
     - React-callinvoker
     - React-Core
-  - askar (0.6.1-alpha-20260720140434):
+  - askar (0.6.1):
     - React
     - React-callinvoker
     - React-Core
@@ -1688,7 +1688,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-attestation (3.1.2):
+  - react-native-attestation (3.1.3):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3312,7 +3312,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   anoncreds: 44708d3b11aac8edabf814e4e20778f4b3b093f7
-  askar: 7251a41080ee698f73c244eb0c4ae56eb4fd5141
+  askar: 6f739013054775244f341e3e50b5c49046a25957
   BcscCore: 4f7a70d12e3587fcf4e62c3ec791aab4b4a89d90
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   FBLazyVector: 2138c6c2ab66c31bf5754dc18097fbc498a49c7f
@@ -3383,7 +3383,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 3c805ea54675b00ef1755f23b3c1fccf34962b93
   React-microtasksnativemodule: 97a771dbbb4315c71579995b53e4e3e351a99d89
   React-mutationobservernativemodule: 530bff1bba9511a5133e3cf8170e3b2c0df49e89
-  react-native-attestation: 4b08001c4916386c46559bd441aef46d14a0cd48
+  react-native-attestation: 6d6343748329c8d23b3d6ec1b0a7fad76cff54ae
   react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-drop-shadow: aeb76e4b46c09924b4a8ee3d454dd00fdb5c62d9
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba

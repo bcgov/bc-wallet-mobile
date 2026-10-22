@@ -60,6 +60,7 @@ abstract class BcscCoreSpec internal constructor(
         clientID: String,
         fcmDeviceToken: String,
         deviceToken: String?,
+        challengeSource: String,
         promise: Promise,
     )
 
@@ -241,6 +242,8 @@ abstract class BcscCoreSpec internal constructor(
     abstract fun isThirdPartyKeyboardActive(promise: Promise)
 
     abstract fun openKeyboardSelector(promise: Promise)
+
+    abstract fun isBluetoothAudioConnected(promise: Promise)
 
     abstract fun getAllKeysWithPublicInfo(promise: Promise)
 
