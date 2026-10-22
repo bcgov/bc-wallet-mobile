@@ -79,7 +79,8 @@
     "@credo-ts/core@npm:^0.6.1": "0.7.0",
     "@credo-ts/didcomm@npm:0.7.0": "patch:@credo-ts/didcomm@npm%3A0.7.0#~/.yarn/patches/@credo-ts-didcomm-npm-0.7.0-e7c274e2fd.patch",
     "websocket-driver": "0.7.5",
-    "proxy-addr": "2.0.8"
+    "proxy-addr": "2.0.8",
+    "tar": "7.5.21"
   },
   "dependencies": {
     "react-native-bcsc-core": "workspace:*"
