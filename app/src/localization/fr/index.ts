@@ -829,6 +829,8 @@ const translation = {
       "UnrecognizedQR": "QR code not recognized. (FR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (FR)",
       "FeatureUnavailable": "This action isn't available yet. (FR)",
+      "AccountTransferErrorTitle": "Unable to add device (FR)",
+      "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it. (FR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (FR)",
         "Mediator": "Mediator invitations aren't supported in BC Services Card. (FR)",

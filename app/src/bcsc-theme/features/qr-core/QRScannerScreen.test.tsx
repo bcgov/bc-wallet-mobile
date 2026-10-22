@@ -14,6 +14,10 @@ const mockParentNavigate = jest.fn()
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 jest.mock('@bifold/core', () => ({ QrCodeScanError: class QrCodeScanError extends Error {} }))
+jest.mock('@/contexts/ErrorAlertContext', () => {
+  const emitErrorModal = jest.fn()
+  return { useErrorAlert: () => ({ emitErrorModal, isErrorModalVisible: false }) }
+})
 jest.mock('@react-navigation/native', () => ({
   useFocusEffect: jest.fn(),
   useNavigation: () => ({

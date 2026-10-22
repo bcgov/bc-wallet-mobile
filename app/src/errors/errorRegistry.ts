@@ -556,6 +556,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.VERIFICATION,
     message: 'Video prompts were missing or empty when entering the capture screen',
   },
+  ACCOUNT_TRANSFER_ERROR: {
+    statusCode: 2413,
+    appEvent: AppEventCode.ACCOUNT_TRANSFER_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Account transfer failed — error during transfer process',
+  },
 
   // ============================================
   // Token/Crypto Errors (2500-2599)
