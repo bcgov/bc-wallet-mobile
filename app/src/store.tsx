@@ -8,7 +8,7 @@ import {
   ReducerAction,
 } from '@bifold/core'
 import { getInitialEnvironment, IASEnvironment } from '@utils/environment'
-import { BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
@@ -69,6 +69,22 @@ export interface NonBCSCUserMetadata {
   }
 }
 
+/**
+ * The residential address form as the user last left it, kept in memory for the signed-in session
+ * so a trip back through the verify flow brings their unsaved input back. Partial, untrimmed
+ * and unvalidated: it is never sent anywhere and never written to native storage, so it is dropped
+ * with the rest of the secure state on lock, logout or a verification reset, and a write that lands
+ * after such a clear is refused (see the reducer). Only a submitted address
+ * (`NonBCSCUserMetadata.address`) outlives the session.
+ */
+export interface ResidentialAddressDraft {
+  streetAddress: string
+  streetAddress2: string
+  city: string
+  province: ProvinceCode | null
+  postalCode: string
+}
+
 export interface BCSCState {
   appVersion: string
   appBuildNumber: string
@@ -114,15 +130,25 @@ export interface BCSCState {
    * choice survives an app restart:
    * - `undefined` — not answered yet (fresh install, or after a factory reset). RootStack shows the
    *   prompt.
-   * - `false` — the user chose to start verification but has not finished. RootStack routes straight
-   *   into VerifyStack on every launch until they verify.
-   * - `true` — the user chose to skip, OR verification completed. RootStack routes to the home stack.
+   * - `false` — the user chose to verify at the prompt, or upgraded from v3 (which offered no skip): a
+   *   first-time verifier.
+   * - `true` — the user chose to skip, OR verification completed.
    *
-   * Set `true` automatically when `bcscSecure.verified` flips true (see UPDATE_SECURE_VERIFIED), and
-   * reset to `undefined` by CLEAR_BCSC. Intentionally on plain (AsyncStorage) state, not secure
-   * state, so an app uninstall clears it — iOS Keychain-backed secure state would survive a reinstall.
+   * Only the prompt answers it: starting verification later from Home leaves it alone, so it still tells
+   * a first-time verifier from one who skipped. Whether a launch resumes verification is
+   * `verificationStarted`, not this. Set `true` when verification completes (see updateVerified) and
+   * reset to `undefined` by CLEAR_BCSC. Intentionally on plain (AsyncStorage) state, not secure state, so
+   * an app uninstall clears it — iOS Keychain-backed secure state would survive a reinstall.
    */
   verificationSkipped?: boolean
+  /**
+   * Whether the user has entered identity verification (the prompt's Continue, a Home card, a renewal, a
+   * restart) and not finished it, whether or not they skipped the prompt first. RootStack resumes a
+   * started, unfinished verification at its last incomplete step on every launch. Cleared when
+   * verification completes (see updateVerified) and by CLEAR_BCSC. Plain state for the same reason as
+   * `verificationSkipped`.
+   */
+  verificationStarted?: boolean
 }
 
 export enum VerificationStatus {
@@ -186,6 +212,8 @@ export interface BCSCSecureState {
   // === Non-BCSC User Metadata ===
   /** Metadata for users verifying with non-BCSC cards (name, address) */
   userMetadata?: NonBCSCUserMetadata
+  /** In memory only: the address form as the user left it this session (see ResidentialAddressDraft) */
+  residentialAddressDraft?: ResidentialAddressDraft
 
   // === Account Flags (flattened) ===
   /** Whether user chose to skip email verification */
@@ -210,6 +238,11 @@ export interface BCSCSecureState {
   // === Security ===
   /** PBKDF2 hash of PIN used for Askar wallet encryption */
   walletKey?: string
+  /**
+   * How the app unlocks (PIN or device auth), mirrored from the native account record so screens
+   * can read it on their first render. Hydrated at launch; updated when the user switches method.
+   */
+  securityMethod?: AccountSecurityMethod
 
   hasDismissedExpiryAlert?: boolean
 
@@ -290,6 +323,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateSecureDeviceCodeExpiresAt',
   UPDATE_SECURE_CARD_PROCESS = 'bcsc/updateSecureCardProcess',
   UPDATE_SECURE_USER_METADATA = 'bcsc/updateSecureUserMetadata',
+  UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT = 'bcsc/updateSecureResidentialAddressDraft',
   UPDATE_SECURE_REFRESH_TOKEN = 'bcsc/updateSecureRefreshToken',
   UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateSecureRegistrationAccessToken',
   UPDATE_SECURE_ACCESS_TOKEN = 'bcsc/updateSecureAccessToken',
@@ -307,6 +341,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
   UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus', //controls whether the VerifyStack or the MainStack are displayed
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
+  UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
@@ -319,6 +354,7 @@ enum BCSCDispatchAction {
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
   RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
   SET_VERIFICATION_SKIPPED = 'bcsc/setVerificationSkipped',
+  SET_VERIFICATION_STARTED = 'bcsc/setVerificationStarted',
 }
 
 enum ModeDispatchAction {
@@ -365,22 +401,26 @@ export const initialBCSCState: BCSCState = {
   analyticsOptIn: false,
 }
 
+// The fields migrateBCSCState may add, kept in its return type even when T is inferred from a narrow
+// literal that never mentions them (e.g. `{ reportUUID: 'x' }` in tests)
+type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'>
+
 /**
- * Migrates a persisted BCSC state blob on load. Two idempotent, read-side migrations:
+ * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
  * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
  *   have launched on >= v4.1.
- * - Onboarded installs that predate `verificationSkipped`: a missing value is treated as "not skipped"
- *   (`false`) so an unverified user resumes verification rather than seeing the post-onboarding verify
- *   prompt. v3 upgrades have no persisted blob yet and are handled in useInitializeAccountStatus.
+ * - Onboarded installs that predate `verificationSkipped`: a missing value is stamped "skipped" (`true`)
+ *   so an upgrading install lands on Home rather than on the post-onboarding verify prompt. v3 upgrades
+ *   have no persisted blob yet and are handled in useInitializeAccountStatus.
+ * - Onboarded installs that predate `verificationStarted`: launches resumed whoever had stored
+ *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
+ *   count as started.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
-  // `& { installId?: string; verificationSkipped?: boolean }` keeps these fields in the return type
-  // even when T is inferred from a narrow literal that never mentions them (e.g. `{ reportUUID: 'x' }`
-  // in tests).
-): { bcsc: Omit<T, 'reportUUID'> & { installId?: string; verificationSkipped?: boolean }; migrated: boolean } => {
+): { bcsc: Omit<T, 'reportUUID'> & MigratedBCSCFields; migrated: boolean } => {
   const { reportUUID, ...rest } = persisted
-  let bcsc: Omit<T, 'reportUUID'> & { installId?: string; verificationSkipped?: boolean } = rest
+  let bcsc: Omit<T, 'reportUUID'> & MigratedBCSCFields = rest
   let migrated = false
 
   if (reportUUID !== undefined) {
@@ -390,6 +430,11 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
 
   if (bcsc.hasAccount === true && bcsc.verificationSkipped === undefined) {
     bcsc = { ...bcsc, verificationSkipped: true }
+    migrated = true
+  }
+
+  if (bcsc.hasAccount === true && bcsc.verificationStarted === undefined) {
+    bcsc = { ...bcsc, verificationStarted: bcsc.verificationSkipped === false }
     migrated = true
   }
 
@@ -408,6 +453,8 @@ export enum BCLocalStorageKeys {
   BCSC = 'BCSC',
   Mode = 'Mode',
   CachedJWK = 'CachedJWK',
+  /** MEDIATOR_URL the mediator preferences were last reconciled with */
+  MediatorUrl = 'MediatorUrl',
 }
 
 export const initialState: BCState = {
@@ -612,6 +659,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = { ...state.bcscSecure, userMetadata }
       return { ...state, bcscSecure }
     }
+    case BCSCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT: {
+      const draft: ResidentialAddressDraft | undefined = (action?.payload || []).pop() ?? undefined
+      // A draft is a pending edit of userMetadata.address, so it is only kept while that record is in
+      // memory. The address screen writes its draft as it unmounts, and a lock or a verification reset
+      // unmounts it by clearing the secure state first: that write lands here after the clear and must
+      // not bring the input back.
+      const residentialAddressDraft = state.bcscSecure.userMetadata ? draft : undefined
+      const bcscSecure = { ...state.bcscSecure, residentialAddressDraft }
+      return { ...state, bcscSecure }
+    }
     case BCSCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN: {
       const refreshToken = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, refreshToken }
@@ -700,6 +757,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {
       const [walletKey] = action.payload as [string | undefined]
       const bcscSecure = { ...state.bcscSecure, walletKey }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_SECURITY_METHOD: {
+      const securityMethod = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, securityMethod }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA: {
@@ -856,6 +918,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.SET_VERIFICATION_SKIPPED: {
       const verificationSkipped: boolean | undefined = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, verificationSkipped }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.SET_VERIFICATION_STARTED: {
+      const verificationStarted: boolean | undefined = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, verificationStarted }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

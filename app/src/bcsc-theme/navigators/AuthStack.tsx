@@ -36,15 +36,7 @@ import { getDefaultModalOptions } from './stack-utils'
  */
 const AuthIntroScreen = (): React.ReactElement => {
   const navigation = useNavigation<StackNavigationProp<BCSCAuthStackParams>>()
-  return (
-    <OnboardingIntroScreen
-      onContinue={() => navigation.replace(BCSCScreens.AccountLanding)}
-      // Same hidden developer trigger the onboarding intro exposes. AuthStack already registers the
-      // Developer screen (AuthDeveloper), so returning users can reach it (e.g. the "Reset Welcome
-      // Intro" dev tool) from the intro before unlocking.
-      onActivateDeveloper={() => navigation.navigate(BCSCScreens.AuthDeveloper)}
-    />
-  )
+  return <OnboardingIntroScreen onContinue={() => navigation.replace(BCSCScreens.AccountLanding)} />
 }
 
 /**

@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { type A11yScreenDiff, diffScreen, loadBaseline } from '../brief/a11y-summary.js'
-import { ANDROID_CHECKS, auditAndroidScreen } from './a11y-android.js'
+import { ANDROID_CHECKS, type AndroidCheck, auditAndroidScreen } from './a11y-android.js'
 
 /**
  * Automated accessibility audits at journey checkpoints.
@@ -253,9 +253,14 @@ async function record(report: A11yAuditReport): Promise<void> {
  * with no transition or keyboard in flight. Never throws on findings.
  *
  * `types` narrows the iOS audit for one call (e.g. skip `dynamicType` on a screen it is known to
- * misjudge); Android always runs every heuristic.
+ * misjudge); `skip` drops an Android heuristic the screen is known to defeat (text-contrast over a
+ * live camera preview, where the screenshot sampler measures the frame and the verdict changes with
+ * the light).
  */
-export async function auditScreen(screen: string, options: { types?: IosAuditType[] } = {}): Promise<A11yAuditReport> {
+export async function auditScreen(
+  screen: string,
+  options: { types?: IosAuditType[]; skip?: AndroidCheck[] } = {}
+): Promise<A11yAuditReport> {
   const started = Date.now()
   let result: A11yEngineResult
   let checks: readonly string[]
@@ -264,8 +269,9 @@ export async function auditScreen(screen: string, options: { types?: IosAuditTyp
     checks = types
     result = await auditIos(types)
   } else {
-    checks = ANDROID_CHECKS
-    result = await auditAndroidScreen()
+    const skip = options.skip ?? []
+    checks = ANDROID_CHECKS.filter((check) => !skip.includes(check))
+    result = await auditAndroidScreen({ skip })
   }
   const report: A11yAuditReport = {
     screen,

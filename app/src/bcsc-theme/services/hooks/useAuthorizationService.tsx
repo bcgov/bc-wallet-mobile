@@ -27,6 +27,7 @@ const DEVICE_AUTHORIZATION_ERROR_MAP: Partial<Record<AppEventCode, DeviceAuthori
   [AppEventCode.CARD_NOT_FOUND]: DeviceAuthorizationError.MismatchedSerial,
   // Per IAS, only returned for the non-BCSC (authorizeDeviceWithUnknownBCSC) flow.
   [AppEventCode.UNDER_MINIMUM_AGE]: DeviceAuthorizationError.UnderMinimumAge,
+  [AppEventCode.OVER_MAXIMUM_AGE]: DeviceAuthorizationError.OverMaximumAge,
   [AppEventCode.TOO_MANY_MOBILE_CARDS]: DeviceAuthorizationError.TooManyMobileCards,
 }
 

@@ -5,7 +5,7 @@ import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import { BCDispatchAction } from '@/store'
+import { BCDispatchAction, VerificationStatus } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import {
@@ -16,7 +16,6 @@ import {
   EvidenceMetadata,
   getAccount,
   getAccountFlags,
-  getAccountSecurityMethod,
   getAuthorizationRequest,
   getCredential,
   getEvidence,
@@ -60,7 +59,6 @@ jest.mock('react-native-bcsc-core', () => ({
   isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
   getAccount: jest.fn(),
   getAccountFlags: jest.fn(),
-  getAccountSecurityMethod: jest.fn(),
   getAuthorizationRequest: jest.fn(),
   getCredential: jest.fn(),
   getEvidence: jest.fn(),
@@ -203,6 +201,24 @@ describe('useSecureActions', () => {
       await expect(result.current.deleteVerificationData()).rejects.toMatchObject({
         appEvent: AppEventCode.NATIVE_STORAGE_DELETE_FAILED,
       })
+    })
+  })
+
+  describe('updateResidentialAddressDraft', () => {
+    it('keeps the draft in the store only, writing nothing to native storage', () => {
+      const draft = { streetAddress: '123 Main St', streetAddress2: '', city: '', province: null, postalCode: '' }
+      const { result } = renderHook(() => useSecureActions())
+
+      act(() => {
+        result.current.updateResidentialAddressDraft(draft)
+      })
+
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+      expect(setAuthorizationRequest).not.toHaveBeenCalled()
+      expect(setAccountFlags).not.toHaveBeenCalled()
     })
   })
 
@@ -482,6 +498,7 @@ describe('useSecureActions', () => {
       id: 'account-1',
       issuer: '',
       clientID: '',
+      securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
       displayName: 'Test User',
     }
 
@@ -491,10 +508,9 @@ describe('useSecureActions', () => {
       jest.mocked(getEvidence).mockResolvedValue([] as any)
       jest.mocked(getCredential).mockResolvedValue(null as any)
       jest.mocked(getSavedServices).mockResolvedValue([] as any)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
     })
 
-    it('recovers issuer/clientID from authorization request and updates account', async () => {
+    it('recovers issuer/clientID from authorization request and updates account, keeping its security method', async () => {
       jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue({
         issuer: 'https://idsit.gov.bc.ca',
@@ -507,7 +523,6 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(getAccountSecurityMethod).toHaveBeenCalled()
       expect(setAccount).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'account-1',
@@ -516,6 +531,24 @@ describe('useSecureActions', () => {
           securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
         })
       )
+    })
+
+    it('hydrates securityMethod from the account record', async () => {
+      jest.mocked(getAccount).mockResolvedValue({
+        ...baseAccount,
+        issuer: 'https://idsit.gov.bc.ca',
+        clientID: 'existing-client-id',
+        securityMethod: AccountSecurityMethod.DeviceAuth,
+      } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null)
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydrateField('securityMethod')).toBe(AccountSecurityMethod.DeviceAuth)
     })
 
     it('does not call setAccount when account already has issuer and clientID', async () => {
@@ -676,7 +709,6 @@ describe('useSecureActions', () => {
       jest.mocked(getEvidence).mockResolvedValue([] as any)
       jest.mocked(getCredential).mockResolvedValue(null as any)
       jest.mocked(getSavedServices).mockResolvedValue([] as any)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
       jest.mocked(getAccount).mockResolvedValue(account as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
       jest.mocked(getToken).mockImplementation(async (type: any) => {
@@ -777,7 +809,6 @@ describe('useSecureActions', () => {
       jest.mocked(getEvidence).mockResolvedValue([] as any)
       jest.mocked(getCredential).mockResolvedValue(null as any)
       jest.mocked(getSavedServices).mockResolvedValue([] as any)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
       jest.mocked(getAccount).mockResolvedValue(account as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
       jest.mocked(getToken).mockImplementation(async (type: any) => {
@@ -879,7 +910,6 @@ describe('useSecureActions', () => {
       jest.mocked(getEvidence).mockResolvedValue([] as any)
       jest.mocked(getCredential).mockResolvedValue(null as any)
       jest.mocked(getSavedServices).mockResolvedValue([] as any)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
       jest.mocked(getAccount).mockResolvedValue({ id: 'a', issuer: 'https://i', clientID: 'c' } as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
       jest
@@ -1010,7 +1040,7 @@ describe('useSecureActions', () => {
       jest.mocked(getAccount).mockResolvedValue(null as any)
     })
 
-    it('dispatches UPDATE_SECURE_VERIFIED and latches SET_VERIFICATION_SKIPPED=true when verified', async () => {
+    it('dispatches UPDATE_SECURE_VERIFIED, ends the started verification and latches SET_VERIFICATION_SKIPPED=true when verified', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       await act(async () => {
@@ -1021,13 +1051,18 @@ describe('useSecureActions', () => {
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [true],
       })
+      // Nothing is left to resume on launch: an expired card later is renewed from Home
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.SET_VERIFICATION_STARTED,
+        payload: [false],
+      })
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
         payload: [true],
       })
     })
 
-    it('leaves SET_VERIFICATION_SKIPPED alone when marking unverified', async () => {
+    it('leaves both verification flags alone when marking unverified', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       await act(async () => {
@@ -1038,6 +1073,42 @@ describe('useSecureActions', () => {
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [false],
       })
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
+      )
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_STARTED })
+      )
+    })
+  })
+
+  describe('continueVerificationProcess', () => {
+    it('marks verification started and in progress', () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      act(() => {
+        result.current.continueVerificationProcess()
+      })
+
+      // Started makes every later launch resume the flow; IN_PROGRESS shows it now
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.SET_VERIFICATION_STARTED,
+        payload: [true],
+      })
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
+        payload: [VerificationStatus.IN_PROGRESS],
+      })
+    })
+
+    it('leaves the answer to the verify prompt alone', () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      act(() => {
+        result.current.continueVerificationProcess()
+      })
+
+      // Entering from Home (a card, a renewal) is not answering the onboarding prompt
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
       )

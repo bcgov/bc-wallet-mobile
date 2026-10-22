@@ -1,6 +1,6 @@
 import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { openLink } from '@/utils/links'
+import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -44,6 +44,10 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
 
     if (banner.id === BCSCBanner.IAS_SERVER_UNAVAILABLE && typeof banner.metadata?.contactLink === 'string') {
       openLink(banner.metadata.contactLink)
+    }
+
+    if (banner.id === BCSCBanner.APP_UPDATE_AVAILABLE) {
+      void openLink(getBCSCAppStoreUrl())
     }
 
     const message = store.bcsc.bannerMessages.find((banner) => banner.id === bannerId)

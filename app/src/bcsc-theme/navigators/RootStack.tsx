@@ -38,19 +38,30 @@ const FcmCardExpirySync: React.FC = () => {
 }
 
 /**
- * Decides whether the root shows the verify journey: the one-shot startup auto-resume for a user who
- * chose to verify, the verify prompt, and the outage fallback that stands in for the resume while IAS
- * is down. `appReady`: state, API client, account and navigation are all ready.
+ * Decides whether the root shows the verify journey: the once-per-session auto-resume for a user who
+ * has started verification, the verify prompt, and the outage fallback that stands in for the resume
+ * while IAS is down. A session runs from startup or unlock to the next lock. `appReady`: state, API
+ * client, account and navigation are all ready.
  */
 const useVerificationRouting = (appReady: boolean) => {
   const [store, dispatch] = useStore<BCState>()
-  const { needsVerification, isVerified, isVerificationInProgress } = useVerificationStatus()
+  const { needsVerification, isVerified, isVerificationInProgress, isDeactivated } = useVerificationStatus()
   const { isAvailable: isServerAvailable, hasChecked: serverStatusChecked } = useServerStatus()
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
-  // Startup-only: whether the one-shot auto-resume below has been decided. State, not a ref, so the
-  // render stops reading "chose to verify, not in progress" as a pending resume once it has — every
-  // exit from the verify flow produces exactly that state on purpose.
+  // Once per session: whether the auto-resume below has been decided. State, not a ref, so the
+  // render stops reading "started, not in progress" as a pending resume once it has — every exit from
+  // the verify flow produces exactly that state on purpose.
   const [resumeEvaluated, setResumeEvaluated] = useState(false)
+
+  // Removing the account (factory reset) and locking both leave RootStack mounted, so these session flags
+  // are reset by hand: onboarding again after a removal is due the prompt like a fresh install, and an
+  // unlock resumes a started verification like a relaunch does (the lock cleared the in-progress status)
+  useEffect(() => {
+    if (store.bcsc.hasAccount === false || store.authentication.didAuthenticate === false) {
+      setVerifyPromptAnswered(false)
+      setResumeEvaluated(false)
+    }
+  }, [store.bcsc.hasAccount, store.authentication.didAuthenticate])
 
   // Has an account, is unlocked and needs no session recovery: Home or Verify is the next screen
   const signedIn =
@@ -58,11 +69,12 @@ const useVerificationRouting = (appReady: boolean) => {
     store.authentication.didAuthenticate !== false &&
     store.bcscSecure.sessionRecoveryRequired !== true
 
-  // Chose to verify (prompt, Home card or v3 upgrade) and has neither finished nor entered the flow yet
-  const wantsToResumeVerification = store.bcsc.verificationSkipped === false && needsVerification
+  // Started verification (prompt, Home card, renewal or v3 upgrade), whether or not they skipped the
+  // prompt, and has neither finished nor re-entered the flow yet. A deactivated card is renewed from
+  // Home, not resumed
+  const wantsToResumeVerification = store.bcsc.verificationStarted === true && needsVerification && !isDeactivated
 
-  // A user who chose to start verification during onboarding and is not verified
-  // will be routed to continue verification where they left off
+  // A user who has started verification and is not verified is routed back to the step they left off on
   // Runs exactly once per session so the user isn't stuck in verification
   useEffect(() => {
     if (resumeEvaluated || !appReady || !signedIn || !serverStatusChecked) {
@@ -92,7 +104,8 @@ const useVerificationRouting = (appReady: boolean) => {
   const pendingVerificationResume = !resumeEvaluated && serverStatusChecked && wantsToResumeVerification
 
   // During an outage the resume is held off, so fall back to the prompt — its inline ServiceOutage +
-  // "skip" is the user's way to Home. Startup-only: a later outage is the banner on Home, not this prompt.
+  // "skip" is the user's way to Home. Only at the start of a session: an outage that begins later is the
+  // banner on Home, not this prompt.
   const resumeBlockedByOutage = pendingVerificationResume && !isServerAvailable
 
   // This prompt controls if the user is sent back into the verification stack or can continue into the main app
@@ -107,7 +120,12 @@ const useVerificationRouting = (appReady: boolean) => {
   // a RootStack swap.
   const showVerifyStack = showVerifyPrompt || pendingVerificationResume || (!isVerified && isVerificationInProgress)
 
-  const onVerifyPromptAnswered = useCallback(() => setVerifyPromptAnswered(true), [])
+  // Answering the prompt settles the startup resume too: Skip on the outage fallback is the user's way to
+  // Home, so neither the pending resume nor IAS recovering later in the session may pull them back in
+  const onVerifyPromptAnswered = useCallback(() => {
+    setVerifyPromptAnswered(true)
+    setResumeEvaluated(true)
+  }, [])
 
   return {
     awaitingStatusForResume,

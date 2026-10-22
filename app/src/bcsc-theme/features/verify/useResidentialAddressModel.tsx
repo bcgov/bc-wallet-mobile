@@ -1,10 +1,10 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import {
   useDeviceAuthorizationRecovery,
   useIsDeviceAuthorizationRecovering,
 } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { formatBirthdateForApi } from '@/bcsc-theme/utils/birthdate'
@@ -20,20 +20,15 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { isHandledAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCState, NonBCSCUserMetadata } from '@/store'
+import { BCState, NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-export type ResidentialAddressFormState = {
-  streetAddress: string
-  streetAddress2: string
-  city: string
-  province: ProvinceCode | null
-  postalCode: string
-}
+/** The form's values, kept as the session draft in the same shape (see ResidentialAddressDraft). */
+export type ResidentialAddressFormState = ResidentialAddressDraft
 
 export type ResidentialAddressFormErrors = {
   streetAddress?: string
@@ -57,22 +52,55 @@ type useResidentialAddressModelProps = {
 const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResidentialAddressModelProps) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { authorization } = useApi()
+  const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorModal } = useErrorAlert()
-  const { updateCardProcess, updateUserMetadata, updateDeviceCodes, updateVerificationOptions } = useSecureActions()
+  const {
+    updateCardProcess,
+    updateUserMetadata,
+    updateDeviceCodes,
+    updateVerificationOptions,
+    updateResidentialAddressDraft,
+  } = useSecureActions()
   const attemptWithRecovery = useDeviceAuthorizationRecovery()
   const isRecovering = useIsDeviceAuthorizationRecovering()
 
-  const [formState, setFormState] = useState<ResidentialAddressFormState>({
-    streetAddress: store.bcscSecure.userMetadata?.address?.streetAddress ?? '',
-    streetAddress2: store.bcscSecure.userMetadata?.address?.streetAddress2 ?? '',
-    city: store.bcscSecure.userMetadata?.address?.city ?? '',
-    province: store.bcscSecure.userMetadata?.address?.province ?? null,
-    postalCode: store.bcscSecure.userMetadata?.address?.postalCode ?? '',
+  const [formState, setFormState] = useState<ResidentialAddressFormState>(() => {
+    // Stepping back and forward through the flow, or leaving for Home and resuming, remounts this
+    // screen, so what the user typed this session (the draft) wins over what they last submitted. A
+    // lock drops the draft with the rest of the secure state, so after an unlock only a submitted
+    // address comes back.
+    if (store.bcscSecure.residentialAddressDraft) {
+      return store.bcscSecure.residentialAddressDraft
+    }
+
+    const address = store.bcscSecure.userMetadata?.address
+    return {
+      streetAddress: address?.streetAddress ?? '',
+      streetAddress2: address?.streetAddress2 ?? '',
+      city: address?.city ?? '',
+      province: address?.province ?? null,
+      postalCode: address?.postalCode ?? '',
+    }
   })
   const [formErrors, setFormErrors] = useState<ResidentialAddressFormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // The latest form, for the unmount write below, so that write neither re-registers nor runs per keystroke.
+  const formStateRef = useRef(formState)
+  formStateRef.current = formState
+
+  // The draft is written when the screen unmounts, which is every way off it that remounts it later:
+  // popping back, a stack reset, and leaving for Home ("Back to home" in the help menu, or back at the
+  // beginning of the stack, unmounts the whole stack with no blur). Not per keystroke: every store
+  // consumer would re-render while typing. A lock or a verification reset also unmounts the stack, right
+  // after clearing the secure state; that write lands on the cleared state and the reducer drops it
+  // (see UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT), so after an unlock only a submitted address comes back.
+  useEffect(() => {
+    return () => {
+      updateResidentialAddressDraft(formStateRef.current)
+    }
+  }, [updateResidentialAddressDraft])
 
   /**
    * Handles changes to the form fields.
@@ -182,8 +210,8 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
     // making the assumption that the user metadata has been previously saved ie: Step 1
     if (!store.bcscSecure.birthdate || !store.bcscSecure.userMetadata?.name) {
       logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected', {
-        birthdate: store.bcscSecure.birthdate,
-        name: store.bcscSecure.userMetadata?.name,
+        hasBirthdate: Boolean(store.bcscSecure.birthdate),
+        hasName: Boolean(store.bcscSecure.userMetadata?.name),
       })
 
       throw new Error(t('BCSC.Address.MissingPrerequisiteAttributes'))
@@ -210,7 +238,7 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
       }
 
       const deviceAuth = await attemptWithRecovery(
-        () => authorization.authorizeDeviceWithUnknownBCSC(deviceAuthConfig),
+        () => authorizationService.authorizeDeviceWithUnknownBCSC(deviceAuthConfig),
         BCSCScreens.ResidentialAddress
       )
 
@@ -269,7 +297,7 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
     attemptWithRecovery,
     emitErrorModal,
     t,
-    authorization,
+    authorizationService,
     updateDeviceCodes,
     updateVerificationOptions,
     updateCardProcess,

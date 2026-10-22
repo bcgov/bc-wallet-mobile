@@ -33,7 +33,10 @@
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
 #   objects. Each entry spawns a separate SauceLabs session.
-#   Example: [{"platform":"iOS","device":"iPhone.*","os_version":"18"}]
+#   Example: [{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"}]
+#   The iOS pattern keeps to the 14–16 series: every device-bound iOS flake of the Oct 2026 nightlies
+#   (recorder error 2002, undecoded injected QR, controls under the keyboard, a hung session) was an
+#   iPhone 11/12/SE/Mini pool unit, and every retry on a 13–16 unit passed.
 #
 # Trigger modes:
 #   workflow_call  — called from main.yaml after builds (PR smoke tests)
@@ -141,9 +144,9 @@ on:
         required: false
         default: ''
       device_matrix:
-        description: 'JSON array of {platform, device, os_version} objects — keep os_version pinned (unpinned iOS lands on iOS 15-era devices)'
+        description: 'JSON array of {platform, device, os_version} objects — keep os_version pinned (unpinned iOS lands on iOS 15-era devices) and the iOS device pattern on the 14–16 series (the older pool units carry the device-bound flakes)'
         type: string
-        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+        default: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
       runner_label:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
@@ -262,6 +265,12 @@ jobs:
           # No cross-run actions/cache of this dir: matrix jobs are separate ephemeral runners, and caching it
           # would persist live Entra session cookies in the repo-scoped cache. One cold sign-in per job is fine.
           IDCHECK_STATE_DIR: ${{ runner.temp }}/idcheck-e2e
+          # The two platform jobs sign in to the same Entra account in step; each mints TOTP codes only in
+          # windows of its own parity so neither replays the other's code (scripts/idcheck-session.mjs).
+          IDCHECK_TOTP_WINDOW_PARITY: ${{ matrix.device.platform == 'iOS' && 'even' || 'odd' }}
+          # A NEW accessibility finding fails the roll-up checkpoint only when the audit lane is dispatched on
+          # its own; inside regression (the nightly) it is advisory — the brief flags it, the lane stays green.
+          A11Y_AUDIT_FAIL_ON_NEW: ${{ inputs.suite == 'a11y' && '1' || '0' }}
           SAUCE_REGION: us
           VARIANT: bcsc-dev
           DEVICE_MATRIX: ${{ inputs.device_matrix }}

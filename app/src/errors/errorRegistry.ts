@@ -461,6 +461,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.CREDENTIAL,
     message: "Individual's age is below the minimum required for remote verification",
   },
+  OVER_MAXIMUM_AGE: {
+    statusCode: 2319,
+    appEvent: AppEventCode.OVER_MAXIMUM_AGE,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.CREDENTIAL,
+    message: "Individual's age is above the maximum allowed for remote verification",
+  },
   TOO_MANY_MOBILE_CARDS: {
     statusCode: 2318,
     appEvent: AppEventCode.TOO_MANY_MOBILE_CARDS,
@@ -548,6 +555,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.VERIFICATION,
     message: 'Video prompts were missing or empty when entering the capture screen',
+  },
+  ACCOUNT_TRANSFER_ERROR: {
+    statusCode: 2413,
+    appEvent: AppEventCode.ACCOUNT_TRANSFER_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Account transfer failed — error during transfer process',
   },
 
   // ============================================
@@ -1145,6 +1159,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.GENERAL,
     message: 'WebView request returned a non-2xx HTTP response',
   },
+  ACCOUNT_NOT_REGISTERED: {
+    statusCode: 2836,
+    appEvent: AppEventCode.ACCOUNT_NOT_REGISTERED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Device account exists but is not registered with the server (no client ID)',
+  },
 
   // ============================================
   // Wallet/Agent Errors (2900-2999)
@@ -1176,6 +1197,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.CRITICAL,
     category: ErrorCategory.WALLET,
     message: 'Wallet key rotation error — check current key and new key validity',
+  },
+  MEDIATOR_SWITCH_ERROR: {
+    statusCode: 2904,
+    appEvent: AppEventCode.MEDIATOR_SWITCH_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.WALLET,
+    message: 'Switching the wallet to another mediator failed — the previous mediator stays in use',
   },
 
   // ============================================

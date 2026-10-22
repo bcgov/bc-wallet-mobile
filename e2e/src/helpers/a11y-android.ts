@@ -14,6 +14,7 @@ import type { A11yEngineResult, A11yIssue, A11ySeverity } from './a11y-audit.js'
  */
 
 export const ANDROID_CHECKS = ['unlabeled-control', 'unlabeled-text-field', 'touch-target', 'text-contrast'] as const
+export type AndroidCheck = (typeof ANDROID_CHECKS)[number]
 
 /** Material says 48dp, Apple 44pt — warn under the lower of the two, so a 47dp button is not noise. */
 const TOUCH_TARGET_RECOMMENDED_DP = 48
@@ -391,26 +392,32 @@ async function accessibilityTreeSource(): Promise<string> {
 }
 
 /** Run every heuristic against the current screen. Never throws — an engine failure is reported as such. */
-export async function auditAndroidScreen(): Promise<A11yEngineResult> {
+export async function auditAndroidScreen(options: { skip?: readonly AndroidCheck[] } = {}): Promise<A11yEngineResult> {
+  const skip = options.skip ?? []
   try {
     await driver.pause(SETTLE_MS)
     const source = await accessibilityTreeSource()
     const density = await resolveDensity()
-    const screenshot = await driver.takeScreenshot()
 
     const { roots, width, height } = parseHierarchy(source)
     const nodes = flatten(roots)
-    const contrast = await checkTextContrast(nodes, screenshot, { width, height })
-    const notes = [
-      `text-contrast measured ${contrast.measured} text nodes; skipped ${contrast.covered} that are not visibly rendered (covered by a screen above, or blank)`,
-    ]
+    const notes: string[] = []
+    const issues = [...checkLabels(nodes), ...checkTouchTargets(nodes, density.dpi)]
+    if (skip.includes('text-contrast')) {
+      // The sampler reads the screenshot, so text over a live camera preview measures the frame, not
+      // the UI — the caller knows which screens those are.
+      notes.push('text-contrast skipped on this screen by the journey (text over a live camera preview)')
+    } else {
+      const screenshot = await driver.takeScreenshot()
+      const contrast = await checkTextContrast(nodes, screenshot, { width, height })
+      notes.push(
+        `text-contrast measured ${contrast.measured} text nodes; skipped ${contrast.covered} that are not visibly rendered (covered by a screen above, or blank)`
+      )
+      issues.push(...contrast.issues)
+    }
     if (density.assumed) notes.push(`touch-target assumed ${density.dpi}dpi — no density reported by the session`)
 
-    return {
-      engine: 'android-heuristics',
-      notes,
-      issues: [...checkLabels(nodes), ...checkTouchTargets(nodes, density.dpi), ...contrast.issues],
-    }
+    return { engine: 'android-heuristics', notes, issues }
   } catch (err) {
     return { engine: 'unavailable', reason: (err as Error).message ?? String(err), issues: [] }
   }

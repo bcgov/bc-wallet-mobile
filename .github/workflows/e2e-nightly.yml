@@ -22,7 +22,15 @@
 # Default device matrix: 1 iOS + 1 Android device (one modern OS major each).
 # os_version stays PINNED: unpinned, Sauce hands out iOS 15-era devices, where
 # deep links open through Siri (hangs, kills the session) — the app-scoped open
-# needs iOS 16.4+.
+# needs iOS 16.4+. The iOS device pattern keeps to the 14–16 series: the pool's
+# iPhone 11/12/SE/Mini units carried every device-bound iOS flake of Oct 2026.
+#
+# Lane rules the chain depends on (see e2e/README.md → CI/CD → Nightly flake taxonomy):
+# the two platforms share the five SIT test personas and SIT keeps ONE active device
+# per card, so two lanes that verify the same persona at once invalidate each other's
+# device at the next cold start — upgrade and upgrade403 therefore run their platforms
+# one at a time (max_parallel: 1), and the IDCheck sign-in mints TOTP codes in a window
+# parity per platform (IDCHECK_TOTP_WINDOW_PARITY in e2e.yml).
 #
 # Trigger modes:
 #   schedule         — runs every night at midnight PT (7 AM UTC)
@@ -79,7 +87,7 @@ on:
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
-        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+        default: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
 
 jobs:
   # ─── Gate: skip scheduled runs when nothing merged to main ──────
@@ -188,7 +196,7 @@ jobs:
     with:
       suite: ${{ inputs.suite || 'regression' }}
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
+      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
       # The send-video journeys get their own lane below; a `send-video` dispatch runs them here instead.
       exclude_send_video: ${{ (inputs.suite || 'regression') != 'send-video' }}
     secrets:
@@ -210,7 +218,7 @@ jobs:
     with:
       suite: send-video
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
+      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
       max_parallel: 1
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
@@ -234,11 +242,14 @@ jobs:
     with:
       suite: migration
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
       max_parallel: 1
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
+  # One platform at a time: both platforms verify the SAME persona within seconds of each other when
+  # they run in step, and SIT invalidates the earlier device (the post-upgrade unlock then reads
+  # "Device invalidated"); their cold IDCheck sign-ins also collided in one TOTP window. ~8 min more.
   e2e-upgrade:
     needs: [check-for-merges, resolve-build, e2e-migration, e2e-send-video]
     if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
@@ -248,10 +259,12 @@ jobs:
     with:
       suite: upgrade
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+      max_parallel: 1
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
+  # Serial for the same reason as e2e-upgrade (a verified account on both platforms).
   e2e-upgrade403:
     needs: [check-for-merges, resolve-build, e2e-upgrade]
     if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
@@ -261,7 +274,8 @@ jobs:
     with:
       suite: upgrade403
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+      max_parallel: 1
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
@@ -280,7 +294,7 @@ jobs:
     with:
       suite: upgradeV3
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
@@ -301,7 +315,7 @@ jobs:
     with:
       suite: upgradeSendVideo
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
       max_parallel: 1
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
@@ -323,7 +337,7 @@ jobs:
     with:
       suite: device-auth
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
+      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 

@@ -17,3 +17,9 @@ export const parseBirthdateToLocalDate = (value: string): Date =>
  * Never use `toISOString()` here: it converts to UTC and shifts the day for non-UTC timezones.
  */
 export const formatBirthdateForApi = (date: Date): string => moment(date).format('YYYY-MM-DD')
+
+/**
+ * Age in completed years as of today. Matches IAS's `Period.between(birthdate, now).getYears()`,
+ * so client age limits agree with the server's.
+ */
+export const ageInYears = (date: Date): number => moment().diff(moment(date), 'years')

@@ -1,4 +1,5 @@
-import { AbstractBifoldLogger, isDidCommInvitation } from '@bifold/core'
+import { isDidCommInvitationCandidate } from '@/bcsc-theme/utils/didcomm-invitation'
+import { AbstractBifoldLogger } from '@bifold/core'
 import { ConnectionInvitationService } from '../connection-invitation/ConnectionInvitationService'
 import { PairingService } from '../pairing'
 import { DeepLinkPayload, DeepLinkService } from './services/deep-linking'
@@ -46,9 +47,10 @@ export class DeepLinkViewModel {
    * Detection keys off the invitation query param via Bifold's
    * `isDidCommInvitation`, which is scheme- and host-agnostic — robust even when
    * `parseUrl` mangles the host of `scheme://host?query` custom-scheme URLs.
+   * Bare http(s) URLs are also accepted so Credo can resolve them as short URLs.
    */
   private handleConnectionInvitation(payload: DeepLinkPayload): boolean {
-    if (!isDidCommInvitation(payload.rawUrl)) {
+    if (!isDidCommInvitationCandidate(payload.rawUrl)) {
       return false
     }
 

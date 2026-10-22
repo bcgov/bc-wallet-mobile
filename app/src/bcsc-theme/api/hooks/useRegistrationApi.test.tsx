@@ -6,7 +6,6 @@ import {
   BcscNativeError,
   BcscNativeErrorCodes,
   getAccount,
-  getAccountSecurityMethod,
   getDynamicClientRegistrationBody,
   isBcscNativeError,
   setAccount,
@@ -128,7 +127,6 @@ describe('useRegistrationApi', () => {
     mockUpdateTokens.mockResolvedValue(undefined)
     jest.mocked(setAccount).mockResolvedValue(undefined)
     jest.mocked(getAccount).mockResolvedValue(null)
-    jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
   })
 
   // ---------------------------------------------------------------------------
@@ -338,6 +336,7 @@ describe('useRegistrationApi', () => {
     const existingAccount = {
       clientID: 'existing-client-id',
       issuer: 'https://mock-issuer.example.com',
+      securityMethod: AccountSecurityMethod.PinWithDeviceAuth,
     }
 
     beforeEach(() => {
@@ -371,6 +370,7 @@ describe('useRegistrationApi', () => {
       expect(setAccount).toHaveBeenCalledWith(
         expect.objectContaining({
           clientID: mockRegistrationResponse.client_id,
+          securityMethod: AccountSecurityMethod.PinWithDeviceAuth,
           nickname: 'NewNickname',
           didPostNicknameToServer: true,
         })

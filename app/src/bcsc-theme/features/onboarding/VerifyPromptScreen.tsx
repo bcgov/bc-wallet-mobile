@@ -2,7 +2,9 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
-import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { useLeaveVerification } from '@/bcsc-theme/hooks/useLeaveVerification'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -12,10 +14,10 @@ import { View } from 'react-native'
 import { Edges } from 'react-native-safe-area-context'
 
 /**
- * One-time prompt shown after onboarding completes (PIN created) and before the
- * user enters the main app. Lets them choose to start identity verification now
- * or defer it until later. Also reachable from the main app (without the skip
- * button) for a user who deferred.
+ * Prompt shown after onboarding completes (PIN created) and before the user enters the main app.
+ * Lets them choose to start identity verification now or defer it until later. It stays the root of
+ * the verify stack for a user who chose to verify, so backing out of the first step returns here.
+ * Also reachable from the main app (without the skip button) for a user who deferred.
  */
 interface VerifyPromptScreenProps {
   showSkip?: boolean
@@ -42,26 +44,33 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
+  const { continueVerificationProcess } = useSecureActions()
+  const leaveVerification = useLeaveVerification()
   // Startup seeds server status; the ServiceOutage screen's "Check again" force-refreshes it, so
   // no on-focus re-check is needed here.
   const { isAvailable, isChecking, serverStatus } = useServerStatus()
 
   const handleVerifyNow = useCallback(() => {
     onAnswered?.()
-    dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
-      payload: [VerificationStatus.IN_PROGRESS],
-    })
-    // Verification is now in progress, which keeps VerifyStack mounted, so onContinue can navigate
-    // within it for a normal slide transition.
+    // Only a copy that offers Skip is answering the prompt. The main-app copy is entered from Home, so
+    // it leaves the answer given after onboarding as it was
+    if (showSkip) {
+      dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
+    }
+    // Entering verification sets it in progress, which keeps VerifyStack mounted, so onContinue can
+    // navigate within it for a normal slide transition.
+    continueVerificationProcess()
     onContinue?.()
-  }, [dispatch, onAnswered, onContinue])
+  }, [continueVerificationProcess, dispatch, onAnswered, onContinue, showSkip])
 
   const handleLater = useCallback(() => {
     onAnswered?.()
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
-  }, [dispatch, onAnswered])
+    // A first-time verifier who walked back here from the first step is still IN_PROGRESS, which alone
+    // keeps VerifyStack mounted; skipping is their way to Home, so leave the flow as well (a no-op at the
+    // fresh prompt, where nothing is in progress yet). Progress is kept for the Home card
+    leaveVerification()
+  }, [dispatch, leaveVerification, onAnswered])
 
   if (serverStatus === null && isChecking) {
     return <WaitingScreenContent message={t('BCSC.Loading.DefaultMessage')} />
