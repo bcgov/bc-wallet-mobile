@@ -1,0 +1,21 @@
+{
+  "cid": "0-0",
+  "specs": ["test/bcsc/verify/send-video-approved.journey.ts"],
+  "sessionId": "11111111-1111-4111-8111-111111111111",
+  "capabilities": {
+    "platformName": "iOS",
+    "appium:deviceName": "iPhone 15",
+    "appium:platformVersion": "18",
+    "testobject_device_name": "iPhone_15_18_real_us",
+    "testobject_test_report_url": "https://app.saucelabs.com/tests/aaaa0001aaaa0001aaaa0001aaaa0001"
+  },
+  "startedAt": "2026-08-28T06:58:00.000Z",
+  "endedAt": "2026-08-28T07:03:30.000Z",
+  "failures": 1,
+  "lost": "reachVerificationMethod: neither VerificationMethodSelection nor EnterEmail appeared. On screen: (no visible text found; page source unavailable: WebDriverError: A session is either terminated or not started when running \"source\" with method \"GET\")",
+  "tests": [
+    { "suite": "Verified journey: send video, approved", "title": "clears the review queue before submitting", "status": "pass" },
+    { "suite": "Verified journey: send video, approved", "title": "onboards to the verify prompt", "status": "pass" },
+    { "suite": "Verified journey: send video, approved", "title": "enters the photo serial and submits the birthdate", "status": "fail", "message": "reachVerificationMethod: neither VerificationMethodSelection nor EnterEmail appeared. On screen: (no visible text found; page source unavailable: WebDriverError: A session is either terminated or not started when running \"source\" with method \"GET\")" }
+  ]
+}

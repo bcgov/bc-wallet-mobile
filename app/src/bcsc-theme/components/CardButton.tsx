@@ -146,7 +146,10 @@ export const CardButton = (props: CardProps): React.ReactElement => {
     return (
       <View
         accessible={true}
-        accessibilityLabel={a11yLabel(props.subtext ? `${props.title}. ${props.subtext}` : props.title)}
+        // Each phrase NBSP-joined on its own: joined across the period, Apple's audit reads "method.PIN" as an identifier.
+        accessibilityLabel={
+          props.subtext ? `${a11yLabel(props.title)}. ${a11yLabel(props.subtext)}` : a11yLabel(props.title)
+        }
         accessibilityState={{ selected: true }}
         style={[styles.cardContainer, styles.cardContainerSelected]}
         testID={props.testID ?? testIdWithKey(`${TestIds.shared.cardButtonPrefix}${props.title}`)}

@@ -6,6 +6,7 @@ import { PLATFORMS, type Platform, type ReportDir } from './types.js'
 /**
  * The accessibility roll-up: the latest audit output per platform, compared against the committed
  * baseline so a finding reads as known or NEW. Only screens with errors get a row; warnings are counted.
+ * `diffScreen` is the one definition of NEW — the lane's roll-up checkpoint fails on it too.
  */
 
 /** `a11y-baseline.json`: platform → screen → the signatures already known there. */
@@ -48,6 +49,23 @@ export interface LoadedA11y {
   reports: A11yAuditReport[]
   source: string
   stamp: string
+}
+
+/** One screen against the baseline. `inBaseline` false = never seen, so every finding on it is new. */
+export interface A11yScreenDiff {
+  screen: string
+  inBaseline: boolean
+  newIssues: A11yIssue[]
+}
+
+/** `screens` is the baseline's map for the report's platform (`baseline[platform]`). */
+export function diffScreen(report: A11yAuditReport, screens: Record<string, string[]> | undefined): A11yScreenDiff {
+  const known = screens?.[report.screen]
+  return {
+    screen: report.screen,
+    inBaseline: known !== undefined,
+    newIssues: report.issues.filter((issue) => !known?.includes(issue.signature)),
+  }
 }
 
 const SUMMARY_SUFFIX = '-summary.json'
@@ -100,7 +118,7 @@ export function loadBaseline(path: string): A11yBaseline | undefined {
 export function buildBaseline(loaded: Partial<Record<Platform, LoadedA11y>>): A11yBaseline {
   const baseline: A11yBaseline = {
     $comment:
-      'Known accessibility findings (platform → screen → issue signatures). Regenerate from a report dir: cd e2e && yarn a11y:baseline --reports <dir>. Report-only: the brief tags findings missing here as NEW.',
+      'Known accessibility findings (platform → screen → issue signatures). A finding missing here is NEW: the brief tags it and the a11y roll-up checkpoint fails on it (A11Y_AUDIT_FAIL_ON_NEW=0 to report only). Regenerate from a report dir once the findings are triaged: cd e2e && yarn a11y:baseline --reports <dir>.',
     generatedAt: new Date().toISOString(),
   }
   for (const platform of PLATFORMS) {
@@ -129,7 +147,7 @@ export function summarizeA11y(
   for (const platform of PLATFORMS) {
     const entry = loaded[platform]
     if (!entry) continue
-    const known = baseline?.[platform] ?? {}
+    const known = baseline?.[platform]
     const summary: A11yPlatformSummary = {
       platform,
       source: entry.source,
@@ -149,12 +167,11 @@ export function summarizeA11y(
       byRule: countRules(entry.reports.flatMap((report) => report.issues.filter((issue) => issue.severity === 'error'))),
     }
     for (const report of entry.reports) {
-      const knownHere = known[report.screen]
-      const isNew = (issue: A11yIssue): boolean => !knownHere?.includes(issue.signature)
+      const { inBaseline, newIssues } = diffScreen(report, known)
       const errors = report.issues.filter((issue) => issue.severity === 'error')
       const warnings = report.issues.filter((issue) => issue.severity === 'warning')
-      const newErrors = errors.filter(isNew).length
-      const newWarnings = warnings.filter(isNew).length
+      const newErrors = newIssues.filter((issue) => issue.severity === 'error').length
+      const newWarnings = newIssues.length - newErrors
       summary.errorsTotal += errors.length
       summary.newErrorsTotal += newErrors
       summary.warningsTotal += warnings.length
@@ -166,7 +183,7 @@ export function summarizeA11y(
           newErrors,
           warnings: warnings.length,
           newWarnings,
-          inBaseline: knownHere !== undefined,
+          inBaseline,
           rules: countRules(errors),
         })
       } else if (warnings.length) {

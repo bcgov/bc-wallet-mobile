@@ -77,7 +77,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                 ]
               }
             >
-              Enter your 6-digit PIN
+              BCSC.EnterPIN.Title
             </Text>
             <View
               style={
@@ -99,7 +99,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
               >
                 <TextInput
                   accessibilityHint="Enter your 6-digit PIN"
-                  accessibilityLabel=""
+                  accessibilityLabel="BCSC.EnterPIN.Title"
                   autoFocus={false}
                   cursorColor="#313132"
                   keyboardType="number-pad"
@@ -202,7 +202,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                 ]
               }
             >
-              The one you chose to secure this app
+              BCSC.EnterPIN.Description
             </Text>
           </View>
         </View>

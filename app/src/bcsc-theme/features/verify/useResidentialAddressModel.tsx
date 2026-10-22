@@ -1,0 +1,316 @@
+import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import {
+  useDeviceAuthorizationRecovery,
+  useIsDeviceAuthorizationRecovering,
+} from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { formatBirthdateForApi } from '@/bcsc-theme/utils/birthdate'
+import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
+import {
+  citySchema,
+  firstErrorKey,
+  postalCodeSchema,
+  streetAddress2Schema,
+  streetAddressSchema,
+} from '@/bcsc-theme/utils/validation'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { isHandledAppError } from '@/errors/appError'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
+import { BCState, NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
+import { StackActions } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+/** The form's values, kept as the session draft in the same shape (see ResidentialAddressDraft). */
+export type ResidentialAddressFormState = ResidentialAddressDraft
+
+export type ResidentialAddressFormErrors = {
+  streetAddress?: string
+  streetAddress2?: string
+  city?: string
+  province?: string
+  postalCode?: string
+}
+
+type useResidentialAddressModelProps = {
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ResidentialAddress>
+  onInvalidSubmit?: (errors: ResidentialAddressFormErrors) => void
+}
+
+/**
+ * Model hook for the ResidentialAddressScreen that provides:
+ * - Form state and error management
+ * - Form validation
+ * - Submit handler with device authorization
+ */
+const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResidentialAddressModelProps) => {
+  const { t } = useTranslation()
+  const [store] = useStore<BCState>()
+  const authorizationService = useAuthorizationService()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { emitErrorModal } = useErrorAlert()
+  const {
+    updateCardProcess,
+    updateUserMetadata,
+    updateDeviceCodes,
+    updateVerificationOptions,
+    updateResidentialAddressDraft,
+  } = useSecureActions()
+  const attemptWithRecovery = useDeviceAuthorizationRecovery()
+  const isRecovering = useIsDeviceAuthorizationRecovering()
+
+  const [formState, setFormState] = useState<ResidentialAddressFormState>(() => {
+    // Stepping back and forward through the flow, or leaving for Home and resuming, remounts this
+    // screen, so what the user typed this session (the draft) wins over what they last submitted. A
+    // lock drops the draft with the rest of the secure state, so after an unlock only a submitted
+    // address comes back.
+    if (store.bcscSecure.residentialAddressDraft) {
+      return store.bcscSecure.residentialAddressDraft
+    }
+
+    const address = store.bcscSecure.userMetadata?.address
+    return {
+      streetAddress: address?.streetAddress ?? '',
+      streetAddress2: address?.streetAddress2 ?? '',
+      city: address?.city ?? '',
+      province: address?.province ?? null,
+      postalCode: address?.postalCode ?? '',
+    }
+  })
+  const [formErrors, setFormErrors] = useState<ResidentialAddressFormErrors>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // The latest form, for the unmount write below, so that write neither re-registers nor runs per keystroke.
+  const formStateRef = useRef(formState)
+  formStateRef.current = formState
+
+  // The draft is written when the screen unmounts, which is every way off it that remounts it later:
+  // popping back, a stack reset, and leaving for Home ("Back to home" in the help menu, or back at the
+  // beginning of the stack, unmounts the whole stack with no blur). Not per keystroke: every store
+  // consumer would re-render while typing. A lock or a verification reset also unmounts the stack, right
+  // after clearing the secure state; that write lands on the cleared state and the reducer drops it
+  // (see UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT), so after an unlock only a submitted address comes back.
+  useEffect(() => {
+    return () => {
+      updateResidentialAddressDraft(formStateRef.current)
+    }
+  }, [updateResidentialAddressDraft])
+
+  /**
+   * Handles changes to the form fields.
+   *
+   * @param {keyof ResidentialAddressFormState} field - The field being updated.
+   * @param {ResidentialAddressFormState[keyof ResidentialAddressFormState]} value - The new value for the field.
+   */
+  const handleChange = useCallback(
+    <K extends keyof ResidentialAddressFormState>(field: K, value: ResidentialAddressFormState[K]) => {
+      setFormState((prev) => ({ ...prev, [field]: value }))
+      // clear field-specific error on change
+      setFormErrors((prev) => ({ ...prev, [field]: undefined }))
+    },
+    []
+  )
+
+  /**
+   * Validates the Residential Address form and returns the errors
+   *
+   * @param {ResidentialAddressFormState} values - The form values to validate
+   * @returns {ResidentialAddressFormErrors}
+   */
+  const validateForm = useCallback(
+    (values: ResidentialAddressFormState): ResidentialAddressFormErrors => {
+      const errors: ResidentialAddressFormErrors = {}
+
+      const streetAddressErrorKey = firstErrorKey(streetAddressSchema, values.streetAddress)
+      if (streetAddressErrorKey) {
+        errors.streetAddress = t(streetAddressErrorKey)
+      }
+      const streetAddress2ErrorKey = firstErrorKey(streetAddress2Schema, values.streetAddress2)
+      if (streetAddress2ErrorKey) {
+        errors.streetAddress2 = t(streetAddress2ErrorKey)
+      }
+      const cityErrorKey = firstErrorKey(citySchema, values.city)
+      if (cityErrorKey) {
+        errors.city = t(cityErrorKey)
+      }
+      if (!values.province) {
+        errors.province = t('BCSC.Address.ProvinceInvalid')
+      }
+      const postalCodeErrorKey = firstErrorKey(postalCodeSchema, values.postalCode)
+      if (postalCodeErrorKey) {
+        errors.postalCode = t(postalCodeErrorKey)
+      }
+
+      return errors
+    },
+    [t]
+  )
+
+  /**
+   * Handles form submission, validates the form, updates user metadata,
+   * and performs device authorization if needed.
+   */
+  const handleSubmit = useCallback(async () => {
+    setFormErrors({})
+
+    const errors = validateForm(formState)
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      onInvalidSubmit?.(errors)
+      return
+    }
+
+    // A1: update user metadata
+    // QUESTION: Does updating the data here make sense if the IAS device auth is tied to the previous values?
+    // If no: swap this block (A1) and the check for the deviceCode (A2)
+    const address = {
+      streetAddress: formState.streetAddress.trim(),
+      streetAddress2: formState.streetAddress2.trim() || undefined,
+      postalCode: formState.postalCode.trim(),
+      city: formState.city.trim(),
+      province: formState.province as ProvinceCode, // we know this is present because validation passed
+      country: 'CA' as const,
+    }
+
+    const updatedUserMetadata: NonBCSCUserMetadata = {
+      ...store.bcscSecure.userMetadata,
+      address,
+    }
+    await updateUserMetadata(updatedUserMetadata)
+
+    // A2: device is already authorized — only short-circuit when the device_code is still valid.
+    // A present-but-expired code must fall through to re-authorize (mint a fresh code) rather than
+    // proceed with a dead one, which would 401 on the evidence calls. See issue #4050.
+    const deviceCodeStillValid = Boolean(
+      store.bcscSecure.deviceCode &&
+        store.bcscSecure.deviceCodeExpiresAt &&
+        store.bcscSecure.deviceCodeExpiresAt.getTime() > Date.now()
+    )
+    if (deviceCodeStillValid) {
+      // Resume at whatever step the user is now on (v4.1 routing), using the just-updated metadata.
+      const predictedStore: BCState = {
+        ...store,
+        bcscSecure: { ...store.bcscSecure, userMetadata: updatedUserMetadata },
+      }
+      // Advance to the next step while keeping the history so the user can step back through the
+      // flow (this address screen, then the ID forms). push preserves the back stack.
+      const nextStep = getResumeStepRoute(predictedStore)
+      navigation.dispatch(StackActions.push(nextStep.name, nextStep.params))
+      return
+    }
+
+    // missing required user attributes
+    // making the assumption that the user metadata has been previously saved ie: Step 1
+    if (!store.bcscSecure.birthdate || !store.bcscSecure.userMetadata?.name) {
+      logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected', {
+        hasBirthdate: Boolean(store.bcscSecure.birthdate),
+        hasName: Boolean(store.bcscSecure.userMetadata?.name),
+      })
+
+      throw new Error(t('BCSC.Address.MissingPrerequisiteAttributes'))
+    }
+
+    try {
+      setIsSubmitting(true)
+
+      const mergedStreetAddress = address.streetAddress2
+        ? `${address.streetAddress}\n${address.streetAddress2}`
+        : address.streetAddress
+
+      const deviceAuthConfig = {
+        firstName: store.bcscSecure.userMetadata.name.first,
+        lastName: store.bcscSecure.userMetadata.name.last,
+        birthdate: formatBirthdateForApi(store.bcscSecure.birthdate),
+        middleNames: store.bcscSecure.userMetadata.name.middle,
+        address: {
+          streetAddress: mergedStreetAddress,
+          city: address.city,
+          province: address.province,
+          postalCode: address.postalCode,
+        },
+      }
+
+      const deviceAuth = await attemptWithRecovery(
+        () => authorizationService.authorizeDeviceWithUnknownBCSC(deviceAuthConfig),
+        BCSCScreens.ResidentialAddress
+      )
+
+      // null if handled by error policies
+      if (!deviceAuth) {
+        return
+      }
+
+      logger.info(`Updating deviceCode: ${deviceAuth.device_code}`)
+
+      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
+      await updateDeviceCodes({
+        deviceCode: deviceAuth.device_code,
+        userCode: deviceAuth.user_code,
+        deviceCodeExpiresAt: expiresAt,
+      })
+      await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
+      await updateCardProcess(deviceAuth.process)
+
+      const predictedStore: BCState = {
+        ...store,
+        bcscSecure: {
+          ...store.bcscSecure,
+          userMetadata: updatedUserMetadata,
+          deviceCode: deviceAuth.device_code,
+          userCode: deviceAuth.user_code,
+          deviceCodeExpiresAt: expiresAt,
+          cardProcess: deviceAuth.process,
+        },
+      }
+      // Advance to the next step while keeping the history so the user can step back through the
+      // flow (this address screen, then the ID forms). push preserves the back stack.
+      const nextStep = getResumeStepRoute(predictedStore)
+      navigation.dispatch(StackActions.push(nextStep.name, nextStep.params))
+    } catch (error) {
+      if (isHandledAppError(error)) {
+        return
+      }
+
+      logger.error('ResidentialAddressScreen.handleSubmit -> device authorization failed', { error })
+      emitErrorModal(
+        t('BCSC.Address.AuthorizationErrorTitle'),
+        t('BCSC.Address.AuthorizationErrorMessage'),
+        ensureAppError(error, AppEventCode.DEVICE_AUTHORIZATION_ERROR)
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [
+    validateForm,
+    formState,
+    store,
+    updateUserMetadata,
+    navigation,
+    logger,
+    attemptWithRecovery,
+    emitErrorModal,
+    t,
+    authorizationService,
+    updateDeviceCodes,
+    updateVerificationOptions,
+    updateCardProcess,
+    onInvalidSubmit,
+  ])
+
+  return {
+    formState,
+    formErrors,
+    isSubmitting: isSubmitting || isRecovering,
+    handleChange,
+    handleSubmit,
+  }
+}
+
+export default useResidentialAddressModel

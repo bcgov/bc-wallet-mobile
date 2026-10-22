@@ -35,6 +35,11 @@ export interface SuiteResult {
   hookFailures: HookFailure[]
   /** The report dir the suite came from. */
   source: string
+  /** The Sauce job that ran it, when a session record exists. */
+  jobUrl?: string
+  device?: string
+  /** Rebuilt from a session record: Sauce terminated the session and the reporter wrote nothing. */
+  terminated?: boolean
 }
 
 /** A worker that never got a session: the reporter emits one nameless failure and nothing else. */

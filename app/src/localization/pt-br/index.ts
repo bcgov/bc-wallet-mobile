@@ -213,6 +213,8 @@ const translation = {
     "EnableProxy": "Enable proxy (PT-BR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
     "SwitchTheme": "Switch theme (PT-BR)",
+    "SelectedMediator": "Selected mediator (PT-BR)",
+    "MediatorSection": "Mediator (PT-BR)",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes (PT-BR)",
       "OneHour": "1 hour (PT-BR)",
@@ -373,7 +375,7 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
-      "AppStartup": "Getting your BC Services Card app ready... (PT-BR)"
+      "AppStartup": "Getting your BC Services Card App ready... (PT-BR)"
     },
     "AccountLanding": {
       "Title": "BC Services Card (PT-BR)",
@@ -382,7 +384,8 @@ const translation = {
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (PT-BR)",
-      "AuthenticateToSecure": "Authenticate to secure your app (PT-BR)"
+      "AuthenticateToSecure": "Authenticate to secure your app (PT-BR)",
+      "UnlockPrompt": "Unlock your app (PT-BR)"
     },
     "AppReset": {
       "Title": "App reset for security (PT-BR)",
@@ -414,6 +417,10 @@ const translation = {
       "SettingUpAccount": "Setting up your account... (PT-BR)",
       "FailedToSetPIN": "Failed to set PIN (PT-BR)",
       "ErrorSettingPIN": "An error occurred while setting the PIN (PT-BR)"
+    },
+    "EnterPIN": {
+      "Title": "Enter your 6-digit PIN (PT-BR)",
+      "Description": "The one you chose to secure this app (PT-BR)"
     },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN (PT-BR)",
@@ -600,6 +607,18 @@ const translation = {
       "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code (PT-BR)",
       "ViewMessages": "View new messages (PT-BR)",
     },
+    "ServiceNotice": {
+      "Header": "Service notice (PT-BR)",
+      "NoticeUnavailable": "This notice isn't available right now. (PT-BR)",
+      "MobileCardHeading": "Setting up a mobile card? (PT-BR)",
+      "MobileCardDescription": "It may take longer to get your identity verified to set up your mobile card. (PT-BR)",
+      "MobileCardVideoCall": "Video call – it may take more than 5 minutes to speak to an agent (PT-BR)",
+      "MobileCardSendVideo": "Send video – it may take more than 3 days to get a response back (PT-BR)",
+      "LoginHeading": "Logging into a government service? (PT-BR)",
+      "LoginDescription": "Please be patient, it may take longer to log in. (PT-BR)",
+      "HaveQuestions": "Have questions? (PT-BR)",
+      "ContactUsLink": "Contact us (PT-BR)",
+    },
     "Steps": {
       "VerificationIDMissing": "Verification request ID is missing (PT-BR)",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (PT-BR)",
@@ -622,6 +641,7 @@ const translation = {
       },
       "ServerStatus": {
         "UnavailableBannerTitle": "Service Unavailable (PT-BR)",
+        "NoticeBannerTitle": "Service notice. Learn more. (PT-BR)",
       },
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available (PT-BR)",
@@ -684,6 +704,11 @@ const translation = {
       "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again. (PT-BR)",
       "PrimaryAction": "Reset (PT-BR)",
       "Resetting": "Resetting… (PT-BR)"
+    },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator (PT-BR)",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (PT-BR)",
+      "ScanButton": "Scan mediator QR code (PT-BR)"
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (PT-BR)",
@@ -804,6 +829,8 @@ const translation = {
       "UnrecognizedQR": "QR code not recognized. (PT-BR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (PT-BR)",
       "FeatureUnavailable": "This action isn't available yet. (PT-BR)",
+      "AccountTransferErrorTitle": "Unable to add device (PT-BR)",
+      "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it. (PT-BR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (PT-BR)",
         "Mediator": "Mediator invitations aren't supported in BC Services Card. (PT-BR)",
@@ -885,6 +912,9 @@ const translation = {
       "CancelCamera": "Cancel camera (PT-BR)",
       "TakePhoto": "Take photo (PT-BR)",
       "ToggleFlash": "Toggle flash (PT-BR)",
+      "CameraInterrupted": "Camera paused (PT-BR)",
+      "CameraInterruptedMessage": "The camera is in use by another app or is temporarily unavailable. It will resume on its own when it's available. (PT-BR)",
+      "CameraNotReady": "The camera isn't ready yet. Please try again. (PT-BR)",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings (PT-BR)",
@@ -897,6 +927,22 @@ const translation = {
       "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps: (PT-BR)",
       "CameraAndMicrophoneTitle": "Camera & Microphone Disabled (PT-BR)",
       "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video. (PT-BR)",
+      "BluetoothTitle": "Nearby Devices Disabled (PT-BR)",
+      "BluetoothDescription": "Follow these steps to allow access to nearby devices so you can use a connected Bluetooth headset or speaker during the call. (PT-BR)",
+      "Bluetooth": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (PT-BR)",
+          "Step2": "2. Tap 'Bluetooth' (PT-BR)",
+          "Step3": "3. Return to the app to continue (PT-BR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (PT-BR)",
+          "Step2": "2. Tap 'Permissions' (PT-BR)",
+          "Step3": "3. Tap 'Nearby devices' (PT-BR)",
+          "Step4": "4. Select 'Allow' (PT-BR)",
+          "Step5": "5. Return to the app to continue (PT-BR)",
+        },
+      },
       "Camera": {
         "iOS": {
           "Step1": "1. Tap 'Open Settings' below (PT-BR)",
@@ -1029,6 +1075,8 @@ const translation = {
       "TakeVideo": {
         "RecordingError": "Recording error (PT-BR)",
         "RecordingErrorDescription": "There was an issue with the recording. Please try again. (PT-BR)",
+        "RecordingInterrupted": "Recording interrupted (PT-BR)",
+        "RecordingInterruptedDescription": "The recording stopped before you finished. Please record your video again. (PT-BR)",
         "CameraPermissionRequired": "Camera Permission Required (PT-BR)",
         "CameraPermissionRequiredDescription": "Please enable camera permission to take a photo. (PT-BR)",
         "MicrophonePermissionRequired": "Microphone Permission Required (PT-BR)",
@@ -1074,6 +1122,7 @@ const translation = {
         "PreparingVideo": "Preparing your photo and video for verification (PT-BR)",
         "PreparingDocuments": "Preparing additional documents (PT-BR)",
         "UploadingInformation": "Uploading your documents securely (PT-BR)",
+        "UploadingFiles": "Uploading your files (PT-BR)",
         "FinalizingVerification": "Finalizing your request (PT-BR)"
       }
     },
@@ -1114,7 +1163,7 @@ const translation = {
       "Title": "Open the BC Services Card app on your other device (PT-BR)",
       "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device. (PT-BR)",
       "Warning": "Do not scan with the camera app. (PT-BR)",
-      "GetQRCode": "Get QR Code (PT-BR)",
+      "GetQRCode": "Get QR code (PT-BR)",
     },
     "TransferInformation": {
       "Title": "Have this app on another device? (PT-BR)",
@@ -1122,10 +1171,12 @@ const translation = {
       "TransferAccount": "Add device (PT-BR)",
     },
     "TransferInstructions": {
+      "AddingDevice": "Adding this device... (PT-BR)",
       "Title": "Scan your QR code to add your device (PT-BR)",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner. (PT-BR)",
-      "Step2": "Choose <b>‘Add another device'</b> to get your QR code. (PT-BR)",
-      "Step3": "<b>Scan the QR code</b> that appears on your other device. (PT-BR)",
+      "Step1": "<b>On your other device</b>, open and unlock the BC Services Card app. (PT-BR)",
+      "Step2": "Tap the <b>menu ‘☰’</b> icon in the top left corner. (PT-BR)",
+      "Step3": "Choose <b>‘Add another device’</b> to get your QR code. (PT-BR)",
+      "Step4": "<b>Scan the QR code</b> that appears on your other device. (PT-BR)",
       "ScanQRCode": "Scan QR code (PT-BR)",
     },
     "QRDisplay": {
@@ -1148,6 +1199,12 @@ const translation = {
       "Title": "Your identity has been verified (PT-BR)",
       "Description": "You're now able to access services with your verified identity. (PT-BR)",
       "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID. (PT-BR)",
+      "ButtonText": "Continue (PT-BR)"
+    },
+    "AlreadyVerified": {
+      "Title": "You're already set! (PT-BR)",
+      "Description": "The QR code scanned is for transferring an existing account to a new device. This device is already verified and ready to use. (PT-BR)",
+      "ExtraText": "To access a website or service, scan the QR code shown on that website or service. (PT-BR)",
       "ButtonText": "Continue (PT-BR)"
     },
     "CancelledVerification": {
@@ -1348,6 +1405,10 @@ const translation = {
       "CannotSendVideo": "Cannot send a video? (PT-BR)",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (PT-BR)",
       "CannotVideoCall": "Cannot video call? (PT-BR)"
+    },
+    "BluetoothDisclosure": {
+      "Title": "Detect bluetooth devices (PT-BR)",
+      "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device. (PT-BR)",
     },
   },
   "RemoteLogging": {

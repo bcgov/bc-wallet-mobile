@@ -28,8 +28,8 @@ jest.mock('../contexts/BCSCStackContext', () => ({
 jest.mock('../components/HeaderBackButton', () => ({
   createHeaderBackButton: jest.fn(() => 'HeaderBackButton'),
 }))
-jest.mock('../components/HeaderWithBanner', () => ({
-  createHeaderWithoutBanner: jest.fn(() => null),
+jest.mock('../components/NavigationHeaders', () => ({
+  createStackHeader: jest.fn(() => null),
 }))
 jest.mock('../components/SettingsHeaderButton', () => ({
   createAuthSettingsHeaderButton: jest.fn(() => () => 'SettingsHeaderButton'),
@@ -56,6 +56,9 @@ jest.mock('../features/modal/MandatoryUpdate', () => ({
 }))
 jest.mock('../features/modal/ServiceOutage', () => ({
   ServiceOutage: 'ServiceOutage',
+}))
+jest.mock('../features/service-notice/ServiceNoticeScreen', () => ({
+  ServiceNoticeScreen: 'ServiceNoticeScreen',
 }))
 jest.mock('../features/settings/AuthPrivacyPolicyScreen', () => ({
   AuthPrivacyPolicyScreen: 'AuthPrivacyPolicyScreen',
@@ -97,6 +100,7 @@ describe('AuthStack', () => {
       BCSCScreens.DeviceAuthAppReset,
       BCSCScreens.AuthSettings,
       BCSCScreens.AuthWebView,
+      BCSCScreens.ServiceNotice,
       BCSCScreens.AuthPrivacyPolicy,
       BCSCScreens.AuthDeveloper,
       BCSCScreens.PairingConfirmation,

@@ -2,9 +2,11 @@ import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { useFocusEffect } from '@react-navigation/native'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Linking } from 'react-native'
+import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
 import { SettingsContent } from './SettingsContent'
 
 const tid = (key: string) => testIdWithKey(key)
@@ -70,11 +72,52 @@ describe('SettingsContent', () => {
     expect(screen.getByTestId(tid('RemoveAccount'))).toBeTruthy()
   })
 
-  it('shows ChangePIN when security method is not device auth', async () => {
-    renderWithState({
-      authentication: { didAuthenticate: true },
+  describe('ChangePIN row', () => {
+    const focusEffectMock = useFocusEffect as jest.Mock
+
+    beforeEach(() => {
+      // Run the focus callback as an effect, emulating the screen gaining focus after render
+      focusEffectMock.mockImplementation((callback: () => void) => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(callback, [callback])
+      })
     })
-    expect(await screen.findByTestId(tid('ChangePIN'))).toBeTruthy()
+
+    afterEach(() => {
+      focusEffectMock.mockReset()
+    })
+
+    it('shows ChangePIN on the first render for a PIN account, without a native read', () => {
+      renderWithState({
+        authentication: { didAuthenticate: true },
+        bcscSecure: { securityMethod: AccountSecurityMethod.PinWithDeviceAuth },
+      })
+      expect(screen.getByTestId(tid('ChangePIN'))).toBeTruthy()
+      expect(getAccountSecurityMethod).not.toHaveBeenCalled()
+    })
+
+    it('never shows ChangePIN for a device-auth account', () => {
+      renderWithState({
+        authentication: { didAuthenticate: true },
+        bcscSecure: { securityMethod: AccountSecurityMethod.DeviceAuth },
+      })
+      expect(screen.queryByTestId(tid('ChangePIN'))).toBeNull()
+      expect(getAccountSecurityMethod).not.toHaveBeenCalled()
+    })
+
+    it('hides ChangePIN until the method is read from the account record when secure state has none', async () => {
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+      renderWithState({ authentication: { didAuthenticate: true } })
+      expect(screen.queryByTestId(tid('ChangePIN'))).toBeNull()
+
+      expect(await screen.findByTestId(tid('ChangePIN'))).toBeTruthy()
+      expect(getAccountSecurityMethod).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not read the account record before authentication', () => {
+      renderWithState()
+      expect(getAccountSecurityMethod).not.toHaveBeenCalled()
+    })
   })
 
   it('shows the Notifications row ON when OS notification permission is granted', async () => {

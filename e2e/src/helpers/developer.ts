@@ -1,5 +1,7 @@
+import assert from 'node:assert/strict'
 import { Timeouts } from '../constants.js'
 import { DeveloperScreen } from '../screens/developer.js'
+import { SettingsScreen } from '../screens/main.js'
 import { swipeUpBy } from './gestures.js'
 
 /**
@@ -10,7 +12,8 @@ import { swipeUpBy } from './gestures.js'
  * so neither driver can see it.
  *
  * Enabling developer mode persists: the `DeveloperMode` settings row and other dev-gated surfaces
- * (e.g. the QRCore Display tab) stay available for the rest of the session.
+ * (e.g. the QRCore Display tab) stay available for the rest of the session. That row is also the
+ * default-off assert (`expectDeveloperModeHidden`): no build or upgrade may turn the mode on by itself.
  */
 
 /** bifold's `useDeveloperMode` fires on the tap AFTER its 10-touch threshold — so eleven, not ten. */
@@ -47,6 +50,21 @@ export async function scrollToSettingsVersionFooter(): Promise<void> {
 export async function readSettingsVersionFooter(): Promise<string> {
   await scrollToSettingsVersionFooter()
   return (await versionFooter()).getText()
+}
+
+/**
+ * Assert developer mode is off on whichever Settings surface is on screen: the `DeveloperMode` row
+ * renders only while it is on. Scrolls to the footer first, so the absence means "not rendered", not
+ * "below the fold", and leaves the list there.
+ */
+export async function expectDeveloperModeHidden(): Promise<void> {
+  await scrollToSettingsVersionFooter()
+  // One SettingsContent behind every surface, so the main descriptor's row id holds pre-auth too.
+  assert.equal(
+    await SettingsScreen.isVisible('developerMode'),
+    false,
+    'the Developer options row must stay hidden while developer mode is off'
+  )
 }
 
 /**

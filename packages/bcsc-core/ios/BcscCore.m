@@ -49,7 +49,8 @@ RCT_EXTERN_METHOD(getRefreshTokenRequestBody : (NSString *)issuer clientID : (NS
 
 RCT_EXTERN_METHOD(signPairingCode : (NSString *)code issuer : (NSString *)issuer clientID : (NSString *)
                       clientID fcmDeviceToken : (NSString *)fcmDeviceToken deviceToken : (NSString *_Nullable)
-                          deviceToken resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+                          deviceToken challengeSource : (NSString *)challengeSource resolve : (RCTPromiseResolveBlock)
+                              resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getDynamicClientRegistrationBody : (NSString *)fcmDeviceToken deviceToken : (NSString *_Nullable)
                       deviceToken attestation : (NSString *_Nullable)attestation nickname : (NSString *_Nullable)
@@ -180,4 +181,6 @@ RCT_EXTERN_METHOD(showLocalNotification : (NSString *)title message : (NSString 
 RCT_EXTERN_METHOD(isThirdPartyKeyboardActive : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(openKeyboardSelector : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(isBluetoothAudioConnected : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 @end

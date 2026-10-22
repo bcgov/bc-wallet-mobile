@@ -5,7 +5,7 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, useAnimatedComponents
 import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { BackHandler, StyleSheet } from 'react-native'
-import useVerificationResponseViewModel from './_models/useVerificationResponseViewModel'
+import useVerificationResponseViewModel from './useVerificationResponseViewModel'
 
 const VerificationSuccessScreen = () => {
   const { Spacing } = useTheme()

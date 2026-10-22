@@ -1,4 +1,4 @@
-import { createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
+import { createStackHeader } from '@/bcsc-theme/components/NavigationHeaders'
 import { createProgressHeader } from '@/bcsc-theme/components/VerifyProgressHeader'
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
@@ -8,15 +8,14 @@ import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { useCallback } from 'react'
+import { StackActions } from '@react-navigation/native'
+import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { BackHandler } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton, createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
-import { createHeaderBackButton, HeaderBackButton } from '../components/HeaderBackButton'
+import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createVerifySettingsHeaderButton } from '../components/SettingsHeaderButton'
+import { createVerifyHeaderBackButton } from '../components/VerifyHeaderBackButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
@@ -72,56 +71,34 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
-import { useLeaveVerification } from '../hooks/useLeaveVerification'
 import useSecureActions from '../hooks/useSecureActions'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
 /**
- * Creates a custom back button for the verify stack that handles navigation and verification flow logic.
- * @param onPress Optional callback to handle back button press
- * @returns A React component that renders the custom back button.
+ * Header left for method selection: the settings button, which replaces the back arrow by design, with
+ * the verify back owner hidden behind it. Method selection can be the stack's initial route on resume,
+ * and without an owner Android back would fall through to the OS and leave the app; with one it pops
+ * when a step is beneath and otherwise does nothing, matching the absent arrow.
  */
-const createVerifyHeaderBackButton = (
-  onPress?: (navigation: StackNavigationProp<BCSCVerifyStackParams>, leaveVerification: () => void) => void
-) => {
-  const VerifyBackButton = (props: HeaderBackButtonProps) => {
-    const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
-    const leaveVerification = useLeaveVerification()
-
-    const handlePressBack = useCallback(() => {
-      if (onPress) {
-        // If a custom onPress handler is provided, call it with the navigation prop and leaveVerification function.
-        return onPress(navigation, leaveVerification)
-      }
-
+const createVerifySettingsHeaderLeft = () => {
+  const VerifySettingsHeaderButton = createVerifySettingsHeaderButton()
+  const HiddenVerifyBackButton = createVerifyHeaderBackButton(
+    (navigation) => {
       if (navigation.canGoBack()) {
-        // If the navigation stack can go back, navigate back to the previous screen.
-        return navigation.goBack()
+        navigation.goBack()
       }
+    },
+    { hidden: true }
+  )
+  const VerifySettingsHeaderLeft = (props: HeaderBackButtonProps) => (
+    <>
+      <HiddenVerifyBackButton {...props} />
+      <VerifySettingsHeaderButton />
+    </>
+  )
 
-      // If the navigation stack cannot go back, leave the verification flow and return to the app's home screen.
-      leaveVerification()
-    }, [leaveVerification, navigation])
-
-    useFocusEffect(
-      useCallback(() => {
-        // Parity for Android hardware back navigation
-        const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-          handlePressBack()
-          return true
-        })
-
-        return () => {
-          subscription.remove()
-        }
-      }, [handlePressBack])
-    )
-
-    return <HeaderBackButton {...props} onPress={handlePressBack} />
-  }
-
-  return VerifyBackButton
+  return VerifySettingsHeaderLeft
 }
 
 interface VerifyStackProps {
@@ -165,27 +142,32 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         headerLeft: createHeaderBackButton,
         headerBackTestID: testIdWithKey(TestIds.common.back),
         headerBackTitleVisible: false,
-        header: createHeaderWithoutBanner,
+        header: createStackHeader,
         headerRight: createVerifyHelpMenuButton({ showRestartVerification: true }),
       }}
     >
       <Stack.Screen
         name={BCSCScreens.VerifyPrompt}
         options={{
-          // First screen of the verify journey — no back destination; help menu without "restart"
-          // since verification hasn't started yet.
-          headerLeft: () => null,
-          headerRight: createVerifyHelpMenuButton(),
+          // Root of the verify journey for a first-time verifier: no back destination, and Android back
+          // is swallowed rather than popping out of the stack. The help menu offers no "Restart"
+          // (verification hasn't started yet) and, the prompt's own Skip being its way to Home, "Back to
+          // home" only in developer mode — where it must also count the prompt answered, or the fresh
+          // prompt would stay mounted. A resumed initial step walks back here by replace, animated as a pop.
+          headerLeft: createVerifyHeaderBackButton(() => undefined, { hidden: true }),
+          headerRight: createVerifyHelpMenuButton({ showBackToHome: 'developerOnly', onLeave: onVerifyPromptAnswered }),
+          animationTypeForReplace: 'pop',
         }}
       >
         {({ navigation }) => (
           <VerifyPromptScreen
             onAnswered={onVerifyPromptAnswered}
-            // replace (not navigate) so this one-time prompt is dropped from the stack. Once
-            // "Continue" sets verification IN_PROGRESS, VerifyStack stays mounted, so returning to the
-            // prompt would leave "Skip" a no-op (it can no longer unmount the stack). With the prompt
-            // gone, AccountSetup's back button leaves verification (home) instead of re-showing it.
-            onContinue={() => navigation.replace(BCSCScreens.AccountSetup)}
+            // push (not replace): the prompt stays beneath as the first-time verifier's root, so the
+            // first step's back button returns here, where Skip is still a real exit (it leaves the flow
+            // as well as recording the skip). The step pushed is the user's resume step — AccountSetup
+            // for a fresh user, their own step when they walked back here — so Continue never re-asks
+            // for progress they already have.
+            onContinue={() => navigation.dispatch(StackActions.push(resumeRoute.name, resumeRoute.params))}
           />
         )}
       </Stack.Screen>
@@ -285,7 +267,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         component={VerificationMethodSelectionScreen}
         options={{
           header: createProgressHeader(5, 20),
-          headerLeft: createVerifySettingsHeaderButton(),
+          headerLeft: createVerifySettingsHeaderLeft(),
         }}
       />
       <Stack.Screen
@@ -328,9 +310,17 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         component={PendingReviewScreen}
         options={{
           header: createProgressHeader(5, 80),
-          headerLeft: createVerifyHeaderBackButton((_navigation, leaveVerification) => {
-            leaveVerification()
-          }),
+          // A deferred verifier leaves for Home, progress kept (the Home card is the way back in). A
+          // first-time verifier has no arrow here and hardware back does nothing: the screen picks up the
+          // decision itself. "Choose another way to verify" is the in-flow way off it for both.
+          headerLeft: createVerifyHeaderBackButton(
+            (_navigation, leaveVerification, { isFirstTimeVerifier }) => {
+              if (!isFirstTimeVerifier) {
+                leaveVerification()
+              }
+            },
+            { hidden: ({ isFirstTimeVerifier }) => isFirstTimeVerifier }
+          ),
           title: t('BCSC.Steps.Status'),
         }}
       />
@@ -385,8 +375,8 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         options={{
           header: createProgressHeader(2, 50),
           // Can be the stack's initial route when the user resumes after leaving mid-capture (see
-          // getResumeStepRoute); with nothing beneath it, back leaves the flow home rather than
-          // being a dead button.
+          // getResumeStepRoute); with nothing beneath it, back follows the exit policy (the prompt for
+          // a first-time verifier, Home otherwise) rather than being a dead button.
           headerLeft: createVerifyHeaderBackButton(),
         }}
       />
@@ -474,23 +464,22 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       <Stack.Screen
         name={BCSCScreens.TransferAccountInstructions}
         component={TransferInstructionsScreen}
-        options={({ navigation }) => ({
+        options={{
           // This screen can be the stack's initial route when the user resumes a transfer
           // (accountSetupType persisted); with nothing beneath it, back returns to the setup
-          // question instead so the user can still choose a traditional setup.
-          headerLeft: (props) => (
-            <HeaderBackButton
-              {...props}
-              onPress={() =>
-                navigation.canGoBack() ? navigation.goBack() : navigation.replace(BCSCScreens.AccountSetup)
-              }
-            />
-          ),
+          // question instead so the user can still choose a traditional setup. The verify back owner
+          // gives Android hardware back the same destination.
+          headerLeft: createVerifyHeaderBackButton((navigation) => {
+            if (navigation.canGoBack()) {
+              return navigation.goBack()
+            }
+            navigation.replace(BCSCScreens.AccountSetup)
+          }),
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.QUICK_SETUP_OF_ADDITIONAL_DEVICES,
           }),
-        })}
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.TransferAccountQRScan}

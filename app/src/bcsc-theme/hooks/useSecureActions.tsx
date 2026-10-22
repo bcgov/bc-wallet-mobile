@@ -4,7 +4,14 @@ import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, VerificationStatus } from '@/store'
+import {
+  BCDispatchAction,
+  BCSCSecureState,
+  BCState,
+  NonBCSCUserMetadata,
+  ResidentialAddressDraft,
+  VerificationStatus,
+} from '@/store'
 import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
@@ -25,7 +32,6 @@ import {
   EvidenceType,
   getAccount,
   getAccountFlags,
-  getAccountSecurityMethod,
   getAuthorizationRequest,
   getCredential,
   getEvidence,
@@ -462,6 +468,22 @@ export const useSecureActions = () => {
   )
 
   /**
+   * Keep the residential address form as the user left it, in memory only. Unlike the other
+   * updates here nothing is written to native storage: the draft lives for the signed-in session and
+   * is dropped with the rest of the secure state on lock, logout or a verification reset, so only a
+   * submitted address (see updateUserMetadata) survives. Pass undefined to discard it.
+   */
+  const updateResidentialAddressDraft = useCallback(
+    (draft: ResidentialAddressDraft | undefined) => {
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+    },
+    [dispatch]
+  )
+
+  /**
    * Update verification status in state and persist as credential for v3 compatibility
    * When marking as verified, stores the credential object; when unverified, removes it
    */
@@ -472,7 +494,12 @@ export const useSecureActions = () => {
         payload: [verified],
       })
       if (verified) {
-        // set flag as "skipped" so the user isn't routed to reverify
+        // Verification is finished: nothing is left to resume on launch, and the user is no longer a
+        // first-time verifier (a later re-verification, e.g. a renewal, starts from Home)
+        dispatch({
+          type: BCDispatchAction.SET_VERIFICATION_STARTED,
+          payload: [false],
+        })
         dispatch({
           type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
           payload: [true],
@@ -517,7 +544,15 @@ export const useSecureActions = () => {
     [dispatch, logger, store.bcscSecure.cardProcess]
   )
 
+  /**
+   * Enters (or re-enters) the verification flow: RootStack shows the VerifyStack while verification is
+   * IN_PROGRESS, and marking it started makes every later launch resume it until the user is verified.
+   */
   const continueVerificationProcess = useCallback(() => {
+    dispatch({
+      type: BCDispatchAction.SET_VERIFICATION_STARTED,
+      payload: [true],
+    })
     dispatch({
       type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
       payload: [VerificationStatus.IN_PROGRESS],
@@ -957,13 +992,8 @@ export const useSecureActions = () => {
             clientID = clientID || authRequest.clientID
 
             if (issuer && clientID) {
-              const securityMethod = await getAccountSecurityMethod()
-              const updatedAccount = {
-                ...account,
-                issuer,
-                clientID,
-                securityMethod,
-              }
+              // The account record already carries its security method, so only the recovered fields change.
+              const updatedAccount = { ...account, issuer, clientID }
               logger.info('[hydrateSecureState] Recovered issuer/clientID from authorization request; updating account')
               await setAccount(updatedAccount)
             } else {
@@ -1134,6 +1164,7 @@ export const useSecureActions = () => {
         userCode: authRequest?.userCode,
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
         cardProcess: hydrateCardProcess(authRequest, cleanedEvidence),
+        securityMethod: account?.securityMethod,
 
         ...effectiveTokens,
 
@@ -1276,6 +1307,7 @@ export const useSecureActions = () => {
     clearAuthorizationRequest,
     updateCardProcess,
     updateUserMetadata,
+    updateResidentialAddressDraft,
     updateVerified,
     updateWalletKey,
     updateAccountFlags,

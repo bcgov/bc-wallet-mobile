@@ -70,6 +70,7 @@ export enum BCSCScreens {
   EvidenceUploading = 'Send Video Uploading',
   SuccessfullySent = 'Send Video Received Request Confirmation',
   VerificationSuccess = 'Setup Complete',
+  AlreadyVerifiedSuccess = 'Already Verified',
   ManualPairingCode = 'Login Device Pairing',
   PairingConfirmation = 'Login Complete with Paired Device',
   AdditionalIdentificationRequired = 'Photo ID Required',
@@ -111,6 +112,7 @@ export enum BCSCScreens {
   TransferAccountQRInformation = 'QR Get Overview',
   TransferAccountSuccess = 'QR Code Scan Complete',
   ServiceLogin = 'Login Request',
+  ServiceNotice = 'Service Notice',
   EditNickname = 'Change Account Nickname',
   AccountDetails = 'Account Details',
   AccountSetup = 'Start Setup',
@@ -136,6 +138,7 @@ export enum BCSCScreens {
   MainDeveloper = `${BCSCStacks.Main} Developer`,
   MainAutoLock = 'BCSCMainAutoLock',
   ProofRequestExpiry = 'BCSCProofRequestExpiry',
+  ConfigureMediator = 'BCSCConfigureMediator',
   MainNotificationSettings = 'BCSCMainNotificationSettings',
   MainAppSecurity = `${BCSCStacks.Main} App Security Setting`,
   MainChangePIN = `${BCSCStacks.Main} Change PIN`,
@@ -276,6 +279,7 @@ export type BCSCTabStackParams = {
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
   [BCSCScreens.MainWebView]: { url: string; title: string }
+  [BCSCScreens.ServiceNotice]: undefined
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.MainRemoveAccountConfirmation]: undefined
@@ -297,6 +301,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainDeveloper]: undefined
   [BCSCScreens.MainAutoLock]: undefined
   [BCSCScreens.ProofRequestExpiry]: undefined
+  [BCSCScreens.ConfigureMediator]: { scannedMediatorUri?: string } | undefined
   [BCSCScreens.MainNotificationSettings]: undefined
   [BCSCScreens.MainAppSecurity]: undefined
   [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined
@@ -321,6 +326,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
   [BCSCScreens.VerificationSuccess]: undefined
+  [BCSCScreens.AlreadyVerifiedSuccess]: undefined
   [BCSCScreens.MainCancelledReview]: { agentReason?: string }
   [BCSCScreens.MainVerifyPrompt]: undefined
 
@@ -342,6 +348,7 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.DeviceAuthAppReset]: undefined
   [BCSCScreens.AuthSettings]: undefined
   [BCSCScreens.AuthWebView]: { url: string; title: string }
+  [BCSCScreens.ServiceNotice]: undefined
   [BCSCScreens.AuthPrivacyPolicy]: undefined
   [BCSCScreens.AuthDeveloper]: undefined
 

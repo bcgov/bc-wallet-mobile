@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { SHORT_TEST_PIN, TEST_PIN, Timeouts, WRONG_TEST_PIN } from '../../../src/constants.js'
 import { answerNotificationPermission } from '../../../src/flows/onboarding.js'
-import { scrollToSettingsVersionFooter } from '../../../src/helpers/developer.js'
+import { expectDeveloperModeHidden } from '../../../src/helpers/developer.js'
 import { tapAtWindowPercent } from '../../../src/helpers/gestures.js'
 import { BaseScreen } from '../../../src/screens/core/BaseScreen.js'
 import {
@@ -60,14 +60,8 @@ describe('Onboarding journey: detours', () => {
     // Pre-auth, the AuthenticatedSection rows are absent; the always-rendered ContactUs row is the marker.
     await OnboardingSettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 
-    // A default install must not expose the developer menu. Scroll to the footer first so the absence
-    // means "not rendered", not "below the fold". Revealing it lives in `auth/auth-intro.journey.ts`.
-    await scrollToSettingsVersionFooter()
-    assert.equal(
-      await OnboardingSettingsScreen.isVisible('developerMode'),
-      false,
-      'the developer menu row must stay hidden on a default install'
-    )
+    // A default install must not expose the developer menu. Revealing it lives in `auth/auth-intro.journey.ts`.
+    await expectDeveloperModeHidden()
 
     await OnboardingSettingsScreen.back.tap() // → Intro
     await OnboardingIntroScreen.expectVisible(Timeouts.SCREEN_TRANSITION)

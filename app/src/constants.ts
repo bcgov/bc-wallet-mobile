@@ -40,6 +40,11 @@ export const AttestationRestrictions: { [key: string]: CredentialRestrictionEnvi
   },
 } as const
 
+export const PlayIntegrityCloudProjects = {
+  attestationController: '270607296846',
+  ias: '1050427621187',
+} as const
+
 export const appleAppStoreUrl = 'https://apps.apple.com/ca/app/bc-wallet/id1587380443'
 export const googlePlayStoreUrl = 'https://play.google.com/store/apps/details?id=ca.bc.gov.BCWallet&hl=en-CA'
 export const appHelpUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
@@ -156,6 +161,7 @@ export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
 export const VIDEO_MP4_MIME_TYPE = 'video/mp4'
 export const MIN_PROMPT_DURATION_SECONDS = 2
+export const MIN_SELFIE_VIDEO_DURATION_SECONDS = 6
 export const enum LIVE_CALL_UNAVAILABLE_REASONS {
   MAINTENANCE = 'MAINTENANCE',
   HOLIDAY = 'HOLIDAY',
@@ -182,6 +188,7 @@ export const USER_REPORT_ERROR_CODE = 0
 
 // Validation constants
 export const MINIMUM_VERIFICATION_AGE = 12
+export const MAXIMUM_VERIFICATION_AGE = 120
 
 // Analytics constants
 export const ANALYTICS_APP_ID_PREFIX = 'Snowplow_standalone_IDIMapp_'

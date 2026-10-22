@@ -9,6 +9,7 @@ import {
   exerciseInCallControls,
   expectCallBusyOrClosedVariant,
   leaveLiveCall,
+  type LiveCallExit,
   reachStartCallViaSelfie,
   reachVerificationMethod,
   startLiveCall,
@@ -35,8 +36,8 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  *
  * - OPEN: selfie → StartCall → the real setup chain (evidence upload → session mint → WebRTC guest
  *   connect) settles as answered (usual on SIT) or waiting at the queue — answered exercises the
- *   in-call controls then EndCall, waiting cancels from the loading view — → VerifyNotComplete →
- *   Try Again back to method selection.
+ *   in-call controls then EndCall → VerifyNotComplete → Try Again back to method selection.
+ *   Waiting cancels from the loading view → StartCall, then proves a fresh attempt can start and exit.
  * - CLOSED/BUSY: CallBusyOrClosed asserted in full (known variant title, hours, reminder) and its
  *   SendVideo reset back to method selection. The nightly runs at midnight PT, so it deterministically
  *   gets 'closed'.
@@ -48,6 +49,7 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
 describe('Verify journey: video call to the approval boundary', () => {
   let entry: 'open' | 'busyOrClosed' | undefined
   let callOutcome: 'waiting' | 'connected' | undefined
+  let callExit: LiveCallExit | undefined
 
   before(() => {
     setTestUser(TestUsers.photo)
@@ -109,16 +111,16 @@ describe('Verify journey: video call to the approval boundary', () => {
     await exerciseInCallControls()
   })
 
-  it('open: leaves the call at the approval boundary and lands on VerifyNotComplete', async function () {
+  it('open: leaves the call at the approval boundary and reaches the matching destination', async function () {
     if (entry !== 'open') {
       return this.skip()
     }
     assert.ok(callOutcome, 'the call checkpoint must have settled before leaving')
-    await leaveLiveCall(callOutcome)
+    callExit = await leaveLiveCall()
   })
 
   it('open: recovers from VerifyNotComplete back to method selection', async function () {
-    if (entry !== 'open') {
+    if (entry !== 'open' || callExit !== 'ended') {
       return this.skip()
     }
     // Both recovery actions must be offered before one is taken.
@@ -127,5 +129,14 @@ describe('Verify journey: video call to the approval boundary', () => {
     // TryAgain is safe to confirm-and-retry (its id is not on method selection, unlike SendVideo's).
     await VerifyNotCompleteScreen.tapToNavigate('secondary')
     await VerificationMethodSelectionScreen.waitFor('videoCall', Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('open: can start another call after cancelling setup', async function () {
+    if (entry !== 'open' || callExit !== 'cancelled') {
+      return this.skip()
+    }
+    await StartCallScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await startLiveCall()
+    await leaveLiveCall()
   })
 })

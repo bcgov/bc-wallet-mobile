@@ -5,8 +5,9 @@ import { OTHER_COVERAGE, UAT_CHECKLIST } from './coverage-map.js'
 import { collectFailures, evaluateSections, platformTotals, type SpecTitleLookup } from './evaluate.js'
 import { loadJunitReports } from './junit.js'
 import type { BriefModel, LaneResult } from './render.js'
+import { applySessions, groupAttempts, loadSessions, markTerminated, type SessionGroup } from './sessions.js'
 import { specTitles } from './spec-titles.js'
-import { PLATFORM_LABEL, PLATFORMS, type Platform, type ReportDir } from './types.js'
+import { PLATFORM_LABEL, PLATFORMS, type Platform, type ReportDir, type SuiteResult } from './types.js'
 
 /** Report dirs in → a brief model out. Shared by the CLI and the fixture self-test. */
 
@@ -60,6 +61,27 @@ export function resolveReportDirs(paths: string[]): ReportDir[] {
   return dirs
 }
 
+const suiteFailed = (suite: SuiteResult): boolean =>
+  Boolean(suite.terminated) || suite.hookFailures.length > 0 || suite.tests.some((test) => test.status === 'fail')
+
+/** Terminated sessions per platform, and 0-byte worker reports no session record can stand in for. */
+function sessionWarnings(sessions: SessionGroup[], emptyFiles: { source: string; cid: string }[]): string[] {
+  const warnings: string[] = []
+  for (const platform of PLATFORMS) {
+    const lost = sessions.filter((group) => group.platform === platform && group.attempts.at(-1)?.outcome === 'lost').length
+    if (lost) warnings.push(`${lost} ${PLATFORM_LABEL[platform]} journey(s) lost their session mid-run (the app stopped answering the driver) — rebuilt from the session records and marked 🔌 below.`)
+  }
+  const recorded = new Set(sessions.flatMap((group) => group.attempts.map((attempt) => `${attempt.source}|${attempt.cid}`)))
+  const orphans = new Map<string, number>()
+  for (const file of emptyFiles) {
+    if (!recorded.has(`${file.source}|${file.cid}`)) orphans.set(file.source, (orphans.get(file.source) ?? 0) + 1)
+  }
+  for (const [source, count] of orphans) {
+    warnings.push(`${count} worker report(s) in ${source} are empty (the session was terminated before the reporter wrote) and no session record exists — those journeys show ⬜.`)
+  }
+  return warnings
+}
+
 /** `e2e-reports-regression-iOS-18` → `iOS 18`; otherwise the bare platform name. */
 function platformLabel(platform: Platform, sources: string[]): string {
   for (const source of sources) {
@@ -75,6 +97,11 @@ export function buildBrief(options: BuildOptions): BriefModel {
   if (!reportDirs.length) warnings.push('No report directories found — nothing to summarize.')
 
   const junit = loadJunitReports(reportDirs)
+  const attempts = loadSessions(reportDirs)
+  markTerminated(attempts, junit.emptyFiles)
+  const sessions = groupAttempts(attempts)
+  applySessions(junit.results, sessions)
+  warnings.push(...sessionWarnings(sessions, junit.emptyFiles))
   const a11y = loadA11yReports(reportDirs)
   const baseline = options.baselinePath ? loadBaseline(options.baselinePath) : undefined
 
@@ -85,10 +112,11 @@ export function buildBrief(options: BuildOptions): BriefModel {
     else if (reportDirs.length) warnings.push(`No ${PLATFORM_LABEL[platform]} results in these reports.`)
   }
 
-  const lanes: LaneResult[] = (options.lanes ?? []).map((lane) => ({
-    ...lane,
-    hasReports: reportDirs.some((dir) => dir.name.includes(`-${lane.name}-`)),
-  }))
+  const suites = Object.values(junit.results).flatMap((run) => run.suites)
+  const lanes: LaneResult[] = (options.lanes ?? []).map((lane) => {
+    const sources = reportDirs.filter((dir) => dir.name.includes(`-${lane.name}-`)).map((dir) => dir.name)
+    return { ...lane, hasReports: sources.length > 0, failedSuites: suites.filter((suite) => sources.includes(suite.source) && suiteFailed(suite)).length }
+  })
 
   const titlesOf = specTitleLookup()
   const now = options.now ?? new Date()
@@ -102,6 +130,7 @@ export function buildBrief(options: BuildOptions): BriefModel {
     uat: evaluateSections(UAT_CHECKLIST, junit.results, titlesOf),
     other: evaluateSections(OTHER_COVERAGE, junit.results, titlesOf),
     failures: collectFailures(junit.results, titlesOf),
+    sessions,
     a11y: summarizeA11y(a11y, baseline),
     baselineGeneratedAt: baseline?.generatedAt,
     warnings,

@@ -1,5 +1,5 @@
 import { buildBarcodePayload } from './barcode'
-import { DriversLicenseMetadata } from './decoder-strategy/DecoderStrategy'
+import { DriversLicenseMetadata } from './card-barcode-decoder'
 
 const makeLicense = (overrides?: Partial<DriversLicenseMetadata>): DriversLicenseMetadata => ({
   licenseNumber: '2222222',
@@ -29,6 +29,15 @@ describe('buildBarcodePayload', () => {
       type: 'CODE_128',
       value: 'S00023254',
     })
+  })
+
+  it('joins a second street line with a newline', () => {
+    const [pdf417] = buildBarcodePayload(
+      null,
+      makeLicense({ streetAddress: 'UNIT 5', streetAddress2: '910 GOVERNMENT ST' })
+    )
+
+    expect(pdf417).toMatchObject({ address: { street_address: 'UNIT 5\n910 GOVERNMENT ST' } })
   })
 
   it('should return a PDF_417 entry for a license only', () => {

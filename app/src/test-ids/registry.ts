@@ -113,6 +113,11 @@ export const TestIds = {
       takePhoto: 'TakePhoto',
       cancel: 'CancelCamera',
       toggleFlash: 'ToggleFlash',
+      notReady: 'CameraNotReady',
+    },
+    /** `CameraInterruptedOverlay` — covers any camera preview while the camera session is interrupted. */
+    cameraInterrupted: {
+      overlay: 'CameraInterrupted',
     },
     /** `AppBanner` composes `<part>-<banner type>`; the type is the banner's variant, not a screen. */
     appBanner: {
@@ -136,6 +141,13 @@ export const TestIds = {
     /** `PINInput` appends this to its `testIDKey`, and uses it BARE when no key was passed. */
     pinInput: {
       visibilitySuffix: 'VisibilityButton',
+    },
+    /** `WaitingScreenContent` appends these to its `testIDKey`, falling back to `key` when none was passed,
+     *  so the always-mounted loading overlay and a screen's own waiting view never share ids. */
+    waitingScreen: {
+      key: 'WaitingScreenContent',
+      viewportSuffix: 'Viewport',
+      statusSuffix: 'Status',
     },
     /** Title-derived row ids. `SectionButton` strips whitespace from the title; `CardButton` does not. */
     cardButtonPrefix: 'CardButton-',
@@ -201,6 +213,10 @@ export const TestIds = {
       // (`ChangePINContent`) reuses this form and falls back to the generic `Continue`.
       continue: 'Continue',
     },
+    /** "Verify your account" (`VerifyPrompt`), the root of `VerifyStack` for a user who taps Continue
+     *  (a first-time verifier): no header back (`common.back` is absent), Android back is swallowed, and
+     *  its help menu (`common.help`) has no "Back to home". The first step's back returns here. Skip
+     *  leaves for Home and makes the user a deferred verifier, who re-enters from the Home card. */
     verifyPrompt: {
       continue: 'Continue',
       skipVerification: 'SkipVerification',
@@ -290,6 +306,8 @@ export const TestIds = {
     enterBirthdate: {
       birthdatePressable: 'birthDate-pressable',
       birthdateInput: 'birthDate-input',
+      /** The field's label (InputWithValidation `<id>-label`): inert, so e2e taps it to close the number pad. */
+      label: 'birthDate-label',
       continue: 'Continue',
     },
     /** `BirthdateLockout` — too many wrong birthdates. `close` just goes back; there is no header. */
@@ -393,17 +411,23 @@ export const TestIds = {
     },
     /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
     evidenceUploading: {
+      screen: 'UploadingScreen',
       cancelUpload: 'CancelUpload',
     },
     /** `SuccessfullySent` — the post-upload confirmation. `goToHome` is the screen's ONLY way out:
-     *  hardware back is disabled. */
+     *  hardware back is disabled. Its label depends on the verifier: "Go to home" leaves for Home
+     *  (deferred verifier), "Check status" replaces onto `PendingReview` (first-time verifier, who has
+     *  no Home to go to). */
     successfullySent: {
       goToHome: 'GoToHome',
     },
-    /** `PendingReview` — re-checks the request status on EVERY mount, which is what makes re-entering
-     *  it the app's own poll for the agent's decision. `chooseAnotherWay` cancels the request
-     *  (confirm-gated) and returns to method selection. */
+    /** `PendingReview` — re-checks the request status on focus, on return to the foreground, when the
+     *  review push lands, and on `checkStatus`: a first-time verifier cannot leave it, so it notices the
+     *  agent's decision itself. Re-entering it (deferred verifier, no header back for first-timers) is
+     *  a poll too. `chooseAnotherWay` cancels the request (confirm-gated) and returns to method
+     *  selection. */
     pendingReview: {
+      checkStatus: 'CheckStatus',
       chooseAnotherWay: 'ChooseAnotherWayToVerify',
     },
     /** `CancelledReview` and its MainStack twin (same component on both stacks). The agent's reason is
@@ -433,6 +457,7 @@ export const TestIds = {
      *  agent answers, and CallErrorView's pair on a failed setup. The "Call ended" processing view
      *  has no ids. */
     liveCall: {
+      loadingScreen: 'LiveCallLoadingScreen',
       cancel: 'Cancel',
       mute: 'Mute',
       video: 'Video',
@@ -538,6 +563,12 @@ export const TestIds = {
       provinceOptionBC: 'province-option-BC',
       continue: 'ResidentialAddressContinue',
     },
+    /**
+     * `BluetoothDisclosure` — the pre-pairing primer. `continue` is the only control
+     */
+    bluetoothDisclosure: {
+      continue: 'Continue',
+    },
   },
 
   main: {
@@ -555,6 +586,12 @@ export const TestIds = {
       pairingCodeCard: 'PairingCodeCard',
       savedServiceOpenPrefix: 'OpenService-',
       savedServiceRemovePrefix: 'RemoveService-',
+    },
+    /** Service-notice detail, opened by the "Service notice" banner shown while IAS reports a status
+     *  message. That banner is a `warning` `AppBanner`, sharing its ids with the device-limit banner, so
+     *  select it by copy. AuthStack registers this screen too, for the same banner on account landing. */
+    serviceNotice: {
+      contactUs: 'ServiceNoticeContactUs',
     },
     /** Services catalogue (verified-only; unverified taps redirect to MainVerifyPrompt). `search` is
      *  the always-present sticky-header catalogue search field — the "Services opened, not gated" marker. */
@@ -728,6 +765,12 @@ export const TestIds = {
      *  native "Success"/OK alert fires, then it returns to Settings. */
     forgetPairingsScreen: {
       confirm: 'ForgetAllPairings',
+    },
+    /** Developer-mode mediator picker. Rows compose from the mediator label (the invitation's label,
+     *  or its host without the payload); `scan` opens the QR scanner, whose hand-off lands back here. */
+    configureMediator: {
+      mediatorRowPrefix: 'MediatorRow-',
+      scan: 'ScanMediator',
     },
     /** Edit-nickname form (verified-only; `InputWithValidation` id 'accountNickname'). Validation is
      *  length-only — there is no duplicate-nickname check. Saving updates the Profile-card name. */
@@ -947,11 +990,10 @@ export const TestIds = {
   /**
    * The hidden Developer (IAS) menu — ONE shared `Developer` screen registered per stack
    * (`OnboardingDeveloper` / `AuthDeveloper` / `VerifyDeveloper` / `MainDeveloper`). Reached only via
-   * the Settings version footer (`helpers/developer.ts`); the app's `DeveloperCounter` trigger is
-   * hidden from the accessibility tree and cannot be selected. `Testing` rows are BCSC-mode only.
+   * the Settings version footer (`helpers/developer.ts`). `Testing` rows are BCSC-mode only.
    */
   developer: {
-    /** Tap counter on the settings version row (`DeveloperModeTrigger`) that unlocks developer mode. */
+    /** BC Wallet Preface tap counter that unlocks developer mode. */
     counter: 'DeveloperCounter',
     /** Always-rendered first row — the reliable "Developer screen mounted" marker. */
     toggleDeveloper: 'ToggleDeveloper',
@@ -974,6 +1016,8 @@ export const TestIds = {
     toggleRemoteLogging: 'ToggleRemoteLoggingSwitch',
     toggleEnableProxy: 'ToggleEnableProxy',
     toggleTheme: 'ToggleTheme',
+    /** BCSC only, main stack only: opens the mediator picker. */
+    configureMediator: 'ConfigureMediator',
     /** Raises a deliberate error so the ErrorInfoCard path can be exercised by hand. */
     errorAlertTest: 'ErrorAlertTest',
     fetchPersonCredentialTest: 'FetchPersonCredentialTest',

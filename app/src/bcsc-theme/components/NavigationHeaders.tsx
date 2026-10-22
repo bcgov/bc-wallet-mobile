@@ -1,0 +1,71 @@
+import {
+  HEADER_SHADOW,
+  SHADOW_CASTER_HEIGHT,
+  SHADOW_COLOR,
+  SHADOW_OFFSET_DOWN,
+  SHADOW_OPACITY,
+  SHADOW_RADIUS,
+} from '@/constants'
+import { useTheme } from '@bifold/core'
+import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs'
+import { Header as ElementsHeader, getHeaderTitle, HeaderOptions, Layout } from '@react-navigation/elements'
+import { Header, StackHeaderProps } from '@react-navigation/stack'
+import React from 'react'
+import { View } from 'react-native'
+import DropShadow from 'react-native-drop-shadow'
+
+export const HeaderDropShadow = () => {
+  const { ColorPalette } = useTheme()
+  return (
+    <DropShadow
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        shadowColor: SHADOW_COLOR,
+        shadowOffset: SHADOW_OFFSET_DOWN,
+        shadowOpacity: SHADOW_OPACITY,
+        shadowRadius: SHADOW_RADIUS,
+        zIndex: -1,
+      }}
+    >
+      <View
+        style={{
+          height: SHADOW_CASTER_HEIGHT,
+          backgroundColor: ColorPalette.brand.primaryBackground,
+        }}
+      />
+    </DropShadow>
+  )
+}
+
+/** A blank `title: ''` still mounts an empty header Text that VoiceOver stops on — render no title at all. */
+const withoutBlankTitle = <T extends HeaderOptions>(options: T, routeName: string): T =>
+  getHeaderTitle(options, routeName) === '' ? { ...options, headerTitle: () => null } : options
+
+export const createStackHeader = (props: StackHeaderProps) => (
+  <View>
+    <HeaderDropShadow />
+    <Header {...props} options={withoutBlankTitle(props.options, props.route.name)} />
+  </View>
+)
+
+export const createTabHeader = ({ route, options, layout }: BottomTabHeaderProps) => (
+  <TabHeader route={route} options={options} layout={layout} />
+)
+
+type TabHeaderProps = {
+  route: { name: string }
+  options: HeaderOptions
+  layout: Layout
+}
+
+const TabHeader = ({ route, options, layout }: TabHeaderProps) => (
+  <ElementsHeader
+    {...withoutBlankTitle(options, route.name)}
+    layout={layout}
+    title={getHeaderTitle(options, route.name)}
+    headerStyle={[options.headerStyle, HEADER_SHADOW]}
+  />
+)

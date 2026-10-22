@@ -1,7 +1,9 @@
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Mode } from '@/constants'
 import { AuthProvider, testIdWithKey, TOKENS, useServices } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { deleteToken, TokenType } from 'react-native-bcsc-core'
@@ -39,6 +41,7 @@ describe('Developer Screen', () => {
     })
     jest.useFakeTimers()
 
+    jest.mocked(useRoute).mockReturnValue({ params: {} } as never)
     mockUseServices.mockReturnValue([mockLogger])
     mockUseBCSCApiClientState.mockReturnValue({
       client: { clearTokens: mockClearTokens },
@@ -114,6 +117,47 @@ describe('Developer Screen', () => {
     expect(mockClearTokens).not.toHaveBeenCalled()
     expect(mockLogger.info).not.toHaveBeenCalled()
     expect(queryByText('true')).toBeNull()
+  })
+
+  describe('configure mediator', () => {
+    const renderInMainStack = () => {
+      jest.mocked(useRoute).mockReturnValue({ name: BCSCScreens.MainDeveloper, params: {} } as never)
+      return render(
+        <BasicAppContext
+          initialStateOverride={
+            {
+              mode: Mode.BCSC,
+              preferences: { selectedMediator: 'https://mediator.example/invite?oob=current' },
+            } as never
+          }
+        >
+          <AuthProvider>
+            <Developer />
+          </AuthProvider>
+        </BasicAppContext>
+      )
+    }
+
+    test('opens the mediator picker from the main stack and shows the selected mediator', () => {
+      const { getByTestId, getByText } = renderInMainStack()
+
+      expect(getByText('https://mediator.example/invite')).toBeTruthy()
+      fireEvent.press(getByTestId(testIdWithKey('ConfigureMediator')))
+
+      expect(useNavigation().navigate).toHaveBeenCalledWith(BCSCScreens.ConfigureMediator)
+    })
+
+    test('has no mediator entry outside the main stack', () => {
+      const { queryByTestId } = render(
+        <BasicAppContext initialStateOverride={{ mode: Mode.BCSC }}>
+          <AuthProvider>
+            <Developer />
+          </AuthProvider>
+        </BasicAppContext>
+      )
+
+      expect(queryByTestId(testIdWithKey('ConfigureMediator'))).toBeNull()
+    })
   })
 
   describe('fetchPersonCredentialTest', () => {

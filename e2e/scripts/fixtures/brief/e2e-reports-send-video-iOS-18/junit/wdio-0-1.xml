@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="8" failures="0" errors="0" skipped="0">
+  <testsuite name="Verified journey non photo card send video" timestamp="2026-08-28T07:21:40" time="610.204" tests="8" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Verified journey: non-photo card, send video"/>
+      <property name="capabilities" value="ios.00008030-000d318214b8402e"/>
+      <property name="file" value="file://./test/bcsc/verify/send-video-non-photo.journey.ts"/>
+    </properties>
+    <testcase classname="ios.00008030-000d318214b8402e.Verified_journey:_non-photo_card,_send_video" name="clears the review queue before submitting" time="12.001"/>
+    <testcase classname="ios.00008030-000d318214b8402e.Verified_journey:_non-photo_card,_send_video" name="onboards to the verify prompt" time="60.112"/>
+    <testcase classname="ios.00008030-000d318214b8402e.Verified_journey:_non-photo_card,_send_video" name="enters the non photo serial and submits the birthdate" time="48.330"/>
+    <testcase classname="ios.00008030-000d318214b8402e.Verified_journey:_non-photo_card,_send_video" name="adds the required photo ID" time="95.004"/>
+    <testcase classname="ios.00008030-000d318214b8402e.Verified_journey:_non-photo_card,_send_video" name="records and uploads a send video request" time="120.550"/>
+    <testcase classname="ios.00008030-000d318214b8402e.Verified_journey:_non-photo_card,_send_video" name="is approved by the agent scripted against the SIT review portal" time="80.207"/>
+    <testcase classname="ios.00008030-000d318214b8402e.Verified_journey:_non-photo_card,_send_video" name="picks up the approval and lands on verified Home" time="40.000"/>
+    <testcase classname="ios.00008030-000d318214b8402e.Verified_journey:_non-photo_card,_send_video" name="confirms verified state the account profile row now appears in Settings" time="30.000"/>
+  </testsuite>
+</testsuites>

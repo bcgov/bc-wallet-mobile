@@ -213,6 +213,8 @@ const translation = {
     "EnableProxy": "Enable proxy (FR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
     "SwitchTheme": "Switch theme (FR)",
+    "SelectedMediator": "Selected mediator (FR)",
+    "MediatorSection": "Mediator (FR)",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes (FR)",
       "OneHour": "1 hour (FR)",
@@ -373,7 +375,7 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (FR)",
-      "AppStartup": "Getting your BC Services Card app ready... (FR)"
+      "AppStartup": "Getting your BC Services Card App ready... (FR)"
     },
     "AccountLanding": {
       "Title": "BC Services Card (FR)",
@@ -382,7 +384,8 @@ const translation = {
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
-      "AuthenticateToSecure": "Authenticate to secure your app (FR)"
+      "AuthenticateToSecure": "Authenticate to secure your app (FR)",
+      "UnlockPrompt": "Unlock your app (FR)"
     },
     "AppReset": {
       "Title": "App reset for security (FR)",
@@ -414,6 +417,10 @@ const translation = {
       "SettingUpAccount": "Setting up your account... (FR)",
       "FailedToSetPIN": "Failed to set PIN (FR)",
       "ErrorSettingPIN": "An error occurred while setting the PIN (FR)"
+    },
+    "EnterPIN": {
+      "Title": "Enter your 6-digit PIN (FR)",
+      "Description": "The one you chose to secure this app (FR)"
     },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN (FR)",
@@ -600,6 +607,18 @@ const translation = {
       "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code (FR)",
       "ViewMessages": "View new messages (FR)",
     },
+    "ServiceNotice": {
+      "Header": "Service notice (FR)",
+      "NoticeUnavailable": "This notice isn't available right now. (FR)",
+      "MobileCardHeading": "Setting up a mobile card? (FR)",
+      "MobileCardDescription": "It may take longer to get your identity verified to set up your mobile card. (FR)",
+      "MobileCardVideoCall": "Video call – it may take more than 5 minutes to speak to an agent (FR)",
+      "MobileCardSendVideo": "Send video – it may take more than 3 days to get a response back (FR)",
+      "LoginHeading": "Logging into a government service? (FR)",
+      "LoginDescription": "Please be patient, it may take longer to log in. (FR)",
+      "HaveQuestions": "Have questions? (FR)",
+      "ContactUsLink": "Contact us (FR)",
+    },
     "Steps": {
       "VerificationIDMissing": "Verification request ID is missing (FR)",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (FR)",
@@ -622,6 +641,7 @@ const translation = {
       },
       "ServerStatus": {
         "UnavailableBannerTitle": "Service Unavailable (FR)",
+        "NoticeBannerTitle": "Service notice. Learn more. (FR)",
       },
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available (FR)",
@@ -684,6 +704,11 @@ const translation = {
       "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again. (FR)",
       "PrimaryAction": "Reset (FR)",
       "Resetting": "Resetting… (FR)"
+    },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator (FR)",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (FR)",
+      "ScanButton": "Scan mediator QR code (FR)"
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (FR)",
@@ -804,6 +829,8 @@ const translation = {
       "UnrecognizedQR": "QR code not recognized. (FR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (FR)",
       "FeatureUnavailable": "This action isn't available yet. (FR)",
+      "AccountTransferErrorTitle": "Unable to add device (FR)",
+      "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it. (FR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (FR)",
         "Mediator": "Mediator invitations aren't supported in BC Services Card. (FR)",
@@ -885,6 +912,9 @@ const translation = {
       "CancelCamera": "Cancel camera (FR)",
       "TakePhoto": "Take photo (FR)",
       "ToggleFlash": "Toggle flash (FR)",
+      "CameraInterrupted": "Camera paused (FR)",
+      "CameraInterruptedMessage": "The camera is in use by another app or is temporarily unavailable. It will resume on its own when it's available. (FR)",
+      "CameraNotReady": "The camera isn't ready yet. Please try again. (FR)",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings (FR)",
@@ -897,6 +927,22 @@ const translation = {
       "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps: (FR)",
       "CameraAndMicrophoneTitle": "Camera & Microphone Disabled (FR)",
       "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video. (FR)",
+      "BluetoothTitle": "Nearby Devices Disabled (FR)",
+      "BluetoothDescription": "Follow these steps to allow access to nearby devices so you can use a connected Bluetooth headset or speaker during the call. (FR)",
+      "Bluetooth": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Bluetooth' (FR)",
+          "Step3": "3. Return to the app to continue (FR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Permissions' (FR)",
+          "Step3": "3. Tap 'Nearby devices' (FR)",
+          "Step4": "4. Select 'Allow' (FR)",
+          "Step5": "5. Return to the app to continue (FR)",
+        },
+      },
       "Camera": {
         "iOS": {
           "Step1": "1. Tap 'Open Settings' below (FR)",
@@ -1029,6 +1075,8 @@ const translation = {
       "TakeVideo": {
         "RecordingError": "Recording error (FR)",
         "RecordingErrorDescription": "There was an issue with the recording. Please try again. (FR)",
+        "RecordingInterrupted": "Recording interrupted (FR)",
+        "RecordingInterruptedDescription": "The recording stopped before you finished. Please record your video again. (FR)",
         "CameraPermissionRequired": "Camera Permission Required (FR)",
         "CameraPermissionRequiredDescription": "Please enable camera permission to take a photo. (FR)",
         "MicrophonePermissionRequired": "Microphone Permission Required (FR)",
@@ -1074,6 +1122,7 @@ const translation = {
         "PreparingVideo": "Preparing your photo and video for verification (FR)",
         "PreparingDocuments": "Preparing additional documents (FR)",
         "UploadingInformation": "Uploading your documents securely (FR)",
+        "UploadingFiles": "Uploading your files (FR)",
         "FinalizingVerification": "Finalizing your request (FR)"
       }
     },
@@ -1114,7 +1163,7 @@ const translation = {
       "Title": "Open the BC Services Card app on your other device (FR)",
       "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device. (FR)",
       "Warning": "Do not scan with the camera app. (FR)",
-      "GetQRCode": "Get QR Code (FR)",
+      "GetQRCode": "Get QR code (FR)",
     },
     "TransferInformation": {
       "Title": "Have this app on another device? (FR)",
@@ -1122,10 +1171,12 @@ const translation = {
       "TransferAccount": "Add device (FR)",
     },
     "TransferInstructions": {
+      "AddingDevice": "Adding this device... (FR)",
       "Title": "Scan your QR code to add your device (FR)",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner. (FR)",
-      "Step2": "Choose <b>‘Add another device'</b> to get your QR code. (FR)",
-      "Step3": "<b>Scan the QR code</b> that appears on your other device. (FR)",
+      "Step1": "<b>On your other device</b>, open and unlock the BC Services Card app. (FR)",
+      "Step2": "Tap the <b>menu ‘☰’</b> icon in the top left corner. (FR)",
+      "Step3": "Choose <b>‘Add another device’</b> to get your QR code. (FR)",
+      "Step4": "<b>Scan the QR code</b> that appears on your other device. (FR)",
       "ScanQRCode": "Scan QR code (FR)",
     },
     "QRDisplay": {
@@ -1148,6 +1199,12 @@ const translation = {
       "Title": "Your identity has been verified (FR)",
       "Description": "You're now able to access services with your verified identity. (FR)",
       "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID. (FR)",
+      "ButtonText": "Continue (FR)"
+    },
+    "AlreadyVerified": {
+      "Title": "You're already set! (FR)",
+      "Description": "The QR code scanned is for transferring an existing account to a new device. This device is already verified and ready to use. (FR)",
+      "ExtraText": "To access a website or service, scan the QR code shown on that website or service. (FR)",
       "ButtonText": "Continue (FR)"
     },
     "CancelledVerification": {
@@ -1348,6 +1405,10 @@ const translation = {
       "CannotSendVideo": "Cannot send a video? (FR)",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (FR)",
       "CannotVideoCall": "Cannot video call? (FR)"
+    },
+    "BluetoothDisclosure": {
+      "Title": "Detect bluetooth devices (FR)",
+      "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device. (FR)",
     },
   },
   "RemoteLogging": {

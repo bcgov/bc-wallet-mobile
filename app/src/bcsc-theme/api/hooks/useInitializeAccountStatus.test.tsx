@@ -136,7 +136,7 @@ describe('useInitializeAccountStatus', () => {
     expect(result.current.initializingAccount).toBe(false)
   })
 
-  describe('verificationSkipped for accounts predating v4.1', () => {
+  describe('verification flags for accounts predating v4.1', () => {
     const run = async (bcsc: Record<string, unknown>, account: unknown) => {
       const mockDispatch = jest.fn()
       jest.mocked(Bifold.useStore).mockReturnValue([{ stateLoaded: true, bcsc } as any, mockDispatch])
@@ -147,29 +147,38 @@ describe('useInitializeAccountStatus', () => {
       return mockDispatch
     }
 
-    it('sets verificationSkipped to false when adopting a native account (v3 upgrade)', async () => {
+    const verificationFlagActions = [
+      expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED }),
+      expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_STARTED }),
+    ]
+
+    it('carries a native account over as a first-time verifier whose verification has started (v3 upgrade)', async () => {
       const mockDispatch = await run({ hasAccount: false }, { nickname: 'Combo' })
 
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
         payload: [false],
       })
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.SET_VERIFICATION_STARTED,
+        payload: [true],
+      })
     })
 
-    it('does not set verificationSkipped when there is no native account', async () => {
+    it('does not set either verification flag when there is no native account', async () => {
       const mockDispatch = await run({ hasAccount: false }, null)
 
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
-      )
+      for (const action of verificationFlagActions) {
+        expect(mockDispatch).not.toHaveBeenCalledWith(action)
+      }
     })
 
     it('does not overwrite an existing verificationSkipped value', async () => {
       const mockDispatch = await run({ hasAccount: false, verificationSkipped: true }, { nickname: 'Combo' })
 
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
-      )
+      for (const action of verificationFlagActions) {
+        expect(mockDispatch).not.toHaveBeenCalledWith(action)
+      }
     })
   })
 

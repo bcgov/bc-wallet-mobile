@@ -134,6 +134,7 @@ export enum AppEventCode {
   CARD_PROBLEM = 'card_problem',
   ADDITIONAL_CARD = 'additional_card',
   UNDER_MINIMUM_AGE = 'under_minimum_age',
+  OVER_MAXIMUM_AGE = 'over_maximum_age',
   TOO_MANY_MOBILE_CARDS = 'too_many_mobile_cards',
   AUTHORIZATION_PENDING = 'authorization_pending',
   RATE_IN_APP_STORE = 'rate_in_app_store',
@@ -143,6 +144,7 @@ export enum AppEventCode {
   CONFIRM_CANCEL_MOBILE_CARD_SETUP = 'confirm_cancel_mobile_card_setup',
   TOO_MANY_ATTEMPTS = 'too_many_attempts',
   INVALID_QR_CODE = 'invalid_qr_code',
+  ACCOUNT_TRANSFER_ERROR = 'account_transfer_error', // Non-IAS error code
   NON_BCSC_ACCEPT_CONDITIONS = 'non_bcsc_accept_conditions',
   NON_BCSC_HAS_BEEN_DISABLED = 'non_bcsc_has_been_disabled',
   DELETE_VERIFY_REQUEST_ERROR = 'delete_verify_request_error',
@@ -182,6 +184,7 @@ export enum AppEventCode {
   AGENT_INITIALIZATION_ERROR = 'agent_initialization_error', // Non-IAS error code
   WALLET_SECRET_NOT_FOUND = 'wallet_secret_not_found', // Non-IAS error code
   WALLET_KEY_ROTATION_ERROR = 'wallet_key_rotation_error', // Non-IAS error code
+  MEDIATOR_SWITCH_ERROR = 'mediator_switch_error', // Non-IAS error code
   // BCID/Connection Errors
   PARSE_INVITATION_ERROR = 'parse_invitation_error', // Non-IAS error code
   RECEIVE_INVITATION_ERROR = 'receive_invitation_error', // Non-IAS error code
@@ -209,6 +212,7 @@ export enum AppEventCode {
   AUTO_CRED_ACCOUNT_DEACTIVATED = 'auto_cred_account_deactivated',
   // Account Errors
   ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
+  ACCOUNT_NOT_REGISTERED = 'account_not_registered', // Non-IAS error code
   // Native module errors (#3419) — distinct codes for bcsc-core native rejections
   TOKEN_SAVE_FAILED = 'token_save_failed', // Non-IAS error code
   TOKEN_DELETE_FAILED = 'token_delete_failed', // Non-IAS error code

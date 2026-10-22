@@ -47,8 +47,8 @@ jest.mock('../features/scan', () => ({
 jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
   createFloatingHelpMenuButton: jest.fn(() => () => null),
 }))
-jest.mock('../components/HeaderWithBanner', () => ({
-  createTabHeaderWithoutBanner: jest.fn(() => null),
+jest.mock('../components/NavigationHeaders', () => ({
+  createTabHeader: jest.fn(() => null),
 }))
 jest.mock('../components/SettingsHeaderButton', () => ({
   createMainSettingsHeaderButton: jest.fn(() => () => null),

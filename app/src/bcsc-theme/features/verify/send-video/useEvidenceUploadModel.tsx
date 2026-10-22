@@ -1,4 +1,3 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import {
   VerificationPhotoUploadPayload,
   VerificationPrompt,
@@ -7,12 +6,14 @@ import {
 import useAlreadyVerifiedRecovery from '@/bcsc-theme/hooks/useAlreadyVerifiedRecovery'
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import type { MediaFormat } from '@/bcsc-theme/utils/media-format'
 import { normalizeMp4MajorBrand, sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
+import { VerificationRequestStatus } from '@/constants'
 import { isAxiosAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
@@ -27,24 +28,51 @@ import { useTranslation } from 'react-i18next'
 import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
+enum UploadStage {
+  PreparingVideo = 'preparingVideo',
+  PreparingDocuments = 'preparingDocuments',
+  UploadingFiles = 'uploadingFiles',
+  FinalizingVerification = 'finalizingVerification',
+  Complete = 'complete',
+}
+
+const UPLOAD_PROGRESS: Record<UploadStage, number> = {
+  [UploadStage.PreparingVideo]: 0,
+  [UploadStage.PreparingDocuments]: 25,
+  [UploadStage.UploadingFiles]: 50,
+  [UploadStage.FinalizingVerification]: 75,
+  [UploadStage.Complete]: 100,
+}
+
 const useEvidenceUploadModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceUploading>
 ) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store, dispatch] = useStore<BCState>()
   const isCancelledRef = useRef(false)
-  const { evidence } = useApi()
+  const evidence = useEvidenceService()
   const { updateAccountFlags, updateVerificationRequest } = useSecureActions()
   const { processAdditionalEvidence } = useEvidenceUpload()
   const { t } = useTranslation()
   const [isUploading, setIsUploading] = useState(false)
-  const [isCancelling, setIsCancelling] = useState(false)
-  const [uploadMessage, setUploadMessage] = useState<string | null>(null)
+  const [uploadStage, setUploadStage] = useState(UploadStage.PreparingVideo)
   const { fileUploadErrorAlert, alreadyVerifiedAlert } = useAlerts(navigation)
   const { recoverFromAlreadyVerified } = useAlreadyVerifiedRecovery()
 
   const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata } = store.bcsc
   const { verificationRequestId, verificationRequestSha } = store.bcscSecure
+
+  // Derived from the stage alone so the text keeps matching the bar after an error or completion.
+  const uploadMessage = useMemo(() => {
+    const messages: Record<UploadStage, string> = {
+      [UploadStage.PreparingVideo]: t('BCSC.SendVideo.UploadProgress.PreparingVideo'),
+      [UploadStage.PreparingDocuments]: t('BCSC.SendVideo.UploadProgress.PreparingDocuments'),
+      [UploadStage.UploadingFiles]: t('BCSC.SendVideo.UploadProgress.UploadingFiles'),
+      [UploadStage.FinalizingVerification]: t('BCSC.SendVideo.UploadProgress.FinalizingVerification'),
+      [UploadStage.Complete]: t('BCSC.SendVideo.UploadProgress.FinalizingVerification'),
+    }
+    return messages[uploadStage]
+  }, [t, uploadStage])
 
   const isReady = useMemo(
     () => Boolean(photoPath && videoPath && videoThumbnailPath),
@@ -139,7 +167,7 @@ const useEvidenceUploadModel = (
 
   const handleSend = useCallback(async () => {
     setIsUploading(true)
-    setUploadMessage(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
+    setUploadStage(UploadStage.PreparingVideo)
     try {
       if (!photoPath || !videoPath || !videoDuration) {
         throw new Error('Missing photo or video data')
@@ -174,13 +202,13 @@ const useEvidenceUploadModel = (
         return
       }
 
-      setUploadMessage(t('BCSC.SendVideo.UploadProgress.PreparingDocuments'))
+      setUploadStage(UploadStage.PreparingDocuments)
       const additionalEvidence = await processAdditionalEvidence()
       if (isCancelledRef.current) {
         return
       }
 
-      setUploadMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
+      setUploadStage(UploadStage.UploadingFiles)
       // AC3 boundary check — see capture-date.ts's file header for scoping. Reached
       // independently of the live-call flow's equivalent guard in uploadSelfiePhoto: send-video
       // is a first-class choice on Verification Method Selection, and the fallback when a call
@@ -206,7 +234,7 @@ const useEvidenceUploadModel = (
         return
       }
 
-      setUploadMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
+      setUploadStage(UploadStage.FinalizingVerification)
       const additionalUploadUris = additionalEvidence.map(({ uploadUri }) => uploadUri)
       const verificationResponse = await finalizeVerification(
         evidenceMetadata.photoMetadataResponse.upload_uri,
@@ -216,12 +244,32 @@ const useEvidenceUploadModel = (
         verificationRequestSha
       )
 
+      // A submit reconciled against a request the server already reviewed (see useEvidenceService) can come
+      // back cancelled: "Successfully sent" would only bounce the user here through the pending screen's check
+      if (verificationResponse?.status === VerificationRequestStatus.CANCELLED) {
+        setUploadStage(UploadStage.Complete)
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              {
+                name: BCSCScreens.CancelledReview,
+                params: { agentReason: verificationResponse.status_message },
+              },
+            ],
+          })
+        )
+        return
+      }
+
       await updateAccountFlags({
         userSubmittedVerificationVideo: true,
       })
 
       // Capture a timestamp when the user successfully submits their verification video. This is needed on the pending review screen
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [new Date()] })
+
+      setUploadStage(UploadStage.Complete)
 
       navigation.dispatch(
         CommonActions.reset({
@@ -258,7 +306,6 @@ const useEvidenceUploadModel = (
       }
     } finally {
       setIsUploading(false)
-      setUploadMessage(null)
     }
   }, [
     alreadyVerifiedAlert,
@@ -274,7 +321,6 @@ const useEvidenceUploadModel = (
     processAdditionalEvidence,
     prompts,
     store,
-    t,
     updateAccountFlags,
     updateVerificationRequest,
     uploadEvidenceFiles,
@@ -286,7 +332,6 @@ const useEvidenceUploadModel = (
   ])
 
   const handleCancel = useCallback(async () => {
-    setIsCancelling(true)
     isCancelledRef.current = true
     await Promise.allSettled([
       removeFileSafely(photoPath, logger),
@@ -303,8 +348,8 @@ const useEvidenceUploadModel = (
     handleCancel,
     isReady,
     isUploading,
-    isCancelling,
     uploadMessage,
+    progressPercent: UPLOAD_PROGRESS[uploadStage],
   }
 }
 

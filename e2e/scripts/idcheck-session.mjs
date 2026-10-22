@@ -11,6 +11,8 @@
  * Credentials: IDCHECK_USER (the account's Entra sign-in name: its gov email, or <IDIR>@gov.bc.ca),
  * IDCHECK_PASSWORD, and IDCHECK_TOTP_SECRET when the account's MFA is an authenticator-app code.
  * Without the secret a push to the account's phone is waited on — fine locally, never in CI.
+ * IDCHECK_TOTP_WINDOW_PARITY (even|odd) keeps two lanes that sign in at once out of each other's
+ * TOTP windows — see totpMintDelayMs.
  */
 import { load } from 'cheerio'
 import makeFetchCookie from 'fetch-cookie'
@@ -55,6 +57,24 @@ const NAV_SETTLE_MS = 800
 const TOTP_STEP_S = 30
 /** A code about to roll over is generated after the rollover instead. */
 const TOTP_MIN_REMAINING_S = 3
+/** Minted this long into a window, so a code never rides the boundary. */
+const TOTP_WINDOW_SETTLE_MS = 200
+/**
+ * A submitted code that has brought neither a navigation nor a verdict after this long is treated as
+ * lost — a replayed window Entra ignored, a Verify the page swallowed — and a fresh code goes in,
+ * before the sign-in deadline (which the submission also extends). Measured: every stalled code page
+ * in five nightlies sat for the whole 45 s deadline with the code typed and nothing on screen.
+ */
+const OTC_RESUBMIT_AFTER_MS = 12_000
+/** Code submissions per sign-in before the drive gives up: the first, then two fresh windows. */
+const OTC_MAX_SUBMISSIONS = 3
+/** A fill Entra wipes by re-rendering the field is typed again this many times before it is an error. */
+const FIELD_FILL_ATTEMPTS = 3
+const FIELD_SETTLE_MS = 300
+/** An empty-password submit ("Please enter your password") is a fill/re-render race, retried this often. */
+const PASSWORD_RETRIES = 2
+/** The landing on IDCheck crosses the SIT allowlist and a Keycloak bounce; connect timeouts there are routine. */
+const LANDING_TIMEOUT_MS = 30_000
 
 /** @typedef {'silent' | 'none' | 'totp' | 'push' | 'prompt'} SignInMethod */
 /** @typedef {{ fetchWithCookies: typeof fetch }} Session */
@@ -260,7 +280,7 @@ async function signInWithBrowser(jar, signal) {
       signal?.addEventListener('abort', onAbort, { once: true })
       const page = context.pages()[0] ?? (await context.newPage())
       try {
-        await page.goto(IDCHECK_HOME_URL, { waitUntil: 'domcontentloaded' })
+        await page.goto(IDCHECK_HOME_URL, { waitUntil: 'domcontentloaded', timeout: LANDING_TIMEOUT_MS })
         const method = await Promise.race([driveSignIn(page, credentials), rejectOnAbort(signal)])
         await page.waitForLoadState('load').catch(() => undefined)
         const cookies = (await context.cookies()).filter((cookie) => bareDomain(cookie.domain).endsWith('gov.bc.ca'))
@@ -421,6 +441,7 @@ async function launchPersistentBrowserContext(userDataDir, headed) {
  *   the one-shot steps already taken, so a page that lingers is not acted on twice
  * @property {number} codeSubmissions
  * @property {number} codeSubmittedAt
+ * @property {number} emptySubmitRetries empty-password submits typed again so far
  */
 
 /**
@@ -442,6 +463,7 @@ async function driveSignIn(page, credentials) {
     done: { picker: false, user: false, password: false, kmsi: false, anotherWay: false, pushLogged: false },
     codeSubmissions: 0,
     codeSubmittedAt: 0,
+    emptySubmitRetries: 0,
   }
   let lastKnownPageAt = Date.now()
   let lastNavAt = Date.now()
@@ -449,10 +471,11 @@ async function driveSignIn(page, credentials) {
     if (frame === page.mainFrame()) lastNavAt = Date.now()
   })
 
-  for (;;) {
-    if (Date.now() > drive.deadline) {
-      throw new Error(`[idcheck sign-in] timed out ${await describePage(page, credentials.user)}`)
-    }
+  // The deadline is the one exit that is not a return or a throw from inside the drive: it breaks
+  // out, and the page is described once, after the loop.
+  while (Date.now() <= drive.deadline) {
+    // Arrival before expiry: a sign-in that completed while the driver waited out a TOTP window is a
+    // success, never a timeout.
     const url = currentUrl(page)
     if (url && isIdcheckPage(url)) {
       return finishOnIdcheck(page, url, drive)
@@ -464,6 +487,7 @@ async function driveSignIn(page, credentials) {
     }
     await page.waitForTimeout(POLL_INTERVAL_MS)
   }
+  throw new Error(`[idcheck sign-in] timed out ${await describePage(page, credentials.user)}`)
 }
 
 /**
@@ -543,9 +567,27 @@ async function assertNoEntraVerdict(page, drive) {
     )
   }
   if (await visible(page, '#passwordError')) {
-    throw entraError(
-      `[idcheck sign-in] password rejected for ${drive.maskedUser}: ${await pageText(page, '#passwordError')}`
-    )
+    const text = await pageText(page, '#passwordError')
+    // "Please enter your password." answers an EMPTY submit: Entra re-rendered the field between the
+    // fill and the click (a client-side view swap, which the navigation-settle guard cannot see) — a
+    // race on our side, not a verdict on the credential. The password branch types it again.
+    if (/enter your password/i.test(text)) {
+      if (!drive.done.password) return // the retry is queued — reactToMicrosoftPage types it next
+      if (drive.emptySubmitRetries < PASSWORD_RETRIES) {
+        drive.emptySubmitRetries++
+        drive.done.password = false
+        // The counter and the budget are all this line carries — never the credential.
+        console.log(
+          `[idcheck] [~] Entra answered an empty submit — typing the password again (${drive.emptySubmitRetries}/${PASSWORD_RETRIES})`
+        )
+        return
+      }
+      // Still the race, not a verdict: an exhausted retry budget must not count toward the lockout latch.
+      throw new Error(
+        `[idcheck sign-in] the password field would not keep its value through ${PASSWORD_RETRIES} retries ${await describePage(page, drive.credentials.user)}`
+      )
+    }
+    throw entraError(`[idcheck sign-in] password rejected for ${drive.maskedUser}: ${text}`)
   }
   if (await visible(page, '#idSubmit_ProofUp_Redirect')) {
     throw entraError(
@@ -609,30 +651,47 @@ async function codeRejected(page, drive) {
 
 /**
  * Entra rejects a replayed code (two sign-ins in one window) and a drifted clock alike; the next
- * window is a fair retry, with a deadline of its own since the wait for it is ours, not the page's.
+ * window is a fair retry (submitTotpCode waits for it and extends the deadline).
  *
  * @param {import('playwright-core').Page} page
  * @param {Drive} drive
  */
 async function retryCode(page, drive) {
-  if (drive.codeSubmissions >= 2 || !drive.credentials.totpSecret) {
+  if (drive.codeSubmissions >= OTC_MAX_SUBMISSIONS || !drive.credentials.totpSecret) {
     throw entraError(
-      `[idcheck sign-in] verification code rejected twice — check IDCHECK_TOTP_SECRET and the clock: ${await pageText(page, '#idSpan_SAOTCC_Error_OTC')}`
+      `[idcheck sign-in] verification code rejected ${drive.codeSubmissions} times — check IDCHECK_TOTP_SECRET and the clock: ${await pageText(page, '#idSpan_SAOTCC_Error_OTC')}`
     )
   }
   await submitTotpCode(page, drive)
-  drive.deadline = Date.now() + SIGN_IN_TIMEOUT_MS
 }
 
 /**
- * The code page. A code is typed once and then left alone — the page lingers while Entra checks it —
- * and only a submission the deadline has outlived is typed again.
+ * The code page. A code is typed once and then left alone while Entra checks it; a minted code that
+ * has brought neither a verdict nor a navigation after OTC_RESUBMIT_AFTER_MS is replaced by a fresh
+ * one (next window), up to OTC_MAX_SUBMISSIONS. A code a person typed gets the whole deadline.
  *
  * @param {import('playwright-core').Page} page
  * @param {Drive} drive
  */
 async function submitVerificationCode(page, drive) {
-  if (drive.codeSubmissions > 0 && Date.now() - drive.codeSubmittedAt <= SIGN_IN_TIMEOUT_MS) {
+  if (drive.codeSubmissions > 0) {
+    const sinceSubmitMs = Date.now() - drive.codeSubmittedAt
+    if (!drive.credentials.totpSecret) {
+      if (sinceSubmitMs <= SIGN_IN_TIMEOUT_MS) return
+      throw new Error(
+        `[idcheck sign-in] the typed code never moved the page on ${await describePage(page, drive.credentials.user)}`
+      )
+    }
+    if (sinceSubmitMs <= OTC_RESUBMIT_AFTER_MS) return
+    if (drive.codeSubmissions >= OTC_MAX_SUBMISSIONS) {
+      throw new Error(
+        `[idcheck sign-in] the code page did not move on after ${drive.codeSubmissions} submissions ${await describePage(page, drive.credentials.user)}`
+      )
+    }
+    console.log(
+      `[idcheck] [~] code submission ${drive.codeSubmissions} brought neither a verdict nor a navigation within ${OTC_RESUBMIT_AFTER_MS}ms — submitting a fresh code`
+    )
+    await submitTotpCode(page, drive)
     return
   }
   if (drive.credentials.totpSecret) {
@@ -648,17 +707,25 @@ async function submitVerificationCode(page, drive) {
 }
 
 /**
- * Mints the code for a fresh window and submits it.
+ * Mints the code for a fresh window and submits it. Every submission restarts the sign-in deadline:
+ * the wait for a window is ours, not the page's, and Entra deserves a whole answer budget per code.
  *
  * @param {import('playwright-core').Page} page
  * @param {Drive} drive
  */
 async function submitTotpCode(page, drive) {
-  await waitForFreshTotpWindow(page, drive.codeSubmittedAt)
+  if (!(await waitForFreshTotpWindow(page, drive.codeSubmittedAt))) {
+    // Entra accepted the code already in flight while this waited: the loop sees the arrival next, and
+    // the wait was ours, so the arrival gets a budget of its own rather than an expiry.
+    console.log('[idcheck] [~] the code page moved on while waiting for a window — nothing to resubmit')
+    drive.deadline = Date.now() + SIGN_IN_TIMEOUT_MS
+    return
+  }
   await submitCode(page, totpCode(drive.credentials.totpSecret))
   drive.method = 'totp'
   drive.codeSubmissions++
   drive.codeSubmittedAt = Date.now()
+  drive.deadline = Date.now() + SIGN_IN_TIMEOUT_MS
 }
 
 /**
@@ -744,8 +811,28 @@ async function riskPageText(page) {
  * @param {string} value
  */
 async function submitField(page, selector, value) {
-  await page.locator(selector).first().fill(value)
+  await fillUntilHeld(page, selector, value, 1)
   await page.locator('#idSIButton9').first().click()
+}
+
+/**
+ * Fill, then read the value back: Entra re-renders a field as its view settles, which can wipe a value
+ * typed a moment too early, so only a fill the field still holds is submitted.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {string} selector
+ * @param {string} value
+ * @param {number} attempt
+ */
+async function fillUntilHeld(page, selector, value, attempt) {
+  const field = page.locator(selector).first()
+  await field.fill(value)
+  if ((await field.inputValue().catch(() => '')) === value) return
+  if (attempt >= FIELD_FILL_ATTEMPTS) {
+    throw new Error(`[idcheck sign-in] ${selector} would not keep its value — the page re-rendered it ${attempt} times`)
+  }
+  await page.waitForTimeout(FIELD_SETTLE_MS)
+  return fillUntilHeld(page, selector, value, attempt + 1)
 }
 
 /** @param {import('playwright-core').Page} page @param {string} code */
@@ -769,19 +856,59 @@ async function promptForCode() {
 }
 
 /**
- * Sleeps into the next TOTP window when a code minted now would be unsafe: the window already minted
- * the code submitted at `lastSubmittedAtMs` (Entra rejects a replay), or it is about to roll over.
+ * Sleeps until a code minted now is safe — see {@link totpMintDelayMs} — unless the page moves on
+ * first: a code still in flight can succeed during the wait, and filling a code input that is no
+ * longer there would turn that success into a locator timeout.
  *
  * @param {import('playwright-core').Page} page
  * @param {number} lastSubmittedAtMs 0 before the first submission
+ * @returns {Promise<boolean>} whether the code page is still showing, so a code may be submitted
  */
 async function waitForFreshTotpWindow(page, lastSubmittedAtMs) {
-  const nowS = Math.floor(Date.now() / 1000)
-  const remainingS = TOTP_STEP_S - (nowS % TOTP_STEP_S)
-  const sameWindow = Math.floor(nowS / TOTP_STEP_S) === Math.floor(lastSubmittedAtMs / 1000 / TOTP_STEP_S)
-  if (sameWindow || remainingS < TOTP_MIN_REMAINING_S) {
-    await page.waitForTimeout(remainingS * 1000 + 200)
+  const parity = readTotpWindowParity()
+  const delayMs = totpMintDelayMs(Date.now(), lastSubmittedAtMs, parity)
+  if (delayMs > 0) {
+    const lane = parity ? ` (${parity} windows)` : ''
+    console.log(`[idcheck] [~] waiting ${delayMs}ms for a fresh TOTP window${lane}`)
+    try {
+      // Resolves as soon as the code input goes away; a TimeoutError means it stayed the whole wait.
+      await page.locator('input[name="otc"]').first().waitFor({ state: 'hidden', timeout: delayMs })
+      return false
+    } catch (error) {
+      if (error?.name !== 'TimeoutError') throw error
+    }
   }
+  return visible(page, 'input[name="otc"]')
+}
+
+/**
+ * How long to wait before minting a code: into the next window when this one already minted the code
+ * submitted at `lastSubmittedAtMs` (Entra rejects a replay) or is about to roll over, and — when the
+ * run claims a window parity — into the next window of that parity. Two runners signing in as the
+ * same account at once (the nightly's iOS and Android jobs run the same specs in step) otherwise mint
+ * the same code in the same window; a parity per platform keeps them apart with no coordination, for
+ * at most one window of waiting. Pure, so the arithmetic has unit tests.
+ *
+ * @param {number} nowMs
+ * @param {number} lastSubmittedAtMs 0 before the first submission
+ * @param {'even' | 'odd' | undefined} parity
+ * @returns {number} milliseconds to wait; 0 when the current window will do
+ */
+export function totpMintDelayMs(nowMs, lastSubmittedAtMs, parity) {
+  const stepMs = TOTP_STEP_S * 1000
+  const current = Math.floor(nowMs / stepMs)
+  const remainingMs = (current + 1) * stepMs - nowMs
+  const lastWindow = lastSubmittedAtMs > 0 ? Math.floor(lastSubmittedAtMs / stepMs) : -1
+  let target = current
+  if (target === lastWindow || remainingMs < TOTP_MIN_REMAINING_S * 1000) target++
+  if (parity && target % 2 !== (parity === 'even' ? 0 : 1)) target++
+  return target === current ? 0 : target * stepMs - nowMs + TOTP_WINDOW_SETTLE_MS
+}
+
+/** IDCHECK_TOTP_WINDOW_PARITY=even|odd — CI sets it per platform lane; anything else means no parity. */
+function readTotpWindowParity() {
+  const raw = process.env.IDCHECK_TOTP_WINDOW_PARITY?.trim().toLowerCase()
+  return raw === 'even' || raw === 'odd' ? raw : undefined
 }
 
 /**

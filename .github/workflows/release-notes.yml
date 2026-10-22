@@ -1,0 +1,133 @@
+# Builds a report from every PR merged between two tags and
+# posts it as a Discussion in the "Release notes" category. Manual and
+# on-demand — give it any two tags, in either order.
+#
+# How it works:
+#   1. Figure out which tag is older (by commit date) and list the PRs
+#      merged in between. This repo only squash-merges
+#   2. For each PR, find its linked issue via GitHub's own "Closes #123"
+#      tracking (`closingIssuesReferences`). PRs with no linked issue go
+#      in their own "No linked ticket" section.
+#   3. Look up each linked issue's Sprint/Priority from the "BC Wallet"
+#      project board, and bucket it into a category (Bug/Feature/Task/Tech
+#      Debt/Spike/Other) from its issue type and labels.
+#   4. Render it all as Markdown tables, grouped by category, and post as a
+#      new Discussion.
+#
+# The step scripts live in scripts/release-notes/ — see that directory for
+# the actual logic.
+#
+# Reading Project fields needs a scope the default GITHUB_TOKEN doesn't have,
+# so this reuses the fine-grained PAT `board-status.yml` already depends on
+# (op://bcsc-mobile-app-cd/github-projects/credential)
+#
+# Creating the Discussion itself uses the default GITHUB_TOKEN instead —
+# `discussions: write` is a permission it can hold, so the PAT's job stops
+# at reading.
+name: Release Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_a:
+        description: 'A git tag in the range (either order — the workflow figures out which is older)'
+        required: true
+        type: string
+      tag_b:
+        description: 'The other git tag in the range'
+        required: true
+        type: string
+
+permissions: {}
+
+# Queue instead of cancel: overlapping runs would each post a duplicate
+# Discussion, and runs are rare enough that queueing is fine.
+concurrency:
+  group: release-notes
+  cancel-in-progress: false
+
+jobs:
+  release-notes:
+    name: Build and post release notes
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      discussions: write
+    timeout-minutes: 15
+    steps:
+      - name: Check secrets are available
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          if [ -z "${OP_SERVICE_ACCOUNT_TOKEN}" ]; then
+            echo "::error::No 1Password token available. This workflow needs the fine-grained PAT at op://bcsc-mobile-app-cd/github-projects/credential (org Projects read/write, repo Issues and Pull requests read) to read PR, issue and Sprint data. Configure secrets.OP_SERVICE_ACCOUNT_TOKEN."
+            exit 1
+          fi
+
+      - name: Load project token
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PROJECTS_TOKEN: op://bcsc-mobile-app-cd/github-projects/credential
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # The two tags can be arbitrarily old, so history and tags both
+          # need to be complete for merge-base / git log to see them.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Verify discussion category exists
+        id: category
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const script = require('./scripts/release-notes/verify-discussion-category.js')
+            await script({ github, context, core })
+
+      - name: Resolve tag order and enumerate PRs
+        id: range
+        env:
+          TAG_A: ${{ inputs.tag_a }}
+          TAG_B: ${{ inputs.tag_b }}
+        run: ./scripts/release-notes/resolve-tag-range.sh
+
+      - name: Check for an existing release notes discussion
+        env:
+          NEWER_TAG: ${{ steps.range.outputs.newer }}
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const script = require('./scripts/release-notes/check-existing-discussion.js')
+            await script({ github, context, core })
+
+      - name: Build release notes report
+        id: report
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          OLDER_TAG: ${{ steps.range.outputs.older }}
+          NEWER_TAG: ${{ steps.range.outputs.newer }}
+          PR_NUMBERS: ${{ steps.range.outputs.pr_numbers }}
+        with:
+          github-token: ${{ env.PROJECTS_TOKEN }}
+          script: |
+            const script = require('./scripts/release-notes/build-report.js')
+            await script({ github, context, core })
+
+      - name: Create the discussion
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          NEWER_TAG: ${{ steps.range.outputs.newer }}
+          BODY: ${{ steps.report.outputs.body }}
+          REPOSITORY_ID: ${{ steps.category.outputs.repository_id }}
+          CATEGORY_ID: ${{ steps.category.outputs.category_id }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const script = require('./scripts/release-notes/create-discussion.js')
+            await script({ github, core })

@@ -16,7 +16,7 @@ import {
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import useResidentialAddressModel, { ResidentialAddressFormState } from './_models/useResidentialAddressModel'
+import useResidentialAddressModel, { ResidentialAddressFormState } from './useResidentialAddressModel'
 
 type ResidentialAddressScreenProps = StackScreenProps<BCSCVerifyStackParams, BCSCScreens.ResidentialAddress>
 

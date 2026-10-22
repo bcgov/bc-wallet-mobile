@@ -56,6 +56,7 @@ const upgradeWrapper = (wrapper: string, scenario: string): Proof => ({
 
 const IN_PERSON_COMPLETE = 'completes verification in person and lands on verified Home'
 const SEND_VIDEO_APPROVED = 'is approved by the agent (scripted against the SIT review portal)'
+const DEV_MODE_OFF_AFTER_UPGRADE = 'keeps developer mode off across the upgrade: the Developer options row is absent'
 
 /** The UAT checklist, row for row. */
 export const UAT_CHECKLIST: CoverageSection[] = [
@@ -401,6 +402,31 @@ export const UAT_CHECKLIST: CoverageSection[] = [
           },
         ],
       },
+      {
+        id: 'feat-developer-mode-off',
+        label: 'Developer mode off by default',
+        platforms: both,
+        proof: [
+          {
+            file: spec('onboarding/onboarding-detours.journey.ts'),
+            tests: ['opens onboarding Settings from the intro header, with no developer menu, and backs out'],
+          },
+          {
+            file: spec('main/settings.journey.ts'),
+            tests: ['has developer mode off by default: the Developer options row is absent'],
+          },
+          { file: spec('upgrade/upgrade.spec.ts'), tests: [DEV_MODE_OFF_AFTER_UPGRADE] },
+          { ...upgradeWrapper('upgrade-verified', 'verified'), tests: [DEV_MODE_OFF_AFTER_UPGRADE] },
+          { ...upgradeWrapper('upgrade-verified-v403', 'verified'), tests: [DEV_MODE_OFF_AFTER_UPGRADE] },
+          {
+            file: spec('migration/migration.spec.ts'),
+            suite: 'Upgrade from v3: unlocking with the v3 PIN',
+            tests: [DEV_MODE_OFF_AFTER_UPGRADE],
+            sources: [spec('migration/v4-unlock.spec.ts')],
+          },
+        ],
+        note: 'fresh install before and after onboarding, then every upgrade lineage; proves the default only, a user who turned it on keeps it',
+      },
     ],
   },
   {
@@ -513,7 +539,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
         label: 'Automated audit (iOS: Apple audit engine · Android: heuristics)',
         platforms: both,
         proof: [{ file: spec('a11y/accessibility.journey.ts'), tests: ['reports the accessibility audit roll-up'] }],
-        note: 'advisory; the roll-up fails only if the engine could not run — findings below',
+        note: 'the roll-up fails on a finding missing from a11y-baseline.json, or if the engine could not run — findings below',
       },
       {
         id: 'a11y-screen-reader',

@@ -145,6 +145,8 @@ export function parseJunitXml(xml: string, source: string, hint?: Platform): Par
 export interface LoadedJunit {
   results: RunResults
   runnerErrors: RunnerError[]
+  /** `wdio-<cid>.xml` files with nothing in them: the worker's session was terminated before the reporter wrote. */
+  emptyFiles: { source: string; cid: string }[]
 }
 
 /**
@@ -177,17 +179,23 @@ export function loadJunitReports(reportDirs: ReportDir[]): LoadedJunit {
   const latest = new Map<string, SuiteResult>()
   const runnerErrors: RunnerError[] = []
   const sources = new Map<Platform, Set<string>>()
+  const emptyFiles: LoadedJunit['emptyFiles'] = []
 
   for (const dir of reportDirs) {
     const junitDir = join(dir.path, 'junit')
     if (!existsSync(junitDir)) continue
     const hint = platformFromDirName(dir.name)
     for (const entry of readdirSync(junitDir).filter((name) => name.endsWith('.xml')).sort((a, b) => a.localeCompare(b))) {
-      const parsed = parseJunitXml(readFileSync(join(junitDir, entry), 'utf8'), dir.name, hint)
+      const xml = readFileSync(join(junitDir, entry), 'utf8')
+      if (!xml.trim()) {
+        emptyFiles.push({ source: dir.name, cid: /^wdio-(.+)\.xml$/.exec(entry)?.[1] ?? entry })
+        continue
+      }
+      const parsed = parseJunitXml(xml, dir.name, hint)
       runnerErrors.push(...parsed.runnerErrors)
       for (const suite of parsed.suites) noteSuite(latest, sources, suite, dir.name)
     }
   }
 
-  return { results: collectResults(latest, sources), runnerErrors }
+  return { results: collectResults(latest, sources), runnerErrors, emptyFiles }
 }

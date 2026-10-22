@@ -133,6 +133,7 @@ describe('useAuthorizationService', () => {
       ['card_problem', AppEventCode.CARD_PROBLEM, DeviceAuthorizationError.CardProblem],
       ['additional_card', AppEventCode.ADDITIONAL_CARD, DeviceAuthorizationError.AdditionalCard],
       ['under_minimum_age', AppEventCode.UNDER_MINIMUM_AGE, DeviceAuthorizationError.UnderMinimumAge],
+      ['over_maximum_age', AppEventCode.OVER_MAXIMUM_AGE, DeviceAuthorizationError.OverMaximumAge],
       ['too_many_mobile_cards', AppEventCode.TOO_MANY_MOBILE_CARDS, DeviceAuthorizationError.TooManyMobileCards],
     ]
 

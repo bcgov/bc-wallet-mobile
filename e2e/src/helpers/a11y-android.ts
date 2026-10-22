@@ -14,14 +14,13 @@ import type { A11yEngineResult, A11yIssue, A11ySeverity } from './a11y-audit.js'
  */
 
 export const ANDROID_CHECKS = ['unlabeled-control', 'unlabeled-text-field', 'touch-target', 'text-contrast'] as const
+export type AndroidCheck = (typeof ANDROID_CHECKS)[number]
 
 /** Material says 48dp, Apple 44pt — warn under the lower of the two, so a 47dp button is not noise. */
 const TOUCH_TARGET_RECOMMENDED_DP = 48
 const TOUCH_TARGET_WARN_BELOW_DP = 44
 /** WCAG 2.5.8 (AA). */
 const TOUCH_TARGET_MINIMUM_DP = 24
-/** Anything thinner is a row clipped at a scroll edge, not a control. */
-const CLIPPED_TARGET_DP = 4
 /** WCAG 1.4.3 (AA): 4.5:1 for body text, 3:1 for large text (≥18pt, or ≥14pt bold). */
 const CONTRAST_AA = 4.5
 const CONTRAST_AA_LARGE_TEXT = 3
@@ -56,6 +55,8 @@ interface UiNode {
   enabled: boolean
   displayed: boolean
   bounds?: Bounds
+  /** Bounds of the nearest scrolling ancestor — what clips this node's reported bounds. */
+  scroll?: Bounds
   children: UiNode[]
 }
 
@@ -70,11 +71,16 @@ function parseBounds(value: string): Bounds | undefined {
   return right > left && bottom > top ? { left, top, right, bottom } : undefined
 }
 
-function toNode($: CheerioAPI, el: DomElement): UiNode {
+const isScrollContainer = (cls: string): boolean => /(ScrollView|RecyclerView|ListView|ViewPager\d?)$/.test(cls)
+
+function toNode($: CheerioAPI, el: DomElement, scroll?: Bounds): UiNode {
   const $el = $(el)
   const attr = (name: string): string => $el.attr(name) ?? ''
+  const cls = attr('class')
+  const bounds = parseBounds(attr('bounds'))
+  const childScroll = isScrollContainer(cls) && bounds ? bounds : scroll
   return {
-    cls: attr('class'),
+    cls,
     id: attr('resource-id'),
     text: attr('text'),
     desc: attr('content-desc'),
@@ -82,11 +88,12 @@ function toNode($: CheerioAPI, el: DomElement): UiNode {
     clickable: attr('clickable') === 'true',
     enabled: attr('enabled') !== 'false',
     displayed: attr('displayed') !== 'false',
-    bounds: parseBounds(attr('bounds')),
+    bounds,
+    scroll,
     children: $el
       .children()
       .toArray()
-      .map((child) => toNode($, child)),
+      .map((child) => toNode($, child, childScroll)),
   }
 }
 
@@ -199,6 +206,17 @@ function checkLabels(nodes: UiNode[]): A11yIssue[] {
   return issues
 }
 
+/**
+ * Bounds are the visible slice: a row cut by the top or bottom edge of its scroll view reports only
+ * what is on screen, which is not a small control. (A genuinely short row sitting exactly on that
+ * edge is skipped too — the price of not knowing its full height.)
+ */
+function isClippedByScroll(node: UiNode, heightDp: number): boolean {
+  const { bounds, scroll } = node
+  if (!bounds || !scroll) return false
+  return (bounds.top === scroll.top || bounds.bottom === scroll.bottom) && heightDp < TOUCH_TARGET_WARN_BELOW_DP
+}
+
 function checkTouchTargets(nodes: UiNode[], density: number): A11yIssue[] {
   const toDp = (px: number): number => (px * 160) / density
   const issues: A11yIssue[] = []
@@ -208,7 +226,7 @@ function checkTouchTargets(nodes: UiNode[], density: number): A11yIssue[] {
     const width = Math.round(toDp(node.bounds.right - node.bounds.left))
     const height = Math.round(toDp(node.bounds.bottom - node.bounds.top))
     const smallest = Math.min(width, height)
-    if (smallest < CLIPPED_TARGET_DP || smallest >= TOUCH_TARGET_WARN_BELOW_DP) continue
+    if (smallest >= TOUCH_TARGET_WARN_BELOW_DP || isClippedByScroll(node, height)) continue
     const severity: A11ySeverity = smallest < TOUCH_TARGET_MINIMUM_DP ? 'error' : 'warning'
     issues.push(
       issue(
@@ -358,27 +376,48 @@ async function resolveDensity(): Promise<{ dpi: number; assumed: boolean }> {
   return { dpi: FALLBACK_DENSITY_DPI, assumed: true }
 }
 
+/**
+ * The tree as TalkBack sees it. The default dump keeps every view; `ignoreUnimportantViews` drops the
+ * ones marked not important for accessibility (RN `importantForAccessibility="no…"`), which is how a
+ * hidden tap target stops reading as an unnamed control.
+ */
+async function accessibilityTreeSource(): Promise<string> {
+  const before = (await driver.getSettings()) as { ignoreUnimportantViews?: boolean }
+  await driver.updateSettings({ ignoreUnimportantViews: true })
+  try {
+    return await driver.getPageSource()
+  } finally {
+    await driver.updateSettings({ ignoreUnimportantViews: before.ignoreUnimportantViews ?? false })
+  }
+}
+
 /** Run every heuristic against the current screen. Never throws — an engine failure is reported as such. */
-export async function auditAndroidScreen(): Promise<A11yEngineResult> {
+export async function auditAndroidScreen(options: { skip?: readonly AndroidCheck[] } = {}): Promise<A11yEngineResult> {
+  const skip = options.skip ?? []
   try {
     await driver.pause(SETTLE_MS)
-    const source = await driver.getPageSource()
+    const source = await accessibilityTreeSource()
     const density = await resolveDensity()
-    const screenshot = await driver.takeScreenshot()
 
     const { roots, width, height } = parseHierarchy(source)
     const nodes = flatten(roots)
-    const contrast = await checkTextContrast(nodes, screenshot, { width, height })
-    const notes = [
-      `text-contrast measured ${contrast.measured} text nodes; skipped ${contrast.covered} that are not visibly rendered (covered by a screen above, or blank)`,
-    ]
+    const notes: string[] = []
+    const issues = [...checkLabels(nodes), ...checkTouchTargets(nodes, density.dpi)]
+    if (skip.includes('text-contrast')) {
+      // The sampler reads the screenshot, so text over a live camera preview measures the frame, not
+      // the UI — the caller knows which screens those are.
+      notes.push('text-contrast skipped on this screen by the journey (text over a live camera preview)')
+    } else {
+      const screenshot = await driver.takeScreenshot()
+      const contrast = await checkTextContrast(nodes, screenshot, { width, height })
+      notes.push(
+        `text-contrast measured ${contrast.measured} text nodes; skipped ${contrast.covered} that are not visibly rendered (covered by a screen above, or blank)`
+      )
+      issues.push(...contrast.issues)
+    }
     if (density.assumed) notes.push(`touch-target assumed ${density.dpi}dpi — no density reported by the session`)
 
-    return {
-      engine: 'android-heuristics',
-      notes,
-      issues: [...checkLabels(nodes), ...checkTouchTargets(nodes, density.dpi), ...contrast.issues],
-    }
+    return { engine: 'android-heuristics', notes, issues }
   } catch (err) {
     return { engine: 'unavailable', reason: (err as Error).message ?? String(err), issues: [] }
   }

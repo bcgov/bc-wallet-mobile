@@ -7,7 +7,7 @@ import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { buildBarcodePayload } from '@/bcsc-theme/utils/barcode'
-import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { DriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { isAxiosAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
@@ -18,11 +18,11 @@ import { TestIds } from '@/test-ids/registry'
 import { withAlert } from '@/utils/alert'
 import { ScreenWrapper, testIdWithKey, TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useRef, useState } from 'react'
+import { ComponentProps, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission } from 'react-native-vision-camera'
-import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
+import { BarcodeScannerOutputOptions, useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 
 /**
  * Builds the barcodes array for the evidence upload payload, matching the
@@ -35,16 +35,22 @@ import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scan
  * ---
  *
  * CAMERA LIFECYCLE:
- * This screen mounts MaskedCamera for each document side (front, back, etc).
- * The Camera component properly manages its lifecycle via the isActive prop per
- * react-native-vision-camera best practices:
- * https://github.com/mrousavy/react-native-vision-camera/tree/main/docs/content/docs/lifecycle.mdx
- *
- * Per library docs, using isActive to pause/resume is preferred over full mount/unmount
- * because it keeps the camera session warm and resumes much faster. MaskedCamera deactivates
- * the camera preview when the screen loses focus via `useIsFocused`/`isActive`, and turns off
- * the torch when focus is lost.
+ * The camera unmounts while PhotoReview shows, so every side and every retake opens a new capture
+ * session. EvidenceCamera creates the photo and barcode outputs along with it, because on iOS a
+ * session given a previous session's outputs never starts.
  */
+
+type EvidenceCameraProps = Omit<ComponentProps<typeof MaskedCamera>, 'photoOutput' | 'codeScanner'> & {
+  scannerOptions: BarcodeScannerOutputOptions
+}
+
+/** MaskedCamera with outputs that mount and unmount with it. */
+const EvidenceCamera = ({ scannerOptions, ...cameraProps }: EvidenceCameraProps) => {
+  const photoOutput = useEvidencePhotoOutput()
+  const codeScanner = useBarcodeScannerOutput(scannerOptions)
+
+  return <MaskedCamera {...cameraProps} photoOutput={photoOutput} codeScanner={codeScanner} />
+}
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>
@@ -76,8 +82,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const barcodesCheckedRef = useRef(false)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert, documentExpiredAlert } = useAlerts(navigation)
-  const photoOutput = useEvidencePhotoOutput()
-  const codeScanner = useBarcodeScannerOutput({
+  const scannerOptions: BarcodeScannerOutputOptions = {
     barcodeFormats: scanner.codeTypes,
     onBarcodeScanned: async (codes) => {
       if (!codes.length) {
@@ -107,7 +112,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     onError: (error) => {
       logger.error('[EvidenceCaptureScreen] Error scanning barcode', error)
     },
-  })
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -247,14 +252,13 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     <ScreenWrapper padded={false} scrollable={false} edges={['top']}>
       {captureState === CaptureState.CAPTURING ? (
         <View style={styles.container} testID={testIdWithKey(TestIds.verify.evidenceCapture.maskedCamera)}>
-          <MaskedCamera
+          <EvidenceCamera
             navigation={navigation}
             cameraFace={'back'}
             cameraInstructions={currentSide.image_side_tip}
             cameraLabel={currentSide.image_side_label}
             onPhotoTaken={handlePhotoTaken}
-            photoOutput={photoOutput}
-            codeScanner={codeScanner}
+            scannerOptions={scannerOptions}
           />
         </View>
       ) : (

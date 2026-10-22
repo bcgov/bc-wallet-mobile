@@ -26,9 +26,30 @@ export async function describeCurrentScreen(limit = 8): Promise<string> {
   return texts.length ? texts.join(' | ') : `(no visible text found; ${await describeSilentScreen()})`
 }
 
+/**
+ * The element types a text-less iOS screen is described by, in the order they tell screens apart (a
+ * camera is Images over Others; a webview is its own type). Queried per type rather than through the
+ * page source: on a camera screen WDA's full snapshot has hung for 60 s and taken the session with it
+ * (Sauce ends a session whose command never answers — six journeys in one night). The queries are
+ * independent, so they are issued together; Appium runs a session's commands one at a time regardless.
+ */
+const IOS_SILENT_SCREEN_TYPES = [
+  'XCUIElementTypeImage',
+  'XCUIElementTypeButton',
+  'XCUIElementTypeWebView',
+  'XCUIElementTypeOther',
+]
+
 /** The view classes on a text-less screen, so a blank camera or a bare surface is still identifiable. */
 async function describeSilentScreen(): Promise<string> {
   try {
+    if (driver.isIOS) {
+      const counts = await Promise.all(
+        IOS_SILENT_SCREEN_TYPES.map(async (type) => [type, await $$(`-ios class chain:**/${type}`).length] as const)
+      )
+      const present = counts.filter(([, n]) => n > 0).map(([type, n]) => `${type.replace('XCUIElementType', '')}×${n}`)
+      return present.join(', ') || 'no elements'
+    }
     const source = await driver.getPageSource()
     const counts = new Map<string, number>()
     for (const [, name] of source.matchAll(driver.isIOS ? /\btype="([^"]+)"/g : /\bclass="([^"]+)"/g)) {

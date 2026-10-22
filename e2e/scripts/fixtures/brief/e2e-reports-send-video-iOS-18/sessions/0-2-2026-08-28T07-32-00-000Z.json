@@ -1,0 +1,19 @@
+{
+  "cid": "0-2",
+  "specs": ["test/bcsc/verify/send-video-cancelled.journey.ts"],
+  "sessionId": "55555555-5555-4555-8555-555555555555",
+  "capabilities": {
+    "platformName": "iOS",
+    "appium:deviceName": "iPhone 15",
+    "appium:platformVersion": "18",
+    "testobject_device_name": "iPhone_15_18_real_us",
+    "testobject_test_report_url": "https://app.saucelabs.com/tests/aaaa0005aaaa0005aaaa0005aaaa0005"
+  },
+  "startedAt": "2026-08-28T07:32:00.000Z",
+  "endedAt": "2026-08-28T07:36:10.000Z",
+  "failures": 1,
+  "tests": [
+    { "suite": "Verified journey: send video, rejected", "title": "clears the review queue before submitting", "status": "pass" },
+    { "suite": "Verified journey: send video, rejected", "title": "onboards to the verify prompt", "status": "pass" }
+  ]
+}

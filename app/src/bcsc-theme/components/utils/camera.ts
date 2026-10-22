@@ -254,7 +254,7 @@ export const isCodeAlignedWithZones = (
  *
  * All identified (non-empty value) codes qualify for these transitions — position
  * on screen is not a gate. Card identity is validated downstream by decoding
- * content (`useCardScanner` → `decodeScannedCode`); a scan that decodes to a
+ * content (`ScanSerialScreen.onCodeScanned` → `decodeCardBarcode`); a scan that decodes to a
  * DL-only card with no BCSC serial is rejected there via the `onCodeScanned`
  * `false` return, which resets the scanner. `isAligned` is still computed per
  * code (see `enhanceSingleCode`) but only drives focus-cycle prioritisation and
@@ -304,11 +304,11 @@ export type AccumulatedCode = { code: EnhancedCode; timestamp: number }
  * before the lock — e.g. the birthdate-bearing PDF-417 on a combo card when the
  * easier code-39 serial alone satisfies the lock threshold first.
  *
- * Ordering: accumulated extras are returned FIRST, current-frame codes LAST. Callers
- * (`useCardScanner`'s decode loop) apply "later code wins" when the same kind of
- * data shows up twice, so putting the current frame last means a fresher reading
- * always overrides a stale accumulated one of the same decoded kind — ordering
- * alone resolves that conflict, no extra same-kind filtering is needed here. Only
+ * Ordering: accumulated extras are returned FIRST, current-frame codes LAST. The caller
+ * (`ScanSerialScreen.onCodeScanned`, via `combineCardBarcodes`) applies "later code wins"
+ * when the same kind of data shows up twice, so putting the current frame last means a
+ * fresher reading always overrides a stale accumulated one of the same decoded kind —
+ * ordering alone resolves that conflict, no extra same-kind filtering is needed here. Only
  * exact `${type}-${value}` duplicates against the current frame are dropped from
  * the accumulator; anything else (including a stale same-type/different-value
  * entry) is passed through and left for the ordering to resolve downstream.
@@ -353,27 +353,44 @@ export const mergeLockedCodesWithAccumulated = (
   return [...accumulatedExtras, ...currentFrameCodes]
 }
 
+// VisionCamera v5 passes iOS errors to JS as `String(describing: NSError)`, so the AVError code is in the message
+const AV_ERROR_MEDIA_SERVICES_WERE_RESET = /AVFoundationErrorDomain Code=-11819\b/
+const AV_ERROR_SESSION_NOT_RUNNING = /AVFoundationErrorDomain Code=-11803\b/
+// CameraX `ImageCaptureException.ERROR_CAMERA_CLOSED`
+const CAMERAX_CAMERA_CLOSED = 'Camera is closed.'
+
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : '')
+
 /**
- * Whether a VisionCamera runtime error is one the library recovers from on its own, so a
- * single occurrence should not fail the camera over.
+ * Whether a camera `onError` error is one the session recovers from on its own, so a single
+ * occurrence should not fail the camera over.
  *
- * On iOS, `unknown/unknown` is how VisionCamera surfaces an `AVCaptureSessionRuntimeError`
- * notification (e.g. `AVFoundationErrorDomain -11800` with an `NSOSStatusErrorDomain -12780`
- * cause): it reports the error and immediately calls `startRunning()` on the capture session
- * again while the camera is still active. If that restart fails, AVFoundation posts another
- * runtime error straight away — so callers can treat a repeat within a short window as fatal.
+ * On iOS a media services reset stops the capture session, and our VisionCamera patch restarts it
+ * (see PATCH_NOTES.md). If that restart fails, AVFoundation posts another runtime error straight
+ * away, so callers can treat a repeat within a short window as fatal.
  *
- * Android has no such auto-restart and uses `unknown/unknown` as a catch-all, so every
- * runtime error stays fatal there.
+ * Android reports only critical CameraX errors through `onError` (recoverable ones arrive as
+ * interruptions), so every error stays fatal there.
  *
  * @param error The error passed to the Camera `onError` callback
  * @param platform Platform the app is running on (injectable for tests)
  * @returns true if the error should be given a chance to recover before failing over
  */
-export const isRecoverableCameraRuntimeError = (
-  error: { code?: string } | null | undefined,
-  platform: string = Platform.OS
-): boolean => platform === 'ios' && error?.code === 'unknown/unknown'
+export const isRecoverableCameraRuntimeError = (error: unknown, platform: string = Platform.OS): boolean =>
+  platform === 'ios' && AV_ERROR_MEDIA_SERVICES_WERE_RESET.test(errorMessage(error))
+
+/**
+ * Whether a photo capture failed only because the camera wasn't running at that moment (stopped,
+ * interrupted or restarting), so the user can simply try again.
+ *
+ * @param error The error thrown by the photo capture
+ * @returns true if the capture can be retried once the camera is running again
+ */
+export const isCameraNotReadyCaptureError = (error: unknown): boolean => {
+  const message = errorMessage(error)
+
+  return AV_ERROR_SESSION_NOT_RUNNING.test(message) || message.includes(CAMERAX_CAMERA_CLOSED)
+}
 
 /**
  * Get camera metadata including the selected device and format, with deduplicated formats.

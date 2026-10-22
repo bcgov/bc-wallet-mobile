@@ -213,6 +213,8 @@ const translation = {
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchTheme": "Switch theme",
+    "SelectedMediator": "Selected mediator",
+    "MediatorSection": "Mediator",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes",
       "OneHour": "1 hour",
@@ -373,7 +375,7 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online",
-      "AppStartup": "Getting your BC Services Card app ready..."
+      "AppStartup": "Getting your BC Services Card App ready..."
     },
     "AccountLanding": {
       "Title": "BC Services Card",
@@ -382,7 +384,8 @@ const translation = {
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app",
-      "AuthenticateToSecure": "Authenticate to secure your app"
+      "AuthenticateToSecure": "Authenticate to secure your app",
+      "UnlockPrompt": "Unlock your app"
     },
     "AppReset": {
       "Title": "App reset for security",
@@ -414,6 +417,10 @@ const translation = {
       "SettingUpAccount": "Setting up your account...",
       "FailedToSetPIN": "Failed to set PIN",
       "ErrorSettingPIN": "An error occurred while setting the PIN"
+    },
+    "EnterPIN": {
+      "Title": "Enter your 6-digit PIN",
+      "Description": "The one you chose to secure this app"
     },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN",
@@ -600,6 +607,18 @@ const translation = {
       "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code",
       "ViewMessages": "View new messages",
     },
+    "ServiceNotice": {
+      "Header": "Service notice",
+      "NoticeUnavailable": "This notice isn't available right now.",
+      "MobileCardHeading": "Setting up a mobile card?",
+      "MobileCardDescription": "It may take longer to get your identity verified to set up your mobile card.",
+      "MobileCardVideoCall": "Video call – it may take more than 5 minutes to speak to an agent",
+      "MobileCardSendVideo": "Send video – it may take more than 3 days to get a response back",
+      "LoginHeading": "Logging into a government service?",
+      "LoginDescription": "Please be patient, it may take longer to log in.",
+      "HaveQuestions": "Have questions?",
+      "ContactUsLink": "Contact us",
+    },
     "Steps": {
       "VerificationIDMissing": "Verification request ID is missing",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification",
@@ -622,6 +641,7 @@ const translation = {
       },
       "ServerStatus": {
         "UnavailableBannerTitle": "Service Unavailable",
+        "NoticeBannerTitle": "Service notice. Learn more.",
       },
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available",
@@ -684,6 +704,11 @@ const translation = {
       "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again.",
       "PrimaryAction": "Reset",
       "Resetting": "Resetting…"
+    },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list.",
+      "ScanButton": "Scan mediator QR code"
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices?",
@@ -804,6 +829,8 @@ const translation = {
       "UnrecognizedQR": "QR code not recognized.",
       "InvalidConnectionInvitation": "This connection invitation could not be opened.",
       "FeatureUnavailable": "This action isn't available yet.",
+      "AccountTransferErrorTitle": "Unable to add device",
+      "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it.",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card.",
         "Mediator": "Mediator invitations aren't supported in BC Services Card.",
@@ -885,6 +912,9 @@ const translation = {
       "CancelCamera": "Cancel camera",
       "TakePhoto": "Take photo",
       "ToggleFlash": "Toggle flash",
+      "CameraInterrupted": "Camera paused",
+      "CameraInterruptedMessage": "The camera is in use by another app or is temporarily unavailable. It will resume on its own when it's available.",
+      "CameraNotReady": "The camera isn't ready yet. Please try again.",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings",
@@ -897,6 +927,22 @@ const translation = {
       "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps:",
       "CameraAndMicrophoneTitle": "Camera & Microphone Disabled",
       "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video.",
+      "BluetoothTitle": "Nearby Devices Disabled",
+      "BluetoothDescription": "Follow these steps to allow access to nearby devices so you can use a connected Bluetooth headset or speaker during the call.",
+      "Bluetooth": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Bluetooth'",
+          "Step3": "3. Return to the app to continue",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Permissions'",
+          "Step3": "3. Tap 'Nearby devices'",
+          "Step4": "4. Select 'Allow'",
+          "Step5": "5. Return to the app to continue",
+        },
+      },
       "Camera": {
         "iOS": {
           "Step1": "1. Tap 'Open Settings' below",
@@ -1029,6 +1075,8 @@ const translation = {
       "TakeVideo": {
         "RecordingError": "Recording error",
         "RecordingErrorDescription": "There was an issue with the recording. Please try again.",
+        "RecordingInterrupted": "Recording interrupted",
+        "RecordingInterruptedDescription": "The recording stopped before you finished. Please record your video again.",
         "CameraPermissionRequired": "Camera Permission Required",
         "CameraPermissionRequiredDescription": "Please enable camera permission to take a photo.",
         "MicrophonePermissionRequired": "Microphone Permission Required",
@@ -1074,6 +1122,7 @@ const translation = {
         "PreparingVideo": "Preparing your photo and video for verification",
         "PreparingDocuments": "Preparing additional documents",
         "UploadingInformation": "Uploading your documents securely",
+        "UploadingFiles": "Uploading your files",
         "FinalizingVerification": "Finalizing your request"
       }
     },
@@ -1143,6 +1192,11 @@ const translation = {
         "Description": "You must be 12 years old or older to set up a mobile card.",
         "ButtonText": ""
       },
+      "OverMaximumAge": {
+        "Heading": "Check your birth date",
+        "Description": "Over maximum age. Make sure the year is correct, then try again.",
+        "ButtonText": ""
+      },
       "TooManyMobileCards": {
         "Heading": "App is on too many of your devices",
         "Description": "You may only have the app on five mobile devices at a time.\n\nIf you deleted the app from a device without resetting it first, then it will still count as one of your devices.\n\nYou need to remove at least one of the devices from your account.",
@@ -1171,7 +1225,7 @@ const translation = {
       "Title": "Open the BC Services Card app on your other device",
       "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device.",
       "Warning": "Do not scan with the camera app.",
-      "GetQRCode": "Get QR Code",
+      "GetQRCode": "Get QR code",
     },
     "TransferInformation": {
       "Title": "Have this app on another device?",
@@ -1179,10 +1233,12 @@ const translation = {
       "TransferAccount": "Add device",
     },
     "TransferInstructions": {
+      "AddingDevice": "Adding this device...",
       "Title": "Scan your QR code to add your device",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner.",
-      "Step2": "Choose <b>‘Add another device'</b> to get your QR code.",
-      "Step3": "<b>Scan the QR code</b> that appears on your other device.",
+      "Step1": "<b>On your other device</b>, open and unlock the BC Services Card app.",
+      "Step2": "Tap the <b>menu ‘☰’</b> icon in the top left corner.",
+      "Step3": "Choose <b>‘Add another device’</b> to get your QR code.",
+      "Step4": "<b>Scan the QR code</b> that appears on your other device.",
       "ScanQRCode": "Scan QR code",
     },
     "QRDisplay": {
@@ -1205,6 +1261,12 @@ const translation = {
       "Title": "Your identity has been verified",
       "Description": "You're now able to access services with your verified identity.",
       "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID.",
+      "ButtonText": "Continue"
+    },
+    "AlreadyVerified": {
+      "Title": "You're already set!",
+      "Description": "The QR code scanned is for transferring an existing account to a new device. This device is already verified and ready to use.",
+      "ExtraText": "To access a website or service, scan the QR code shown on that website or service.",
       "ButtonText": "Continue"
     },
     "CancelledVerification": {
@@ -1324,6 +1386,7 @@ const translation = {
       "BirthDateSubtext": "Enter your birth date",
       "BirthDateError": "Please enter a valid birth date (YYYY/MM/DD)",
       "BirthDateAgeError": "You must be {{ minimumAge }} years or older to set up a mobile card",
+      "BirthDateMaxAgeError": "Over maximum age. Check your birthdate year is correct",
       "BirthDatePickerLabel": "Select birth date",
       "BirthDatePickerAccessibilityLabel": "Birth date picker",
       "MiddleNamesLabel": "Middle names",
@@ -1413,6 +1476,10 @@ const translation = {
       "CannotSendVideo": "Cannot send a video?",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office?",
       "CannotVideoCall": "Cannot video call?"
+    },
+    "BluetoothDisclosure": {
+      "Title": "Detect Bluetooth devices",
+      "Description": "Allow the detection of nearby devices to use any Bluetooth devices connected to this device.",
     },
   },
   "RemoteLogging": {

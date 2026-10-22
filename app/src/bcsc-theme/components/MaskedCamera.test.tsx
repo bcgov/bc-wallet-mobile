@@ -1,7 +1,10 @@
-import { act, render } from '@testing-library/react-native'
+import { testIdWithKey } from '@bifold/core'
+import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
+import { Platform } from 'react-native'
 
 import { AppEventCode } from '@/events/appEventCode'
+import { TestIds } from '@/test-ids/registry'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import MaskedCamera from './MaskedCamera'
@@ -92,14 +95,14 @@ describe('MaskedCamera', () => {
     mockNavigation = useNavigation()
   })
 
-  const renderCamera = () => {
+  const renderCamera = (photoOutput = mockPhotoOutput) => {
     return render(
       <BasicAppContext>
         <MaskedCamera
           navigation={mockNavigation as never}
           cameraFace="back"
           onPhotoTaken={mockOnPhotoTaken}
-          photoOutput={mockPhotoOutput}
+          photoOutput={photoOutput}
         />
       </BasicAppContext>
     )
@@ -196,6 +199,248 @@ describe('MaskedCamera', () => {
         'BCSC.CameraDisclosure.ErrorMessage',
         expectedAppError
       )
+    })
+  })
+
+  describe('Photo capture readiness', () => {
+    const shutterTestId = testIdWithKey(TestIds.shared.maskedCamera.takePhoto)
+    const overlayTestId = testIdWithKey(TestIds.shared.cameraInterrupted.overlay)
+    const notReadyTestId = testIdWithKey(TestIds.shared.maskedCamera.notReady)
+
+    const makeAppError = () => ({
+      name: 'NormalizedAppError',
+      message: 'normalized',
+      addContext: jest.fn(),
+      toJSON: jest.fn(),
+    })
+
+    const renderStartedCamera = async (photoOutput = mockPhotoOutput) => {
+      const utils = renderCamera(photoOutput)
+      await act(async () => {
+        utils.getByTestId('mock-camera').props.onStarted()
+      })
+      return utils
+    }
+
+    it('disables the shutter until the camera session has started', async () => {
+      const { getByTestId } = renderCamera()
+      expect(getByTestId(shutterTestId).props.accessibilityState).toEqual({ disabled: true })
+
+      await act(async () => {
+        getByTestId('mock-camera').props.onStarted()
+      })
+      expect(getByTestId(shutterTestId).props.accessibilityState).toEqual({ disabled: false })
+    })
+
+    it('covers the preview and disables the shutter while the session is interrupted', async () => {
+      const { getByTestId, queryByTestId } = await renderStartedCamera()
+      const camera = getByTestId('mock-camera')
+
+      await act(async () => {
+        camera.props.onInterruptionStarted('unknown')
+      })
+      expect(getByTestId(overlayTestId)).toBeTruthy()
+      expect(getByTestId(shutterTestId).props.accessibilityState).toEqual({ disabled: true })
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+
+      await act(async () => {
+        camera.props.onInterruptionEnded()
+      })
+      expect(queryByTestId(overlayTestId)).toBeNull()
+      expect(getByTestId(shutterTestId).props.accessibilityState).toEqual({ disabled: false })
+    })
+
+    it.each([
+      ['iOS session not running', 'Error Domain=AVFoundationErrorDomain Code=-11803 "Cannot Record" UserInfo={}'],
+      ['Android camera closed', 'androidx.camera.core.ImageCaptureException: Camera is closed.'],
+    ])('asks the user to try again instead of reporting a broken camera (%s)', async (_, message) => {
+      const photoOutput = { capturePhotoToFile: jest.fn().mockRejectedValue(new Error(message)) } as any
+      const { getByTestId } = await renderStartedCamera(photoOutput)
+
+      await act(async () => {
+        fireEvent.press(getByTestId(shutterTestId))
+      })
+
+      expect(photoOutput.capturePhotoToFile).toHaveBeenCalled()
+      expect(getByTestId(notReadyTestId)).toBeTruthy()
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      expect(mockOnPhotoTaken).not.toHaveBeenCalled()
+    })
+
+    it('clears the not-ready notice once the camera starts again', async () => {
+      const photoOutput = {
+        capturePhotoToFile: jest.fn().mockRejectedValue(new Error('Camera is closed.')),
+      } as any
+      const { getByTestId, queryByTestId } = await renderStartedCamera(photoOutput)
+
+      await act(async () => {
+        fireEvent.press(getByTestId(shutterTestId))
+      })
+      expect(getByTestId(notReadyTestId)).toBeTruthy()
+
+      await act(async () => {
+        getByTestId('mock-camera').props.onStarted()
+      })
+      expect(queryByTestId(notReadyTestId)).toBeNull()
+    })
+
+    it('still reports other capture failures as a camera error', async () => {
+      const captureError = new Error(
+        'Error Domain=AVFoundationErrorDomain Code=-11800 "The operation could not be completed"'
+      )
+      const photoOutput = { capturePhotoToFile: jest.fn().mockRejectedValue(captureError) } as any
+      mockEnsureAppError.mockImplementation(makeAppError)
+      const { getByTestId, queryByTestId } = await renderStartedCamera(photoOutput)
+
+      await act(async () => {
+        fireEvent.press(getByTestId(shutterTestId))
+      })
+
+      expect(queryByTestId(notReadyTestId)).toBeNull()
+      expect(mockEnsureAppError).toHaveBeenCalledWith(captureError, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
+    })
+
+    it('reports a second "not ready" capture failure in a row with the camera error modal', async () => {
+      const notReadyError = new Error('Error Domain=AVFoundationErrorDomain Code=-11803 "Cannot Record" UserInfo={}')
+      const photoOutput = { capturePhotoToFile: jest.fn().mockRejectedValue(notReadyError) } as any
+      mockEnsureAppError.mockImplementation(makeAppError)
+      const { getByTestId, queryByTestId } = await renderStartedCamera(photoOutput)
+
+      await act(async () => {
+        fireEvent.press(getByTestId(shutterTestId))
+      })
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+
+      await act(async () => {
+        fireEvent.press(getByTestId(shutterTestId))
+      })
+      expect(mockEnsureAppError).toHaveBeenCalledWith(notReadyError, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
+      expect(queryByTestId(notReadyTestId)).toBeNull()
+
+      // The count starts over after the report, so the next failure is a notice again
+      await act(async () => {
+        fireEvent.press(getByTestId(shutterTestId))
+      })
+      expect(getByTestId(notReadyTestId)).toBeTruthy()
+      expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
+    })
+
+    describe('camera that stays unusable for 8 seconds', () => {
+      beforeEach(() => {
+        jest.useFakeTimers()
+        mockEnsureAppError.mockImplementation(makeAppError)
+      })
+
+      afterEach(() => {
+        jest.useRealTimers()
+      })
+
+      it('reports a camera that never starts with the camera error modal', async () => {
+        renderCamera()
+
+        await act(async () => {
+          jest.advanceTimersByTime(7999)
+        })
+        expect(mockEmitErrorModal).not.toHaveBeenCalled()
+
+        await act(async () => {
+          jest.advanceTimersByTime(1)
+        })
+        expect(mockEnsureAppError).toHaveBeenCalledWith(
+          expect.objectContaining({ message: 'Camera did not start within 8 s' }),
+          AppEventCode.ADD_CARD_CAMERA_BROKEN
+        )
+        expect(mockEmitErrorModal).toHaveBeenCalledWith(
+          'BCSC.CameraDisclosure.Error',
+          'BCSC.CameraDisclosure.ErrorMessage',
+          expect.anything()
+        )
+      })
+
+      it('reports an interruption that lasts 8 seconds, and keeps the overlay up', async () => {
+        const { getByTestId } = renderCamera()
+        await act(async () => {
+          getByTestId('mock-camera').props.onStarted()
+          getByTestId('mock-camera').props.onInterruptionStarted('video-device-in-use-by-another-client')
+        })
+
+        await act(async () => {
+          jest.advanceTimersByTime(8000)
+        })
+
+        expect(mockEnsureAppError).toHaveBeenCalledWith(
+          expect.objectContaining({ message: 'Camera interrupted for 8 s (video-device-in-use-by-another-client)' }),
+          AppEventCode.ADD_CARD_CAMERA_BROKEN
+        )
+        expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
+        expect(getByTestId(overlayTestId)).toBeTruthy()
+      })
+
+      it('does not report a camera that starts in time', async () => {
+        const { getByTestId } = renderCamera()
+
+        await act(async () => {
+          jest.advanceTimersByTime(2000)
+          getByTestId('mock-camera').props.onStarted()
+        })
+        await act(async () => {
+          jest.advanceTimersByTime(20000)
+        })
+
+        expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      })
+
+      it('does not time out while the app is in the background', async () => {
+        mockUseBCSCActivity.mockReturnValue({ appStateStatus: 'background' })
+        renderCamera()
+
+        await act(async () => {
+          jest.advanceTimersByTime(20000)
+        })
+
+        expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('iOS media services reset', () => {
+      const originalPlatform = Platform.OS
+      const resetError = () =>
+        new Error('Error Domain=AVFoundationErrorDomain Code=-11819 "Cannot Complete Action" UserInfo={}')
+
+      beforeEach(() => {
+        Platform.OS = 'ios'
+        mockEnsureAppError.mockImplementation(makeAppError)
+      })
+
+      afterEach(() => {
+        Platform.OS = originalPlatform
+      })
+
+      it('waits for the session to restart after a single reset', async () => {
+        const { getByTestId } = renderCamera()
+
+        await act(async () => {
+          getByTestId('mock-camera').props.onError(resetError())
+        })
+
+        expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      })
+
+      it('reports a second reset inside the recovery window (restart failed)', async () => {
+        const { getByTestId } = renderCamera()
+        const camera = getByTestId('mock-camera')
+
+        await act(async () => {
+          camera.props.onError(resetError())
+        })
+        await act(async () => {
+          camera.props.onError(resetError())
+        })
+
+        expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
+      })
     })
   })
 

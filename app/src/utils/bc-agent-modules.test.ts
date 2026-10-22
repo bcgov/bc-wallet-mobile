@@ -1,6 +1,9 @@
 import { CacheModule, InMemoryLruCache, SingleContextStorageLruCache } from '@credo-ts/core'
+import { indyVdr } from '@hyperledger/indy-vdr-react-native'
 
 import { getBCAgentModules } from './bc-agent-modules'
+
+jest.mock('@hyperledger/indy-vdr-react-native', () => ({ indyVdr: { setLedgerTxnCache: jest.fn() } }))
 
 const baseOptions = {
   walletId: 'bc-wallet-bcsc',
@@ -32,5 +35,13 @@ describe('getBCAgentModules', () => {
     // The proxy branch reassigns only anoncreds/dids — the cache override must survive.
     expect(modules.cache).toBeInstanceOf(CacheModule)
     expect(modules.cache.config.cache).toBeInstanceOf(InMemoryLruCache)
+  })
+
+  it('configures the ledger transaction cache without a disk path', () => {
+    getBCAgentModules({ ...baseOptions, txnCache: { capacity: 1000, expiryOffsetMs: 60_000 } })
+
+    const [options] = jest.mocked(indyVdr.setLedgerTxnCache).mock.calls[0]
+    expect(options).toEqual({ capacity: 1000, expiry_offset_ms: 60_000 })
+    expect(options).not.toHaveProperty('path')
   })
 })

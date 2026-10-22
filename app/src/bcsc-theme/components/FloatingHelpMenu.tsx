@@ -130,10 +130,11 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
       animationType="none"
       onRequestClose={() => handleClose()}
     >
-      <TouchableWithoutFeedback onPress={() => handleClose()} accessible={false}>
+      {/* Backdrop and tap-swallower are plumbing: Android keeps them clickable, so TalkBack must skip them. */}
+      <TouchableWithoutFeedback onPress={() => handleClose()} accessible={false} importantForAccessibility="no">
         <View style={styles.root}>
           <View style={styles.floatingMenuContainer}>
-            <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
+            <TouchableWithoutFeedback onPress={() => {}} accessible={false} importantForAccessibility="no">
               <Animated.View style={[styles.container, { transform: [{ translateX }] }]}>
                 <View style={styles.headerContainer}>
                   <PressableOpacity

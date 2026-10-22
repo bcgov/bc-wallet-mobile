@@ -21,7 +21,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
-import { createTabHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createTabHeader } from '../components/NavigationHeaders'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { AgentReadyGate, CredentialsReadyGate } from '../features/agent'
 import Home from '../features/home/Home'
@@ -234,7 +234,7 @@ const BCSCTabStack: React.FC = () => {
         tabBar={tabBar}
         screenOptions={{
           ...defaultStackOptions,
-          // Show the header's own (native) shadow. TabHeaderWithoutBanner draws no drop-shadow caster,
+          // Show the header's own (native) shadow. TabHeader draws no drop-shadow caster,
           // so this native shadow — tuned via HEADER_SHADOW — is the single header shadow.
           headerShadowVisible: true,
           unmountOnBlur: false,
@@ -245,7 +245,7 @@ const BCSCTabStack: React.FC = () => {
           },
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
-          header: createTabHeaderWithoutBanner,
+          header: createTabHeader,
           headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
         }}
       >

@@ -3,6 +3,7 @@ import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
 import { confirmModulusRegistered } from '@/bcsc-theme/utils/jwk-modulus'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { PlayIntegrityCloudProjects } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BifoldLogger, TOKENS, useServices } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
@@ -11,7 +12,6 @@ import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
   getAccount,
-  getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
   isAccountRegistered,
@@ -141,7 +141,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           }
         )
         logger.debug('Received nonce for Android Play Integrity attestation')
-        attestation = await googleAttestation(nonce)
+        attestation = await googleAttestation(nonce, PlayIntegrityCloudProjects.ias)
         logger.debug('Android Play Integrity attestation complete')
       }
     } catch (err) {
@@ -339,12 +339,10 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
         logger.info('Completed registration update request')
         try {
-          const securityMethod = await getAccountSecurityMethod()
-
           await setAccount({
             clientID: updatedRegistrationData?.client_id,
             issuer: apiClient.endpoints.issuer,
-            securityMethod,
+            securityMethod: account.securityMethod,
             nickname: selectedNickname,
             didPostNicknameToServer: true,
           })

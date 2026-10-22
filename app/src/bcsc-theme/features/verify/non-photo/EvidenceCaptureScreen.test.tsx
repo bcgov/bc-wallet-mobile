@@ -1,5 +1,5 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { DriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { isAxiosAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
@@ -30,14 +30,29 @@ jest.mock('react-native-vision-camera', () => ({
   useCameraPermission: jest.fn(),
 }))
 
-// The scanner output is just the options object, so tests can call onBarcodeScanned directly.
-jest.mock('react-native-vision-camera-barcode-scanner', () => ({
-  useBarcodeScannerOutput: jest.fn((config: unknown) => config),
-}))
+// Outputs are memoized per mount like the real hooks, so tests can tell one camera mount's outputs
+// from the next. The scanner output forwards to the latest handler, so tests can call it directly.
+let mockOutputCount = 0
+jest.mock('react-native-vision-camera-barcode-scanner', () => {
+  const { useMemo, useRef } = jest.requireActual('react')
+  return {
+    useBarcodeScannerOutput: (config: any) => {
+      const latest = useRef(config)
+      latest.current = config
+      return useMemo(
+        () => ({ id: ++mockOutputCount, onBarcodeScanned: (codes: unknown) => latest.current.onBarcodeScanned(codes) }),
+        []
+      )
+    },
+  }
+})
 
-jest.mock('@/bcsc-theme/components/utils/camera-output', () => ({
-  useEvidencePhotoOutput: jest.fn(() => ({})),
-}))
+jest.mock('@/bcsc-theme/components/utils/camera-output', () => {
+  const { useMemo } = jest.requireActual('react')
+  return {
+    useEvidencePhotoOutput: () => useMemo(() => ({ id: ++mockOutputCount }), []),
+  }
+})
 
 // Stub the real camera UI out entirely: this suite exercises the screen's own state machine
 // (capturing -> reviewing -> accept/retake, barcode handling) rather than MaskedCamera's
@@ -286,6 +301,34 @@ describe('EvidenceCapture', () => {
 
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('EvidenceCaptureScreenMaskedCamera'))).toBeTruthy())
     expect(tree.queryByTestId(testIdWithKey('UsePhoto'))).toBeNull()
+  })
+
+  it('gives each camera mount new outputs on a retake and on the next side', async () => {
+    const tree = renderScreen(buildEvidenceType([frontSide, backSide]))
+    await waitFor(() => expect(maskedCameraProps).not.toBeNull())
+    const mounts = [maskedCameraProps]
+
+    act(() => {
+      maskedCameraProps.onPhotoTaken('mock/front.jpg')
+    })
+    await waitFor(() => expect(tree.getByTestId(testIdWithKey('RetakePhoto'))).toBeTruthy())
+    fireEvent.press(tree.getByTestId(testIdWithKey('RetakePhoto')))
+    await waitFor(() => expect(tree.getByTestId(testIdWithKey('EvidenceCaptureScreenMaskedCamera'))).toBeTruthy())
+    mounts.push(maskedCameraProps)
+
+    act(() => {
+      maskedCameraProps.onPhotoTaken('mock/front.jpg')
+    })
+    await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
+    await act(async () => {
+      fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
+    })
+    expect(maskedCameraProps.cameraLabel).toBe(backSide.image_side_label)
+    mounts.push(maskedCameraProps)
+
+    // A new capture session must never get a previous session's outputs
+    expect(new Set(mounts.map((props) => props.photoOutput)).size).toBe(mounts.length)
+    expect(new Set(mounts.map((props) => props.codeScanner)).size).toBe(mounts.length)
   })
 
   it('advances to the next side without submitting when accepting a non-last photo', async () => {

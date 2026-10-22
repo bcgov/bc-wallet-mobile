@@ -8,7 +8,7 @@ The suite is built on a typed **screen-object DSL** and **per-area journey files
 
 - **testID keys** live in the app-owned registry `app/src/test-ids/registry.ts`, re-exported here as `src/test-ids/registry.ts` — the exact keys the app passes to `testIdWithKey`. Never write `com.ariesbifold:id/...` literals; wrap registry keys with `bcsc(key)`.
 - **Screen descriptors** (`src/screens/<stack>.ts`) map semantic roles (`self`/`primary`/`secondary`/`back`/`help`/`menu` + named `links`/`inputs`/`elements`) to testIDs via `defineScreen`. Journeys call `tap('primary')`, `fill('pin', …)` — never raw selectors. `src/screens/main.ts` is the reference style.
-- **Arrange flows** (`src/flows/`) are how journeys earn preconditions — there is no app-side seeding: `completeOnboarding()`, `skipToHome()`, `unlockWithPin()`, `completeVerification()`. The VerifyPrompt exists **only in the session that completed onboarding**; never relaunch between onboarding and verify entry.
+- **Arrange flows** (`src/flows/`) are how journeys earn preconditions — there is no app-side seeding: `completeOnboarding()`, `skipToHome()`, `unlockWithPin()`, `completeVerification()`. The VerifyPrompt is answered **only in the session that completed onboarding**; never relaunch between onboarding and verify entry. The answer decides the exits for the rest of the account's life: `startVerification()` (Continue) makes a **first-time verifier** with no "Back to home" and a back arrow that returns to the prompt, `skipPromptAndStartFromHome()` (Skip, then the Home card) a **deferred verifier** who keeps every exit — pick the entry a journey's later checkpoints need.
 - **Journeys** (`test/bcsc/<area>/*.journey.ts`): one file = one app session = one ordered journey of checkpoints, so a failure isolates to its file and reports per scenario. wdio `bail: 0` keeps files independent; `mochaOpts.bail: true` aborts the rest of a file on its first failure. See **[Writing Tests → Journeys](#journeys)** to add one.
 - **Test context** (`src/support/context.ts`) carries the active `TestUser` across a journey's checkpoints (`setTestUser` / `getTestUser`).
 - Failure screenshots + JUnit/Allure output land in `e2e/reports/` (gitignored).
@@ -522,7 +522,7 @@ it('audits Settings', async () => {
 })
 
 it('reports the accessibility audit roll-up', async () => {
-  await reportA11ySummary() // terminal checkpoint: fails only if NO audit could run (or under A11Y_AUDIT_STRICT=1)
+  await reportA11ySummary() // terminal checkpoint: fails on a finding missing from a11y-baseline.json, or if NO audit could run
 })
 ```
 
@@ -531,9 +531,9 @@ What each platform can see is very different, and the report says which engine p
 | Platform | Engine | Checks | Blind spots |
 | --- | --- | --- | --- |
 | iOS 17+ | Apple's audit engine via `mobile: performAccessibilityAudit` (XCTest) | contrast, hit region, element description, traits, clipped text, dynamic type, parent/child, actions | screen-reader announcements and order |
-| Android | page-source + screenshot heuristics (`src/helpers/a11y-android.ts`) | tappable elements with no accessible name, unlabeled text fields, touch targets under 44dp (error under 24dp), text contrast under 4.5:1 sampled from the screenshot (regions the pushed screen covers are skipped, not flagged) | roles/traits, focus order, live regions, anything semantic — there is no Appium-native audit engine for Android (Google's ATF is in-process only) |
+| Android | page-source + screenshot heuristics (`src/helpers/a11y-android.ts`), over the tree TalkBack sees (views marked not important for accessibility are dropped) | tappable elements with no accessible name, unlabeled text fields, touch targets under 44dp (error under 24dp; a row clipped at a scroll edge is skipped), text contrast under 4.5:1 sampled from the screenshot (regions the pushed screen covers are skipped, not flagged) | roles/traits, focus order, live regions, anything semantic — there is no Appium-native audit engine for Android (Google's ATF is in-process only) |
 
-Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) that `a11y-baseline.json` is keyed on — the nightly brief tags findings missing from it as NEW (see **Nightly brief** under CI/CD). Neither engine can assert VoiceOver/TalkBack behaviour — that pass stays manual with the UAT team.
+Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) that `a11y-baseline.json` is keyed on. A finding missing from the baseline is NEW: the roll-up checkpoint fails on it when the baseline knows the screen (fail-on-new, either severity), and the nightly brief tags it (see **Nightly brief** under CI/CD). A screen the baseline has never seen is reported, not gated, until the baseline is regenerated; a baseline with no section for the platform (or none at all) fails the roll-up outright, since nothing would gate. Neither engine can assert VoiceOver/TalkBack behaviour — that pass stays manual with the UAT team.
 
 ```bash
 # The whole lane locally (one cheap unverified session, ~20 screens)
@@ -541,7 +541,8 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite a11y
 yarn wdio configs/local/wdio.android.local.emu.conf.ts --suite a11y
 
 A11Y_AUDIT_TYPES=contrast,hitRegion   # iOS: narrow the audit types (default: all)
-A11Y_AUDIT_STRICT=1                    # fail the roll-up on error-severity findings
+A11Y_AUDIT_FAIL_ON_NEW=0               # report findings missing from a11y-baseline.json instead of failing the roll-up (default: fail)
+A11Y_AUDIT_STRICT=1                    # fail the roll-up on error-severity findings, known or not
 ```
 
 ### _Camera Image Injection_
@@ -629,8 +630,12 @@ _Two rules, both learned the hard way:_
    it decodes as a silently WRONG serial._
 
 _`scripts/generate-scan-assets.mjs` writes `assets/images/scan/card_<persona>.png` — one combo-card
-back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. Rerun it
-after changing a payload or size; it prints px-per-module for every code it writes._
+back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. The PDF-417
+carries ICBC's 3-track layout exactly as the app's spec-based parser demands it — track 3 is a fixed
+82-character block whose security field zero-pads the serial — because the parser rejects the whole
+code when any track is malformed, and then the live scanner never reads the card and the reroute never
+fires. Rerun the script after changing a payload or size; it prints px-per-module and px-per-row for
+every code it writes._
 
 _The cards are generated rather than photographed because the serial screen needs BOTH codes — the
 serial from the 1D code-39 and the birthdate from the PDF-417 — matching the same persona. The shared
@@ -638,14 +643,14 @@ serial from the 1D code-39 and the birthdate from the PDF-417 — matching the s
 nonexistent card._
 
 > **_App behaviour that limits this (worth its own ticket):_** `ScanSerialScreen` reroutes to the
-> non-BCSC ("two government-issued IDs") flow the instant any scanned code decodes to `null`, guarded
+> non-BCSC ("two government-issued IDs") flow the instant any scanned code fails to decode, guarded
 > only by "nothing captured yet". Since the vision-camera patch enables ML Kit's
-> `enableAllPotentialBarcodes()` and `decodeBarcodes` does not filter value-less codes, a partial
-> detection triggers it — so a real user whose card is still half-aligned can be bounced out of the
+> `enableAllPotentialBarcodes()` and `ScanSerialScreen.onCodeScanned`'s decode loop does not filter
+> value-less codes, a partial detection triggers it — so a real user whose card is still half-aligned can be bounced out of the
 > BCSC flow before the scanner ever gets a clean read. Seven purpose-built image variants across six
 > device sessions (varying geometry, sharpness, module size, orientation and injection ordering) all
 > reroute within seconds, so this is not an image problem. Skipping value-less codes in
-> `decodeBarcodes` — the same guard it already applies to `type === 'unknown'` — would fix the
+> that loop — the same guard it already applies to `type === 'unknown'` — would fix the
 > user-facing behaviour and make this screen testable by injection._
 
 ### Device authentication (Sauce device-lock lane)
@@ -674,7 +679,7 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
 | _Nightly (schedule)_ | `regression` | _1 iOS (18) + 1 Android (15)_ | `bcsc-dev` | _—_          |
 
-> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, `upgrade403`, `upgradeV3` and `upgradeSendVideo` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (all on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*` and `upgradeV3` the `BCSC-v3.*` pair. The `upgrade` and `upgrade403` lanes also carry the verified-account state check; `upgradeSendVideo` (a pending review across the upgrade) is a send-video journey, so it runs last among the queue users, one platform at a time, on the Android injection-off upgrade lane. The costlier state checks (`upgradeExtra` / `upgrade403Extra`: unapproved in-person, partial non-BCSC, resume states) are dispatch-only. `a11y` rides inside `regression` on both platforms as an advisory lane — its findings are reports, not failures. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, `upgrade403`, `upgradeV3` and `upgradeSendVideo` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (all on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*` and `upgradeV3` the `BCSC-v3.*` pair. The `upgrade` and `upgrade403` lanes also carry the verified-account state check; `upgradeSendVideo` (a pending review across the upgrade) is a send-video journey, so it runs last among the queue users, one platform at a time, on the Android injection-off upgrade lane. The costlier state checks (`upgradeExtra` / `upgrade403Extra`: unapproved in-person, partial non-BCSC, resume states) are dispatch-only. `a11y` rides inside `regression` on both platforms; a NEW finding (one missing from `a11y-baseline.json`) fails the roll-up checkpoint only when the `a11y` suite is dispatched on its own — inside the nightly regression it is advisory, flagged by the brief, so a heuristic that changes its mind with the light (contrast sampled over a camera preview) cannot turn the blocking lane red (`A11Y_AUDIT_FAIL_ON_NEW`, set per suite in `e2e.yml`). `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
 
 _The four send-video journeys are excluded from that concurrent regression matrix and run right after it as their own_ `send-video` _lane — both platforms, one at a time (`max_parallel: 1`), alongside the migration lane (also one platform at a time, so the pair stays inside the two-session budget) — because they review a shared, blind-FIFO SIT agent queue with shared personas (see **Send-video review queue**). The journeys drain that queue around their own uploads, and the nightly ends with a_ `queue-hygiene` _job that drains it once more._
 
@@ -685,6 +690,19 @@ _The nightly ends with the_ `device-auth` _lane (both platforms, last in the cha
 _**Note:** There is no E2E job on_ `main` _merge by design — regression is deferred to the nightly workflow so SauceLabs devices stay free during the day when multiple PRs merge. The in-person verification step needs the runner's egress IP allowlisted with the BC Gov ID Check portal; see the notes in_ `e2e-nightly.yml` _and use the "Verify Allowlist Connectivity" workflow to confirm reachability._
 
 _**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices = 2 jobs) this fits within a single round. Nightly uses the same two-device matrix; it runs longer end-to-end because the advisory lanes (migration, upgrade, upgrade403, upgradeV3, upgradeSendVideo, device-auth) chain serially after the regression._
+
+### Nightly flake taxonomy and lane rules
+
+Every red nightly of Oct 7–14 2026 was reviewed down to the checkpoint (`tmp/e2e-nightly-review-2026-10-14.md` in the review branch; the brief's `sig` ids make the same tally repeatable). None of the red lanes was Sauce device flakiness; the causes, and the rules that now keep them out:
+
+| Cause | Rule / guard |
+| --- | --- |
+| **Shared personas, one device per card.** Both platforms verify the same five SIT personas (`TestUsers`), and SIT keeps one active device per card: whichever lane verifies a persona later invalidates the other's device at its next cold start ("Device invalidated" on the combined journey's cold deep link and the upgrade's post-install unlock). A retry re-verifies the same persona, so retries of verified journeys are not hermetic. | Lanes that verify the same persona on both platforms run them one at a time (`upgrade`, `upgrade403`: `max_parallel: 1`). The real fix is a persona set per platform — ask IAS for a second set of SIT cards and key `TestUsers` by platform. |
+| **One Entra account, two lanes signing in at once.** The platform jobs run the same specs in step, so their cold IDCheck sign-ins mint the same TOTP code in the same 30 s window; the code page then sat for the whole deadline. | `IDCHECK_TOTP_WINDOW_PARITY` (iOS even windows, Android odd — `e2e.yml`), and `scripts/idcheck-session.mjs` resubmits a code that brings no verdict within 12 s, retypes a password Entra's re-render wiped ("Please enter your password"), and gives the IDCheck landing 30 s. |
+| **An app change the journey never adapted to.** #4792 surfaces an injected biometric failure as the error modal; the device-auth journey waited for a prompt under it. | `recoverFromFailedDeviceAuth` closes the modal (logging its error code) and asserts it on Android. Adapt journeys in the PR that changes the UX. |
+| **A heuristic that depends on the light.** Android `text-contrast` sampled the live camera frame on ScanSerial. | Camera screens skip it; NEW findings are advisory in the nightly (above). |
+| **Old pool devices.** Every device-bound iOS flake (recorder error 2002, undecoded injected QR, controls under the number pad, a hung session) was an iPhone 11/12/SE/Mini unit; the retry on a 13–16 unit passed. | The iOS matrix pattern is `iPhone 1[4-6].*`. Scroll hunts close an open keyboard before the first swipe (a footer button outside the form's scroll view never scrolls out from under one) and keep the band above an iOS number pad, which has no key to close it; the birthdate form closes its via the field label. |
+| **Runner → SIT connectivity.** 5–17 connect timeouts a night, usually absorbed by the pairing-code mint retry; on 2026-10-15 all 20 attempts on both lanes — always the mint's second hop, which Node's fetch had put on a fresh connection. | The whole mint rides one keep-alive connection (an `undici` Agent with `connections: 1`), so only its first hop ever connects; five attempts with a growing wait; `verify-allowlist-connectivity.yml` probes both mint hops with TCP/TLS handshake times; the email inbox keeps polling through a placeholder body; issuer-side polls in the wallet journey run under a driver keepalive. |
 
 ### Nightly brief
 
@@ -698,6 +716,9 @@ Every nightly run ends with a **brief** — one page on the run's Summary tab (a
 | ⬜ not run | no result for it in these reports (lane not run, spec not scheduled, worker never got a session) |
 | ➖ n/a | not applicable on that platform (e.g. card-barcode scanning on iOS) |
 | 📝 manual | proved by the UAT team, not automation — the manual script is linked |
+| 🔌 session terminated | Sauce killed the session mid-journey, almost always because the app stopped answering the driver (a hung main thread); the checkpoint it died on fails and the rest of the file is blocked |
+
+Every failure links its Sauce job and carries a `sig` — a stable id of platform + file + checkpoint, so the same failure can be counted across a fortnight of briefs — and the **Retried and passed** table lists every journey `specFileRetries` rescued with its first attempt's failure and the devices involved: a flake a retry absorbs still costs five to ten minutes of device time a night, and is only ever noticed here. The **Sessions** table lists every journey's attempts in order (`❌ 1 · ✅ 2`), each linked to its job. Both come from `reports/sessions/*.json`, one record per WebDriver session that the config hooks write as the journey runs (spec, device, Sauce job, every checkpoint's outcome). That record is also what stands in for the JUnit of a session Sauce terminated: the reporter writes its XML only when the worker ends, and the runner's session teardown throws first on a dead session, leaving a 0-byte file — without the record such a journey would read ⬜, as if it had never run. That 0-byte file is itself proof of a terminated session: the worker's last attempt reads 🔌 even when it died in a hook and its record closed as an ordinary failure. The lane line reads from the reports too: an advisory lane (`continue-on-error`) shows `❌ (job ✅)` when its job passed but a journey did not.
 
 Cells show `passed/listed` plus tallies when not everything listed passed (`✅ 4/5 ⏭1`). The rows come from `src/brief/coverage-map.ts` — each UAT row names the spec files and exact `it` titles that prove it, per platform — and `yarn brief:check` (the brief job runs it first) fails when a listed title no longer exists or a journey under `test/bcsc/` is not mapped, so renaming a checkpoint means updating the map. `smoke.spec.ts` is the PR gate and has no row: the nightly never schedules it.
 
@@ -708,7 +729,7 @@ yarn brief:check                                               # the coverage ma
 yarn a11y:baseline --reports reports                           # re-snapshot the known a11y findings after triage
 ```
 
-The accessibility section lists only screens with errors, per platform, with how many findings are NEW versus `a11y-baseline.json` (platform → screen → issue `signature`). A screen the baseline has never seen shows all its findings as NEW and says so. The baseline is report-only: regenerate it once the findings are triaged, and review its diff like code.
+The accessibility section lists only screens with errors, per platform, with how many findings are NEW versus `a11y-baseline.json` (platform → screen → issue `signature`). A screen the baseline has never seen shows all its findings as NEW and says so. The baseline gates the roll-up checkpoint when the `a11y` suite runs on its own — a NEW finding on a screen it knows fails it — while the nightly regression runs it advisory (`A11Y_AUDIT_FAIL_ON_NEW`, set per suite in `e2e.yml`; `=0` locally to report only). Regenerate it once the findings are triaged, and review its diff like code. Camera screens skip `text-contrast` by design (`auditScreen(name, { skip: ['text-contrast'] })`): the sampler reads the screenshot, and over a live preview it measures the frame.
 
 ## _Local App Binaries_
 
@@ -762,6 +783,7 @@ e2e/
 │   │   ├── evaluate.ts                      # row × platform → pass/fail/blocked/skipped/not-run/n-a/manual
 │   │   ├── a11y-summary.ts                  # latest audit per platform vs a11y-baseline.json (NEW vs known)
 │   │   ├── render.ts                        # the markdown GitHub shows as the run summary
+│   │   ├── sessions.ts                      # session records → attempts + Sauce job links; rebuilds journeys whose session died
 │   │   └── build.ts                         # report dirs → brief model (the CLI and the self-test share it)
 │   │
 │   ├── test-ids/
@@ -790,7 +812,8 @@ e2e/
 │   │   ├── email.ts                         # temp-inbox email verification helper
 │   │   ├── gestures.ts                      # swipe, scroll, tap-at-coordinate wrappers
 │   │   ├── pairing-code.ts                  # mint pairing codes / deep links against SIT
-│   │   └── sauce.ts                         # SauceLabs-specific utilities (detection, annotations)
+│   │   ├── sauce.ts                         # SauceLabs-specific utilities (detection, annotations)
+│   │   └── session-record.ts                # one reports/sessions/*.json per WebDriver session (spec, device, Sauce job, checkpoints)
 │   │
 │   └── screens/                             # action-based screen-object DSL, one file per stack
 │       ├── core/
@@ -834,7 +857,7 @@ e2e/
 │       │   └── under-12.journey.ts          # under-12 persona: restricted method set + transfer age gate
 │       ├── main/
 │       │   ├── unverified-main.journey.ts   # unverified tab / QRCore gating
-│       │   ├── settings.journey.ts          # settings rows, change-PIN, auto-lock, reset/remove account
+│       │   ├── settings.journey.ts          # settings rows, developer mode off, change-PIN, auto-lock, reset/remove account
 │       │   └── wallet.journey.ts            # DIDComm credential lifecycle + populated Contacts (issuer tenant)
 │       │
 │       ├── scan/                            # card-barcode scanning — Android + Sauce only (--suite scan; in regression)
@@ -870,7 +893,7 @@ e2e/
 │           ├── migration.spec.ts            # orchestrator: v3 onboarding → upgrade → v4 unlock
 │           ├── migration-context.ts         # shared state (PIN) between v3 and v4 specs
 │           ├── v3-onboarding.spec.ts        # v3 native app onboarding + card verification (v3TestIDs)
-│           ├── upgrade.spec.ts              # install v4 over v3 via driver.installApp()
+│           ├── v3-to-v4-upgrade.spec.ts     # install v4 over v3 via driver.installApp()
 │           └── v4-unlock.spec.ts            # unlock v4 with the v3 PIN (DSL: AccountLanding → EnterPIN → Home)
 │
 ├── assets/                                  # test images for camera injection

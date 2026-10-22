@@ -144,7 +144,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 2801
-        versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "4.1.0"
+        versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "4.2.0"
 
         missingDimensionStrategy 'react-native-camera', 'general'
         ndk {
@@ -210,3 +210,4 @@ dependencies {
 
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.crashlytics'
