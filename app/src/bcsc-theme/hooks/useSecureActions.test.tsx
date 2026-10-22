@@ -204,6 +204,24 @@ describe('useSecureActions', () => {
     })
   })
 
+  describe('updateResidentialAddressDraft', () => {
+    it('keeps the draft in the store only, writing nothing to native storage', () => {
+      const draft = { streetAddress: '123 Main St', streetAddress2: '', city: '', province: null, postalCode: '' }
+      const { result } = renderHook(() => useSecureActions())
+
+      act(() => {
+        result.current.updateResidentialAddressDraft(draft)
+      })
+
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+      expect(setAuthorizationRequest).not.toHaveBeenCalled()
+      expect(setAccountFlags).not.toHaveBeenCalled()
+    })
+  })
+
   describe('removeIncompleteEvidence', () => {
     it('should return empty array when given empty evidence', async () => {
       const { result } = renderHook(() => useSecureActions())

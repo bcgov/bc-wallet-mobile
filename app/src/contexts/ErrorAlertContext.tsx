@@ -33,6 +33,9 @@ export interface ErrorAlertContextType {
    */
   emitAlert: (title: string, description: string, options?: AlertOptions) => void
 
+  /**
+   * Indicates whether the error modal is currently visible
+   */
   isErrorModalVisible: boolean
 }
 

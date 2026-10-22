@@ -35,6 +35,7 @@ const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
 const mockUpdateDeviceCodes = jest.fn().mockResolvedValue(undefined)
 const mockUpdateVerificationOptions = jest.fn()
 const mockUpdateCardProcess = jest.fn()
+const mockUpdateResidentialAddressDraft = jest.fn()
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
@@ -42,6 +43,7 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
     updateDeviceCodes: mockUpdateDeviceCodes,
     updateVerificationOptions: mockUpdateVerificationOptions,
     updateCardProcess: mockUpdateCardProcess,
+    updateResidentialAddressDraft: mockUpdateResidentialAddressDraft,
   })),
 }))
 
@@ -175,6 +177,51 @@ describe('useResidentialAddressModel', () => {
         city: '',
         province: null,
         postalCode: '',
+      })
+    })
+  })
+
+  // Stepping back and forward remounts the screen, so unsaved input is kept as a session draft
+  describe('session draft', () => {
+    const draft = {
+      streetAddress: '456 Oak Ave',
+      streetAddress2: 'Unit 2',
+      city: 'Victoria',
+      province: null,
+      postalCode: '',
+    }
+
+    it('seeds the form from the session draft rather than the submitted address', () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, residentialAddressDraft: draft } },
+        mockDispatch,
+      ])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      expect(result.current.formState).toEqual(draft)
+    })
+
+    it('keeps the form as the user left it when the screen unmounts, not per keystroke', () => {
+      const { result, unmount } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      act(() => {
+        result.current.handleChange('city', 'Victoria')
+      })
+      expect(mockUpdateResidentialAddressDraft).not.toHaveBeenCalled()
+
+      // Popping back, a stack reset and leaving for Home all unmount the screen; the last of them fires
+      // no navigation blur, so the unmount is the one moment every exit shares
+      unmount()
+
+      expect(mockUpdateResidentialAddressDraft).toHaveBeenCalledTimes(1)
+      expect(mockUpdateResidentialAddressDraft).toHaveBeenCalledWith({
+        streetAddress: '123 Main St',
+        streetAddress2: '',
+        city: 'Victoria',
+        province: 'BC',
+        postalCode: 'V6B 1A1',
       })
     })
   })

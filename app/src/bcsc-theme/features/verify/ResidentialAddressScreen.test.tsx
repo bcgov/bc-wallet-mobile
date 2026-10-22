@@ -31,6 +31,7 @@ const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
 const mockUpdateDeviceCodes = jest.fn().mockResolvedValue(undefined)
 const mockUpdateVerificationOptions = jest.fn().mockResolvedValue(undefined)
 const mockUpdateCardProcess = jest.fn().mockResolvedValue(undefined)
+const mockUpdateResidentialAddressDraft = jest.fn()
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
@@ -39,6 +40,7 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
     updateDeviceCodes: mockUpdateDeviceCodes,
     updateVerificationOptions: mockUpdateVerificationOptions,
     updateCardProcess: mockUpdateCardProcess,
+    updateResidentialAddressDraft: mockUpdateResidentialAddressDraft,
   })),
 }))
 
@@ -65,6 +67,41 @@ describe('ResidentialAddress', () => {
     )
 
     expect(tree).toMatchSnapshot()
+  })
+
+  // A remount after stepping back shows what the user typed, not the last submitted address
+  it('fills the form from the session draft', () => {
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: {
+            ...initialBCSCSecureState,
+            userMetadata: {
+              address: {
+                streetAddress: '1 Submitted St',
+                city: 'Vancouver',
+                province: 'BC',
+                postalCode: 'V6B 1A1',
+                country: 'CA',
+              },
+            },
+            residentialAddressDraft: {
+              streetAddress: '456 Oak Ave',
+              streetAddress2: '',
+              city: 'Victoria',
+              province: null,
+              postalCode: '',
+            },
+          },
+        }}
+      >
+        <ResidentialAddressScreen navigation={mockNavigation as never} route={mockRoute as never} />
+      </BasicAppContext>
+    )
+
+    expect(tree.getByTestId('com.ariesbifold:id/streetAddress1-input').props.value).toBe('456 Oak Ave')
+    expect(tree.getByTestId('com.ariesbifold:id/city-input').props.value).toBe('Victoria')
+    expect(tree.getByTestId('com.ariesbifold:id/postalCode-input').props.value).toBe('')
   })
 
   describe('focus and scroll on invalid submit', () => {

@@ -4,7 +4,14 @@ import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, VerificationStatus } from '@/store'
+import {
+  BCDispatchAction,
+  BCSCSecureState,
+  BCState,
+  NonBCSCUserMetadata,
+  ResidentialAddressDraft,
+  VerificationStatus,
+} from '@/store'
 import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
@@ -458,6 +465,22 @@ export const useSecureActions = () => {
       }
     },
     [dispatch, persistAuthorizationRequest]
+  )
+
+  /**
+   * Keep the residential address form as the user left it, in memory only. Unlike the other
+   * updates here nothing is written to native storage: the draft lives for the signed-in session and
+   * is dropped with the rest of the secure state on lock, logout or a verification reset, so only a
+   * submitted address (see updateUserMetadata) survives. Pass undefined to discard it.
+   */
+  const updateResidentialAddressDraft = useCallback(
+    (draft: ResidentialAddressDraft | undefined) => {
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+    },
+    [dispatch]
   )
 
   /**
@@ -1284,6 +1307,7 @@ export const useSecureActions = () => {
     clearAuthorizationRequest,
     updateCardProcess,
     updateUserMetadata,
+    updateResidentialAddressDraft,
     updateVerified,
     updateWalletKey,
     updateAccountFlags,
