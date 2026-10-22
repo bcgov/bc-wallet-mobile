@@ -827,7 +827,7 @@ const translation = {
       "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it. (PT-BR)",
       "UnrecognizedQRDescription": "We couldn't recognize this QR code. Make sure it's meant for this app. If it is, report this error. (PT-BR)",
       "CredentialQRScanFailedTitle": "Unable to process invitation (PT-BR)",
-      "CredentialQRScanFailedDescription": "Try scanning the invitation QR code again. If the problem continues, report it. (PT-BR)",
+      "CredentialQRScanFailedDescription": "We couldn't process this invitation. If you think it should work, report this error. (PT-BR)",
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (PT-BR)",
