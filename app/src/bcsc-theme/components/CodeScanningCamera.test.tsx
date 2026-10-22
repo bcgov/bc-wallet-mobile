@@ -7,6 +7,7 @@ import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scan
 import { ReactTestInstance } from 'react-test-renderer'
 
 import { AppEventCode } from '@/events/appEventCode'
+import { TestIds } from '@/test-ids/registry'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import CodeScanningCamera, { ScanZone } from './CodeScanningCamera'
@@ -40,18 +41,18 @@ jest.mock('react-native-vision-camera', () => {
       focusTo: mockFocus,
     }))
 
-    // Simulate the session starting
+    // Simulate the session starting, once per mount like a real session
+    const onStartedRef = React.useRef(onStarted)
+    onStartedRef.current = onStarted
     React.useEffect(() => {
       const timer = setTimeout(() => {
-        if (onStarted) {
-          onStarted()
-        }
+        onStartedRef.current?.()
       }, 0)
       return () => clearTimeout(timer)
-    }, [onStarted])
+    }, [])
 
     return (
-      <View testID="mock-camera" {...props}>
+      <View testID="mock-camera" onStarted={onStarted} {...props}>
         {children}
       </View>
     )
@@ -1442,7 +1443,7 @@ describe('CodeScanningCamera', () => {
     })
   })
 
-  describe('Recoverable camera runtime errors (regression: iOS unknown/unknown -12780 in 4.1.0)', () => {
+  describe('Recoverable camera runtime errors (iOS media services reset)', () => {
     const makeAppError = () => ({
       name: 'NormalizedAppError',
       message: 'normalized',
@@ -1450,10 +1451,12 @@ describe('CodeScanningCamera', () => {
       toJSON: jest.fn(),
     })
 
-    // VisionCamera surfaces an AVCaptureSessionRuntimeError as `unknown/unknown` and restarts
-    // the capture session itself; this is the shape the Camera onError callback receives.
-    const makeRuntimeError = (code = 'unknown/unknown') =>
-      Object.assign(new Error('Error Domain=AVFoundationErrorDomain Code=-11800'), { code })
+    // VisionCamera v5 passes the AVCaptureSessionRuntimeError NSError through as its description;
+    // our patch restarts the session after a media services reset (-11819).
+    const makeRuntimeError = (code = -11819) =>
+      new Error(
+        `Error Domain=AVFoundationErrorDomain Code=${code} "Cannot Complete Action" UserInfo={NSLocalizedDescription=Cannot Complete Action}`
+      )
 
     beforeEach(() => {
       jest.useFakeTimers()
@@ -1465,28 +1468,26 @@ describe('CodeScanningCamera', () => {
       jest.useRealTimers()
     })
 
-    it('lets VisionCamera restart the session after a single unknown/unknown error instead of failing over', async () => {
+    it('waits for the session to restart after a single media services reset instead of failing over', async () => {
       const onError = jest.fn()
       const { getByTestId } = render(
         <BasicAppContext>
           <CodeScanningCamera {...defaultProps} onError={onError} />
         </BasicAppContext>
       )
+      const runtimeError = makeRuntimeError()
 
       await act(async () => {
-        getByTestId('mock-camera').props.onError(makeRuntimeError())
+        getByTestId('mock-camera').props.onError(runtimeError)
       })
 
       expect(mockEmitErrorModal).not.toHaveBeenCalled()
       expect(onError).not.toHaveBeenCalled()
       // Still normalized with the device/format context so the warning carries the same detail.
-      expect(mockEnsureAppError).toHaveBeenCalledWith(
-        expect.objectContaining({ code: 'unknown/unknown' }),
-        AppEventCode.ADD_CARD_CAMERA_BROKEN
-      )
+      expect(mockEnsureAppError).toHaveBeenCalledWith(runtimeError, AppEventCode.ADD_CARD_CAMERA_BROKEN)
     })
 
-    it('fails over when a second unknown/unknown error arrives inside the recovery window (restart failed)', async () => {
+    it('fails over when a second reset arrives inside the recovery window (restart failed)', async () => {
       const onError = jest.fn()
       const { getByTestId } = render(
         <BasicAppContext>
@@ -1511,7 +1512,7 @@ describe('CodeScanningCamera', () => {
       expect(onError).toHaveBeenCalledWith(secondError)
     })
 
-    it('treats an unknown/unknown error after the recovery window as a fresh recoverable one', async () => {
+    it('treats a reset after the recovery window as a fresh recoverable one', async () => {
       const onError = jest.fn()
       const { getByTestId } = render(
         <BasicAppContext>
@@ -1519,6 +1520,10 @@ describe('CodeScanningCamera', () => {
         </BasicAppContext>
       )
       const camera = getByTestId('mock-camera')
+      // Let the session start first, or the not-ready timeout fires inside the 10 s advance below
+      await act(async () => {
+        jest.advanceTimersByTime(0)
+      })
 
       await act(async () => {
         camera.props.onError(makeRuntimeError())
@@ -1534,7 +1539,7 @@ describe('CodeScanningCamera', () => {
       expect(onError).not.toHaveBeenCalled()
     })
 
-    it('still fails over immediately for other error codes on iOS', async () => {
+    it('still fails over immediately for other runtime errors on iOS', async () => {
       const onError = jest.fn()
       const { getByTestId } = render(
         <BasicAppContext>
@@ -1542,16 +1547,16 @@ describe('CodeScanningCamera', () => {
         </BasicAppContext>
       )
 
-      const flashError = makeRuntimeError('device/flash-unavailable')
+      const unknownError = makeRuntimeError(-11800)
       await act(async () => {
-        getByTestId('mock-camera').props.onError(flashError)
+        getByTestId('mock-camera').props.onError(unknownError)
       })
 
       expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
-      expect(onError).toHaveBeenCalledWith(flashError)
+      expect(onError).toHaveBeenCalledWith(unknownError)
     })
 
-    it('still fails over immediately for unknown/unknown on Android (no auto-restart there)', async () => {
+    it('still fails over immediately on Android (only critical CameraX errors reach onError)', async () => {
       Platform.OS = 'android'
       const onError = jest.fn()
       const { getByTestId } = render(
@@ -1566,6 +1571,101 @@ describe('CodeScanningCamera', () => {
 
       expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
       expect(onError).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('Camera interruptions', () => {
+    const overlayTestId = testIdWithKey(TestIds.shared.cameraInterrupted.overlay)
+
+    // The mock camera reports onStarted on a 0 ms timer, which clears an interruption; let it fire first
+    const renderStarted = async () => {
+      const utils = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+      return utils
+    }
+
+    it('covers the preview while the session is interrupted and removes the cover when it ends', async () => {
+      const { getByTestId, queryByTestId } = await renderStarted()
+      const camera = getByTestId('mock-camera')
+
+      expect(queryByTestId(overlayTestId)).toBeNull()
+
+      await act(async () => {
+        camera.props.onInterruptionStarted('unknown')
+      })
+      expect(getByTestId(overlayTestId)).toBeTruthy()
+
+      await act(async () => {
+        camera.props.onInterruptionEnded()
+      })
+      expect(queryByTestId(overlayTestId)).toBeNull()
+    })
+
+    it('removes the cover when the session starts again without an interruption-ended event', async () => {
+      const { getByTestId, queryByTestId } = await renderStarted()
+      const camera = getByTestId('mock-camera')
+
+      await act(async () => {
+        camera.props.onInterruptionStarted('video-device-in-use-by-another-client')
+      })
+      expect(getByTestId(overlayTestId)).toBeTruthy()
+
+      await act(async () => {
+        camera.props.onStarted()
+      })
+      expect(queryByTestId(overlayTestId)).toBeNull()
+    })
+
+    it('reports an interruption that lasts 8 seconds, so the parent can fall back', async () => {
+      jest.useFakeTimers()
+      try {
+        mockEnsureAppError.mockImplementation(() => ({
+          name: 'NormalizedAppError',
+          message: 'normalized',
+          addContext: jest.fn(),
+          toJSON: jest.fn(),
+        }))
+        const onError = jest.fn()
+        const { getByTestId } = render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} onError={onError} />
+          </BasicAppContext>
+        )
+        await act(async () => {
+          jest.advanceTimersByTime(0)
+        })
+        await act(async () => {
+          getByTestId('mock-camera').props.onInterruptionStarted('unknown')
+        })
+
+        await act(async () => {
+          jest.advanceTimersByTime(8000)
+        })
+
+        expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
+        // ScanSerialScreen switches to its camera-failed state (retry / manual entry) on this
+        expect(onError).toHaveBeenCalledWith(
+          expect.objectContaining({ message: 'Camera interrupted for 8 s (unknown)' })
+        )
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
+    it('does not treat an interruption as a camera error', async () => {
+      const { getByTestId } = await renderStarted()
+
+      await act(async () => {
+        getByTestId('mock-camera').props.onInterruptionStarted('unknown')
+      })
+
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
     })
   })
 
