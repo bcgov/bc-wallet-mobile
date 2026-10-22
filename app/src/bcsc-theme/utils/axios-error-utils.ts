@@ -40,6 +40,86 @@ export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosE
   return axiosError
 }
 
+/** The axios message for a request that produced no HTTP response; the runtime gives it no reason. */
+const AXIOS_NETWORK_ERROR_MESSAGE = 'Network Error'
+
+const NATIVE_REASON_MAX_LENGTH = 200
+
+/**
+ * Certificate/TLS validation wording from OkHttp and Conscrypt (Android) and NSURLError (iOS). Loose on
+ * purpose: a miss shows the misleading "No internet" modal. `certif` covers "certificate",
+ * "certification path" and the French iOS wording. Conscrypt reports plain connection drops with TLS
+ * vocabulary ("Read error: ssl=0x…", "SSL handshake aborted: … Connection reset by peer"); none of
+ * those match here.
+ */
+const TLS_FAILURE_PATTERN =
+  /certif|trust anchor|hostname .+ not verified|chain validation|pin verification|SSLHandshakeException|SSLPeerUnverifiedException|handshake failed|an ssl error has occurred/i
+
+// "javax.net.ssl.SSLHandshakeException" → "SSLHandshakeException"; a package path would otherwise read as a hostname
+const JAVA_PACKAGE_PREFIX_PATTERN = /\b(?:[a-z_][a-z0-9_]*\.)+(?=[A-Z])/g
+// IPv6 literals, bracketed or bare: two or more hex groups, so compressed ("::1"), scoped ("fe80::1%wlan0")
+// and IPv4-mapped ("::ffff:203.0.113.10") forms all match. A mapped address's dotted quad hangs off the
+// last hex group, which doubles as its first octet; an alternation there breaches Sonar's regex complexity
+// limit. Android's connect timeout names the device's own address ("… from /fe80::1%wlan0 (port 51234) …"),
+// not just the server's.
+const IPV6_PATTERN = /\[?(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(?:(?:\.\d{1,3}){3})?(?:%[a-z0-9_-]+)?\]?/gi
+// IPv4 addresses and dotted hostnames
+const HOST_OR_IP_PATTERN = /\b(?:\d{1,3}\.){3}\d{1,3}\b|\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b/gi
+
+/**
+ * Make a native error string safe for the modal, remote logs and incident reports: first line only
+ * (Android appends the certificate dump on the following lines), hostnames and IP addresses replaced,
+ * whitespace collapsed, length capped. IPv6 goes first so an IPv4-mapped address is one literal, not two.
+ */
+const redactNativeReason = (text: string): string =>
+  text
+    .split(/\r?\n/)[0]
+    .replace(JAVA_PACKAGE_PREFIX_PATTERN, '')
+    .replace(IPV6_PATTERN, '<host>')
+    .replace(HOST_OR_IP_PATTERN, '<host>')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, NATIVE_REASON_MAX_LENGTH)
+
+/**
+ * The reason React Native left on the XMLHttpRequest for a request that died before any response:
+ * OkHttp/Conscrypt text on Android, the NSURLError description on iOS. Redacted; undefined when
+ * nothing was stored. RN only stores it for text response types, and the `responseText` getter throws
+ * for binary ones (an arraybuffer picture download), hence the guard.
+ */
+const getNativeNetworkReason = (error: AxiosError): string | undefined => {
+  try {
+    const text = (error.request as { responseText?: unknown } | undefined)?.responseText
+    return typeof text === 'string' && text.trim() ? redactNativeReason(text) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Response-interceptor sibling of {@link formatIasAxiosResponseError} for the opposite case: no response
+ * came back at all. Replaces axios' bare "Network Error" with the redacted native reason, so
+ * `AppError.technicalMessage` (the modal's Debug line), `toJSON().cause` and the logger say what
+ * actually happened on the wire. The axios `code` is left untouched because {@link isNetworkError}
+ * and the error policies key off it. Idempotent: only the bare message is rewritten.
+ *
+ * @param error - The axios error to format
+ * @returns The same error, with its message extended when a native reason was available
+ */
+export const formatNetworkAxiosError = (error: AxiosError): AxiosError => {
+  if (error.code !== AxiosErrorCode.NETWORK_ERROR || error.message !== AXIOS_NETWORK_ERROR_MESSAGE) {
+    return error
+  }
+
+  const reason = getNativeNetworkReason(error)
+
+  if (reason) {
+    error.message = `${AXIOS_NETWORK_ERROR_MESSAGE}: ${reason}`
+  }
+
+  return error
+}
+
 /**
  * Summarize an HTTP body for logging. Request/response bodies can be multi-MB binary
  * Buffers (e.g. an evidence upload's photo/video bytes); logging them verbatim expands the
@@ -159,18 +239,27 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
 }
 
 /**
- * Determines if the provided error is a network error.
+ * Determines if the provided error is a network error: the request produced no HTTP response.
+ *
+ * This is what the fail-open paths (client discovery, the JWK retry loop, the device count check)
+ * rely on, so it also holds for a rejected certificate (classified as UNSECURED_NETWORK): the
+ * ERR_NETWORK cause is kept on the AppError and is found by walking the cause chain of re-wrapped errors.
  *
  * @param {unknown} error - The error to check
+ * @param depth - Recursion guard for the cause chain
  * @returns {*} {boolean} True if the error is a network error, false otherwise.
  */
-export const isNetworkError = (error: unknown): boolean => {
+export const isNetworkError = (error: unknown, depth = 0): boolean => {
+  if (depth > 10) {
+    return false
+  }
+
   if (error instanceof AxiosError) {
     return (error as any)?.isNetworkError === true || error.code === AxiosErrorCode.NETWORK_ERROR
   }
 
   if (error instanceof AppError) {
-    return error.appEvent === AppEventCode.NO_INTERNET
+    return error.appEvent === AppEventCode.NO_INTERNET || isNetworkError(error.cause, depth + 1)
   }
 
   return false
@@ -213,14 +302,19 @@ const getClientErrorDefinitionFromStatus = (status?: number): ErrorDefinition =>
  *
  * @param errorCode - The error code from an AxiosError to map to an AppError definition
  * @param status - The HTTP response status, used to disambiguate the collapsed `ERR_BAD_REQUEST` (4xx) code
+ * @param tlsFailure - Whether the collapsed `ERR_NETWORK` code was a rejected certificate rather than a dead network
  * @returns An ErrorDefinition from the ErrorRegistry if a mapping exists, or null if no mapping is found
  */
-export const getAxiosErrorDefinition = (errorCode?: string, status?: number): ErrorDefinition | null => {
+export const getAxiosErrorDefinition = (
+  errorCode?: string,
+  status?: number,
+  tlsFailure = false
+): ErrorDefinition | null => {
   switch (errorCode) {
     case AxiosErrorCode.ECONNABORTED:
       return ErrorRegistry.SERVER_TIMEOUT
     case AxiosErrorCode.NETWORK_ERROR:
-      return ErrorRegistry.NO_INTERNET
+      return tlsFailure ? ErrorRegistry.UNSECURED_NETWORK : ErrorRegistry.NO_INTERNET
     case AxiosErrorCode.BAD_REQUEST:
       return getClientErrorDefinitionFromStatus(status)
     case AxiosErrorCode.BAD_RESPONSE:
@@ -244,8 +338,11 @@ export const getAxiosErrorDefinition = (errorCode?: string, status?: number): Er
  */
 export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   const errorCode = error.code
+  // The response interceptor has already put the native reason on the message (formatNetworkAxiosError)
+  const tlsFailure = errorCode === AxiosErrorCode.NETWORK_ERROR && TLS_FAILURE_PATTERN.test(error.message)
   const errorDefinition =
-    getAxiosErrorDefinition(errorCode, error.response?.status) ?? getErrorDefinitionFromAppEventCode(errorCode)
+    getAxiosErrorDefinition(errorCode, error.response?.status, tlsFailure) ??
+    getErrorDefinitionFromAppEventCode(errorCode)
 
   const statusCode = error.response?.status ?? 0
   const track = !(error.config?.suppressStatusCodeLogs ?? []).includes(statusCode)
