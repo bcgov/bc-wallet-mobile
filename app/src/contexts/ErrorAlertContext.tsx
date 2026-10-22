@@ -11,7 +11,6 @@ import { createContext, PropsWithChildren, useCallback, useContext, useMemo, use
 
 interface ErrorModalOptions {
   action?: ErrorModalAction
-  onDismiss?: () => void
   // dismissible?: boolean TODO (MD): Future enhancement to make error modals blocking/non-dismissible
 }
 
@@ -33,6 +32,9 @@ export interface ErrorAlertContextType {
    */
   emitAlert: (title: string, description: string, options?: AlertOptions) => void
 
+  /**
+   * Indicates whether the error modal is currently visible
+   */
   isErrorModalVisible: boolean
 }
 
