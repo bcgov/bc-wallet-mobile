@@ -51,7 +51,7 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
         await strategy.handle(value) // success: lock stays held
       } catch (error) {
         lockedRef.current = false // failure: unlock to allow retry
-        const modal = strategy.toErrorModal?.(error)
+        const modal = strategy.toErrorModal(error)
 
         if (modal) {
           return emitErrorModal(modal.title, modal.description, modal.error)

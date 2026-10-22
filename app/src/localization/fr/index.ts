@@ -828,11 +828,6 @@ const translation = {
       "UnrecognizedQRDescription": "We couldn't recognize this QR code. Make sure it's meant for this app. If it is, report this error. (FR)",
       "CredentialQRScanFailedTitle": "Unable to process invitation (FR)",
       "CredentialQRScanFailedDescription": "Try scanning the invitation QR code again. If the problem continues, report it. (FR)",
-      "Unsupported": {
-        "OpenID": "OpenID credentials aren't supported in BC Services Card. (FR)",
-        "Mediator": "Mediator invitations aren't supported in BC Services Card. (FR)",
-        "AgentNotReady": "Wallet isn't ready yet — please try again in a moment. (FR)",
-      },
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (FR)",
