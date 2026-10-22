@@ -92,10 +92,12 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
 }))
 
 const mockDocumentExpiredAlert = jest.fn()
+const mockBcscCardAlreadyAddedAlert = jest.fn()
 const mockFailedToReadFromLocalStorageAlert = jest.fn()
 jest.mock('@/hooks/useAlerts', () => ({
   useAlerts: jest.fn(() => ({
     documentExpiredAlert: mockDocumentExpiredAlert,
+    bcscCardAlreadyAddedAlert: mockBcscCardAlreadyAddedAlert,
     failedToReadFromLocalStorageAlert: mockFailedToReadFromLocalStorageAlert,
   })),
 }))
@@ -463,5 +465,71 @@ describe('EvidenceCapture', () => {
       cardProcess: BCSCCardProcess.NonBCSC,
     })
     expect(mockDocumentExpiredAlert).toHaveBeenCalled()
+  })
+
+  it('rejects the registered BC Services Card as the additional photo ID (Non-Photo BCSC flow)', async () => {
+    mockScanCard.mockImplementation(async (_codes: unknown, callback: (serial?: string, license?: unknown) => void) => {
+      callback('S00023254', null)
+    })
+
+    const existingEvidence = [{ evidenceType: { evidence_type: 'bcid' }, metadata: [] }]
+
+    const tree = renderScreen(buildEvidenceType([frontSide]), {
+      bcscSecure: {
+        ...initialBCSCSecureState,
+        cardProcess: BCSCCardProcess.BCSCNonPhoto,
+        // The 2D barcode's zero-padded form of the serial the camera read from the 1D barcode
+        serial: '00S00023254',
+        additionalEvidenceData: existingEvidence,
+      },
+    })
+    await waitFor(() => expect(maskedCameraProps).not.toBeNull())
+
+    await act(async () => {
+      await maskedCameraProps.codeScanner.onBarcodeScanned([{ format: 'code-39', displayValue: 'S00023254' }])
+    })
+
+    act(() => {
+      maskedCameraProps.onPhotoTaken('mock/front.jpg')
+    })
+    await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
+
+    await fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
+
+    await waitFor(() => expect(mockTruncateEvidence).toHaveBeenCalledWith(existingEvidence, 0))
+    expect(mockNavigation.navigate).toHaveBeenCalledWith({
+      name: BCSCScreens.EvidenceTypeList,
+      params: { cardProcess: BCSCCardProcess.BCSCNonPhoto },
+      merge: true,
+    })
+    expect(mockBcscCardAlreadyAddedAlert).toHaveBeenCalled()
+    expect(mockUpdateEvidenceMetadata).not.toHaveBeenCalled()
+    expect(mockHandleScanBarcodes).not.toHaveBeenCalled()
+  })
+
+  it('captures a card other than the registered one as the additional photo ID (Non-Photo BCSC flow)', async () => {
+    mockScanCard.mockImplementation(async (_codes: unknown, callback: (serial?: string, license?: unknown) => void) => {
+      callback('C00015303', null)
+    })
+
+    const tree = renderScreen(buildEvidenceType([frontSide]), {
+      bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto, serial: 'S00023254' },
+    })
+    await waitFor(() => expect(maskedCameraProps).not.toBeNull())
+
+    await act(async () => {
+      await maskedCameraProps.codeScanner.onBarcodeScanned([{ format: 'code-39', displayValue: 'C00015303' }])
+    })
+
+    act(() => {
+      maskedCameraProps.onPhotoTaken('mock/front.jpg')
+    })
+    await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
+
+    await fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
+
+    await waitFor(() => expect(mockUpdateEvidenceMetadata).toHaveBeenCalled())
+    expect(mockBcscCardAlreadyAddedAlert).not.toHaveBeenCalled()
+    expect(mockTruncateEvidence).not.toHaveBeenCalled()
   })
 })
