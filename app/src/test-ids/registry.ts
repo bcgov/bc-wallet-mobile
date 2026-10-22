@@ -113,6 +113,11 @@ export const TestIds = {
       takePhoto: 'TakePhoto',
       cancel: 'CancelCamera',
       toggleFlash: 'ToggleFlash',
+      notReady: 'CameraNotReady',
+    },
+    /** `CameraInterruptedOverlay` — covers any camera preview while the camera session is interrupted. */
+    cameraInterrupted: {
+      overlay: 'CameraInterrupted',
     },
     /** `AppBanner` composes `<part>-<banner type>`; the type is the banner's variant, not a screen. */
     appBanner: {
