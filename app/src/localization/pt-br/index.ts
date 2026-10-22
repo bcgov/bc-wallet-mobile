@@ -909,6 +909,9 @@ const translation = {
       "CancelCamera": "Cancel camera (PT-BR)",
       "TakePhoto": "Take photo (PT-BR)",
       "ToggleFlash": "Toggle flash (PT-BR)",
+      "CameraInterrupted": "Camera paused (PT-BR)",
+      "CameraInterruptedMessage": "The camera is in use by another app or is temporarily unavailable. It will resume on its own when it's available. (PT-BR)",
+      "CameraNotReady": "The camera isn't ready yet. Please try again. (PT-BR)",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings (PT-BR)",
@@ -1069,6 +1072,8 @@ const translation = {
       "TakeVideo": {
         "RecordingError": "Recording error (PT-BR)",
         "RecordingErrorDescription": "There was an issue with the recording. Please try again. (PT-BR)",
+        "RecordingInterrupted": "Recording interrupted (PT-BR)",
+        "RecordingInterruptedDescription": "The recording stopped before you finished. Please record your video again. (PT-BR)",
         "CameraPermissionRequired": "Camera Permission Required (PT-BR)",
         "CameraPermissionRequiredDescription": "Please enable camera permission to take a photo. (PT-BR)",
         "MicrophonePermissionRequired": "Microphone Permission Required (PT-BR)",
