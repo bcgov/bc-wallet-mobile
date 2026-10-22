@@ -107,6 +107,20 @@ describe('useVerificationReset', () => {
     expect(mockLogger.error).not.toHaveBeenCalled()
   })
 
+  it('can leave verification IN_PROGRESS for a reset that happens inside the flow', async () => {
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current({ verifiedStatus: VerificationStatus.IN_PROGRESS })
+    })
+
+    // Backing out of identity selection pops to the setup question; the stack must stay mounted
+    expect(mockClearSecureState).toHaveBeenCalledWith(
+      expect.objectContaining({ verified: false, verifiedStatus: VerificationStatus.IN_PROGRESS })
+    )
+    expect(mockCreateRegistration).toHaveBeenCalledWith('device_authentication')
+  })
+
   it('shows the factory reset alert when no account exists', async () => {
     jest.mocked(getAccount).mockResolvedValue(null)
 

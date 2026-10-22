@@ -1,6 +1,6 @@
 import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
 import { relaunchApp, selectAccountLandingIfPresent, submitPin } from '../../../src/flows/auth.js'
-import { chooseAddAccount, leaveVerificationToHome, startVerification } from '../../../src/flows/verify.js'
+import { chooseAddAccount, leaveVerificationToHome, skipPromptAndStartFromHome } from '../../../src/flows/verify.js'
 import { auditScreen, reportA11ySummary } from '../../../src/helpers/a11y-audit.js'
 import { tapAtWindowPercent } from '../../../src/helpers/gestures.js'
 import { reachCameraScreen } from '../../../src/helpers/screens.js'
@@ -145,7 +145,7 @@ describe('Accessibility journey: automated audits over the core screens', () => 
   })
 
   it('audits the verification entry: account setup and identity selection', async () => {
-    await startVerification()
+    await skipPromptAndStartFromHome()
     await AccountSetupScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await auditScreen('AccountSetup')
     await chooseAddAccount()

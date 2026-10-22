@@ -14,6 +14,7 @@ import { getEmailConfirmationCode, getLatestMailId, getTempEmailAddress } from '
 import { swipeUpBy } from '../helpers/gestures.js'
 import {
   closeHelpMenu,
+  expectHelpMenuRowAbsent,
   HelpMenuRows,
   openHelpMenu,
   RestartVerificationAlert,
@@ -112,8 +113,22 @@ export async function chooseAddAccount(): Promise<void> {
 }
 
 /**
+ * The deferred entry: VerifyPrompt `Skip verification` → Home, whose "Start verification" card opens the
+ * flow on AccountSetup. A user who enters this way keeps "Back to home" and a back arrow that leaves for
+ * Home; one who taps Continue instead (`startVerification`) gets neither — see `expectNoBackToHome`.
+ */
+export async function skipPromptAndStartFromHome(): Promise<void> {
+  await VerifyPromptScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await VerifyPromptScreen.tapToReach('secondary', HomeScreen)
+  await HomeNotificationCard.tapToNavigate('primary')
+  await AccountSetupScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
  * Help menu → "Back to home", KEEPING progress (the app only moves the status out of IN_PROGRESS).
- * Available on every verify screen except VerifyPrompt and the two transfer screens.
+ * Offered to a deferred verifier (`skipPromptAndStartFromHome`) and in developer mode, on every verify
+ * screen except VerifyPrompt and the two transfer screens. A first-time verifier (`startVerification`)
+ * never has the row — `expectNoBackToHome`.
  */
 export async function leaveVerificationToHome(): Promise<void> {
   await openHelpMenu()
@@ -122,10 +137,32 @@ export async function leaveVerificationToHome(): Promise<void> {
 }
 
 /**
+ * Open the help menu and assert it offers no "Back to home" — what a first-time verifier (Continue at
+ * the prompt, developer mode off) sees on every verify screen, the prompt included. Closes the menu.
+ */
+export async function expectNoBackToHome(): Promise<void> {
+  await openHelpMenu()
+  await expectHelpMenuRowAbsent(HelpMenuRows.backToHome)
+  await closeHelpMenu()
+}
+
+/**
+ * The pending review as a first-time verifier sees it: no back arrow and no "Back to home", so the
+ * agent's decision has to be picked up from the screen itself (`waitForSendVideoDecision`).
+ */
+export async function expectPendingReviewLocked(): Promise<void> {
+  await PendingReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  if (await PendingReviewScreen.isVisible('backArrow')) {
+    throw new Error('The pending review offers a back arrow, but a first-time verifier cannot leave it')
+  }
+  await expectNoBackToHome()
+}
+
+/**
  * Re-enter an interrupted verification. In-session, Home's verification card is the only route back
- * in (the in-progress flag is in-memory); across a relaunch the app resumes a user who chose to
- * verify straight onto their step, so pass `resumedOnto` to accept that landing too. Either way the
- * stack mounts at `getResumeStepRoute`; which screen that is stays the caller's assertion.
+ * in; across a relaunch the app resumes anyone who has started verification straight onto their step
+ * (`verificationStarted`, skipped or not), so pass `resumedOnto` to accept that landing too. Either way
+ * the stack mounts at `getResumeStepRoute`; which screen that is stays the caller's assertion.
  *
  * An account that never answered the verify prompt (state written by a build predating it, e.g. a v3
  * migrant) is shown the prompt first. Its Continue replaces onto AccountSetup and would re-ask for the
@@ -356,9 +393,20 @@ export async function submitSendVideoVerification(user: TestUser): Promise<void>
   await VideoReviewScreen.tapWhenEnabled('primary') // UseVideo → RESETS to EvidenceUploading, which uploads on mount
   await SuccessfullySentScreen.expectVisible(Timeouts.VIDEO_UPLOAD)
   markSubmissionQueued() // from here until the scripted review claims it, a failure leaves an orphan behind
-  await SuccessfullySentScreen.tapToNavigate('primary') // Go to home — the screen's only way out
+  // The screen's only way out. A first-time verifier is kept in the flow, on the pending review; a deferred
+  // verifier — and every build before the exit rules, which the upgrade lane drives through here — goes
+  // Home, where the pending card is the way back in. Either landing is fine for the decision wait.
+  await SuccessfullySentScreen.tapToNavigate('primary')
 
-  await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  const landed = await probeAnyScreen(
+    { pendingReview: PendingReviewScreen, home: HomeScreen },
+    Timeouts.SCREEN_TRANSITION
+  )
+  if (!landed) {
+    throw new Error(
+      `Neither the pending review nor Home appeared after the submission. On screen: ${await describeCurrentScreen()}`
+    )
+  }
 }
 
 /**
@@ -628,41 +676,49 @@ function assertExpectedDecision(actual: 'verified' | 'cancelled', expected: 'ver
 /**
  * Wait for the agent's decision to reach the app, and assert it is the expected one.
  *
- * Re-entering PendingReview is the poll: it re-checks the request status on every mount and navigates
- * on by itself, so this loops Home → verification card → decision-or-back-out. Backgrounding and
- * foregrounding would NOT do — the Home-side status check runs once per stack mount, not per resume.
- * The push notification is advisory and never navigates, so it is not waited on either.
+ * PendingReview is the poll: its "Check status" re-fetches the request status and the screen navigates
+ * on by itself, so each round sees where the screen settles and, if still pending, taps Check status
+ * for the next round an interval later — from the pending review itself, which a first-time verifier
+ * cannot leave. Starting from Home (a deferred verifier who left) is tolerated: the verification card
+ * re-enters the pending review first, and that mount re-checks too. The push notification is advisory
+ * and never navigates, so it is not waited on.
  */
 export async function waitForSendVideoDecision(
   expected: 'verified' | 'cancelled',
   options: { reviewed?: ClaimedRequestSummary } = {}
 ): Promise<void> {
-  const deadline = Date.now() + REVIEW_DECISION_TIMEOUT_MS
-  for (;;) {
-    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await resumeVerification()
+  const reviewed = options.reviewed
+    ? `The scripted review decided ${options.reviewed.queue} request ${options.reviewed.requestIdentifier} ` +
+      `(${options.reviewed.persona}, ${options.reviewed.claimedOs || 'os unknown'})`
+    : 'The scripted review reported success'
 
-    const status = await waitForReviewSettleStatus()
-    if (status !== 'pending') {
-      assertExpectedDecision(status, expected)
-      return
-    }
+  const status = await driver.waitUntil(
+    async (): Promise<'verified' | 'cancelled' | false> => {
+      if (await HomeScreen.isPresent(1_000)) {
+        await resumeVerification()
+      }
 
-    if (Date.now() + REVIEW_DECISION_POLL_MS >= deadline) {
-      const reviewed = options.reviewed
-        ? `The scripted review decided ${options.reviewed.queue} request ${options.reviewed.requestIdentifier} ` +
-          `(${options.reviewed.persona}, ${options.reviewed.claimedOs || 'os unknown'})`
-        : 'The scripted review reported success'
-      throw new Error(
+      const settled = await waitForReviewSettleStatus()
+      if (settled !== 'pending') {
+        return settled
+      }
+
+      // Check status is disabled while a check is already running (the focus-time one, say); waiting for
+      // it makes this tap a fresh fetch rather than a dropped one. The next round reads what it fetched
+      await PendingReviewScreen.tapWhenEnabled('primary')
+      return false
+    },
+    {
+      timeout: REVIEW_DECISION_TIMEOUT_MS,
+      interval: REVIEW_DECISION_POLL_MS,
+      timeoutMsg:
         `The agent decision (${expected}) did not reach the app within ${REVIEW_DECISION_TIMEOUT_MS}ms of re-checking. ` +
-          `${reviewed}, so suspect the status endpoint or a submission other than this one — ` +
-          'a stale same-persona upload at the head of the queue is the usual cause.'
-      )
+        `${reviewed}, so suspect the status endpoint or a submission other than this one — ` +
+        'a stale same-persona upload at the head of the queue is the usual cause.',
     }
-    // Back does not pop here: it marks the account unverified, which swaps the stack back to Home.
-    await PendingReviewScreen.back.tap()
-    await driver.pause(REVIEW_DECISION_POLL_MS)
-  }
+  )
+
+  assertExpectedDecision(status, expected)
 }
 
 /**

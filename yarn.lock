@@ -2349,6 +2349,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@credo-ts/didcomm@patch:@credo-ts/didcomm@npm%3A0.7.0#~/.yarn/patches/@credo-ts-didcomm-npm-0.7.0-e7c274e2fd.patch":
+  version: 0.7.0
+  resolution: "@credo-ts/didcomm@patch:@credo-ts/didcomm@npm%3A0.7.0#~/.yarn/patches/@credo-ts-didcomm-npm-0.7.0-e7c274e2fd.patch::version=0.7.0&hash=293e77"
+  dependencies:
+    "@credo-ts/core": "npm:0.7.0"
+    class-transformer: "npm:0.5.1"
+    class-validator: "npm:^0.14.3"
+    luxon: "npm:^3.7.2"
+    query-string: "npm:^9.3.1"
+    rxjs: "npm:^7.8.2"
+  checksum: 10c0/a515b166771aec2e0834a85fa17f2eeea6ffffbb895f4cc2e39bb088a741ad21c4906ee3e35a9efae5f08959cff1ee3c9ffba1692803b6cc5a220f6ed7b16794
+  languageName: node
+  linkType: hard
+
 "@credo-ts/drpc@npm:0.7.0":
   version: 0.7.0
   resolution: "@credo-ts/drpc@npm:0.7.0"
@@ -16023,7 +16037,7 @@ __metadata:
 
 "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch":
   version: 5.2.3
-  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch::version=5.2.3&hash=6e24fc"
+  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch::version=5.2.3&hash=958be2"
   peerDependencies:
     react: "*"
     react-native: "*"
@@ -16032,7 +16046,7 @@ __metadata:
   peerDependenciesMeta:
     react-native-nitro-modules:
       optional: true
-  checksum: 10c0/140a340b05ceab256a6bfbd6cda17eca8e68cf56990ab7b69121f8b5cf66f40645347069ddd5b7c1ef6085e5402100d56a3297ad97a17e0b8db5b8857dafda7c
+  checksum: 10c0/4aaee4d1789756a2e2dd166cb6c1cfbb947528a3dc1e9f6f4265b65bfd8ee6bd9ef48193b6e988a22df097524e9efde33c904edc1c6b2065a2e86bf3a46160ab
   languageName: node
   linkType: hard
 

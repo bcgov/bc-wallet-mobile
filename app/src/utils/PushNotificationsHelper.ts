@@ -118,6 +118,12 @@ const requestPermission = async (): Promise<NotificationPermissionStatus> => {
  */
 
 const getMediatorConnection = async (agent: Agent): Promise<DidCommConnectionRecord | undefined> => {
+  // The default mediator wins; the most recent mediator connection is the fallback
+  const defaultMediatorConnection = await agent.didcomm.mediationRecipient.findDefaultMediatorConnection()
+  if (defaultMediatorConnection) {
+    return defaultMediatorConnection
+  }
+
   const connections: DidCommConnectionRecord[] = await agent.didcomm.connections.getAll()
   const mediators = connections.filter((r) => r.connectionTypes.includes(DidCommConnectionType.Mediator))
   if (mediators.length < 1) {

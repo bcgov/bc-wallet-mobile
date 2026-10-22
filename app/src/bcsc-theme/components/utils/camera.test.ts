@@ -8,6 +8,7 @@ import {
   calculateBarcodeOrientation,
   clampZoom,
   determineScanState,
+  isCameraNotReadyCaptureError,
   isCodeAlignedWithZones,
   isRecoverableCameraRuntimeError,
   mergeLockedCodesWithAccumulated,
@@ -490,26 +491,25 @@ describe('mergeLockedCodesWithAccumulated', () => {
 
 // ─── isRecoverableCameraRuntimeError ──────────────────────────────────────────
 
+// VisionCamera v5 passes iOS NSErrors to JS as their description
+const avError = (code: number) =>
+  new Error(`Error Domain=AVFoundationErrorDomain Code=${code} "Cannot Complete Action" UserInfo={}`)
+
 describe('isRecoverableCameraRuntimeError', () => {
-  it('treats unknown/unknown as recoverable on iOS (VisionCamera restarts the session itself)', () => {
-    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' }, 'ios')).toBe(true)
+  it('treats a media services reset as recoverable on iOS (our patch restarts the session)', () => {
+    expect(isRecoverableCameraRuntimeError(avError(-11819), 'ios')).toBe(true)
   })
 
-  it('treats unknown/unknown as fatal on Android (no auto-restart, catch-all code)', () => {
-    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' }, 'android')).toBe(false)
+  it('treats every error as fatal on Android (only critical CameraX errors reach onError)', () => {
+    expect(isRecoverableCameraRuntimeError(avError(-11819), 'android')).toBe(false)
   })
 
-  it.each([
-    'device/flash-unavailable',
-    'device/configuration-error',
-    'session/camera-not-ready',
-    'system/camera-has-been-disconnected',
-  ])('treats %s as fatal on iOS', (code) => {
-    expect(isRecoverableCameraRuntimeError({ code }, 'ios')).toBe(false)
+  it.each([-11800, -11803, -11814, -118190])('treats AVError %s as fatal on iOS', (code) => {
+    expect(isRecoverableCameraRuntimeError(avError(code), 'ios')).toBe(false)
   })
 
-  it('treats errors without a code as fatal', () => {
-    expect(isRecoverableCameraRuntimeError({}, 'ios')).toBe(false)
+  it('treats non-Error values as fatal', () => {
+    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' }, 'ios')).toBe(false)
     expect(isRecoverableCameraRuntimeError(null, 'ios')).toBe(false)
     expect(isRecoverableCameraRuntimeError(undefined, 'ios')).toBe(false)
   })
@@ -518,11 +518,41 @@ describe('isRecoverableCameraRuntimeError', () => {
     const originalPlatform = Platform.OS
 
     Platform.OS = 'ios'
-    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' })).toBe(true)
+    expect(isRecoverableCameraRuntimeError(avError(-11819))).toBe(true)
 
     Platform.OS = 'android'
-    expect(isRecoverableCameraRuntimeError({ code: 'unknown/unknown' })).toBe(false)
+    expect(isRecoverableCameraRuntimeError(avError(-11819))).toBe(false)
 
     Platform.OS = originalPlatform
+  })
+})
+
+// ─── isCameraNotReadyCaptureError ─────────────────────────────────────────────
+
+describe('isCameraNotReadyCaptureError', () => {
+  it('matches the iOS session-not-running capture error', () => {
+    const error = new Error(
+      'Error Domain=AVFoundationErrorDomain Code=-11803 "Cannot Record" UserInfo={AVErrorRecordingFailureDomainKey=3}'
+    )
+    expect(isCameraNotReadyCaptureError(error)).toBe(true)
+  })
+
+  it('matches the CameraX camera-closed capture error', () => {
+    expect(
+      isCameraNotReadyCaptureError(new Error('androidx.camera.core.ImageCaptureException: Camera is closed.'))
+    ).toBe(true)
+  })
+
+  it.each([
+    new Error('Error Domain=AVFoundationErrorDomain Code=-11819 "Cannot Complete Action"'),
+    new Error('Error Domain=AVFoundationErrorDomain Code=-118030 "Something else"'),
+    new Error('ENOSPC: no space left on device'),
+  ])('does not match other capture errors: %s', (error) => {
+    expect(isCameraNotReadyCaptureError(error)).toBe(false)
+  })
+
+  it('does not match non-Error values', () => {
+    expect(isCameraNotReadyCaptureError('Camera is closed.')).toBe(false)
+    expect(isCameraNotReadyCaptureError(undefined)).toBe(false)
   })
 })

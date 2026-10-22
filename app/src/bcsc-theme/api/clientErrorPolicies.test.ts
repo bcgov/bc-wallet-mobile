@@ -890,6 +890,20 @@ describe('clientErrorPolicies', () => {
         }
         expect(attestationPollingErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
+
+      // The transfer submission (POST to the attestation endpoint itself) must surface its failure instead of
+      // being logged and marked handled, otherwise the QR scanner shows nothing and the camera stays frozen.
+      it.each([400, 404])('should NOT match %s on the attestation submission endpoint', (statusCode) => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode,
+          endpoint: '/api/attestation',
+          apiEndpoints: {
+            attestation: '/api/attestation',
+          },
+        }
+        expect(attestationPollingErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
     })
 
     describe('handle', () => {

@@ -556,6 +556,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.VERIFICATION,
     message: 'Video prompts were missing or empty when entering the capture screen',
   },
+  ACCOUNT_TRANSFER_ERROR: {
+    statusCode: 2413,
+    appEvent: AppEventCode.ACCOUNT_TRANSFER_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Account transfer failed — error during transfer process',
+  },
 
   // ============================================
   // Token/Crypto Errors (2500-2599)
@@ -1190,6 +1197,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.CRITICAL,
     category: ErrorCategory.WALLET,
     message: 'Wallet key rotation error — check current key and new key validity',
+  },
+  MEDIATOR_SWITCH_ERROR: {
+    statusCode: 2904,
+    appEvent: AppEventCode.MEDIATOR_SWITCH_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.WALLET,
+    message: 'Switching the wallet to another mediator failed — the previous mediator stays in use',
   },
 
   // ============================================

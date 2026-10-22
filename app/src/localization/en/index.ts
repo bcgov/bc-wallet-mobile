@@ -213,6 +213,8 @@ const translation = {
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchTheme": "Switch theme",
+    "SelectedMediator": "Selected mediator",
+    "MediatorSection": "Mediator",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes",
       "OneHour": "1 hour",
@@ -703,6 +705,11 @@ const translation = {
       "PrimaryAction": "Reset",
       "Resetting": "Resetting…"
     },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list.",
+      "ScanButton": "Scan mediator QR code"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices?",
       "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step.",
@@ -822,6 +829,8 @@ const translation = {
       "UnrecognizedQR": "QR code not recognized.",
       "InvalidConnectionInvitation": "This connection invitation could not be opened.",
       "FeatureUnavailable": "This action isn't available yet.",
+      "AccountTransferErrorTitle": "Unable to add device",
+      "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it.",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card.",
         "Mediator": "Mediator invitations aren't supported in BC Services Card.",
@@ -903,6 +912,9 @@ const translation = {
       "CancelCamera": "Cancel camera",
       "TakePhoto": "Take photo",
       "ToggleFlash": "Toggle flash",
+      "CameraInterrupted": "Camera paused",
+      "CameraInterruptedMessage": "The camera is in use by another app or is temporarily unavailable. It will resume on its own when it's available.",
+      "CameraNotReady": "The camera isn't ready yet. Please try again.",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings",
@@ -1063,6 +1075,8 @@ const translation = {
       "TakeVideo": {
         "RecordingError": "Recording error",
         "RecordingErrorDescription": "There was an issue with the recording. Please try again.",
+        "RecordingInterrupted": "Recording interrupted",
+        "RecordingInterruptedDescription": "The recording stopped before you finished. Please record your video again.",
         "CameraPermissionRequired": "Camera Permission Required",
         "CameraPermissionRequiredDescription": "Please enable camera permission to take a photo.",
         "MicrophonePermissionRequired": "Microphone Permission Required",
