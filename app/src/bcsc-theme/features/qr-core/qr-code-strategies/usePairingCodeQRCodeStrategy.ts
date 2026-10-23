@@ -3,7 +3,7 @@ import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { QRCodeStrategy } from '../useQRScanner'
+import { QRCodeStrategy, QRError } from '../useQRScanner'
 
 // Pairing QRs encode a landing-page URL with the code in the fragment, e.g.
 // https://idsit.gov.bc.ca/static/pairingqrcode.html#SKGAZZ
@@ -36,7 +36,7 @@ export const usePairingCodeQRCodeStrategy = (onSuccess: (pairingCode: string) =>
       const code = extractPairingCode(uri)
 
       if (!code) {
-        throw new Error('Invalid pairing code QR')
+        throw new QRError('Invalid pairing code QR')
       }
 
       onSuccess(code)

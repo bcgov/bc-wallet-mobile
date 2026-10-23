@@ -3,6 +3,7 @@ import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as Bifold from '@bifold/core'
 import { renderHook } from '@testing-library/react-native'
+import { QRError } from '../useQRScanner'
 import { useDidCommOobQRCodeStrategy } from './useDidCommOobQRCodeStrategy'
 
 jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider')
@@ -308,6 +309,42 @@ describe('useDidCommOobQRCodeStrategy', () => {
       expect(modal?.error.cause).toBe(thrown)
       expect(modal?.title).toBe('BCSC.Scan.CredentialQRScanFailedTitle')
       expect(modal?.description).toBe('BCSC.Scan.CredentialQRScanFailedDescription')
+    })
+
+    it.each([
+      ['agentNotReady', 'BCSC.Scan.Unsupported.AgentNotReady'],
+      ['unsupportedOpenId', 'BCSC.Scan.Unsupported.OpenID'],
+      ['unsupportedMediator', 'BCSC.Scan.Unsupported.Mediator'],
+      ['unresolvedUrl', 'BCSC.Scan.CredentialQRScanFailedDescription'],
+      ['unparseableInvitation', 'BCSC.Scan.CredentialQRScanFailedDescription'],
+    ])('describes a %s failure with %s', (reason, descriptionKey) => {
+      const modal = setup().toErrorModal(new QRError('failed', reason))
+
+      expect(modal?.description).toBe(descriptionKey)
+      expect(modal?.title).toBe('BCSC.Scan.CredentialQRScanFailedTitle')
+    })
+
+    it.each([
+      ['the agent is unavailable', () => useAgent(null), 'agentNotReady'],
+      ['an OpenID offer', () => useAgent(makeAgent().agent), 'unsupportedOpenId'],
+      [
+        'a mediator invitation',
+        () => useAgent(makeAgent({ goalCode: 'aries.vc.mediate' }).agent),
+        'unsupportedMediator',
+      ],
+      [
+        'an unparseable invitation',
+        () => useAgent(makeAgent({ goalCode: '__noparse__' }).agent),
+        'unparseableInvitation',
+      ],
+    ])('tags %s with the %s reason', async (label, arrange, reason) => {
+      arrange()
+      const uri = label === 'an OpenID offer' ? 'openid-credential-offer://abc' : OOB_URI
+
+      const thrown = await setup().handleOobRecordId!(uri).catch((error: unknown) => error)
+
+      expect(thrown).toBeInstanceOf(QRError)
+      expect((thrown as QRError).reason).toBe(reason)
     })
 
     it('passes an existing AppError through unchanged', () => {

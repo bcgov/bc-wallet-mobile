@@ -4,6 +4,26 @@ import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+type ToErrorModalReturn = {
+  /**
+   * The error that occurred during the QR code handling process.
+   */
+  error: AppError
+  /**
+   * The title to display in the error modal.
+   */
+  title: string
+  /**
+   * The description/message to display in the error modal.
+   */
+  description: string
+  /**
+   * Indicates whether the error modal should include a report button for sending error details to support.
+   * @default true
+   */
+  enableReport?: boolean
+}
+
 const ALLOWED_QR_SCHEMES = [
   'http',
   'https',
@@ -15,9 +35,10 @@ const ALLOWED_QR_SCHEMES = [
   'openid-initiate-issuance',
 ]
 
+/** An error a strategy throws on purpose, tagged with the reason so its modal can say the right thing. */
 export class QRError extends Error {
-  reason: string
-  constructor(message: string, reason: string) {
+  reason?: string
+  constructor(message: string, reason?: string) {
     super(message)
     this.reason = reason
   }
@@ -26,7 +47,7 @@ export class QRError extends Error {
 export type QRCodeStrategy = {
   matches: (uri: string) => boolean
   handle: (uri: string) => void | Promise<void>
-  toErrorModal: (error: unknown) => { error: AppError; title: string; description: string } | null
+  toErrorModal: (error: unknown) => ToErrorModalReturn | null // Return null to suppress the modal. ie: already handled.
 }
 
 /**
