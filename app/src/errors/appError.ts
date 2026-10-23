@@ -182,9 +182,10 @@ export class AppError extends Error {
 
     // Surface the HTTP context (status + endpoint) when the cause is an HTTP/Axios error. Axios collapses
     // every 4xx into a single code, so without this the dashboard cannot tell 400/401/403/404 apart — nor
-    // which endpoint produced the error.
+    // which endpoint produced the error. The route template, never the raw path: the evidence paths
+    // embed verification and email record IDs, and analytics must not carry them.
     const httpStatus = (this.cause as { response?: { status?: number } } | undefined)?.response?.status
-    const request = [this.context?.method, this.context?.url].filter(Boolean).join(' ')
+    const request = [this.context?.http_method, this.context?.http_route].filter(Boolean).join(' ')
     const context = [httpStatus ? `HTTP ${httpStatus}` : undefined, request || undefined].filter(Boolean).join(' ')
 
     Analytics.trackErrorEvent({
