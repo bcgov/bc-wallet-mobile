@@ -34,7 +34,7 @@ const buildContainer = () => {
   const logger = new RemoteLogger({} as RemoteLoggerOptions) // class is mocked globally in jestSetup.js
   new AppContainer(fakeBifoldContainer, ((k: string) => k) as never, jest.fn(), jest.fn(), logger).init()
 
-  return { registrations }
+  return { registrations, logger }
 }
 
 describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiring)', () => {
@@ -54,7 +54,10 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     storeValueForKeySpy = jest
       .spyOn(PersistentStorage, 'storeValueForKey')
       .mockImplementation((key: unknown, value: unknown) => {
-        storeCalls.push({ key, value: JSON.parse(JSON.stringify(value)) })
+        const snapshot = JSON.parse(JSON.stringify(value))
+        storeCalls.push({ key, value: snapshot })
+        // A successful write changes what the next load reads, as real storage does
+        mockStoredValues[key as string] = snapshot
         return Promise.resolve(undefined)
       })
   })
@@ -165,11 +168,11 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     }
 
     const load = async () => {
-      const { registrations } = buildContainer()
+      const { registrations, logger } = buildContainer()
       const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
       const dispatch = jest.fn()
       await loadState(dispatch)
-      return dispatch
+      return { dispatch, logger }
     }
 
     it('drops it on load, persists the cleaned blob once, and stays gone after a restart', async () => {
@@ -179,7 +182,7 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
         bannerMessages: [retiredBanner, serviceNotice],
       }
 
-      const firstDispatch = await load()
+      const { dispatch: firstDispatch } = await load()
 
       expect(firstDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
       expect(storeCalls).toHaveLength(1)
@@ -187,18 +190,17 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
       expect(key).toBe(BCLocalStorageKeys.BCSC)
       expect(value.bannerMessages).toEqual([serviceNotice])
 
-      // Restart: a fresh container loads the blob that was just saved
-      mockStoredValues[BCLocalStorageKeys.BCSC] = value
+      // Restart: a fresh container reads whatever the first load persisted
       storeCalls = []
       storeValueForKeySpy.mockClear()
 
-      const secondDispatch = await load()
+      const { dispatch: secondDispatch } = await load()
 
       expect(secondDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
       expect(storeValueForKeySpy).not.toHaveBeenCalled()
     })
 
-    it('still loads cleaned state when the write-back fails, and retries the cleanup next launch', async () => {
+    it('still loads cleaned state when the write-back fails, logs it, and retries the cleanup next launch', async () => {
       mockStoredValues[BCLocalStorageKeys.BCSC] = {
         appVersion: '1.0.0',
         installId: 'already-migrated',
@@ -206,14 +208,18 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
       }
       storeValueForKeySpy.mockRejectedValue(new Error('disk full'))
 
-      const firstDispatch = await load()
+      const { dispatch: firstDispatch, logger: firstLogger } = await load()
+      // The write-back is not awaited by LOAD_STATE; let its rejection settle before asserting
+      await new Promise(setImmediate)
 
       expect(firstDispatch).toHaveBeenCalledTimes(1)
       expect(firstDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
       expect(storeValueForKeySpy).toHaveBeenCalledTimes(1)
+      expect(firstLogger.error).toHaveBeenCalledWith('Failed to write back migrated BCSC state', expect.any(Error))
 
-      // The stored blob is unchanged, so the next launch cleans and tries to write again
-      const secondDispatch = await load()
+      // Nothing was persisted, so the next launch reads the same legacy blob, cleans it and tries to write again
+      const { dispatch: secondDispatch } = await load()
+      await new Promise(setImmediate)
 
       expect(secondDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
       expect(storeValueForKeySpy).toHaveBeenCalledTimes(2)
