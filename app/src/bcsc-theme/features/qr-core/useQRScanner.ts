@@ -1,13 +1,13 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
-import { QrCodeScanError } from '@bifold/core'
+import { AppError, ErrorRegistry } from '@/errors'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export type QRCodeStrategy = {
   matches: (uri: string) => boolean
   handle: (uri: string) => void | Promise<void>
-  toErrorModal?: (error: unknown) => { error: AppError; title: string; description: string } | null
+  toErrorModal: (error: unknown) => { error: AppError; title: string; description: string } | null
 }
 
 /**
@@ -17,47 +17,11 @@ export type QRCodeStrategy = {
  */
 export const useQRScanner = (strategies: QRCodeStrategy[]) => {
   const { t } = useTranslation()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isProcessing, setIsProcessing] = useState(false)
-  const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
   const lockedRef = useRef(false) // held while processing, and after success until the screen refocuses
   const processingRef = useRef(false)
   const { emitErrorModal, isErrorModalVisible } = useErrorAlert()
-
-  // Dismiss the current scan error, allowing the user to try scanning again.
-  const dismissError = useCallback(() => setScanError(null), [])
-
-  /**
-   * Handle errors that occur during QR code scanning.
-   * @param error - The error that occurred during scanning.
-   * @param value - The scanned QR code value that caused the error.
-   * @param strategy - The QRCodeStrategy that was being used when the error occurred, if any.
-   * @returns void
-   */
-  const handleQRScanError = useCallback(
-    (error: unknown, value: string, strategy: QRCodeStrategy | undefined) => {
-      let scanError: QrCodeScanError
-      const errorModal = strategy?.toErrorModal?.(error)
-
-      if (errorModal === null) {
-        // strategy does not want to show a modal (ie: previously handled)
-        return
-      } else if (errorModal) {
-        // strategy has provided a custom error modal to show
-        return emitErrorModal(errorModal.title, errorModal.description, errorModal.error)
-      }
-      // TODO (MD): Remove these legacy paths once all strategies have been updated to use toErrorModal
-      else if (error instanceof QrCodeScanError) {
-        scanError = error
-      } else if (error instanceof Error) {
-        scanError = new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, error.message)
-      } else {
-        scanError = new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, String(error))
-      }
-
-      setScanError(scanError)
-    },
-    [emitErrorModal, t]
-  )
 
   /**
    * Handle a scanned QR code value by finding a matching strategy and executing its handler.
@@ -66,32 +30,41 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
    */
   const handleScan = useCallback(
     async (value: string) => {
-      if (lockedRef.current || scanError || isErrorModalVisible) {
+      if (lockedRef.current || isErrorModalVisible) {
         return
+      }
+
+      const strategy = strategies.find((s) => s.matches(value))
+
+      if (!strategy) {
+        // NOTE: This will help us identify missing and misconfigured strategies
+        logger.warn('[useQRScanner] No strategy matched scanned QR code', describeQRCode(value))
+        return emitErrorModal(
+          t('BCSC.Scan.UnrecognizedQR'),
+          t('BCSC.Scan.UnrecognizedQRDescription'),
+          AppError.fromErrorDefinition(ErrorRegistry.INVALID_QR_CODE, { context: describeQRCode(value) })
+        )
       }
 
       lockedRef.current = true
       processingRef.current = true
       setIsProcessing(true)
 
-      let strategy: QRCodeStrategy | undefined
       try {
-        strategy = strategies.find((s) => s.matches(value))
-
-        if (!strategy) {
-          throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), value)
-        }
-
         await strategy.handle(value) // success: lock stays held
       } catch (error) {
-        lockedRef.current = false
-        handleQRScanError(error, value, strategy)
+        lockedRef.current = false // failure: unlock to allow retry
+        const modal = strategy.toErrorModal(error)
+
+        if (modal) {
+          return emitErrorModal(modal.title, modal.description, modal.error)
+        }
       } finally {
         processingRef.current = false
         setIsProcessing(false)
       }
     },
-    [scanError, isErrorModalVisible, strategies, t, handleQRScanError]
+    [isErrorModalVisible, strategies, logger, emitErrorModal, t]
   )
 
   // Call from the screen's focus effect to unlock scanning after a completed flow.
@@ -102,5 +75,22 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
     lockedRef.current = false
   }, [])
 
-  return { handleScan, isProcessing, scanError, dismissError, resetLock }
+  return { handleScan, isProcessing, resetLock }
+}
+
+/**
+ * Describes a QR code value by extracting its scheme, length, and presence of query or fragment components.
+ * NOTE: Doesn't expose the actual value to avoid logging sensitive information.
+ * @param value - The QR code value to describe.
+ * @returns An object containing the scheme, length, and flags for query and fragment presence.
+ */
+function describeQRCode(value: string) {
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(value)?.[1]?.toLowerCase() ?? 'none'
+
+  return {
+    qrScheme: scheme,
+    qrLength: value.length,
+    qrHasQuery: value.includes('?'),
+    qrHasFragment: value.includes('#'),
+  }
 }

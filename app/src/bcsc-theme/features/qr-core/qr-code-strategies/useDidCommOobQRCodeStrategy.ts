@@ -1,11 +1,12 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { isDidCommInvitationCandidate } from '@/bcsc-theme/utils/didcomm-invitation'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import {
   isDidCommInvitation,
   isOpenIdCredentialOffer,
   isOpenIdPresentationRequest,
-  QrCodeScanError,
   TOKENS,
   useServices,
   useStore,
@@ -59,12 +60,12 @@ export const useDidCommOobQRCodeStrategy = (
       const agent = await waitForAgent()
 
       if (!agent) {
-        throw new QrCodeScanError(t('BCSC.Scan.Unsupported.AgentNotReady'), uri)
+        throw new Error('Agent is not ready')
       }
 
       if (isOpenIdCredentialOffer(uri) || isOpenIdPresentationRequest(uri)) {
         logger.info('[useDidCommOobQRCodeStrategy] OpenID URI rejected (BCSC v4.1 is AnonCreds-only)')
-        throw new QrCodeScanError(t('BCSC.Scan.Unsupported.OpenID'), uri)
+        throw new Error('OpenID URI rejected - AnonCreds only wallet')
       }
 
       let invitation
@@ -77,11 +78,11 @@ export const useDidCommOobQRCodeStrategy = (
         }
         // Bare URL that didn't resolve to an invitation, most likely an ordinary web link
         logger.warn(`[useDidCommOobQRCodeStrategy] URL did not resolve to an OOB invitation: ${error}`)
-        throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), uri, String(error))
+        throw new Error('URL did not resolve to an OOB invitation')
       }
       if (!invitation) {
         logger.warn('[useDidCommOobQRCodeStrategy] could not parse OOB invitation')
-        throw new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), uri)
+        throw new Error('Could not parse OOB invitation')
       }
 
       if (invitation.goalCode === MEDIATOR_GOAL_CODE) {
@@ -91,7 +92,7 @@ export const useDidCommOobQRCodeStrategy = (
           return undefined
         }
         logger.info('[useDidCommOobQRCodeStrategy] mediator invitation rejected (BCSC uses .env mediator)')
-        throw new QrCodeScanError(t('BCSC.Scan.Unsupported.Mediator'), uri)
+        throw new Error('Mediator invitation rejected - BCSC uses .env mediator')
       }
 
       // Duplicate scans of the same invitation @id would leave the user stuck on "Connecting…"
@@ -105,7 +106,7 @@ export const useDidCommOobQRCodeStrategy = (
 
       return outOfBandRecord.id
     },
-    [waitForAgent, logger, label, t, store.preferences.developerModeEnabled, onMediatorInvitation]
+    [waitForAgent, logger, label, store.preferences.developerModeEnabled, onMediatorInvitation]
   )
 
   const handle = useCallback(
@@ -118,5 +119,23 @@ export const useDidCommOobQRCodeStrategy = (
     [handleOobRecordId, onSuccess]
   )
 
-  return useMemo(() => ({ matches, handle, handleOobRecordId }), [matches, handle, handleOobRecordId])
+  const toErrorModal = useCallback(
+    (error: unknown) => {
+      logger.error('[useDidCommOobQRCodeStrategy] error handling credential OOB invitation', error as Error)
+
+      const appError = ensureAppError(error, AppEventCode.CREDENTIAL_QR_SCAN_FAILED)
+
+      return {
+        error: appError,
+        title: t('BCSC.Scan.CredentialQRScanFailedTitle'),
+        description: t('BCSC.Scan.CredentialQRScanFailedDescription'),
+      }
+    },
+    [logger, t]
+  )
+
+  return useMemo(
+    () => ({ matches, handle, toErrorModal, handleOobRecordId }),
+    [matches, handle, toErrorModal, handleOobRecordId]
+  )
 }
