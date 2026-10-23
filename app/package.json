@@ -54,7 +54,7 @@
     "@credo-ts/didcomm": "0.7.0",
     "@credo-ts/didcomm-push-notifications": "^0.0.1",
     "@credo-ts/drpc": "0.7.0",
-    "@credo-ts/indy-vdr": "0.7.0",
+    "@credo-ts/indy-vdr": "0.7.2",
     "@credo-ts/openid4vc": "0.7.0",
     "@credo-ts/question-answer": "0.7.0",
     "@credo-ts/react-native": "0.7.0",
