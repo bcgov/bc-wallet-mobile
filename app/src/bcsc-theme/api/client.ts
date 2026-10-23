@@ -16,6 +16,7 @@ import {
   formatIasAxiosResponseError,
   getAppErrorFromAxiosError,
   isNetworkError,
+  normalizeAxiosTimeoutError,
 } from '../utils/axios-error-utils'
 import { isTokenExpired } from '../utils/token-expiry'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
@@ -192,8 +193,9 @@ class BCSCApiClient {
         return this.client.request(originalConfig)
       }
 
-      // 1. Format the error - update error code and message properties from IAS response
-      const error = formatIasAxiosResponseError(_error)
+      // 1. Format the error - reclassify Android client timeouts, then update error code and message
+      // properties from IAS response
+      const error = formatIasAxiosResponseError(normalizeAxiosTimeoutError(_error))
 
       // 2. Convert the axios error into an AppError
       const appError = getAppErrorFromAxiosError(error)

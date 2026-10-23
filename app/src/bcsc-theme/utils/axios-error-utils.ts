@@ -41,6 +41,34 @@ export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosE
 }
 
 /**
+ * Reclassifies an Android client-side timeout as a timeout.
+ *
+ * On android, React Native only flags a SoecketTimeoutException as a timeout, so any client side timeout will appear as a generic network error.
+ * This function detects that and reclassifies the error as a timeout (ECONNABORTED).
+ * iOS reports its timeout correctly as ECONNABORTED, so no reclassification is needed.
+ *
+ * @param axiosError - The AxiosError to normalize (mutated in place)
+ * @returns The same AxiosError, reclassified as ECONNABORTED when it was a client-side timeout
+ */
+export const normalizeAxiosTimeoutError = (axiosError: AxiosError): AxiosError => {
+  const timeout = axiosError.config?.timeout
+  const startedAt = axiosError.config?._requestStartedAt
+
+  if (
+    axiosError.code === AxiosErrorCode.NETWORK_ERROR &&
+    !axiosError.response &&
+    timeout &&
+    startedAt &&
+    Date.now() - startedAt >= timeout
+  ) {
+    axiosError.code = AxiosErrorCode.ECONNABORTED
+    axiosError.message = `timeout of ${timeout}ms exceeded`
+  }
+
+  return axiosError
+}
+
+/**
  * Summarize an HTTP body for logging. Request/response bodies can be multi-MB binary
  * Buffers (e.g. an evidence upload's photo/video bytes); logging them verbatim expands the
  * Buffer to a per-byte JSON number array and can exhaust memory. Replace binary or very
