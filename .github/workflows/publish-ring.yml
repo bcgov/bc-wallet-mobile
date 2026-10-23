@@ -30,6 +30,13 @@ on:
       targets:
         type: string
         required: true
+      # The ring approver's comment: TestFlight's What to Test and Play's
+      # release notes. Empty for ring-3 and ring-4, whose testers may be the
+      # public, so they get only the "Release x.y.z-n" line.
+      what_to_test:
+        type: string
+        required: false
+        default: ''
 
 permissions: {}
 
@@ -76,6 +83,7 @@ jobs:
           bundle_id: ${{ env.IOS_BUNDLE_ID }}
           version_code: ${{ inputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
+          what_to_test: ${{ inputs.what_to_test }}
           beta_groups: ${{ steps.ring.outputs.spaced }}
 
   google-promote:
@@ -130,6 +138,7 @@ jobs:
           version_code: ${{ inputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
           build_number: ${{ inputs.run_number }}
+          release_notes: ${{ inputs.what_to_test }}
           target_tracks: ${{ steps.ring.outputs.spaced }}
 
   firebase-ios-widen:

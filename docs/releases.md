@@ -64,6 +64,20 @@ Anyone in the team can approve, and membership is managed in the team, so
 nothing here changes when someone joins or leaves. You cannot approve your own
 run, so a publish always needs a second person.
 
+The comment you leave when approving ring-1 or ring-2 is required. It becomes
+the build's TestFlight **What to Test**, in both English (U.S.) and English
+(Canada), and the release notes on that ring's Google Play track, under a
+`Release <version>-<build>` line, so write it for the testers. Keep it to 450
+characters, which leaves room for that line inside Play's 500 limit. Approving
+without one fails that ring's gate; re-run the failed job and approve again
+with a comment.
+
+ring-3 and ring-4 may reach the public, so they get only the
+`Release <version>-<build>` line and their approvals need no comment. On
+TestFlight that replaces the ring-1 and ring-2 text for every group, because
+it keeps one What to Test per build, not per group; Play keeps each track's
+notes separately.
+
 ## Publishing
 
 Go to **Actions → Publish → Run workflow**. Anyone with write access can start
