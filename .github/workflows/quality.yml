@@ -110,7 +110,18 @@ jobs:
         run: yarn install --immutable
 
       - name: Install formatting and linting tools
-        run: brew install swiftformat clang-format ktlint
+        run: brew install clang-format ktlint
+
+      # Pinned: runner images ship different SwiftFormat versions, and 0.64 adds default rules that fail lint
+      - name: Install SwiftFormat
+        env:
+          SWIFTFORMAT_VERSION: 0.63.1
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/swiftformat.zip" \
+            "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip"
+          unzip -q -o "$RUNNER_TEMP/swiftformat.zip" -d "$RUNNER_TEMP/swiftformat"
+          echo "$RUNNER_TEMP/swiftformat" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/swiftformat/swiftformat" --version
 
       - name: Lint
         run: yarn lint
