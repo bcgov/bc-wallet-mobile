@@ -54,6 +54,7 @@ import {
   confirmRegistrationClientId,
   getErrorHttpStatus,
   getRegistrationTokenClientId,
+  isUnusableClientIdError,
 } from '../utils/registration-token'
 import { isTokenExpired } from '../utils/token-expiry'
 import { stripDisallowedNameCharacters } from '../utils/validation'
@@ -1113,9 +1114,14 @@ export const useSecureActions = () => {
               '[hydrateSecureState] event=refresh_token_rejected server rejected a locally-valid refresh token (invalid_token); skipping key recovery'
             )
           } else {
-            // Only a 401 (unknown client at /device/token) says the stored client ID is bad;
-            // network, timeout and 5xx failures don't, so those go straight to key recovery.
-            if (driftDetected && getErrorHttpStatus(error) === 401 && (await repairClientIdDrift())) {
+            // Only a 401 naming an unknown client, or one that doesn't own the token, proves the stored ID is
+            // bad. Other 401s (bad signature, clock skew) and network/timeout/5xx go straight to key recovery.
+            if (
+              driftDetected &&
+              getErrorHttpStatus(error) === 401 &&
+              isUnusableClientIdError(error) &&
+              (await repairClientIdDrift())
+            ) {
               freshTokens = await retryRefreshAfter('client id repair')
             }
 

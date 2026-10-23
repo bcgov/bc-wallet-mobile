@@ -1,4 +1,8 @@
-import { confirmRegistrationClientId, getRegistrationTokenClientId } from './registration-token'
+import {
+  confirmRegistrationClientId,
+  getRegistrationTokenClientId,
+  isUnusableClientIdError,
+} from './registration-token'
 
 const b64url = (value: object | string) =>
   Buffer.from(typeof value === 'string' ? value : JSON.stringify(value)).toString('base64url')
@@ -135,4 +139,30 @@ describe('confirmRegistrationClientId', () => {
       httpStatus: undefined,
     })
   })
+})
+
+describe('isUnusableClientIdError', () => {
+  it.each([
+    'Could not find client: b5a1c3d2-7e44-4f0a-9d21-3c8a6f1e5b70',
+    'Client does not own the presented refresh token',
+  ])('accepts %s', (technicalMessage) => {
+    expect(isUnusableClientIdError({ technicalMessage })).toBe(true)
+  })
+
+  it.each([
+    'Signature did not validate for presented JWT authentication.',
+    'Assertion Token is expired: Tue Jan 01 00:00:00 GMT 2030',
+    'Assertion Token was issued in the future: Tue Jan 01 00:00:00 GMT 2030',
+    'Unknown: Could not find client',
+    '',
+  ])('rejects %s', (technicalMessage) => {
+    expect(isUnusableClientIdError({ technicalMessage })).toBe(false)
+  })
+
+  it.each([null, undefined, 'Could not find client', { technicalMessage: null }, { technicalMessage: 401 }])(
+    'rejects a non-string technicalMessage (%p)',
+    (error) => {
+      expect(isUnusableClientIdError(error)).toBe(false)
+    }
+  )
 })

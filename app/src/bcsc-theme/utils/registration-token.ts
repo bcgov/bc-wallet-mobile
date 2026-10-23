@@ -14,6 +14,16 @@ export const getErrorHttpStatus = (error: unknown): number | undefined => {
   return typeof httpStatus === 'number' ? httpStatus : undefined
 }
 
+// IAS 401 `error_description` prefixes that prove the stored client ID can never refresh with this token. Every
+// other 401 (bad signature, expired or future-dated assertion) can hit a working client ID, so must not trigger a switch.
+const UNUSABLE_CLIENT_ID_MESSAGES = ['Could not find client', 'Client does not own the presented refresh token']
+
+/** Whether the error's server text (AppError.technicalMessage) says the client ID is unknown or doesn't own the refresh token. */
+export const isUnusableClientIdError = (error: unknown): boolean => {
+  const technicalMessage = (error as { technicalMessage?: unknown } | null)?.technicalMessage
+  return typeof technicalMessage === 'string' && UNUSABLE_CLIENT_ID_MESSAGES.some((m) => technicalMessage.startsWith(m))
+}
+
 /**
  * Client ID the registration access token was issued for (its `aud`). Returns undefined when `aud`
  * is missing, malformed or multi-valued. Never throws. These tokens carry no `exp`, so expiry is not checked.
