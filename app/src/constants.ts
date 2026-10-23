@@ -129,6 +129,18 @@ export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 4 * 1000
  */
 export const JWK_CACHE_TTL_MS = 60 * 60 * 1000
 
+/**
+ * Default timeout for API requests (90s). IAS server has a global 60s timeout.
+ * Padding the client side timeout (1.5x) so we can determine if a request is failing server side or client side, based on the timeout difference
+ */
+export const BCSC_API_TIMEOUT_MS = 90 * 1000
+
+/**
+ * Timeout for evidence binary uploads: 0 disables the axios timeout, keeping the native default.
+ * This is done intentionally to avoid the client-side unintentionally ending a slow or large file upload early
+ */
+export const EVIDENCE_UPLOAD_TIMEOUT_MS = 0
+
 // Notification constants
 /**
  * Notifications within this window of expiring (or already expired) show the yellow

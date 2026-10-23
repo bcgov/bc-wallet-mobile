@@ -1,7 +1,7 @@
 import { JWK } from '@/bcsc-theme/types/jwk'
 import type { UploadLogContext } from '@/bcsc-theme/utils/media-format'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
-import { JWK_CACHE_TTL_MS } from '@/constants'
+import { BCSC_API_TIMEOUT_MS, JWK_CACHE_TTL_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
@@ -55,6 +55,8 @@ declare module 'axios' {
     _retriedAfter401?: boolean
     // Evidence-upload media fields; getAppErrorFromAxiosError copies them into AppError.context.
     uploadLogContext?: UploadLogContext
+    // Internal: epoch ms when the request was started, used to log elapsed time on failure
+    _requestStartedAt?: number
   }
 }
 
@@ -108,6 +110,7 @@ class BCSCApiClient {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
+      timeout: BCSC_API_TIMEOUT_MS,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'User-Agent': getUserAgentString(),
@@ -349,13 +352,14 @@ class BCSCApiClient {
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
     this.logger.info(`[${config.method?.toUpperCase()}] ${String(config.url)}`)
 
-    // skip processing if skipBearerAuth is set in the config
-    if (config.skipBearerAuth) {
-      return config
+    // skip bearer auth if skipBearerAuth is set in the config
+    if (!config.skipBearerAuth) {
+      const tokens = await this.ensureValidTokens()
+      config.headers.set('Authorization', `Bearer ${tokens.access_token}`)
     }
 
-    const tokens = await this.ensureValidTokens()
-    config.headers.set('Authorization', `Bearer ${tokens.access_token}`)
+    // Stamped after token refresh so the logged time only covers the API call
+    config._requestStartedAt = Date.now()
 
     return config
   }

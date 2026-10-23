@@ -132,6 +132,11 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
     baseURL: options.error.config?.baseURL,
     isTimeout: options.error.code === AxiosErrorCode.ECONNABORTED,
     isNetworkError: isNetworkError(options.error),
+    timeoutMs: options.error.config?.timeout,
+    // Calculates how long a request has been running based on _requestStartedAt timestamp
+    elapsedMs: options.error.config?._requestStartedAt
+      ? Date.now() - options.error.config._requestStartedAt
+      : undefined,
   }
 
   if (options.error.config) {
