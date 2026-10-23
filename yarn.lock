@@ -7610,7 +7610,7 @@ __metadata:
     react-native-volume-manager: "npm:~2.2.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:13.16.2"
-    react-native-worklets: "npm:0.10.1"
+    react-native-worklets: "npm:0.10.4"
     react-test-renderer: "npm:~19.1.4"
     reflect-metadata: "npm:~0.1.14"
     rxjs: "npm:~7.8.2"
@@ -16168,9 +16168,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-worklets@npm:0.10.1":
-  version: 0.10.1
-  resolution: "react-native-worklets@npm:0.10.1"
+"react-native-worklets@npm:0.10.4":
+  version: 0.10.4
+  resolution: "react-native-worklets@npm:0.10.4"
   dependencies:
     "@babel/plugin-transform-arrow-functions": "npm:^7.27.1"
     "@babel/plugin-transform-class-properties": "npm:^7.28.6"
@@ -16189,7 +16189,7 @@ __metadata:
     "@react-native/metro-config": "*"
     react: "*"
     react-native: 0.83 - 0.86
-  checksum: 10c0/31712cf1b311e3dc96544a665da269cdd6be8cab286234cea968c22509398924020f168b1e9e13a532acc23086048c16f5167aa3737e756711239b6f7521fe5a
+  checksum: 10c0/f68464191364d6c126504e29193a3ac7429bd14bb29179f613d5543c8a3ad8cd0bde50b459142b28266e7f73343b8d2c652749e96446b99b2383e1ea0ad0156c
   languageName: node
   linkType: hard
 
