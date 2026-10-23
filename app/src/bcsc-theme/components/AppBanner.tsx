@@ -4,16 +4,11 @@ import React, { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { BCSCBanner } from '@bcsc-theme/types/banners'
 import { a11yLabel } from '@utils/accessibility'
 
-export enum BCSCBanner {
-  IAS_SERVER_UNAVAILABLE = 'IASServerUnavailableBanner',
-  IAS_SERVER_NOTIFICATION = 'IASServerNotificationBanner',
-  DEVICE_LIMIT_EXCEEDED = 'DeviceLimitExceededBanner',
-  LIVE_CALL_STATUS = 'LiveCallStatusBanner',
-  APP_UPDATE_AVAILABLE = 'AppUpdateAvailableBanner',
-  ACCOUNT_EXPIRED = 'CardExpiredBanner',
-}
+// Defined in types/banners so the store can read the ids without loading the theme
+export { BCSCBanner }
 
 export interface BCSCBannerMessage {
   id: BCSCBanner
