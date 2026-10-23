@@ -401,13 +401,14 @@ describe('EvidenceCapture', () => {
     expect(mockHandleScanDriversLicense).toHaveBeenCalledWith(mockLicense)
   })
 
-  it('clears additional evidence when scanned barcodes switch the user to BCSC (Non-BCSC flow)', async () => {
+  it('stops the capture when scanned barcodes switch the user to BCSC, leaving the IDs to the switch (Non-BCSC flow)', async () => {
     mockScanCard.mockImplementation(async (_codes: unknown, callback: (serial?: string, license?: unknown) => void) => {
       callback('SERIAL123', mockLicense)
     })
     mockHandleScanBarcodes.mockResolvedValue(true)
 
-    const tree = renderScreen(buildEvidenceType([frontSide]), {
+    const cardType = buildEvidenceType([frontSide])
+    const tree = renderScreen(cardType, {
       bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.NonBCSC },
     })
     await waitFor(() => expect(maskedCameraProps).not.toBeNull())
@@ -423,8 +424,12 @@ describe('EvidenceCapture', () => {
 
     await fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
 
-    expect(mockHandleScanBarcodes).toHaveBeenCalledWith('SERIAL123', mockLicense)
-    expect(mockClearAdditionalEvidence).toHaveBeenCalled()
+    // The switch is told which ID the card was photographed as and settles the IDs itself before it
+    // routes. Clearing them here would come after the route was chosen from the stale list.
+    await waitFor(() => expect(mockHandleScanBarcodes).toHaveBeenCalledWith('SERIAL123', mockLicense, cardType))
+    expect(mockClearAdditionalEvidence).not.toHaveBeenCalled()
+    expect(mockUpdateEvidenceMetadata).not.toHaveBeenCalled()
+    expect(mockNavigation.push).not.toHaveBeenCalled()
   })
 
   it('removes the expired card entry and returns to the evidence list on a 400 card-expired error (Non-BCSC flow)', async () => {

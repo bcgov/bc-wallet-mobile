@@ -6,7 +6,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { BCSCCardProcess, EvidenceMetadata, EvidenceType } from 'react-native-bcsc-core'
 import { BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
 import { DeviceAuthorizationResponse, DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { useAuthorizationService } from '../services/hooks/useAuthorizationService'
@@ -62,8 +62,15 @@ export const useCardScanner = () => {
   const route = useRoute<RouteProp<BCSCVerifyStackParams>>()
   const attemptWithRecovery = useDeviceAuthorizationRecovery()
   const scannerEnabledRef = useRef(true)
-  const { updateUserInfo, updateUserMetadata, updateDeviceCodes, updateCardProcess, updateVerificationOptions } =
-    useSecureActions()
+  const {
+    updateUserInfo,
+    updateUserMetadata,
+    updateDeviceCodes,
+    updateCardProcess,
+    updateVerificationOptions,
+    removeEvidenceByType,
+    clearAdditionalEvidence,
+  } = useSecureActions()
 
   /**
    * Applies a successful device authorization to secure storage and reroutes the
@@ -71,9 +78,16 @@ export const useCardScanner = () => {
    * barcodes (`/device/barcodes`) authorization paths.
    *
    * @param deviceAuth - The device authorization response from the backend.
+   * @param scanned - The serial and birthdate read off the card.
+   * @param additionalEvidenceData - The IDs on file once the caller has settled them. The resume route
+   *   reads them, so they must already be what the store holds.
    */
   const applyDeviceAuthorization = useCallback(
-    async (deviceAuth: DeviceAuthorizationResponse, scanned: { serial: string; birthdate?: Date }) => {
+    async (
+      deviceAuth: DeviceAuthorizationResponse,
+      scanned: { serial: string; birthdate?: Date },
+      additionalEvidenceData: EvidenceMetadata[] = store.bcscSecure.additionalEvidenceData
+    ) => {
       await updateUserInfo({
         email: deviceAuth.verified_email,
         isEmailVerified: !!deviceAuth.verified_email,
@@ -89,7 +103,8 @@ export const useCardScanner = () => {
       await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
 
       // Build a predicted store snapshot reflecting the dispatches above so the
-      // resume route honours the freshly-set deviceCode / cardProcess / email.
+      // resume route honours the freshly-set deviceCode / cardProcess / email
+      // and the IDs left on file.
       const predictedStore: BCState = {
         ...store,
         bcscSecure: {
@@ -102,6 +117,7 @@ export const useCardScanner = () => {
           userCode: deviceAuth.user_code,
           deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
           cardProcess: deviceAuth.process,
+          additionalEvidenceData,
         },
       }
       navigation.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] })
@@ -165,6 +181,29 @@ export const useCardScanner = () => {
   )
 
   /**
+   * Settles the IDs collected in the Non-BCSC flow once a card photographed there turns out to be a
+   * BC Services Card, moving the device to that card's own process (as v3 does). The entry the card
+   * was photographed under always goes: it holds the card itself, not another ID. A non-photo card
+   * keeps the IDs completed before it, since one with a photo is the photo ID that card still needs.
+   * A photo card is verified without additional IDs, so none are kept.
+   *
+   * @param process - The card process the device now follows.
+   * @param photographedAs - The ID type the card was photographed under.
+   * @returns The IDs kept.
+   */
+  const settleEvidenceForCardProcess = useCallback(
+    async (process: BCSCCardProcess, photographedAs: EvidenceType): Promise<EvidenceMetadata[]> => {
+      if (process === BCSCCardProcess.BCSCNonPhoto) {
+        return removeEvidenceByType(photographedAs)
+      }
+
+      await clearAdditionalEvidence()
+      return []
+    },
+    [removeEvidenceByType, clearAdditionalEvidence]
+  )
+
+  /**
    * Non-BCSC flow handler: ask the backend whether the scanned barcodes belong
    * to a real BC Services Card via POST `/device/barcodes`. The backend owns the
    * discrimination (matching v3): a real BCSC is authorized and the user is
@@ -176,10 +215,11 @@ export const useCardScanner = () => {
    *
    * @param bcscSerial - The serial decoded from the card's 1D (CODE_128) barcode.
    * @param license - The metadata decoded from the card's 2D (PDF-417) barcode.
+   * @param photographedAs - The ID type the card is being photographed under.
    * @returns true if the scanned card is a BC Services Card
    */
   const handleScanBarcodes = useCallback(
-    async (bcscSerial: string, license: DriversLicenseMetadata): Promise<boolean> => {
+    async (bcscSerial: string, license: DriversLicenseMetadata, photographedAs: EvidenceType): Promise<boolean> => {
       logger.info(
         '[CardScanner] Non-BCSC flow: querying /device/barcodes to check if the scanned card is a BC Services Card'
       )
@@ -192,11 +232,21 @@ export const useCardScanner = () => {
         route.name
       )
       await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
-      await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
+      // Settled before routing, which resumes the user from the IDs left on file
+      const keptEvidence = await settleEvidenceForCardProcess(deviceAuth.process, photographedAs)
+      await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate }, keptEvidence)
       logger.info('[CardScanner] Scanned card matched a BC Services Card; switching to setup')
       return true
     },
-    [authorizationService, attemptWithRecovery, route.name, updateUserInfo, applyDeviceAuthorization, logger]
+    [
+      authorizationService,
+      attemptWithRecovery,
+      route.name,
+      updateUserInfo,
+      settleEvidenceForCardProcess,
+      applyDeviceAuthorization,
+      logger,
+    ]
   )
 
   /**

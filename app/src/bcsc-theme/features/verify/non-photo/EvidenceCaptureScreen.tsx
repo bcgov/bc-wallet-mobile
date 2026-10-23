@@ -68,7 +68,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const [store] = useStore<BCState>()
   const isNonBCSCFlow = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
   const isNonPhotoBcscFlow = store.bcscSecure.cardProcess === BCSCCardProcess.BCSCNonPhoto
-  const { clearAdditionalEvidence, updateEvidenceMetadata, truncateEvidence, removeEvidenceByType } = useSecureActions()
+  const { updateEvidenceMetadata, truncateEvidence, removeEvidenceByType } = useSecureActions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
@@ -168,9 +168,9 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
      * Let the backend decide via POST /device/barcodes rather than guessing
      * client-side. Only a card presenting BOTH a serial (1D) and an AAMVA (2D)
      * barcode can match, so that's the only case we ask about. A real BCSC
-     * reroutes into setup; anything else — a lone serial (e.g. a PR card's 1D
-     * barcode), a passport, a DL — falls through to evidence capture with no
-     * error (matching v3 behaviour).
+     * reroutes into setup, which also settles the IDs collected so far; anything
+     * else — a lone serial (e.g. a PR card's 1D barcode), a passport, a DL — falls
+     * through to evidence capture with no error (matching v3 behaviour).
      *
      * In the Non-Photo BCSC flow we've already done authorizeDevice, so we skip.
      */
@@ -178,10 +178,9 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       barcodesCheckedRef.current = true
 
       try {
-        const switchedToBcsc = await scanner.handleScanBarcodes(bcscSerialRef.current, licenseRef.current)
+        const switchedToBcsc = await scanner.handleScanBarcodes(bcscSerialRef.current, licenseRef.current, cardType)
 
         if (switchedToBcsc) {
-          await clearAdditionalEvidence()
           return true
         }
       } catch (error) {
