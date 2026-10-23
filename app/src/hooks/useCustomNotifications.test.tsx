@@ -4,6 +4,7 @@ import { CustomNotificationId, useCustomNotifications } from './useCustomNotific
 const mockUseStore = jest.fn()
 const mockUseVerificationStatus = jest.fn()
 const mockComputeSetupStepCompletion = jest.fn()
+const mockIsUserVerified = jest.fn()
 
 jest.mock('@bifold/core', () => ({
   useStore: () => mockUseStore(),
@@ -11,6 +12,10 @@ jest.mock('@bifold/core', () => ({
 
 jest.mock('@/bcsc-theme/hooks/useVerificationStatus', () => ({
   useVerificationStatus: () => mockUseVerificationStatus(),
+}))
+
+jest.mock('@/bcsc-theme/utils/bcsc-credential', () => ({
+  isUserVerified: (...args: unknown[]) => mockIsUserVerified(...args),
 }))
 
 jest.mock('@/bcsc-theme/utils/setup-step-completion', () => ({
@@ -61,6 +66,7 @@ describe('useCustomNotifications', () => {
     mockUseVerificationStatus.mockReturnValue(baseVerificationStatus)
     mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: null, verificationRequestId: null }))
     mockComputeSetupStepCompletion.mockReturnValue(buildIdStepCompletion(false))
+    mockIsUserVerified.mockReturnValue(false)
   })
 
   it('returns an empty array when there is nothing to show', () => {
@@ -101,6 +107,44 @@ describe('useCustomNotifications', () => {
 
     expect(result.current.customNotifications).toHaveLength(1)
     expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.AccountExpired)
+  })
+
+  describe('a device IAS has verified that has no credential record (isUserVerified without verified)', () => {
+    // Tokens IAS issued are on the device, from an account transfer or a finish step whose credential
+    // write failed, but the finish step hasn't persisted the record the routing keys on
+    beforeEach(() => {
+      mockIsUserVerified.mockReturnValue(true)
+    })
+
+    it('shows VerifiedNotification so the user can finish setup, even with no request status', () => {
+      mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, needsVerification: true })
+      mockComputeSetupStepCompletion.mockReturnValue(buildIdStepCompletion(true))
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(mockIsUserVerified).toHaveBeenCalledWith(mockUseStore()[0].bcscSecure)
+      expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCVerified)
+    })
+
+    it('takes priority over a cancelled request status', () => {
+      mockUseStore.mockReturnValue(
+        buildStore({ verificationRequestStatus: 'cancelled', verificationRequestId: 'req-1' })
+      )
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCVerified)
+    })
+
+    it('is dropped once the record is persisted, like the request status', () => {
+      mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(0)
+    })
   })
 
   it('returns CancelledReviewNotification when status is cancelled', () => {
