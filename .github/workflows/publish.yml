@@ -430,6 +430,12 @@ jobs:
   # deliberately not on its result. An environment with no protection rules
   # approves instantly, so a gate is open until required reviewers are
   # configured in Settings.
+  #
+  # The ring-1 and ring-2 approver's comment is required: it becomes the
+  # build's TestFlight "What to Test" (en-US and en-CA) and the ring's Play
+  # release notes. An empty one fails the gate, and re-running it asks for
+  # approval again. ring-3 and ring-4 testers may be the public, so those
+  # rings send only the "Release x.y.z-n" line and need no comment.
 
   approve-ring-1:
     name: Approve ring-1
@@ -444,12 +450,26 @@ jobs:
     runs-on: ubuntu-22.04
     environment:
       name: ring-1
-    permissions: {}
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      what_to_test: ${{ steps.comment.outputs.comment }}
     steps:
       - name: Approved
         env:
           BUILD: ${{ needs.resolve-build.outputs.run_number }}
         run: echo "Build ${BUILD} approved for ring-1"
+
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/workflows/actions/read-approval-comment
+
+      - name: Read What to Test from the approval
+        id: comment
+        uses: ./.github/workflows/actions/read-approval-comment
+        with:
+          ring: ring-1
 
   ring-1:
     needs: [resolve-build, approve-ring-1]
@@ -469,6 +489,7 @@ jobs:
       widen_aab_variants: ${{ needs.resolve-build.outputs.widen_aab_variants }}
       widen_apk_variants: ${{ needs.resolve-build.outputs.widen_apk_variants }}
       targets: ${{ inputs.targets }}
+      what_to_test: ${{ needs.approve-ring-1.outputs.what_to_test }}
     secrets: inherit
 
   approve-ring-2:
@@ -481,12 +502,26 @@ jobs:
     runs-on: ubuntu-22.04
     environment:
       name: ring-2
-    permissions: {}
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      what_to_test: ${{ steps.comment.outputs.comment }}
     steps:
       - name: Approved
         env:
           BUILD: ${{ needs.resolve-build.outputs.run_number }}
         run: echo "Build ${BUILD} approved for ring-2"
+
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/workflows/actions/read-approval-comment
+
+      - name: Read What to Test from the approval
+        id: comment
+        uses: ./.github/workflows/actions/read-approval-comment
+        with:
+          ring: ring-2
 
   ring-2:
     needs: [resolve-build, approve-ring-2]
@@ -506,6 +541,7 @@ jobs:
       widen_aab_variants: ${{ needs.resolve-build.outputs.widen_aab_variants }}
       widen_apk_variants: ${{ needs.resolve-build.outputs.widen_apk_variants }}
       targets: ${{ inputs.targets }}
+      what_to_test: ${{ needs.approve-ring-2.outputs.what_to_test }}
     secrets: inherit
 
   approve-ring-3:
