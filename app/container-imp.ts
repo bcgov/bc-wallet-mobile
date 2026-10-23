@@ -426,9 +426,8 @@ export class AppContainer implements Container {
       }
 
       if (bcscMigration.migrated) {
-        // Write back so subsequent launches skip the migrations. Deferred until after the scrub above so
-        // this one-shot write persists the scrubbed blob, not the transient fields that were just nulled
-        // out. Failure is non-fatal - the migrations re-run next launch.
+        // Written after the scrub above so the saved blob omits the transient fields it nulled.
+        // Failure is non-fatal: the migrations re-run next launch.
         PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc).catch((error) => {
           this.logger.error('Failed to write back migrated BCSC state', error)
         })

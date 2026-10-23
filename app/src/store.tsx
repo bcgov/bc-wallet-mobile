@@ -418,9 +418,8 @@ const currentBannerIds = new Set<string>(Object.values(BCSCBanner))
  * - Onboarded installs that predate `verificationStarted`: launches resumed whoever had stored
  *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
  *   count as started.
- * - Stored banners whose id is no longer a `BCSCBanner` are dropped, whether retired or written by a newer
- *   build. The example is 4.0.x `CardExpiringSoonBanner`, retired in 4.1 with nothing left to remove it.
- *   After a downgrade and re-upgrade, a dropped banner returns only if its producer adds it again.
+ * - Stored banners whose id is not a current `BCSCBanner` (e.g. 4.0.x `CardExpiringSoonBanner`) are dropped,
+ *   including ids from a newer build; a dropped banner returns only when its producer adds it again.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
