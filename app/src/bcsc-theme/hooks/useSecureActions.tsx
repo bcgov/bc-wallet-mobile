@@ -19,9 +19,8 @@ import { useTranslation } from 'react-i18next'
 import {
   AccountFlags,
   BarcodePayload,
-  BCSCAccountType,
   BCSCCardProcess,
-  BCSCCardType,
+  CredentialInfo,
   deleteAccountFlags,
   deleteAuthorizationRequest,
   deleteCredential,
@@ -52,7 +51,7 @@ import {
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
-import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
+import { createVerifiedCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import { isTokenExpired } from '../utils/token-expiry'
@@ -484,11 +483,26 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Update verification status in state and persist as credential for v3 compatibility
-   * When marking as verified, stores the credential object; when unverified, removes it
+   * Update verification status: persists the credential record (the marker hydration reads on every
+   * unlock, kept in the v3 format for rollback) and then updates the store. When marking as verified,
+   * stores the credential object; when unverified, removes it.
+   *
+   * The native write goes first and its failure is thrown: a session that says verified while the next
+   * unlock says otherwise is the status mismatch this ordering rules out.
    */
   const updateVerified = useCallback(
     async (verified: boolean) => {
+      if (verified) {
+        const account = await getAccount()
+        if (!account) {
+          throw new Error('Cannot mark as verified: no account found')
+        }
+
+        await setCredential(createVerifiedCredential(account.issuer, account.clientID, store.bcscSecure.cardProcess))
+      } else {
+        await deleteCredential()
+      }
+
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [verified],
@@ -505,43 +519,8 @@ export const useSecureActions = () => {
           payload: [true],
         })
       }
-
-      const account = await getAccount()
-      if (!account) {
-        logger.error('Cannot mark as verified: no account found')
-        return
-      }
-
-      // Persist credential state for v3 rollback compatibility
-      if (verified) {
-        // Map cardProcess to proper enums
-        const cardProcess = store.bcscSecure.cardProcess
-        let cardType: BCSCCardType
-        let accountType: BCSCAccountType
-
-        if (cardProcess === BCSCCardProcess.BCSCPhoto) {
-          cardType = BCSCCardType.PhotoCard
-          accountType = BCSCAccountType.PhotoCard
-        } else if (cardProcess === BCSCCardProcess.BCSCNonPhoto) {
-          cardType = BCSCCardType.NonPhotoCard
-          accountType = BCSCAccountType.NonPhotoCard
-        } else if (cardProcess === BCSCCardProcess.NonBCSC) {
-          cardType = BCSCCardType.NonBcsc
-          accountType = BCSCAccountType.NoBcscCard
-        } else {
-          // Default to non-bcsc if process is unknown
-          cardType = BCSCCardType.NonBcsc
-          accountType = BCSCAccountType.NoBcscCard
-        }
-
-        // Create minimal credential for v3 compatibility
-        const credential = createMinimalCredential(account.issuer, account.clientID, cardType, accountType)
-        await setCredential(credential)
-      } else {
-        await deleteCredential()
-      }
     },
-    [dispatch, logger, store.bcscSecure.cardProcess]
+    [dispatch, store.bcscSecure.cardProcess]
   )
 
   /**
@@ -971,11 +950,6 @@ export const useSecureActions = () => {
       const registrationAccessToken = registrationAccessTokenObj?.token
       const accessToken = accessTokenObj?.token
 
-      if (!credential && refreshToken) {
-        // Potential bug detected: Missing credential but refresh token exists? Log a warning for visibility, but treat as not verified to avoid false positives.
-        logger.warn('[IsVerified] No credential found but refresh token exists — treating as not verified.')
-      }
-
       let issuer = account?.issuer
       let clientID = account?.clientID
 
@@ -1132,17 +1106,6 @@ export const useSecureActions = () => {
         }
       }
 
-      const verificationStatus = getCredentialVerificationStatus(credential)
-      const verified = verificationStatus === VerificationStatus.VERIFIED
-
-      // A verified account with no refresh token is unrecoverable
-      const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
-
-      // Extract bookmarked service IDs from native client metadata
-      const savedServices = (nativeSavedServices ?? [])
-        .filter((s: NativeSavedService) => s.bookmarked)
-        .map((s: NativeSavedService) => s.clientRefId)
-
       let cleanedEvidence = evidenceData
       try {
         // Only drop abandoned selections (no photos captured). Evidence that has its photos
@@ -1154,6 +1117,46 @@ export const useSecureActions = () => {
         logger.error('Error removing abandoned evidence during hydration:', error as Error)
       }
 
+      const cardProcess = hydrateCardProcess(authRequest, cleanedEvidence)
+
+      // The credential record is the persisted "verified" marker, written when the user finishes setup
+      // (see updateVerified). A device can hold a refresh token IAS still accepts without that record:
+      // the finish step never ran, or its write failed. Treating such a device as unverified is the
+      // status mismatch users report, so once IAS has confirmed the device by issuing fresh tokens the
+      // record is restored. Not while a started verification is still being resumed: that resume ends
+      // on the finish step, which also sets the nickname and clears the authorization request.
+      let restoredCredential: CredentialInfo | null = null
+      if (!credential && refreshToken) {
+        if (freshTokens && issuer && clientID && store.bcsc.verificationStarted !== true) {
+          try {
+            restoredCredential = createVerifiedCredential(issuer, clientID, cardProcess)
+            await setCredential(restoredCredential)
+            logger.info(
+              '[hydrateSecureState] event=verified_credential_restored no credential record, but IAS accepted the stored refresh token; record restored'
+            )
+          } catch (error) {
+            restoredCredential = null
+            logger.error(
+              '[hydrateSecureState] Failed to restore the verified credential record; continuing as not verified',
+              error as Error
+            )
+          }
+        } else {
+          logger.warn('[hydrateSecureState] No credential record but a refresh token exists; treating as not verified')
+        }
+      }
+
+      const verificationStatus = getCredentialVerificationStatus(credential ?? restoredCredential)
+      const verified = verificationStatus === VerificationStatus.VERIFIED
+
+      // A verified account with no refresh token is unrecoverable
+      const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
+
+      // Extract bookmarked service IDs from native client metadata
+      const savedServices = (nativeSavedServices ?? [])
+        .filter((s: NativeSavedService) => s.bookmarked)
+        .map((s: NativeSavedService) => s.clientRefId)
+
       const secureData: BCSCSecureState = {
         isHydrated: true,
 
@@ -1163,7 +1166,7 @@ export const useSecureActions = () => {
         deviceCode: authRequest?.deviceCode,
         userCode: authRequest?.userCode,
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
-        cardProcess: hydrateCardProcess(authRequest, cleanedEvidence),
+        cardProcess,
         securityMethod: account?.securityMethod,
 
         ...effectiveTokens,
@@ -1204,7 +1207,15 @@ export const useSecureActions = () => {
       // mapped downstream (e.g. token persistence) passes through the mapper unchanged.
       throwNativeBcscError(error)
     }
-  }, [logger, apiClient, isClientReady, updateTokens, removeAbandonedEvidence, dispatch])
+  }, [
+    logger,
+    apiClient,
+    isClientReady,
+    updateTokens,
+    removeAbandonedEvidence,
+    dispatch,
+    store.bcsc.verificationStarted,
+  ])
 
   /**
    * Clears secure state from store (does not delete from native storage).
