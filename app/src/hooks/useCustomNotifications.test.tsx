@@ -145,6 +145,19 @@ describe('useCustomNotifications', () => {
 
       expect(result.current.customNotifications).toHaveLength(0)
     })
+
+    it('is not shown once the refresh token has expired, since finishing needs a token refresh', () => {
+      // The state hydration leaves: the refresh was skipped, so no record was restored
+      mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, needsVerification: true })
+      mockUseStore.mockReturnValue(
+        buildStore({ verificationRequestStatus: null, verificationRequestId: null, refreshTokenExpired: true })
+      )
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCStartVerification)
+    })
   })
 
   it('returns CancelledReviewNotification when status is cancelled', () => {

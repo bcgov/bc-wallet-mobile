@@ -36,12 +36,14 @@ export const useCustomNotifications = () => {
   const customNotifications = useMemo((): JSX.Element[] => {
     // IAS has verified this device but the user hasn't finished setup: a request reviewed this session, or
     // tokens IAS issued found on the device (an account transfer, or a finish step whose credential write
-    // failed). Keyed on `verified` like the VerificationSuccess route this card opens (see MainStack). The
+    // failed). Not once that refresh token has expired: Finish needs a token refresh, which an expired token
+    // can't get. Keyed on `verified` like the VerificationSuccess route this card opens (see MainStack). The
     // status can outlive that flip — handleAccountSetup sets `verified` before cleanup that can throw — and
     // the card would then be a button to a route that is no longer registered
     const finishSetupPending =
       !isVerified &&
-      (verificationRequestStatus === VerificationRequestStatus.VERIFIED || isUserVerified(store.bcscSecure))
+      (verificationRequestStatus === VerificationRequestStatus.VERIFIED ||
+        (isUserVerified(store.bcscSecure) && !store.bcscSecure.refreshTokenExpired))
     if (finishSetupPending) {
       return [<VerifiedNotification key={CustomNotificationId.BCSCVerified} />]
     }
