@@ -2,6 +2,7 @@ import { AppError, ErrorDefinition, ErrorRegistry } from '@/errors'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AppEventCode, isAppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
+import { Platform } from 'react-native'
 import z from 'zod'
 
 enum AxiosErrorCode {
@@ -55,6 +56,7 @@ export const normalizeAxiosTimeoutError = (axiosError: AxiosError): AxiosError =
   const startedAt = axiosError.config?._requestStartedAt
 
   if (
+    Platform.OS === 'android' &&
     axiosError.code === AxiosErrorCode.NETWORK_ERROR &&
     !axiosError.response &&
     timeout &&

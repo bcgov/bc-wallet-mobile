@@ -327,14 +327,14 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     }
   }
 
-  // Sends a REAL request (unauthenticated, read-only discovery document) with a 5ms timeout so the
+  // Sends a REAL request (unauthenticated, read-only discovery document) with a 1ms timeout so the
   // native networking layer aborts it. This triggers a genuine ECONNABORTED error
   const triggerRealClientTimeout = async () => {
     onBack() // close the dev modal first; iOS can't present the error modal over it
     try {
       await client.get(`${client.baseURL}/device/.well-known/openid-configuration`, {
         skipBearerAuth: true,
-        timeout: 5,
+        timeout: 1,
       })
     } catch (error) {
       logger.debug('Triggered real client-side request timeout', { error })

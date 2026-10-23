@@ -136,10 +136,10 @@ export const JWK_CACHE_TTL_MS = 60 * 60 * 1000
 export const BCSC_API_TIMEOUT_MS = 90 * 1000
 
 /**
- * Timeout for evidence binary uploads: 0 disables the axios timeout, keeping the native default.
- * This is done intentionally to avoid the client-side unintentionally ending a slow or large file upload early
+ * Timeout for evidence binary uploads: 10 minutes, gives plenty of time for large uploads
+ * over slow networks to finish work without hanging on a pending screen forever
  */
-export const EVIDENCE_UPLOAD_TIMEOUT_MS = 0
+export const EVIDENCE_UPLOAD_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes
 
 // Notification constants
 /**
