@@ -63,7 +63,7 @@ jest.mock('../contexts/BCSCLoadingContext', () => ({
   LoadingScreen: 'LoadingScreen',
 }))
 jest.mock('../hooks/useSystemChecks', () => ({
-  SystemCheckScope: { MAIN_STACK: 'MAIN_STACK', ACCOUNT: 'ACCOUNT' },
+  SystemCheckScope: { MAIN_STACK: 'MAIN_STACK' },
   useSystemChecks: jest.fn(() => ({ hasSettled: true })),
 }))
 jest.mock('../contexts/ServerStatusContext', () => ({

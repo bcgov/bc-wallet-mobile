@@ -1,9 +1,6 @@
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { useMemo } from 'react'
-import { useAccount } from '../contexts/BCSCAccountContext'
-import { isAccountExpired } from '../utils/datetime-utils'
-import { BCSCReason } from '../utils/id-token'
+import { AccountPhaseType } from '../utils/account-phase'
+import { useAccountPhase } from './useAccountPhase'
 import { useVerificationStatus } from './useVerificationStatus'
 
 /**
@@ -17,21 +14,15 @@ import { useVerificationStatus } from './useVerificationStatus'
  */
 export const useCardStatus = () => {
   const verificationStatus = useVerificationStatus()
-  const { account } = useAccount()
-  const [store] = useStore<BCState>()
+  const { phase } = useAccountPhase()
 
   return useMemo(() => {
-    const isExpiredByServer = store.bcsc.credentialMetadata?.bcscReason === BCSCReason.ExpiredBySystem
-    const isExpired = verificationStatus.isVerified
-      ? isExpiredByServer ||
-        store.bcscSecure.refreshTokenExpired === true ||
-        (account != null && isAccountExpired(account.account_expiration_date))
-      : false
+    const isExpired = phase === AccountPhaseType.Expired
 
     return {
       ...verificationStatus,
       isExpired,
       isActivelyVerified: verificationStatus.isVerified && !isExpired,
     }
-  }, [verificationStatus, account, store.bcsc.credentialMetadata?.bcscReason, store.bcscSecure.refreshTokenExpired])
+  }, [verificationStatus, phase])
 }

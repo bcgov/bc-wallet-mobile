@@ -1,28 +1,19 @@
-import { BCSCReason } from '@/bcsc-theme/utils/id-token'
+import { AccountPhase, AccountPhaseType } from '@/bcsc-theme/utils/account-phase'
 import * as Bifold from '@bifold/core'
 import { renderHook } from '@testing-library/react-native'
-import { useAccount } from '../contexts/BCSCAccountContext'
+import { useAccountPhase } from './useAccountPhase'
 import { useCardStatus } from './useCardStatus'
 
 jest.mock('@bifold/core')
-jest.mock('../contexts/BCSCAccountContext', () => ({ useAccount: jest.fn() }))
+jest.mock('./useAccountPhase', () => ({ useAccountPhase: jest.fn() }))
 
-const DAY_MS = 24 * 60 * 60 * 1000
-const futureExpiry = new Date(Date.now() + 365 * DAY_MS)
-const pastExpiry = new Date(Date.now() - 30 * DAY_MS)
+const expiresAt = new Date('2027-10-19T00:00:00.000Z')
 
-const mockStore = (opts: { verified?: boolean; bcscReason?: BCSCReason; refreshTokenExpired?: boolean }) => {
-  jest.mocked(Bifold.useStore).mockReturnValue([
-    {
-      bcscSecure: { verified: opts.verified ?? true, refreshTokenExpired: opts.refreshTokenExpired },
-      bcsc: { credentialMetadata: { bcscReason: opts.bcscReason ?? BCSCReason.ApprovedByAgent } },
-    } as any,
-    jest.fn(),
-  ])
-}
+const setup = (verified: boolean, phase: AccountPhase) => {
+  jest.mocked(Bifold.useStore).mockReturnValue([{ bcscSecure: { verified } } as any, jest.fn()])
+  jest.mocked(useAccountPhase).mockReturnValue(phase)
 
-const mockAccount = (expiry: Date | null) => {
-  jest.mocked(useAccount).mockReturnValue({ account: expiry ? { account_expiration_date: expiry } : null } as any)
+  return renderHook(() => useCardStatus())
 }
 
 describe('useCardStatus', () => {
@@ -30,75 +21,28 @@ describe('useCardStatus', () => {
     jest.clearAllMocks()
   })
 
-  it('is actively verified when the card is verified and the expiry date has not passed', () => {
-    mockStore({})
-    mockAccount(futureExpiry)
+  it('is expired, and not actively verified, when the account phase is expired', () => {
+    const { result } = setup(true, { phase: AccountPhaseType.Expired })
 
-    const { result } = renderHook(() => useCardStatus())
+    expect(result.current.isExpired).toBe(true)
+    expect(result.current.isActivelyVerified).toBe(false)
+  })
+
+  it.each([
+    ['active', { phase: AccountPhaseType.Active, expiresAt } as AccountPhase],
+    ['expiringSoon', { phase: AccountPhaseType.ExpiringSoon, expiresAt } as AccountPhase],
+    ['unknown', { phase: AccountPhaseType.Unknown } as AccountPhase],
+  ])('is actively verified when verified and the account phase is %s', (_name, phase) => {
+    const { result } = setup(true, phase)
 
     expect(result.current.isExpired).toBe(false)
     expect(result.current.isActivelyVerified).toBe(true)
   })
 
-  it('is expired once the expiry date has passed', () => {
-    mockStore({})
-    mockAccount(pastExpiry)
-
-    const { result } = renderHook(() => useCardStatus())
-
-    expect(result.current.isExpired).toBe(true)
-    expect(result.current.isActivelyVerified).toBe(false)
-  })
-
-  // IAS can expire an account server-side before its printed expiry date. Previously this reason
-  // was read as an "emergency mode" that bypassed the expiry check, leaving a deactivated user
-  // with Services, pairing, and the verified home still open to them.
-  it('is expired when IAS reports ExpiredBySystem, even if the expiry date is in the future', () => {
-    mockStore({ bcscReason: BCSCReason.ExpiredBySystem })
-    mockAccount(futureExpiry)
-
-    const { result } = renderHook(() => useCardStatus())
-
-    expect(result.current.isExpired).toBe(true)
-    expect(result.current.isActivelyVerified).toBe(false)
-  })
-
-  it('is not expired when the user is not verified, so they are routed to verify rather than renew', () => {
-    mockStore({ verified: false, bcscReason: BCSCReason.ExpiredBySystem })
-    mockAccount(pastExpiry)
-
-    const { result } = renderHook(() => useCardStatus())
+  it('is neither expired nor actively verified when the account phase is none', () => {
+    const { result } = setup(false, { phase: AccountPhaseType.None })
 
     expect(result.current.isExpired).toBe(false)
     expect(result.current.isActivelyVerified).toBe(false)
-  })
-
-  it('is not expired when no account has loaded yet', () => {
-    mockStore({})
-    mockAccount(null)
-
-    const { result } = renderHook(() => useCardStatus())
-
-    expect(result.current.isExpired).toBe(false)
-  })
-
-  // #4654: hydration flags refreshTokenExpired before userinfo can ever load, so `account` is null here.
-  it('is expired when hydration flagged the stored refresh token as expired, even with no account loaded', () => {
-    mockStore({ refreshTokenExpired: true })
-    mockAccount(null)
-
-    const { result } = renderHook(() => useCardStatus())
-
-    expect(result.current.isExpired).toBe(true)
-    expect(result.current.isActivelyVerified).toBe(false)
-  })
-
-  it('is not expired from refreshTokenExpired when the user is not verified', () => {
-    mockStore({ verified: false, refreshTokenExpired: true })
-    mockAccount(null)
-
-    const { result } = renderHook(() => useCardStatus())
-
-    expect(result.current.isExpired).toBe(false)
   })
 })
