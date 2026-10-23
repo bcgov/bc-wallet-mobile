@@ -1,10 +1,12 @@
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
+import { AxiosError } from 'axios'
 import {
   formatAxiosErrorForLogger,
   formatIasAxiosResponseError,
   getAppErrorFromAxiosError,
   getAxiosErrorDefinition,
+  normalizeAxiosTimeoutError,
 } from './axios-error-utils'
 
 describe('Error Utils', () => {
@@ -266,6 +268,65 @@ describe('Error Utils', () => {
 
       expect(errorDefinition).toBeDefined()
       expect(errorDefinition?.appEvent).toBe('server_error')
+    })
+  })
+
+  describe('normalizeAxiosTimeoutError', () => {
+    const networkError = (config: Record<string, unknown>) =>
+      ({ name: 'AxiosError', code: 'ERR_NETWORK', message: 'Network Error', config }) as any
+
+    it('reclassifies a network error after the timeout elapsed (Android callTimeout) as a timeout', () => {
+      const error = normalizeAxiosTimeoutError(networkError({ timeout: 1000, _requestStartedAt: Date.now() - 1000 }))
+
+      expect(error.code).toBe('ECONNABORTED')
+      expect(error.message).toBe('timeout of 1000ms exceeded')
+      expect(getAppErrorFromAxiosError(error).appEvent).toBe(ErrorRegistry.SERVER_TIMEOUT.appEvent)
+    })
+
+    it('leaves a network error before the timeout elapsed as a network error', () => {
+      const error = normalizeAxiosTimeoutError(networkError({ timeout: 90_000, _requestStartedAt: Date.now() }))
+
+      expect(error.code).toBe('ERR_NETWORK')
+    })
+
+    it('leaves a network error alone when no timeout is configured', () => {
+      const error = normalizeAxiosTimeoutError(networkError({ timeout: 0, _requestStartedAt: Date.now() - 120_000 }))
+
+      expect(error.code).toBe('ERR_NETWORK')
+    })
+
+    it('leaves errors with a response alone', () => {
+      const error = normalizeAxiosTimeoutError({
+        ...networkError({ timeout: 1000, _requestStartedAt: Date.now() - 1000 }),
+        response: { status: 502 },
+      })
+
+      expect(error.code).toBe('ERR_NETWORK')
+    })
+  })
+
+  describe('getAppErrorFromAxiosError timing context', () => {
+    it('adds the configured timeout and elapsed time to the AppError context', () => {
+      const error = new AxiosError('timeout of 90000ms exceeded', 'ECONNABORTED', {
+        method: 'get',
+        url: 'https://api.example.com/x',
+        timeout: 90_000,
+        _requestStartedAt: Date.now() - 60_000,
+      } as any)
+
+      const appError = getAppErrorFromAxiosError(error)
+
+      expect(appError.context?.http_timeout_ms).toBe(90_000)
+      expect(appError.context?.http_elapsed_ms).toBeGreaterThanOrEqual(60_000)
+      expect(appError.context?.http_elapsed_ms).toBeLessThan(61_000)
+      // context serializes with the error, so the timing reaches the error modal log and problem reports
+      expect(appError.toJSON().context).toMatchObject({ http_timeout_ms: 90_000 })
+    })
+
+    it('omits elapsed time when the request was never dispatched', () => {
+      const error = new AxiosError('Network Error', 'ERR_NETWORK', { method: 'get', url: '/x' } as any)
+
+      expect(getAppErrorFromAxiosError(error).context?.http_elapsed_ms).toBeUndefined()
     })
   })
 

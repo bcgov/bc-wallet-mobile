@@ -1,6 +1,6 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { loadPersistedJwk, persistJwk } from '@/bcsc-theme/api/jwk-cache'
-import { JWK_CACHE_TTL_MS } from '@/constants'
+import { BCSC_API_TIMEOUT_MS, JWK_CACHE_TTL_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -37,6 +37,14 @@ describe('BCSC Client', () => {
     const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
     expect(client.client.defaults.headers['Content-Type']).toBe('application/json; charset=utf-8')
+  })
+
+  it('should set the default request timeout above the 60s reverse proxy timeout', () => {
+    const mockLogger = createMockLogger()
+    const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+    expect(client.client.defaults.timeout).toBe(BCSC_API_TIMEOUT_MS)
+    expect(BCSC_API_TIMEOUT_MS).toBeGreaterThan(60_000)
   })
 
   it('should set User-Agent default header', () => {
@@ -774,6 +782,23 @@ describe('BCSC Client', () => {
       await (client as any).handleRequest(config)
 
       expect(config.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer my-token')
+    })
+
+    it('should stamp the dispatch time on the config for elapsed-time logging', async () => {
+      jest.spyOn(Date, 'now').mockReturnValue(123_456)
+      const mockLogger = createMockLogger()
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      const config = {
+        url: '/test',
+        method: 'get',
+        headers: { set: jest.fn() },
+        skipBearerAuth: true,
+      }
+
+      const result = await (client as any).handleRequest(config)
+
+      expect(result._requestStartedAt).toBe(123_456)
     })
   })
 
