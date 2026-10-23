@@ -1,3 +1,4 @@
+import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
 
 import { extractPairingCode, usePairingCodeQRCodeStrategy } from './usePairingCodeQRCodeStrategy'
@@ -66,5 +67,18 @@ describe('usePairingCodeQRCodeStrategy', () => {
     expect(() => setup().handle('https://www.gov.bc.ca')).toThrow('Invalid pairing code QR')
 
     expect(onSuccess).not.toHaveBeenCalled()
+  })
+
+  describe('toErrorModal', () => {
+    it('shows the unrecognized QR modal and keeps the thrown error as the cause', () => {
+      const thrown = new Error('onSuccess failed')
+
+      const modal = setup().toErrorModal(thrown)
+
+      expect(modal?.title).toBe('BCSC.Scan.UnrecognizedQR')
+      expect(modal?.description).toBe('BCSC.Scan.UnrecognizedQRDescription')
+      expect(modal?.error.appEvent).toBe(AppEventCode.INVALID_QR_CODE)
+      expect(modal?.error.cause).toBe(thrown)
+    })
   })
 })

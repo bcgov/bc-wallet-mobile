@@ -88,6 +88,67 @@ describe('useQRScanner', () => {
     expect(JSON.stringify(mockLogger.warn.mock.calls)).not.toContain('secret')
   })
 
+  it('ignores the same unrecognized value after its modal is dismissed', async () => {
+    const { result, emitErrorModal } = renderScanner([mkStrategy(false)])
+
+    await act(async () => {
+      await result.current.handleScan('qr')
+    })
+    await act(async () => {
+      await result.current.handleScan('qr')
+    })
+
+    expect(emitErrorModal).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the unrecognized modal again when a different value arrives', async () => {
+    const { result, emitErrorModal } = renderScanner([mkStrategy(false)])
+
+    await act(async () => {
+      await result.current.handleScan('first')
+    })
+    await act(async () => {
+      await result.current.handleScan('second')
+    })
+    await act(async () => {
+      await result.current.handleScan('first')
+    })
+
+    expect(emitErrorModal).toHaveBeenCalledTimes(3)
+  })
+
+  it('forgets the unrecognized value when resetLock is called', async () => {
+    const { result, emitErrorModal } = renderScanner([mkStrategy(false)])
+
+    await act(async () => {
+      await result.current.handleScan('qr')
+    })
+    act(() => result.current.resetLock())
+    await act(async () => {
+      await result.current.handleScan('qr')
+    })
+
+    expect(emitErrorModal).toHaveBeenCalledTimes(2)
+  })
+
+  it('lets the same value fail again in a strategy so a retry still shows the modal', async () => {
+    const toErrorModal = jest
+      .fn()
+      .mockReturnValue({ error: {} as AppError, title: 'Title', description: 'Description' })
+    const handle = jest.fn().mockRejectedValue(new Error('boom'))
+    const { result, emitErrorModal } = renderScanner([mkStrategy(true, handle, toErrorModal)])
+
+    await act(async () => {
+      await result.current.handleScan('qr')
+    })
+    await act(async () => {
+      await result.current.handleScan('qr')
+    })
+
+    expect(handle).toHaveBeenCalledTimes(2)
+    expect(emitErrorModal).toHaveBeenCalledTimes(2)
+  })
+
   it('does not lock scanning when no strategy matches', async () => {
     const handle = jest.fn().mockResolvedValue(undefined)
     const unmatched = mkStrategy(false, handle)
@@ -98,7 +159,7 @@ describe('useQRScanner', () => {
     })
     jest.mocked(unmatched.matches).mockReturnValue(true)
     await act(async () => {
-      await result.current.handleScan('qr')
+      await result.current.handleScan('other-qr')
     })
 
     expect(handle).toHaveBeenCalledTimes(1)

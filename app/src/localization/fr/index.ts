@@ -820,7 +820,7 @@ const translation = {
       "Confirm": "Confirm (FR)",
       "TryAgain": "Try Again (FR)",
       "Connecting": "Connecting… (FR)",
-      "UnrecognizedQR": "QR code not recognized. (FR)",
+      "UnrecognizedQR": "QR code not recognized (FR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (FR)",
       "FeatureUnavailable": "This action isn't available yet. (FR)",
       "AccountTransferErrorTitle": "Unable to add device (FR)",

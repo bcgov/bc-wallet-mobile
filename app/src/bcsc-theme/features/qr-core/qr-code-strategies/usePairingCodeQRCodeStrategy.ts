@@ -1,5 +1,8 @@
 import { PAIRING_CODE_LENGTH } from '@/constants'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { QRCodeStrategy } from '../useQRScanner'
 
 // Pairing QRs encode a landing-page URL with the code in the fragment, e.g.
@@ -22,6 +25,8 @@ export const extractPairingCode = (uri: string): string | null => {
 }
 
 export const usePairingCodeQRCodeStrategy = (onSuccess: (pairingCode: string) => void): QRCodeStrategy => {
+  const { t } = useTranslation()
+
   const matches = useCallback((uri: string): boolean => {
     return extractPairingCode(uri) !== null
   }, [])
@@ -39,9 +44,14 @@ export const usePairingCodeQRCodeStrategy = (onSuccess: (pairingCode: string) =>
     [onSuccess]
   )
 
-  const toErrorModal = useCallback(() => {
-    return null
-  }, [])
+  const toErrorModal = useCallback(
+    (error: unknown) => ({
+      error: ensureAppError(error, AppEventCode.INVALID_QR_CODE),
+      title: t('BCSC.Scan.UnrecognizedQR'),
+      description: t('BCSC.Scan.UnrecognizedQRDescription'),
+    }),
+    [t]
+  )
 
   return useMemo(() => ({ matches, handle, toErrorModal }), [matches, handle, toErrorModal])
 }
