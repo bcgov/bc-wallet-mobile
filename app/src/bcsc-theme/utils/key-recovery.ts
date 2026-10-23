@@ -46,12 +46,31 @@ interface ServerJwk {
   n?: string
 }
 
-interface ServerClientRegistrationView {
+export interface ServerClientRegistrationView {
   client_id: string
   /** RFC 7592: the reg token MAY rotate on GET/PUT. Surfaced so the caller can persist it. */
   registration_access_token?: string
   jwks?: { keys?: ServerJwk[] }
 }
+
+/**
+ * GET /device/register/{clientId} with the registration access token (RFC 7592 read). Shared by key
+ * recovery and the client ID drift check. A rejected request (e.g. a dead reg token -> 401/403) must
+ * not trigger the client's global onError handler, which surfaces user-facing errors, so callers
+ * handle the rejection themselves. The client sets no default timeout; pass `timeoutMs` to bound the call.
+ */
+export const fetchRegistrationView = (
+  apiClient: BCSCApiClient,
+  clientId: string,
+  registrationAccessToken: string,
+  timeoutMs?: number
+) =>
+  apiClient.get<ServerClientRegistrationView>(`${apiClient.endpoints.registration}/${clientId}`, {
+    skipBearerAuth: true,
+    skipOnErrorHandler: true,
+    headers: { Authorization: `Bearer ${registrationAccessToken}` },
+    ...(timeoutMs === undefined ? {} : { timeout: timeoutMs }),
+  })
 
 export type KeyRecoveryStatus = 'recovered' | 'no_match' | 'failed'
 
@@ -108,17 +127,7 @@ export async function performKeyRecovery(
     logger.info(
       `[performKeyRecovery] event=triggered client_id=${clientId} — probing server for its registered signing keys`
     )
-    const { data } = await apiClient.get<ServerClientRegistrationView>(
-      `${apiClient.endpoints.registration}/${clientId}`,
-      {
-        skipBearerAuth: true,
-        // Silent background self-heal: a probe failure (e.g. a dead/revoked reg token → 401/403)
-        // must NOT trigger the client's global onError handler (which surfaces user-facing errors).
-        // It falls through to our own catch → status 'failed', and the caller leaves tokens stale.
-        skipOnErrorHandler: true,
-        headers: { Authorization: `Bearer ${registrationAccessToken}` },
-      }
-    )
+    const { data } = await fetchRegistrationView(apiClient, clientId, registrationAccessToken)
 
     newRegistrationAccessToken = data?.registration_access_token
 
