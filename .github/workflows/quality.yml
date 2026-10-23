@@ -117,7 +117,7 @@ jobs:
         env:
           SWIFTFORMAT_VERSION: 0.63.1
         run: |
-          curl -sSfL -o "$RUNNER_TEMP/swiftformat.zip" \
+          curl --proto "=https" --tlsv1.2 -sSfL -o "$RUNNER_TEMP/swiftformat.zip" \
             "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip"
           unzip -q -o "$RUNNER_TEMP/swiftformat.zip" -d "$RUNNER_TEMP/swiftformat"
           echo "$RUNNER_TEMP/swiftformat" >> "$GITHUB_PATH"
