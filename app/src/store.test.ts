@@ -1,3 +1,6 @@
+import type { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
+// Not imported via AppBanner: that would load the theme, which this suite's @bifold/core mock cannot support
+import { BCSCBanner } from './bcsc-theme/types/banners'
 import { InstallIdSystemCheck } from './services/system-checks/InstallIdSystemCheck'
 import {
   BCDispatchAction,
@@ -222,5 +225,48 @@ describe('migrateBCSCState', () => {
     const check = new InstallIdSystemCheck(bcsc.installId, jest.fn())
 
     expect(check.runCheck()).toBe(true)
+  })
+
+  describe('bannerMessages', () => {
+    const deviceLimit = { id: BCSCBanner.DEVICE_LIMIT_EXCEEDED, title: 'Limit', type: 'error' } as BCSCBannerMessage
+    const serviceNotice = {
+      id: BCSCBanner.IAS_SERVER_NOTIFICATION,
+      title: 'Notice',
+      type: 'warning',
+    } as BCSCBannerMessage
+    const retired4xBanner = {
+      id: 'CardExpiringSoonBanner',
+      title: 'Expires in 9 days',
+      description: 'Renew your account before it expires',
+      type: 'warning',
+      dismissible: false,
+    } as unknown as BCSCBannerMessage
+    const futureBanner = { id: 'SomeFutureBanner', title: 'Future', type: 'info' } as unknown as BCSCBannerMessage
+
+    it('drops banners whose id is not a current BCSCBanner, keeping the rest in order', () => {
+      const result = migrateBCSCState({ bannerMessages: [deviceLimit, retired4xBanner, futureBanner, serviceNotice] })
+
+      expect(result).toEqual({ bcsc: { bannerMessages: [deviceLimit, serviceNotice] }, migrated: true })
+    })
+
+    it('is idempotent: running again on the cleaned result changes nothing', () => {
+      const first = migrateBCSCState({ bannerMessages: [deviceLimit, retired4xBanner, serviceNotice] })
+      const second = migrateBCSCState(first.bcsc)
+
+      expect(second).toEqual({ bcsc: { bannerMessages: [deviceLimit, serviceNotice] }, migrated: false })
+    })
+
+    it.each(Object.values(BCSCBanner))('keeps a current %s banner', (id) => {
+      const banner = { id, title: 'Title', type: 'info' } as BCSCBannerMessage
+
+      expect(migrateBCSCState({ bannerMessages: [banner] })).toEqual({
+        bcsc: { bannerMessages: [banner] },
+        migrated: false,
+      })
+    })
+
+    it.each([[{ bannerMessages: [] }], [{}]])('has nothing to clean in %j', (persisted) => {
+      expect(migrateBCSCState(persisted)).toEqual({ bcsc: persisted, migrated: false })
+    })
   })
 })

@@ -14,6 +14,7 @@ import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
+import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { appLogger } from './utils/logger'
 
@@ -365,13 +366,17 @@ export const initialBCSCState: BCSCState = {
   analyticsOptIn: false,
 }
 
+const currentBannerIds = new Set<string>(Object.values(BCSCBanner))
+
 /**
- * Migrates a persisted BCSC state blob on load. Two idempotent, read-side migrations:
+ * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
  * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
  *   have launched on >= v4.1.
  * - Onboarded installs that predate `verificationSkipped`: a missing value is treated as "not skipped"
  *   (`false`) so an unverified user resumes verification rather than seeing the post-onboarding verify
  *   prompt. v3 upgrades have no persisted blob yet and are handled in useInitializeAccountStatus.
+ * - Stored banners whose id is not a current `BCSCBanner` (e.g. 4.0.x `CardExpiringSoonBanner`) are dropped,
+ *   including ids from a newer build; a dropped banner returns only when its producer adds it again.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
@@ -391,6 +396,14 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
   if (bcsc.hasAccount === true && bcsc.verificationSkipped === undefined) {
     bcsc = { ...bcsc, verificationSkipped: false }
     migrated = true
+  }
+
+  if (Array.isArray(bcsc.bannerMessages)) {
+    const bannerMessages = bcsc.bannerMessages.filter((banner) => currentBannerIds.has(banner.id))
+    if (bannerMessages.length !== bcsc.bannerMessages.length) {
+      bcsc = { ...bcsc, bannerMessages }
+      migrated = true
+    }
   }
 
   return { bcsc, migrated }
