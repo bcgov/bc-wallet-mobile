@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Linking, Platform, StyleSheet, View } from 'react-native'
 import { ControlContainer } from './ControlContainer'
 
-export type PermissionType = 'camera' | 'microphone' | 'notifications' | 'cameraAndMicrophone'
+export type PermissionType = 'camera' | 'microphone' | 'notifications' | 'cameraAndMicrophone' | 'bluetooth'
 
 type PermissionDisabledProps = {
   permissionType: PermissionType
@@ -100,6 +100,24 @@ const translationKeys: Record<PermissionType, TranslationConfig> = {
         'BCSC.PermissionDisabled.CameraAndMicrophone.Android.Step4',
         'BCSC.PermissionDisabled.CameraAndMicrophone.Android.Step5',
         'BCSC.PermissionDisabled.CameraAndMicrophone.Android.Step6',
+      ],
+    },
+  },
+  bluetooth: {
+    title: 'BCSC.PermissionDisabled.BluetoothTitle',
+    description: 'BCSC.PermissionDisabled.BluetoothDescription',
+    steps: {
+      ios: [
+        'BCSC.PermissionDisabled.Bluetooth.iOS.Step1',
+        'BCSC.PermissionDisabled.Bluetooth.iOS.Step2',
+        'BCSC.PermissionDisabled.Bluetooth.iOS.Step3',
+      ],
+      android: [
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step1',
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step2',
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step3',
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step4',
+        'BCSC.PermissionDisabled.Bluetooth.Android.Step5',
       ],
     },
   },

@@ -1,10 +1,12 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey } from '@bifold/core'
+import { testIdWithKey, useStore } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Text } from 'react-native'
 import {
   AccountSecurityMethod,
   BiometricType,
@@ -77,6 +79,12 @@ const mockGetAccount = jest.mocked(getAccount)
 const mockSetAccount = jest.mocked(setAccount)
 const mockSetAccountSecurityMethod = jest.mocked(setAccountSecurityMethod)
 
+/** Shows the method held in secure state, so a test can watch the store follow the switch. */
+const SecureStateProbe = () => {
+  const [store] = useStore<BCState>()
+  return <Text>{store.bcscSecure.securityMethod ?? 'unknown'}</Text>
+}
+
 describe('SecureApp', () => {
   let mockNavigation: any
 
@@ -144,12 +152,14 @@ describe('SecureApp', () => {
         <BasicAppContext>
           <BCSCLoadingProvider>
             <SecureAppScreen navigation={mockNavigation as never} />
+            <SecureStateProbe />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
 
       const button = await waitFor(() => tree.getByTestId(testIdWithKey(TestIds.onboarding.secureApp.chooseDeviceAuth)))
       fireEvent.press(button)
+      return tree
     }
 
     it('creates the placeholder account when none exists, before setting up device security', async () => {
@@ -174,11 +184,12 @@ describe('SecureApp', () => {
       mockGetAccount.mockResolvedValue(existingAccount as never)
       mockSetupDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'wallet-key' } as never)
 
-      await pressDeviceAuth()
+      const tree = await pressDeviceAuth()
 
       await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('wallet-key'))
       expect(mockSetAccount).not.toHaveBeenCalled()
       expect(mockSetAccountSecurityMethod).toHaveBeenCalledWith(AccountSecurityMethod.DeviceAuth)
+      expect(tree.getByText(AccountSecurityMethod.DeviceAuth)).toBeTruthy()
       expect(mockSetupDeviceSecurity.mock.invocationCallOrder[0]).toBeLessThan(
         mockSetAccountSecurityMethod.mock.invocationCallOrder[0]
       )

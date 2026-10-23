@@ -1,3 +1,6 @@
+import type { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
+// Not imported via AppBanner: that would load the theme, which this suite's @bifold/core mock cannot support
+import { BCSCBanner } from './bcsc-theme/types/banners'
 import { InstallIdSystemCheck } from './services/system-checks/InstallIdSystemCheck'
 import {
   BCDispatchAction,
@@ -152,6 +155,64 @@ describe('reducer', () => {
     expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
   })
 
+  it('UPDATE_SECURE_SECURITY_METHOD stores the method on secure state without persisting it', () => {
+    const result = reducer(initialState, {
+      type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD,
+      payload: ['device_authentication'],
+    })
+
+    expect(result.bcscSecure.securityMethod).toBe('device_authentication')
+    expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
+  })
+
+  describe('UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT', () => {
+    const draft = { streetAddress: '123 Main St', streetAddress2: '', city: '', province: null, postalCode: '' }
+    // The address step follows the name step, so a verification in memory always carries userMetadata
+    const verifying = {
+      ...initialState,
+      bcscSecure: { ...initialState.bcscSecure, userMetadata: { name: { first: 'John', last: 'Doe' } } },
+    }
+
+    it('keeps the draft on secure state without persisting anything', () => {
+      const result = reducer(verifying, {
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+
+      expect(result.bcscSecure.residentialAddressDraft).toEqual(draft)
+      expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+    })
+
+    it('discards the draft when dispatched without one', () => {
+      const state = { ...verifying, bcscSecure: { ...verifying.bcscSecure, residentialAddressDraft: draft } }
+      const result = reducer(state, {
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [undefined],
+      })
+
+      expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
+    })
+
+    it('is dropped with the rest of the secure state on lock or logout', () => {
+      const state = { ...verifying, bcscSecure: { ...verifying.bcscSecure, residentialAddressDraft: draft } }
+      const result = reducer(state, { type: BCDispatchAction.CLEAR_SECURE_STATE })
+
+      expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
+    })
+
+    it('refuses a draft written after the secure state was cleared, so a lock or reset cannot bring it back', () => {
+      // The address screen writes its draft as it unmounts, and a lock or a verification reset unmounts
+      // it by clearing the secure state first, so the write arrives on the cleared state
+      const cleared = reducer(verifying, { type: BCDispatchAction.CLEAR_SECURE_STATE })
+      const result = reducer(cleared, {
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+
+      expect(result.bcscSecure.residentialAddressDraft).toBeUndefined()
+    })
+  })
+
   it('CLEAR_BCSC resets verificationSkipped to undefined', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
     const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })
@@ -280,5 +341,48 @@ describe('migrateBCSCState', () => {
     const check = new InstallIdSystemCheck(bcsc.installId, jest.fn())
 
     expect(check.runCheck()).toBe(true)
+  })
+
+  describe('bannerMessages', () => {
+    const deviceLimit = { id: BCSCBanner.DEVICE_LIMIT_EXCEEDED, title: 'Limit', type: 'error' } as BCSCBannerMessage
+    const serviceNotice = {
+      id: BCSCBanner.IAS_SERVER_NOTIFICATION,
+      title: 'Notice',
+      type: 'warning',
+    } as BCSCBannerMessage
+    const retired4xBanner = {
+      id: 'CardExpiringSoonBanner',
+      title: 'Expires in 9 days',
+      description: 'Renew your account before it expires',
+      type: 'warning',
+      dismissible: false,
+    } as unknown as BCSCBannerMessage
+    const futureBanner = { id: 'SomeFutureBanner', title: 'Future', type: 'info' } as unknown as BCSCBannerMessage
+
+    it('drops banners whose id is not a current BCSCBanner, keeping the rest in order', () => {
+      const result = migrateBCSCState({ bannerMessages: [deviceLimit, retired4xBanner, futureBanner, serviceNotice] })
+
+      expect(result).toEqual({ bcsc: { bannerMessages: [deviceLimit, serviceNotice] }, migrated: true })
+    })
+
+    it('is idempotent: running again on the cleaned result changes nothing', () => {
+      const first = migrateBCSCState({ bannerMessages: [deviceLimit, retired4xBanner, serviceNotice] })
+      const second = migrateBCSCState(first.bcsc)
+
+      expect(second).toEqual({ bcsc: { bannerMessages: [deviceLimit, serviceNotice] }, migrated: false })
+    })
+
+    it.each(Object.values(BCSCBanner))('keeps a current %s banner', (id) => {
+      const banner = { id, title: 'Title', type: 'info' } as BCSCBannerMessage
+
+      expect(migrateBCSCState({ bannerMessages: [banner] })).toEqual({
+        bcsc: { bannerMessages: [banner] },
+        migrated: false,
+      })
+    })
+
+    it.each([[{ bannerMessages: [] }], [{}]])('has nothing to clean in %j', (persisted) => {
+      expect(migrateBCSCState(persisted)).toEqual({ bcsc: persisted, migrated: false })
+    })
   })
 })

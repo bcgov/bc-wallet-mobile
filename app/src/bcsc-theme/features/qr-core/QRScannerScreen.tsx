@@ -16,6 +16,7 @@ import { useQRScanner } from './useQRScanner'
  *  - Pairing code QR codes (e.g., for logging into a service)
  *  - Account transfer QR codes (e.g., for transferring an account)
  *  - DIDComm OOB QR codes (e.g., for establishing a VC connection)
+ *  - Mediator invitation QR codes (developer mode only; opens the mediator picker)
  *
  * @returns A React element that renders the QR scanner for various QR code strategies.
  */
@@ -46,9 +47,18 @@ const QRScannerScreen: React.FC = () => {
     [navigation]
   )
 
+  const onMediatorInvitation = useCallback(
+    (uri: string) => {
+      navigation.getParent<StackNavigationProp<BCSCMainStackParams>>()?.navigate(BCSCScreens.ConfigureMediator, {
+        scannedMediatorUri: uri,
+      })
+    },
+    [navigation]
+  )
+
   const pairingCodeQRCodeStrategy = usePairingCodeQRCodeStrategy(onPairingCodeFound)
   const accountTransferQRCodeStrategy = useAccountTransferQRCodeStrategy(onAccountTransferSuccess, onAlreadyVerified)
-  const didCommOobQRCodeStrategy = useDidCommOobQRCodeStrategy(onConnectionFound)
+  const didCommOobQRCodeStrategy = useDidCommOobQRCodeStrategy(onConnectionFound, { onMediatorInvitation })
 
   const strategies = useMemo(
     () => [pairingCodeQRCodeStrategy, accountTransferQRCodeStrategy, didCommOobQRCodeStrategy],

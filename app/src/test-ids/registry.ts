@@ -113,6 +113,11 @@ export const TestIds = {
       takePhoto: 'TakePhoto',
       cancel: 'CancelCamera',
       toggleFlash: 'ToggleFlash',
+      notReady: 'CameraNotReady',
+    },
+    /** `CameraInterruptedOverlay` — covers any camera preview while the camera session is interrupted. */
+    cameraInterrupted: {
+      overlay: 'CameraInterrupted',
     },
     /** `AppBanner` composes `<part>-<banner type>`; the type is the banner's variant, not a screen. */
     appBanner: {
@@ -208,6 +213,10 @@ export const TestIds = {
       // (`ChangePINContent`) reuses this form and falls back to the generic `Continue`.
       continue: 'Continue',
     },
+    /** "Verify your account" (`VerifyPrompt`), the root of `VerifyStack` for a user who taps Continue
+     *  (a first-time verifier): no header back (`common.back` is absent), Android back is swallowed, and
+     *  its help menu (`common.help`) has no "Back to home". The first step's back returns here. Skip
+     *  leaves for Home and makes the user a deferred verifier, who re-enters from the Home card. */
     verifyPrompt: {
       continue: 'Continue',
       skipVerification: 'SkipVerification',
@@ -406,14 +415,19 @@ export const TestIds = {
       cancelUpload: 'CancelUpload',
     },
     /** `SuccessfullySent` — the post-upload confirmation. `goToHome` is the screen's ONLY way out:
-     *  hardware back is disabled. */
+     *  hardware back is disabled. Its label depends on the verifier: "Go to home" leaves for Home
+     *  (deferred verifier), "Check status" replaces onto `PendingReview` (first-time verifier, who has
+     *  no Home to go to). */
     successfullySent: {
       goToHome: 'GoToHome',
     },
-    /** `PendingReview` — re-checks the request status on EVERY mount, which is what makes re-entering
-     *  it the app's own poll for the agent's decision. `chooseAnotherWay` cancels the request
-     *  (confirm-gated) and returns to method selection. */
+    /** `PendingReview` — re-checks the request status on focus, on return to the foreground, when the
+     *  review push lands, and on `checkStatus`: a first-time verifier cannot leave it, so it notices the
+     *  agent's decision itself. Re-entering it (deferred verifier, no header back for first-timers) is
+     *  a poll too. `chooseAnotherWay` cancels the request (confirm-gated) and returns to method
+     *  selection. */
     pendingReview: {
+      checkStatus: 'CheckStatus',
       chooseAnotherWay: 'ChooseAnotherWayToVerify',
     },
     /** `CancelledReview` and its MainStack twin (same component on both stacks). The agent's reason is
@@ -548,6 +562,12 @@ export const TestIds = {
       provinceInput: 'province-input',
       provinceOptionBC: 'province-option-BC',
       continue: 'ResidentialAddressContinue',
+    },
+    /**
+     * `BluetoothDisclosure` — the pre-pairing primer. `continue` is the only control
+     */
+    bluetoothDisclosure: {
+      continue: 'Continue',
     },
   },
 
@@ -745,6 +765,12 @@ export const TestIds = {
      *  native "Success"/OK alert fires, then it returns to Settings. */
     forgetPairingsScreen: {
       confirm: 'ForgetAllPairings',
+    },
+    /** Developer-mode mediator picker. Rows compose from the mediator label (the invitation's label,
+     *  or its host without the payload); `scan` opens the QR scanner, whose hand-off lands back here. */
+    configureMediator: {
+      mediatorRowPrefix: 'MediatorRow-',
+      scan: 'ScanMediator',
     },
     /** Edit-nickname form (verified-only; `InputWithValidation` id 'accountNickname'). Validation is
      *  length-only — there is no duplicate-nickname check. Saving updates the Profile-card name. */
@@ -990,6 +1016,8 @@ export const TestIds = {
     toggleRemoteLogging: 'ToggleRemoteLoggingSwitch',
     toggleEnableProxy: 'ToggleEnableProxy',
     toggleTheme: 'ToggleTheme',
+    /** BCSC only, main stack only: opens the mediator picker. */
+    configureMediator: 'ConfigureMediator',
     /** Raises a deliberate error so the ErrorInfoCard path can be exercised by hand. */
     errorAlertTest: 'ErrorAlertTest',
     fetchPersonCredentialTest: 'FetchPersonCredentialTest',

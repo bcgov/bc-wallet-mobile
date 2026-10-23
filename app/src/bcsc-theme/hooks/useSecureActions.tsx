@@ -4,7 +4,14 @@ import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, VerificationStatus } from '@/store'
+import {
+  BCDispatchAction,
+  BCSCSecureState,
+  BCState,
+  NonBCSCUserMetadata,
+  ResidentialAddressDraft,
+  VerificationStatus,
+} from '@/store'
 import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
@@ -26,7 +33,6 @@ import {
   EvidenceType,
   getAccount,
   getAccountFlags,
-  getAccountSecurityMethod,
   getAuthorizationRequest,
   getCredential,
   getEvidence,
@@ -466,6 +472,22 @@ export const useSecureActions = () => {
       }
     },
     [dispatch, persistAuthorizationRequest]
+  )
+
+  /**
+   * Keep the residential address form as the user left it, in memory only. Unlike the other
+   * updates here nothing is written to native storage: the draft lives for the signed-in session and
+   * is dropped with the rest of the secure state on lock, logout or a verification reset, so only a
+   * submitted address (see updateUserMetadata) survives. Pass undefined to discard it.
+   */
+  const updateResidentialAddressDraft = useCallback(
+    (draft: ResidentialAddressDraft | undefined) => {
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
+        payload: [draft],
+      })
+    },
+    [dispatch]
   )
 
   /**
@@ -978,13 +1000,8 @@ export const useSecureActions = () => {
           clientID = clientID || (registrationAccessToken ? tokenClientID : authRequest?.clientID)
 
           if (issuer && clientID) {
-            const securityMethod = await getAccountSecurityMethod()
-            const updatedAccount = {
-              ...account,
-              issuer,
-              clientID,
-              securityMethod,
-            }
+            // The account record already carries its security method, so only the recovered fields change.
+            const updatedAccount = { ...account, issuer, clientID }
             logger.info(
               `[hydrateSecureState] Recovered issuer/clientID (clientID source: ${clientIDSource}); updating account`
             )
@@ -1046,12 +1063,7 @@ export const useSecureActions = () => {
         }
 
         try {
-          await setAccount({
-            ...account,
-            issuer,
-            clientID: tokenClientID,
-            securityMethod: await getAccountSecurityMethod(),
-          })
+          await setAccount({ ...account, issuer, clientID: tokenClientID })
           clientID = tokenClientID
         } catch {
           // Android can save the account and then fail on the issuer file, so trust what is stored.
@@ -1240,6 +1252,7 @@ export const useSecureActions = () => {
         userCode: authRequest?.userCode,
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
         cardProcess: hydrateCardProcess(authRequest, cleanedEvidence),
+        securityMethod: account?.securityMethod,
 
         ...effectiveTokens,
 
@@ -1382,6 +1395,7 @@ export const useSecureActions = () => {
     clearAuthorizationRequest,
     updateCardProcess,
     updateUserMetadata,
+    updateResidentialAddressDraft,
     updateVerified,
     updateWalletKey,
     updateAccountFlags,

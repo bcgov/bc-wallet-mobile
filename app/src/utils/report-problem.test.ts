@@ -1,3 +1,4 @@
+import { NAVIGATION_TRAIL } from '@/contexts/NavigationContainerContext'
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { RemoteLogger } from '@bifold/remote-logs'
@@ -45,6 +46,13 @@ const baseProblem: ReportProblem = {
 describe('report-problem', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    NAVIGATION_TRAIL.screens.length = 0
+    NAVIGATION_TRAIL.droppedCount = 0
+  })
+
+  afterEach(() => {
+    NAVIGATION_TRAIL.screens.length = 0
+    NAVIGATION_TRAIL.droppedCount = 0
   })
 
   describe('reportProblemLokiTransport', () => {
@@ -158,6 +166,23 @@ describe('report-problem', () => {
         description: 'The app crashed when I tried to do X',
         code: 2800,
       })
+    })
+
+    it('formats a populated navigation trail with the entry point, gap, repeat block and back entry', () => {
+      NAVIGATION_TRAIL.screens.push(
+        { name: 'Home', isBack: false },
+        { name: 'Verify Options', isBack: false },
+        { name: 'Incomplete', isBack: false },
+        { name: 'Verify Options', isBack: true },
+        { name: 'Incomplete', isBack: false },
+        { name: 'Help', isBack: true }
+      )
+      NAVIGATION_TRAIL.droppedCount = 7
+
+      const result = createReportProblemLokiPayload('7K2P-9XQF', baseProblem)
+      const body = JSON.parse(result.streams[0].values[0][1])
+
+      expect(body.navigation).toBe('Home > (7 more) > [back to Verify Options > Incomplete] x2 > back to Help')
     })
 
     it('omits error fields from the body when no error is provided', () => {

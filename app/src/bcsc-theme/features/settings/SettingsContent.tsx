@@ -274,7 +274,11 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
 
   const { status: notificationStatus } = useNotificationPermissionStatus()
 
-  const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
+  // Hidden until the method is known: a row that appears or vanishes after mount slides every row below it.
+  const isPinUser =
+    accountSecurityMethod === AccountSecurityMethod.PinNoDeviceAuth ||
+    accountSecurityMethod === AccountSecurityMethod.PinWithDeviceAuth
+  const showChangePIN = isPinUser && Boolean(onChangePIN)
   const { developerModeEnabled } = store.preferences
   const showFeaturesSection = Boolean(onContacts) || developerModeEnabled
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
@@ -520,7 +524,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const { Spacing, ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
+  const accountSecurityMethod = store.bcscSecure.securityMethod
   const isAuthenticated = store.authentication.didAuthenticate
 
   const styles = makeStyles(Spacing, ColorPalette)
@@ -533,24 +537,22 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   useFocusEffect(
     useCallback(() => {
-      // The account security method is read via a device authorization grant, which only succeeds
-      // once the device is registered/approved. During onboarding the device isn't registered yet,
-      // so the grant fails with a device_authorization_error. The value is also only consumed by
-      // AuthenticatedSection, so skip the fetch entirely when unauthenticated.
-      if (!isAuthenticated) {
+      // Hydration puts the method in secure state, so the rows are right on the first frame. Read the
+      // native account record only when it is missing, and never before authentication (no record yet).
+      if (!isAuthenticated || accountSecurityMethod) {
         return
       }
       const fetchAccountSecurityMethod = async () => {
         try {
           const method = await getAccountSecurityMethod()
-          setAccountSecurityMethod(method)
+          dispatch({ type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD, payload: [method] })
         } catch (error) {
           const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
           logger.error(`Error fetching app security method [${appError.appEvent}]`, appError)
         }
       }
       fetchAccountSecurityMethod()
-    }, [logger, isAuthenticated])
+    }, [logger, isAuthenticated, accountSecurityMethod, dispatch])
   )
 
   const onPressTermsOfUse = async () => {

@@ -15,14 +15,16 @@ const v = TestIds.verify
 const { common } = TestIds
 
 /**
- * Add-or-transfer choice (`AccountSetup`) — first screen after VerifyPrompt `Continue`.
- * `primary` (AddAccount, "No, continue setup") → IdentitySelection · `secondary` (TransferAccount)
- * → transfer instructions.
+ * Add-or-transfer choice (`AccountSetup`) — first screen after VerifyPrompt `Continue`, and where the
+ * Home card lands a deferred verifier who never chose. `primary` (AddAccount, "No, continue setup") →
+ * IdentitySelection · `secondary` (TransferAccount) → transfer instructions.
+ * `back` depends on the entry: a first-time verifier returns to VerifyPrompt, a deferred one leaves for Home.
  */
 export const AccountSetupScreen = defineScreen({
   self: bcsc(v.accountSetup.addAccount),
   primary: bcsc(v.accountSetup.addAccount),
   secondary: bcsc(v.accountSetup.transferAccount),
+  back: bcsc(common.back),
   help: bcsc(common.help),
 })
 
@@ -266,8 +268,9 @@ export const EvidenceUploadingScreen = defineScreen({
 })
 
 /**
- * `SuccessfullySent` — the post-upload confirmation. `primary` (GoToHome) leaves the verify stack for
- * Home and is the ONLY way out (hardware back is disabled).
+ * `SuccessfullySent` — the post-upload confirmation. `primary` (GoToHome) is the ONLY way out (hardware
+ * back is disabled); where it goes depends on the verifier: a first-time verifier is kept in the flow
+ * ("Check status" → PendingReview), a deferred one goes Home ("Go to home"). Older builds always go Home.
  */
 export const SuccessfullySentScreen = defineScreen({
   self: bcsc(v.successfullySent.goToHome),
@@ -276,17 +279,25 @@ export const SuccessfullySentScreen = defineScreen({
 
 /**
  * `PendingReview` ('Send Video Check Status') — where a submitted request waits for its agent
- * decision. The mount re-checks the status and navigates on to VerificationSuccess or CancelledReview
- * when one has landed, so LEAVING AND RE-ENTERING this screen is the app's own poll (see
+ * decision. The screen re-checks the status on focus, on return to the foreground, when the review
+ * push lands and on `primary` (CheckStatus), and navigates on to VerificationSuccess or
+ * CancelledReview once a decision has landed — so tapping Check status is the app's own poll (see
  * `waitForSendVideoDecision`).
  *
- * `back` does not pop: it marks the account unverified, which swaps the whole stack back to Home.
- * `primary` (ChooseAnotherWayToVerify) cancels the request behind a confirmation alert.
+ * `back` exists only for a deferred verifier: it does not pop but marks the account unverified, which
+ * swaps the whole stack back to Home. A first-time verifier has no arrow (`backArrow` is not visible)
+ * and no "Back to home" (`expectPendingReviewLocked`). `secondary` (ChooseAnotherWayToVerify) cancels
+ * the request behind a confirmation alert — the in-flow way off this screen for everyone.
  */
 export const PendingReviewScreen = defineScreen({
   self: bcsc(v.pendingReview.chooseAnotherWay),
-  primary: bcsc(v.pendingReview.chooseAnotherWay),
+  primary: bcsc(v.pendingReview.checkStatus),
+  secondary: bcsc(v.pendingReview.chooseAnotherWay),
   back: bcsc(common.back),
+  elements: {
+    backArrow: bcsc(common.back),
+    checkStatus: bcsc(v.pendingReview.checkStatus),
+  },
 })
 
 /**

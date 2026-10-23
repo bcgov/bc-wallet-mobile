@@ -5,6 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.os.Build
 import android.provider.Settings
 import android.security.keystore.KeyProperties
@@ -2851,13 +2853,15 @@ class BcscCoreModule internal constructor(
     /**
      * Gets the security method for the current account.
      * Matches TypeScript: getAccountSecurityMethod(): Promise<AccountSecurityMethod>
+     * Rejects with E_ACCOUNT_NOT_FOUND when no account exists, matching iOS: a defaulted method
+     * would let callers register or unlock with a method the user never set up.
      */
     @ReactMethod
     override fun getAccountSecurityMethod(promise: Promise) {
         try {
             val account = resolveFirstAccount()
             if (account == null) {
-                promise.resolve("device_authentication") // Default
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
                 return
             }
 
@@ -4986,6 +4990,28 @@ class BcscCoreModule internal constructor(
         val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
         imm?.showInputMethodPicker()
         promise.resolve(null)
+    }
+
+    @ReactMethod
+    override fun isBluetoothAudioConnected(promise: Promise) {
+        try {
+            val audioManager = reactApplicationContext.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            if (audioManager == null) {
+                promise.reject("E_AUDIO_SERVICE_UNAVAILABLE", "AudioManager is not available on this device")
+                return
+            }
+
+            val isConnected =
+                audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any {
+                    it.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO ||
+                        it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
+                        (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && it.type == AudioDeviceInfo.TYPE_BLE_HEADSET)
+                }
+            promise.resolve(isConnected)
+        } catch (e: Exception) {
+            Log.e(NAME, "isBluetoothAudioConnected: ${e.message}", e)
+            promise.reject("E_BLUETOOTH_AUDIO_CHECK_ERROR", "Error checking Bluetooth audio output: ${e.message}", e)
+        }
     }
 
     /**

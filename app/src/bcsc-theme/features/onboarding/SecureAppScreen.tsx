@@ -5,7 +5,8 @@ import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navig
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { TOKENS, useServices } from '@bifold/core'
+import { BCDispatchAction, BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -31,6 +32,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
   const { handleSuccessfulAuth } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const client = useBCSCApiClient()
+  const [, dispatch] = useStore<BCState>()
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
@@ -50,6 +52,10 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
       if (success) {
         if (account) {
           await setAccountSecurityMethod(AccountSecurityMethod.DeviceAuth)
+          dispatch({
+            type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD,
+            payload: [AccountSecurityMethod.DeviceAuth],
+          })
         }
 
         // Complete onboarding with the wallet key
@@ -62,7 +68,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
       const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
       logger.error(`Error completing device security setup: ${appError.technicalMessage ?? appError.message}`)
     }
-  }, [client.endpoints.issuer, handleSuccessfulAuth, logger])
+  }, [client.endpoints.issuer, dispatch, handleSuccessfulAuth, logger])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)

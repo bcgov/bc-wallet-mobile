@@ -153,10 +153,11 @@ export const ErrorRegistry = {
     category: ErrorCategory.NETWORK,
     // NOTE: This maps from axios `ERR_NETWORK`, which means the request failed at the transport
     // layer with no HTTP response — NOT necessarily that the device is offline. It also covers
-    // DNS failures, TLS errors, and connection resets against a specific host. Avoid implying a
-    // reachability probe was run (none is).
+    // DNS failures and connection resets against a specific host; a rejected certificate is
+    // classified as UNSECURED_NETWORK (2103) instead (see getAppErrorFromAxiosError). Avoid
+    // implying a reachability probe was run (none is).
     message:
-      'Network request failed before a response was received — device offline, or DNS/TLS/connection error on the target host',
+      'Network request failed before a response was received — device offline, or DNS/connection error on the target host',
   },
   SERVER_ERROR: {
     statusCode: 2101,
@@ -555,6 +556,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.VERIFICATION,
     message: 'Video prompts were missing or empty when entering the capture screen',
+  },
+  ACCOUNT_TRANSFER_ERROR: {
+    statusCode: 2413,
+    appEvent: AppEventCode.ACCOUNT_TRANSFER_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Account transfer failed — error during transfer process',
   },
 
   // ============================================
@@ -1190,6 +1198,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.CRITICAL,
     category: ErrorCategory.WALLET,
     message: 'Wallet key rotation error — check current key and new key validity',
+  },
+  MEDIATOR_SWITCH_ERROR: {
+    statusCode: 2904,
+    appEvent: AppEventCode.MEDIATOR_SWITCH_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.WALLET,
+    message: 'Switching the wallet to another mediator failed — the previous mediator stays in use',
   },
 
   // ============================================

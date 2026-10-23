@@ -78,8 +78,11 @@ exports[`ScanSerial renders correctly 1`] = `
             }
           }
           getInitialZoom={[Function]}
+          implementationMode="compatible"
           isActive={true}
           onError={[Function]}
+          onInterruptionEnded={[Function]}
+          onInterruptionStarted={[Function]}
           onStarted={[Function]}
           onStopped={[Function]}
           outputs={

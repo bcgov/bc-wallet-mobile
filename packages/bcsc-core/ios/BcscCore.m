@@ -181,4 +181,6 @@ RCT_EXTERN_METHOD(showLocalNotification : (NSString *)title message : (NSString 
 RCT_EXTERN_METHOD(isThirdPartyKeyboardActive : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(openKeyboardSelector : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(isBluetoothAudioConnected : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 @end

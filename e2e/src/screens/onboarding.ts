@@ -139,18 +139,22 @@ export const OnboardingCreatePINScreen = defineScreen({
 })
 
 /**
- * One-time verify prompt shown after onboarding completes, before the main app (entry screen of
- * `VerifyStack`). Its gate is in-memory in `RootStack`: the prompt exists ONLY in the session that
- * completed onboarding, and skipping persists nothing — a later cold start goes AccountLanding →
- * EnterPIN → Home, never back here.
- * `primary` (Continue) → begins verification (AccountSetup) · `secondary` (SkipVerification) → Home.
+ * Verify prompt shown after onboarding completes, before the main app (entry screen of `VerifyStack`).
+ * `primary` (Continue) → begins verification (AccountSetup) as a FIRST-TIME verifier: the prompt stays
+ * beneath as the flow's root, so the first step's back returns here, and here there is no back arrow
+ * (`backArrow` is never visible), hardware back does nothing, and `help` offers no "Back to home".
+ * `secondary` (SkipVerification) → Home, as a DEFERRED verifier who re-enters from the Home card and
+ * keeps every exit. The answer persists (`verificationSkipped`); a later cold start never shows the
+ * prompt again — AccountLanding → EnterPIN → Home or the resumed step.
  */
 export const VerifyPromptScreen = defineScreen({
   self: bcsc(ob.verifyPrompt.continue),
   primary: bcsc(ob.verifyPrompt.continue),
   secondary: bcsc(ob.verifyPrompt.skipVerification),
+  help: bcsc(common.help),
   elements: {
     skipVerification: bcsc(ob.verifyPrompt.skipVerification),
+    backArrow: bcsc(common.back),
   },
 })
 

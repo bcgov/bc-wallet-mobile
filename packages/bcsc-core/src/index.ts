@@ -479,10 +479,10 @@ export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<vo
 };
 
 /**
- * Retrieves the current account information.
+ * Retrieves the current account information, including its security method.
  * @returns A promise that resolves to an Account object if an account exists, otherwise null.
  */
-export const getAccount = async (): Promise<Omit<NativeAccount, 'securityMethod'> | null> => {
+export const getAccount = async (): Promise<NativeAccount | null> => {
   return BcscCore.getAccount();
 };
 
@@ -806,6 +806,7 @@ export const setAccountSecurityMethod = async (
 /**
  * Gets the security method for the current account.
  * @returns A promise that resolves to the security method string
+ * @throws E_ACCOUNT_NOT_FOUND when no account exists (both platforms); there is no default method
  */
 export const getAccountSecurityMethod = async (): Promise<import('./NativeBcscCore').AccountSecurityMethod> => {
   return BcscCore.getAccountSecurityMethod();
@@ -1282,6 +1283,18 @@ export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
  */
 export const openAndroidKeyboardSelector = async (): Promise<void> => {
   return BcscCore.openKeyboardSelector();
+};
+
+/**
+ * Checks if a Bluetooth audio output device (headset, or A2DP speaker) is currently connected on Android.
+ * Needs no Bluetooth permission, so it can run before deciding whether to ask for one.
+ * iOS is not implemented yet and always resolves null.
+ *
+ * @returns True if a Bluetooth audio output is connected, false if not, or null if unknown (iOS)
+ * @throws If detection fails, so callers can tell "no headset" from "detection failed"
+ */
+export const isBluetoothAudioConnected = async (): Promise<boolean | null> => {
+  return BcscCore.isBluetoothAudioConnected();
 };
 
 // ============================================================================

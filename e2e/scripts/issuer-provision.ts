@@ -43,6 +43,10 @@ const REVOCATION_REGISTRY_SIZE = 1000
 
 const ENDORSER_WRITE_BUDGET_MS = 120_000
 const REV_REG_BUDGET_MS = 180_000
+/** Reading a schema back through Traction → ACA-Py → the BCovrin test pool. The 2026-10-15 nightly
+ *  lost both regression lanes to a read outage of a few minutes (30 s request timeouts on one lane,
+ *  `500 Server got itself in trouble` on the other) — runner time only, spent before any Sauce session. */
+const LEDGER_READ_BUDGET_MS = 300_000
 
 const OUTPUT_FILE = resolve(SCRIPT_DIR, '../issuer/.issuer-env')
 
@@ -137,7 +141,7 @@ async function ensureSchema(issuerDid: string): Promise<string> {
         )
         return found?.schema?.attrNames ? found.schema : undefined
       },
-      { timeoutMs: ENDORSER_WRITE_BUDGET_MS, description: `schema ${schemaId} to be resolvable from the ledger` }
+      { timeoutMs: LEDGER_READ_BUDGET_MS, description: `schema ${schemaId} to be resolvable from the ledger` }
     )
   )
   const actual = onLedger.attrNames ?? []
