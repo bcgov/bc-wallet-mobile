@@ -14,6 +14,7 @@ import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
+import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { appLogger } from './utils/logger'
 
@@ -405,6 +406,8 @@ export const initialBCSCState: BCSCState = {
 // literal that never mentions them (e.g. `{ reportUUID: 'x' }` in tests)
 type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'>
 
+const currentBannerIds = new Set<string>(Object.values(BCSCBanner))
+
 /**
  * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
  * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
@@ -415,6 +418,9 @@ type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 
  * - Onboarded installs that predate `verificationStarted`: launches resumed whoever had stored
  *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
  *   count as started.
+ * - Stored banners whose id is no longer a `BCSCBanner` are dropped, whether retired or written by a newer
+ *   build. The example is 4.0.x `CardExpiringSoonBanner`, retired in 4.1 with nothing left to remove it.
+ *   After a downgrade and re-upgrade, a dropped banner returns only if its producer adds it again.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
@@ -436,6 +442,14 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
   if (bcsc.hasAccount === true && bcsc.verificationStarted === undefined) {
     bcsc = { ...bcsc, verificationStarted: bcsc.verificationSkipped === false }
     migrated = true
+  }
+
+  if (Array.isArray(bcsc.bannerMessages)) {
+    const bannerMessages = bcsc.bannerMessages.filter((banner) => currentBannerIds.has(banner.id))
+    if (bannerMessages.length !== bcsc.bannerMessages.length) {
+      bcsc = { ...bcsc, bannerMessages }
+      migrated = true
+    }
   }
 
   return { bcsc, migrated }
