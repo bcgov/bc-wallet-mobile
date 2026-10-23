@@ -1,7 +1,8 @@
 name: Distribute to TestFlight
 description: |
   Wait for App Store Connect to finish processing a build, then
-  distribute it to the specified TestFlight beta groups.
+  distribute it to the specified TestFlight beta groups and set its
+  "What to Test" text.
   Runs on ubuntu (no macOS needed — purely API calls).
 
 inputs:
@@ -23,8 +24,15 @@ inputs:
     required: true
   version_name:
     description: |
-      The version name for the release notes. i.e 1.0.1
+      The version name of the build to wait for. i.e 1.0.1
     required: true
+  what_to_test:
+    description: |
+      The build's TestFlight "What to Test" text, set for en-US and en-CA
+      after a "Release <version_name>-<version_code>" line. Empty sends
+      only that line.
+    required: false
+    default: ''
   beta_groups:
     description: |
       Newline-separated TestFlight beta group names to distribute
@@ -53,6 +61,7 @@ runs:
         BUNDLE_ID: ${{ inputs.bundle_id }}
         VERSION_CODE: ${{ inputs.version_code }}
         VERSION_NAME: ${{ inputs.version_name }}
+        WHAT_TO_TEST: ${{ inputs.what_to_test }}
         BETA_GROUPS: ${{ inputs.beta_groups }}
         MAX_WAIT: ${{ inputs.max_wait_minutes }}
       run: |
@@ -293,38 +302,57 @@ runs:
         echo ""
         echo "✅ Build ${VERSION_CODE} distributed to ${MATCHED_COUNT} beta group(s)"
 
-        # Add release notes (what's new)
-        # First, get the build's betaBuildLocalizations
-        WHATS_NEW="Release ${VERSION_NAME}-${VERSION_CODE}"
-        LOC_RESPONSE=$(asc_get "${API}/builds/${BUILD_ID}/betaBuildLocalizations") \
-          || LOC_RESPONSE='{"data":[]}'
+        echo "::endgroup::"
 
-        LOC_ID=$(echo "$LOC_RESPONSE" | python3 -c "
-        import sys, json
-        data = json.load(sys.stdin).get('data', [])
-        for loc in data:
-            if loc['attributes'].get('locale', '') == 'en-US':
-                print(loc['id'])
-                break
+        # "What to Test" is per build and per locale, and external testers
+        # cannot get the build while a locale is missing it. A failure here is
+        # a hard failure: swallowing it is what left en-CA empty unnoticed.
+        echo "::group::Setting What to Test..."
+        LOC_RESPONSE=$(asc_get "${API}/builds/${BUILD_ID}/betaBuildLocalizations") || {
+          echo "❌ Failed to fetch the build's localizations" >&2
+          exit 1
+        }
+
+        for LOCALE in en-US en-CA; do
+          # The text reaches python through the environment so quotes and
+          # newlines in it stay data rather than breaking the JSON.
+          read -r METHOD URL BODY_FILE < <(LOC_RESPONSE="$LOC_RESPONSE" LOCALE="$LOCALE" API="$API" BUILD_ID="$BUILD_ID" python3 -c "
+        import json, os, tempfile
+        locale = os.environ['LOCALE']
+        existing = next((l['id'] for l in json.loads(os.environ['LOC_RESPONSE']).get('data', [])
+                         if l['attributes'].get('locale') == locale), None)
+        notes = f\"Release {os.environ['VERSION_NAME']}-{os.environ['VERSION_CODE']}\"
+        if os.environ['WHAT_TO_TEST'].strip():
+            notes += '\n\n' + os.environ['WHAT_TO_TEST']
+        attributes = {'whatsNew': notes}
+        if existing:
+            method, url = 'PATCH', f\"{os.environ['API']}/betaBuildLocalizations/{existing}\"
+            body = {'data': {'type': 'betaBuildLocalizations', 'id': existing, 'attributes': attributes}}
         else:
-            print('')
-        " 2>/dev/null || echo '')
+            method, url = 'POST', f\"{os.environ['API']}/betaBuildLocalizations\"
+            body = {'data': {'type': 'betaBuildLocalizations',
+                             'attributes': {'locale': locale, **attributes},
+                             'relationships': {'build': {'data': {'type': 'builds', 'id': os.environ['BUILD_ID']}}}}}
+        fd, path = tempfile.mkstemp()
+        with os.fdopen(fd, 'w') as f:
+            json.dump(body, f)
+        print(method, url, path)
+        ")
 
-        if [ -n "$LOC_ID" ]; then
-          curl -sf -X PATCH \
+          HTTP_CODE=$(curl -s -o /tmp/what_to_test_response.json -w '%{http_code}' \
+            -X "$METHOD" \
             -H "$AUTH" \
             -H "Content-Type: application/json" \
-            -d "{\"data\":{\"type\":\"betaBuildLocalizations\",\"id\":\"${LOC_ID}\",\"attributes\":{\"whatsNew\":\"${WHATS_NEW}\"}}}" \
-            "${API}/betaBuildLocalizations/${LOC_ID}" > /dev/null || true
-          echo "✅ Release notes set: ${WHATS_NEW}"
-        else
-          # Create a new localization
-          curl -sf -X POST \
-            -H "$AUTH" \
-            -H "Content-Type: application/json" \
-            -d "{\"data\":{\"type\":\"betaBuildLocalizations\",\"attributes\":{\"locale\":\"en-US\",\"whatsNew\":\"${WHATS_NEW}\"},\"relationships\":{\"build\":{\"data\":{\"type\":\"builds\",\"id\":\"${BUILD_ID}\"}}}}}" \
-            "${API}/betaBuildLocalizations" > /dev/null || true
-          echo "✅ Release notes created: ${WHATS_NEW}"
-        fi
+            --data-binary "@${BODY_FILE}" \
+            "$URL")
+          rm -f "$BODY_FILE"
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "❌ Failed to set What to Test for ${LOCALE} (HTTP ${HTTP_CODE}):"
+            python3 -m json.tool < /tmp/what_to_test_response.json 2>/dev/null || cat /tmp/what_to_test_response.json 2>/dev/null || true
+            exit 1
+          fi
+          echo "✅ What to Test set for ${LOCALE}"
+        done
 
         echo "::endgroup::"
