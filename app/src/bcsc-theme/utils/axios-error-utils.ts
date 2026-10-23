@@ -160,11 +160,6 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
     baseURL: options.error.config?.baseURL,
     isTimeout: options.error.code === AxiosErrorCode.ECONNABORTED,
     isNetworkError: isNetworkError(options.error),
-    timeoutMs: options.error.config?.timeout,
-    // Calculates how long a request has been running based on _requestStartedAt timestamp
-    elapsedMs: options.error.config?._requestStartedAt
-      ? Date.now() - options.error.config._requestStartedAt
-      : undefined,
   }
 
   if (options.error.config) {
@@ -298,6 +293,9 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
       http_status: error.response?.status,
       http_response_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.response?.data),
       http_request_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.config?.data),
+      http_timeout_ms: error.config?.timeout,
+      // Calculates how long a request has been running based on _requestStartedAt timestamp
+      http_elapsed_ms: error.config?._requestStartedAt ? Date.now() - error.config._requestStartedAt : undefined,
       // TODO (MD): Remove this (uploadLogContext) from the config and inject directly into the
       // error at the service layer to prevent the config from being polluted with api specific details.
 

@@ -330,6 +330,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   // Sends a REAL request (unauthenticated, read-only discovery document) with a 5ms timeout so the
   // native networking layer aborts it. This triggers a genuine ECONNABORTED error
   const triggerRealClientTimeout = async () => {
+    onBack() // close the dev modal first; iOS can't present the error modal over it
     try {
       await client.get(`${client.baseURL}/device/.well-known/openid-configuration`, {
         skipBearerAuth: true,
@@ -341,7 +342,10 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   // No way to force a serverside timeout, inject the error to simulate a timeout
-  const triggerProxyGatewayTimeout = () => injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_RESPONSE', undefined, 504)
+  const triggerProxyGatewayTimeout = () => {
+    onBack() // close the dev modal first; iOS can't present the error modal over it
+    injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_RESPONSE', undefined, 504)
+  }
 
   const triggerErrorAsAlert = (description: string) => {
     emitAlert('Native alert triggered', description, {
