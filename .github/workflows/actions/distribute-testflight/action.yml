@@ -209,6 +209,61 @@ runs:
 
         echo "::endgroup::"
 
+        # "What to Test" is per build and per locale, and external testers
+        # cannot get the build while a locale is missing it. It is set before
+        # the group is added, so a wider ring never gets the build while it
+        # still carries the previous ring's notes. A failure here is a hard
+        # failure: swallowing it is what left en-CA empty unnoticed.
+        echo "::group::Setting What to Test..."
+        LOC_RESPONSE=$(asc_get "${API}/builds/${BUILD_ID}/betaBuildLocalizations") || {
+          echo "❌ Failed to fetch the build's localizations" >&2
+          exit 1
+        }
+
+        for LOCALE in en-US en-CA; do
+          # The text reaches python through the environment so quotes and
+          # newlines in it stay data rather than breaking the JSON.
+          read -r METHOD URL BODY_FILE < <(LOC_RESPONSE="$LOC_RESPONSE" LOCALE="$LOCALE" API="$API" BUILD_ID="$BUILD_ID" python3 -c "
+        import json, os, tempfile
+        locale = os.environ['LOCALE']
+        existing = next((l['id'] for l in json.loads(os.environ['LOC_RESPONSE']).get('data', [])
+                         if l['attributes'].get('locale') == locale), None)
+        notes = f\"Release {os.environ['VERSION_NAME']}-{os.environ['VERSION_CODE']}\"
+        if os.environ['WHAT_TO_TEST'].strip():
+            notes += '\n\n' + os.environ['WHAT_TO_TEST']
+        attributes = {'whatsNew': notes}
+        if existing:
+            method, url = 'PATCH', f\"{os.environ['API']}/betaBuildLocalizations/{existing}\"
+            body = {'data': {'type': 'betaBuildLocalizations', 'id': existing, 'attributes': attributes}}
+        else:
+            method, url = 'POST', f\"{os.environ['API']}/betaBuildLocalizations\"
+            body = {'data': {'type': 'betaBuildLocalizations',
+                             'attributes': {'locale': locale, **attributes},
+                             'relationships': {'build': {'data': {'type': 'builds', 'id': os.environ['BUILD_ID']}}}}}
+        fd, path = tempfile.mkstemp()
+        with os.fdopen(fd, 'w') as f:
+            json.dump(body, f)
+        print(method, url, path)
+        ")
+
+          HTTP_CODE=$(curl -s -o /tmp/what_to_test_response.json -w '%{http_code}' \
+            -X "$METHOD" \
+            -H "$AUTH" \
+            -H "Content-Type: application/json" \
+            --data-binary "@${BODY_FILE}" \
+            "$URL")
+          rm -f "$BODY_FILE"
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "❌ Failed to set What to Test for ${LOCALE} (HTTP ${HTTP_CODE}):"
+            python3 -m json.tool < /tmp/what_to_test_response.json 2>/dev/null || cat /tmp/what_to_test_response.json 2>/dev/null || true
+            exit 1
+          fi
+          echo "✅ What to Test set for ${LOCALE}"
+        done
+
+        echo "::endgroup::"
+
         # --- Distribute to beta groups ---
         echo "::group::Distributing build to TestFlight beta groups..."
 
@@ -301,58 +356,5 @@ runs:
 
         echo ""
         echo "✅ Build ${VERSION_CODE} distributed to ${MATCHED_COUNT} beta group(s)"
-
-        echo "::endgroup::"
-
-        # "What to Test" is per build and per locale, and external testers
-        # cannot get the build while a locale is missing it. A failure here is
-        # a hard failure: swallowing it is what left en-CA empty unnoticed.
-        echo "::group::Setting What to Test..."
-        LOC_RESPONSE=$(asc_get "${API}/builds/${BUILD_ID}/betaBuildLocalizations") || {
-          echo "❌ Failed to fetch the build's localizations" >&2
-          exit 1
-        }
-
-        for LOCALE in en-US en-CA; do
-          # The text reaches python through the environment so quotes and
-          # newlines in it stay data rather than breaking the JSON.
-          read -r METHOD URL BODY_FILE < <(LOC_RESPONSE="$LOC_RESPONSE" LOCALE="$LOCALE" API="$API" BUILD_ID="$BUILD_ID" python3 -c "
-        import json, os, tempfile
-        locale = os.environ['LOCALE']
-        existing = next((l['id'] for l in json.loads(os.environ['LOC_RESPONSE']).get('data', [])
-                         if l['attributes'].get('locale') == locale), None)
-        notes = f\"Release {os.environ['VERSION_NAME']}-{os.environ['VERSION_CODE']}\"
-        if os.environ['WHAT_TO_TEST'].strip():
-            notes += '\n\n' + os.environ['WHAT_TO_TEST']
-        attributes = {'whatsNew': notes}
-        if existing:
-            method, url = 'PATCH', f\"{os.environ['API']}/betaBuildLocalizations/{existing}\"
-            body = {'data': {'type': 'betaBuildLocalizations', 'id': existing, 'attributes': attributes}}
-        else:
-            method, url = 'POST', f\"{os.environ['API']}/betaBuildLocalizations\"
-            body = {'data': {'type': 'betaBuildLocalizations',
-                             'attributes': {'locale': locale, **attributes},
-                             'relationships': {'build': {'data': {'type': 'builds', 'id': os.environ['BUILD_ID']}}}}}
-        fd, path = tempfile.mkstemp()
-        with os.fdopen(fd, 'w') as f:
-            json.dump(body, f)
-        print(method, url, path)
-        ")
-
-          HTTP_CODE=$(curl -s -o /tmp/what_to_test_response.json -w '%{http_code}' \
-            -X "$METHOD" \
-            -H "$AUTH" \
-            -H "Content-Type: application/json" \
-            --data-binary "@${BODY_FILE}" \
-            "$URL")
-          rm -f "$BODY_FILE"
-
-          if [ "$HTTP_CODE" -ge 400 ]; then
-            echo "❌ Failed to set What to Test for ${LOCALE} (HTTP ${HTTP_CODE}):"
-            python3 -m json.tool < /tmp/what_to_test_response.json 2>/dev/null || cat /tmp/what_to_test_response.json 2>/dev/null || true
-            exit 1
-          fi
-          echo "✅ What to Test set for ${LOCALE}"
-        done
 
         echo "::endgroup::"
