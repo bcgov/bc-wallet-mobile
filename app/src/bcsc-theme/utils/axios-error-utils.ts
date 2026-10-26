@@ -207,33 +207,61 @@ export const isNetworkError = (error: unknown): boolean => {
 }
 
 /**
+ * Checks a single error for a network error, a timeout, or a 5xx server response.
+ *
+ * @param {unknown} error - The error to check
+ * @returns {*} {boolean} True if this error is transient, false otherwise.
+ */
+const isTransientError = (error: unknown): boolean => {
+  if (isNetworkError(error)) {
+    return true
+  }
+
+  // Covers timeout AppErrors created without an AxiosError cause
+  if (error instanceof AppError && error.appEvent === AppEventCode.SERVER_TIMEOUT) {
+    return true
+  }
+
+  const axiosError = error as Partial<AxiosError>
+
+  if (axiosError.code === AxiosErrorCode.ECONNABORTED) {
+    return true
+  }
+
+  const status = axiosError.response?.status
+  return typeof status === 'number' && status >= 500
+}
+
+/**
  * Determines if the provided error is a request failure that may succeed on a retry: a network
  * error, a request timeout, or a 5xx server response.
- * This code decides whether a failed request should be treated as fatal or can be accepted or retried.
+ *
+ * Classification only — callers decide what to do with it (e.g. BCSCApiClientContext tolerates a
+ * transient config-fetch failure). Checks the error and each error in its `cause` chain, so a
+ * wrapped AxiosError is still recognized.
+ *
+ * Walks cause chain for transient errors (network, timeout, 5xx) and returns true if any are found.
+ * Walk is limited to 5 to prevent infinite loops
  *
  * @param {unknown} error - The error to check
  * @returns {*} {boolean} True if the request failure is transient, false otherwise.
  */
 export const isTransientRequestError = (error: unknown): boolean => {
-  if (isNetworkError(error)) {
-    return true
+  let current: unknown = error
+
+  // TODO: Refactor cause-chain walks into a shared helper
+  //   - isDeviceStorageFullError (errorHandler.ts)
+  //   - describeCauseChain / deepest (useAgentSetupViewModel.ts)
+  // Bounded walk of the cause chain to guard against cycles
+  for (let depth = 0; current != null && depth < 5; depth++) {
+    if (isTransientError(current)) {
+      return true
+    }
+
+    current = (current as { cause?: unknown }).cause
   }
 
-  if (error instanceof AppError && error.appEvent === AppEventCode.SERVER_TIMEOUT) {
-    return true
-  }
-
-  // Check the AxiosError for cause and code, looking for ECONNABORTED or 5xx server responses
-  const axiosError = (error instanceof AxiosError ? error : (error as { cause?: unknown } | undefined)?.cause) as
-    | Partial<AxiosError>
-    | undefined
-
-  if (axiosError?.code === AxiosErrorCode.ECONNABORTED) {
-    return true
-  }
-
-  const status = axiosError?.response?.status
-  return typeof status === 'number' && status >= 500
+  return false
 }
 
 /**

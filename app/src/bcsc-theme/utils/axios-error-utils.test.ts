@@ -1,3 +1,4 @@
+import { AppError } from '@/errors'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { AxiosError } from 'axios'
@@ -6,6 +7,7 @@ import {
   formatIasAxiosResponseError,
   getAppErrorFromAxiosError,
   getAxiosErrorDefinition,
+  isTransientRequestError,
   normalizeAxiosTimeoutError,
 } from './axios-error-utils'
 
@@ -302,6 +304,57 @@ describe('Error Utils', () => {
       })
 
       expect(error.code).toBe('ERR_NETWORK')
+    })
+  })
+
+  describe('isTransientRequestError', () => {
+    const httpError = (status: number) =>
+      new AxiosError('Request failed', status >= 500 ? 'ERR_BAD_RESPONSE' : 'ERR_BAD_REQUEST', undefined, null, {
+        status,
+        data: {},
+        statusText: '',
+        headers: {},
+        config: {} as any,
+      })
+
+    it.each([
+      ['a raw network error', new AxiosError('Network Error', 'ERR_NETWORK')],
+      ['a NO_INTERNET AppError', AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET)],
+      ['a raw timeout', new AxiosError('timeout of 90000ms exceeded', 'ECONNABORTED')],
+      ['a SERVER_TIMEOUT AppError', AppError.fromErrorDefinition(ErrorRegistry.SERVER_TIMEOUT)],
+      ['a timeout AppError from the interceptor', getAppErrorFromAxiosError(new AxiosError('timeout', 'ECONNABORTED'))],
+      ['a raw 503', httpError(503)],
+      ['a 500 AppError from the interceptor', getAppErrorFromAxiosError(httpError(500))],
+      [
+        'a plain Error wrapping a network error',
+        new Error('wrapped', { cause: new AxiosError('Network Error', 'ERR_NETWORK') }),
+      ],
+      [
+        'an AppError wrapping a 503 AppError from the interceptor',
+        AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR, {
+          cause: getAppErrorFromAxiosError(httpError(503)),
+        }),
+      ],
+    ])('treats %s as transient', (_, error) => {
+      expect(isTransientRequestError(error)).toBe(true)
+    })
+
+    it.each([
+      ['a 400', getAppErrorFromAxiosError(httpError(400))],
+      ['a 404', getAppErrorFromAxiosError(httpError(404))],
+      ['a non-HTTP AppError', AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)],
+      ['a plain Error', new Error('boom')],
+      ['a plain Error wrapping a 404', new Error('wrapped', { cause: getAppErrorFromAxiosError(httpError(404)) })],
+      ['undefined', undefined],
+    ])('does not treat %s as transient', (_, error) => {
+      expect(isTransientRequestError(error)).toBe(false)
+    })
+
+    it('stops on a circular cause chain', () => {
+      const error = new Error('circular') as Error & { cause?: unknown }
+      error.cause = error
+
+      expect(isTransientRequestError(error)).toBe(false)
     })
   })
 
