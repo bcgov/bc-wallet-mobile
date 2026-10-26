@@ -9,11 +9,7 @@ import {
   selectEvidenceType,
   startVerification,
 } from '../../../src/flows/verify.js'
-import {
-  EnterEmailScreen,
-  IDPhotoInformationScreen,
-  VerificationMethodSelectionScreen,
-} from '../../../src/screens/verify.js'
+import { EnterEmailScreen, VerificationMethodSelectionScreen } from '../../../src/screens/verify.js'
 
 /**
  * Shared arrange + landings for the non-BCSC → BCSC reroute journeys.
@@ -68,13 +64,10 @@ export async function expectRerouteToMethodSelection(): Promise<void> {
  * Landing for a non-photo card with no photo ID yet: the serial is accepted but the ID step still owes
  * a photo document, so the reroute lands back inside it rather than at the method choice.
  *
- * Either screen counts. The app computes the resume route from a store snapshot that still holds the
- * interrupted evidence and clears it immediately AFTER navigating — with the record present the route
- * is IDPhotoInformation (restart that capture), without it AdditionalIdentificationRequired (pick a
- * photo ID). Pinning one would pin that ordering rather than the reroute this journey is about.
+ * It lands on AdditionalIdentificationRequired, the screen explaining why a photo ID is needed. The app
+ * drops the entry the card was photographed under before it picks the route, so the user is never sent
+ * to restart that capture on IDPhotoInformation.
  */
 export async function expectRerouteIntoIdStep(): Promise<void> {
-  await expectEvidenceReroute(
-    async () => (await IDPhotoInformationScreen.isPresent(500)) || (await isAdditionalIdentificationRequired())
-  )
+  await expectEvidenceReroute(isAdditionalIdentificationRequired)
 }
