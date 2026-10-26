@@ -129,6 +129,14 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
          * lets the Internet Disconnected modal be displayed.
          */
         if (isTransientRequestError(err)) {
+          const failure = err as { code?: string; appEvent?: string; response?: { status?: number } }
+          logger.warn('[BCSCApiClient] Config fetch failed, using fallback endpoints and config:', {
+            environment: store.developer.environment.name,
+            errorCode: failure?.code,
+            appEvent: failure?.appEvent,
+            status: failure?.response?.status,
+          })
+
           setClientAndSingleton(newClient)
           return
         }
