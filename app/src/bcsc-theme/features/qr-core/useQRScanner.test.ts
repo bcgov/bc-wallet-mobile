@@ -88,7 +88,7 @@ describe('useQRScanner', () => {
     expect(JSON.stringify(mockLogger.warn.mock.calls)).not.toContain('secret')
   })
 
-  it('ignores the same unrecognized value after its modal is dismissed', async () => {
+  it('shows the unrecognized modal again when the same value is scanned after its modal is dismissed', async () => {
     const { result, emitErrorModal } = renderScanner([mkStrategy(false)])
 
     await act(async () => {
@@ -98,7 +98,7 @@ describe('useQRScanner', () => {
       await result.current.handleScan('qr')
     })
 
-    expect(emitErrorModal).toHaveBeenCalledTimes(1)
+    expect(emitErrorModal).toHaveBeenCalledTimes(2)
   })
 
   it('shows the unrecognized modal again when a different value arrives', async () => {
@@ -226,7 +226,9 @@ describe('useQRScanner', () => {
   it('emits the strategy error modal when the strategy throws', async () => {
     const thrown = new Error('boom')
     const appError = { message: 'wrapped' } as AppError
-    const toErrorModal = jest.fn().mockReturnValue({ error: appError, title: 'Title', description: 'Description' })
+    const toErrorModal = jest
+      .fn()
+      .mockReturnValue({ error: appError, title: 'Title', description: 'Description', enableReport: false })
     const handle = jest.fn().mockRejectedValue(thrown)
     const { result, emitErrorModal } = renderScanner([mkStrategy(true, handle, toErrorModal)])
 
@@ -235,7 +237,7 @@ describe('useQRScanner', () => {
     })
 
     expect(toErrorModal).toHaveBeenCalledWith(thrown)
-    expect(emitErrorModal).toHaveBeenCalledWith('Title', 'Description', appError)
+    expect(emitErrorModal).toHaveBeenCalledWith('Title', 'Description', appError, { enableReport: false })
   })
 
   it('shows nothing when the strategy reports the error as already handled', async () => {
