@@ -14,6 +14,7 @@ import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from '
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
+  formatNetworkAxiosError,
   getAppErrorFromAxiosError,
   isTransientRequestError,
   normalizeAxiosTimeoutError,
@@ -195,9 +196,10 @@ class BCSCApiClient {
         return this.client.request(originalConfig)
       }
 
-      // 1. Format the error - reclassify Android client timeouts, then update error code and message
-      // properties from IAS response
-      const error = formatIasAxiosResponseError(normalizeAxiosTimeoutError(_error))
+      // 1. Format the error: reclassify Android client timeouts first (so they never reach the TLS
+      // classification), then the IAS error body when there is a response, or the native reason the
+      // request died with when there is none
+      const error = formatNetworkAxiosError(formatIasAxiosResponseError(normalizeAxiosTimeoutError(_error)))
 
       // 2. Convert the axios error into an AppError
       const appError = getAppErrorFromAxiosError(error)

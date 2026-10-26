@@ -74,6 +74,7 @@ type ErrorHandlingPolicy = {
 // HTTP alert map for network and server errors that can occur on multiple endpoints (client metadata fetch, device authorization, token, etc.)
 const _getHTTPAlertMap = (alerts?: AppAlerts) => {
   return new Map([
+    // Also reached by a certificate/TLS failure before any response (see getAppErrorFromAxiosError)
     [AppEventCode.UNSECURED_NETWORK, alerts?.unsecuredNetworkAlert],
     [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutAlert],
     [AppEventCode.SERVER_ERROR, alerts?.serverErrorAlert],

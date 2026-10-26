@@ -97,6 +97,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     { key: 'NO_INTERNET', description: 'Network connectivity error' },
     { key: 'SERVER_ERROR', description: 'Server-side error' },
     { key: 'SERVER_TIMEOUT', description: 'Request timeout error' },
+    { key: 'UNSECURED_NETWORK', description: 'Certificate rejected before any response (TLS)' },
     { key: 'INVALID_QR_CODE', description: 'QR code scanning error' },
     { key: 'LOGIN_REJECTED_401', description: 'Authentication unauthorized' },
     { key: 'FORBIDDEN', description: 'HTTP 403 — authenticated but not permitted' },
@@ -269,6 +270,29 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       onBack()
       alerts.failedToWriteToLocalStorageAlert(new Error('Simulated storage write failure unrelated to disk space.'))
     },
+  }
+
+  /**
+   * Real certificate failures through the real client: badssl.com rejects each request in the TLS
+   * handshake, so the whole path runs — the response interceptor reads the native reason, the global
+   * policy shows the "Unsecured Network" modal and the Debug line carries the reason with the host
+   * redacted. Works on both platforms.
+   */
+  const requestLiveTlsFailure = async (url: string) => {
+    onBack() // close the dev modal so the resulting error modal is visible
+
+    try {
+      await client.get(url, { skipBearerAuth: true })
+    } catch (error) {
+      // The response interceptor has already classified, logged and surfaced the failure
+      logger.debug('Live TLS failure request finished', { error })
+    }
+  }
+
+  const liveTlsFailureCallbacks: Record<string, () => void> = {
+    wrong_host: () => requestLiveTlsFailure('https://wrong.host.badssl.com/'),
+    expired: () => requestLiveTlsFailure('https://expired.badssl.com/'),
+    untrusted_root: () => requestLiveTlsFailure('https://untrusted-root.badssl.com/'),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {
@@ -533,6 +557,25 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
                 testID={`api-error-${errorCode}`}
                 buttonType={ButtonType.Secondary}
                 onPress={() => serverErrorCodeAlertCallbacks[errorCode as keyof typeof serverErrorCodeAlertCallbacks]()}
+              />
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'TLS failure (live)'}</Text>
+          <Text style={styles.description}>
+            {'Real requests badssl.com rejects in the TLS handshake. Expect the "Unsecured Network" modal (2103); ' +
+              'Show Details carries the native reason with the host redacted.'}
+          </Text>
+          {Object.keys(liveTlsFailureCallbacks).map((key) => (
+            <View key={key} style={styles.buttonRow}>
+              <Button
+                title={key}
+                accessibilityLabel={`Request a live TLS failure ${key}`}
+                testID={`tls-live-${key}`}
+                buttonType={ButtonType.Secondary}
+                onPress={liveTlsFailureCallbacks[key]}
               />
             </View>
           ))}

@@ -407,8 +407,7 @@ export class AppContainer implements Container {
         loadState<string>(BCLocalStorageKeys.MediatorUrl, (val) => (recordedMediatorUrl = val)),
       ])
 
-      // One-time, idempotent read-side migration: maps a legacy `reportUUID` forward to `installId`
-      // so an existing install keeps its identity instead of the STARTUP check minting a new one.
+      // Idempotent load-time migrations of the persisted BCSC blob; see migrateBCSCState for the list.
       const bcscMigration = migrateBCSCState(bcsc)
       bcsc = bcscMigration.bcsc
 
@@ -427,11 +426,10 @@ export class AppContainer implements Container {
       }
 
       if (bcscMigration.migrated) {
-        // Write back under the new field name so subsequent launches skip this mapping. Deferred until
-        // after the scrub above so this one-shot write persists the scrubbed blob, not the transient
-        // fields that were just nulled out. Failure is non-fatal - the same mapping re-runs next launch.
+        // Written after the scrub above so the saved blob omits the transient fields it nulled.
+        // Failure is non-fatal: the migrations re-run next launch.
         PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc).catch((error) => {
-          this.logger.error('Failed to write back migrated BCSC state (reportUUID -> installId)', error)
+          this.logger.error('Failed to write back migrated BCSC state', error)
         })
       }
 

@@ -127,7 +127,7 @@ jobs:
     env:
       VALIDATED_VARIANTS: 'bcsc-dev bcsc-qa bcsc-test bcsc-prod'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # Fetch all branches, main needed.
 
@@ -283,13 +283,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
       - name: Cache Yarn dependencies and node_modules
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .yarn/cache
@@ -315,7 +315,7 @@ jobs:
       # cache entries. PR builds restore from main's latest cache but
       # never save, avoiding storage waste from short-lived PR branches.
       - name: Restore Metro bundler cache
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: app/.metro-cache
           key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
@@ -333,14 +333,14 @@ jobs:
             --verbose
 
       - name: Upload iOS JS bundle
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ios-jsbundle
           path: /tmp/ios-main.jsbundle
           retention-days: 1
 
       - name: Upload iOS JS assets
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ios-jsassets
           path: /tmp/ios-assets
@@ -349,7 +349,7 @@ jobs:
 
       - name: Save Metro bundler cache
         if: github.ref == 'refs/heads/main'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: app/.metro-cache
           key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
@@ -378,7 +378,7 @@ jobs:
     env:
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Prepare directories
         run: |
@@ -389,13 +389,13 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Setup Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: 'zulu'
           java-version: 17
 
       - name: Restore Gradle dependencies
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             /mnt/gradle-cache/caches
@@ -405,7 +405,7 @@ jobs:
           restore-keys: gradle-deps-${{ runner.os }}-
 
       - name: Cache Yarn dependencies and node_modules
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .yarn/cache
@@ -434,7 +434,7 @@ jobs:
           sudo apt-get clean 2>/dev/null || true
 
       - name: Restore Metro bundler cache
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: app/.metro-cache
           key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
@@ -453,14 +453,14 @@ jobs:
             --verbose
 
       - name: Upload Android JS bundle
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-jsbundle
           path: app/android/app/src/main/assets/index.android.bundle
           retention-days: 1
 
       - name: Upload Android JS assets
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-jsassets
           path: app/android/app/src/main/res/drawable-*
@@ -469,13 +469,13 @@ jobs:
 
       - name: Save Metro bundler cache (Android)
         if: github.ref == 'refs/heads/main'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: app/.metro-cache
           key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
 
       - name: Restore Gradle build cache (cross-run)
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
           key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
@@ -515,7 +515,7 @@ jobs:
 
       - name: Save Gradle build cache
         if: github.ref == 'refs/heads/main' && always()
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
           key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
@@ -535,14 +535,14 @@ jobs:
       NODE_BINARY: $(which node)
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Load variant config
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.11'
 
@@ -550,7 +550,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Configure ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@26e5b7d197ebf60545ee9667bcbace0be11ccaec # v1.334.0
         with:
           working-directory: ./app
 
@@ -575,14 +575,14 @@ jobs:
 
       - name: Restore ccache
         id: ccache-restore
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/Library/Caches/ccache
           key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: ${{ runner.os }}-ccache-
 
       - name: Cached pip dependencies
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: pip-cache
         with:
           path: ~/.cache/pip
@@ -592,7 +592,7 @@ jobs:
 
       - name: Cache pod dependencies
         id: pod-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             app/ios/Pods
@@ -608,7 +608,7 @@ jobs:
       # ccache provides the actual compilation reuse instead.
 
       - name: Cache Yarn dependencies and node_modules
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .yarn/cache
@@ -650,13 +650,13 @@ jobs:
       # so Metro is never invoked during the Xcode archive build.
 
       - name: Download pre-built iOS JS bundle
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ios-jsbundle
           path: app/ios/jsbundle
 
       - name: Download pre-built iOS JS assets
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ios-jsassets
           path: app/ios/jsassets
@@ -876,7 +876,7 @@ jobs:
       # and halves storage usage.
       - name: Save ccache
         if: always() && matrix.variant == 'bcsc-dev' && steps.ccache-restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/Library/Caches/ccache
           key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}
@@ -904,7 +904,7 @@ jobs:
     env:
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Prepare Gradle cache directory
         run: |
@@ -923,7 +923,7 @@ jobs:
           sudo docker image prune --all --force 2>/dev/null || true
           sudo apt-get clean 2>/dev/null || true
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.11'
 
@@ -931,7 +931,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Setup Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: 'zulu'
           java-version: 17
@@ -939,7 +939,7 @@ jobs:
           settings-path: ${{ github.workspace }}
 
       - name: Restore Gradle dependencies
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             /mnt/gradle-cache/caches
@@ -949,7 +949,7 @@ jobs:
           restore-keys: gradle-deps-${{ runner.os }}-
 
       - name: Cache Yarn dependencies and node_modules
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .yarn/cache
@@ -973,7 +973,7 @@ jobs:
           git status
 
       - name: Restore Gradle build cache
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
           key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
@@ -990,13 +990,13 @@ jobs:
       # used by the prepare-ios job.
 
       - name: Download pre-built JS bundle
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-jsbundle
           path: app/android/app/src/main/assets
 
       - name: Download pre-built JS assets
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-jsassets
           path: app/android/app/src/main/res
@@ -1121,7 +1121,7 @@ jobs:
           find . -type f -name '*.aab'
 
       - name: Upload Android AAB artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-${{ matrix.variant }}.aab
           path: app/android/app/build/outputs/bundle/release/app-release.aab
@@ -1129,7 +1129,7 @@ jobs:
           retention-days: 30
 
       - name: Upload Android APK artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-${{ matrix.variant }}.apk
           path: app/android/app/build/outputs/apk/release/app-release.apk
@@ -1239,12 +1239,12 @@ jobs:
       - name: Check build artifact exists
         id: probe
         continue-on-error: true
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ${{ matrix.platform }}-${{ matrix.variant }}.${{ matrix.platform == 'ios' && 'ipa' || 'apk' }}
           path: ${{ runner.temp }}/probe
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.probe.outcome == 'success'
 
       - name: Load variant config

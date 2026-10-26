@@ -27,9 +27,12 @@ inputs:
     description: Build number of the run that produced the AAB, used in the Play release name.
     required: true
   release_notes:
-    description: "Tester-facing \"what to test\" note, published as en-CA."
+    description: |
+      Tester-facing "what to test" note, published as en-CA after a
+      "Release <version_name>-<build_number>" line. Play allows 500 characters
+      in all. Empty sends only that line.
     required: false
-    default: 'This is what to test.'
+    default: ''
   target_tracks:
     description: Comma-separated tracks to promote onto, e.g. 'ring-1,ring-2'
     required: true
@@ -98,7 +101,7 @@ runs:
           fi
 
           NOTES_JSON=$(RELEASE_NOTES="${RELEASE_NOTES}" python3 -c \
-            'import json, os; print(json.dumps([{"language": "en-CA", "text": os.environ["RELEASE_NOTES"]}]))')
+            'import json, os; e = os.environ; notes = "Release " + e["VERSION_NAME"] + "-" + e["BUILD_NUMBER"] + ("\n\n" + e["RELEASE_NOTES"] if e["RELEASE_NOTES"].strip() else ""); print(json.dumps([{"language": "en-CA", "text": notes}]))')
 
           echo "Releasing ${VERSION_CODE} to ${TARGET}..."
           "${GP}" tracks set-release \

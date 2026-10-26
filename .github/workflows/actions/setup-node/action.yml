@@ -7,16 +7,15 @@ inputs:
   node-version:
     description: Select the nodejs version to use
     required: false
-    default: "24.14.1"
+    default: "24.22.1"
 
 runs:
   using: composite
   steps:
     - name: Setup node v${{ inputs.node-version }}
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: ${{ inputs.node-version }}
-        registry-url: "https://registry.npmjs.org/"
 
     - name: Enable corepack and setup Yarn 4.9.2
       shell: bash

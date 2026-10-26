@@ -2,7 +2,7 @@ import { SafeAreaModal } from '@bifold/core'
 import { getUserAgentString } from '@utils/user-agent'
 import React from 'react'
 import { StyleSheet } from 'react-native'
-import { WebView, WebViewNavigation } from 'react-native-webview'
+import { WebView } from 'react-native-webview'
 
 interface WebDisplayProps {
   destinationUrl: string
@@ -29,7 +29,7 @@ const WebDisplay = ({ destinationUrl, exitUrl, visible, onClose }: WebDisplayPro
         javaScriptEnabled={true}
         domStorageEnabled={true}
         userAgent={getUserAgentString()}
-        onNavigationStateChange={(nav: WebViewNavigation) => {
+        onNavigationStateChange={(nav) => {
           if (exitUrl && nav.url.includes(exitUrl)) {
             onClose()
           }

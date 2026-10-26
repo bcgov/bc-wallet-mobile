@@ -6,7 +6,7 @@ updates:
   #  - Check for updates once a week
   #  - Group all updates into a single PR
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories: ["/", "/.github/workflows/actions/*"]
     labels: ["dependencies"]
     schedule:
       interval: "weekly"

@@ -359,6 +359,13 @@ describe('BCSCApiClientProvider', () => {
       'a server error',
       AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: { response: { status: 503 } } }),
     ],
+    [
+      'a rejected certificate',
+      AppError.fromErrorDefinition(ErrorRegistry.UNSECURED_NETWORK, {
+        cause: new AxiosError('Network Error: Hostname <host> not verified:', 'ERR_NETWORK'),
+        track: false,
+      }),
+    ],
   ])('should keep the client usable after %s during initialization', async (_, mockError) => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)

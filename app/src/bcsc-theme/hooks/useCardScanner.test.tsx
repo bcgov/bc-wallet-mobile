@@ -733,49 +733,79 @@ describe('useCardScanner', () => {
       isoIIN: '636028',
       licenseNumber: '2222222',
     }
+    const frontSide = { image_side_name: 'FRONT_SIDE' }
+    const backSide = { image_side_name: 'BACK_SIDE' }
+    const driversLicence: any = { evidence_type: 'BC_DL', has_photo: true, image_sides: [frontSide, backSide] }
+    const passport: any = { evidence_type: 'CA_PASSPORT', has_photo: true, image_sides: [frontSide] }
+    const birthCertificate: any = { evidence_type: 'BIRTH_CERT', has_photo: false, image_sides: [frontSide] }
+    const completedId = (evidenceType: unknown) => ({
+      evidenceType,
+      documentNumber: '123456789',
+      metadata: [{ label: 'FRONT_SIDE' }],
+    })
+    // The card itself, picked as a licence when the list was shown. Its photos are only stored once every
+    // side is accepted, so the entry is still empty when the barcodes are checked.
+    const cardBeingCaptured = { evidenceType: driversLicence, metadata: [] }
 
-    it('should authorize via /device/barcodes and reroute to setup when the barcodes match a BC Services Card', async () => {
-      const useAuthorizationServiceMock = jest.mocked(useAuthorizationService)
-      const bifoldMock = jest.mocked(Bifold)
-      const navigationMock = jest.mocked(navigation)
-      const useSecureActionsMock = jest.mocked(useSecureActions)
-
-      const mockState: any = {
-        bcsc: { accountSetupType: AccountSetupType.AddAccount },
-        bcscSecure: { additionalEvidenceData: [] },
-      }
-      const mockUpdateDeviceCodes = jest.fn()
+    const renderScanner = (process: BCSCCardProcess, additionalEvidenceData: any[]) => {
+      const mockNavigationReset = jest.fn()
       const mockUpdateCardProcess = jest.fn()
       const mockUpdateVerificationOptions = jest.fn()
-      const mockNavigationReset = jest.fn()
+      const mockClearAdditionalEvidence = jest.fn()
+      const mockRemoveEvidenceByType = jest.fn(async (evidenceType: any) =>
+        additionalEvidenceData.filter((item) => item.evidenceType.evidence_type !== evidenceType.evidence_type)
+      )
       const mockAuthorizeDeviceWithBarcodes = jest.fn().mockResolvedValue({
         device_code: 'test-device-code',
         user_code: 'ABCD1234',
         verified_email: 'test@example.com',
         expires_in: 3600,
         verification_options: 'video_call back_check',
-        process: 'IDIM L3 Remote BCSC Photo Identity Verification',
+        process,
       })
+      const navigationMock = jest.mocked(navigation)
 
-      useAuthorizationServiceMock.mockReturnValue({
+      jest.mocked(useAuthorizationService).mockReturnValue({
         authorizeDeviceWithBarcodes: mockAuthorizeDeviceWithBarcodes,
       } as any)
-      useSecureActionsMock.mockReturnValue({
+      jest.mocked(useSecureActions).mockReturnValue({
         updateUserInfo: jest.fn(),
-        updateDeviceCodes: mockUpdateDeviceCodes,
+        updateDeviceCodes: jest.fn(),
         updateCardProcess: mockUpdateCardProcess,
         updateVerificationOptions: mockUpdateVerificationOptions,
+        removeEvidenceByType: mockRemoveEvidenceByType,
+        clearAdditionalEvidence: mockClearAdditionalEvidence,
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      jest.mocked(Bifold).useStore.mockReturnValue([
+        {
+          bcsc: { accountSetupType: AccountSetupType.AddAccount },
+          bcscSecure: { cardProcess: BCSCCardProcess.NonBCSC, additionalEvidenceData },
+        } as any,
+        mockDispatch,
+      ])
       navigationMock.useNavigation = jest.fn().mockReturnValue({ reset: mockNavigationReset })
-      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn(), info: jest.fn() } as any])
+      jest.mocked(Bifold).useServices.mockReturnValue([{ debug: jest.fn(), info: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
 
-      const result = await hook.result.current.handleScanBarcodes('S00023254', mockLicense)
+      return {
+        handleScanBarcodes: hook.result.current.handleScanBarcodes,
+        mockAuthorizeDeviceWithBarcodes,
+        mockUpdateCardProcess,
+        mockUpdateVerificationOptions,
+        mockClearAdditionalEvidence,
+        mockRemoveEvidenceByType,
+        mockNavigationReset,
+      }
+    }
+
+    it('should authorize via /device/barcodes and reroute a photo card to setup without any IDs', async () => {
+      const scanner = renderScanner(BCSCCardProcess.BCSCPhoto, [cardBeingCaptured])
+
+      const result = await scanner.handleScanBarcodes('S00023254', mockLicense, driversLicence)
 
       expect(result).toBe(true)
-      expect(mockAuthorizeDeviceWithBarcodes).toHaveBeenCalledWith(
+      expect(scanner.mockAuthorizeDeviceWithBarcodes).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({ type: 'CODE_128', value: 'S00023254' }),
           expect.objectContaining({ type: 'PDF_417', iso_iin: '636028' }),
@@ -784,11 +814,57 @@ describe('useCardScanner', () => {
         // the service's own error handling is skipped so this call site's catch decides.
         { skipErrorHandling: true }
       )
-      expect(mockUpdateCardProcess).toHaveBeenCalledWith('IDIM L3 Remote BCSC Photo Identity Verification')
-      expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
-      expect(mockNavigationReset).toHaveBeenCalledWith({
+      expect(scanner.mockUpdateCardProcess).toHaveBeenCalledWith(BCSCCardProcess.BCSCPhoto)
+      expect(scanner.mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
+      // A photo card is verified without additional IDs, and they are gone before the route is chosen
+      expect(scanner.mockClearAdditionalEvidence).toHaveBeenCalled()
+      expect(scanner.mockClearAdditionalEvidence.mock.invocationCallOrder[0]).toBeLessThan(
+        scanner.mockNavigationReset.mock.invocationCallOrder[0]
+      )
+      expect(scanner.mockNavigationReset).toHaveBeenCalledWith({
         index: 0,
         routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+      })
+    })
+
+    it('should reroute a non-photo card photographed as the first ID to the screen explaining the photo ID it needs', async () => {
+      const scanner = renderScanner(BCSCCardProcess.BCSCNonPhoto, [cardBeingCaptured])
+
+      await scanner.handleScanBarcodes('S00023254', mockLicense, driversLicence)
+
+      // Routed from the list without the card's own entry; from the stale one, the user would be sent to
+      // restart its capture (IDPhotoInformation) instead
+      expect(scanner.mockRemoveEvidenceByType).toHaveBeenCalledWith(driversLicence)
+      expect(scanner.mockNavigationReset).toHaveBeenCalledWith({
+        index: 0,
+        routes: [{ name: BCSCScreens.AdditionalIdentificationRequired }],
+      })
+    })
+
+    it('should keep a completed photo ID as the one a non-photo card needs when the card is the second ID', async () => {
+      const scanner = renderScanner(BCSCCardProcess.BCSCNonPhoto, [completedId(passport), cardBeingCaptured])
+
+      await scanner.handleScanBarcodes('S00023254', mockLicense, driversLicence)
+
+      expect(scanner.mockRemoveEvidenceByType).toHaveBeenCalledWith(driversLicence)
+      expect(scanner.mockClearAdditionalEvidence).not.toHaveBeenCalled()
+      // The passport completes the ID step, and the authorization supplied a verified email
+      expect(scanner.mockNavigationReset).toHaveBeenCalledWith({
+        index: 0,
+        routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+      })
+    })
+
+    it('should still ask a non-photo card for a photo ID when the completed first ID has none', async () => {
+      const scanner = renderScanner(BCSCCardProcess.BCSCNonPhoto, [completedId(birthCertificate), cardBeingCaptured])
+
+      await scanner.handleScanBarcodes('S00023254', mockLicense, driversLicence)
+
+      expect(scanner.mockRemoveEvidenceByType).toHaveBeenCalledWith(driversLicence)
+      expect(scanner.mockClearAdditionalEvidence).not.toHaveBeenCalled()
+      expect(scanner.mockNavigationReset).toHaveBeenCalledWith({
+        index: 0,
+        routes: [{ name: BCSCScreens.AdditionalIdentificationRequired }],
       })
     })
   })

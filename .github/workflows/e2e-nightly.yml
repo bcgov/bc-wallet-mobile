@@ -369,7 +369,7 @@ jobs:
       contents: read
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup E2E
         uses: ./.github/workflows/actions/setup-e2e
@@ -377,7 +377,7 @@ jobs:
       # A lane that uploaded nothing (upgrade skipping on a missing BCSC-prev.*) is normal — the page
       # shows it as "no reports" rather than the job failing here.
       - name: Download E2E reports
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         continue-on-error: true
         with:
           pattern: e2e-reports-*
@@ -415,7 +415,7 @@ jobs:
 
       - name: Upload brief
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: e2e-nightly-brief
           path: |
