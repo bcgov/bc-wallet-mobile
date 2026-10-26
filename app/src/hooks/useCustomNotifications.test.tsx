@@ -1,4 +1,4 @@
-import { AccountPhaseType } from '@/bcsc-theme/utils/account-phase'
+import { AccountPhaseType } from '@/bcsc-theme/state/account/account-phase'
 import { renderHook } from '@testing-library/react-native'
 import { CustomNotificationId, useCustomNotifications } from './useCustomNotifications'
 
@@ -15,7 +15,7 @@ jest.mock('@/bcsc-theme/hooks/useVerificationStatus', () => ({
   useVerificationStatus: () => mockUseVerificationStatus(),
 }))
 
-jest.mock('@/bcsc-theme/hooks/useAccountPhase', () => ({
+jest.mock('@/bcsc-theme/state/account/useAccountPhase', () => ({
   useAccountPhase: () => mockUseAccountPhase(),
 }))
 

@@ -1,3 +1,5 @@
+import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
+import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { CustomNotificationId, useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { BCDispatchAction, BCState, initialBCSCSecureState, VerificationStatus } from '@/store'
@@ -7,15 +9,13 @@ import { act, renderHook, waitFor } from '@testing-library/react-native'
 import moment from 'moment'
 import React from 'react'
 import { AppState, DeviceEventEmitter } from 'react-native'
-import { BCSCReason } from '../utils/id-token'
-import { useCardStatus } from './useCardStatus'
 
 // Real provider, hooks and store: only the user API is mocked
-jest.unmock('../contexts/BCSCAccountContext')
+jest.unmock('@/bcsc-theme/contexts/BCSCAccountContext')
 
 const mockGetUserMetadata = jest.fn()
 
-jest.mock('../services/hooks/useUserService', () => ({
+jest.mock('@/bcsc-theme/services/hooks/useUserService', () => ({
   useUserService: jest.fn(() => ({
     getUserMetadata: mockGetUserMetadata,
   })),
@@ -39,7 +39,7 @@ jest.mock(
 jest.mock('@/bcsc-theme/features/notifications/CardExpiryNotification', () => 'CardExpiryNotification')
 jest.mock('@/bcsc-theme/features/notifications/CardRenewalNotification', () => 'CardRenewalNotification')
 
-import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
+import { BCSCAccountProvider } from '@/bcsc-theme/contexts/BCSCAccountContext'
 
 const userData = (daysUntilExpiry: number) => ({
   user: {

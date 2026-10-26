@@ -1,8 +1,8 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import { AccountPhaseType } from '@/bcsc-theme/utils/account-phase'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState } from '@/store'
-import { selectAccountPhase } from './account'
+import { AccountPhaseType } from './account-phase'
+import { selectAccountPhase } from './selectors'
 
 const NOW = new Date('2026-10-19T12:00:00.000Z')
 const FUTURE = new Date('2027-10-19T00:00:00.000Z')

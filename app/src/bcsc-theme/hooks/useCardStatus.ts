@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { AccountPhaseType } from '../utils/account-phase'
-import { useAccountPhase } from './useAccountPhase'
+import { AccountPhaseType } from '../state/account/account-phase'
+import { useAccountPhase } from '../state/account/useAccountPhase'
 import { useVerificationStatus } from './useVerificationStatus'
 
 /**

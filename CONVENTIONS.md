@@ -139,10 +139,12 @@ alone because starting from the Home card must not turn a skipper into a first-t
 ## Derived state: compute it from its inputs, don't store a flag
 
 State that follows from other state is derived on read through a rule, a selector and a hook, never saved as a
-flag that something has to remember to set and clear. The card expiry phase is the example:
+flag that something has to remember to set and clear. The three live together in `bcsc-theme/state/<domain>/`;
+`state/` holds only derived, UI-free state, not actions or API calls. The card expiry phase
+(`bcsc-theme/state/account/`) is the example:
 
-- `getAccountPhase` (`bcsc-theme/utils/account-phase.ts`) is the only definition of "expired" and "expiring soon".
-- `selectAccountPhase` (`bcsc-theme/selectors/account.ts`) reads its inputs: `bcscSecure.verified`, the ID token
+- `getAccountPhase` (`account-phase.ts`) is the only definition of "expired" and "expiring soon".
+- `selectAccountPhase` (`selectors.ts`) reads its inputs: `bcscSecure.verified`, the ID token
   `bcscReason`, `bcscSecure.refreshTokenExpired`, and the account's `account_expiration_date`.
 - `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
   `useCustomNotifications` (Home notices) both read it, so they cannot disagree.

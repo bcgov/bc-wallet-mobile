@@ -1,11 +1,11 @@
-import { AccountPhase, AccountPhaseType } from '@/bcsc-theme/utils/account-phase'
+import { AccountPhase, AccountPhaseType } from '@/bcsc-theme/state/account/account-phase'
+import { useAccountPhase } from '@/bcsc-theme/state/account/useAccountPhase'
 import * as Bifold from '@bifold/core'
 import { renderHook } from '@testing-library/react-native'
-import { useAccountPhase } from './useAccountPhase'
 import { useCardStatus } from './useCardStatus'
 
 jest.mock('@bifold/core')
-jest.mock('./useAccountPhase', () => ({ useAccountPhase: jest.fn() }))
+jest.mock('@/bcsc-theme/state/account/useAccountPhase', () => ({ useAccountPhase: jest.fn() }))
 
 const expiresAt = new Date('2027-10-19T00:00:00.000Z')
 

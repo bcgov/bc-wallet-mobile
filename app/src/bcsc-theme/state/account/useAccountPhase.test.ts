@@ -1,8 +1,8 @@
 import { BCSCAccount, useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import { AccountPhaseType } from '@/bcsc-theme/utils/account-phase'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState } from '@/store'
 import { renderHook } from '@testing-library/react-native'
+import { AccountPhaseType } from './account-phase'
 import { useAccountPhase } from './useAccountPhase'
 
 const mockUseStore = jest.fn()

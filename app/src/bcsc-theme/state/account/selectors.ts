@@ -1,7 +1,7 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import { AccountPhase, getAccountPhase } from '@/bcsc-theme/utils/account-phase'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState } from '@/store'
+import { AccountPhase, getAccountPhase } from './account-phase'
 
 /**
  * Reads the expiry rule's inputs from the store and the in-memory account.
