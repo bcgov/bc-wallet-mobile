@@ -81,9 +81,9 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
       <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
         {t('BCSC.Services.PreferOtherDevice')}
       </ThemedText>
-      <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
         <ThemedText>{t('BCSC.Services.Goto')}</ThemedText>
-        <ThemedText selectable={true}>
+        <ThemedText selectable={true} style={{ flexShrink: 1 }}>
           <Link
             linkText={serviceClientUri}
             testID={testIdWithKey(TestIds.main.serviceLogin.serviceClientLink)}
@@ -237,7 +237,7 @@ const ServiceLoginDefaultView = ({
               marginBottom: Spacing.sm,
             }}
           >
-            <ThemedText style={styles.infoHeader}>{t('BCSC.Services.FromAccount')}</ThemedText>
+            <ThemedText style={[styles.infoHeader, { flexShrink: 1 }]}>{t('BCSC.Services.FromAccount')}</ThemedText>
             <TouchableOpacity
               testID={testIdWithKey(TestIds.main.serviceLogin.help)}
               accessibilityLabel={a11yLabel(t('BCSC.Screens.HelpCentre'))}

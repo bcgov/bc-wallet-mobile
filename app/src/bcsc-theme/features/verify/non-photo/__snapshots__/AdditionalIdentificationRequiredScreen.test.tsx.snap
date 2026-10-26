@@ -98,7 +98,7 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
           <View
             style={
               {
-                "height": undefined,
+                "height": 48,
                 "justifyContent": "center",
                 "marginHorizontal": 8,
               }
@@ -162,7 +162,7 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
           <View
             style={
               {
-                "height": undefined,
+                "height": 48,
                 "justifyContent": "center",
                 "marginHorizontal": 8,
               }
@@ -226,7 +226,7 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
           <View
             style={
               {
-                "height": undefined,
+                "height": 48,
                 "justifyContent": "center",
                 "marginHorizontal": 8,
               }

@@ -111,6 +111,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
       opacity: 0.6,
     },
     cardTitle: {
+      flexShrink: 1,
       color: TextTheme.headingFour.color,
       fontSize: props.startIcon ? 16 : TextTheme.headingFour.fontSize,
     },

@@ -123,6 +123,7 @@ exports[`PairingConfirmation should match snapshot 1`] = `
               },
               {
                 "color": "#313132",
+                "flexShrink": 1,
               },
             ]
           }

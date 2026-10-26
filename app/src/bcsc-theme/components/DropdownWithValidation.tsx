@@ -135,6 +135,7 @@ export const DropdownWithValidation = <T extends string | number>({
       backgroundColor: ColorPalette.brand.primaryLight,
     },
     optionText: {
+      flexShrink: 1,
       fontSize: 16,
       // No explicit color: ThemedText applies the theme foreground (dark on white in Light,
       // light on dark-blue in Dark), which is legible on the modal's primaryBackground in both themes.

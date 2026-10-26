@@ -391,6 +391,7 @@ exports[`PINEntryForm renders correctly with create and confirm PIN fields 1`] =
                           },
                           {
                             "color": "#313132",
+                            "flexShrink": 1,
                           },
                         ]
                       }
