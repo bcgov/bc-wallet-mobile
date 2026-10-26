@@ -271,10 +271,6 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
 /**
  * Determines if the provided error is a network error: the request produced no HTTP response.
  *
- * This is what the fail-open paths (client discovery, the JWK retry loop, the device count check)
- * rely on, so it also holds for a rejected certificate (classified as UNSECURED_NETWORK): the
- * ERR_NETWORK cause is kept on the AppError and is found by walking the cause chain of re-wrapped errors.
- *
  * @param {unknown} error - The error to check
  * @param depth - Recursion guard for the cause chain
  * @returns {*} {boolean} True if the error is a network error, false otherwise.
@@ -327,10 +323,6 @@ const isTransientError = (error: unknown): boolean => {
 /**
  * Determines if the provided error is a request failure that may succeed on a retry: a network
  * error, a request timeout, or a 5xx server response.
- *
- * Classification only — callers decide what to do with it (e.g. BCSCApiClientContext tolerates a
- * transient config-fetch failure). Checks the error and each error in its `cause` chain, so a
- * wrapped AxiosError is still recognized.
  *
  * Walks cause chain for transient errors (network, timeout, 5xx) and returns true if any are found.
  * Walk is limited to 5 to prevent infinite loops
