@@ -1,13 +1,54 @@
-import { getBaseScreenName, getCurrentStateScreenName } from '@/bcsc-theme/navigators/stack-utils'
+import {
+  getBaseScreenName,
+  getCurrentStateScreenName,
+  getRouteNamesBelowFocus,
+  isForwardPush,
+} from '@/bcsc-theme/navigators/stack-utils'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
-import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native'
+import { createNavigationContainerRef, NavigationContainer, NavigationState } from '@react-navigation/native'
 import { createContext, PropsWithChildren, useContext, useMemo, useRef, useState } from 'react'
 
 export const navigationRef = createNavigationContainerRef()
 
+export interface VisitedScreen {
+  /** Display name, with any stack prefix removed. */
+  name: string
+  /** True when the user returned to a screen that was already beneath them in the stack. */
+  isBack: boolean
+}
+
 export const MAX_VISITED_SCREENS = 15
-export const NAVIGATION_VISITED_SCREEN_NAMES: string[] = []
+
+export const NAVIGATION_TRAIL: { screens: VisitedScreen[]; droppedCount: number } = {
+  screens: [],
+  droppedCount: 0,
+}
+
+const recordVisit = (previousState: NavigationState | undefined, state: NavigationState) => {
+  const currentRouteName = getCurrentStateScreenName(state)
+  const currentScreenName = getBaseScreenName(currentRouteName)
+
+  // Update the visited screens list only if the current screen is different from the last visited screen
+  const { screens } = NAVIGATION_TRAIL
+  if (!currentScreenName || screens[screens.length - 1]?.name === currentScreenName) {
+    return
+  }
+
+  // Raw (stack-prefixed) names are compared so same-named screens in different stacks never match.
+  // A forward push of a screen already in the stack is not a return.
+  const isBack =
+    previousState !== undefined &&
+    !isForwardPush(previousState, state) &&
+    getRouteNamesBelowFocus(previousState).includes(currentRouteName)
+
+  screens.push({ name: currentScreenName, isBack })
+  if (screens.length > MAX_VISITED_SCREENS) {
+    // Index 0 is the session entry point and is never evicted
+    screens.splice(1, 1)
+    NAVIGATION_TRAIL.droppedCount += 1
+  }
+}
 
 export interface NavigationContainerContextType {
   isNavigationReady: boolean
@@ -24,7 +65,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
   const [navigationReady, setNavigationReady] = useState(false)
   const { NavigationTheme } = useTheme()
   const screenTransitionKeyRef = useRef<string>('')
-  const previousScreenRef = useRef<string | undefined>(undefined)
+  const previousStateRef = useRef<NavigationState | undefined>(undefined)
 
   const navigationContext = useMemo(
     () => ({
@@ -39,6 +80,13 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
         ref={navigationRef}
         theme={NavigationTheme}
         onReady={() => {
+          // onStateChange skips the initial render, so the entry screen is recorded here
+          const initialState = navigationRef.getRootState()
+          if (initialState) {
+            previousStateRef.current = initialState
+            recordVisit(undefined, initialState)
+          }
+
           setNavigationReady(true)
         }}
         onStateChange={async (state) => {
@@ -46,8 +94,13 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
             return
           }
 
-          const previousScreenName = previousScreenRef.current
-          const currentScreenName = getBaseScreenName(getCurrentStateScreenName(state))
+          // Moves forward on every change, even ones that record nothing, so back detection compares adjacent states
+          const previousState = previousStateRef.current
+          previousStateRef.current = state
+
+          const previousScreenName = previousState && getBaseScreenName(getCurrentStateScreenName(previousState))
+          const currentRouteName = getCurrentStateScreenName(state)
+          const currentScreenName = getBaseScreenName(currentRouteName)
 
           const screenTransitionKey = `${previousScreenName}->${currentScreenName}`
 
@@ -58,18 +111,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
             screenTransitionKeyRef.current = screenTransitionKey
           }
 
-          // Update the visited screens list only if the current screen is different from the last visited screen
-          if (
-            currentScreenName &&
-            NAVIGATION_VISITED_SCREEN_NAMES[NAVIGATION_VISITED_SCREEN_NAMES.length - 1] !== currentScreenName
-          ) {
-            NAVIGATION_VISITED_SCREEN_NAMES.push(currentScreenName)
-            if (NAVIGATION_VISITED_SCREEN_NAMES.length > MAX_VISITED_SCREENS) {
-              NAVIGATION_VISITED_SCREEN_NAMES.shift()
-            }
-          }
-
-          previousScreenRef.current = currentScreenName
+          recordVisit(previousState, state)
         }}
       >
         {children}

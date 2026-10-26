@@ -5,6 +5,8 @@ import {
   BCSCApiClientProvider,
 } from '@/bcsc-theme/contexts/BCSCApiClientContext'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import * as Bifold from '@bifold/core'
 import { MockLogger } from '@bifold/core'
 import { renderHook, waitFor } from '@testing-library/react-native'
@@ -347,6 +349,52 @@ describe('BCSCApiClientProvider', () => {
       expect(result.current?.client).toBeInstanceOf(BCSCApiClient)
       expect(result.current?.error).toBeNull()
       expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('still readies the client when discovery fails on a rejected certificate', async () => {
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const factoryResetMock = jest.mocked(FactoryReset)
+
+    const mockStore: any = {
+      stateLoaded: true,
+      developer: { environment: { iasApiBaseUrl: 'https://example.com' }, remoteDebugging: { sessionId: undefined } },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
+      },
+      bcsc: {},
+    }
+    const dispatchMock = jest.fn()
+    const mockLogger = new MockLogger()
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
+    bifoldMock.useServices.mockReturnValue([mockLogger])
+    bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+
+    // The response interceptor classifies a rejected certificate as UNSECURED_NETWORK but keeps the
+    // no-response axios cause, so discovery must fail open exactly like the historical no_internet error
+    const mockError = AppError.fromErrorDefinition(ErrorRegistry.UNSECURED_NETWORK, {
+      cause: new AxiosError('Network Error: Hostname <host> not verified:', 'ERR_NETWORK'),
+      track: false,
+    })
+
+    bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockRejectedValue(mockError)
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ErrorAlertProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
+      </ErrorAlertProvider>
+    )
+
+    const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
+
+    await waitFor(() => {
+      expect(result.current?.isClientReady).toBe(true)
+      expect(result.current?.client).toBeInstanceOf(BCSCApiClient)
+      expect(result.current?.error).toBeNull()
     })
   })
 

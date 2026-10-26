@@ -14,6 +14,7 @@ import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from '
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
+  formatNetworkAxiosError,
   getAppErrorFromAxiosError,
   isNetworkError,
 } from '../utils/axios-error-utils'
@@ -189,8 +190,9 @@ class BCSCApiClient {
         return this.client.request(originalConfig)
       }
 
-      // 1. Format the error - update error code and message properties from IAS response
-      const error = formatIasAxiosResponseError(_error)
+      // 1. Format the error: the IAS error body when there is a response, or the native reason the
+      // request died with when there is none
+      const error = formatNetworkAxiosError(formatIasAxiosResponseError(_error))
 
       // 2. Convert the axios error into an AppError
       const appError = getAppErrorFromAxiosError(error)
