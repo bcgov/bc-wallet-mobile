@@ -1,6 +1,7 @@
 import { Platform } from 'react-native'
 import {
   CommonResolutions,
+  OrientationSource,
   PreviewImplementationMode,
   QualityPrioritization,
   usePhotoOutput,
@@ -12,6 +13,13 @@ import {
  * SurfaceView ('performance'), which misbehaves on some low-end phones. Ignored on iOS.
  */
 export const PREVIEW_IMPLEMENTATION_MODE: PreviewImplementationMode = 'compatible'
+
+/**
+ * Orient photos and videos like the preview, which always follows the interface. v5's default
+ * ('device') follows the physical device, so on a portrait-locked phone held sideways the capture
+ * came out upright in landscape and, shown in the portrait review, looked rotated and zoomed in.
+ */
+export const OUTPUT_ORIENTATION_SOURCE: OrientationSource = 'interface'
 
 /*
  * On Android, photos use 'balanced' (CameraX's MINIMIZE_LATENCY capture mode), as v4 and ias-android did.
