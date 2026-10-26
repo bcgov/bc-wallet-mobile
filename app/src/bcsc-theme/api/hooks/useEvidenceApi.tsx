@@ -1,7 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import type { MediaFormat, MediaKind } from '@/bcsc-theme/utils/media-format'
 import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
-import { VerificationRequestStatus, VIDEO_MP4_MIME_TYPE } from '@/constants'
+import { EVIDENCE_UPLOAD_TIMEOUT_MS, VerificationRequestStatus, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
@@ -393,6 +393,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             Accept: 'image/jpeg',
           },
           skipBearerAuth: true,
+          timeout: EVIDENCE_UPLOAD_TIMEOUT_MS,
           uploadLogContext: {
             media_kind: mediaKind,
             media_stage: 'binary',
@@ -418,6 +419,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             Accept: VIDEO_MP4_MIME_TYPE,
           },
           skipBearerAuth: true,
+          timeout: EVIDENCE_UPLOAD_TIMEOUT_MS,
           uploadLogContext: {
             media_kind: 'video',
             media_stage: 'binary',

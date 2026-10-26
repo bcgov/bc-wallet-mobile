@@ -352,7 +352,21 @@ describe('BCSCApiClientProvider', () => {
     })
   })
 
-  it('still readies the client when discovery fails on a rejected certificate', async () => {
+  it.each([
+    ['a request timeout', AppError.fromErrorDefinition(ErrorRegistry.SERVER_TIMEOUT)],
+    ['a raw timeout', new AxiosError('timeout of 90000ms exceeded', 'ECONNABORTED')],
+    [
+      'a server error',
+      AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: { response: { status: 503 } } }),
+    ],
+    [
+      'a rejected certificate',
+      AppError.fromErrorDefinition(ErrorRegistry.UNSECURED_NETWORK, {
+        cause: new AxiosError('Network Error: Hostname <host> not verified:', 'ERR_NETWORK'),
+        track: false,
+      }),
+    ],
+  ])('should keep the client usable after %s during initialization', async (_, mockError) => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
     const factoryResetMock = jest.mocked(FactoryReset)
@@ -372,13 +386,6 @@ describe('BCSCApiClientProvider', () => {
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
-    // The response interceptor classifies a rejected certificate as UNSECURED_NETWORK but keeps the
-    // no-response axios cause, so discovery must fail open exactly like the historical no_internet error
-    const mockError = AppError.fromErrorDefinition(ErrorRegistry.UNSECURED_NETWORK, {
-      cause: new AxiosError('Network Error: Hostname <host> not verified:', 'ERR_NETWORK'),
-      track: false,
-    })
-
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockRejectedValue(mockError)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -395,6 +402,11 @@ describe('BCSCApiClientProvider', () => {
       expect(result.current?.isClientReady).toBe(true)
       expect(result.current?.client).toBeInstanceOf(BCSCApiClient)
       expect(result.current?.error).toBeNull()
+      expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).toHaveBeenCalledTimes(1)
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('using fallback endpoints'),
+        expect.any(Object)
+      )
     })
   })
 

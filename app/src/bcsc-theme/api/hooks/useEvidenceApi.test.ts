@@ -1,4 +1,5 @@
 import useEvidenceApi from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { EVIDENCE_UPLOAD_TIMEOUT_MS } from '@/constants'
 import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -266,6 +267,20 @@ describe('useEvidenceApi - upload log context', () => {
       media_bytes: mp4Bytes.byteLength,
       media_format: 'video/mp4',
     })
+  })
+
+  // Android maps the axios timeout to OkHttp's total callTimeout, so the default API timeout must
+  // not cut off a large upload that is still making progress.
+  it('uses the longer evidence upload timeout for photo and video binary uploads', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.uploadPhotoEvidenceBinary('https://upload.test/photo', jpegBytes, 'image')
+      await result.current.uploadVideoEvidenceBinary('https://upload.test/video', mp4Bytes)
+    })
+
+    expect(apiClient.put.mock.calls[0][2].timeout).toBe(EVIDENCE_UPLOAD_TIMEOUT_MS)
+    expect(apiClient.put.mock.calls[1][2].timeout).toBe(EVIDENCE_UPLOAD_TIMEOUT_MS)
   })
 
   it('omits media_format (not a placeholder) when the binary is unrecognizable, keeping the other fields', async () => {

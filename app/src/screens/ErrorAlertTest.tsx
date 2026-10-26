@@ -351,6 +351,26 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     }
   }
 
+  // Sends a REAL request (unauthenticated, read-only discovery document) with a 1ms timeout so the
+  // native networking layer aborts it. This triggers a genuine ECONNABORTED error
+  const triggerRealClientTimeout = async () => {
+    onBack() // close the dev modal first; iOS can't present the error modal over it
+    try {
+      await client.get(`${client.baseURL}/device/.well-known/openid-configuration`, {
+        skipBearerAuth: true,
+        timeout: 1,
+      })
+    } catch (error) {
+      logger.debug('Triggered real client-side request timeout', { error })
+    }
+  }
+
+  // No way to force a serverside timeout, inject the error to simulate a timeout
+  const triggerProxyGatewayTimeout = async (): Promise<void> => {
+    onBack() // close the dev modal first; iOS can't present the error modal over it
+    await injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_RESPONSE', undefined, 504)
+  }
+
   const triggerErrorAsAlert = (description: string) => {
     emitAlert('Native alert triggered', description, {
       actions: [
@@ -455,6 +475,34 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
               testID={'error-jwe-decrypt'}
               buttonType={ButtonType.Secondary}
               onPress={triggerJweDecryptError}
+            />
+          </View>
+        </View>
+
+        {/* Network timeouts — real client-side timeout (2102) vs simulated proxy 504 (2101) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'Network timeouts'}</Text>
+          <Text style={styles.description}>
+            {'Client timeout sends a real request with a 1ms timeout so the native layer aborts it ' +
+              '(2102); the remote log should include timeoutMs: 1 and elapsedMs. Proxy timeout ' +
+              'simulates the 504 the Apache reverse proxy returns after waiting 60s for Tomcat (2101).'}
+          </Text>
+          <View style={styles.buttonRow}>
+            <Button
+              title={'Client timeout - real request (2102)'}
+              accessibilityLabel={'Trigger real client-side request timeout'}
+              testID={'error-real-client-timeout'}
+              buttonType={ButtonType.Secondary}
+              onPress={triggerRealClientTimeout}
+            />
+          </View>
+          <View style={styles.buttonRow}>
+            <Button
+              title={'Proxy timeout - simulated 504 (2101)'}
+              accessibilityLabel={'Trigger simulated proxy gateway timeout'}
+              testID={'error-proxy-gateway-timeout'}
+              buttonType={ButtonType.Secondary}
+              onPress={triggerProxyGatewayTimeout}
             />
           </View>
         </View>
