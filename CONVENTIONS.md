@@ -155,3 +155,5 @@ store or account change.
 
 **Why:** the saved `showAccountExpiryNotification` / `showCardRenewalNotification` flags were only written at
 startup and cleared by hand, so a failed account load or a missed reset left a stale renewal notice (#4866, #4878).
+
+How to apply this to other state: [`docs/guides/derived-state-refactor.md`](docs/guides/derived-state-refactor.md).
