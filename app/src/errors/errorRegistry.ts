@@ -149,6 +149,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.CAMERA,
     message: 'Credential QR code scan failed — unable to extract credential data from QR code',
   },
+  UNRECOGNIZED_QR_CODE: {
+    statusCode: 2004,
+    appEvent: AppEventCode.UNRECOGNIZED_QR_CODE,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.CAMERA,
+    message: 'Scanned QR code is unrecognized — no matching handler found for the QR code type',
+  },
 
   // ============================================
   // Network Errors (2100-2199)

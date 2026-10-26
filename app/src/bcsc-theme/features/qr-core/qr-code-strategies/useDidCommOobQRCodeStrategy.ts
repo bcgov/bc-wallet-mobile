@@ -1,5 +1,6 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { isDidCommInvitationCandidate } from '@/bcsc-theme/utils/didcomm-invitation'
+import { AppError, ErrorRegistry } from '@/errors'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
@@ -145,6 +146,9 @@ export const useDidCommOobQRCodeStrategy = (
         switch (error.reason) {
           case QRDidCommOobErrorReason.AGENT_NOT_READY:
             errorModal.description = t('BCSC.Scan.Unsupported.AgentNotReady')
+            break
+          case QRDidCommOobErrorReason.UNRESOLVED_URL:
+            errorModal.error = AppError.fromErrorDefinition(ErrorRegistry.UNRECOGNIZED_QR_CODE, { cause: error })
             break
           case QRDidCommOobErrorReason.UNSUPPORTED_OPENID:
             errorModal.description = t('BCSC.Scan.Unsupported.OpenID')

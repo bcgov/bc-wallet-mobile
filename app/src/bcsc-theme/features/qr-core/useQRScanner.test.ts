@@ -82,7 +82,7 @@ describe('useQRScanner', () => {
     })
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('No strategy matched'),
+      expect.stringContaining('Unrecognized QR code'),
       expect.objectContaining({ qrScheme: 'https', qrHasQuery: true })
     )
     expect(JSON.stringify(mockLogger.warn.mock.calls)).not.toContain('secret')
