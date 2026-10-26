@@ -15,7 +15,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Dependabot/fork runs get no repo secrets, so gate only the
       # secret-dependent steps below on this — build/typecheck/test stay
@@ -33,7 +33,7 @@ jobs:
             echo "OP_SERVICE_ACCOUNT_TOKEN unavailable (Dependabot or fork run); skipping 1Password load and codecov upload."
           fi
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.11'
 
@@ -41,7 +41,7 @@ jobs:
 
       - name: Cache node_modules
         id: cache-node
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .yarn/cache
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -51,7 +51,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Cache bcsc-core build output
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/bcsc-core/lib
           key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('packages/bcsc-core/src/**') }}
@@ -91,16 +91,16 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.11'
 
       - uses: ./.github/workflows/actions/setup-node
 
       - name: Restore node_modules cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .yarn/cache
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -110,7 +110,18 @@ jobs:
         run: yarn install --immutable
 
       - name: Install formatting and linting tools
-        run: brew install swiftformat clang-format ktlint
+        run: brew install clang-format ktlint
+
+      # Pinned: runner images ship different SwiftFormat versions, and 0.64 adds default rules that fail lint
+      - name: Install SwiftFormat
+        env:
+          SWIFTFORMAT_VERSION: 0.63.1
+        run: |
+          curl --proto "=https" --tlsv1.2 -sSfL -o "$RUNNER_TEMP/swiftformat.zip" \
+            "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip"
+          unzip -q -o "$RUNNER_TEMP/swiftformat.zip" -d "$RUNNER_TEMP/swiftformat"
+          echo "$RUNNER_TEMP/swiftformat" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/swiftformat/swiftformat" --version
 
       - name: Lint
         run: yarn lint
@@ -124,13 +135,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: ./.github/workflows/actions/setup-node
 
       # e2e is not a root workspace member, so it installs from its own lockfile into its own cache.
       - name: Cache e2e Yarn cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: e2e/.yarn/cache
           key: ${{ runner.os }}-yarn-e2e-${{ hashFiles('e2e/yarn.lock') }}
@@ -160,7 +171,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Resolve iOS Simulator destination
         id: sim
@@ -190,15 +201,15 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-java@v6
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: zulu
           java-version: 17
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
