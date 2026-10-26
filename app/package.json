@@ -132,7 +132,7 @@
     "react-native-screens": "~4.26.0",
     "react-native-splash-screen": "~3.3.0",
     "react-native-sse": "~1.2.1",
-    "react-native-svg": "15.15.4",
+    "react-native-svg": "15.15.5",
     "react-native-tcp-socket": "~6.0.6",
     "react-native-toast-message": "~2.1.10",
     "react-native-url-polyfill": "^3.0.0",
