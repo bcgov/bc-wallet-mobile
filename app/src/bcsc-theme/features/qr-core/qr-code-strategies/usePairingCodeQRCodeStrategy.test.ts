@@ -77,7 +77,7 @@ describe('usePairingCodeQRCodeStrategy', () => {
 
       expect(modal?.title).toBe('BCSC.Scan.UnrecognizedQR')
       expect(modal?.description).toBe('BCSC.Scan.UnrecognizedQRDescription')
-      expect(modal?.error.appEvent).toBe(AppEventCode.INVALID_QR_CODE)
+      expect(modal?.error.appEvent).toBe(AppEventCode.UNRECOGNIZED_QR_CODE)
       expect(modal?.error.cause).toBe(thrown)
     })
   })

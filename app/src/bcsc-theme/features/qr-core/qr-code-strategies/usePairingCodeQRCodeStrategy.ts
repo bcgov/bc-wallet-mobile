@@ -46,7 +46,7 @@ export const usePairingCodeQRCodeStrategy = (onSuccess: (pairingCode: string) =>
 
   const toErrorModal = useCallback(
     (error: unknown) => ({
-      error: ensureAppError(error, AppEventCode.INVALID_QR_CODE),
+      error: ensureAppError(error, AppEventCode.UNRECOGNIZED_QR_CODE),
       title: t('BCSC.Scan.UnrecognizedQR'),
       description: t('BCSC.Scan.UnrecognizedQRDescription'),
     }),

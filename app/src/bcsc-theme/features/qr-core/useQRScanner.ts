@@ -93,20 +93,12 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
         return
       }
 
-      if (value === lastUnrecognizedRef.current) {
-        return // the dismissed code is still in frame, ScanCamera remounted with an empty dedupe set
-      }
-
       lastUnrecognizedRef.current = null
 
       const strategy = strategies.find((s) => s.matches(value))
 
-      if (!strategy) {
+      if (!strategy || lastUnrecognizedRef.current === value) {
         return handleUnrecognizedError(new QRError('Unrecognized QR code'), value)
-      }
-
-      if (lastUnrecognizedRef.current === value) {
-        return handleUnrecognizedError(new QRError('Unrecognized QR code scanned again'), value)
       }
 
       lockedRef.current = true
@@ -118,14 +110,14 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
       } catch (error) {
         lockedRef.current = false // failure: unlock to allow retry
 
-        if (isAppError(error, AppEventCode.UNRECOGNIZED_QR_CODE)) {
+        const modal = strategy.toErrorModal(error)
+
+        if (isAppError(modal?.error, AppEventCode.UNRECOGNIZED_QR_CODE)) {
           return handleUnrecognizedError(error, value)
         }
 
-        const modal = strategy.toErrorModal(error)
-
         if (modal) {
-          return emitErrorModal(modal.title, modal.description, modal.error)
+          return emitErrorModal(modal.title, modal.description, modal.error, { enableReport: modal.enableReport })
         }
       } finally {
         processingRef.current = false
