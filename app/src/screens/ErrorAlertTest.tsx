@@ -342,9 +342,9 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   // No way to force a serverside timeout, inject the error to simulate a timeout
-  const triggerProxyGatewayTimeout = () => {
+  const triggerProxyGatewayTimeout = async (): Promise<void> => {
     onBack() // close the dev modal first; iOS can't present the error modal over it
-    injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_RESPONSE', undefined, 504)
+    await injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_RESPONSE', undefined, 504)
   }
 
   const triggerErrorAsAlert = (description: string) => {
