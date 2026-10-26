@@ -1237,6 +1237,13 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible) (PT-BR)"
     },
     "VideoCall": {
+      "Controls": {
+        "Mute": "Mute (PT-BR)",
+        "Unmute": "Unmute (PT-BR)",
+        "HideVideo": "Hide Video (PT-BR)",
+        "ShowVideo": "Show Video (PT-BR)",
+        "EndCall": "End Call (PT-BR)"
+      },
       "MissingSession": "Missing required parameters to end session (PT-BR)",
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update (PT-BR)",
       "DeviceCodeError": "Missing device or user code (PT-BR)",

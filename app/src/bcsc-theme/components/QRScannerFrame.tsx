@@ -1,6 +1,13 @@
 import { ThemedText, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
-import { NativeSyntheticEvent, StyleSheet, TextLayoutEventData, useWindowDimensions, View } from 'react-native'
+import {
+  LayoutChangeEvent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  TextLayoutEventData,
+  useWindowDimensions,
+  View,
+} from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { getCutoutRect, QRScannerOverlay } from './QRScannerOverlay'
 
@@ -22,7 +29,16 @@ export const QRScannerFrame: React.FC<QRScannerFrameProps> = ({ message }) => {
   // a close-enough first render; onLayout provides the real dimensions.
   const window = useWindowDimensions()
   const [area, setArea] = useState({ width: window.width, height: window.height })
-  const cutout = getCutoutRect(area.width, area.height)
+
+  // The message row's own height, so the reticle moves down rather than under the message when
+  // large OS font sizes make the message taller than the gap the design leaves for it (#4401)
+  const [messageHeight, setMessageHeight] = useState(0)
+  const handleMessageLayout = (event: LayoutChangeEvent) => {
+    const { height } = event.nativeEvent.layout
+    setMessageHeight((current) => (current === height ? current : height))
+  }
+  const minCutoutY = messageHeight ? messageHeight + 2 * Spacing.md : 0
+  const cutout = getCutoutRect(area.width, area.height, minCutoutY)
 
   // Wrapped text fills all the width it's offered, which would push the icon+text row
   // edge-to-edge and off the reticle's center line. Shrink the text box to its widest
@@ -50,6 +66,9 @@ export const QRScannerFrame: React.FC<QRScannerFrameProps> = ({ message }) => {
       right: 0,
       height: cutout.y,
       paddingHorizontal: 40,
+      justifyContent: 'center',
+    },
+    messageRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -70,15 +89,17 @@ export const QRScannerFrame: React.FC<QRScannerFrameProps> = ({ message }) => {
         setArea((current) => (current.width === width && current.height === height ? current : { width, height }))
       }}
     >
-      <QRScannerOverlay width={area.width} height={area.height} />
+      <QRScannerOverlay width={area.width} height={area.height} minCutoutY={minCutoutY} />
       <View style={styles.messageContainer}>
-        <Icon name="qrcode-scan" size={40} style={styles.icon} />
-        <ThemedText
-          style={[styles.messageText, messageTextWidth !== undefined && { width: messageTextWidth }]}
-          onTextLayout={handleMessageTextLayout}
-        >
-          {message}
-        </ThemedText>
+        <View style={styles.messageRow} onLayout={handleMessageLayout}>
+          <Icon name="qrcode-scan" size={40} style={styles.icon} />
+          <ThemedText
+            style={[styles.messageText, messageTextWidth !== undefined && { width: messageTextWidth }]}
+            onTextLayout={handleMessageTextLayout}
+          >
+            {message}
+          </ThemedText>
+        </View>
       </View>
     </View>
   )

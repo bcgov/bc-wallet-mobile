@@ -23,55 +23,19 @@ exports[`TakeVideoScreen renders correctly 1`] = `
   <View
     style={
       {
+        "backgroundColor": "#000000",
         "flex": 1,
       }
     }
   >
-    <View
-      device={
-        {
-          "id": "mock-device",
-        }
-      }
-      implementationMode="compatible"
-      isActive={false}
-      mirrorMode={[Function]}
-      onConfigured={[Function]}
-      onError={[Function]}
-      onInterruptionEnded={[Function]}
-      onInterruptionStarted={[Function]}
-      onStarted={[Function]}
-      onStopped={[Function]}
-      outputs={
-        [
-          {
-            "capturePhotoToFile": [MockFunction],
-          },
-          {
-            "createRecorder": [MockFunction],
-            "setOutputSettings": [MockFunction],
-          },
-        ]
-      }
-      style={
-        {
-          "flex": 1,
-        }
-      }
-      testID="mock-camera"
-    />
     <View
       style={
         {
           "alignItems": "center",
           "backgroundColor": "rgba(0, 0, 0, 0.5)",
           "justifyContent": "center",
-          "left": 0,
           "paddingHorizontal": 16,
           "paddingVertical": 24,
-          "position": "absolute",
-          "right": 0,
-          "top": 0,
         }
       }
     >
@@ -110,6 +74,310 @@ exports[`TakeVideoScreen renders correctly 1`] = `
       >
         3
       </Text>
+    </View>
+    <View
+      style={
+        {
+          "flex": 1,
+          "overflow": "hidden",
+        }
+      }
+    >
+      <View
+        device={
+          {
+            "id": "mock-device",
+          }
+        }
+        implementationMode="compatible"
+        isActive={false}
+        mirrorMode={[Function]}
+        onConfigured={[Function]}
+        onError={[Function]}
+        onInterruptionEnded={[Function]}
+        onInterruptionStarted={[Function]}
+        onStarted={[Function]}
+        onStopped={[Function]}
+        outputs={
+          [
+            {
+              "capturePhotoToFile": [MockFunction],
+            },
+            {
+              "createRecorder": [MockFunction],
+              "setOutputSettings": [MockFunction],
+            },
+          ]
+        }
+        style={
+          {
+            "flex": 1,
+          }
+        }
+        testID="mock-camera"
+      />
+    </View>
+    <View
+      accessibilityElementsHidden={true}
+      importantForAccessibility="no-hide-descendants"
+      pointerEvents="none"
+      style={
+        [
+          {
+            "backgroundColor": "rgba(0, 0, 0, 0.5)",
+            "flexDirection": "column",
+            "paddingBottom": 16,
+            "paddingHorizontal": 24,
+          },
+          {
+            "opacity": 0,
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+            "paddingBottom": 24,
+            "paddingTop": 16,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="Global.Cancel"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 44,
+              "left": 44,
+              "right": 44,
+              "top": 44,
+            }
+          }
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "flexShrink": 1,
+              "opacity": 1,
+            }
+          }
+          testID="com.ariesbifold:id/CancelRecording"
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "white",
+                  "fontSize": 21,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅁
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "white",
+                  "flexShrink": 1,
+                  "fontSize": 21,
+                },
+              ]
+            }
+          >
+            Global.Cancel
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flex": 1,
+              "flexDirection": "row",
+              "gap": 8,
+              "justifyContent": "flex-end",
+            }
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#FFFFFF",
+                  "fontSize": 21,
+                },
+              ]
+            }
+          >
+            00:00
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#D8292F",
+                  "fontSize": 21,
+                },
+              ]
+            }
+          >
+            ⬤
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "marginBottom": 0,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="BCSC.SendVideo.TakeVideo.ShowNextPrompt"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": true,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={false}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#757575",
+              "borderRadius": 4,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/NextPrompt"
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                  ],
+                ]
+              }
+            >
+              BCSC.SendVideo.TakeVideo.ShowNextPrompt
+            </Text>
+          </View>
+        </View>
+      </View>
     </View>
   </View>
 </RNCSafeAreaView>
