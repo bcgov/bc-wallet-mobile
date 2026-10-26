@@ -206,6 +206,9 @@ export const isNetworkError = (error: unknown): boolean => {
   return false
 }
 
+// Guards against circular `cause` references
+const MAX_CAUSE_DEPTH = 5
+
 /**
  * Checks a single error for a network error, a timeout, or a 5xx server response.
  *
@@ -244,7 +247,7 @@ const isTransientError = (error: unknown): boolean => {
  * Walk is limited to 5 to prevent infinite loops
  *
  * @param {unknown} error - The error to check
- * @returns {*} {boolean} True if the request failure is transient, false otherwise.
+ * @returns {*} {boolean} True if this error alone is transient, false otherwise.
  */
 export const isTransientRequestError = (error: unknown): boolean => {
   let current: unknown = error
@@ -253,7 +256,7 @@ export const isTransientRequestError = (error: unknown): boolean => {
   //   - isDeviceStorageFullError (errorHandler.ts)
   //   - describeCauseChain / deepest (useAgentSetupViewModel.ts)
   // Bounded walk of the cause chain to guard against cycles
-  for (let depth = 0; current != null && depth < 5; depth++) {
+  for (let depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
     if (isTransientError(current)) {
       return true
     }

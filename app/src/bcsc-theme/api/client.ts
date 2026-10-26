@@ -15,7 +15,7 @@ import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
   getAppErrorFromAxiosError,
-  isNetworkError,
+  isTransientRequestError,
   normalizeAxiosTimeoutError,
 } from '../utils/axios-error-utils'
 import { isTokenExpired } from '../utils/token-expiry'
@@ -30,8 +30,10 @@ import { loadPersistedJwk, persistJwk } from './jwk-cache'
 // and an inline verification-path call, not a user-facing loading state.
 const JWK_FETCH_MAX_ATTEMPTS = 3
 const JWK_FETCH_RETRY_BASE_DELAY_MS = 500
+// Per-attempt timeout for the JWKS fetch. Timeouts are retried, so we keep this shorter than the normal 90s timeout
+const JWK_FETCH_TIMEOUT_MS = 15 * 1000
 
-// The retryable JWKS failure shapes (see isRetryableJwkFetchError): 0 for a network error (no HTTP
+// The retryable JWKS failure shapes (see isRetryableJwkFetchError): 0 for a network error or timeout (no HTTP
 // response — see the response interceptor's `error.response?.status ?? 0`), and the full 5xx range.
 // Passed as suppressStatusCodeLogs on the JWKS request so the interceptor's own log line + analytics
 // tracking (see getAppErrorFromAxiosError) don't fire on every retry attempt — fetchJwk already logs
@@ -486,6 +488,7 @@ class BCSCApiClient {
     const response = await this.get<JWKResponseData>(this.endpoints.jwksURI, {
       skipBearerAuth: true,
       skipOnErrorHandler: true,
+      timeout: JWK_FETCH_TIMEOUT_MS,
       suppressStatusCodeLogs: JWK_FETCH_RETRYABLE_STATUS_CODES,
     })
 
@@ -497,18 +500,13 @@ class BCSCApiClient {
   }
 
   /**
-   * Gates the JWK fetch retry loop to transient failures only: a network error, or an HTTP >= 500
-   * read from the AxiosError the response interceptor attaches as `AppError.cause`. A deterministic
-   * 4xx (or any other error shape) is not retryable — retrying it would just waste the attempt budget
-   * on a request that will fail the same way every time.
+   * Gates the JWK fetch retry loop to transient failures only: a network error, a timeout, or an
+   * HTTP >= 500 (see isTransientRequestError). A deterministic 4xx (or any other error shape) is not
+   * retryable — retrying it would just waste the attempt budget on a request that will fail the same
+   * way every time.
    */
   private isRetryableJwkFetchError(error: unknown): boolean {
-    if (isNetworkError(error)) {
-      return true
-    }
-
-    const status = (error as Partial<AxiosAppError>)?.cause?.response?.status
-    return typeof status === 'number' && status >= 500
+    return isTransientRequestError(error)
   }
 
   /**
