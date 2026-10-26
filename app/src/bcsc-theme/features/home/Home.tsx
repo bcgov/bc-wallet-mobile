@@ -57,9 +57,11 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   }
 
   return (
-    <>
+    <TabScreenWrapper>
+      {/* Banners scroll with the page: pinned above the ScrollView, a couple of them fill the screen at
+          large OS font sizes and leave no room for the content. */}
       <NotificationBannerContainer onManageDevices={handleManageDevices} bannerMessages={store.bcsc.bannerMessages} />
-      <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
+      <View style={{ padding: Spacing.lg, gap: Spacing.lg }}>
         {/* Header and pairing shortcut are only shown to actively-verified users, since the pairing
             code screen itself is gated on verification (see QRCoreStack) and unusable otherwise. */}
         {isActivelyVerified && account ? <WelcomeHeader name={account.fullname_formatted} /> : null}
@@ -73,8 +75,8 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
           />
         ) : null}
         <NotificationsList />
-      </TabScreenWrapper>
-    </>
+      </View>
+    </TabScreenWrapper>
   )
 }
 

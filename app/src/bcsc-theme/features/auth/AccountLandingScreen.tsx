@@ -10,7 +10,7 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore,
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
 interface AccountLandingScreenProps {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.AccountLanding>
@@ -25,6 +25,9 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
   const styles = StyleSheet.create({
     contentContainer: {
       flexGrow: 1,
+    },
+    content: {
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
       padding: Spacing.lg,
@@ -48,13 +51,15 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
   )
 
   return (
-    <>
-      {/* noop handler: DEVICE_LIMIT_EXCEEDED is the only banner that invokes it and is filtered out below */}
+    <ScreenWrapper padded={false} scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
+      {/* Banners scroll with the page rather than pinning above it, so they cannot crowd out the content
+          at large OS font sizes. noop handler: DEVICE_LIMIT_EXCEEDED is the only banner that invokes it
+          and is filtered out below. */}
       <NotificationBannerContainer
         onManageDevices={() => {}}
         bannerMessages={store.bcsc.bannerMessages.filter((b) => b.id !== BCSCBanner.DEVICE_LIMIT_EXCEEDED)}
       />
-      <ScreenWrapper padded={false} scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
+      <View style={styles.content}>
         <BCSCLogo width={160} height={160} />
         <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.primary }}>
           {t('BCSC.AccountLanding.Title')}
@@ -62,8 +67,8 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
         <ThemedText variant={'normal'} style={{ textAlign: 'center', paddingTop: Spacing.xxl }}>
           {t('BCSC.AccountLanding.Description')}
         </ThemedText>
-      </ScreenWrapper>
-    </>
+      </View>
+    </ScreenWrapper>
   )
 }
 

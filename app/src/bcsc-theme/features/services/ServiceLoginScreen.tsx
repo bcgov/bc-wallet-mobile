@@ -204,8 +204,6 @@ const ServiceLoginDefaultView = ({
         buttonType={ButtonType.Secondary}
         onPress={onCancel}
       />
-
-      <ReportSuspiciousLink t={t} testID={testIdWithKey(TestIds.main.serviceLogin.reportSuspicious)} />
     </ControlContainer>
   )
 
@@ -267,6 +265,8 @@ const ServiceLoginDefaultView = ({
           </TouchableOpacity>
         ) : null}
       </View>
+
+      <ReportSuspiciousLink t={t} testID={testIdWithKey(TestIds.main.serviceLogin.reportSuspicious)} />
     </ScreenWrapper>
   )
 }
