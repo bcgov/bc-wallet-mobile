@@ -1,6 +1,6 @@
-import { testIdWithKey, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { a11yLabel } from '@utils/accessibility'
-import { Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native'
+import { Image, ImageSourcePropType, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 export type TileButtonProps = {
@@ -49,11 +49,11 @@ const TileButton: React.FC<TileButtonProps> = ({
       accessibilityLabel={a11yLabel(accessibilityLabel)}
     >
       <View style={styles.tile}>
-        <Text style={styles.actionText}>
+        <ThemedText variant={'bold'} style={styles.actionText}>
           {actionText}
           <Icon size={20} color={ColorPalette.brand.primary} name={'arrow-right-thin'} />
-        </Text>
-        <Text style={styles.description}>{description}</Text>
+        </ThemedText>
+        <ThemedText style={styles.description}>{description}</ThemedText>
         {imgSrc ? (
           <Image source={imgSrc} style={{ flex: 1, height: 100, width: 150, marginTop: 16 }} resizeMode={'contain'} />
         ) : null}

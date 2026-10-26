@@ -96,6 +96,7 @@ exports[`TakeVideoScreen renders correctly 1`] = `
       </Text>
       <Text
         collapsable={false}
+        maxFontSizeMultiplier={2}
         style={
           {
             "color": "#FFFFFF",

@@ -46,7 +46,7 @@ import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Animated, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import {
@@ -78,7 +78,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     [photoOutput, videoOutput]
   )
   const { t } = useTranslation()
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing, TextTheme, maxFontSizeMultiplier } = useTheme()
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
@@ -566,7 +566,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     return (
       <SafeAreaView style={styles.pageContainer}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{t('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')}</Text>
+          <ThemedText style={{ color: 'white' }}>{t('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')}</ThemedText>
         </View>
       </SafeAreaView>
     )
@@ -604,6 +604,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         <View style={styles.promptContainer}>
           {recordingInProgress ? (
             <Animated.Text
+              maxFontSizeMultiplier={maxFontSizeMultiplier}
               style={[
                 TextTheme.headingTwo,
                 { textAlign: 'center', opacity: promptOpacity, color: ColorPalette.grayscale.white },
@@ -617,6 +618,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
                 {t('BCSC.SendVideo.TakeVideo.RecordingWillStartIn')}
               </ThemedText>
               <Animated.Text
+                maxFontSizeMultiplier={maxFontSizeMultiplier}
                 style={[
                   TextTheme.headingTwo,
                   { textAlign: 'center', opacity: promptOpacity, color: ColorPalette.grayscale.white },

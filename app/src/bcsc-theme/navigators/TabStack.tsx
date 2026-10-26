@@ -6,6 +6,7 @@ import {
   CredentialStack,
   OpenIDCredentialRecordProvider,
   testIdWithKey,
+  ThemedText,
   TOKENS,
   useDefaultStackOptions,
   useServices,
@@ -16,7 +17,7 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Animated, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { Animated, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
@@ -62,7 +63,8 @@ const createTabBarIcon = (label: string, iconName: string) => {
           color={focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
         />
         {showLabels && (
-          <Text
+          <ThemedText
+            variant={'labelSubtitle'}
             style={{
               ...TabTheme.tabBarTextStyle,
               color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
@@ -70,7 +72,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
             }}
           >
             {label}
-          </Text>
+          </ThemedText>
         )}
       </View>
     )
@@ -80,6 +82,27 @@ const createTabBarIcon = (label: string, iconName: string) => {
 }
 
 const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })
+
+// React Navigation's tab badge is an uncapped Animated.Text inside a fixed box (3/4 of the 25pt icon).
+// The digits follow the OS font scale but the box does not, so the count is clipped at large sizes.
+// `tabBarBadgeStyle` is applied last, so size the box for the capped scale and bring the text back down
+// to that same cap (RN multiplies fontSize and lineHeight by the raw fontScale).
+const TAB_BADGE_SIZE = (25 * 3) / 4
+
+export const getTabBarBadgeStyle = (fontScale: number, maxFontSizeMultiplier: number, backgroundColor: string) => {
+  const scale = Math.min(fontScale, maxFontSizeMultiplier)
+  const size = TAB_BADGE_SIZE * scale
+  const textScale = scale / fontScale
+
+  return {
+    backgroundColor,
+    height: size,
+    minWidth: size,
+    borderRadius: size / 2,
+    fontSize: Math.floor((TAB_BADGE_SIZE * 3) / 4) * textScale,
+    lineHeight: (TAB_BADGE_SIZE - 1) * textScale,
+  }
+}
 const ACTIVE_INDICATOR_HEIGHT = 3
 const ACTIVE_INDICATOR_DURATION_MS = 100
 
@@ -195,7 +218,8 @@ const BCSCTabStack: React.FC = () => {
     return true
   }, [isServerAvailable, isActivelyVerified, isExpired, logger, navigation])
 
-  const { TabTheme, ColorPalette, Spacing } = theme
+  const { TabTheme, ColorPalette, Spacing, maxFontSizeMultiplier } = theme
+  const { fontScale } = useWindowDimensions()
 
   const homeNotificationsBadgeCount = customNotifications.length + notifications.length || undefined
 
@@ -240,9 +264,7 @@ const BCSCTabStack: React.FC = () => {
           unmountOnBlur: false,
           lazy: true,
           tabBarStyle: TabTheme.tabBarStyle,
-          tabBarBadgeStyle: {
-            backgroundColor: ColorPalette.notification.errorIcon,
-          },
+          tabBarBadgeStyle: getTabBarBadgeStyle(fontScale, maxFontSizeMultiplier, ColorPalette.notification.errorIcon),
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
           header: createTabHeader,
@@ -256,7 +278,7 @@ const BCSCTabStack: React.FC = () => {
             title: t('BCSC.Home.Title'),
             headerTitleAlign: 'center',
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon('Home', 'home-outline'),
+            tabBarIcon: createTabBarIcon(t('BCSC.Home.Title'), 'home-outline'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('BCSC.Home.Title'),
             tabBarTestID: testIdWithKey(TestIds.main.tabBar.home),
@@ -269,9 +291,9 @@ const BCSCTabStack: React.FC = () => {
           component={Services}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon('Services', 'list-alt'),
+            tabBarIcon: createTabBarIcon(t('BCSC.Services.Title'), 'list-alt'),
             tabBarShowLabel: false,
-            tabBarAccessibilityLabel: 'Services',
+            tabBarAccessibilityLabel: t('BCSC.Services.Title'),
             tabBarTestID: testIdWithKey(TestIds.main.tabBar.services),
             headerLeft: createMainSettingsHeaderButton(),
             title: t('BCSC.Services.Title'),
@@ -282,9 +304,9 @@ const BCSCTabStack: React.FC = () => {
           component={ScopedCredentialStack}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon('Wallet', 'wallet'),
+            tabBarIcon: createTabBarIcon(t('BCSC.Wallet.Title'), 'wallet'),
             tabBarShowLabel: false,
-            tabBarAccessibilityLabel: 'Wallet',
+            tabBarAccessibilityLabel: t('BCSC.Wallet.Title'),
             tabBarTestID: testIdWithKey(TestIds.main.tabBar.wallet),
             headerLeft: createMainSettingsHeaderButton(),
             headerShown: true,

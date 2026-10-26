@@ -6,12 +6,21 @@ import { decodeCardBarcode, ScanableCode, toDriversLicenseMetadata } from '@/bcs
 import { CardScan, combineCardBarcodes, EMPTY_CARD_SCAN } from '@/bcsc-theme/utils/card-scan'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useTheme,
+} from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native'
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, Mask, Rect } from 'react-native-svg'
 import { useCameraPermission } from 'react-native-vision-camera'
@@ -377,8 +386,12 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       <View style={styles.container} onLayout={onContainerLayout}>
         {cameraFailed ? (
           <View style={styles.cameraErrorBlock}>
-            <Text style={styles.instructionText}>{t('BCSC.CameraDisclosure.Error')}</Text>
-            <Text style={styles.instructionSubText}>{t('BCSC.CameraDisclosure.ErrorMessage')}</Text>
+            <ThemedText variant={'labelTitle'} style={styles.instructionText}>
+              {t('BCSC.CameraDisclosure.Error')}
+            </ThemedText>
+            <ThemedText variant={'labelSubtitle'} style={styles.instructionSubText}>
+              {t('BCSC.CameraDisclosure.ErrorMessage')}
+            </ThemedText>
           </View>
         ) : (
           <>
@@ -405,11 +418,17 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
             {/* Instruction text — initial guidance until the timeout, then steady-hold help */}
             <View style={styles.topBanner} pointerEvents="none">
               {showHelp ? (
-                <Text style={styles.instructionText}>{t('BCSC.Scan.HoldSteadyHelp')}</Text>
+                <ThemedText variant={'labelTitle'} style={styles.instructionText}>
+                  {t('BCSC.Scan.HoldSteadyHelp')}
+                </ThemedText>
               ) : (
                 <>
-                  <Text style={styles.instructionText}>{t('BCSC.Scan.ScanYourCard')}</Text>
-                  <Text style={styles.instructionSubText}>{t('BCSC.Scan.LineUpHelp')}</Text>
+                  <ThemedText variant={'labelTitle'} style={styles.instructionText}>
+                    {t('BCSC.Scan.ScanYourCard')}
+                  </ThemedText>
+                  <ThemedText variant={'labelSubtitle'} style={styles.instructionSubText}>
+                    {t('BCSC.Scan.LineUpHelp')}
+                  </ThemedText>
                 </>
               )}
             </View>

@@ -208,26 +208,69 @@ exports[`EnterBirthdate renders correctly 1`] = `
                     }
                   >
                     <Text
+                      maxFontSizeMultiplier={2}
                       style={
-                        {
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 16,
-                          "marginBottom": undefined,
-                        }
+                        [
+                          {
+                            "color": "#313132",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 16,
+                            "fontWeight": "bold",
+                          },
+                          [
+                            {
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 16,
+                            },
+                            {
+                              "marginBottom": undefined,
+                            },
+                          ],
+                        ]
                       }
                     >
                       <Text
+                        maxFontSizeMultiplier={2}
                         style={
-                          {
-                            "color": "transparent",
-                          }
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 16,
+                              "fontWeight": "bold",
+                            },
+                            [
+                              {
+                                "fontFamily": "BCSans-Regular",
+                                "fontSize": 16,
+                              },
+                              {
+                                "color": "transparent",
+                              },
+                            ],
+                          ]
                         }
                       />
                       <Text
+                        maxFontSizeMultiplier={2}
                         style={
-                          {
-                            "color": "#606060",
-                          }
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 16,
+                              "fontWeight": "bold",
+                            },
+                            [
+                              {
+                                "fontFamily": "BCSans-Regular",
+                                "fontSize": 16,
+                              },
+                              {
+                                "color": "#606060",
+                              },
+                            ],
+                          ]
                         }
                       >
                         YYYY/MM/DD
@@ -237,6 +280,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                   <TextInput
                     accessibilityLabel="BCSC.Birthdate.Label"
                     keyboardType="number-pad"
+                    maxFontSizeMultiplier={2}
                     onBlur={[Function]}
                     onChange={[Function]}
                     onChangeText={[Function]}

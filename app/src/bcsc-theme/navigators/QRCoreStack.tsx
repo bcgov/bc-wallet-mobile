@@ -13,13 +13,13 @@ import {
 import { HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
@@ -68,7 +68,8 @@ const createTabBarIcon = (label: string, iconName: string) => {
           color={focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
         />
         {showLabels && (
-          <Text
+          <ThemedText
+            variant={'labelSubtitle'}
             style={{
               ...TabTheme.tabBarTextStyle,
               color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
@@ -76,7 +77,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
             }}
           >
             {label}
-          </Text>
+          </ThemedText>
         )}
       </View>
     )

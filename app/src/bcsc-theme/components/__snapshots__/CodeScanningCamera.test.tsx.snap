@@ -145,12 +145,21 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
     }
   >
     <Text
+      maxFontSizeMultiplier={2}
       style={
-        {
-          "color": "white",
-          "fontSize": 10,
-          "fontWeight": "bold",
-        }
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
+          },
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+        ]
       }
     >
       Zoom: 
@@ -158,16 +167,25 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
       x
     </Text>
     <Text
+      maxFontSizeMultiplier={2}
       style={
         [
           {
-            "color": "white",
-            "fontSize": 10,
-            "fontWeight": "bold",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
           },
-          {
-            "fontSize": 8,
-          },
+          [
+            {
+              "color": "white",
+              "fontSize": 10,
+              "fontWeight": "bold",
+            },
+            {
+              "fontSize": 8,
+            },
+          ],
         ]
       }
     >
@@ -414,12 +432,21 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
     }
   >
     <Text
+      maxFontSizeMultiplier={2}
       style={
-        {
-          "color": "white",
-          "fontSize": 10,
-          "fontWeight": "bold",
-        }
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
+          },
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+        ]
       }
     >
       Zoom: 
@@ -427,16 +454,25 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
       x
     </Text>
     <Text
+      maxFontSizeMultiplier={2}
       style={
         [
           {
-            "color": "white",
-            "fontSize": 10,
-            "fontWeight": "bold",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
           },
-          {
-            "fontSize": 8,
-          },
+          [
+            {
+              "color": "white",
+              "fontSize": 10,
+              "fontWeight": "bold",
+            },
+            {
+              "fontSize": 8,
+            },
+          ],
         ]
       }
     >
@@ -683,12 +719,21 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
     }
   >
     <Text
+      maxFontSizeMultiplier={2}
       style={
-        {
-          "color": "white",
-          "fontSize": 10,
-          "fontWeight": "bold",
-        }
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
+          },
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+        ]
       }
     >
       Zoom: 
@@ -696,16 +741,25 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
       x
     </Text>
     <Text
+      maxFontSizeMultiplier={2}
       style={
         [
           {
-            "color": "white",
-            "fontSize": 10,
-            "fontWeight": "bold",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
           },
-          {
-            "fontSize": 8,
-          },
+          [
+            {
+              "color": "white",
+              "fontSize": 10,
+              "fontWeight": "bold",
+            },
+            {
+              "fontSize": 8,
+            },
+          ],
         ]
       }
     >
@@ -952,12 +1006,21 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
     }
   >
     <Text
+      maxFontSizeMultiplier={2}
       style={
-        {
-          "color": "white",
-          "fontSize": 10,
-          "fontWeight": "bold",
-        }
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
+          },
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+        ]
       }
     >
       Zoom: 
@@ -965,16 +1028,25 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
       x
     </Text>
     <Text
+      maxFontSizeMultiplier={2}
       style={
         [
           {
-            "color": "white",
-            "fontSize": 10,
-            "fontWeight": "bold",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
           },
-          {
-            "fontSize": 8,
-          },
+          [
+            {
+              "color": "white",
+              "fontSize": 10,
+              "fontWeight": "bold",
+            },
+            {
+              "fontSize": 8,
+            },
+          ],
         ]
       }
     >
@@ -1221,12 +1293,21 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
     }
   >
     <Text
+      maxFontSizeMultiplier={2}
       style={
-        {
-          "color": "white",
-          "fontSize": 10,
-          "fontWeight": "bold",
-        }
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
+          },
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+        ]
       }
     >
       Zoom: 
@@ -1234,16 +1315,25 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
       x
     </Text>
     <Text
+      maxFontSizeMultiplier={2}
       style={
         [
           {
-            "color": "white",
-            "fontSize": 10,
-            "fontWeight": "bold",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
           },
-          {
-            "fontSize": 8,
-          },
+          [
+            {
+              "color": "white",
+              "fontSize": 10,
+              "fontWeight": "bold",
+            },
+            {
+              "fontSize": 8,
+            },
+          ],
         ]
       }
     >
@@ -1490,12 +1580,21 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
     }
   >
     <Text
+      maxFontSizeMultiplier={2}
       style={
-        {
-          "color": "white",
-          "fontSize": 10,
-          "fontWeight": "bold",
-        }
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
+          },
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+        ]
       }
     >
       Zoom: 
@@ -1503,16 +1602,25 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
       x
     </Text>
     <Text
+      maxFontSizeMultiplier={2}
       style={
         [
           {
-            "color": "white",
-            "fontSize": 10,
-            "fontWeight": "bold",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
           },
-          {
-            "fontSize": 8,
-          },
+          [
+            {
+              "color": "white",
+              "fontSize": 10,
+              "fontWeight": "bold",
+            },
+            {
+              "fontSize": 8,
+            },
+          ],
         ]
       }
     >
@@ -1759,12 +1867,21 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
     }
   >
     <Text
+      maxFontSizeMultiplier={2}
       style={
-        {
-          "color": "white",
-          "fontSize": 10,
-          "fontWeight": "bold",
-        }
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
+          },
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+        ]
       }
     >
       Zoom: 
@@ -1772,16 +1889,25 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
       x
     </Text>
     <Text
+      maxFontSizeMultiplier={2}
       style={
         [
           {
-            "color": "white",
-            "fontSize": 10,
-            "fontWeight": "bold",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
           },
-          {
-            "fontSize": 8,
-          },
+          [
+            {
+              "color": "white",
+              "fontSize": 10,
+              "fontWeight": "bold",
+            },
+            {
+              "fontSize": 8,
+            },
+          ],
         ]
       }
     >
@@ -2028,12 +2154,21 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
     }
   >
     <Text
+      maxFontSizeMultiplier={2}
       style={
-        {
-          "color": "white",
-          "fontSize": 10,
-          "fontWeight": "bold",
-        }
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
+          },
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+        ]
       }
     >
       Zoom: 
@@ -2041,16 +2176,25 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
       x
     </Text>
     <Text
+      maxFontSizeMultiplier={2}
       style={
         [
           {
-            "color": "white",
-            "fontSize": 10,
-            "fontWeight": "bold",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "normal",
           },
-          {
-            "fontSize": 8,
-          },
+          [
+            {
+              "color": "white",
+              "fontSize": 10,
+              "fontWeight": "bold",
+            },
+            {
+              "fontSize": 8,
+            },
+          ],
         ]
       }
     >

@@ -1354,6 +1354,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (PT-BR)",
     },
     "Wallet": {
+      "Title": "Wallet (PT-BR)",
       "EmptyMessage": "Your wallet is empty (PT-BR)",
       "EmptyLearnMore": "Learn more about the wallet (PT-BR)",
       "Reset": "Reset wallet (PT-BR)",
