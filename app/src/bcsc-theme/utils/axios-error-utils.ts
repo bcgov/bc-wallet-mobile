@@ -207,6 +207,36 @@ export const isNetworkError = (error: unknown): boolean => {
 }
 
 /**
+ * Determines if the provided error is a request failure that may succeed on a retry: a network
+ * error, a request timeout, or a 5xx server response.
+ * This code decides whether a failed request should be treated as fatal or can be accepted or retried.
+ *
+ * @param {unknown} error - The error to check
+ * @returns {*} {boolean} True if the request failure is transient, false otherwise.
+ */
+export const isTransientRequestError = (error: unknown): boolean => {
+  if (isNetworkError(error)) {
+    return true
+  }
+
+  if (error instanceof AppError && error.appEvent === AppEventCode.SERVER_TIMEOUT) {
+    return true
+  }
+
+  // Check the AxiosError for cause and code, looking for ECONNABORTED or 5xx server responses
+  const axiosError = (error instanceof AxiosError ? error : (error as { cause?: unknown } | undefined)?.cause) as
+    | Partial<AxiosError>
+    | undefined
+
+  if (axiosError?.code === AxiosErrorCode.ECONNABORTED) {
+    return true
+  }
+
+  const status = axiosError?.response?.status
+  return typeof status === 'number' && status >= 500
+}
+
+/**
  * Disambiguates a 4xx client error by its real HTTP status.
  *
  * Axios collapses *every* 4xx response into a single `ERR_BAD_REQUEST` code — see axios

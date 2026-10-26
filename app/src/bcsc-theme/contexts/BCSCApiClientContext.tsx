@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
 import { AxiosAppError, ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
-import { isNetworkError } from '../utils/axios-error-utils'
+import { isTransientRequestError } from '../utils/axios-error-utils'
 
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
@@ -124,11 +124,11 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       } catch (err) {
         /**
          * Special case:
-         * If it's a network error, we still want to set the client.
-         * This prevents the app from being blocked by a permanent loading state,
-         * while also allowing the Internet Disconnected modal to be displayed.
+         * If it's a transient failure (network error, timeout or 5xx), we still want to set the client.
+         * This prevents the app from being blocked by a permanent loading state. A network error also
+         * lets the Internet Disconnected modal be displayed.
          */
-        if (isNetworkError(err)) {
+        if (isTransientRequestError(err)) {
           setClientAndSingleton(newClient)
           return
         }
