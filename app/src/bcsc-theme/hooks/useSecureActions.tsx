@@ -747,7 +747,10 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Remove a specific evidence type from secure state
+   * Remove a specific evidence type from secure state and persist to native storage
+   *
+   * @param evidenceType The evidence type to remove
+   * @returns The evidence metadata left
    */
   const removeEvidenceByType = useCallback(
     async (evidenceType: EvidenceType) => {
@@ -761,6 +764,8 @@ export const useSecureActions = () => {
       })
 
       await persistEvidenceData(updatedEvidence)
+
+      return updatedEvidence
     },
     [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
   )
