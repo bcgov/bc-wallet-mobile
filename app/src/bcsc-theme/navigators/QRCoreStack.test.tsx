@@ -2,6 +2,7 @@ import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
+import { createTabHeader } from '../components/NavigationHeaders'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { BCSCModals, BCSCQRCoreScreens, BCSCScreens } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
@@ -34,6 +35,7 @@ jest.mock('../hooks/useCardStatus', () => ({
   useCardStatus: jest.fn(),
 }))
 jest.mock('@/constants', () => ({
+  DEFAULT_HEADER_TITLE_CONTAINER_STYLE: { flexShrink: 1, maxWidth: '68%' },
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
 }))
 jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
@@ -239,6 +241,25 @@ describe('QRCoreStack', () => {
 
       expect(resetCallIndex).toBeGreaterThanOrEqual(0)
       expect(destinationCallIndex).toBeGreaterThan(resetCallIndex)
+    })
+  })
+
+  describe('header', () => {
+    it('spreads the default stack options so the title shrinks instead of being cut off at large font sizes', () => {
+      const headerTitle = () => null
+      jest.mocked(Bifold.useDefaultStackOptions).mockReturnValue({ headerTitle, header: () => null } as any)
+
+      render(<QRCoreStack />)
+
+      expect(capturedNavigatorProps.screenOptions).toEqual(
+        expect.objectContaining({
+          headerTitle,
+          headerTitleAlign: 'center',
+          headerTitleContainerStyle: { flexShrink: 1, maxWidth: '68%' },
+          // The tab header still wins over the default stack header.
+          header: createTabHeader,
+        })
+      )
     })
   })
 
