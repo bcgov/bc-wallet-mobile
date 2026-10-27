@@ -4,6 +4,7 @@ import { NotificationBannerContainer } from '@/bcsc-theme/components/Notificatio
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useFloatingScanButtonClearance } from '@/bcsc-theme/features/scan'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCQRCoreScreens, BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
@@ -51,6 +52,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { account } = useAccount()
   const { isActivelyVerified } = useCardStatus()
   const handleManageDevices = useManageDevicesNavigation(navigation)
+  const scanButtonClearance = useFloatingScanButtonClearance()
 
   const handlePairingCodePress = () => {
     navigation.getParent()?.navigate(BCSCScreens.QRCore, { screen: BCSCQRCoreScreens.PairingCode })
@@ -61,7 +63,9 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
       {/* Banners scroll with the page: pinned above the ScrollView, a couple of them fill the screen at
           large OS font sizes and leave no room for the content. */}
       <NotificationBannerContainer onManageDevices={handleManageDevices} bannerMessages={store.bcsc.bannerMessages} />
-      <View style={{ padding: Spacing.lg, gap: Spacing.lg }}>
+      {/* The Scan button floats over the bottom of the page (see TabStack): keep its footprint free
+          below the last card so the card can scroll out from under it. */}
+      <View style={{ padding: Spacing.lg, paddingBottom: Spacing.lg + scanButtonClearance, gap: Spacing.lg }}>
         {/* Header and pairing shortcut are only shown to actively-verified users, since the pairing
             code screen itself is gated on verification (see QRCoreStack) and unusable otherwise. */}
         {isActivelyVerified && account ? <WelcomeHeader name={account.fullname_formatted} /> : null}

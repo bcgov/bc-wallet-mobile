@@ -234,7 +234,9 @@ const BCSCTabStack: React.FC = () => {
     },
     fabContainer: {
       position: 'absolute',
-      bottom: safeAreaBottom + TAB_BAR_HEIGHT + Spacing.md,
+      // Flush with the tab bar's top edge; the button carries its own gap (and reports its footprint
+      // through useFloatingScanButtonClearance so pages can scroll clear of it).
+      bottom: safeAreaBottom + TAB_BAR_HEIGHT,
       right: Spacing.lg,
     },
   })
