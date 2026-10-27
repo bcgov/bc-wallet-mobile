@@ -13,6 +13,8 @@ import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-nat
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useCameraPermission } from 'react-native-vision-camera'
 
+const RESCAN_DELAY_MS = 1000
+
 export interface QRScannerProps {
   isProcessing: boolean
   onScan: (value: string) => Promise<void>
@@ -68,10 +70,16 @@ const QRScanner = ({ isProcessing, onScan }: QRScannerProps) => {
   )
 
   useEffect(() => {
-    if (modalWasVisibleRef.current && !isErrorModalVisible) {
-      setScannerKey((prevKey) => prevKey + 1) // remount ScanCamera to clear its frozen state
-    }
+    const modalJustClosed = modalWasVisibleRef.current && !isErrorModalVisible
     modalWasVisibleRef.current = isErrorModalVisible
+
+    if (!modalJustClosed) {
+      return
+    }
+
+    // Remount ScanCamera to clear its frozen state, once the modal has finished dismissing
+    const timer = setTimeout(() => setScannerKey((prevKey) => prevKey + 1), RESCAN_DELAY_MS)
+    return () => clearTimeout(timer)
   }, [isErrorModalVisible])
 
   if (isPermissionLoading) {
