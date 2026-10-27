@@ -581,14 +581,14 @@ path CI already uses)._
 | Android | PDF-417 (evidence capture — live scanner behind the shutter) | ✅ WORKS | `8819e61675d340b4afa096d6ed886adf`, `ed55eb7cd49e4cf2a3a6240b1b516323` | _Pixel 7 Pro / Android 14; decoded an injected card back and rerouted the flow — why `COMBO_CARD_BARCODE_MASKS` exists_ |
 | Android | Code-39 + PDF-417 (serial-scan screen) — full decode | ⚠️ WORKS BUT RACY | `94241d04…`, `88d9f8d377584709a40183aebfe66245` | _Proven: with a purpose-built card the app reached `VerificationCardError` showing the serial AND the birthdate it had decoded — only reachable after both codes decode, pair and hit the backend. Not yet CI-reliable: the screen reroutes to the non-BCSC flow on ANY value-less barcode detection (see below), which usually wins the race. Blocker is app behaviour, not image quality — CI keeps manual serial entry meanwhile_ |
 | Android | Non-BCSC reroute at the serial screen | ✅ WORKS (deterministic) | same jobs | _An unrecognised/undecodable code at `ScanSerial` routes to DualIdentificationRequired within seconds, every run — an edge case previously untestable_ |
-| Android | QR (FAB scanner) | ✅ WORKS | `a6f63e6f9f674fab95eea0f560918234` | _junk QR → "not recognized" popup AND pairing QR → full strategy pipeline, both first try; transfer-in scanning shares the same camera component_ |
-| iOS | QR (FAB scanner) | ✅ WORKS | `d7ea2c3c39c548a8a7ddc422d2c32714` | _Sauce's synthesized QR metadata reaches the vision-camera delegate: junk QR → "not recognized" popup AND pairing QR → full strategy pipeline_ |
+| Android | QR (FAB scanner) | ✅ WORKS | `a6f63e6f9f674fab95eea0f560918234` | _junk QR → "not recognized" modal AND pairing QR → full strategy pipeline, both first try; transfer-in scanning shares the same camera component_ |
+| iOS | QR (FAB scanner) | ✅ WORKS | `d7ea2c3c39c548a8a7ddc422d2c32714` | _Sauce's synthesized QR metadata reaches the vision-camera delegate: junk QR → "not recognized" modal AND pairing QR → full strategy pipeline_ |
 | iOS | Code-39 / PDF-417 (any surface) | ❌ DEAD (structural) | `d7ea2c3c39c548a8a7ddc422d2c32714`, `e7214db3895d4d67bb05d053e38e6350`, `3b6691b413534c2299051991a0dc85e5` (serial: bare code-39, bare PDF-417, card back), `56f3c3775264490c8d92bf98465fd066` (evidence capture) | _Proven, not just documented: the injected card is plainly VISIBLE and sharp in the iOS preview, and code-39/PDF-417 still never fire, while QR fires reliably from the same image. iOS decodes in the OS (`AVCaptureMetadataOutput`) and Sauce only synthesizes QR metadata, so no rotation/clarity/size change can ever help. Mitigation: manual serial entry_ |
 
 _What that buys CI today, split by what each platform can actually do:_
 
 - **_QR, both platforms_** _(in the regular journeys): `unverified-main.journey.ts` injects an
-  unrecognised QR and asserts the scan-error popup; `verified-combined.journey.ts` injects a QR
+  unrecognised QR and asserts the error modal; `verified-combined.journey.ts` injects a QR
   carrying a freshly minted pairing code and asserts the app logs in and names the service._
 - **_Card barcodes, Android only_** _(the `scan` suite): the non-BCSC → BCSC reroutes, one journey per
   card type plus one on the second ID, and the serial scanner's unrecognised-code path. The reroute

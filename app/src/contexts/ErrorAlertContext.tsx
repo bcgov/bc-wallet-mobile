@@ -12,6 +12,10 @@ import { createContext, PropsWithChildren, useCallback, useContext, useMemo, use
 interface ErrorModalOptions {
   action?: ErrorModalAction
   onDismiss?: () => void
+  /**
+   * Whether to enable the "Report" button in the error modal. Defaults to true.
+   */
+  enableReport?: boolean
   // dismissible?: boolean TODO (MD): Future enhancement to make error modals blocking/non-dismissible
 }
 
@@ -63,6 +67,8 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
   const [errorKey, setErrorKey] = useState(0)
   const [errorModalOptions, setErrorModalOptions] = useState<ErrorModalOptions | null>(null)
   const [store] = useStore<BCState>() // Ensure store is initialized for error handling
+
+  const reportEnabled = errorModalOptions?.enableReport !== false && enableReport !== false
 
   /**
    * Show error via ErrorModal
@@ -129,7 +135,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
         payload={errorPayload}
         errorKey={errorKey}
         onDismiss={dismissErrorModal}
-        enableReport={enableReport}
+        enableReport={reportEnabled}
         action={errorModalOptions?.action}
       />
     </ErrorAlertContext.Provider>

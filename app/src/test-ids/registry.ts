@@ -668,14 +668,6 @@ export const TestIds = {
       loading: 'QRDisplay.Loading',
       error: 'QRDisplay.Error',
     },
-    /** The QR scanner's failed-scan popup (bifold `DismissiblePopupModal`). `okay` is its CTA
-     *  (labelled "Dismiss"); `header`/`body` are bifold-generic ids shared with the Home notification
-     *  card, so only assert them while the scanner is up. */
-    scanError: {
-      header: 'HeaderText',
-      body: 'BodyText',
-      okay: 'Okay',
-    },
     /** Main settings (minimal — the full screen is modeled later). `profile` is verified-gated. */
     /** Main settings menu (`SettingsContent.tsx`). The `AuthenticatedSection` rows render once
      *  `didAuthenticate`; the `isVerified`-gated rows (profile/editProfile/addDevice/myDevices/
