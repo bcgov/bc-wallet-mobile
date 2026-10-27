@@ -264,6 +264,38 @@ runs:
 
         echo "::endgroup::"
 
+        # Without automatic notification an approved build is not distributed
+        # until someone presses Notify Testers. Set before the group is added,
+        # so an already-approved build reaches the new group straight away and
+        # one still in review is distributed when it passes.
+        echo "::group::Enabling automatic tester notification..."
+        DETAIL=$(asc_get "${API}/builds/${BUILD_ID}/buildBetaDetail") || {
+          echo "❌ Failed to fetch the build's beta details" >&2
+          exit 1
+        }
+        read -r DETAIL_ID AUTO_NOTIFY_ENABLED < <(echo "$DETAIL" | python3 -c "
+        import sys, json
+        data = json.load(sys.stdin).get('data', {})
+        print(data.get('id', ''), str(data.get('attributes', {}).get('autoNotifyEnabled', False)).lower())
+        ")
+        if [ "$AUTO_NOTIFY_ENABLED" = "true" ]; then
+          echo "✅ Already enabled"
+        else
+          HTTP_CODE=$(curl -s -o /tmp/auto_notify_response.json -w '%{http_code}' \
+            -X PATCH \
+            -H "$AUTH" \
+            -H "Content-Type: application/json" \
+            -d "{\"data\":{\"type\":\"buildBetaDetails\",\"id\":\"${DETAIL_ID}\",\"attributes\":{\"autoNotifyEnabled\":true}}}" \
+            "${API}/buildBetaDetails/${DETAIL_ID}")
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "❌ Failed to enable automatic tester notification (HTTP ${HTTP_CODE}):"
+            python3 -m json.tool < /tmp/auto_notify_response.json 2>/dev/null || cat /tmp/auto_notify_response.json 2>/dev/null || true
+            exit 1
+          fi
+          echo "✅ Enabled"
+        fi
+        echo "::endgroup::"
+
         # --- Distribute to beta groups ---
         echo "::group::Distributing build to TestFlight beta groups..."
 
@@ -360,8 +392,9 @@ runs:
         echo "::endgroup::"
 
         # External testers only get a build once it passes Beta App Review,
-        # and adding it to a group through the API does not submit it. A
-        # wider ring finds it already submitted or approved and moves on.
+        # and adding it to a group through the API does not submit it. A build
+        # approved while automatic notification was off was never distributed,
+        # so it is distributed here instead of being taken as done.
         echo "::group::Submitting for Beta App Review..."
         DETAIL=$(asc_get "${API}/builds/${BUILD_ID}/buildBetaDetail") || {
           echo "❌ Failed to fetch the build's beta state" >&2
@@ -388,8 +421,25 @@ runs:
             fi
             echo "✅ Submitted for Beta App Review"
             ;;
-          WAITING_FOR_BETA_REVIEW|IN_BETA_REVIEW|BETA_APPROVED|READY_FOR_BETA_TESTING|IN_BETA_TESTING)
-            echo "✅ Already submitted (${EXTERNAL_STATE}), nothing to do"
+          BETA_APPROVED|READY_FOR_BETA_TESTING)
+            HTTP_CODE=$(curl -s -o /tmp/beta_notify_response.json -w '%{http_code}' \
+              -X POST \
+              -H "$AUTH" \
+              -H "Content-Type: application/json" \
+              -d "{\"data\":{\"type\":\"buildBetaNotifications\",\"relationships\":{\"build\":{\"data\":{\"type\":\"builds\",\"id\":\"${BUILD_ID}\"}}}}}" \
+              "${API}/buildBetaNotifications")
+            if [ "$HTTP_CODE" -ge 400 ]; then
+              echo "❌ Build is approved but notifying testers failed (HTTP ${HTTP_CODE}):"
+              python3 -m json.tool < /tmp/beta_notify_response.json 2>/dev/null || cat /tmp/beta_notify_response.json 2>/dev/null || true
+              exit 1
+            fi
+            echo "✅ Approved build distributed to testers"
+            ;;
+          WAITING_FOR_BETA_REVIEW|IN_BETA_REVIEW)
+            echo "✅ In review (${EXTERNAL_STATE}); testers are notified automatically once it is approved"
+            ;;
+          IN_BETA_TESTING)
+            echo "✅ Already in testing; the new group is notified automatically"
             ;;
           *)
             echo "❌ Build ${VERSION_CODE} cannot reach external testers from state '${EXTERNAL_STATE:-unknown}'. Resolve it in App Store Connect, then re-run."
