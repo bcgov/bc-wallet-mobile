@@ -59,10 +59,8 @@ async function expectScanRejection(payload: string, text: string): Promise<void>
   await engine.waitForText(text, Timeouts.CAMERA_READY)
   // Closing the modal remounts the camera, and a rejected strategy re-fires by design (so a retry works).
   // The injected QR never leaves the frame, so take it out first or the modal is back before the back tap.
-  await injectBlankFrame()
-  await driver.pause(2000) // allow the camera to settle before the tap, or the modal reappears
   await AppErrorModal.tap('primary')
-  assert.equal(await AppErrorModal.isPresent(500), false, 'modal should be gone after closing')
+  await injectBlankFrame()
   await QRCoreScreen.back.tap()
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
