@@ -213,6 +213,8 @@ const translation = {
     "EnableProxy": "Enable proxy (FR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
     "SwitchTheme": "Switch theme (FR)",
+    "SelectedMediator": "Selected mediator (FR)",
+    "MediatorSection": "Mediator (FR)",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes (FR)",
       "OneHour": "1 hour (FR)",
@@ -703,6 +705,11 @@ const translation = {
       "PrimaryAction": "Reset (FR)",
       "Resetting": "Resetting… (FR)"
     },
+    "ConfigureMediator": {
+      "ScreenTitle": "Configure mediator (FR)",
+      "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (FR)",
+      "ScanButton": "Scan mediator QR code (FR)"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (FR)",
       "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step. (FR)",
@@ -822,6 +829,8 @@ const translation = {
       "UnrecognizedQR": "QR code not recognized. (FR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (FR)",
       "FeatureUnavailable": "This action isn't available yet. (FR)",
+      "AccountTransferErrorTitle": "Unable to add device (FR)",
+      "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it. (FR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (FR)",
         "Mediator": "Mediator invitations aren't supported in BC Services Card. (FR)",
@@ -903,6 +912,9 @@ const translation = {
       "CancelCamera": "Cancel camera (FR)",
       "TakePhoto": "Take photo (FR)",
       "ToggleFlash": "Toggle flash (FR)",
+      "CameraInterrupted": "Camera paused (FR)",
+      "CameraInterruptedMessage": "The camera is in use by another app or is temporarily unavailable. It will resume on its own when it's available. (FR)",
+      "CameraNotReady": "The camera isn't ready yet. Please try again. (FR)",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings (FR)",
@@ -1063,6 +1075,8 @@ const translation = {
       "TakeVideo": {
         "RecordingError": "Recording error (FR)",
         "RecordingErrorDescription": "There was an issue with the recording. Please try again. (FR)",
+        "RecordingInterrupted": "Recording interrupted (FR)",
+        "RecordingInterruptedDescription": "The recording stopped before you finished. Please record your video again. (FR)",
         "CameraPermissionRequired": "Camera Permission Required (FR)",
         "CameraPermissionRequiredDescription": "Please enable camera permission to take a photo. (FR)",
         "MicrophonePermissionRequired": "Microphone Permission Required (FR)",
@@ -1573,6 +1587,10 @@ const translation = {
     "DocumentExpired": {
       "Title": "This document has expired. (FR)",
       "Description": "Please choose a different form of ID to continue. (FR)"
+    },
+    "BcscCardAlreadyAdded": {
+      "Title": "This is the BC Services Card you already added. (FR)",
+      "Description": "Please choose a different photo ID to continue. (FR)"
     },
     "FactoryReset": {
       "Title": "Problem with App (FR)",

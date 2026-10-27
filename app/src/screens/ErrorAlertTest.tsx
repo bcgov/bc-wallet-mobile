@@ -97,6 +97,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     { key: 'NO_INTERNET', description: 'Network connectivity error' },
     { key: 'SERVER_ERROR', description: 'Server-side error' },
     { key: 'SERVER_TIMEOUT', description: 'Request timeout error' },
+    { key: 'UNSECURED_NETWORK', description: 'Certificate rejected before any response (TLS)' },
     { key: 'INVALID_QR_CODE', description: 'QR code scanning error' },
     { key: 'LOGIN_REJECTED_401', description: 'Authentication unauthorized' },
     { key: 'FORBIDDEN', description: 'HTTP 403 — authenticated but not permitted' },
@@ -271,6 +272,29 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     },
   }
 
+  /**
+   * Real certificate failures through the real client: badssl.com rejects each request in the TLS
+   * handshake, so the whole path runs — the response interceptor reads the native reason, the global
+   * policy shows the "Unsecured Network" modal and the Debug line carries the reason with the host
+   * redacted. Works on both platforms.
+   */
+  const requestLiveTlsFailure = async (url: string) => {
+    onBack() // close the dev modal so the resulting error modal is visible
+
+    try {
+      await client.get(url, { skipBearerAuth: true })
+    } catch (error) {
+      // The response interceptor has already classified, logged and surfaced the failure
+      logger.debug('Live TLS failure request finished', { error })
+    }
+  }
+
+  const liveTlsFailureCallbacks: Record<string, () => void> = {
+    wrong_host: () => requestLiveTlsFailure('https://wrong.host.badssl.com/'),
+    expired: () => requestLiveTlsFailure('https://expired.badssl.com/'),
+    untrusted_root: () => requestLiveTlsFailure('https://untrusted-root.badssl.com/'),
+  }
+
   const getCategoryIcon = (category: ErrorCategory): string => {
     const icons: Record<ErrorCategory, string> = {
       [ErrorCategory.CAMERA]: 'camera-alt',
@@ -325,6 +349,26 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         toAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
       )
     }
+  }
+
+  // Sends a REAL request (unauthenticated, read-only discovery document) with a 1ms timeout so the
+  // native networking layer aborts it. This triggers a genuine ECONNABORTED error
+  const triggerRealClientTimeout = async () => {
+    onBack() // close the dev modal first; iOS can't present the error modal over it
+    try {
+      await client.get(`${client.baseURL}/device/.well-known/openid-configuration`, {
+        skipBearerAuth: true,
+        timeout: 1,
+      })
+    } catch (error) {
+      logger.debug('Triggered real client-side request timeout', { error })
+    }
+  }
+
+  // No way to force a serverside timeout, inject the error to simulate a timeout
+  const triggerProxyGatewayTimeout = async (): Promise<void> => {
+    onBack() // close the dev modal first; iOS can't present the error modal over it
+    await injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_RESPONSE', undefined, 504)
   }
 
   const triggerErrorAsAlert = (description: string) => {
@@ -435,6 +479,34 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
           </View>
         </View>
 
+        {/* Network timeouts — real client-side timeout (2102) vs simulated proxy 504 (2101) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'Network timeouts'}</Text>
+          <Text style={styles.description}>
+            {'Client timeout sends a real request with a 1ms timeout so the native layer aborts it ' +
+              '(2102); the remote log should include timeoutMs: 1 and elapsedMs. Proxy timeout ' +
+              'simulates the 504 the Apache reverse proxy returns after waiting 60s for Tomcat (2101).'}
+          </Text>
+          <View style={styles.buttonRow}>
+            <Button
+              title={'Client timeout - real request (2102)'}
+              accessibilityLabel={'Trigger real client-side request timeout'}
+              testID={'error-real-client-timeout'}
+              buttonType={ButtonType.Secondary}
+              onPress={triggerRealClientTimeout}
+            />
+          </View>
+          <View style={styles.buttonRow}>
+            <Button
+              title={'Proxy timeout - simulated 504 (2101)'}
+              accessibilityLabel={'Trigger simulated proxy gateway timeout'}
+              testID={'error-proxy-gateway-timeout'}
+              buttonType={ButtonType.Secondary}
+              onPress={triggerProxyGatewayTimeout}
+            />
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>{'useAlerts Hook'}</Text>
           <Text style={styles.description}>{'useAlerts callbacks'}</Text>
@@ -485,6 +557,25 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
                 testID={`api-error-${errorCode}`}
                 buttonType={ButtonType.Secondary}
                 onPress={() => serverErrorCodeAlertCallbacks[errorCode as keyof typeof serverErrorCodeAlertCallbacks]()}
+              />
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'TLS failure (live)'}</Text>
+          <Text style={styles.description}>
+            {'Real requests badssl.com rejects in the TLS handshake. Expect the "Unsecured Network" modal (2103); ' +
+              'Show Details carries the native reason with the host redacted.'}
+          </Text>
+          {Object.keys(liveTlsFailureCallbacks).map((key) => (
+            <View key={key} style={styles.buttonRow}>
+              <Button
+                title={key}
+                accessibilityLabel={`Request a live TLS failure ${key}`}
+                testID={`tls-live-${key}`}
+                buttonType={ButtonType.Secondary}
+                onPress={liveTlsFailureCallbacks[key]}
               />
             </View>
           ))}

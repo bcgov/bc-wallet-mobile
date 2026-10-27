@@ -5500,56 +5500,56 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@snowplow/browser-plugin-screen-tracking@npm:4.8.1":
-  version: 4.8.1
-  resolution: "@snowplow/browser-plugin-screen-tracking@npm:4.8.1"
+"@snowplow/browser-plugin-screen-tracking@npm:4.8.4":
+  version: 4.8.4
+  resolution: "@snowplow/browser-plugin-screen-tracking@npm:4.8.4"
   dependencies:
-    "@snowplow/browser-tracker-core": "npm:4.8.1"
-    "@snowplow/tracker-core": "npm:4.8.1"
+    "@snowplow/browser-tracker-core": "npm:4.8.4"
+    "@snowplow/tracker-core": "npm:4.8.4"
     tslib: "npm:^2.3.1"
-    uuid: "npm:^10.0.0"
+    uuid: "npm:^11.1.1"
   peerDependencies:
-    "@snowplow/browser-tracker": ~4.8.1
-  checksum: 10c0/b6e82d4eac6ff208239938a52b9fdffb418b7a7efe8286272a7487ef181afe4973ac6cece7f524c2c9eb40e848c10446ce18f3fde6fa59416e05b0adc33204fc
+    "@snowplow/browser-tracker": ~4.8.4
+  checksum: 10c0/2b29f5d7a1222735b6081267c565b317754e056df74968b569d11c9339ca6c0cc0b18fd6718a3af0f66ee3d4c8bd0cdd9272532e698e540ea61ad39c0947595b
   languageName: node
   linkType: hard
 
-"@snowplow/browser-tracker-core@npm:4.8.1":
-  version: 4.8.1
-  resolution: "@snowplow/browser-tracker-core@npm:4.8.1"
+"@snowplow/browser-tracker-core@npm:4.8.4":
+  version: 4.8.4
+  resolution: "@snowplow/browser-tracker-core@npm:4.8.4"
   dependencies:
-    "@snowplow/tracker-core": "npm:4.8.1"
+    "@snowplow/tracker-core": "npm:4.8.4"
     tslib: "npm:^2.3.1"
-    uuid: "npm:^10.0.0"
-  checksum: 10c0/f529cf2ec825ac998d9000102724165bdf8141801354c095cb0dc650aab75b9cef9bb4555ee4fafb04114e9abdddde94e505e65e380f2d6a1845f90b5595b28e
+    uuid: "npm:^11.1.1"
+  checksum: 10c0/74f74ebcd380c15954c98a00fb60ba64467797ccfd200e0460fa21c1669bc1dbe9fd842fbabadfde7a30d415ff5c1a04869fbfb4b341143442fb3c1094dcb4fc
   languageName: node
   linkType: hard
 
-"@snowplow/react-native-tracker@npm:^4.6.8":
-  version: 4.8.1
-  resolution: "@snowplow/react-native-tracker@npm:4.8.1"
+"@snowplow/react-native-tracker@npm:^4.8.4":
+  version: 4.8.4
+  resolution: "@snowplow/react-native-tracker@npm:4.8.4"
   dependencies:
-    "@snowplow/browser-plugin-screen-tracking": "npm:4.8.1"
-    "@snowplow/browser-tracker-core": "npm:4.8.1"
-    "@snowplow/tracker-core": "npm:4.8.1"
+    "@snowplow/browser-plugin-screen-tracking": "npm:4.8.4"
+    "@snowplow/browser-tracker-core": "npm:4.8.4"
+    "@snowplow/tracker-core": "npm:4.8.4"
     tslib: "npm:^2.3.1"
-    uuid: "npm:^10.0.0"
+    uuid: "npm:^11.1.1"
   peerDependencies:
     "@react-native-async-storage/async-storage": ^2.0.0
     react: "*"
     react-native: "*"
-    react-native-get-random-values: ^1.11.0
-  checksum: 10c0/cfdb4bcb53fa5d5f89eef8864e9f5fb71d16dfdae20e522894a76be7f4b8a7d38017f38b7d54ec4c90a6451221317cb7728abe79e35713dd586e688d91b237dc
+    react-native-get-random-values: ^1.11.0 || ^2.0.0
+  checksum: 10c0/1f81acc7eb10ebcda63e70ed00b8771f692294c04ff1ffa2ef2098622c796fb1fabf09e203186554079bb43e531bfd8dbc2c5a080aea6489801e4f733fa0bad2
   languageName: node
   linkType: hard
 
-"@snowplow/tracker-core@npm:4.8.1":
-  version: 4.8.1
-  resolution: "@snowplow/tracker-core@npm:4.8.1"
+"@snowplow/tracker-core@npm:4.8.4":
+  version: 4.8.4
+  resolution: "@snowplow/tracker-core@npm:4.8.4"
   dependencies:
     tslib: "npm:^2.3.1"
-    uuid: "npm:^10.0.0"
-  checksum: 10c0/fc8aa724eb4285c8a6afb106fe1b1b65754cc6a1247149e80d9707ae9f56fee23ad179f5b28e1b6254632f99960641107bc388a7f1fe8d0290357a89548db749
+    uuid: "npm:^11.1.1"
+  checksum: 10c0/778e9b8dd1941ac134b7aefeeacf7074fbb884cb2b813cdfc1f8af808504526a4eb8bd6b8abfebb14e41bc22906b94d221e0384ddd6fce24e95bfacdb415692c
   languageName: node
   linkType: hard
 
@@ -6590,6 +6590,87 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@typescript/native-preview-darwin-arm64@npm:7.0.0-dev.20260707.2":
+  version: 7.0.0-dev.20260707.2
+  resolution: "@typescript/native-preview-darwin-arm64@npm:7.0.0-dev.20260707.2"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-darwin-x64@npm:7.0.0-dev.20260707.2":
+  version: 7.0.0-dev.20260707.2
+  resolution: "@typescript/native-preview-darwin-x64@npm:7.0.0-dev.20260707.2"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-linux-arm64@npm:7.0.0-dev.20260707.2":
+  version: 7.0.0-dev.20260707.2
+  resolution: "@typescript/native-preview-linux-arm64@npm:7.0.0-dev.20260707.2"
+  conditions: os=linux & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-linux-arm@npm:7.0.0-dev.20260707.2":
+  version: 7.0.0-dev.20260707.2
+  resolution: "@typescript/native-preview-linux-arm@npm:7.0.0-dev.20260707.2"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-linux-x64@npm:7.0.0-dev.20260707.2":
+  version: 7.0.0-dev.20260707.2
+  resolution: "@typescript/native-preview-linux-x64@npm:7.0.0-dev.20260707.2"
+  conditions: os=linux & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-win32-arm64@npm:7.0.0-dev.20260707.2":
+  version: 7.0.0-dev.20260707.2
+  resolution: "@typescript/native-preview-win32-arm64@npm:7.0.0-dev.20260707.2"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview-win32-x64@npm:7.0.0-dev.20260707.2":
+  version: 7.0.0-dev.20260707.2
+  resolution: "@typescript/native-preview-win32-x64@npm:7.0.0-dev.20260707.2"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@typescript/native-preview@npm:^7.0.0-dev.20260301.1":
+  version: 7.0.0-dev.20260707.2
+  resolution: "@typescript/native-preview@npm:7.0.0-dev.20260707.2"
+  dependencies:
+    "@typescript/native-preview-darwin-arm64": "npm:7.0.0-dev.20260707.2"
+    "@typescript/native-preview-darwin-x64": "npm:7.0.0-dev.20260707.2"
+    "@typescript/native-preview-linux-arm": "npm:7.0.0-dev.20260707.2"
+    "@typescript/native-preview-linux-arm64": "npm:7.0.0-dev.20260707.2"
+    "@typescript/native-preview-linux-x64": "npm:7.0.0-dev.20260707.2"
+    "@typescript/native-preview-win32-arm64": "npm:7.0.0-dev.20260707.2"
+    "@typescript/native-preview-win32-x64": "npm:7.0.0-dev.20260707.2"
+  dependenciesMeta:
+    "@typescript/native-preview-darwin-arm64":
+      optional: true
+    "@typescript/native-preview-darwin-x64":
+      optional: true
+    "@typescript/native-preview-linux-arm":
+      optional: true
+    "@typescript/native-preview-linux-arm64":
+      optional: true
+    "@typescript/native-preview-linux-x64":
+      optional: true
+    "@typescript/native-preview-win32-arm64":
+      optional: true
+    "@typescript/native-preview-win32-x64":
+      optional: true
+  bin:
+    tsgo: bin/tsgo
+  checksum: 10c0/42c527da5c4d61884e50591dba0a37e6d98f992e355037213f2039d606dd9fddfbacee308d40b4f3b4cfa06f79b07b7e86b45b92a83a9e60741f65e07a031982
+  languageName: node
+  linkType: hard
+
 "@ungap/structured-clone@npm:^1.2.0":
   version: 1.3.1
   resolution: "@ungap/structured-clone@npm:1.3.1"
@@ -7443,7 +7524,7 @@ __metadata:
     "@react-navigation/devtools": "npm:~6.0.27"
     "@react-navigation/native": "npm:~6.0.16"
     "@react-navigation/stack": "npm:~6.3.29"
-    "@snowplow/react-native-tracker": "npm:^4.6.8"
+    "@snowplow/react-native-tracker": "npm:^4.8.4"
     "@testing-library/jest-native": "npm:~5.4.3"
     "@testing-library/react-native": "npm:~13.3.0"
     "@types/eslint__js": "npm:~8.42.3"
@@ -7500,7 +7581,7 @@ __metadata:
     react-native-gifted-chat: "npm:~3.3.2"
     react-native-inappbrowser-reborn: "npm:~3.7.0"
     react-native-incall-manager: "npm:~4.2.1"
-    react-native-keyboard-controller: "npm:1.21.9"
+    react-native-keyboard-controller: "npm:1.21.14"
     react-native-keychain: "npm:~10.0.0"
     react-native-localize: "npm:~2.2.6"
     react-native-logs: "npm:~5.1.0"
@@ -7509,14 +7590,14 @@ __metadata:
     react-native-orientation-locker: "patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch"
     react-native-permissions: "npm:~5.4.1"
     react-native-qrcode-svg: "npm:~6.2.0"
-    react-native-reanimated: "npm:4.5.1"
+    react-native-reanimated: "npm:4.5.5"
     react-native-safe-area-context: "npm:~5.7.0"
     react-native-scalable-image: "npm:~1.1.0"
     react-native-screenguard: "npm:~1.1.0"
     react-native-screens: "npm:~4.26.0"
     react-native-splash-screen: "npm:~3.3.0"
     react-native-sse: "npm:~1.2.1"
-    react-native-svg: "npm:15.15.4"
+    react-native-svg: "npm:15.15.5"
     react-native-svg-transformer: "npm:~1.5.0"
     react-native-tcp-socket: "npm:~6.0.6"
     react-native-toast-message: "npm:~2.1.10"
@@ -7528,8 +7609,8 @@ __metadata:
     react-native-vision-camera-barcode-scanner: "npm:^5.2.3"
     react-native-volume-manager: "npm:~2.2.0"
     react-native-webrtc: "npm:~124.0.6"
-    react-native-webview: "npm:13.16.1"
-    react-native-worklets: "npm:0.10.1"
+    react-native-webview: "npm:13.16.2"
+    react-native-worklets: "npm:0.10.4"
     react-test-renderer: "npm:~19.1.4"
     reflect-metadata: "npm:~0.1.14"
     rxjs: "npm:~7.8.2"
@@ -11165,11 +11246,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"handlebars@npm:4.7.9":
-  version: 4.7.9
-  resolution: "handlebars@npm:4.7.9"
+"handlebars@npm:4.7.10":
+  version: 4.7.10
+  resolution: "handlebars@npm:4.7.10"
   dependencies:
-    minimist: "npm:^1.2.5"
+    minimist: "npm:^1.2.8"
     neo-async: "npm:^2.6.2"
     source-map: "npm:^0.6.1"
     uglify-js: "npm:^3.1.4"
@@ -11179,7 +11260,7 @@ __metadata:
       optional: true
   bin:
     handlebars: bin/handlebars
-  checksum: 10c0/22f8105a7e68e81aff2662bb434edf05f757d21d850731d71cec886d69c10cd33d3c43e34b2892968ec62de8241611851d3d0674c8ef324ea3e01dc66262faa9
+  checksum: 10c0/9b5573584ae5836172ae3f1502d9819568ba1b92ee83b81b18223beeb4c07486595e7b0fa633102beabc66ed06fe6e7da1dd9a9ea8c7072b9550b9a88809165c
   languageName: node
   linkType: hard
 
@@ -13992,7 +14073,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimist@npm:^1.2.0, minimist@npm:^1.2.5, minimist@npm:^1.2.6":
+"minimist@npm:^1.2.0, minimist@npm:^1.2.6, minimist@npm:^1.2.8":
   version: 1.2.8
   resolution: "minimist@npm:1.2.8"
   checksum: 10c0/19d3fcdca050087b84c2029841a093691a91259a47def2f18222f41e7645a0b7c44ef4b40e88a1e58a40c84d2ef0ee6047c55594d298146d0eb3f6b737c20ce6
@@ -15132,13 +15213,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-addr@npm:^2.0.7":
-  version: 2.0.7
-  resolution: "proxy-addr@npm:2.0.7"
+"proxy-addr@npm:2.0.8":
+  version: 2.0.8
+  resolution: "proxy-addr@npm:2.0.8"
   dependencies:
     forwarded: "npm:0.2.0"
     ipaddr.js: "npm:1.9.1"
-  checksum: 10c0/c3eed999781a35f7fd935f398b6d8920b6fb00bbc14287bc6de78128ccc1a02c89b95b56742bf7cf0362cc333c61d138532049c7dedc7a328ef13343eff81210
+  checksum: 10c0/58398f36e5b1f72b1011ca21844c0c41a9a3b6f2f0d101bcdb19abb3f3dd9626b27a96e53da777ded901eb67faed0304a4bc1d435b235e436f66f8e5e1fe1f5e
   languageName: node
   linkType: hard
 
@@ -15692,16 +15773,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-keyboard-controller@npm:1.21.9":
-  version: 1.21.9
-  resolution: "react-native-keyboard-controller@npm:1.21.9"
+"react-native-keyboard-controller@npm:1.21.14":
+  version: 1.21.14
+  resolution: "react-native-keyboard-controller@npm:1.21.14"
   dependencies:
     react-native-is-edge-to-edge: "npm:^1.2.1"
   peerDependencies:
     react: "*"
     react-native: "*"
     react-native-reanimated: ">=3.0.0"
-  checksum: 10c0/2a679df003f23fbfabe067b14ab4fe2e565421a3285d658a8c3242a0362d4a19ebda6139b0e35fdc926377dab291bad06b15167bc63ca715ab795b946812ac76
+  checksum: 10c0/b589762d8229809f8411de45a9c68e1ffb11e19d4958542a11cd2230d52ba40f6a3fbcb2ca1d1f1a51f95b570b5d57d3ba60426bcfe0d41852af08851beb3274
   languageName: node
   linkType: hard
 
@@ -15826,17 +15907,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-reanimated@npm:4.5.1":
-  version: 4.5.1
-  resolution: "react-native-reanimated@npm:4.5.1"
+"react-native-reanimated@npm:4.5.5":
+  version: 4.5.5
+  resolution: "react-native-reanimated@npm:4.5.5"
   dependencies:
     react-native-is-edge-to-edge: "npm:^1.3.1"
     semver: "npm:^7.7.3"
   peerDependencies:
     react: "*"
     react-native: 0.83 - 0.86
-    react-native-worklets: 0.10.x
-  checksum: 10c0/86c64529fc5d59fb1a9083e0934c957c95c7319149efe02f92252237aa1fb208958da1c42705447c12b1d6bff3c23a354e10a05787995082eda1c284703ec0bc
+    react-native-worklets: 0.10.x - 0.11.x
+  checksum: 10c0/0bfdb14846e66c648a55fd842b485dd37833924032f6d790a70a28e9cb973ebadb890bc8a5e4678669f8f2b40ac0c4de989b5b2580aa13fb3f344aeb7f53c00a
   languageName: node
   linkType: hard
 
@@ -15915,17 +15996,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-svg@npm:15.15.4":
-  version: 15.15.4
-  resolution: "react-native-svg@npm:15.15.4"
+"react-native-svg@npm:15.15.5":
+  version: 15.15.5
+  resolution: "react-native-svg@npm:15.15.5"
   dependencies:
     css-select: "npm:^5.1.0"
     css-tree: "npm:^1.1.3"
-    warn-once: "npm:0.1.1"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/1fb8e3ac9d45a4db74731a006cd32f883051844f361974dff49e1a4142aa7c1a0d87e0b04fff06a1932ca53940bcfb94e45e01a845eb451d4659fbf07092629e
+  checksum: 10c0/34b71b6c83d7235efbc4263abaffcbad780375f9e0fca95786e4f1a543a2b6d07e90c7df426f708e85be68331c412066cdc639f4a6ce82bed42bc728050d9402
   languageName: node
   linkType: hard
 
@@ -16037,7 +16117,7 @@ __metadata:
 
 "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch":
   version: 5.2.3
-  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch::version=5.2.3&hash=6e24fc"
+  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch::version=5.2.3&hash=958be2"
   peerDependencies:
     react: "*"
     react-native: "*"
@@ -16046,7 +16126,7 @@ __metadata:
   peerDependenciesMeta:
     react-native-nitro-modules:
       optional: true
-  checksum: 10c0/140a340b05ceab256a6bfbd6cda17eca8e68cf56990ab7b69121f8b5cf66f40645347069ddd5b7c1ef6085e5402100d56a3297ad97a17e0b8db5b8857dafda7c
+  checksum: 10c0/4aaee4d1789756a2e2dd166cb6c1cfbb947528a3dc1e9f6f4265b65bfd8ee6bd9ef48193b6e988a22df097524e9efde33c904edc1c6b2065a2e86bf3a46160ab
   languageName: node
   linkType: hard
 
@@ -16073,22 +16153,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-webview@npm:13.16.1":
-  version: 13.16.1
-  resolution: "react-native-webview@npm:13.16.1"
+"react-native-webview@npm:13.16.2":
+  version: 13.16.2
+  resolution: "react-native-webview@npm:13.16.2"
   dependencies:
+    "@typescript/native-preview": "npm:^7.0.0-dev.20260301.1"
     escape-string-regexp: "npm:^4.0.0"
     invariant: "npm:2.2.4"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/8fdf14447bc430100d78030b8fdb60df223bd51cdb25c06d58757962fea8ad0cd9cdb13a7aa40ff795c671d2b04a561cbeb2b5795d95780d7f0d3734573ebeeb
+  checksum: 10c0/c1af5270e66d0b8722c86d65641bf93bb89f314c73273b6aa60d3c57bbd4ea19544a33d190f3fadf35c9001836dab478e074c0fc2e20de02b433c8ddd6245d09
   languageName: node
   linkType: hard
 
-"react-native-worklets@npm:0.10.1":
-  version: 0.10.1
-  resolution: "react-native-worklets@npm:0.10.1"
+"react-native-worklets@npm:0.10.4":
+  version: 0.10.4
+  resolution: "react-native-worklets@npm:0.10.4"
   dependencies:
     "@babel/plugin-transform-arrow-functions": "npm:^7.27.1"
     "@babel/plugin-transform-class-properties": "npm:^7.28.6"
@@ -16107,7 +16188,7 @@ __metadata:
     "@react-native/metro-config": "*"
     react: "*"
     react-native: 0.83 - 0.86
-  checksum: 10c0/31712cf1b311e3dc96544a665da269cdd6be8cab286234cea968c22509398924020f168b1e9e13a532acc23086048c16f5167aa3737e756711239b6f7521fe5a
+  checksum: 10c0/f68464191364d6c126504e29193a3ac7429bd14bb29179f613d5543c8a3ad8cd0bde50b459142b28266e7f73343b8d2c652749e96446b99b2383e1ea0ad0156c
   languageName: node
   linkType: hard
 
@@ -16987,10 +17068,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shell-quote@npm:1.8.4":
-  version: 1.8.4
-  resolution: "shell-quote@npm:1.8.4"
-  checksum: 10c0/86c93678bc394cb81f5ddcdc87df9c95d279ef9652775cd1cd1eed361404169a8d8cbaacaeed232ab09919e36ee1e5363863570390d78571f8c22b7f6312fb40
+"shell-quote@npm:1.11.0":
+  version: 1.11.0
+  resolution: "shell-quote@npm:1.11.0"
+  checksum: 10c0/c6addefb2c40b3c6172c000306df5781b46ef05cd7ec31017bc600bacd3882f69f55351310fe023dcab692fee98a8062192071d9ab16f5bc9eba056a5b3a378f
   languageName: node
   linkType: hard
 
@@ -17693,16 +17774,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^7.4.3, tar@npm:^7.5.4":
-  version: 7.5.11
-  resolution: "tar@npm:7.5.11"
+"tar@npm:7.5.21":
+  version: 7.5.21
+  resolution: "tar@npm:7.5.21"
   dependencies:
     "@isaacs/fs-minipass": "npm:^4.0.0"
     chownr: "npm:^3.0.0"
     minipass: "npm:^7.1.2"
     minizlib: "npm:^3.1.0"
     yallist: "npm:^5.0.0"
-  checksum: 10c0/b6bb420550ef50ef23356018155e956cd83282c97b6128d8d5cfe5740c57582d806a244b2ef0bf686a74ce526babe8b8b9061527623e935e850008d86d838929
+  checksum: 10c0/bce0e51692356078e6f6a909d5c93f5b4c099c097ffea19b1b1bf10385539a429baba26bca59aabbace68c4519d16f2f1c07afe7eaab55876a449a032480fabc
   languageName: node
   linkType: hard
 
@@ -18457,12 +18538,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^10.0.0":
-  version: 10.0.0
-  resolution: "uuid@npm:10.0.0"
+"uuid@npm:^11.1.1":
+  version: 11.1.1
+  resolution: "uuid@npm:11.1.1"
   bin:
-    uuid: dist/bin/uuid
-  checksum: 10c0/eab18c27fe4ab9fb9709a5d5f40119b45f2ec8314f8d4cf12ce27e4c6f4ffa4a6321dc7db6c515068fa373c075b49691ba969f0010bf37f44c37ca40cd6bf7fe
+    uuid: dist/esm/bin/uuid
+  checksum: 10c0/9e3af58eba872ece5a5e76f4773a94fc78a0ef2c2444c38dbe6b42f41dadf76c01850fd783604f27986f6195e6286aef064d45987d401b2a33127b98ddf7c0c5
   languageName: node
   linkType: hard
 
@@ -18568,7 +18649,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"warn-once@npm:0.1.1, warn-once@npm:^0.1.0":
+"warn-once@npm:^0.1.0":
   version: 0.1.1
   resolution: "warn-once@npm:0.1.1"
   checksum: 10c0/f531e7b2382124f51e6d8f97b8c865246db8ab6ff4e53257a2d274e0f02b97d7201eb35db481843dc155815e154ad7afb53b01c4d4db15fb5aa073562496aff7
@@ -18628,14 +18709,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"websocket-driver@npm:>=0.5.1":
-  version: 0.7.4
-  resolution: "websocket-driver@npm:0.7.4"
+"websocket-driver@npm:0.7.5":
+  version: 0.7.5
+  resolution: "websocket-driver@npm:0.7.5"
   dependencies:
     http-parser-js: "npm:>=0.5.1"
     safe-buffer: "npm:>=5.1.0"
     websocket-extensions: "npm:>=0.1.1"
-  checksum: 10c0/5f09547912b27bdc57bac17b7b6527d8993aa4ac8a2d10588bb74aebaf785fdcf64fea034aae0c359b7adff2044dd66f3d03866e4685571f81b13e548f9021f1
+  checksum: 10c0/843a3c9f529ce07f2721829f70f62986247525ab22625e857b69da13dc90967bacfe57b85e196801b565cd797e309ddd5b06fa8435732e34e8a8ab6201d7abed
   languageName: node
   linkType: hard
 

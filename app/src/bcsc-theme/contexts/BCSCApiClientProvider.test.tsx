@@ -5,6 +5,8 @@ import {
   BCSCApiClientProvider,
 } from '@/bcsc-theme/contexts/BCSCApiClientContext'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import * as Bifold from '@bifold/core'
 import { MockLogger } from '@bifold/core'
 import { renderHook, waitFor } from '@testing-library/react-native'
@@ -347,6 +349,64 @@ describe('BCSCApiClientProvider', () => {
       expect(result.current?.client).toBeInstanceOf(BCSCApiClient)
       expect(result.current?.error).toBeNull()
       expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it.each([
+    ['a request timeout', AppError.fromErrorDefinition(ErrorRegistry.SERVER_TIMEOUT)],
+    ['a raw timeout', new AxiosError('timeout of 90000ms exceeded', 'ECONNABORTED')],
+    [
+      'a server error',
+      AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: { response: { status: 503 } } }),
+    ],
+    [
+      'a rejected certificate',
+      AppError.fromErrorDefinition(ErrorRegistry.UNSECURED_NETWORK, {
+        cause: new AxiosError('Network Error: Hostname <host> not verified:', 'ERR_NETWORK'),
+        track: false,
+      }),
+    ],
+  ])('should keep the client usable after %s during initialization', async (_, mockError) => {
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const factoryResetMock = jest.mocked(FactoryReset)
+
+    const mockStore: any = {
+      stateLoaded: true,
+      developer: { environment: { iasApiBaseUrl: 'https://example.com' }, remoteDebugging: { sessionId: undefined } },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
+      },
+      bcsc: {},
+    }
+    const dispatchMock = jest.fn()
+    const mockLogger = new MockLogger()
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
+    bifoldMock.useServices.mockReturnValue([mockLogger])
+    bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+
+    bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockRejectedValue(mockError)
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ErrorAlertProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
+      </ErrorAlertProvider>
+    )
+
+    const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
+
+    await waitFor(() => {
+      expect(result.current?.isClientReady).toBe(true)
+      expect(result.current?.client).toBeInstanceOf(BCSCApiClient)
+      expect(result.current?.error).toBeNull()
+      expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).toHaveBeenCalledTimes(1)
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('using fallback endpoints'),
+        expect.any(Object)
+      )
     })
   })
 

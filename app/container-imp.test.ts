@@ -1,7 +1,8 @@
-import { DispatchAction, PersistentStorage, TOKENS } from '@bifold/core'
+import { DispatchAction, LocalStorageKeys, PersistentStorage, TOKENS } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
+import { Config } from 'react-native-config'
 import { AppContainer } from './container-imp'
-import { BCSCBanner } from './src/bcsc-theme/components/AppBanner'
+import { BCSCBanner } from './src/bcsc-theme/types/banners'
 import { BCLocalStorageKeys } from './src/store'
 
 // LOAD_STATE-level regression test for the reportUUID -> installId migration (issue #4325):
@@ -33,7 +34,7 @@ const buildContainer = () => {
   const logger = new RemoteLogger({} as RemoteLoggerOptions) // class is mocked globally in jestSetup.js
   new AppContainer(fakeBifoldContainer, ((k: string) => k) as never, jest.fn(), jest.fn(), logger).init()
 
-  return { registrations }
+  return { registrations, logger }
 }
 
 describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiring)', () => {
@@ -53,7 +54,10 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     storeValueForKeySpy = jest
       .spyOn(PersistentStorage, 'storeValueForKey')
       .mockImplementation((key: unknown, value: unknown) => {
-        storeCalls.push({ key, value: JSON.parse(JSON.stringify(value)) })
+        const snapshot = JSON.parse(JSON.stringify(value))
+        storeCalls.push({ key, value: snapshot })
+        // A successful write changes what the next load reads, as real storage does
+        mockStoredValues[key as string] = snapshot
         return Promise.resolve(undefined)
       })
   })
@@ -145,6 +149,81 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
 
     const state = dispatch.mock.calls[0][0].payload[0]
     expect(state.bcsc.bannerMessages).toEqual([serviceNotice])
+    expect(storeValueForKeySpy).not.toHaveBeenCalled()
+  })
+
+  describe('retired 4.0.x expiry banner', () => {
+    const serviceNotice = {
+      id: BCSCBanner.IAS_SERVER_NOTIFICATION,
+      title: 'Notice',
+      type: 'warning',
+      dismissible: false,
+    }
+    const retiredBanner = {
+      id: 'CardExpiringSoonBanner',
+      title: 'Expires in 9 days',
+      description: 'Renew your account before it expires',
+      type: 'warning',
+      dismissible: false,
+    }
+
+    const load = async () => {
+      const { registrations, logger } = buildContainer()
+      const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
+      const dispatch = jest.fn()
+      await loadState(dispatch)
+      return { dispatch, logger }
+    }
+
+    it('drops it on load, persists the cleaned blob once, and stays gone after a restart', async () => {
+      mockStoredValues[BCLocalStorageKeys.BCSC] = {
+        appVersion: '1.0.0',
+        installId: 'already-migrated',
+        bannerMessages: [retiredBanner, serviceNotice],
+      }
+
+      const { dispatch: firstDispatch } = await load()
+
+      expect(firstDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
+      expect(storeCalls).toHaveLength(1)
+      const [{ key, value }] = storeCalls as [{ key: string; value: { bannerMessages: unknown[] } }]
+      expect(key).toBe(BCLocalStorageKeys.BCSC)
+      expect(value.bannerMessages).toEqual([serviceNotice])
+
+      // Restart: a fresh container reads whatever the first load persisted
+      storeCalls = []
+      storeValueForKeySpy.mockClear()
+
+      const { dispatch: secondDispatch } = await load()
+
+      expect(secondDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
+      expect(storeValueForKeySpy).not.toHaveBeenCalled()
+    })
+
+    it('still loads cleaned state when the write-back fails, logs it, and retries the cleanup next launch', async () => {
+      mockStoredValues[BCLocalStorageKeys.BCSC] = {
+        appVersion: '1.0.0',
+        installId: 'already-migrated',
+        bannerMessages: [retiredBanner, serviceNotice],
+      }
+      storeValueForKeySpy.mockRejectedValue(new Error('disk full'))
+
+      const { dispatch: firstDispatch, logger: firstLogger } = await load()
+      // The write-back is not awaited by LOAD_STATE; let its rejection settle before asserting
+      await new Promise(setImmediate)
+
+      expect(firstDispatch).toHaveBeenCalledTimes(1)
+      expect(firstDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
+      expect(storeValueForKeySpy).toHaveBeenCalledTimes(1)
+      expect(firstLogger.error).toHaveBeenCalledWith('Failed to write back migrated BCSC state', expect.any(Error))
+
+      // Nothing was persisted, so the next launch reads the same legacy blob, cleans it and tries to write again
+      const { dispatch: secondDispatch } = await load()
+      await new Promise(setImmediate)
+
+      expect(secondDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
+      expect(storeValueForKeySpy).toHaveBeenCalledTimes(2)
+    })
   })
 
   it('keeps the empty bannerMessages default when the persisted state has none', async () => {
@@ -158,5 +237,97 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
 
     const state = dispatch.mock.calls[0][0].payload[0]
     expect(state.bcsc.bannerMessages).toEqual([])
+  })
+})
+
+describe('AppContainer TOKENS.LOAD_STATE (mediator preferences vs MEDIATOR_URL)', () => {
+  const previous = 'https://mediator.example/invite?oob=previous'
+  const current = 'https://mediator.example/invite?oob=current'
+  const custom = 'https://mediator-dev.example/invite?oob=custom'
+
+  let storeValueForKeySpy: jest.SpyInstance
+  let storeCalls: { key: unknown; value: unknown }[]
+
+  const loadPreferences = async () => {
+    const { registrations } = buildContainer()
+    const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
+    const dispatch = jest.fn()
+
+    await loadState(dispatch)
+    // The write-back is not awaited by LOAD_STATE; let its chain settle before asserting on it
+    await new Promise((resolve) => setImmediate(resolve))
+
+    return dispatch.mock.calls[0][0].payload[0].preferences
+  }
+
+  beforeEach(() => {
+    mockStoredValues = {}
+    storeCalls = []
+    Config.MEDIATOR_URL = current
+    jest
+      .spyOn(PersistentStorage.prototype, 'getValueForKey')
+      .mockImplementation((key: string) => Promise.resolve(mockStoredValues[key] as never))
+    storeValueForKeySpy = jest
+      .spyOn(PersistentStorage, 'storeValueForKey')
+      .mockImplementation((key: unknown, value: unknown) => {
+        storeCalls.push({ key, value: JSON.parse(JSON.stringify(value)) })
+        return Promise.resolve(undefined)
+      })
+  })
+
+  afterEach(() => {
+    delete Config.MEDIATOR_URL
+    jest.restoreAllMocks()
+  })
+
+  it('adopts MEDIATOR_URL over a persisted selection when no URL was recorded, and records both', async () => {
+    mockStoredValues[LocalStorageKeys.Preferences] = { selectedMediator: previous, availableMediators: [previous] }
+
+    const preferences = await loadPreferences()
+
+    expect(preferences.selectedMediator).toBe(current)
+    expect(preferences.availableMediators).toEqual([current])
+    expect(storeCalls).toEqual([
+      { key: LocalStorageKeys.Preferences, value: expect.objectContaining({ selectedMediator: current }) },
+      { key: BCLocalStorageKeys.MediatorUrl, value: current },
+    ])
+  })
+
+  it('keeps a mediator picked in developer mode while MEDIATOR_URL is unchanged', async () => {
+    mockStoredValues[BCLocalStorageKeys.MediatorUrl] = current
+    mockStoredValues[LocalStorageKeys.Preferences] = { selectedMediator: custom, availableMediators: [current, custom] }
+
+    const preferences = await loadPreferences()
+
+    expect(preferences.selectedMediator).toBe(custom)
+    expect(preferences.availableMediators).toEqual([current, custom])
+    expect(storeValueForKeySpy).not.toHaveBeenCalled()
+  })
+
+  it('moves a user on the previous default to a changed MEDIATOR_URL', async () => {
+    mockStoredValues[BCLocalStorageKeys.MediatorUrl] = previous
+    mockStoredValues[LocalStorageKeys.Preferences] = {
+      selectedMediator: previous,
+      availableMediators: [previous, custom],
+    }
+
+    const preferences = await loadPreferences()
+
+    expect(preferences.selectedMediator).toBe(current)
+    expect(preferences.availableMediators).toEqual([current, custom])
+    expect(storeCalls.map(({ key }) => key)).toEqual([LocalStorageKeys.Preferences, BCLocalStorageKeys.MediatorUrl])
+  })
+
+  it('leaves the recorded URL alone when the preferences cannot be written', async () => {
+    mockStoredValues[BCLocalStorageKeys.MediatorUrl] = previous
+    mockStoredValues[LocalStorageKeys.Preferences] = { selectedMediator: previous, availableMediators: [previous] }
+    storeValueForKeySpy.mockImplementation((key: unknown) => {
+      storeCalls.push({ key, value: undefined })
+      return key === LocalStorageKeys.Preferences ? Promise.reject(new Error('disk full')) : Promise.resolve(undefined)
+    })
+
+    await loadPreferences()
+
+    expect(storeCalls.map(({ key }) => key)).toEqual([LocalStorageKeys.Preferences])
   })
 })

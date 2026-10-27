@@ -1,4 +1,5 @@
 import useEvidenceApi from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { EVIDENCE_UPLOAD_TIMEOUT_MS } from '@/constants'
 import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -268,6 +269,20 @@ describe('useEvidenceApi - upload log context', () => {
     })
   })
 
+  // Android maps the axios timeout to OkHttp's total callTimeout, so the default API timeout must
+  // not cut off a large upload that is still making progress.
+  it('uses the longer evidence upload timeout for photo and video binary uploads', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.uploadPhotoEvidenceBinary('https://upload.test/photo', jpegBytes, 'image')
+      await result.current.uploadVideoEvidenceBinary('https://upload.test/video', mp4Bytes)
+    })
+
+    expect(apiClient.put.mock.calls[0][2].timeout).toBe(EVIDENCE_UPLOAD_TIMEOUT_MS)
+    expect(apiClient.put.mock.calls[1][2].timeout).toBe(EVIDENCE_UPLOAD_TIMEOUT_MS)
+  })
+
   it('omits media_format (not a placeholder) when the binary is unrecognizable, keeping the other fields', async () => {
     const result = renderApi()
 
@@ -351,5 +366,56 @@ describe('useEvidenceApi - upload log context', () => {
       media_stage: 'metadata',
       media_bytes: 300,
     })
+  })
+})
+
+describe('useEvidenceApi - error handling opt-out', () => {
+  const submitPayload = { upload_uris: ['u1'], sha256: 'sha' }
+  const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
+  const mockStore: any = { bcsc: {}, bcscSecure: { deviceCode: 'test-device-code' } }
+
+  const apiClient: any = {
+    endpoints: { evidence: 'https://example.test/evidence' },
+    get: jest.fn(),
+    put: jest.fn(),
+    post: jest.fn(),
+    logger: mockLogger,
+  }
+
+  const renderApi = () => renderHook(() => useEvidenceApi(apiClient)).result
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending' } })
+    ;(getAccount as jest.Mock).mockResolvedValue({ clientID: 'client-id', issuer: 'issuer' })
+    jest.mocked(Bifold.useStore).mockReturnValue([mockStore as Bifold.State, jest.fn()])
+  })
+
+  it('opts the submit PUT out of the global error handling; useEvidenceService owns its errors', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.sendVerificationRequest('v1', submitPayload)
+    })
+
+    expect(apiClient.put).toHaveBeenCalledWith(
+      'https://example.test/evidence/v1/verifications/v1',
+      submitPayload,
+      expect.objectContaining({ skipBearerAuth: true, skipOnErrorHandler: true })
+    )
+  })
+
+  it('opts the status GET out of the global error handling; useEvidenceService owns its errors', async () => {
+    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending' } })
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.getVerificationRequestStatus('v1')
+    })
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      'https://example.test/evidence/v1/verifications/v1',
+      expect.objectContaining({ skipBearerAuth: true, skipOnErrorHandler: true })
+    )
   })
 })

@@ -35,12 +35,16 @@ exports[`TakePhoto renders correctly 1`] = `
           "id": "mock-device",
         }
       }
+      implementationMode="compatible"
       isActive={true}
       mirrorMode={[Function]}
       onConfigured={[Function]}
       onError={[Function]}
+      onInterruptionEnded={[Function]}
+      onInterruptionStarted={[Function]}
       onStarted={[Function]}
       onStopped={[Function]}
+      orientationSource="interface"
       outputs={
         [
           {
@@ -314,7 +318,7 @@ exports[`TakePhoto renders correctly 1`] = `
           {
             "busy": undefined,
             "checked": undefined,
-            "disabled": undefined,
+            "disabled": true,
             "expanded": undefined,
             "selected": undefined,
           }
@@ -329,7 +333,7 @@ exports[`TakePhoto renders correctly 1`] = `
         }
         accessible={true}
         collapsable={false}
-        focusable={true}
+        focusable={false}
         onClick={[Function]}
         onResponderGrant={[Function]}
         onResponderMove={[Function]}
@@ -345,7 +349,7 @@ exports[`TakePhoto renders correctly 1`] = `
             "borderWidth": 4,
             "height": 70,
             "justifyContent": "center",
-            "opacity": 1,
+            "opacity": 0.4,
             "width": 70,
           }
         }

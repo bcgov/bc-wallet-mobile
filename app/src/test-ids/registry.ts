@@ -113,6 +113,11 @@ export const TestIds = {
       takePhoto: 'TakePhoto',
       cancel: 'CancelCamera',
       toggleFlash: 'ToggleFlash',
+      notReady: 'CameraNotReady',
+    },
+    /** `CameraInterruptedOverlay` — covers any camera preview while the camera session is interrupted. */
+    cameraInterrupted: {
+      overlay: 'CameraInterrupted',
     },
     /** `AppBanner` composes `<part>-<banner type>`; the type is the banner's variant, not a screen. */
     appBanner: {
@@ -761,6 +766,12 @@ export const TestIds = {
     forgetPairingsScreen: {
       confirm: 'ForgetAllPairings',
     },
+    /** Developer-mode mediator picker. Rows compose from the mediator label (the invitation's label,
+     *  or its host without the payload); `scan` opens the QR scanner, whose hand-off lands back here. */
+    configureMediator: {
+      mediatorRowPrefix: 'MediatorRow-',
+      scan: 'ScanMediator',
+    },
     /** Edit-nickname form (verified-only; `InputWithValidation` id 'accountNickname'). Validation is
      *  length-only — there is no duplicate-nickname check. Saving updates the Profile-card name. */
     editNickname: {
@@ -1005,6 +1016,8 @@ export const TestIds = {
     toggleRemoteLogging: 'ToggleRemoteLoggingSwitch',
     toggleEnableProxy: 'ToggleEnableProxy',
     toggleTheme: 'ToggleTheme',
+    /** BCSC only, main stack only: opens the mediator picker. */
+    configureMediator: 'ConfigureMediator',
     /** Raises a deliberate error so the ErrorInfoCard path can be exercised by hand. */
     errorAlertTest: 'ErrorAlertTest',
     fetchPersonCredentialTest: 'FetchPersonCredentialTest',

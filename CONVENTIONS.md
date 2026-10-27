@@ -79,6 +79,24 @@ next mount.
 session's outputs never starts or crashes the app. Keeping one camera mounted and pausing it with
 `isActive` instead was tried and rejected: on Android the paused preview failed to restart.
 
+## Cameras: an interrupted or stopped camera is not a broken one
+
+Pass `useCameraInterruption` to every `<Camera>` and render `CameraInterruptedOverlay` while it
+reports an interruption. Only allow photo capture while the session has started and isn't
+interrupted. A capture that still loses that race (`isCameraNotReadyCaptureError`) gets an inline
+"try again" notice, not the camera error modal; a second one in a row gets the modal. Wait out a
+single recoverable runtime error with `useRecoverableCameraError` before failing over. Pass the
+screen's camera error handler to `useCameraNotReadyTimeout`, so a camera that stays unstarted or
+interrupted for 8 seconds still reaches the error modal (camera screens have no help menu, so that
+modal is the user's only way to report). To see these states without a failing camera, follow the
+"Note: ... to simulate camera errors" comments in `MaskedCamera.tsx` and `useCameraRecovery.ts`,
+then switch on the dev-only flags in `app/src/bcsc-theme/hooks/useCameraEventSimulation.ts`.
+
+**Why:** VisionCamera v5 reports a camera held by another app as an interruption that CameraX retries,
+not as an error, and iOS restarts the session after a media services reset (our patch). Without
+this the preview sits black with no explanation, or the user sees "camera broken" for a camera that
+is about to come back.
+
 ## Buttons: loading spinner follows the label
 
 The spinner inside a `Button` takes the button's resolved label colour (including the disabled
@@ -89,6 +107,22 @@ spinner inside a button.
 **Why:** `ButtonLoading` used a fixed grey, which was unreadable on a blue Primary button. Bifold 3.1.3
 lets `Button` hand its label colour to the spinner, so every button type and theme stays legible
 without per-screen colour props (#4743).
+
+## Mediator: MEDIATOR_URL wins only when it changes
+
+The build's `MEDIATOR_URL` is the default mediator. On load, a changed URL (a new build) replaces the
+previous default and moves installs that were on it; a mediator picked in developer mode stays
+selected either way, so switching survives restarts and upgrades. The URL last reconciled with is
+recorded in local storage, and an install without a record starts over from the build's URL.
+BC Wallet switches through Bifold's Configure mediator screen (sign-out, agent restart); BC Services
+Card switches in place from its Developer screen (default mediator and message pickup move on the
+live agent, the device token follows, and a failed switch puts the previous mediator back).
+Connections made before a switch keep routing through their original mediator, which is no longer
+picked up from, the same as after an agent restart.
+
+**Why:** Always forcing `MEDIATOR_URL` silently disabled developer-mode mediator switching (the
+selection reverted on the next launch), while never forcing it kept an upgraded app on a retired
+mediator.
 
 ## Settings: rows are decided before the first render
 
@@ -128,9 +162,10 @@ Rules that keep this consistent:
   `ListButtonGroup` positions every element child, so a row rendering `null` still takes a slot.
 - From the prompt, `push` the resume step; never `replace` the prompt away. A screen that `replace`s back onto
   the prompt relies on its `animationTypeForReplace: 'pop'`.
-- RootStack never remounts on a factory reset, so its once-per-session routing state (prompt answered,
-  startup resume evaluated) is reset when `hasAccount` turns false: removing the account and onboarding
-  again offers the prompt like a fresh install.
+- RootStack never remounts on a factory reset or a lock, so its once-per-session routing state (prompt
+  answered, resume evaluated) is reset when `hasAccount` or `didAuthenticate` turns false: removing the
+  account and onboarding again offers the prompt like a fresh install, and an unlock resumes a started
+  verification like a relaunch does (the lock clears the secure state, in-progress status included).
 
 **Why:** many people install the app only to verify their BC Services Card; an unverified Home is a dead end
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer

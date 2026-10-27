@@ -30,6 +30,13 @@ on:
       targets:
         type: string
         required: true
+      # The ring approver's comment: TestFlight's What to Test and Play's
+      # release notes. Empty for ring-3 and ring-4, whose testers may be the
+      # public, so they get only the "Release x.y.z-n" line.
+      what_to_test:
+        type: string
+        required: false
+        default: ''
 
 permissions: {}
 
@@ -48,7 +55,7 @@ jobs:
       matrix:
         variant: ${{ fromJSON(inputs.widen_ipa_variants) }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Use the build's variant config
         uses: ./.github/workflows/actions/use-build-variant-config
@@ -76,6 +83,7 @@ jobs:
           bundle_id: ${{ env.IOS_BUNDLE_ID }}
           version_code: ${{ inputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
+          what_to_test: ${{ inputs.what_to_test }}
           beta_groups: ${{ steps.ring.outputs.spaced }}
 
   google-promote:
@@ -92,7 +100,7 @@ jobs:
       matrix:
         variant: ${{ fromJSON(inputs.widen_aab_variants) }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Use the build's variant config
         uses: ./.github/workflows/actions/use-build-variant-config
@@ -130,6 +138,7 @@ jobs:
           version_code: ${{ inputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
           build_number: ${{ inputs.run_number }}
+          release_notes: ${{ inputs.what_to_test }}
           target_tracks: ${{ steps.ring.outputs.spaced }}
 
   firebase-ios-widen:
@@ -147,14 +156,14 @@ jobs:
         variant: ${{ fromJSON(inputs.widen_ipa_variants) }}
     steps:
       - name: Download IPA
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ios-${{ matrix.variant }}.ipa
           path: ${{ runner.temp }}/firebase-artifact
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Use the build's variant config
         uses: ./.github/workflows/actions/use-build-variant-config
@@ -205,14 +214,14 @@ jobs:
         variant: ${{ fromJSON(inputs.widen_apk_variants) }}
     steps:
       - name: Download APK
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-${{ matrix.variant }}.apk
           path: ${{ runner.temp }}/firebase-artifact
           run-id: ${{ inputs.run_id }}
           github-token: ${{ github.token }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Use the build's variant config
         uses: ./.github/workflows/actions/use-build-variant-config

@@ -14,6 +14,7 @@ import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
+import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { appLogger } from './utils/logger'
 
@@ -67,6 +68,22 @@ export interface NonBCSCUserMetadata {
     province: ProvinceCode
     country: 'CA' // currently we only support Canada
   }
+}
+
+/**
+ * The residential address form as the user last left it, kept in memory for the signed-in session
+ * so a trip back through the verify flow brings their unsaved input back. Partial, untrimmed
+ * and unvalidated: it is never sent anywhere and never written to native storage, so it is dropped
+ * with the rest of the secure state on lock, logout or a verification reset, and a write that lands
+ * after such a clear is refused (see the reducer). Only a submitted address
+ * (`NonBCSCUserMetadata.address`) outlives the session.
+ */
+export interface ResidentialAddressDraft {
+  streetAddress: string
+  streetAddress2: string
+  city: string
+  province: ProvinceCode | null
+  postalCode: string
 }
 
 export interface BCSCState {
@@ -194,6 +211,8 @@ export interface BCSCSecureState {
   // === Non-BCSC User Metadata ===
   /** Metadata for users verifying with non-BCSC cards (name, address) */
   userMetadata?: NonBCSCUserMetadata
+  /** In memory only: the address form as the user left it this session (see ResidentialAddressDraft) */
+  residentialAddressDraft?: ResidentialAddressDraft
 
   // === Account Flags (flattened) ===
   /** Whether user chose to skip email verification */
@@ -303,6 +322,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateSecureDeviceCodeExpiresAt',
   UPDATE_SECURE_CARD_PROCESS = 'bcsc/updateSecureCardProcess',
   UPDATE_SECURE_USER_METADATA = 'bcsc/updateSecureUserMetadata',
+  UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT = 'bcsc/updateSecureResidentialAddressDraft',
   UPDATE_SECURE_REFRESH_TOKEN = 'bcsc/updateSecureRefreshToken',
   UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateSecureRegistrationAccessToken',
   UPDATE_SECURE_ACCESS_TOKEN = 'bcsc/updateSecureAccessToken',
@@ -382,6 +402,8 @@ export const initialBCSCState: BCSCState = {
 // literal that never mentions them (e.g. `{ reportUUID: 'x' }` in tests)
 type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'>
 
+const currentBannerIds = new Set<string>(Object.values(BCSCBanner))
+
 /**
  * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
  * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
@@ -392,6 +414,8 @@ type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 
  * - Onboarded installs that predate `verificationStarted`: launches resumed whoever had stored
  *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
  *   count as started.
+ * - Stored banners whose id is not a current `BCSCBanner` (e.g. 4.0.x `CardExpiringSoonBanner`) are dropped,
+ *   including ids from a newer build; a dropped banner returns only when its producer adds it again.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
@@ -415,6 +439,14 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
     migrated = true
   }
 
+  if (Array.isArray(bcsc.bannerMessages)) {
+    const bannerMessages = bcsc.bannerMessages.filter((banner) => currentBannerIds.has(banner.id))
+    if (bannerMessages.length !== bcsc.bannerMessages.length) {
+      bcsc = { ...bcsc, bannerMessages }
+      migrated = true
+    }
+  }
+
   return { bcsc, migrated }
 }
 
@@ -430,6 +462,8 @@ export enum BCLocalStorageKeys {
   BCSC = 'BCSC',
   Mode = 'Mode',
   CachedJWK = 'CachedJWK',
+  /** MEDIATOR_URL the mediator preferences were last reconciled with */
+  MediatorUrl = 'MediatorUrl',
 }
 
 export const initialState: BCState = {
@@ -632,6 +666,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_USER_METADATA: {
       const userMetadata = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, userMetadata }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT: {
+      const draft: ResidentialAddressDraft | undefined = (action?.payload || []).pop() ?? undefined
+      // A draft is a pending edit of userMetadata.address, so it is only kept while that record is in
+      // memory. The address screen writes its draft as it unmounts, and a lock or a verification reset
+      // unmounts it by clearing the secure state first: that write lands here after the clear and must
+      // not bring the input back.
+      const residentialAddressDraft = state.bcscSecure.userMetadata ? draft : undefined
+      const bcscSecure = { ...state.bcscSecure, residentialAddressDraft }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN: {

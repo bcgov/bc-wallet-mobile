@@ -11,6 +11,7 @@ import { createContext, PropsWithChildren, useCallback, useContext, useMemo, use
 
 interface ErrorModalOptions {
   action?: ErrorModalAction
+  onDismiss?: () => void
   // dismissible?: boolean TODO (MD): Future enhancement to make error modals blocking/non-dismissible
 }
 
@@ -31,6 +32,11 @@ export interface ErrorAlertContextType {
    * Show native alert with title and description
    */
   emitAlert: (title: string, description: string, options?: AlertOptions) => void
+
+  /**
+   * Indicates whether the error modal is currently visible
+   */
+  isErrorModalVisible: boolean
 }
 
 export const ErrorAlertContext = createContext<ErrorAlertContextType | null>(null)
@@ -111,8 +117,9 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
     () => ({
       emitErrorModal,
       emitAlert,
+      isErrorModalVisible: Boolean(errorPayload),
     }),
-    [emitErrorModal, emitAlert]
+    [emitErrorModal, emitAlert, errorPayload]
   )
 
   return (

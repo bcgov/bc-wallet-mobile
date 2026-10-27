@@ -129,6 +129,18 @@ export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 4 * 1000
  */
 export const JWK_CACHE_TTL_MS = 60 * 60 * 1000
 
+/**
+ * Default timeout for API requests (90s). IAS server has a global 60s timeout.
+ * Padding the client side timeout (1.5x) so we can determine if a request is failing server side or client side, based on the timeout difference
+ */
+export const BCSC_API_TIMEOUT_MS = 90 * 1000
+
+/**
+ * Timeout for evidence binary uploads: 10 minutes, gives plenty of time for large uploads
+ * over slow networks to finish work without hanging on a pending screen forever
+ */
+export const EVIDENCE_UPLOAD_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes
+
 // Notification constants
 /**
  * Notifications within this window of expiring (or already expired) show the yellow
@@ -161,6 +173,7 @@ export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
 export const VIDEO_MP4_MIME_TYPE = 'video/mp4'
 export const MIN_PROMPT_DURATION_SECONDS = 2
+export const MIN_SELFIE_VIDEO_DURATION_SECONDS = 6
 export const enum LIVE_CALL_UNAVAILABLE_REASONS {
   MAINTENANCE = 'MAINTENANCE',
   HOLIDAY = 'HOLIDAY',

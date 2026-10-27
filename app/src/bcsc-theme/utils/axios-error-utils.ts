@@ -2,6 +2,7 @@ import { AppError, ErrorDefinition, ErrorRegistry } from '@/errors'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AppEventCode, isAppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
+import { Platform } from 'react-native'
 import z from 'zod'
 
 enum AxiosErrorCode {
@@ -35,6 +36,115 @@ export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosE
   ) {
     axiosError.code = axiosError.response.data.error
     axiosError.message = axiosError.response.data.error_description
+  }
+
+  return axiosError
+}
+
+/** The axios message for a request that produced no HTTP response; the runtime gives it no reason. */
+const AXIOS_NETWORK_ERROR_MESSAGE = 'Network Error'
+
+const NATIVE_REASON_MAX_LENGTH = 200
+
+/**
+ * Certificate/TLS validation wording from OkHttp and Conscrypt (Android) and NSURLError (iOS). Loose on
+ * purpose: a miss shows the misleading "No internet" modal. `certif` covers "certificate",
+ * "certification path" and the French iOS wording. Conscrypt reports plain connection drops with TLS
+ * vocabulary ("Read error: ssl=0x…", "SSL handshake aborted: … Connection reset by peer"); none of
+ * those match here.
+ */
+const TLS_FAILURE_PATTERN =
+  /certif|trust anchor|hostname .+ not verified|chain validation|pin verification|SSLHandshakeException|SSLPeerUnverifiedException|handshake failed|an ssl error has occurred/i
+
+// "javax.net.ssl.SSLHandshakeException" → "SSLHandshakeException"; a package path would otherwise read as a hostname
+const JAVA_PACKAGE_PREFIX_PATTERN = /\b(?:[a-z_][a-z0-9_]*\.)+(?=[A-Z])/g
+// IPv6 literals, bracketed or bare: two or more hex groups, so compressed ("::1"), scoped ("fe80::1%wlan0")
+// and IPv4-mapped ("::ffff:203.0.113.10") forms all match. A mapped address's dotted quad hangs off the
+// last hex group, which doubles as its first octet; an alternation there breaches Sonar's regex complexity
+// limit. Android's connect timeout names the device's own address ("… from /fe80::1%wlan0 (port 51234) …"),
+// not just the server's.
+const IPV6_PATTERN = /\[?(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(?:(?:\.\d{1,3}){3})?(?:%[a-z0-9_-]+)?\]?/gi
+// IPv4 addresses and dotted hostnames
+const HOST_OR_IP_PATTERN = /\b(?:\d{1,3}\.){3}\d{1,3}\b|\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b/gi
+
+/**
+ * Make a native error string safe for the modal, remote logs and incident reports: first line only
+ * (Android appends the certificate dump on the following lines), hostnames and IP addresses replaced,
+ * whitespace collapsed, length capped. IPv6 goes first so an IPv4-mapped address is one literal, not two.
+ */
+const redactNativeReason = (text: string): string =>
+  text
+    .split(/\r?\n/)[0]
+    .replace(JAVA_PACKAGE_PREFIX_PATTERN, '')
+    .replace(IPV6_PATTERN, '<host>')
+    .replace(HOST_OR_IP_PATTERN, '<host>')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, NATIVE_REASON_MAX_LENGTH)
+
+/**
+ * The reason React Native left on the XMLHttpRequest for a request that died before any response:
+ * OkHttp/Conscrypt text on Android, the NSURLError description on iOS. Redacted; undefined when
+ * nothing was stored. RN only stores it for text response types, and the `responseText` getter throws
+ * for binary ones (an arraybuffer picture download), hence the guard.
+ */
+const getNativeNetworkReason = (error: AxiosError): string | undefined => {
+  try {
+    const text = (error.request as { responseText?: unknown } | undefined)?.responseText
+    return typeof text === 'string' && text.trim() ? redactNativeReason(text) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Response-interceptor sibling of {@link formatIasAxiosResponseError} for the opposite case: no response
+ * came back at all. Replaces axios' bare "Network Error" with the redacted native reason, so
+ * `AppError.technicalMessage` (the modal's Debug line), `toJSON().cause` and the logger say what
+ * actually happened on the wire. The axios `code` is left untouched because {@link isNetworkError}
+ * and the error policies key off it. Idempotent: only the bare message is rewritten.
+ *
+ * @param error - The axios error to format
+ * @returns The same error, with its message extended when a native reason was available
+ */
+export const formatNetworkAxiosError = (error: AxiosError): AxiosError => {
+  if (error.code !== AxiosErrorCode.NETWORK_ERROR || error.message !== AXIOS_NETWORK_ERROR_MESSAGE) {
+    return error
+  }
+
+  const reason = getNativeNetworkReason(error)
+
+  if (reason) {
+    error.message = `${AXIOS_NETWORK_ERROR_MESSAGE}: ${reason}`
+  }
+
+  return error
+}
+
+/**
+ * Reclassifies an Android client-side timeout as a timeout.
+ *
+ * On android, React Native only flags a SoecketTimeoutException as a timeout, so any client side timeout will appear as a generic network error.
+ * This function detects that and reclassifies the error as a timeout (ECONNABORTED).
+ * iOS reports its timeout correctly as ECONNABORTED, so no reclassification is needed.
+ *
+ * @param axiosError - The AxiosError to normalize (mutated in place)
+ * @returns The same AxiosError, reclassified as ECONNABORTED when it was a client-side timeout
+ */
+export const normalizeAxiosTimeoutError = (axiosError: AxiosError): AxiosError => {
+  const timeout = axiosError.config?.timeout
+  const startedAt = axiosError.config?._requestStartedAt
+
+  if (
+    Platform.OS === 'android' &&
+    axiosError.code === AxiosErrorCode.NETWORK_ERROR &&
+    !axiosError.response &&
+    timeout &&
+    startedAt &&
+    Date.now() - startedAt >= timeout
+  ) {
+    axiosError.code = AxiosErrorCode.ECONNABORTED
+    axiosError.message = `timeout of ${timeout}ms exceeded`
   }
 
   return axiosError
@@ -159,18 +269,80 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
 }
 
 /**
- * Determines if the provided error is a network error.
+ * Determines if the provided error is a network error: the request produced no HTTP response.
  *
  * @param {unknown} error - The error to check
+ * @param depth - Recursion guard for the cause chain
  * @returns {*} {boolean} True if the error is a network error, false otherwise.
  */
-export const isNetworkError = (error: unknown): boolean => {
+export const isNetworkError = (error: unknown, depth = 0): boolean => {
+  if (depth > 10) {
+    return false
+  }
+
   if (error instanceof AxiosError) {
     return (error as any)?.isNetworkError === true || error.code === AxiosErrorCode.NETWORK_ERROR
   }
 
   if (error instanceof AppError) {
-    return error.appEvent === AppEventCode.NO_INTERNET
+    return error.appEvent === AppEventCode.NO_INTERNET || isNetworkError(error.cause, depth + 1)
+  }
+
+  return false
+}
+
+// Guards against circular `cause` references
+const MAX_CAUSE_DEPTH = 5
+
+/**
+ * Checks a single error for a network error, a timeout, or a 5xx server response.
+ *
+ * @param {unknown} error - The error to check
+ * @returns {*} {boolean} True if this error is transient, false otherwise.
+ */
+const isTransientError = (error: unknown): boolean => {
+  if (isNetworkError(error)) {
+    return true
+  }
+
+  // Covers timeout AppErrors created without an AxiosError cause
+  if (error instanceof AppError && error.appEvent === AppEventCode.SERVER_TIMEOUT) {
+    return true
+  }
+
+  const axiosError = error as Partial<AxiosError>
+
+  if (axiosError.code === AxiosErrorCode.ECONNABORTED) {
+    return true
+  }
+
+  const status = axiosError.response?.status
+  return typeof status === 'number' && status >= 500
+}
+
+/**
+ * Determines if the provided error is a request failure that may succeed on a retry: a network
+ * error, a request timeout, or a 5xx server response.
+ *
+ * Walks cause chain for transient errors (network, timeout, 5xx) and returns true if any are found.
+ * Walk is limited to 5 to prevent infinite loops
+ *
+ * @param {unknown} error - The error to check
+ * @returns {*} {boolean} True if this error alone is transient, false otherwise.
+ */
+export const isTransientRequestError = (error: unknown): boolean => {
+  let current: unknown = error
+
+  // TODO: Refactor cause-chain walks into a shared helper
+  //   - isDeviceStorageFullError (errorHandler.ts)
+  //   - describeCauseChain / deepest (useAgentSetupViewModel.ts)
+  // Bounded walk of the cause chain to guard against cycles
+  for (let depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
+    if (isTransientError(current)) {
+      return true
+    }
+
+    current = (current as { cause?: unknown }).cause
   }
 
   return false
@@ -213,14 +385,19 @@ const getClientErrorDefinitionFromStatus = (status?: number): ErrorDefinition =>
  *
  * @param errorCode - The error code from an AxiosError to map to an AppError definition
  * @param status - The HTTP response status, used to disambiguate the collapsed `ERR_BAD_REQUEST` (4xx) code
+ * @param tlsFailure - Whether the collapsed `ERR_NETWORK` code was a rejected certificate rather than a dead network
  * @returns An ErrorDefinition from the ErrorRegistry if a mapping exists, or null if no mapping is found
  */
-export const getAxiosErrorDefinition = (errorCode?: string, status?: number): ErrorDefinition | null => {
+export const getAxiosErrorDefinition = (
+  errorCode?: string,
+  status?: number,
+  tlsFailure = false
+): ErrorDefinition | null => {
   switch (errorCode) {
     case AxiosErrorCode.ECONNABORTED:
       return ErrorRegistry.SERVER_TIMEOUT
     case AxiosErrorCode.NETWORK_ERROR:
-      return ErrorRegistry.NO_INTERNET
+      return tlsFailure ? ErrorRegistry.UNSECURED_NETWORK : ErrorRegistry.NO_INTERNET
     case AxiosErrorCode.BAD_REQUEST:
       return getClientErrorDefinitionFromStatus(status)
     case AxiosErrorCode.BAD_RESPONSE:
@@ -244,8 +421,11 @@ export const getAxiosErrorDefinition = (errorCode?: string, status?: number): Er
  */
 export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   const errorCode = error.code
+  // The response interceptor has already put the native reason on the message (formatNetworkAxiosError)
+  const tlsFailure = errorCode === AxiosErrorCode.NETWORK_ERROR && TLS_FAILURE_PATTERN.test(error.message)
   const errorDefinition =
-    getAxiosErrorDefinition(errorCode, error.response?.status) ?? getErrorDefinitionFromAppEventCode(errorCode)
+    getAxiosErrorDefinition(errorCode, error.response?.status, tlsFailure) ??
+    getErrorDefinitionFromAppEventCode(errorCode)
 
   const statusCode = error.response?.status ?? 0
   const track = !(error.config?.suppressStatusCodeLogs ?? []).includes(statusCode)
@@ -265,6 +445,9 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
       http_status: error.response?.status,
       http_response_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.response?.data),
       http_request_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.config?.data),
+      http_timeout_ms: error.config?.timeout,
+      // Calculates how long a request has been running based on _requestStartedAt timestamp
+      http_elapsed_ms: error.config?._requestStartedAt ? Date.now() - error.config._requestStartedAt : undefined,
       // TODO (MD): Remove this (uploadLogContext) from the config and inject directly into the
       // error at the service layer to prevent the config from being polluted with api specific details.
 

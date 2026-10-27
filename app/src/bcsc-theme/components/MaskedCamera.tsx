@@ -13,16 +13,25 @@ import {
   useTheme,
 } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, CameraOutput, CameraPhotoOutput, MirrorMode } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+// Note: uncomment the following lines to simulate camera errors
+// import {
+//   SIMULATE_CAMERA_EVENTS,
+//   throwIfSimulatingNotReadyCapture,
+//   useSimulatedMediaServicesResets,
+// } from '../hooks/useCameraEventSimulation'
+import { useCameraInterruption, useCameraNotReadyTimeout, useRecoverableCameraError } from '../hooks/useCameraRecovery'
 import { isCameraControlCanceledError, useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
-import { getCameraMetadata } from './utils/camera'
+import CameraInterruptedOverlay from './CameraInterruptedOverlay'
+import { getCameraMetadata, isCameraNotReadyCaptureError } from './utils/camera'
+import { OUTPUT_ORIENTATION_SOURCE, PREVIEW_IMPLEMENTATION_MODE } from './utils/camera-output'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -63,6 +72,14 @@ const MaskedCamera = ({
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
   const [cameraStarted, setCameraStarted] = useState(false)
+  const { isInterrupted, interruptionReason, onInterruptionStarted, onInterruptionEnded, clearInterruption } =
+    useCameraInterruption('MaskedCamera')
+  const shouldAwaitRecovery = useRecoverableCameraError()
+  // Capturing while the session is stopped or interrupted fails (iOS -11803, Android "Camera is closed.")
+  const isCameraReady = cameraStarted && !isInterrupted
+  const [showNotReadyNotice, setShowNotReadyNotice] = useState(false)
+  // A second "not ready" capture failure in a row is reported instead, so the user isn't stuck retrying
+  const consecutiveNotReadyCapturesRef = useRef(0)
 
   const { cameraRef, device, takePhoto } = useVisionCamera({
     position: cameraFace,
@@ -163,10 +180,29 @@ const MaskedCamera = ({
       // Add camera device and format info to the error context for better debugging
       appError.addContext(cameraMetadata)
 
+      if (shouldAwaitRecovery(error)) {
+        logger.warn(
+          '[MaskedCamera] recoverable runtime error, waiting for the camera session to restart',
+          appError.toJSON()
+        )
+        return
+      }
+
       emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), appError)
     },
-    [appStateStatus, cameraMetadata, emitErrorModal, logger, t]
+    [appStateStatus, cameraMetadata, emitErrorModal, logger, shouldAwaitRecovery, t]
   )
+
+  // Note: uncomment the following line to simulate camera errors
+  // useSimulatedMediaServicesResets(onError)
+
+  useCameraNotReadyTimeout({
+    shouldBeRunning: Boolean(device) && isFocused && !isBackgroundedAppState(appStateStatus),
+    isStarted: cameraStarted,
+    interruptionReason,
+    onTimeout: onError,
+  })
+
   if (!device) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -182,15 +218,37 @@ const MaskedCamera = ({
   }
 
   const takeAndSavePhoto = async () => {
-    if (!isFocused) {
+    if (!isFocused || !isCameraReady) {
       return
     }
 
+    setShowNotReadyNotice(false)
+
     try {
+      // Note: uncomment the following line to simulate camera errors
+      // throwIfSimulatingNotReadyCapture()
       const photo = await takePhoto()
+      consecutiveNotReadyCapturesRef.current = 0
       onPhotoTaken(photo.filePath)
       logger.info(`[MaskedCamera] Photo taken and saved temporarily: ${photo.filePath}`)
     } catch (error) {
+      if (isCameraNotReadyCaptureError(error)) {
+        consecutiveNotReadyCapturesRef.current += 1
+      } else {
+        consecutiveNotReadyCapturesRef.current = 0
+      }
+
+      if (consecutiveNotReadyCapturesRef.current === 1) {
+        // The session stopped between the tap and the capture; the shutter re-enables once it runs again
+        logger.warn('[MaskedCamera] Photo capture failed because the camera was not running', {
+          message: (error as Error).message,
+        })
+        setShowNotReadyNotice(true)
+        return
+      }
+
+      consecutiveNotReadyCapturesRef.current = 0
+
       logger.error('[MaskedCamera] Error taking photo', error as Error)
       onError(error)
     }
@@ -202,14 +260,23 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
+        implementationMode={PREVIEW_IMPLEMENTATION_MODE}
+        orientationSource={OUTPUT_ORIENTATION_SOURCE}
         mirrorMode={mirrorMode}
         isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
         onError={onError}
         outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
         torchMode={torchMode}
         onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
-        onStarted={() => setCameraStarted(true)}
+        onStarted={() => {
+          // Note: to simulate camera errors, replace `true` with `!SIMULATE_CAMERA_EVENTS.neverStarts`
+          setCameraStarted(true)
+          clearInterruption()
+          setShowNotReadyNotice(false)
+        }}
         onStopped={() => setCameraStarted(false)}
+        onInterruptionStarted={onInterruptionStarted}
+        onInterruptionEnded={onInterruptionEnded}
       />
       {maskType && (
         <SVGOverlay
@@ -220,6 +287,7 @@ const MaskedCamera = ({
           overlayOpacity={maskOverlayOpacity}
         />
       )}
+      {isInterrupted && <CameraInterruptedOverlay />}
       <View style={styles.instructionText}>
         {cameraLabel && (
           <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
@@ -237,6 +305,15 @@ const MaskedCamera = ({
             {cameraInstructions}
           </ThemedText>
         )}
+        {showNotReadyNotice && (
+          <ThemedText
+            style={{ color: 'white', textAlign: 'center', marginTop: Spacing.sm }}
+            accessibilityLiveRegion="polite"
+            testID={testIdWithKey(TestIds.shared.maskedCamera.notReady)}
+          >
+            {t('BCSC.CameraDisclosure.CameraNotReady')}
+          </ThemedText>
+        )}
       </View>
       <View style={styles.controlsContainer}>
         <TouchableOpacity
@@ -249,10 +326,12 @@ const MaskedCamera = ({
           <ThemedText style={{ color: ColorPalette.grayscale.white }}>{t('Global.Cancel')}</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.captureButton}
+          style={[styles.captureButton, !isCameraReady && { opacity: 0.4 }]}
           onPress={preventDoublePress(takeAndSavePhoto)}
+          disabled={!isCameraReady}
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
+          accessibilityState={{ disabled: !isCameraReady }}
           testID={testIdWithKey(TestIds.shared.maskedCamera.takePhoto)}
         ></TouchableOpacity>
         {hasTorch ? (

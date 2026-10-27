@@ -60,6 +60,7 @@ import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen
 import { ServiceNoticeScreen } from '../features/service-notice/ServiceNoticeScreen'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
+import { ConfigureMediatorScreen } from '../features/settings/ConfigureMediatorScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
 import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
@@ -367,6 +368,14 @@ const MainStack: React.FC = () => {
             options={{
               headerShown: true,
               title: t('BCSC.Settings.ProofRequestExpiry'),
+            }}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ConfigureMediator}
+            component={ConfigureMediatorScreen}
+            options={{
+              headerShown: true,
+              title: t('BCSC.ConfigureMediator.ScreenTitle'),
             }}
           />
           <Stack.Screen

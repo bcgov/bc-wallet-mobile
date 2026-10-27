@@ -73,7 +73,7 @@ jobs:
           PROJECTS_TOKEN: op://bcsc-mobile-app-cd/github-projects/credential
 
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # The two tags can be arbitrarily old, so history and tags both
           # need to be complete for merge-base / git log to see them.

@@ -1,6 +1,8 @@
 /* eslint-disable no-extra-semi */
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/system-checks'
@@ -195,6 +197,33 @@ describe('System Checks', () => {
 
         expect(getIdToken).toHaveBeenCalledTimes(1)
         expect(result).toBe(false)
+      })
+
+      // A failed id token lookup says nothing about the device count, so it must not show the
+      // "device limit reached" banner (or clear an existing one): the check throws and the runner
+      // runs neither onFail nor onSuccess.
+      it.each([
+        ['times out', AppError.fromErrorDefinition(ErrorRegistry.SERVER_TIMEOUT)],
+        ['fails with a server error', AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR)],
+        ['has no internet', AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET)],
+        ['has no JWK to verify with', AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)],
+      ])('should leave the banner unchanged when the id token request %s', async (_, error) => {
+        const mockUtils = makeUtils()
+        const getIdToken = jest.fn().mockRejectedValue(error)
+        const mockLogger = new MockLogger()
+
+        const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils)
+
+        await expect(deviceCountCheck.runCheck()).rejects.toBe(error)
+
+        const results = await runSystemChecks([deviceCountCheck], mockLogger)
+
+        expect(results).toEqual([false])
+        expect(mockUtils.dispatch).not.toHaveBeenCalled()
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'runSystemChecks: DeviceCountSystemCheck threw during runCheck',
+          error
+        )
       })
 
       it('should return true early when dismissed before cooldown time', async () => {

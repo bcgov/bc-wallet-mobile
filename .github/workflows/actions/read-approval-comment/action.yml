@@ -1,0 +1,51 @@
+name: Read approval comment
+description: |
+  Read the comment left when a ring's environment was approved in this run,
+  and fail if there is none. GitHub cannot make the approval comment
+  required, so this gate does. It runs inside the approve job so that
+  re-running the failed job asks for approval again.
+
+inputs:
+  ring:
+    description: The ring's environment name, e.g. ring-1
+    required: true
+
+outputs:
+  comment:
+    description: The approver's comment
+    value: ${{ steps.read.outputs.comment }}
+
+runs:
+  using: composite
+  steps:
+    - name: Read the approver's comment
+      id: read
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RING: ${{ inputs.ring }}
+      run: |
+        set -euo pipefail
+        # Newest review first, so a re-run's approval wins over the one before it.
+        COMMENT=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/approvals" \
+          --jq '[.[] | select(any(.environments[]; .name == $ENV.RING))][0].comment // ""')
+
+        if [ -z "${COMMENT//[[:space:]]/}" ]; then
+          echo "::error::${RING} was approved without a comment. The comment becomes the build's TestFlight \"What to Test\", so it is required. Re-run this job and write what testers should test in the comment box when approving."
+          exit 1
+        fi
+        # Play's release notes allow 500 (TestFlight 4000); the rest is room
+        # for the "Release x.y.z-n" line both get ahead of the comment.
+        if [ "${#COMMENT}" -gt 450 ]; then
+          echo "::error::The ${RING} approval comment is ${#COMMENT} characters; it can be at most 450. Re-run this job and approve with a shorter comment."
+          exit 1
+        fi
+
+        echo "What to Test for ${RING}:"
+        echo "${COMMENT}"
+        DELIMITER="COMMENT_$(openssl rand -hex 8)"
+        {
+          echo "comment<<${DELIMITER}"
+          echo "${COMMENT}"
+          echo "${DELIMITER}"
+        } >> "$GITHUB_OUTPUT"

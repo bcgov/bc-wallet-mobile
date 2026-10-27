@@ -1,7 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import type { MediaFormat, MediaKind } from '@/bcsc-theme/utils/media-format'
 import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
-import { VerificationRequestStatus, VIDEO_MP4_MIME_TYPE } from '@/constants'
+import { EVIDENCE_UPLOAD_TIMEOUT_MS, VerificationRequestStatus, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
@@ -10,10 +10,6 @@ import type { BarcodePayload } from 'react-native-bcsc-core'
 import { createPreVerificationJWT, EvidenceType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
-
-export interface EvidenceApiOptions {
-  skipOnErrorHandler?: boolean
-}
 
 export interface VerificationPrompt {
   id: number
@@ -237,6 +233,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
     [_getDeviceCode, apiClient]
   )
 
+  /**
+   * Submits the uploaded evidence for review.
+   * @param verificationRequestId - The ID of the verification request to submit.
+   * @param payload - The upload URIs and the sha256 the recording was issued against.
+   * @returns Promise resolving to the verification submit response data.
+   */
   const sendVerificationRequest = useCallback(
     async (
       verificationRequestId: string,
@@ -252,6 +254,8 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            // Note: Errors handled in `useEvidenceService`
+            skipOnErrorHandler: true,
           }
         )
         const isTerminal = await cancelRemindersOnTerminalStatus(data)
@@ -284,14 +288,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
   )
 
   /**
-   * Fetches the status of a verification request by its ID and handles errors appropriately.
-   * TODO (MD): deprecate `options` once all callsites use `useEvidenceService` instead of `useEvidenceApi`.
+   * Fetches the status of a verification request by its ID.
    * @param verificationRequestId - The ID of the verification request to check.
-   * @param options - Optional configuration for the API call.
    * @returns Promise resolving to the verification status response data.
    */
   const getVerificationRequestStatus = useCallback(
-    async (verificationRequestId: string, options?: EvidenceApiOptions): Promise<VerificationStatusResponseData> => {
+    async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.get<VerificationStatusResponseData>(
@@ -301,7 +303,8 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-            skipOnErrorHandler: options?.skipOnErrorHandler,
+            // Note: Errors handled in `useEvidenceService`
+            skipOnErrorHandler: true,
           }
         )
         await cancelRemindersOnTerminalStatus(data)
@@ -390,6 +393,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             Accept: 'image/jpeg',
           },
           skipBearerAuth: true,
+          timeout: EVIDENCE_UPLOAD_TIMEOUT_MS,
           uploadLogContext: {
             media_kind: mediaKind,
             media_stage: 'binary',
@@ -415,6 +419,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             Accept: VIDEO_MP4_MIME_TYPE,
           },
           skipBearerAuth: true,
+          timeout: EVIDENCE_UPLOAD_TIMEOUT_MS,
           uploadLogContext: {
             media_kind: 'video',
             media_stage: 'binary',
