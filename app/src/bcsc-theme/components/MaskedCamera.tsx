@@ -24,7 +24,7 @@ import { isCameraControlCanceledError, useVisionCamera } from '../hooks/useVisio
 import { isBackgroundedAppState } from '../utils/app-state'
 import CameraInterruptedOverlay from './CameraInterruptedOverlay'
 import { getCameraMetadata, isCameraNotReadyCaptureError } from './utils/camera'
-import { PREVIEW_IMPLEMENTATION_MODE } from './utils/camera-output'
+import { OUTPUT_ORIENTATION_SOURCE, PREVIEW_IMPLEMENTATION_MODE } from './utils/camera-output'
 
 const controlHitSlop = { top: hitSlop.top, bottom: hitSlop.bottom }
 
@@ -345,6 +345,7 @@ const MaskedCamera = ({
           style={styles.camera}
           device={device}
           implementationMode={PREVIEW_IMPLEMENTATION_MODE}
+          orientationSource={OUTPUT_ORIENTATION_SOURCE}
           mirrorMode={mirrorMode}
           isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
           onError={onError}

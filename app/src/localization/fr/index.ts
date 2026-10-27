@@ -1596,6 +1596,10 @@ const translation = {
       "Title": "This document has expired. (FR)",
       "Description": "Please choose a different form of ID to continue. (FR)"
     },
+    "BcscCardAlreadyAdded": {
+      "Title": "This is the BC Services Card you already added. (FR)",
+      "Description": "Please choose a different photo ID to continue. (FR)"
+    },
     "FactoryReset": {
       "Title": "Problem with App (FR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (FR)",

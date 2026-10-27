@@ -1,5 +1,4 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { isNetworkError } from '@/bcsc-theme/utils/axios-error-utils'
 import { IdToken } from '@/bcsc-theme/utils/id-token'
 import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 import { BCDispatchAction } from '@/store'
@@ -30,6 +29,7 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
    * Runs the device count check to verify if the number of registered devices is within the allowed limit.
    *
    * @returns {Promise<boolean>} - A promise that resolves to true if the device count is within the limit, false otherwise.
+   * @throws When the id token cannot be retrieved
    */
   async runCheck() {
     const deviceCountBannerCooldown = __DEV__
@@ -41,15 +41,11 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
       }
     }
 
-    try {
-      const idToken = await this.getIdToken()
+    // Only a confirmed count at or over the limit fails the check. A failed id token lookup (offline,
+    // timeout) says nothing about the device count, so let it throw
+    const idToken = await this.getIdToken()
 
-      return idToken.bcsc_devices_count < idToken.bcsc_max_devices
-    } catch (error) {
-      this.utils.logger.error('DeviceSystemCheck: Id token request failed', error as Error)
-      // Treat network errors as non-failures (handled by InternetStatusSystemCheck)
-      return isNetworkError(error)
-    }
+    return idToken.bcsc_devices_count < idToken.bcsc_max_devices
   }
 
   /**

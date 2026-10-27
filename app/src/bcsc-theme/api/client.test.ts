@@ -1,6 +1,6 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { loadPersistedJwk, persistJwk } from '@/bcsc-theme/api/jwk-cache'
-import { JWK_CACHE_TTL_MS } from '@/constants'
+import { BCSC_API_TIMEOUT_MS, JWK_CACHE_TTL_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -10,7 +10,7 @@ import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { initLanguages } from '@bifold/core'
 import { AxiosError } from 'axios'
 import { jwtDecode } from 'jwt-decode'
-import { DeviceEventEmitter } from 'react-native'
+import { DeviceEventEmitter, Platform } from 'react-native'
 import { getAccount, getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
 
 jest.mock('jwt-decode', () => ({
@@ -37,6 +37,14 @@ describe('BCSC Client', () => {
     const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
     expect(client.client.defaults.headers['Content-Type']).toBe('application/json; charset=utf-8')
+  })
+
+  it('should set the default request timeout above the 60s reverse proxy timeout', () => {
+    const mockLogger = createMockLogger()
+    const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+    expect(client.client.defaults.timeout).toBe(BCSC_API_TIMEOUT_MS)
+    expect(BCSC_API_TIMEOUT_MS).toBeGreaterThan(60_000)
   })
 
   it('should set User-Agent default header', () => {
@@ -469,6 +477,26 @@ describe('BCSC Client', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('[BCSCApiClient] Error handler threw', handlerError)
     })
 
+    it.each([
+      ['android', AppEventCode.SERVER_TIMEOUT],
+      ['ios', AppEventCode.NO_INTERNET],
+    ])('on %s, maps a network error raised after the request timeout elapsed to %s', async (os, expectedAppEvent) => {
+      jest.replaceProperty(Platform, 'OS', os as typeof Platform.OS)
+      const mockLogger = createMockLogger()
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      // Android's OkHttp callTimeout surfaces as a generic ERR_NETWORK; the interceptor should
+      // reclassify it from the elapsed time so it is reported as a timeout, not as offline.
+      client.client.defaults.adapter = async (config: any) => {
+        await new Promise((resolve) => setTimeout(resolve, 5))
+        throw new AxiosError('Network Error', 'ERR_NETWORK', config)
+      }
+
+      await expect(client.get('/endpoint', { skipBearerAuth: true, timeout: 1 })).rejects.toMatchObject({
+        appEvent: expectedAppEvent,
+      })
+    })
+
     describe('network errors (no response)', () => {
       const TLS_NATIVE_TEXT =
         'Hostname id.example.com not verified:\n    certificate: sha256/abc=\n    subjectAltNames: [other.example.com]'
@@ -822,6 +850,23 @@ describe('BCSC Client', () => {
 
       expect(config.headers.set).toHaveBeenCalledWith('Authorization', 'Bearer my-token')
     })
+
+    it('should stamp the dispatch time on the config for elapsed-time logging', async () => {
+      jest.spyOn(Date, 'now').mockReturnValue(123_456)
+      const mockLogger = createMockLogger()
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      const config = {
+        url: '/test',
+        method: 'get',
+        headers: { set: jest.fn() },
+        skipBearerAuth: true,
+      }
+
+      const result = await (client as any).handleRequest(config)
+
+      expect(result._requestStartedAt).toBe(123_456)
+    })
   })
 
   describe('HTTP methods', () => {
@@ -1058,6 +1103,41 @@ describe('BCSC Client', () => {
         expect(result).toEqual(mockJwk)
         expect(getSpy).toHaveBeenCalledTimes(2)
         expect(persistJwk).toHaveBeenCalledWith('https://example.com', mockJwk, mockLogger)
+      })
+
+      it('retries a request timeout and succeeds on the next attempt', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        let attempts = 0
+
+        // Real adapter so the timeout flows through the response interceptor and reaches the retry
+        // gate as the SERVER_TIMEOUT AppError it is in production.
+        client.client.defaults.adapter = (config: any) => {
+          attempts += 1
+          if (attempts === 1) {
+            return Promise.reject(new AxiosError('timeout of 15000ms exceeded', 'ECONNABORTED', config))
+          }
+          return Promise.resolve({ data: { keys: [mockJwk] }, status: 200, statusText: 'OK', headers: {}, config })
+        }
+
+        const resultPromise = client.fetchJwk()
+        await jest.advanceTimersByTimeAsync(500)
+        const result = await resultPromise
+
+        expect(attempts).toBe(2)
+        expect(result).toEqual(mockJwk)
+      })
+
+      it('uses a short per-attempt timeout so retried timeouts stay bounded', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [mockJwk] } } as any)
+
+        await client.fetchJwk()
+
+        const [, config] = getSpy.mock.calls[0]
+        expect(config?.timeout).toBeGreaterThan(0)
+        expect(config?.timeout).toBeLessThan(BCSC_API_TIMEOUT_MS)
       })
 
       it('does not retry a non-retryable 4xx error and falls back to the persisted key', async () => {

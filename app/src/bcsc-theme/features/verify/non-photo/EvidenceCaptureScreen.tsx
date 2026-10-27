@@ -8,6 +8,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { buildBarcodePayload } from '@/bcsc-theme/utils/barcode'
 import { DriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
+import { isSameCardSerial } from '@/bcsc-theme/utils/card-serial'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { isAxiosAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
@@ -66,7 +67,8 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { cardType } = route.params
   const [store] = useStore<BCState>()
   const isNonBCSCFlow = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
-  const { clearAdditionalEvidence, updateEvidenceMetadata, truncateEvidence } = useSecureActions()
+  const isNonPhotoBcscFlow = store.bcscSecure.cardProcess === BCSCCardProcess.BCSCNonPhoto
+  const { updateEvidenceMetadata, truncateEvidence, removeEvidenceByType } = useSecureActions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
@@ -78,10 +80,23 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const licenseRef = useRef<DriversLicenseMetadata | null>(null)
   // Guards against re-hitting /device/barcodes on every photo of a multi-sided
   // card — the scanned barcodes can't change once both refs are set (scanning
-  // stops below), so the backend only needs to be asked once per card.
+  // stops below), so the backend only needs to be asked once per card. A retake
+  // restores it together with the barcodes it was asked about.
   const barcodesCheckedRef = useRef(false)
+  // The barcodes as they stood when the last photo was accepted, restored on retake: the scanner
+  // reads only until both codes are known, so what it read for a discarded shot must not carry over.
+  const acceptedBarcodesRef = useRef<{
+    serial: string | null
+    license: DriversLicenseMetadata | null
+    checked: boolean
+  }>({ serial: null, license: null, checked: false })
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-  const { failedToReadFromLocalStorageAlert, documentExpiredAlert } = useAlerts(navigation)
+  const {
+    failedToReadFromLocalStorageAlert,
+    failedToWriteToLocalStorageAlert,
+    documentExpiredAlert,
+    bcscCardAlreadyAddedAlert,
+  } = useAlerts(navigation)
   const scannerOptions: BarcodeScannerOutputOptions = {
     barcodeFormats: scanner.codeTypes,
     onBarcodeScanned: async (codes) => {
@@ -129,23 +144,21 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   }
 
   /**
-   * Handles accepting the captured photo and proceeding to the next step.
+   * Decides, before a photo is accepted, what to do when the barcodes read while framing it belong
+   * to a BC Services Card. Returns true when the capture must stop here: the user was rerouted into
+   * that card's own setup, or the card was rejected and they were sent back to the ID list.
    *
-   * @returns A promise that resolves when the process is complete.
+   * @returns Whether the capture was stopped.
    */
-  const handleAcceptPhoto = async () => {
-    if (!currentPhotoPath || !currentSide) {
-      return
-    }
-
+  const resolveScannedBcscCard = async (): Promise<boolean> => {
     /**
      * Non-BCSC flow only: the user may have scanned a real BC Services Card.
      * Let the backend decide via POST /device/barcodes rather than guessing
      * client-side. Only a card presenting BOTH a serial (1D) and an AAMVA (2D)
      * barcode can match, so that's the only case we ask about. A real BCSC
-     * reroutes into setup; anything else — a lone serial (e.g. a PR card's 1D
-     * barcode), a passport, a DL — falls through to evidence capture with no
-     * error (matching v3 behaviour).
+     * reroutes into setup, which also settles the IDs collected so far; anything
+     * else — a lone serial (e.g. a PR card's 1D barcode), a passport, a DL — falls
+     * through to evidence capture with no error (matching v3 behaviour).
      *
      * In the Non-Photo BCSC flow we've already done authorizeDevice, so we skip.
      */
@@ -153,11 +166,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       barcodesCheckedRef.current = true
 
       try {
-        const switchedToBcsc = await scanner.handleScanBarcodes(bcscSerialRef.current, licenseRef.current)
+        const switchedToBcsc = await scanner.handleScanBarcodes(bcscSerialRef.current, licenseRef.current, cardType)
 
         if (switchedToBcsc) {
-          await clearAdditionalEvidence()
-          return
+          return true
         }
       } catch (error) {
         if (isAxiosAppError(error, 400) && error.cause.message === AppEventCode.CARD_EXPIRED) {
@@ -169,11 +181,56 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
           )
           navigation.navigate(BCSCScreens.EvidenceTypeList, { cardProcess: BCSCCardProcess.NonBCSC })
           documentExpiredAlert()
-          return
+          return true
         }
 
         // Note: Card not found is a valid error - continue with the evidence capture flow
       }
+    }
+
+    /**
+     * Non-Photo BCSC flow only: the additional photo ID must be a different document from the
+     * BC Services Card already registered on this device. Nothing stops that card from being
+     * photographed again under a photo-ID type such as BCID, which would submit a request whose
+     * only photo ID is the non-photo card itself (#4894). Its serial — the 1D barcode, or the
+     * PDF-417's DCN — gives it away, so the entry is dropped before anything is stored and the
+     * user is sent back to the list to choose another ID.
+     */
+    if (isNonPhotoBcscFlow && isSameCardSerial(bcscSerialRef.current, store.bcscSecure.serial)) {
+      try {
+        // By type rather than by position: the store is updated before it is persisted, so a retry
+        // after a failed persist must not drop an earlier, valid ID.
+        await removeEvidenceByType(cardType)
+      } catch (error) {
+        failedToWriteToLocalStorageAlert(error)
+        return true
+      }
+
+      // merge keeps the list's photo filter as the user left it
+      navigation.navigate({
+        name: BCSCScreens.EvidenceTypeList,
+        params: { cardProcess: BCSCCardProcess.BCSCNonPhoto },
+        merge: true,
+      })
+      bcscCardAlreadyAddedAlert()
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Handles accepting the captured photo and proceeding to the next step.
+   *
+   * @returns A promise that resolves when the process is complete.
+   */
+  const handleAcceptPhoto = async () => {
+    if (!currentPhotoPath || !currentSide) {
+      return
+    }
+
+    if (await resolveScannedBcscCard()) {
+      return
     }
 
     /**
@@ -195,6 +252,12 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     const newPhotos = [...capturedPhotos]
     newPhotos[currentIndex] = photoMetadata
     setCapturedPhotos(newPhotos)
+    // The photo is kept, and with it whatever the scanner read while framing it.
+    acceptedBarcodesRef.current = {
+      serial: bcscSerialRef.current,
+      license: licenseRef.current,
+      checked: barcodesCheckedRef.current,
+    }
 
     if (isLastSide) {
       // Build barcode payload to include in the single dispatch alongside photo metadata.
@@ -219,6 +282,12 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   }
 
   const handleRetakePhoto = () => {
+    // Forget what the scanner read for the discarded shot. It reads only until both codes are known,
+    // so a code from this shot would otherwise be judged, and uploaded, with the next one.
+    const { serial, license, checked } = acceptedBarcodesRef.current
+    bcscSerialRef.current = serial
+    licenseRef.current = license
+    barcodesCheckedRef.current = checked
     setCaptureState(CaptureState.CAPTURING)
     setCurrentPhotoPath(undefined)
   }

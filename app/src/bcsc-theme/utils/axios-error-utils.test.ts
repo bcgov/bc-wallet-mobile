@@ -3,6 +3,7 @@ import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { AxiosError } from 'axios'
+import { Platform } from 'react-native'
 import {
   formatAxiosErrorForLogger,
   formatIasAxiosResponseError,
@@ -10,6 +11,8 @@ import {
   getAppErrorFromAxiosError,
   getAxiosErrorDefinition,
   isNetworkError,
+  isTransientRequestError,
+  normalizeAxiosTimeoutError,
 } from './axios-error-utils'
 
 // What React Native leaves on the XMLHttpRequest axios attaches to a failed request
@@ -512,6 +515,153 @@ describe('Error Utils', () => {
 
       expect(errorDefinition).toBeDefined()
       expect(errorDefinition?.appEvent).toBe('server_error')
+    })
+  })
+
+  describe('isTransientRequestError', () => {
+    const httpError = (status: number) =>
+      new AxiosError('Request failed', status >= 500 ? 'ERR_BAD_RESPONSE' : 'ERR_BAD_REQUEST', undefined, null, {
+        status,
+        data: {},
+        statusText: '',
+        headers: {},
+        config: {} as any,
+      })
+
+    it.each([
+      ['a raw network error', new AxiosError('Network Error', 'ERR_NETWORK')],
+      ['a NO_INTERNET AppError', AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET)],
+      ['a raw timeout', new AxiosError('timeout of 90000ms exceeded', 'ECONNABORTED')],
+      ['a SERVER_TIMEOUT AppError', AppError.fromErrorDefinition(ErrorRegistry.SERVER_TIMEOUT)],
+      ['a timeout AppError from the interceptor', getAppErrorFromAxiosError(new AxiosError('timeout', 'ECONNABORTED'))],
+      ['a raw 503', httpError(503)],
+      ['a 500 AppError from the interceptor', getAppErrorFromAxiosError(httpError(500))],
+      [
+        'a plain Error wrapping a network error',
+        new Error('wrapped', { cause: new AxiosError('Network Error', 'ERR_NETWORK') }),
+      ],
+      [
+        'an AppError wrapping a 503 AppError from the interceptor',
+        AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR, {
+          cause: getAppErrorFromAxiosError(httpError(503)),
+        }),
+      ],
+    ])('treats %s as transient', (_, error) => {
+      expect(isTransientRequestError(error)).toBe(true)
+    })
+
+    it.each([
+      ['a 400', getAppErrorFromAxiosError(httpError(400))],
+      ['a 404', getAppErrorFromAxiosError(httpError(404))],
+      ['a non-HTTP AppError', AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)],
+      ['a plain Error', new Error('boom')],
+      ['undefined', undefined],
+      ['a plain Error wrapping a 404', new Error('wrapped', { cause: getAppErrorFromAxiosError(httpError(404)) })],
+    ])('does not treat %s as transient', (_, error) => {
+      expect(isTransientRequestError(error)).toBe(false)
+    })
+
+    it('stops on a circular cause chain', () => {
+      const error = new Error('circular') as Error & { cause?: unknown }
+      error.cause = error
+
+      expect(isTransientRequestError(error)).toBe(false)
+    })
+
+    it('does not widen isNetworkError: a timeout is not reported as offline', () => {
+      expect(isNetworkError(AppError.fromErrorDefinition(ErrorRegistry.SERVER_TIMEOUT))).toBe(false)
+    })
+  })
+
+  describe('normalizeAxiosTimeoutError', () => {
+    // Default to Android (the only platform that reclassifies) so the guard tests below exercise
+    // the timing/response checks rather than passing on the jest default of iOS
+    beforeEach(() => {
+      jest.replaceProperty(Platform, 'OS', 'android')
+    })
+
+    // Undo jest.replaceProperty(Platform, 'OS', ...) so the platform doesn't leak into other tests
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    const networkError = (config: Record<string, unknown>) =>
+      ({ name: 'AxiosError', code: 'ERR_NETWORK', message: 'Network Error', config }) as any
+
+    it('reclassifies a network error after the timeout elapsed (Android callTimeout) as a timeout', () => {
+      const error = normalizeAxiosTimeoutError(networkError({ timeout: 1000, _requestStartedAt: Date.now() - 1000 }))
+
+      expect(error.code).toBe('ECONNABORTED')
+      expect(error.message).toBe('timeout of 1000ms exceeded')
+      expect(getAppErrorFromAxiosError(error).appEvent).toBe(ErrorRegistry.SERVER_TIMEOUT.appEvent)
+    })
+
+    it('leaves an iOS network error alone, since iOS already reports its timeouts as ECONNABORTED', () => {
+      jest.replaceProperty(Platform, 'OS', 'ios')
+      const error = normalizeAxiosTimeoutError(networkError({ timeout: 1000, _requestStartedAt: Date.now() - 1000 }))
+
+      expect(error.code).toBe('ERR_NETWORK')
+    })
+
+    it('leaves a network error before the timeout elapsed as a network error', () => {
+      const error = normalizeAxiosTimeoutError(networkError({ timeout: 90_000, _requestStartedAt: Date.now() }))
+
+      expect(error.code).toBe('ERR_NETWORK')
+    })
+
+    it('leaves a network error alone when no timeout is configured', () => {
+      const error = normalizeAxiosTimeoutError(networkError({ timeout: 0, _requestStartedAt: Date.now() - 120_000 }))
+
+      expect(error.code).toBe('ERR_NETWORK')
+    })
+
+    it('leaves errors with a response alone', () => {
+      const error = normalizeAxiosTimeoutError({
+        ...networkError({ timeout: 1000, _requestStartedAt: Date.now() - 1000 }),
+        response: { status: 502 },
+      })
+
+      expect(error.code).toBe('ERR_NETWORK')
+    })
+
+    it('leaves a network error alone when the request was never dispatched', () => {
+      const error = normalizeAxiosTimeoutError(networkError({ timeout: 1000 }))
+
+      expect(error.code).toBe('ERR_NETWORK')
+    })
+
+    it('leaves non-network errors alone', () => {
+      const error = normalizeAxiosTimeoutError({
+        ...networkError({ timeout: 1000, _requestStartedAt: Date.now() - 1000 }),
+        code: 'ERR_BAD_REQUEST',
+      })
+
+      expect(error.code).toBe('ERR_BAD_REQUEST')
+    })
+  })
+
+  describe('getAppErrorFromAxiosError timing context', () => {
+    it('adds the configured timeout and elapsed time to the AppError context', () => {
+      const error = new AxiosError('timeout of 90000ms exceeded', 'ECONNABORTED', {
+        method: 'get',
+        url: 'https://api.example.com/x',
+        timeout: 90_000,
+        _requestStartedAt: Date.now() - 60_000,
+      } as any)
+
+      const appError = getAppErrorFromAxiosError(error)
+
+      expect(appError.context?.http_timeout_ms).toBe(90_000)
+      expect(appError.context?.http_elapsed_ms).toBeGreaterThanOrEqual(60_000)
+      expect(appError.context?.http_elapsed_ms).toBeLessThan(61_000)
+      // context serializes with the error, so the timing reaches the error modal log and problem reports
+      expect(appError.toJSON().context).toMatchObject({ http_timeout_ms: 90_000 })
+    })
+
+    it('omits elapsed time when the request was never dispatched', () => {
+      const error = new AxiosError('Network Error', 'ERR_NETWORK', { method: 'get', url: '/x' } as any)
+
+      expect(getAppErrorFromAxiosError(error).context?.http_elapsed_ms).toBeUndefined()
     })
   })
 

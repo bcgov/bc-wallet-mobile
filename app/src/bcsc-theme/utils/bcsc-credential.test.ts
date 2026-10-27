@@ -1,6 +1,11 @@
 import { VerificationStatus } from '@/store'
-import { BCSCAccountType, BCSCCardType, CredentialInfo } from 'react-native-bcsc-core'
-import { createMinimalCredential, getCredentialVerificationStatus, isUserVerified } from './bcsc-credential'
+import { BCSCAccountType, BCSCCardProcess, BCSCCardType, CredentialInfo } from 'react-native-bcsc-core'
+import {
+  createMinimalCredential,
+  createVerifiedCredential,
+  getCredentialVerificationStatus,
+  isUserVerified,
+} from './bcsc-credential'
 import { BCSCEvent, BCSCReason } from './id-token'
 
 describe('createMinimalCredential', () => {
@@ -57,6 +62,31 @@ describe('createMinimalCredential', () => {
     expect(credential.created).toBe(1700000000)
     expect(credential.lastUsed).toBe(1700000000)
     expect(credential.updatedDate).toBe(1700000000)
+  })
+})
+
+describe('createVerifiedCredential', () => {
+  it.each([
+    [BCSCCardProcess.BCSCPhoto, BCSCCardType.PhotoCard, BCSCAccountType.PhotoCard],
+    [BCSCCardProcess.BCSCNonPhoto, BCSCCardType.NonPhotoCard, BCSCAccountType.NonPhotoCard],
+    [BCSCCardProcess.NonBCSC, BCSCCardType.NonBcsc, BCSCAccountType.NoBcscCard],
+  ])('types the credential for the %s process', (cardProcess, cardType, accountType) => {
+    const credential = createVerifiedCredential('https://issuer.example.com', 'client-123', cardProcess)
+
+    expect(credential).toMatchObject({
+      issuer: 'https://issuer.example.com',
+      subject: 'client-123',
+      bcscEvent: BCSCEvent.Authorization,
+      cardType,
+      accountType,
+    })
+  })
+
+  it('records an unknown process as a non-BCSC card (e.g. a device set up by account transfer)', () => {
+    const credential = createVerifiedCredential('https://issuer.example.com', 'client-123', undefined)
+
+    expect(credential.cardType).toBe(BCSCCardType.NonBcsc)
+    expect(credential.accountType).toBe(BCSCAccountType.NoBcscCard)
   })
 })
 

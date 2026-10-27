@@ -1,7 +1,7 @@
 import { JWK } from '@/bcsc-theme/types/jwk'
 import type { UploadLogContext } from '@/bcsc-theme/utils/media-format'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
-import { JWK_CACHE_TTL_MS } from '@/constants'
+import { BCSC_API_TIMEOUT_MS, JWK_CACHE_TTL_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
@@ -16,7 +16,8 @@ import {
   formatIasAxiosResponseError,
   formatNetworkAxiosError,
   getAppErrorFromAxiosError,
-  isNetworkError,
+  isTransientRequestError,
+  normalizeAxiosTimeoutError,
 } from '../utils/axios-error-utils'
 import { isTokenExpired } from '../utils/token-expiry'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
@@ -30,8 +31,10 @@ import { loadPersistedJwk, persistJwk } from './jwk-cache'
 // and an inline verification-path call, not a user-facing loading state.
 const JWK_FETCH_MAX_ATTEMPTS = 3
 const JWK_FETCH_RETRY_BASE_DELAY_MS = 500
+// Per-attempt timeout for the JWKS fetch. Timeouts are retried, so we keep this shorter than the normal 90s timeout
+const JWK_FETCH_TIMEOUT_MS = 15 * 1000
 
-// The retryable JWKS failure shapes (see isRetryableJwkFetchError): 0 for a network error (no HTTP
+// The retryable JWKS failure shapes (see isRetryableJwkFetchError): 0 for a network error or timeout (no HTTP
 // response — see the response interceptor's `error.response?.status ?? 0`), and the full 5xx range.
 // Passed as suppressStatusCodeLogs on the JWKS request so the interceptor's own log line + analytics
 // tracking (see getAppErrorFromAxiosError) don't fire on every retry attempt — fetchJwk already logs
@@ -56,6 +59,8 @@ declare module 'axios' {
     _retriedAfter401?: boolean
     // Evidence-upload media fields; getAppErrorFromAxiosError copies them into AppError.context.
     uploadLogContext?: UploadLogContext
+    // Internal: epoch ms when the request was started, used to log elapsed time on failure
+    _requestStartedAt?: number
   }
 }
 
@@ -109,6 +114,7 @@ class BCSCApiClient {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
+      timeout: BCSC_API_TIMEOUT_MS,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'User-Agent': getUserAgentString(),
@@ -190,9 +196,10 @@ class BCSCApiClient {
         return this.client.request(originalConfig)
       }
 
-      // 1. Format the error: the IAS error body when there is a response, or the native reason the
+      // 1. Format the error: reclassify Android client timeouts first (so they never reach the TLS
+      // classification), then the IAS error body when there is a response, or the native reason the
       // request died with when there is none
-      const error = formatNetworkAxiosError(formatIasAxiosResponseError(_error))
+      const error = formatNetworkAxiosError(formatIasAxiosResponseError(normalizeAxiosTimeoutError(_error)))
 
       // 2. Convert the axios error into an AppError
       const appError = getAppErrorFromAxiosError(error)
@@ -351,13 +358,14 @@ class BCSCApiClient {
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
     this.logger.info(`[${config.method?.toUpperCase()}] ${String(config.url)}`)
 
-    // skip processing if skipBearerAuth is set in the config
-    if (config.skipBearerAuth) {
-      return config
+    // skip bearer auth if skipBearerAuth is set in the config
+    if (!config.skipBearerAuth) {
+      const tokens = await this.ensureValidTokens()
+      config.headers.set('Authorization', `Bearer ${tokens.access_token}`)
     }
 
-    const tokens = await this.ensureValidTokens()
-    config.headers.set('Authorization', `Bearer ${tokens.access_token}`)
+    // Stamped after token refresh so the logged time only covers the API call
+    config._requestStartedAt = Date.now()
 
     return config
   }
@@ -482,6 +490,7 @@ class BCSCApiClient {
     const response = await this.get<JWKResponseData>(this.endpoints.jwksURI, {
       skipBearerAuth: true,
       skipOnErrorHandler: true,
+      timeout: JWK_FETCH_TIMEOUT_MS,
       suppressStatusCodeLogs: JWK_FETCH_RETRYABLE_STATUS_CODES,
     })
 
@@ -493,18 +502,13 @@ class BCSCApiClient {
   }
 
   /**
-   * Gates the JWK fetch retry loop to transient failures only: a network error, or an HTTP >= 500
-   * read from the AxiosError the response interceptor attaches as `AppError.cause`. A deterministic
-   * 4xx (or any other error shape) is not retryable — retrying it would just waste the attempt budget
-   * on a request that will fail the same way every time.
+   * Gates the JWK fetch retry loop to transient failures only: a network error, a timeout, or an
+   * HTTP >= 500 (see isTransientRequestError). A deterministic 4xx (or any other error shape) is not
+   * retryable — retrying it would just waste the attempt budget on a request that will fail the same
+   * way every time.
    */
   private isRetryableJwkFetchError(error: unknown): boolean {
-    if (isNetworkError(error)) {
-      return true
-    }
-
-    const status = (error as Partial<AxiosAppError>)?.cause?.response?.status
-    return typeof status === 'number' && status >= 500
+    return isTransientRequestError(error)
   }
 
   /**

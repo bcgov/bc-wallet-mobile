@@ -1,4 +1,4 @@
-import { parseDcn, parseLooseSerial } from '@/bcsc-theme/utils/card-serial'
+import { isSameCardSerial, parseDcn, parseLooseSerial } from '@/bcsc-theme/utils/card-serial'
 
 describe('parseDcn', () => {
   it('reads a bare DCN from the 1D barcode', () => {
@@ -69,5 +69,26 @@ describe('parseLooseSerial', () => {
       expect(parseLooseSerial(serial)).toBeNull()
       expect(parseDcn(serial)).toBe('S00023254')
     })
+  })
+})
+
+describe('isSameCardSerial', () => {
+  it.each([
+    ['identical serials', 'S00023254', 'S00023254'],
+    ['the zero-padded DCN from the 2D barcode', '00S00023254', 'S00023254'],
+    ['a serial typed in lowercase', 's00023254', 'S00023254'],
+    ['a serial with surrounding whitespace', ' S00023254 ', 'S00023254'],
+    ['loose serials that are not DCNs, ignoring case', 'ab1234567', 'AB1234567'],
+  ])('matches %s', (_, a, b) => {
+    expect(isSameCardSerial(a, b)).toBe(true)
+  })
+
+  it.each([
+    ['different serials', 'S00023254', 'C00015303'],
+    ['a missing registered serial', 'S00023254', undefined],
+    ['a missing scanned serial', null, 'S00023254'],
+    ['two blank serials', ' ', ''],
+  ])('does not match %s', (_, a, b) => {
+    expect(isSameCardSerial(a, b)).toBe(false)
   })
 })
