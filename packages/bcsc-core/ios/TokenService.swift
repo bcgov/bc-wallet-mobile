@@ -241,10 +241,8 @@ extension KeychainTokenStorageService {
     }
   }
 
-  /// Migrates a token stored at the V3 keychain key format ({clientID}/{type}/1)
-  /// to the V4 format ({clientID}/tokens/{type}/1), then deletes the old entry once the
-  /// V4 copy is saved. Returns the V4-keyed token only when that copy could not be saved.
-  /// Must be called after NSKeyedUnarchiver class name registrations in get(id:).
+  /// Moves a V3-keyed token to the V4 key, deleting the V3 entry only once the V4 copy is saved.
+  /// Returns the token only when that save failed. Call after the class name registrations in get(id:).
   private func migrateV3TokenIfNeeded(newId: String) -> Token? {
     // Derive V3 key by stripping the "/tokens" path segment
     // V4 format: "{clientID}/tokens/{type}/1"
