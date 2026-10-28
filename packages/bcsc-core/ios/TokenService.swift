@@ -106,6 +106,11 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
 
       let updateAttributes: NSDictionary = [kSecValueData: data]
       status = SecItemUpdate(query, updateAttributes)
+      // A token served from the unmigrated V3 key has nothing at the V4 tag to update.
+      if status == errSecItemNotFound {
+        branch = "add"
+        status = SecItemAdd(attributes, nil)
+      }
     } else {
       status = SecItemAdd(attributes, nil)
     }
@@ -165,7 +170,8 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
       logger.log("get: retry after unlock wait id=\(id) status=\(describe(status))")
     }
 
-    if status != errSecSuccess {
+    // When falling back to the unmigrated V3 token, the missing V4 item is expected, not an error.
+    if status != errSecSuccess, unmigratedV3Token == nil {
       let description = describe(status)
       diagnostic = description
       logger.error(
@@ -209,9 +215,16 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
       kSecValueData: data,
     ]
 
-    var result: CFTypeRef?
+    // Also remove the V3 entry, which survives (and is served by get) after a failed migration.
+    if let v3Id = v3Id(for: id) {
+      SecItemDelete([
+        kSecClass: kSecClassKey,
+        kSecAttrApplicationTag: v3Id.data(using: .utf8)!,
+      ] as NSDictionary)
+    }
+
     let status = SecItemDelete(query)
-    if status != errSecSuccess {
+    if status != errSecSuccess, status != errSecItemNotFound {
       logger.error("delete: failed status=\(describe(status))")
       return false
     }
@@ -241,14 +254,18 @@ extension KeychainTokenStorageService {
     }
   }
 
+  /// Derives the V3 key by stripping the "/tokens" path segment
+  /// V4 format: "{clientID}/tokens/{type}/1"
+  /// V3 format: "{clientID}/{type}/1"
+  private func v3Id(for newId: String) -> String? {
+    guard let range = newId.range(of: "/tokens/") else { return nil }
+    return newId.replacingCharacters(in: range, with: "/")
+  }
+
   /// Moves a V3-keyed token to the V4 key, deleting the V3 entry only once the V4 copy is saved.
   /// Returns the token only when that save failed. Call after the class name registrations in get(id:).
   private func migrateV3TokenIfNeeded(newId: String) -> Token? {
-    // Derive V3 key by stripping the "/tokens" path segment
-    // V4 format: "{clientID}/tokens/{type}/1"
-    // V3 format: "{clientID}/{type}/1"
-    guard let range = newId.range(of: "/tokens/") else { return nil }
-    let v3Id = newId.replacingCharacters(in: range, with: "/")
+    guard let v3Id = v3Id(for: newId) else { return nil }
 
     // Read token data at V3 key
     let readQuery: NSDictionary = [
