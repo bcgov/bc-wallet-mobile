@@ -569,7 +569,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.VIDEO_PROMPTS_MISSING,
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.VERIFICATION,
-    message: 'Video prompts were missing or empty when entering the capture screen',
+    message: 'Video prompts unavailable — request failed or returned no prompts',
   },
   ACCOUNT_TRANSFER_ERROR: {
     statusCode: 2413,

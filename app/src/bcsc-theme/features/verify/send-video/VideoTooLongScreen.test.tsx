@@ -1,4 +1,6 @@
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -13,6 +15,8 @@ const mockVideoPromptsMissingAlert = jest.fn()
 jest.mock('@/hooks/useAlerts', () => ({
   useAlerts: () => ({ videoPromptsMissingAlert: mockVideoPromptsMissingAlert }),
 }))
+
+const promptsError = AppError.fromErrorDefinition(ErrorRegistry.VIDEO_PROMPTS_MISSING, { track: false })
 
 describe('VideoTooLong', () => {
   let mockNavigation: any
@@ -29,7 +33,7 @@ describe('VideoTooLong', () => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
     jest.useFakeTimers()
-    mockRefreshPrompts.mockResolvedValue(true)
+    mockRefreshPrompts.mockResolvedValue({ ready: true })
     jest.mocked(useVideoPrompts).mockReturnValue({
       refreshPrompts: mockRefreshPrompts,
       ensureVerificationRequest: jest.fn(),
@@ -59,13 +63,14 @@ describe('VideoTooLong', () => {
   })
 
   it('holds the user here and alerts when a fresh set cannot be issued', async () => {
-    mockRefreshPrompts.mockResolvedValue(false)
+    mockRefreshPrompts.mockResolvedValue({ ready: false, error: promptsError })
 
     const tree = renderScreen()
 
     fireEvent.press(tree.getByText('BCSC.SendVideo.VideoTooLong.ButtonText'))
 
     await waitFor(() => expect(mockVideoPromptsMissingAlert).toHaveBeenCalledTimes(1))
+    expect(mockVideoPromptsMissingAlert).toHaveBeenCalledWith(promptsError)
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 

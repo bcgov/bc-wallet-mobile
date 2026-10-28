@@ -41,11 +41,11 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   const loadPrompts = useCallback(async (): Promise<void> => {
     setPromptsStatus('loading')
 
-    const ready = await refreshPrompts()
+    const prompts = await refreshPrompts()
 
-    setPromptsStatus(ready ? 'ready' : 'failed')
-    if (!ready) {
-      videoPromptsMissingAlert()
+    setPromptsStatus(prompts.ready ? 'ready' : 'failed')
+    if (!prompts.ready) {
+      videoPromptsMissingAlert(prompts.error)
     }
   }, [refreshPrompts, videoPromptsMissingAlert])
 
