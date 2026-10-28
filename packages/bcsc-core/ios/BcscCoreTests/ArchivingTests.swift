@@ -161,8 +161,8 @@ final class AuthorizationRequestArchivingTests: XCTestCase {
     XCTAssertEqual(decoded?.values.first?.status, .requested)
   }
 
-  /// v3 QA and TEST targets archive under their own module names; getAuthorizationRequest must
-  /// read them, nested Address included.
+  /// AuthorizationRequest and nested Address archives written under the v3 QA and TEST module
+  /// names decode once `registerV3ClassNames` has run for both classes.
   func testAuthorizationRequestDecodesWithQAAndTestClassNames() throws {
     for module in ["bc_services_card_qa", "bc_services_card_test"] {
       let request = AuthorizationRequest()
