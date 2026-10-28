@@ -5,6 +5,7 @@ import useVerificationMethodModel from '@/bcsc-theme/features/verify/useVerifica
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
@@ -294,6 +295,12 @@ describe('useVerificationMethodModel', () => {
       })
 
       expect(mockVideoPromptsMissingAlert).toHaveBeenCalledTimes(1)
+      expect(mockVideoPromptsMissingAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appEvent: AppEventCode.VIDEO_PROMPTS_MISSING,
+          technicalMessage: 'Server returned no prompts (prompts was an empty array)',
+        })
+      )
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
       expect(result.current.sendVideoLoading).toBe(false)
     })

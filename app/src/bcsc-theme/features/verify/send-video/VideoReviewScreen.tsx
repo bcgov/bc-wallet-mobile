@@ -107,11 +107,11 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * Safe to rotate here because the video being discarded is the only one bound to the current sha.
    */
   const onPressRetake = async () => {
-    const promptsReady = await refreshPrompts()
-    if (!promptsReady) {
+    const prompts = await refreshPrompts()
+    if (!prompts.ready) {
       // Recording against the current set would replay a challenge the server already issued, so hold the
       // user here rather than sending them back to the camera with stale prompts.
-      videoPromptsMissingAlert()
+      videoPromptsMissingAlert(prompts.error)
       return
     }
 

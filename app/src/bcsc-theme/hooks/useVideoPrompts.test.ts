@@ -1,7 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
+import useVideoPrompts, { PromptsResult } from '@/bcsc-theme/hooks/useVideoPrompts'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -38,11 +39,11 @@ describe('useVideoPrompts', () => {
    * The status matters — only a 500 means IAS has deleted the request server-side. Anything else leaves
    * the id usable, so the hook must not replace it.
    */
-  const apiError = (status: number) => {
+  const apiError = (status: number, context?: Record<string, unknown>) => {
     const cause = new AxiosError(`Request failed with status code ${status}`)
     cause.response = { status } as any
 
-    return new AppError('api failure', ErrorRegistry.SERVER_ERROR, { cause, track: false })
+    return new AppError('api failure', ErrorRegistry.SERVER_ERROR, { cause, track: false, context })
   }
 
   const baseStore: any = {
@@ -79,12 +80,12 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.refreshPrompts()
+        outcome = await result.current.refreshPrompts()
       })
 
-      expect(ready).toBe(true)
+      expect(outcome).toEqual({ ready: true })
       expect(mockEvidenceApi.getVerificationRequestPrompts).toHaveBeenCalledWith('existing-id')
       expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
       expect(mockDispatch).toHaveBeenCalledWith({
@@ -132,12 +133,12 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.refreshPrompts()
+        outcome = await result.current.refreshPrompts()
       })
 
-      expect(ready).toBe(true)
+      expect(outcome).toEqual({ ready: true })
       expect(mockEvidenceApi.getVerificationRequestPrompts).not.toHaveBeenCalled()
       expect(mockEvidenceApi.createVerificationRequest).toHaveBeenCalledTimes(1)
     })
@@ -154,12 +155,12 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.refreshPrompts()
+        outcome = await result.current.refreshPrompts()
       })
 
-      expect(ready).toBe(true)
+      expect(outcome).toEqual({ ready: true })
       expect(mockEvidenceApi.getVerificationRequestPrompts).toHaveBeenCalledWith('stale-id')
       expect(mockEvidenceApi.createVerificationRequest).toHaveBeenCalledTimes(1)
       expect(mockDispatch).toHaveBeenCalledWith({
@@ -181,12 +182,12 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.refreshPrompts()
+        outcome = await result.current.refreshPrompts()
       })
 
-      expect(ready).toBe(false)
+      expect(outcome?.ready).toBe(false)
       expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID })
@@ -204,12 +205,12 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.refreshPrompts()
+        outcome = await result.current.refreshPrompts()
       })
 
-      expect(ready).toBe(false)
+      expect(outcome?.ready).toBe(false)
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS })
       )
@@ -261,8 +262,8 @@ describe('useVideoPrompts', () => {
       const first = renderHook(() => useVideoPrompts())
       const second = renderHook(() => useVideoPrompts())
 
-      let firstReady: boolean | undefined
-      let secondReady: boolean | undefined
+      let firstReady: PromptsResult | undefined
+      let secondReady: PromptsResult | undefined
       await act(async () => {
         const firstCall = first.result.current.refreshPrompts().then((ready) => (firstReady = ready))
         const secondCall = second.result.current.refreshPrompts().then((ready) => (secondReady = ready))
@@ -272,8 +273,8 @@ describe('useVideoPrompts', () => {
       })
 
       expect(mockEvidenceApi.getVerificationRequestPrompts).toHaveBeenCalledTimes(1)
-      expect(firstReady).toBe(true)
-      expect(secondReady).toBe(true)
+      expect(firstReady).toEqual({ ready: true })
+      expect(secondReady).toEqual({ ready: true })
     })
 
     it('starts a new rotation once the previous refresh has settled', async () => {
@@ -321,18 +322,87 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.refreshPrompts()
+        outcome = await result.current.refreshPrompts()
       })
 
-      expect(ready).toBe(false)
+      expect(outcome?.ready).toBe(false)
       expect(mockEvidenceApi.createVerificationRequest).toHaveBeenCalledTimes(1)
       expect(mockDispatch).not.toHaveBeenCalled()
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to refresh verification prompts'),
         expect.any(Error)
       )
+      expect(outcome?.ready === false && outcome.error.context.prompts_request).toBe('recreate')
+    })
+
+    it('reports a failed request as a 2412 that carries the cause and its HTTP context', async () => {
+      // Reports used to arrive with an empty context, leaving no way to tell a rejected request from a
+      // network drop or an empty set.
+      const failure = apiError(429, {
+        http_route: '/evidence/v1/verifications',
+        http_method: 'POST',
+        http_status: 429,
+        http_url: '/evidence/v1/verifications',
+      })
+      mockEvidenceApi.createVerificationRequest.mockRejectedValue(failure)
+
+      const { result } = renderHook(() => useVideoPrompts())
+
+      let outcome: PromptsResult | undefined
+      await act(async () => {
+        outcome = await result.current.refreshPrompts()
+      })
+
+      if (outcome?.ready !== false) {
+        throw new Error('expected the refresh to fail')
+      }
+      expect(outcome.error.appEvent).toBe(AppEventCode.VIDEO_PROMPTS_MISSING)
+      expect(outcome.error.cause).toBe(failure)
+      expect(outcome.error.context).toEqual({
+        prompts_request: 'create',
+        http_route: '/evidence/v1/verifications',
+        http_method: 'POST',
+        http_status: 429,
+      })
+    })
+
+    it('labels a failed fetch of an open request as a refresh', async () => {
+      mockStoreWith({ bcscSecure: { verificationRequestId: 'existing-id' } })
+      mockEvidenceApi.getVerificationRequestPrompts.mockRejectedValue(apiError(502))
+
+      const { result } = renderHook(() => useVideoPrompts())
+
+      let outcome: PromptsResult | undefined
+      await act(async () => {
+        outcome = await result.current.refreshPrompts()
+      })
+
+      expect(outcome?.ready === false && outcome.error.context.prompts_request).toBe('refresh')
+    })
+
+    it.each([
+      [[], 'an empty array'],
+      [undefined, 'undefined'],
+      [null, 'null'],
+    ])('reports an unusable response whose prompts were %p as %s', async (prompts, description) => {
+      // Tells the backend whether the field was dropped or sent empty, without logging the body.
+      mockEvidenceApi.createVerificationRequest.mockResolvedValue({ id: 'new-id', sha256: 'sha', prompts })
+
+      const { result } = renderHook(() => useVideoPrompts())
+
+      let outcome: PromptsResult | undefined
+      await act(async () => {
+        outcome = await result.current.refreshPrompts()
+      })
+
+      if (outcome?.ready !== false) {
+        throw new Error('expected the refresh to fail')
+      }
+      expect(outcome.error.appEvent).toBe(AppEventCode.VIDEO_PROMPTS_MISSING)
+      expect(outcome.error.technicalMessage).toBe(`Server returned no prompts (prompts was ${description})`)
+      expect(outcome.error.context.prompts_request).toBe('create')
     })
 
     it('keeps a stable identity across a re-render once the request id lands', async () => {
@@ -358,12 +428,12 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.refreshPrompts()
+        outcome = await result.current.refreshPrompts()
       })
 
-      expect(ready).toBe(true)
+      expect(outcome).toEqual({ ready: true })
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
         payload: [fetched.prompts],
@@ -408,12 +478,12 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.ensureVerificationRequest()
+        outcome = await result.current.ensureVerificationRequest()
       })
 
-      expect(ready).toBe(true)
+      expect(outcome).toEqual({ ready: true })
       expect(mockEvidenceApi.createVerificationRequest).toHaveBeenCalledTimes(1)
     })
 
@@ -422,12 +492,12 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.ensureVerificationRequest()
+        outcome = await result.current.ensureVerificationRequest()
       })
 
-      expect(ready).toBe(true)
+      expect(outcome).toEqual({ ready: true })
       expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
       expect(mockEvidenceApi.getVerificationRequestPrompts).not.toHaveBeenCalled()
     })
@@ -437,12 +507,12 @@ describe('useVideoPrompts', () => {
 
       const { result } = renderHook(() => useVideoPrompts())
 
-      let ready: boolean | undefined
+      let outcome: PromptsResult | undefined
       await act(async () => {
-        ready = await result.current.ensureVerificationRequest()
+        outcome = await result.current.ensureVerificationRequest()
       })
 
-      expect(ready).toBe(false)
+      expect(outcome?.ready).toBe(false)
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to refresh verification prompts'),
         expect.any(Error)
