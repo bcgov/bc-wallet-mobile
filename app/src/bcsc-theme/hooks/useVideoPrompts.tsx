@@ -48,12 +48,20 @@ const promptsMissingError = (cause: unknown, request: PromptsRequest): AppError 
   })
 }
 
+/**
+ * Describes the shape of an unusable `prompts` value for the 2412 report, never its contents. Stands
+ * alone rather than assuming why the caller rejected it.
+ */
 const describePrompts = (prompts: unknown): string => {
   if (Array.isArray(prompts)) {
-    return 'an empty array'
+    return prompts.length === 0 ? 'an empty array' : `an array of ${prompts.length}`
   }
 
-  return prompts === null ? 'null' : typeof prompts
+  if (prompts === null) {
+    return 'null'
+  }
+
+  return typeof prompts
 }
 
 const useVideoPrompts = () => {
@@ -79,7 +87,8 @@ const useVideoPrompts = () => {
    */
   const _storeVerificationRequest = useCallback(
     async (verificationRequest: VerificationResponseData, request: PromptsRequest): Promise<PromptsResult> => {
-      const usable = Boolean(verificationRequest.prompts?.length)
+      const { prompts } = verificationRequest
+      const usable = Array.isArray(prompts) && prompts.length > 0
 
       await updateVerificationRequest(verificationRequest.id, usable ? verificationRequest.sha256 : null)
 
@@ -87,14 +96,12 @@ const useVideoPrompts = () => {
         // The previous prompts stay in the store deliberately. TakeVideoScreen hard-throws on an empty
         // set and is still mounted underneath on the retake paths, so clearing here would crash the
         // screen the caller is about to send the user back to. Callers block the attempt instead.
-        logger.error('[useVideoPrompts] Server returned an empty prompt set')
-        const cause = new Error(
-          `Server returned no prompts (prompts was ${describePrompts(verificationRequest.prompts)})`
-        )
+        logger.error('[useVideoPrompts] Server returned no usable prompt set')
+        const cause = new Error(`Server returned no usable prompts (prompts was ${describePrompts(prompts)})`)
         return { ready: false, error: promptsMissingError(cause, request) }
       }
 
-      dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [verificationRequest.prompts] })
+      dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
       return { ready: true }
     },
     [dispatch, logger, updateVerificationRequest]

@@ -298,7 +298,7 @@ describe('useVerificationMethodModel', () => {
       expect(mockVideoPromptsMissingAlert).toHaveBeenCalledWith(
         expect.objectContaining({
           appEvent: AppEventCode.VIDEO_PROMPTS_MISSING,
-          technicalMessage: 'Server returned no prompts (prompts was an empty array)',
+          technicalMessage: 'Server returned no usable prompts (prompts was an empty array)',
         })
       )
       expect(mockNavigation.navigate).not.toHaveBeenCalled()

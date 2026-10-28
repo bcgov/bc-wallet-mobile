@@ -386,8 +386,11 @@ describe('useVideoPrompts', () => {
       [[], 'an empty array'],
       [undefined, 'undefined'],
       [null, 'null'],
+      ['Say your name', 'string'],
+      [{ 0: { id: 1, prompt: 'Say your name' } }, 'object'],
     ])('reports an unusable response whose prompts were %p as %s', async (prompts, description) => {
-      // Tells the backend whether the field was dropped or sent empty, without logging the body.
+      // Tells the backend whether the field was dropped, sent empty or sent malformed, without logging the
+      // body. A non-array with a length must not pass as a prompt set and reach TakeVideoScreen's `.map`.
       mockEvidenceApi.createVerificationRequest.mockResolvedValue({ id: 'new-id', sha256: 'sha', prompts })
 
       const { result } = renderHook(() => useVideoPrompts())
@@ -401,7 +404,10 @@ describe('useVideoPrompts', () => {
         throw new Error('expected the refresh to fail')
       }
       expect(outcome.error.appEvent).toBe(AppEventCode.VIDEO_PROMPTS_MISSING)
-      expect(outcome.error.technicalMessage).toBe(`Server returned no prompts (prompts was ${description})`)
+      expect(outcome.error.technicalMessage).toBe(`Server returned no usable prompts (prompts was ${description})`)
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS })
+      )
       expect(outcome.error.context.prompts_request).toBe('create')
     })
 
