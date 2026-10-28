@@ -8,11 +8,13 @@ import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
 import { VideoCallFlowState } from '../types/live-call'
+import { connect } from '../utils/connect'
 import useVideoCallFlow from './useVideoCallFlow'
 
 jest.mock('@bcsc-theme/api/hooks/useApi')
 jest.mock('@bcsc-theme/hooks/useEvidenceUpload')
 jest.mock('@bcsc-theme/hooks/useAlreadyVerifiedRecovery')
+jest.mock('../utils/connect')
 jest.mock('@/utils/analytics/analytics-singleton', () => ({
   Analytics: { trackErrorEvent: jest.fn() },
 }))
@@ -21,10 +23,10 @@ jest.mock('@bifold/core', () => ({
   useServices: jest.fn(),
 }))
 
-const deferred = () => {
-  let resolve!: () => void
+const deferred = <T = void,>() => {
+  let resolve!: (value: T) => void
   let reject!: (reason: Error) => void
-  const promise = new Promise<void>((resolvePromise, rejectPromise) => {
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
     resolve = resolvePromise
     reject = rejectPromise
   })
@@ -154,5 +156,91 @@ describe('useVideoCallFlow', () => {
 
     expect(recoverFromAlreadyVerified).toHaveBeenCalledTimes(1)
     expect(video.createVideoSession).not.toHaveBeenCalled()
+  })
+
+  it('ends a session that was created after the user cancelled', async () => {
+    uploadSelfiePhoto.mockResolvedValueOnce(undefined)
+    const session = deferred()
+    video.createVideoSession.mockReturnValueOnce(session.promise)
+    video.endVideoSession.mockResolvedValueOnce(undefined)
+    const { result } = renderHook(() => useVideoCallFlow(jest.fn()))
+    let pending!: Promise<void>
+    await act(async () => {
+      pending = result.current.startVideoCall()
+    })
+    await act(async () => {
+      await result.current.cleanup()
+    })
+
+    await act(async () => {
+      session.resolve({ session_id: '1711469' } as any)
+      await pending
+    })
+
+    expect(video.endVideoSession).toHaveBeenCalledWith('1711469')
+    expect(connect).not.toHaveBeenCalled()
+  })
+
+  it('logs and carries on when ending an orphaned session fails', async () => {
+    const logger = { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() }
+    jest.mocked(Bifold.useServices).mockReturnValue([logger] as any)
+    uploadSelfiePhoto.mockResolvedValueOnce(undefined)
+    const session = deferred()
+    video.createVideoSession.mockReturnValueOnce(session.promise)
+    const endError = new Error('boom')
+    video.endVideoSession.mockRejectedValueOnce(endError)
+    const { result } = renderHook(() => useVideoCallFlow(jest.fn()))
+    let pending!: Promise<void>
+    await act(async () => {
+      pending = result.current.startVideoCall()
+    })
+    await act(async () => {
+      await result.current.cleanup()
+    })
+
+    await act(async () => {
+      session.resolve({ session_id: '1711469' } as any)
+      await pending
+    })
+
+    expect(logger.error).toHaveBeenCalledWith('Failed to end orphaned video session:', endError)
+  })
+
+  it('ends the active session on cleanup', async () => {
+    uploadSelfiePhoto.mockResolvedValueOnce(undefined)
+    video.createVideoSession.mockResolvedValueOnce({ session_id: '1711469', destination_host: 'host' } as any)
+    jest.mocked(connect).mockRejectedValueOnce(new Error('no connection'))
+    video.endVideoSession.mockResolvedValueOnce(undefined)
+    const { result } = renderHook(() => useVideoCallFlow(jest.fn()))
+    await act(async () => {
+      await result.current.startVideoCall()
+    })
+
+    await act(async () => {
+      await result.current.cleanup()
+    })
+
+    expect(video.endVideoSession).toHaveBeenCalledTimes(1)
+    expect(video.endVideoSession).toHaveBeenCalledWith('1711469')
+  })
+
+  it('finishes cleanup and logs when ending the active session fails', async () => {
+    const logger = { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() }
+    jest.mocked(Bifold.useServices).mockReturnValue([logger] as any)
+    uploadSelfiePhoto.mockResolvedValueOnce(undefined)
+    video.createVideoSession.mockResolvedValueOnce({ session_id: '1711469', destination_host: 'host' } as any)
+    jest.mocked(connect).mockRejectedValueOnce(new Error('no connection'))
+    const endError = new Error('boom')
+    video.endVideoSession.mockRejectedValueOnce(endError)
+    const { result } = renderHook(() => useVideoCallFlow(jest.fn()))
+    await act(async () => {
+      await result.current.startVideoCall()
+    })
+
+    await act(async () => {
+      await expect(result.current.cleanup()).resolves.toBeUndefined()
+    })
+
+    expect(logger.error).toHaveBeenCalledWith('Failed to end video session:', endError)
   })
 })
