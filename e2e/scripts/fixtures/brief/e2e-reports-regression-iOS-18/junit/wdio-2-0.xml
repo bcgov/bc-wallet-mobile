@@ -10,7 +10,7 @@
     <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="onboards and skips to unverified Home" time="40.905"/>
     <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="Home shows exactly one custom card Start verification" time="6.114"/>
     <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="the scan FAB opens the ungated QR scanner" time="14.228"/>
-    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="an unrecognised QR raises the scan error popup" time="0">
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="an unrecognised QR raises the error modal" time="0">
       <skipped/>
     </testcase>
     <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="an OpenID credential offer QR is deliberately rejected" time="0">
