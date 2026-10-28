@@ -106,11 +106,6 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
 
       let updateAttributes: NSDictionary = [kSecValueData: data]
       status = SecItemUpdate(query, updateAttributes)
-      // A token served from the unmigrated V3 key has nothing at the V4 tag to update.
-      if status == errSecItemNotFound {
-        branch = "add"
-        status = SecItemAdd(attributes, nil)
-      }
     } else {
       status = SecItemAdd(attributes, nil)
     }
@@ -149,7 +144,7 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     registerV3ClassNames(for: Token.self)
 
     // Migrate V3 key format ({clientID}/{type}/1) to V4 format ({clientID}/tokens/{type}/1)
-    let unmigratedV3Token = migrateV3TokenIfNeeded(newId: id)
+    migrateV3TokenIfNeeded(newId: id)
 
     let query: NSDictionary = [
       kSecClass: kSecClassKey,
@@ -170,8 +165,7 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
       logger.log("get: retry after unlock wait id=\(id) status=\(describe(status))")
     }
 
-    // When falling back to the unmigrated V3 token, the missing V4 item is expected, not an error.
-    if status != errSecSuccess, unmigratedV3Token == nil {
+    if status != errSecSuccess {
       let description = describe(status)
       diagnostic = description
       logger.error(
@@ -182,9 +176,6 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
           let data = result as? Data,
           let token = NSKeyedUnarchiver.unarchiveObject(with: data) as? Token
     else {
-      if let unmigratedV3Token {
-        return unmigratedV3Token
-      }
       if status == errSecSuccess {
         diagnostic = "SecItemCopyMatching succeeded but returned no usable data"
         logger.error("get: SecItemCopyMatching succeeded but returned no usable data")
@@ -215,16 +206,9 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
       kSecValueData: data,
     ]
 
-    // Also remove the V3 entry, which survives (and is served by get) after a failed migration.
-    if let v3Id = v3Id(for: id) {
-      SecItemDelete([
-        kSecClass: kSecClassKey,
-        kSecAttrApplicationTag: v3Id.data(using: .utf8)!,
-      ] as NSDictionary)
-    }
-
+    var result: CFTypeRef?
     let status = SecItemDelete(query)
-    if status != errSecSuccess, status != errSecItemNotFound {
+    if status != errSecSuccess {
       logger.error("delete: failed status=\(describe(status))")
       return false
     }
@@ -254,18 +238,15 @@ extension KeychainTokenStorageService {
     }
   }
 
-  /// Derives the V3 key by stripping the "/tokens" path segment
-  /// V4 format: "{clientID}/tokens/{type}/1"
-  /// V3 format: "{clientID}/{type}/1"
-  private func v3Id(for newId: String) -> String? {
-    guard let range = newId.range(of: "/tokens/") else { return nil }
-    return newId.replacingCharacters(in: range, with: "/")
-  }
-
-  /// Moves a V3-keyed token to the V4 key, deleting the V3 entry only once the V4 copy is saved.
-  /// Returns the token only when that save failed. Call after the class name registrations in get(id:).
-  private func migrateV3TokenIfNeeded(newId: String) -> Token? {
-    guard let v3Id = v3Id(for: newId) else { return nil }
+  /// Migrates a token stored at the V3 keychain key format ({clientID}/{type}/1)
+  /// to the V4 format ({clientID}/tokens/{type}/1), then deletes the old entry.
+  /// Must be called after NSKeyedUnarchiver class name registrations in get(id:).
+  private func migrateV3TokenIfNeeded(newId: String) {
+    // Derive V3 key by stripping the "/tokens" path segment
+    // V4 format: "{clientID}/tokens/{type}/1"
+    // V3 format: "{clientID}/{type}/1"
+    guard let range = newId.range(of: "/tokens/") else { return }
+    let v3Id = newId.replacingCharacters(in: range, with: "/")
 
     // Read token data at V3 key
     let readQuery: NSDictionary = [
@@ -285,7 +266,7 @@ extension KeychainTokenStorageService {
           "migrateV3TokenIfNeeded: SecItemCopyMatching failed v3Id=\(v3Id) status=\(describe(readStatus)) isProtectedDataAvailable=\(UIApplication.shared.isProtectedDataAvailable)"
         )
       }
-      return nil
+      return
     }
 
     // Re-archive with the new V4 id and write directly to avoid recursive save() → get() calls
@@ -306,21 +287,13 @@ extension KeychainTokenStorageService {
       kSecAttrAccessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
       kSecValueData: migratedData,
     ]
-    let addStatus = SecItemAdd(addAttributes, nil)
+    SecItemAdd(addAttributes, nil)
 
-    // Keep the V3 entry unless the V4 copy is known to exist, so a failed add is retried on the next read
-    guard addStatus == errSecSuccess || addStatus == errSecDuplicateItem else {
-      logger.error(
-        "migrateV3TokenIfNeeded: SecItemAdd failed newId=\(newId) status=\(describe(addStatus)) — keeping V3 entry"
-      )
-      return migratedToken
-    }
-
+    // Delete the old V3 entry
     let deleteQuery: NSDictionary = [
       kSecClass: kSecClassKey,
       kSecAttrApplicationTag: v3Id.data(using: .utf8)!,
     ]
     SecItemDelete(deleteQuery)
-    return nil
   }
 }
