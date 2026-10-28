@@ -48,8 +48,13 @@ const promptsMissingError = (cause: unknown, request: PromptsRequest): AppError 
   })
 }
 
-const describePrompts = (prompts: unknown): string =>
-  Array.isArray(prompts) ? 'an empty array' : prompts === null ? 'null' : typeof prompts
+const describePrompts = (prompts: unknown): string => {
+  if (Array.isArray(prompts)) {
+    return 'an empty array'
+  }
+
+  return prompts === null ? 'null' : typeof prompts
+}
 
 const useVideoPrompts = () => {
   const [store, dispatch] = useStore<BCState>()
@@ -163,8 +168,12 @@ const useVideoPrompts = () => {
    * @returns {Promise<PromptsResult>} Whether the flow can proceed, with the error to report if not.
    */
   const ensureVerificationRequest = useCallback(async (): Promise<PromptsResult> => {
+    if (verificationRequestId) {
+      return { ready: true }
+    }
+
     // refreshPrompts creates a request when no id is stored, which is exactly this call.
-    return verificationRequestId ? { ready: true } : refreshPrompts()
+    return await refreshPrompts()
   }, [refreshPrompts, verificationRequestId])
 
   return { refreshPrompts, ensureVerificationRequest, isRefreshingPrompts }
