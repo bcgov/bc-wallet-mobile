@@ -55,10 +55,9 @@ import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
-import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
+import { KeyRecoveryStatus, performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import {
   confirmRegistrationClientId,
-  getErrorHttpStatus,
   getRegistrationTokenClientId,
   isUnusableClientIdError,
 } from '../utils/registration-token'
@@ -1128,13 +1127,11 @@ export const useSecureActions = () => {
           } else {
             // Only a 401 naming an unknown client, or one that doesn't own the token, proves the stored ID is
             // bad. Other 401s (bad signature, clock skew) and network/timeout/5xx go straight to key recovery.
-            if (
-              driftDetected &&
-              getErrorHttpStatus(error) === 401 &&
-              isUnusableClientIdError(error) &&
-              (await repairClientIdDrift())
-            ) {
-              freshTokens = await retryRefreshAfter('client id repair')
+            if (driftDetected && isUnusableClientIdError(error)) {
+              const repaired = await repairClientIdDrift()
+              if (repaired) {
+                freshTokens = await retryRefreshAfter('client id repair')
+              }
             }
 
             if (!freshTokens && clientID && registrationAccessToken) {
@@ -1142,9 +1139,9 @@ export const useSecureActions = () => {
               const recovery = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
               recoveredRegistrationAccessToken = recovery.newRegistrationAccessToken
 
-              if (recovery.status === 'recovered') {
+              if (recovery.status === KeyRecoveryStatus.Recovered) {
                 freshTokens = await retryRefreshAfter('key recovery')
-              } else if (recovery.status === 'no_match') {
+              } else if (recovery.status === KeyRecoveryStatus.NoMatch) {
                 logger.info(
                   '[hydrateSecureState] No local key matches server jwks; attempting to re-register the newest local key...'
                 )

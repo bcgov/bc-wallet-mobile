@@ -142,11 +142,13 @@ describe('confirmRegistrationClientId', () => {
 })
 
 describe('isUnusableClientIdError', () => {
+  const unauthorized = (technicalMessage: unknown) => ({ technicalMessage, context: { http_status: 401 } })
+
   it.each([
     'Could not find client: b5a1c3d2-7e44-4f0a-9d21-3c8a6f1e5b70',
     'Client does not own the presented refresh token',
   ])('accepts %s', (technicalMessage) => {
-    expect(isUnusableClientIdError({ technicalMessage })).toBe(true)
+    expect(isUnusableClientIdError(unauthorized(technicalMessage))).toBe(true)
   })
 
   it.each([
@@ -156,10 +158,15 @@ describe('isUnusableClientIdError', () => {
     'Unknown: Could not find client',
     '',
   ])('rejects %s', (technicalMessage) => {
-    expect(isUnusableClientIdError({ technicalMessage })).toBe(false)
+    expect(isUnusableClientIdError(unauthorized(technicalMessage))).toBe(false)
   })
 
-  it.each([null, undefined, 'Could not find client', { technicalMessage: null }, { technicalMessage: 401 }])(
+  it.each([403, 400, undefined])('rejects a matching message with HTTP status %p', (httpStatus) => {
+    const error = { technicalMessage: 'Could not find client: x', context: { http_status: httpStatus } }
+    expect(isUnusableClientIdError(error)).toBe(false)
+  })
+
+  it.each([null, undefined, 'Could not find client', unauthorized(null), unauthorized(401)])(
     'rejects a non-string technicalMessage (%p)',
     (error) => {
       expect(isUnusableClientIdError(error)).toBe(false)

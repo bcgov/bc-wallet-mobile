@@ -29,7 +29,7 @@ import {
   setToken,
   TokenType,
 } from 'react-native-bcsc-core'
-import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
+import { KeyRecoveryStatus, performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import { confirmRegistrationClientId } from '../utils/registration-token'
 import { isTokenExpired } from '../utils/token-expiry'
 import * as useBCSCApiClientModule from './useBCSCApiClient'
@@ -37,6 +37,7 @@ import { useSecureActions } from './useSecureActions'
 
 jest.mock('@bifold/core')
 jest.mock('../utils/key-recovery', () => ({
+  KeyRecoveryStatus: jest.requireActual('../utils/key-recovery').KeyRecoveryStatus,
   performKeyRecovery: jest.fn(),
   reRegisterNewestKey: jest.fn(),
 }))
@@ -741,7 +742,7 @@ describe('useSecureActions', () => {
         .mockResolvedValueOnce({ refresh_token: 'new-refresh', access_token: 'new-access' })
       jest
         .mocked(performKeyRecovery)
-        .mockResolvedValue({ status: 'recovered', newRegistrationAccessToken: 'rotated-token' })
+        .mockResolvedValue({ status: KeyRecoveryStatus.Recovered, newRegistrationAccessToken: 'rotated-token' })
 
       const { result } = renderHook(() => useSecureActions())
       await act(async () => {
@@ -764,7 +765,7 @@ describe('useSecureActions', () => {
       mockGetTokensForRefreshToken
         .mockRejectedValueOnce(new Error('401'))
         .mockResolvedValueOnce({ refresh_token: 'new-refresh-2', access_token: 'new-access-2' })
-      jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'no_match' })
+      jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.NoMatch })
       jest
         .mocked(reRegisterNewestKey)
         .mockResolvedValue({ success: true, newRegistrationAccessToken: 'put-rotated-token' })
@@ -786,7 +787,7 @@ describe('useSecureActions', () => {
 
     it('leaves tokens stale (no retry) when recovery fails outright', async () => {
       mockGetTokensForRefreshToken.mockRejectedValue(new Error('401'))
-      jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+      jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
 
       const { result } = renderHook(() => useSecureActions())
       await act(async () => {
@@ -1122,7 +1123,7 @@ describe('useSecureActions', () => {
       it('runs key recovery with the token client ID when the retry after the repair still fails', async () => {
         mockGetTokensForRefreshToken.mockRejectedValue(unknownClientError())
         jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'confirmed' })
-        jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+        jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
 
         await hydrate()
 
@@ -1132,7 +1133,7 @@ describe('useSecureActions', () => {
       it('keeps the stored client ID for key recovery when the server does not confirm', async () => {
         mockGetTokensForRefreshToken.mockRejectedValue(unknownClientError())
         jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'request_failed', httpStatus: 403 })
-        jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+        jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
 
         await hydrate()
 
@@ -1151,7 +1152,7 @@ describe('useSecureActions', () => {
       ])('does not confirm when the refresh fails with %s', async (_label, error) => {
         mockGetTokensForRefreshToken.mockRejectedValue(error)
         jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'confirmed' })
-        jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+        jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
 
         await hydrate()
 
@@ -1186,7 +1187,7 @@ describe('useSecureActions', () => {
           errorDescription ? refreshError(401, undefined, errorDescription) : refreshError(401)
         )
         jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'confirmed' })
-        jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+        jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
 
         await hydrate()
 
@@ -1227,7 +1228,7 @@ describe('useSecureActions', () => {
       it('does not confirm when the stored client ID already matches the token', async () => {
         jest.mocked(getAccount).mockResolvedValue({ ...account, clientID: NEW_ID } as any)
         mockGetTokensForRefreshToken.mockRejectedValue(unknownClientError())
-        jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+        jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
 
         await hydrate()
 
@@ -1238,7 +1239,7 @@ describe('useSecureActions', () => {
       it('does not confirm when the token client ID is unreadable', async () => {
         mockStoredTokens({ registration: makeRegistrationToken({ iss: 'idp' }) })
         mockGetTokensForRefreshToken.mockRejectedValue(unknownClientError())
-        jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+        jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
 
         await hydrate()
 
@@ -1248,7 +1249,7 @@ describe('useSecureActions', () => {
       it('does not confirm on iOS', async () => {
         Platform.OS = 'ios'
         mockGetTokensForRefreshToken.mockRejectedValue(unknownClientError())
-        jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+        jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
 
         await hydrate()
 
@@ -1275,7 +1276,7 @@ describe('useSecureActions', () => {
         mockGetTokensForRefreshToken
           .mockRejectedValueOnce(unknownClientError())
           .mockResolvedValue({ refresh_token: 'new-refresh', access_token: 'new-access' })
-        jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+        jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
       })
 
       it('persists a rotated token before switching the client ID when confirmed', async () => {

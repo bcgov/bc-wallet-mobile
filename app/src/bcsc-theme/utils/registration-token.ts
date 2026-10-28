@@ -18,8 +18,11 @@ export const getErrorHttpStatus = (error: unknown): number | undefined => {
 // other 401 (bad signature, expired or future-dated assertion) can hit a working client ID, so must not trigger a switch.
 const UNUSABLE_CLIENT_ID_MESSAGES = ['Could not find client', 'Client does not own the presented refresh token']
 
-/** Whether the error's server text (AppError.technicalMessage) says the client ID is unknown or doesn't own the refresh token. */
+/** Whether the error is a 401 whose server text (AppError.technicalMessage) says the client ID is unknown or doesn't own the refresh token. */
 export const isUnusableClientIdError = (error: unknown): boolean => {
+  if (getErrorHttpStatus(error) !== 401) {
+    return false
+  }
   const technicalMessage = (error as { technicalMessage?: unknown } | null)?.technicalMessage
   return typeof technicalMessage === 'string' && UNUSABLE_CLIENT_ID_MESSAGES.some((m) => technicalMessage.startsWith(m))
 }

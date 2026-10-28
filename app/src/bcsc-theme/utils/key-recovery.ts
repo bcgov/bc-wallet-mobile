@@ -72,7 +72,11 @@ export const fetchRegistrationView = (
     ...(timeoutMs === undefined ? {} : { timeout: timeoutMs }),
   })
 
-export type KeyRecoveryStatus = 'recovered' | 'no_match' | 'failed'
+export enum KeyRecoveryStatus {
+  Recovered = 'recovered',
+  NoMatch = 'no_match',
+  Failed = 'failed',
+}
 
 export type KeyRecoveryResult = {
   status: KeyRecoveryStatus
@@ -146,7 +150,7 @@ export async function performKeyRecovery(
       logger.warn(
         `[performKeyRecovery] event=failed_empty_jwks server returned no decodable jwks moduli; refusing to prune or reassign (serverKids=${serverKidsForLog})`
       )
-      return { status: 'failed', newRegistrationAccessToken }
+      return { status: KeyRecoveryStatus.Failed, newRegistrationAccessToken }
     }
 
     const localKeys = await getAllKeysWithPublicInfo()
@@ -179,7 +183,7 @@ export async function performKeyRecovery(
       logger.warn(
         `[performKeyRecovery] event=failed_no_match no local key modulus matches server jwks (local=${JSON.stringify(localIds)}, serverKids=${serverKidsForLog})`
       )
-      return { status: 'no_match', newRegistrationAccessToken }
+      return { status: KeyRecoveryStatus.NoMatch, newRegistrationAccessToken }
     }
 
     logger.info(`[performKeyRecovery] activating matched key '${matched.id}' as the signing key (setActiveKeyAlias)`)
@@ -227,22 +231,22 @@ export async function performKeyRecovery(
         logger.error(
           `[performKeyRecovery] event=post_prune_active_mismatch expected newest='${matched.id}' but got '${newest?.id}' (remaining=${JSON.stringify(post.map((k) => k.id))})`
         )
-        return { status: 'failed', newRegistrationAccessToken }
+        return { status: KeyRecoveryStatus.Failed, newRegistrationAccessToken }
       }
     } catch (verifyErr) {
       logger.error(
         `[performKeyRecovery] event=post_prune_verification_failed could not confirm activation: ${describeError(verifyErr)}`
       )
-      return { status: 'failed', newRegistrationAccessToken }
+      return { status: KeyRecoveryStatus.Failed, newRegistrationAccessToken }
     }
 
     logger.info(
       `[performKeyRecovery] event=succeeded active='${matched.id}' pruned=${prunedCount} prune_failures=${pruneFailures}`
     )
-    return { status: 'recovered', newRegistrationAccessToken }
+    return { status: KeyRecoveryStatus.Recovered, newRegistrationAccessToken }
   } catch (error) {
     logger.error(`[performKeyRecovery] event=failed_probe recovery probe failed: ${describeError(error)}`)
-    return { status: 'failed', newRegistrationAccessToken }
+    return { status: KeyRecoveryStatus.Failed, newRegistrationAccessToken }
   }
 }
 
