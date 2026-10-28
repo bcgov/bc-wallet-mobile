@@ -81,9 +81,14 @@ private func archiveAsV3(_ account: LegacyV3Account) -> Data {
 /// Archives the fixture the way production stores it — wrapped in the provider-keyed dictionary
 /// that `StorageService.decodeArchivedObject` unwraps. This is the shape in the crash reports:
 /// NSDictionary.initWithCoder → _decodeArrayOfObjectsForKey → Account.init(coder:).
-private func archiveAsV3Dictionary(_ account: LegacyV3Account, provider: String) -> Data {
-  NSKeyedArchiver.setClassName(v3AccountClassName, for: LegacyV3Account.self)
+///
+/// `moduleName` is the v3 target the archive impersonates. The rename is per-archiver, so it also
+/// overrides whatever class-level names other tests have left behind.
+private func archiveAsV3Dictionary(
+  _ account: LegacyV3Account, provider: String, moduleName: String = "bc_services_card"
+) -> Data {
   let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+  archiver.setClassName("\(moduleName).Account", for: LegacyV3Account.self)
   archiver.encode([provider: account], forKey: NSKeyedArchiveRootObjectKey)
   archiver.finishEncoding()
   return archiver.encodedData
@@ -320,27 +325,43 @@ final class AccountClientIDRepairTests: XCTestCase {
     try super.tearDownWithError()
   }
 
-  private func writeAccountMetadata(clientID: String?) throws {
+  @discardableResult
+  private func writeAccountMetadata(
+    clientID: String?, moduleName: String = "bc_services_card"
+  ) throws -> Data {
     let fixture = LegacyV3Account(clientID: clientID, securityMethod: "")
-    let data = archiveAsV3Dictionary(fixture, provider: storage.provider)
+    let data = archiveAsV3Dictionary(fixture, provider: storage.provider, moduleName: moduleName)
     try data.write(to: accountDirectory.appendingPathComponent("account_metadata"))
+    return data
   }
 
   /// v3's ClientRegistrationSource keyed by `provider.issuer` — issuer + "device/", which is
   /// StorageService.provider. Writing under any other key would not match what v3 produced.
-  private func writeClientRegistration(clientID: String?) throws {
+  @discardableResult
+  private func writeClientRegistration(
+    clientID: String?, moduleName: String = "bc_services_card"
+  ) throws -> Data {
     let registration = ClientRegistration()
     registration.clientID = clientID
-    try writeClientRegistrations([storage.provider: registration])
+    registration.credential = Credential(
+      issuer: storage.provider, subject: "subject", label: "label", created: Date()
+    )
+    return try writeClientRegistrations([storage.provider: registration], moduleName: moduleName)
   }
 
-  private func writeClientRegistrations(_ registrations: [String: ClientRegistration]) throws {
+  @discardableResult
+  private func writeClientRegistrations(
+    _ registrations: [String: ClientRegistration], moduleName: String = "bc_services_card"
+  ) throws -> Data {
     let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+    archiver.setClassName("\(moduleName).ClientRegistration", for: ClientRegistration.self)
+    archiver.setClassName("\(moduleName).Credential", for: Credential.self)
     archiver.encode(registrations, forKey: NSKeyedArchiveRootObjectKey)
     archiver.finishEncoding()
     try archiver.encodedData.write(
       to: accountDirectory.appendingPathComponent("client_registration")
     )
+    return archiver.encodedData
   }
 
   private func registration(_ clientID: String) -> ClientRegistration {
@@ -361,6 +382,45 @@ final class AccountClientIDRepairTests: XCTestCase {
     ].filter { $0.key != storage.provider }
 
     return others.mapValues { registration($0) }
+  }
+
+  /// The regression behind QA and TEST upgrades from v3: each v3 target archives its classes under
+  /// its own module name, and an unreadable account makes the app onboard as a new device.
+  func testAccountWrittenByEveryV3EnvironmentLoads() throws {
+    for module in expectedV3ModuleNames {
+      let archive = try writeAccountMetadata(clientID: "client-\(module)", moduleName: module)
+      XCTAssertTrue(
+        try archivedClassNames(in: archive).contains("\(module).Account"),
+        "Fixture must carry the \(module) class name"
+      )
+
+      let account: Account? = storage.readData(
+        file: .accountMetadata, pathDirectory: .applicationSupportDirectory
+      )
+
+      XCTAssertNotNil(account, "Account archived by \(module) should load")
+      XCTAssertEqual(account?.clientID, "client-\(module)")
+      XCTAssertEqual(account?.id, "v3-account-id")
+      XCTAssertEqual(account?.displayName, "Jane Doe")
+    }
+  }
+
+  func testClientIDRepairReadsQAAndTestClientRegistration() throws {
+    for module in ["bc_services_card_qa", "bc_services_card_test"] {
+      try writeAccountMetadata(clientID: nil, moduleName: module)
+      let registration = try writeClientRegistration(
+        clientID: "recovered-\(module)", moduleName: module
+      )
+      let names = try archivedClassNames(in: registration)
+      XCTAssertTrue(names.contains("\(module).ClientRegistration"))
+      XCTAssertTrue(names.contains("\(module).Credential"))
+
+      let account: Account? = storage.readData(
+        file: .accountMetadata, pathDirectory: .applicationSupportDirectory
+      )
+
+      XCTAssertEqual(account?.clientID, "recovered-\(module)")
+    }
   }
 
   func testEmptyClientIDIsRepairedFromClientRegistration() throws {

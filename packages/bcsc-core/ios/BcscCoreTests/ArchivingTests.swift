@@ -147,15 +147,9 @@ final class AuthorizationRequestArchivingTests: XCTestCase {
     archiver.finishEncoding()
     let data = archiver.encodedData
 
-    // Decode — register both prod and dev names (as the real code does)
-    NSKeyedUnarchiver.setClass(
-      AuthorizationRequest.self, forClassName: "bc_services_card.AuthorizationRequest"
-    )
-    NSKeyedUnarchiver.setClass(
-      AuthorizationRequest.self, forClassName: "bc_services_card_dev.AuthorizationRequest"
-    )
-    NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card.Address")
-    NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card_dev.Address")
+    // Decode — register v3 names through the same helper the real code uses
+    registerV3ClassNames(for: AuthorizationRequest.self)
+    registerV3ClassNames(for: Address.self)
 
     let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
     unarchiver.requiresSecureCoding = false
@@ -165,6 +159,44 @@ final class AuthorizationRequestArchivingTests: XCTestCase {
     XCTAssertNotNil(decoded)
     XCTAssertEqual(decoded?.values.first?.firstName, "Test")
     XCTAssertEqual(decoded?.values.first?.status, .requested)
+  }
+
+  /// v3 QA and TEST targets archive under their own module names; getAuthorizationRequest must
+  /// read them, nested Address included.
+  func testAuthorizationRequestDecodesWithQAAndTestClassNames() throws {
+    for module in ["bc_services_card_qa", "bc_services_card_test"] {
+      let request = AuthorizationRequest()
+      request.deviceCode = "device-\(module)"
+      request.firstName = "Jane"
+      request.status = .authorized
+      request.address = Address(
+        streetAddress: "123 Main St", locality: "Victoria", postalCode: "V8W 1A1",
+        country: "CA", region: "BC"
+      )
+
+      let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+      archiver.setClassName("\(module).AuthorizationRequest", for: AuthorizationRequest.self)
+      archiver.setClassName("\(module).Address", for: Address.self)
+      archiver.encode(["https://idqa.gov.bc.ca/device/": request], forKey: NSKeyedArchiveRootObjectKey)
+      archiver.finishEncoding()
+      let data = archiver.encodedData
+
+      let names = try archivedClassNames(in: data)
+      XCTAssertTrue(names.contains("\(module).AuthorizationRequest"))
+      XCTAssertTrue(names.contains("\(module).Address"))
+
+      registerV3ClassNames(for: AuthorizationRequest.self)
+      registerV3ClassNames(for: Address.self)
+      let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+      unarchiver.requiresSecureCoding = false
+      let root = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+
+      let decoded = (root as? [String: AuthorizationRequest])?.values.first
+      XCTAssertEqual(decoded?.deviceCode, "device-\(module)")
+      XCTAssertEqual(decoded?.status, .authorized)
+      XCTAssertEqual(decoded?.address?.streetAddress, "123 Main St")
+      XCTAssertEqual(decoded?.address?.region, "BC")
+    }
   }
 
   // MARK: - AuthorizationRequest NSCoding Field Preservation
@@ -331,6 +363,85 @@ final class DocumentsArchiverTests: XCTestCase {
     let decoded = try archiver.decode(from: XCTUnwrap(encoded))
     XCTAssertNotNil(decoded)
     XCTAssertEqual(decoded?.count, 0)
+  }
+}
+
+// MARK: - V3 environment module names (Documents / ClientMetadata)
+
+final class V3EnvironmentArchiveTests: XCTestCase {
+  private let environmentModules = ["bc_services_card_qa", "bc_services_card_test"]
+
+  private func documentsFixture(module: String) throws -> Data {
+    let evidenceType = EvidenceType(
+      evidenceType: "passport",
+      hasPhoto: true,
+      group: "id_group",
+      sortOrder: 1,
+      imageSides: [ImageSide(imageSideName: "front", imageSideLabel: "Front", imageSideTip: "Tip")]
+    )
+    let evidence = EvidenceModel(
+      evidenceDetails: EvidenceDetails(documentNumber: "AB123456", namesMatching: true),
+      evidencePhotos: [EvidencePhoto(timestamp: 1_700_000_000, photoBase64String: "cGhvdG8=")],
+      evidenceType: evidenceType,
+      barcodeData: [BarcodeData(value: ["format": "PDF417"])]
+    )
+    let model = DocumentsDataModel(firstId: evidence, secondId: nil)
+
+    let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+    let classes: [AnyClass] = [
+      DocumentsDataModel.self, EvidenceModel.self, EvidencePhoto.self, EvidenceDetails.self,
+      EvidenceType.self, ImageSide.self, BarcodeData.self,
+    ]
+    for cls in classes {
+      archiver.setClassName("\(module).\(String(describing: cls))", for: cls)
+    }
+    archiver.encode(["documents-key": model], forKey: NSKeyedArchiveRootObjectKey)
+    archiver.finishEncoding()
+
+    let names = try archivedClassNames(in: archiver.encodedData)
+    for cls in classes {
+      XCTAssertTrue(names.contains("\(module).\(String(describing: cls))"), "\(cls) not renamed")
+    }
+    return archiver.encodedData
+  }
+
+  func testDocumentsArchiverReadsQAAndTestArchives() throws {
+    for module in environmentModules {
+      let decoded = try DocumentsArchiver().decode(from: documentsFixture(module: module))
+
+      let first = decoded?["documents-key"]?.firstId
+      XCTAssertNotNil(first, "\(module) documents should decode")
+      XCTAssertEqual(first?.evidenceType?.evidenceType, "passport")
+      XCTAssertEqual(first?.evidenceType?.imageSides.first?.imageSideName, "front")
+      XCTAssertEqual(first?.evidenceDetails?.documentNumber, "AB123456")
+      XCTAssertEqual(first?.evidencePhotos?.first?.photoBase64String, "cGhvdG8=")
+      XCTAssertEqual(first?.barcodeData.first?.value?["format"], "PDF417")
+    }
+  }
+
+  func testClientMetadataArchiverReadsQAAndTestArchives() throws {
+    for module in environmentModules {
+      let model = ClientMetadataResponseModel(clients: [
+        MetadataClients(clientId: "client-\(module)", clientName: "Test Client", bookmarked: true),
+      ])
+
+      let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+      archiver.setClassName("\(module).ClientMetadataResponseModel", for: ClientMetadataResponseModel.self)
+      archiver.setClassName("\(module).MetadataClients", for: MetadataClients.self)
+      archiver.encode([StorageService().provider: model], forKey: NSKeyedArchiveRootObjectKey)
+      archiver.finishEncoding()
+
+      let names = try archivedClassNames(in: archiver.encodedData)
+      XCTAssertTrue(names.contains("\(module).ClientMetadataResponseModel"))
+      XCTAssertTrue(names.contains("\(module).MetadataClients"))
+
+      let decoded = ClientMetadataArchiver().decode(from: archiver.encodedData)
+
+      XCTAssertEqual(decoded?.clients?.count, 1, "\(module) client metadata should decode")
+      XCTAssertEqual(decoded?.clients?.first?.clientId, "client-\(module)")
+      XCTAssertEqual(decoded?.clients?.first?.clientName, "Test Client")
+      XCTAssertEqual(decoded?.clients?.first?.bookmarked, true)
+    }
   }
 }
 
