@@ -55,7 +55,10 @@ type SubmitOutcome =
 /** The live state of a submit run, shared with every instance showing it. */
 interface SubmitProgress {
   stage: UploadStage
-  /** Set by any instance's Cancel; the run stops at its next stage boundary and settles as cancelled. */
+  /**
+   * Set by any instance's Cancel; the run stops at its next stage boundary and settles as cancelled. Until then it
+   * is not joined: a caller arriving after the cancel is a new attempt and starts its own run.
+   */
   cancelled: boolean
   /** Stage setters of the instances currently mirroring this run. */
   listeners: Set<(stage: UploadStage) => void>
@@ -406,7 +409,9 @@ const useEvidenceUploadModel = (
     setIsUploading(true)
 
     let run = inFlightSubmit
-    if (run === null || run.requestId !== verificationRequestId) {
+    // A cancelled run is draining, not submitting. Cancel keeps the request id, so a screen mounted for the next
+    // recording before that run settles would otherwise join it, inherit `cancelled`, and leave its recording unsent.
+    if (run === null || run.requestId !== verificationRequestId || run.progress.cancelled) {
       const progress: SubmitProgress = { stage: UploadStage.PreparingVideo, cancelled: false, listeners: new Set() }
       const started: SubmitRun = {
         requestId: verificationRequestId,

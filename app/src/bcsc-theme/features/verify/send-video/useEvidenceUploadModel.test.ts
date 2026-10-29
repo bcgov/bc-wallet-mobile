@@ -1112,6 +1112,47 @@ describe('useEvidenceUploadModel', () => {
         expect(secondNavigation.goBack).toHaveBeenCalledTimes(1)
       })
 
+      it('starts a fresh run when the previous one was cancelled and is still draining', async () => {
+        // Cancel keeps the verification request id, so the next recording is submitted against the same request.
+        // The cancelled run is still finishing the upload it was in when it was flagged; joining it would hand the
+        // new screen `cancelled` and leave the new recording unsent.
+        arrangeReadySend()
+        const cancelledUpload = deferred<void>()
+        mockEvidenceApi.uploadVideoEvidenceBinary.mockReturnValueOnce(cancelledUpload.promise)
+        mockEvidenceApi.sendVerificationRequest.mockResolvedValueOnce({ id: 'req-123', status: 'pending' })
+
+        const first = renderHook(() => useEvidenceUploadModel(mockNavigation))
+        let firstSend!: Promise<void>
+        await act(async () => {
+          firstSend = first.result.current.handleSend()
+        })
+        await waitFor(() => expect(mockEvidenceApi.uploadVideoEvidenceBinary).toHaveBeenCalledTimes(1))
+        await act(async () => {
+          await first.result.current.handleCancel()
+        })
+
+        const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
+        let secondSend!: Promise<void>
+        await act(async () => {
+          secondSend = second.result.current.handleSend()
+        })
+        // Not joined: the new recording is prepared and uploaded by a run of its own
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('already in flight'))
+        await waitFor(() => expect(mockEvidenceApi.uploadVideoEvidenceBinary).toHaveBeenCalledTimes(2))
+
+        await act(async () => {
+          cancelledUpload.resolve()
+          await Promise.all([firstSend, secondSend])
+        })
+
+        // The cancelled run never submitted; the new one did, and only the new screen navigated
+        expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledTimes(1)
+        expect(second.result.current.progressPercent).toBe(100)
+        expect(secondNavigation.dispatch).toHaveBeenCalledTimes(1)
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+      })
+
       it('starts a fresh run once the previous one has settled', async () => {
         // Only a live run is joined: a retry after a failure must submit again
         arrangeReadySend()

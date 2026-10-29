@@ -55,10 +55,12 @@ A screen that submits on mount (the send-video `UploadingScreen`) keeps its in-f
 module-level single-flight record keyed by the request id, as `useVideoPrompts` does for prompt
 refreshes. A second instance of the screen joins the run instead of starting another: it mirrors
 the run's progress, can cancel it, and as the most recent caller it is the one that navigates or
-alerts when the run settles. The run itself only touches the server and the store and returns an
-outcome; the UI effects are applied once, by that caller. A button that hands a flow to such a
-screen through a `reset` also refuses a second press itself, because `reset` with key-less routes
-mounts a fresh instance every time.
+alerts when the run settles. A run that was cancelled is not joined: Cancel keeps the request id,
+so an instance mounted for the next recording while that run is still draining starts its own run
+rather than inheriting an outcome of cancelled with its recording unsent. The run itself only
+touches the server and the store and returns an outcome; the UI effects are applied once, by that
+caller. A button that hands a flow to such a screen through a `reset` also refuses a second press
+itself, because `reset` with key-less routes mounts a fresh instance every time.
 
 **Why:** a double tap on "Use Video" mounted two upload screens and submitted the same verification
 request twice; IAS rejected the second as a duplicate (500) after the first had gone through, so the
