@@ -238,6 +238,9 @@ PREV_ANDROID_APP=BCSC-Dev-4550.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
 PREV_ANDROID_APP=BCSC-v4.1.0.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
   yarn test:android:upgrade:sauce
 
+# From CI against a release copy instead of a main build (release/* builds have no BCSC-Dev-<n> in Sauce)
+gh workflow run e2e.yml -f suite=upgradeV3 -f app_name=BCSC-v4.1.3
+
 # iOS on Sauce (storage-based mid-session install passes Sauce resigning; validated 2026-08-25)
 yarn test:ios:upgrade:sauce
 
@@ -684,6 +687,8 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 _The four send-video journeys are excluded from that concurrent regression matrix and run right after it as their own_ `send-video` _lane — both platforms, one at a time (`max_parallel: 1`), alongside the migration lane (also one platform at a time, so the pair stays inside the two-session budget) — because they review a shared, blind-FIFO SIT agent queue with shared personas (see **Send-video review queue**). The journeys drain that queue around their own uploads, and the nightly ends with a_ `queue-hygiene` _job that drains it once more._
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status._
+
+_The app under test is the main build's Sauce storage copy, `BCSC-Dev-<build_number>.*`. A dispatch of_ `e2e.yml` _can name any other stored build instead via_ `app_name` _(the storage name without extension, e.g. `BCSC-v4.1.3` — a shipped release, which has no `BCSC-Dev` copy because `release/*` builds never get one); the platform job appends its own `.apk` / `.ipa`._
 
 _The nightly ends with the_ `device-auth` _lane (both platforms, last in the chain so its two sessions stay inside the cap): the device-authentication journey on a Sauce session whose device carries a screen lock and biometric interception — see **[Device authentication](#device-authentication-sauce-device-lock-lane)**._
 

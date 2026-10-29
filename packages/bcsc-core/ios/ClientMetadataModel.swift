@@ -9,7 +9,7 @@
 //  In v3, the class names are:
 //  - bc_services_card.ClientMetadataResponseModel
 //  - bc_services_card.MetadataClients
-//  (or bc_services_card_dev.* for dev builds)
+//  (or bc_services_card_<env>.* for the other environment builds, see `v3ModuleNames`)
 //
 
 import Foundation
@@ -248,13 +248,7 @@ class ClientMetadataArchiver {
   ]
 
   private func registerDecodingClassMappings() {
-    for cls in modelClasses {
-      let className = String(describing: cls)
-      let prodName = "bc_services_card.\(className)"
-      let devName = "bc_services_card_dev.\(className)"
-      NSKeyedUnarchiver.setClass(cls, forClassName: prodName)
-      NSKeyedUnarchiver.setClass(cls, forClassName: devName)
-    }
+    modelClasses.forEach { registerV3ClassNames(for: $0) }
   }
 
   private func registerEncodingClassMappings() {

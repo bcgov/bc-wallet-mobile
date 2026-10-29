@@ -49,10 +49,10 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       // Opens a request only if one isn't already in flight. The prompt set the user records against is
       // issued by VideoInstructions immediately beforehand, so entering the flow must not burn one here.
       // This still catches a backend that can't issue prompts at all before the user does the photo steps.
-      const canProceed = await ensureVerificationRequest()
-      if (!canProceed) {
+      const request = await ensureVerificationRequest()
+      if (!request.ready) {
         logger.error('[useVerificationMethodModel] No verification request available; aborting Send Video')
-        videoPromptsMissingAlert()
+        videoPromptsMissingAlert(request.error)
         return
       }
 

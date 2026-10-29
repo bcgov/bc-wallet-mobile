@@ -1,5 +1,7 @@
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import * as ReactNavigationNative from '@react-navigation/native'
@@ -20,6 +22,8 @@ jest.mock('@/hooks/useAlerts', () => ({
   }),
 }))
 
+const promptsError = AppError.fromErrorDefinition(ErrorRegistry.VIDEO_PROMPTS_MISSING, { track: false })
+
 describe('VideoReview', () => {
   let mockNavigation: any
   const mockRefreshPrompts = jest.fn()
@@ -39,7 +43,7 @@ describe('VideoReview', () => {
     jest.clearAllMocks()
     jest.useFakeTimers()
     ;(useContextNavigation() as any).addListener = mockAddListener
-    mockRefreshPrompts.mockResolvedValue(true)
+    mockRefreshPrompts.mockResolvedValue({ ready: true })
     jest.mocked(useVideoPrompts).mockReturnValue({
       refreshPrompts: mockRefreshPrompts,
       ensureVerificationRequest: jest.fn(),
@@ -70,13 +74,14 @@ describe('VideoReview', () => {
 
   it('holds the user on the review screen and alerts when a fresh set cannot be issued', async () => {
     // Going back with the cached set would re-record against a challenge the server already issued.
-    mockRefreshPrompts.mockResolvedValue(false)
+    mockRefreshPrompts.mockResolvedValue({ ready: false, error: promptsError })
 
     const tree = renderScreen()
 
     fireEvent.press(tree.getByText('BCSC.SendVideo.VideoReview.RetakeVideo'))
 
     await waitFor(() => expect(mockVideoPromptsMissingAlert).toHaveBeenCalledTimes(1))
+    expect(mockVideoPromptsMissingAlert).toHaveBeenCalledWith(promptsError)
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
