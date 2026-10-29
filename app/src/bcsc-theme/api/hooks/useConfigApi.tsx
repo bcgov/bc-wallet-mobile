@@ -32,6 +32,7 @@ const useConfigApi = (apiClient: BCSCApiClient) => {
       `${apiClient.endpoints.cardTap}/v3/status/${Platform.OS}/mobile_card`,
       {
         skipBearerAuth: true, // this endpoint does not require an access token
+        skipOnErrorHandler: true, // we handle errors ourselves
       }
     )
 

@@ -37,6 +37,7 @@ describe('useConfigApi', () => {
         `${mockApiClient.endpoints.cardTap}/v3/status/android/mobile_card`,
         {
           skipBearerAuth: true,
+          skipOnErrorHandler: true,
         }
       )
       expect(response).toEqual({ status: 'ok', serverTimestamp: new Date('Wed, 01 Jan 2025 00:00:00 GMT') })
@@ -52,6 +53,7 @@ describe('useConfigApi', () => {
 
       expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/status/ios/mobile_card`, {
         skipBearerAuth: true,
+        skipOnErrorHandler: true,
       })
       expect(response).toEqual({ status: 'ok', serverTimestamp: new Date('Wed, 01 Jan 2025 00:00:00 GMT') })
     })
