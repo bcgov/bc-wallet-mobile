@@ -52,13 +52,8 @@ const getRouteLeafName = (route: NavigationRoute): string => {
   return nested ? getCurrentStateScreenName(nested) : route.name
 }
 
-/**
- * Gets the current screen name from the navigation state, accounting for nested navigators.
- *
- * @param state - The navigation state object.
- * @returns The name of the current screen.
- */
-export const getCurrentStateScreenName = (state: NavigationState): string => getRouteLeafName(state.routes[state.index])
+// The leaf screen name of a state, descending into nested navigators that have been visited
+const getCurrentStateScreenName = (state: NavigationState): string => getRouteLeafName(state.routes[state.index])
 
 // The navigators on the focused path, outermost first
 const getFocusedStates = (state: NavigationState): NavigationState[] => {

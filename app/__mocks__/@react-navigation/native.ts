@@ -63,6 +63,8 @@ const useTheme = () => ({
 
 const useFocusEffect = jest.fn()
 const createNavigatorFactory = jest.fn()
+// The real focused-route walker: pure, and the screen tracker relies on its exact nesting rules
+const { findFocusedRoute } = jest.requireActual('@react-navigation/core')
 const createNavigationContainerRef = jest.fn(() => ({
   isReady: jest.fn(() => false),
   getCurrentRoute: jest.fn(() => undefined),
@@ -75,6 +77,7 @@ export {
   StackActions,
   createNavigationContainerRef,
   createNavigatorFactory,
+  findFocusedRoute,
   useFocusEffect,
   useIsFocused,
   useNavigation,
