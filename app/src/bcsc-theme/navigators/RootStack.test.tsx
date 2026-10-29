@@ -9,16 +9,23 @@ import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
 
 const mockIsClientReady = jest.fn()
-const mockIsNavigationReady = jest.fn()
 const mockEmitErrorModal = jest.fn()
 
 jest.mock('@bifold/core')
+// Renders the one registered screen. A navigationKey change remounts it, as the real navigator would.
+jest.mock('@react-navigation/stack', () => {
+  const React = jest.requireActual('react')
+  const Screen = ({ name, navigationKey, component: Component, children }: any) => (
+    <React.Fragment key={`${name}:${navigationKey ?? ''}`}>{Component ? <Component /> : children()}</React.Fragment>
+  )
+  const Navigator = ({ children }: any) => children
+  return { createStackNavigator: () => ({ Navigator, Screen }) }
+})
 jest.mock('@/contexts/ErrorAlertContext', () => ({
   useErrorAlert: () => ({ emitErrorModal: mockEmitErrorModal }),
 }))
 jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
-  useNavigationContainer: () => ({ isNavigationReady: mockIsNavigationReady() }),
 }))
 jest.mock('../api/hooks/useInitializeAccountStatus')
 jest.mock('../api/hooks/useThirdPartyKeyboardWarning', () => ({
@@ -104,7 +111,6 @@ describe('BCSCRootStack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockIsClientReady.mockReturnValue(true)
-    mockIsNavigationReady.mockReturnValue(true)
     mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
 
     const mockLoadState = jest.fn()
@@ -144,17 +150,6 @@ describe('BCSCRootStack', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
 
     mockIsClientReady.mockReturnValue(false)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
-  })
-
-  it('renders LoadingScreen when isNavigationReady is false', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
-
-    mockIsNavigationReady.mockReturnValue(false)
 
     const { toJSON } = render(<BCSCRootStack />)
 

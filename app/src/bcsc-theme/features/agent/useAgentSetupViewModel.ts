@@ -34,7 +34,12 @@ export interface AgentSetupResult {
   waitForAgent: () => Promise<Agent | null>
 }
 
-const useAgentSetupViewModel = (): AgentSetupResult => {
+export interface AgentSetupOptions {
+  /** False keeps the agent down (shutting down a live one) as if the user were signed out. Defaults to true. */
+  enabled?: boolean
+}
+
+const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): AgentSetupResult => {
   const [store] = useStore<BCState>()
   const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas, ocaBundleResolver] = useServices(
     [
@@ -101,7 +106,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   }, [])
 
   useEffect(() => {
-    if (!didAuthenticate) {
+    if (!enabled || !didAuthenticate) {
       if (agentRef.current) {
         shutdownAgent(agentRef.current, logger)
         agentRef.current = null
@@ -318,6 +323,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       agentPromiseRef.current = null
     }
   }, [
+    enabled,
     didAuthenticate,
     walletKey,
     mediatorUrl,

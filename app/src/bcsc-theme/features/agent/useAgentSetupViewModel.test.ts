@@ -169,6 +169,29 @@ describe('useAgentSetupViewModel', () => {
     expect(result.current.agent).toBeNull()
   })
 
+  it('stays idle while disabled and shuts the agent down when disabled again', async () => {
+    const { result, rerender } = renderHook(
+      ({ enabled }: { enabled: boolean }) => useAgentSetupViewModel({ enabled }),
+      {
+        initialProps: { enabled: false },
+      }
+    )
+
+    await new Promise((r) => setTimeout(r, 0))
+    expect(result.current.status).toBe('idle')
+    expect(agentService.buildAgent).not.toHaveBeenCalled()
+
+    rerender({ enabled: true })
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    const shutdownsBefore = jest.mocked(agentService.shutdownAgent).mock.calls.length
+
+    rerender({ enabled: false })
+    await waitFor(() => expect(result.current.status).toBe('idle'))
+
+    expect(agentService.shutdownAgent).toHaveBeenCalledTimes(shutdownsBefore + 1)
+    expect(result.current.agent).toBeNull()
+  })
+
   it('shuts down old agent when restart returns undefined before building fresh', async () => {
     const agent1 = mockAgent()
     const agent2 = mockAgent()

@@ -1,8 +1,8 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
+import { createStackNavigator } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountStatus'
@@ -18,11 +18,21 @@ import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
+
+const Root = createStackNavigator<BCSCRootStackParams>()
+
+/** The root's only route until state, API client and account are ready. */
+const AppStartupLoadingScreen: React.FC = () => {
+  const { t } = useTranslation()
+
+  return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
+}
 
 // Keeps FcmViewModel in sync with card expiry so it can drop challenges for expired users.
 // Must live inside BCSCAccountProvider.
@@ -41,7 +51,7 @@ const FcmCardExpirySync: React.FC = () => {
  * Decides whether the root shows the verify journey: the once-per-session auto-resume for a user who
  * has started verification, the verify prompt, and the outage fallback that stands in for the resume
  * while IAS is down. A session runs from startup or unlock to the next lock. `appReady`: state, API
- * client, account and navigation are all ready.
+ * client and account are all ready.
  */
 const useVerificationRouting = (appReady: boolean) => {
   const [store, dispatch] = useStore<BCState>()
@@ -136,6 +146,39 @@ const useVerificationRouting = (appReady: boolean) => {
   }
 }
 
+/**
+ * The phases of the app, in order of precedence. The root navigator registers the current phase's
+ * route only, so React Navigation drops the previous phase's screens and mounts the new ones; no
+ * imperative navigation is involved.
+ */
+type RootPhase = 'loading' | 'onboarding' | 'auth' | 'recovery' | 'verify' | 'main'
+
+const getRootPhase = (
+  store: BCState,
+  appReady: boolean,
+  awaitingStatusForResume: boolean,
+  showVerifyStack: boolean
+): RootPhase => {
+  // Loading until the app is ready and, for a would-resume user, IAS status is known
+  if (!appReady || awaitingStatusForResume) {
+    return 'loading'
+  }
+
+  if (store.bcsc.hasAccount === false) {
+    return 'onboarding'
+  }
+
+  if (store.authentication.didAuthenticate === false) {
+    return 'auth'
+  }
+
+  if (store.bcscSecure.sessionRecoveryRequired === true) {
+    return 'recovery'
+  }
+
+  return showVerifyStack ? 'verify' : 'main'
+}
+
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
@@ -143,14 +186,13 @@ const BCSCRootStack: React.FC = () => {
   const { isClientReady } = useBCSCApiClientState()
   const fcmService = useFcmService()
   const { emitErrorModal } = useErrorAlert()
-  const { isNavigationReady } = useNavigationContainer()
   const { initializingAccount } = useInitializeAccountStatus()
   const { isVerified } = useVerificationStatus()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
-  // State, API client, account and navigation are all ready
-  const appReady = store.stateLoaded && isClientReady && !initializingAccount && isNavigationReady
+  // State, API client and account are all ready
+  const appReady = store.stateLoaded && isClientReady && !initializingAccount
   const { awaitingStatusForResume, showVerifyStack, showVerifyPrompt, verifyStackKey, onVerifyPromptAnswered } =
     useVerificationRouting(appReady)
 
@@ -174,51 +216,57 @@ const BCSCRootStack: React.FC = () => {
     }
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
 
-  // Loading until the app is ready and, for a would-resume user, IAS status is known
-  if (!appReady || awaitingStatusForResume) {
-    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
-  }
-
-  if (store.bcsc.hasAccount === false) {
-    return <OnboardingStack />
-  }
-
-  if (store.authentication.didAuthenticate === false) {
-    return <AuthStack />
-  }
-
-  if (store.bcscSecure.sessionRecoveryRequired === true) {
-    return (
-      <BCSCActivityProvider>
-        <VerifyStack />
-      </BCSCActivityProvider>
-    )
-  }
+  const phase = getRootPhase(store, appReady, awaitingStatusForResume, showVerifyStack)
+  // The agent needs an unlocked wallet and is not used while recovering a session, so it runs for the
+  // verify and main phases only. The provider stays mounted so a verify ↔ main change never restarts it.
+  const agentEnabled = phase === 'verify' || phase === 'main'
 
   return (
-    <BCSCAgentProvider>
-      {showVerifyStack ? (
-        <BCSCActivityProvider>
-          <VerifyStack
-            key={verifyStackKey}
-            showVerifyPrompt={showVerifyPrompt}
-            onVerifyPromptAnswered={onVerifyPromptAnswered}
-          />
-        </BCSCActivityProvider>
-      ) : (
-        <BCSCActivityProvider>
-          <BCSCAccountProvider>
-            <FcmCardExpirySync />
-            {isVerified ? (
-              <BCSCIdTokenProvider>
-                <BCSCMainStack />
-              </BCSCIdTokenProvider>
-            ) : (
-              <BCSCMainStack />
+    <BCSCAgentProvider enabled={agentEnabled}>
+      <Root.Navigator screenOptions={{ headerShown: false, animationEnabled: false, gestureEnabled: false }}>
+        {phase === 'loading' ? (
+          <Root.Screen name={BCSCScreens.RootLoading} component={AppStartupLoadingScreen} />
+        ) : null}
+        {phase === 'onboarding' ? <Root.Screen name={BCSCStacks.Onboarding} component={OnboardingStack} /> : null}
+        {phase === 'auth' ? <Root.Screen name={BCSCStacks.Auth} component={AuthStack} /> : null}
+        {phase === 'recovery' ? (
+          <Root.Screen name={BCSCStacks.Verify}>
+            {() => (
+              <BCSCActivityProvider>
+                <VerifyStack />
+              </BCSCActivityProvider>
             )}
-          </BCSCAccountProvider>
-        </BCSCActivityProvider>
-      )}
+          </Root.Screen>
+        ) : null}
+        {phase === 'verify' ? (
+          // A key change drops the route and registers it afresh, so VerifyStack re-evaluates its first step
+          <Root.Screen name={BCSCStacks.Verify} navigationKey={verifyStackKey}>
+            {() => (
+              <BCSCActivityProvider>
+                <VerifyStack showVerifyPrompt={showVerifyPrompt} onVerifyPromptAnswered={onVerifyPromptAnswered} />
+              </BCSCActivityProvider>
+            )}
+          </Root.Screen>
+        ) : null}
+        {phase === 'main' ? (
+          <Root.Screen name={BCSCStacks.Main}>
+            {() => (
+              <BCSCActivityProvider>
+                <BCSCAccountProvider>
+                  <FcmCardExpirySync />
+                  {isVerified ? (
+                    <BCSCIdTokenProvider>
+                      <BCSCMainStack />
+                    </BCSCIdTokenProvider>
+                  ) : (
+                    <BCSCMainStack />
+                  )}
+                </BCSCAccountProvider>
+              </BCSCActivityProvider>
+            )}
+          </Root.Screen>
+        ) : null}
+      </Root.Navigator>
     </BCSCAgentProvider>
   )
 }

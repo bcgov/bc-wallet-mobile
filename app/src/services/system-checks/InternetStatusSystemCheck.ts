@@ -4,6 +4,24 @@ import { NavigationState } from '@react-navigation/native'
 import { SystemCheckNavigation, SystemCheckStrategy } from './system-checks'
 
 /**
+ * The navigators on the focused path, outermost first. `getState()` is the root navigator's state,
+ * and the modal is registered in the phase stack nested under it.
+ *
+ * @param {NavigationState | undefined} state The root navigation state.
+ * @returns {*} {NavigationState[]} The focused navigator states, root first.
+ */
+const getFocusedPath = (state: NavigationState | undefined): NavigationState[] => {
+  const path: NavigationState[] = []
+
+  for (let current: NavigationState | undefined = state; current; ) {
+    path.push(current)
+    current = current.routes[current.index ?? 0]?.state as NavigationState | undefined
+  }
+
+  return path
+}
+
+/**
  * System check strategy to verify internet connectivity.
  *
  *
@@ -34,28 +52,30 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   }
 
   /**
-   * Checks if the InternetDisconnected modal is currently visible.
+   * Checks if the InternetDisconnected modal is currently visible: it is the focused route of the
+   * innermost navigator on the focused path.
    *
-   * @param {NavigationState | undefined} state The navigation state to inspect.
+   * @param {NavigationState | undefined} state The root navigation state to inspect.
    * @returns {*} {boolean} True if the modal is visible, false otherwise.
    */
   private isModalVisible(state: NavigationState | undefined) {
-    return state?.routes?.[state.index]?.name === BCSCModals.InternetDisconnected
+    const path = getFocusedPath(state)
+    const leaf = path[path.length - 1]
+
+    return leaf?.routes[leaf.index ?? 0]?.name === BCSCModals.InternetDisconnected
   }
 
   /**
-   * Whether the InternetDisconnected modal can be navigated to from the currently-mounted navigator.
+   * Whether a navigator on the focused path registers the InternetDisconnected modal.
    *
-   * False during the root-stack swap window (e.g. onboarding → verify after biometric setup), where
-   * the single child navigator is mid-remount and `getState()` is undefined, and on the
-   * non-navigator LoadingScreen branch — navigating in those windows logs "NAVIGATE ... was not
-   * handled by any navigator".
+   * False while the root navigator shows its startup Loading route, which registers no modals:
+   * navigating then would log "NAVIGATE ... was not handled by any navigator".
    *
-   * @param {NavigationState | undefined} state The navigation state to inspect.
-   * @returns {*} {boolean} True if the modal route is registered in the current navigator.
+   * @param {NavigationState | undefined} state The root navigation state to inspect.
+   * @returns {*} {boolean} True if a navigator on the focused path registers the modal route.
    */
   private canShowModal(state: NavigationState | undefined) {
-    return state?.routeNames?.includes(BCSCModals.InternetDisconnected) ?? false
+    return getFocusedPath(state).some((navigator) => navigator.routeNames?.includes(BCSCModals.InternetDisconnected))
   }
 
   /**
@@ -85,8 +105,8 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
     }
 
     if (!this.canShowModal(state)) {
-      // Root stack is mid-swap / on the non-navigator LoadingScreen; skip to avoid an unhandled
-      // NAVIGATE. The next NetInfo change or app-foreground event re-runs the check.
+      // Still on the startup Loading route; skip to avoid an unhandled NAVIGATE. The next NetInfo
+      // change or app-foreground event re-runs the check.
       return
     }
 
