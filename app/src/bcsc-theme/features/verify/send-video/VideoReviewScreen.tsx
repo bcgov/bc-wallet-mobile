@@ -21,7 +21,7 @@ import {
 } from '@bifold/core'
 import { CommonActions, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -48,6 +48,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Mirrors `isSubmitting` for the window before the disabled state has rendered, when a second tap can still land.
+  const isSubmittingRef = useRef(false)
   const isFocused = useIsFocused()
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
@@ -87,7 +90,20 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     },
   })
 
+  /**
+   * Hands the recording to UploadingScreen, once. The reset carries key-less routes, so dispatching it twice
+   * mounts a second UploadingScreen that submits the same verification request again — IAS rejects the duplicate
+   * with a 500 after the first already went through (#4928). Bifold's Button only swallows presses while the
+   * handler is running, and this one returns synchronously, so the guard lives here. The screen is reset away
+   * on success, so the flag never needs clearing.
+   */
   const onPressUse = () => {
+    if (isSubmittingRef.current) {
+      return
+    }
+    isSubmittingRef.current = true
+    setIsSubmitting(true)
+
     dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [videoThumbnailPath] })
     navigation.dispatch(
       CommonActions.reset({
@@ -179,14 +195,15 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const controls = (
     <ControlContainer>
       {/* A refresh in flight is about to rotate the sha this recording is bound to, so accepting the video
-          mid-refresh would finalize it against a sha the server has already replaced. */}
+          mid-refresh would finalize it against a sha the server has already replaced. Once the video is handed
+          over, a retake would rotate the sha under the upload in the same way, so both hold until the reset lands. */}
       <Button
         buttonType={ButtonType.Primary}
         onPress={onPressUse}
         testID={testIdWithKey(TestIds.verify.videoReview.useVideo)}
         title={t('BCSC.SendVideo.VideoReview.UseVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
-        disabled={isRefreshingPrompts}
+        disabled={isRefreshingPrompts || isSubmitting}
       />
       <Button
         buttonType={ButtonType.Secondary}
@@ -194,7 +211,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         testID={testIdWithKey(TestIds.verify.videoReview.retakeVideo)}
         title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
-        disabled={isRefreshingPrompts}
+        disabled={isRefreshingPrompts || isSubmitting}
       />
     </ControlContainer>
   )

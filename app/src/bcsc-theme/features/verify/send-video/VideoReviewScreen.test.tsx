@@ -6,7 +6,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import * as ReactNavigationNative from '@react-navigation/native'
 import { useNavigation as useContextNavigation, useFocusEffect } from '@react-navigation/native'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Image } from 'react-native'
 import VideoReviewScreen from './VideoReviewScreen'
@@ -83,6 +83,23 @@ describe('VideoReview', () => {
     await waitFor(() => expect(mockVideoPromptsMissingAlert).toHaveBeenCalledTimes(1))
     expect(mockVideoPromptsMissingAlert).toHaveBeenCalledWith(promptsError)
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
+  })
+
+  it('hands the video over once, however many times Use Video is pressed', async () => {
+    // The reset carries key-less routes, so a second dispatch would mount a second UploadingScreen and submit
+    // the same verification request twice; IAS rejects the duplicate with a 500 (#4928). Bifold's Button only
+    // swallows presses while the handler runs, so the second press lands after that window has closed.
+    const tree = renderScreen()
+    const useVideo = tree.getByText('BCSC.SendVideo.VideoReview.UseVideo')
+
+    fireEvent.press(useVideo)
+    await act(async () => {})
+    fireEvent.press(useVideo)
+
+    expect(mockNavigation.dispatch).toHaveBeenCalledTimes(1)
+    expect(useVideo).toBeDisabled()
+    // A retake now would rotate the sha under the upload that just started
+    expect(tree.getByText('BCSC.SendVideo.VideoReview.RetakeVideo')).toBeDisabled()
   })
 
   it('blocks both actions while a refresh is in flight', async () => {
