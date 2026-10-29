@@ -141,9 +141,7 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     // Migrate before fetching
     migrateLegacyItem(id)
 
-    // Register both production and dev module names for compatibility with native ias-ios
-    NSKeyedUnarchiver.setClass(Token.self, forClassName: "bc_services_card.Token")
-    NSKeyedUnarchiver.setClass(Token.self, forClassName: "bc_services_card_dev.Token")
+    registerV3ClassNames(for: Token.self)
 
     // Migrate V3 key format ({clientID}/{type}/1) to V4 format ({clientID}/tokens/{type}/1)
     migrateV3TokenIfNeeded(newId: id)

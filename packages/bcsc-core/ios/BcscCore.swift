@@ -2528,15 +2528,8 @@ class BcscCore: NSObject {
       let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
       unarchiver.requiresSecureCoding = false
 
-      // Register classes with both prod and dev module names for v3 compatibility
-      NSKeyedUnarchiver.setClass(
-        AuthorizationRequest.self, forClassName: "bc_services_card.AuthorizationRequest"
-      )
-      NSKeyedUnarchiver.setClass(
-        AuthorizationRequest.self, forClassName: "bc_services_card_dev.AuthorizationRequest"
-      )
-      NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card.Address")
-      NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card_dev.Address")
+      registerV3ClassNames(for: AuthorizationRequest.self)
+      registerV3ClassNames(for: Address.self)
       let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
 
       // Empty dictionary = no authorization request (v3 writes empty dict after removing a request)
@@ -3298,15 +3291,8 @@ class BcscCore: NSObject {
       let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
       unarchiver.requiresSecureCoding = false
 
-      // Register classes with both prod and dev module names for v3 compatibility
-      NSKeyedUnarchiver.setClass(
-        ClientRegistration.self, forClassName: "bc_services_card.ClientRegistration"
-      )
-      NSKeyedUnarchiver.setClass(
-        ClientRegistration.self, forClassName: "bc_services_card_dev.ClientRegistration"
-      )
-      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card.Credential")
-      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card_dev.Credential")
+      registerV3ClassNames(for: ClientRegistration.self)
+      registerV3ClassNames(for: Credential.self)
 
       // Try to decode the root object first to see what type it is
       let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
@@ -3418,10 +3404,8 @@ class BcscCore: NSObject {
       if FileManager.default.fileExists(atPath: fileUrl.path) {
         let data = try Data(contentsOf: fileUrl)
         let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
-        unarchiver.setClass(
-          ClientRegistration.self, forClassName: "\(storage.nativeModuleName).ClientRegistration"
-        )
-        unarchiver.setClass(Credential.self, forClassName: "\(storage.nativeModuleName).Credential")
+        registerV3ClassNames(for: ClientRegistration.self)
+        registerV3ClassNames(for: Credential.self)
 
         if let decoded = unarchiver.decodeObject(
           of: ClientRegistration.self, forKey: NSKeyedArchiveRootObjectKey
@@ -3551,15 +3535,8 @@ class BcscCore: NSObject {
       let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
       unarchiver.requiresSecureCoding = false
 
-      // Register classes with both prod and dev module names
-      NSKeyedUnarchiver.setClass(
-        ClientRegistration.self, forClassName: "bc_services_card.ClientRegistration"
-      )
-      NSKeyedUnarchiver.setClass(
-        ClientRegistration.self, forClassName: "bc_services_card_dev.ClientRegistration"
-      )
-      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card.Credential")
-      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card_dev.Credential")
+      registerV3ClassNames(for: ClientRegistration.self)
+      registerV3ClassNames(for: Credential.self)
 
       let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
 
@@ -3632,10 +3609,8 @@ class BcscCore: NSObject {
 
       let data = try Data(contentsOf: fileUrl)
       let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
-      unarchiver.setClass(
-        ClientRegistration.self, forClassName: "\(storage.nativeModuleName).ClientRegistration"
-      )
-      unarchiver.setClass(Credential.self, forClassName: "\(storage.nativeModuleName).Credential")
+      registerV3ClassNames(for: ClientRegistration.self)
+      registerV3ClassNames(for: Credential.self)
 
       guard let clientRegistration = unarchiver.decodeObject(
         of: ClientRegistration.self,
