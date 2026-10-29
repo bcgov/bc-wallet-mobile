@@ -124,6 +124,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     let cancelled = false
     let inFlightAgent: Agent | undefined
 
+    const startedAt = Date.now() // TEMP: agent init timing
+
     // Reuse the in-memory agent if it can be reopened. Returns 'ready' when reused,
     // 'rebuild' to fall through to a fresh build, or 'cancelled' if torn down mid-way.
     const attemptRestart = async (existing: Agent): Promise<'ready' | 'rebuild' | 'cancelled'> => {
@@ -168,11 +170,19 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         return
       }
 
-      await (ocaBundleResolver as RemoteOCABundleResolver)
-        .checkForUpdates?.()
-        .catch((err) => logger.warn(`OCA bundle update failed (continuing): ${err}`))
       ledgerResolver.logger = logger
-      await ledgerResolver.checkForUpdates().catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
+      const [ocaBundleResolverResult, ledgerResolverResult] = await Promise.allSettled([
+        (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.(),
+        ledgerResolver.checkForUpdates(),
+      ])
+
+      if (ocaBundleResolverResult.status === 'rejected') {
+        logger.warn(`OCA bundle update failed (continuing): ${ocaBundleResolverResult.reason}`)
+      }
+
+      if (ledgerResolverResult.status === 'rejected') {
+        logger.warn(`Ledger update failed (continuing): ${ledgerResolverResult.reason}`)
+      }
 
       // checkForUpdates can take seconds; a sign-out/reset may have flipped
       // `cancelled` meanwhile. Re-check before buildAgent so a discarded run never
@@ -205,7 +215,15 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       if (cancelled) {
         return
       }
-      await warmCache(inFlightAgent, credDefs, schemas, cachedLedgers, logger)
+
+      /**
+       * This request can take upwards of 6000+ ms to complete
+       * Warm the cache in the background to prevent blocking the agent initialization.
+       */
+      void warmCache(inFlightAgent, credDefs, schemas, cachedLedgers, logger).catch((error) =>
+        logger.error('[Agent] Cache warm-up failed (continuing)', error)
+      )
+
       if (cancelled) {
         return
       }
@@ -222,6 +240,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       agentRef.current = inFlightAgent
       setAgent(inFlightAgent)
       setStatus('ready')
+      logger.info(`[AgentTiming] ready: total ${Date.now() - startedAt}ms`)
       inFlightAgent = undefined
     }
 
