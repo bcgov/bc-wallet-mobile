@@ -142,6 +142,20 @@ export const ErrorRegistry = {
     category: ErrorCategory.CAMERA,
     message: 'Camera runtime error — check device camera permissions and availability',
   },
+  CREDENTIAL_QR_SCAN_FAILED: {
+    statusCode: 2003,
+    appEvent: AppEventCode.CREDENTIAL_QR_SCAN_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CAMERA,
+    message: 'Credential QR code scan failed — unable to extract credential data from QR code',
+  },
+  UNRECOGNIZED_QR_CODE: {
+    statusCode: 2004,
+    appEvent: AppEventCode.UNRECOGNIZED_QR_CODE,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.CAMERA,
+    message: 'Scanned QR code is unrecognized — no matching handler found for the QR code type',
+  },
 
   // ============================================
   // Network Errors (2100-2199)
@@ -555,7 +569,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.VIDEO_PROMPTS_MISSING,
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.VERIFICATION,
-    message: 'Video prompts were missing or empty when entering the capture screen',
+    message: 'Video prompts unavailable — request failed or returned no prompts',
   },
   ACCOUNT_TRANSFER_ERROR: {
     statusCode: 2413,

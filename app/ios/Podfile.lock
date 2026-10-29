@@ -1718,7 +1718,7 @@ PODS:
     - React
   - react-native-get-random-values (1.11.0):
     - React-Core
-  - react-native-keyboard-controller (1.21.9):
+  - react-native-keyboard-controller (1.21.14):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1730,7 +1730,7 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-keyboard-controller/common (= 1.21.9)
+    - react-native-keyboard-controller/common (= 1.21.14)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1741,7 +1741,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-keyboard-controller/common (1.21.9):
+  - react-native-keyboard-controller/common (1.21.14):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2721,7 +2721,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNSVG (15.15.4):
+  - RNSVG (15.15.5):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2742,9 +2742,9 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNSVG/common (= 15.15.4)
+    - RNSVG/common (= 15.15.5)
     - Yoga
-  - RNSVG/common (15.15.4):
+  - RNSVG/common (15.15.5):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2788,7 +2788,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets (0.10.1):
+  - RNWorklets (0.10.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2810,10 +2810,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-    - RNWorklets/apple (= 0.10.1)
-    - RNWorklets/common (= 0.10.1)
+    - RNWorklets/apple (= 0.10.4)
+    - RNWorklets/common (= 0.10.4)
     - Yoga
-  - RNWorklets/apple (0.10.1):
+  - RNWorklets/apple (0.10.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2836,7 +2836,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNWorklets/common (0.10.1):
+  - RNWorklets/common (0.10.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3387,7 +3387,7 @@ SPEC CHECKSUMS:
   react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-drop-shadow: aeb76e4b46c09924b4a8ee3d454dd00fdb5c62d9
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
-  react-native-keyboard-controller: d4796248609d4c03cd6b5f73a9fd083d7c5f33d6
+  react-native-keyboard-controller: 8224a2d68ef0068c9b46c4e5372844e333910cb7
   react-native-netinfo: 2f906d5d9a639090ed1c079135d6485a95f749f1
   react-native-orientation-locker: ee8bb2177365ca74f51dc1e11218fe544634d523
   react-native-safe-area-context: 6b4966397ada0f7dd481e4486a2ef936834861a1
@@ -3449,9 +3449,9 @@ SPEC CHECKSUMS:
   RNPermissions: fd379a085150cae807106ddd342b46f781c38c9a
   RNReanimated: 8e15e9c39a36a01b296bf9f7254a6a35ed9c5a6c
   RNScreens: 7118cd7715c226856125b5bece3c4d9abec90356
-  RNSVG: 3fe8590403ac9f107b4d14591bc6e54da4894e5c
+  RNSVG: 6cae8d4082913be2eb43eaec2a456222c42195ed
   RNVectorIcons: 97f26211c07d69e45b189f9dd0dbbe5e2d2b0b92
-  RNWorklets: 43af89f696342f91118a2f1f3a879056e2f47331
+  RNWorklets: f0de904d12965e1de29125e6acc7a0d65acadb43
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   VisionCamera: f84550cffbbf23f3cac7a3d1d2e66e5098a4e8eb
   VisionCameraBarcodeScanner: 20cca2d99425546548511a95980bb8b1117fb830

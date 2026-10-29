@@ -127,6 +127,7 @@ export enum AppEventCode {
   CARD_NOT_FOUND = 'card_not_found',
   CARD_INACTIVE = 'card_inactive',
   CARD_EXPIRED = 'card_expired',
+  EVIDENCE_BCSC_CARD_ALREADY_ADDED = 'evidence_bcsc_card_already_added', // Non-IAS error code — the registered BC Services Card scanned again as the additional photo ID
   CARD_REPLACED = 'card_replaced',
   CARD_CANCELLED = 'card_cancelled',
   CARD_RENEWED = 'card_renewed',
@@ -144,7 +145,9 @@ export enum AppEventCode {
   CONFIRM_CANCEL_MOBILE_CARD_SETUP = 'confirm_cancel_mobile_card_setup',
   TOO_MANY_ATTEMPTS = 'too_many_attempts',
   INVALID_QR_CODE = 'invalid_qr_code',
+  UNRECOGNIZED_QR_CODE = 'unrecognized_qr_code',
   ACCOUNT_TRANSFER_ERROR = 'account_transfer_error', // Non-IAS error code
+  CREDENTIAL_QR_SCAN_FAILED = 'credential_qr_scan_failed', // Non-IAS error code
   NON_BCSC_ACCEPT_CONDITIONS = 'non_bcsc_accept_conditions',
   NON_BCSC_HAS_BEEN_DISABLED = 'non_bcsc_has_been_disabled',
   DELETE_VERIFY_REQUEST_ERROR = 'delete_verify_request_error',

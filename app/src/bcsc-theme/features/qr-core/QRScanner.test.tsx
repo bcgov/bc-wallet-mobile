@@ -144,16 +144,44 @@ describe('QRScanner', () => {
   })
 
   // ScanCamera freezes itself after a scan, so closing any global error modal has to remount it.
-  it('remounts ScanCamera only once the error modal closes', () => {
-    const mockUseErrorAlert = jest.mocked(useErrorAlert)
-    mockUseErrorAlert.mockReturnValue({ isErrorModalVisible: true } as unknown as ReturnType<typeof useErrorAlert>)
+  it('remounts ScanCamera only once the error modal closes and the rescan delay passes', () => {
+    jest.useFakeTimers()
+    try {
+      const mockUseErrorAlert = jest.mocked(useErrorAlert)
+      mockUseErrorAlert.mockReturnValue({ isErrorModalVisible: true } as unknown as ReturnType<typeof useErrorAlert>)
 
-    const { rerender } = render(<QRScanner {...defaultProps} />)
-    rerender(<QRScanner {...defaultProps} />)
-    expect(mockCameraMounted).toHaveBeenCalledTimes(1) // still open, so still frozen
+      const { rerender } = render(<QRScanner {...defaultProps} />)
+      rerender(<QRScanner {...defaultProps} />)
+      act(() => jest.runOnlyPendingTimers())
+      expect(mockCameraMounted).toHaveBeenCalledTimes(1) // still open, so still frozen
 
-    mockUseErrorAlert.mockReturnValue({ isErrorModalVisible: false } as unknown as ReturnType<typeof useErrorAlert>)
-    rerender(<QRScanner {...defaultProps} />)
-    expect(mockCameraMounted).toHaveBeenCalledTimes(2)
+      mockUseErrorAlert.mockReturnValue({ isErrorModalVisible: false } as unknown as ReturnType<typeof useErrorAlert>)
+      rerender(<QRScanner {...defaultProps} />)
+      expect(mockCameraMounted).toHaveBeenCalledTimes(1) // closed, but the delay hasn't passed
+
+      act(() => jest.runOnlyPendingTimers())
+      expect(mockCameraMounted).toHaveBeenCalledTimes(2)
+    } finally {
+      jest.useRealTimers()
+    }
+  })
+
+  it('does not remount ScanCamera if the screen unmounts before the rescan delay passes', () => {
+    jest.useFakeTimers()
+    try {
+      const mockUseErrorAlert = jest.mocked(useErrorAlert)
+      mockUseErrorAlert.mockReturnValue({ isErrorModalVisible: true } as unknown as ReturnType<typeof useErrorAlert>)
+
+      const { rerender, unmount } = render(<QRScanner {...defaultProps} />)
+
+      mockUseErrorAlert.mockReturnValue({ isErrorModalVisible: false } as unknown as ReturnType<typeof useErrorAlert>)
+      rerender(<QRScanner {...defaultProps} />)
+      unmount()
+      act(() => jest.runOnlyPendingTimers())
+
+      expect(mockCameraMounted).toHaveBeenCalledTimes(1)
+    } finally {
+      jest.useRealTimers()
+    }
   })
 })

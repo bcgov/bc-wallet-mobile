@@ -14,12 +14,12 @@ jobs:
     name: Scan code for Shai-hulud virus
     steps:
       - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: bc-wallet-mobile
 
       - name: Checkout Shai-hulud scanner
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: CyberDracula/shai-hulud-2-scanner
           path: shai-hulud-2-scanner

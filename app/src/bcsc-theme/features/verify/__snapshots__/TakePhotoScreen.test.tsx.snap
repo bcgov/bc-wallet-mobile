@@ -44,6 +44,7 @@ exports[`TakePhoto renders correctly 1`] = `
       onInterruptionStarted={[Function]}
       onStarted={[Function]}
       onStopped={[Function]}
+      orientationSource="interface"
       outputs={
         [
           {

@@ -809,28 +809,25 @@ const translation = {
       "EnterManually": "Enter Serial Number Manually",
     },
     "Scan": {
-      "NoAccountFound": "No account found, restart the app and try again.",
-      "NoAttestationResponse": "No attestation response, check your connection and try again.",
-      "NoDeviceCodeFound": "No device code found",
-      "InvalidQrCode": "Invalid QR code",
       "WillScanAutomatically": "A valid QR code will scan automatically",
       "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady.",
       "ScanYourCard": "Scan your card",
       "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically.",
       "TorchOn": "Turn flashlight on",
       "TorchOff": "Turn flashlight off",
-      "ErrorDetails": "Error details",
-      "Dismiss": "Dismiss",
       "SaveScanZones": "Save Scan Zones",
       "ContinueScanning": "Continue Scanning",
       "Confirm": "Confirm",
       "TryAgain": "Try Again",
       "Connecting": "Connecting…",
-      "UnrecognizedQR": "QR code not recognized.",
+      "UnrecognizedQR": "QR code not recognized",
       "InvalidConnectionInvitation": "This connection invitation could not be opened.",
       "FeatureUnavailable": "This action isn't available yet.",
       "AccountTransferErrorTitle": "Unable to add device",
       "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it.",
+      "UnrecognizedQRDescription": "We couldn't recognize this QR code. Make sure it's meant for this app. If it is, report this error.",
+      "CredentialQRScanFailedTitle": "Unable to process invitation",
+      "CredentialQRScanFailedDescription": "We couldn't process this invitation. If you think it should work, report this error.",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card.",
         "Mediator": "Mediator invitations aren't supported in BC Services Card.",
@@ -1658,6 +1655,10 @@ const translation = {
     "DocumentExpired": {
       "Title": "This document has expired.",
       "Description": "Please choose a different form of ID to continue."
+    },
+    "BcscCardAlreadyAdded": {
+      "Title": "This is the BC Services Card you already added.",
+      "Description": "Please choose a different photo ID to continue."
     },
     "FactoryReset": {
       "Title": "Problem with App",

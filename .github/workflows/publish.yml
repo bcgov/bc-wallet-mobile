@@ -6,24 +6,15 @@
 # App Store Connect, Google Play and Firebase App Distribution — is reached
 # only from here.
 #
-# `ring` is the audience. ring-0 is the team and always publishes, without
-# approval. Picking a higher ring publishes every ring up to it, each behind
-# its own environment approval, in order. See docs/releases.md.
+# Rings are the audience. ring-0 is the team and always publishes, without
+# approval. Every publish then heads for ring-4, each ring behind its own
+# environment approval, in order; rejecting a gate stops it there. See
+# docs/releases.md.
 name: Publish
 
 on:
   workflow_dispatch:
     inputs:
-      ring:
-        description: 'How far to publish. ring-0 (the team) always goes; this picks how much further, and each ring on the way needs its own approval.'
-        required: false
-        default: ring-2
-        type: choice
-        options:
-          - ring-1
-          - ring-2
-          - ring-3
-          - ring-4
       build_number:
         description: 'Build number to publish. Leave blank for the most recent publishable build on this branch.'
         required: false
@@ -77,7 +68,6 @@ jobs:
       widen_ipa_variants: ${{ steps.resolve.outputs.widen_ipa_variants }}
       widen_aab_variants: ${{ steps.resolve.outputs.widen_aab_variants }}
       widen_apk_variants: ${{ steps.resolve.outputs.widen_apk_variants }}
-      reached_rings: ${{ steps.resolve.outputs.reached_rings }}
       has_widening: ${{ steps.resolve.outputs.has_widening }}
     steps:
       # A feature branch can produce a perfectly good build, but shipping one
@@ -97,7 +87,7 @@ jobs:
       # and composite actions have to match the workflow file being run, and
       # dispatching from a branch is the only way to test a change to this
       # workflow.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Resolve build
         id: resolve
@@ -105,7 +95,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
-          RING: ${{ inputs.ring }}
           TARGETS: ${{ inputs.targets }}
           REQUESTED_BUILD: ${{ inputs.build_number }}
         run: python3 .github/scripts/resolve_publishable_build.py
@@ -136,14 +125,14 @@ jobs:
         variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
     steps:
       - name: Download IPA
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ios-${{ matrix.variant }}.ipa
           path: ${{ runner.temp }}/artifact
           run-id: ${{ needs.resolve-build.outputs.run_id }}
           github-token: ${{ github.token }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Use the build's variant config
         uses: ./.github/workflows/actions/use-build-variant-config
@@ -207,14 +196,14 @@ jobs:
         variant: ${{ fromJSON(needs.resolve-build.outputs.aab_variants) }}
     steps:
       - name: Download AAB
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-${{ matrix.variant }}.aab
           path: ${{ runner.temp }}/artifact
           run-id: ${{ needs.resolve-build.outputs.run_id }}
           github-token: ${{ github.token }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Use the build's variant config
         uses: ./.github/workflows/actions/use-build-variant-config
@@ -228,7 +217,7 @@ jobs:
 
       # bundletool validates the AAB before upload, and it needs a JRE.
       - name: Set up Java
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: 17
@@ -271,14 +260,14 @@ jobs:
         variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
     steps:
       - name: Download IPA
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ios-${{ matrix.variant }}.ipa
           path: ${{ runner.temp }}/firebase-artifact
           run-id: ${{ needs.resolve-build.outputs.run_id }}
           github-token: ${{ github.token }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Use the build's variant config
         uses: ./.github/workflows/actions/use-build-variant-config
@@ -330,14 +319,14 @@ jobs:
         variant: ${{ fromJSON(needs.resolve-build.outputs.apk_variants) }}
     steps:
       - name: Download APK
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-${{ matrix.variant }}.apk
           path: ${{ runner.temp }}/firebase-artifact
           run-id: ${{ needs.resolve-build.outputs.run_id }}
           github-token: ${{ github.token }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Use the build's variant config
         uses: ./.github/workflows/actions/use-build-variant-config
@@ -377,7 +366,9 @@ jobs:
   # Once a build reaches ring-0 (uploaded to stores, firebase etc.), tag
   # the commit with bcsc-v<APP_VERSION>-<build number>.
   # APP_VERSION comes from that commit's variant.env, not from main.
-  # Idempotent: a single-store retry re-runs this and finds the tag already there
+  # Idempotent: a single-store retry re-runs this and finds the tag already there.
+  # At least one upload must have succeeded: a run whose `targets` reach no
+  # artifact skips every upload, and that is not a release.
   tag-ring-0:
     name: Tag ring-0 build
     needs: [resolve-build, apple-upload, google-upload, firebase-ios, firebase-android]
@@ -387,12 +378,16 @@ jobs:
       needs.apple-upload.result != 'failure' &&
       needs.google-upload.result != 'failure' &&
       needs.firebase-ios.result != 'failure' &&
-      needs.firebase-android.result != 'failure'
+      needs.firebase-android.result != 'failure' &&
+      (needs.apple-upload.result == 'success' ||
+       needs.google-upload.result == 'success' ||
+       needs.firebase-ios.result == 'success' ||
+       needs.firebase-android.result == 'success')
     runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.resolve-build.outputs.head_sha }}
 
@@ -440,13 +435,11 @@ jobs:
   approve-ring-1:
     name: Approve ring-1
     needs: [resolve-build, apple-upload, google-upload, firebase-ios, firebase-android]
-    # resolve-build success is tested first: fromJSON must not see an empty output.
     # Skipping this gate skips the whole chain, since each one needs the last.
     if: >-
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
-      needs.resolve-build.outputs.has_widening == 'true' &&
-      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-1')
+      needs.resolve-build.outputs.has_widening == 'true'
     runs-on: ubuntu-22.04
     environment:
       name: ring-1
@@ -461,7 +454,7 @@ jobs:
           BUILD: ${{ needs.resolve-build.outputs.run_number }}
         run: echo "Build ${BUILD} approved for ring-1"
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github/workflows/actions/read-approval-comment
 
@@ -474,8 +467,8 @@ jobs:
   ring-1:
     needs: [resolve-build, approve-ring-1]
     if: >-
-      needs.approve-ring-1.result == 'success' &&
-      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-1')
+      !cancelled() &&
+      needs.approve-ring-1.result == 'success'
     permissions:
       contents: read
       actions: read
@@ -497,8 +490,7 @@ jobs:
     needs: [resolve-build, approve-ring-1, ring-1]
     if: >-
       always() && !cancelled() &&
-      needs.approve-ring-1.result == 'success' &&
-      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-2')
+      needs.approve-ring-1.result == 'success'
     runs-on: ubuntu-22.04
     environment:
       name: ring-2
@@ -513,7 +505,7 @@ jobs:
           BUILD: ${{ needs.resolve-build.outputs.run_number }}
         run: echo "Build ${BUILD} approved for ring-2"
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           sparse-checkout: .github/workflows/actions/read-approval-comment
 
@@ -526,8 +518,8 @@ jobs:
   ring-2:
     needs: [resolve-build, approve-ring-2]
     if: >-
-      needs.approve-ring-2.result == 'success' &&
-      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-2')
+      !cancelled() &&
+      needs.approve-ring-2.result == 'success'
     permissions:
       contents: read
       actions: read
@@ -549,8 +541,7 @@ jobs:
     needs: [resolve-build, approve-ring-2, ring-2]
     if: >-
       always() && !cancelled() &&
-      needs.approve-ring-2.result == 'success' &&
-      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-3')
+      needs.approve-ring-2.result == 'success'
     runs-on: ubuntu-22.04
     environment:
       name: ring-3
@@ -564,8 +555,8 @@ jobs:
   ring-3:
     needs: [resolve-build, approve-ring-3]
     if: >-
-      needs.approve-ring-3.result == 'success' &&
-      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-3')
+      !cancelled() &&
+      needs.approve-ring-3.result == 'success'
     permissions:
       contents: read
       actions: read
@@ -586,8 +577,7 @@ jobs:
     needs: [resolve-build, approve-ring-3, ring-3]
     if: >-
       always() && !cancelled() &&
-      needs.approve-ring-3.result == 'success' &&
-      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-4')
+      needs.approve-ring-3.result == 'success'
     runs-on: ubuntu-22.04
     environment:
       name: ring-4
@@ -601,8 +591,8 @@ jobs:
   ring-4:
     needs: [resolve-build, approve-ring-4]
     if: >-
-      needs.approve-ring-4.result == 'success' &&
-      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-4')
+      !cancelled() &&
+      needs.approve-ring-4.result == 'success'
     permissions:
       contents: read
       actions: read

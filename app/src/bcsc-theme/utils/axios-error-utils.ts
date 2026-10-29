@@ -2,6 +2,7 @@ import { AppError, ErrorDefinition, ErrorRegistry } from '@/errors'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AppEventCode, isAppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
+import { Platform } from 'react-native'
 import z from 'zod'
 
 enum AxiosErrorCode {
@@ -118,6 +119,35 @@ export const formatNetworkAxiosError = (error: AxiosError): AxiosError => {
   }
 
   return error
+}
+
+/**
+ * Reclassifies an Android client-side timeout as a timeout.
+ *
+ * On android, React Native only flags a SoecketTimeoutException as a timeout, so any client side timeout will appear as a generic network error.
+ * This function detects that and reclassifies the error as a timeout (ECONNABORTED).
+ * iOS reports its timeout correctly as ECONNABORTED, so no reclassification is needed.
+ *
+ * @param axiosError - The AxiosError to normalize (mutated in place)
+ * @returns The same AxiosError, reclassified as ECONNABORTED when it was a client-side timeout
+ */
+export const normalizeAxiosTimeoutError = (axiosError: AxiosError): AxiosError => {
+  const timeout = axiosError.config?.timeout
+  const startedAt = axiosError.config?._requestStartedAt
+
+  if (
+    Platform.OS === 'android' &&
+    axiosError.code === AxiosErrorCode.NETWORK_ERROR &&
+    !axiosError.response &&
+    timeout &&
+    startedAt &&
+    Date.now() - startedAt >= timeout
+  ) {
+    axiosError.code = AxiosErrorCode.ECONNABORTED
+    axiosError.message = `timeout of ${timeout}ms exceeded`
+  }
+
+  return axiosError
 }
 
 /**
@@ -241,10 +271,6 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
 /**
  * Determines if the provided error is a network error: the request produced no HTTP response.
  *
- * This is what the fail-open paths (client discovery, the JWK retry loop, the device count check)
- * rely on, so it also holds for a rejected certificate (classified as UNSECURED_NETWORK): the
- * ERR_NETWORK cause is kept on the AppError and is found by walking the cause chain of re-wrapped errors.
- *
  * @param {unknown} error - The error to check
  * @param depth - Recursion guard for the cause chain
  * @returns {*} {boolean} True if the error is a network error, false otherwise.
@@ -260,6 +286,63 @@ export const isNetworkError = (error: unknown, depth = 0): boolean => {
 
   if (error instanceof AppError) {
     return error.appEvent === AppEventCode.NO_INTERNET || isNetworkError(error.cause, depth + 1)
+  }
+
+  return false
+}
+
+// Guards against circular `cause` references
+const MAX_CAUSE_DEPTH = 5
+
+/**
+ * Checks a single error for a network error, a timeout, or a 5xx server response.
+ *
+ * @param {unknown} error - The error to check
+ * @returns {*} {boolean} True if this error is transient, false otherwise.
+ */
+const isTransientError = (error: unknown): boolean => {
+  if (isNetworkError(error)) {
+    return true
+  }
+
+  // Covers timeout AppErrors created without an AxiosError cause
+  if (error instanceof AppError && error.appEvent === AppEventCode.SERVER_TIMEOUT) {
+    return true
+  }
+
+  const axiosError = error as Partial<AxiosError>
+
+  if (axiosError.code === AxiosErrorCode.ECONNABORTED) {
+    return true
+  }
+
+  const status = axiosError.response?.status
+  return typeof status === 'number' && status >= 500
+}
+
+/**
+ * Determines if the provided error is a request failure that may succeed on a retry: a network
+ * error, a request timeout, or a 5xx server response.
+ *
+ * Walks cause chain for transient errors (network, timeout, 5xx) and returns true if any are found.
+ * Walk is limited to 5 to prevent infinite loops
+ *
+ * @param {unknown} error - The error to check
+ * @returns {*} {boolean} True if this error alone is transient, false otherwise.
+ */
+export const isTransientRequestError = (error: unknown): boolean => {
+  let current: unknown = error
+
+  // TODO: Refactor cause-chain walks into a shared helper
+  //   - isDeviceStorageFullError (errorHandler.ts)
+  //   - describeCauseChain / deepest (useAgentSetupViewModel.ts)
+  // Bounded walk of the cause chain to guard against cycles
+  for (let depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
+    if (isTransientError(current)) {
+      return true
+    }
+
+    current = (current as { cause?: unknown }).cause
   }
 
   return false
@@ -362,6 +445,9 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
       http_status: error.response?.status,
       http_response_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.response?.data),
       http_request_size: error.config?.uploadLogContext?.media_bytes ?? _getByteLength(error.config?.data),
+      http_timeout_ms: error.config?.timeout,
+      // Calculates how long a request has been running based on _requestStartedAt timestamp
+      http_elapsed_ms: error.config?._requestStartedAt ? Date.now() - error.config._requestStartedAt : undefined,
       // TODO (MD): Remove this (uploadLogContext) from the config and inject directly into the
       // error at the service layer to prevent the config from being polluted with api specific details.
 

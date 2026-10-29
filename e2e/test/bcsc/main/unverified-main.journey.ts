@@ -2,18 +2,18 @@ import assert from 'node:assert/strict'
 import { Timeouts } from '../../../src/constants.js'
 import { openScanner } from '../../../src/flows/main.js'
 import { skipToHome } from '../../../src/flows/onboarding.js'
-import { injectQrCode } from '../../../src/helpers/camera.js'
+import { injectBlankFrame, injectQrCode } from '../../../src/helpers/camera.js'
 import { CUSTOM_CARD_COPY, countNotificationListItems } from '../../../src/helpers/notifications.js'
 import { mediatorInviteUri, openIdCredentialOfferUri } from '../../../src/helpers/qr-payloads.js'
 import { isSauceLabs } from '../../../src/helpers/sauce.js'
 import { reachCameraScreen } from '../../../src/helpers/screens.js'
 import { BaseScreen } from '../../../src/screens/core/BaseScreen.js'
+import { AppErrorModal } from '../../../src/screens/errors.js'
 import {
   HomeNotificationCard,
   HomeScreen,
   MainVerifyPromptScreen,
   QRCoreScreen,
-  ScanErrorModal,
   SettingsScreen,
   TabBar,
   WalletScreen,
@@ -27,7 +27,7 @@ import {
  * MainVerifyPrompt, while Home, the empty Wallet, the QR scanner, and Settings stay reachable. Home's
  * single custom card (the Start-verification variant on this fresh account) is asserted by copy. The
  * scanner's rejection matrix rides along, since it needs no account: an unrecognised QR and the two
- * DELIBERATE refusals (OpenID offers, mediator invitations) each surface the error popup and re-arm.
+ * DELIBERATE refusals (OpenID offers, mediator invitations) each surface the app error modal and re-arm.
  * AccountDetails is deliberately absent: its Settings row (`Profile`) and its account data are both
  * verified-gated — this journey asserts the row's absence; the verified screen is covered separately.
  * Verified tab/Services content rides the verified card journeys.
@@ -36,28 +36,31 @@ import {
 /** Engine handle for the MainVerifyPrompt title — the screen's only distinguishing marker is copy. */
 const engine = new BaseScreen()
 
-/** The scan-error popup's body for a QR no strategy claims — `BCSC.Scan.UnrecognizedQR` (en). */
-const UNRECOGNIZED_QR_MESSAGE = 'QR code not recognized.'
-/** The DELIBERATE rejections (`BCSC.Scan.Unsupported.*`, en) — recognized content the app refuses. */
+/** The error modal's title for a QR no strategy claims — `BCSC.Scan.UnrecognizedQR` (en). */
+const UNRECOGNIZED_QR_TITLE = 'QR code not recognized'
+/** The DELIBERATE rejections' modal descriptions (`BCSC.Scan.Unsupported.*`, en) — recognized content the app refuses. */
 const UNSUPPORTED_OPENID_MESSAGE = "OpenID credentials aren't supported in BC Services Card."
 const UNSUPPORTED_MEDIATOR_MESSAGE = "Mediator invitations aren't supported in BC Services Card."
 
 /**
- * Drive one injected QR through the scanner to its error popup and back to Home. The injection must
+ * Drive one injected QR through the scanner to its error modal and back to Home. The injection must
  * happen BEFORE the scanner opens (see injectQrCode), and the first frame can decode before the torch
- * marker settles — so the popup may beat the scanner-ready probe.
+ * marker settles — so the modal may beat the scanner-ready probe.
  */
-async function expectScanRejection(payload: string, message: string): Promise<void> {
+async function expectScanRejection(payload: string, text: string): Promise<void> {
   await injectQrCode(payload)
   await openScanner()
   await reachCameraScreen(
     'QRCore scanner',
-    async () => (await QRCoreScreen.isVisible('torch')) || (await ScanErrorModal.isPresent(500))
+    async () => (await QRCoreScreen.isVisible('torch')) || (await AppErrorModal.isPresent(500))
   )
-  await ScanErrorModal.expectVisible(Timeouts.CAMERA_READY)
-  // The popup's `BodyText` id collides with the Home notification card — assert the copy instead.
-  await engine.waitForText(message, Timeouts.CAMERA_READY)
-  await ScanErrorModal.tap('primary') // Dismiss → clears the error and re-arms the scanner
+  await AppErrorModal.expectVisible(Timeouts.CAMERA_READY)
+  // The modal has no testIDs for its copy — assert the text instead.
+  await engine.waitForText(text, Timeouts.CAMERA_READY)
+  // Closing the modal remounts the camera, and a rejected strategy re-fires by design (so a retry works).
+  // The injected QR never leaves the frame, so take it out first or the modal is back before the back tap.
+  await AppErrorModal.tap('primary')
+  await injectBlankFrame()
   await QRCoreScreen.back.tap()
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
@@ -122,13 +125,13 @@ describe('Main journey: unverified gating', () => {
   })
 
   // The scanner's failure path, driven by a real decode: an unrecognised QR must surface the error
-  // popup rather than navigate. Sauce-only (camera injection is), and the QR is rendered at runtime
+  // modal rather than navigate. Sauce-only (camera injection is), and the QR is rendered at runtime
   // rather than committed — it is a one-line payload, not a fixture.
-  it('an unrecognised QR raises the scan-error popup', async function () {
+  it('an unrecognised QR raises the error modal', async function () {
     if (!isSauceLabs()) {
       return this.skip()
     }
-    await expectScanRejection('not-a-supported-code', UNRECOGNIZED_QR_MESSAGE)
+    await expectScanRejection('not-a-supported-code', UNRECOGNIZED_QR_TITLE)
   })
 
   it('an OpenID credential-offer QR is deliberately rejected', async function () {
