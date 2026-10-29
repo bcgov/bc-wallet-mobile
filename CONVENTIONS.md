@@ -49,6 +49,22 @@ existing cancellation destination: verification-method selection (#4585).
 Startup and post-call verification checks have no Cancel control. Post-call checks
 show the existing verification message without a progress bar.
 
+## Submits: one run per request, however many screens mount
+
+A screen that submits on mount (the send-video `UploadingScreen`) keeps its in-flight run in a
+module-level single-flight record keyed by the request id, as `useVideoPrompts` does for prompt
+refreshes. A second instance of the screen joins the run instead of starting another: it mirrors
+the run's progress, can cancel it, and as the most recent caller it is the one that navigates or
+alerts when the run settles. The run itself only touches the server and the store and returns an
+outcome; the UI effects are applied once, by that caller. A button that hands a flow to such a
+screen through a `reset` also refuses a second press itself, because `reset` with key-less routes
+mounts a fresh instance every time.
+
+**Why:** a double tap on "Use Video" mounted two upload screens and submitted the same verification
+request twice; IAS rejected the second as a duplicate (500) after the first had gone through, so the
+user saw a server error over "Successfully sent" (#4928). Bifold's `Button` only swallows presses
+while the handler is running, which a synchronous handler never is.
+
 ## Test IDs: Register the key, then reference it
 
 Never pass a string literal to `testIdWithKey`. Add the key to `app/src/test-ids/registry.ts` under
