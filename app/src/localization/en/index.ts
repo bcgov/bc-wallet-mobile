@@ -212,6 +212,7 @@ const translation = {
     "Toggle": "Toggle Developer Mode",
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
+    "EnableAttestation": "Enable attestation",
     "SwitchTheme": "Switch theme",
     "SelectedMediator": "Selected mediator",
     "MediatorSection": "Mediator",
