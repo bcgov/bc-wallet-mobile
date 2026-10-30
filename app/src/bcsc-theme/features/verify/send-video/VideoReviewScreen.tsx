@@ -15,6 +15,7 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
+  useAnimatedComponents,
   useServices,
   useStore,
   useTheme,
@@ -48,11 +49,13 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
   const isFocused = useIsFocused()
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
   const { failedToReadFromLocalStorageAlert, videoPromptsMissingAlert } = useAlerts(navigation)
   const { refreshPrompts, isRefreshingPrompts } = useVideoPrompts()
+  const { ButtonLoading } = useAnimatedComponents()
 
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
@@ -88,6 +91,11 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   })
 
   const onPressUse = () => {
+    if (!videoLoaded) {
+      logger.error('[VideoReview] Attempted to use video before it was loaded')
+      return
+    }
+
     dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [videoThumbnailPath] })
     navigation.dispatch(
       CommonActions.reset({
@@ -115,6 +123,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       return
     }
 
+    VerificationVideoCache.clearCache()
+    dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
     dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [''] })
     navigation.goBack()
   }
@@ -155,6 +165,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * @returns {*} {Promise<void>} A promise that resolves when the video metadata is processed and cached.
    */
   const onVideoLoad = async (data: OnLoadData) => {
+    setVideoLoaded(false)
     try {
       // Clear the previously cached video
       VerificationVideoCache.clearCache()
@@ -173,6 +184,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         type: BCDispatchAction.SAVE_VIDEO,
         payload: [{ videoPath: videoPath, videoDuration: Math.floor(data.duration) }],
       })
+      setVideoLoaded(true)
     }
   }
 
@@ -186,8 +198,10 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         testID={testIdWithKey(TestIds.verify.videoReview.useVideo)}
         title={t('BCSC.SendVideo.VideoReview.UseVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
-        disabled={isRefreshingPrompts}
-      />
+        disabled={!videoLoaded || isRefreshingPrompts}
+      >
+        {!videoLoaded || isRefreshingPrompts ? <ButtonLoading /> : null}
+      </Button>
       <Button
         buttonType={ButtonType.Secondary}
         onPress={onPressRetake}
@@ -221,6 +235,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
           resizeMode={'cover'}
           style={styles.video}
           onLoad={(data) => onVideoLoad(data)}
+          onError={(error) => logger.error('[VideoReview] Video review error:', error)}
           disableAudioSessionManagement
           viewType={ViewType.TEXTURE}
         />
