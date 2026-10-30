@@ -357,7 +357,10 @@ describe('TakeVideoScreen', () => {
       expect(setIntervalSpy.mock.calls.some(([, delay]) => delay === 1000)).toBe(false)
       expect(navigation.goBack).toHaveBeenCalled()
       expect(removeFileSafely).toHaveBeenCalledWith('/tmp/thumbnail.jpg', expect.anything())
-      expect(screen.queryByTestId(testIdWithKey(TestIds.verify.takeVideo.cancel))).toBeNull()
+      // The recording controls are laid out from the start but only revealed once recording begins
+      expect(
+        screen.getByTestId(testIdWithKey(TestIds.verify.takeVideo.cancel), { includeHiddenElements: true })
+      ).not.toBeVisible()
     })
 
     it('does not go back again when the screen has already unmounted', async () => {

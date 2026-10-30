@@ -47,7 +47,7 @@ import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Animated, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import {
@@ -79,7 +79,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     [photoOutput, videoOutput]
   )
   const { t } = useTranslation()
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing, TextTheme, maxFontSizeMultiplier } = useTheme()
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
@@ -139,15 +139,18 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       StyleSheet.create({
         pageContainer: {
           flex: 1,
+          backgroundColor: ColorPalette.grayscale.black,
+        },
+        // The prompt and the controls sit above and below the preview rather than on it, so the
+        // prompt text at large OS font sizes shrinks the preview instead of covering it (#4401)
+        cameraContainer: {
+          flex: 1,
+          overflow: 'hidden',
         },
         camera: {
           flex: 1,
         },
         promptContainer: {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
           backgroundColor: ColorPalette.notification.popupOverlay,
           paddingVertical: Spacing.lg,
           paddingHorizontal: Spacing.md,
@@ -155,10 +158,6 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           justifyContent: 'center',
         },
         controlsContainer: {
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
           backgroundColor: ColorPalette.notification.popupOverlay,
           paddingBottom: Spacing.md,
           paddingHorizontal: Spacing.lg,
@@ -171,6 +170,16 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           paddingTop: Spacing.md,
           paddingBottom: Spacing.lg,
         },
+        cancelButton: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          flexShrink: 1,
+        },
+        cancelText: {
+          color: 'white',
+          fontSize: TextTheme.headingFour.fontSize,
+          flexShrink: 1,
+        },
         recordingLengthContainer: {
           flexDirection: 'row',
           gap: Spacing.sm,
@@ -182,7 +191,15 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           marginBottom: safeAreaInsets.bottom,
         },
       }),
-    [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, safeAreaInsets.bottom]
+    [
+      ColorPalette.grayscale.black,
+      ColorPalette.notification.popupOverlay,
+      Spacing.lg,
+      Spacing.md,
+      Spacing.sm,
+      TextTheme.headingFour.fontSize,
+      safeAreaInsets.bottom,
+    ]
   )
 
   const getCameraError = useCallback(
@@ -593,7 +610,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     return (
       <SafeAreaView style={styles.pageContainer}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{t('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')}</Text>
+          <ThemedText style={{ color: 'white' }}>{t('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')}</ThemedText>
         </View>
       </SafeAreaView>
     )
@@ -602,36 +619,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   return (
     <ScreenWrapper padded={false} scrollable={false} edges={['top']}>
       <View style={styles.pageContainer}>
-        <Camera
-          ref={cameraRef}
-          style={styles.camera}
-          device={device}
-          implementationMode={PREVIEW_IMPLEMENTATION_MODE}
-          orientationSource={OUTPUT_ORIENTATION_SOURCE}
-          mirrorMode={mirrorMode}
-          outputs={[photoOutput, videoOutput]}
-          // Also deactivate while the app is backgrounded/inactive, same as CodeScanningCamera and
-          // MaskedCamera — this only changes what gets passed to the native camera prop; `isActive`
-          // the state variable (and the useFocusEffect below that gates startRecording() on it) is
-          // untouched, so this can't re-trigger a recording. A recording attempt in progress is thrown
-          // away at the same moment (see the app state effect above).
-          isActive={isActive && !isBackgroundedAppState(appStateStatus)}
-          onError={onError}
-          onConfigured={onInitialized}
-          onStarted={() => {
-            setCameraStarted(true)
-            clearInterruption()
-          }}
-          onStopped={() => setCameraStarted(false)}
-          onInterruptionStarted={onInterruptionStarted}
-          onInterruptionEnded={onInterruptionEnded}
-        />
-        {isInterrupted && <CameraInterruptedOverlay />}
-
-        {/* Top overlay with prompt text */}
         <View style={styles.promptContainer}>
           {recordingInProgress ? (
             <Animated.Text
+              maxFontSizeMultiplier={maxFontSizeMultiplier}
               style={[
                 TextTheme.headingTwo,
                 { textAlign: 'center', opacity: promptOpacity, color: ColorPalette.grayscale.white },
@@ -645,6 +636,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
                 {t('BCSC.SendVideo.TakeVideo.RecordingWillStartIn')}
               </ThemedText>
               <Animated.Text
+                maxFontSizeMultiplier={maxFontSizeMultiplier}
                 style={[
                   TextTheme.headingTwo,
                   { textAlign: 'center', opacity: promptOpacity, color: ColorPalette.grayscale.white },
@@ -656,54 +648,84 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           )}
         </View>
 
-        {/* Bottom overlay with controls */}
-        {recordingInProgress ? (
-          <View style={styles.controlsContainer}>
-            <View style={styles.cancelContainer}>
-              <TouchableOpacity
-                onPress={handleCancel}
-                hitSlop={hitSlop}
-                testID={testIdWithKey(TestIds.verify.takeVideo.cancel)}
-                accessibilityLabel={t('Global.Cancel')}
-                accessibilityRole="button"
-                style={{ flexDirection: 'row', alignItems: 'center' }}
+        <View style={styles.cameraContainer}>
+          <Camera
+            ref={cameraRef}
+            style={styles.camera}
+            device={device}
+            implementationMode={PREVIEW_IMPLEMENTATION_MODE}
+            orientationSource={OUTPUT_ORIENTATION_SOURCE}
+            mirrorMode={mirrorMode}
+            outputs={[photoOutput, videoOutput]}
+            // Also deactivate while the app is backgrounded/inactive, same as CodeScanningCamera and
+            // MaskedCamera — this only changes what gets passed to the native camera prop; `isActive`
+            // the state variable (and the useFocusEffect below that gates startRecording() on it) is
+            // untouched, so this can't re-trigger a recording. A recording attempt in progress is thrown
+            // away at the same moment (see the app state effect above).
+            isActive={isActive && !isBackgroundedAppState(appStateStatus)}
+            onError={onError}
+            onConfigured={onInitialized}
+            onStarted={() => {
+              setCameraStarted(true)
+              clearInterruption()
+            }}
+            onStopped={() => setCameraStarted(false)}
+            onInterruptionStarted={onInterruptionStarted}
+            onInterruptionEnded={onInterruptionEnded}
+          />
+          {isInterrupted && <CameraInterruptedOverlay />}
+        </View>
+
+        {/* The controls are laid out from the start and revealed once recording begins, so the
+            preview keeps its size when the countdown ends */}
+        <View
+          style={[styles.controlsContainer, !recordingInProgress && { opacity: 0 }]}
+          pointerEvents={recordingInProgress ? 'auto' : 'none'}
+          accessibilityElementsHidden={!recordingInProgress}
+          importantForAccessibility={recordingInProgress ? 'auto' : 'no-hide-descendants'}
+        >
+          <View style={styles.cancelContainer}>
+            <TouchableOpacity
+              onPress={handleCancel}
+              hitSlop={hitSlop}
+              testID={testIdWithKey(TestIds.verify.takeVideo.cancel)}
+              accessibilityLabel={t('Global.Cancel')}
+              accessibilityRole="button"
+              style={styles.cancelButton}
+            >
+              <Icon name={'chevron-left'} size={TextTheme.headingFour.fontSize} color={'white'} />
+              <ThemedText style={styles.cancelText}>{t('Global.Cancel')}</ThemedText>
+            </TouchableOpacity>
+            <View style={styles.recordingLengthContainer}>
+              <ThemedText
+                style={{
+                  color: exceedsMaxDuration ? ColorPalette.semantic.error : ColorPalette.grayscale.white,
+                  fontSize: TextTheme.headingFour.fontSize,
+                }}
               >
-                <Icon name={'chevron-left'} size={TextTheme.headingFour.fontSize} color={'white'} />
-                <ThemedText style={{ color: 'white', fontSize: TextTheme.headingFour.fontSize }}>
-                  {t('Global.Cancel')}
-                </ThemedText>
-              </TouchableOpacity>
-              <View style={styles.recordingLengthContainer}>
-                <ThemedText
-                  style={{
-                    color: exceedsMaxDuration ? ColorPalette.semantic.error : ColorPalette.grayscale.white,
-                    fontSize: TextTheme.headingFour.fontSize,
-                  }}
-                >
-                  {formatTime(elapsedTime)}
-                </ThemedText>
-                <ThemedText style={{ color: ColorPalette.semantic.error, fontSize: TextTheme.headingFour.fontSize }}>
-                  {'\u2B24'}
-                </ThemedText>
-              </View>
-            </View>
-            <View style={styles.buttonContainer}>
-              <Button
-                buttonType={ButtonType.Primary}
-                title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
-                onPress={onPressNextPrompt}
-                testID={testIdWithKey(TestIds.verify.takeVideo.nextPrompt)}
-                accessibilityLabel={
-                  isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')
-                }
-                disabled={
-                  elapsedTime - promptTimestamp < MIN_PROMPT_DURATION_SECONDS ||
-                  (isLastPrompt && elapsedTime < MIN_SELFIE_VIDEO_DURATION_SECONDS)
-                }
-              />
+                {formatTime(elapsedTime)}
+              </ThemedText>
+              <ThemedText style={{ color: ColorPalette.semantic.error, fontSize: TextTheme.headingFour.fontSize }}>
+                {'\u2B24'}
+              </ThemedText>
             </View>
           </View>
-        ) : null}
+          <View style={styles.buttonContainer}>
+            <Button
+              buttonType={ButtonType.Primary}
+              title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
+              onPress={onPressNextPrompt}
+              testID={testIdWithKey(TestIds.verify.takeVideo.nextPrompt)}
+              accessibilityLabel={
+                isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')
+              }
+              disabled={
+                elapsedTime - promptTimestamp < MIN_PROMPT_DURATION_SECONDS ||
+                (isLastPrompt && elapsedTime < MIN_SELFIE_VIDEO_DURATION_SECONDS)
+              }
+            />
+          </View>
+        </View>
       </View>
     </ScreenWrapper>
   )

@@ -267,7 +267,7 @@ const MainStack: React.FC = () => {
             component={CredentialJSONDetailsScreen}
             options={{
               headerShown: true,
-              headerTitle: t('Credentials.JSONDetailsTitle'),
+              title: t('Credentials.JSONDetailsTitle'),
             }}
           />
           <Stack.Screen

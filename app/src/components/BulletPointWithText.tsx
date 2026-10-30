@@ -1,7 +1,7 @@
 import { ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
+import { StyleProp, StyleSheet, useWindowDimensions, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 interface BoldedBulletPointProps {
@@ -17,8 +17,9 @@ const BulletPointWithText: React.FC<BoldedBulletPointProps> = ({
   iconColor,
   containerStyle,
 }) => {
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing, TextTheme, maxFontSizeMultiplier } = useTheme()
   const { t } = useTranslation()
+  const { fontScale } = useWindowDimensions()
 
   const styles = StyleSheet.create({
     container: {
@@ -28,7 +29,8 @@ const BulletPointWithText: React.FC<BoldedBulletPointProps> = ({
     },
     iconContainer: {
       marginHorizontal: Spacing.sm,
-      height: TextTheme.normal.lineHeight,
+      // The rendered height of the first text line, so the dot stays centred on it at every OS font size
+      height: (TextTheme.normal.lineHeight ?? Spacing.lg) * Math.min(fontScale, maxFontSizeMultiplier),
       justifyContent: 'center',
     },
   })

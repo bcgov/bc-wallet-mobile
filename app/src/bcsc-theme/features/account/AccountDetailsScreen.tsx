@@ -25,7 +25,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppState, AppStateStatus, Linking, StyleSheet, View } from 'react-native'
+import { AppState, AppStateStatus, Linking, StyleSheet, useWindowDimensions, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
@@ -37,6 +37,7 @@ interface AccountDetailsScreenProps {
 const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, Buttons } = useTheme()
+  const { fontScale } = useWindowDimensions()
   const { metadata } = useApi()
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -96,9 +97,11 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
     container: {
       padding: Spacing.lg,
     },
+    // Beside the 130pt photo the heading-sized name breaks mid-word once the OS font is large, so
+    // stack the two instead (same switch Bifold's Settings screen makes for its rows).
     photoAndNameContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: fontScale >= 1.5 ? 'column' : 'row',
+      alignItems: fontScale >= 1.5 ? 'flex-start' : 'center',
       gap: Spacing.md,
     },
     name: {

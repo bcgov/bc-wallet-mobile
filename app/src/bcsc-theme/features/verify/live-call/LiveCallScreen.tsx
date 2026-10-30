@@ -368,6 +368,10 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
           padding: Spacing.md,
           backgroundColor: ColorPalette.notification.popupOverlay,
         },
+        serviceText: {
+          color: ColorPalette.grayscale.white,
+          flexShrink: 1,
+        },
         timerText: {
           color: ColorPalette.grayscale.white,
         },
@@ -380,15 +384,22 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         },
         lowerContentContainer: {
           flexDirection: 'row',
-          height: (width / 4) * 1.5,
+          // Grows with the "Having trouble?" text at large OS font sizes (#4401)
+          minHeight: (width / 4) * 1.5,
         },
         hasTroubleContainer: {
           marginLeft: 'auto',
           marginRight: Spacing.xs,
+          flexShrink: 1,
+        },
+        hasTroubleText: {
+          color: ColorPalette.grayscale.white,
+          padding: Spacing.sm,
+          textAlign: 'right',
         },
         selfieVideoContainer: {
           width: width / 4,
-          height: '100%',
+          height: (width / 4) * 1.5,
           overflow: 'hidden',
         },
         selfieVideo: {
@@ -452,7 +463,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       <SafeAreaView edges={['left', 'right']} style={{ flex: 1, justifyContent: 'space-between' }}>
         <View style={styles.upperContainer}>
           <View style={styles.timeAndLabelContainer}>
-            <ThemedText style={{ color: ColorPalette.grayscale.white }}>{t('BCSC.VideoCall.ServiceBC')}</ThemedText>
+            <ThemedText style={styles.serviceText}>{t('BCSC.VideoCall.ServiceBC')}</ThemedText>
             {callTimer ? <ThemedText style={styles.timerText}>{callTimer}</ThemedText> : null}
           </View>
           {banner ? (
@@ -479,7 +490,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               accessibilityRole="button"
               testID={testIdWithKey(TestIds.verify.liveCall.havingTrouble)}
             >
-              <ThemedText style={{ color: ColorPalette.grayscale.white, padding: Spacing.sm }}>
+              <ThemedText style={styles.hasTroubleText}>
                 {t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
               </ThemedText>
             </TouchableOpacity>
@@ -492,7 +503,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               secondaryColor={'transparent'}
               size={iconSize}
               iconName={onMute ? 'microphone-off' : 'microphone'}
-              label={onMute ? 'Unmute' : 'Mute'}
+              label={onMute ? t('BCSC.VideoCall.Controls.Unmute') : t('BCSC.VideoCall.Controls.Mute')}
               testIDKey={TestIds.verify.liveCall.mute}
             />
             <CallIconButton
@@ -501,7 +512,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               secondaryColor={'transparent'}
               size={iconSize}
               iconName={videoHidden ? 'video-off' : 'video'}
-              label={videoHidden ? 'Show Video' : 'Hide Video'}
+              label={videoHidden ? t('BCSC.VideoCall.Controls.ShowVideo') : t('BCSC.VideoCall.Controls.HideVideo')}
               testIDKey={TestIds.verify.liveCall.video}
             />
             <CallIconButton
@@ -510,7 +521,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               secondaryColor={ColorPalette.semantic.error}
               size={iconSize}
               iconName={'phone-cancel'}
-              label={'End Call'}
+              label={t('BCSC.VideoCall.Controls.EndCall')}
               testIDKey={TestIds.verify.liveCall.endCall}
             />
           </View>

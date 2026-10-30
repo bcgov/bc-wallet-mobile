@@ -94,7 +94,9 @@ exports[`AutoLockScreen renders correctly 1`] = `
                   "fontSize": 20,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "flexShrink": 1,
+                },
               ]
             }
           >
@@ -305,7 +307,9 @@ exports[`AutoLockScreen renders correctly 1`] = `
                   "fontSize": 20,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "flexShrink": 1,
+                },
               ]
             }
           >
@@ -494,7 +498,9 @@ exports[`AutoLockScreen renders correctly 1`] = `
                   "fontSize": 20,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "flexShrink": 1,
+                },
               ]
             }
           >
@@ -683,7 +689,9 @@ exports[`AutoLockScreen renders correctly 1`] = `
                   "fontSize": 20,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "flexShrink": 1,
+                },
               ]
             }
           >

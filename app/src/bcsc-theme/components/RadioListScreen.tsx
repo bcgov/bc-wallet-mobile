@@ -37,11 +37,16 @@ function RadioListRow({ title, value, selected, testID, onPress }: RadioListRowP
     checkboxContainer: {
       justifyContent: 'center',
     },
+    title: {
+      flexShrink: 1,
+    },
   })
 
   return (
     <View style={[styles.section, styles.sectionRow]}>
-      <ThemedText variant="title">{title}</ThemedText>
+      <ThemedText variant="title" style={styles.title}>
+        {title}
+      </ThemedText>
       <Pressable
         style={styles.checkboxContainer}
         accessibilityLabel={title}

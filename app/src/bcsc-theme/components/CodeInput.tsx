@@ -123,10 +123,17 @@ const CodeInput = ({
         rootStyle={styles.root}
         renderCell={({ index, symbol, isFocused }) => (
           <Fragment key={index}>
-            {separator && index === CELL_COUNT / 2 && <ThemedText style={styles.separator}>{'\u2013'}</ThemedText>}
+            {/* Fixed-size digit cells do not follow the OS font scale (same policy as PINInput): the
+                32pt glyphs are already large, and scaled text would be clipped by the cell box. */}
+            {separator && index === CELL_COUNT / 2 && (
+              <ThemedText style={styles.separator} maxFontSizeMultiplier={1}>
+                {'\u2013'}
+              </ThemedText>
+            )}
             <ThemedText
               style={[styles.cell, isFocused && styles.cellFocused, error && !isFocused && styles.cellError]}
               onLayout={getCellOnLayoutHandler(index)}
+              maxFontSizeMultiplier={1}
             >
               {symbol || (isFocused ? <Cursor /> : null)}
             </ThemedText>

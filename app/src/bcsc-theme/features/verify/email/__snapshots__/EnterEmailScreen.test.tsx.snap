@@ -150,6 +150,7 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                   autoComplete="email"
                   autoCorrect={false}
                   keyboardType="email-address"
+                  maxFontSizeMultiplier={2}
                   maxLength={254}
                   onBlur={[Function]}
                   onChange={[Function]}
@@ -261,7 +262,7 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
               <View
                 style={
                   {
-                    "height": undefined,
+                    "height": 48,
                     "justifyContent": "center",
                     "marginHorizontal": 8,
                   }
@@ -325,7 +326,7 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
               <View
                 style={
                   {
-                    "height": undefined,
+                    "height": 48,
                     "justifyContent": "center",
                     "marginHorizontal": 8,
                   }
@@ -389,7 +390,7 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
               <View
                 style={
                   {
-                    "height": undefined,
+                    "height": 48,
                     "justifyContent": "center",
                     "marginHorizontal": 8,
                   }

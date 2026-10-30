@@ -67,7 +67,7 @@ exports[`IDPhotoInformation renders correctly 1`] = `
           <View
             style={
               {
-                "height": undefined,
+                "height": 48,
                 "justifyContent": "center",
                 "marginHorizontal": 8,
               }
@@ -131,7 +131,7 @@ exports[`IDPhotoInformation renders correctly 1`] = `
           <View
             style={
               {
-                "height": undefined,
+                "height": 48,
                 "justifyContent": "center",
                 "marginHorizontal": 8,
               }
@@ -195,7 +195,7 @@ exports[`IDPhotoInformation renders correctly 1`] = `
           <View
             style={
               {
-                "height": undefined,
+                "height": 48,
                 "justifyContent": "center",
                 "marginHorizontal": 8,
               }
@@ -259,7 +259,7 @@ exports[`IDPhotoInformation renders correctly 1`] = `
           <View
             style={
               {
-                "height": undefined,
+                "height": 48,
                 "justifyContent": "center",
                 "marginHorizontal": 8,
               }

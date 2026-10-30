@@ -264,7 +264,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         </View>
         <Callout>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm }}>
-            <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
+            <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color, flexShrink: 1 }}>
               {tWithPrefix('ThisPINIsUnique')}
             </ThemedText>
             <Icon name="information-outline" size={24} color={TextTheme.headingFour.color} />

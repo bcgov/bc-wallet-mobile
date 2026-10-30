@@ -183,6 +183,7 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]
@@ -317,6 +318,7 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]

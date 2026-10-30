@@ -1,20 +1,10 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { QRScannerTorch, TOKENS, useServices, useTheme } from '@bifold/core'
+import { QRScannerTorch, TOKENS, ThemedText, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  Alert,
-  Animated,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle,
-  useWindowDimensions,
-} from 'react-native'
+import { Alert, Animated, Platform, Pressable, StyleSheet, View, ViewStyle, useWindowDimensions } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Reanimated, { Extrapolation, interpolate, runOnJS, useSharedValue } from 'react-native-reanimated'
 import { Camera, CameraOutput, CameraRef, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
@@ -1104,7 +1094,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   if (!device || !hasPermission) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</Text>
+        <ThemedText style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</ThemedText>
       </View>
     )
   }
@@ -1229,7 +1219,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
                 accessibilityLabel={a11yLabel(t('BCSC.Scan.SaveScanZones'))}
                 accessibilityRole="button"
               >
-                <Text style={styles.saveButtonText}>{'\uD83D\uDCD0'} Save Scan Zones</Text>
+                <ThemedText variant={'labelSubtitle'} style={styles.saveButtonText}>
+                  {'\uD83D\uDCD0'} Save Scan Zones
+                </ThemedText>
               </Pressable>
               <Pressable
                 style={styles.continueButton}
@@ -1238,7 +1230,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
                 accessibilityLabel={a11yLabel(t('BCSC.Scan.ContinueScanning'))}
                 accessibilityRole="button"
               >
-                <Text style={styles.continueButtonText}>{'\u25B6'} Continue Scanning</Text>
+                <ThemedText variant={'labelSubtitle'} style={styles.continueButtonText}>
+                  {'\u25B6'} Continue Scanning
+                </ThemedText>
               </Pressable>
             </>
           ) : (
@@ -1250,7 +1244,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
                 accessibilityLabel={a11yLabel(t('BCSC.Scan.Confirm'))}
                 accessibilityRole="button"
               >
-                <Text style={styles.confirmButtonText}>{'\u2714'} Confirm</Text>
+                <ThemedText variant={'labelSubtitle'} style={styles.confirmButtonText}>
+                  {'\u2714'} Confirm
+                </ThemedText>
               </Pressable>
               <Pressable
                 style={styles.continueButton}
@@ -1259,7 +1255,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
                 accessibilityLabel={a11yLabel(t('BCSC.Scan.TryAgain'))}
                 accessibilityRole="button"
               >
-                <Text style={styles.continueButtonText}>{'\uD83D\uDD04'} Try Again</Text>
+                <ThemedText variant={'labelSubtitle'} style={styles.continueButtonText}>
+                  {'\uD83D\uDD04'} Try Again
+                </ThemedText>
               </Pressable>
             </>
           )}
@@ -1269,11 +1267,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       {/* Zoom level indicator - diagnostic readout */}
       {showZoomIndicator && (
         <View style={styles.zoomIndicator}>
-          <Text style={styles.zoomText}>Zoom: {zoomDisplay.toFixed(2)}x</Text>
+          <ThemedText variant={'labelSubtitle'} style={styles.zoomText}>
+            Zoom: {zoomDisplay.toFixed(2)}x
+          </ThemedText>
           {device && (
-            <Text style={[styles.zoomText, { fontSize: 8 }]}>
+            <ThemedText variant={'labelSubtitle'} style={[styles.zoomText, { fontSize: 8 }]}>
               ({device.minZoom?.toFixed(1)}-{device.maxZoom?.toFixed(1)})
-            </Text>
+            </ThemedText>
           )}
         </View>
       )}

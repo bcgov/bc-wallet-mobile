@@ -94,7 +94,7 @@ const ContactRow: React.FC<ContactRowProps> = ({ contact, pinned, onPress, onLon
           <Image style={styles.avatarImage} source={{ uri: contact.imageUrl }} />
         ) : (
           <View style={styles.avatar}>
-            <ThemedText variant="bold" style={{ color: ColorPalette.brand.primary }}>
+            <ThemedText variant="bold" style={{ color: ColorPalette.brand.primary }} maxFontSizeMultiplier={1}>
               {initial}
             </ThemedText>
           </View>

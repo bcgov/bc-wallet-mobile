@@ -1,6 +1,7 @@
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -66,12 +67,6 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       width: '100%',
       height: 250,
       marginBottom: Spacing.md,
-    },
-    bulletContainer: {
-      flexDirection: 'row',
-    },
-    bullet: {
-      marginRight: Spacing.xs,
     },
   })
 
@@ -144,26 +139,11 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         {t('BCSC.SendVideo.VideoInstructions.YouShould')}
       </ThemedText>
 
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet1')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet2')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet3')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet4')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet5')}</ThemedText>
-      </View>
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet1'} />
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet2'} />
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet3'} />
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet4'} />
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet5'} />
       <View
         style={{
           flexDirection: 'row',

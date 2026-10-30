@@ -150,6 +150,7 @@ exports[`EditNickname renders correctly 1`] = `
                   autoCapitalize="sentences"
                   autoCorrect={false}
                   keyboardType="default"
+                  maxFontSizeMultiplier={2}
                   maxLength={30}
                   onBlur={[Function]}
                   onChange={[Function]}

@@ -69,9 +69,13 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
     },
     statusRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       alignItems: 'center',
       gap: Spacing.sm,
       marginVertical: Spacing.sm,
+    },
+    statusLabel: {
+      flexShrink: 1,
     },
     statusValue: {
       color: ColorPalette.brand.primary,
@@ -212,7 +216,7 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
         accessibilityLabel={`${t('BCSC.Settings.NotificationsAreLabel')} ${statusWord}`}
       >
         <Icon name="bell-outline" size={BELL_ICON_SIZE} color={ColorPalette.grayscale.darkGrey} />
-        <ThemedText>{t('BCSC.Settings.NotificationsAreLabel')}</ThemedText>
+        <ThemedText style={styles.statusLabel}>{t('BCSC.Settings.NotificationsAreLabel')}</ThemedText>
         <ThemedText variant="bold" style={styles.statusValue}>
           {statusWord}
         </ThemedText>

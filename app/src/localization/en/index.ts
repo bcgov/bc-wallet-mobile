@@ -1297,6 +1297,13 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible)"
     },
     "VideoCall": {
+      "Controls": {
+        "Mute": "Mute",
+        "Unmute": "Unmute",
+        "HideVideo": "Hide Video",
+        "ShowVideo": "Show Video",
+        "EndCall": "End Call"
+      },
       "MissingSession": "Missing required parameters to end session",
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update",
       "DeviceCodeError": "Missing device or user code",
@@ -1422,6 +1429,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Wallet": {
+      "Title": "Wallet",
       "EmptyMessage": "Your wallet is empty",
       "EmptyLearnMore": "Learn more about the wallet",
       "Reset": "Reset wallet",

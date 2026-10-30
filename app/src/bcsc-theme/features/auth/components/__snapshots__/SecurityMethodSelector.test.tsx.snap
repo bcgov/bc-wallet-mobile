@@ -163,6 +163,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) marks t
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]
@@ -318,6 +319,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) marks t
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]
@@ -1408,6 +1410,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]
@@ -1542,6 +1545,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]

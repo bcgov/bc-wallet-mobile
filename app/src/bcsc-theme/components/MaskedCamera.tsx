@@ -1,22 +1,15 @@
+import { hitSlop } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { TestIds } from '@/test-ids/registry'
-import {
-  MaskType,
-  SVGOverlay,
-  testIdWithKey,
-  ThemedText,
-  TOKENS,
-  usePreventDoublePress,
-  useServices,
-  useTheme,
-} from '@bifold/core'
+import { MaskType, testIdWithKey, ThemedText, TOKENS, usePreventDoublePress, useServices, useTheme } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { LayoutChangeEvent, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import Svg, { Defs, Ellipse, Mask, Rect } from 'react-native-svg'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, CameraOutput, CameraPhotoOutput, MirrorMode } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
@@ -33,20 +26,72 @@ import CameraInterruptedOverlay from './CameraInterruptedOverlay'
 import { getCameraMetadata, isCameraNotReadyCaptureError } from './utils/camera'
 import { OUTPUT_ORIENTATION_SOURCE, PREVIEW_IMPLEMENTATION_MODE } from './utils/camera-output'
 
+const controlHitSlop = { top: hitSlop.top, bottom: hitSlop.bottom }
+
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
   photoOutput: CameraPhotoOutput
   cameraFace: 'front' | 'back'
   cameraInstructions?: string
   cameraLabel?: string
-  maskType?: MaskType
+  /** Only the selfie oval is drawn; it is sized to the preview, not the window. */
+  maskType?: MaskType.OVAL
   maskLineColor?: string
   maskLineWidth?: number
   maskOverlayOpacity?: number
-  customPath?: string
   codeScanner?: CameraOutput
   onPhotoTaken: (path: string) => void
 }
+
+export type OvalGeometry = { cx: number; cy: number; rx: number; ry: number }
+
+/**
+ * Oval cutout for a camera preview of the given size. Matches bifold's `MaskType.OVAL` (radii of
+ * 45% of the width and 28% of the window height) while the preview is tall enough, and shrinks to
+ * keep `margin` of preview visible above and below the oval once the instruction and control bars
+ * take more room, as they do at large OS font sizes (#4401). The width shrinks with the height so
+ * the oval keeps a face-like proportion.
+ */
+export const getOvalGeometry = (width: number, height: number, windowHeight: number, margin: number): OvalGeometry => {
+  const ry = Math.max(0, Math.min(height / 2 - margin, windowHeight * 0.28))
+  const rx = Math.min(width * 0.45, ry * 0.82)
+
+  return { cx: width / 2, cy: height / 2, rx, ry }
+}
+
+type OvalMaskOverlayProps = OvalGeometry & {
+  width: number
+  height: number
+  strokeColor: string
+  strokeWidth?: number
+  overlayOpacity?: number
+}
+
+/** Dims the preview outside the oval and outlines it. Sized to the measured preview box. */
+const OvalMaskOverlay = ({
+  width,
+  height,
+  cx,
+  cy,
+  rx,
+  ry,
+  strokeColor,
+  strokeWidth = 2,
+  overlayOpacity = 0.6,
+}: OvalMaskOverlayProps) => (
+  <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <Svg width={width} height={height}>
+      <Defs>
+        <Mask id="ovalMask">
+          <Rect width={width} height={height} fill="white" />
+          <Ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="black" />
+        </Mask>
+      </Defs>
+      <Rect width={width} height={height} fill="black" fillOpacity={overlayOpacity} mask="url(#ovalMask)" />
+      <Ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="transparent" stroke={strokeColor} strokeWidth={strokeWidth} />
+    </Svg>
+  </View>
+)
 
 const MaskedCamera = ({
   navigation,
@@ -57,15 +102,18 @@ const MaskedCamera = ({
   maskLineWidth,
   maskOverlayOpacity = 0,
   maskType,
-  customPath,
   codeScanner,
   cameraFace = 'back',
   onPhotoTaken,
 }: MaskedCameraProps) => {
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
+  const window = useWindowDimensions()
   const { Spacing, ColorPalette } = useTheme()
   const [torchEnabled, setTorchEnabled] = useState(false)
+  // The preview is the space left between the instruction and control bars; the window is only a
+  // first-render stand-in until onLayout reports the real box.
+  const [previewSize, setPreviewSize] = useState<{ width: number; height: number } | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
   const { emitErrorModal } = useErrorAlert()
@@ -111,30 +159,27 @@ const MaskedCamera = ({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      position: 'relative',
+      backgroundColor: ColorPalette.grayscale.black,
+    },
+    // Text and controls sit above and below the preview rather than on it, so long text at large
+    // OS font sizes shrinks the preview instead of covering it (#4401)
+    preview: {
+      flex: 1,
+      overflow: 'hidden',
     },
     camera: {
       flex: 1,
     },
     controlsContainer: {
-      flex: 1,
-      position: 'absolute',
-      bottom: 30,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: Spacing.lg,
-      marginBottom: safeAreaInsets.bottom,
+      paddingTop: Spacing.lg,
+      paddingBottom: safeAreaInsets.bottom + Spacing.lg,
     },
-    instructionText: {
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      position: 'absolute',
-      fontWeight: 'normal',
-      left: 0,
-      right: 0,
-      zIndex: 5,
+    instructionContainer: {
       padding: Spacing.lg,
-      flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -254,71 +299,87 @@ const MaskedCamera = ({
     }
   }
 
+  const onPreviewLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout
+    setPreviewSize((current) => (current?.width === width && current?.height === height ? current : { width, height }))
+  }
+
+  const previewWidth = previewSize?.width ?? window.width
+  const previewHeight = previewSize?.height ?? window.height
+  const hasInstructions = Boolean(cameraLabel || cameraInstructions || showNotReadyNotice)
+
   return (
-    <View style={{ flex: 1, backgroundColor: 'black', position: 'relative' }}>
-      <Camera
-        ref={cameraRef}
-        style={styles.camera}
-        device={device}
-        implementationMode={PREVIEW_IMPLEMENTATION_MODE}
-        orientationSource={OUTPUT_ORIENTATION_SOURCE}
-        mirrorMode={mirrorMode}
-        isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
-        onError={onError}
-        outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
-        torchMode={torchMode}
-        onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
-        onStarted={() => {
-          // Note: to simulate camera errors, replace `true` with `!SIMULATE_CAMERA_EVENTS.neverStarts`
-          setCameraStarted(true)
-          clearInterruption()
-          setShowNotReadyNotice(false)
-        }}
-        onStopped={() => setCameraStarted(false)}
-        onInterruptionStarted={onInterruptionStarted}
-        onInterruptionEnded={onInterruptionEnded}
-      />
-      {maskType && (
-        <SVGOverlay
-          maskType={maskType}
-          customPath={customPath}
-          strokeColor={maskLineColor ?? ColorPalette.brand.tertiary}
-          strokeWidth={maskLineWidth}
-          overlayOpacity={maskOverlayOpacity}
-        />
+    <View style={styles.container}>
+      {hasInstructions && (
+        <View style={styles.instructionContainer}>
+          {cameraLabel && (
+            <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
+              {cameraLabel}
+            </ThemedText>
+          )}
+          {cameraInstructions && (
+            <ThemedText
+              style={{
+                color: 'white',
+                textAlign: 'center',
+              }}
+              variant={'headingFour'}
+            >
+              {cameraInstructions}
+            </ThemedText>
+          )}
+          {showNotReadyNotice && (
+            <ThemedText
+              style={{ color: 'white', textAlign: 'center', marginTop: Spacing.sm }}
+              accessibilityLiveRegion="polite"
+              testID={testIdWithKey(TestIds.shared.maskedCamera.notReady)}
+            >
+              {t('BCSC.CameraDisclosure.CameraNotReady')}
+            </ThemedText>
+          )}
+        </View>
       )}
-      {isInterrupted && <CameraInterruptedOverlay />}
-      <View style={styles.instructionText}>
-        {cameraLabel && (
-          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
-            {cameraLabel}
-          </ThemedText>
+      <View style={styles.preview} onLayout={onPreviewLayout}>
+        <Camera
+          ref={cameraRef}
+          style={styles.camera}
+          device={device}
+          implementationMode={PREVIEW_IMPLEMENTATION_MODE}
+          orientationSource={OUTPUT_ORIENTATION_SOURCE}
+          mirrorMode={mirrorMode}
+          isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
+          onError={onError}
+          outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
+          torchMode={torchMode}
+          onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
+          onStarted={() => {
+            // Note: to simulate camera errors, replace `true` with `!SIMULATE_CAMERA_EVENTS.neverStarts`
+            setCameraStarted(true)
+            clearInterruption()
+            setShowNotReadyNotice(false)
+          }}
+          onStopped={() => setCameraStarted(false)}
+          onInterruptionStarted={onInterruptionStarted}
+          onInterruptionEnded={onInterruptionEnded}
+        />
+        {maskType && (
+          <OvalMaskOverlay
+            width={previewWidth}
+            height={previewHeight}
+            {...getOvalGeometry(previewWidth, previewHeight, window.height, Spacing.lg)}
+            strokeColor={maskLineColor ?? ColorPalette.brand.tertiary}
+            strokeWidth={maskLineWidth}
+            overlayOpacity={maskOverlayOpacity}
+          />
         )}
-        {cameraInstructions && (
-          <ThemedText
-            style={{
-              color: 'white',
-              textAlign: 'center',
-            }}
-            variant={'headingFour'}
-          >
-            {cameraInstructions}
-          </ThemedText>
-        )}
-        {showNotReadyNotice && (
-          <ThemedText
-            style={{ color: 'white', textAlign: 'center', marginTop: Spacing.sm }}
-            accessibilityLiveRegion="polite"
-            testID={testIdWithKey(TestIds.shared.maskedCamera.notReady)}
-          >
-            {t('BCSC.CameraDisclosure.CameraNotReady')}
-          </ThemedText>
-        )}
+        {isInterrupted && <CameraInterruptedOverlay />}
       </View>
+      {/* Side by side, so the slop is vertical only: a horizontal one would steal taps from the shutter */}
       <View style={styles.controlsContainer}>
         <TouchableOpacity
           style={{ flex: 1 }}
           onPress={handleCancel}
+          hitSlop={controlHitSlop}
           accessibilityLabel={t('BCSC.CameraDisclosure.CancelCamera')}
           accessibilityRole="button"
           testID={testIdWithKey(TestIds.shared.maskedCamera.cancel)}
@@ -328,6 +389,7 @@ const MaskedCamera = ({
         <TouchableOpacity
           style={[styles.captureButton, !isCameraReady && { opacity: 0.4 }]}
           onPress={preventDoublePress(takeAndSavePhoto)}
+          hitSlop={controlHitSlop}
           disabled={!isCameraReady}
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
@@ -338,6 +400,7 @@ const MaskedCamera = ({
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}
             onPress={() => setTorchEnabled((prev) => !prev)}
+            hitSlop={controlHitSlop}
             accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
             accessibilityRole="button"
             testID={testIdWithKey(TestIds.shared.maskedCamera.toggleFlash)}
