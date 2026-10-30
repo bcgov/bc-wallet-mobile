@@ -1,5 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
+import useEvidenceUploadModel, {
+  resetInFlightSubmitForTests,
+} from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
 import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
@@ -9,7 +11,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
 import * as Navigation from '@react-navigation/native'
-import { act, renderHook } from '@testing-library/react-native'
+import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
 import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
@@ -69,11 +71,10 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
 
 const mockFileUploadErrorAlert = jest.fn()
 const mockAlreadyVerifiedAlert = jest.fn()
+// Takes the screen's navigation, so a test with two screens can hand each its own alert and see which one fired
+const mockUseAlerts = jest.fn()
 jest.mock('@/hooks/useAlerts', () => ({
-  useAlerts: () => ({
-    fileUploadErrorAlert: mockFileUploadErrorAlert,
-    alreadyVerifiedAlert: mockAlreadyVerifiedAlert,
-  }),
+  useAlerts: (navigation: unknown) => mockUseAlerts(navigation),
 }))
 
 // Left unmocked so the real useAlreadyVerifiedRecovery runs and its navigation is asserted here;
@@ -138,6 +139,10 @@ describe('useEvidenceUploadModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseAlerts.mockReturnValue({
+      fileUploadErrorAlert: mockFileUploadErrorAlert,
+      alreadyVerifiedAlert: mockAlreadyVerifiedAlert,
+    })
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([baseStore as BCState, jest.fn()])
@@ -148,6 +153,12 @@ describe('useEvidenceUploadModel', () => {
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({ evidence: mockEvidenceApi } as any)
     jest.mocked(useEvidenceService).mockReturnValue(mockEvidenceApi as any)
+  })
+
+  afterEach(() => {
+    // Every case settles its run: one left in flight would be joined by the next case for req-123 and time it out
+    const { wasInFlight } = resetInFlightSubmitForTests()
+    expect(wasInFlight).toBe(false)
   })
 
   describe('isReady', () => {
@@ -1002,6 +1013,217 @@ describe('useEvidenceUploadModel', () => {
           expect.stringContaining('Error during evidence upload process'),
           surfacedError
         )
+      })
+    })
+
+    describe('when a second UploadingScreen mounts while a submit is in flight (#4928)', () => {
+      // "Use Video" resets the stack with key-less routes, so a second press while the reset is still landing
+      // mounts a second UploadingScreen, which submits on mount as well. Both would PUT the same verification
+      // request, and IAS rejects the second as a duplicate (500) after the first went through. The second joins.
+      const secondNavigation = { navigate: jest.fn(), dispatch: jest.fn(), goBack: jest.fn() } as any
+
+      const arrangeReadySend = () => {
+        jest.mocked(Bifold).useStore.mockReturnValue([
+          {
+            ...baseStore,
+            bcsc: {
+              ...baseStore.bcsc,
+              photoPath: '/photo.jpg',
+              videoPath: '/video.mp4',
+              videoDuration: 10,
+              prompts: [{ text: 'smile' }],
+              photoMetadata: plausiblePhotoMetadata,
+            },
+            bcscSecure: {
+              ...baseStore.bcscSecure,
+              verificationRequestId: 'req-123',
+              verificationRequestSha: 'sha-456',
+              additionalEvidenceData: [],
+            },
+          } as BCState,
+          jest.fn(),
+        ])
+
+        jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
+        jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+        jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
+        mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
+        mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+        mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
+        mockEvidenceApi.uploadVideoEvidenceBinary.mockResolvedValue(undefined)
+      }
+
+      it('submits once, mirrors the run on the newest screen and lets only that screen navigate', async () => {
+        arrangeReadySend()
+        const submission = deferred<{ id: string; status: string }>()
+        mockEvidenceApi.sendVerificationRequest.mockReturnValueOnce(submission.promise)
+
+        const first = renderHook(() => useEvidenceUploadModel(mockNavigation))
+        let firstSend!: Promise<void>
+        await act(async () => {
+          firstSend = first.result.current.handleSend()
+        })
+        await waitFor(() => expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledTimes(1))
+        expect(first.result.current.progressPercent).toBe(75)
+
+        const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
+        let secondSend!: Promise<void>
+        await act(async () => {
+          secondSend = second.result.current.handleSend()
+        })
+        // Joined: nothing is uploaded or submitted again, and the progress made so far is shown
+        expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledTimes(1)
+        expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledTimes(1)
+        expect(second.result.current.progressPercent).toBe(75)
+        expect(second.result.current.isUploading).toBe(true)
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('already in flight'))
+
+        await act(async () => {
+          submission.resolve({ id: 'req-123', status: 'pending' })
+          await Promise.all([firstSend, secondSend])
+        })
+
+        expect(mockUpdateAccountFlags).toHaveBeenCalledTimes(1)
+        expect(first.result.current.progressPercent).toBe(100)
+        expect(second.result.current.progressPercent).toBe(100)
+        expect(secondNavigation.dispatch).toHaveBeenCalledTimes(1)
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(first.result.current.isUploading).toBe(false)
+        expect(second.result.current.isUploading).toBe(false)
+      })
+
+      it('alerts once, from the newest screen, when the shared run fails', async () => {
+        // The user in #4928 saw the error alert. The replaced screen awaited the same run, so a settler check that
+        // only held on the success path would still alert twice here.
+        arrangeReadySend()
+        const replacedScreenAlert = jest.fn()
+        mockUseAlerts.mockImplementation((navigation: unknown) => ({
+          fileUploadErrorAlert: navigation === secondNavigation ? mockFileUploadErrorAlert : replacedScreenAlert,
+          alreadyVerifiedAlert: mockAlreadyVerifiedAlert,
+        }))
+        const submission = deferred<{ id: string; status: string }>()
+        mockEvidenceApi.sendVerificationRequest.mockReturnValueOnce(submission.promise)
+
+        const first = renderHook(() => useEvidenceUploadModel(mockNavigation))
+        let firstSend!: Promise<void>
+        await act(async () => {
+          firstSend = first.result.current.handleSend()
+        })
+        await waitFor(() => expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledTimes(1))
+
+        const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
+        let secondSend!: Promise<void>
+        await act(async () => {
+          secondSend = second.result.current.handleSend()
+        })
+
+        await act(async () => {
+          submission.reject(new Error('Verification failed'))
+          await Promise.all([firstSend, secondSend])
+        })
+
+        expect(mockFileUploadErrorAlert).toHaveBeenCalledTimes(1)
+        expect(replacedScreenAlert).not.toHaveBeenCalled()
+        expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(secondNavigation.dispatch).not.toHaveBeenCalled()
+        expect(first.result.current.isUploading).toBe(false)
+        expect(second.result.current.isUploading).toBe(false)
+      })
+
+      it('lets the newest screen cancel the shared run before it submits', async () => {
+        arrangeReadySend()
+        const video = deferred<Buffer>()
+        jest.mocked(VerificationVideoCache.getCache).mockReturnValueOnce(video.promise)
+
+        const first = renderHook(() => useEvidenceUploadModel(mockNavigation))
+        let firstSend!: Promise<void>
+        await act(async () => {
+          firstSend = first.result.current.handleSend()
+        })
+        const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
+        let secondSend!: Promise<void>
+        await act(async () => {
+          secondSend = second.result.current.handleSend()
+        })
+
+        await act(async () => {
+          await second.result.current.handleCancel()
+          video.resolve(Buffer.from([4, 5, 6]))
+          await Promise.all([firstSend, secondSend])
+        })
+
+        expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).not.toHaveBeenCalled()
+        expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(secondNavigation.dispatch).not.toHaveBeenCalled()
+        expect(secondNavigation.goBack).toHaveBeenCalledTimes(1)
+      })
+
+      it('starts a fresh run when the previous one was cancelled and is still draining', async () => {
+        // Cancel keeps the verification request id, so the next recording is submitted against the same request.
+        // The cancelled run is still finishing the upload it was in when it was flagged; joining it would hand the
+        // new screen `cancelled` and leave the new recording unsent.
+        arrangeReadySend()
+        const cancelledUpload = deferred<void>()
+        mockEvidenceApi.uploadVideoEvidenceBinary.mockReturnValueOnce(cancelledUpload.promise)
+        mockEvidenceApi.sendVerificationRequest.mockResolvedValueOnce({ id: 'req-123', status: 'pending' })
+
+        const first = renderHook(() => useEvidenceUploadModel(mockNavigation))
+        let firstSend!: Promise<void>
+        await act(async () => {
+          firstSend = first.result.current.handleSend()
+        })
+        await waitFor(() => expect(mockEvidenceApi.uploadVideoEvidenceBinary).toHaveBeenCalledTimes(1))
+        await act(async () => {
+          await first.result.current.handleCancel()
+        })
+
+        const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
+        let secondSend!: Promise<void>
+        await act(async () => {
+          secondSend = second.result.current.handleSend()
+        })
+        // Not joined: the new recording is prepared and uploaded by a run of its own
+        expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('already in flight'))
+        await waitFor(() => expect(mockEvidenceApi.uploadVideoEvidenceBinary).toHaveBeenCalledTimes(2))
+
+        await act(async () => {
+          cancelledUpload.resolve()
+          await Promise.all([firstSend, secondSend])
+        })
+
+        // The cancelled run never submitted; the new one did, and only the new screen navigated
+        expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledTimes(1)
+        expect(second.result.current.progressPercent).toBe(100)
+        expect(secondNavigation.dispatch).toHaveBeenCalledTimes(1)
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+      })
+
+      it('starts a fresh run once the previous one has settled', async () => {
+        // Only a live run is joined: a retry after a failure must submit again
+        arrangeReadySend()
+        mockEvidenceApi.sendVerificationRequest
+          .mockRejectedValueOnce(new Error('Verification failed'))
+          .mockResolvedValueOnce({ id: 'req-123', status: 'pending' })
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+        expect(mockFileUploadErrorAlert).toHaveBeenCalledTimes(1)
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledTimes(2)
+        expect(mockNavigation.dispatch).toHaveBeenCalledTimes(1)
       })
     })
 

@@ -8,7 +8,8 @@ import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { VerificationRequestStatus } from '@/constants'
-import { isAppError, isAxiosAppError } from '@/errors/appError'
+import { AppError, isAppError, isAxiosAppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { showErrorAlert, useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
@@ -17,6 +18,22 @@ import { useCallback, useMemo } from 'react'
 
 /** The statuses this app understands; a read-back naming anything else is not trusted. */
 const KNOWN_VERIFICATION_REQUEST_STATUSES: readonly string[] = Object.values(VerificationRequestStatus)
+
+/**
+ * Counts a submit the server had already recorded, so the duplicate-submit rate stays visible now that no modal
+ * shows for it (#4928): device logs never leave production handsets, analytics do. Tracked like any error, with
+ * the original 500's HTTP status and route template only — never the id in the URL, never the body.
+ *
+ * @param submitError - The 500 the submit came back with.
+ * @returns void
+ */
+const trackAlreadyRecordedSubmit = (submitError: AppError): void => {
+  AppError.fromErrorDefinition(ErrorRegistry.EVIDENCE_SUBMIT_ALREADY_RECORDED, {
+    cause: submitError.cause,
+    context: { http_method: submitError.context.http_method, http_route: submitError.context.http_route },
+    track: false,
+  }).track()
+}
 
 /**
  * Service layer hook for evidence api.
@@ -203,6 +220,7 @@ export const useEvidenceService = () => {
             logger.info(
               `[useEvidenceService] Submit of verification request ${verificationRequestId} returned 500 but the request is already ${submitted.status}; continuing as submitted`
             )
+            trackAlreadyRecordedSubmit(error)
             return submitted
           }
         }
