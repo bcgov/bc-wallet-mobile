@@ -1,5 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
+import useEvidenceUploadModel, {
+  resetInFlightSubmitForTests,
+} from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
 import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
@@ -69,11 +71,10 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
 
 const mockFileUploadErrorAlert = jest.fn()
 const mockAlreadyVerifiedAlert = jest.fn()
+// Takes the screen's navigation, so a test with two screens can hand each its own alert and see which one fired
+const mockUseAlerts = jest.fn()
 jest.mock('@/hooks/useAlerts', () => ({
-  useAlerts: () => ({
-    fileUploadErrorAlert: mockFileUploadErrorAlert,
-    alreadyVerifiedAlert: mockAlreadyVerifiedAlert,
-  }),
+  useAlerts: (navigation: unknown) => mockUseAlerts(navigation),
 }))
 
 // Left unmocked so the real useAlreadyVerifiedRecovery runs and its navigation is asserted here;
@@ -138,6 +139,10 @@ describe('useEvidenceUploadModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseAlerts.mockReturnValue({
+      fileUploadErrorAlert: mockFileUploadErrorAlert,
+      alreadyVerifiedAlert: mockAlreadyVerifiedAlert,
+    })
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([baseStore as BCState, jest.fn()])
@@ -148,6 +153,12 @@ describe('useEvidenceUploadModel', () => {
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({ evidence: mockEvidenceApi } as any)
     jest.mocked(useEvidenceService).mockReturnValue(mockEvidenceApi as any)
+  })
+
+  afterEach(() => {
+    // Every case settles its run: one left in flight would be joined by the next case for req-123 and time it out
+    const { wasInFlight } = resetInFlightSubmitForTests()
+    expect(wasInFlight).toBe(false)
   })
 
   describe('isReady', () => {
@@ -1078,6 +1089,45 @@ describe('useEvidenceUploadModel', () => {
         expect(second.result.current.progressPercent).toBe(100)
         expect(secondNavigation.dispatch).toHaveBeenCalledTimes(1)
         expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(first.result.current.isUploading).toBe(false)
+        expect(second.result.current.isUploading).toBe(false)
+      })
+
+      it('alerts once, from the newest screen, when the shared run fails', async () => {
+        // The user in #4928 saw the error alert. The replaced screen awaited the same run, so a settler check that
+        // only held on the success path would still alert twice here.
+        arrangeReadySend()
+        const replacedScreenAlert = jest.fn()
+        mockUseAlerts.mockImplementation((navigation: unknown) => ({
+          fileUploadErrorAlert: navigation === secondNavigation ? mockFileUploadErrorAlert : replacedScreenAlert,
+          alreadyVerifiedAlert: mockAlreadyVerifiedAlert,
+        }))
+        const submission = deferred<{ id: string; status: string }>()
+        mockEvidenceApi.sendVerificationRequest.mockReturnValueOnce(submission.promise)
+
+        const first = renderHook(() => useEvidenceUploadModel(mockNavigation))
+        let firstSend!: Promise<void>
+        await act(async () => {
+          firstSend = first.result.current.handleSend()
+        })
+        await waitFor(() => expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledTimes(1))
+
+        const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
+        let secondSend!: Promise<void>
+        await act(async () => {
+          secondSend = second.result.current.handleSend()
+        })
+
+        await act(async () => {
+          submission.reject(new Error('Verification failed'))
+          await Promise.all([firstSend, secondSend])
+        })
+
+        expect(mockFileUploadErrorAlert).toHaveBeenCalledTimes(1)
+        expect(replacedScreenAlert).not.toHaveBeenCalled()
+        expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        expect(secondNavigation.dispatch).not.toHaveBeenCalled()
         expect(first.result.current.isUploading).toBe(false)
         expect(second.result.current.isUploading).toBe(false)
       })

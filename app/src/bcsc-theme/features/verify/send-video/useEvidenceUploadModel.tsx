@@ -64,16 +64,7 @@ interface SubmitProgress {
   listeners: Set<(stage: UploadStage) => void>
 }
 
-/**
- * The submit in flight, shared across every instance of this hook (#4928).
- *
- * "Use Video" resets the stack with key-less routes, so a second press while the first reset is still landing
- * mounts a second UploadingScreen instead of re-focusing the first. Each instance submits on mount and nothing
- * stops the replaced one, so two runs would PUT the same verification request, and IAS rejects the second as a
- * duplicate (500) after the first already went through. Every caller wants the same thing, this request
- * submitted once, so a later call joins the run instead of starting another: it mirrors the run's progress, can
- * cancel it, and as the most recent caller it is the one that navigates or alerts when the run settles.
- */
+/** One submit of a verification request, awaited by every instance that joined it. */
 interface SubmitRun {
   requestId: string | undefined
   progress: SubmitProgress
@@ -82,14 +73,28 @@ interface SubmitRun {
   promise: Promise<SubmitOutcome>
 }
 
+/**
+ * The submit in flight, shared across every instance of this hook so a second UploadingScreen joins it instead of
+ * submitting the same verification request again (#4928, see CONVENTIONS.md).
+ */
 let inFlightSubmit: SubmitRun | null = null
+
+/**
+ * Drops the shared run so a case that failed mid-run cannot be joined by the next one, and reports whether there
+ * was one to drop. Tests call this between cases; production code must not.
+ */
+export const resetInFlightSubmitForTests = (): { wasInFlight: boolean } => {
+  const wasInFlight = inFlightSubmit !== null
+  inFlightSubmit = null
+  return { wasInFlight }
+}
 
 const useEvidenceUploadModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceUploading>
 ) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store, dispatch] = useStore<BCState>()
-  // Identity for the settler check: the latest instance to call handleSend applies the outcome
+  // Identity for the settler check
   const instanceRef = useRef<object>({})
   const evidence = useEvidenceService()
   const { updateAccountFlags, updateVerificationRequest } = useSecureActions()
@@ -409,8 +414,7 @@ const useEvidenceUploadModel = (
     setIsUploading(true)
 
     let run = inFlightSubmit
-    // A cancelled run is draining, not submitting. Cancel keeps the request id, so a screen mounted for the next
-    // recording before that run settles would otherwise join it, inherit `cancelled`, and leave its recording unsent.
+    // A cancelled run is draining, not submitting (see SubmitProgress.cancelled)
     if (run === null || run.requestId !== verificationRequestId || run.progress.cancelled) {
       const progress: SubmitProgress = { stage: UploadStage.PreparingVideo, cancelled: false, listeners: new Set() }
       const started: SubmitRun = {

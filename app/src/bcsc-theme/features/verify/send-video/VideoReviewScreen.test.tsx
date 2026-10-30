@@ -2,6 +2,7 @@ import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { Button } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import * as ReactNavigationNative from '@react-navigation/native'
@@ -85,19 +86,24 @@ describe('VideoReview', () => {
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
-  it('hands the video over once, however many times Use Video is pressed', async () => {
+  it('hands the video over once, however many times Use Video is pressed', () => {
     // The reset carries key-less routes, so a second dispatch would mount a second UploadingScreen and submit
     // the same verification request twice; IAS rejects the duplicate with a 500 (#4928). Bifold's Button only
-    // swallows presses while the handler runs, so the second press lands after that window has closed.
+    // swallows presses while the handler runs, so the second press lands after that window has closed. The
+    // handler is called twice inside one act: fireEvent would render the disabled state between the presses,
+    // and the pre-render window is the one the ref guards.
     const tree = renderScreen()
-    const useVideo = tree.getByText('BCSC.SendVideo.VideoReview.UseVideo')
+    const [useVideo] = tree
+      .UNSAFE_getAllByType(Button)
+      .filter((button) => button.props.title === 'BCSC.SendVideo.VideoReview.UseVideo')
 
-    fireEvent.press(useVideo)
-    await act(async () => {})
-    fireEvent.press(useVideo)
+    act(() => {
+      useVideo.props.onPress()
+      useVideo.props.onPress()
+    })
 
     expect(mockNavigation.dispatch).toHaveBeenCalledTimes(1)
-    expect(useVideo).toBeDisabled()
+    expect(tree.getByText('BCSC.SendVideo.VideoReview.UseVideo')).toBeDisabled()
     // A retake now would rotate the sha under the upload that just started
     expect(tree.getByText('BCSC.SendVideo.VideoReview.RetakeVideo')).toBeDisabled()
   })
