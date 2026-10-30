@@ -5,11 +5,15 @@ import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
 import { useFcmService } from '../features/fcm'
+import { BCSCStacks } from '../types/navigators'
 import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
 
 const mockIsClientReady = jest.fn()
 const mockEmitErrorModal = jest.fn()
+const mockIsLoading = jest.fn()
+// Each render's registered screen and screen options: what the real navigator reads to animate a route change
+const mockNavigatorRender = jest.fn()
 
 jest.mock('@bifold/core')
 // Renders the one registered screen. A navigationKey change remounts it, as the real navigator would.
@@ -18,7 +22,14 @@ jest.mock('@react-navigation/stack', () => {
   const Screen = ({ name, navigationKey, component: Component, children }: any) => (
     <React.Fragment key={`${name}:${navigationKey ?? ''}`}>{Component ? <Component /> : children()}</React.Fragment>
   )
-  const Navigator = ({ children }: any) => children
+  const Navigator = ({ children, screenOptions }: any) => {
+    const [screen] = React.Children.toArray(children)
+    mockNavigatorRender({
+      screen: { name: screen?.props.name, navigationKey: screen?.props.navigationKey },
+      options: screenOptions,
+    })
+    return children
+  }
   return { createStackNavigator: () => ({ Navigator, Screen }) }
 })
 jest.mock('@/contexts/ErrorAlertContext', () => ({
@@ -45,6 +56,7 @@ jest.mock('../hooks/useSystemChecks', () => ({
 }))
 jest.mock('../contexts/BCSCLoadingContext', () => ({
   LoadingScreen: 'LoadingScreen',
+  useLoadingScreen: () => ({ isLoading: mockIsLoading() }),
 }))
 jest.mock('./AuthStack', () => ({
   __esModule: true,
@@ -107,10 +119,31 @@ const mockStore = (overrides: Record<string, any> = {}) => ({
 
 const mockProcessPendingChallenges = jest.fn()
 
+type NavigatorRender = { screen: { name: string; navigationKey?: string }; options: Record<string, unknown> }
+const navigatorRenders = (): NavigatorRender[] => mockNavigatorRender.mock.calls.map(([render]) => render)
+/** The screen options of every render that registered a different screen than the render before it */
+const swapOptions = () =>
+  navigatorRenders()
+    .filter(({ screen }, index, renders) => {
+      const previous = renders[index - 1]?.screen
+      return (
+        previous !== undefined && (screen.name !== previous.name || screen.navigationKey !== previous.navigationKey)
+      )
+    })
+    .map(({ options }) => options)
+/** The screen options once the registered route has entered */
+const settledOptions = () => navigatorRenders()[navigatorRenders().length - 1].options
+
+const NO_ANIMATION = { animationEnabled: false }
+const PUSH = { animationEnabled: true, animationTypeForReplace: 'push' }
+const POP = { animationEnabled: true, animationTypeForReplace: 'pop' }
+const SETTLED = { headerShown: false, gestureEnabled: false, animationEnabled: true }
+
 describe('BCSCRootStack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockIsClientReady.mockReturnValue(true)
+    mockIsLoading.mockReturnValue(false)
     mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
 
     const mockLoadState = jest.fn()
@@ -234,6 +267,8 @@ describe('BCSCRootStack', () => {
     rerender(<BCSCRootStack />)
 
     expect(toJSON()).toBe('VerifyStack')
+    // The verify prompt slides in over the onboarding screen that created the PIN
+    expect(swapOptions()).toEqual([expect.objectContaining(PUSH)])
   })
 
   describe('verification resume routing', () => {
@@ -644,6 +679,129 @@ describe('BCSCRootStack', () => {
         apply(withStatus(VerificationStatus.UNVERIFIED))
         expect(toJSON()).toBe('MainStack')
         expect(dispatch).toHaveBeenCalledTimes(2)
+      })
+
+      describe('animating the change of phase', () => {
+        it('cuts in the first stack and settles its options on animated once it has entered', () => {
+          renderColdStart(authedUnverified(SKIPPED))
+
+          expect(navigatorRenders()[0]).toMatchObject({ screen: { name: BCSCStacks.Main }, options: NO_ANIMATION })
+          // A later change pops the route with these options, so they must not stay at animationEnabled: false
+          expect(settledOptions()).toEqual(SETTLED)
+        })
+
+        it('cuts from the startup loading route to the first stack', () => {
+          mockIsClientReady.mockReturnValue(false)
+          const { toJSON, rerender } = renderColdStart(authedUnverified(SKIPPED))
+          expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
+
+          mockIsClientReady.mockReturnValue(true)
+          rerender(<BCSCRootStack />)
+
+          expect(toJSON()).toBe('MainStack')
+          expect(swapOptions()).toEqual([expect.objectContaining(NO_ANIMATION)])
+          expect(settledOptions()).toEqual(SETTLED)
+        })
+
+        it('pushes Home in over the prompt when a first-time user skips it', () => {
+          const { toJSON, apply } = renderColdStart(authedUnverified(UNANSWERED))
+          expect(toJSON()).toBe('VerifyStack')
+
+          act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+          apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
+
+          expect(toJSON()).toBe('MainStack')
+          expect(swapOptions()).toEqual([expect.objectContaining(PUSH)])
+        })
+
+        it('pushes the verify flow in over Home and pops it back out when the user leaves', () => {
+          const { toJSON, apply } = renderColdStart(authedUnverified(SKIPPED))
+
+          // "Start verification" on the Home card, then the back arrow / "Back to home"
+          apply((current) => ({
+            ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+            bcsc: { ...current.bcsc, verificationStarted: true },
+          }))
+          expect(toJSON()).toBe('VerifyStack')
+          apply(withStatus(VerificationStatus.UNVERIFIED))
+          expect(toJSON()).toBe('MainStack')
+
+          expect(swapOptions()).toEqual([expect.objectContaining(PUSH), expect.objectContaining(POP)])
+        })
+
+        it('pops back to Home when a first-time verifier walks back to the prompt and skips', () => {
+          const { toJSON, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
+          expect(toJSON()).toBe('VerifyStack')
+
+          act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+          apply((current) => ({
+            ...withStatus(VerificationStatus.UNVERIFIED)(current),
+            bcsc: { ...current.bcsc, verificationSkipped: true },
+          }))
+
+          expect(toJSON()).toBe('MainStack')
+          expect(swapOptions()).toEqual([expect.objectContaining(POP)])
+        })
+
+        it('pushes Home in when verification finishes', () => {
+          const { toJSON, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
+          expect(toJSON()).toBe('VerifyStack')
+
+          // Continue on the success screen sets `verified`
+          apply((current) => ({ ...current, bcscSecure: { ...current.bcscSecure, verified: true } }))
+
+          expect(toJSON()).toBe('MainStack')
+          expect(swapOptions()).toEqual([expect.objectContaining(PUSH)])
+        })
+
+        it('cuts to the lock screen and pushes the unlocked stack back in', () => {
+          const { toJSON, apply } = renderColdStart(authedUnverified(SKIPPED))
+
+          apply(lock)
+          expect(toJSON()).toBe('AuthStack')
+          apply(unlock)
+          expect(toJSON()).toBe('MainStack')
+
+          expect(swapOptions()).toEqual([expect.objectContaining(NO_ANIMATION), expect.objectContaining(PUSH)])
+        })
+
+        it('cuts to onboarding when the account is removed', () => {
+          const { toJSON, apply } = renderColdStart(authedUnverified(SKIPPED))
+
+          apply(() => mockStore())
+
+          expect(toJSON()).toBe('OnboardingStack')
+          expect(swapOptions()).toEqual([expect.objectContaining(NO_ANIMATION)])
+        })
+
+        it('does not animate a change hidden by the global loading overlay', () => {
+          const { toJSON, apply, rerender } = renderColdStart(authedUnverified(UNANSWERED))
+
+          mockIsLoading.mockReturnValue(true)
+          act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
+          apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
+
+          expect(toJSON()).toBe('MainStack')
+          expect(swapOptions()).toEqual([expect.objectContaining(NO_ANIMATION)])
+
+          // The route still settles on animated options for the next change
+          mockIsLoading.mockReturnValue(false)
+          rerender(<BCSCRootStack />)
+          expect(settledOptions()).toEqual(SETTLED)
+        })
+
+        it('does not animate the verify stack re-registering when the outage blocking a resume clears', () => {
+          mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
+          const { toJSON, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
+          expect(toJSON()).toBe('VerifyStack')
+
+          mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
+          rerender(<BCSCRootStack />)
+
+          expect(toJSON()).toBe('VerifyStack')
+          expect(mockVerifyStackMount).toHaveBeenCalledTimes(2)
+          expect(swapOptions()).toEqual([expect.objectContaining(NO_ANIMATION)])
+        })
       })
     })
   })

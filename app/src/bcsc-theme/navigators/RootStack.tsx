@@ -10,7 +10,7 @@ import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarn
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
-import { LoadingScreen } from '../contexts/BCSCLoadingContext'
+import { LoadingScreen, useLoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useServerStatus } from '../contexts/ServerStatusContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
@@ -23,6 +23,15 @@ import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
+import {
+  getRootRouteKey,
+  getRootTransition,
+  IDLE_ROOT_TRANSITION,
+  RootPhase,
+  RootRoute,
+  RootTransition,
+  RootTransitionContext,
+} from './root-transition'
 import VerifyStack from './VerifyStack'
 
 const Root = createStackNavigator<BCSCRootStackParams>()
@@ -146,13 +155,7 @@ const useVerificationRouting = (appReady: boolean) => {
   }
 }
 
-/**
- * The phases of the app, in order of precedence. The root navigator registers the current phase's
- * route only, so React Navigation drops the previous phase's screens and mounts the new ones; no
- * imperative navigation is involved.
- */
-type RootPhase = 'loading' | 'onboarding' | 'auth' | 'recovery' | 'verify' | 'main'
-
+/** The phase the store puts the app in, in order of precedence; see {@link RootPhase} for how the root registers it. */
 const getRootPhase = (
   store: BCState,
   appReady: boolean,
@@ -179,6 +182,32 @@ const getRootPhase = (
   return showVerifyStack ? 'verify' : 'main'
 }
 
+/**
+ * The screen options of the root's one registered route. A route change is decided once, in the render
+ * that registers the new route, from the route it replaces. The options then settle on
+ * {@link IDLE_ROOT_TRANSITION} once the route has entered, so a later change can pop it with an animation.
+ */
+const useRootTransition = (route: RootRoute, context: RootTransitionContext): RootTransition => {
+  const routeKey = getRootRouteKey(route)
+  // The latest route change: the route it registered, which the next change leaves from, and its options
+  const [swap, setSwap] = useState<{ routeKey: string; route: RootRoute; transition: RootTransition }>()
+  const [enteredRouteKey, setEnteredRouteKey] = useState<string>()
+
+  if (swap?.routeKey !== routeKey) {
+    // Decided during the render, so it holds for any render before the route has entered: deciding again
+    // from the live context could turn the animation off mid-slide, which snaps the card into place
+    setSwap({ routeKey, route, transition: getRootTransition(swap?.route, route, context) })
+  }
+
+  useEffect(() => {
+    setEnteredRouteKey(routeKey)
+  }, [routeKey])
+
+  const entered = enteredRouteKey === routeKey
+
+  return !entered && swap?.routeKey === routeKey ? swap.transition : IDLE_ROOT_TRANSITION
+}
+
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
@@ -188,6 +217,7 @@ const BCSCRootStack: React.FC = () => {
   const { emitErrorModal } = useErrorAlert()
   const { initializingAccount } = useInitializeAccountStatus()
   const { isVerified } = useVerificationStatus()
+  const { isLoading: globalLoading } = useLoadingScreen()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
@@ -217,13 +247,24 @@ const BCSCRootStack: React.FC = () => {
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
 
   const phase = getRootPhase(store, appReady, awaitingStatusForResume, showVerifyStack)
+  const transition = useRootTransition(
+    { phase, verifyStackKey: phase === 'verify' ? verifyStackKey : undefined },
+    {
+      globalLoading,
+      // Started and unfinished: a verify → main change is the user leaving the flow, so Home comes back
+      // from beneath rather than sliding in over it
+      leavingStartedVerification: store.bcsc.verificationStarted === true && !isVerified,
+    }
+  )
   // The agent needs an unlocked wallet and is not used while recovering a session, so it runs for the
   // verify and main phases only. The provider stays mounted so a verify ↔ main change never restarts it.
+  // The phases it is disabled for are entered without an animation, so no stack lingers without it.
   const agentEnabled = phase === 'verify' || phase === 'main'
 
   return (
     <BCSCAgentProvider enabled={agentEnabled}>
-      <Root.Navigator screenOptions={{ headerShown: false, animationEnabled: false, gestureEnabled: false }}>
+      {/* gestureEnabled stays explicit: its default follows animationEnabled */}
+      <Root.Navigator screenOptions={{ headerShown: false, gestureEnabled: false, ...transition }}>
         {phase === 'loading' ? (
           <Root.Screen name={BCSCScreens.RootLoading} component={AppStartupLoadingScreen} />
         ) : null}

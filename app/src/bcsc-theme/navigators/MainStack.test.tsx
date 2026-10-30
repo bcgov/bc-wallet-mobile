@@ -1,4 +1,5 @@
-import { SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
+import { STACK_LOADING_REVEAL_DELAY_MS, SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { act, render } from '@testing-library/react-native'
@@ -54,14 +55,19 @@ jest.mock('@/constants', () => ({
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: {},
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
   Mode: { BCWallet: 'bcwallet', BCSC: 'bcsc' },
+  STACK_LOADING_REVEAL_DELAY_MS: 250,
   SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS: 10000,
 }))
 jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
 }))
+// Whether the global loading overlay is up when the stack renders
+const mockOverlayUp = jest.fn()
 jest.mock('../contexts/BCSCLoadingContext', () => ({
   LoadingScreen: 'LoadingScreen',
+  useLoadingScreen: () => ({ isLoading: mockOverlayUp() }),
 }))
+jest.mock('../components/WaitingScreenContent', () => ({ WaitingScreenContent: 'WaitingScreenContent' }))
 jest.mock('../hooks/useSystemChecks', () => ({
   SystemCheckScope: { MAIN_STACK: 'MAIN_STACK', ACCOUNT: 'ACCOUNT' },
   useSystemChecks: jest.fn(() => ({ hasSettled: true })),
@@ -148,7 +154,8 @@ describe('MainStack', () => {
     jest.clearAllMocks()
     mockNavigation = useNavigation() as typeof mockNavigation
     jest.mocked(Bifold.useDefaultStackOptions).mockReturnValue({} as any)
-    jest.mocked(Bifold.useTheme).mockReturnValue({} as any)
+    jest.mocked(Bifold.useTheme).mockReturnValue({ ColorPalette: { brand: { primaryBackground: '#FFFFFF' } } } as any)
+    mockOverlayUp.mockReturnValue(false)
     jest.mocked(Bifold.useTour).mockReturnValue({ currentStep: undefined } as any)
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
     jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: { bannerMessages: [] } }, jest.fn()] as any)
@@ -161,6 +168,12 @@ describe('MainStack', () => {
   })
 
   const queryLoadingScreens = (view: ReturnType<typeof render>) => view.UNSAFE_queryAllByType('LoadingScreen' as any)
+
+  // The stack's own loading view, inside its card; it shows the waiting screen only once revealed
+  const queryStackLoadingViews = (view: ReturnType<typeof render>) => view.queryAllByTestId(TestIds.main.loadingGate)
+
+  const queryWaitingScreens = (view: ReturnType<typeof render>) =>
+    view.UNSAFE_queryAllByType('WaitingScreenContent' as any)
 
   // The mocked Stack.Navigator instance, read from the mock module at call time (not
   // captured inside the jest.mock factory, which runs before this file's own module body).
@@ -249,87 +262,158 @@ describe('MainStack', () => {
     expect(screenNames).toContain(BCSCScreens.MainSettings)
   })
 
-  it('replaces the stack with the loading screen while the account is still loading', () => {
-    jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
+  // The root slides this stack in with the global overlay down, so its loading states stay inside its card
+  describe('loading inside the card', () => {
+    it('replaces the stack with its own loading view while the account is still loading', () => {
+      jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
 
-    const view = render(<MainStack />)
+      const view = render(<MainStack />)
 
-    // Replace, not overlay: the navigator has to unmount here so it drops any navigation state
-    // inherited from VerifyStack. Overlaying it stranded users on VerificationSuccess (#4682).
-    expect(view.toJSON()).toMatchObject({
-      type: 'LoadingScreen',
-      props: { message: 'BCSC.Loading.AppStartup' },
+      // Replace, not overlay: the navigator has to unmount here so it drops any navigation state it
+      // inherits. Overlaying it stranded users on VerificationSuccess.
+      expect(queryNavigators(view)).toHaveLength(0)
+      expect(queryStackLoadingViews(view)).toHaveLength(1)
+      expect(queryLoadingScreens(view)).toHaveLength(0)
     })
-    expect(queryNavigators(view)).toHaveLength(0)
-  })
 
-  it('holds the loading screen over the stack while system checks are still settling', () => {
-    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+    it('holds its own loading view over the stack while system checks are still settling', () => {
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
 
-    const view = render(<MainStack />)
-
-    // Overlay, not replace: the checks navigate to screens registered in this navigator (terms of
-    // use, device invalidated, reverify), and a navigate() with no navigator mounted is dropped.
-    expect(view.toJSON()).toMatchObject({ type: 'View' })
-    expect(queryNavigators(view)).toHaveLength(1)
-
-    const loadingScreens = queryLoadingScreens(view)
-    expect(loadingScreens).toHaveLength(1)
-    expect(loadingScreens[0].props.message).toBe('BCSC.Loading.AppStartup')
-  })
-
-  it('drops the loading screen once the system checks have settled', () => {
-    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(0)
-  })
-
-  it('releases the loading screen when the system checks never settle', () => {
-    jest.useFakeTimers()
-    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
-
-    try {
       const view = render(<MainStack />)
-      expect(queryLoadingScreens(view)).toHaveLength(1)
 
-      act(() => {
-        jest.advanceTimersByTime(SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
-      })
-
+      // Overlay, not replace: the checks navigate to screens registered in this navigator (terms of
+      // use, device invalidated, reverify), and a navigate() with no navigator mounted is dropped.
+      expect(queryNavigators(view)).toHaveLength(1)
+      expect(queryStackLoadingViews(view)).toHaveLength(1)
       expect(queryLoadingScreens(view)).toHaveLength(0)
-    } finally {
-      jest.useRealTimers()
-    }
+    })
+
+    it('hides the covered stack from assistive technology, and not the loading view over it', () => {
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+
+      const [card, loadingView] = render(<MainStack />).toJSON() as any[]
+
+      expect(card).toMatchObject({ type: 'View', props: { importantForAccessibility: 'no-hide-descendants' } })
+      expect(loadingView).toMatchObject({
+        type: 'View',
+        props: { testID: TestIds.main.loadingGate, accessible: true, accessibilityViewIsModal: true },
+      })
+    })
+
+    it('shows the waiting screen only once the wait outlasts the root slide', () => {
+      jest.useFakeTimers()
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+
+      try {
+        const view = render(<MainStack />)
+        expect(queryWaitingScreens(view)).toHaveLength(0)
+
+        act(() => {
+          jest.advanceTimersByTime(STACK_LOADING_REVEAL_DELAY_MS)
+        })
+
+        expect(queryWaitingScreens(view)).toHaveLength(1)
+        expect(queryWaitingScreens(view)[0].props.message).toBe('BCSC.Loading.AppStartup')
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
+    it('drops its loading view once the system checks have settled', () => {
+      expect(queryStackLoadingViews(render(<MainStack />))).toHaveLength(0)
+    })
+
+    it('releases its loading view when the system checks never settle', () => {
+      jest.useFakeTimers()
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+
+      try {
+        const view = render(<MainStack />)
+        expect(queryStackLoadingViews(view)).toHaveLength(1)
+
+        act(() => {
+          jest.advanceTimersByTime(SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
+        })
+
+        expect(queryStackLoadingViews(view)).toHaveLength(0)
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
+    // Screens under this stack (Services tab, ServiceLogin, pairing, settings) gate solely on
+    // isAvailable, which fails open (true) until the first check completes — so this stack must not
+    // render underneath until that initial fetch has resolved, or a real outage could go unnoticed.
+    it('holds its loading view over the stack while the initial server-status check is still pending', () => {
+      jest.mocked(useServerStatus).mockReturnValue({ hasChecked: false } as any)
+
+      expect(queryStackLoadingViews(render(<MainStack />))).toHaveLength(1)
+    })
+
+    it('drops its loading view once the initial server-status check has resolved', () => {
+      jest.mocked(useServerStatus).mockReturnValue({ hasChecked: true } as any)
+
+      expect(queryStackLoadingViews(render(<MainStack />))).toHaveLength(0)
+    })
+
+    it('releases its loading view when the server-status check never settles', () => {
+      jest.useFakeTimers()
+      jest.mocked(useServerStatus).mockReturnValue({ hasChecked: false } as any)
+
+      try {
+        const view = render(<MainStack />)
+        expect(queryStackLoadingViews(view)).toHaveLength(1)
+
+        act(() => {
+          jest.advanceTimersByTime(SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
+        })
+
+        expect(queryStackLoadingViews(view)).toHaveLength(0)
+      } finally {
+        jest.useRealTimers()
+      }
+    })
   })
 
-  // Screens under this stack (Services tab, ServiceLogin, pairing, settings) gate solely on
-  // isAvailable, which fails open (true) until the first check completes — so this stack must not
-  // render underneath until that initial fetch has resolved, or a real outage could go unnoticed.
-  it('holds the loading screen over the stack while the initial server-status check is still pending', () => {
-    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: false } as any)
+  // A cold start, or a route change hidden by a loader: the startup overlay must stay continuous
+  describe('with the global loading overlay already up at mount', () => {
+    beforeEach(() => {
+      mockOverlayUp.mockReturnValue(true)
+    })
 
-    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(1)
-  })
+    it('extends the overlay instead of showing its own view while the account loads', () => {
+      jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
 
-  it('drops the loading screen once the initial server-status check has resolved', () => {
-    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: true } as any)
-
-    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(0)
-  })
-
-  it('releases the loading screen when the server-status check never settles', () => {
-    jest.useFakeTimers()
-    jest.mocked(useServerStatus).mockReturnValue({ hasChecked: false } as any)
-
-    try {
       const view = render(<MainStack />)
+
+      expect(view.toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
+      expect(queryNavigators(view)).toHaveLength(0)
+      expect(queryStackLoadingViews(view)).toHaveLength(0)
+    })
+
+    it('extends the overlay instead of showing its own view while system checks settle', () => {
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+
+      const view = render(<MainStack />)
+
+      expect(queryNavigators(view)).toHaveLength(1)
       expect(queryLoadingScreens(view)).toHaveLength(1)
+      expect(queryLoadingScreens(view)[0].props.message).toBe('BCSC.Loading.AppStartup')
+      expect(queryStackLoadingViews(view)).toHaveLength(0)
+      // The provider hides the tree, so the card is left to the tour
+      const [card] = view.toJSON() as any[]
+      expect(card).toMatchObject({ type: 'View', props: { importantForAccessibility: 'auto' } })
+    })
 
-      act(() => {
-        jest.advanceTimersByTime(SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
-      })
+    it('keeps extending the overlay once it drops, rather than switching views mid-wait', () => {
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+      const view = render(<MainStack />)
 
-      expect(queryLoadingScreens(view)).toHaveLength(0)
-    } finally {
-      jest.useRealTimers()
-    }
+      mockOverlayUp.mockReturnValue(false)
+      view.rerender(<MainStack />)
+
+      expect(queryLoadingScreens(view)).toHaveLength(1)
+      expect(queryStackLoadingViews(view)).toHaveLength(0)
+    })
   })
 })

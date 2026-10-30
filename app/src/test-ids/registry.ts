@@ -572,6 +572,9 @@ export const TestIds = {
   },
 
   main: {
+    /** The stack's own loading view (account load, system checks) inside its card while the root slides it
+     *  in. When the global overlay is already up at mount it is extended instead and this id is not emitted. */
+    loadingGate: 'MainStackLoading',
     /** Bottom tab bar (`tabBarTestID`s in `TabStack`). */
     tabBar: {
       home: 'Home',

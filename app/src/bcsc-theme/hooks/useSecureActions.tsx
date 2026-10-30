@@ -1388,6 +1388,8 @@ export const useSecureActions = () => {
   /**
    * Handles successful authentication by updating wallet key, hydrating state, and dispatching auth success.
    * Call this after setPIN, setupDeviceSecurity, unlockWithDeviceSecurity, or verifyPIN succeeds.
+   * Release any loading overlay in the same continuation as this resolves (no `await` in between):
+   * SUCCESSFUL_AUTH changes the root's route, and a change under the overlay is a cut rather than a slide.
    * @param walletKey wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
    */
   const handleSuccessfulAuth = useCallback(

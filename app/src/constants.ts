@@ -124,6 +124,12 @@ export const FIVE_MINUTES_IN_SECONDS = 5 * 60
  */
 export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 4 * 1000
 /**
+ * How long the main stack's own loading view stays a plain backdrop before it shows the waiting screen.
+ * Shorter than the root slide that brings the stack in, so a wait that ends within the slide (the usual
+ * case) shows no spinner at all, while a longer one is explained before the slide ends.
+ */
+export const STACK_LOADING_REVEAL_DELAY_MS = 250
+/**
  * Time to live for the in-memory IAS JWK cache (1 hour). Once expired, the next fetch goes back to the
  * network so a server key rotation is picked up without an app restart.
  */

@@ -40,6 +40,11 @@ Keep waiting-screen colors in the theme and follow the
 
 Hidden loading views must not run animations. Concurrent operations own separate
 loading tokens; the overlay stays visible until all tokens are released.
+A phase stack's own loading state (MainStack's account load and system-check gate) extends an
+overlay that is already up when the stack mounts, and otherwise stays inside the stack's card: a
+plain backdrop that becomes the waiting screen only once the wait outlasts the root slide. It never
+raises the global overlay from inside the card, which blanked the whole app for the first frames of
+every slide into Home.
 Video-call setup and video submission use `CancellableWaitingScreen` to reveal Cancel
 after 10 seconds without fading or shifting content (#4513). It keeps Cancel hidden
 from accessibility until available, then disables it for good once pressed so repeated
@@ -170,3 +175,33 @@ Rules that keep this consistent:
 **Why:** many people install the app only to verify their BC Services Card; an unverified Home is a dead end
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
 alone because starting from the Home card must not turn a skipper into a first-time verifier.
+
+## Root phase transitions: a declarative switch that slides
+
+`BCSCRootStack` registers exactly one route, the current phase's (`loading | onboarding | auth | recovery |
+verify | main`), decided from the store by `getRootPhase`. A phase change is a store dispatch; nothing
+`navigate`s or `reset`s between phases. React Navigation treats the swapped route as a `replace` and animates
+it like one, with the direction decided per change by `getRootTransition` (`navigators/root-transition.ts`)
+from the route being left and the one being entered:
+
+- Into `loading`, `auth` or `onboarding` (a lock, a removed account, a factory reset): no animation. The agent
+  provider is disabled in the same commit and the store is cleared under the outgoing stack, so it must
+  unmount at once rather than linger for a slide.
+- A change hidden by the global loading overlay: no animation. Callers of `handleSuccessfulAuth` release
+  their overlay in the same continuation as the dispatch for this reason.
+- The same phase under a new navigation key (the outage fallback re-registering the verify stack): no animation.
+- `verify → main`: pop when leaving a started, unfinished verification (back arrow, "Back to home", Skip after
+  walking back to the prompt), so Home comes back from beneath; push otherwise (Skip on the fresh prompt,
+  Setup Complete).
+- Everything else pushes.
+
+Once a route has entered, its options settle on animated (`IDLE_ROOT_TRANSITION`): a popped card exits with
+its own options, so a route left at `animationEnabled: false` would later vanish instead of sliding out.
+A phase stack claims `BCSCStackContext` when it mounts and never re-claims it, as two stacks are mounted while
+the root slides between them and the incoming one mounts last.
+
+**Why:** the alternative, every stack always registered and each phase-changing dispatch site also issuing a
+navigation action, is two sources of truth that can disagree, across unlock, lock, factory reset, the
+`continueVerificationProcess` callers, `useLeaveVerification`, the once-per-session resume and the outage
+fallback. The declarative switch had the slide available all along; it only needed the animation turned
+back on and told which way each change goes.
