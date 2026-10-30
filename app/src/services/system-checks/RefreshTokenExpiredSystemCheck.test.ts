@@ -1,6 +1,5 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { RefreshTokenExpiredSystemCheck } from '@/services/system-checks/RefreshTokenExpiredSystemCheck'
-import { BCDispatchAction } from '@/store'
 import { MockLogger } from '@bifold/core'
 
 const makeUtils = () => ({
@@ -25,7 +24,7 @@ describe('RefreshTokenExpiredSystemCheck', () => {
   })
 
   describe('onFail', () => {
-    it('navigates to ReverifyAccount with isExpired: true and dispatches SET_ACCOUNT_EXPIRY_NOTIFICATION', () => {
+    it('navigates to ReverifyAccount with isExpired: true and dispatches nothing', () => {
       const navigate = jest.fn()
       const utils = makeUtils()
       const check = new RefreshTokenExpiredSystemCheck(true, { navigate } as any, utils)
@@ -33,10 +32,7 @@ describe('RefreshTokenExpiredSystemCheck', () => {
       check.onFail()
 
       expect(navigate).toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, { isExpired: true })
-      expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION,
-        payload: [true],
-      })
+      expect(utils.dispatch).not.toHaveBeenCalled()
     })
   })
 })

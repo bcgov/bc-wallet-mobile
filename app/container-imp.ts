@@ -418,8 +418,6 @@ export class AppContainer implements Container {
       bcsc.prompts = undefined
       bcsc.photoMetadata = undefined
       bcsc.videoDuration = undefined
-      bcsc.showAccountExpiryNotification = undefined
-      bcsc.showCardRenewalNotification = undefined
       // Recomputed each launch by UpdateAppSystemCheck; a stale persisted one would outlive an update if the status fetch fails
       if (Array.isArray(bcsc.bannerMessages)) {
         bcsc.bannerMessages = bcsc.bannerMessages.filter((banner) => banner.id !== BCSCBanner.APP_UPDATE_AVAILABLE)

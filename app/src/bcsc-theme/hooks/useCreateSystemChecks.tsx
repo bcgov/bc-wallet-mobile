@@ -5,8 +5,6 @@ import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
-import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
-import { AccountRenewalSystemCheck } from '@/services/system-checks/AccountRenewalSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
@@ -94,7 +92,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const launchVersionRecordedRef = useRef(false)
 
   const defaultReadiness = isNavigationReady && client && isClientReady
-  const accountExpirationDate = accountContext?.account?.card_expiry
   const isVerified = Boolean(store.bcscSecure.verified)
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
   const verificationRequestId = store.bcscSecure.verificationRequestId
@@ -338,18 +335,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return [new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils)]
   }, [navigation, utils])
 
-  const getAccountSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    let checks: SystemCheckStrategy[] = []
-
-    if (accountExpirationDate) {
-      checks = [
-        new AccountExpirySystemCheck(accountExpirationDate, utils),
-        new AccountRenewalSystemCheck(accountExpirationDate, utils),
-      ]
-    }
-    return checks
-  }, [accountExpirationDate, utils])
-
   return useMemo(() => {
     return {
       [SystemCheckScope.STARTUP]: {
@@ -367,13 +352,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
         isApplicable: true,
       },
-      [SystemCheckScope.ACCOUNT]: {
-        getSystemChecks: getAccountSystemChecks,
-        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && !!accountContext?.account),
-        // Account metadata is only fetched for verified users, and a failed fetch leaves `account`
-        // null for good — so without an account in hand this scope has nothing to wait for.
-        isApplicable: Boolean(accountContext?.account),
-      },
     }
   }, [
     defaultReadiness,
@@ -382,8 +360,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcscSecure.isHydrated,
     store.stateLoaded,
     getVerifySystemChecks,
-    getAccountSystemChecks,
-    accountContext?.account,
     accountContext?.isLoadingAccount,
   ])
 }
