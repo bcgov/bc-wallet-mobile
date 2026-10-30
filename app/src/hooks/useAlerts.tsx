@@ -398,6 +398,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       failedToSwitchMediatorAlert: _createBasicErrorModal(AppEventCode.MEDIATOR_SWITCH_ERROR, 'SomethingWentWrong'),
       invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'SomethingWentWrong'),
       registrationKeyNotConfirmedAlert: _createBasicErrorModal(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED, 'SomethingWentWrong'),
+      deviceStorageFullAlert: _createBasicErrorModal(AppEventCode.DEVICE_STORAGE_FULL, 'DeviceStorageFull'),
     }),
     [
       appUpdateRequiredAlert,

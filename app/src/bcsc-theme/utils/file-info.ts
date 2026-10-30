@@ -131,3 +131,27 @@ export const removeFileSafely = async (path: string | undefined, logger: BifoldL
     logger.error('Error removing file safely', error as Error)
   }
 }
+
+export const checkFileSystemFreeStorage = async (
+  minMb: number,
+  logger: BifoldLogger
+): Promise<{
+  hasFreeStorage: boolean
+  freeStorageMb: number
+}> => {
+  try {
+    const { freeSpace } = await RNFS.getFSInfo()
+    const freeSpaceMb = freeSpace / (1024 * 1024)
+    logger.debug(`[FileSystem] Free space: ${freeSpaceMb.toFixed(2)} MB, Minimum required: ${minMb} MB`)
+    return {
+      hasFreeStorage: freeSpaceMb >= minMb,
+      freeStorageMb: freeSpaceMb,
+    }
+  } catch (error) {
+    logger.error('Error checking file system space', error as Error)
+    return {
+      hasFreeStorage: true, // Fail open: assume enough space if we can't check
+      freeStorageMb: -1, // Indicate unknown free space
+    }
+  }
+}
