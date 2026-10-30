@@ -18,7 +18,7 @@ import sys
 
 WORKFLOW = "main.yaml"
 RUN_PAGE_SIZE = 100
-# ring-0 always publishes; the input picks how much further to go.
+# ring-0 publishes without approval; every later ring waits on its own gate.
 RINGS = ["ring-0", "ring-1", "ring-2", "ring-3", "ring-4"]
 # BC Wallet is being retired after v4.1, so its ring groups and tracks were
 # never created past ring-0. It still publishes to the team; it is left out of
@@ -74,11 +74,7 @@ def fail(message):
 
 REPO = os.environ["REPO"]
 BRANCH = os.environ["BRANCH"]
-RING = os.environ["RING"]
 TARGETS = os.environ.get("TARGETS", "all")
-if RING not in RINGS:
-    print(f"::error::Unknown ring '{RING}'. Expected one of: {', '.join(RINGS)}.")
-    sys.exit(1)
 requested_build = os.environ.get("REQUESTED_BUILD", "").strip()
 
 runs = gh_api(
@@ -129,12 +125,10 @@ for kind, variants in by_kind.items():
         # rather than showing up as a quietly skipped job.
         print(f"  {kind}: none — those destinations will be skipped")
 
-# Publishing to a ring publishes every ring below it too, so ring-2 means
-# ring-0, ring-1 and ring-2. ring-0 is the upload; the rest only widen who
-# can see it, because Apple rejects a duplicate binary and Play rejects a
-# duplicate version code.
-reached = RINGS[: RINGS.index(RING) + 1]
-widen_rings = reached[1:]
+# Every publish heads for the last ring; rejecting a gate is how one stops
+# short. ring-0 is the upload; the rest only widen who can see it, because
+# Apple rejects a duplicate binary and Play rejects a duplicate version code.
+widen_rings = RINGS[1:]
 
 widen_by_kind = {
     kind: [v for v in variants if v not in RING_0_ONLY]
@@ -142,19 +136,15 @@ widen_by_kind = {
 }
 # An approval that can only be followed by skipped jobs is worse than no gate:
 # it holds the publish queue while distributing nothing.
-has_widening = bool(widen_rings) and any(
+has_widening = any(
     widen_by_kind[kind] for kind in TARGET_KINDS.get(TARGETS, TARGET_KINDS["all"])
 )
 
-print(f"  ring:   {RING}")
-print(f"  reaches: {', '.join(reached)}")
 print("  ring-0 publishes now, without approval")
 held_back = sorted(set(all_variants(by_kind)) & RING_0_ONLY)
-if held_back and widen_rings:
+if held_back:
     print(f"  ring-0 only for: {', '.join(held_back)}")
-if not widen_rings:
-    pass
-elif has_widening:
+if has_widening:
     print(f"  then, each behind its own approval, in order: {', '.join(widen_rings)}")
 else:
     print(f"  nothing to widen for targets '{TARGETS}' — the approval gates are skipped")
@@ -162,7 +152,6 @@ else:
 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
     for kind, widening in widen_by_kind.items():
         output.write(f"widen_{kind}_variants={json.dumps(widening)}\n")
-    output.write(f"reached_rings={json.dumps(reached)}\n")
     output.write(f"has_widening={str(has_widening).lower()}\n")
     output.write(f"run_id={run['id']}\n")
     output.write(f"run_number={run['run_number']}\n")

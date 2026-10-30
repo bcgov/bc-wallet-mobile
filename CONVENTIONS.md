@@ -134,6 +134,16 @@ box, so they need no change. The photo, video and barcode outputs are independen
 **Why:** overlays sized from the window covered the face oval, the card cutout and most of the preview at
 large OS font sizes (#4401).
 
+## Recording: an inactive app is not a user who left
+
+During the video countdown, act on an `inactive` app state only if it lasts until the countdown ends.
+Act on `background` at once, and on either once a recording has started.
+
+**Why:** iOS reports `inactive` for a system prompt dismissing (the microphone permission is asked on
+the recording screen), Control Center, and on iOS 26+ a spare resign/activate pair after either.
+Treating it as leaving the app sent every first-time sender back to the instructions the moment the
+countdown began.
+
 ## Buttons: loading spinner follows the label
 
 The spinner inside a `Button` takes the button's resolved label colour (including the disabled

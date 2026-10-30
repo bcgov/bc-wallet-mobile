@@ -106,6 +106,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const stopRequestedRef = useRef(false)
   // Set from the countdown until the recording ends, while leaving the app throws the attempt away
   const recordingAttemptActiveRef = useRef(false)
+  // Set during the countdown, when nothing is recording yet and a moment of inactivity is survivable
+  const countingDownRef = useRef(false)
+  // The live app state, for the check at the end of the countdown
+  const appStateStatusRef = useRef(appStateStatus)
   // Set when leaving the app threw the attempt away; the screen goes back once the app is active again
   const exitWhenActiveRef = useRef(false)
   const snapshotPathRef = useRef<string | undefined>(undefined)
@@ -274,6 +278,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     stopRequestedRef.current = false
     exitWhenActiveRef.current = false
     recordingAttemptActiveRef.current = true
+    countingDownRef.current = true
     setElapsedTime(0)
     setPromptTimestamp(0)
     setRecordingInProgress(false)
@@ -285,8 +290,19 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         }, 1000)
       )
     }
+    countingDownRef.current = false
 
     if (abandonedRef.current) {
+      return
+    }
+
+    // Still away as the countdown ends: thrown away like leaving during a recording, back once active
+    if (isBackgroundedAppState(appStateStatusRef.current)) {
+      logger.info('[TakeVideoScreen] App not in the foreground as the countdown ended, discarding the attempt', {
+        appStateStatus: appStateStatusRef.current,
+      })
+      exitWhenActiveRef.current = true
+      await abandonRecording()
       return
     }
 
@@ -444,6 +460,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [
     prompts,
     cancelRecordingVideo,
+    abandonRecording,
     startTimer,
     cameraRef,
     startRecordingVideo,
@@ -475,9 +492,18 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   // Like ias-ios and ias-android, leaving the app during the countdown or a recording throws the attempt
   // away and returns to the instructions, which load a fresh prompt set. The return waits until the app is
   // active again so that load doesn't run while the app is being suspended.
+  // iOS also reports 'inactive' for a system prompt dismissing (the microphone one is asked here), Control
+  // Center, and on iOS 26+ a spare resign/activate pair after either, so during the countdown it only
+  // counts if it outlasts the countdown (see startRecording).
   useEffect(() => {
+    appStateStatusRef.current = appStateStatus
+
     if (isBackgroundedAppState(appStateStatus)) {
       if (!recordingAttemptActiveRef.current || abandonedRef.current) {
+        return
+      }
+
+      if (countingDownRef.current && appStateStatus === 'inactive') {
         return
       }
 

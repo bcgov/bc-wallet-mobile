@@ -165,6 +165,13 @@ jobs:
         working-directory: e2e
         run: yarn test:unit
 
+      # The nightly brief maps every checkpoint by its it() title and proves its rules on fixture reports.
+      # A renamed checkpoint, or a map/fixture left behind by a rename, fails here at PR time instead of
+      # on the next nightly, where it also blocks the brief from rendering.
+      - name: Brief coverage map
+        working-directory: e2e
+        run: yarn brief:check
+
   test-ios:
     runs-on: macos-26
     name: Native Tests (iOS)
