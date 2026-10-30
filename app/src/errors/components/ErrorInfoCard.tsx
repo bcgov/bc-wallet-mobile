@@ -33,6 +33,9 @@ export const colors = {
   destructiveButtonText: '#FFFFFF',
 }
 
+/** Share of the window height the card may take, so the overlay stays visible above and below it. */
+export const MAX_CARD_HEIGHT_RATIO = 0.85
+
 export interface ErrorInfoCardProps {
   title: string
   description: string
@@ -59,7 +62,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
   enableReport = false,
 }) => {
   const { t } = useTranslation()
-  const { width } = useWindowDimensions()
+  const { width, height } = useWindowDimensions()
   const [showDetails, setShowDetails] = useState(false)
   const [reported, setReported] = useState(false)
   const [referenceCode, setReferenceCode] = useState<string | null>(null)
@@ -100,8 +103,10 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
     () => ({
       minWidth: width - 50,
       maxWidth: width - 50,
+      // Long details scroll inside the card instead of pushing the header, and its close button, off screen
+      maxHeight: height * MAX_CARD_HEIGHT_RATIO,
     }),
-    [width]
+    [width, height]
   )
 
   return (
@@ -256,6 +261,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
+    flexShrink: 1,
     backgroundColor: colors.cardBackground,
     borderRadius: 8,
     borderWidth: 1,
