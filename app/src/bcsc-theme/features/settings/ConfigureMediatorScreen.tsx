@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { PressableOpacity } from '@/components/PressableOpacity'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -11,12 +12,16 @@ import { useConfigureMediatorViewModel } from './useConfigureMediatorViewModel'
 
 type ConfigureMediatorScreenProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ConfigureMediator>
 
+const ROW_ICON_SIZE = 24
+/** Grows the remove control to a 48dp target without claiming the row's trailing edge, which selects. */
+const REMOVE_HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 }
+
 /**
  * Developer-mode picker for the mediator the wallet routes its messages through.
  */
 export const ConfigureMediatorScreen: React.FC<ConfigureMediatorScreenProps> = ({ route }) => {
   const { Spacing, ColorPalette } = useTheme()
-  const { mediators, switchingTo, descriptionText, scanButtonText, selectMediator, scanMediator } =
+  const { mediators, switchingTo, descriptionText, scanButtonText, selectMediator, removeMediator, scanMediator } =
     useConfigureMediatorViewModel(route.params?.scannedMediatorUri)
   const switching = switchingTo !== null
 
@@ -64,7 +69,7 @@ export const ConfigureMediatorScreen: React.FC<ConfigureMediatorScreenProps> = (
       <ThemedText>{descriptionText}</ThemedText>
       <View style={styles.group}>
         <ListButtonGroup>
-          {mediators.map(({ url, label, host, selected }) => (
+          {mediators.map(({ url, label, host, selected, removable, removeLabel }) => (
             <ListButton
               key={url}
               onPress={() => selectMediator(url)}
@@ -84,7 +89,20 @@ export const ConfigureMediatorScreen: React.FC<ConfigureMediatorScreenProps> = (
                   ) : null}
                 </View>
                 {switchingTo === url ? <ActivityIndicator color={ColorPalette.brand.primary} /> : null}
-                {selected ? <Icon name="check" size={24} color={ColorPalette.brand.primary} /> : null}
+                {selected ? <Icon name="check" size={ROW_ICON_SIZE} color={ColorPalette.brand.primary} /> : null}
+                {removable ? (
+                  <PressableOpacity
+                    onPress={() => removeMediator(url)}
+                    disabled={switching}
+                    hitSlop={REMOVE_HIT_SLOP}
+                    accessibilityLabel={removeLabel}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: switching }}
+                    testID={testIdWithKey(`${TestIds.main.configureMediator.removeRowPrefix}${label}`)}
+                  >
+                    <Icon name="delete" size={ROW_ICON_SIZE} color={ColorPalette.brand.primary} />
+                  </PressableOpacity>
+                ) : null}
               </View>
             </ListButton>
           ))}
