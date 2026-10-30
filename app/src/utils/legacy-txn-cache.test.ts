@@ -44,7 +44,7 @@ describe('removeLegacyTxnCache', () => {
     expect(logger.error).toHaveBeenCalled()
   })
 
-  it('retries on the next launch after a failed delete', async () => {
+  it('does not remember a failed attempt on the next call', async () => {
     jest.mocked(RNFS.exists).mockResolvedValue(true)
     jest.mocked(RNFS.unlink).mockRejectedValueOnce(new Error('EBUSY')).mockResolvedValueOnce(undefined)
 
