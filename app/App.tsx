@@ -106,7 +106,7 @@ const App = () => {
   }, [])
 
   useEffect(() => {
-    removeLegacyTxnCache(appLogger)
+    void removeLegacyTxnCache(appLogger)
   }, [])
 
   useEffect(() => {
