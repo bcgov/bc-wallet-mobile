@@ -53,6 +53,12 @@ const makeAgent = (
 }
 
 const callOrder = (fn: jest.Mock) => fn.mock.invocationCallOrder[0]
+/** Lets a switch run up to its next pending await without relying on timers. */
+const flush = async () => {
+  for (let i = 0; i < 50; i++) {
+    await Promise.resolve()
+  }
+}
 
 describe('mediatorLabel', () => {
   const invitation = {
@@ -145,6 +151,44 @@ describe('switchMediator', () => {
     expect(api.oob.deleteById).toHaveBeenCalledWith('oob-1')
     expect(callOrder(api.oob.deleteById)).toBeLessThan(callOrder(api.oob.receiveInvitation))
     expect(api.oob.receiveInvitation).toHaveBeenCalledTimes(1)
+  })
+
+  it('runs switches one after another, so a retry cannot discard the connection a switch is completing', async () => {
+    const { agent, api, mediation, readyConnection } = makeAgent({ existingConnection: null })
+    let connected!: (connection: Connection) => void
+    api.connections.returnWhenIsConnected.mockImplementationOnce(
+      () => new Promise<Connection>((resolve) => (connected = resolve))
+    )
+
+    const first = switchMediator(agent, TARGET, logger)
+    await flush()
+    expect(api.connections.returnWhenIsConnected).toHaveBeenCalledTimes(1)
+    // What a retry would find while the first switch waits on its handshake
+    api.oob.findByReceivedInvitationId.mockResolvedValue({ id: 'oob-1' })
+    api.connections.findAllByOutOfBandId.mockResolvedValue([{ id: 'conn-1', isReady: false }])
+
+    const second = switchMediator(agent, TARGET, logger)
+    await flush()
+
+    expect(api.oob.findByReceivedInvitationId).toHaveBeenCalledTimes(1)
+    expect(api.connections.deleteById).not.toHaveBeenCalled()
+
+    api.connections.findAllByOutOfBandId.mockResolvedValue([readyConnection])
+    connected(readyConnection)
+    await expect(first).resolves.toBe(mediation)
+    await expect(second).resolves.toBe(mediation)
+
+    expect(api.connections.deleteById).not.toHaveBeenCalled()
+    expect(api.oob.deleteById).not.toHaveBeenCalled()
+    expect(api.oob.receiveInvitation).toHaveBeenCalledTimes(1)
+  })
+
+  it('starts the next switch after a failed one', async () => {
+    const { agent, api } = makeAgent({ existingConnection: null })
+    api.oob.receiveInvitation.mockResolvedValueOnce({ connectionRecord: undefined })
+
+    await expect(switchMediator(agent, TARGET, logger)).rejects.toThrow('no connection')
+    await expect(switchMediator(agent, TARGET, logger)).resolves.toBeDefined()
   })
 
   it('fails before touching the default when the invitation yields no connection', async () => {

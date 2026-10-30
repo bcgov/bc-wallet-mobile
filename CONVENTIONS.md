@@ -134,8 +134,13 @@ A switch connects to the mediator directly and sends the wallet's label with the
 applies no agent-wide label to connections (the `label` given to `Agent` is ignored), and a DID Exchange
 request without one fails validation before it leaves the device. A connection found incomplete when a
 switch starts is the leftover of an attempt that never finished; it is discarded and made again, so one
-failed switch cannot block that mediator for good. A mediator that is not in use can be removed from
-the picker (`REMOVE_AVAILABLE_MEDIATOR`); the build's mediator stays, as the next launch would restore it.
+failed switch cannot block that mediator for good. Switches run one after another in the service, not
+the picker: a switch outlives the picker when the user leaves mid-handshake, and one started on return
+waits instead of discarding the connection the first is completing. A mediator that is not in use can
+be removed from the picker (`REMOVE_AVAILABLE_MEDIATOR`); the build's mediator stays, as the next launch
+would restore it. The picker consumes its scanned-invitation param once handled, or a removal would bring
+the mediator back from the route. A `ListButton` row is one accessibility element, so a control nested in
+it (the remove button) is also offered as an accessibility action on the row.
 
 **Why:** Always forcing `MEDIATOR_URL` silently disabled developer-mode mediator switching (the
 selection reverted on the next launch), while never forcing it kept an upgraded app on a retired

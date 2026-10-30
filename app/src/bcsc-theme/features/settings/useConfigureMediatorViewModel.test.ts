@@ -101,17 +101,34 @@ describe('useConfigureMediatorViewModel', () => {
     ])
   })
 
-  it('adds a scanned mediator invitation to the list once', () => {
+  it('adds a scanned mediator invitation to the list once and consumes the scan', () => {
     renderHook(() => useConfigureMediatorViewModel(scanned))
 
     expect(mockDispatch).toHaveBeenCalledTimes(1)
     expect(mockDispatch).toHaveBeenCalledWith({ type: DispatchAction.ADD_AVAILABLE_MEDIATOR, payload: [scanned] })
+    expect(useNavigation().setParams).toHaveBeenCalledWith({ scannedMediatorUri: undefined })
   })
 
   it('does not re-add a scanned mediator already on the list', () => {
     renderHook(() => useConfigureMediatorViewModel(other))
 
     expect(mockDispatch).not.toHaveBeenCalled()
+    expect(useNavigation().setParams).toHaveBeenCalledWith({ scannedMediatorUri: undefined })
+  })
+
+  it('does not add a scanned mediator back once it was removed again', () => {
+    const { rerender } = renderHook(({ uri }: { uri?: string }) => useConfigureMediatorViewModel(uri), {
+      initialProps: { uri: scanned },
+    })
+    expect(mockDispatch).toHaveBeenCalledWith({ type: DispatchAction.ADD_AVAILABLE_MEDIATOR, payload: [scanned] })
+
+    // The scan lands in the list with its params consumed, then the mediator is removed
+    setStore({ availableMediators: [current, other, scanned] })
+    rerender({ uri: undefined })
+    setStore({ availableMediators: [current, other] })
+    rerender({ uri: undefined })
+
+    expect(mockDispatch).toHaveBeenCalledTimes(1)
   })
 
   it('ignores a tap on the selected mediator', async () => {

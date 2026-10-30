@@ -15,6 +15,8 @@ type ConfigureMediatorScreenProps = StackScreenProps<BCSCMainStackParams, BCSCSc
 const ROW_ICON_SIZE = 24
 /** Grows the remove control to a 48dp target without claiming the row's trailing edge, which selects. */
 const REMOVE_HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 }
+/** The row's accessibility action for removal: the nested remove control is not focusable on its own. */
+const REMOVE_ACTION = 'remove'
 
 /**
  * Developer-mode picker for the mediator the wallet routes its messages through.
@@ -77,6 +79,16 @@ export const ConfigureMediatorScreen: React.FC<ConfigureMediatorScreenProps> = (
               accessibilityRole="radio"
               accessibilityState={{ selected, disabled: switching }}
               accessibilityLabel={label}
+              accessibilityActions={removable ? [{ name: REMOVE_ACTION, label: removeLabel }] : undefined}
+              onAccessibilityAction={
+                removable
+                  ? ({ nativeEvent }) => {
+                      if (nativeEvent.actionName === REMOVE_ACTION) {
+                        removeMediator(url)
+                      }
+                    }
+                  : undefined
+              }
               testID={testIdWithKey(`${TestIds.main.configureMediator.mediatorRowPrefix}${label}`)}
             >
               <View style={styles.row}>

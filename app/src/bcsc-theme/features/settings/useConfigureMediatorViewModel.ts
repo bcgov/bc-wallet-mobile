@@ -33,7 +33,7 @@ export const useConfigureMediatorViewModel = (scannedMediatorUri?: string) => {
   const [store, dispatch] = useStore<BCState>()
   const { waitForAgent } = useBCSCAgent()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams, BCSCScreens.ConfigureMediator>>()
   const { failedToSwitchMediatorAlert } = useAlerts(navigation)
   const [switchingTo, setSwitchingTo] = useState<string | null>(null)
 
@@ -42,10 +42,15 @@ export const useConfigureMediatorViewModel = (scannedMediatorUri?: string) => {
   const walletLabel = walletName || 'BC Wallet'
 
   useEffect(() => {
-    if (scannedMediatorUri && !availableMediators.includes(scannedMediatorUri)) {
+    if (!scannedMediatorUri) {
+      return
+    }
+    if (!availableMediators.includes(scannedMediatorUri)) {
       dispatch({ type: DispatchAction.ADD_AVAILABLE_MEDIATOR, payload: [scannedMediatorUri] })
     }
-  }, [scannedMediatorUri, availableMediators, dispatch])
+    // Consumed: the route keeps its params, and a mediator removed later must not come back from them
+    navigation.setParams({ scannedMediatorUri: undefined })
+  }, [scannedMediatorUri, availableMediators, dispatch, navigation])
 
   const mediators = useMemo<MediatorOption[]>(
     () =>

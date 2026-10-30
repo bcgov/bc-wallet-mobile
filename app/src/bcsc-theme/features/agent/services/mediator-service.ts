@@ -87,14 +87,7 @@ const routeThrough = async (agent: Agent, mediation: DidCommMediationRecord, log
   )
 }
 
-/**
- * Switches the wallet to the mediator in `target` on the running agent. Mediation is requested on
- * first use; a mediator used before is re-selected. A failure after the default moved puts the
- * previous mediator back, so a rejected switch leaves nothing half-switched. The caller persists the
- * choice. Connections made earlier keep routing through their original mediator, which is no longer
- * picked up from, the same as after a restart.
- */
-export const switchMediator = async (
+const performSwitch = async (
   agent: Agent,
   target: MediatorSwitch,
   logger: BifoldLogger
@@ -118,4 +111,32 @@ export const switchMediator = async (
 
   logger.info('Mediator switch: default mediator and message pickup moved')
   return mediation
+}
+
+/**
+ * Switches run one after another. A switch outlives the picker when the user leaves it mid-handshake,
+ * and a second one started on return must not discard the connection the first is still completing;
+ * the picker's own guard is lost with the screen, so the queue lives here, like `enqueueWalletOp`.
+ */
+let switchQueue: Promise<unknown> = Promise.resolve()
+
+/**
+ * Switches the wallet to the mediator in `target` on the running agent, after any switch still in
+ * flight. Mediation is requested on first use; a mediator used before is re-selected. A failure after
+ * the default moved puts the previous mediator back, so a rejected switch leaves nothing half-switched.
+ * The caller persists the choice. Connections made earlier keep routing through their original
+ * mediator, which is no longer picked up from, the same as after a restart.
+ */
+export const switchMediator = (
+  agent: Agent,
+  target: MediatorSwitch,
+  logger: BifoldLogger
+): Promise<DidCommMediationRecord> => {
+  const run = () => performSwitch(agent, target, logger)
+  const result = switchQueue.then(run, run)
+  switchQueue = result.then(
+    () => undefined,
+    () => undefined
+  )
+  return result
 }
