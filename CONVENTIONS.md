@@ -97,6 +97,16 @@ not as an error, and iOS restarts the session after a media services reset (our 
 this the preview sits black with no explanation, or the user sees "camera broken" for a camera that
 is about to come back.
 
+## Recording: an inactive app is not a user who left
+
+During the video countdown, act on an `inactive` app state only if it lasts until the countdown ends.
+Act on `background` at once, and on either once a recording has started.
+
+**Why:** iOS reports `inactive` for a system prompt dismissing (the microphone permission is asked on
+the recording screen), Control Center, and on iOS 26+ a spare resign/activate pair after either.
+Treating it as leaving the app sent every first-time sender back to the instructions the moment the
+countdown began.
+
 ## Buttons: loading spinner follows the label
 
 The spinner inside a `Button` takes the button's resolved label colour (including the disabled
