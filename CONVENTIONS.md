@@ -45,6 +45,11 @@ overlay that is already up when the stack mounts, and otherwise stays inside the
 plain backdrop that becomes the waiting screen only once the wait outlasts the root slide. It never
 raises the global overlay from inside the card, which blanked the whole app for the first frames of
 every slide into Home.
+The global overlay is raised only around work that will actually wait, such as a network round trip,
+never around a check that usually resolves at once: it hides the whole navigator, so an overlay that
+goes up and comes down within a frame or two flashes the loading screen, and one that drops as an
+in-stack push starts leaves the slide starting from the screen it had hidden. `AccountSetupScreen`
+checks the registration service's `isRegistered` before it waits on `ensureRegistered` for this reason.
 Video-call setup and video submission use `CancellableWaitingScreen` to reveal Cancel
 after 10 seconds without fading or shifting content (#4513). It keeps Cancel hidden
 from accessibility until available, then disables it for good once pressed so repeated

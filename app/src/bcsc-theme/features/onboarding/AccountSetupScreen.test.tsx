@@ -144,13 +144,18 @@ describe('AccountSetup', () => {
     const { getByTestId } = renderScreen({
       bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
     })
+    const overlay = () => getByTestId(testIdWithKey(TestIds.common.loadingOverlay), hidden)
 
     fireEvent.press(getByTestId(testIdWithKey('AddAccount')))
+
+    // A registered device has nothing to wait for, so the overlay never goes up to flash over the slide
+    expect(overlay().props.accessible).toBe(false)
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.IdentitySelection)
     })
 
+    expect(overlay().props.accessible).toBe(false)
     expect(getByTestId('SetupTypeProbe').props.children).toBe(AccountSetupType.AddAccount)
   })
 
@@ -158,13 +163,17 @@ describe('AccountSetup', () => {
     const { getByTestId } = renderScreen({
       bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
     })
+    const overlay = () => getByTestId(testIdWithKey(TestIds.common.loadingOverlay), hidden)
 
     fireEvent.press(getByTestId(testIdWithKey('TransferAccount')))
+
+    expect(overlay().props.accessible).toBe(false)
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountInstructions)
     })
 
+    expect(overlay().props.accessible).toBe(false)
     expect(getByTestId('SetupTypeProbe').props.children).toBe(AccountSetupType.TransferAccount)
   })
 
@@ -246,7 +255,6 @@ describe('AccountSetup', () => {
       })
       expect(getByTestId('SetupTypeProbe', hidden).props.children).toBe('undefined')
       expect(mockNavigate).not.toHaveBeenCalled()
-      expect(button().props.accessibilityState?.disabled ?? false).toBe(false)
 
       jest.mocked(getAccountSecurityMethod).mockResolvedValue('app_pin_no_device_authn' as any)
       jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-id' } as any)

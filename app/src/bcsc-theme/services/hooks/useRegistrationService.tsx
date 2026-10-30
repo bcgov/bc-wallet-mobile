@@ -55,6 +55,8 @@ export const useRegistrationService = () => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const [store] = useStore<BCState>()
   const alerts = useAlerts(navigation)
+  /** Whether the device holds an IAS registration, so `ensureRegistered` has nothing to wait for. */
+  const isRegistered = Boolean(store.bcscSecure.registrationAccessToken)
 
   /** @returns whether a mapped registration alert was shown */
   const emitRegistrationAlert = useCallback(
@@ -133,7 +135,7 @@ export const useRegistrationService = () => {
    * */
   const ensureRegistered = useCallback(async () => {
     // 1. Check if account is already registered
-    if (store.bcscSecure.registrationAccessToken) {
+    if (isRegistered) {
       return
     }
 
@@ -153,7 +155,7 @@ export const useRegistrationService = () => {
 
       throw appError
     }
-  }, [alerts, registrationApi, emitRegistrationAlert, store.bcscSecure.registrationAccessToken])
+  }, [alerts, registrationApi, emitRegistrationAlert, isRegistered])
 
   /**
    * Deletes the current IAS client registration and creates a fresh one, keeping the same
@@ -189,7 +191,8 @@ export const useRegistrationService = () => {
       register,
       ensureRegistered,
       cycleRegistration,
+      isRegistered,
     }),
-    [ensureRegistered, register, registrationApi, updateRegistration, cycleRegistration]
+    [ensureRegistered, register, registrationApi, updateRegistration, cycleRegistration, isRegistered]
   )
 }

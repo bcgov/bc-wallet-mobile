@@ -13,14 +13,13 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
-  useAnimatedComponents,
   useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
@@ -32,10 +31,8 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearDeviceCodes } = useSecureActions()
-  const [isAddingAccount, setIsAddingAccount] = useState(false)
   const registrationService = useRegistrationService()
   const loadingScreen = useLoadingScreen()
   const storeRef = useRef(store)
@@ -90,24 +87,27 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     },
   })
 
-  useFocusEffect(
-    useCallback(() => {
-      // set loading state to false on unmount
-      // so the user isn't stuck if they come back to this screen
-      return () => {
-        setIsAddingAccount(false)
-      }
-    }, [])
-  )
+  // Registering the device is a network round trip, so it waits under the loading overlay. A device
+  // that is already registered (back from the identity step, a restart, a resumed journey) has nothing
+  // to wait for and keeps the overlay down: raised around the instant no-op, it flashed the loading
+  // screen over the slide to the next step.
+  const ensureRegistered = useCallback(async () => {
+    if (registrationService.isRegistered) {
+      return
+    }
+
+    const stopLoading = loadingScreen.startLoading()
+    try {
+      await registrationService.ensureRegistered()
+    } finally {
+      stopLoading()
+    }
+  }, [loadingScreen, registrationService])
 
   // "No, continue setup" — verify a new account on this device via the identity steps.
   const handleAddAccount = useCallback(async () => {
-    setIsAddingAccount(true)
-
-    const stopLoading = loadingScreen.startLoading()
-
     try {
-      await registrationService.ensureRegistered()
+      await ensureRegistered()
 
       // Saved only once registered: a saved choice makes resume skip this screen
       dispatch({
@@ -116,20 +116,15 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       })
       navigation.navigate(BCSCScreens.IdentitySelection)
     } catch (error) {
-      setIsAddingAccount(false)
       logger.error('[AccountSetupScreen] Failed to ensure registration for add account', error as Error)
-    } finally {
-      stopLoading()
     }
-  }, [dispatch, loadingScreen, logger, navigation, registrationService])
+  }, [dispatch, ensureRegistered, logger, navigation])
 
   // "Yes, connect this device" — transfer an already-verified account by scanning the QR
   // shown on the other device, skipping the identity verification steps.
   const handleTransferAccount = useCallback(async () => {
-    const stopLoading = loadingScreen.startLoading()
-
     try {
-      await registrationService.ensureRegistered()
+      await ensureRegistered()
 
       // Saved only once registered: a saved choice makes resume skip this screen
       dispatch({
@@ -139,10 +134,8 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       navigation.navigate(BCSCScreens.TransferAccountInstructions)
     } catch (error) {
       logger.error('[AccountSetupScreen] Failed to ensure registration for transfer', error as Error)
-    } finally {
-      stopLoading()
     }
-  }, [dispatch, loadingScreen, logger, navigation, registrationService])
+  }, [dispatch, ensureRegistered, logger, navigation])
 
   const controls = (
     <ControlContainer>
@@ -152,10 +145,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         onPress={handleAddAccount}
         accessibilityLabel={t('BCSC.AccountSetup.AddAccount')}
         testID={testIdWithKey(TestIds.verify.accountSetup.addAccount)}
-        disabled={isAddingAccount}
-      >
-        {isAddingAccount && <ButtonLoading />}
-      </Button>
+      />
       <Button
         buttonType={ButtonType.Secondary}
         title={t('BCSC.AccountSetup.TransferAccount')}
