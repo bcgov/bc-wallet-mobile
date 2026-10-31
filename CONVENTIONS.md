@@ -229,7 +229,9 @@ flag that something has to remember to set and clear. The three live together in
 - `selectAccountPhase` (`selectors.ts`) reads its inputs: `bcscSecure.verified`, the ID token
   `bcscReason`, `bcscSecure.refreshTokenExpired`, and the account's `account_expiration_date`.
 - `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
-  `useCustomNotifications` (Home notices) both read it, so they cannot disagree.
+  `selectHomeNotice` (Home notices, `bcsc-theme/state/home/`) both read it, so they cannot disagree.
+- `getHomeNotice` (`home-notice.ts`) is the only definition of which notice Home shows. `useCustomNotifications`
+  only maps its result to a component.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next

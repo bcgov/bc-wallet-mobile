@@ -5,24 +5,29 @@ import ContinueVerificationNotification from '@/bcsc-theme/features/notification
 import PendingReviewNotification from '@/bcsc-theme/features/notifications/PendingReviewNotification'
 import StartVerificationNotification from '@/bcsc-theme/features/notifications/StartVerificationNotification'
 import VerifiedNotification from '@/bcsc-theme/features/notifications/VerifiedNotification'
-import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
-import { AccountPhaseType } from '@/bcsc-theme/state/account/account-phase'
-import { useAccountPhase } from '@/bcsc-theme/state/account/useAccountPhase'
-import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
-import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
-import { VerificationRequestStatus } from '@/constants'
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { HomeNotice, HomeNoticeType } from '@/bcsc-theme/state/home/home-notice'
+import { useHomeNotice } from '@/bcsc-theme/state/home/useHomeNotice'
 import { JSX, useMemo } from 'react'
 
-export enum CustomNotificationId {
-  BCSCStartVerification = 'BCSCStartVerification',
-  BCSCContinueVerification = 'BCSCContinueVerification',
-  BCSCPendingReview = 'BCSCPendingReview',
-  BCSCCancelledReview = 'BCSCCancelledReview',
-  BCSCVerified = 'BCSCVerified',
-  AccountExpired = 'AccountExpired',
-  AccountRenewalAvailable = 'AccountRenewalAvailable',
+const toElements = (notice: HomeNotice): JSX.Element[] => {
+  switch (notice.type) {
+    case HomeNoticeType.BCSCVerified:
+      return [<VerifiedNotification key={notice.type} />]
+    case HomeNoticeType.BCSCCancelledReview:
+      return [<CancelledReviewNotification key={notice.type} />]
+    case HomeNoticeType.BCSCPendingReview:
+      return [<PendingReviewNotification key={notice.type} />]
+    case HomeNoticeType.BCSCContinueVerification:
+      return [<ContinueVerificationNotification key={notice.type} />]
+    case HomeNoticeType.BCSCStartVerification:
+      return [<StartVerificationNotification key={notice.type} />]
+    case HomeNoticeType.AccountExpired:
+      return [<CardExpiryNotification key={notice.type} />]
+    case HomeNoticeType.AccountRenewalAvailable:
+      return [<CardRenewalNotification key={notice.type} expiresAt={notice.expiresAt} />]
+    case HomeNoticeType.None:
+      return []
+  }
 }
 
 /**
@@ -31,62 +36,7 @@ export enum CustomNotificationId {
  * @returns An object containing an array of custom notifications to be displayed on the Home screen.
  */
 export const useCustomNotifications = () => {
-  const { needsVerification, isVerified } = useVerificationStatus()
-  const [store] = useStore<BCState>()
-  const accountPhase = useAccountPhase()
-  const { verificationRequestStatus, verificationRequestId } = store.bcscSecure
+  const notice = useHomeNotice()
 
-  const customNotifications = useMemo((): JSX.Element[] => {
-    // IAS has verified this device but the user hasn't finished setup: a request reviewed this session, or
-    // tokens IAS issued found on the device (an account transfer, or a finish step whose credential write
-    // failed). Not once that refresh token has expired: Finish needs a token refresh, which an expired token
-    // can't get. Keyed on `verified` like the VerificationSuccess route this card opens (see MainStack). The
-    // status can outlive that flip — handleAccountSetup sets `verified` before cleanup that can throw — and
-    // the card would then be a button to a route that is no longer registered
-    const finishSetupPending =
-      !isVerified &&
-      (verificationRequestStatus === VerificationRequestStatus.VERIFIED ||
-        (isUserVerified(store.bcscSecure) && !store.bcscSecure.refreshTokenExpired))
-    if (finishSetupPending) {
-      return [<VerifiedNotification key={CustomNotificationId.BCSCVerified} />]
-    }
-
-    if (verificationRequestStatus === VerificationRequestStatus.CANCELLED) {
-      return [<CancelledReviewNotification key={CustomNotificationId.BCSCCancelledReview} />]
-    }
-
-    if (verificationRequestStatus === VerificationRequestStatus.PENDING) {
-      return [<PendingReviewNotification key={CustomNotificationId.BCSCPendingReview} />]
-    }
-
-    if (needsVerification && computeSetupStepCompletion(store).id.completed) {
-      return [<ContinueVerificationNotification key={CustomNotificationId.BCSCContinueVerification} />]
-    }
-
-    if (needsVerification && !verificationRequestId) {
-      return [<StartVerificationNotification key={CustomNotificationId.BCSCStartVerification} />]
-    }
-
-    if (accountPhase.phase === AccountPhaseType.Expired) {
-      return [<CardExpiryNotification key={CustomNotificationId.AccountExpired} />]
-    }
-
-    if (accountPhase.phase === AccountPhaseType.ExpiringSoon) {
-      return [
-        <CardRenewalNotification
-          key={CustomNotificationId.AccountRenewalAvailable}
-          expiresAt={accountPhase.expiresAt}
-        />,
-      ]
-    }
-
-    return []
-  }, [verificationRequestStatus, verificationRequestId, needsVerification, isVerified, accountPhase, store])
-
-  return useMemo(
-    () => ({
-      customNotifications,
-    }),
-    [customNotifications]
-  )
+  return useMemo(() => ({ customNotifications: toElements(notice) }), [notice])
 }
