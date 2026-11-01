@@ -1,9 +1,9 @@
+import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCDispatchAction } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
 import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 import * as DeviceInfo from 'react-native-device-info'
-import { EXPIRED_JWT } from '../utils/__fixtures__/jwt'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
 import { SystemCheckScope } from './useSystemChecks'
 

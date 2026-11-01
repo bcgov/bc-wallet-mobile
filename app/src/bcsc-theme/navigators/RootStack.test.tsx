@@ -1,3 +1,4 @@
+import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { ErrorRegistry } from '@/errors'
 import { VerificationStatus } from '@/store'
 import * as Bifold from '@bifold/core'
@@ -5,7 +6,6 @@ import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
 import { useFcmService } from '../features/fcm'
-import { EXPIRED_JWT } from '../utils/__fixtures__/jwt'
 import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
 

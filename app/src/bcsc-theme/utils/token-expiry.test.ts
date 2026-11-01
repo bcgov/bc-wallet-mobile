@@ -1,5 +1,5 @@
-import { makeJwt } from './__fixtures__/jwt'
-import { isRefreshTokenExpired, isTokenExpired, TOKEN_EXPIRY_BUFFER_MS } from './token-expiry'
+import { makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
+import { isRefreshTokenExpired, isTokenExpired, TOKEN_EXPIRY_BUFFER_MS } from '@/bcsc-theme/utils/token-expiry'
 
 const NOW = 1_700_000_000_000
 

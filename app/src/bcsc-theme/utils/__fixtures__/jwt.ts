@@ -1,9 +1,6 @@
-const base64url = (input: string): string =>
-  Buffer.from(input).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-
 export const makeJwt = (payload: Record<string, unknown>): string => {
-  const header = base64url(JSON.stringify({ alg: 'none', typ: 'JWT' }))
-  const body = base64url(JSON.stringify(payload))
+  const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url')
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
   return `${header}.${body}.signature`
 }
 
