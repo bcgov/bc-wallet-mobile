@@ -1,8 +1,8 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
-import { isRefreshTokenExpired } from '@/bcsc-theme/utils/token-expiry'
 import { BCState } from '@/store'
 import { AccountPhase, getAccountPhase } from './account-phase'
+import { isRefreshTokenExpired } from './refresh-token'
 
 /**
  * Reads the expiry rule's inputs from the store and the in-memory account.
