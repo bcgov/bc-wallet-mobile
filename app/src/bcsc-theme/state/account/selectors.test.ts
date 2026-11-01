@@ -1,4 +1,5 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { EXPIRED_JWT, makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState } from '@/store'
 import { AccountPhaseType } from './account-phase'
@@ -7,9 +8,9 @@ import { selectAccountPhase } from './selectors'
 const NOW = new Date('2026-10-19T12:00:00.000Z')
 const FUTURE = new Date('2027-10-19T00:00:00.000Z')
 
-const buildState = (opts: { verified?: boolean; bcscReason?: BCSCReason; refreshTokenExpired?: boolean } = {}) =>
+const buildState = (opts: { verified?: boolean; bcscReason?: BCSCReason; refreshToken?: string } = {}) =>
   ({
-    bcscSecure: { verified: opts.verified ?? true, refreshTokenExpired: opts.refreshTokenExpired },
+    bcscSecure: { verified: opts.verified ?? true, refreshToken: opts.refreshToken },
     bcsc: { credentialMetadata: { bcscReason: opts.bcscReason ?? BCSCReason.ApprovedByAgent } },
   }) as unknown as BCState
 
@@ -31,10 +32,18 @@ describe('selectAccountPhase', () => {
     expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.Expired)
   })
 
-  it('reads refreshTokenExpired from secure state', () => {
-    expect(selectAccountPhase(buildState({ refreshTokenExpired: true }), null, NOW).phase).toBe(
+  it('derives the credential expiry from the stored refresh token', () => {
+    expect(selectAccountPhase(buildState({ refreshToken: EXPIRED_JWT }), null, NOW).phase).toBe(
       AccountPhaseType.Expired
     )
+  })
+
+  it('expires the credential as time passes, with no change to the store', () => {
+    const state = buildState({ refreshToken: makeJwt({ exp: NOW.getTime() / 1000 + 3600 }) })
+    const twoHoursLater = new Date(NOW.getTime() + 2 * 3600_000)
+
+    expect(selectAccountPhase(state, null, NOW).phase).not.toBe(AccountPhaseType.Expired)
+    expect(selectAccountPhase(state, null, twoHoursLater).phase).toBe(AccountPhaseType.Expired)
   })
 
   it('reads the card expiry date from the account, and is unknown without one', () => {

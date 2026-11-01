@@ -5,6 +5,7 @@ import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
 import { useFcmService } from '../features/fcm'
+import { EXPIRED_JWT } from '../utils/__fixtures__/jwt'
 import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
 
@@ -717,7 +718,7 @@ describe('BCSCRootStack', () => {
     jest
       .mocked(Bifold.useStore)
       .mockReturnValue([
-        mockStore({ ...verified, bcscSecure: { verified: true, refreshTokenExpired: true } }),
+        mockStore({ ...verified, bcscSecure: { verified: true, refreshToken: EXPIRED_JWT } }),
         jest.fn(),
       ] as any)
     rerender(<BCSCRootStack />)
@@ -762,7 +763,7 @@ describe('BCSCRootStack', () => {
       rerender(<BCSCRootStack />)
       expect(phaseLogs()).toHaveLength(1)
 
-      useVerifiedStore({ refreshTokenExpired: true })
+      useVerifiedStore({ refreshToken: EXPIRED_JWT })
       rerender(<BCSCRootStack />)
 
       expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: unknown', '[RootStack] Card expiry phase: expired'])

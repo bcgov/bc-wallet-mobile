@@ -805,7 +805,6 @@ describe('useSecureActions', () => {
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
       expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
       expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
-      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
     })
   })
 
@@ -843,7 +842,7 @@ describe('useSecureActions', () => {
       } as any)
     })
 
-    it('skips the network call and key recovery, and flags refreshTokenExpired, when the stored token is expired', async () => {
+    it('skips the network call and key recovery, and keeps the expired token, when the stored token is expired', async () => {
       jest.mocked(isTokenExpired).mockReturnValue(true)
 
       const { result } = renderHook(() => useSecureActions())
@@ -854,13 +853,13 @@ describe('useSecureActions', () => {
       expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
       expect(performKeyRecovery).not.toHaveBeenCalled()
       expect(reRegisterNewestKey).not.toHaveBeenCalled()
-      expect(captureHydrateField('refreshTokenExpired')).toBe(true)
+      expect(captureHydrateField('refreshToken')).toBe('stale-refresh-token')
       // The stale token is still re-persisted, matching today's failure path (renewal deletes it)
       expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
       expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
     })
 
-    it('flags refreshTokenExpired: false when the stored token is valid and refresh succeeds', async () => {
+    it('stores the new token when the stored token is valid and refresh succeeds', async () => {
       jest.mocked(isTokenExpired).mockReturnValue(false)
       mockGetTokensForRefreshToken.mockResolvedValue({ refresh_token: 'new-refresh', access_token: 'new-access' })
 
@@ -870,10 +869,10 @@ describe('useSecureActions', () => {
       })
 
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('stale-refresh-token')
-      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+      expect(captureHydrateField('refreshToken')).toBe('new-refresh')
     })
 
-    it('stops key-recovery retries and does not flag refreshTokenExpired when the server rejects a locally-valid token as invalid_token', async () => {
+    it('stops key-recovery retries and keeps the original token when the server rejects a locally-valid token as invalid_token', async () => {
       jest.mocked(isTokenExpired).mockReturnValue(false)
       mockGetTokensForRefreshToken.mockRejectedValue(AppError.fromErrorDefinition(ErrorRegistry.INVALID_TOKEN))
 
@@ -885,15 +884,14 @@ describe('useSecureActions', () => {
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
       expect(performKeyRecovery).not.toHaveBeenCalled()
       expect(reRegisterNewestKey).not.toHaveBeenCalled()
-      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+      expect(captureHydrateField('refreshToken')).toBe('stale-refresh-token')
     })
 
-    it('does not call isTokenExpired and flags refreshTokenExpired: false when there is no stored refresh token (session recovery case)', async () => {
+    it('does not call isTokenExpired and stores no token when there is no stored refresh token (session recovery case)', async () => {
       // No refresh token at all — e.g. a verified user whose tokens file is unreadable/corrupt
       // (session recovery, see the 'hydrateSecureState account recovery' describe). isTokenExpired
-      // is mocked to true here specifically to prove the `Boolean(refreshToken) &&` short-circuit is
-      // load-bearing: without it, a bare `isTokenExpired(refreshToken)` call with refreshToken
-      // undefined would (per the real util's semantics) evaluate to expired and misroute this user.
+      // is mocked to true here to prove the `Boolean(refreshToken) &&` short-circuit is load-bearing:
+      // without it, an undefined token would read as expired and skip the session-recovery path.
       jest.mocked(getToken).mockImplementation(async (type: any) => {
         if (type === TokenType.Registration) {
           return { id: 'g', type, token: 'stored-reg-token', created: 0 } as any
@@ -910,7 +908,7 @@ describe('useSecureActions', () => {
 
       expect(isTokenExpired).not.toHaveBeenCalled()
       expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
-      expect(captureHydrateField('refreshTokenExpired')).toBe(false)
+      expect(captureHydrateField('refreshToken')).toBeUndefined()
       expect(captureHydrateField('sessionRecoveryRequired')).toBe(true)
     })
   })

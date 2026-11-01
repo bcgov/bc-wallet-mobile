@@ -1,13 +1,5 @@
-import { isTokenExpired, TOKEN_EXPIRY_BUFFER_MS } from './token-expiry'
-
-const base64url = (input: string): string =>
-  Buffer.from(input).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-
-const makeJwt = (payload: Record<string, unknown>): string => {
-  const header = base64url(JSON.stringify({ alg: 'none', typ: 'JWT' }))
-  const body = base64url(JSON.stringify(payload))
-  return `${header}.${body}.signature`
-}
+import { makeJwt } from './__fixtures__/jwt'
+import { isRefreshTokenExpired, isTokenExpired, TOKEN_EXPIRY_BUFFER_MS } from './token-expiry'
 
 const NOW = 1_700_000_000_000
 
@@ -43,5 +35,19 @@ describe('isTokenExpired', () => {
   it('returns false and does not throw for a malformed token string', () => {
     expect(() => isTokenExpired('not-a-jwt', NOW)).not.toThrow()
     expect(isTokenExpired('not-a-jwt', NOW)).toBe(false)
+  })
+})
+
+describe('isRefreshTokenExpired', () => {
+  it('returns false when there is no token', () => {
+    expect(isRefreshTokenExpired(undefined, NOW)).toBe(false)
+  })
+
+  it('returns true for an expired token', () => {
+    expect(isRefreshTokenExpired(makeJwt({ exp: NOW / 1000 - 3600 }), NOW)).toBe(true)
+  })
+
+  it('returns false for an unexpired token', () => {
+    expect(isRefreshTokenExpired(makeJwt({ exp: NOW / 1000 + 3600 }), NOW)).toBe(false)
   })
 })

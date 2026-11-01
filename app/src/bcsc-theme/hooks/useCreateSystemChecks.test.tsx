@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react-native'
 import React from 'react'
 import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 import * as DeviceInfo from 'react-native-device-info'
+import { EXPIRED_JWT } from '../utils/__fixtures__/jwt'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
 import { SystemCheckScope } from './useSystemChecks'
 
@@ -504,7 +505,7 @@ describe('useGetSystemChecks', () => {
             bcscSecure: {
               isHydrated: true,
               verified: true,
-              refreshTokenExpired: true,
+              refreshToken: EXPIRED_JWT,
               registrationAccessToken: 'test-registration-token',
             },
           },

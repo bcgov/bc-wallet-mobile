@@ -23,3 +23,7 @@ export const isTokenExpired = (token?: string, now: number = Date.now()): boolea
     return false
   }
 }
+
+// No token means session recovery, not renewal.
+export const isRefreshTokenExpired = (refreshToken?: string, now: number = Date.now()): boolean =>
+  Boolean(refreshToken) && isTokenExpired(refreshToken, now)
