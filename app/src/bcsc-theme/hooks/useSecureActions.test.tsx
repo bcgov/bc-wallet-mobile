@@ -888,10 +888,8 @@ describe('useSecureActions', () => {
     })
 
     it('does not call isTokenExpired and stores no token when there is no stored refresh token (session recovery case)', async () => {
-      // No refresh token at all — e.g. a verified user whose tokens file is unreadable/corrupt
-      // (session recovery, see the 'hydrateSecureState account recovery' describe). isTokenExpired
-      // is mocked to true here to prove the `Boolean(refreshToken) &&` short-circuit is load-bearing:
-      // without it, an undefined token would read as expired and skip the session-recovery path.
+      // isTokenExpired is mocked true to prove the `Boolean(refreshToken) &&` short-circuit:
+      // without it, a missing token (session recovery) logs a spurious expired-token warning.
       jest.mocked(getToken).mockImplementation(async (type: any) => {
         if (type === TokenType.Registration) {
           return { id: 'g', type, token: 'stored-reg-token', created: 0 } as any
