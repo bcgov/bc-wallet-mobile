@@ -2,7 +2,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
- * Routes a verified user to account renewal when hydration found the stored refresh token expired (#4654),
+ * Routes a verified user to account renewal when the stored refresh token has expired (#4654),
  * instead of letting the first bearer request surface a "Problem with Account" error.
  *
  * @class RefreshTokenExpiredSystemCheck
