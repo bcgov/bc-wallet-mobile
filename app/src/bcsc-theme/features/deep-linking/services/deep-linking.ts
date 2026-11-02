@@ -20,22 +20,27 @@ export class DeepLinkService {
   private subscription?: { remove(): void }
   private initialized = false
   private initialUrl: string | null = null
+  private lastInitialUrl: string | null = null
 
   public async init(): Promise<void> {
-    if (this.initialized) {
+    if (!this.initialized) {
+      this.initialized = true
+      this.subscription = Linking.addEventListener('url', ({ url }) => this.emit(url))
+    }
+
+    const url = await Linking.getInitialURL()
+
+    if (!url || url === this.lastInitialUrl) {
       return
     }
-    this.initialized = true
+    this.lastInitialUrl = url
 
-    // Store the initial URL so late subscribers can still get it if needed
-    // or we can emit it immediately if we have handlers
-    const url = await Linking.getInitialURL()
-    if (url) {
+    if (this.handlers.size === 0) {
       this.initialUrl = url
-      this.emit(url)
+      return
     }
 
-    this.subscription = Linking.addEventListener('url', ({ url }) => this.emit(url))
+    this.emit(url)
   }
 
   public destroy(): void {
@@ -43,6 +48,7 @@ export class DeepLinkService {
     this.subscription = undefined
     this.initialized = false
     this.initialUrl = null
+    this.lastInitialUrl = null
     this.handlers.clear()
   }
 

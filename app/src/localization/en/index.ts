@@ -1596,6 +1596,10 @@ const translation = {
       "Title": "Invalid Login",
       "Description": "Please try again later. If the problem continues, contact the BC Services Card Help Desk."
     },
+    "LoginRequestExpired": {
+      "Title": "Login Request Expired",
+      "Description": "This login request has expired or is no longer valid. Please start again from the service."
+    },
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent",
       "Description": "Please try again later.",

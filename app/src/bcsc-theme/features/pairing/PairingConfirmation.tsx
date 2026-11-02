@@ -5,9 +5,10 @@ import ArrowUp from '@assets/img/arrowup.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppState, BackHandler, Platform } from 'react-native'
+import { AppState, Platform } from 'react-native'
+import { moveAppToBackground } from 'react-native-bcsc-core'
 import ServiceBookmarkButton from './components/ServiceBookmarkButton'
 
 const ARROW_SIZE = 80
@@ -20,6 +21,15 @@ const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, r
   const { serviceName, serviceId, fromAppSwitch } = route.params
   const showIOSAppSwitchGuide = Platform.OS === 'ios' && fromAppSwitch
 
+  const resetToHome = useCallback(() => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab }],
+      })
+    )
+  }, [navigation])
+
   useEffect(() => {
     if (!fromAppSwitch) {
       return
@@ -27,28 +37,19 @@ const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, r
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'background' && fromAppSwitch) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCStacks.Tab }],
-          })
-        )
+        resetToHome()
       }
     })
 
     return subscription.remove
-  }, [navigation, fromAppSwitch])
+  }, [resetToHome, fromAppSwitch])
 
   const onClose = () => {
     if (fromAppSwitch && Platform.OS === 'android') {
-      BackHandler.exitApp() // Closes the app on Android, taking you back to browser
+      // Returns to the browser without finishing the Activity, as BackHandler.exitApp can
+      moveAppToBackground().catch(resetToHome)
     } else {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: BCSCStacks.Tab }],
-        })
-      )
+      resetToHome()
     }
   }
 

@@ -4992,6 +4992,18 @@ class BcscCoreModule internal constructor(
         promise.resolve(null)
     }
 
+    /**
+     * Moves the app's task to the background without finishing the Activity, revealing the previous task.
+     */
+    @ReactMethod
+    override fun moveAppToBackground(promise: Promise) {
+        if (reactApplicationContext.currentActivity?.moveTaskToBack(true) == true) {
+            promise.resolve(null)
+        } else {
+            promise.reject("E_MOVE_TO_BACKGROUND_ERROR", "Unable to move the app to the background")
+        }
+    }
+
     @ReactMethod
     override fun isBluetoothAudioConnected(promise: Promise) {
         try {

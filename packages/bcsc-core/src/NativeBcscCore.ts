@@ -560,6 +560,12 @@ export interface Spec extends TurboModule {
   openKeyboardSelector(): Promise<void>;
 
   /**
+   * Moves the app's task to the background on Android without finishing the Activity,
+   * revealing the previous task. iOS does not support this and resolves immediately.
+   */
+  moveAppToBackground(): Promise<void>;
+
+  /**
    * Checks if a Bluetooth audio output device (SCO headset, A2DP headset/speaker, or BLE headset
    * on Android 12+) is currently connected on Android. Needs no Bluetooth permission.
    * iOS is a stub that always resolves null.

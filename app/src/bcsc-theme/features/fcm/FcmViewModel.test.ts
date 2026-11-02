@@ -112,6 +112,30 @@ describe('FcmViewModel', () => {
       expect(mockFcmService.init).toHaveBeenCalledTimes(1)
     })
 
+    it('re-reads the launch notification without subscribing again when initialized twice', () => {
+      viewModel.initialize()
+      viewModel.initialize()
+
+      expect(mockFcmService.subscribe).toHaveBeenCalledTimes(1)
+      expect(mockFcmService.init).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not touch the FCM service in BCWallet mode when initialized twice', () => {
+      const bcWalletViewModel = new FcmViewModel(
+        mockFcmService,
+        mockLogger as any,
+        mockPairingService,
+        mockVerificationResponseService,
+        Mode.BCWallet
+      )
+
+      bcWalletViewModel.initialize()
+      bcWalletViewModel.initialize()
+
+      expect(mockFcmService.subscribe).not.toHaveBeenCalled()
+      expect(mockFcmService.init).not.toHaveBeenCalled()
+    })
+
     it('subscribes before calling init to avoid missing messages', () => {
       const callOrder: string[] = []
       mockFcmService.subscribe.mockImplementation((handler) => {

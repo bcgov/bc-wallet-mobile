@@ -1286,6 +1286,16 @@ export const openAndroidKeyboardSelector = async (): Promise<void> => {
 };
 
 /**
+ * Moves the app's task to the background on Android without finishing the Activity,
+ * revealing the previous task. iOS does not support this and will always resolve immediately.
+ *
+ * @returns A promise that resolves once the task has moved. Rejects if it could not be moved (E_MOVE_TO_BACKGROUND_ERROR)
+ */
+export const moveAppToBackground = async (): Promise<void> => {
+  return BcscCore.moveAppToBackground();
+};
+
+/**
  * Checks if a Bluetooth audio output device (headset, or A2DP speaker) is currently connected on Android.
  * Needs no Bluetooth permission, so it can run before deciding whether to ask for one.
  * iOS is not implemented yet and always resolves null.

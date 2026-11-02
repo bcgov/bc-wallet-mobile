@@ -113,6 +113,49 @@ describe('DeepLinkService', () => {
     )
   })
 
+  describe('when the app remounts in a surviving JS runtime', () => {
+    const secondPairingUrl = 'ca.bc.gov.iddev.servicescard://pair/https%3A%2F%2Fexample.com%2Fdevice%2FOther%2FCODE456'
+
+    it('emits the URL that started the new Activity without adding a second listener', async () => {
+      const handler = jest.fn()
+      const service = new DeepLinkService()
+      service.subscribe(handler)
+      mockLinking.getInitialURL.mockResolvedValueOnce(pairingUrl)
+      await service.init()
+
+      mockLinking.getInitialURL.mockResolvedValueOnce(secondPairingUrl)
+      await service.init()
+
+      expect(handler).toHaveBeenCalledTimes(2)
+      expect(handler).toHaveBeenLastCalledWith(expect.objectContaining({ pairingCode: 'CODE456' }))
+      expect(mockLinking.addEventListener).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not emit the same initial URL twice', async () => {
+      const handler = jest.fn()
+      const service = new DeepLinkService()
+      service.subscribe(handler)
+      mockLinking.getInitialURL.mockResolvedValue(pairingUrl)
+
+      await service.init()
+      await service.init()
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not replay a delivered initial URL to a new subscriber', async () => {
+      const service = new DeepLinkService()
+      service.subscribe(jest.fn())
+      mockLinking.getInitialURL.mockResolvedValue(pairingUrl)
+      await service.init()
+
+      const lateHandler = jest.fn()
+      service.subscribe(lateHandler)
+
+      expect(lateHandler).not.toHaveBeenCalled()
+    })
+  })
+
   it('clears handlers on destroy', async () => {
     const handler = jest.fn()
     const service = new DeepLinkService()
