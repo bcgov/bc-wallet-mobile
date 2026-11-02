@@ -232,9 +232,7 @@ describe('EvidenceIDCollection', () => {
       })
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       expect(scrollToSpy).toHaveBeenCalledWith({ y: 125, animated: false })
@@ -266,9 +264,7 @@ describe('EvidenceIDCollection', () => {
       })
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       expect(scrollToSpy).toHaveBeenCalledTimes(1)
@@ -303,9 +299,7 @@ describe('EvidenceIDCollection', () => {
       })
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       expect(scrollToSpy).toHaveBeenCalledTimes(1)
@@ -344,9 +338,7 @@ describe('EvidenceIDCollection', () => {
       })
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       const { remove } = jest.mocked(KeyboardEvents.addListener).mock.results[0].value
@@ -373,16 +365,12 @@ describe('EvidenceIDCollection', () => {
       )
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
       const firstSubscription = jest.mocked(KeyboardEvents.addListener).mock.results[0].value
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       expect(KeyboardEvents.addListener).toHaveBeenCalledTimes(2)
@@ -420,9 +408,7 @@ describe('EvidenceIDCollection', () => {
       fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       expect(scrollToSpy).toHaveBeenCalledWith({ y: 100, animated: false })
@@ -462,9 +448,7 @@ describe('EvidenceIDCollection', () => {
       fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '99999999')
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       // Distinct offset from documentNumber's, so a scroll that ignored the target field couldn't pass.
@@ -497,9 +481,7 @@ describe('EvidenceIDCollection', () => {
       fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '99999999')
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/middleNames-input'])
@@ -528,9 +510,7 @@ describe('EvidenceIDCollection', () => {
       })
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
       await act(async () => {
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
@@ -567,18 +547,14 @@ describe('EvidenceIDCollection', () => {
       })
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
 
       enter(tree, 'documentNumber', '123456789')
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input', 'com.ariesbifold:id/lastName-input'])
       // documentNumber was never measured, so only the second press scrolls.
@@ -601,9 +577,7 @@ describe('EvidenceIDCollection', () => {
       )
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       expect(scrollToSpy).not.toHaveBeenCalled()
@@ -634,9 +608,7 @@ describe('EvidenceIDCollection', () => {
       fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       expect(scrollToSpy).not.toHaveBeenCalled()
@@ -665,9 +637,7 @@ describe('EvidenceIDCollection', () => {
       )
 
       await act(async () => {
-
         fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
       })
 
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
@@ -773,9 +743,7 @@ describe('EvidenceIDCollection', () => {
     fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-
     })
 
     expect(mockUpdateUserMetadata).toHaveBeenCalledWith(

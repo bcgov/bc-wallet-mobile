@@ -348,9 +348,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     expect(mockUpdateEvidenceMetadata).not.toHaveBeenCalled()
@@ -369,9 +367,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     await waitFor(() =>
@@ -405,9 +401,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     expect(mockHandleScanDriversLicense).toHaveBeenCalledWith(mockLicense)
@@ -435,9 +429,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     // The switch is told which ID the card was photographed as and settles the IDs itself before it
@@ -482,9 +474,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     await waitFor(() =>
@@ -525,9 +515,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     await waitFor(() => expect(mockRemoveEvidenceByType).toHaveBeenCalledWith(cardType))
@@ -562,9 +550,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     await waitFor(() => expect(mockUpdateEvidenceMetadata).toHaveBeenCalled())
@@ -594,9 +580,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     await waitFor(() => expect(mockFailedToWriteToLocalStorageAlert).toHaveBeenCalled())
@@ -642,9 +626,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     await waitFor(() =>
@@ -697,9 +679,7 @@ describe('EvidenceCapture', () => {
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('UsePhoto'))).toBeTruthy())
 
     await act(async () => {
-
       fireEvent.press(tree.getByTestId(testIdWithKey('UsePhoto')))
-
     })
 
     await waitFor(() => expect(mockRemoveEvidenceByType).toHaveBeenCalledWith(cardType))
