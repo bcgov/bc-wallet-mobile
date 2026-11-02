@@ -2322,16 +2322,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@credo-ts/didcomm-push-notifications@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "@credo-ts/didcomm-push-notifications@npm:0.0.1"
+"@credo-ts/didcomm-push-notifications@npm:^0.0.2":
+  version: 0.0.2
+  resolution: "@credo-ts/didcomm-push-notifications@npm:0.0.2"
   dependencies:
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.2"
   peerDependencies:
     "@credo-ts/core": ^0.6.0
     "@credo-ts/didcomm": ^0.6.0
-  checksum: 10c0/6f3817c14debfaf8dd9584924f23ad53fa7a595ba396cd1ad3ccfc17d1c48c0cc2161132896e6944c995b190402953412a7cdbd1f743cc32613f402725721ef9
+  checksum: 10c0/447ee850aa80364ed740ce5a5dfdf15de8cb30f7d06dfa5ff911c7ed68042d947e12e33ddb1822f61f2a7f607c92e86a62a8ba11c049fd411650de7b8979ef25
   languageName: node
   linkType: hard
 
@@ -7482,7 +7482,7 @@ __metadata:
     "@credo-ts/askar": "npm:0.7.0"
     "@credo-ts/core": "npm:0.7.0"
     "@credo-ts/didcomm": "npm:0.7.0"
-    "@credo-ts/didcomm-push-notifications": "npm:^0.0.1"
+    "@credo-ts/didcomm-push-notifications": "npm:^0.0.2"
     "@credo-ts/drpc": "npm:0.7.0"
     "@credo-ts/indy-vdr": "npm:0.7.0"
     "@credo-ts/openid4vc": "npm:0.7.0"

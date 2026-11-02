@@ -52,7 +52,7 @@
     "@credo-ts/askar": "0.7.0",
     "@credo-ts/core": "0.7.0",
     "@credo-ts/didcomm": "0.7.0",
-    "@credo-ts/didcomm-push-notifications": "^0.0.1",
+    "@credo-ts/didcomm-push-notifications": "^0.0.2",
     "@credo-ts/drpc": "0.7.0",
     "@credo-ts/indy-vdr": "0.7.0",
     "@credo-ts/openid4vc": "0.7.0",
