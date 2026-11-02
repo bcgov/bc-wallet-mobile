@@ -3,6 +3,7 @@ import {
   reducer as bifoldReducer,
   State as BifoldState,
   defaultState,
+  LocalStorageKeys,
   mergeReducers,
   PersistentStorage,
   ReducerAction,
@@ -362,12 +363,18 @@ enum ModeDispatchAction {
   UPDATE_MODE = 'mode/updateMode',
 }
 
+enum MediatorDispatchAction {
+  /** Drops a mediator from the developer-mode picker; Bifold only adds to or resets the list. */
+  REMOVE_AVAILABLE_MEDIATOR = 'preferences/removeAvailableMediator',
+}
+
 export type BCDispatchAction =
   | DeveloperDispatchAction
   | DismissPersonCredentialOfferDispatchAction
   | RemoteDebuggingDispatchAction
   | BCSCDispatchAction
   | ModeDispatchAction
+  | MediatorDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
@@ -375,6 +382,7 @@ export const BCDispatchAction = {
   ...RemoteDebuggingDispatchAction,
   ...BCSCDispatchAction,
   ...ModeDispatchAction,
+  ...MediatorDispatchAction,
 }
 
 const remoteDebuggingState: RemoteDebuggingState = {
@@ -482,6 +490,20 @@ export const initialState: BCState = {
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
+    case MediatorDispatchAction.REMOVE_AVAILABLE_MEDIATOR: {
+      const mediatorUrl: string | undefined = (action.payload ?? []).pop()
+      const { availableMediators, selectedMediator } = state.preferences
+      // The selected mediator is in use and stays listed
+      if (!mediatorUrl || mediatorUrl === selectedMediator || !availableMediators.includes(mediatorUrl)) {
+        return state
+      }
+      const preferences = {
+        ...state.preferences,
+        availableMediators: availableMediators.filter((url) => url !== mediatorUrl),
+      }
+      PersistentStorage.storeValueForKey(LocalStorageKeys.Preferences, preferences)
+      return { ...state, preferences }
+    }
     case ModeDispatchAction.UPDATE_MODE: {
       const mode: Mode = (action?.payload || []).pop() || Mode.BCWallet
       // If the mode isn't actually changing, do nothing

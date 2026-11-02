@@ -4,6 +4,7 @@ const navigation = {
   navigate,
   push: jest.fn(),
   setOptions: jest.fn(),
+  setParams: jest.fn(),
   getParent: jest.fn(() => ({
     navigate,
   })),

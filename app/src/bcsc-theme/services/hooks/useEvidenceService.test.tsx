@@ -3,6 +3,7 @@ import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import * as Bifold from '@bifold/core'
 import { mockAppError } from '@mocks/helpers/error'
 import { CommonActions, useNavigation } from '@react-navigation/native'
@@ -11,6 +12,13 @@ import { AxiosError } from 'axios'
 import { useEvidenceService } from './useEvidenceService'
 
 jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
+jest.mock('@/utils/analytics/analytics-singleton', () => ({
+  Analytics: {
+    trackErrorEvent: jest.fn(),
+    trackAlertDisplayEvent: jest.fn(),
+    trackAlertActionEvent: jest.fn(),
+  },
+}))
 
 jest.mock('@/bcsc-theme/api/hooks/useEvidenceApi')
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
@@ -272,7 +280,13 @@ describe('useEvidenceService', () => {
       'treats a 500 as submitted when the read-back finds the request %s',
       async (status) => {
         const readBack = { ...submitted, status }
-        mockEvidenceApi.sendVerificationRequest.mockRejectedValue(serverError())
+        const error = serverError()
+        error.context = {
+          http_method: 'PUT',
+          http_route: '/evidence/v1/verifications/{id}',
+          http_url: '/evidence/v1/verifications/NzY0NDY3NQ',
+        }
+        mockEvidenceApi.sendVerificationRequest.mockRejectedValue(error)
         mockEvidenceApi.getVerificationRequestStatus.mockResolvedValue(readBack)
 
         const { result } = renderHook(() => useEvidenceService())
@@ -285,6 +299,14 @@ describe('useEvidenceService', () => {
         expect(mockUnknownErrorModal).not.toHaveBeenCalled()
         expect(mockUpdateVerificationRequest).not.toHaveBeenCalled()
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(`already ${status}`))
+        // No modal shows for this any more, so the duplicate submit is counted in analytics instead (#4928):
+        // the status and route template travel, the id in the URL does not
+        expect(Analytics.trackErrorEvent).toHaveBeenCalledTimes(1)
+        expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
+          code: AppEventCode.EVIDENCE_SUBMIT_ALREADY_RECORDED,
+          message: expect.stringContaining('HTTP 500 PUT /evidence/v1/verifications/{id}'),
+        })
+        expect(jest.mocked(Analytics.trackErrorEvent).mock.calls[0][0].message).not.toContain('NzY0NDY3NQ')
       }
     )
 
@@ -303,6 +325,8 @@ describe('useEvidenceService', () => {
         expect.stringContaining('failed; surfacing the original submit error'),
         expect.objectContaining({ error: notFoundError })
       )
+      // Nothing was on record, so this is a plain failure, not a duplicate submit
+      expect(Analytics.trackErrorEvent).not.toHaveBeenCalled()
     })
 
     it('surfaces the original 500 when the read-back itself fails', async () => {

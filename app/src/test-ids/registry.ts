@@ -762,6 +762,8 @@ export const TestIds = {
      *  or its host without the payload); `scan` opens the QR scanner, whose hand-off lands back here. */
     configureMediator: {
       mediatorRowPrefix: 'MediatorRow-',
+      /** Remove control on a mediator row, suffixed like `mediatorRowPrefix`; absent on the selected and built-in rows. */
+      removeRowPrefix: 'RemoveMediator-',
       scan: 'ScanMediator',
     },
     /** Edit-nickname form (verified-only; `InputWithValidation` id 'accountNickname'). Validation is
