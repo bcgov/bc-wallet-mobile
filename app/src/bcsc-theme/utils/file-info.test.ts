@@ -309,7 +309,10 @@ describe('File Info Utils', () => {
 
       expect(RNFSMock.exists).toHaveBeenCalledWith(mockFilePath)
       expect(RNFSMock.unlink).toHaveBeenCalledWith(mockFilePath)
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error removing file safely'), mockError)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(`Error removing file at path '${mockFilePath}'`),
+        mockError
+      )
     })
   })
 })
