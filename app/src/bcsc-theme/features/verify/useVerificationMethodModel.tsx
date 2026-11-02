@@ -13,7 +13,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { getLiveCallVideoQueue } from './live-call/utils/videoDestinations'
 import { VerificationVideoCache } from './send-video/VideoReviewScreen'
 
-const MINIMUM_FREE_STORAGE_BYTES = 500 * 1024 * 1024 // 500 MB
+const MINIMUM_FREE_STORAGE_MB = 500
 
 type useVerificationMethodModelProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationMethodSelection>
@@ -69,12 +69,12 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
 
       dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
 
-      const storage = await checkFileSystemFreeStorage(MINIMUM_FREE_STORAGE_BYTES, logger)
+      const storage = await checkFileSystemFreeStorage(MINIMUM_FREE_STORAGE_MB, logger)
 
-      if (storage.hasFreeStorage) {
+      if (!storage.hasFreeStorage) {
         const appError = AppError.fromErrorDefinition(ErrorRegistry.DEVICE_STORAGE_FULL)
         appError.addContext({ freeStorageMB: storage.freeStorageMb })
-        deviceStorageFullAlert()
+        deviceStorageFullAlert(appError)
         return
       }
 
