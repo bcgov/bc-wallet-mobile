@@ -165,6 +165,16 @@ const useEvidenceUploadModel = (
     [evidence, logger]
   )
 
+  const cleanup = useCallback(async () => {
+    await Promise.allSettled([
+      removeFileSafely(photoPath, logger),
+      removeFileSafely(videoPath, logger),
+      removeFileSafely(videoThumbnailPath, logger),
+    ])
+    VerificationVideoCache.clearCache()
+    dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+  }, [dispatch, logger, photoPath, videoPath, videoThumbnailPath])
+
   const handleSend = useCallback(async () => {
     setIsUploading(true)
     setUploadStage(UploadStage.PreparingVideo)
@@ -266,6 +276,8 @@ const useEvidenceUploadModel = (
         userSubmittedVerificationVideo: true,
       })
 
+      await cleanup()
+
       // Capture a timestamp when the user successfully submits their verification video. This is needed on the pending review screen
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [new Date()] })
 
@@ -308,40 +320,35 @@ const useEvidenceUploadModel = (
       setIsUploading(false)
     }
   }, [
-    alreadyVerifiedAlert,
-    dispatch,
-    fileUploadErrorAlert,
-    finalizeVerification,
-    logger,
-    recoverFromAlreadyVerified,
-    navigation,
-    photoMetadata,
     photoPath,
-    prepareLocalFiles,
-    processAdditionalEvidence,
+    videoPath,
+    videoDuration,
     prompts,
-    store,
-    updateAccountFlags,
-    updateVerificationRequest,
-    uploadEvidenceFiles,
-    uploadEvidenceMetadata,
     verificationRequestId,
     verificationRequestSha,
-    videoDuration,
-    videoPath,
+    photoMetadata,
+    prepareLocalFiles,
+    processAdditionalEvidence,
+    logger,
+    uploadEvidenceMetadata,
+    uploadEvidenceFiles,
+    finalizeVerification,
+    updateAccountFlags,
+    cleanup,
+    dispatch,
+    navigation,
+    updateVerificationRequest,
+    store,
+    recoverFromAlreadyVerified,
+    alreadyVerifiedAlert,
+    fileUploadErrorAlert,
   ])
 
   const handleCancel = useCallback(async () => {
     isCancelledRef.current = true
-    await Promise.allSettled([
-      removeFileSafely(photoPath, logger),
-      removeFileSafely(videoPath, logger),
-      removeFileSafely(videoThumbnailPath, logger),
-    ])
-    VerificationVideoCache.clearCache()
-    dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+    await cleanup()
     navigation.goBack()
-  }, [dispatch, logger, navigation, photoPath, videoPath, videoThumbnailPath])
+  }, [cleanup, navigation])
 
   return {
     handleSend,
