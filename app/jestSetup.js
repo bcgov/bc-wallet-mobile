@@ -1,11 +1,11 @@
 /* eslint-disable no-undef */
 import mockRNCNetInfo from '@react-native-community/netinfo/jest/netinfo-mock.js'
+import { format } from 'node:util'
 import React from 'react'
 import 'react-native-gesture-handler/jestSetup'
 import mockRNLocalize from 'react-native-localize/mock'
 import mockSafeAreaContext from 'react-native-safe-area-context/jest/mock'
 import 'reflect-metadata'
-import { format } from 'util'
 
 // React 18+/19: enable proper act() behavior in tests
 global.React = React
