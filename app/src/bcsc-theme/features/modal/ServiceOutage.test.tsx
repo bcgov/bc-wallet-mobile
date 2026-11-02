@@ -1,6 +1,6 @@
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { ServiceOutage } from './ServiceOutage'
 
@@ -44,10 +44,12 @@ describe('ServiceOutage', () => {
     expect(getByText('Check again')).toBeTruthy()
   })
 
-  it('calls handleCheckAgain when Check again is pressed', () => {
+  it('calls handleCheckAgain when Check again is pressed', async () => {
     const { getByTestId } = renderOutage()
 
-    fireEvent.press(getByTestId(testIdWithKey('ServiceOutageCheckAgain')))
+    await act(async () => {
+      fireEvent.press(getByTestId(testIdWithKey('ServiceOutageCheckAgain')))
+    })
 
     expect(mockHandleCheckAgain).toHaveBeenCalled()
   })
