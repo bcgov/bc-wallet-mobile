@@ -5,6 +5,7 @@ import 'react-native-gesture-handler/jestSetup'
 import mockRNLocalize from 'react-native-localize/mock'
 import mockSafeAreaContext from 'react-native-safe-area-context/jest/mock'
 import 'reflect-metadata'
+import { format } from 'util'
 
 // React 18+/19: enable proper act() behavior in tests
 global.React = React
@@ -23,14 +24,15 @@ const suppressedPatterns = [/RefreshOrchestrator/, /\[Refresh\]/, /initialized -
 
 // React warnings we cannot act on, scoped as narrowly as possible.
 //
-// The act() entries name only Bifold's own ButtonImpl/PressableOpacity, whose
-// press-in/press-out animations schedule state updates we have no way to wrap
-// from a test. The filter deliberately does NOT swallow act() warnings from our
+// The act() entries name only Bifold's own ButtonImpl/PressableOpacity/IconButton,
+// whose press animations and usePreventDoublePress reset schedule state updates we
+// have no way to wrap from a test. The filter deliberately does NOT swallow act() warnings from our
 // own components: those indicate a test that is asserting against a tree React
 // has not finished committing, and they should be fixed, not hidden.
 const expectedReactWarnings = [
   /An update to ButtonImpl inside a test was not wrapped in act/,
   /An update to PressableOpacity inside a test was not wrapped in act/,
+  /An update to IconButton inside a test was not wrapped in act/,
   /Function components cannot be given refs/,
   /The above error occurred in the <.*> component/,
   /Consider adding an error boundary to your tree/,
@@ -61,7 +63,9 @@ const createFilteredConsole = (method, patterns) => {
         return String(arg)
       }
     }
-    const message = args.map(stringify).join(' ')
+    // React passes printf-style args ("An update to %s ..."), so the patterns
+    // must match the formatted string, not the raw template.
+    const message = typeof args[0] === 'string' ? format(...args) : args.map(stringify).join(' ')
 
     // Check if message matches any suppressed pattern
     const shouldSuppress = patterns.some((pattern) => pattern.test(message))
