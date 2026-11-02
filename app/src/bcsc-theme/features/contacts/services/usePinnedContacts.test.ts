@@ -18,9 +18,12 @@ describe('usePinnedContacts', () => {
     resetPinnedContactsForTests()
   })
 
-  it('starts with an empty pin set', () => {
+  it('starts with an empty pin set', async () => {
     const { result } = renderHook(() => usePinnedContacts())
     expect(result.current.isPinned('any-id')).toBe(false)
+
+    // Let the storage hydration settle inside act before the test ends
+    await act(async () => {})
   })
 
   it('hydrates the pin set from PersistentStorage', async () => {
