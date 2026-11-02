@@ -7608,7 +7608,7 @@ __metadata:
     react-native-vision-camera: "patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch"
     react-native-vision-camera-barcode-scanner: "npm:^5.2.3"
     react-native-volume-manager: "npm:~2.2.0"
-    react-native-webrtc: "npm:~124.0.6"
+    react-native-webrtc: "npm:~124.0.8"
     react-native-webview: "npm:13.16.2"
     react-native-worklets: "npm:0.10.4"
     react-test-renderer: "npm:~19.1.4"
@@ -10283,13 +10283,6 @@ __metadata:
   version: 1.8.1
   resolution: "etag@npm:1.8.1"
   checksum: 10c0/12be11ef62fb9817314d790089a0a49fae4e1b50594135dcb8076312b7d7e470884b5100d249b28c18581b7fd52f8b485689ffae22a11ed9ec17377a33a08f84
-  languageName: node
-  linkType: hard
-
-"event-target-shim@npm:6.0.2":
-  version: 6.0.2
-  resolution: "event-target-shim@npm:6.0.2"
-  checksum: 10c0/e40b89effb1bd0fdd44dd198e3b61669c2bff89b680a8156c50480b5df8d4364208d1db09fbe823211005651558415691cb3ff72c22618eb154e55282b8b0481
   languageName: node
   linkType: hard
 
@@ -16140,16 +16133,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-webrtc@npm:~124.0.6":
-  version: 124.0.7
-  resolution: "react-native-webrtc@npm:124.0.7"
+"react-native-webrtc@npm:~124.0.8":
+  version: 124.0.8
+  resolution: "react-native-webrtc@npm:124.0.8"
   dependencies:
     base64-js: "npm:1.5.1"
     debug: "npm:4.3.4"
-    event-target-shim: "npm:6.0.2"
   peerDependencies:
     react-native: ">=0.60.0"
-  checksum: 10c0/8947299ec2d86d0baa44dbab76169cd4fe204de20cf27187f9181fd7bcf6a742313aba7b8352c05afb0eba24edfa74eac6b0f9ef75b088380e945b7abb49c40a
+  checksum: 10c0/8ee1500caae1478e41fa3a8b14d7a4210260ceb4394e998a48c89d6cc5c4becce73883d546466565f2f585e2c919659f4a1a6ffb81ba23ad82d07b1783fbb967
   languageName: node
   linkType: hard
 

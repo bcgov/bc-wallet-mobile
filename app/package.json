@@ -142,7 +142,7 @@
     "react-native-vision-camera": "patch:react-native-vision-camera@npm%3A5.2.3#~/.yarn/patches/react-native-vision-camera-npm-5.2.3-cdc12318c5.patch",
     "react-native-vision-camera-barcode-scanner": "^5.2.3",
     "react-native-volume-manager": "~2.2.0",
-    "react-native-webrtc": "~124.0.6",
+    "react-native-webrtc": "~124.0.8",
     "react-native-webview": "13.16.2",
     "react-native-worklets": "0.10.4",
     "reflect-metadata": "~0.1.14",
