@@ -161,6 +161,10 @@ describe('ManualPairing', () => {
         client_name: 'BC Parks Discover Camping',
       })
       jest.mocked(useRoute).mockReturnValue({ params: { pairingCode: 'SKGAZZ' } } as ReturnType<typeof useRoute>)
+      // Mirror the navigator clearing the param, otherwise the effect re-submits on every re-render
+      mockNavigation.setParams.mockImplementationOnce((params: object) => {
+        jest.mocked(useRoute).mockReturnValue({ params } as ReturnType<typeof useRoute>)
+      })
 
       renderScreen()
 
