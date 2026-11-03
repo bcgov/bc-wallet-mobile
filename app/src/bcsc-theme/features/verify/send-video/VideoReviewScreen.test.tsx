@@ -2,6 +2,7 @@ import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import * as readFile from '@/utils/read-file'
 import { Button } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -10,6 +11,7 @@ import { useNavigation as useContextNavigation, useFocusEffect } from '@react-na
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Image } from 'react-native'
+import { Video } from 'react-native-video'
 import VideoReviewScreen from './VideoReviewScreen'
 
 jest.mock('@/bcsc-theme/hooks/useVideoPrompts')
@@ -86,13 +88,42 @@ describe('VideoReview', () => {
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
-  it('hands the video over once, however many times Use Video is pressed', () => {
+  it('keeps Use Video disabled and ignores presses until the video has loaded', async () => {
+    // Pressing early sent the user to the upload screen before the store held the video (#4926).
+    jest.spyOn(readFile, 'default').mockResolvedValue(Buffer.from('video'))
+    const tree = renderScreen()
+    const [useVideo] = tree
+      .UNSAFE_getAllByType(Button)
+      .filter((button) => button.props.title === 'BCSC.SendVideo.VideoReview.UseVideo')
+
+    expect(tree.getByText('BCSC.SendVideo.VideoReview.UseVideo')).toBeDisabled()
+
+    act(() => {
+      useVideo.props.onPress()
+    })
+
+    expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await tree.UNSAFE_getByType(Video).props.onLoad({ duration: 5 })
+    })
+
+    expect(tree.getByText('BCSC.SendVideo.VideoReview.UseVideo')).toBeEnabled()
+  })
+
+  it('hands the video over once, however many times Use Video is pressed', async () => {
     // The reset carries key-less routes, so a second dispatch would mount a second UploadingScreen and submit
     // the same verification request twice; IAS rejects the duplicate with a 500 (#4928). Bifold's Button only
     // swallows presses while the handler runs, so the second press lands after that window has closed. The
     // handler is called twice inside one act: fireEvent would render the disabled state between the presses,
     // and the pre-render window is the one the ref guards.
+    jest.spyOn(readFile, 'default').mockResolvedValue(Buffer.from('video'))
     const tree = renderScreen()
+
+    await act(async () => {
+      await tree.UNSAFE_getByType(Video).props.onLoad({ duration: 5 })
+    })
+
     const [useVideo] = tree
       .UNSAFE_getAllByType(Button)
       .filter((button) => button.props.title === 'BCSC.SendVideo.VideoReview.UseVideo')

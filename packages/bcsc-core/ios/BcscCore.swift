@@ -3926,6 +3926,14 @@ class BcscCore: NSObject {
     resolve(nil)
   }
 
+  func moveAppToBackground(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    // iOS doesn't provide a public API to background the app
+    logger.log("moveAppToBackground: Unsupported on iOS")
+    resolve(nil)
+  }
+
   func isBluetoothAudioConnected(
     _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
   ) {

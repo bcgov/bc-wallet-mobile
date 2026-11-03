@@ -162,7 +162,8 @@ describe('useQuickLoginURL', () => {
     const fetchJwkMock = jest.fn().mockResolvedValue(true)
     bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
-    bcscCoreMock.createQuickLoginJWT = jest.fn().mockRejectedValue(new Error('failed jwt'))
+    const jwtError = new Error('failed jwt')
+    bcscCoreMock.createQuickLoginJWT = jest.fn().mockRejectedValue(jwtError)
 
     useClientMock.useBCSCApiClient.mockReturnValue({ tokens: { access_token: true }, fetchJwk: fetchJwkMock } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
@@ -170,7 +171,7 @@ describe('useQuickLoginURL', () => {
     const hook = renderHook(() => useQuickLoginURL())
     const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
 
-    expect(result).toEqual({ success: false, error: expect.stringContaining('failed jwt') })
+    expect(result).toEqual({ success: false, error: expect.stringContaining('failed jwt'), cause: jwtError })
 
     expect(tokensMock.getNotificationTokens).toHaveBeenCalledTimes(1)
     expect(bcscCoreMock.getAccount).toHaveBeenCalledTimes(1)

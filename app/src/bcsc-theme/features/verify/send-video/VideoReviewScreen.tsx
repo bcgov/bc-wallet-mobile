@@ -15,6 +15,7 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
+  useAnimatedComponents,
   useServices,
   useStore,
   useTheme,
@@ -48,6 +49,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   // Mirrors `isSubmitting` for the window before the disabled state has rendered, when a second tap can still land.
   const isSubmittingRef = useRef(false)
@@ -56,6 +58,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { t } = useTranslation()
   const { failedToReadFromLocalStorageAlert, videoPromptsMissingAlert } = useAlerts(navigation)
   const { refreshPrompts, isRefreshingPrompts } = useVideoPrompts()
+  const { ButtonLoading } = useAnimatedComponents()
 
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
@@ -98,6 +101,11 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * on success, so the flag never needs clearing.
    */
   const onPressUse = () => {
+    if (!videoLoaded) {
+      logger.error('[VideoReview] Attempted to use video before it was loaded')
+      return
+    }
+
     if (isSubmittingRef.current) {
       return
     }
@@ -131,6 +139,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       return
     }
 
+    VerificationVideoCache.clearCache()
+    dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
     dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [''] })
     navigation.goBack()
   }
@@ -171,9 +181,11 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * @returns {*} {Promise<void>} A promise that resolves when the video metadata is processed and cached.
    */
   const onVideoLoad = async (data: OnLoadData) => {
+    setVideoLoaded(false)
     try {
       // Clear the previously cached video
       VerificationVideoCache.clearCache()
+      dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
 
       // Wrap the file reader with alert
       const readFileInChunksWithAlert = withAlert(readFileInChunks, failedToReadFromLocalStorageAlert)
@@ -189,6 +201,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         type: BCDispatchAction.SAVE_VIDEO,
         payload: [{ videoPath: videoPath, videoDuration: Math.floor(data.duration) }],
       })
+      setVideoLoaded(true)
     }
   }
 
@@ -203,8 +216,10 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         testID={testIdWithKey(TestIds.verify.videoReview.useVideo)}
         title={t('BCSC.SendVideo.VideoReview.UseVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
-        disabled={isRefreshingPrompts || isSubmitting}
-      />
+        disabled={!videoLoaded || isRefreshingPrompts || isSubmitting}
+      >
+        {!videoLoaded || isRefreshingPrompts ? <ButtonLoading /> : null}
+      </Button>
       <Button
         buttonType={ButtonType.Secondary}
         onPress={onPressRetake}
@@ -238,6 +253,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
           resizeMode={'cover'}
           style={styles.video}
           onLoad={(data) => onVideoLoad(data)}
+          onError={(error) => logger.error('[VideoReview] Video review error:', error)}
           disableAudioSessionManagement
           viewType={ViewType.TEXTURE}
         />

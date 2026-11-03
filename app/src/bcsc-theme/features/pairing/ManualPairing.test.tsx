@@ -1,8 +1,10 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { AppEventCode } from '@/events/appEventCode'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation, useRoute } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { mockAssertion404 } from '@mocks/helpers/pairing-error'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert } from 'react-native'
@@ -117,9 +119,9 @@ describe('ManualPairing', () => {
       })
     })
 
-    test('shows error when submission fails with 404', async () => {
+    test('shows the code mismatch error for a plain 404', async () => {
       alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
-      mockLoginByPairingCode.mockRejectedValue(new Error('Not Found', { cause: { status: 404 } }))
+      mockLoginByPairingCode.mockRejectedValue(mockAssertion404('<html>Not Found</html>').appError)
       renderScreen()
 
       const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
@@ -133,6 +135,31 @@ describe('ManualPairing', () => {
           expect.any(Array)
         )
       })
+    })
+
+    test.each([
+      { name: 'a policy already alerted on', error: AppEventCode.INVALID_PAIRING_CODE, policyAlerts: 1 },
+      { name: 'no policy recognises', error: 'invalid_request', policyAlerts: 0 },
+    ])('shows only the inline failure for a 404 with an IAS error $name', async ({ error, policyAlerts }) => {
+      alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+      const mockInvalidPairingCodeAlert = jest.fn()
+      const { appError } = mockAssertion404(
+        { error, error_description: 'The request failed' },
+        { invalidPairingCodeAlert: mockInvalidPairingCodeAlert }
+      )
+      expect(mockInvalidPairingCodeAlert).toHaveBeenCalledTimes(policyAlerts)
+
+      mockLoginByPairingCode.mockRejectedValue(appError)
+      renderScreen()
+
+      const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
+      fireEvent.changeText(codeInput, 'ABCDEF')
+
+      await waitFor(() => {
+        expect(screen.getByText('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage')).toBeTruthy()
+      })
+      expect(screen.queryByText('BCSC.ManualPairing.CodeDoesNotMatchMessage')).toBeNull()
+      expect(alertSpy).not.toHaveBeenCalled()
     })
 
     test('navigates to PairingConfirmation on success', async () => {

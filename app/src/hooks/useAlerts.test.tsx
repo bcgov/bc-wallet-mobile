@@ -292,6 +292,29 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('loginRequestExpiredAlert', () => {
+    it('should show a basic alert that runs the action on OK, rather than an error modal', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      const mockEmitErrorModal = jest.fn()
+      const onAction = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.loginRequestExpiredAlert(onAction)
+
+      expect(mockEmitAlert).toHaveBeenCalledWith(
+        'Alerts.LoginRequestExpired.Title',
+        'Alerts.LoginRequestExpired.Description',
+        { event: AppEventCode.NOT_FOUND, actions: [{ text: 'Global.OK', onPress: onAction }] }
+      )
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+    })
+  })
+
   describe('loginRejected401Alert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }

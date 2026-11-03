@@ -63,7 +63,10 @@ export class FcmViewModel {
 
   public initialize() {
     if (this.initialized) {
-      this.logger.info('[FcmViewModel] Already initialized, skipping')
+      this.logger.info('[FcmViewModel] Already initialized, checking for a launch notification')
+      if (this.mode === Mode.BCSC) {
+        void this.initFcmService()
+      }
       return
     }
     this.initialized = true

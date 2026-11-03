@@ -1058,8 +1058,8 @@ describe('clientErrorPolicies', () => {
     const assertionBase = 'https://idsit.gov.bc.ca'
 
     describe('matches', () => {
-      it('should match 404 on pairing code assertion endpoint', () => {
-        const error = newError('unknown_server_error')
+      it('should match a plain 404 on pairing code assertion endpoint', () => {
+        const error = newError('not_found')
         const context = {
           statusCode: 404,
           endpoint: `${assertionBase}/v3/mobile/assertion`,
@@ -1068,10 +1068,10 @@ describe('clientErrorPolicies', () => {
         expect(pairingCodeErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
-      it('should NOT match other status codes on the assertion endpoint', () => {
+      it('should NOT match a 404 carrying an unknown IAS error code on the assertion endpoint', () => {
         const error = newError('unknown_server_error')
         const context = {
-          statusCode: 400,
+          statusCode: 404,
           endpoint: `${assertionBase}/v3/mobile/assertion`,
           apiEndpoints: {},
         }
@@ -1079,7 +1079,7 @@ describe('clientErrorPolicies', () => {
       })
 
       it('should NOT match 404 on unrelated endpoints', () => {
-        const error = newError('unknown_server_error')
+        const error = newError('not_found')
         const context = {
           statusCode: 404,
           endpoint: `${assertionBase}/v1/emails/349802`,

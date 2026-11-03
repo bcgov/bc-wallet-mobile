@@ -308,6 +308,21 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     [emitAlert, t]
   )
 
+  const loginRequestExpiredAlert = useCallback(
+    (onAction: AlertOnPressAction) => {
+      emitAlert(t('Alerts.LoginRequestExpired.Title'), t('Alerts.LoginRequestExpired.Description'), {
+        event: AppEventCode.NOT_FOUND,
+        actions: [
+          {
+            text: t('Global.OK'),
+            onPress: onAction,
+          },
+        ],
+      })
+    },
+    [emitAlert, t]
+  )
+
   return useMemo(
     () =>
       // prettier-ignore
@@ -319,6 +334,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
+      loginRequestExpiredAlert,
       forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
 
       // ERROR MODALS
@@ -399,6 +415,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       failedToSwitchMediatorAlert: _createBasicErrorModal(AppEventCode.MEDIATOR_SWITCH_ERROR, 'SomethingWentWrong'),
       invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'SomethingWentWrong'),
       registrationKeyNotConfirmedAlert: _createBasicErrorModal(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED, 'SomethingWentWrong'),
+      deviceStorageFullAlert: _createBasicErrorModal(AppEventCode.DEVICE_STORAGE_FULL, 'DeviceStorageFull'),
     }),
     [
       appUpdateRequiredAlert,
@@ -407,6 +424,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
+      loginRequestExpiredAlert,
       _createBasicAlert,
       unknownErrorModal,
       factoryResetErrorModal,
