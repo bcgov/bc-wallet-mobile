@@ -1,4 +1,4 @@
-import { BCSCSecureState, VerificationStatus } from '@/store'
+import { VerificationStatus } from '@/store'
 import { BCSCAccountType, BCSCCardProcess, BCSCCardType, CredentialInfo } from 'react-native-bcsc-core'
 import { BCSCEvent, BCSCReason } from './id-token'
 
@@ -73,25 +73,4 @@ export function getCredentialVerificationStatus(credential: CredentialInfo | nul
   }
 
   return VerificationStatus.VERIFIED
-}
-
-/**
- * Determines if the user is verified based on their secure state.
- *
- * @param secureState The current secure state of the user
- * @returns boolean indicating if the user is verified
- */
-export function isUserVerified(secureState: BCSCSecureState): boolean {
-  if (secureState.verified || secureState.verifiedStatus === VerificationStatus.VERIFIED) {
-    // If already verified, we can trust the state and skip checks
-    return true
-  }
-
-  if (secureState.refreshToken && secureState.verifiedStatus !== VerificationStatus.DEACTIVATED) {
-    // If we have a refresh token and the status is not deactivated, we can consider it verified
-    return true
-  }
-
-  // In all other cases, we should not consider the user verified
-  return false
 }

@@ -1,5 +1,5 @@
 import useCancelledReviewViewModel from '@/bcsc-theme/features/verify/send-video/CancelledReviewViewModel'
-import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
+import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
@@ -26,8 +26,8 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   })),
 }))
 
-jest.mock('@/bcsc-theme/hooks/useVerificationStatus', () => ({
-  useVerificationStatus: jest.fn(),
+jest.mock('@/bcsc-theme/state/verification/useVerificationState', () => ({
+  useVerificationState: jest.fn(),
 }))
 
 describe('useCancelledReviewViewModel', () => {
@@ -36,8 +36,9 @@ describe('useCancelledReviewViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.mocked(Bifold).useStore.mockReturnValue([{} as any, mockDispatch])
-    jest.mocked(useVerificationStatus).mockReturnValue({
+    jest.mocked(useVerificationState).mockReturnValue({
       isVerified: false,
+      isDeviceVerifiedByIas: false,
       isVerificationInProgress: true,
       isDeactivated: false,
       needsVerification: false,
@@ -136,8 +137,9 @@ describe('useCancelledReviewViewModel', () => {
 
     // Reached from the home notification card, where there is no verify route to navigate to.
     it('re-enters the verify flow via store state when mounted outside it', () => {
-      jest.mocked(useVerificationStatus).mockReturnValue({
+      jest.mocked(useVerificationState).mockReturnValue({
         isVerified: false,
+        isDeviceVerifiedByIas: false,
         isVerificationInProgress: false,
         isDeactivated: false,
         needsVerification: true,

@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { selectVerificationState } from '@/bcsc-theme/state/verification/selectors'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from '@/bcsc-theme/utils/verification-status'
 import { isVerifiedByTokenExchange } from '@/bcsc-theme/utils/verification-token-exchange'
 import { VerificationRequestStatus } from '@/constants'
@@ -50,7 +50,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
   // Only these fields decide the check, so unrelated secure-state writes don't change its identity (the
   // pending screen re-checks whenever it does)
   const { verificationRequestId, deviceCode, userCode } = store.bcscSecure
-  const verified = isUserVerified(store.bcscSecure)
+  const verified = selectVerificationState(store).isDeviceVerifiedByIas
 
   /** One status check. Never throws: a failure is logged, and shown only when asked. */
   const runStatusCheck = useCallback(

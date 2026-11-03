@@ -83,6 +83,20 @@ describe('useVerificationPendingActions', () => {
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
     })
 
+    it('goes to the success screen without a fetch when IAS already issued tokens, before setup finished', async () => {
+      jest
+        .mocked(Bifold)
+        .useStore.mockReturnValue([{ bcscSecure: { ...pendingRequest, refreshToken: 'token' } } as any, dispatchMock])
+      const { result } = renderHook(() => useVerificationPendingActions(navigation))
+
+      await act(async () => {
+        await result.current.handleCheckStatus()
+      })
+
+      expect(getVerificationRequestStatusMock).not.toHaveBeenCalled()
+      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+    })
+
     it('exchanges the device code and moves on to the success screen once the review is approved', async () => {
       getVerificationRequestStatusMock.mockResolvedValue({ status: VerificationRequestStatus.VERIFIED })
       const { result } = renderHook(() => useVerificationPendingActions(navigation))
