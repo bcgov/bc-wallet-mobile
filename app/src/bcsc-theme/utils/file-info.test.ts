@@ -322,7 +322,7 @@ describe('File Info Utils', () => {
 
       const result = await checkFileSystemFreeStorage(100, mockLogger)
 
-      expect(result).toEqual({ hasFreeStorage: true, freeStorageMb: 200 })
+      expect(result).toEqual({ hasFreeStorage: true, freeStorageMb: 200, totalStorageMb: 500 })
     })
 
     it('should return hasFreeStorage false when free space is below minimum', async () => {
@@ -331,7 +331,7 @@ describe('File Info Utils', () => {
 
       const result = await checkFileSystemFreeStorage(100, mockLogger)
 
-      expect(result).toEqual({ hasFreeStorage: false, freeStorageMb: 50 })
+      expect(result).toEqual({ hasFreeStorage: false, freeStorageMb: 50, totalStorageMb: 500 })
     })
 
     it('should log error and return hasFreeStorage true when getFSInfo fails', async () => {
@@ -341,7 +341,7 @@ describe('File Info Utils', () => {
 
       const result = await checkFileSystemFreeStorage(100, mockLogger)
 
-      expect(result).toEqual({ hasFreeStorage: true, freeStorageMb: -1 })
+      expect(result).toEqual({ hasFreeStorage: true, freeStorageMb: -1, totalStorageMb: -1 })
     })
 
     it('should log the free space and minimum required', async () => {
