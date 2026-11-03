@@ -13,13 +13,14 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
+  useAnimatedComponents,
   useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
@@ -31,10 +32,13 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
+  const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearDeviceCodes } = useSecureActions()
   const registrationService = useRegistrationService()
   const loadingScreen = useLoadingScreen()
+  /** The setup choice whose device registration is in flight, if any. */
+  const [registeringFor, setRegisteringFor] = useState<AccountSetupType | null>(null)
   const storeRef = useRef(store)
   const registrationServiceRef = useRef(registrationService)
   const loadingScreenRef = useRef(loadingScreen)
@@ -87,55 +91,52 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     },
   })
 
-  // Registering the device is a network round trip, so it waits under the loading overlay. A device
+  // Registering the device is a network round trip. It waits on the pressed button, inside the card,
+  // rather than under the global overlay: the overlay hides this screen, and released as the push to
+  // the next step started it left the slide beginning from a screen that had just been hidden. A device
   // that is already registered (back from the identity step, a restart, a resumed journey) has nothing
-  // to wait for and keeps the overlay down: raised around the instant no-op, it flashed the loading
-  // screen over the slide to the next step.
-  const ensureRegistered = useCallback(async () => {
-    if (registrationService.isRegistered) {
-      return
-    }
+  // to wait for and moves on at once.
+  const chooseSetupType = useCallback(
+    async (setupType: AccountSetupType, goToNextStep: () => void) => {
+      if (!registrationService.isRegistered) {
+        setRegisteringFor(setupType)
+        try {
+          await registrationService.ensureRegistered()
+        } catch (error) {
+          logger.error(`[AccountSetupScreen] Failed to register the device for ${setupType}`, error as Error)
+          return
+        } finally {
+          setRegisteringFor(null)
+        }
 
-    const stopLoading = loadingScreen.startLoading()
-    try {
-      await registrationService.ensureRegistered()
-    } finally {
-      stopLoading()
-    }
-  }, [loadingScreen, registrationService])
-
-  // "No, continue setup" — verify a new account on this device via the identity steps.
-  const handleAddAccount = useCallback(async () => {
-    try {
-      await ensureRegistered()
+        // Back stays live during an in-card wait: a user who left has abandoned the choice
+        if (!navigation.isFocused()) {
+          return
+        }
+      }
 
       // Saved only once registered: a saved choice makes resume skip this screen
-      dispatch({
-        type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
-        payload: [AccountSetupType.AddAccount],
-      })
-      navigation.navigate(BCSCScreens.IdentitySelection)
-    } catch (error) {
-      logger.error('[AccountSetupScreen] Failed to ensure registration for add account', error as Error)
-    }
-  }, [dispatch, ensureRegistered, logger, navigation])
+      dispatch({ type: BCDispatchAction.ACCOUNT_SETUP_TYPE, payload: [setupType] })
+      goToNextStep()
+    },
+    [dispatch, logger, navigation, registrationService]
+  )
+
+  // "No, continue setup" — verify a new account on this device via the identity steps.
+  const handleAddAccount = useCallback(
+    () => chooseSetupType(AccountSetupType.AddAccount, () => navigation.navigate(BCSCScreens.IdentitySelection)),
+    [chooseSetupType, navigation]
+  )
 
   // "Yes, connect this device" — transfer an already-verified account by scanning the QR
   // shown on the other device, skipping the identity verification steps.
-  const handleTransferAccount = useCallback(async () => {
-    try {
-      await ensureRegistered()
-
-      // Saved only once registered: a saved choice makes resume skip this screen
-      dispatch({
-        type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
-        payload: [AccountSetupType.TransferAccount],
-      })
-      navigation.navigate(BCSCScreens.TransferAccountInstructions)
-    } catch (error) {
-      logger.error('[AccountSetupScreen] Failed to ensure registration for transfer', error as Error)
-    }
-  }, [dispatch, ensureRegistered, logger, navigation])
+  const handleTransferAccount = useCallback(
+    () =>
+      chooseSetupType(AccountSetupType.TransferAccount, () =>
+        navigation.navigate(BCSCScreens.TransferAccountInstructions)
+      ),
+    [chooseSetupType, navigation]
+  )
 
   const controls = (
     <ControlContainer>
@@ -145,14 +146,20 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         onPress={handleAddAccount}
         accessibilityLabel={t('BCSC.AccountSetup.AddAccount')}
         testID={testIdWithKey(TestIds.verify.accountSetup.addAccount)}
-      />
+        disabled={registeringFor !== null}
+      >
+        {registeringFor === AccountSetupType.AddAccount && <ButtonLoading />}
+      </Button>
       <Button
         buttonType={ButtonType.Secondary}
         title={t('BCSC.AccountSetup.TransferAccount')}
         onPress={handleTransferAccount}
         accessibilityLabel={t('BCSC.AccountSetup.TransferAccount')}
         testID={testIdWithKey(TestIds.verify.accountSetup.transferAccount)}
-      />
+        disabled={registeringFor !== null}
+      >
+        {registeringFor === AccountSetupType.TransferAccount && <ButtonLoading />}
+      </Button>
     </ControlContainer>
   )
 

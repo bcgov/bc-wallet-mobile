@@ -31,7 +31,8 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
   return (
     <PINEntryForm
       onSuccess={handlePINSuccess}
-      loadingMessage={t('BCSC.PIN.SettingUpAccount')}
+      // The whole app waits: completing auth swaps the root, which is cut beneath the overlay
+      overlayMessage={t('BCSC.PIN.SettingUpAccount')}
       translationPrefix="BCSC.PIN"
       creatingNewPIN={true}
     />

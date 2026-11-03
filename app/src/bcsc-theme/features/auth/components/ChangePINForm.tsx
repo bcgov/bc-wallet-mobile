@@ -1,6 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import {
@@ -23,13 +22,9 @@ import { PINEntryResult } from './PINEntryForm'
 
 interface ChangePINFormProps {
   /**
-   * Called when PIN is successfully changed.
+   * Called when PIN is successfully changed. The form stays busy until it returns.
    */
   onSuccess: (result: PINEntryResult) => Promise<void>
-  /**
-   * Optional loading message to show during PIN change
-   */
-  loadingMessage?: string
 }
 
 /**
@@ -39,12 +34,13 @@ interface ChangePINFormProps {
  * - Validation (6 digits, matching)
  * - Setting the new PIN via native module
  *
- * Used when user already has a PIN and wants to change it.
+ * Used when user already has a PIN and wants to change it. The wait, through `onSuccess`, stays on the
+ * button with the inputs locked rather than under the global loading overlay: `onSuccess` navigates
+ * within the stack, and the slide away must start from this screen, not from behind the overlay.
  */
-export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loadingMessage }: ChangePINFormProps) => {
+export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess }: ChangePINFormProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
-  const { startLoading } = useLoadingScreen()
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState(false)
   const [checkboxError, setCheckboxError] = useState(false)
@@ -63,7 +59,6 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
 
   const validateAndChangePIN = useCallback(
     async (current: string, newPin: string, confirm: string) => {
-      let stopLoading: (() => void) | undefined
       try {
         setLoading(true)
         setCurrentPINError(undefined)
@@ -105,9 +100,6 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
           return
         }
 
-        // Show loading indicator
-        stopLoading = startLoading(loadingMessage ?? t('BCSC.ChangePIN.ChangingPIN'))
-
         // Verify current PIN first
         const verifyResult = await verifyPIN(current)
         if (!verifyResult.success) {
@@ -117,7 +109,6 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
             setCurrentPINError(t('BCSC.ChangePIN.IncorrectPIN'))
           }
           setLoading(false)
-          stopLoading()
           return
         }
 
@@ -135,10 +126,9 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         logger.error(`PIN change error: ${error}`)
       } finally {
         setLoading(false)
-        stopLoading?.()
       }
     },
-    [checked, logger, onSuccess, startLoading, loadingMessage, t]
+    [checked, logger, onSuccess, t]
   )
 
   const onPressChangePIN = useCallback(async () => {
@@ -219,6 +209,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
           <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.EnterCurrentPIN')}</ThemedText>
           <PINInput
             testIDKey={TestIds.main.changePin.current}
+            editable={!loading}
             onPINChange={handleCurrentPINChange}
             onPINComplete={handleCurrentPINComplete}
             errorMessage={currentPINError}
@@ -231,6 +222,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
           <PINInput
             testIDKey={TestIds.main.changePin.newPin}
             ref={newPINRef}
+            editable={!loading}
             onPINChange={handleNewPINChange}
             onPINComplete={handleNewPINComplete}
             errorMessage={newPINError}
@@ -243,6 +235,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
           <PINInput
             testIDKey={TestIds.main.changePin.confirm}
             ref={confirmPINRef}
+            editable={!loading}
             onPINChange={handleConfirmPINChange}
             onPINComplete={handleConfirmPINComplete}
             errorMessage={confirmPINError}

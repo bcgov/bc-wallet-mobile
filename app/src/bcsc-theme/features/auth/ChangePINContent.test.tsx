@@ -4,7 +4,7 @@ import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Text } from 'react-native'
 import {
@@ -159,6 +159,90 @@ describe('ChangePINContent', () => {
         expect(mockRotateWalletKey).toHaveBeenCalledWith('new-key')
         expect(onChangePINSuccess).toHaveBeenCalled()
       })
+    })
+
+    it('waits on the button with the overlay down and the inputs locked while the key rotates', async () => {
+      let settleRotation: (rotated: boolean) => void = () => {}
+      const mockRotateWalletKey = jest.fn(
+        () =>
+          new Promise<boolean>((resolve) => {
+            settleRotation = resolve
+          })
+      )
+      jest.spyOn(walletServiceHooks, 'useWalletService').mockReturnValue({ rotateWalletKey: mockRotateWalletKey })
+
+      const tree = render(
+        <BasicAppContext>
+          <BCSCLoadingProvider>
+            <ChangePINContent
+              onChangePINSuccess={onChangePINSuccess}
+              onCreatePINSuccess={onCreatePINSuccess}
+              isChangingExistingPIN={true}
+            />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+
+      const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
+      fireEvent.changeText(inputs[0], '123456')
+      fireEvent.changeText(inputs[1], '654321')
+      fireEvent.changeText(inputs[2], '654321')
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/IUnderstand'))
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ChangePIN'))
+
+      await waitFor(() => {
+        expect(mockRotateWalletKey).toHaveBeenCalledWith('new-key')
+      })
+      // The wait stays inside the card, so the pop that follows slides from this screen rather than
+      // from behind the overlay
+      expect(tree.getByTestId('com.ariesbifold:id/ButtonLoading')).toBeTruthy()
+      expect(
+        tree.getByTestId('com.ariesbifold:id/BCSCLoadingProviderOverlay', { includeHiddenElements: true }).props
+          .accessible
+      ).toBe(false)
+      for (const input of tree.getAllByAccessibilityHint('Enter your 6-digit PIN')) {
+        expect(input.props.editable).toBe(false)
+      }
+      expect(onChangePINSuccess).not.toHaveBeenCalled()
+
+      await act(async () => {
+        settleRotation(true)
+      })
+
+      expect(onChangePINSuccess).toHaveBeenCalledTimes(1)
+      expect(tree.queryByTestId('com.ariesbifold:id/ButtonLoading')).toBeNull()
+    })
+
+    it('does not navigate back when the screen lost focus during the key rotation', async () => {
+      // Back stays live while the button waits, so the user can leave before the rotation lands
+      jest.spyOn(mockNavigation, 'isFocused').mockReturnValue(false)
+      const mockRotateWalletKey = jest.fn().mockResolvedValue(true)
+      jest.spyOn(walletServiceHooks, 'useWalletService').mockReturnValue({ rotateWalletKey: mockRotateWalletKey })
+
+      const tree = render(
+        <BasicAppContext>
+          <BCSCLoadingProvider>
+            <ChangePINContent
+              onChangePINSuccess={onChangePINSuccess}
+              onCreatePINSuccess={onCreatePINSuccess}
+              isChangingExistingPIN={true}
+            />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+
+      const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
+      fireEvent.changeText(inputs[0], '123456')
+      fireEvent.changeText(inputs[1], '654321')
+      fireEvent.changeText(inputs[2], '654321')
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/IUnderstand'))
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ChangePIN'))
+
+      await waitFor(() => {
+        expect(mockRotateWalletKey).toHaveBeenCalledWith('new-key')
+        expect(tree.queryByTestId('com.ariesbifold:id/ButtonLoading')).toBeNull()
+      })
+      expect(onChangePINSuccess).not.toHaveBeenCalled()
     })
   })
 

@@ -3,7 +3,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation, useRoute } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert } from 'react-native'
 import { ChallengeSource } from 'react-native-bcsc-core'
@@ -133,6 +133,9 @@ describe('ManualPairing', () => {
           expect.any(Array)
         )
       })
+      // The code unlocks again for another try
+      expect(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')).props.editable).toBe(true)
+      expect(screen.queryByTestId(testIdWithKey('ManualPairingVerifying'))).toBeNull()
     })
 
     test('navigates to PairingConfirmation on success', async () => {
@@ -151,6 +154,59 @@ describe('ManualPairing', () => {
           serviceName: 'Test Service',
         })
       })
+    })
+  })
+
+  describe('Waiting inside the card', () => {
+    test('locks the code and shows the spinner while the code is checked, with the overlay down', async () => {
+      let settle: (client: { client_ref_id: string; client_name: string }) => void = () => {}
+      mockLoginByPairingCode.mockReturnValue(
+        new Promise((resolve) => {
+          settle = resolve
+        })
+      )
+      renderScreen()
+
+      fireEvent.changeText(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')), 'ABCDEF')
+
+      await waitFor(() => {
+        expect(screen.getByTestId(testIdWithKey('ManualPairingVerifying'))).toBeTruthy()
+      })
+      expect(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')).props.editable).toBe(false)
+      // The wait stays inside the card, so the slide to the confirmation starts from this screen rather
+      // than from behind the overlay
+      expect(
+        screen.getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'), { includeHiddenElements: true }).props
+          .accessible
+      ).toBe(false)
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+
+      await act(async () => {
+        settle({ client_ref_id: 'ref-123', client_name: 'Test Service' })
+      })
+
+      expect(screen.queryByTestId(testIdWithKey('ManualPairingVerifying'))).toBeNull()
+      expect(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')).props.editable).toBe(true)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
+        serviceId: 'ref-123',
+        serviceName: 'Test Service',
+      })
+    })
+
+    test('does not navigate when the screen lost focus while the code was checked', async () => {
+      // The tab bar and Back stay live while the spinner shows, so the user can leave before the answer lands
+      const isFocused = jest.spyOn(mockNavigation, 'isFocused').mockReturnValue(false)
+      mockLoginByPairingCode.mockResolvedValue({ client_ref_id: 'ref-123', client_name: 'Test Service' })
+      renderScreen()
+
+      fireEvent.changeText(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')), 'ABCDEF')
+
+      await waitFor(() => {
+        expect(mockLoginByPairingCode).toHaveBeenCalled()
+        expect(screen.queryByTestId(testIdWithKey('ManualPairingVerifying'))).toBeNull()
+      })
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      isFocused.mockRestore()
     })
   })
 

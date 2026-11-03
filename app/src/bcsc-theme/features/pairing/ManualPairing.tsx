@@ -1,6 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { PAIRING_CODE_LENGTH } from '@/constants'
 import { TestIds } from '@/test-ids/registry'
@@ -11,7 +10,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Alert, Keyboard, StyleSheet, View } from 'react-native'
 import { ChallengeSource } from 'react-native-bcsc-core'
 
 const ManualPairing: React.FC = () => {
@@ -21,10 +20,10 @@ const ManualPairing: React.FC = () => {
   const { t } = useTranslation()
   const [code, setCode] = useState(route.params?.pairingCode ?? '')
   const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { pairing } = useApi()
-  const loadingScreen = useLoadingScreen()
   const { isAvailable: isServerAvailable } = useServerStatus()
 
   const onSubmit = useCallback(
@@ -33,12 +32,22 @@ const ManualPairing: React.FC = () => {
       if (!isServerAvailable) {
         return
       }
-      const stopLoading = loadingScreen.startLoading()
+
+      // The round trip waits inside the card, with the code locked and a spinner beneath it, rather than
+      // under the global overlay: the overlay hid this screen, and released as the push to the
+      // confirmation started it left the slide beginning from a screen that had just been hidden.
+      Keyboard.dismiss()
+      setSubmitting(true)
       try {
         logger.info('Submitting pairing code.')
         const serviceClient = await pairing.loginByPairingCode(pairingCode, challengeSource)
 
         logger.info('Pairing code submitted successfully.')
+
+        // The tab bar and Back stay live during an in-card wait: a user who left is not pushed onward
+        if (!navigation.isFocused()) {
+          return
+        }
 
         navigation.navigate(BCSCScreens.PairingConfirmation, {
           serviceId: serviceClient.client_ref_id,
@@ -59,10 +68,10 @@ const ManualPairing: React.FC = () => {
           setError(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
         }
       } finally {
-        stopLoading()
+        setSubmitting(false)
       }
     },
-    [isServerAvailable, loadingScreen, logger, navigation, pairing, t]
+    [isServerAvailable, logger, navigation, pairing, t]
   )
 
   // QRCoreStack keeps tabs mounted (unmountOnBlur: false), so a pre-populated
@@ -100,6 +109,9 @@ const ManualPairing: React.FC = () => {
       marginTop: Spacing.md,
       marginHorizontal: Spacing.md,
     },
+    verifying: {
+      marginTop: Spacing.lg,
+    },
   })
 
   return (
@@ -124,11 +136,20 @@ const ManualPairing: React.FC = () => {
           autoCapitalize: 'characters',
           autoComplete: 'off',
           autoCorrect: false,
+          editable: !submitting,
           testID: testIdWithKey(TestIds.main.pairing.manualCodeInput),
           accessibilityLabel: 'Pairing-Code-Input',
         }}
       />
       <View style={[styles.lineBreak, { backgroundColor: ColorPalette.brand.highlight }]} />
+      {submitting && (
+        <ActivityIndicator
+          size="large"
+          color={ColorPalette.brand.primary}
+          style={styles.verifying}
+          testID={testIdWithKey(TestIds.main.pairing.verifying)}
+        />
+      )}
     </ScreenWrapper>
   )
 }

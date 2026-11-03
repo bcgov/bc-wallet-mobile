@@ -44,9 +44,12 @@ interface PINEntryFormProps {
    */
   onSuccess: (result: PINEntryResult) => Promise<void>
   /**
-   * Optional loading message to show during PIN setup
+   * Raises the global loading overlay with this message from the moment validation passes until `onSuccess`
+   * returns. Set it when `onSuccess` ends in a root phase swap, which is cut beneath the overlay (Create PIN).
+   * Leave it unset when `onSuccess` navigates within the stack: the wait then stays on the button, with the
+   * inputs locked, so the slide away starts from this screen rather than from behind the overlay.
    */
-  loadingMessage?: string
+  overlayMessage?: string
   /**
    * Translation key prefix for labels (defaults to 'BCSC.PIN')
    * Will look for: CreatePIN, ConfirmPIN, RememberPIN, RememberPINDescription,
@@ -72,7 +75,7 @@ interface PINEntryFormProps {
  */
 export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   onSuccess,
-  loadingMessage,
+  overlayMessage,
   translationPrefix = 'BCSC.PIN',
   creatingNewPIN = false,
 }: PINEntryFormProps) => {
@@ -127,8 +130,10 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           return
         }
 
-        // All validations passed, show a full screen loading indicator
-        stopLoading = startLoading(loadingMessage ?? tWithPrefix('SettingUpPIN'))
+        // All validations passed; the caller decides whether the wait covers the whole app
+        if (overlayMessage) {
+          stopLoading = startLoading(overlayMessage)
+        }
 
         const account = await getAccount()
 
@@ -166,7 +171,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         stopLoading?.()
       }
     },
-    [checked, startLoading, loadingMessage, tWithPrefix, client.endpoints.issuer, onSuccess, logger]
+    [checked, startLoading, overlayMessage, tWithPrefix, client.endpoints.issuer, onSuccess, logger]
   )
 
   const onPressContinue = useCallback(async () => {
@@ -241,6 +246,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             {tWithPrefix('CreatePIN')}
           </ThemedText>
           <PINInput
+            editable={!loading}
             onPINChange={handlePIN1Change}
             onPINComplete={handlePIN1Complete}
             errorMessage={errorMessage1}
@@ -255,6 +261,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           </ThemedText>
           <PINInput
             ref={pin2Ref}
+            editable={!loading}
             onPINChange={handlePIN2Change}
             onPINComplete={handlePIN2Complete}
             errorMessage={errorMessage2}
