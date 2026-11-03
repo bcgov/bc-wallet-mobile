@@ -1955,7 +1955,7 @@ PODS:
   - react-native-volume-manager (2.2.0):
     - Mute
     - React-Core
-  - react-native-webrtc (124.0.7):
+  - react-native-webrtc (124.0.8):
     - JitsiWebRTC (~> 124.0.0)
     - React-Core
   - react-native-webview (13.16.2):
@@ -3396,7 +3396,7 @@ SPEC CHECKSUMS:
   react-native-tcp-socket: ae8abcfebc071216302a09d9ed1e375d4e877484
   react-native-video: db3a70efc9fa0c00f5499d7798283bf0585cbd37
   react-native-volume-manager: ad4a45ef90515220687198c350f6649ca529bcd2
-  react-native-webrtc: e8f0ce746353adc2744a2b933645e1aeb41eaa74
+  react-native-webrtc: da75ba1f85a36981cbcb3fdae7dfbab7ad63c040
   react-native-webview: bc519c989fc0401c630c0440f8f0ea602ce74dd8
   React-NativeModulesApple: 2b658272ca69df0694cf5d54f9510aa7c33977bc
   React-networking: 6be0b80e18e710dd30e77b04838ec46666a7bb78
