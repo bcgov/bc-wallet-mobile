@@ -211,6 +211,16 @@ const useEvidenceUploadModel = (
     [evidence, logger]
   )
 
+  const cleanupFilesAndState = useCallback(async () => {
+    await Promise.allSettled([
+      removeFileSafely(photoPath, logger),
+      removeFileSafely(videoPath, logger),
+      removeFileSafely(videoThumbnailPath, logger),
+    ])
+    VerificationVideoCache.clearCache()
+    dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+  }, [dispatch, logger, photoPath, videoPath, videoThumbnailPath])
+
   /**
    * Uploads the evidence and submits the verification request. Server and store effects only: every way it can
    * end is returned for `settleSubmit`, so a run shared by two screens changes the server and the store once and
@@ -238,7 +248,7 @@ const useEvidenceUploadModel = (
           )
           await updateVerificationRequest(undefined, null)
           dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
-          dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+          await cleanupFilesAndState()
           return {
             kind: 'requestMissing',
             error: new Error('Missing verification request data, resetting so you can try again.'),
@@ -300,12 +310,17 @@ const useEvidenceUploadModel = (
         // back cancelled: "Successfully sent" would only bounce the user here through the pending screen's check
         if (verificationResponse?.status === VerificationRequestStatus.CANCELLED) {
           setStage(UploadStage.Complete)
+          // The server has accepted the request, so the local files and state are no longer needed
+          await cleanupFilesAndState()
           return { kind: 'reviewCancelled', agentReason: verificationResponse.status_message }
         }
 
         await updateAccountFlags({
           userSubmittedVerificationVideo: true,
         })
+
+        // The server has accepted the request, so the local files and state are no longer needed
+        await cleanupFilesAndState()
 
         // Capture a timestamp when the user successfully submits their verification video. This is needed on the pending review screen
         dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [new Date()] })
@@ -318,6 +333,7 @@ const useEvidenceUploadModel = (
       }
     },
     [
+      cleanupFilesAndState,
       dispatch,
       finalizeVerification,
       logger,
@@ -455,15 +471,9 @@ const useEvidenceUploadModel = (
     if (inFlightSubmit !== null) {
       inFlightSubmit.progress.cancelled = true
     }
-    await Promise.allSettled([
-      removeFileSafely(photoPath, logger),
-      removeFileSafely(videoPath, logger),
-      removeFileSafely(videoThumbnailPath, logger),
-    ])
-    VerificationVideoCache.clearCache()
-    dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+    await cleanupFilesAndState()
     navigation.goBack()
-  }, [dispatch, logger, navigation, photoPath, videoPath, videoThumbnailPath])
+  }, [cleanupFilesAndState, navigation])
 
   return {
     handleSend,

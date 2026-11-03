@@ -3,7 +3,7 @@ import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizatio
 import { VerificationVideoCache } from '@/bcsc-theme/features/verify/send-video/VideoReviewScreen'
 import useVerificationMethodModel from '@/bcsc-theme/features/verify/useVerificationMethodModel'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import { checkFileSystemFreeStorage, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -133,6 +133,7 @@ describe('useVerificationMethodModel', () => {
       const clearCacheMock = jest.mocked(VerificationVideoCache.clearCache)
       const removeFileSafelyMock = jest.mocked(removeFileSafely)
       removeFileSafelyMock.mockResolvedValue(undefined)
+      jest.mocked(checkFileSystemFreeStorage).mockResolvedValue({ hasFreeStorage: true, freeStorageMb: 1000 })
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -244,6 +245,7 @@ describe('useVerificationMethodModel', () => {
       mockEvidenceApi.createVerificationRequest.mockResolvedValue(mockVerificationRequest)
       const removeFileSafelyMock = jest.mocked(removeFileSafely)
       removeFileSafelyMock.mockRejectedValue(new Error('Failed to remove file'))
+      jest.mocked(checkFileSystemFreeStorage).mockResolvedValue({ hasFreeStorage: true, freeStorageMb: 1000 })
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -271,6 +273,7 @@ describe('useVerificationMethodModel', () => {
       }
       jest.mocked(Bifold).useStore.mockReturnValue([fullyHydrated, mockDispatch])
       jest.mocked(removeFileSafely).mockResolvedValue(undefined)
+      jest.mocked(checkFileSystemFreeStorage).mockResolvedValue({ hasFreeStorage: true, freeStorageMb: 1000 })
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -281,6 +284,35 @@ describe('useVerificationMethodModel', () => {
       expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
       expect(mockEvidenceApi.getVerificationRequestPrompts).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PhotoInstructions, { forLiveCall: false })
+    })
+
+    it('stops with a storage alert and no navigation when the device is low on storage', async () => {
+      const mockDeviceStorageFullAlert = jest.fn()
+      jest.mocked(useAlerts).mockReturnValue({
+        videoPromptsMissingAlert: mockVideoPromptsMissingAlert,
+        deviceStorageFullAlert: mockDeviceStorageFullAlert,
+      } as any)
+      mockEvidenceApi.createVerificationRequest.mockResolvedValue({
+        id: 'test-id',
+        sha256: 'test-sha256',
+        prompts: [{ id: 1, prompt: 'Say your name' }],
+      })
+      jest.mocked(removeFileSafely).mockResolvedValue(undefined)
+      jest.mocked(checkFileSystemFreeStorage).mockResolvedValue({ hasFreeStorage: false, freeStorageMb: 120 })
+
+      const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handlePressSendVideo()
+      })
+
+      expect(checkFileSystemFreeStorage).toHaveBeenCalledWith(500, mockLogger)
+      expect(mockDeviceStorageFullAlert).toHaveBeenCalledTimes(1)
+      expect(mockDeviceStorageFullAlert).toHaveBeenCalledWith(
+        expect.objectContaining({ appEvent: AppEventCode.DEVICE_STORAGE_FULL })
+      )
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      expect(result.current.sendVideoLoading).toBe(false)
     })
 
     it('aborts with a retryable alert and no navigation when no prompts are returned', async () => {
