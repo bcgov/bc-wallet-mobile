@@ -213,7 +213,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
         // By type rather than by position: the store is updated before it is persisted, so a retry
         // after a failed persist must not drop an earlier, valid ID.
         await removeEvidenceByType(cardType)
-        // TODO (MD): fix here
       } catch (error) {
         failedToWriteToLocalStorageAlert(error)
         return true
