@@ -76,6 +76,8 @@ const createMockAgent = (overrides: Partial<Agent> = {}): Agent => {
   const poolService = createMockPoolService()
 
   const agent: Partial<Agent> = {
+    // Sentinel so assertions on agent.context cannot pass against undefined.
+    context: { contextCorrelationId: 'test-agent' } as any,
     initialize: jest.fn().mockResolvedValue(undefined),
     shutdown: jest.fn().mockResolvedValue(undefined),
 
@@ -594,6 +596,7 @@ describe('useBCAgentSetup', () => {
 
     expect(mediationRepository.delete).toHaveBeenCalledWith(agent.context, oldMediationRecord)
     expect(connectionRepository.delete).toHaveBeenCalledWith(agent.context, oldConnection)
+    expect(outOfBandRepository.getById).toHaveBeenCalledWith(agent.context, 'oob1')
     expect(outOfBandRepository.delete).toHaveBeenCalledWith(agent.context, { id: 'oob1' })
     expect(agent.didcomm.oob.receiveInvitationFromUrl).toHaveBeenCalledWith('http://mediator', expect.anything())
     expect(connectionRepository.getById).toHaveBeenNthCalledWith(2, agent.context, 'test-connection-id')
