@@ -61,24 +61,32 @@ class RSAVerifier: JWSVerifier {
         let signatureBytes = signatureData.withUnsafeBytes {
           [UInt8](UnsafeBufferPointer(start: $0, count: signatureData.count))
         }
-        let signatureLength = SecKeyGetBlockSize(rsaKey)
 
-        // calculate digest into hashbytes
-        if let digest = try calculateDigest(alg: header.alg, signedData: signedData) {
-          let status = SecKeyRawVerify(
-            rsaKey,
-            padding,
-            digest,
-            digest.count,
-            signatureBytes,
-            signatureLength
-          )
-
-//                    print("RSAVerifier.verify status=\(status)")
-          return status == errSecSuccess
-        } else {
-          // unable to calculate digest
+        // A signature of another key size is not this key's: a mismatch, as nimbus reports it on Android.
+        if signatureBytes.count != SecKeyGetBlockSize(rsaKey) {
           return false
+        }
+
+        guard let digest = try calculateDigest(alg: header.alg, signedData: signedData) else {
+          throw JOSEException("Could not digest the signing input for JWS algorithm [\(header.alg.name)]")
+        }
+        let status = SecKeyRawVerify(
+          rsaKey,
+          padding,
+          digest,
+          digest.count,
+          signatureBytes,
+          signatureBytes.count
+        )
+        switch status {
+        case errSecSuccess:
+          return true
+        case errSSLCrypto, errSecVerifyFailed:
+          // The only statuses that mean "this signature is not this key's"; SecKeyRawVerify
+          // reports a mismatch as errSSLCrypto, newer verify paths as errSecVerifyFailed.
+          return false
+        default:
+          throw JOSEException("SecKeyRawVerify could not run for JWS algorithm [\(header.alg.name)]: status \(status)")
         }
 
       } else {

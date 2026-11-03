@@ -17,11 +17,11 @@ final class JWKTests: XCTestCase {
 
   // MARK: - Fixtures
 
-  /// A 2048-bit key that lives only in this process: no kSecAttrIsPermanent, so no keychain.
-  private static func ephemeralPrivateKey() throws -> SecKey {
+  /// A key that lives only in this process: no kSecAttrIsPermanent, so no keychain.
+  private static func ephemeralPrivateKey(bits: Int = 2048) throws -> SecKey {
     let attributes: [CFString: Any] = [
       kSecAttrKeyType: kSecAttrKeyTypeRSA,
-      kSecAttrKeySizeInBits: 2048,
+      kSecAttrKeySizeInBits: bits,
     ]
     var error: Unmanaged<CFError>?
     return try XCTUnwrap(SecKeyCreateRandomKey(attributes as CFDictionary, &error), "\(String(describing: error))")
@@ -33,16 +33,20 @@ final class JWKTests: XCTestCase {
     return try XCTUnwrap(SecKeyCopyExternalRepresentation(publicKey, &error) as Data?)
   }
 
-  /// The JWK as a JWKS endpoint publishes it: base64url modulus and exponent.
-  private static func jwk(for privateKey: SecKey, kid: String) throws -> JWK {
-    let (modulus, exponent) = try XCTUnwrap(RSAUtil.splitIntoComponents(keyData: publicKeyData(privateKey)))
+  /// The JWK as a JWKS endpoint publishes it: base64url modulus and exponent. The exported DER
+  /// integer carries a leading zero; a real JWKS sends the modulus unsigned, so tests ask for both.
+  private static func jwk(for privateKey: SecKey, kid: String, unsignedModulus: Bool = false) throws -> JWK {
+    var (modulus, exponent) = try XCTUnwrap(RSAUtil.splitIntoComponents(keyData: publicKeyData(privateKey)))
+    if unsignedModulus, modulus.first == 0x00 {
+      modulus.removeFirst()
+    }
     return JWK(kid: kid, kty: .RSA, alg: "RS512", e: Base64URL.encode(exponent), n: Base64URL.encode(modulus))
   }
 
-  private func signedToken() throws -> String {
+  private func signedToken(signedBy key: SecKey? = nil) throws -> String {
     let claims = JWTClaimsSet.Builder().subject("user-123").build()
     let jws = JWS(header: JWSHeader(alg: JWSAlgorithm.RS512, kid: "unit-test"), payload: claims)
-    try jws.sign(signer: RSASigner(privateKey: privateKey))
+    try jws.sign(signer: RSASigner(privateKey: key ?? privateKey))
     return try jws.serialize()
   }
 
@@ -58,6 +62,28 @@ final class JWKTests: XCTestCase {
     var error: Unmanaged<CFError>?
     XCTAssertEqual(SecKeyCopyExternalRepresentation(key, &error) as Data?, try JWKTests.publicKeyData(privateKey))
     XCTAssertEqual(SecKeyGetBlockSize(key), 256)
+  }
+
+  /// The server key is 4096-bit and its JWKS modulus has no leading zero, so the 513-byte padded
+  /// integer and its long-form DER length must import and verify as well as the 2048-bit fixture.
+  func testBuildsAndVerifiesWithBothKeySizesWithAndWithoutTheLeadingZero() throws {
+    for bits in [2048, 4096] {
+      let key = try JWKTests.ephemeralPrivateKey(bits: bits)
+      let token = try JWS.parse(s: signedToken(signedBy: key))
+      for unsignedModulus in [false, true] {
+        let jwk = try JWKTests.jwk(for: key, kid: "k\(bits)", unsignedModulus: unsignedModulus)
+        let secKey = try JWK.jwkToSecKey(jwk: jwk)
+
+        XCTAssertEqual(SecKeyGetBlockSize(secKey), bits / 8, "\(bits)-bit, unsignedModulus=\(unsignedModulus)")
+        XCTAssertEqual(
+          SecKeyCopyExternalRepresentation(secKey, nil) as Data?, try JWKTests.publicKeyData(key),
+          "\(bits)-bit, unsignedModulus=\(unsignedModulus)"
+        )
+        XCTAssertTrue(
+          try token.verify(verifier: RSAVerifier(rsaKey: secKey)), "\(bits)-bit, unsignedModulus=\(unsignedModulus)"
+        )
+      }
+    }
   }
 
   func testRejectsANonRsaKeyType() {
@@ -96,6 +122,15 @@ final class JWKTests: XCTestCase {
     let parsed = try JWS.parse(s: signedToken())
 
     XCTAssertFalse(try parsed.verify(verifier: verifier(for: otherJwk)))
+  }
+
+  /// Either way round, a signature of another key size is a mismatch (as on Android), never an error.
+  func testASignatureOfAnotherKeySizeDoesNotVerify() throws {
+    let bigKey = try JWKTests.ephemeralPrivateKey(bits: 4096)
+    let bigJwk = try JWKTests.jwk(for: bigKey, kid: "big")
+
+    XCTAssertFalse(try JWS.parse(s: signedToken()).verify(verifier: verifier(for: bigJwk)))
+    XCTAssertFalse(try JWS.parse(s: signedToken(signedBy: bigKey)).verify(verifier: verifier(for: jwk)))
   }
 
   func testTamperedSignatureDoesNotVerify() throws {
