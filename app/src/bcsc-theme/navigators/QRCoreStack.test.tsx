@@ -2,6 +2,7 @@ import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
+import QRScannerScreen from '../features/qr-core/QRScannerScreen'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { BCSCModals, BCSCQRCoreScreens, BCSCScreens } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
@@ -264,10 +265,9 @@ describe('QRCoreStack', () => {
       return screens.find((s) => s.props.name === BCSCQRCoreScreens.Scanner)
     }
 
-    it('gates the scanner screen behind AgentReadyGate', () => {
-      const ScannerComponent = getScannerScreen().props.component
-      const tree = render(<ScannerComponent />)
-      expect(tree.toJSON()).toBeTruthy()
+    // The scanner is deliberately not behind an agent gate (see QRCoreStack), so a wrapper here is a regression.
+    it('mounts the scanner screen directly, without an agent gate', () => {
+      expect(getScannerScreen().props.component).toBe(QRScannerScreen)
     })
 
     const renderTabIcon = (focused: boolean, fontScale: number) => {

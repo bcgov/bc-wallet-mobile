@@ -96,7 +96,7 @@ describe('DeepLinkService', () => {
     expect(handler).toHaveBeenCalledWith({ rawUrl: 'not-a-url' })
   })
 
-  it('allows subscribing after init when an initial URL was captured', async () => {
+  it('replays a captured initial URL once, to the first subscriber after init', async () => {
     mockLinking.getInitialURL.mockResolvedValue(pairingUrl)
     const service = new DeepLinkService()
     await service.init()
@@ -104,13 +104,14 @@ describe('DeepLinkService', () => {
     const handler = jest.fn()
     service.subscribe(handler)
 
-    // No automatic replay exists, but the branch should be exercised and we can still emit manually
-    const manualEmit = mockLinking.addEventListener.mock.calls[0]?.[1]
-    manualEmit?.({ url: pairingUrl })
-
+    expect(handler).toHaveBeenCalledTimes(1)
     expect(handler).toHaveBeenCalledWith(
-      expect.objectContaining({ serviceTitle: 'My Service', pairingCode: 'CODE123' })
+      expect.objectContaining({ rawUrl: pairingUrl, serviceTitle: 'My Service', pairingCode: 'CODE123' })
     )
+
+    const laterHandler = jest.fn()
+    service.subscribe(laterHandler)
+    expect(laterHandler).not.toHaveBeenCalled()
   })
 
   it('clears handlers on destroy', async () => {
