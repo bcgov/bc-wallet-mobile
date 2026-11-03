@@ -131,6 +131,12 @@ describe('useAlerts', () => {
       AppEventCode.ERR_112_JWS_VERIFICATION_FAILED,
     ],
     [
+      'joseExceptionAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION,
+    ],
+    [
       'loginServerErrorAlert',
       'Alerts.ProblemWithLogin.Title',
       'Alerts.ProblemWithLogin.Description',

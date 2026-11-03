@@ -46,6 +46,10 @@ export const useTokenService = () => {
           alerts.jwsVerificationFailedAlert(error)
         }
 
+        if (isAppError(error, AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION)) {
+          alerts.joseExceptionAlert(error)
+        }
+
         if (isAppError(error, AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY)) {
           alerts.failedToGetClaimsSetAlert(error)
         }

@@ -355,6 +355,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       clientRegistrationFailureAlert: _createBasicErrorModal(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE, 'SomethingWentWrong'),
       missingJwkAlert: _createBasicErrorModal(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK, 'SomethingWentWrong'),
       jwsVerificationFailedAlert: _createBasicErrorModal(AppEventCode.ERR_112_JWS_VERIFICATION_FAILED, 'SomethingWentWrong'),
+      joseExceptionAlert: _createBasicErrorModal(AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION, 'SomethingWentWrong'),
       failedToGetClaimsSetAlert: _createBasicErrorModal(AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY, 'SomethingWentWrong'),
       failedToSerializeJsonAlert: _createBasicErrorModal(AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON, 'SomethingWentWrong'),
       failedToParseJwsAlert: _createBasicErrorModal(AppEventCode.ERR_117_FAILED_TO_PARSE_JWS, 'SomethingWentWrong'),

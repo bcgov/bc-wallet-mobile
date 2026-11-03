@@ -192,3 +192,23 @@ export const mapNativeBcscError = (error: unknown): AppError => {
 export const throwNativeBcscError = (error: unknown): never => {
   throw mapNativeBcscError(error)
 }
+
+/** Native codes the signature verifier owns; any other decode rejection keeps the caller's definition. */
+const verifierNativeErrorCodes: ReadonlySet<string> = new Set(['E_INVALID_JWK', 'E_JWS_VERIFY_ERROR'])
+
+/**
+ * Wraps a `decodePayload` / `decodeLoginChallenge` rejection. An unusable server key
+ * (`E_INVALID_JWK` → ERR_111) or a verifier that could not run (`E_JWS_VERIFY_ERROR` → ERR_113)
+ * classifies through {@link nativeBcscErrorMap}; every other rejection keeps `fallback`.
+ */
+export const toDecodeAppError = (error: unknown, fallback: ErrorDefinition): AppError =>
+  isBcscNativeError(error) && verifierNativeErrorCodes.has(error.code)
+    ? mapNativeBcscError(error)
+    : toAppError(error, fallback)
+
+/**
+ * Throwing variant of {@link toDecodeAppError}.
+ */
+export const throwDecodeAppError = (error: unknown, fallback: ErrorDefinition): never => {
+  throw toDecodeAppError(error, fallback)
+}
