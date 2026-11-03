@@ -1,16 +1,10 @@
-import {
-  AxiosAppError,
-  ClientErrorHandlingPolicies,
-  pairingCodeErrorPolicy,
-  verifyDeviceAssertionErrorPolicy,
-} from '@/bcsc-theme/api/clientErrorPolicies'
+import { pairingCodeErrorPolicy, verifyDeviceAssertionErrorPolicy } from '@/bcsc-theme/api/clientErrorPolicies'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import * as useServiceLoginStateModule from '@/bcsc-theme/features/services/hooks/useServiceLoginState'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { formatIasAxiosResponseError, getAppErrorFromAxiosError } from '@/bcsc-theme/utils/axios-error-utils'
-import { HelpCentreUrl, REPORT_SUSPICIOUS_URL, VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
+import { HelpCentreUrl, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -18,8 +12,8 @@ import * as useAlertsModule from '@/hooks/useAlerts'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { mockAssertion404 } from '@mocks/helpers/pairing-error'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
-import { AxiosError } from 'axios'
 import React from 'react'
 import { Alert, Linking } from 'react-native'
 import { ChallengeSource } from 'react-native-bcsc-core'
@@ -332,39 +326,8 @@ describe('ServiceLogin', () => {
       return { ...tree, rerenderScreen: () => tree.rerender(buildScreen()) }
     }
 
-    // Takes a 404 through the same steps as the API client and BCSCApiClientProvider
-    const assertion404 = (data: unknown, alerts: Record<string, jest.Mock> = {}) => {
-      const endpoint = `https://example.com/cardtap/${VERIFY_DEVICE_ASSERTION_PATH}`
-      const appError = getAppErrorFromAxiosError(
-        formatIasAxiosResponseError(
-          new AxiosError(
-            'Request failed with status code 404',
-            'ERR_BAD_REQUEST',
-            { url: endpoint } as any,
-            undefined,
-            {
-              status: 404,
-              data,
-            } as any
-          )
-        )
-      ) as AxiosAppError
-
-      const policy = ClientErrorHandlingPolicies.find((candidate) =>
-        candidate.matches(appError, {
-          endpoint,
-          statusCode: 404,
-          apiEndpoints: { cardTap: 'https://example.com/cardtap' } as any,
-        })
-      )
-      policy?.handle(appError, { logger: { info: jest.fn() }, alerts } as any)
-      appError.handled = policy !== undefined
-
-      return { appError, policy }
-    }
-
     const expire404 = (mockAlert: jest.Mock) =>
-      renderWithPairingCode(jest.fn().mockRejectedValue(assertion404('<html>Not Found</html>').appError), {
+      renderWithPairingCode(jest.fn().mockRejectedValue(mockAssertion404('<html>Not Found</html>').appError), {
         loginRequestExpiredAlert: mockAlert,
       })
 
@@ -456,7 +419,7 @@ describe('ServiceLogin', () => {
     })
 
     it('should show loginRequestExpiredAlert for a 404 with no IAS error body', async () => {
-      const { appError, policy } = assertion404('<html>Not Found</html>')
+      const { appError, policy } = mockAssertion404('<html>Not Found</html>')
       expect(policy).toBe(pairingCodeErrorPolicy)
 
       const mockLoginRequestExpiredAlert = jest.fn()
@@ -476,7 +439,7 @@ describe('ServiceLogin', () => {
     })
 
     it('should show loginServerErrorAlert for a 404 with an IAS error the app has no code for', async () => {
-      const { appError, policy } = assertion404({
+      const { appError, policy } = mockAssertion404({
         error: 'invalid_request',
         error_description: 'The request is invalid',
       })
@@ -501,7 +464,7 @@ describe('ServiceLogin', () => {
 
     it('should not add a second alert to a 404 that an earlier assertion policy already alerted on', async () => {
       const mockInvalidPairingCodeAlert = jest.fn()
-      const { appError, policy } = assertion404(
+      const { appError, policy } = mockAssertion404(
         { error: AppEventCode.INVALID_PAIRING_CODE, error_description: 'The pairing code is invalid' },
         { invalidPairingCodeAlert: mockInvalidPairingCodeAlert }
       )
