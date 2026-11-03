@@ -171,6 +171,17 @@ them natively on focus and re-renders, and a row whose gate is still unknown sta
 disappears after mount slides every row below it. "Change PIN" rendered on a default and was dropped
 once the native read reported device auth, so the whole list jumped on every open of Settings.
 
+## Android: the JS runtime outlives the Activity
+
+To leave the app on Android, use `moveAppToBackground`, not `BackHandler.exitApp`. Hardware back can still
+finish the Activity, so anything that reads launch data (`getInitialURL`, `getInitialNotification`) must read
+it again on every mount and skip what it already handled. Module-level state survives the remount, so a
+"run once" guard around these reads drops the link or notification that started the new Activity.
+`getInitialNotification` also needs a resumed Activity, or it silently resolves `null`.
+
+**Why:** `exitApp` finished the Activity for a browser-launched task but left the process alive. The next link
+or notification tap created a new Activity, which fires no `onNewIntent`, so logins after the first were lost.
+
 ## Verification flow exits: first-time vs deferred verifiers
 
 The onboarding "Verify your account" prompt decides who may leave the verify flow, through the persisted
