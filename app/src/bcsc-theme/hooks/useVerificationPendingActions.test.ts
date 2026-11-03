@@ -186,6 +186,65 @@ describe('useVerificationPendingActions', () => {
       })
     })
 
+    it('drops a response that lands after the request was cancelled', async () => {
+      let settle: (value: { status: VerificationRequestStatus; status_message?: string }) => void = () => undefined
+      getVerificationRequestStatusMock.mockReturnValueOnce(
+        new Promise((resolve) => {
+          settle = resolve
+        })
+      )
+      const { result } = renderHook(() => useVerificationPendingActions(navigation))
+
+      let check: Promise<void> = Promise.resolve()
+      act(() => {
+        check = result.current.handleCheckStatus()
+      })
+      await act(async () => {
+        await result.current.handleCancelVerification()
+      })
+      await act(async () => {
+        settle({ status: VerificationRequestStatus.CANCELLED, status_message: 'Too late' })
+        await check
+      })
+
+      expect(dispatchMock).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED })
+      )
+      expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(navigation.reset).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not land on the pending screen when the request is cancelled during the unrecognised-status exchange', async () => {
+      getVerificationRequestStatusMock.mockResolvedValue({ status: 'expired' })
+      let settleExchange: (reason: unknown) => void = () => undefined
+      checkDeviceCodeStatusMock.mockReturnValueOnce(
+        new Promise((_resolve, reject) => {
+          settleExchange = reject
+        })
+      )
+      const { result } = renderHook(() => useVerificationPendingActions(navigation))
+
+      let check: Promise<void> = Promise.resolve()
+      act(() => {
+        check = result.current.handleCheckStatus()
+      })
+      await act(async () => {
+        await Promise.resolve()
+      })
+      await act(async () => {
+        await result.current.handleCancelVerification()
+      })
+      await act(async () => {
+        settleExchange(mockAppError(AppEventCode.AUTHORIZATION_PENDING))
+        await check
+      })
+
+      expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(dispatchMock).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED })
+      )
+    })
+
     it('only logs a failed automatic check', async () => {
       getVerificationRequestStatusMock.mockRejectedValue(new Error('status boom'))
       const { result } = renderHook(() => useVerificationPendingActions(navigation))

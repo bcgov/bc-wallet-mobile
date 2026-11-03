@@ -174,6 +174,82 @@ describe('useVerificationResponseListener', () => {
       })
     })
 
+    it('drops a status that arrives after the request was cancelled', async () => {
+      // require returns the jest.mock'd module, so this test can override useStore mid-test
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { useStore } = require('@bifold/core')
+      let settleFetch: (value: { status: string }) => void = () => undefined
+      mockGetVerificationRequestStatus.mockReturnValueOnce(
+        new Promise((resolve) => {
+          settleFetch = resolve
+        })
+      )
+      const { rerender } = renderHook(() => useVerificationResponseListener())
+
+      act(() => {
+        mockVerificationResponseService.handleRequestReviewed()
+      })
+      await waitFor(() => {
+        expect(mockGetVerificationRequestStatus).toHaveBeenCalledWith('test-verification-request-id')
+      })
+
+      // "Choose another way" clears the request while the fetch is in flight
+      const originalUseStore = useStore.getMockImplementation()
+      useStore.mockReturnValue([
+        { bcscSecure: { deviceCode: 'test-device-code', userCode: 'test-user-code' } },
+        mockStoreDispatch,
+      ])
+      try {
+        rerender({})
+        await act(async () => {
+          settleFetch({ status: 'cancelled' })
+        })
+
+        expect(mockStoreDispatch).not.toHaveBeenCalled()
+        expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
+      } finally {
+        useStore.mockImplementation(originalUseStore)
+      }
+    })
+
+    it('drops an unrecognised-status verification that completes after the request was cancelled', async () => {
+      // require returns the jest.mock'd module, so this test can override useStore mid-test
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { useStore } = require('@bifold/core')
+      mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'expired' })
+      let settleExchange: (value: unknown) => void = () => undefined
+      mockCheckDeviceCodeStatus.mockReturnValueOnce(
+        new Promise((resolve) => {
+          settleExchange = resolve
+        })
+      )
+      const { rerender } = renderHook(() => useVerificationResponseListener())
+
+      act(() => {
+        mockVerificationResponseService.handleRequestReviewed()
+      })
+      await waitFor(() => {
+        expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
+      })
+
+      // "Choose another way" clears the request while the exchange is in flight
+      const originalUseStore = useStore.getMockImplementation()
+      useStore.mockReturnValue([
+        { bcscSecure: { deviceCode: 'test-device-code', userCode: 'test-user-code' } },
+        mockStoreDispatch,
+      ])
+      try {
+        rerender({})
+        await act(async () => {
+          settleExchange({ refresh_token: 'test-refresh-token' })
+        })
+
+        expect(mockStoreDispatch).not.toHaveBeenCalled()
+      } finally {
+        useStore.mockImplementation(originalUseStore)
+      }
+    })
+
     it('should record nothing when the token exchange fails on a verified status', async () => {
       mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'verified' })
       mockCheckDeviceCodeStatus.mockRejectedValueOnce(new Error('exchange failed'))

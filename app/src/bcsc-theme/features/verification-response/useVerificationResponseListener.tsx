@@ -9,7 +9,7 @@ import { isVerifiedByTokenExchange } from '@/bcsc-theme/utils/verification-token
 import { VerificationRequestStatus } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 /**
  * Hook that listens for verification response push notifications and records the reviewed status in the
@@ -37,6 +37,9 @@ export const useVerificationResponseListener = () => {
   const { token } = useApi()
   const evidenceService = useEvidenceService()
   const verificationResponseService = useVerificationResponseService()
+  // The handler outlives the render it was built in; this is how it sees a cancel that lands mid-fetch
+  const latestStoreRef = useRef(store)
+  latestStoreRef.current = store
 
   /**
    * Handle request reviewed (send-video verification or live call).
@@ -63,6 +66,13 @@ export const useVerificationResponseListener = () => {
         await evidenceService.getVerificationRequestStatus(verificationRequestId)
       logger.info(`[useVerificationResponseListener] Verification request status: ${rawStatus}`)
       const status = interpretVerificationStatus(rawStatus)
+
+      // "Choose another way" deleted this request while the fetch was in flight; recording its status now
+      // would show a notice for a request that no longer exists
+      if (latestStoreRef.current.bcscSecure.verificationRequestId !== verificationRequestId) {
+        logger.info('[useVerificationResponseListener] Verification request was cancelled mid-check, dropping status')
+        return
+      }
 
       if (status === VerificationRequestStatus.VERIFIED) {
         // Status is verified - fetch and update tokens
@@ -96,7 +106,8 @@ export const useVerificationResponseListener = () => {
       logger.warn(
         `[useVerificationResponseListener] Unrecognised verification status '${rawStatus}'; asking the token endpoint`
       )
-      if (await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))) {
+      const exchanged = await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))
+      if (exchanged && latestStoreRef.current.bcscSecure.verificationRequestId === verificationRequestId) {
         dispatch({
           type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
           payload: [{ status: VerificationRequestStatus.VERIFIED }],

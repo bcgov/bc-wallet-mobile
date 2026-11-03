@@ -43,6 +43,9 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
   // that lands while a stale "pending" response is still in the air is not dropped
   const checkInFlightRef = useRef(false)
   const queuedCheckRef = useRef<CheckStatusOptions | undefined>(undefined)
+  // A response that lands after "Choose another way" belongs to a request that no longer exists; it must
+  // not be recorded or navigated on
+  const cancelledRequestIdRef = useRef<string | undefined>(undefined)
   const { cancelVerificationRequestAlert } = useAlerts(navigation)
   // Only these fields decide the check, so unrelated secure-state writes don't change its identity (the
   // pending screen re-checks whenever it does)
@@ -62,8 +65,15 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
           throw new Error(t('BCSC.Steps.VerificationIDMissing'))
         }
 
+        if (cancelledRequestIdRef.current === verificationRequestId) {
+          return 'decided'
+        }
+
         const { status: rawStatus, status_message } =
           await evidenceService.getVerificationRequestStatus(verificationRequestId)
+        if (cancelledRequestIdRef.current === verificationRequestId) {
+          return 'decided'
+        }
         const status = interpretVerificationStatus(rawStatus)
         if (status === VerificationRequestStatus.VERIFIED) {
           if (!deviceCode || !userCode) {
@@ -99,6 +109,9 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
           }
 
           const exchanged = await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))
+          if (cancelledRequestIdRef.current === verificationRequestId) {
+            return 'decided'
+          }
           if (exchanged) {
             dispatch({
               type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
@@ -158,7 +171,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         const outcome = await runStatusCheck({ surfaceErrors })
         const queued = queuedCheckRef.current
         queuedCheckRef.current = undefined
-        // A decided check has already navigated on; a queued trigger could only re-fetch the same decision
+        // Nothing left to re-fetch (decided or cancelled): the check has navigated on or the request is gone
         if (queued && outcome !== 'decided') {
           await runStatusCheck(queued)
         }
@@ -177,6 +190,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         if (!verificationRequestId) {
           return
         }
+        cancelledRequestIdRef.current = verificationRequestId
         await evidenceService.cancelVerificationRequest(verificationRequestId)
       } catch (error) {
         logger.error(`Error cancelling verification request: ${error}`)
