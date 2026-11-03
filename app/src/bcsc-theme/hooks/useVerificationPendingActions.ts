@@ -61,12 +61,17 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
           return 'decided'
         }
 
-        if (!verificationRequestId) {
-          throw new Error(t('BCSC.Steps.VerificationIDMissing'))
+        // Choosing another way clears the request id before the screen leaves, which re-runs the focus check;
+        // that is not a missing id worth logging
+        if (
+          cancelledRequestIdRef.current &&
+          (!verificationRequestId || cancelledRequestIdRef.current === verificationRequestId)
+        ) {
+          return 'decided'
         }
 
-        if (cancelledRequestIdRef.current === verificationRequestId) {
-          return 'decided'
+        if (!verificationRequestId) {
+          throw new Error(t('BCSC.Steps.VerificationIDMissing'))
         }
 
         const { status: rawStatus, status_message } =

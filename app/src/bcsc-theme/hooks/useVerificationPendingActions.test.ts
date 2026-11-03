@@ -228,6 +228,24 @@ describe('useVerificationPendingActions', () => {
       expect(navigation.reset).toHaveBeenCalledTimes(1)
     })
 
+    it('does not log a missing request ID when the focus check re-runs after "Choose another way"', async () => {
+      const { result, rerender } = renderHook(() => useVerificationPendingActions(navigation))
+
+      await act(async () => {
+        await result.current.handleCancelVerification()
+      })
+      // The cancel clears the request from the store, which re-runs the focused screen's check
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: {} } as any, dispatchMock])
+      rerender({})
+      await act(async () => {
+        await result.current.handleCheckStatus({ surfaceErrors: true })
+      })
+
+      expect(loggerMock.error).not.toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      expect(getVerificationRequestStatusMock).not.toHaveBeenCalled()
+    })
+
     it('does not land on the pending screen when the request is cancelled during the unrecognised-status exchange', async () => {
       getVerificationRequestStatusMock.mockResolvedValue({ status: 'expired' })
       let settleExchange: (reason: unknown) => void = () => undefined
