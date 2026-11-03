@@ -44,6 +44,9 @@ const REJECT_NOTE_TITLE = 'Add Note to Activity Log'
 const APPROVE_DONE_TITLE = 'Card Added to Mobile'
 const NOTE_DONE_TITLE = 'Note Added to Activity Log'
 const IDENTITY_MATCH_TITLE = 'Choose Which of These is a Match'
+/** The transfer-to-specialist chain: the note the portal asks for, then its confirmation. */
+const TRANSFER_NOTE_TITLE = 'Add Notes for Transfer'
+const TRANSFER_DONE_TITLE = 'Request Transferred'
 
 /**
  * Wall-clock at the previous {@link logStep}, so each line reports how long its request took. The whole
@@ -571,19 +574,39 @@ function backcheckFormPostHeaders(referer) {
 }
 
 /**
- * @typedef {'cardholder' | 'cardless'} ReviewQueue
+ * The two send-video review queues, by the portal's names for them. `regular` is the dashboard's
+ * "Other Verify Requests" FIFO, where a cardholder's upload lands; `specialist` is its "Specialist
+ * Review" queue, where a cardless registration lands (its identity match is specialist work) — and
+ * where an agent's "Transfer Request to Specialist" moves anything else.
+ *
+ * @typedef {'regular' | 'specialist'} ReviewQueue
  * @typedef {{ action: string, csrfToken: string, queue: ReviewQueue }} ClaimForm
  */
 
-/** Which queue a claim/detail URL belongs to: `verifyIdentity` is cardholder, `reviewIdentity` cardless. */
+/** The order the queues are worked in: the regular FIFO first, the specialist queue after it. */
+const REVIEW_QUEUE_ORDER = ['regular', 'specialist']
+
+/** Which queue a claim/detail URL belongs to: `verifyIdentity` is the regular queue, `reviewIdentity` the specialist one. */
 function queueOfUrl(url) {
-  return /reviewIdentity/.test(url) ? 'cardless' : 'cardholder'
+  return /reviewIdentity/.test(url) ? 'specialist' : 'regular'
 }
 
 /**
- * Every claim button on the dashboard. The portal renders a DIFFERENT form per queue — cardholder
- * requests post to `verifyIdentity`, cardless ones to `reviewIdentity` — and only for queues that
- * actually have work, so the endpoints are discovered rather than assumed.
+ * Where a submission for this identity queues: a cardless registration (its serial reads "N/A") lands
+ * in the specialist queue, a cardholder's in the regular one.
+ *
+ * @param {{ cardSerialNumber: string }} identity
+ * @returns {ReviewQueue}
+ */
+function queueOfIdentity(identity) {
+  return identity.cardSerialNumber.trim().toUpperCase() === 'N/A' ? 'specialist' : 'regular'
+}
+
+/**
+ * Every claim button on the dashboard, in {@link REVIEW_QUEUE_ORDER}. The portal renders a DIFFERENT
+ * form per queue — the regular queue's posts to `verifyIdentity`, the specialist queue's to
+ * `reviewIdentity` — and only for queues that actually have work, so the endpoints are discovered
+ * rather than assumed.
  *
  * @param {string} dashboardHtml
  * @returns {ClaimForm[]}
@@ -602,25 +625,26 @@ function findClaimForms(dashboardHtml) {
     const href = new URL(action, IDCHECK_ORIGIN).href
     forms.push({ action: href, csrfToken, queue: queueOfUrl(href) })
   })
-  return forms
+  return forms.sort((a, b) => REVIEW_QUEUE_ORDER.indexOf(a.queue) - REVIEW_QUEUE_ORDER.indexOf(b.queue))
 }
 
 /**
- * The claim button to press for `preferredQueue`, falling back to whichever queue has work (its head
- * then reads as foreign and is released) — so a review never stalls on a claim it could have made.
+ * The claim button for one queue, or null while that queue is empty. Only that queue: the other one's
+ * head is someone else's work by definition, and claiming it just to release it again would churn a
+ * request a person is waiting on.
  *
  * @param {string} dashboardHtml
- * @param {ReviewQueue} preferredQueue
+ * @param {ReviewQueue} queue
  * @returns {ClaimForm | null}
  */
-function findClaimForm(dashboardHtml, preferredQueue) {
-  const forms = findClaimForms(dashboardHtml)
-  return forms.find((form) => form.queue === preferredQueue) ?? forms[0] ?? null
+function findClaimForm(dashboardHtml, queue) {
+  return findClaimForms(dashboardHtml).find((form) => form.queue === queue) ?? null
 }
 
 /**
- * Builds the attestation body by ECHOING the rendered review form: every answer is the affirmative
- * one, every other field is sent back as the portal filled it in.
+ * Echoes the rendered review form as a browser would submit it: every field sent back as the portal
+ * filled it in, and each radio group answered by `answerGroup` — or left out when that returns
+ * undefined, as an untouched radio group is.
  *
  * Which fields exist depends on what the person submitted — a cardholder with a photo card answers
  * three questions, while an added photo ID or a cardless registration brings its own document and
@@ -628,11 +652,10 @@ function findClaimForm(dashboardHtml, preferredQueue) {
  * instead of from test config, which is what keeps one code path correct for every card type.
  *
  * @param {ReturnType<typeof load>} $ - the loaded review page
- * @param {'0' | '2'} suspiciousActivityValue - '0' confident (approve), '2' not confident (reject)
- * @param {'Continue' | 'CloseRequest'} command
- * @returns {string}
+ * @param {(groupName: string) => string | undefined} answerGroup
+ * @returns {URLSearchParams}
  */
-function buildAttestationBody($, suspiciousActivityValue, command) {
+function echoReviewForm($, answerGroup) {
   const form = $('#verify-form')
   if (form.length === 0) {
     throw new Error('[review form] no #verify-form on the review page')
@@ -661,7 +684,10 @@ function buildAttestationBody($, suspiciousActivityValue, command) {
         return
       }
       answeredGroups.add(name)
-      body.append(name, name === SUSPICIOUS_ACTIVITY_FIELD ? suspiciousActivityValue : AFFIRMATIVE_ANSWER)
+      const answer = answerGroup(name)
+      if (answer !== undefined) {
+        body.append(name, answer)
+      }
       return
     }
     if (type === 'checkbox') {
@@ -676,6 +702,36 @@ function buildAttestationBody($, suspiciousActivityValue, command) {
     body.append(name, field.attr('value') ?? '')
   })
 
+  return body
+}
+
+/**
+ * The attestation a decision submits (`Continue`): every answer the affirmative one, bar the
+ * suspicious-activity confidence that tells approve from reject.
+ *
+ * @param {ReturnType<typeof load>} $ - the loaded review page
+ * @param {'0' | '2'} suspiciousActivityValue - '0' confident (approve), '2' not confident (reject)
+ * @returns {string}
+ */
+function buildAttestationBody($, suspiciousActivityValue) {
+  const body = echoReviewForm($, (name) =>
+    name === SUSPICIOUS_ACTIVITY_FIELD ? suspiciousActivityValue : AFFIRMATIVE_ANSWER
+  )
+  body.append('command', 'Continue')
+  return body.toString()
+}
+
+/**
+ * The body for a command that decides nothing — `CloseRequest` (release the claim) or
+ * `TransferToSpecialist` — as the browser sends it: the form's own fields and no attestation answers
+ * (reference capture 2026-11-03), so nothing is attested on a request someone else will review.
+ *
+ * @param {ReturnType<typeof load>} $ - the loaded review page
+ * @param {'CloseRequest' | 'TransferToSpecialist'} command
+ * @returns {string}
+ */
+function buildReviewCommandBody($, command) {
+  const body = echoReviewForm($, () => undefined)
   body.append('command', command)
   return body.toString()
 }
@@ -973,10 +1029,16 @@ function describeClaimLanding(response, html) {
  * Polls the backcheck dashboard, claiming until the claimed request matches the expected person.
  *
  * The claim button takes the next submission blindly (FIFO, no worklist), and the queue is shared —
- * the other platform's run, a crashed run's leftovers, other SIT users — so the head can be anyone's.
- * Never review someone else's submission: a foreign claim is closed (`CloseRequest`, observed to
- * clear it from the queue) and the poll continues. The same request coming back a third time means
- * the release is not sticking, and the loop fails rather than churn the queue.
+ * the other platform's run, a crashed run's leftovers, the UAT team — so the head can be anyone's.
+ * Never review someone else's submission, and never reject it either: a stranger's at the head of the
+ * regular queue is moved to the Specialist Review queue for a person to work (the one way past it
+ * that keeps it), while any other foreign head — a stranger's in the specialist queue, where there is
+ * nowhere left to move it, or this persona's own upload from the other platform, which is e2e work
+ * the lane rules say never runs alongside — is released (`CloseRequest`) and the poll continues. The
+ * same request coming back a third time means the release or the move is not sticking, and the loop
+ * fails rather than churn the queue.
+ *
+ * Exported for the unit tests; {@link reviewSendVideoLogin} is the entry point.
  *
  * @param {typeof fetch} fetchWithCookies
  * @param {SendVideoReviewInput} input
@@ -984,20 +1046,21 @@ function describeClaimLanding(response, html) {
  * @param {AbortSignal} [signal]
  * @returns {Promise<{ detailUrl: string, claimed: ClaimedRequest }>}
  */
-async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeoutMs, signal) {
+export async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeoutMs, signal) {
   const claimDeadline = Date.now() + claimTimeoutMs
-  /** @type {Map<string, number>} how often each foreign request id has been claimed (and closed) */
+  const queue = queueOfIdentity(input)
+  /** @type {Map<string, number>} how often each foreign request id has been claimed (and moved or released) */
   const foreignClaims = new Map()
 
   for (let attempt = 1; ; attempt++) {
     const dashboardHtml = await fetchBackcheckDashboard(fetchWithCookies, signal)
 
-    // Rendered only for a queue with work, so its absence is the empty-queue signal — and which one
-    // it is decides the endpoint. A fresh-login role interstitial also lands here, hence the title.
-    const claimForm = findClaimForm(dashboardHtml, input.cardSerialNumber.toUpperCase() === 'N/A' ? 'cardless' : 'cardholder')
+    // Rendered only for a queue with work, so its absence is the empty-queue signal. A fresh-login
+    // role interstitial also lands here, hence the title.
+    const claimForm = findClaimForm(dashboardHtml, queue)
     if (!claimForm) {
       console.log(
-        `[idcheck] [~] claim attempt ${attempt}: no claim button on the dashboard — page is "${extractPageTitle(dashboardHtml) || '(untitled)'}"`
+        `[idcheck] [~] claim attempt ${attempt}: no claim button for the ${queue} queue — page is "${extractPageTitle(dashboardHtml) || '(untitled)'}"`
       )
       await waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, signal)
       continue
@@ -1028,9 +1091,24 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
       // while still holding the claim would leave the queue head ours and block the next run too.
       await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
       throw new Error(
-        `[claim send-video request] CloseRequest is not clearing foreign request ${claimed.requestIdentifier} — ` +
+        `[claim send-video request] foreign request ${claimed.requestIdentifier} keeps coming back to the ${claimed.queue} queue — ` +
           `claimed it ${timesClaimed} times while waiting for ${expectedPersona(input)}; check the SIT backcheck dashboard`
       )
+    }
+
+    const samePersonaOtherPlatform = matchesExpectedIdentity(claimed, { ...input, platform: undefined })
+    if (claimed.queue === 'regular' && !samePersonaOtherPlatform) {
+      console.log(
+        `[idcheck] [~] claim attempt ${attempt}: claimed ${describeClaimed(claimed, 'foreign')} — moving it to the specialist queue and retrying`
+      )
+      await transferClaimedRequestToSpecialist(
+        fetchWithCookies,
+        claimed.$detail,
+        claimResponse.url,
+        DEFAULT_TRANSFER_COMMENT,
+        signal
+      )
+      continue // the queue just changed under us; nothing to wait for
     }
 
     console.log(
@@ -1077,7 +1155,7 @@ async function releaseClaimedRequest(fetchWithCookies, $detail, detailUrl, signa
   try {
     const response = await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
       headers: backcheckFormPostHeaders(detailUrl),
-      body: buildAttestationBody($detail, AFFIRMATIVE_ANSWER, 'CloseRequest'),
+      body: buildReviewCommandBody($detail, 'CloseRequest'),
       method: 'POST',
       signal,
     })
@@ -1087,6 +1165,64 @@ async function releaseClaimedRequest(fetchWithCookies, $detail, detailUrl, signa
   } catch (err) {
     console.warn('[idcheck] [!] CloseRequest release failed:', err)
   }
+}
+
+/** The note a moved request carries into the specialist queue — the first thing its reviewer reads there. */
+const DEFAULT_TRANSFER_COMMENT =
+  'Moved here by the automated e2e queue cleanup: this request is not from an e2e test persona, so it was transferred instead of rejected. Please review it from this queue.'
+
+/**
+ * Moves a claimed request to the Specialist Review queue, as an agent's "Transfer Request to
+ * Specialist" does: the command on the review form (no attestation — the specialist reviews it
+ * fresh), then the note form it leads to, echoed with the comment. Each page title is asserted, so a
+ * request is never left half-moved without the log naming the step that failed.
+ *
+ * Reference capture: idsit.gov.bc.ca, 2026-11-03.
+ *
+ * @param {typeof fetch} fetchWithCookies
+ * @param {ReturnType<typeof load>} $detail
+ * @param {string} detailUrl
+ * @param {string} comment
+ * @param {AbortSignal} [signal]
+ */
+async function transferClaimedRequestToSpecialist(fetchWithCookies, $detail, detailUrl, comment, signal) {
+  const commandResponse = await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
+    headers: backcheckFormPostHeaders(detailUrl),
+    body: buildReviewCommandBody($detail, 'TransferToSpecialist'),
+    method: 'POST',
+    signal,
+  })
+  const noteHtml = await logStep('transfer to specialist', commandResponse)
+  assertPageTitle('transfer to specialist', noteHtml, TRANSFER_NOTE_TITLE)
+
+  // The note form's action is set client-side from its data attribute; its hidden fields carry the
+  // request and the target status (REVIEW), echoed as rendered.
+  const $note = load(noteHtml)
+  const form = $note('#transfer-form')
+  if (form.length === 0) {
+    throw new Error('[transfer note] no #transfer-form on the transfer page')
+  }
+  const actionPath = form.attr('data-action-path')
+  if (!actionPath) {
+    throw new Error('[transfer note] #transfer-form names no data-action-path')
+  }
+  const body = new URLSearchParams()
+  form.find('input[type="hidden"]').each((_, element) => {
+    const name = $note(element).attr('name')
+    if (name) {
+      body.append(name, $note(element).attr('value') ?? '')
+    }
+  })
+  body.append('comment', comment)
+
+  const transferResponse = await fetchWithCookies(`${BACKCHECK_BASE_URL}/${actionPath}`, {
+    headers: backcheckFormPostHeaders(BACKCHECK_CONTINUE_URL),
+    body: body.toString(),
+    method: 'POST',
+    signal,
+  })
+  const doneHtml = await logStep('transfer note', transferResponse)
+  assertPageTitle('transfer note', doneHtml, TRANSFER_DONE_TITLE)
 }
 
 /**
@@ -1106,7 +1242,7 @@ async function submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, req
   const suspiciousActivityValue = input.decision === 'approve' ? AFFIRMATIVE_ANSWER : '2'
   const continueResponse = await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
     headers: backcheckFormPostHeaders(detailUrl),
-    body: buildAttestationBody($detail, suspiciousActivityValue, 'Continue'),
+    body: buildAttestationBody($detail, suspiciousActivityValue),
     method: 'POST',
     signal,
   })
@@ -1158,8 +1294,8 @@ async function submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, req
  * Reviews (approves or rejects) a queued send-video verification request in the IDCheck portal.
  *
  * The portal has no queue listing — its claim button takes the next submission FIFO — so the claim is
- * polled until it lands on the expected person, closing foreign submissions along the way (see
- * {@link claimMatchingSendVideoRequest}). Which claim button exists depends on the queue holding the
+ * polled until it lands on the expected person, moving anyone else's submission aside along the way
+ * (see {@link claimMatchingSendVideoRequest}). Which claim button exists depends on the queue holding the
  * work, and what the review asks for depends on what the person submitted, so both are read off the
  * pages themselves: cardholder requests go straight to the decision, while a cardless registration
  * inserts an identity-match step first.
@@ -1194,8 +1330,9 @@ export async function reviewSendVideoLogin(input, options = {}) {
  * @property {string} videoDate
  *
  * @typedef {Object} DrainSendVideoQueueResult
- * @property {ClaimedRequestSummary[]} rejected
- * @property {ClaimedRequestSummary[]} released
+ * @property {ClaimedRequestSummary[]} rejected - The e2e personas' requests (every request, under scope `all`)
+ * @property {ClaimedRequestSummary[]} transferred - Anyone else's, moved from the regular queue to the specialist queue
+ * @property {ClaimedRequestSummary[]} released - Anyone else's at the head of the specialist queue, released and left there
  * @property {ReviewQueue[]} queuesWithWork - Queues still showing a claim button when the drain ended
  * @property {string} [stoppedReason] - Why the drain stopped before the dashboard ran dry
  */
@@ -1218,7 +1355,7 @@ const DEFAULT_DRAIN_MAX_CLAIMS = 25
  */
 function assertValidDrainScope(scope, personas) {
   if (scope !== 'all' && scope !== 'e2e') {
-    throw new Error(`[queue drain] unknown scope "${scope}" (all | e2e)`)
+    throw new Error(`[queue drain] unknown scope "${scope}" (e2e | all)`)
   }
   if (scope === 'e2e' && personas.length === 0) {
     throw new Error("[queue drain] scope 'e2e' needs the personas to keep to")
@@ -1226,44 +1363,58 @@ function assertValidDrainScope(scope, personas) {
 }
 
 /**
- * Empty the review queues: claim the head, reject it, repeat until the dashboard renders no claim
- * button. The journeys run it before they submit (so their own upload is the head the review claims)
- * and after a failure (so an orphan never waits for the morning); CI runs it after every lane.
+ * @typedef {Object} DrainOptions
+ * @property {'e2e' | 'all'} scope
+ * @property {{ cardSerialNumber: string, surname: string, firstName: string, persona?: string }[]} personas
+ * @property {string} reason - What the portal records against each rejected request
+ * @property {string} transferComment - The note each moved request carries into the specialist queue
+ * @property {number} maxClaims
+ * @property {boolean} dryRun
+ * @property {AbortSignal} [signal]
+ */
+
+/**
+ * Empty the review queues of the e2e personas' requests: claim the head, decide what it is, repeat
+ * until no queue has a head this run may claim. The journeys run it before they submit (so their own
+ * upload is the head the review claims) and after a failure (so an orphan never waits for the
+ * morning); the nightly runs it once more at the end.
  *
- * `scope: 'e2e'` rejects only the listed personas and STOPS at the first foreign head, releasing it
- * the way a review does — FIFO means nothing behind it is reachable without touching it. Rejecting,
- * not closing: a rejection is a terminal, logged decision, while `CloseRequest` has only ever been
- * observed to release the claim.
+ * An e2e persona's request is rejected — a terminal, logged decision, while `CloseRequest` only
+ * releases the claim. Anyone else's is never rejected (scope `e2e`, the default): at the head of the
+ * regular queue it is moved to the Specialist Review queue, where a person reviews it and where it no
+ * longer stands in front of the journeys' uploads; at the head of the specialist queue there is
+ * nowhere left to move it, so it is released and that queue left alone — FIFO means nothing behind
+ * it is reachable without touching it. Scope `all` rejects everything queued, and is for a
+ * deliberate manual cleanup only.
  *
- * `dryRun` only logs in and reads the dashboard — which queues hold work — claiming nothing.
+ * `dryRun` only reads the dashboard — which queues hold work — claiming nothing.
  *
- * @param {{ scope?: 'all' | 'e2e', personas?: { cardSerialNumber: string, surname: string, firstName: string, persona?: string }[], reason?: string, maxClaims?: number, dryRun?: boolean, signal?: AbortSignal }} [options]
+ * Exported for the unit tests; {@link drainSendVideoQueue} is the entry point.
+ *
+ * @param {typeof fetch} fetchWithCookies
+ * @param {DrainOptions} options
  * @returns {Promise<DrainSendVideoQueueResult>}
  */
-export async function drainSendVideoQueue(options = {}) {
-  const {
-    scope = 'all',
-    personas = [],
-    reason = DEFAULT_DRAIN_REASON,
-    maxClaims = DEFAULT_DRAIN_MAX_CLAIMS,
-    dryRun = false,
-    signal,
-  } = options
-  assertValidDrainScope(scope, personas)
-
-  const fetchWithCookies = await openSession(signal)
+export async function drainReviewQueues(fetchWithCookies, options) {
+  const { scope, personas, reason, transferComment, maxClaims, dryRun, signal } = options
   /** @type {DrainSendVideoQueueResult} */
-  const result = { rejected: [], released: [], queuesWithWork: [] }
-  /** @type {Map<string, 'rejected' | 'released'>} what this run already did to each request id */
+  const result = { rejected: [], transferred: [], released: [], queuesWithWork: [] }
+  /** @type {Map<string, 'rejected' | 'transferred' | 'released'>} what this run already did to each request id */
   const handled = new Map()
+  /** @type {Set<ReviewQueue>} queues whose head is someone else's with nowhere to go — left as they are */
+  const leftAlone = new Set()
 
   for (let claims = 0; ; claims++) {
     const dashboardHtml = await fetchBackcheckDashboard(fetchWithCookies, signal)
     const claimForms = findClaimForms(dashboardHtml)
     result.queuesWithWork = claimForms.map((form) => form.queue)
-    const claimForm = claimForms[0]
+    const claimForm = claimForms.find((form) => !leftAlone.has(form.queue))
     if (!claimForm) {
-      console.log(`[queue drain] queues empty after ${claims} claim(s)`)
+      if (claimForms.length === 0) {
+        console.log(`[queue drain] queues empty after ${claims} claim(s)`)
+      } else {
+        result.stoppedReason = `a request that is not an e2e persona heads the ${result.queuesWithWork.join(' and ')} queue — left for a person to review`
+      }
       return result
     }
     if (dryRun) {
@@ -1282,26 +1433,46 @@ export async function drainSendVideoQueue(options = {}) {
     } = await claimQueueHead(fetchWithCookies, claimForm, 'claim queued request', signal)
     if (!claimed) {
       result.stoppedReason = `the claim landed on ${describeClaimLanding(claimResponse, claimHtml)} instead of a request`
+      // The queue emptied between the dashboard read and the claim: report what is queued NOW.
+      result.queuesWithWork = findClaimForms(await fetchBackcheckDashboard(fetchWithCookies, signal)).map(
+        (form) => form.queue
+      )
       return result
     }
 
     const persona = claimedPersona(claimed, personas)
     const summary = summarizeClaimed(claimed, persona)
     const before = handled.get(claimed.requestIdentifier)
-    if (before) {
-      // A decision that did not stick, or a foreign head under 'e2e' — either way, stop churning.
+    // A request moved to the specialist queue is expected back at that queue's head; anything else
+    // coming back — a decision or a move that did not stick — is a reason to stop churning.
+    if (before && !(before === 'transferred' && claimed.queue === 'specialist')) {
       await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
-      result.stoppedReason = `${claimed.requestIdentifier} (${persona}) came back after being ${before}`
+      result.stoppedReason = `${claimed.requestIdentifier} (${persona}) came back to the ${claimed.queue} queue after being ${before}`
       return result
     }
 
     if (scope === 'e2e' && persona === 'foreign') {
+      if (claimed.queue === 'regular') {
+        await transferClaimedRequestToSpecialist(
+          fetchWithCookies,
+          claimed.$detail,
+          claimResponse.url,
+          transferComment,
+          signal
+        )
+        handled.set(claimed.requestIdentifier, 'transferred')
+        result.transferred.push(summary)
+        console.log(`[queue drain] moved ${describeClaimed(claimed, persona)} to the specialist queue`)
+        continue
+      }
       await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
       handled.set(claimed.requestIdentifier, 'released')
       result.released.push(summary)
-      result.stoppedReason = `foreign request at the head — released ${claimed.requestIdentifier} and stopped (scope e2e)`
-      console.log(`[queue drain] released ${describeClaimed(claimed, persona)}`)
-      return result
+      leftAlone.add(claimed.queue)
+      console.log(
+        `[queue drain] released ${describeClaimed(claimed, persona)} — leaving the ${claimed.queue} queue alone`
+      )
+      continue
     }
 
     await submitSendVideoDecision(
@@ -1324,6 +1495,28 @@ export async function drainSendVideoQueue(options = {}) {
     result.rejected.push(summary)
     console.log(`[queue drain] rejected ${describeClaimed(claimed, persona)}`)
   }
+}
+
+/**
+ * Signs in and runs {@link drainReviewQueues}.
+ *
+ * @param {{ scope?: 'e2e' | 'all', personas?: { cardSerialNumber: string, surname: string, firstName: string, persona?: string }[], reason?: string, transferComment?: string, maxClaims?: number, dryRun?: boolean, signal?: AbortSignal }} [options]
+ * @returns {Promise<DrainSendVideoQueueResult>}
+ */
+export async function drainSendVideoQueue(options = {}) {
+  const {
+    scope = 'e2e',
+    personas = [],
+    reason = DEFAULT_DRAIN_REASON,
+    transferComment = DEFAULT_TRANSFER_COMMENT,
+    maxClaims = DEFAULT_DRAIN_MAX_CLAIMS,
+    dryRun = false,
+    signal,
+  } = options
+  assertValidDrainScope(scope, personas)
+
+  const fetchWithCookies = await openSession(signal)
+  return drainReviewQueues(fetchWithCookies, { scope, personas, reason, transferComment, maxClaims, dryRun, signal })
 }
 
 function isRunAsCli() {
@@ -1358,7 +1551,7 @@ function printUsage() {
   console.error('  node login.mjs send-video approve <serial> <surname> <firstName>')
   console.error('  node login.mjs send-video reject  <serial> <surname> <firstName> [reasonId] [message]')
   console.error('     (serial is "N/A" for a cardless registration; the name is what identifies it)')
-  console.error('  Draining the review queue: yarn queue:drain [--scope all|e2e] (scripts/send-video-queue.ts)')
+  console.error('  Draining the review queue: yarn queue:drain [--scope e2e|all] (scripts/send-video-queue.ts)')
 }
 
 if (isRunAsCli()) {
