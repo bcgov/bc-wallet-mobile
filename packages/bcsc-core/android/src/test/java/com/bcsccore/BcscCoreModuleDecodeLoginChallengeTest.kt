@@ -106,4 +106,19 @@ class BcscCoreModuleDecodeLoginChallengeTest {
         verify { promise.reject("E_INVALID_JWK", any<String>(), any<Throwable>()) }
         verify(exactly = 0) { promise.resolve(any()) }
     }
+
+    @Test
+    fun `a JWK whose kid is not a string still reports the unusable key, not a decode failure`() {
+        val jwk =
+            jwkFor(serverKey).apply {
+                putInt("kid", 7)
+                putString("n", null)
+            }
+        val promise = mockk<Promise>(relaxed = true)
+
+        module.decodeLoginChallenge(challenge(), jwk, promise)
+
+        verify { promise.reject("E_INVALID_JWK", any<String>(), any<Throwable>()) }
+        verify(exactly = 0) { promise.resolve(any()) }
+    }
 }

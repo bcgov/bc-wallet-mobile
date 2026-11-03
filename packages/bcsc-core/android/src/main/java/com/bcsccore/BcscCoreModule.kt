@@ -5010,6 +5010,10 @@ class BcscCoreModule internal constructor(
         }
     }
 
+    /** The field as a string, or null when absent or not a string, so a diagnostic read never throws. */
+    private fun ReadableMap.stringOrNull(name: String): String? =
+        if (hasKey(name) && getType(name) == ReadableType.String) getString(name) else null
+
     /**
      * Verifies the inner JWS against the server JWK. `false` means no key was provided or the
      * signature does not match, nothing else: a JWK that cannot become a key rejects with
@@ -5023,8 +5027,8 @@ class BcscCoreModule internal constructor(
         context: String = "",
     ): Boolean? {
         if (jwk == null) return false
-        val kid = jwk.takeIf { it.hasKey("kid") }?.getString("kid") ?: "?"
-        val alg = jwk.takeIf { it.hasKey("alg") }?.getString("alg") ?: "?"
+        val kid = jwk.stringOrNull("kid") ?: "?"
+        val alg = jwk.stringOrNull("alg") ?: "?"
         val publicKey =
             try {
                 convertJWKToRSAPublicKey(jwk) as java.security.interfaces.RSAPublicKey
