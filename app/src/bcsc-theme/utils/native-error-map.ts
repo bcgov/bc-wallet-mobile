@@ -61,6 +61,7 @@ export const nativeBcscErrorMap: ReadonlyMap<string, ErrorDefinition> = new Map<
   ['E_INVALID_JWT', ErrorRegistry.PARSE_JWT_ERROR],
   ['E_DECODE_LOGIN_CHALLENGE_ERROR', ErrorRegistry.PARSE_JWT_ERROR],
   ['E_INVALID_JWK', ErrorRegistry.MISSING_JWK_ERROR],
+  ['E_JWS_VERIFY_ERROR', ErrorRegistry.JOSE_EXCEPTION],
   ['E_PAYLOAD_DECODE_ERROR', ErrorRegistry.DECRYPT_JWE_ERROR],
   ['E_JWE_DECRYPT_ERROR', ErrorRegistry.DECRYPT_JWE_ERROR],
   ['E_JWE_PARSE_ERROR', ErrorRegistry.DECRYPT_JWE_ERROR],

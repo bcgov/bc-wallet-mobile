@@ -180,3 +180,19 @@ Rules that keep this consistent:
 **Why:** many people install the app only to verify their BC Services Card; an unverified Home is a dead end
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
 alone because starting from the Home card must not turn a skipper into a first-time verifier.
+
+## Server keys: build them in memory, never in the keychain
+
+A server public key (the JWKS entry that verifies the ID token, user info and login challenge, and
+encrypts the quick-login hint) becomes an in-memory key: `JWK.jwkToSecKey` → `SecKeyCreateWithData` on
+iOS, `convertJWKToRSAPublicKey` → `KeyFactory` on Android. Never store it as a keychain or keystore
+item. In `decodePayload` and `decodeLoginChallenge`, `verified: false` means exactly "no key supplied" or
+"signature mismatch"; a JWK that cannot become a key rejects with `E_INVALID_JWK`, a verifier that cannot
+run (unsupported `alg`) rejects with `E_JWS_VERIFY_ERROR`, and both messages name kid/alg/kty only, never
+key material. iOS `JWK(json:)` requires kid/alg/kty/n/e while Android needs kty/n/e; a JWKS entry has all
+of them.
+
+**Why:** iOS used to write the server key into the keychain under `com.mcsi.op.<kid>` and read it back
+before every signature check; any failure of that round trip returned `false`, which the app reported as
+error 2509 "signature does not match payload" with nothing to investigate. Verifying a signature needs no
+keychain, and the rejection codes let the next problem report explain itself.

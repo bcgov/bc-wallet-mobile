@@ -29,8 +29,13 @@ class Base64URL {
   }
 
   class func decode(_ encodedString: String) -> Data {
+    return decodeOrNil(encodedString)!
+  }
+
+  /// Nil for input that is not base64url, where `decode` would trap.
+  class func decodeOrNil(_ encodedString: String) -> Data? {
     let tempEncodedString = Base64URL.toBase64(encodedString)
-    return Data(base64Encoded: tempEncodedString, options: NSData.Base64DecodingOptions(rawValue: 0))!
+    return Data(base64Encoded: tempEncodedString, options: NSData.Base64DecodingOptions(rawValue: 0))
   }
 
   class func decodeAsString(_ encodedString: String) -> String {

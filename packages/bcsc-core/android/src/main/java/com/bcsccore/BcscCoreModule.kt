@@ -1912,9 +1912,10 @@ class BcscCoreModule internal constructor(
                 return
             }
 
-            // Parse the inner JWS and verify its signature. `verified` is a flag (never throws); the
-            // caller decides what to do when it is false. A malformed inner token maps to
-            // E_FAILED_TO_PARSE_JWS, distinct from the outer JWE parse failure handled below.
+            // Parse the inner JWS and verify its signature. `verified` is false only for a missing key
+            // or a signature mismatch; an unusable key or a verifier that cannot run has already
+            // rejected. A malformed inner token maps to E_FAILED_TO_PARSE_JWS, distinct from the outer
+            // JWE parse failure handled below.
             val signedJWT =
                 try {
                     SignedJWT.parse(jwtPayload)
@@ -1923,7 +1924,7 @@ class BcscCoreModule internal constructor(
                     promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", e)
                     return
                 }
-            val verified = if (key != null) verifyJwtSignature(signedJWT, key) else false
+            val verified = verifySignatureOrReject(signedJWT, key, promise, diagnostics) ?: return
 
             // Parse the JWT to extract and decode the payload (claims)
             val jwtSegments = jwtPayload.split(".")
@@ -2049,7 +2050,7 @@ class BcscCoreModule internal constructor(
                     convertJWKToRSAPublicKey(key)
                 } catch (e: Exception) {
                     Log.e(NAME, "createQuickLoginJWT: Failed to convert JWK to public key: ${e.message}")
-                    promise.reject("E_JWK_TO_KEY_FAILED", "Failed to convert JWK to RSA public key: ${e.message}", e)
+                    promise.reject("E_INVALID_JWK", "Failed to convert JWK to RSA public key: ${e.message}", e)
                     return
                 }
 
@@ -4907,13 +4908,8 @@ class BcscCoreModule internal constructor(
 
             Log.d(NAME, "decodeLoginChallenge: claims = ${jwtClaims.toJSONObject()}")
 
-            // Attempt verification if key is provided
-            val verified =
-                if (key != null) {
-                    verifyJwtSignature(signedJWT, key)
-                } else {
-                    false
-                }
+            // Verify the signature if a key is provided; an unusable key has already rejected
+            val verified = verifySignatureOrReject(signedJWT, key, promise) ?: return
 
             val claims =
                 Arguments.createMap().apply {
@@ -5015,42 +5011,43 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Verifies the JWT signature using the provided JWK.
-     * Returns true if verification succeeds, false otherwise.
+     * Verifies the inner JWS against the server JWK. `false` means no key was provided or the
+     * signature does not match, nothing else: a JWK that cannot become a key rejects with
+     * E_INVALID_JWK and a verifier that cannot run rejects with E_JWS_VERIFY_ERROR, both returning
+     * null so the caller stops. Messages name kid/alg only, never key material.
      */
-    private fun verifyJwtSignature(
+    private fun verifySignatureOrReject(
         signedJWT: SignedJWT,
-        jwk: ReadableMap,
-    ): Boolean {
-        return try {
-            // Validate JWK has required fields
-            if (!jwk.hasKey("n") || !jwk.hasKey("e")) {
-                Log.w(NAME, "verifyJwtSignature: JWK missing required fields (n, e)")
-                return false
+        jwk: ReadableMap?,
+        promise: Promise,
+        context: String = "",
+    ): Boolean? {
+        if (jwk == null) return false
+        val kid = jwk.takeIf { it.hasKey("kid") }?.getString("kid") ?: "?"
+        val alg = jwk.takeIf { it.hasKey("alg") }?.getString("alg") ?: "?"
+        val publicKey =
+            try {
+                convertJWKToRSAPublicKey(jwk) as java.security.interfaces.RSAPublicKey
+            } catch (e: Exception) {
+                Log.e(NAME, "verifySignatureOrReject: unusable JWK (kid=$kid, alg=$alg): ${e.message}", e)
+                promise.reject(
+                    "E_INVALID_JWK",
+                    "Unusable JWK for signature verification (kid=$kid, alg=$alg): ${e.message} $context",
+                    e,
+                )
+                return null
             }
-
-            val n = jwk.getString("n") ?: return false
-            val e = jwk.getString("e") ?: return false
-
-            // Build RSA public key from JWK components
-            val rsaKey =
-                RSAKey
-                    .Builder(
-                        com.nimbusds.jose.util
-                            .Base64URL(n),
-                        com.nimbusds.jose.util
-                            .Base64URL(e),
-                    ).build()
-
-            val publicKey = rsaKey.toRSAPublicKey()
-            val verifier = RSASSAVerifier(publicKey)
-
-            val verified = signedJWT.verify(verifier)
-            Log.d(NAME, "verifyJwtSignature: verification result = $verified")
-            verified
-        } catch (e: Exception) {
-            Log.e(NAME, "verifyJwtSignature: Verification failed: ${e.message}", e)
-            false
+        return try {
+            signedJWT.verify(RSASSAVerifier(publicKey))
+        } catch (e: com.nimbusds.jose.JOSEException) {
+            val algorithm = signedJWT.header.algorithm
+            Log.e(NAME, "verifySignatureOrReject: verifier could not run (alg=$algorithm): ${e.message}", e)
+            promise.reject(
+                "E_JWS_VERIFY_ERROR",
+                "JWS verification could not run (alg=$algorithm): ${e.message} $context",
+                e,
+            )
+            null
         }
     }
 

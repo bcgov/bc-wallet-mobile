@@ -103,6 +103,7 @@ describe('native-error-map', () => {
 
     it('maps a raw-string-only native code (not in the enum) to its definition', () => {
       expect(nativeBcscErrorMap.get('E_JWE_DECRYPT_ERROR')).toBe(ErrorRegistry.DECRYPT_JWE_ERROR)
+      expect(nativeBcscErrorMap.get('E_JWS_VERIFY_ERROR')).toBe(ErrorRegistry.JOSE_EXCEPTION)
     })
 
     it('maps both platforms’ divergent strings for the same condition to one definition', () => {
