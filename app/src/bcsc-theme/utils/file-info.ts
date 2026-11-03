@@ -147,14 +147,16 @@ export const checkFileSystemFreeStorage = async (
   freeStorageMb: number
   totalStorageMb: number
 }> => {
+  const _bytesToMegabytes = (bytes: number): number => Math.floor(bytes / (1024 * 1024))
+
   try {
     const { freeSpace, totalSpace } = await RNFS.getFSInfo()
-    const freeSpaceMb = freeSpace / (1024 * 1024)
-    logger.debug(`[FileSystem] Free space: ${freeSpaceMb.toFixed(2)} MB, Minimum required: ${minMb} MB`)
+    const freeSpaceMb = _bytesToMegabytes(freeSpace)
+    logger.debug(`[FileSystem] Free space: ${freeSpaceMb} MB, Minimum required: ${minMb} MB`)
     return {
       hasFreeStorage: freeSpaceMb >= minMb,
       freeStorageMb: freeSpaceMb,
-      totalStorageMb: totalSpace / (1024 * 1024),
+      totalStorageMb: _bytesToMegabytes(totalSpace),
     }
   } catch (error) {
     logger.error('Error checking file system space', error as Error)

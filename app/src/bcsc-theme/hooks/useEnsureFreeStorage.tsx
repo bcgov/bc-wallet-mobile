@@ -5,8 +5,8 @@ import { useCallback } from 'react'
 import { checkFileSystemFreeStorage } from '../utils/file-info'
 
 export enum MinimumFreeStorageMb {
-  SMALL = 100,
-  LARGE = 250,
+  SMALL = 25, // ie: Photo uploads
+  LARGE = 150, // ie: Video uploads
 }
 
 /**
@@ -21,19 +21,26 @@ export const useEnsureFreeStorage = () => {
 
   // Resolves true when it is safe to continue; shows the alert and resolves false when space is low
   return useCallback(
+    /**
+     * Ensures that the device has enough free storage space.
+     * If the available storage is below the specified minimum, an alert is shown to the user.
+     * @param minFreeMb - The minimum free storage in MB required to continue.
+     * @returns A promise that resolves to true if there is enough free storage,
+     *          or false if an alert was shown due to low storage.
+     */
     async (minFreeMb: MinimumFreeStorageMb) => {
       const storage = await checkFileSystemFreeStorage(minFreeMb, logger)
       if (!storage.hasFreeStorage) {
         const appError = AppError.fromErrorDefinition(ErrorRegistry.DEVICE_STORAGE_FULL)
 
-        appError.addContext({
+        const context = {
           freeStorageMb: storage.freeStorageMb,
           totalStorageMb: storage.totalStorageMb,
           hasFreeStorage: storage.hasFreeStorage,
           minRequiredMb: minFreeMb,
-        })
+        }
 
-        logger.error('[useEnsureFreeStorage] Device storage is full', appError)
+        appError.addContext(context)
 
         deviceStorageFullAlert(appError)
       }

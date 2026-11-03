@@ -14,6 +14,8 @@ import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, Platform } from 'react-native'
 
+const ANDROID_STORAGE_SETTINGS_INTENT = 'android.settings.INTERNAL_STORAGE_SETTINGS'
+
 export type AppAlerts = ReturnType<typeof useAlerts>
 type AlertOnPressAction = () => void | Promise<void>
 
@@ -128,6 +130,16 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
           action: {
             text: t('BCSC.OpenSettings'),
             onPress: async () => {
+              try {
+                if (Platform.OS === 'android') {
+                  // On Android we can open the internal storage settings directly
+                  await Linking.sendIntent(ANDROID_STORAGE_SETTINGS_INTENT)
+                  return
+                }
+              } catch (error) {
+                logger.error('[DeviceStorageFullAlert] Failed to open android settings', error as Error)
+              }
+
               try {
                 await Linking.openSettings()
               } catch (error) {

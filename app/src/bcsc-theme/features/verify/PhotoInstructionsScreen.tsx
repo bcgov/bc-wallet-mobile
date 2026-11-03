@@ -1,4 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { MinimumFreeStorageMb, useEnsureFreeStorage } from '@/bcsc-theme/hooks/useEnsureFreeStorage'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointList from '@/components/BulletPointList'
 import { TestIds } from '@/test-ids/registry'
@@ -19,6 +20,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   const { forLiveCall } = route.params
   const { Spacing } = useTheme()
   const { t } = useTranslation()
+  const ensureFreeStorage = useEnsureFreeStorage()
 
   const styles = StyleSheet.create({
     image: {
@@ -32,7 +34,12 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.PhotoInstructions.TakePhoto')}
-        onPress={() => {
+        onPress={async () => {
+          const hasFreeStorage = await ensureFreeStorage(MinimumFreeStorageMb.SMALL)
+          if (!hasFreeStorage) {
+            return
+          }
+
           navigation.navigate(BCSCScreens.TakePhoto, {
             deviceSide: 'front',
             cameraInstructions: '',

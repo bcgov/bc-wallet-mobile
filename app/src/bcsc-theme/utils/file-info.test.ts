@@ -351,7 +351,7 @@ describe('File Info Utils', () => {
       await checkFileSystemFreeStorage(100, mockLogger)
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('[FileSystem] Free space: 150.00 MB, Minimum required: 100 MB')
+        expect.stringContaining('[FileSystem] Free space: 150 MB, Minimum required: 100 MB')
       )
     })
   })
