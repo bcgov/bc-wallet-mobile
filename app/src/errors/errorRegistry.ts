@@ -308,7 +308,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.LOGIN_SERVER_ERROR,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.AUTHENTICATION,
-    message: 'Auth server returned 5xx during login flow',
+    message: 'Login failed — see failure_step and the technical message for the cause',
   },
   INVALID_PAIRING_CODE: {
     statusCode: 2205,
