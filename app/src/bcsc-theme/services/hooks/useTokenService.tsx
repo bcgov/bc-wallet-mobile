@@ -3,9 +3,24 @@ import useTokenApi, { IdTokenMetadataConfig } from '@/bcsc-theme/api/hooks/useTo
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
-import { useAlerts } from '@/hooks/useAlerts'
+import { AppAlerts, useAlerts } from '@/hooks/useAlerts'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
+
+/**
+ * Maps AppEventCodes that can be thrown while decrypting and verifying the ID token to their
+ * corresponding alert functions from {@link useAlerts}.
+ */
+const getIdTokenAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode, (error?: unknown) => void>> => ({
+  [AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN]: alerts.unableToDecryptIdTokenAlert,
+  [AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON]: alerts.failedToDeserializeJsonAlert,
+  [AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK]: alerts.missingJwkAlert,
+  [AppEventCode.ERR_112_JWS_VERIFICATION_FAILED]: alerts.jwsVerificationFailedAlert,
+  [AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION]: alerts.joseExceptionAlert,
+  [AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY]: alerts.failedToGetClaimsSetAlert,
+  [AppEventCode.ERR_117_FAILED_TO_PARSE_JWS]: alerts.failedToParseJwsAlert,
+  [AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL]: alerts.tokenUnexpectedlyNullAlert,
+})
 
 /**
  * Service layer hook for token api.
@@ -30,36 +45,8 @@ export const useTokenService = () => {
       try {
         return await tokenApi.getCachedIdTokenMetadata(config)
       } catch (error) {
-        if (isAppError(error, AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN)) {
-          alerts.unableToDecryptIdTokenAlert(error)
-        }
-
-        if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
-          alerts.failedToDeserializeJsonAlert(error)
-        }
-
-        if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
-          alerts.missingJwkAlert(error)
-        }
-
-        if (isAppError(error, AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)) {
-          alerts.jwsVerificationFailedAlert(error)
-        }
-
-        if (isAppError(error, AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION)) {
-          alerts.joseExceptionAlert(error)
-        }
-
-        if (isAppError(error, AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY)) {
-          alerts.failedToGetClaimsSetAlert(error)
-        }
-
-        if (isAppError(error, AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)) {
-          alerts.failedToParseJwsAlert(error)
-        }
-
-        if (isAppError(error, AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL)) {
-          alerts.tokenUnexpectedlyNullAlert(error)
+        if (isAppError(error)) {
+          getIdTokenAlertMap(alerts)[error.appEvent]?.(error)
         }
 
         throw error
