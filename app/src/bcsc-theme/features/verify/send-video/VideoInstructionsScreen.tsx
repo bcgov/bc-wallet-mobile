@@ -84,7 +84,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
         onPress={async () => {
           const hasFreeStorage = await ensureFreeStorage(MinimumFreeStorageMb.LARGE)
-          if (hasFreeStorage) {
+          if (!hasFreeStorage) {
             return
           }
 
