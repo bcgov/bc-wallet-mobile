@@ -2887,7 +2887,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - VisionCameraBarcodeScanner (5.2.3):
+  - VisionCameraBarcodeScanner (5.2.4):
     - GoogleMLKit/BarcodeScanning (= 9.0.0)
     - hermes-engine
     - NitroImage
@@ -3454,7 +3454,7 @@ SPEC CHECKSUMS:
   RNWorklets: f0de904d12965e1de29125e6acc7a0d65acadb43
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   VisionCamera: f84550cffbbf23f3cac7a3d1d2e66e5098a4e8eb
-  VisionCameraBarcodeScanner: 20cca2d99425546548511a95980bb8b1117fb830
+  VisionCameraBarcodeScanner: f323ff15285506ab428226fd03ddfb7add98cbad
   Yoga: 18b74b3ade30bebc1904004dfaceae1dd02a330a
 
 PODFILE CHECKSUM: 475181d0fc730400f475cc78734301e2bbd5e7d0
