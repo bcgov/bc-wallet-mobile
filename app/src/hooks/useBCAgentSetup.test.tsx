@@ -402,18 +402,22 @@ describe('useBCAgentSetup', () => {
 
     const agent = createMockAgent()
 
+    const oldMediationRecord = { id: 'med1', connectionId: 'conn1', recipientKeys: ['key1'] }
+    const oldConnection = {
+      id: 'conn1',
+      getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
+      outOfBandId: 'oob1',
+      updatedAt: moment().subtract(100, 'days').toDate(),
+    }
+    const oldOobRecord = { id: 'oob1' }
     const mediationRepository = { delete: jest.fn(), save: jest.fn() }
     const connectionRepository = {
       save: jest.fn(),
-      getById: jest.fn().mockResolvedValue({
-        getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
-        outOfBandId: 'oob1',
-        updatedAt: moment().subtract(100, 'days').toDate(),
-      }),
+      getById: jest.fn().mockResolvedValue(oldConnection),
       delete: jest.fn(),
     }
     const outOfBandRepository = {
-      getById: jest.fn().mockResolvedValue({ id: 'oob1' }),
+      getById: jest.fn().mockResolvedValue(oldOobRecord),
       delete: jest.fn(),
       save: jest.fn(),
     }
@@ -432,12 +436,8 @@ describe('useBCAgentSetup', () => {
     }) as any
     agent.didcomm.mediationRecipient.initiateMessagePickup = jest
       .fn()
-      .mockRejectedValue(new Error('Timed out waiting for connection test-connection-id to complete'))
-    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
-      id: 'med1',
-      connectionId: 'conn1',
-      recipientKeys: ['key1'],
-    })
+      .mockRejectedValue(new Error('Failed to initiate message pickup'))
+    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue(oldMediationRecord)
     agent.didcomm.oob.receiveInvitationFromUrl = jest.fn().mockResolvedValue({
       outOfBandRecord: { id: 'oob1' },
       connectionRecord: {
@@ -452,24 +452,15 @@ describe('useBCAgentSetup', () => {
       .mockRejectedValue(new Error('Failed to establish a new connection for mediation recovery'))
     ;(Agent as jest.Mock).mockImplementation(() => agent)
 
-    jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
-
-    let thrownError: unknown
     await act(async () => {
-      try {
-        await result.current.initializeAgent({
-          id: 'wallet-id',
-          key: 'wallet-key',
-          salt: 'wallet-salt',
-        })
-      } catch (error) {
-        thrownError = error
-      }
+      await expect(
+        result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
+      ).rejects.toThrow('Failed to establish a new connection for mediation recovery')
     })
-    expect(thrownError).toBeInstanceOf(Error)
 
-    expect(mediationRepository.save).toHaveBeenCalled()
-    expect(connectionRepository.save).toHaveBeenCalled()
+    expect(mediationRepository.save).toHaveBeenCalledWith(agent.context, oldMediationRecord)
+    expect(connectionRepository.save).toHaveBeenCalledWith(agent.context, oldConnection)
+    expect(outOfBandRepository.save).not.toHaveBeenCalled()
   })
 
   it('should rollback if mediation recovery fails and new connection is not established so recover oob invitation', async () => {
@@ -477,18 +468,22 @@ describe('useBCAgentSetup', () => {
 
     const agent = createMockAgent()
 
+    const oldMediationRecord = { id: 'med1', connectionId: 'conn1', recipientKeys: ['key1'] }
+    const oldConnection = {
+      id: 'conn1',
+      getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
+      outOfBandId: 'oob1',
+      updatedAt: moment().subtract(100, 'days').toDate(),
+    }
+    const oldOobRecord = { id: 'oob1' }
     const mediationRepository = { delete: jest.fn(), save: jest.fn() }
     const connectionRepository = {
       save: jest.fn(),
-      getById: jest.fn().mockResolvedValue({
-        getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
-        outOfBandId: 'oob1',
-        updatedAt: moment().subtract(100, 'days').toDate(),
-      }),
+      getById: jest.fn().mockResolvedValue(oldConnection),
       delete: jest.fn(),
     }
     const outOfBandRepository = {
-      getById: jest.fn().mockResolvedValue({ id: 'oob1' }),
+      getById: jest.fn().mockResolvedValue(oldOobRecord),
       delete: jest.fn(),
       save: jest.fn(),
     }
@@ -509,35 +504,21 @@ describe('useBCAgentSetup', () => {
     agent.didcomm.mediationRecipient.initiateMessagePickup = jest
       .fn()
       .mockRejectedValue(new Error('Failed to initiate message pickup'))
-    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
-      id: 'med1',
-      connectionId: 'conn1',
-      recipientKeys: ['key1'],
-    })
+    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue(oldMediationRecord)
     agent.didcomm.oob.receiveInvitationFromUrl = jest
       .fn()
       .mockRejectedValue(new Error('Failed to establish a new connection for mediation recovery'))
     ;(Agent as jest.Mock).mockImplementation(() => agent)
 
-    jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
-
-    let thrownError: unknown
     await act(async () => {
-      try {
-        await result.current.initializeAgent({
-          id: 'wallet-id',
-          key: 'wallet-key',
-          salt: 'wallet-salt',
-        })
-      } catch (error) {
-        thrownError = error
-      }
+      await expect(
+        result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
+      ).rejects.toThrow('Failed to establish a new connection for mediation recovery')
     })
-    expect(thrownError).toBeInstanceOf(Error)
 
-    expect(mediationRepository.save).toHaveBeenCalled()
-    expect(connectionRepository.save).toHaveBeenCalled()
-    expect(outOfBandRepository.save).toHaveBeenCalled()
+    expect(mediationRepository.save).toHaveBeenCalledWith(agent.context, oldMediationRecord)
+    expect(connectionRepository.save).toHaveBeenCalledWith(agent.context, oldConnection)
+    expect(outOfBandRepository.save).toHaveBeenCalledWith(agent.context, oldOobRecord)
   })
 
   it('on fail recover connection and mediation keys are re-established', async () => {

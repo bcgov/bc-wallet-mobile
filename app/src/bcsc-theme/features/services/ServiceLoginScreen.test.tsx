@@ -339,7 +339,11 @@ describe('ServiceLogin', () => {
 
       const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
       fireEvent.press(continueButton)
-      await waitFor(() => expect(mockLoginServerErrorAlert).not.toHaveBeenCalled())
+
+      // Continue is re-enabled in the same catch that decides on the alert, so once it is
+      // enabled again the alert decision has been made.
+      await waitFor(() => expect(continueButton).toBeEnabled())
+      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
     })
 
     it('should show loginServerErrorAlert when pairing code error is not handled', async () => {

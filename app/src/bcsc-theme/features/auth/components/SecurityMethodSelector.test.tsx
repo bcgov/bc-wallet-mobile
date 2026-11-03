@@ -1,5 +1,5 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { testIdWithKey } from '@bifold/core'
+import { bifoldLoggerInstance, testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -253,14 +253,21 @@ describe('SecurityMethodSelector', () => {
 
   describe('error handling', () => {
     it('handles error when loading device auth info', async () => {
-      mockCanPerformDeviceAuthentication.mockRejectedValue(new Error('Failed to check device auth'))
+      // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
+      const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
+      try {
+        mockCanPerformDeviceAuthentication.mockRejectedValue(new Error('Failed to check device auth'))
 
-      const tree = renderSubject()
+        const tree = renderSubject()
 
-      // Should fall back to device auth not available state
-      await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppNoDeviceAuthContent1')).toBeTruthy()
-      })
+        // Should fall back to device auth not available state
+        await waitFor(() => {
+          expect(tree.getByText('BCSC.Onboarding.SecureAppNoDeviceAuthContent1')).toBeTruthy()
+        })
+        expect(errorSpy).toHaveBeenCalledWith('Error checking device auth availability: Failed to check device auth')
+      } finally {
+        errorSpy.mockRestore()
+      }
     })
 
     it('handles device authentication failure gracefully', async () => {
