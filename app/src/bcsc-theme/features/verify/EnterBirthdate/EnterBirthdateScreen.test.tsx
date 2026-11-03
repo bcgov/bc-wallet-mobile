@@ -78,7 +78,7 @@ describe('EnterBirthdate', () => {
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
-  it('goes back instead of authorizing when no serial is stored', () => {
+  it('goes back when no serial is stored', () => {
     const { getByTestId } = renderScreen(mockNavigation as never)
 
     const input = getByTestId('com.ariesbifold:id/birthDate-input')
