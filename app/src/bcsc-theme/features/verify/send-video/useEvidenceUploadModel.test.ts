@@ -353,8 +353,11 @@ describe('useEvidenceUploadModel', () => {
       }
     )
 
-    it('should emit fileUploadErrorAlert when prompts are missing', async () => {
-      jest.mocked(Bifold.useStore).mockReturnValue([submittableStore({ prompts: [] }), jest.fn()])
+    it.each([
+      ['empty', []],
+      ['undefined', undefined],
+    ])('should emit fileUploadErrorAlert when prompts are missing (%s)', async (_label, prompts) => {
+      jest.mocked(Bifold.useStore).mockReturnValue([submittableStore({ prompts }), jest.fn()])
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 

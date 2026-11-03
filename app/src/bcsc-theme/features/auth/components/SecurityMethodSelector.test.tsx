@@ -27,6 +27,13 @@ describe('SecurityMethodSelector', () => {
   const mockOnDeviceAuthPress = jest.fn()
   const mockOnPINPress = jest.fn()
 
+  // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
+  const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
+
+  afterAll(() => {
+    errorSpy.mockRestore()
+  })
+
   const renderSubject = (props: Partial<React.ComponentProps<typeof SecurityMethodSelector>> = {}) =>
     render(
       <BasicAppContext>
@@ -253,21 +260,15 @@ describe('SecurityMethodSelector', () => {
 
   describe('error handling', () => {
     it('handles error when loading device auth info', async () => {
-      // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
-      const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
-      try {
-        mockCanPerformDeviceAuthentication.mockRejectedValue(new Error('Failed to check device auth'))
+      mockCanPerformDeviceAuthentication.mockRejectedValue(new Error('Failed to check device auth'))
 
-        const tree = renderSubject()
+      const tree = renderSubject()
 
-        // Should fall back to device auth not available state
-        await waitFor(() => {
-          expect(tree.getByText('BCSC.Onboarding.SecureAppNoDeviceAuthContent1')).toBeTruthy()
-        })
-        expect(errorSpy).toHaveBeenCalledWith('Error checking device auth availability: Failed to check device auth')
-      } finally {
-        errorSpy.mockRestore()
-      }
+      // Should fall back to device auth not available state
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Onboarding.SecureAppNoDeviceAuthContent1')).toBeTruthy()
+      })
+      expect(errorSpy).toHaveBeenCalledWith('Error checking device auth availability: Failed to check device auth')
     })
 
     it('handles device authentication failure gracefully', async () => {

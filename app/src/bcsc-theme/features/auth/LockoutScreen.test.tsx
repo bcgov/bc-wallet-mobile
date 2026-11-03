@@ -24,6 +24,13 @@ describe('LockoutScreen', () => {
   let mockNavigation: ReturnType<typeof useNavigation>
   let mockIsAccountLocked: jest.SpyInstance
 
+  // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
+  const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
+
+  afterAll(() => {
+    errorSpy.mockRestore()
+  })
+
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
@@ -164,25 +171,19 @@ describe('LockoutScreen', () => {
 
   describe('error handling', () => {
     it('handles error when checking lock status gracefully', async () => {
-      // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
-      const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
-      try {
-        mockIsAccountLocked.mockRejectedValue(new Error('Network error'))
+      mockIsAccountLocked.mockRejectedValue(new Error('Network error'))
 
-        const tree = render(
-          <BasicAppContext>
-            <LockoutScreen navigation={mockNavigation as never} />
-          </BasicAppContext>
-        )
+      const tree = render(
+        <BasicAppContext>
+          <LockoutScreen navigation={mockNavigation as never} />
+        </BasicAppContext>
+      )
 
-        await waitFor(() => {
-          expect(errorSpy).toHaveBeenCalledWith('Error checking lock status: Network error')
-        })
-        expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
-        expect(mockUnlockApp).not.toHaveBeenCalled()
-      } finally {
-        errorSpy.mockRestore()
-      }
+      await waitFor(() => {
+        expect(errorSpy).toHaveBeenCalledWith('Error checking lock status: Network error')
+      })
+      expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
+      expect(mockUnlockApp).not.toHaveBeenCalled()
     })
   })
 
@@ -209,30 +210,25 @@ describe('LockoutScreen', () => {
     })
 
     it('handles error when factoryReset fails gracefully', async () => {
-      const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
-      try {
-        mockFactoryReset.mockRejectedValue(new Error('Reset failed'))
+      mockFactoryReset.mockRejectedValue(new Error('Reset failed'))
 
-        const tree = render(
-          <BasicAppContext>
-            <LockoutScreen navigation={mockNavigation as never} />
-          </BasicAppContext>
-        )
+      const tree = render(
+        <BasicAppContext>
+          <LockoutScreen navigation={mockNavigation as never} />
+        </BasicAppContext>
+      )
 
-        await waitFor(() => {
-          expect(tree.getByText('BCSC.Account.RemoveAccount')).toBeTruthy()
-        })
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Account.RemoveAccount')).toBeTruthy()
+      })
 
-        const removeButton = tree.getByTestId('com.ariesbifold:id/RemoveAccount')
-        fireEvent.press(removeButton)
+      const removeButton = tree.getByTestId('com.ariesbifold:id/RemoveAccount')
+      fireEvent.press(removeButton)
 
-        await waitFor(() => {
-          expect(errorSpy).toHaveBeenCalledWith('Error removing account: Reset failed')
-        })
-        expect(removeButton).toBeEnabled()
-      } finally {
-        errorSpy.mockRestore()
-      }
+      await waitFor(() => {
+        expect(errorSpy).toHaveBeenCalledWith('Error removing account: Reset failed')
+      })
+      expect(removeButton).toBeEnabled()
     })
   })
 
