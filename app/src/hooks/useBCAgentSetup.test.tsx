@@ -281,6 +281,11 @@ describe('useBCAgentSetup', () => {
       await result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
     })
 
+    await act(async () => {
+      await result.current.shutdownAndClearAgentIfExists()
+    })
+    expect(result.current.agent).toBeNull()
+
     jest.clearAllMocks()
 
     await act(async () => {
@@ -384,6 +389,7 @@ describe('useBCAgentSetup', () => {
       })
     })
 
+    expect(agent.didcomm.mediationRecipient.initiateMessagePickup).toHaveBeenCalledTimes(1)
     expect(connectionRepository.getById).toHaveBeenCalledWith(agent.context, 'conn1')
     expect(mediationRepository.delete).not.toHaveBeenCalled()
     expect(connectionRepository.delete).not.toHaveBeenCalled()
@@ -540,7 +546,7 @@ describe('useBCAgentSetup', () => {
     const agent = createMockAgent()
     const { mediationRecipient } = agent.didcomm
 
-    const oldMediationRecord = { id: 'med1', connectionId: 'conn1', recipientKeys: ['key1'] }
+    const oldMediationRecord = { id: 'med1', connectionId: 'conn1', recipientKeys: ['key1', 'key2'] }
     const oldConnection = {
       id: 'conn1',
       getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
@@ -607,12 +613,22 @@ describe('useBCAgentSetup', () => {
 
     expect(mediationRepository.delete).toHaveBeenCalledWith(agent.context, oldMediationRecord)
     expect(connectionRepository.delete).toHaveBeenCalledWith(agent.context, oldConnection)
+    expect(outOfBandRepository.delete).toHaveBeenCalledWith(agent.context, { id: 'oob1' })
     expect(agent.didcomm.oob.receiveInvitationFromUrl).toHaveBeenCalledWith('http://mediator', expect.anything())
+    expect(connectionRepository.getById).toHaveBeenNthCalledWith(2, agent.context, 'test-connection-id')
     expect(agent.didcomm.connections.sendPing).toHaveBeenCalledWith('test-connection-id', { responseRequested: true })
     expect(mediationRecipient.requestAndAwaitGrant).toHaveBeenCalledWith(freshConnection)
-    expect(mediationRecipient.notifyKeylistUpdate).toHaveBeenCalledWith(
+    expect(mediationRecipient.notifyKeylistUpdate).toHaveBeenCalledTimes(2)
+    expect(mediationRecipient.notifyKeylistUpdate).toHaveBeenNthCalledWith(
+      1,
       freshConnection,
       'key1',
+      DidCommKeylistUpdateAction.add
+    )
+    expect(mediationRecipient.notifyKeylistUpdate).toHaveBeenNthCalledWith(
+      2,
+      freshConnection,
+      'key2',
       DidCommKeylistUpdateAction.add
     )
     expect(mediationRecipient.setDefaultMediator).toHaveBeenCalledWith(newMediationRecord)
