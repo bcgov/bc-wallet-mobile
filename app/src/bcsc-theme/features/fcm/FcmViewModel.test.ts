@@ -153,6 +153,28 @@ describe('FcmViewModel', () => {
       expect(callOrder).toEqual(['subscribe', 'init'])
     })
 
+    it('logs an error when the FCM service fails to initialize', async () => {
+      const error = new Error('init failed')
+      mockFcmService.init.mockRejectedValueOnce(error)
+
+      viewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockLogger.error).toHaveBeenCalledWith('[FcmViewModel] Failed to initialize FCM service', error)
+    })
+
+    it('logs an error when re-reading the launch notification fails', async () => {
+      viewModel.initialize()
+
+      const error = new Error('read failed')
+      mockFcmService.init.mockRejectedValueOnce(error)
+
+      viewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockLogger.error).toHaveBeenCalledWith('[FcmViewModel] Failed to initialize FCM service', error)
+    })
+
     it('fetches server JWK on initialization when API client is available', async () => {
       viewModel.initialize()
 

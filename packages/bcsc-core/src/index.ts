@@ -1292,7 +1292,7 @@ export const openAndroidKeyboardSelector = async (): Promise<void> => {
  * @returns A promise that resolves once the task has moved. Rejects if it could not be moved (E_MOVE_TO_BACKGROUND_ERROR)
  */
 export const moveAppToBackground = async (): Promise<void> => {
-  return BcscCore.moveAppToBackground();
+  await BcscCore.moveAppToBackground();
 };
 
 /**
