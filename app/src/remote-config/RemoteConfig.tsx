@@ -39,6 +39,11 @@ interface RemoteConfigContextType {
 
 interface RemoteConfigProviderProps extends PropsWithChildren {
   logger: RemoteLogger
+  /**
+   * Use this config as-is and skip the async cache/server load. Intended for tests,
+   * where the post-render load triggers state updates outside act().
+   */
+  initialConfig?: RemoteConfig
 }
 
 const RemoteConfigContext = createContext<RemoteConfigContextType | null>(null)
@@ -49,8 +54,8 @@ const RemoteConfigContext = createContext<RemoteConfigContextType | null>(null)
  * @returns A React context provider that wraps its children and provides access to the remote configuration.
  */
 export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
-  const [loading, setLoading] = useState(true)
-  const [remoteConfigState, setRemoteConfigState] = useState<RemoteConfig>(REMOTE_CONFIG_CACHE)
+  const [loading, setLoading] = useState(!props.initialConfig)
+  const [remoteConfigState, setRemoteConfigState] = useState<RemoteConfig>(props.initialConfig ?? REMOTE_CONFIG_CACHE)
   const initializedRef = useRef(false)
 
   /**
@@ -122,6 +127,12 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
       return
     }
 
+    if (props.initialConfig) {
+      REMOTE_CONFIG_CACHE = props.initialConfig
+      initializedRef.current = true
+      return
+    }
+
     const load = async () => {
       try {
         const remoteConfig = await _initRemoteConfig(props.logger)
@@ -133,7 +144,7 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
     }
 
     load()
-  }, [props.logger, setRemoteConfig])
+  }, [props.logger, props.initialConfig, setRemoteConfig])
 
   const context = useMemo(
     () => ({

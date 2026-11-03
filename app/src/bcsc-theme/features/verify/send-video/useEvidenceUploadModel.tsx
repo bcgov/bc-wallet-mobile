@@ -44,12 +44,58 @@ const UPLOAD_PROGRESS: Record<UploadStage, number> = {
   [UploadStage.Complete]: 100,
 }
 
+/** How a submit run ended. The run only touches the server and the store; `settleSubmit` applies the UI effects. */
+type SubmitOutcome =
+  | { kind: 'submitted'; avgTurnaroundTimeMessage?: string }
+  | { kind: 'reviewCancelled'; agentReason?: string }
+  | { kind: 'requestMissing'; error: Error }
+  | { kind: 'cancelled' }
+  | { kind: 'failed'; error: unknown }
+
+/** The live state of a submit run, shared with every instance showing it. */
+interface SubmitProgress {
+  stage: UploadStage
+  /**
+   * Set by any instance's Cancel; the run stops at its next stage boundary and settles as cancelled. Until then it
+   * is not joined: a caller arriving after the cancel is a new attempt and starts its own run.
+   */
+  cancelled: boolean
+  /** Stage setters of the instances currently mirroring this run. */
+  listeners: Set<(stage: UploadStage) => void>
+}
+
+/** One submit of a verification request, awaited by every instance that joined it. */
+interface SubmitRun {
+  requestId: string | undefined
+  progress: SubmitProgress
+  /** The most recent caller: the only instance that applies the outcome, so the user sees it once. */
+  settler: object
+  promise: Promise<SubmitOutcome>
+}
+
+/**
+ * The submit in flight, shared across every instance of this hook so a second UploadingScreen joins it instead of
+ * submitting the same verification request again (#4928, see CONVENTIONS.md).
+ */
+let inFlightSubmit: SubmitRun | null = null
+
+/**
+ * Drops the shared run so a case that failed mid-run cannot be joined by the next one, and reports whether there
+ * was one to drop. Tests call this between cases; production code must not.
+ */
+export const resetInFlightSubmitForTests = (): { wasInFlight: boolean } => {
+  const wasInFlight = inFlightSubmit !== null
+  inFlightSubmit = null
+  return { wasInFlight }
+}
+
 const useEvidenceUploadModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceUploading>
 ) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store, dispatch] = useStore<BCState>()
-  const isCancelledRef = useRef(false)
+  // Identity for the settler check
+  const instanceRef = useRef<object>({})
   const evidence = useEvidenceService()
   const { updateAccountFlags, updateVerificationRequest } = useSecureActions()
   const { processAdditionalEvidence } = useEvidenceUpload()
@@ -165,128 +211,134 @@ const useEvidenceUploadModel = (
     [evidence, logger]
   )
 
-  const handleSend = useCallback(async () => {
-    setIsUploading(true)
-    setUploadStage(UploadStage.PreparingVideo)
-    try {
-      if (!photoPath || !videoPath || !videoDuration) {
-        throw new Error('Missing photo or video data')
+  /**
+   * Uploads the evidence and submits the verification request. Server and store effects only: every way it can
+   * end is returned for `settleSubmit`, so a run shared by two screens changes the server and the store once and
+   * the screen the user is looking at applies the result.
+   */
+  const runSubmit = useCallback(
+    async (progress: SubmitProgress): Promise<SubmitOutcome> => {
+      const setStage = (stage: UploadStage) => {
+        progress.stage = stage
+        progress.listeners.forEach((listener) => listener(stage))
       }
 
-      if (!prompts || prompts.length === 0) {
-        throw new Error('Missing video prompts data')
-      }
+      try {
+        if (!photoPath || !videoPath || !videoDuration) {
+          throw new Error('Missing photo or video data')
+        }
 
-      if (!verificationRequestId || !verificationRequestSha) {
-        logger.warn(
-          '[useEvidenceUploadModel] Missing verification request data at submit; routing back to Verification Method Selection so prompts can be refreshed and video re-recorded'
-        )
-        await updateVerificationRequest(undefined, null)
-        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
-        dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [getResumeStepRoute(store)],
-          })
-        )
-        throw new Error('Missing verification request data, resetting so you can try again.')
-      }
+        if (!prompts || prompts.length === 0) {
+          throw new Error('Missing video prompts data')
+        }
 
-      if (!photoMetadata) {
-        throw new Error('Missing photo metadata')
-      }
+        if (!verificationRequestId || !verificationRequestSha) {
+          logger.warn(
+            '[useEvidenceUploadModel] Missing verification request data at submit; routing back to Verification Method Selection so prompts can be refreshed and video re-recorded'
+          )
+          await updateVerificationRequest(undefined, null)
+          dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
+          dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+          return {
+            kind: 'requestMissing',
+            error: new Error('Missing verification request data, resetting so you can try again.'),
+          }
+        }
 
-      const localFiles = await prepareLocalFiles(photoPath, videoPath, videoDuration, prompts)
-      if (isCancelledRef.current) {
-        return
-      }
+        if (!photoMetadata) {
+          throw new Error('Missing photo metadata')
+        }
 
-      setUploadStage(UploadStage.PreparingDocuments)
-      const additionalEvidence = await processAdditionalEvidence()
-      if (isCancelledRef.current) {
-        return
-      }
+        const localFiles = await prepareLocalFiles(photoPath, videoPath, videoDuration, prompts)
+        if (progress.cancelled) {
+          return { kind: 'cancelled' }
+        }
 
-      setUploadStage(UploadStage.UploadingFiles)
-      // AC3 boundary check — see capture-date.ts's file header for scoping. Reached
-      // independently of the live-call flow's equivalent guard in uploadSelfiePhoto: send-video
-      // is a first-class choice on Verification Method Selection, and the fallback when a call
-      // is busy or closed, so it needs its own.
-      const selfieMetadata = await withPlausibleCaptureDate(photoMetadata, logger)
+        setStage(UploadStage.PreparingDocuments)
+        const additionalEvidence = await processAdditionalEvidence()
+        if (progress.cancelled) {
+          return { kind: 'cancelled' }
+        }
 
-      const evidenceMetadata = await uploadEvidenceMetadata(selfieMetadata, localFiles.videoMetadata, {
-        photo: sniffMediaFormat(localFiles.photoBytes),
-        video: sniffMediaFormat(localFiles.videoBytes),
-      })
-      if (isCancelledRef.current) {
-        return
-      }
+        setStage(UploadStage.UploadingFiles)
+        // AC3 boundary check — see capture-date.ts's file header for scoping. Reached
+        // independently of the live-call flow's equivalent guard in uploadSelfiePhoto: send-video
+        // is a first-class choice on Verification Method Selection, and the fallback when a call
+        // is busy or closed, so it needs its own.
+        const selfieMetadata = await withPlausibleCaptureDate(photoMetadata, logger)
 
-      await uploadEvidenceFiles(
-        evidenceMetadata.photoMetadataResponse.upload_uri,
-        localFiles.photoBytes,
-        evidenceMetadata.videoMetadataResponse.upload_uri,
-        localFiles.videoBytes,
-        additionalEvidence
-      )
-      if (isCancelledRef.current) {
-        return
-      }
-
-      setUploadStage(UploadStage.FinalizingVerification)
-      const additionalUploadUris = additionalEvidence.map(({ uploadUri }) => uploadUri)
-      const verificationResponse = await finalizeVerification(
-        evidenceMetadata.photoMetadataResponse.upload_uri,
-        evidenceMetadata.videoMetadataResponse.upload_uri,
-        additionalUploadUris,
-        verificationRequestId,
-        verificationRequestSha
-      )
-
-      // A submit reconciled against a request the server already reviewed (see useEvidenceService) can come
-      // back cancelled: "Successfully sent" would only bounce the user here through the pending screen's check
-      if (verificationResponse?.status === VerificationRequestStatus.CANCELLED) {
-        setUploadStage(UploadStage.Complete)
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [
-              {
-                name: BCSCScreens.CancelledReview,
-                params: { agentReason: verificationResponse.status_message },
-              },
-            ],
-          })
-        )
-        return
-      }
-
-      await updateAccountFlags({
-        userSubmittedVerificationVideo: true,
-      })
-
-      // Capture a timestamp when the user successfully submits their verification video. This is needed on the pending review screen
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [new Date()] })
-
-      setUploadStage(UploadStage.Complete)
-
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            {
-              name: BCSCScreens.SuccessfullySent,
-              params: { avgTurnaroundTimeMessage: verificationResponse?.avg_turnaround_time_message },
-            },
-          ],
+        const evidenceMetadata = await uploadEvidenceMetadata(selfieMetadata, localFiles.videoMetadata, {
+          photo: sniffMediaFormat(localFiles.photoBytes),
+          video: sniffMediaFormat(localFiles.videoBytes),
         })
-      )
-    } catch (error) {
-      if (isCancelledRef.current) {
-        return
-      }
+        if (progress.cancelled) {
+          return { kind: 'cancelled' }
+        }
 
+        await uploadEvidenceFiles(
+          evidenceMetadata.photoMetadataResponse.upload_uri,
+          localFiles.photoBytes,
+          evidenceMetadata.videoMetadataResponse.upload_uri,
+          localFiles.videoBytes,
+          additionalEvidence
+        )
+        if (progress.cancelled) {
+          return { kind: 'cancelled' }
+        }
+
+        setStage(UploadStage.FinalizingVerification)
+        const additionalUploadUris = additionalEvidence.map(({ uploadUri }) => uploadUri)
+        const verificationResponse = await finalizeVerification(
+          evidenceMetadata.photoMetadataResponse.upload_uri,
+          evidenceMetadata.videoMetadataResponse.upload_uri,
+          additionalUploadUris,
+          verificationRequestId,
+          verificationRequestSha
+        )
+
+        // A submit reconciled against a request the server already reviewed (see useEvidenceService) can come
+        // back cancelled: "Successfully sent" would only bounce the user here through the pending screen's check
+        if (verificationResponse?.status === VerificationRequestStatus.CANCELLED) {
+          setStage(UploadStage.Complete)
+          return { kind: 'reviewCancelled', agentReason: verificationResponse.status_message }
+        }
+
+        await updateAccountFlags({
+          userSubmittedVerificationVideo: true,
+        })
+
+        // Capture a timestamp when the user successfully submits their verification video. This is needed on the pending review screen
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [new Date()] })
+
+        setStage(UploadStage.Complete)
+        return { kind: 'submitted', avgTurnaroundTimeMessage: verificationResponse?.avg_turnaround_time_message }
+      } catch (error) {
+        // Cancel removes the media out from under the run, so a failure after it is the cancel, not news
+        return progress.cancelled ? { kind: 'cancelled' } : { kind: 'failed', error }
+      }
+    },
+    [
+      dispatch,
+      finalizeVerification,
+      logger,
+      photoMetadata,
+      photoPath,
+      prepareLocalFiles,
+      processAdditionalEvidence,
+      prompts,
+      updateAccountFlags,
+      updateVerificationRequest,
+      uploadEvidenceFiles,
+      uploadEvidenceMetadata,
+      verificationRequestId,
+      verificationRequestSha,
+      videoDuration,
+      videoPath,
+    ]
+  )
+
+  const surfaceFailure = useCallback(
+    async (error: unknown) => {
       // 409 on the evidence endpoints means the registration request is already approved
       if (isAxiosAppError(error, 409)) {
         const recovered = await recoverFromAlreadyVerified()
@@ -304,35 +356,105 @@ const useEvidenceUploadModel = (
       if (!appError.handled) {
         fileUploadErrorAlert(appError)
       }
+    },
+    [alreadyVerifiedAlert, fileUploadErrorAlert, logger, recoverFromAlreadyVerified]
+  )
+
+  /** Applies a settled run to the screen — navigation and alerts — once, from the most recent caller. */
+  const settleSubmit = useCallback(
+    async (outcome: SubmitOutcome) => {
+      switch (outcome.kind) {
+        case 'submitted':
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [
+                {
+                  name: BCSCScreens.SuccessfullySent,
+                  params: { avgTurnaroundTimeMessage: outcome.avgTurnaroundTimeMessage },
+                },
+              ],
+            })
+          )
+          return
+        case 'reviewCancelled':
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [
+                {
+                  name: BCSCScreens.CancelledReview,
+                  params: { agentReason: outcome.agentReason },
+                },
+              ],
+            })
+          )
+          return
+        case 'requestMissing':
+          // The alert then pops on top of the destination screen, so the user knows why they were moved
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [getResumeStepRoute(store)],
+            })
+          )
+          await surfaceFailure(outcome.error)
+          return
+        case 'failed':
+          await surfaceFailure(outcome.error)
+          return
+        case 'cancelled':
+          return
+      }
+    },
+    [navigation, store, surfaceFailure]
+  )
+
+  const handleSend = useCallback(async () => {
+    setIsUploading(true)
+
+    let run = inFlightSubmit
+    // A cancelled run is draining, not submitting (see SubmitProgress.cancelled)
+    if (run === null || run.requestId !== verificationRequestId || run.progress.cancelled) {
+      const progress: SubmitProgress = { stage: UploadStage.PreparingVideo, cancelled: false, listeners: new Set() }
+      const started: SubmitRun = {
+        requestId: verificationRequestId,
+        progress,
+        settler: instanceRef.current,
+        promise: runSubmit(progress),
+      }
+      started.promise = started.promise.finally(() => {
+        if (inFlightSubmit === started) {
+          inFlightSubmit = null
+        }
+      })
+      inFlightSubmit = started
+      run = started
+    } else {
+      logger.warn(
+        '[useEvidenceUploadModel] A submit for this verification request is already in flight; joining it instead of submitting again'
+      )
+    }
+
+    run.settler = instanceRef.current
+    run.progress.listeners.add(setUploadStage)
+    setUploadStage(run.progress.stage)
+
+    try {
+      const outcome = await run.promise
+      if (run.settler === instanceRef.current) {
+        await settleSubmit(outcome)
+      }
     } finally {
+      run.progress.listeners.delete(setUploadStage)
       setIsUploading(false)
     }
-  }, [
-    alreadyVerifiedAlert,
-    dispatch,
-    fileUploadErrorAlert,
-    finalizeVerification,
-    logger,
-    recoverFromAlreadyVerified,
-    navigation,
-    photoMetadata,
-    photoPath,
-    prepareLocalFiles,
-    processAdditionalEvidence,
-    prompts,
-    store,
-    updateAccountFlags,
-    updateVerificationRequest,
-    uploadEvidenceFiles,
-    uploadEvidenceMetadata,
-    verificationRequestId,
-    verificationRequestSha,
-    videoDuration,
-    videoPath,
-  ])
+  }, [logger, runSubmit, settleSubmit, verificationRequestId])
 
   const handleCancel = useCallback(async () => {
-    isCancelledRef.current = true
+    if (inFlightSubmit !== null) {
+      inFlightSubmit.progress.cancelled = true
+    }
     await Promise.allSettled([
       removeFileSafely(photoPath, logger),
       removeFileSafely(videoPath, logger),

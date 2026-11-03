@@ -4,6 +4,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
 <View
   style={
     {
+      "maxHeight": 1133.8999999999999,
       "maxWidth": 700,
       "minWidth": 700,
     }
@@ -17,6 +18,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
         "borderRadius": 8,
         "borderWidth": 1,
         "elevation": 4,
+        "flexShrink": 1,
         "padding": 16,
         "shadowColor": "#000000",
         "shadowOffset": {
@@ -185,6 +187,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
 <View
   style={
     {
+      "maxHeight": 1133.8999999999999,
       "maxWidth": 700,
       "minWidth": 700,
     }
@@ -198,6 +201,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
         "borderRadius": 8,
         "borderWidth": 1,
         "elevation": 4,
+        "flexShrink": 1,
         "padding": 16,
         "shadowColor": "#000000",
         "shadowOffset": {

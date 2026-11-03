@@ -708,7 +708,8 @@ const translation = {
     "ConfigureMediator": {
       "ScreenTitle": "Configure mediator (FR)",
       "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (FR)",
-      "ScanButton": "Scan mediator QR code (FR)"
+      "ScanButton": "Scan mediator QR code (FR)",
+      "Remove": "Remove {{mediator}} (FR)"
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (FR)",
