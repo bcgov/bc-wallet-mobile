@@ -19,9 +19,12 @@ import {
   DidCommConnectionRepository,
   DidCommDidExchangeRole,
   DidCommDidExchangeState,
+  DidCommKeylistUpdateAction,
   DidCommMediationRepository,
+  DidCommMediatorPickupStrategy,
   DidCommOutOfBandRepository,
 } from '@credo-ts/didcomm'
+import { IndyVdrPoolService } from '@credo-ts/indy-vdr'
 
 import { act, renderHook } from '@testing-library/react-native'
 import useBCAgentSetup from './useBCAgentSetup'
@@ -270,7 +273,7 @@ describe('useBCAgentSetup', () => {
   it('should restart existing agent if present', async () => {
     const mockAgent = createMockAgent()
 
-    ;(Agent as jest.Mock).mockImplementation(() => mockAgent)
+    jest.mocked(Agent).mockImplementation(() => mockAgent)
 
     const { result } = renderHook(() => useBCAgentSetup())
 
@@ -284,8 +287,15 @@ describe('useBCAgentSetup', () => {
       await result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
     })
 
-    expect(mockAgent.initialize).toHaveBeenCalled()
-    expect(mockAgent.didcomm.mediationRecipient.initiateMessagePickup).toHaveBeenCalled()
+    // The Agent mock hands back the same instance on every call, so only the
+    // constructor not being called again tells a restart from a fresh build.
+    expect(Agent).not.toHaveBeenCalled()
+    expect(mockAgent.initialize).toHaveBeenCalledTimes(1)
+    expect(mockAgent.didcomm.mediationRecipient.initiateMessagePickup).toHaveBeenCalledWith(
+      undefined,
+      DidCommMediatorPickupStrategy.PickUpV2LiveMode
+    )
+    expect(result.current.agent).toBe(mockAgent)
   })
 
   it('should call recovery if initialization fails', async () => {
@@ -328,6 +338,34 @@ describe('useBCAgentSetup', () => {
     const { result } = renderHook(() => useBCAgentSetup())
 
     const agent = createMockAgent()
+
+    const mediationRepository = { delete: jest.fn(), save: jest.fn() }
+    const connectionRepository = {
+      getAll: jest.fn().mockResolvedValue([]),
+      getById: jest.fn().mockResolvedValue({
+        getTag: jest.fn().mockReturnValue(new Date().toISOString()),
+        updatedAt: new Date(),
+      }),
+      delete: jest.fn(),
+      save: jest.fn(),
+    }
+    const outOfBandRepository = { getById: jest.fn(), delete: jest.fn(), save: jest.fn() }
+
+    agent.dependencyManager.resolve = jest.fn((dep: any) => {
+      if (dep === DidCommMediationRepository) {
+        return mediationRepository
+      }
+      if (dep === DidCommConnectionRepository) {
+        return connectionRepository
+      }
+      if (dep === DidCommOutOfBandRepository) {
+        return outOfBandRepository
+      }
+      if (dep === IndyVdrPoolService) {
+        return createMockPoolService()
+      }
+      return {}
+    }) as any
     agent.didcomm.mediationRecipient.initiateMessagePickup = jest
       .fn()
       .mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
@@ -336,40 +374,21 @@ describe('useBCAgentSetup', () => {
       connectionId: 'conn1',
       recipientKeys: ['key1'],
     })
+    jest.mocked(Agent).mockImplementation(() => agent)
 
-    agent.dependencyManager.resolve = jest.fn((dep: any) => {
-      if (dep === DidCommConnectionRepository) {
-        return {
-          getById: jest.fn().mockResolvedValue({
-            getTag: jest.fn().mockReturnValue(new Date().toISOString()),
-            updatedAt: new Date(),
-          }),
-        }
-      }
-      if (dep === 'IndyVdrPoolService') {
-        return createMockPoolService()
-      }
-      return {}
-    }) as any
-    ;(Agent as jest.Mock).mockImplementation(() => agent)
-
-    jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
-
-    let thrownError: unknown
     await act(async () => {
-      try {
-        await result.current.initializeAgent({
-          id: 'wallet-id',
-          key: 'wallet-key',
-          salt: 'wallet-salt',
-        })
-      } catch (error) {
-        thrownError = error
-      }
+      await result.current.initializeAgent({
+        id: 'wallet-id',
+        key: 'wallet-key',
+        salt: 'wallet-salt',
+      })
     })
-    expect(thrownError).toBeInstanceOf(Error)
 
-    expect(mockLogger.info).toHaveBeenCalled()
+    expect(connectionRepository.getById).toHaveBeenCalledWith(agent.context, 'conn1')
+    expect(mediationRepository.delete).not.toHaveBeenCalled()
+    expect(connectionRepository.delete).not.toHaveBeenCalled()
+    expect(agent.didcomm.oob.receiveInvitationFromUrl).not.toHaveBeenCalled()
+    expect(result.current.agent).toBe(agent)
   })
 
   it('should rollback if mediation recovery fails and new connection is established so do not recover oob invitation', async () => {
@@ -519,15 +538,23 @@ describe('useBCAgentSetup', () => {
     const { result } = renderHook(() => useBCAgentSetup())
 
     const agent = createMockAgent()
+    const { mediationRecipient } = agent.didcomm
+
+    const oldMediationRecord = { id: 'med1', connectionId: 'conn1', recipientKeys: ['key1'] }
+    const oldConnection = {
+      id: 'conn1',
+      getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
+      outOfBandId: 'oob1',
+      updatedAt: moment().subtract(100, 'days').toDate(),
+    }
+    const freshConnection = { id: 'test-connection-id' }
+    const newMediationRecord = { id: 'med2', recipientKeys: ['newKey1'] }
 
     const mediationRepository = { delete: jest.fn(), save: jest.fn() }
     const connectionRepository = {
+      getAll: jest.fn().mockResolvedValue([]),
       save: jest.fn(),
-      getById: jest.fn().mockResolvedValue({
-        getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
-        outOfBandId: 'oob1',
-        updatedAt: moment().subtract(100, 'days').toDate(),
-      }),
+      getById: jest.fn().mockResolvedValueOnce(oldConnection).mockResolvedValueOnce(freshConnection),
       delete: jest.fn(),
     }
     const outOfBandRepository = {
@@ -545,22 +572,19 @@ describe('useBCAgentSetup', () => {
       if (dep === DidCommOutOfBandRepository) {
         return outOfBandRepository
       }
+      if (dep === IndyVdrPoolService) {
+        return createMockPoolService()
+      }
       return {}
     }) as any
 
-    agent.didcomm.mediationRecipient.initiateMessagePickup = jest
+    mediationRecipient.initiateMessagePickup = jest
       .fn()
       .mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
-    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
-      id: 'med1',
-      connectionId: 'conn1',
-      recipientKeys: ['key1'],
-    })
-    agent.didcomm.mediationRecipient.setDefaultMediator = jest.fn().mockResolvedValue(undefined)
-    agent.didcomm.mediationRecipient.initiateMessagePickup = jest.fn().mockResolvedValue(undefined)
-    agent.didcomm.mediationRecipient.requestAndAwaitGrant = jest.fn().mockResolvedValue({
-      recipientKeys: ['newKey1'],
-    })
+      .mockResolvedValueOnce(undefined)
+    mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue(oldMediationRecord)
+    mediationRecipient.setDefaultMediator = jest.fn().mockResolvedValue(undefined)
+    mediationRecipient.requestAndAwaitGrant = jest.fn().mockResolvedValue(newMediationRecord)
     agent.didcomm.oob.receiveInvitationFromUrl = jest.fn().mockResolvedValue({
       outOfBandRecord: { id: 'oob1' },
       connectionRecord: {
@@ -571,27 +595,35 @@ describe('useBCAgentSetup', () => {
       },
     })
     agent.didcomm.connections.sendPing = jest.fn().mockResolvedValue(undefined)
-    ;(Agent as jest.Mock).mockImplementation(() => agent)
+    jest.mocked(Agent).mockImplementation(() => agent)
 
-    jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
-
-    let thrownError: unknown
     await act(async () => {
-      try {
-        await result.current.initializeAgent({
-          id: 'wallet-id',
-          key: 'wallet-key',
-          salt: 'wallet-salt',
-        })
-      } catch (error) {
-        thrownError = error
-      }
+      await result.current.initializeAgent({
+        id: 'wallet-id',
+        key: 'wallet-key',
+        salt: 'wallet-salt',
+      })
     })
-    expect(thrownError).toBeInstanceOf(Error)
 
+    expect(mediationRepository.delete).toHaveBeenCalledWith(agent.context, oldMediationRecord)
+    expect(connectionRepository.delete).toHaveBeenCalledWith(agent.context, oldConnection)
+    expect(agent.didcomm.oob.receiveInvitationFromUrl).toHaveBeenCalledWith('http://mediator', expect.anything())
+    expect(agent.didcomm.connections.sendPing).toHaveBeenCalledWith('test-connection-id', { responseRequested: true })
+    expect(mediationRecipient.requestAndAwaitGrant).toHaveBeenCalledWith(freshConnection)
+    expect(mediationRecipient.notifyKeylistUpdate).toHaveBeenCalledWith(
+      freshConnection,
+      'key1',
+      DidCommKeylistUpdateAction.add
+    )
+    expect(mediationRecipient.setDefaultMediator).toHaveBeenCalledWith(newMediationRecord)
+    expect(mediationRecipient.initiateMessagePickup).toHaveBeenLastCalledWith(
+      newMediationRecord,
+      DidCommMediatorPickupStrategy.PickUpV2LiveMode
+    )
     expect(mediationRepository.save).not.toHaveBeenCalled()
     expect(connectionRepository.save).not.toHaveBeenCalled()
     expect(outOfBandRepository.save).not.toHaveBeenCalled()
+    expect(result.current.agent).toBe(agent)
   })
 
   it('should timeout waiting for mediation connection completion and clean up listener', async () => {
