@@ -28,6 +28,9 @@ const FLATTENED_APP_ERROR_CONTEXT_KEYS = new Set([
   'http_status',
   'http_response_size',
   'http_request_size',
+  'failure_flow',
+  'failure_step',
+  'failure_elapsed_ms',
 ])
 
 /**

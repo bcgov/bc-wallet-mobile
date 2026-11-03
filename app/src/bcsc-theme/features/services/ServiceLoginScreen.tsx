@@ -5,7 +5,9 @@ import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
+import { ErrorRegistry } from '@/errors'
 import { isHandledAppError } from '@/errors/appError'
+import { createFailureError } from '@/errors/failureContext'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -361,6 +363,8 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return
     }
 
+    const startedAt = Date.now()
+
     try {
       const client = await pairing.loginByPairingCode(
         code,
@@ -376,7 +380,14 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
       setIsContinueDisabled(false)
       if (!isHandledAppError(error)) {
-        alerts.loginServerErrorAlert()
+        alerts.loginServerErrorAlert(
+          createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+            flow: 'pairing',
+            step: 'login_by_pairing_code',
+            startedAt,
+            cause: error,
+          })
+        )
       }
     }
   }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled])
@@ -391,7 +402,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     if (!state.service) {
       logger.error('ServiceLoginScreen: No service context available for quick login')
       setIsContinueDisabled(false)
-      alerts.loginServerErrorAlert()
+      alerts.loginServerErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, { flow: 'quick_login', step: 'service_context' })
+      )
       return
     }
 
@@ -419,8 +432,8 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 
     // A handled result has already shown its own alert (e.g. missing JWK), so only alert here for unhandled errors
     if ('error' in result) {
-      logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
-      alerts.loginServerErrorAlert()
+      logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error.fullMessage}`)
+      alerts.loginServerErrorAlert(result.error)
     }
   }, [getQuickLoginURL, logger, state.service, navigation, alerts, t, setIsContinueDisabled])
 
@@ -432,7 +445,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     } else {
       logger.error('ServiceLoginScreen: No authentication method available')
       setIsContinueDisabled(false)
-      alerts.loginServerErrorAlert()
+      alerts.loginServerErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, { flow: 'service_login', step: 'auth_method' })
+      )
     }
   }, [
     logger,

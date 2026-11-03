@@ -5,6 +5,8 @@ import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { ErrorRegistry } from '@/errors'
+import { createFailureError } from '@/errors/failureContext'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
 
@@ -77,12 +79,18 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
         await Linking.openURL(result.url)
         openedWebview.current = true
       } else if ('error' in result) {
-        logger.debug(`AccountDetails: error generating quick login URL: ${result.error}`)
-        alerts.loginServerErrorAlert()
+        logger.debug(`AccountDetails: error generating quick login URL: ${result.error.fullMessage}`)
+        alerts.loginServerErrorAlert(result.error)
       }
     } catch (error) {
       logger.error(`Error opening account webview: ${error}`)
-      alerts.loginServerErrorAlert()
+      alerts.loginServerErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+          flow: 'account_details',
+          step: 'open_webview',
+          cause: error,
+        })
+      )
     } finally {
       setIsDisabled(false)
     }

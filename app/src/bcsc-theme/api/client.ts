@@ -109,6 +109,7 @@ class BCSCApiClient {
   private cachedJwkFetchedAt: number | null = null // epoch ms, compared against JWK_CACHE_TTL_MS
   private jwkFetchPromise: Promise<JWK | null> | null = null // single-flight in-progress JWK fetch
   private jwkFetchPromiseBaseUrl: string | null = null // baseURL the in-flight fetch was started for
+  lastJwkFetchError: unknown // why the latest JWK fetch failed; fetchJwk resolves null, so callers read the reason here
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -607,6 +608,8 @@ class BCSCApiClient {
         await new Promise((resolve) => setTimeout(resolve, JWK_FETCH_RETRY_BASE_DELAY_MS * attempt))
       }
     }
+
+    this.lastJwkFetchError = lastError
 
     if (jwk) {
       this.cachedJwk = jwk
