@@ -128,7 +128,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
         ensureAppError(error, AppEventCode.DEVICE_STORAGE_FULL),
         {
           action: {
-            text: t('BCSC.OpenSettings'),
+            text: t('BCSC.Settings.OpenDeviceSettings'),
             onPress: async () => {
               try {
                 if (Platform.OS === 'android') {

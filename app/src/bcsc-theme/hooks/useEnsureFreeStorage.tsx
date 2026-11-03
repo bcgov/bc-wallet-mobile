@@ -33,14 +33,12 @@ export const useEnsureFreeStorage = () => {
       if (!storage.hasFreeStorage) {
         const appError = AppError.fromErrorDefinition(ErrorRegistry.DEVICE_STORAGE_FULL)
 
-        const context = {
+        appError.addContext({
           freeStorageMb: storage.freeStorageMb,
           totalStorageMb: storage.totalStorageMb,
           hasFreeStorage: storage.hasFreeStorage,
           minRequiredMb: minFreeMb,
-        }
-
-        appError.addContext(context)
+        })
 
         deviceStorageFullAlert(appError)
       }
