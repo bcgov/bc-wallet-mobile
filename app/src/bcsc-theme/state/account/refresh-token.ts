@@ -1,5 +1,6 @@
 import { isTokenExpired } from '@/bcsc-theme/utils/token-expiry'
 
-// No token means session recovery, not renewal.
+// Unlike isTokenExpired, a missing token returns false: with no session there is nothing to renew,
+// so the expired-login flow must not fire. Recovery and onboarding handle that case.
 export const isRefreshTokenExpired = (refreshToken?: string, now: number = Date.now()): boolean =>
   Boolean(refreshToken) && isTokenExpired(refreshToken, now)
