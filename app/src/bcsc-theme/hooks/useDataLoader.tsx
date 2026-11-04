@@ -63,6 +63,11 @@ export type DataLoader<ResponseType> = {
    */
   clear: () => void
   /**
+   * Forgets the loaded data and any error, and lets `load` run again. A fetch still in flight is discarded
+   * when it lands, so nothing from before the reset ever shows up after it
+   */
+  reset: () => void
+  /**
    * Setter for manually handling data. Useful for sorting
    */
   setData: (data: ResponseType) => void
@@ -101,6 +106,8 @@ export default function useDataLoader<ResponseType>(
   // Keep these flags as refs to avoid re renders
   const isOneTimeLoadRef = useRef(false)
   const isLoadingRef = useRef(false)
+  // Bumped by reset(); a fetch started under an older generation is discarded when it lands
+  const generationRef = useRef(0)
 
   const setDataWithReady = useCallback((newData: ResponseType) => {
     setData(newData)
@@ -113,6 +120,8 @@ export default function useDataLoader<ResponseType>(
     }
 
     const { interval, timeout } = retryConfigRef.current ?? {}
+    const generation = generationRef.current
+    const isStale = () => generationRef.current !== generation
 
     try {
       isOneTimeLoadRef.current = true
@@ -128,6 +137,9 @@ export default function useDataLoader<ResponseType>(
         while (Date.now() - startTime < timeout) {
           try {
             const response = await fetchDataRef.current()
+            if (isStale()) {
+              return
+            }
             setDataWithReady(response)
             return
           } catch (err) {
@@ -155,13 +167,22 @@ export default function useDataLoader<ResponseType>(
 
       // If retry config not provided, just fetch the data once
       const response = await fetchDataRef.current()
+      if (isStale()) {
+        return
+      }
       setDataWithReady(response)
     } catch (error) {
+      if (isStale()) {
+        return
+      }
       setError(error)
       onErrorRef.current(error)
     } finally {
-      isLoadingRef.current = false
-      setIsLoading(false)
+      // A reset mid-flight has already cleared the flags, possibly for a newer load
+      if (!isStale()) {
+        isLoadingRef.current = false
+        setIsLoading(false)
+      }
     }
   }, [setDataWithReady])
 
@@ -187,6 +208,17 @@ export default function useDataLoader<ResponseType>(
     setError(undefined)
   }, [])
 
+  // Back to the initial state: the next load() fetches again, and a fetch still in flight is discarded
+  const reset = useCallback(() => {
+    generationRef.current += 1
+    isOneTimeLoadRef.current = false
+    isLoadingRef.current = false
+    setData(undefined)
+    setError(undefined)
+    setIsReady(false)
+    setIsLoading(false)
+  }, [])
+
   return {
     data,
     error,
@@ -195,6 +227,7 @@ export default function useDataLoader<ResponseType>(
     load,
     refresh,
     clear,
+    reset,
     setData: setDataWithReady,
   }
 }

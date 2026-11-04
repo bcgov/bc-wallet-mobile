@@ -12,6 +12,7 @@ import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen, useLoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useServerStatus } from '../contexts/ServerStatusContext'
+import { SystemCheckSessionProvider } from '../contexts/SystemCheckSessionContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
@@ -264,58 +265,62 @@ const BCSCRootStack: React.FC = () => {
       leavingStartedVerification: store.bcsc.verificationStarted === true && !isVerified,
     }
   )
-  // The agent needs an unlocked wallet and is not used while recovering a session, so it runs for the
-  // verify and main phases only. The provider stays mounted so a verify ↔ main change never restarts it.
-  // The phases it is disabled for are entered without an animation, so no stack lingers without it.
-  const agentEnabled = phase === 'verify' || phase === 'main'
+  // Verify and main are the unlocked, signed-in phases: a session. The agent, the account and the record of
+  // which system checks have run live for exactly these phases, mounted above the root's route so a verify ↔
+  // main change never restarts them and a stack that mounts again mid-session shows at once, with nothing left
+  // to wait for. Entering any other phase ends the session and clears them; those phases are entered without
+  // an animation, so no stack lingers without them.
+  const inSession = phase === 'verify' || phase === 'main'
 
   return (
-    <BCSCAgentProvider enabled={agentEnabled}>
-      {/* gestureEnabled stays explicit: its default follows animationEnabled */}
-      <Root.Navigator screenOptions={{ headerShown: false, gestureEnabled: false, ...transition }}>
-        {phase === 'loading' ? (
-          <Root.Screen name={BCSCScreens.RootLoading} component={AppStartupLoadingScreen} />
-        ) : null}
-        {phase === 'onboarding' ? <Root.Screen name={BCSCStacks.Onboarding} component={OnboardingStack} /> : null}
-        {phase === 'auth' ? <Root.Screen name={BCSCStacks.Auth} component={AuthStack} /> : null}
-        {phase === 'recovery' ? (
-          <Root.Screen name={BCSCStacks.Verify}>
-            {() => (
-              <BCSCActivityProvider>
-                <VerifyStack />
-              </BCSCActivityProvider>
-            )}
-          </Root.Screen>
-        ) : null}
-        {phase === 'verify' ? (
-          // A key change drops the route and registers it afresh, so VerifyStack re-evaluates its first step
-          <Root.Screen name={BCSCStacks.Verify} navigationKey={verifyStackKey}>
-            {() => (
-              <BCSCActivityProvider>
-                <VerifyStack showVerifyPrompt={showVerifyPrompt} onVerifyPromptAnswered={onVerifyPromptAnswered} />
-              </BCSCActivityProvider>
-            )}
-          </Root.Screen>
-        ) : null}
-        {phase === 'main' ? (
-          <Root.Screen name={BCSCStacks.Main}>
-            {() => (
-              <BCSCActivityProvider>
-                <BCSCAccountProvider>
-                  <FcmCardExpirySync />
-                  {isVerified ? (
-                    <BCSCIdTokenProvider>
+    <BCSCAgentProvider enabled={inSession}>
+      <BCSCAccountProvider enabled={inSession}>
+        <SystemCheckSessionProvider enabled={inSession}>
+          {/* gestureEnabled stays explicit: its default follows animationEnabled */}
+          <Root.Navigator screenOptions={{ headerShown: false, gestureEnabled: false, ...transition }}>
+            {phase === 'loading' ? (
+              <Root.Screen name={BCSCScreens.RootLoading} component={AppStartupLoadingScreen} />
+            ) : null}
+            {phase === 'onboarding' ? <Root.Screen name={BCSCStacks.Onboarding} component={OnboardingStack} /> : null}
+            {phase === 'auth' ? <Root.Screen name={BCSCStacks.Auth} component={AuthStack} /> : null}
+            {phase === 'recovery' ? (
+              <Root.Screen name={BCSCStacks.Verify}>
+                {() => (
+                  <BCSCActivityProvider>
+                    <VerifyStack />
+                  </BCSCActivityProvider>
+                )}
+              </Root.Screen>
+            ) : null}
+            {phase === 'verify' ? (
+              // A key change drops the route and registers it afresh, so VerifyStack re-evaluates its first step
+              <Root.Screen name={BCSCStacks.Verify} navigationKey={verifyStackKey}>
+                {() => (
+                  <BCSCActivityProvider>
+                    <VerifyStack showVerifyPrompt={showVerifyPrompt} onVerifyPromptAnswered={onVerifyPromptAnswered} />
+                  </BCSCActivityProvider>
+                )}
+              </Root.Screen>
+            ) : null}
+            {phase === 'main' ? (
+              <Root.Screen name={BCSCStacks.Main}>
+                {() => (
+                  <BCSCActivityProvider>
+                    <FcmCardExpirySync />
+                    {isVerified ? (
+                      <BCSCIdTokenProvider>
+                        <BCSCMainStack />
+                      </BCSCIdTokenProvider>
+                    ) : (
                       <BCSCMainStack />
-                    </BCSCIdTokenProvider>
-                  ) : (
-                    <BCSCMainStack />
-                  )}
-                </BCSCAccountProvider>
-              </BCSCActivityProvider>
-            )}
-          </Root.Screen>
-        ) : null}
-      </Root.Navigator>
+                    )}
+                  </BCSCActivityProvider>
+                )}
+              </Root.Screen>
+            ) : null}
+          </Root.Navigator>
+        </SystemCheckSessionProvider>
+      </BCSCAccountProvider>
     </BCSCAgentProvider>
   )
 }

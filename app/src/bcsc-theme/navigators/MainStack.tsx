@@ -119,7 +119,9 @@ const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKe
  * Holds the startup loading screen until the system checks that decide the Home notification card
  * have settled in addition to the server status check. Home renders that card straight out of the store, so a check resolving after paint
  * swaps the card in front of the user (e.g. "Start verification" flipping to "Verified"). Capped by
- * {@link SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS} so a hung request can't strand the app.
+ * {@link SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS} so a hung request can't strand the app. The checks run once
+ * per session (see SystemCheckSessionProvider), so this holds on the session's first mount of the stack only;
+ * a later mount finds them settled and shows Home at once.
  *
  * @param hasSettled - Whether every tracked system check scope has finished running.
  * @returns Whether the loading screen should still be shown.
@@ -251,6 +253,7 @@ const MainStack: React.FC = () => {
   // Replaces rather than overlays the stack: unmounting the navigator while the account loads drops any
   // navigation state it would inherit (its own, when it remounts under BCSCIdTokenProvider with
   // VerificationSuccess focused), so it comes back on initialRouteName instead of stranding the user there.
+  // The account loads once per session, above the root's route, so this is the session's first mount only.
   if (isLoadingAccount) {
     return <StackLoadingGate message={t('BCSC.Loading.AppStartup')} />
   }

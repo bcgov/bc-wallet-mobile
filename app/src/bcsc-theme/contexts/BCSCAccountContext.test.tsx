@@ -354,4 +354,72 @@ describe('BCSCAccountContext', () => {
       })
     })
   })
+
+  describe('session boundary (enabled)', () => {
+    /** Renders under a provider whose `enabled` the test flips, as RootStack does across lock and unlock. */
+    const renderSession = (bcscSecure: BCSCSecureState, initialEnabled = true) => {
+      let enabled = initialEnabled
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <BasicAppContext initialStateOverride={{ bcscSecure }}>
+          <BCSCAccountProvider enabled={enabled}>{children}</BCSCAccountProvider>
+        </BasicAppContext>
+      )
+      const utils = renderHook(() => useAccount(), { wrapper })
+      const setEnabled = (next: boolean) => {
+        enabled = next
+        utils.rerender(undefined)
+      }
+
+      return { ...utils, setEnabled }
+    }
+
+    it('loads nothing while disabled, and reports no loading', () => {
+      mockGetUserMetadata.mockResolvedValue(mockUserData())
+
+      const { result } = renderSession(verified, false)
+
+      expect(mockGetUserMetadata).not.toHaveBeenCalled()
+      expect(result.current.account).toBeNull()
+      expect(result.current.isLoadingAccount).toBe(false)
+    })
+
+    it('drops the account when the session ends and loads it afresh when the next one starts', async () => {
+      mockGetUserMetadata.mockResolvedValue(mockUserData())
+      const { result, setEnabled } = renderSession(verified)
+      await waitFor(() => expect(result.current.account).not.toBeNull())
+
+      setEnabled(false)
+
+      expect(result.current.account).toBeNull()
+      expect(result.current.isLoadingAccount).toBe(false)
+
+      setEnabled(true)
+
+      // The new session loads before it shows anything, as the first one did
+      expect(result.current.isLoadingAccount).toBe(true)
+      await waitFor(() => expect(result.current.account).not.toBeNull())
+      expect(mockGetUserMetadata).toHaveBeenCalledTimes(2)
+    })
+
+    it('discards a load that lands after the session ended', async () => {
+      let resolveLoad: (data: ReturnType<typeof mockUserData>) => void = () => undefined
+      mockGetUserMetadata.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveLoad = resolve
+          })
+      )
+      const { result, setEnabled } = renderSession(verified)
+      await waitFor(() => expect(mockGetUserMetadata).toHaveBeenCalledTimes(1))
+
+      setEnabled(false)
+      await act(async () => {
+        resolveLoad(mockUserData())
+        await new Promise<void>((resolve) => setImmediate(resolve))
+      })
+
+      expect(result.current.account).toBeNull()
+      expect(result.current.isLoadingAccount).toBe(false)
+    })
+  })
 })

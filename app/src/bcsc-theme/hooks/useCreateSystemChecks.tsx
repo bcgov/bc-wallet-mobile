@@ -58,6 +58,11 @@ type UseGetSystemChecksReturn = Record<
      * the scope (see the loading gate in MainStack) should stop waiting — `isReady` will never flip.
      */
     isApplicable: boolean
+    /**
+     * Set for a scope that runs once per signed-in session rather than once per mounting navigator: the key
+     * `SystemCheckSessionProvider` records the run under. A different key is a new batch to run.
+     */
+    sessionKey?: string
   }
 >
 
@@ -346,6 +351,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         getSystemChecks: getMainSystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && !accountContext?.isLoadingAccount),
         isApplicable: true,
+        // Once per session, and once more when the user verifies during it, as the id-token-backed checks only
+        // join the batch then. A verify ↔ main change within a session doesn't run it again, so Home shows at once
+        sessionKey: `MAIN_STACK:${isVerified ? 'verified' : 'unverified'}`,
       },
       [SystemCheckScope.VERIFY]: {
         getSystemChecks: getVerifySystemChecks,
@@ -361,5 +369,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.stateLoaded,
     getVerifySystemChecks,
     accountContext?.isLoadingAccount,
+    isVerified,
   ])
 }

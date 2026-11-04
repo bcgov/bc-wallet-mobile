@@ -45,6 +45,11 @@ overlay that is already up when the stack mounts, and otherwise stays inside the
 plain backdrop that becomes the waiting screen only once the wait outlasts the root slide. It never
 raises the global overlay from inside the card, which blanked the whole app for the first frames of
 every slide into Home.
+Both waits belong to the session, not the stack: `BCSCAccountProvider` and `SystemCheckSessionProvider`
+are mounted above the root's route, so a stack that mounts again in the same session (verify → main and
+back) finds the account loaded and its checks settled, and its first frame is the screen itself. Only the
+session's first entry into Home waits, plus the first entry after the user verifies mid-session, when the
+id-token-backed checks run for the first time.
 The global overlay is raised only around work that will actually wait, such as a network round trip,
 never around a check that usually resolves at once: it hides the whole navigator, so an overlay that
 goes up and comes down within a frame or two flashes the loading screen. `AccountSetupScreen` checks
@@ -299,6 +304,10 @@ Once a route has entered, its options settle on animated (`IDLE_ROOT_TRANSITION`
 its own options, so a route left at `animationEnabled: false` would later vanish instead of sliding out.
 A phase stack claims `BCSCStackContext` when it mounts and never re-claims it, as two stacks are mounted while
 the root slides between them and the incoming one mounts last.
+The agent, the account and the record of which system checks have run (`BCSCAgentProvider`,
+`BCSCAccountProvider`, `SystemCheckSessionProvider`) are mounted above the root's route and enabled for the
+`verify` and `main` phases only: a session. A phase change within the session never restarts them, so the
+incoming stack has nothing to wait for; entering any other phase ends the session and clears them.
 
 **Why:** the alternative, every stack always registered and each phase-changing dispatch site also issuing a
 navigation action, is two sources of truth that can disagree, across unlock, lock, factory reset, the

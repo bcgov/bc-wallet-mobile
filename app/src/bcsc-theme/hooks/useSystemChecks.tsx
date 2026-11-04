@@ -7,9 +7,10 @@ import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, DeviceEventEmitter } from 'react-native'
+import { RunRegistry, useRunRegistry, useSystemCheckSession } from '../contexts/SystemCheckSessionContext'
 import { useTokenService } from '../services/hooks/useTokenService'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
@@ -28,6 +29,9 @@ export enum SystemCheckScope {
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
  *   - VERIFY: Checks that run within the verification flow (VerifyStack) for an unverified, authenticated user ie: expired verification session
  *
+ * A scope runs its batch once per mount of the calling navigator, or, when it has a `sessionKey`, once per
+ * signed-in session however often that navigator mounts (the record lives in SystemCheckSessionProvider).
+ *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
  * @returns Whether the scope has settled, i.e. its checks have finished running (or will never run).
  *   Callers that paint state the checks can change (see MainStack's loading gate) wait on this.
@@ -39,8 +43,6 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
   const tokenService = useTokenService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
-  const ranSystemChecksRef = useRef(false)
-  const [hasRun, setHasRun] = useState(false)
   const systemChecks = useCreateSystemChecks()
   const appStateRef = useRef(AppState.currentState)
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
@@ -55,6 +57,18 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
 
   // Get system checks for the specified scope (useGetSystemChecks)
   const scopeSystemCheck = systemChecks[scope]
+  const { sessionKey } = scopeSystemCheck
+  const session = useSystemCheckSession()
+  // A scope without a session key runs once per mounting navigator, so its record lives with this hook
+  const instanceRuns = useRunRegistry()
+
+  if (sessionKey && !session) {
+    throw new Error(`useSystemChecks: the ${scope} scope runs once per session and needs a SystemCheckSessionProvider`)
+  }
+
+  const runs: RunRegistry = sessionKey && session ? session : instanceRuns
+  const runKey = sessionKey ?? scope
+  const { startRun } = runs
 
   // Internet connectivity and foreground listener
   useEffect(() => {
@@ -113,12 +127,15 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
 
   useEffect(() => {
     const runSystemChecksByScope = async () => {
-      if (ranSystemChecksRef.current || !scopeSystemCheck.isReady) {
-        // Only run if not already run and system checks for the scope are ready
+      if (!scopeSystemCheck.isReady) {
         return
       }
 
-      ranSystemChecksRef.current = true
+      // Claimed once: a later claim, by this hook re-running or by a later mount in the same session, is refused
+      const finishRun = startRun(runKey)
+      if (!finishRun) {
+        return
+      }
 
       try {
         const systemCheckStrategies = await scopeSystemCheck.getSystemChecks()
@@ -138,15 +155,17 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
       } catch (error) {
         logger.error(`[useSystemChecks]: Error running system checks for scope: ${scope}:`, error as Error)
       } finally {
-        setHasRun(true)
+        finishRun()
       }
     }
 
     runSystemChecksByScope()
-  }, [logger, scope, scopeSystemCheck])
+  }, [logger, scope, scopeSystemCheck, startRun, runKey])
+
+  const runStatus = runs.getRunStatus(runKey)
 
   return useMemo(
-    () => ({ hasSettled: hasRun || !scopeSystemCheck.isApplicable }),
-    [hasRun, scopeSystemCheck.isApplicable]
+    () => ({ hasSettled: runStatus === 'settled' || !scopeSystemCheck.isApplicable }),
+    [runStatus, scopeSystemCheck.isApplicable]
   )
 }

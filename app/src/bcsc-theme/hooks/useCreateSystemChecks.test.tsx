@@ -436,6 +436,44 @@ describe('useGetSystemChecks', () => {
       })
     })
 
+    describe('sessionKey', () => {
+      const renderWithVerified = (verified: boolean) => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          {
+            stateLoaded: true,
+            developer: { environment: { analyticsAppId: 'test-app-id' } },
+            bcsc: { analyticsOptIn: true },
+            bcscSecure: { isHydrated: true, verified },
+          },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        // The hook reads the account and error-alert contexts; neither decides the key
+        jest.spyOn(React, 'useContext').mockReturnValue({})
+
+        return renderHook(() => useCreateSystemChecks())
+      }
+
+      it('runs the main stack batch once per session, and once more when the user verifies', () => {
+        expect(renderWithVerified(false).result.current[SystemCheckScope.MAIN_STACK].sessionKey).toBe(
+          'MAIN_STACK:unverified'
+        )
+        expect(renderWithVerified(true).result.current[SystemCheckScope.MAIN_STACK].sessionKey).toBe(
+          'MAIN_STACK:verified'
+        )
+      })
+
+      it('leaves the startup and verify scopes to run once per mount', () => {
+        const { result } = renderWithVerified(false)
+
+        expect(result.current[SystemCheckScope.STARTUP].sessionKey).toBeUndefined()
+        expect(result.current[SystemCheckScope.VERIFY].sessionKey).toBeUndefined()
+      })
+    })
+
     describe('getSystemChecks', () => {
       it('should return the correct system checks for MAIN_STACK scope', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')

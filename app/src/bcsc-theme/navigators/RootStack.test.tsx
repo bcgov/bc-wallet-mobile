@@ -93,10 +93,33 @@ jest.mock('./VerifyStack', () => {
 jest.mock('../contexts/BCSCActivityContext', () => ({
   BCSCActivityProvider: ({ children }: any) => children,
 }))
-jest.mock('../contexts/BCSCAccountContext', () => ({
-  BCSCAccountProvider: ({ children }: any) => children,
-  useAccount: () => ({ account: mockAccount }),
-}))
+// The session providers above the route: each render's `enabled`, and their mounts (a remount would restart them)
+const mockAccountProviderRender = jest.fn()
+const mockAccountProviderMount = jest.fn()
+jest.mock('../contexts/BCSCAccountContext', () => {
+  const { useEffect } = jest.requireActual('react')
+  const BCSCAccountProvider = ({ enabled, children }: any) => {
+    mockAccountProviderRender(enabled)
+    useEffect(() => {
+      mockAccountProviderMount()
+    }, [])
+    return children
+  }
+  return { BCSCAccountProvider, useAccount: () => ({ account: mockAccount }) }
+})
+const mockSessionProviderRender = jest.fn()
+const mockSessionProviderMount = jest.fn()
+jest.mock('../contexts/SystemCheckSessionContext', () => {
+  const { useEffect } = jest.requireActual('react')
+  const SystemCheckSessionProvider = ({ enabled, children }: any) => {
+    mockSessionProviderRender(enabled)
+    useEffect(() => {
+      mockSessionProviderMount()
+    }, [])
+    return children
+  }
+  return { SystemCheckSessionProvider }
+})
 jest.mock('../contexts/BCSCIdTokenContext', () => ({
   BCSCIdTokenProvider: ({ children }: any) => children,
 }))
@@ -812,6 +835,64 @@ describe('BCSCRootStack', () => {
           expect(toJSON()).toBe('VerifyStack')
           expect(mockVerifyStackMount).toHaveBeenCalledTimes(2)
           expect(swapOptions()).toEqual([expect.objectContaining(NO_ANIMATION)])
+        })
+      })
+
+      describe('the session providers above the route', () => {
+        const lastEnabled = (provider: jest.Mock) => provider.mock.lastCall?.[0]
+
+        it('keeps the account and the system-check record mounted and live across verify ↔ main changes', () => {
+          const { toJSON, apply } = renderColdStart(authedUnverified(SKIPPED))
+          expect(toJSON()).toBe('MainStack')
+
+          // "Start verification" on the Home card, then the back arrow / "Back to home"
+          apply((current) => ({
+            ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+            bcsc: { ...current.bcsc, verificationStarted: true },
+          }))
+          expect(toJSON()).toBe('VerifyStack')
+          apply(withStatus(VerificationStatus.UNVERIFIED))
+          expect(toJSON()).toBe('MainStack')
+
+          expect(mockAccountProviderMount).toHaveBeenCalledTimes(1)
+          expect(mockSessionProviderMount).toHaveBeenCalledTimes(1)
+          expect(mockAccountProviderRender.mock.calls.every(([enabled]) => enabled === true)).toBe(true)
+          expect(mockSessionProviderRender.mock.calls.every(([enabled]) => enabled === true)).toBe(true)
+        })
+
+        it('ends the session on a lock and starts the next on the unlock, without remounting them', () => {
+          const { apply } = renderColdStart(authedUnverified(SKIPPED))
+          expect(lastEnabled(mockAccountProviderRender)).toBe(true)
+          expect(lastEnabled(mockSessionProviderRender)).toBe(true)
+
+          apply(lock)
+          expect(lastEnabled(mockAccountProviderRender)).toBe(false)
+          expect(lastEnabled(mockSessionProviderRender)).toBe(false)
+
+          apply(unlock)
+          expect(lastEnabled(mockAccountProviderRender)).toBe(true)
+          expect(lastEnabled(mockSessionProviderRender)).toBe(true)
+          expect(mockAccountProviderMount).toHaveBeenCalledTimes(1)
+          expect(mockSessionProviderMount).toHaveBeenCalledTimes(1)
+        })
+
+        it('ends the session when the account is removed', () => {
+          const { toJSON, apply } = renderColdStart(authedUnverified(SKIPPED))
+
+          apply(() => mockStore())
+
+          expect(toJSON()).toBe('OnboardingStack')
+          expect(lastEnabled(mockAccountProviderRender)).toBe(false)
+          expect(lastEnabled(mockSessionProviderRender)).toBe(false)
+        })
+
+        it('has no session while the app is still starting up', () => {
+          mockIsClientReady.mockReturnValue(false)
+
+          renderColdStart(authedUnverified(SKIPPED))
+
+          expect(lastEnabled(mockAccountProviderRender)).toBe(false)
+          expect(lastEnabled(mockSessionProviderRender)).toBe(false)
         })
       })
     })
