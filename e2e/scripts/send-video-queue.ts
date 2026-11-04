@@ -1,12 +1,15 @@
 /**
- * Drain the SIT send-video review queue from the command line — locally and from CI:
+ * Drain the SIT send-video review queues from the command line — locally and from CI:
  *
- *   yarn queue:drain [--scope all|e2e] [--max N] [--reason text] [--dry-run]
+ *   yarn queue:drain [--scope e2e|all] [--max N] [--reason text] [--dry-run]
  *
- * `--dry-run` logs in and reports which queues hold work, claiming nothing. Needs the IDCHECK_* credentials (e2e/.env.e2e locally, 1Password in CI) and an egress IP the IDcheck
- * portal allowlists. Prints what it did as markdown, appends it to $GITHUB_STEP_SUMMARY when set,
- * and exits non-zero only when the drain itself failed (login, network) — stopping with work still
- * queued is a warning, not a failure.
+ * Scope `e2e` (the default) rejects only the e2e personas' requests; anyone else's is moved from the
+ * regular queue to the Specialist Review queue, or left alone at the head of the specialist queue.
+ * Scope `all` rejects everything queued — a deliberate manual cleanup. `--dry-run` logs in and reports
+ * which queues hold work, claiming nothing. Needs the IDCHECK_* credentials (e2e/.env.e2e locally,
+ * 1Password in CI) and an egress IP the IDcheck portal allowlists. Prints what it did as markdown,
+ * appends it to $GITHUB_STEP_SUMMARY when set, and exits non-zero only when the drain itself failed
+ * (login, network) — stopping with work still queued is a warning, not a failure.
  */
 import { appendFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -27,7 +30,7 @@ interface Args {
 }
 
 function usage(message: string): never {
-  console.error(`[queue] ${message}\nusage: yarn queue:drain [--scope all|e2e] [--max N] [--reason text] [--dry-run]`)
+  console.error(`[queue] ${message}\nusage: yarn queue:drain [--scope e2e|all] [--max N] [--reason text] [--dry-run]`)
   process.exit(2)
 }
 
@@ -40,7 +43,7 @@ function parseArgs(argv: string[]): Args {
     const value = rest[i + 1]
     switch (flag) {
       case '--scope':
-        if (value !== 'all' && value !== 'e2e') usage(`--scope wants all|e2e, got "${value ?? ''}"`)
+        if (value !== 'all' && value !== 'e2e') usage(`--scope wants e2e|all, got "${value ?? ''}"`)
         args.scope = value
         i++
         break

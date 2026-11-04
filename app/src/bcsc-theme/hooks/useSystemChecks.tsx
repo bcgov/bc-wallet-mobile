@@ -18,7 +18,6 @@ export enum SystemCheckScope {
   STARTUP = 'STARTUP',
   MAIN_STACK = 'MAIN_STACK',
   VERIFY = 'VERIFY',
-  ACCOUNT = 'ACCOUNT',
 }
 
 /**
@@ -127,7 +126,7 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
         const results = await runSystemChecks(systemCheckStrategies, logger)
 
         const systemCheckResults = systemCheckStrategies.reduce<Record<string, boolean>>((acc, check, index) => {
-          // Collect results for logging ie: { DeviceCountSystemCheck: true, AccountExpiryWarningSystemCheck: false }
+          // Collect results for logging ie: { DeviceCountSystemCheck: true, KeyRotationSystemCheck: false }
           acc[check.constructor.name] = results[index]
           return acc
         }, {})

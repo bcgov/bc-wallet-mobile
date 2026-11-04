@@ -1,5 +1,5 @@
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
 import { NavigationProp, ParamListBase } from '@react-navigation/native'
@@ -36,7 +36,7 @@ export type VerificationResetOptions = {
 }
 
 export const useVerificationReset = () => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, deleteVerificationData } = useSecureActions()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
@@ -98,12 +98,6 @@ export const useVerificationReset = () => {
             verifiedStatus, // device is no longer verified; whether the verify flow stays mounted is the caller's call
           })
 
-          // After reset the account context is cleared, so accountExpirationDate is undefined and
-          // the AccountRenewal/AccountExpiry system checks are skipped — clear the flags explicitly
-          // so the stale notification cards don't render with a blank date on return to Home.
-          dispatch({ type: BCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION, payload: [false] })
-          dispatch({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [false] })
-
           logger.info('[useVerificationReset] Secure state cleared. Deleting IAS registration...')
 
           // Delete old account registration in IAS
@@ -138,7 +132,6 @@ export const useVerificationReset = () => {
       store.bcscSecure.walletKey,
       store.bcscSecure.securityMethod,
       logger,
-      dispatch,
       clearSecureState,
       deleteRegistration,
       deleteVerificationData,

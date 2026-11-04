@@ -63,14 +63,14 @@ describe('ServerStatusProvider', () => {
     expect(result.current.statusMessage).toBe('Down for maintenance')
   })
 
-  it('fails open and still marks hasChecked when the fetch throws', async () => {
+  it('fails null and still marks hasChecked when the fetch throws', async () => {
     const error = new Error('network')
     mockGetServerStatus.mockRejectedValue(error)
 
     const { result } = renderProvider()
 
     await waitFor(() => expect(result.current.hasChecked).toBe(true))
-    expect(result.current.isAvailable).toBe(true)
+    expect(result.current.isAvailable).toBe(null)
     expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('failed to fetch'), error)
   })
 

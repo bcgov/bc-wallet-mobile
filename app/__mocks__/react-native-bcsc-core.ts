@@ -193,3 +193,6 @@ export const setCredential = jest.fn().mockResolvedValue(undefined)
 export const getCredential = jest.fn().mockResolvedValue(null)
 export const deleteCredential = jest.fn().mockResolvedValue(undefined)
 export const hasCredential = jest.fn().mockResolvedValue(false)
+
+// App lifecycle
+export const moveAppToBackground = jest.fn().mockResolvedValue(undefined)

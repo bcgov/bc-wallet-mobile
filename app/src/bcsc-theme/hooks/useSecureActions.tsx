@@ -524,9 +524,11 @@ export const useSecureActions = () => {
           type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
           payload: [true],
         })
+        // Clean up scheduled verification reminders, the user is verified
+        await cancelVerificationReminders(logger)
       }
     },
-    [dispatch, store.bcscSecure.cardProcess]
+    [dispatch, logger, store.bcscSecure.cardProcess]
   )
 
   /**

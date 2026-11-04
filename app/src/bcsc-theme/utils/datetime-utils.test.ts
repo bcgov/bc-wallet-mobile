@@ -1,10 +1,4 @@
-import {
-  formatExpiryBadge,
-  formatTimestamp,
-  getProofRequestExpiry,
-  isAccountExpired,
-  isAccountWithinWarningPeriod,
-} from './datetime-utils'
+import { formatExpiryBadge, formatTimestamp, getProofRequestExpiry, isAccountExpired } from './datetime-utils'
 
 const NOW = new Date('2026-06-04T12:00:00.000Z')
 const minutes = (n: number) => n * 60_000
@@ -159,29 +153,5 @@ describe('isAccountExpired', () => {
 
   it('accepts a "MMMM D, YYYY" string in the future', () => {
     expect(isAccountExpired('January 1, 2030')).toBe(false)
-  })
-})
-
-describe('isAccountWithinWarningPeriod', () => {
-  it('is true when the date is inside the warning window', () => {
-    expect(isAccountWithinWarningPeriod(ahead(days(10)), 30)).toBe(true)
-  })
-
-  it('is true at exactly the edge of the warning window', () => {
-    expect(isAccountWithinWarningPeriod(ahead(days(30)), 30)).toBe(true)
-  })
-
-  it('is false when the date is beyond the warning window', () => {
-    expect(isAccountWithinWarningPeriod(ahead(days(40)), 30)).toBe(false)
-  })
-
-  it('is false once the date is today or has passed', () => {
-    expect(isAccountWithinWarningPeriod(NOW, 30)).toBe(false)
-    expect(isAccountWithinWarningPeriod(ago(days(1)), 30)).toBe(false)
-  })
-
-  it('accepts a "MMMM D, YYYY" string', () => {
-    expect(isAccountWithinWarningPeriod('June 14, 2026', 30)).toBe(true)
-    expect(isAccountWithinWarningPeriod('July 14, 2026', 30)).toBe(false)
   })
 })

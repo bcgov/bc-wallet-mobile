@@ -578,6 +578,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.VERIFICATION,
     message: 'Account transfer failed — error during transfer process',
   },
+  EVIDENCE_SUBMIT_ALREADY_RECORDED: {
+    statusCode: 2414,
+    appEvent: AppEventCode.EVIDENCE_SUBMIT_ALREADY_RECORDED,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Verification submit returned 500 but the server already had the request on record — submitted twice',
+  },
 
   // ============================================
   // Token/Crypto Errors (2500-2599)

@@ -1,4 +1,5 @@
 import { LockoutScreen } from '@/bcsc-theme/features/auth/LockoutScreen'
+import { bifoldLoggerInstance } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -22,6 +23,13 @@ jest.mock('@/bcsc-theme/hooks/useAuthentication', () => ({
 describe('LockoutScreen', () => {
   let mockNavigation: ReturnType<typeof useNavigation>
   let mockIsAccountLocked: jest.SpyInstance
+
+  // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
+  const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
+
+  afterAll(() => {
+    errorSpy.mockRestore()
+  })
 
   beforeEach(() => {
     mockNavigation = useNavigation()
@@ -171,10 +179,11 @@ describe('LockoutScreen', () => {
         </BasicAppContext>
       )
 
-      // Should still render the screen
       await waitFor(() => {
-        expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
+        expect(errorSpy).toHaveBeenCalledWith('Error checking lock status: Network error')
       })
+      expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
+      expect(mockUnlockApp).not.toHaveBeenCalled()
     })
   })
 
@@ -216,10 +225,10 @@ describe('LockoutScreen', () => {
       const removeButton = tree.getByTestId('com.ariesbifold:id/RemoveAccount')
       fireEvent.press(removeButton)
 
-      // Should not throw - error is handled gracefully
       await waitFor(() => {
-        expect(mockFactoryReset).toHaveBeenCalled()
+        expect(errorSpy).toHaveBeenCalledWith('Error removing account: Reset failed')
       })
+      expect(removeButton).toBeEnabled()
     })
   })
 

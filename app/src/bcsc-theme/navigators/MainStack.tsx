@@ -220,11 +220,8 @@ const MainStack: React.FC = () => {
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
 
   const mainStackChecks = useSystemChecks(SystemCheckScope.MAIN_STACK)
-  const accountChecks = useSystemChecks(SystemCheckScope.ACCOUNT)
   const { hasChecked: serverStatusChecked } = useServerStatus()
-  const isAwaitingSystemChecks = useSystemCheckLoadingGate(
-    mainStackChecks.hasSettled && accountChecks.hasSettled && serverStatusChecked
-  )
+  const isAwaitingSystemChecks = useSystemCheckLoadingGate(mainStackChecks.hasSettled && serverStatusChecked)
   const { isLoading: overlayUpNow } = useLoadingScreen()
   // Decided at mount: a loading state here extends an overlay that is already up (the startup overlay on
   // a cold start, a loader hiding the root's route change) and otherwise stays inside this card, so a

@@ -6,8 +6,10 @@ import {
   mapNativeBcscError,
   nativeBcscErrorMap,
   throwAppError,
+  throwDecodeAppError,
   throwNativeBcscError,
   toAppError,
+  toDecodeAppError,
 } from './native-error-map'
 
 jest.mock('react-native-bcsc-core')
@@ -103,6 +105,7 @@ describe('native-error-map', () => {
 
     it('maps a raw-string-only native code (not in the enum) to its definition', () => {
       expect(nativeBcscErrorMap.get('E_JWE_DECRYPT_ERROR')).toBe(ErrorRegistry.DECRYPT_JWE_ERROR)
+      expect(nativeBcscErrorMap.get('E_JWS_VERIFY_ERROR')).toBe(ErrorRegistry.JOSE_EXCEPTION)
     })
 
     it('maps both platforms’ divergent strings for the same condition to one definition', () => {
@@ -176,6 +179,42 @@ describe('native-error-map', () => {
       const thrown = captureThrown(() => throwNativeBcscError(error))
 
       expect(thrown.appEvent).toBe(ErrorRegistry.KEYCHAIN_KEY_NOT_FOUND.appEvent)
+      expect(thrown.cause).toBe(error)
+    })
+  })
+
+  describe('toDecodeAppError', () => {
+    it.each([
+      ['E_INVALID_JWK', ErrorRegistry.MISSING_JWK_ERROR],
+      ['E_JWS_VERIFY_ERROR', ErrorRegistry.JOSE_EXCEPTION],
+    ])('classifies the verifier code %s through the map instead of the fallback', (code, definition) => {
+      const error = nativeError(code)
+      const result = toDecodeAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
+
+      expect(result.appEvent).toBe(definition.appEvent)
+      expect(result.cause).toBe(error)
+    })
+
+    it('keeps the fallback for any other native rejection', () => {
+      const error = nativeError('E_FAILED_TO_PARSE_JWS')
+
+      expect(toDecodeAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR).appEvent).toBe(
+        ErrorRegistry.DECRYPT_JWE_ERROR.appEvent
+      )
+    })
+
+    it('keeps the fallback for a non-native error', () => {
+      expect(toDecodeAppError(new Error('plain'), ErrorRegistry.CLAIMS_SET_ERROR).appEvent).toBe(
+        ErrorRegistry.CLAIMS_SET_ERROR.appEvent
+      )
+    })
+
+    it('throws through throwDecodeAppError', () => {
+      const error = nativeError('E_JWS_VERIFY_ERROR')
+
+      const thrown = captureThrown(() => throwDecodeAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR))
+
+      expect(thrown.appEvent).toBe(ErrorRegistry.JOSE_EXCEPTION.appEvent)
       expect(thrown.cause).toBe(error)
     })
   })

@@ -1,5 +1,4 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction } from '@/store'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -26,8 +25,6 @@ export class RefreshTokenExpiredSystemCheck implements SystemCheckStrategy {
 
   onFail() {
     this.utils.logger.warn('[RefreshTokenExpiredSystemCheck] stored refresh token expired; routing to account renewal')
-    // Same Home card AccountExpirySystemCheck lights, so backing out of the screen still leaves a renew path
-    this.utils.dispatch({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [true] })
     this.navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: true })
   }
 }

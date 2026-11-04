@@ -10,6 +10,8 @@ import { DeepLinkPayload, DeepLinkService } from './services/deep-linking'
  * ConnectionInvitationService.
  */
 export class DeepLinkViewModel {
+  private subscribed = false
+
   constructor(
     private readonly deepLinkService: DeepLinkService,
     private readonly logger: AbstractBifoldLogger,
@@ -18,7 +20,10 @@ export class DeepLinkViewModel {
   ) {}
 
   public initialize() {
-    this.deepLinkService.subscribe(this.handleDeepLink.bind(this))
+    if (!this.subscribed) {
+      this.subscribed = true
+      this.deepLinkService.subscribe(this.handleDeepLink.bind(this))
+    }
     this.deepLinkService.init()
   }
 

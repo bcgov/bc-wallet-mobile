@@ -4,7 +4,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { initialState } from '@/store'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render } from '@testing-library/react-native'
+import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import DefaultHome, { HomeV4_0_x as Home } from './Home'
 
@@ -29,6 +29,9 @@ jest.mock('@/hooks/useCustomNotifications', () => ({
 
 const mockedUseAccount = useAccount as jest.MockedFunction<typeof useAccount>
 
+// SavedServices loads service clients after mount; flush that load so its state updates land inside act.
+const flushSavedServicesLoad = () => act(async () => {})
+
 describe('Home', () => {
   let mockNavigation: any
 
@@ -42,7 +45,7 @@ describe('Home', () => {
     jest.useRealTimers()
   })
 
-  it('renders full name in header when both names are present', () => {
+  it('renders full name in header when both names are present', async () => {
     mockedUseAccount.mockReturnValue({
       account: {
         given_name: 'Steve',
@@ -63,9 +66,10 @@ describe('Home', () => {
 
     expect(tree.getByText('Brule, Steve')).toBeTruthy()
     expect(tree).toMatchSnapshot()
+    await flushSavedServicesLoad()
   })
 
-  it('renders only family_name in header when given_name is undefined (mononym)', () => {
+  it('renders only family_name in header when given_name is undefined (mononym)', async () => {
     mockedUseAccount.mockReturnValue({
       account: {
         given_name: undefined,
@@ -87,9 +91,10 @@ describe('Home', () => {
     expect(tree.getByText('Madonna')).toBeTruthy()
     expect(tree.queryByText(/undefined/i)).toBeNull()
     expect(tree).toMatchSnapshot()
+    await flushSavedServicesLoad()
   })
 
-  it('renders only family_name in header when given_name is empty string (mononym)', () => {
+  it('renders only family_name in header when given_name is empty string (mononym)', async () => {
     mockedUseAccount.mockReturnValue({
       account: {
         given_name: '',
@@ -111,9 +116,10 @@ describe('Home', () => {
     expect(tree.getByText('Cher')).toBeTruthy()
     expect(tree.queryByText(/undefined/i)).toBeNull()
     expect(tree).toMatchSnapshot()
+    await flushSavedServicesLoad()
   })
 
-  it('renders only given_name in header when family_name is undefined', () => {
+  it('renders only given_name in header when family_name is undefined', async () => {
     mockedUseAccount.mockReturnValue({
       account: {
         given_name: 'Prince',
@@ -135,6 +141,7 @@ describe('Home', () => {
     expect(tree.getByText('Prince')).toBeTruthy()
     expect(tree.queryByText(/undefined/i)).toBeNull()
     expect(tree).toMatchSnapshot()
+    await flushSavedServicesLoad()
   })
 })
 

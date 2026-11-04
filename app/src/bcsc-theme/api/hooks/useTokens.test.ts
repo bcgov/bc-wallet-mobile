@@ -2,7 +2,7 @@ import { VerifyAttestationPayload } from '@/bcsc-theme/api/hooks/useDeviceAttest
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
-import { renderHook } from '@testing-library/react-native'
+import { act, renderHook } from '@testing-library/react-native'
 import { BasicAppContext } from '__mocks__/helpers/app'
 import { getDeviceCodeRequestBody, setToken } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -135,7 +135,10 @@ describe('useTokenApi', () => {
       mockApiClient.post.mockResolvedValue(mockAxiosResponse)
 
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
-      const response = await result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')
+      let response: TokenResponse | undefined
+      await act(async () => {
+        response = await result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')
+      })
 
       expect(getDeviceCodeRequestBody).toHaveBeenCalledWith(
         'test_device_code',
@@ -194,11 +197,13 @@ describe('useTokenApi', () => {
 
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
-      await expect(result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')).rejects.toMatchObject(
-        {
+      await act(async () => {
+        await expect(
+          result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')
+        ).rejects.toMatchObject({
           appEvent: AppEventCode.TOKEN_SAVE_FAILED,
-        }
-      )
+        })
+      })
       expect(mockApiClient.logger.error).toHaveBeenCalledWith(
         '[checkDeviceCodeStatus] Failed to update tokens',
         expect.anything()

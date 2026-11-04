@@ -182,5 +182,7 @@ RCT_EXTERN_METHOD(isThirdPartyKeyboardActive : (RCTPromiseResolveBlock)resolve r
 
 RCT_EXTERN_METHOD(openKeyboardSelector : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(moveAppToBackground : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(isBluetoothAudioConnected : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 @end

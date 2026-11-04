@@ -3,7 +3,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render } from '@testing-library/react-native'
+import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { AccountSecurityMethod } from 'react-native-bcsc-core'
 import { VerifySettingsScreen } from './VerifySettingsScreen'
@@ -13,6 +13,9 @@ const authenticatedState = {
   authentication: { didAuthenticate: true },
   bcscSecure: { securityMethod: AccountSecurityMethod.PinWithDeviceAuth },
 } as never
+
+// The authenticated section reads the OS notification permission after mount; flush it so the update lands inside act.
+const flushNotificationStatus = () => act(async () => {})
 
 describe('VerifySettings', () => {
   let mockNavigation: any
@@ -34,7 +37,7 @@ describe('VerifySettings', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('renders correctly when authenticated', () => {
+  it('renders correctly when authenticated', async () => {
     const tree = render(
       <BasicAppContext initialStateOverride={authenticatedState}>
         <BCSCLoadingProvider>
@@ -44,9 +47,10 @@ describe('VerifySettings', () => {
     )
 
     expect(tree).toMatchSnapshot()
+    await flushNotificationStatus()
   })
 
-  it('renders the remove account option', () => {
+  it('renders the remove account option', async () => {
     const { getByTestId } = render(
       <BasicAppContext initialStateOverride={authenticatedState}>
         <BCSCLoadingProvider>
@@ -56,9 +60,10 @@ describe('VerifySettings', () => {
     )
 
     expect(getByTestId(testIdWithKey('RemoveAccount'))).toBeTruthy()
+    await flushNotificationStatus()
   })
 
-  it('navigates to remove account confirmation when remove account is pressed', () => {
+  it('navigates to remove account confirmation when remove account is pressed', async () => {
     const { getByTestId } = render(
       <BasicAppContext initialStateOverride={authenticatedState}>
         <BCSCLoadingProvider>
@@ -70,6 +75,7 @@ describe('VerifySettings', () => {
     fireEvent.press(getByTestId(testIdWithKey('RemoveAccount')))
 
     expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifyRemoveAccountConfirmation)
+    await flushNotificationStatus()
   })
 
   it('navigates to the Contact us WebView when Contact us is pressed', () => {

@@ -8,6 +8,7 @@ import {
   onNotificationOpenedApp,
   setBackgroundMessageHandler,
 } from '@react-native-firebase/messaging'
+import { AppState } from 'react-native'
 
 // ============================================================================
 // Status Notification Types
@@ -100,45 +101,55 @@ export class FcmService {
   private notificationOpenedSubscription?: () => void
   private initialized = false
   private suppressed = false
+  private lastOpenedMessageId?: string
 
   constructor(logger?: AbstractBifoldLogger) {
     this.logger = logger
   }
 
   public async init(): Promise<void> {
-    if (this.initialized) {
-      return
-    }
-    this.initialized = true
-
     const app = getApp()
     const messagingInstance = getMessaging(app)
 
-    // Handle foreground messages
-    this.foregroundSubscription = onMessage(messagingInstance, (remoteMessage) => {
-      this.emit(remoteMessage, { source: 'foreground' })
-    })
+    if (!this.initialized) {
+      this.initialized = true
 
-    // Handle when user taps notification while app is in background
-    this.notificationOpenedSubscription = onNotificationOpenedApp(messagingInstance, (remoteMessage) => {
-      this.emit(remoteMessage)
-    })
+      // Handle foreground messages
+      this.foregroundSubscription = onMessage(messagingInstance, (remoteMessage) => {
+        this.emit(remoteMessage, { source: 'foreground' })
+      })
 
-    // Handle when app was killed and user taps notification to launch it
-    const initialNotification = await getInitialNotification(messagingInstance)
-    if (initialNotification) {
-      this.logger?.info('[FcmService] Cold-start notification detected, emitting now')
-      this.emit(initialNotification)
+      // Handle when user taps notification while app is in background
+      this.notificationOpenedSubscription = onNotificationOpenedApp(messagingInstance, (remoteMessage) => {
+        this.lastOpenedMessageId = remoteMessage.messageId
+        this.emit(remoteMessage)
+      })
+
+      // Note: background messages (including potential challenge data) are intentionally
+      // not processed here. The OS notification system delivers them to the user and
+      // any challenge/status handling is performed only when the app is brought to the
+      // foreground and messages are received via the foreground listener above.
+      setBackgroundMessageHandler(messagingInstance, async () => {
+        // Intentionally left as a no-op: do not process challenge/status data while the
+        // app is in the background; rely on the foreground flow for handling.
+      })
     }
 
-    // Note: background messages (including potential challenge data) are intentionally
-    // not processed here. The OS notification system delivers them to the user and
-    // any challenge/status handling is performed only when the app is brought to the
-    // foreground and messages are received via the foreground listener above.
-    setBackgroundMessageHandler(messagingInstance, async () => {
-      // Intentionally left as a no-op: do not process challenge/status data while the
-      // app is in the background; rely on the foreground flow for handling.
-    })
+    // Handle when the user taps a notification that launches the app or a new Activity.
+    // Without a resumed Activity, getInitialNotification silently resolves null.
+    await this.waitForActive()
+    const initialNotification = await getInitialNotification(messagingInstance)
+    if (!initialNotification) {
+      return
+    }
+
+    // Firebase also returns the last notification it already delivered through onNotificationOpenedApp
+    if (initialNotification.messageId && initialNotification.messageId === this.lastOpenedMessageId) {
+      return
+    }
+
+    this.logger?.info('[FcmService] Launch notification detected, emitting now')
+    this.emit(initialNotification)
   }
 
   public destroy(): void {
@@ -148,7 +159,23 @@ export class FcmService {
     this.notificationOpenedSubscription = undefined
     this.initialized = false
     this.suppressed = false
+    this.lastOpenedMessageId = undefined
     this.handlers.clear()
+  }
+
+  private waitForActive(): Promise<void> {
+    if (AppState.currentState === 'active') {
+      return Promise.resolve()
+    }
+
+    return new Promise((resolve) => {
+      const subscription = AppState.addEventListener('change', (nextAppState) => {
+        if (nextAppState === 'active') {
+          subscription.remove()
+          resolve()
+        }
+      })
+    })
   }
 
   public setSuppressed(value: boolean): void {

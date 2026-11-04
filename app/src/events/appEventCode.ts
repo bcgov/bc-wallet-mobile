@@ -164,6 +164,7 @@ export enum AppEventCode {
   FORGET_ALL_PAIRINGS = 'forget_all_pairings',
   LIVE_CALL_FILE_UPLOAD_ERROR = 'live_call_file_upload_error', // Non-IAS error code
   FILE_UPLOAD_ERROR = 'file_upload_error',
+  EVIDENCE_SUBMIT_ALREADY_RECORDED = 'evidence_submit_already_recorded', // Non-IAS error code — analytics only, never alerted (#4928)
   NO_DOCUMENT_NUMBER_ENTERED_ERROR = 'no_document_number_entered_error',
   VIDEO_VERIFY_NOT_COMPLETE = 'video_verify_not_complete',
   VIDEO_PROMPTS_MISSING = 'video_prompts_missing',

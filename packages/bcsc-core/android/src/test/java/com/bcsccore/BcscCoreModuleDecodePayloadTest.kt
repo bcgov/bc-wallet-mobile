@@ -13,6 +13,7 @@ import com.nimbusds.jose.JWEObject
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.Payload
+import com.nimbusds.jose.crypto.MACSigner
 import com.nimbusds.jose.crypto.RSAEncrypter
 import com.nimbusds.jose.crypto.RSASSASigner
 import com.nimbusds.jwt.JWTClaimsSet
@@ -41,7 +42,8 @@ import java.util.Collections
 
 /**
  * Covers how the decrypt key is chosen (issue #4595): try a response-named key first, then every
- * remaining key newest-first. Runs the real [BcscCoreModule.decodePayload] against a real
+ * remaining key newest-first; and how the inner signature check reports an unusable server key.
+ * Runs the real [BcscCoreModule.decodePayload] against a real
  * [BcscKeyPairRepo] over a stand-in [KeyStore], so the last test checks real code, not a substitute.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -121,14 +123,15 @@ class BcscCoreModuleDecodePayloadTest {
     @After
     fun tearDown() = unmockkStatic(Arguments::class)
 
-    /** Builds what the server sends: a signed token wrapped in an encrypted one, labelled [kid]. */
+    /**
+     * Builds what the server sends: a signed token wrapped in an encrypted one, labelled [kid]. The
+     * inner token is signed by [encryptTo] unless a test supplies its own.
+     */
     private fun serverJwe(
         encryptTo: KeyPair,
         kid: String?,
+        inner: SignedJWT = rs512Token(signedBy = encryptTo),
     ): String {
-        val inner =
-            SignedJWT(JWSHeader.Builder(JWSAlgorithm.RS512).build(), JWTClaimsSet.Builder().subject("user-123").build())
-        inner.sign(RSASSASigner(encryptTo.private))
         val header = JWEHeader.Builder(JWEAlgorithm.RSA1_5, EncryptionMethod.A256CBC_HS512)
         if (kid != null) header.keyID(kid)
         return JWEObject(header.build(), Payload(inner.serialize()))
@@ -136,7 +139,11 @@ class BcscCoreModuleDecodePayloadTest {
             .serialize()
     }
 
-    /** Runs decodePayload (no JWK, so `verified` is false and irrelevant) and returns the resolved map. */
+    private fun rs512Token(signedBy: KeyPair): SignedJWT =
+        SignedJWT(JWSHeader.Builder(JWSAlgorithm.RS512).build(), JWTClaimsSet.Builder().subject("user-123").build())
+            .also { it.sign(RSASSASigner(signedBy.private)) }
+
+    /** Runs decodePayload and returns the resolved map; pass [key] to exercise signature verification. */
     private fun decode(
         jwe: String,
         key: JavaOnlyMap? = null,
@@ -155,9 +162,23 @@ class BcscCoreModuleDecodePayloadTest {
         verify { promise.reject("E_JWE_DECRYPT_ERROR", any<String>(), any<Throwable>()) }
     }
 
+    private fun assertRejected(
+        jwe: String,
+        key: JavaOnlyMap,
+        code: String,
+    ) {
+        val promise = mockk<Promise>(relaxed = true)
+        module.decodePayload(jwe, key, promise)
+        verify { promise.reject(code, any<String>(), any<Throwable>()) }
+        verify(exactly = 0) { promise.resolve(any()) }
+    }
+
     private fun jwkFor(keyPair: KeyPair): JavaOnlyMap {
         val publicKey = keyPair.public as RSAPublicKey
         return JavaOnlyMap().apply {
+            putString("kty", "RSA")
+            putString("kid", "server-key")
+            putString("alg", "RS512")
             putString("n", base64Url(publicKey.modulus.toByteArray()))
             putString("e", base64Url(publicKey.publicExponent.toByteArray()))
         }
@@ -254,5 +275,43 @@ class BcscCoreModuleDecodePayloadTest {
         verify { promise.reject("E_NO_KEYS_FOUND", any<String>()) }
         assertTrue(emptyInfoSource.store.isEmpty())
         assertTrue(emptyRepo.retrievedAliases.isEmpty())
+    }
+
+    @Test
+    fun `the inner signature verifies against the signing key's JWK`() {
+        val result = decode(serverJwe(KEYS.getValue("rsa2"), kid = "rsa2"), jwkFor(KEYS.getValue("rsa2")))
+
+        assertTrue(result.getBoolean("verified"))
+    }
+
+    @Test
+    fun `a JWK without a modulus rejects as an unusable key, not a signature mismatch`() {
+        val jwk =
+            JavaOnlyMap().apply {
+                putString("kty", "RSA")
+                putString("e", "AQAB")
+            }
+
+        assertRejected(serverJwe(KEYS.getValue("rsa2"), kid = "rsa2"), jwk, "E_INVALID_JWK")
+    }
+
+    @Test
+    fun `a modulus that is not base64url rejects as an unusable key`() {
+        val jwk = jwkFor(KEYS.getValue("rsa2")).also { it.putString("n", "!!!") }
+
+        assertRejected(serverJwe(KEYS.getValue("rsa2"), kid = "rsa2"), jwk, "E_INVALID_JWK")
+    }
+
+    @Test
+    fun `a token the verifier cannot process rejects instead of reporting a mismatch`() {
+        val hmacToken =
+            SignedJWT(JWSHeader.Builder(JWSAlgorithm.HS256).build(), JWTClaimsSet.Builder().subject("user-123").build())
+                .also { it.sign(MACSigner(ByteArray(32))) }
+
+        assertRejected(
+            serverJwe(KEYS.getValue("rsa2"), kid = "rsa2", inner = hmacToken),
+            jwkFor(KEYS.getValue("rsa2")),
+            "E_JWS_VERIFY_ERROR",
+        )
     }
 }

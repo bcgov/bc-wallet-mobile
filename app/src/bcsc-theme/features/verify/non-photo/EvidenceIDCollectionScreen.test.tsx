@@ -231,7 +231,9 @@ describe('EvidenceIDCollection', () => {
         nativeEvent: { layout: { y: 25 } },
       })
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(scrollToSpy).toHaveBeenCalledWith({ y: 125, animated: false })
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
@@ -261,7 +263,9 @@ describe('EvidenceIDCollection', () => {
         nativeEvent: { layout: { y: 25 } },
       })
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(scrollToSpy).toHaveBeenCalledTimes(1)
 
@@ -294,7 +298,9 @@ describe('EvidenceIDCollection', () => {
         nativeEvent: { layout: { y: 25 } },
       })
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(scrollToSpy).toHaveBeenCalledTimes(1)
 
@@ -331,7 +337,9 @@ describe('EvidenceIDCollection', () => {
         nativeEvent: { layout: { y: 25 } },
       })
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       const { remove } = jest.mocked(KeyboardEvents.addListener).mock.results[0].value
       expect(remove).not.toHaveBeenCalled()
@@ -356,10 +364,14 @@ describe('EvidenceIDCollection', () => {
         </BasicAppContext>
       )
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
       const firstSubscription = jest.mocked(KeyboardEvents.addListener).mock.results[0].value
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(KeyboardEvents.addListener).toHaveBeenCalledTimes(2)
       expect(firstSubscription.remove).toHaveBeenCalledTimes(1)
@@ -395,7 +407,9 @@ describe('EvidenceIDCollection', () => {
       enter(tree, 'firstName', 'Jane')
       fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(scrollToSpy).toHaveBeenCalledWith({ y: 100, animated: false })
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
@@ -433,7 +447,9 @@ describe('EvidenceIDCollection', () => {
       enter(tree, 'documentNumber', '123456789')
       fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '99999999')
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       // Distinct offset from documentNumber's, so a scroll that ignored the target field couldn't pass.
       expect(scrollToSpy).toHaveBeenCalledWith({ y: 180, animated: false })
@@ -464,7 +480,9 @@ describe('EvidenceIDCollection', () => {
       enter(tree, 'middleNames', 'A'.repeat(31))
       fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '99999999')
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/middleNames-input'])
     })
@@ -491,8 +509,12 @@ describe('EvidenceIDCollection', () => {
         nativeEvent: { layout: { y: 25 } },
       })
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(scrollToSpy).toHaveBeenCalledTimes(2)
       expect(focusSpy).toHaveBeenCalledTimes(2)
@@ -524,12 +546,16 @@ describe('EvidenceIDCollection', () => {
         nativeEvent: { layout: { y: 140 } },
       })
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
 
       enter(tree, 'documentNumber', '123456789')
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input', 'com.ariesbifold:id/lastName-input'])
       // documentNumber was never measured, so only the second press scrolls.
       expect(scrollToSpy).toHaveBeenCalledTimes(1)
@@ -550,7 +576,9 @@ describe('EvidenceIDCollection', () => {
         </BasicAppContext>
       )
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(scrollToSpy).not.toHaveBeenCalled()
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
@@ -579,7 +607,9 @@ describe('EvidenceIDCollection', () => {
       enter(tree, 'firstName', 'Jane')
       fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(scrollToSpy).not.toHaveBeenCalled()
       expect(focusSpy).not.toHaveBeenCalled()
@@ -606,7 +636,9 @@ describe('EvidenceIDCollection', () => {
         </BasicAppContext>
       )
 
-      await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      await act(async () => {
+        fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+      })
 
       expect(focusedTestIds()).toEqual(['com.ariesbifold:id/documentNumber-input'])
     })
@@ -636,7 +668,9 @@ describe('EvidenceIDCollection', () => {
     fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'change', {
       nativeEvent: { text: '123456789' },
     })
-    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+    await act(async () => {
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+    })
 
     // Pushes the next step (keeping this ID's form in the history) rather than collapsing the stack.
     const action = mockNavigation.dispatch.mock.calls.at(-1)?.[0]
@@ -666,7 +700,9 @@ describe('EvidenceIDCollection', () => {
     fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'change', {
       nativeEvent: { text: '123456789' },
     })
-    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+    await act(async () => {
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+    })
 
     // Pushes the address step, keeping this ID's form in the history so back returns here.
     const action = mockNavigation.dispatch.mock.calls.at(-1)?.[0]
@@ -706,7 +742,9 @@ describe('EvidenceIDCollection', () => {
     // DateInput formats digits itself, so it listens on onChangeText rather than onChange
     fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
 
-    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+    await act(async () => {
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+    })
 
     expect(mockUpdateUserMetadata).toHaveBeenCalledWith(
       expect.objectContaining({ name: { first: 'JANE', middle: 'ALEX', last: "O'BRIEN-SMITH" } })
@@ -733,7 +771,9 @@ describe('EvidenceIDCollection', () => {
     fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'change', {
       nativeEvent: { text: ' ab123456 ' },
     })
-    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+    await act(async () => {
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+    })
 
     expect(tree.queryByText('Please enter a valid document number')).toBeNull()
     expect(mockUpdateEvidenceDocumentNumber).toHaveBeenCalledWith(upperCaseMaskType, 'AB123456')

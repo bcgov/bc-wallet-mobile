@@ -16,7 +16,7 @@ type ClientMetadataStub = Pick<ClientMetadata, 'client_ref_id' | 'initiate_login
 // Discriminated union for clearer guarantees
 type QuickLoginURLResult =
   | { success: true; url: string }
-  | { success: false; error: string }
+  | { success: false; error: string; cause?: unknown }
   | { success: false; handled: true }
 
 // Represents a stub service client with an empty client_ref_id
@@ -92,7 +92,7 @@ export const useQuickLoginURL = () => {
         }
 
         logger.error('Error creating quick login URL', error as Error)
-        return { success: false, error: `Error creating quick login URL: ${(error as Error).message}` }
+        return { success: false, error: `Error creating quick login URL: ${(error as Error).message}`, cause: error }
       }
     },
     [alerts, client, logger]

@@ -92,6 +92,22 @@ describe('useTokenService', () => {
       expect(mockAlerts.jwsVerificationFailedAlert).toHaveBeenCalled()
     })
 
+    it('should show alert on JOSE exception error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION)
+      const tokenApi = {
+        getCachedIdTokenMetadata: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { joseExceptionAlert: jest.fn() }
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(mockError)
+      expect(mockAlerts.joseExceptionAlert).toHaveBeenCalled()
+    })
+
     it('should show alert on claims set error and rethrow error', async () => {
       const mockError = mockAppError(AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY)
       const tokenApi = {

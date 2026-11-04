@@ -50,6 +50,18 @@ type ApproveInPersonLoginInput = ApproveInPersonInput extends infer T
     : never
   : never
 
+/**
+ * The two send-video review queues, by the portal's names for them: the regular FIFO (the dashboard's
+ * "Other Verify Requests", where a cardholder's upload lands) and Specialist Review (where a cardless
+ * registration lands, and where an agent's "Transfer Request to Specialist" moves anything else).
+ */
+export type ReviewQueue = 'regular' | 'specialist'
+
+/** Where a submission for this identity queues: a cardless registration (its serial reads "N/A") lands in the specialist queue. */
+export function reviewQueueFor(identity: Pick<SendVideoReviewIdentity, 'cardSerialNumber'>): ReviewQueue {
+  return identity.cardSerialNumber.trim().toUpperCase() === 'N/A' ? 'specialist' : 'regular'
+}
+
 /** Who the claimed request must be for. Checked before any decision, and never guessed at. */
 export interface SendVideoReviewIdentity {
   /** Guards the claim. A cardless registration has no card, and the portal shows 'N/A' for it. */
@@ -82,7 +94,7 @@ type LabelledIdentity = SendVideoReviewIdentity & { persona: PersonaLabel }
 /** What the scripted review claimed and decided — for the journey's logs and its decision-timeout message. */
 export interface ClaimedRequestSummary {
   requestIdentifier: string
-  queue: 'cardholder' | 'cardless'
+  queue: ReviewQueue
   /** Whose request it was, as a log may say it: a persona key, or `foreign`. */
   persona: string
   claimedName: string
@@ -93,15 +105,21 @@ export interface ClaimedRequestSummary {
   videoDate: string
 }
 
-/** 'all' rejects every queued request; 'e2e' only the journeys' personas, stopping at a foreign head. */
-export type DrainScope = 'all' | 'e2e'
+/**
+ * What a drain rejects. `e2e` (the default) rejects only the journeys' personas; anyone else's request
+ * is moved from the regular queue to the specialist queue, or left alone at the head of the specialist
+ * queue. `all` rejects everything queued — a deliberate manual cleanup, never a default.
+ */
+export type DrainScope = 'e2e' | 'all'
 
 export interface DrainSendVideoQueueOptions {
-  /** Defaults to E2E_QUEUE_DRAIN_SCOPE, else 'all'. */
+  /** Defaults to E2E_QUEUE_DRAIN_SCOPE, else 'e2e'. */
   scope?: DrainScope
   maxClaims?: number
   /** The reason the portal records against each rejected request. */
   reason?: string
+  /** The note each moved request carries into the specialist queue (scope e2e). */
+  transferComment?: string
   /** Budget for the WHOLE drain — login plus ~5 round trips per queued request. */
   timeoutMs?: number
   /** Log in and read which queues hold work; claim nothing. */
@@ -109,11 +127,15 @@ export interface DrainSendVideoQueueOptions {
 }
 
 export interface DrainSendVideoQueueResult {
+  /** The e2e personas' requests (every request, under scope `all`). */
   rejected: ClaimedRequestSummary[]
+  /** Anyone else's, moved from the regular queue to the specialist queue. */
+  transferred: ClaimedRequestSummary[]
+  /** Anyone else's at the head of the specialist queue: released and left there, with that queue. */
   released: ClaimedRequestSummary[]
-  /** Queues still showing a claim button when the drain ended ('cardholder' / 'cardless'). */
-  queuesWithWork: ('cardholder' | 'cardless')[]
-  /** Set when work was still queued: a foreign head under 'e2e', the claim cap, or a decision that did not stick. */
+  /** Queues still showing a claim button when the drain ended. */
+  queuesWithWork: ReviewQueue[]
+  /** Set when work was still queued: a specialist queue left alone, the claim cap, or a decision that did not stick. */
   stoppedReason?: string
 }
 
@@ -127,6 +149,7 @@ type LoginModule = {
     scope: DrainScope
     personas: LabelledIdentity[]
     reason?: string
+    transferComment?: string
     maxClaims?: number
     dryRun?: boolean
     signal?: AbortSignal
@@ -262,20 +285,21 @@ export const E2E_SEND_VIDEO_PERSONAS: LabelledIdentity[] = Object.entries(TestUs
   firstName: user.firstName,
 }))
 
-/** The drain scope to use: an explicit one, else E2E_QUEUE_DRAIN_SCOPE, else 'all'. */
+/** The drain scope to use: an explicit one, else E2E_QUEUE_DRAIN_SCOPE, else 'e2e'. */
 export function resolveDrainScope(scope?: DrainScope): DrainScope {
   if (scope) return scope
   const fromEnv = process.env.E2E_QUEUE_DRAIN_SCOPE
   if (fromEnv === 'all' || fromEnv === 'e2e') return fromEnv
-  if (fromEnv) console.warn(`[queue] Unknown E2E_QUEUE_DRAIN_SCOPE "${fromEnv}" — draining with scope 'all'`)
-  return 'all'
+  if (fromEnv) console.warn(`[queue] Unknown E2E_QUEUE_DRAIN_SCOPE "${fromEnv}" — draining with scope 'e2e'`)
+  return 'e2e'
 }
 
 /**
- * Empty the SIT send-video review queue by rejecting whatever is queued, so the next upload is the
- * head the scripted review claims. The queue is shared with the UAT team and the other platform's
- * run, which is why the journeys never run send-video on two platforms at once, and why `scope`
- * exists: 'e2e' keeps a daytime run to the journeys' own personas.
+ * Clear the e2e personas' requests out of the SIT send-video review queues, so the next upload is the
+ * head the scripted review claims. The queues are shared with the UAT team and the other platform's
+ * run — which is why the journeys never run send-video on two platforms at once, and why anyone
+ * else's request is never rejected: at the head of the regular queue it is moved to the Specialist
+ * Review queue for a person to work, at the head of the specialist queue it is left alone.
  */
 export async function drainSendVideoQueue(options: DrainSendVideoQueueOptions = {}): Promise<DrainSendVideoQueueResult> {
   const scope = resolveDrainScope(options.scope)
@@ -294,6 +318,7 @@ export async function drainSendVideoQueue(options: DrainSendVideoQueueOptions = 
         scope,
         personas: E2E_SEND_VIDEO_PERSONAS,
         reason: options.reason,
+        transferComment: options.transferComment,
         maxClaims: options.maxClaims,
         dryRun: options.dryRun,
         signal: controller.signal,
@@ -301,7 +326,8 @@ export async function drainSendVideoQueue(options: DrainSendVideoQueueOptions = 
     )
     const stopped = result.stoppedReason ? ` — ${result.stoppedReason}` : ''
     console.log(
-      `[queue] Drained in ${Date.now() - startedAt}ms: ${result.rejected.length} rejected, ${result.released.length} released${stopped}`
+      `[queue] Drained in ${Date.now() - startedAt}ms: ${result.rejected.length} rejected, ` +
+        `${result.transferred.length} moved to the specialist queue, ${result.released.length} released${stopped}`
     )
     return result
   } catch (error: unknown) {
@@ -321,6 +347,7 @@ export function renderDrainSummary(result: DrainSendVideoQueueResult, scope: Dra
   const lines = [`### Send-video review queue drain (scope: ${scope})`, '']
   const rows = [
     ...result.rejected.map((request) => ({ action: 'rejected', ...request })),
+    ...result.transferred.map((request) => ({ action: 'moved to specialist', ...request })),
     ...result.released.map((request) => ({ action: 'released', ...request })),
   ]
   if (rows.length === 0) {

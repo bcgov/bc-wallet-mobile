@@ -49,6 +49,10 @@ const renderWithState = (override: Record<string, unknown> = {}) =>
     </BasicAppContext>
   )
 
+// The OS notification-permission read resolves after mount; wait for it so its state update lands inside act.
+const waitForNotificationStatus = () =>
+  waitFor(() => expect(within(screen.getByTestId(tid('Notifications'))).getByText('ON')).toBeTruthy())
+
 describe('SettingsContent', () => {
   beforeEach(() => {
     mockStatus.mockResolvedValue('granted')
@@ -87,22 +91,24 @@ describe('SettingsContent', () => {
       focusEffectMock.mockReset()
     })
 
-    it('shows ChangePIN on the first render for a PIN account, without a native read', () => {
+    it('shows ChangePIN on the first render for a PIN account, without a native read', async () => {
       renderWithState({
         authentication: { didAuthenticate: true },
         bcscSecure: { securityMethod: AccountSecurityMethod.PinWithDeviceAuth },
       })
       expect(screen.getByTestId(tid('ChangePIN'))).toBeTruthy()
       expect(getAccountSecurityMethod).not.toHaveBeenCalled()
+      await waitForNotificationStatus()
     })
 
-    it('never shows ChangePIN for a device-auth account', () => {
+    it('never shows ChangePIN for a device-auth account', async () => {
       renderWithState({
         authentication: { didAuthenticate: true },
         bcscSecure: { securityMethod: AccountSecurityMethod.DeviceAuth },
       })
       expect(screen.queryByTestId(tid('ChangePIN'))).toBeNull()
       expect(getAccountSecurityMethod).not.toHaveBeenCalled()
+      await waitForNotificationStatus()
     })
 
     it('hides ChangePIN until the method is read from the account record when secure state has none', async () => {
@@ -228,6 +234,7 @@ describe('SettingsContent', () => {
       </BasicAppContext>
     )
     expect(screen.queryByTestId(tid('ResetWallet'))).toBeNull()
+    await waitForNotificationStatus()
   })
 
   it('renders the RemoveAccount row and invokes onRemoveAccount when pressed', async () => {

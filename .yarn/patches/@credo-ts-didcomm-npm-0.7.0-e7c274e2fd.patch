@@ -1,3 +1,53 @@
+diff --git a/build/decorators/signature/SignatureDecoratorUtils.mjs b/build/decorators/signature/SignatureDecoratorUtils.mjs
+index 27241c69c6233e07b98239f226549cb13ef4fcf9..fe8628a77a7e875f21db3865d20417b46be15dd2 100644
+--- a/build/decorators/signature/SignatureDecoratorUtils.mjs
++++ b/build/decorators/signature/SignatureDecoratorUtils.mjs
+@@ -2,6 +2,25 @@ import { SignatureDecorator } from "./SignatureDecorator.mjs";
+ import { CredoError, JsonEncoder, Kms, TypedArrayEncoder, utils } from "@credo-ts/core";
+ 
+ //#region src/decorators/signature/SignatureDecoratorUtils.ts
++/*
++* Helper function returning the raw bytes of a base64url-encoded signature field.
++*
++* RFC 0234 spec's `sig_data` and `signature` as base64url, so we try decoding it as
++* base64url first. ACA-Py emits them with `=` padding, so strip it, and fall back to
++* standard base64 to preserve interop with older agents. Mirrors
++* `DidCommAttachment.getDataAsUint8Array`.
++*/
++function decodeSignatureField(value, field) {
++	try {
++		return TypedArrayEncoder.fromBase64Url(value.replace(/=+$/, ""));
++	} catch (base64UrlError) {
++		try {
++			return TypedArrayEncoder.fromBase64(value);
++		} catch {
++			throw new CredoError(`Could not decode signature decorator ${field} as base64url or base64 string.`, { cause: base64UrlError });
++		}
++	}
++}
+ /**
+ *
+ * Unpack and verify signed data before casting it to the supplied type.
+@@ -16,8 +35,8 @@ async function unpackAndVerifySignatureDecorator(agentContext, decorator) {
+ 			crv: "Ed25519",
+ 			publicKey: TypedArrayEncoder.fromBase58(signerVerkey)
+ 		});
+-		const signedData = TypedArrayEncoder.fromBase64Url(decorator.signatureData);
+-		const signature = TypedArrayEncoder.fromBase64Url(decorator.signature);
++		const signedData = decodeSignatureField(decorator.signatureData, "signatureData");
++		const signature = decodeSignatureField(decorator.signature, "signature");
+ 		if (!(await kms.verify({
+ 			algorithm: "EdDSA",
+ 			data: signedData,
+@@ -26,7 +45,7 @@ async function unpackAndVerifySignatureDecorator(agentContext, decorator) {
+ 		})).verified) throw new CredoError("Could not verify signature");
+ 		return JsonEncoder.fromUint8Array(signedData.slice(8));
+ 	} catch (error) {
+-		throw new CredoError("Signature is not valid", error);
++		throw new CredoError("Signature is not valid", { cause: error });
+ 	}
+ }
+ /**
 diff --git a/build/util/parseInvitation.mjs b/build/util/parseInvitation.mjs
 index 30f36f9495c7ee4cad31599b63b9fe2412cff9d2..4a11fefc9230266f4c9ce4eda04bb4951b470941 100644
 --- a/build/util/parseInvitation.mjs

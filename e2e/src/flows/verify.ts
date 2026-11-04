@@ -7,6 +7,7 @@ import {
   approveInPersonRequest,
   type ClaimedRequestSummary,
   drainSendVideoQueue,
+  reviewQueueFor,
 } from '../helpers/approval.js'
 import type { ImageMaskRegion } from '../helpers/camera.js'
 import { canInjectImages, injectPhoto, injectScanTarget } from '../helpers/camera.js'
@@ -62,6 +63,7 @@ import {
   VideoReviewScreen,
   VideoTooLongScreen,
 } from '../screens/verify.js'
+import { getTestUser } from '../support/context.js'
 import { clearQueuedSubmission, hasQueuedSubmission, markSubmissionQueued } from '../support/send-video-queue.js'
 import { TestIds } from '../test-ids/registry.js'
 import { backgroundAppFor } from './auth.js'
@@ -723,16 +725,23 @@ export async function waitForSendVideoDecision(
 
 /**
  * Journey setup: the review claims the queue HEAD blindly, so this journey's upload only reaches it
- * once the queue is empty. A drain that stops early leaves a foreign request in front of ours — fail
- * here, rather than twenty minutes later on a decision wait that never settles.
+ * once ITS queue is empty. The drain moves anyone else's request out of the regular queue (to the
+ * specialist queue) but has nowhere to move one out of the specialist queue — so a cardless journey
+ * fails here, rather than twenty minutes later on a decision wait that never settles, while a request
+ * that is not an e2e persona heads that queue. A cardholder journey is not held up by it.
  */
 export async function clearReviewQueueBeforeSubmit(): Promise<void> {
+  const queue = reviewQueueFor({ cardSerialNumber: getTestUser().cardSerial })
   const { stoppedReason, queuesWithWork } = await drainSendVideoQueue()
-  if (stoppedReason) {
+  if (queuesWithWork.includes(queue)) {
+    const detail = stoppedReason ? `: ${stoppedReason}` : ''
     throw new Error(
-      `The review queue is not empty, so this journey's upload would not be the request the review claims: ` +
-        `${stoppedReason}. Queues still holding work: ${queuesWithWork.join(', ') || 'none reported'}.`
+      `The ${queue} review queue is not empty, so this journey's upload would not be the request the review ` +
+        `claims${detail}. Queues still holding work: ${queuesWithWork.join(', ')}.`
     )
+  }
+  if (stoppedReason) {
+    console.warn(`[verify] The ${queue} queue is clear; the drain stopped short elsewhere: ${stoppedReason}`)
   }
 }
 

@@ -1,8 +1,9 @@
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { AppState, AppStateStatus, BackHandler, Platform } from 'react-native'
+import { AppState, AppStateStatus, Platform } from 'react-native'
+import { moveAppToBackground } from 'react-native-bcsc-core'
 import PairingConfirmation from './PairingConfirmation'
 
 describe('PairingConfirmation', () => {
@@ -188,8 +189,7 @@ describe('PairingConfirmation', () => {
       addEventSpy.mockRestore()
     })
 
-    it('calls BackHandler.exitApp when Close is pressed', () => {
-      const exitAppSpy = jest.spyOn(BackHandler, 'exitApp').mockImplementation(jest.fn())
+    it('moves the app to the background when Close is pressed', () => {
       const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
 
       const { getByTestId } = render(
@@ -200,9 +200,23 @@ describe('PairingConfirmation', () => {
 
       fireEvent.press(getByTestId('com.ariesbifold:id/Close'))
 
-      expect(exitAppSpy).toHaveBeenCalled()
+      expect(moveAppToBackground).toHaveBeenCalled()
       expect(mockNavigation.dispatch).not.toHaveBeenCalled()
-      exitAppSpy.mockRestore()
+    })
+
+    it('resets navigation to the Tab stack if the app cannot move to the background', async () => {
+      jest.mocked(moveAppToBackground).mockRejectedValueOnce(new Error('E_MOVE_TO_BACKGROUND_ERROR'))
+      const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <PairingConfirmation navigation={mockNavigation as never} route={route as never} />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/Close'))
+
+      await waitFor(() => expect(mockNavigation.dispatch).toHaveBeenCalled())
     })
   })
 

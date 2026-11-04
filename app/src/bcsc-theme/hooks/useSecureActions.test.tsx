@@ -1712,12 +1712,23 @@ describe('useSecureActions', () => {
       })
     })
 
+    it('cancels pending verification reminders when marking verified', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.updateVerified(true)
+      })
+
+      expect(cancelVerificationReminders).toHaveBeenCalledTimes(1)
+    })
+
     it('throws and leaves the store alone when the credential record cannot be written', async () => {
       jest.mocked(setCredential).mockRejectedValueOnce(new Error('write failed'))
       const { result } = renderHook(() => useSecureActions())
 
       await expect(result.current.updateVerified(true)).rejects.toThrow('write failed')
 
+      expect(cancelVerificationReminders).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED })
       )
@@ -1747,6 +1758,7 @@ describe('useSecureActions', () => {
 
       expect(deleteCredential).toHaveBeenCalled()
       expect(setCredential).not.toHaveBeenCalled()
+      expect(cancelVerificationReminders).not.toHaveBeenCalled()
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [false],

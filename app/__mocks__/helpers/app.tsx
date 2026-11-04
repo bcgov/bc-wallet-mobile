@@ -2,6 +2,7 @@ import { BCSCStackProvider } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCThemeNames } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { RemoteConfigProvider } from '@/remote-config/RemoteConfig'
+import { getBundledRemoteConfig } from '@/remote-config/remote-config-utils'
 import { BCState, initialState, reducer } from '@/store'
 import { themes } from '@/theme'
 import { ContainerProvider, MainContainer, MockLogger, StoreProvider, ThemeProvider, TOKENS } from '@bifold/core'
@@ -42,7 +43,7 @@ export const BasicAppContext: React.FC<BasicAppContextProps> = ({ children, init
   return (
     <ContainerProvider value={context}>
       <StoreProvider initialState={testInitialState} reducer={reducer}>
-        <RemoteConfigProvider logger={new MockLogger() as any}>
+        <RemoteConfigProvider logger={new MockLogger() as any} initialConfig={getBundledRemoteConfig()}>
           <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
             <BCSCStackProvider>
               <ErrorAlertProvider>{children}</ErrorAlertProvider>

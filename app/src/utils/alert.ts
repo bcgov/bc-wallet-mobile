@@ -48,13 +48,13 @@ export const showAlert = (title: string, body: string, actions?: AlertAction[], 
  */
 export const withAlert = <TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
-  alert: () => void
+  alert: (error?: unknown) => void
 ) => {
   return async (...args: TArgs): Promise<TResult> => {
     try {
       return await fn(...args)
     } catch (error) {
-      alert() // NOTE (MD): Pass error details to alert if needed
+      alert(error)
       throw error
     }
   }

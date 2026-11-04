@@ -32,6 +32,7 @@ jest.mock('@bifold/core', () => ({
   mergeReducers: jest.fn((_base: any, custom: any) => custom),
   reducer: jest.fn(),
   PersistentStorage: { storeValueForKey: jest.fn() },
+  LocalStorageKeys: { Preferences: 'PreferencesState' },
 }))
 
 import { PersistentStorage } from '@bifold/core'
@@ -247,6 +248,48 @@ describe('reducer', () => {
     const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })
 
     expect(result.bcsc.verificationStarted).toBeUndefined()
+  })
+})
+
+describe('REMOVE_AVAILABLE_MEDIATOR', () => {
+  const current = 'https://mediator.example/invite?oob=current'
+  const other = 'https://mediator-dev.example/invite?oob=other'
+  const withMediators = () => ({
+    ...initialState,
+    preferences: { ...initialState.preferences, availableMediators: [current, other], selectedMediator: current },
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('drops a mediator that is not in use and persists the preferences', () => {
+    const state = reducer(withMediators(), { type: BCDispatchAction.REMOVE_AVAILABLE_MEDIATOR, payload: [other] })
+
+    expect(state.preferences.availableMediators).toEqual([current])
+    expect(state.preferences.selectedMediator).toBe(current)
+    expect(mockedStoreValueForKey).toHaveBeenCalledWith('PreferencesState', state.preferences)
+  })
+
+  it('keeps the selected mediator, which is in use', () => {
+    const initial = withMediators()
+
+    const state = reducer(initial, { type: BCDispatchAction.REMOVE_AVAILABLE_MEDIATOR, payload: [current] })
+
+    expect(state).toBe(initial)
+    expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+  })
+
+  it('ignores a mediator that is not listed', () => {
+    const initial = withMediators()
+
+    const state = reducer(initial, {
+      type: BCDispatchAction.REMOVE_AVAILABLE_MEDIATOR,
+      payload: ['https://mediator-unknown.example/invite'],
+    })
+
+    expect(state).toBe(initial)
+    expect(mockedStoreValueForKey).not.toHaveBeenCalled()
   })
 })
 

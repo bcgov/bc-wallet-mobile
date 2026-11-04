@@ -341,10 +341,11 @@ jobs:
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
-  # ─── Queue hygiene: the last word on the SIT review queue ───────
-  # The send-video journeys drain the queue before each upload and again in their teardown; this is
+  # ─── Queue hygiene: the last word on the SIT review queues ──────
+  # The send-video journeys drain the queues before each upload and again in their teardown; this is
   # the end-of-night double check, whatever the lanes did (always()) — so a run that died mid-journey
-  # never leaves a submission for the UAT team to clear in the morning.
+  # never leaves a submission for the UAT team to clear in the morning. Scope e2e: only the e2e
+  # personas' requests are rejected; anyone else's is moved to the Specialist Review queue instead.
   queue-hygiene:
     needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403, e2e-upgrade-v3, e2e-upgrade-send-video, e2e-device-auth]
     if: ${{ always() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' }}
@@ -352,7 +353,7 @@ jobs:
     permissions:
       contents: read
     with:
-      scope: all
+      scope: e2e
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 

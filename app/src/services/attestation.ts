@@ -1,4 +1,4 @@
-import { AttestationRestrictions, Mode, PlayIntegrityCloudProjects } from '@/constants'
+import { AttestationRestrictions, PlayIntegrityCloudProjects } from '@/constants'
 import { getErrorDefinition } from '@/errors'
 import {
   AbstractBifoldLogger,
@@ -29,7 +29,6 @@ import { BCAgent } from '@utils/bc-agent-modules'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
 import { DeviceEventEmitter, EmitterSubscription, Platform } from 'react-native'
-import { Config } from 'react-native-config'
 import { getBuildNumber, getBundleId, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
@@ -42,6 +41,7 @@ type AgentSubscription = ReturnType<ReturnType<Agent['events']['observable']>['s
 
 export type AttestationMonitorOptions = {
   shouldHandleProofRequestAutomatically?: boolean
+  enabled?: boolean
 }
 
 type AttestationEventTypeKeys = keyof typeof AttestationEventTypes
@@ -173,6 +173,7 @@ export class AttestationMonitor implements AttestationMonitorI {
   private log?: AbstractBifoldLogger
   private _attestationWorkflowInProgress = false
   private _shouldHandleProofRequestAutomatically = false
+  private _enabled = true
   private _proofRequest?: DidCommProofExchangeRecord
   // private _currentWorkflowState?: typeof AttestationEventTypes
 
@@ -181,12 +182,21 @@ export class AttestationMonitor implements AttestationMonitorI {
   public constructor(logger: AbstractBifoldLogger, options: AttestationMonitorOptions) {
     this.log = logger
     this.options = options
-    const { shouldHandleProofRequestAutomatically } = options
+    const { shouldHandleProofRequestAutomatically, enabled } = options
     this._shouldHandleProofRequestAutomatically = shouldHandleProofRequestAutomatically ?? false
+    this._enabled = enabled ?? true
   }
 
   public get attestationWorkflowInProgress() {
     return this._attestationWorkflowInProgress
+  }
+
+  public set enabled(value: boolean) {
+    this._enabled = value
+  }
+
+  public get enabled() {
+    return this._enabled
   }
 
   public set shouldHandleProofRequestAutomatically(value: boolean) {
@@ -242,6 +252,11 @@ export class AttestationMonitor implements AttestationMonitorI {
     proof: DidCommProofExchangeRecord,
     timeoutInMs: number = attestationCompletionTimeoutInMs
   ): Promise<boolean> => {
+    if (!this._enabled) {
+      this.log?.info('Attestation is disabled, not attempting to obtain a credential')
+      return false
+    }
+
     this._proofRequest = proof
     this.startWorkflow()
 
@@ -450,6 +465,10 @@ export class AttestationMonitor implements AttestationMonitorI {
       )
     }
 
+    if (!this._enabled) {
+      return
+    }
+
     const proof = event.payload.proofRecord
     this.log?.info('Handling proof received')
 
@@ -640,15 +659,12 @@ export class AttestationMonitor implements AttestationMonitorI {
   }
 
   private commonAttestationMessageComponent() {
+    // `credential_protocol` is deliberately omitted so both build targets follow the
+    // controller's per-environment default, which is v1 until BC Wallet is decommissioned.
     const common: Partial<AttestationRequestParams> = {
       app_version: `${getVersion()}-${getBuildNumber()}`,
       os_version: `${getSystemName()} ${getSystemVersion()}`,
       app_id_hint: getBundleId(),
-    }
-
-    // BC Wallet stays on the controller's default (v1) until it is decommissioned.
-    if (Config.BUILD_TARGET === Mode.BCSC) {
-      common.credential_protocol = 'v2'
     }
 
     return common

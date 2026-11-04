@@ -1,4 +1,5 @@
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { MinimumFreeStorageMb, useEnsureFreeStorage } from '@/bcsc-theme/hooks/useEnsureFreeStorage'
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -27,6 +28,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   const { refreshPrompts } = useVideoPrompts()
   const { videoPromptsMissingAlert } = useAlerts(navigation)
   const [promptsStatus, setPromptsStatus] = useState<PromptsStatus>('loading')
+  const ensureFreeStorage = useEnsureFreeStorage()
   const scrollViewRef = useRef<ScrollView>(null)
 
   /**
@@ -80,7 +82,12 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
-        onPress={() => {
+        onPress={async () => {
+          const hasFreeStorage = await ensureFreeStorage(MinimumFreeStorageMb.LARGE)
+          if (!hasFreeStorage) {
+            return
+          }
+
           navigation.navigate(BCSCScreens.TakeVideo)
         }}
         testID={testIdWithKey(TestIds.verify.videoInstructions.startRecording)}

@@ -15,13 +15,14 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
+  useAnimatedComponents,
   useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
 import { CommonActions, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -48,11 +49,16 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Mirrors `isSubmitting` for the window before the disabled state has rendered, when a second tap can still land.
+  const isSubmittingRef = useRef(false)
   const isFocused = useIsFocused()
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
   const { failedToReadFromLocalStorageAlert, videoPromptsMissingAlert } = useAlerts(navigation)
   const { refreshPrompts, isRefreshingPrompts } = useVideoPrompts()
+  const { ButtonLoading } = useAnimatedComponents()
 
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
@@ -87,7 +93,25 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     },
   })
 
+  /**
+   * Hands the recording to UploadingScreen, once. The reset carries key-less routes, so dispatching it twice
+   * mounts a second UploadingScreen that submits the same verification request again — IAS rejects the duplicate
+   * with a 500 after the first already went through (#4928). Bifold's Button only swallows presses while the
+   * handler is running, and this one returns synchronously, so the guard lives here. The screen is reset away
+   * on success, so the flag never needs clearing.
+   */
   const onPressUse = () => {
+    if (!videoLoaded) {
+      logger.error('[VideoReview] Attempted to use video before it was loaded')
+      return
+    }
+
+    if (isSubmittingRef.current) {
+      return
+    }
+    isSubmittingRef.current = true
+    setIsSubmitting(true)
+
     dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [videoThumbnailPath] })
     navigation.dispatch(
       CommonActions.reset({
@@ -115,6 +139,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       return
     }
 
+    VerificationVideoCache.clearCache()
+    dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
     dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [''] })
     navigation.goBack()
   }
@@ -155,9 +181,11 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * @returns {*} {Promise<void>} A promise that resolves when the video metadata is processed and cached.
    */
   const onVideoLoad = async (data: OnLoadData) => {
+    setVideoLoaded(false)
     try {
       // Clear the previously cached video
       VerificationVideoCache.clearCache()
+      dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
 
       // Wrap the file reader with alert
       const readFileInChunksWithAlert = withAlert(readFileInChunks, failedToReadFromLocalStorageAlert)
@@ -173,28 +201,32 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         type: BCDispatchAction.SAVE_VIDEO,
         payload: [{ videoPath: videoPath, videoDuration: Math.floor(data.duration) }],
       })
+      setVideoLoaded(true)
     }
   }
 
   const controls = (
     <ControlContainer>
       {/* A refresh in flight is about to rotate the sha this recording is bound to, so accepting the video
-          mid-refresh would finalize it against a sha the server has already replaced. */}
+          mid-refresh would finalize it against a sha the server has already replaced. Once the video is handed
+          over, a retake would rotate the sha under the upload in the same way, so both hold until the reset lands. */}
       <Button
         buttonType={ButtonType.Primary}
         onPress={onPressUse}
         testID={testIdWithKey(TestIds.verify.videoReview.useVideo)}
         title={t('BCSC.SendVideo.VideoReview.UseVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
-        disabled={isRefreshingPrompts}
-      />
+        disabled={!videoLoaded || isRefreshingPrompts || isSubmitting}
+      >
+        {!videoLoaded || isRefreshingPrompts ? <ButtonLoading /> : null}
+      </Button>
       <Button
         buttonType={ButtonType.Secondary}
         onPress={onPressRetake}
         testID={testIdWithKey(TestIds.verify.videoReview.retakeVideo)}
         title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
-        disabled={isRefreshingPrompts}
+        disabled={isRefreshingPrompts || isSubmitting}
       />
     </ControlContainer>
   )
@@ -221,6 +253,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
           resizeMode={'cover'}
           style={styles.video}
           onLoad={(data) => onVideoLoad(data)}
+          onError={(error) => logger.error('[VideoReview] Video review error:', error)}
           disableAudioSessionManagement
           viewType={ViewType.TEXTURE}
         />

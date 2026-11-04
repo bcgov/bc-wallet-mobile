@@ -61,6 +61,21 @@ describe('DeepLinkViewModel', () => {
     expect(mockService.init).toHaveBeenCalled()
   })
 
+  it('re-reads the initial URL without subscribing again when initialized twice', () => {
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
+
+    viewModel.initialize()
+    viewModel.initialize()
+
+    expect(mockService.subscribe).toHaveBeenCalledTimes(1)
+    expect(mockService.init).toHaveBeenCalledTimes(2)
+  })
+
   it('delegates pairing deep link to PairingService', () => {
     const viewModel = new DeepLinkViewModel(
       mockService as any,

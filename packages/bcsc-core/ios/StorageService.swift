@@ -13,6 +13,24 @@ let accountListURLComponent = "account_list"
 let metadataURLComponent = "metadata"
 let issuerURLComponent = "issuer"
 
+/// Swift module names of the v3 app's per-environment targets (target name, `-` -> `_`).
+/// v3 model classes have no `@objc` name, so v3 archives store `<module>.<Class>`.
+let v3ModuleNames = [
+  "bc_services_card",
+  "bc_services_card_dev",
+  "bc_services_card_qa",
+  "bc_services_card_test",
+  "bc_services_card_localDev",
+]
+
+/// Maps every v3 module-qualified name of `cls` to `cls`. Process-wide and idempotent.
+func registerV3ClassNames(for cls: AnyClass) {
+  let className = String(describing: cls)
+  for module in v3ModuleNames {
+    NSKeyedUnarchiver.setClass(cls, forClassName: "\(module).\(className)")
+  }
+}
+
 // Available files in the `basePath` directory:
 // account_list
 
@@ -231,15 +249,8 @@ class StorageService {
 
       guard FileManager.default.fileExists(atPath: fileUrl.path) else { return nil }
 
-      // Register both production and dev module names for v3 compatibility
-      NSKeyedUnarchiver.setClass(
-        ClientRegistration.self, forClassName: "bc_services_card.ClientRegistration"
-      )
-      NSKeyedUnarchiver.setClass(
-        ClientRegistration.self, forClassName: "bc_services_card_dev.ClientRegistration"
-      )
-      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card.Credential")
-      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card_dev.Credential")
+      registerV3ClassNames(for: ClientRegistration.self)
+      registerV3ClassNames(for: Credential.self)
 
       let data = try Data(contentsOf: fileUrl)
       let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
@@ -465,12 +476,8 @@ class StorageService {
     // Modifying the global class name for these types can corrupt other frameworks
     let isFoundationCollectionType = T.self == NSDictionary.self || T.self == NSArray.self
     if !isFoundationCollectionType {
-      // Register both production and dev module names for compatibility
-      let prodClassName = "bc_services_card.\(className)"
-      let devClassName = "bc_services_card_dev.\(className)"
-      NSKeyedUnarchiver.setClass(T.self, forClassName: prodClassName)
-      NSKeyedUnarchiver.setClass(T.self, forClassName: devClassName)
-      logger.log("Decoding class - registered mappings for: \(prodClassName) and \(devClassName)")
+      registerV3ClassNames(for: T.self)
+      logger.log("Decoding class - registered v3 mappings for \(className)")
     } else {
       logger.log("Skipping class registration for Foundation collection type: \(className)")
     }

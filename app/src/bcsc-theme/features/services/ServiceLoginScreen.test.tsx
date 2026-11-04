@@ -1,8 +1,9 @@
+import { pairingCodeErrorPolicy, verifyDeviceAssertionErrorPolicy } from '@/bcsc-theme/api/clientErrorPolicies'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import * as useServiceLoginStateModule from '@/bcsc-theme/features/services/hooks/useServiceLoginState'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
@@ -11,6 +12,7 @@ import * as useAlertsModule from '@/hooks/useAlerts'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { mockAssertion404 } from '@mocks/helpers/pairing-error'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert, Linking } from 'react-native'
@@ -82,6 +84,7 @@ describe('ServiceLogin', () => {
     })
     mockedUseQuickLoginURL.mockReturnValue(jest.fn())
     mockNavigation.canGoBack = jest.fn().mockReturnValue(false)
+    mockNavigation.isFocused = jest.fn().mockReturnValue(true)
     mockUseServerStatus.mockReturnValue({ isAvailable: true })
   })
 
@@ -311,14 +314,70 @@ describe('ServiceLogin', () => {
         },
       }
 
-      return render(
+      const buildScreen = () => (
         <BasicAppContext>
           <PairingServiceProvider service={createMockPairingService()}>
             <ServiceLoginScreen navigation={mockNavigation as never} route={route as never} />
           </PairingServiceProvider>
         </BasicAppContext>
       )
+
+      const tree = render(buildScreen())
+      return { ...tree, rerenderScreen: () => tree.rerender(buildScreen()) }
     }
+
+    const expire404 = (mockAlert: jest.Mock) =>
+      renderWithPairingCode(jest.fn().mockRejectedValue(mockAssertion404('<html>Not Found</html>').appError), {
+        loginRequestExpiredAlert: mockAlert,
+      })
+
+    it('should go home with a fresh stack when the expired alert is dismissed', async () => {
+      const mockAlert = jest.fn()
+      const tree = expire404(mockAlert)
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+      await waitFor(() => expect(mockAlert).toHaveBeenCalled())
+      expect(mockNavigation.reset).not.toHaveBeenCalled()
+
+      mockAlert.mock.calls[0][0]()
+
+      expect(mockNavigation.reset).toHaveBeenCalledWith({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab, params: { screen: BCSCScreens.Home } }],
+      })
+    })
+
+    it('should stay put when a newer login arrived while the expired alert was open', async () => {
+      const mockAlert = jest.fn()
+      const tree = expire404(mockAlert)
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+      await waitFor(() => expect(mockAlert).toHaveBeenCalled())
+
+      jest.spyOn(useServiceLoginStateModule, 'useServiceLoginState').mockReturnValue({
+        state: { pairingCode: 'NEW456', serviceTitle: 'Newer Service' },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+      tree.rerenderScreen()
+
+      mockAlert.mock.calls[0][0]()
+
+      expect(mockNavigation.reset).not.toHaveBeenCalled()
+    })
+
+    it('should stay put when the screen is no longer focused as the expired alert is dismissed', async () => {
+      const mockAlert = jest.fn()
+      const tree = expire404(mockAlert)
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+      await waitFor(() => expect(mockAlert).toHaveBeenCalled())
+
+      mockNavigation.isFocused.mockReturnValue(false)
+      mockAlert.mock.calls[0][0]()
+
+      expect(mockNavigation.reset).not.toHaveBeenCalled()
+    })
 
     it('should not show alert when pairing code error is already handled by error policy', async () => {
       const handledError = new AppError(
@@ -339,18 +398,96 @@ describe('ServiceLogin', () => {
 
       const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
       fireEvent.press(continueButton)
-      await waitFor(() => expect(mockLoginServerErrorAlert).not.toHaveBeenCalled())
+
+      // Continue is re-enabled in the same catch that decides on the alert, so once it is
+      // enabled again the alert decision has been made.
+      await waitFor(() => expect(continueButton).toBeEnabled())
+      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
     })
 
-    it('should show loginServerErrorAlert when pairing code error is not handled', async () => {
+    it('should show loginServerErrorAlert with the cause when pairing code error is not handled', async () => {
       const mockLoginServerErrorAlert = jest.fn()
-      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(new Error('unexpected failure')), {
+      const failure = new Error('unexpected failure')
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(failure), {
         loginServerErrorAlert: mockLoginServerErrorAlert,
       })
 
       const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
       fireEvent.press(continueButton)
       await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+
+      const reported = mockLoginServerErrorAlert.mock.calls[0][0]
+      expect(reported.appEvent).toBe(AppEventCode.LOGIN_SERVER_ERROR)
+      expect(reported.cause).toBe(failure)
+      expect(reported.technicalMessage).toContain('unexpected failure')
+    })
+
+    it('should show loginRequestExpiredAlert for a 404 with no IAS error body', async () => {
+      const { appError, policy } = mockAssertion404('<html>Not Found</html>')
+      expect(policy).toBe(pairingCodeErrorPolicy)
+
+      const mockLoginRequestExpiredAlert = jest.fn()
+      const mockLoginServerErrorAlert = jest.fn()
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(appError), {
+        loginRequestExpiredAlert: mockLoginRequestExpiredAlert,
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      })
+
+      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
+      fireEvent.press(continueButton)
+
+      await waitFor(() => expect(mockLoginRequestExpiredAlert).toHaveBeenCalledTimes(1))
+      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      await waitFor(() => expect(continueButton).toBeEnabled())
+    })
+
+    it('should show loginServerErrorAlert for a 404 with an IAS error the app has no code for', async () => {
+      const { appError, policy } = mockAssertion404({
+        error: 'invalid_request',
+        error_description: 'The request is invalid',
+      })
+      expect(policy).toBeUndefined()
+
+      const mockLoginRequestExpiredAlert = jest.fn()
+      const mockLoginServerErrorAlert = jest.fn()
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(appError), {
+        loginRequestExpiredAlert: mockLoginRequestExpiredAlert,
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      })
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalledTimes(1))
+
+      const reported = mockLoginServerErrorAlert.mock.calls[0][0]
+      expect(reported.appEvent).toBe(AppEventCode.LOGIN_SERVER_ERROR)
+      expect(reported.cause).toBe(appError)
+      expect(reported.technicalMessage).toContain('The request is invalid')
+      expect(mockLoginRequestExpiredAlert).not.toHaveBeenCalled()
+    })
+
+    it('should not add a second alert to a 404 that an earlier assertion policy already alerted on', async () => {
+      const mockInvalidPairingCodeAlert = jest.fn()
+      const { appError, policy } = mockAssertion404(
+        { error: AppEventCode.INVALID_PAIRING_CODE, error_description: 'The pairing code is invalid' },
+        { invalidPairingCodeAlert: mockInvalidPairingCodeAlert }
+      )
+      expect(policy).toBe(verifyDeviceAssertionErrorPolicy)
+      expect(mockInvalidPairingCodeAlert).toHaveBeenCalledTimes(1)
+
+      const mockLoginRequestExpiredAlert = jest.fn()
+      const mockLoginServerErrorAlert = jest.fn()
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(appError), {
+        loginRequestExpiredAlert: mockLoginRequestExpiredAlert,
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      })
+
+      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
+      fireEvent.press(continueButton)
+      await waitFor(() => expect(continueButton).toBeEnabled())
+
+      expect(mockLoginRequestExpiredAlert).not.toHaveBeenCalled()
+      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
     })
 
     it.each([
@@ -432,15 +569,37 @@ describe('ServiceLogin', () => {
       mockOpenURL.mockRestore()
     })
 
-    it('should show loginServerErrorAlert when quick login URL generation fails', async () => {
+    it('should show loginServerErrorAlert with the reason when quick login URL generation fails', async () => {
       const mockLoginServerErrorAlert = jest.fn()
-      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ error: 'token expired' })
+      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: false, error: 'token expired' })
 
       const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: mockLoginServerErrorAlert })
 
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
 
       await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+
+      const reported = mockLoginServerErrorAlert.mock.calls[0][0]
+      expect(reported.appEvent).toBe(AppEventCode.LOGIN_SERVER_ERROR)
+      expect(reported.technicalMessage).toContain('token expired')
+    })
+
+    it('should prefer the original error as the cause when quick login URL generation throws', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      const failure = Object.assign(new Error('key missing'), { code: 'E_KEY_NOT_FOUND' })
+      const mockGetQuickLoginURL = jest
+        .fn()
+        .mockResolvedValue({ success: false, error: 'Error creating quick login URL: key missing', cause: failure })
+
+      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: mockLoginServerErrorAlert })
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+
+      const reported = mockLoginServerErrorAlert.mock.calls[0][0]
+      expect(reported.cause).toBe(failure)
+      expect(reported.technicalMessage).toContain('E_KEY_NOT_FOUND')
     })
 
     it('should re-enable Continue without a second alert when the failure was already handled', async () => {

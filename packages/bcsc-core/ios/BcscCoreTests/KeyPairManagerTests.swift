@@ -329,11 +329,11 @@ final class KeyPairManagerTests: XCTestCase {
 
   // MARK: - Foreign keychain items (issue #4032 hypothesis)
 
-  /// Quick login and login-challenge verification historically imported the *server's*
-  /// public key into the keychain (`RSAUtil.insertPublicKey`, tag `com.mcsi.op.<kid>`,
-  /// no label). If such items ever surfaced in `findAllPrivateKeys`, the newest one
-  /// would be selected as the signing key and retrieval by label would fail — the
-  /// exact 2603 signature. This pins the actual platform behavior.
+  /// Older builds imported the *server's* public key into the keychain (tag
+  /// `com.mcsi.op.<kid>`, no label) and upgraded devices still carry those items. If they
+  /// ever surfaced in `findAllPrivateKeys`, the newest one would be selected as the signing
+  /// key and retrieval by label would fail — the exact 2603 signature. This pins the actual
+  /// platform behavior.
   func testImportedServerPublicKeyDoesNotAppearInPrivateKeyDiscovery() throws {
     let (publicKey, _) = try manager.generateKeyPair(withLabel: testLabel, keyType: KeyType.RSA, keySize: 2048)
 
@@ -345,14 +345,21 @@ final class KeyPairManagerTests: XCTestCase {
       return XCTFail("could not split exported key into modulus/exponent")
     }
 
-    // Import through the legacy path exactly as production code did.
-    let imported = RSAUtil.insertPublicKey(tag: pollutionTag, exponent: exponent, modulus: modulus)
+    // Plant the item exactly as older builds wrote it.
+    let legacyItem: NSDictionary = [
+      kSecClass: kSecClassKey,
+      kSecAttrKeyType: kSecAttrKeyTypeRSA,
+      kSecAttrApplicationTag: pollutionTag,
+      kSecValueData: Data(modulus: modulus, exponent: exponent),
+      kSecAttrAccessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+    ]
+    let imported = SecItemAdd(legacyItem, nil) == errSecSuccess
 
     let keys = try manager.findAllPrivateKeys()
     XCTAssertFalse(
       keys.contains { $0.tag == pollutionTag },
       """
-      imported server public key (imported=\(imported != nil)) leaked into private-key \
+      imported server public key (imported=\(imported)) leaked into private-key \
       discovery — foreign items can shadow the signing key and cause error 2603
       """
     )

@@ -323,12 +323,8 @@ describe('EnterEmailScreen', () => {
         expect(mockNavigation.navigate).toHaveBeenCalled()
       })
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        BCSCScreens.EmailConfirmation,
-        expect.objectContaining({
-          emailAddressId: 'test-id',
-        })
-      )
+      expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSkippedEmailVerification: false })
+      expect(mockUpdateUserInfo).toHaveBeenCalledWith({ email: 'user@test.com', isEmailVerified: false })
     })
 
     it('should submit and persist the trimmed, lower-cased address', async () => {
