@@ -10,28 +10,42 @@ export interface VerificationFacts {
   hasRefreshToken: boolean
 }
 
-export interface VerificationState {
-  /** Setup finished on this device */
-  isVerified: boolean
-  /** Tokens issued, whether or not setup finished (an account transfer, or a failed finish step) */
-  isDeviceVerifiedByIas: boolean
+interface VerificationFlags {
   isVerificationInProgress: boolean
   isDeactivated: boolean
-  needsVerification: boolean
 }
 
 /**
- * The single definition of "verified", "device verified by IAS" and "needs verification".
- * Flags rather than one status because the facts overlap: a deactivated credential can still be `isVerified`.
+ * Split on `isVerified` so the combinations the rule can't produce don't type-check. The other flags
+ * stay booleans because they overlap: a cancelled or expired card is still verified.
  */
+export type VerificationState =
+  | (VerificationFlags & {
+      /** Setup finished on this device */
+      isVerified: true
+      isDeviceVerifiedByIas: true
+      needsVerification: false
+    })
+  | (VerificationFlags & {
+      isVerified: false
+      /** Tokens issued without setup finishing (an account transfer, or a failed finish step) */
+      isDeviceVerifiedByIas: boolean
+      needsVerification: boolean
+    })
+
+/** The single definition of "verified", "device verified by IAS" and "needs verification". */
 export const getVerificationState = (facts: VerificationFacts): VerificationState => {
   const { hasCredential, credentialDeactivated, inVerifyFlow, hasRefreshToken } = facts
+  const flags = { isVerificationInProgress: inVerifyFlow, isDeactivated: credentialDeactivated }
+
+  if (hasCredential) {
+    return { ...flags, isVerified: true, isDeviceVerifiedByIas: true, needsVerification: false }
+  }
 
   return {
-    isVerified: hasCredential,
-    isDeviceVerifiedByIas: hasCredential || (hasRefreshToken && !credentialDeactivated),
-    isVerificationInProgress: inVerifyFlow,
-    isDeactivated: credentialDeactivated,
-    needsVerification: !hasCredential && !inVerifyFlow,
+    ...flags,
+    isVerified: false,
+    isDeviceVerifiedByIas: hasRefreshToken && !credentialDeactivated,
+    needsVerification: !inVerifyFlow,
   }
 }

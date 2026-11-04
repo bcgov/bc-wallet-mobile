@@ -7,49 +7,61 @@ const none: VerificationFacts = {
   hasRefreshToken: false,
 }
 
-const state = (overrides: Partial<VerificationState>): VerificationState => ({
-  isVerified: false,
+type Flags = Pick<VerificationState, 'isVerificationInProgress' | 'isDeactivated'>
+const noFlags: Flags = { isVerificationInProgress: false, isDeactivated: false }
+
+const verified = (flags: Partial<Flags> = {}): VerificationState => ({
+  ...noFlags,
+  ...flags,
+  isVerified: true,
+  isDeviceVerifiedByIas: true,
+  needsVerification: false,
+})
+
+const unverified = (
+  overrides: Partial<Flags & { isDeviceVerifiedByIas: boolean; needsVerification: boolean }> = {}
+): VerificationState => ({
+  ...noFlags,
   isDeviceVerifiedByIas: false,
-  isVerificationInProgress: false,
-  isDeactivated: false,
   needsVerification: false,
   ...overrides,
+  isVerified: false,
 })
 
 describe('getVerificationState', () => {
   it.each<[string, Partial<VerificationFacts>, VerificationState]>([
-    ['nothing', {}, state({ needsVerification: true })],
-    ['a credential', { hasCredential: true }, state({ isVerified: true, isDeviceVerifiedByIas: true })],
+    ['nothing', {}, unverified({ needsVerification: true })],
+    ['a credential', { hasCredential: true }, verified()],
     [
       'a credential deactivated during the session',
       { hasCredential: true, credentialDeactivated: true },
-      state({ isVerified: true, isDeviceVerifiedByIas: true, isDeactivated: true }),
+      verified({ isDeactivated: true }),
     ],
     [
       'a credential and the verify flow',
       { hasCredential: true, inVerifyFlow: true },
-      state({ isVerified: true, isDeviceVerifiedByIas: true, isVerificationInProgress: true }),
+      verified({ isVerificationInProgress: true }),
     ],
     [
       'tokens without a credential (an account transfer, or a failed finish step)',
       { hasRefreshToken: true },
-      state({ isDeviceVerifiedByIas: true, needsVerification: true }),
+      unverified({ isDeviceVerifiedByIas: true, needsVerification: true }),
     ],
     [
       'tokens and a deactivated credential',
       { hasRefreshToken: true, credentialDeactivated: true },
-      state({ isDeactivated: true, needsVerification: true }),
+      unverified({ isDeactivated: true, needsVerification: true }),
     ],
     [
       'tokens and the verify flow',
       { hasRefreshToken: true, inVerifyFlow: true },
-      state({ isDeviceVerifiedByIas: true, isVerificationInProgress: true }),
+      unverified({ isDeviceVerifiedByIas: true, isVerificationInProgress: true }),
     ],
-    ['the verify flow without tokens', { inVerifyFlow: true }, state({ isVerificationInProgress: true })],
+    ['the verify flow without tokens', { inVerifyFlow: true }, unverified({ isVerificationInProgress: true })],
     [
       'a deactivated credential without tokens',
       { credentialDeactivated: true },
-      state({ isDeactivated: true, needsVerification: true }),
+      unverified({ isDeactivated: true, needsVerification: true }),
     ],
   ])('with %s', (_name, facts, expected) => {
     expect(getVerificationState({ ...none, ...facts })).toEqual(expected)
