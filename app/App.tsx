@@ -13,7 +13,6 @@ import {
 import { BCThemeNames, Mode, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
-import { isAppError } from '@/errors/appError'
 import { ErrorBoundaryWrapper } from '@/errors/components/ErrorBoundary'
 import { AppEventCode } from '@/events/appEventCode'
 import { localization } from '@/localization'
@@ -114,20 +113,22 @@ const App = () => {
     // Uses i18next.t() directly instead of the useTranslation hook's t() to avoid
     // adding a dependency to this init-only effect. The callback runs asynchronously
     // on FCM error, so i18next.t() resolves the current language at call time.
+    // Verifier outcomes the user is told about; the ViewModel has already logged everything else.
+    const fcmAlertCodes: Partial<Record<AppEventCode, string>> = {
+      [AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK]: '111',
+      [AppEventCode.ERR_112_JWS_VERIFICATION_FAILED]: '112',
+      [AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION]: '113',
+    }
     fcmViewModel.setErrorHandler((error) => {
-      if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
-        Alert.alert(
-          i18next.t('Alerts.ProblemWithApp.Title', { errorCode: '111' }),
-          i18next.t('Alerts.ProblemWithApp.Description', { errorCode: '111' }),
-          [{ text: i18next.t('Global.OK') }]
-        )
-      } else if (isAppError(error, AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)) {
-        Alert.alert(
-          i18next.t('Alerts.ProblemWithApp.Title', { errorCode: '112' }),
-          i18next.t('Alerts.ProblemWithApp.Description', { errorCode: '112' }),
-          [{ text: i18next.t('Global.OK') }]
-        )
+      const errorCode = fcmAlertCodes[error.appEvent]
+      if (!errorCode) {
+        return
       }
+      Alert.alert(
+        i18next.t('Alerts.ProblemWithApp.Title', { errorCode }),
+        i18next.t('Alerts.ProblemWithApp.Description', { errorCode }),
+        [{ text: i18next.t('Global.OK') }]
+      )
     })
     fcmViewModel.initialize()
   }, [])
