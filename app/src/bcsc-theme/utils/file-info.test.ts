@@ -325,47 +325,6 @@ describe('File Info Utils', () => {
 
       const result = await checkFileSystemFreeStorage(100, mockLogger)
 
-      expect(result).toEqual({ hasFreeStorage: true, freeStorageMb: 200 })
-    })
-
-    it('should return hasFreeStorage false when free space is below minimum', async () => {
-      const mockLogger = new MockLogger()
-      jest.mocked(RNFS).getFSInfo.mockResolvedValue({ freeSpace: 50 * 1024 * 1024, totalSpace: 500 * 1024 * 1024 })
-
-      const result = await checkFileSystemFreeStorage(100, mockLogger)
-
-      expect(result).toEqual({ hasFreeStorage: false, freeStorageMb: 50 })
-    })
-
-    it('should log error and return hasFreeStorage true when getFSInfo fails', async () => {
-      const mockLogger = new MockLogger()
-      const mockError = new Error('Failed to get FS info')
-      jest.mocked(RNFS).getFSInfo.mockRejectedValue(mockError)
-
-      const result = await checkFileSystemFreeStorage(100, mockLogger)
-
-      expect(result).toEqual({ hasFreeStorage: true, freeStorageMb: -1 })
-    })
-
-    it('should log the free space and minimum required', async () => {
-      const mockLogger = new MockLogger()
-      jest.mocked(RNFS).getFSInfo.mockResolvedValue({ freeSpace: 150 * 1024 * 1024, totalSpace: 500 * 1024 * 1024 })
-
-      await checkFileSystemFreeStorage(100, mockLogger)
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('[FileSystem] Free space: 150.00 MB, Minimum required: 100 MB')
-      )
-    })
-  })
-
-  describe('checkFileSystemFreeStorage', () => {
-    it('should return hasFreeStorage true when free space is above minimum', async () => {
-      const mockLogger = new MockLogger()
-      jest.mocked(RNFS).getFSInfo.mockResolvedValue({ freeSpace: 200 * 1024 * 1024, totalSpace: 500 * 1024 * 1024 })
-
-      const result = await checkFileSystemFreeStorage(100, mockLogger)
-
       expect(result).toEqual({ hasFreeStorage: true, freeStorageMb: 200, totalStorageMb: 500 })
     })
 
