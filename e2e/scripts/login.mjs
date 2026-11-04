@@ -1108,7 +1108,14 @@ export async function claimMatchingSendVideoRequest(fetchWithCookies, input, cla
         DEFAULT_TRANSFER_COMMENT,
         signal
       )
-      continue // the queue just changed under us; nothing to wait for
+      // The queue just changed under us, so there is nothing to wait for — but the deadline still
+      // binds, or a regular queue that keeps refilling with strangers would keep the review moving them.
+      throwIfClaimDeadlinePassed(
+        claimDeadline,
+        claimTimeoutMs,
+        () => `moved foreign request ${claimed.requestIdentifier}`
+      )
+      continue
     }
 
     console.log(
@@ -1137,19 +1144,43 @@ async function waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, sig
     await sleep(CLAIM_POLL_INTERVAL_MS, signal)
     return
   }
+  throw claimTimeoutError(claimTimeoutMs, describeLastPage)
+}
+
+/**
+ * Throws once the claim deadline has passed — for a retry with nothing to wait for, which must still
+ * end when the time is up.
+ *
+ * @param {number} claimDeadline
+ * @param {number} claimTimeoutMs
+ * @param {() => string} [describeLastPage]
+ */
+function throwIfClaimDeadlinePassed(claimDeadline, claimTimeoutMs, describeLastPage) {
+  if (Date.now() >= claimDeadline) {
+    throw claimTimeoutError(claimTimeoutMs, describeLastPage)
+  }
+}
+
+/**
+ * @param {number} claimTimeoutMs
+ * @param {() => string} [describeLastPage]
+ */
+function claimTimeoutError(claimTimeoutMs, describeLastPage) {
   const suffix = describeLastPage ? ` — last: ${describeLastPage()}` : ''
-  throw new Error(`[claim send-video request] no matching submission within ${claimTimeoutMs}ms${suffix}`)
+  return new Error(`[claim send-video request] no matching submission within ${claimTimeoutMs}ms${suffix}`)
 }
 
 /**
  * Best-effort `CloseRequest` release of a claimed request. Never throws — the claim loop decides
  * what a release that did not stick means — but a non-OK response is worth a warning, since a
- * silently failed release is exactly how the same foreign request comes straight back.
+ * silently failed release is exactly how the same foreign request comes straight back, and the
+ * caller is told, since the drain never claims from that queue again to notice.
  *
  * @param {typeof fetch} fetchWithCookies
  * @param {ReturnType<typeof load>} $detail
  * @param {string} detailUrl
  * @param {AbortSignal} [signal]
+ * @returns {Promise<boolean>} whether the portal accepted the release
  */
 async function releaseClaimedRequest(fetchWithCookies, $detail, detailUrl, signal) {
   try {
@@ -1162,8 +1193,10 @@ async function releaseClaimedRequest(fetchWithCookies, $detail, detailUrl, signa
     if (!response.ok) {
       console.warn(`[idcheck] [!] CloseRequest release returned ${response.status}`)
     }
+    return response.ok
   } catch (err) {
     console.warn('[idcheck] [!] CloseRequest release failed:', err)
+    return false
   }
 }
 
@@ -1374,6 +1407,75 @@ function assertValidDrainScope(scope, personas) {
  */
 
 /**
+ * @typedef {'rejected' | 'transferred' | 'released'} DrainAction - What the drain did with a claimed request
+ */
+
+/**
+ * Whether a request this run already handled is back somewhere it should not be. One moved to the
+ * specialist queue is expected at that queue's head; anything else coming back — a decision or a move
+ * that did not stick — is a reason to stop churning the queue.
+ *
+ * @param {DrainAction | undefined} before - What this run did with the request, if anything
+ * @param {ReviewQueue} queue - The queue it was just claimed from
+ */
+function cameBackUnexpectedly(before, queue) {
+  return before !== undefined && !(before === 'transferred' && queue === 'specialist')
+}
+
+/**
+ * Does with a claimed request the one thing {@link drainReviewQueues} does with it — reject it, move it
+ * to the specialist queue, or release it — and says which.
+ *
+ * @param {typeof fetch} fetchWithCookies
+ * @param {ClaimedRequest} claimed
+ * @param {string} detailUrl - The claimed request's page, which the portal's forms post from
+ * @param {string} persona - The claimed request's persona label, or `foreign`
+ * @param {DrainOptions} options
+ * @returns {Promise<DrainAction>}
+ */
+async function settleClaimedRequest(fetchWithCookies, claimed, detailUrl, persona, options) {
+  const { scope, reason, transferComment, signal } = options
+  if (scope === 'e2e' && persona === 'foreign') {
+    if (claimed.queue === 'regular') {
+      await transferClaimedRequestToSpecialist(fetchWithCookies, claimed.$detail, detailUrl, transferComment, signal)
+      console.log(`[queue drain] moved ${describeClaimed(claimed, persona)} to the specialist queue`)
+      return 'transferred'
+    }
+    const released = await releaseClaimedRequest(fetchWithCookies, claimed.$detail, detailUrl, signal)
+    if (!released) {
+      // The drain leaves this queue alone from here on, so nothing later would notice a release that
+      // did not go through — unlike the review, which sees the request come back. Say so now.
+      throw new Error(
+        `[queue drain] the portal did not accept the release of ${claimed.requestIdentifier} — it may still be claimed by the e2e account, with the ${claimed.queue} queue blocked behind it`
+      )
+    }
+    console.log(
+      `[queue drain] released ${describeClaimed(claimed, persona)} — leaving the ${claimed.queue} queue alone`
+    )
+    return 'released'
+  }
+
+  await submitSendVideoDecision(
+    fetchWithCookies,
+    claimed.$detail,
+    detailUrl,
+    claimed.requestIdentifier,
+    claimed.csrfToken,
+    {
+      decision: 'reject',
+      cardSerialNumber: claimed.claimedSerial,
+      surname: claimed.claimedSurname,
+      firstName: claimed.claimedFirstName,
+      verificationComment: reason,
+      comment: reason,
+    },
+    signal
+  )
+  console.log(`[queue drain] rejected ${describeClaimed(claimed, persona)}`)
+  return 'rejected'
+}
+
+/**
  * Empty the review queues of the e2e personas' requests: claim the head, decide what it is, repeat
  * until no queue has a head this run may claim. The journeys run it before they submit (so their own
  * upload is the head the review claims) and after a failure (so an orphan never waits for the
@@ -1396,25 +1498,24 @@ function assertValidDrainScope(scope, personas) {
  * @returns {Promise<DrainSendVideoQueueResult>}
  */
 export async function drainReviewQueues(fetchWithCookies, options) {
-  const { scope, personas, reason, transferComment, maxClaims, dryRun, signal } = options
+  const { personas, maxClaims, dryRun, signal } = options
   /** @type {DrainSendVideoQueueResult} */
   const result = { rejected: [], transferred: [], released: [], queuesWithWork: [] }
-  /** @type {Map<string, 'rejected' | 'transferred' | 'released'>} what this run already did to each request id */
+  /** @type {Map<string, DrainAction>} what this run already did to each request id */
   const handled = new Map()
-  /** @type {Set<ReviewQueue>} queues whose head is someone else's with nowhere to go — left as they are */
-  const leftAlone = new Set()
 
   for (let claims = 0; ; claims++) {
     const dashboardHtml = await fetchBackcheckDashboard(fetchWithCookies, signal)
     const claimForms = findClaimForms(dashboardHtml)
     result.queuesWithWork = claimForms.map((form) => form.queue)
-    const claimForm = claimForms.find((form) => !leftAlone.has(form.queue))
+    if (claimForms.length === 0) {
+      console.log(`[queue drain] queues empty after ${claims} claim(s)`)
+      return result
+    }
+    // A queue whose head this run released is left as it is: FIFO means nothing behind that head is reachable.
+    const claimForm = claimForms.find((form) => !result.released.some((released) => released.queue === form.queue))
     if (!claimForm) {
-      if (claimForms.length === 0) {
-        console.log(`[queue drain] queues empty after ${claims} claim(s)`)
-      } else {
-        result.stoppedReason = `a request that is not an e2e persona heads the ${result.queuesWithWork.join(' and ')} queue — left for a person to review`
-      }
+      result.stoppedReason = `a request that is not an e2e persona heads the ${result.queuesWithWork.join(' and ')} queue — left for a person to review`
       return result
     }
     if (dryRun) {
@@ -1441,59 +1542,16 @@ export async function drainReviewQueues(fetchWithCookies, options) {
     }
 
     const persona = claimedPersona(claimed, personas)
-    const summary = summarizeClaimed(claimed, persona)
     const before = handled.get(claimed.requestIdentifier)
-    // A request moved to the specialist queue is expected back at that queue's head; anything else
-    // coming back — a decision or a move that did not stick — is a reason to stop churning.
-    if (before && !(before === 'transferred' && claimed.queue === 'specialist')) {
+    if (cameBackUnexpectedly(before, claimed.queue)) {
       await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
       result.stoppedReason = `${claimed.requestIdentifier} (${persona}) came back to the ${claimed.queue} queue after being ${before}`
       return result
     }
 
-    if (scope === 'e2e' && persona === 'foreign') {
-      if (claimed.queue === 'regular') {
-        await transferClaimedRequestToSpecialist(
-          fetchWithCookies,
-          claimed.$detail,
-          claimResponse.url,
-          transferComment,
-          signal
-        )
-        handled.set(claimed.requestIdentifier, 'transferred')
-        result.transferred.push(summary)
-        console.log(`[queue drain] moved ${describeClaimed(claimed, persona)} to the specialist queue`)
-        continue
-      }
-      await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
-      handled.set(claimed.requestIdentifier, 'released')
-      result.released.push(summary)
-      leftAlone.add(claimed.queue)
-      console.log(
-        `[queue drain] released ${describeClaimed(claimed, persona)} — leaving the ${claimed.queue} queue alone`
-      )
-      continue
-    }
-
-    await submitSendVideoDecision(
-      fetchWithCookies,
-      claimed.$detail,
-      claimResponse.url,
-      claimed.requestIdentifier,
-      claimed.csrfToken,
-      {
-        decision: 'reject',
-        cardSerialNumber: claimed.claimedSerial,
-        surname: claimed.claimedSurname,
-        firstName: claimed.claimedFirstName,
-        verificationComment: reason,
-        comment: reason,
-      },
-      signal
-    )
-    handled.set(claimed.requestIdentifier, 'rejected')
-    result.rejected.push(summary)
-    console.log(`[queue drain] rejected ${describeClaimed(claimed, persona)}`)
+    const action = await settleClaimedRequest(fetchWithCookies, claimed, claimResponse.url, persona, options)
+    handled.set(claimed.requestIdentifier, action)
+    result[action].push(summarizeClaimed(claimed, persona))
   }
 }
 

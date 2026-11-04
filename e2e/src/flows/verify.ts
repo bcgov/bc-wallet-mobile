@@ -734,9 +734,10 @@ export async function clearReviewQueueBeforeSubmit(): Promise<void> {
   const queue = reviewQueueFor({ cardSerialNumber: getTestUser().cardSerial })
   const { stoppedReason, queuesWithWork } = await drainSendVideoQueue()
   if (queuesWithWork.includes(queue)) {
+    const detail = stoppedReason ? `: ${stoppedReason}` : ''
     throw new Error(
-      `The ${queue} review queue is not empty, so this journey's upload would not be the request the review claims` +
-        `${stoppedReason ? `: ${stoppedReason}` : ''}. Queues still holding work: ${queuesWithWork.join(', ')}.`
+      `The ${queue} review queue is not empty, so this journey's upload would not be the request the review ` +
+        `claims${detail}. Queues still holding work: ${queuesWithWork.join(', ')}.`
     )
   }
   if (stoppedReason) {

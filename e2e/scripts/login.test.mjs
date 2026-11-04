@@ -94,9 +94,10 @@ function transferNotePage(request) {
 /**
  * A portal with the two FIFO queues and one agent session. `CloseRequest` puts the request back at the
  * HEAD of its queue (the capture showed it coming straight back); a transfer appends it to the
- * specialist queue — or, with `transferSticks: false`, back to the regular one.
+ * specialist queue — or, with `transferSticks: false`, back to the regular one. With
+ * `releaseAccepted: false` the portal answers `CloseRequest` with a 500 and keeps the claim.
  */
-function fakePortal({ regular = [], specialist = [], transferSticks = true } = {}) {
+function fakePortal({ regular = [], specialist = [], transferSticks = true, releaseAccepted = true } = {}) {
   const queues = { regular: [...regular], specialist: [...specialist] }
   /** The request this session holds a claim on, and the queue it came from. */
   let held = null
@@ -133,6 +134,7 @@ function fakePortal({ regular = [], specialist = [], transferSticks = true } = {
         assert.equal(body.get('csrftoken'), CSRF)
         switch (body.get('command')) {
           case 'CloseRequest':
+            if (!releaseAccepted) return { ...page(html('Error', ''), url), ok: false, status: 500 }
             queues[held.queue].unshift(held.request)
             held = null
             return page(dashboardPage(queues), url)
@@ -252,6 +254,19 @@ test('a move that does not stick stops the drain, with the request released', as
   assert.deepEqual(portal.queues.regular, [stranger('R1')])
 })
 
+test('a release the portal does not accept fails the drain instead of being recorded', async (t) => {
+  t.mock.method(console, 'warn', () => {})
+  const portal = fakePortal({ specialist: [stranger('S1')], releaseAccepted: false })
+
+  await assert.rejects(
+    drainReviewQueues(portal.fetchWithCookies, drainOptions()),
+    /did not accept the release of S1 .* specialist queue blocked/
+  )
+
+  assert.deepEqual(portal.commands(), ['CloseRequest'])
+  assert.equal(portal.held.request.id, 'S1') // still ours — the drain said so instead of moving on
+})
+
 test('scope all rejects everything queued, regular queue first, and moves nothing', async () => {
   const portal = fakePortal({ regular: [stranger('R1'), photo('R2')], specialist: [stranger('S1')] })
 
@@ -306,6 +321,19 @@ test('the review moves a stranger out of the regular queue and claims its own up
   assert.deepEqual(portal.commands(), ['TransferToSpecialist'])
   assert.match(portal.postsTo('transfer')[0].body.get('comment'), /automated e2e queue cleanup/)
   assert.equal(portal.held.request.id, 'R2') // the review goes on holding its claim
+})
+
+test('the review stops moving strangers aside once the claim deadline has passed', async () => {
+  const portal = fakePortal({ regular: [stranger('R1'), stranger('R2'), photo('R3')] })
+
+  await assert.rejects(
+    claimMatchingSendVideoRequest(portal.fetchWithCookies, { ...PERSONAS[0] }, 0),
+    /no matching submission within 0ms — last: moved foreign request R1/
+  )
+
+  assert.deepEqual(portal.commands(), ['TransferToSpecialist']) // R2 was never claimed
+  assert.deepEqual(portal.queues, { regular: [stranger('R2'), photo('R3')], specialist: [stranger('R1')] })
+  assert.equal(portal.held, null)
 })
 
 test("the review releases the same persona's upload from the other platform instead of moving it", async () => {
