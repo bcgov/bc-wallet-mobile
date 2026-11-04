@@ -226,7 +226,8 @@ describe('FcmViewModel', () => {
       expect(showLocalNotification).not.toHaveBeenCalled()
     })
 
-    it('does not re-show a status notification the OS already presented', async () => {
+    // Tray taps and cold starts arrive with no delivery context: the OS has already shown the notification.
+    it('does not re-show a status notification opened from the tray (no delivery context)', async () => {
       const message = {
         type: 'status',
         data: {
@@ -244,6 +245,7 @@ describe('FcmViewModel', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Status notification received'))
       expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(notifee.displayNotification).not.toHaveBeenCalled()
     })
 
     it('routes notification messages to handleGenericNotification', async () => {
