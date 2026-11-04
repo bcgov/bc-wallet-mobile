@@ -1064,22 +1064,40 @@ describe('BCSC Client', () => {
         expect(trackErrorEventSpy).not.toHaveBeenCalled()
       })
 
-      it('keeps the reason for a failed fetch until a later fetch succeeds', async () => {
+      it('resolves fetchJwkResult with the last network error when every attempt fails', async () => {
         const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
         client.client.defaults.adapter = (config: any) =>
           Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config))
 
-        const failedFetch = client.fetchJwk()
+        const resultPromise = client.fetchJwkResult()
         await jest.advanceTimersByTimeAsync(1500)
 
-        expect(await failedFetch).toBeNull()
-        expect(client.lastJwkFetchError).toBeInstanceOf(AppError)
+        const result = await resultPromise
+        expect(result.jwk).toBeNull()
+        expect(result.error).toBeInstanceOf(AppError)
+      })
 
+      it('resolves fetchJwkResult with a "no keys" error when the endpoint returns an empty key set', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [] } } as any)
+
+        const result = await client.fetchJwkResult()
+
+        expect(result).toEqual({ jwk: null, error: new Error('JWKS endpoint returned no keys') })
+      })
+
+      it('gives callers that join an in-flight fetch the same failure reason', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
         client.client.defaults.adapter = (config: any) =>
-          Promise.resolve({ data: { keys: [mockJwk] }, status: 200, statusText: 'OK', headers: {}, config })
+          Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config))
 
-        expect(await client.fetchJwk()).toEqual(mockJwk)
-        expect(client.lastJwkFetchError).toBeUndefined()
+        const firstPromise = client.fetchJwkResult()
+        const joinedPromise = client.fetchJwkResult()
+        await jest.advanceTimersByTimeAsync(1500)
+
+        const [first, joined] = await Promise.all([firstPromise, joinedPromise])
+        expect(first.error).toBeInstanceOf(AppError)
+        expect(joined.error).toBe(first.error)
       })
 
       it('retries a rejected certificate like any other network error', async () => {

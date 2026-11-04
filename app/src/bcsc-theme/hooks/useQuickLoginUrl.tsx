@@ -88,11 +88,11 @@ export const useQuickLoginURL = () => {
           return { success: false, error: createFailure('access_token', new Error('No access token available')) }
         }
 
-        // fetchJwk never rejects: it resolves null and leaves the reason on lastJwkFetchError
-        const [tokens, account, jwk] = await Promise.all([
+        // fetchJwkResult never rejects: a failure resolves with jwk null and the reason in error
+        const [tokens, account, jwkResult] = await Promise.all([
           atStep('notification_tokens', () => getNotificationTokens(logger)),
           atStep('account', () => getAccount()),
-          client.fetchJwk(),
+          client.fetchJwkResult(),
         ])
 
         if (!tokens) {
@@ -106,8 +106,10 @@ export const useQuickLoginURL = () => {
           return { success: false, error: createFailure('account', new Error('No account data received')) }
         }
 
+        const { jwk } = jwkResult
+
         if (!jwk) {
-          throw createFailure('jwks', client.lastJwkFetchError, ErrorRegistry.MISSING_JWK_ERROR)
+          throw createFailure('jwks', jwkResult.error, ErrorRegistry.MISSING_JWK_ERROR)
         }
 
         const loginHint = await atStep('sign_jwt', () =>

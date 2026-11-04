@@ -22,6 +22,22 @@ describe('createFailureError', () => {
     jest.restoreAllMocks()
   })
 
+  it('records the code of an AppError cause, which technicalMessage does not carry', () => {
+    const cause = AppError.fromErrorDefinition(ErrorRegistry.NO_SIGNING_KEYS, { track: false })
+
+    const error = createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, { flow: 'f', step: 's', cause })
+
+    expect(error.context.failure_cause_code).toBe(cause.code)
+  })
+
+  it('records the code of a native module error cause', () => {
+    const cause = Object.assign(new Error('No keys available'), { code: 'E_NO_KEYS_FOUND' })
+
+    const error = createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, { flow: 'f', step: 's', cause })
+
+    expect(error.context.failure_cause_code).toBe('E_NO_KEYS_FOUND')
+  })
+
   it('keeps the HTTP details of an AppError cause', () => {
     const cause = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
       context: { http_route: '/device/jwk', http_method: 'GET', http_status: 503, http_response_size: 10 },
@@ -32,6 +48,7 @@ describe('createFailureError', () => {
     expect(error.context).toEqual({
       failure_flow: 'f',
       failure_step: 's',
+      failure_cause_code: cause.code,
       http_route: '/device/jwk',
       http_method: 'GET',
       http_status: 503,

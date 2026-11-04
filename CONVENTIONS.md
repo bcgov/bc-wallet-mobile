@@ -216,6 +216,7 @@ report then has no cause and no context, so it cannot say what failed.
 - `flow` and `step` are short, fixed names such as `quick_login` and `sign_jwt`. Never put personal data or
   tokens in them.
 - Pass `startedAt` when the flow makes network calls: a 90 second failure is a timeout, an instant one isn't.
-- Pass the original error as `cause`. Its code and message reach the report through the AppError.
+- Pass the original error as `cause`. Its message reaches the report as the technical message, and its
+  code (an AppError's code or a native error code) as `failure_cause_code`
 - New context fields only become top-level Loki fields once added to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
   `report-problem.ts`.

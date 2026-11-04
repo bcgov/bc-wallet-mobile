@@ -15,6 +15,20 @@ type FailureOptions = {
 }
 
 /**
+ * The cause's own code, so a report can be filtered by what failed and not only by where: an AppError's
+ * code (ie: storage.no_signing_keys.2616), or a native module's error code (ie: E_NO_KEYS_FOUND).
+ * The wrapping AppError's code alone would hide it, and technicalMessage carries no AppError code.
+ */
+const getCauseCode = (cause: unknown): string | undefined => {
+  if (cause instanceof AppError) {
+    return cause.code
+  }
+
+  const code = (cause as { code?: unknown } | undefined)?.code
+  return cause instanceof Error && typeof code === 'string' ? code : undefined
+}
+
+/**
  * Creates an AppError that records where and when a multi-step process failed.
  *
  * Step names must never contain personal data or tokens.
@@ -31,6 +45,12 @@ export const createFailureError = (
 
   if (startedAt !== undefined) {
     context.failure_elapsed_ms = Date.now() - startedAt
+  }
+
+  const causeCode = getCauseCode(cause)
+
+  if (causeCode !== undefined) {
+    context.failure_cause_code = causeCode
   }
 
   if (cause instanceof AppError) {

@@ -42,7 +42,7 @@ describe('useQuickLoginURL', () => {
     const useClientMock = jest.mocked(useBCSCApiClient)
     const bifoldMock = jest.mocked(Bifold)
 
-    useClientMock.useBCSCApiClient.mockReturnValue({ fetchJwk: jest.fn() } as any)
+    useClientMock.useBCSCApiClient.mockReturnValue({ fetchJwkResult: jest.fn() } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
     const hook = renderHook(() => useQuickLoginURL())
@@ -55,7 +55,7 @@ describe('useQuickLoginURL', () => {
     const useClientMock = jest.mocked(useBCSCApiClient)
     const bifoldMock = jest.mocked(Bifold)
 
-    useClientMock.useBCSCApiClient.mockReturnValue({ fetchJwk: jest.fn() } as any)
+    useClientMock.useBCSCApiClient.mockReturnValue({ fetchJwkResult: jest.fn() } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
     const hook = renderHook(() => useQuickLoginURL())
@@ -74,7 +74,10 @@ describe('useQuickLoginURL', () => {
     bcscCoreMock.getAccount = jest.fn()
     tokensMock.getNotificationTokens = jest.fn()
 
-    useClientMock.useBCSCApiClient.mockReturnValue({ tokens: { access_token: true }, fetchJwk: fetchJwkMock } as any)
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwkResult: fetchJwkMock,
+    } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
     const hook = renderHook(() => useQuickLoginURL())
@@ -97,7 +100,10 @@ describe('useQuickLoginURL', () => {
     bcscCoreMock.getAccount = jest.fn()
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
 
-    useClientMock.useBCSCApiClient.mockReturnValue({ tokens: { access_token: true }, fetchJwk: fetchJwkMock } as any)
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwkResult: fetchJwkMock,
+    } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
     const hook = renderHook(() => useQuickLoginURL())
@@ -116,13 +122,16 @@ describe('useQuickLoginURL', () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const tokensMock = jest.mocked(tokens)
 
-    // fetchJwk resolves to null on exhaustion/empty-keys — see BCSCApiClient.fetchJwk's fail-closed path
-    const fetchJwkMock = jest.fn().mockResolvedValue(null)
+    // fetchJwkResult resolves jwk null on exhaustion/empty-keys — see BCSCApiClient.fetchJwk's fail-closed path
+    const fetchJwkMock = jest.fn().mockResolvedValue({ jwk: null, error: new Error('JWKS endpoint returned no keys') })
     bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
     const mockAlerts = { missingJwkAlert: jest.fn() }
 
-    useClientMock.useBCSCApiClient.mockReturnValue({ tokens: { access_token: true }, fetchJwk: fetchJwkMock } as any)
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwkResult: fetchJwkMock,
+    } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
     jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
@@ -149,7 +158,10 @@ describe('useQuickLoginURL', () => {
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
     const mockAlerts = { missingJwkAlert: jest.fn() }
 
-    useClientMock.useBCSCApiClient.mockReturnValue({ tokens: { access_token: true }, fetchJwk: fetchJwkMock } as any)
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwkResult: fetchJwkMock,
+    } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
     jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
@@ -170,12 +182,15 @@ describe('useQuickLoginURL', () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const tokensMock = jest.mocked(tokens)
 
-    const fetchJwkMock = jest.fn().mockResolvedValue(true)
+    const fetchJwkMock = jest.fn().mockResolvedValue({ jwk: true })
     bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
     bcscCoreMock.createQuickLoginJWT = jest.fn().mockRejectedValue(new Error('failed jwt'))
 
-    useClientMock.useBCSCApiClient.mockReturnValue({ tokens: { access_token: true }, fetchJwk: fetchJwkMock } as any)
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwkResult: fetchJwkMock,
+    } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
     const hook = renderHook(() => useQuickLoginURL())
@@ -197,12 +212,12 @@ describe('useQuickLoginURL', () => {
 
     bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
+    const jwkError = new Error('timeout of 15000ms exceeded')
     const mockAlerts = { missingJwkAlert: jest.fn() }
 
     useClientMock.useBCSCApiClient.mockReturnValue({
       tokens: { access_token: true },
-      fetchJwk: jest.fn().mockResolvedValue(null),
-      lastJwkFetchError: new Error('timeout of 15000ms exceeded'),
+      fetchJwkResult: jest.fn().mockResolvedValue({ jwk: null, error: jwkError }),
     } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
     jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
@@ -213,6 +228,7 @@ describe('useQuickLoginURL', () => {
     expect(mockAlerts.missingJwkAlert).toHaveBeenCalledWith(
       failure('jwks', 'timeout of 15000ms', AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)
     )
+    expect(mockAlerts.missingJwkAlert.mock.calls[0][0].cause).toBe(jwkError)
   })
 
   it('should keep the native error code when signing fails', async () => {
@@ -229,7 +245,7 @@ describe('useQuickLoginURL', () => {
 
     useClientMock.useBCSCApiClient.mockReturnValue({
       tokens: { access_token: true },
-      fetchJwk: jest.fn().mockResolvedValue(true),
+      fetchJwkResult: jest.fn().mockResolvedValue({ jwk: true }),
     } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
@@ -250,7 +266,7 @@ describe('useQuickLoginURL', () => {
 
     useClientMock.useBCSCApiClient.mockReturnValue({
       tokens: { access_token: true },
-      fetchJwk: jest.fn().mockResolvedValue(true),
+      fetchJwkResult: jest.fn().mockResolvedValue({ jwk: true }),
     } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
@@ -266,14 +282,14 @@ describe('useQuickLoginURL', () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const tokensMock = jest.mocked(tokens)
 
-    const fetchJwkMock = jest.fn().mockResolvedValue('jwk')
+    const fetchJwkMock = jest.fn().mockResolvedValue({ jwk: 'jwk' })
     bcscCoreMock.getAccount = jest.fn().mockResolvedValue({ clientID: 'client-id', issuer: 'issuer' } as any)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue({ fcmDeviceToken: 'fcm', deviceToken: 'apns' })
     bcscCoreMock.createQuickLoginJWT = jest.fn().mockResolvedValue('test-jwt')
 
     useClientMock.useBCSCApiClient.mockReturnValue({
       tokens: { access_token: 'access-token' },
-      fetchJwk: fetchJwkMock,
+      fetchJwkResult: fetchJwkMock,
     } as any)
     bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 

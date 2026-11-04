@@ -95,6 +95,12 @@ export interface BCSCEndpoints {
   account: string
 }
 
+/**
+ * The outcome of a JWK fetch. On failure, `error` is the reason: the last network attempt's error, or
+ * a "no keys" error when the JWKS endpoint returned an empty key set.
+ */
+export type JwkFetchResult = { jwk: JWK; error?: undefined } | { jwk: null; error: unknown }
+
 class BCSCApiClient {
   readonly client: AxiosInstance
   readonly logger: RemoteLogger
@@ -107,9 +113,8 @@ class BCSCApiClient {
   private cachedJwk: JWK | null = null // in-memory JWK cache, invalidated when baseURL changes
   private cachedJwkBaseUrl: string | null = null
   private cachedJwkFetchedAt: number | null = null // epoch ms, compared against JWK_CACHE_TTL_MS
-  private jwkFetchPromise: Promise<JWK | null> | null = null // single-flight in-progress JWK fetch
+  private jwkFetchPromise: Promise<JwkFetchResult> | null = null // single-flight in-progress JWK fetch
   private jwkFetchPromiseBaseUrl: string | null = null // baseURL the in-flight fetch was started for
-  lastJwkFetchError: unknown // why the latest JWK fetch failed; fetchJwk resolves null, so callers read the reason here
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -541,6 +546,14 @@ class BCSCApiClient {
    * TODO: This should probably not be in the client, move logic elsewhere.
    */
   async fetchJwk(): Promise<JWK | null> {
+    return (await this.fetchJwkResult()).jwk
+  }
+
+  /**
+   * Like {@link fetchJwk}, but includes the failure reason in the result. Never rejects; callers
+   * joining an in-flight fetch receive the same result.
+   */
+  async fetchJwkResult(): Promise<JwkFetchResult> {
     if (
       this.cachedJwk &&
       this.cachedJwkBaseUrl === this.baseURL &&
@@ -550,7 +563,7 @@ class BCSCApiClient {
       this.logger.info(
         `[BCSCApiClient] JWK served from in-memory cache (kid: ${this.cachedJwk.kid}, baseURL: ${this.baseURL})`
       )
-      return this.cachedJwk
+      return { jwk: this.cachedJwk }
     }
 
     // Join an in-flight fetch for the same baseURL rather than starting a parallel retry loop. A
@@ -579,15 +592,15 @@ class BCSCApiClient {
   }
 
   /**
-   * The retry loop + persisted fallback behind fetchJwk's cache/single-flight gate above. Always
+   * The retry loop + persisted fallback behind fetchJwkResult's cache/single-flight gate above. Always
    * resolves, never rejects — fetchJwkFromNetwork's thrown errors are caught here, and
-   * persistJwk/loadPersistedJwk never throw — so fetchJwk's shared promise is always safe to await
+   * persistJwk/loadPersistedJwk never throw — so the shared in-flight promise is always safe to await
    * or fire-and-forget.
    *
-   * @param baseURL - The baseURL this fetch was started for (captured by fetchJwk at call time, not
+   * @param baseURL - The baseURL this fetch was started for (captured by fetchJwkResult at call time, not
    *   re-read from `this.baseURL`, so a baseURL change mid-flight can't misattribute the result).
    */
-  private async fetchJwkWithRetry(baseURL: string): Promise<JWK | null> {
+  private async fetchJwkWithRetry(baseURL: string): Promise<JwkFetchResult> {
     let jwk: JWK | null = null
     let lastError: unknown
 
@@ -609,8 +622,6 @@ class BCSCApiClient {
       }
     }
 
-    this.lastJwkFetchError = lastError
-
     if (jwk) {
       this.cachedJwk = jwk
       this.cachedJwkBaseUrl = baseURL
@@ -618,10 +629,12 @@ class BCSCApiClient {
       this.logger.info(`[BCSCApiClient] JWK fetched from network (kid: ${jwk.kid}, baseURL: ${baseURL})`)
       // Logs its own success/failure — see persistJwk in jwk-cache.ts.
       await persistJwk(baseURL, jwk, this.logger)
-      return jwk
+      return { jwk }
     }
 
-    if (lastError) {
+    const requestFailed = lastError !== undefined
+
+    if (requestFailed) {
       const lastErrorMessage = lastError instanceof Error ? lastError.message : String(lastError)
       this.logger.error(`Failed to fetch JWK: ${lastErrorMessage}`)
     } else {
@@ -631,10 +644,11 @@ class BCSCApiClient {
     const persistedJwk = await loadPersistedJwk(baseURL, this.logger)
     if (persistedJwk) {
       this.logger.warn('[BCSCApiClient] Live JWKS fetch failed; using persisted last-known-good JWK')
-      return persistedJwk
+      return { jwk: persistedJwk }
     }
 
-    return null
+    // No network error means the endpoint answered with an empty key set
+    return { jwk: null, error: requestFailed ? lastError : new Error('JWKS endpoint returned no keys') }
   }
 }
 

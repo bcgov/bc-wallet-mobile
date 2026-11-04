@@ -381,15 +381,17 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       setIsContinueDisabled(false)
       if (!isHandledAppError(error)) {
         // checks if error originated from the server or the device
-        const definition = isAxiosAppError(error) ? ErrorRegistry.LOGIN_SERVER_ERROR : ErrorRegistry.LOGIN_DEVICE_ERROR
-        alerts.loginServerErrorAlert(
-          createFailureError(definition, {
-            flow: 'pairing',
-            step: 'login_by_pairing_code',
-            startedAt,
-            cause: error,
-          })
+        const isServerFailure = isAxiosAppError(error)
+        const failure = createFailureError(
+          isServerFailure ? ErrorRegistry.LOGIN_SERVER_ERROR : ErrorRegistry.LOGIN_DEVICE_ERROR,
+          { flow: 'pairing', step: 'login_by_pairing_code', startedAt, cause: error }
         )
+
+        if (isServerFailure) {
+          alerts.loginServerErrorAlert(failure)
+        } else {
+          alerts.loginDeviceErrorAlert(failure)
+        }
       }
     }
   }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled])

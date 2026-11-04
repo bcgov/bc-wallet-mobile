@@ -334,25 +334,33 @@ describe('ServiceLogin', () => {
       handledError.handled = true
 
       const mockLoginServerErrorAlert = jest.fn()
-      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(handledError), {
+      const mockLoginDeviceErrorAlert = jest.fn()
+      const mockLoginByPairingCode = jest.fn().mockRejectedValue(handledError)
+      const tree = renderWithPairingCode(mockLoginByPairingCode, {
         loginServerErrorAlert: mockLoginServerErrorAlert,
+        loginDeviceErrorAlert: mockLoginDeviceErrorAlert,
       })
 
       const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
       fireEvent.press(continueButton)
-      await waitFor(() => expect(mockLoginServerErrorAlert).not.toHaveBeenCalled())
+      await waitFor(() => expect(mockLoginByPairingCode).toHaveBeenCalled())
+      await waitFor(() => expect(continueButton).toBeEnabled())
+      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
+      expect(mockLoginDeviceErrorAlert).not.toHaveBeenCalled()
     })
 
     it('should report an unhandled non-HTTP pairing error as a device failure', async () => {
       const mockLoginServerErrorAlert = jest.fn()
+      const mockLoginDeviceErrorAlert = jest.fn()
       const tree = renderWithPairingCode(jest.fn().mockRejectedValue(new Error('unexpected failure')), {
         loginServerErrorAlert: mockLoginServerErrorAlert,
+        loginDeviceErrorAlert: mockLoginDeviceErrorAlert,
       })
 
       const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
       fireEvent.press(continueButton)
       await waitFor(() =>
-        expect(mockLoginServerErrorAlert).toHaveBeenCalledWith(
+        expect(mockLoginDeviceErrorAlert).toHaveBeenCalledWith(
           expect.objectContaining({
             appEvent: AppEventCode.LOGIN_DEVICE_ERROR,
             technicalMessage: 'unexpected failure',
@@ -360,6 +368,7 @@ describe('ServiceLogin', () => {
           })
         )
       )
+      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
     })
 
     it('should report an unhandled HTTP pairing error as a server failure', async () => {
@@ -369,8 +378,10 @@ describe('ServiceLogin', () => {
         { category: ErrorCategory.NETWORK, appEvent: AppEventCode.SERVER_ERROR, statusCode: 2101 },
         { cause: new AxiosError('Request failed with status code 502', 'ERR_BAD_RESPONSE'), track: false }
       )
+      const mockLoginDeviceErrorAlert = jest.fn()
       const tree = renderWithPairingCode(jest.fn().mockRejectedValue(httpError), {
         loginServerErrorAlert: mockLoginServerErrorAlert,
+        loginDeviceErrorAlert: mockLoginDeviceErrorAlert,
       })
 
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
@@ -379,6 +390,7 @@ describe('ServiceLogin', () => {
           expect.objectContaining({ appEvent: AppEventCode.LOGIN_SERVER_ERROR, cause: httpError })
         )
       )
+      expect(mockLoginDeviceErrorAlert).not.toHaveBeenCalled()
     })
 
     it.each([
