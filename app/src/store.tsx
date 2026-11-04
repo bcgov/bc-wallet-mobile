@@ -153,13 +153,6 @@ export interface BCSCState {
   verificationStarted?: boolean
 }
 
-export enum VerificationStatus {
-  VERIFIED = 'VERIFIED', // Credential is valid (not cancelled or expired)
-  UNVERIFIED = 'UNVERIFIED', // Credential does't exist or we haven't verified it's status
-  DEACTIVATED = 'DEACTIVATED', // Credential was deactivated (cancelled or expired)
-  IN_PROGRESS = 'IN_PROGRESS', // Verification is currently in progress
-}
-
 /**
  * Secure state containing PII and sensitive data.
  *
@@ -174,8 +167,10 @@ export interface BCSCSecureState {
 
   /** Account verification status - determined from presence of valid credential */
   verified?: boolean
-  /** Account verification status value (VERIFIED, UNVERIFIED, DEACTIVATED) */
-  verifiedStatus: VerificationStatus
+  /** The credential was cancelled or expired */
+  credentialDeactivated: boolean
+  /** The user is in the verify flow this session */
+  inVerifyFlow: boolean
 
   // === from Tokens ===
   /** OAuth refresh token for API authentication */
@@ -260,7 +255,8 @@ export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
   savedServices: [],
-  verifiedStatus: VerificationStatus.UNVERIFIED,
+  credentialDeactivated: false,
+  inVerifyFlow: false,
 }
 
 export enum AccountSetupType {
@@ -337,7 +333,8 @@ enum BCSCDispatchAction {
   VERIFICATION_STATUS_RECEIVED = 'bcsc/verificationStatusReceived',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
-  UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus', //controls whether the VerifyStack or the MainStack are displayed
+  UPDATE_SECURE_IN_VERIFY_FLOW = 'bcsc/updateSecureInVerifyFlow', // controls whether the VerifyStack or the MainStack are displayed
+  UPDATE_SECURE_CREDENTIAL_DEACTIVATED = 'bcsc/updateSecureCredentialDeactivated',
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
   UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
@@ -803,14 +800,21 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = {
         ...state.bcscSecure,
         verified,
-        // QUESTION (MD): Should we handle DEACTIVATED here?
-        verifiedStatus: verified ? VerificationStatus.VERIFIED : VerificationStatus.UNVERIFIED,
+        inVerifyFlow: false,
+        credentialDeactivated: false,
       }
       return { ...state, bcscSecure }
     }
-    case BCSCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS: {
-      const verifiedStatus = (action?.payload || []).pop() ?? VerificationStatus.UNVERIFIED
-      const bcscSecure = { ...state.bcscSecure, verifiedStatus }
+    // The two facts below used to share one saved status, so each write replaced the other; that is
+    // kept until deactivation is allowed to outlive the verify flow (#5008)
+    case BCSCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW: {
+      const inVerifyFlow = (action?.payload || []).pop() ?? false
+      const bcscSecure = { ...state.bcscSecure, inVerifyFlow, credentialDeactivated: false }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED: {
+      const credentialDeactivated = (action?.payload || []).pop() ?? false
+      const bcscSecure = { ...state.bcscSecure, credentialDeactivated, inVerifyFlow: false }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {

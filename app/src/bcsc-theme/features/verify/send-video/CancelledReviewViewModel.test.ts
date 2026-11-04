@@ -120,7 +120,7 @@ describe('useCancelledReviewViewModel', () => {
   })
 
   describe('retryWithNewVideo', () => {
-    // Mounted in the VerifyStack the status already reads IN_PROGRESS, so the store swap the
+    // Mounted in the VerifyStack the user is already in the verify flow, so the store swap the
     // MainStack mount relies on would remount nothing — it has to reset in-stack instead.
     it('resets to verification method selection when the verify flow is already mounted', () => {
       const { result } = renderHook(() => useCancelledReviewViewModel())

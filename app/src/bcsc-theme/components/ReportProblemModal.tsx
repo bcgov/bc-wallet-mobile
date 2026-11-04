@@ -88,7 +88,8 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     appError.addContext({
       state_ias_environment: store.developer.environment.name,
       state_verified: store.bcscSecure.verified,
-      state_verified_status: store.bcscSecure.verifiedStatus,
+      state_credential_deactivated: store.bcscSecure.credentialDeactivated,
+      state_in_verify_flow: store.bcscSecure.inVerifyFlow,
       state_card_process: store.bcscSecure.cardProcess,
       // ...
     })
@@ -110,7 +111,8 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     store.developer.environment.name,
     store.developer.remoteDebugging.sessionId,
     store.bcscSecure.verified,
-    store.bcscSecure.verifiedStatus,
+    store.bcscSecure.credentialDeactivated,
+    store.bcscSecure.inVerifyFlow,
     store.bcscSecure.cardProcess,
     store.bcsc.installId,
     t,

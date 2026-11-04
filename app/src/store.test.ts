@@ -2,14 +2,7 @@ import type { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 // Not imported via AppBanner: that would load the theme, which this suite's @bifold/core mock cannot support
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { InstallIdSystemCheck } from './services/system-checks/InstallIdSystemCheck'
-import {
-  BCDispatchAction,
-  BCLocalStorageKeys,
-  initialState,
-  migrateBCSCState,
-  reducer,
-  VerificationStatus,
-} from './store'
+import { BCDispatchAction, BCLocalStorageKeys, initialState, migrateBCSCState, reducer } from './store'
 
 jest.mock('react-native-config', () => ({
   BUILD_TARGET: 'bcsc',
@@ -151,9 +144,52 @@ describe('reducer', () => {
     const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [true] })
 
     expect(result.bcscSecure.verified).toBe(true)
-    expect(result.bcscSecure.verifiedStatus).toBe(VerificationStatus.VERIFIED)
+    expect(result.bcscSecure.inVerifyFlow).toBe(false)
+    expect(result.bcscSecure.credentialDeactivated).toBe(false)
     expect(result.bcsc.verificationSkipped).toBe(false)
     expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
+  })
+
+  describe('verification facts', () => {
+    const withFacts = (facts: { credentialDeactivated: boolean; inVerifyFlow: boolean }) => ({
+      ...initialState,
+      bcscSecure: { ...initialState.bcscSecure, ...facts },
+    })
+
+    it('starts with neither fact set', () => {
+      expect(initialState.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
+    })
+
+    it.each([true, false])('UPDATE_SECURE_IN_VERIFY_FLOW writes %s and clears deactivation', (inVerifyFlow) => {
+      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: !inVerifyFlow })
+      const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW, payload: [inVerifyFlow] })
+
+      expect(result.bcscSecure).toMatchObject({ inVerifyFlow, credentialDeactivated: false })
+    })
+
+    it.each([true, false])('UPDATE_SECURE_CREDENTIAL_DEACTIVATED writes %s and leaves the flow', (deactivated) => {
+      const state = withFacts({ credentialDeactivated: !deactivated, inVerifyFlow: true })
+      const result = reducer(state, {
+        type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED,
+        payload: [deactivated],
+      })
+
+      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: deactivated, inVerifyFlow: false })
+    })
+
+    it('UPDATE_SECURE_VERIFIED clears both', () => {
+      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: true })
+      const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [false] })
+
+      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
+    })
+
+    it('CLEAR_SECURE_STATE keeps the flow when asked and clears deactivation', () => {
+      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: false })
+      const result = reducer(state, { type: BCDispatchAction.CLEAR_SECURE_STATE, payload: [{ inVerifyFlow: true }] })
+
+      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: true })
+    })
   })
 
   it('UPDATE_SECURE_SECURITY_METHOD stores the method on secure state without persisting it', () => {

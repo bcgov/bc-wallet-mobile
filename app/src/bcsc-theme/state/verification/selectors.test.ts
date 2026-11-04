@@ -1,4 +1,4 @@
-import { BCState, initialState, VerificationStatus } from '@/store'
+import { BCState, initialState } from '@/store'
 import { selectVerificationState } from './selectors'
 
 const buildState = (secure: Partial<BCState['bcscSecure']> = {}): BCState => ({
@@ -18,15 +18,15 @@ describe('selectVerificationState', () => {
     })
   })
 
-  it('reads the stored IN_PROGRESS status as being in the verify flow', () => {
-    expect(selectVerificationState(buildState({ verifiedStatus: VerificationStatus.IN_PROGRESS }))).toMatchObject({
+  it('reads the inVerifyFlow fact as being in the verify flow', () => {
+    expect(selectVerificationState(buildState({ inVerifyFlow: true }))).toMatchObject({
       isVerificationInProgress: true,
       needsVerification: false,
     })
   })
 
-  it('reads the stored DEACTIVATED status as a deactivated credential', () => {
-    expect(selectVerificationState(buildState({ verifiedStatus: VerificationStatus.DEACTIVATED }))).toMatchObject({
+  it('reads the credentialDeactivated fact as a deactivated credential', () => {
+    expect(selectVerificationState(buildState({ credentialDeactivated: true }))).toMatchObject({
       isDeactivated: true,
     })
   })
@@ -39,8 +39,8 @@ describe('selectVerificationState', () => {
   })
 
   it('does not treat a refresh token as device verified once the credential is deactivated', () => {
-    expect(
-      selectVerificationState(buildState({ refreshToken: 'token', verifiedStatus: VerificationStatus.DEACTIVATED }))
-    ).toMatchObject({ isDeviceVerifiedByIas: false })
+    expect(selectVerificationState(buildState({ refreshToken: 'token', credentialDeactivated: true }))).toMatchObject({
+      isDeviceVerifiedByIas: false,
+    })
   })
 })

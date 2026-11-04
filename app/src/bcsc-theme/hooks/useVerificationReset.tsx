@@ -1,5 +1,5 @@
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState, VerificationStatus } from '@/store'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
 import { NavigationProp, ParamListBase } from '@react-navigation/native'
@@ -16,7 +16,8 @@ import { useSecureActions } from './useSecureActions'
  * The user will be placed passed the onboarding at Setup Step 2 and will be able to reverify
  *
  * Reset sequence:
- *   1. Clears the in-memory secure store, marking the device as unverified
+ *   1. Clears the in-memory secure store, marking the device as unverified. This happens before the
+ *      native deletes, so if one fails the surviving record is read back at the next unlock
  *   2. Deletes the existing IAS registration
  *   3. Deletes all verification data and tokens from native storage
  *   4. Creates a new IAS registration, writing the new account data
@@ -28,11 +29,11 @@ import { useSecureActions } from './useSecureActions'
  */
 export type VerificationResetOptions = {
   /**
-   * Status the device is left in. UNVERIFIED (default) unmounts the verify flow, for a restart that
-   * re-enters it or a cancelled review that leaves it. IN_PROGRESS keeps the flow mounted, for a reset
-   * that happens inside it (backing out of identity selection pops to the setup question).
+   * Whether the device is left in the verify flow. False (default) unmounts the flow, for a restart that
+   * re-enters it or a cancelled review that leaves it. True keeps the flow mounted, for a reset that
+   * happens inside it (backing out of identity selection pops to the setup question).
    */
-  verifiedStatus?: VerificationStatus
+  inVerifyFlow?: boolean
 }
 
 export const useVerificationReset = () => {
@@ -78,7 +79,7 @@ export const useVerificationReset = () => {
   )
 
   const verificationReset = useCallback(
-    async ({ verifiedStatus = VerificationStatus.UNVERIFIED }: VerificationResetOptions = {}): Promise<boolean> => {
+    async ({ inVerifyFlow = false }: VerificationResetOptions = {}): Promise<boolean> => {
       try {
         await withAccount(async (account) => {
           if (!store.bcscSecure.registrationAccessToken) {
@@ -95,7 +96,7 @@ export const useVerificationReset = () => {
             // this token is used to clean up other verification data, a new one is saved once the device is registered again
             registrationAccessToken: store.bcscSecure.registrationAccessToken,
             verified: false, // device is no longer verified
-            verifiedStatus, // device is no longer verified; whether the verify flow stays mounted is the caller's call
+            inVerifyFlow, // whether the verify flow stays mounted is the caller's call
           })
 
           logger.info('[useVerificationReset] Secure state cleared. Deleting IAS registration...')

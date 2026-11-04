@@ -1,4 +1,4 @@
-import { BCDispatchAction, VerificationStatus } from '@/store'
+import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { useLeaveVerification } from './useLeaveVerification'
@@ -13,7 +13,7 @@ describe('useLeaveVerification', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([{} as any, mockDispatch])
   })
 
-  it('moves status out of IN_PROGRESS so the RootStack shows home', () => {
+  it('leaves the verify flow so the RootStack shows home', () => {
     const { result } = renderHook(() => useLeaveVerification())
 
     act(() => {
@@ -21,8 +21,8 @@ describe('useLeaveVerification', () => {
     })
 
     expect(mockDispatch).toHaveBeenCalledWith({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
-      payload: [VerificationStatus.UNVERIFIED],
+      type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW,
+      payload: [false],
     })
   })
 
