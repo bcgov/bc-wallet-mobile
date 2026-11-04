@@ -54,6 +54,30 @@ describe('createFailureError', () => {
       http_status: 503,
     })
   })
+
+  it('adds extra diagnostics without letting them override the failure location', () => {
+    const error = createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+      flow: 'quick_login',
+      step: 'account',
+      context: { account_read_status: 'account_decode_failed', failure_step: 'overridden' },
+    })
+
+    expect(error.context).toEqual({
+      failure_flow: 'quick_login',
+      failure_step: 'account',
+      account_read_status: 'account_decode_failed',
+    })
+  })
+
+  it('keeps the push token status of an AppError cause', () => {
+    const cause = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
+      context: { push_fcm_status: 'fetch_failed', push_apns_status: 'missing' },
+    })
+
+    const error = createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, { flow: 'pairing', step: 's', cause })
+
+    expect(error.context).toMatchObject({ push_fcm_status: 'fetch_failed', push_apns_status: 'missing' })
+  })
 })
 
 describe('addFailureContext', () => {
@@ -207,5 +231,34 @@ describe('trackFailureSteps', () => {
 
     expect(error.appEvent).toBe(ErrorRegistry.LOGIN_DEVICE_ERROR.appEvent)
     expect(error.cause).toBe(cause)
+  })
+
+  it('attaches notes to a failure it wraps, without letting them override the step', () => {
+    const steps = track()
+    steps.note({ push_fcm_status: 'fetch_failed', failure_step: 'overridden' })
+
+    const error = steps.fail('second', new Error('native'))
+
+    expect(error.context).toMatchObject({ failure_step: 'second', push_fcm_status: 'fetch_failed' })
+  })
+
+  it('attaches notes to an AppError it labels in place', () => {
+    const steps = track()
+    steps.note({ push_apns_status: 'missing' })
+    const cause = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, { track: false })
+
+    const error = steps.fail('second', cause, { keepAppError: true })
+
+    expect(error).toBe(cause)
+    expect(error.context).toMatchObject({ failure_step: 'second', push_apns_status: 'missing' })
+  })
+
+  it('does not attach notes recorded after a failure was labeled', () => {
+    const steps = track()
+    const error = steps.fail('second', new Error('native'))
+
+    steps.note({ account_read_status: 'account_file_missing' })
+
+    expect(error.context.account_read_status).toBeUndefined()
   })
 })

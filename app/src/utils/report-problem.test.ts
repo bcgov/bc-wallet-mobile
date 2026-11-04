@@ -209,6 +209,12 @@ describe('report-problem', () => {
             failure_flow: 'quick_login',
             failure_step: 'sign_jwt',
             failure_elapsed_ms: 120,
+            push_fcm_status: 'fetch_failed',
+            push_apns_status: 'missing',
+            account_read_status: 'account_decode_failed',
+            account_read_environment: 'PROD',
+            account_read_detail: 'NSCocoaErrorDomain:4864',
+            account_legacy_status: 'absent',
             not_allow_listed: 'should be dropped',
           },
         }
@@ -231,6 +237,12 @@ describe('report-problem', () => {
         failure_flow: 'quick_login',
         failure_step: 'sign_jwt',
         failure_elapsed_ms: 120,
+        push_fcm_status: 'fetch_failed',
+        push_apns_status: 'missing',
+        account_read_status: 'account_decode_failed',
+        account_read_environment: 'PROD',
+        account_read_detail: 'NSCocoaErrorDomain:4864',
+        account_legacy_status: 'absent',
       })
       expect(body).not.toHaveProperty('not_allow_listed')
       expect(body.error_json).toEqual(error.toJSON())

@@ -1,5 +1,5 @@
 import { throwAppError, throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
-import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { getNotificationTokens, getPushTokenStatus } from '@/bcsc-theme/utils/push-notification-tokens'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { trackFailureSteps } from '@/errors/failureContext'
@@ -41,9 +41,11 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
         withAccount<PairingCodeLoginClientMetadata>(async (account) => {
           const { issuer, clientID } = account
 
-          const { fcmDeviceToken, deviceToken } = await steps.run('notification_tokens', () =>
-            getNotificationTokens(logger)
-          )
+          const tokens = await steps.run('notification_tokens', () => getNotificationTokens(logger))
+          const { fcmDeviceToken, deviceToken } = tokens
+
+          // Placeholder push tokens are sent silently when Firebase fails; record it in case the server rejects them
+          steps.note(getPushTokenStatus(tokens))
 
           const signedCode = await steps.run('sign_pairing_code', async () => {
             let signed: string | null

@@ -32,6 +32,12 @@ const FLATTENED_APP_ERROR_CONTEXT_KEYS = new Set([
   'failure_step',
   'failure_elapsed_ms',
   'failure_cause_code',
+  'push_fcm_status',
+  'push_apns_status',
+  'account_read_status',
+  'account_read_environment',
+  'account_read_detail',
+  'account_legacy_status',
 ])
 
 /**

@@ -428,6 +428,48 @@ describe('AppError', () => {
         userInfo: { site: 'retrieve_latest', keyCount: 2, keyTags: ['a/1', 'b/2'] },
       })
     })
+
+    it('follows a wrapped AppError to keep the native code and userInfo of its cause', () => {
+      const nativeLike = Object.assign(new Error('No keys available to sign the JWT.'), {
+        code: 'E_NO_KEYS_FOUND',
+        userInfo: { site: 'sign_jwt' },
+      })
+      const mapped = AppError.fromErrorDefinition(ErrorRegistry.NO_SIGNING_KEYS, { cause: nativeLike, track: false })
+      const error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: mapped, track: false })
+
+      const json = error.toJSON()
+
+      expect(json.cause).toEqual({
+        name: 'AppError',
+        message: mapped.message,
+        code: mapped.code,
+        cause: {
+          name: 'Error',
+          message: 'No keys available to sign the JWT.',
+          code: 'E_NO_KEYS_FOUND',
+          userInfo: { site: 'sign_jwt' },
+        },
+      })
+    })
+
+    it('stops following wrapped AppErrors after a fixed depth', () => {
+      let error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, {
+        cause: new Error('root'),
+        track: false,
+      })
+      for (let i = 0; i < 10; i++) {
+        error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: error, track: false })
+      }
+
+      let depth = 0
+      let node = error.toJSON().cause as { cause?: unknown } | undefined
+      while (node?.cause) {
+        depth++
+        node = node.cause as { cause?: unknown }
+      }
+
+      expect(depth).toBe(3)
+    })
   })
 
   describe('isHandledAppError', () => {

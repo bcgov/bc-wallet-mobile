@@ -15,6 +15,38 @@ export interface NotificationTokens {
   deviceToken: string | null // Device token (APNS token on iOS, null on Android)
 }
 
+// Placeholder FCM tokens sent when Firebase fails; the server receives these instead of a real token
+const FCM_REGISTRATION_FAILED_PLACEHOLDER = 'missing_token_due_to_rnf_registration_failure'
+const FCM_FETCH_FAILED_PLACEHOLDER = 'missing_token_due_to_fetch_failure'
+
+/**
+ * Token health for error reports, derived without exposing the tokens themselves.
+ */
+export type PushTokenStatus = {
+  push_fcm_status: 'ok' | 'registration_failed' | 'fetch_failed'
+  push_apns_status: 'ok' | 'missing' | 'not_applicable'
+}
+
+/**
+ * Describes whether real push tokens were obtained, so a report can show when placeholders were sent.
+ * Safe to log: contains status codes only, never token values.
+ */
+export const getPushTokenStatus = ({ fcmDeviceToken, deviceToken }: NotificationTokens): PushTokenStatus => {
+  let fcmStatus: PushTokenStatus['push_fcm_status'] = 'ok'
+  if (fcmDeviceToken === FCM_REGISTRATION_FAILED_PLACEHOLDER) {
+    fcmStatus = 'registration_failed'
+  } else if (fcmDeviceToken === FCM_FETCH_FAILED_PLACEHOLDER) {
+    fcmStatus = 'fetch_failed'
+  }
+
+  let apnsStatus: PushTokenStatus['push_apns_status'] = 'not_applicable'
+  if (Platform.OS === 'ios') {
+    apnsStatus = deviceToken ? 'ok' : 'missing'
+  }
+
+  return { push_fcm_status: fcmStatus, push_apns_status: apnsStatus }
+}
+
 /**
  * Retrieves the tokens associated with push notifications. fcmDeviceToken is required,
  * deviceToken (APNS) is optional and iOS only.
@@ -37,7 +69,7 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[PushTokens] Failed to register device for remote messages: ${message}`)
       return {
-        fcmDeviceToken: 'missing_token_due_to_rnf_registration_failure',
+        fcmDeviceToken: FCM_REGISTRATION_FAILED_PLACEHOLDER,
         deviceToken: null,
       }
     }
@@ -55,7 +87,7 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[PushTokens] FCM token fetch failed: ${message}`)
-      return 'missing_token_due_to_fetch_failure' // Return dummy token on failure
+      return FCM_FETCH_FAILED_PLACEHOLDER // Return dummy token on failure
     }
   }
 

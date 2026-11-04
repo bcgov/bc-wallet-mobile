@@ -1134,6 +1134,30 @@ class BcscCoreModule internal constructor(
     }
 
     /**
+     * Diagnoses why [getAccount] resolves null (missing vs unreadable vs undecryptable vs unparseable)
+     * for the issuer-scoped store, plus whether a legacy flat-file store is present. Read-only; never rejects.
+     */
+    @ReactMethod
+    override fun getAccountReadStatus(promise: Promise) {
+        val result = Arguments.createMap()
+        try {
+            val issuerName = nativeStorage.getDefaultIssuerName()
+            result.putString("environment", issuerName)
+            val (status, detail) = nativeStorage.accountsReadStatus(issuerName)
+            result.putString("status", status)
+            detail?.let { result.putString("detail", it) }
+        } catch (e: Exception) {
+            result.putString("status", "storage_root_unavailable")
+            result.putString("detail", e.javaClass.simpleName)
+        }
+
+        val legacyFile = java.io.File(reactApplicationContext.filesDir, "accounts")
+        result.putString("legacyStatus", if (legacyFile.exists()) "present" else "absent")
+
+        promise.resolve(result)
+    }
+
+    /**
      * Converts a NativeAccount to a WritableMap for React Native.
      */
     private fun convertNativeAccountToWritableMap(nativeAccount: NativeAccount): WritableMap {

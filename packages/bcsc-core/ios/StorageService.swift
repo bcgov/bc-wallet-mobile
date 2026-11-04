@@ -226,6 +226,79 @@ class StorageService {
     }
   }
 
+  /// Explains why the account metadata read (`readData(file: .accountMetadata)`) would return nil, without
+  /// changing that read. Diagnostic only: values are status codes, the environment directory name, and
+  /// error domains/codes — never paths, IDs, or file contents.
+  func accountReadStatus() -> [String: String] {
+    var result: [String: String] = ["environment": getIssuerNameFromIssuer(issuer: issuer)]
+
+    func failed(_ status: String, _ error: Error? = nil) -> [String: String] {
+      result["status"] = status
+      if let error = error as NSError? {
+        result["detail"] = "\(error.domain):\(error.code)"
+      }
+      return result
+    }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let baseURL = rootDirectoryURL.appendingPathComponent(basePath)
+      let accountListURL = baseURL.appendingPathComponent(accountListURLComponent)
+
+      guard FileManager.default.fileExists(atPath: accountListURL.path) else {
+        return failed("account_list_missing")
+      }
+
+      let accountID: String
+      do {
+        let data = try Data(contentsOf: accountListURL)
+        guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+              let accounts = json["accounts"] as? [String],
+              let first = accounts.first, !first.isEmpty
+        else {
+          return failed("account_list_empty")
+        }
+        accountID = first
+      } catch {
+        return failed("account_list_unreadable", error)
+      }
+
+      let accountFileURL = baseURL
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.accountMetadata.rawValue)
+
+      guard FileManager.default.fileExists(atPath: accountFileURL.path) else {
+        return failed("account_file_missing")
+      }
+
+      let data: Data
+      do {
+        data = try Data(contentsOf: accountFileURL)
+      } catch {
+        return failed("account_file_unreadable", error)
+      }
+
+      do {
+        let account: Account? = try decodeArchivedObject(from: data)
+        guard account != nil else {
+          return failed("account_decode_failed")
+        }
+      } catch {
+        return failed("account_decode_failed", error)
+      }
+
+      result["status"] = "ok"
+      return result
+    } catch {
+      return failed("storage_root_unavailable", error)
+    }
+  }
+
   /// Reads `clientID` straight out of the client_registration file. Used as a fallback if the account itself
   /// doesn't have a clientID.
   ///

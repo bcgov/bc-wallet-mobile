@@ -267,6 +267,10 @@ resulting error to the alert. For a single failure outside a flow, use `createFa
   `isHandledAppError`.
 - To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
   `report-problem.ts`.
+- When a step depends on something that fails silently, record its health with `steps.note` so it rides on
+  whichever step fails. Use status codes only, never values: `getPushTokenStatus` (placeholder push tokens)
+  and `getAccountReadStatus` from bcsc-core (why `getAccount` resolved null). Call `getAccountReadStatus`
+  only after `getAccount` returns null, and never let a diagnostic call replace the real failure.
 
 ## Derived state: compute it from its inputs, don't store a flag
 

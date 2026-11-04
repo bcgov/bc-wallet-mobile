@@ -333,6 +333,50 @@ class NativeCompatibleStorage(
     }
 
     /**
+     * Explains why [readAccounts] would return null or empty, without changing that read.
+     * Diagnostic only: returns a status code and, on failure, the exception class name —
+     * never paths, IDs, or file contents.
+     */
+    fun accountsReadStatus(issuerName: String): Pair<String, String?> {
+        val file = getAccountsFile(issuerName)
+        if (!file.exists() || !file.isFile) {
+            return "account_file_missing" to null
+        }
+
+        val bytes =
+            try {
+                FileInputStream(file).use { fis ->
+                    val data = ByteArray(file.length().toInt())
+                    fis.read(data)
+                    data
+                }
+            } catch (e: Exception) {
+                return "account_file_unreadable" to e.javaClass.simpleName
+            }
+
+        val json =
+            if (isFilePlainText(bytes)) {
+                String(bytes)
+            } else {
+                try {
+                    encryption.decrypt(bytes)
+                } catch (e: Exception) {
+                    return "account_decrypt_failed" to e.javaClass.simpleName
+                }
+            }
+
+        val accounts =
+            try {
+                val type = object : com.google.gson.reflect.TypeToken<List<NativeAccount>>() {}.type
+                gson.fromJson<List<NativeAccount>>(json, type)
+            } catch (e: Exception) {
+                return "account_parse_failed" to e.javaClass.simpleName
+            }
+
+        return if (accounts.isNullOrEmpty()) "account_list_empty" to null else "ok" to null
+    }
+
+    /**
      * Checks if accounts file exists for the given issuer.
      */
     fun accountsExist(issuerName: String): Boolean = getAccountsFile(issuerName).exists()

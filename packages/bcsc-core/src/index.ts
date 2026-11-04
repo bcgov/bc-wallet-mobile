@@ -5,6 +5,7 @@ import NativeBcscCoreSpec, {
   type JWTClaims,
   type LoginChallengeResult,
   type NativeAccount,
+  type NativeAccountReadStatus,
   type NativeAuthorizationRequest,
   type NativeFilesScan,
   type NativeSavedService,
@@ -16,6 +17,7 @@ export type {
   LoginChallenge,
   LoginChallengeResult,
   NativeAccount,
+  NativeAccountReadStatus,
   NativeAddress,
   NativeAuthorizationRequest,
   NativeFilesScan,
@@ -484,6 +486,16 @@ export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<vo
  */
 export const getAccount = async (): Promise<NativeAccount | null> => {
   return BcscCore.getAccount();
+};
+
+/**
+ * Diagnoses why {@link getAccount} resolved null — missing vs unreadable vs undecodable storage —
+ * without changing that read. Call it only after getAccount returns null, to attach the reason to an error report.
+ * Never rejects on the native side; values contain no paths, IDs, or file contents.
+ * @returns A promise that resolves to the account read status.
+ */
+export const getAccountReadStatus = async (): Promise<NativeAccountReadStatus> => {
+  return BcscCore.getAccountReadStatus();
 };
 
 /**

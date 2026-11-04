@@ -1061,6 +1061,13 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Diagnoses why `getAccount` resolves nil (missing vs unreadable vs undecodable). Read-only; never rejects.
+  func getAccountReadStatus(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    resolve(StorageService().accountReadStatus())
+  }
+
   /// Remove the current account and all related files.
   ///
   /// - Parameters:

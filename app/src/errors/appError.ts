@@ -30,7 +30,10 @@ export type ErrorIdentity = {
  * memory, so toJSON() keeps only lightweight identifying fields and drops the nested
  * chain/body. The live `cause` property is left untouched for runtime logic.
  */
-const summarizeCause = (cause: unknown): unknown => {
+// How many wrapped AppErrors to follow when summarizing a cause chain
+const MAX_CAUSE_DEPTH = 3
+
+const summarizeCause = (cause: unknown, depth = 0): unknown => {
   if (!(cause instanceof Error)) {
     return cause
   }
@@ -50,6 +53,11 @@ const summarizeCause = (cause: unknown): unknown => {
   const responseData = (cause as { response?: { data?: unknown } }).response?.data
   if (typeof responseData === 'string' && responseData.length <= 500) {
     summary.responseData = responseData
+  }
+  // A wrapped AppError (e.g. a mapped native error re-wrapped as a login failure) would otherwise hide
+  // its own cause — and with it the native code and iOS userInfo diagnostics — so follow the chain
+  if (cause instanceof AppError && cause.cause !== undefined && depth < MAX_CAUSE_DEPTH) {
+    summary.cause = summarizeCause(cause.cause, depth + 1)
   }
   return summary
 }

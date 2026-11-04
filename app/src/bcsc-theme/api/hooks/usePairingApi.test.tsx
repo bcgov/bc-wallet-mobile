@@ -42,6 +42,7 @@ jest.mock('@/bcsc-theme/utils/push-notification-tokens', () => ({
     fcmDeviceToken: 'mock-fcm-token',
     deviceToken: 'mock-device-token',
   }),
+  getPushTokenStatus: jest.fn().mockReturnValue({ push_fcm_status: 'fetch_failed', push_apns_status: 'ok' }),
 }))
 
 const mockAccount = { clientID: 'mock-client-id', issuer: 'mock-issuer' }
@@ -182,6 +183,31 @@ describe('usePairingApi', () => {
       expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
       expect(error.context).toMatchObject({ failure_step: 'verify_device_assertion', failure_cause_code: 'E_KEYCHAIN' })
       expect(error.cause).toBe(nativeError)
+    })
+
+    it('adds the push token status to a request error it keeps', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      const requestError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { track: false })
+      mockApiClient.post.mockRejectedValue(requestError)
+
+      const error = await loginFailure()
+
+      expect(error).toBe(requestError)
+      expect(error.context).toMatchObject({
+        failure_step: 'verify_device_assertion',
+        push_fcm_status: 'fetch_failed',
+        push_apns_status: 'ok',
+      })
+    })
+
+    it('adds the push token status to a request error it wraps', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      mockApiClient.post.mockRejectedValue(new Error('socket hang up'))
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context).toMatchObject({ push_fcm_status: 'fetch_failed', push_apns_status: 'ok' })
     })
   })
 

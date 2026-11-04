@@ -7,6 +7,16 @@ const INHERITED_CONTEXT_KEYS = ['http_route', 'http_method', 'http_status']
 // Where a flow failed, kept when an already-labeled error is wrapped for its alert
 const FAILURE_CONTEXT_KEYS = ['failure_flow', 'failure_step', 'failure_elapsed_ms', 'failure_cause_code']
 
+// Health of things that fail silently (push tokens, the native account read), kept when an error is wrapped
+const DIAGNOSTIC_CONTEXT_KEYS = [
+  'push_fcm_status',
+  'push_apns_status',
+  'account_read_status',
+  'account_read_environment',
+  'account_read_detail',
+  'account_legacy_status',
+]
+
 type FailureLocation = {
   /** Where in a process the failure happened. ie: quick_login */
   flow: string
@@ -18,6 +28,8 @@ type FailureLocation = {
 type FailureOptions = FailureLocation & {
   /** The underlying error */
   cause?: unknown
+  /** Extra diagnostics, ie: push token or account read status. Never personal data or tokens. */
+  context?: Record<string, unknown>
 }
 
 const buildFailureContext = ({ flow, step, startedAt }: FailureLocation): Record<string, unknown> => {
@@ -51,8 +63,11 @@ const getCauseCode = (cause: unknown): string | undefined => {
  * @param options - The flow, step, start time and cause of the failure
  * @returns An AppError carrying the failure context
  */
-export const createFailureError = (definition: ErrorDefinition, { cause, ...location }: FailureOptions): AppError => {
-  const context = buildFailureContext(location)
+export const createFailureError = (
+  definition: ErrorDefinition,
+  { cause, context: extraContext, ...location }: FailureOptions
+): AppError => {
+  const context = { ...extraContext, ...buildFailureContext(location) }
 
   const causeCode = getCauseCode(cause)
 
@@ -61,7 +76,7 @@ export const createFailureError = (definition: ErrorDefinition, { cause, ...loca
   }
 
   if (cause instanceof AppError) {
-    for (const key of INHERITED_CONTEXT_KEYS) {
+    for (const key of [...INHERITED_CONTEXT_KEYS, ...DIAGNOSTIC_CONTEXT_KEYS]) {
       if (cause.context[key] !== undefined) {
         context[key] = cause.context[key]
       }
@@ -97,7 +112,7 @@ export const wrapKeepingFailureContext = (definition: ErrorDefinition, cause: un
   const context: Record<string, unknown> = {}
 
   if (cause instanceof AppError) {
-    for (const key of [...INHERITED_CONTEXT_KEYS, ...FAILURE_CONTEXT_KEYS]) {
+    for (const key of [...INHERITED_CONTEXT_KEYS, ...FAILURE_CONTEXT_KEYS, ...DIAGNOSTIC_CONTEXT_KEYS]) {
       if (cause.context[key] !== undefined) {
         context[key] = cause.context[key]
       }
@@ -131,6 +146,11 @@ export type FailureSteps<TStep extends string> = {
    * Labels an error as a failure at a step
    */
   fail: (step: TStep, error: unknown, options?: StepOptions) => AppError
+  /**
+   * Records diagnostics (status codes only, never personal data or tokens) to attach to any later failure,
+   * ie: whether push tokens were placeholders. Labels win over a note with the same key.
+   */
+  note: (context: Record<string, unknown>) => void
 }
 
 /**
@@ -143,13 +163,18 @@ export type FailureSteps<TStep extends string> = {
  *
  * @param flow - The name of the flow. ie: quick_login
  * @param options - The definition failures are wrapped in unless a step overrides it
- * @returns `run` and `fail`, sharing the flow's start time
+ * @returns `run`, `fail` and `note`, sharing the flow's start time and notes
  */
 export const trackFailureSteps = <TStep extends string>(
   flow: string,
   { definition }: { definition: ErrorDefinition }
 ): FailureSteps<TStep> => {
   const startedAt = Date.now()
+  const notes: Record<string, unknown> = {}
+
+  const note = (context: Record<string, unknown>) => {
+    Object.assign(notes, context)
+  }
 
   const fail = (step: TStep, error: unknown, options: StepOptions = {}): AppError => {
     // this has already been labeled, leave it as is
@@ -161,10 +186,11 @@ export const trackFailureSteps = <TStep extends string>(
 
     // add error context for handled or keepAppError errors
     if (error instanceof AppError && (error.handled || options.keepAppError)) {
+      error.addContext(notes)
       return addFailureContext(error, location)
     }
 
-    return createFailureError(options.definition ?? definition, { ...location, cause: error })
+    return createFailureError(options.definition ?? definition, { ...location, cause: error, context: notes })
   }
 
   const run = async <T>(step: TStep, work: () => Promise<T>, options?: StepOptions): Promise<T> => {
@@ -175,5 +201,5 @@ export const trackFailureSteps = <TStep extends string>(
     }
   }
 
-  return { run, fail }
+  return { run, fail, note }
 }
