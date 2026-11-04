@@ -1,7 +1,8 @@
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
+import { HomeNoticeType } from '@/bcsc-theme/state/home/home-notice'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { CustomNotificationId, useCustomNotifications } from '@/hooks/useCustomNotifications'
+import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { BCDispatchAction, BCState, initialBCSCSecureState, VerificationStatus } from '@/store'
 import { useStore } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -144,6 +145,6 @@ describe('card expiry notices, from the account provider to Home', () => {
     })
 
     expect(result.current.cardStatus.isExpired).toBe(true)
-    expect(notificationKeys(result.current.notifications)).toEqual([CustomNotificationId.AccountExpired])
+    expect(notificationKeys(result.current.notifications)).toEqual([HomeNoticeType.AccountExpired])
   })
 })
