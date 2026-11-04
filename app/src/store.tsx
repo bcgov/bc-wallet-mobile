@@ -17,7 +17,11 @@ import { VerificationPrompt, VerificationStatusResponseData } from './bcsc-theme
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
-import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from './bcsc-theme/utils/verification-status'
+import {
+  interpretVerificationStatus,
+  isDecidedVerificationStatus,
+  UNKNOWN_VERIFICATION_STATUS,
+} from './bcsc-theme/utils/verification-status'
 import { appLogger } from './utils/logger'
 
 export type RemoteDebuggingState = {
@@ -776,6 +780,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const verificationRequestStatus = interpretVerificationStatus(received.status)
       // Never store an unrecognised status; the caller asks the token endpoint instead
       if (verificationRequestStatus === UNKNOWN_VERIFICATION_STATUS) {
+        return state
+      }
+      // A pending answer fetched before a push landed must not replace the decision. Every request end
+      // clears the status, so a decision still held here belongs to the current request.
+      if (
+        verificationRequestStatus === VerificationRequestStatus.PENDING &&
+        isDecidedVerificationStatus(state.bcscSecure.verificationRequestStatus)
+      ) {
         return state
       }
       // Only the cancelled banner shows the message

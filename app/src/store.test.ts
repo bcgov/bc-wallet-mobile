@@ -298,11 +298,40 @@ describe('reducer', () => {
     })
 
     it('stores pending and leaves the message undefined', () => {
-      const cancelled = received(initialState, [{ status: 'cancelled', status_message: 'Face does not match' }])
-      const result = received(cancelled, [{ status: 'pending', status_message: 'Waiting' }])
+      const result = received(initialState, [{ status: 'pending', status_message: 'Waiting' }])
 
       expect(result.bcscSecure.verificationRequestStatus).toBe('pending')
       expect(result.bcscSecure.verificationRequestStatusMessage).toBeUndefined()
+    })
+
+    it('records a decision that follows pending', () => {
+      const pending = received(initialState, [{ status: 'pending' }])
+
+      expect(received(pending, [{ status: 'verified' }]).bcscSecure.verificationRequestStatus).toBe('verified')
+    })
+
+    describe('a late pending answer', () => {
+      it('does not replace a verified decision', () => {
+        const verified = received(initialState, [{ status: 'verified' }])
+
+        expect(received(verified, [{ status: 'pending' }])).toBe(verified)
+      })
+
+      it('does not replace a cancelled decision or its message', () => {
+        const cancelled = received(initialState, [{ status: 'cancelled', status_message: 'Face does not match' }])
+        const result = received(cancelled, [{ status: 'pending', status_message: 'Waiting' }])
+
+        expect(result).toBe(cancelled)
+        expect(result.bcscSecure.verificationRequestStatus).toBe('cancelled')
+        expect(result.bcscSecure.verificationRequestStatusMessage).toBe('Face does not match')
+      })
+
+      it('is recorded once the request has ended and the status was cleared', () => {
+        const verified = received(initialState, [{ status: 'verified' }])
+        const cleared = reducer(verified, { type: BCDispatchAction.CLEAR_SECURE_STATE })
+
+        expect(received(cleared, [{ status: 'pending' }]).bcscSecure.verificationRequestStatus).toBe('pending')
+      })
     })
 
     it('clears an earlier cancelled message when verified arrives', () => {

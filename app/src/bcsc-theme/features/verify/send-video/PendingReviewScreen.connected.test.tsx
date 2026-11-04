@@ -31,11 +31,13 @@ const pendingRequest = { verificationRequestId: 'request-id', deviceCode: 'devic
 describe('PendingReviewScreen with the real status check', () => {
   const getVerificationRequestStatus = jest.fn()
   let dispatch: (action: { type: BCDispatchAction; payload?: unknown[] }) => void
+  let currentStore: BCState
   let focused: boolean
   let navigation: any
 
   const CaptureDispatch = () => {
-    const [, storeDispatch] = useStore<BCState>()
+    const [store, storeDispatch] = useStore<BCState>()
+    currentStore = store
     dispatch = storeDispatch as typeof dispatch
     return null
   }
@@ -147,5 +149,34 @@ describe('PendingReviewScreen with the real status check', () => {
 
     expect(getVerificationRequestStatus).toHaveBeenCalledTimes(2)
     expect(callsTo(BCSCScreens.CancelledReview)).toHaveLength(1)
+  })
+
+  it('keeps a decision pushed during a check when that check answers pending and the follow-up check fails', async () => {
+    let settleFirstFetch: (value: { status: VerificationRequestStatus }) => void = () => undefined
+    getVerificationRequestStatus.mockReturnValueOnce(
+      new Promise((resolve) => {
+        settleFirstFetch = resolve
+      })
+    )
+    // Offline: the check the push triggers cannot correct a wrong answer
+    getVerificationRequestStatus.mockRejectedValue(new Error('offline'))
+
+    renderScreen()
+    await flush()
+
+    await act(async () => {
+      dispatch({
+        type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+        payload: [{ status: VerificationRequestStatus.CANCELLED, status_message: 'Video too dark' }],
+      })
+    })
+    await act(async () => {
+      settleFirstFetch({ status: VerificationRequestStatus.PENDING })
+    })
+    await flush()
+
+    expect(getVerificationRequestStatus).toHaveBeenCalledTimes(2)
+    expect(currentStore.bcscSecure.verificationRequestStatus).toBe(VerificationRequestStatus.CANCELLED)
+    expect(currentStore.bcscSecure.verificationRequestStatusMessage).toBe('Video too dark')
   })
 })
