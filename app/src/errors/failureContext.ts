@@ -4,6 +4,9 @@ import { ErrorDefinition } from './errorRegistry'
 // HTTP details worth keeping when an AppError is wrapped by a broader failure
 const INHERITED_CONTEXT_KEYS = ['http_route', 'http_method', 'http_status']
 
+// Where a flow failed, kept when an already-labeled error is wrapped for its alert
+const FAILURE_CONTEXT_KEYS = ['failure_flow', 'failure_step', 'failure_elapsed_ms', 'failure_cause_code']
+
 type FailureLocation = {
   /** Where in a process the failure happened. ie: quick_login */
   flow: string
@@ -81,6 +84,34 @@ export const createFailureError = (definition: ErrorDefinition, { cause, ...loca
 export const addFailureContext = (error: AppError, location: FailureLocation): AppError => {
   error.addContext(buildFailureContext(location))
   return error
+}
+
+/**
+ * Wraps an error in a broader definition for its alert, keeping the HTTP and failure context of the error.
+ *
+ * @param definition - The ErrorDefinition to wrap the error in
+ * @param cause - The error to wrap
+ * @returns An AppError with the error as its cause and its context copied over
+ */
+export const wrapKeepingFailureContext = (definition: ErrorDefinition, cause: unknown): AppError => {
+  const context: Record<string, unknown> = {}
+
+  if (cause instanceof AppError) {
+    for (const key of [...INHERITED_CONTEXT_KEYS, ...FAILURE_CONTEXT_KEYS]) {
+      if (cause.context[key] !== undefined) {
+        context[key] = cause.context[key]
+      }
+    }
+  }
+
+  // The cause's own code, unless it already recorded a deeper one
+  const causeCode = getCauseCode(cause)
+
+  if (context.failure_cause_code === undefined && causeCode !== undefined) {
+    context.failure_cause_code = causeCode
+  }
+
+  return AppError.fromErrorDefinition(definition, { cause, context })
 }
 
 type StepOptions = {

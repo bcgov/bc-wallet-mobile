@@ -1,6 +1,6 @@
 import { AppError } from './appError'
 import { ErrorRegistry } from './errorRegistry'
-import { addFailureContext, createFailureError, trackFailureSteps } from './failureContext'
+import { addFailureContext, createFailureError, trackFailureSteps, wrapKeepingFailureContext } from './failureContext'
 
 describe('createFailureError', () => {
   it('records the flow, step and cause', () => {
@@ -75,6 +75,46 @@ describe('addFailureContext', () => {
       failure_elapsed_ms: 3000,
     })
     jest.restoreAllMocks()
+  })
+})
+
+describe('wrapKeepingFailureContext', () => {
+  it("wraps an AppError, copying its HTTP and failure context and recording its code as the cause's", () => {
+    const requestError = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, {
+      context: { http_route: '/assertion', failure_flow: 'pairing', failure_step: 'verify', other: 'not copied' },
+      track: false,
+    })
+
+    const error = wrapKeepingFailureContext(ErrorRegistry.LOGIN_SERVER_ERROR, requestError)
+
+    expect(error.appEvent).toBe(ErrorRegistry.LOGIN_SERVER_ERROR.appEvent)
+    expect(error.cause).toBe(requestError)
+    expect(error.context).toEqual({
+      http_route: '/assertion',
+      failure_flow: 'pairing',
+      failure_step: 'verify',
+      failure_cause_code: requestError.code,
+    })
+  })
+
+  it('keeps a deeper cause code the error already recorded', () => {
+    const labeled = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_DEVICE_ERROR, {
+      context: { failure_cause_code: 'E_SIGN_FAILED' },
+      track: false,
+    })
+
+    const error = wrapKeepingFailureContext(ErrorRegistry.LOGIN_SERVER_ERROR, labeled)
+
+    expect(error.context.failure_cause_code).toBe('E_SIGN_FAILED')
+  })
+
+  it('wraps an error that is not an AppError with only its code', () => {
+    const cause = Object.assign(new Error('native'), { code: 'E_NATIVE' })
+
+    const error = wrapKeepingFailureContext(ErrorRegistry.LOGIN_SERVER_ERROR, cause)
+
+    expect(error.cause).toBe(cause)
+    expect(error.context).toEqual({ failure_cause_code: 'E_NATIVE' })
   })
 })
 
