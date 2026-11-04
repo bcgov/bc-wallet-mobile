@@ -49,6 +49,19 @@ existing cancellation destination: verification-method selection (#4585).
 Startup and post-call verification checks have no Cancel control. Post-call checks
 show the existing verification message without a progress bar.
 
+## Submits: one run per request, however many screens mount
+
+A screen that submits on mount (the send-video `UploadingScreen`) keeps its in-flight run in a
+module-level single-flight record (like `useVideoPrompts`), keyed by request id. A second instance
+of the screen joins the run instead of starting another, so the user sees its outcome once. A
+button that hands a flow to such a screen through a `reset` also refuses a second press itself,
+because `reset` with key-less routes mounts a fresh instance every time.
+
+**Why:** a double tap on "Use Video" mounted two upload screens and submitted the same verification
+request twice; IAS rejected the second as a duplicate (500) after the first had gone through, so the
+user saw a server error over "Successfully sent" (#4928). Bifold's `Button` only swallows presses
+while the handler is running, which a synchronous handler never is.
+
 ## Test IDs: Register the key, then reference it
 
 Never pass a string literal to `testIdWithKey`. Add the key to `app/src/test-ids/registry.ts` under
@@ -167,9 +180,22 @@ live agent, the device token follows, and a failed switch puts the previous medi
 Connections made before a switch keep routing through their original mediator, which is no longer
 picked up from, the same as after an agent restart.
 
+A switch connects to the mediator directly and sends the wallet's label with the invitation: Credo 0.7
+applies no agent-wide label to connections (the `label` given to `Agent` is ignored), and a DID Exchange
+request without one fails validation before it leaves the device. A connection found incomplete when a
+switch starts is the leftover of an attempt that never finished; it is discarded and made again, so one
+failed switch cannot block that mediator for good. Switches run one after another in the service, not
+the picker: a switch outlives the picker when the user leaves mid-handshake, and one started on return
+waits instead of discarding the connection the first is completing. A mediator that is not in use can
+be removed from the picker (`REMOVE_AVAILABLE_MEDIATOR`); the build's mediator stays, as the next launch
+would restore it. The picker consumes its scanned-invitation param once handled, or a removal would bring
+the mediator back from the route. A `ListButton` row is one accessibility element, so a control nested in
+it (the remove button) is also offered as an accessibility action on the row.
+
 **Why:** Always forcing `MEDIATOR_URL` silently disabled developer-mode mediator switching (the
 selection reverted on the next launch), while never forcing it kept an upgraded app on a retired
-mediator.
+mediator. The first in-place switch (#4876) sent no label, so every switch failed and left a half-made
+connection behind that would have stalled the next attempt.
 
 ## Settings: rows are decided before the first render
 
@@ -181,6 +207,17 @@ them natively on focus and re-renders, and a row whose gate is still unknown sta
 **Why:** the settings sections animate layout changes (`LinearTransition`), so a row that appears or
 disappears after mount slides every row below it. "Change PIN" rendered on a default and was dropped
 once the native read reported device auth, so the whole list jumped on every open of Settings.
+
+## Android: the JS runtime outlives the Activity
+
+To leave the app on Android, use `moveAppToBackground`, not `BackHandler.exitApp`. Hardware back can still
+finish the Activity, so anything that reads launch data (`getInitialURL`, `getInitialNotification`) must read
+it again on every mount and skip what it already handled. Module-level state survives the remount, so a
+"run once" guard around these reads drops the link or notification that started the new Activity.
+`getInitialNotification` also needs a resumed Activity, or it silently resolves `null`.
+
+**Why:** `exitApp` finished the Activity for a browser-launched task but left the process alive. The next link
+or notification tap created a new Activity, which fires no `onNewIntent`, so logins after the first were lost.
 
 ## Verification flow exits: first-time vs deferred verifiers
 
@@ -217,3 +254,25 @@ Rules that keep this consistent:
 **Why:** many people install the app only to verify their BC Services Card; an unverified Home is a dead end
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
 alone because starting from the Home card must not turn a skipper into a first-time verifier.
+
+## Derived state: compute it from its inputs, don't store a flag
+
+State that follows from other state is derived on read through a rule, a selector and a hook, never saved as a
+flag that something has to remember to set and clear. The three live together in `bcsc-theme/state/<domain>/`;
+`state/` holds only derived, UI-free state, not actions or API calls. The card expiry phase
+(`bcsc-theme/state/account/`) is the example:
+
+- `getAccountPhase` (`account-phase.ts`) is the only definition of "expired" and "expiring soon".
+- `selectAccountPhase` (`selectors.ts`) reads its inputs: `bcscSecure.verified`, the ID token
+  `bcscReason`, `bcscSecure.refreshTokenExpired`, and the account's `account_expiration_date`.
+- `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
+  `useCustomNotifications` (Home notices) both read it, so they cannot disagree.
+
+The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
+from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
+store or account change.
+
+**Why:** the saved `showAccountExpiryNotification` / `showCardRenewalNotification` flags were only written at
+startup and cleared by hand, so a failed account load or a missed reset left a stale renewal notice (#4866, #4878).
+
+How to apply this to other state: [`docs/guides/derived-state-refactor.md`](docs/guides/derived-state-refactor.md).

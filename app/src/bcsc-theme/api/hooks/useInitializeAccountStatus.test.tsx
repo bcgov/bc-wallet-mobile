@@ -17,7 +17,7 @@ describe('useInitializeAccountStatus', () => {
     jest.clearAllMocks()
   })
 
-  it('returns initializingAccount as true when stateLoaded and hasAccount is false', () => {
+  it('returns initializingAccount as true when stateLoaded and hasAccount is false', async () => {
     const mockDispatch = jest.fn()
     jest
       .mocked(Bifold.useStore)
@@ -28,6 +28,9 @@ describe('useInitializeAccountStatus', () => {
     const { result } = renderHook(() => useInitializeAccountStatus())
 
     expect(result.current.initializingAccount).toBe(true)
+
+    // Let the pending account check settle inside act before the test ends
+    await act(async () => {})
   })
 
   it('returns initializingAccount as false when stateLoaded is false', () => {

@@ -708,7 +708,8 @@ const translation = {
     "ConfigureMediator": {
       "ScreenTitle": "Configure mediator",
       "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list.",
-      "ScanButton": "Scan mediator QR code"
+      "ScanButton": "Scan mediator QR code",
+      "Remove": "Remove {{mediator}}"
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices?",
@@ -1602,6 +1603,10 @@ const translation = {
     "InvalidPairingCodeSameDevice": {
       "Title": "Invalid Login",
       "Description": "Please try again later. If the problem continues, contact the BC Services Card Help Desk."
+    },
+    "LoginRequestExpired": {
+      "Title": "Login Request Expired",
+      "Description": "This login request has expired or is no longer valid. Please start again from the service."
     },
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent",

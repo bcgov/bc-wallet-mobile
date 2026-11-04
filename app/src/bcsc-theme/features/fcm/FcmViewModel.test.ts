@@ -112,6 +112,30 @@ describe('FcmViewModel', () => {
       expect(mockFcmService.init).toHaveBeenCalledTimes(1)
     })
 
+    it('re-reads the launch notification without subscribing again when initialized twice', () => {
+      viewModel.initialize()
+      viewModel.initialize()
+
+      expect(mockFcmService.subscribe).toHaveBeenCalledTimes(1)
+      expect(mockFcmService.init).toHaveBeenCalledTimes(2)
+    })
+
+    it('does not touch the FCM service in BCWallet mode when initialized twice', () => {
+      const bcWalletViewModel = new FcmViewModel(
+        mockFcmService,
+        mockLogger as any,
+        mockPairingService,
+        mockVerificationResponseService,
+        Mode.BCWallet
+      )
+
+      bcWalletViewModel.initialize()
+      bcWalletViewModel.initialize()
+
+      expect(mockFcmService.subscribe).not.toHaveBeenCalled()
+      expect(mockFcmService.init).not.toHaveBeenCalled()
+    })
+
     it('subscribes before calling init to avoid missing messages', () => {
       const callOrder: string[] = []
       mockFcmService.subscribe.mockImplementation((handler) => {
@@ -127,6 +151,28 @@ describe('FcmViewModel', () => {
       viewModel.initialize()
 
       expect(callOrder).toEqual(['subscribe', 'init'])
+    })
+
+    it('logs an error when the FCM service fails to initialize', async () => {
+      const error = new Error('init failed')
+      mockFcmService.init.mockRejectedValueOnce(error)
+
+      viewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockLogger.error).toHaveBeenCalledWith('[FcmViewModel] Failed to initialize FCM service', error)
+    })
+
+    it('logs an error when re-reading the launch notification fails', async () => {
+      viewModel.initialize()
+
+      const error = new Error('read failed')
+      mockFcmService.init.mockRejectedValueOnce(error)
+
+      viewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockLogger.error).toHaveBeenCalledWith('[FcmViewModel] Failed to initialize FCM service', error)
     })
 
     it('fetches server JWK on initialization when API client is available', async () => {
@@ -180,7 +226,8 @@ describe('FcmViewModel', () => {
       expect(showLocalNotification).not.toHaveBeenCalled()
     })
 
-    it('does not re-show a status notification the OS already presented', async () => {
+    // Tray taps and cold starts arrive with no delivery context: the OS has already shown the notification.
+    it('does not re-show a status notification opened from the tray (no delivery context)', async () => {
       const message = {
         type: 'status',
         data: {
@@ -198,6 +245,7 @@ describe('FcmViewModel', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Status notification received'))
       expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(notifee.displayNotification).not.toHaveBeenCalled()
     })
 
     it('routes notification messages to handleGenericNotification', async () => {
