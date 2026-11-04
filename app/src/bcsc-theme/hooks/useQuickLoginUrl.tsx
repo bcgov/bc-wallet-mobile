@@ -1,6 +1,6 @@
-import { AppError, ErrorDefinition, ErrorRegistry } from '@/errors'
-import { isAppError } from '@/errors/appError'
-import { createFailureError } from '@/errors/failureContext'
+import { AppError, ErrorRegistry } from '@/errors'
+import { isAppError, isHandledAppError } from '@/errors/appError'
+import { trackFailureSteps } from '@/errors/failureContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
@@ -58,61 +58,47 @@ export const useQuickLoginURL = () => {
    */
   const getQuickLoginURL = useCallback(
     async (serviceClient: ClientMetadataStub): Promise<QuickLoginURLResult> => {
-      const startedAt = Date.now()
-
-      const createFailure = (
-        step: QuickLoginStep,
-        cause: unknown,
-        definition: ErrorDefinition = ErrorRegistry.LOGIN_DEVICE_ERROR
-      ) => createFailureError(definition, { flow: 'quick_login', step, startedAt, cause })
-
-      const atStep = async <T,>(step: QuickLoginStep, work: () => Promise<T>): Promise<T> => {
-        try {
-          return await work()
-        } catch (cause) {
-          throw createFailure(step, cause)
-        }
-      }
+      const steps = trackFailureSteps<QuickLoginStep>('quick_login', { definition: ErrorRegistry.LOGIN_DEVICE_ERROR })
 
       try {
         if (!serviceClient.initiate_login_uri) {
           return {
             success: false,
-            error: createFailure('service_config', new Error('Quick login unavailable for this service')),
+            error: steps.fail('service_config', new Error('Quick login unavailable for this service')),
           }
         }
 
         const accessToken = client.tokens?.access_token
 
         if (!accessToken) {
-          return { success: false, error: createFailure('access_token', new Error('No access token available')) }
+          return { success: false, error: steps.fail('access_token', new Error('No access token available')) }
         }
 
         // fetchJwkResult never rejects: a failure resolves with jwk null and the reason in error
         const [tokens, account, jwkResult] = await Promise.all([
-          atStep('notification_tokens', () => getNotificationTokens(logger)),
-          atStep('account', () => getAccount()),
+          steps.run('notification_tokens', () => getNotificationTokens(logger)),
+          steps.run('account', () => getAccount()),
           client.fetchJwkResult(),
         ])
 
         if (!tokens) {
           return {
             success: false,
-            error: createFailure('notification_tokens', new Error('No notification tokens received')),
+            error: steps.fail('notification_tokens', new Error('No notification tokens received')),
           }
         }
 
         if (!account) {
-          return { success: false, error: createFailure('account', new Error('No account data received')) }
+          return { success: false, error: steps.fail('account', new Error('No account data received')) }
         }
 
         const { jwk } = jwkResult
 
         if (!jwk) {
-          throw createFailure('jwks', jwkResult.error, ErrorRegistry.MISSING_JWK_ERROR)
+          throw steps.fail('jwks', jwkResult.error, { definition: ErrorRegistry.MISSING_JWK_ERROR })
         }
 
-        const loginHint = await atStep('sign_jwt', () =>
+        const loginHint = await steps.run('sign_jwt', () =>
           createQuickLoginJWT(
             accessToken,
             account.clientID,
@@ -127,16 +113,19 @@ export const useQuickLoginURL = () => {
         const encodedTokenHint = encodeURIComponent(loginHint)
         return { success: true, url: `${serviceClient.initiate_login_uri}?login_hint=${encodedTokenHint}` }
       } catch (error) {
+        if (isHandledAppError(error)) {
+          return { success: false, handled: true }
+        }
+
         if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
           alerts.missingJwkAlert(error)
           return { success: false, handled: true }
         }
 
         logger.error('Error creating quick login URL', error as Error)
-        return {
-          success: false,
-          error: isAppError(error, AppEventCode.LOGIN_DEVICE_ERROR) ? error : createFailure('unexpected', error),
-        }
+
+        // Errors from a step are already handled, anything else is unexpected
+        return { success: false, error: steps.fail('unexpected', error) }
       }
     },
     [alerts, client, logger]

@@ -364,7 +364,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       alerts.loginDeviceErrorAlert(
         createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
           flow: 'pairing',
-          step: 'login_by_pairing_code',
+          step: 'sign_pairing_code',
           startedAt: Date.now() - 80,
           cause: toAppError(
             simulatedNativeError('E_KEYPAIR_RETRIEVAL_FAILED', 'Failed to retrieve key pair'),

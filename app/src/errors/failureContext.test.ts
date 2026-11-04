@@ -1,6 +1,6 @@
 import { AppError } from './appError'
 import { ErrorRegistry } from './errorRegistry'
-import { createFailureError } from './failureContext'
+import { addFailureContext, createFailureError, trackFailureSteps } from './failureContext'
 
 describe('createFailureError', () => {
   it('records the flow, step and cause', () => {
@@ -53,5 +53,105 @@ describe('createFailureError', () => {
       http_method: 'GET',
       http_status: 503,
     })
+  })
+})
+
+describe('addFailureContext', () => {
+  it('adds where and when the flow failed to the same error, keeping its code and context', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(5000)
+    const error = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, {
+      context: { http_route: '/cardtap/v3/devices/assertion' },
+      track: false,
+    })
+
+    const result = addFailureContext(error, { flow: 'pairing', step: 'verify_device_assertion', startedAt: 2000 })
+
+    expect(result).toBe(error)
+    expect(result.appEvent).toBe(ErrorRegistry.NO_INTERNET.appEvent)
+    expect(result.context).toEqual({
+      http_route: '/cardtap/v3/devices/assertion',
+      failure_flow: 'pairing',
+      failure_step: 'verify_device_assertion',
+      failure_elapsed_ms: 3000,
+    })
+    jest.restoreAllMocks()
+  })
+})
+
+describe('trackFailureSteps', () => {
+  type Step = 'first' | 'second'
+  const track = () => trackFailureSteps<Step>('test_flow', { definition: ErrorRegistry.LOGIN_DEVICE_ERROR })
+
+  const rejection = async (promise: Promise<unknown>): Promise<AppError> => {
+    try {
+      await promise
+    } catch (error) {
+      return error as AppError
+    }
+    throw new Error('Expected the step to reject')
+  }
+
+  afterEach(() => jest.restoreAllMocks())
+
+  it('returns the result of a step that succeeds', async () => {
+    await expect(track().run('first', async () => 'value')).resolves.toBe('value')
+  })
+
+  it("wraps a failure in the flow's definition, recording the step and time since the flow started", async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(1000)
+    const steps = track()
+    jest.spyOn(Date, 'now').mockReturnValue(1250)
+    const cause = new Error('boom')
+
+    const error = await rejection(steps.run('first', () => Promise.reject(cause)))
+
+    expect(error.appEvent).toBe(ErrorRegistry.LOGIN_DEVICE_ERROR.appEvent)
+    expect(error.cause).toBe(cause)
+    expect(error.context).toMatchObject({ failure_flow: 'test_flow', failure_step: 'first', failure_elapsed_ms: 250 })
+  })
+
+  it("uses a step's own definition over the flow's", () => {
+    const error = track().fail('first', new Error('no key'), { definition: ErrorRegistry.MISSING_JWK_ERROR })
+
+    expect(error.appEvent).toBe(ErrorRegistry.MISSING_JWK_ERROR.appEvent)
+  })
+
+  it('returns a handled error unchanged, so callers can skip alerting again', async () => {
+    const handled = AppError.fromErrorDefinition(ErrorRegistry.INVALID_PAIRING_CODE, { track: false })
+    handled.handled = true
+
+    const error = await rejection(track().run('first', () => Promise.reject(handled)))
+
+    expect(error).toBe(handled)
+    expect(error.context.failure_step).toBeUndefined()
+  })
+
+  it('keeps the innermost step when steps are nested', async () => {
+    const steps = track()
+
+    const error = await rejection(
+      steps.run('first', () => steps.run('second', () => Promise.reject(new Error('inner'))))
+    )
+
+    expect(error.context.failure_step).toBe('second')
+    expect((error.cause as Error).message).toBe('inner')
+  })
+
+  it("with keepAppError, keeps an AppError's own code and adds where it failed", async () => {
+    const requestError = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, { track: false })
+
+    const error = await rejection(track().run('second', () => Promise.reject(requestError), { keepAppError: true }))
+
+    expect(error).toBe(requestError)
+    expect(error.context).toMatchObject({ failure_flow: 'test_flow', failure_step: 'second' })
+  })
+
+  it('with keepAppError, still wraps an error that is not an AppError', () => {
+    const cause = new Error('native')
+
+    const error = track().fail('second', cause, { keepAppError: true })
+
+    expect(error.appEvent).toBe(ErrorRegistry.LOGIN_DEVICE_ERROR.appEvent)
+    expect(error.cause).toBe(cause)
   })
 })

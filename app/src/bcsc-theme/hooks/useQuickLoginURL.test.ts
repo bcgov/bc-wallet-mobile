@@ -1,6 +1,8 @@
 import * as useBCSCApiClient from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import * as tokens from '@/bcsc-theme/utils/push-notification-tokens'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
@@ -274,6 +276,29 @@ describe('useQuickLoginURL', () => {
     const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
 
     expect(result).toEqual({ success: false, error: failure('account', 'storage read failed') })
+  })
+
+  it('should report a handled error as handled, so the caller does not alert a second time', async () => {
+    const useClientMock = jest.mocked(useBCSCApiClient)
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const tokensMock = jest.mocked(tokens)
+
+    const handledError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { track: false })
+    handledError.handled = true
+    bcscCoreMock.getAccount = jest.fn().mockRejectedValue(handledError)
+    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
+
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwkResult: jest.fn().mockResolvedValue({ jwk: true }),
+    } as any)
+    bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+    const hook = renderHook(() => useQuickLoginURL())
+    const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
+
+    expect(result).toEqual({ success: false, handled: true })
   })
 
   it('should return the quick login URL', async () => {

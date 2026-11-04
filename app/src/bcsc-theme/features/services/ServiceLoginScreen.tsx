@@ -6,8 +6,9 @@ import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { ErrorRegistry } from '@/errors'
-import { isAxiosAppError, isHandledAppError } from '@/errors/appError'
+import { isAppError, isHandledAppError } from '@/errors/appError'
 import { createFailureError } from '@/errors/failureContext'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -363,8 +364,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return
     }
 
-    const startedAt = Date.now()
-
     try {
       const client = await pairing.loginByPairingCode(
         code,
@@ -379,19 +378,14 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     } catch (error) {
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
       setIsContinueDisabled(false)
-      if (!isHandledAppError(error)) {
-        // checks if error originated from the server or the device
-        const isServerFailure = isAxiosAppError(error)
-        const failure = createFailureError(
-          isServerFailure ? ErrorRegistry.LOGIN_SERVER_ERROR : ErrorRegistry.LOGIN_DEVICE_ERROR,
-          { flow: 'pairing', step: 'login_by_pairing_code', startedAt, cause: error }
-        )
+      if (isHandledAppError(error)) {
+        return
+      }
 
-        if (isServerFailure) {
-          alerts.loginServerErrorAlert(failure)
-        } else {
-          alerts.loginDeviceErrorAlert(failure)
-        }
+      if (isAppError(error, AppEventCode.LOGIN_DEVICE_ERROR)) {
+        alerts.loginDeviceErrorAlert(error)
+      } else {
+        alerts.loginServerErrorAlert(error)
       }
     }
   }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled])

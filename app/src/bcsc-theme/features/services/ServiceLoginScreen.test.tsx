@@ -349,47 +349,40 @@ describe('ServiceLogin', () => {
       expect(mockLoginDeviceErrorAlert).not.toHaveBeenCalled()
     })
 
-    it('should report an unhandled non-HTTP pairing error as a device failure', async () => {
+    it('should show the device alert for a device failure from loginByPairingCode', async () => {
       const mockLoginServerErrorAlert = jest.fn()
       const mockLoginDeviceErrorAlert = jest.fn()
-      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(new Error('unexpected failure')), {
-        loginServerErrorAlert: mockLoginServerErrorAlert,
-        loginDeviceErrorAlert: mockLoginDeviceErrorAlert,
-      })
-
-      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
-      fireEvent.press(continueButton)
-      await waitFor(() =>
-        expect(mockLoginDeviceErrorAlert).toHaveBeenCalledWith(
-          expect.objectContaining({
-            appEvent: AppEventCode.LOGIN_DEVICE_ERROR,
-            technicalMessage: 'unexpected failure',
-            context: expect.objectContaining({ failure_flow: 'pairing', failure_step: 'login_by_pairing_code' }),
-          })
-        )
+      const deviceError = new AppError(
+        'device error',
+        { category: ErrorCategory.AUTHENTICATION, appEvent: AppEventCode.LOGIN_DEVICE_ERROR, statusCode: 2211 },
+        { track: false }
       )
-      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
-    })
-
-    it('should report an unhandled HTTP pairing error as a server failure', async () => {
-      const mockLoginServerErrorAlert = jest.fn()
-      const httpError = new AppError(
-        'server error',
-        { category: ErrorCategory.NETWORK, appEvent: AppEventCode.SERVER_ERROR, statusCode: 2101 },
-        { cause: new AxiosError('Request failed with status code 502', 'ERR_BAD_RESPONSE'), track: false }
-      )
-      const mockLoginDeviceErrorAlert = jest.fn()
-      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(httpError), {
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(deviceError), {
         loginServerErrorAlert: mockLoginServerErrorAlert,
         loginDeviceErrorAlert: mockLoginDeviceErrorAlert,
       })
 
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
-      await waitFor(() =>
-        expect(mockLoginServerErrorAlert).toHaveBeenCalledWith(
-          expect.objectContaining({ appEvent: AppEventCode.LOGIN_SERVER_ERROR, cause: httpError })
-        )
+      await waitFor(() => expect(mockLoginDeviceErrorAlert).toHaveBeenCalledWith(deviceError))
+      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
+    })
+
+    it('should show the login alert with the request error itself when the request fails unhandled', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      const mockLoginDeviceErrorAlert = jest.fn()
+      const requestError = new AppError(
+        'no internet',
+        { category: ErrorCategory.NETWORK, appEvent: AppEventCode.NO_INTERNET, statusCode: 2100 },
+        { cause: new AxiosError('Network Error', 'ERR_NETWORK'), track: false }
       )
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(requestError), {
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+        loginDeviceErrorAlert: mockLoginDeviceErrorAlert,
+      })
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+      // Not wrapped: the report keeps no_internet rather than claiming a server 5xx
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalledWith(requestError))
       expect(mockLoginDeviceErrorAlert).not.toHaveBeenCalled()
     })
 
