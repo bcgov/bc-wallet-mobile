@@ -298,6 +298,22 @@ describe('BCSCAccountContext', () => {
       expect(JSON.stringify(tokenNullError.toJSON())).not.toContain('stored-refresh')
     })
 
+    // Verified and deactivated together is the expired finished account: it still loads through the credential
+    it('records credentialDeactivated for an expired finished account whose load fails', async () => {
+      const tokenNullError = AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
+      mockGetUserMetadata.mockRejectedValueOnce(tokenNullError)
+
+      renderAccount({ ...verified, credentialDeactivated: true })
+
+      await waitFor(() => expect(tokenNullError.context.accountLoad).toBeDefined())
+
+      expect(tokenNullError.context.accountLoad).toMatchObject({
+        verified: true,
+        credentialDeactivated: true,
+        hasRefreshToken: true,
+      })
+    })
+
     it('refreshAccount() reloads with trigger "manual"', async () => {
       mockGetUserMetadata.mockReset()
       mockGetUserMetadata.mockResolvedValueOnce(mockUserData())
