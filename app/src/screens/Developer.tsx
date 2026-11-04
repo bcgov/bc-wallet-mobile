@@ -596,14 +596,6 @@ const Developer: React.FC = () => {
                 testID={testIdWithKey(TestIds.developer.toggleEnableAppToAppPersonFlow)}
               />
             ),
-            <ToggleRow
-              key="enableAttestation"
-              title={t('Developer.EnableAttestation')}
-              value={enableAttestation}
-              onToggle={toggleEnableAttestationSwitch}
-              accessibilityLabel={t('Developer.EnableAttestation')}
-              testID={testIdWithKey(TestIds.developer.toggleEnableAttestation)}
-            />,
           ]}
         </ListButtonGroup>
       </View>
@@ -622,6 +614,13 @@ const Developer: React.FC = () => {
                 <RowDetail label={t('RemoteLogging.SessionID')} value={logger.sessionId.toString()} />
               ) : null
             }
+          />
+          <ToggleRow
+            title={t('Developer.EnableAttestation')}
+            value={enableAttestation}
+            onToggle={toggleEnableAttestationSwitch}
+            accessibilityLabel={t('Developer.EnableAttestation')}
+            testID={testIdWithKey(TestIds.developer.toggleEnableAttestation)}
           />
           <ToggleRow
             title={t('Developer.EnableProxy')}
