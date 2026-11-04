@@ -14,23 +14,23 @@ import {
   DidCommAutoAcceptCredential,
   DidCommAutoAcceptProof,
   DidCommConnectionsModule,
-  DidCommCredentialV2Protocol,
   DidCommCredentialsModule,
+  DidCommCredentialV2Protocol,
   DidCommDifPresentationExchangeProofFormatService,
   DidCommHttpOutboundTransport,
   DidCommMediatorPickupStrategy,
   DidCommModule,
-  DidCommProofV2Protocol,
   DidCommProofsModule,
+  DidCommProofV2Protocol,
   DidCommWsOutboundTransport,
 } from '@credo-ts/didcomm'
-import { PushNotificationsFcmModule } from '@credo-ts/didcomm-push-notifications'
+import { DidCommPushNotificationsFcmModule } from '@credo-ts/didcomm-push-notifications'
 import { DrpcModule } from '@credo-ts/drpc'
 import { IndyVdrAnonCredsRegistry, IndyVdrModule, IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 import { WebVhAnonCredsRegistry, WebVhDidResolver } from '@credo-ts/webvh'
-import { anoncreds } from '@hyperledger/anoncreds-react-native'
+import { NativeAnoncreds } from '@hyperledger/anoncreds-react-native'
 import { indyVdr } from '@hyperledger/indy-vdr-react-native'
-import { askar } from '@openwallet-foundation/askar-react-native'
+import { NativeAskar } from '@openwallet-foundation/askar-react-native'
 import { CacheSettings, IndyVdrProxyAnonCredsRegistry, IndyVdrProxyDidResolver } from 'credo-ts-indy-vdr-proxy-client'
 
 export type BCAgent = Agent<ReturnType<typeof getBCAgentModules>>
@@ -119,14 +119,14 @@ export function getBCAgentModules({
     // name, so registering a `cache` key here suppresses the storage-backed default.
     cache: new CacheModule({ cache: new InMemoryLruCache({ limit: 500 }) }),
     askar: new AskarModule({
-      askar,
+      askar: NativeAskar.instance,
       store: {
         id: walletId,
         key: walletKey,
       },
     }),
     anoncreds: new AnonCredsModule({
-      anoncreds,
+      anoncreds: NativeAnoncreds.instance,
       registries: [new IndyVdrAnonCredsRegistry(), new WebVhAnonCredsRegistry()],
     }),
     indyVdr: new IndyVdrModule({
@@ -167,7 +167,7 @@ export function getBCAgentModules({
       autoAcceptProofs: DidCommAutoAcceptProof.ContentApproved,
       proofProtocols,
     }),
-    pushNotificationsFcm: new PushNotificationsFcmModule(),
+    pushNotificationsFcm: new DidCommPushNotificationsFcmModule(),
     dids: new DidsModule({
       resolvers: [new WebVhDidResolver()],
     }),
@@ -176,7 +176,7 @@ export function getBCAgentModules({
 
   if (enableProxy && proxyBaseUrl) {
     modules.anoncreds = new AnonCredsModule({
-      anoncreds,
+      anoncreds: NativeAnoncreds.instance,
       registries: [
         new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings }),
         new WebVhAnonCredsRegistry(),
