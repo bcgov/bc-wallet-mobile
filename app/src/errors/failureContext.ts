@@ -1,4 +1,4 @@
-import { AppError, isHandledAppError } from './appError'
+import { AppError } from './appError'
 import { ErrorDefinition } from './errorRegistry'
 
 // HTTP details worth keeping when an AppError is wrapped by a broader failure
@@ -96,7 +96,9 @@ type StepOptions = {
 export type FailureSteps<TStep extends string> = {
   /** Runs one step of the flow, rethrowing any failure labeled with that step */
   run: <T>(step: TStep, work: () => Promise<T>, options?: StepOptions) => Promise<T>
-  /** Labels an error as a failure at a step. Returns it unchanged when it is already labeled or handled */
+  /**
+   * Labels an error as a failure at a step
+   */
   fail: (step: TStep, error: unknown, options?: StepOptions) => AppError
 }
 
@@ -104,10 +106,9 @@ export type FailureSteps<TStep extends string> = {
  * Tracks the steps of a multi-step flow so any failure reports which step it happened at and how long the
  * flow had been running. Every step follows the same rules:
  *
- * 1. If the error has already been handled, it is left unchanged
- * 2. If the error is already labeled with a step, it is left unchanged
- * 3. With `keepAppError`, an AppError keeps its own code and gains the failure context.
- * 4. Anything else is wrapped with a step, with the error as its cause.
+ * 1. If the error is already labeled with a step, it is left unchanged
+ * 2. If the error is a handled AppError, or an AppError with `keepAppError`, it gains the failure context in place.
+ * 3. Anything else is wrapped with a step, with the error as its cause.
  *
  * @param flow - The name of the flow. ie: quick_login
  * @param options - The definition failures are wrapped in unless a step overrides it
@@ -120,17 +121,15 @@ export const trackFailureSteps = <TStep extends string>(
   const startedAt = Date.now()
 
   const fail = (step: TStep, error: unknown, options: StepOptions = {}): AppError => {
-    if (isHandledAppError(error)) {
-      return error
-    }
-
+    // this has already been labeled, leave it as is
     if (error instanceof AppError && error.context.failure_step !== undefined) {
       return error
     }
 
     const location = { flow, step, startedAt }
 
-    if (options.keepAppError && error instanceof AppError) {
+    // add error context for handled or keepAppError errors
+    if (error instanceof AppError && (error.handled || options.keepAppError)) {
       return addFailureContext(error, location)
     }
 

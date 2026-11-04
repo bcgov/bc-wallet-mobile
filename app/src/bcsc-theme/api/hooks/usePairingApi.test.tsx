@@ -153,7 +153,7 @@ describe('usePairingApi', () => {
       })
     })
 
-    it('rethrows a request error a policy already handled, unchanged', async () => {
+    it('rethrows a request error a policy already handled, still handled, with where it failed added', async () => {
       ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
       const handledError = AppError.fromErrorDefinition(ErrorRegistry.INVALID_PAIRING_CODE, { track: false })
       handledError.handled = true
@@ -162,7 +162,13 @@ describe('usePairingApi', () => {
       const error = await loginFailure()
 
       expect(error).toBe(handledError)
-      expect(error.context.failure_step).toBeUndefined()
+      expect(error.handled).toBe(true)
+      expect(error.appEvent).toBe(ErrorRegistry.INVALID_PAIRING_CODE.appEvent)
+      expect(error.context).toMatchObject({
+        failure_flow: 'pairing',
+        failure_step: 'verify_device_assertion',
+        failure_elapsed_ms: expect.any(Number),
+      })
     })
 
     it('reports a non-AppError at the request step as a device failure', async () => {

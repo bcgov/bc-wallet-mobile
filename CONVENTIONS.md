@@ -209,14 +209,13 @@ alone because starting from the Home card must not turn a skipper into a first-t
 
 ## Error reports: record where and when a flow failed
 
-When a multi-step flow ends in a generic alert, build the error with `createFailureError`
-(`errors/failureContext.ts`) and pass it to the alert. Never call a catch-all alert with no error: the
-report then has no cause and no context, so it cannot say what failed.
+Wrap each step of a multi-step flow with `trackFailureSteps` (`errors/failureContext.ts`), and pass the
+resulting error to the alert. For a single failure outside a flow, use `createFailureError`.
 
-- `flow` and `step` are short, fixed names such as `quick_login` and `sign_jwt`. Never put personal data or
-  tokens in them.
-- Pass `startedAt` when the flow makes network calls: a 90 second failure is a timeout, an instant one isn't.
-- Pass the original error as `cause`. Its message reaches the report as the technical message, and its
-  code (an AppError's code or a native error code) as `failure_cause_code`
-- New context fields only become top-level Loki fields once added to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
+- Never call a catch-all alert without an error, or the report can't say what failed.
+- Name flows and steps with short, fixed names such as `quick_login` and `sign_jwt`. Never put personal data
+  or tokens in them.
+- Errors a policy already handled are labeled but never alerted again. Callers still check
+  `isHandledAppError`.
+- To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
   `report-problem.ts`.

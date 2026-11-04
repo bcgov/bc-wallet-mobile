@@ -116,14 +116,28 @@ describe('trackFailureSteps', () => {
     expect(error.appEvent).toBe(ErrorRegistry.MISSING_JWK_ERROR.appEvent)
   })
 
-  it('returns a handled error unchanged, so callers can skip alerting again', async () => {
+  it('labels a handled error in place, keeping its code and handled flag so callers skip alerting again', async () => {
     const handled = AppError.fromErrorDefinition(ErrorRegistry.INVALID_PAIRING_CODE, { track: false })
     handled.handled = true
 
     const error = await rejection(track().run('first', () => Promise.reject(handled)))
 
     expect(error).toBe(handled)
-    expect(error.context.failure_step).toBeUndefined()
+    expect(error.handled).toBe(true)
+    expect(error.appEvent).toBe(ErrorRegistry.INVALID_PAIRING_CODE.appEvent)
+    expect(error.context).toMatchObject({ failure_flow: 'test_flow', failure_step: 'first' })
+  })
+
+  it('keeps the innermost step of a handled error when steps are nested', async () => {
+    const handled = AppError.fromErrorDefinition(ErrorRegistry.INVALID_PAIRING_CODE, { track: false })
+    handled.handled = true
+    const steps = track()
+
+    const error = await rejection(steps.run('first', () => steps.run('second', () => Promise.reject(handled))))
+
+    expect(error).toBe(handled)
+    expect(error.handled).toBe(true)
+    expect(error.context.failure_step).toBe('second')
   })
 
   it('keeps the innermost step when steps are nested', async () => {

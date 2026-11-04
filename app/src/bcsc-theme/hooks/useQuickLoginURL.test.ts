@@ -299,6 +299,9 @@ describe('useQuickLoginURL', () => {
     const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
 
     expect(result).toEqual({ success: false, handled: true })
+    // Labeled in place, so the report from the alert already shown says where it failed
+    expect(handledError.handled).toBe(true)
+    expect(handledError.context).toMatchObject({ failure_flow: 'quick_login', failure_step: 'account' })
   })
 
   it('should return the quick login URL', async () => {
