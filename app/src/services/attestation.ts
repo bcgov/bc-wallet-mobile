@@ -1,4 +1,4 @@
-import { AttestationRestrictions, Mode, PlayIntegrityCloudProjects } from '@/constants'
+import { AttestationRestrictions, PlayIntegrityCloudProjects } from '@/constants'
 import { getErrorDefinition } from '@/errors'
 import {
   AbstractBifoldLogger,
@@ -29,7 +29,6 @@ import { BCAgent } from '@utils/bc-agent-modules'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
 import { DeviceEventEmitter, EmitterSubscription, Platform } from 'react-native'
-import { Config } from 'react-native-config'
 import { getBuildNumber, getBundleId, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
@@ -660,15 +659,12 @@ export class AttestationMonitor implements AttestationMonitorI {
   }
 
   private commonAttestationMessageComponent() {
+    // `credential_protocol` is deliberately omitted so both build targets follow the
+    // controller's per-environment default, which is v1 until BC Wallet is decommissioned.
     const common: Partial<AttestationRequestParams> = {
       app_version: `${getVersion()}-${getBuildNumber()}`,
       os_version: `${getSystemName()} ${getSystemVersion()}`,
       app_id_hint: getBundleId(),
-    }
-
-    // BC Wallet stays on the controller's default (v1) until it is decommissioned.
-    if (Config.BUILD_TARGET === Mode.BCSC) {
-      common.credential_protocol = 'v2'
     }
 
     return common
