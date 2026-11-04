@@ -198,12 +198,6 @@ jest.mock('@/store', () => ({
     SET_INSTALL_ID: 'bcsc/setInstallId',
     RECORD_APP_LAUNCH_VERSION: 'bcsc/recordAppLaunchVersion',
   },
-  VerificationStatus: {
-    VERIFIED: 'VERIFIED',
-    UNVERIFIED: 'UNVERIFIED',
-    DEACTIVATED: 'DEACTIVATED',
-    IN_PROGRESS: 'IN_PROGRESS',
-  },
 }))
 
 describe('useGetSystemChecks', () => {

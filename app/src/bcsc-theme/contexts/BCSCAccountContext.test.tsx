@@ -1,7 +1,7 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { BCSCSecureState, initialBCSCSecureState, VerificationStatus } from '@/store'
+import { BCSCSecureState, initialBCSCSecureState } from '@/store'
 import { BasicAppContext } from '@mocks/helpers/app'
 import NetInfo, { NetInfoChangeHandler } from '@react-native-community/netinfo'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
@@ -57,7 +57,6 @@ const unverified: BCSCSecureState = { ...initialBCSCSecureState }
 const verified: BCSCSecureState = {
   ...initialBCSCSecureState,
   verified: true,
-  verifiedStatus: VerificationStatus.VERIFIED,
   refreshToken: 'stored-refresh',
 }
 
@@ -65,13 +64,12 @@ const verified: BCSCSecureState = {
 const transferred: BCSCSecureState = {
   ...initialBCSCSecureState,
   refreshToken: 'stored-refresh',
-  verifiedStatus: VerificationStatus.UNVERIFIED,
 }
 
 const deactivatedTransfer: BCSCSecureState = {
   ...initialBCSCSecureState,
   refreshToken: 'stored-refresh',
-  verifiedStatus: VerificationStatus.DEACTIVATED,
+  credentialDeactivated: true,
 }
 
 const renderAccount = (bcscSecure: BCSCSecureState) => {
@@ -294,7 +292,7 @@ describe('BCSCAccountContext', () => {
         appState: 'active',
         connectivity: { isConnected: true, isInternetReachable: null },
         verified: true,
-        verifiedStatus: VerificationStatus.VERIFIED,
+        credentialDeactivated: false,
         hasRefreshToken: true,
       })
       expect(JSON.stringify(tokenNullError.toJSON())).not.toContain('stored-refresh')
@@ -347,7 +345,7 @@ describe('BCSCAccountContext', () => {
       expect(tokenNullError.context.accountLoad).toMatchObject({
         trigger: 'initial',
         verified: false,
-        verifiedStatus: VerificationStatus.UNVERIFIED,
+        credentialDeactivated: false,
         hasRefreshToken: true,
       })
     })

@@ -1,4 +1,4 @@
-import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback } from 'react'
 
@@ -7,10 +7,9 @@ import { useCallback } from 'react'
  * home screen, *preserving* their verification progress so they can resume later — unlike
  * {@link useRestartVerification}, which wipes progress.
  *
- * Moving the verification status out of IN_PROGRESS makes the RootStack render the MainStack instead
- * of the VerifyStack (see RootStack `showVerifyStack`). No verification data is cleared, so the user
- * can pick up where they left off via the home screen's "continue verification" notification (which
- * dispatches IN_PROGRESS again).
+ * Leaving the verify flow makes the RootStack render the MainStack instead of the VerifyStack (see
+ * RootStack `showVerifyStack`). No verification data is cleared, so the user can pick up where they
+ * left off via the home screen's "continue verification" notification (which re-enters the flow).
  *
  * Only a deferred verifier (or developer mode) is offered this exit; see
  * {@link useVerificationExitPolicy} for who gets which way out.
@@ -24,7 +23,7 @@ export const useLeaveVerification = () => {
   return useCallback(
     (onLeave?: () => void) => {
       onLeave?.()
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS, payload: [VerificationStatus.UNVERIFIED] })
+      dispatch({ type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW, payload: [false] })
     },
     [dispatch]
   )

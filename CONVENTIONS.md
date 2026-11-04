@@ -314,7 +314,7 @@ flag that something has to remember to set and clear. The three live together in
   only maps its result to a component.
 - `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
   IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
-  or `selectVerificationState`, never from `bcscSecure.verified`, `verifiedStatus` or the tokens directly.
+  or `selectVerificationState`, never from `bcscSecure.verified`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
