@@ -214,9 +214,14 @@ describe('CodeScanningCamera', () => {
     mockOnCodeScanned.mockReset()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     Platform.OS = originalPlatformOS
     jest.useRealTimers()
+    // The mock camera reports onStarted on a 0 ms timer, which can otherwise land after the test but
+    // before RNTL's cleanup unmounts (it yields via setImmediate); let it land inside act instead.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
   })
 
   it('renders correctly with default props', () => {

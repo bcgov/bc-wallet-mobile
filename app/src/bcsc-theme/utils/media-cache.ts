@@ -17,14 +17,23 @@ export class MediaCache {
    * @returns {*} {Promise<Buffer | null>} - The cached media buffer or null if not cached.
    */
   private async _getCache(logger: BifoldLogger): Promise<Buffer | null> {
-    if (this.cachedMediaPromise) {
-      logger.debug('MediaCache: Awaiting cached media promise')
+    const pendingPromise = this.cachedMediaPromise
 
-      this.cachedMedia = await this.cachedMediaPromise
-      this.cachedMediaPromise = null
+    if (!pendingPromise) {
+      return this.cachedMedia
     }
 
-    return this.cachedMedia
+    logger.debug('MediaCache: Awaiting cached media promise')
+    const media = await pendingPromise
+
+    // clearCache() or setCache() ran while waiting, so this result is stale
+    if (this.cachedMediaPromise !== pendingPromise) {
+      return this.cachedMedia
+    }
+
+    this.cachedMedia = media
+    this.cachedMediaPromise = null
+    return media
   }
 
   /**
@@ -42,6 +51,7 @@ export class MediaCache {
     }
 
     this.cachedMedia = buffer
+    this.cachedMediaPromise = null
   }
 
   /**

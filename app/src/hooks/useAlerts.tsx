@@ -9,10 +9,12 @@ import { ensureAppError, getRegistryAppError, isDeviceStorageFullError } from '@
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
-import { CommonActions, NavigationProp } from '@react-navigation/native'
+import { CommonActions, NavigationProp, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, Platform } from 'react-native'
+
+const ANDROID_STORAGE_SETTINGS_INTENT = 'android.settings.INTERNAL_STORAGE_SETTINGS'
 
 export type AppAlerts = ReturnType<typeof useAlerts>
 type AlertOnPressAction = () => void | Promise<void>
@@ -33,16 +35,22 @@ type AlertOnPressAction = () => void | Promise<void>
  * const alerts = useAlerts(navigation)
  * alerts.unsecuredNetworkAlert() // Shows the unsecured network alert
  *
- * @param navigation - React Navigation prop used for alert-driven navigation actions.
+ * @param navigationProp - Optional React navigation prop used for alert-driven navigation actions.
  * @returns An object containing:
  * - Predefined alert functions for each AppEventCode that can be directly invoked to show the corresponding alert.
  */
-export const useAlerts = (navigation: NavigationProp<any>) => {
+export const useAlerts = (navigationProp?: NavigationProp<any>) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert, emitErrorModal } = useErrorAlert()
+  // TODO (MD): Remove this dependency and inject into the alerts that need it (e.g., setupExpiredAlert, factoryResetErrorModal) to avoid unnecessary coupling.
   const factoryReset = useFactoryReset()
   const { stack } = useBCSCStack()
+
+  // Use the provided navigation prop if available. Otherwise, fall back to the default navigation
+  // TODO (MD): Remove this dependency and inject into the alerts that need it (e.g., liveCallFileUploadAlert, dataUseWarningAlert) to avoid unnecessary coupling.
+  const defaultNavigation = useNavigation<NavigationProp<any>>()
+  const navigation = navigationProp ?? defaultNavigation
 
   // HELPER FUNCTIONS
 
@@ -112,6 +120,39 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     [emitErrorModal, logger, navigation, stack, t]
   )
 
+  const deviceStorageFullAlert = useCallback(
+    (error?: unknown) => {
+      emitErrorModal(
+        t('Alerts.DeviceStorageFull.Title'),
+        t('Alerts.DeviceStorageFull.Description'),
+        ensureAppError(error, AppEventCode.DEVICE_STORAGE_FULL),
+        {
+          action: {
+            text: t('BCSC.Settings.OpenDeviceSettings'),
+            onPress: async () => {
+              try {
+                if (Platform.OS === 'android') {
+                  // On Android we can open the internal storage settings directly
+                  await Linking.sendIntent(ANDROID_STORAGE_SETTINGS_INTENT)
+                  return
+                }
+              } catch (error) {
+                logger.error('[DeviceStorageFullAlert] Failed to open android settings', error as Error)
+              }
+
+              try {
+                await Linking.openSettings()
+              } catch (error) {
+                logger.error('[DeviceStorageFullAlert] Failed to open device settings', error as Error)
+              }
+            },
+          },
+        }
+      )
+    },
+    [emitErrorModal, logger, t]
+  )
+
   /**
    * ERR_100 (storage write failure) normally shows the generic "Something went wrong" copy, but
    * when the underlying cause is the device being out of disk space (e.g. the camera failing
@@ -127,7 +168,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
           ? error
           : getRegistryAppError(AppEventCode.DEVICE_STORAGE_FULL, error)
 
-        emitErrorModal(t('Alerts.DeviceStorageFull.Title'), t('Alerts.DeviceStorageFull.Description'), appError)
+        deviceStorageFullAlert(appError)
         return
       }
 
@@ -137,7 +178,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
         ensureAppError(error, AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE)
       )
     },
-    [emitErrorModal, t]
+    [deviceStorageFullAlert, emitErrorModal, t]
   )
 
   const unknownErrorModal = useCallback(
@@ -308,6 +349,21 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     [emitAlert, t]
   )
 
+  const loginRequestExpiredAlert = useCallback(
+    (onAction: AlertOnPressAction) => {
+      emitAlert(t('Alerts.LoginRequestExpired.Title'), t('Alerts.LoginRequestExpired.Description'), {
+        event: AppEventCode.NOT_FOUND,
+        actions: [
+          {
+            text: t('Global.OK'),
+            onPress: onAction,
+          },
+        ],
+      })
+    },
+    [emitAlert, t]
+  )
+
   return useMemo(
     () =>
       // prettier-ignore
@@ -319,6 +375,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
+      loginRequestExpiredAlert,
       forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
 
       // ERROR MODALS
@@ -355,6 +412,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       clientRegistrationFailureAlert: _createBasicErrorModal(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE, 'SomethingWentWrong'),
       missingJwkAlert: _createBasicErrorModal(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK, 'SomethingWentWrong'),
       jwsVerificationFailedAlert: _createBasicErrorModal(AppEventCode.ERR_112_JWS_VERIFICATION_FAILED, 'SomethingWentWrong'),
+      joseExceptionAlert: _createBasicErrorModal(AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION, 'SomethingWentWrong'),
       failedToGetClaimsSetAlert: _createBasicErrorModal(AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY, 'SomethingWentWrong'),
       failedToSerializeJsonAlert: _createBasicErrorModal(AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON, 'SomethingWentWrong'),
       failedToParseJwsAlert: _createBasicErrorModal(AppEventCode.ERR_117_FAILED_TO_PARSE_JWS, 'SomethingWentWrong'),
@@ -399,6 +457,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       failedToSwitchMediatorAlert: _createBasicErrorModal(AppEventCode.MEDIATOR_SWITCH_ERROR, 'SomethingWentWrong'),
       invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'SomethingWentWrong'),
       registrationKeyNotConfirmedAlert: _createBasicErrorModal(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED, 'SomethingWentWrong'),
+      deviceStorageFullAlert,
     }),
     [
       appUpdateRequiredAlert,
@@ -407,12 +466,14 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
+      loginRequestExpiredAlert,
       _createBasicAlert,
       unknownErrorModal,
       factoryResetErrorModal,
-      failedToWriteToLocalStorageAlert,
       _createBasicErrorModal,
+      failedToWriteToLocalStorageAlert,
       _createProblemWithAccountErrorModal,
+      deviceStorageFullAlert,
     ]
   )
 }

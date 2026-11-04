@@ -1,8 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ServiceHours, VideoDestinations } from '@/bcsc-theme/api/hooks/useVideoCallApi'
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
-import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import { checkFileSystemFreeStorage, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
+import { AppError, ErrorRegistry } from '@/errors'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -11,6 +12,8 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { getLiveCallVideoQueue } from './live-call/utils/videoDestinations'
 import { VerificationVideoCache } from './send-video/VideoReviewScreen'
+
+const MINIMUM_FREE_STORAGE_MB = 500
 
 type useVerificationMethodModelProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationMethodSelection>
@@ -26,7 +29,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
   const { video: videoCallApi } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { ensureVerificationRequest } = useVideoPrompts()
-  const { videoPromptsMissingAlert } = useAlerts(navigation)
+  const { videoPromptsMissingAlert, deviceStorageFullAlert } = useAlerts(navigation)
 
   useEffect(() => {
     Promise.all([videoCallApi.getVideoDestinations(), videoCallApi.getServiceHours()])
@@ -66,6 +69,15 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
 
       dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
 
+      const storage = await checkFileSystemFreeStorage(MINIMUM_FREE_STORAGE_MB, logger)
+
+      if (!storage.hasFreeStorage) {
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.DEVICE_STORAGE_FULL)
+        appError.addContext({ freeStorageMB: storage.freeStorageMb })
+        deviceStorageFullAlert(appError)
+        return
+      }
+
       navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
     } catch (error) {
       logger.error('Error sending video:', error as Error)
@@ -74,14 +86,15 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       setSendVideoLoading(false)
     }
   }, [
+    ensureVerificationRequest,
     store.bcsc.videoPath,
     store.bcsc.photoPath,
     store.bcsc.videoThumbnailPath,
     logger,
     dispatch,
     navigation,
-    ensureVerificationRequest,
     videoPromptsMissingAlert,
+    deviceStorageFullAlert,
   ])
 
   const handlePressLiveCall = useCallback(async () => {

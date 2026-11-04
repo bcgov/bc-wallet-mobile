@@ -212,6 +212,7 @@ const translation = {
     "Toggle": "Toggle Developer Mode",
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
+    "EnableAttestation": "Enable attestation",
     "SwitchTheme": "Switch theme",
     "SelectedMediator": "Selected mediator",
     "MediatorSection": "Mediator",
@@ -1298,6 +1299,13 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible)"
     },
     "VideoCall": {
+      "Controls": {
+        "Mute": "Mute",
+        "Unmute": "Unmute",
+        "HideVideo": "Hide Video",
+        "ShowVideo": "Show Video",
+        "EndCall": "End Call"
+      },
       "MissingSession": "Missing required parameters to end session",
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update",
       "DeviceCodeError": "Missing device or user code",
@@ -1423,6 +1431,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Wallet": {
+      "Title": "Wallet",
       "EmptyMessage": "Your wallet is empty",
       "EmptyLearnMore": "Learn more about the wallet",
       "Reset": "Reset wallet",
@@ -1595,6 +1604,10 @@ const translation = {
     "InvalidPairingCodeSameDevice": {
       "Title": "Invalid Login",
       "Description": "Please try again later. If the problem continues, contact the BC Services Card Help Desk."
+    },
+    "LoginRequestExpired": {
+      "Title": "Login Request Expired",
+      "Description": "This login request has expired or is no longer valid. Please start again from the service."
     },
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent",

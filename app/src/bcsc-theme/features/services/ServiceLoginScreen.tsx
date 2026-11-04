@@ -5,9 +5,9 @@ import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
-import { ErrorRegistry } from '@/errors'
 import { isAppError, isHandledAppError } from '@/errors/appError'
-import { createFailureError } from '@/errors/failureContext'
+import { ErrorRegistry } from '@/errors/errorRegistry'
+import { createFailureError, wrapKeepingFailureContext } from '@/errors/failureContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
@@ -24,7 +24,7 @@ import {
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { ChallengeSource } from 'react-native-bcsc-core'
@@ -84,9 +84,9 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
       <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
         {t('BCSC.Services.PreferOtherDevice')}
       </ThemedText>
-      <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
         <ThemedText>{t('BCSC.Services.Goto')}</ThemedText>
-        <ThemedText selectable={true}>
+        <ThemedText selectable={true} style={{ flexShrink: 1 }}>
           <Link
             linkText={serviceClientUri}
             testID={testIdWithKey(TestIds.main.serviceLogin.serviceClientLink)}
@@ -207,8 +207,6 @@ const ServiceLoginDefaultView = ({
         buttonType={ButtonType.Secondary}
         onPress={onCancel}
       />
-
-      <ReportSuspiciousLink t={t} testID={testIdWithKey(TestIds.main.serviceLogin.reportSuspicious)} />
     </ControlContainer>
   )
 
@@ -240,7 +238,7 @@ const ServiceLoginDefaultView = ({
               marginBottom: Spacing.sm,
             }}
           >
-            <ThemedText style={styles.infoHeader}>{t('BCSC.Services.FromAccount')}</ThemedText>
+            <ThemedText style={[styles.infoHeader, { flexShrink: 1 }]}>{t('BCSC.Services.FromAccount')}</ThemedText>
             <TouchableOpacity
               testID={testIdWithKey(TestIds.main.serviceLogin.help)}
               accessibilityLabel={a11yLabel(t('BCSC.Screens.HelpCentre'))}
@@ -270,6 +268,8 @@ const ServiceLoginDefaultView = ({
           </TouchableOpacity>
         ) : null}
       </View>
+
+      <ReportSuspiciousLink t={t} testID={testIdWithKey(TestIds.main.serviceLogin.reportSuspicious)} />
     </ScreenWrapper>
   )
 }
@@ -300,6 +300,15 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     logger,
   })
   const [isContinueDisabled, setIsContinueDisabled] = useState(false)
+  const latestPairingCode = useRef(state.pairingCode)
+  latestPairingCode.current = state.pairingCode
+
+  const resetToHome = useCallback(() => {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: BCSCStacks.Tab, params: { screen: BCSCScreens.Home } }],
+    })
+  }, [navigation])
 
   const styles = StyleSheet.create({
     cardsContainer: {
@@ -378,6 +387,19 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     } catch (error) {
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
       setIsContinueDisabled(false)
+
+      // An expired or used code returns a 404, which pairingCodeErrorPolicy leaves for the screen to surface.
+      // Checked before isHandledAppError: that policy marks the error handled without showing an alert
+      if (isAppError(error, AppEventCode.NOT_FOUND)) {
+        alerts.loginRequestExpiredAlert(() => {
+          // A newer login can arrive on this same screen while the alert is open, so don't navigate away from it
+          if (navigation.isFocused() && latestPairingCode.current === code) {
+            resetToHome()
+          }
+        })
+        return
+      }
+
       if (isHandledAppError(error)) {
         return
       }
@@ -385,10 +407,11 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       if (isAppError(error, AppEventCode.LOGIN_DEVICE_ERROR)) {
         alerts.loginDeviceErrorAlert(error)
       } else {
-        alerts.loginServerErrorAlert(error)
+        // Wrapped so analytics count it as a login server error, keeping where the flow failed for the report
+        alerts.loginServerErrorAlert(wrapKeepingFailureContext(ErrorRegistry.LOGIN_SERVER_ERROR, error))
       }
     }
-  }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled])
+  }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled, resetToHome])
 
   /**
    * Handles quick login and navigation
@@ -413,10 +436,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 
       try {
         await Linking.openURL(result.url)
-        navigation.reset({
-          index: 0,
-          routes: [{ name: BCSCStacks.Tab, params: { screen: BCSCScreens.Home } }],
-        })
+        resetToHome()
         return
       } catch (error) {
         logger.error('ServiceLoginScreen: Failed to open quick login URL', error as Error)
@@ -433,7 +453,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error.fullMessage}`)
       alerts.loginDeviceErrorAlert(result.error)
     }
-  }, [getQuickLoginURL, logger, state.service, navigation, alerts, t, setIsContinueDisabled])
+  }, [getQuickLoginURL, logger, state.service, alerts, t, setIsContinueDisabled, resetToHome])
 
   const onContinue = useCallback(async () => {
     if (state.pairingCode) {

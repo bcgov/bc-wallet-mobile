@@ -371,20 +371,21 @@ _The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2
 
 ### _Send-video review queue_
 
-_The send-video journeys upload real verification requests to the SIT IDcheck agent queue and review them through the same IDCheck session (`reviewSendVideoRequest`). That queue has **no worklist** — a review claims the_ next _request blindly and then checks it is the expected persona on the expected platform — and it is **shared** with the UAT team. Two things follow:_
+_The send-video journeys upload real verification requests to the SIT IDcheck agent queues and review them through the same IDCheck session (`reviewSendVideoRequest`). The portal has two queues: the **regular** FIFO (the dashboard's "Other Verify Requests", where a cardholder's upload lands) and **Specialist Review** (where a cardless registration lands, and where an agent's "Transfer Request to Specialist" moves anything else). Neither has a **worklist** — a review claims the_ next _request blindly and then checks it is the expected persona on the expected platform — and both are **shared** with the UAT team. Three things follow:_
 
 - _**Never run send-video journeys on two platforms at once.** The personas are shared, so one platform would review (or drain) the other's live upload. CI keeps them out of the concurrent device matrix and runs them in their own_ `send-video` _lane, one platform at a time; a parallel multi-device_ `verify` _/_ `regression` _run drops them automatically (`E2E_EXCLUDE_SEND_VIDEO=1`, with a notice)._
-- _**The queue is drained around every submission.** Each send-video journey rejects whatever is queued before it submits (so its own upload is the head the review claims), and its teardown drains again if the upload was never reviewed. The nightly ends with a_ `queue-hygiene` _job (`e2e-send-video-queue.yml`) that drains once more, so a run that died mid-journey leaves nothing for the morning. Rejections carry the reason "Automated e2e queue cleanup"._
+- _**The queues are drained around every submission.** Each send-video journey drains before it submits (so its own upload is the head the review claims), and its teardown drains again if the upload was never reviewed. The nightly ends with a_ `queue-hygiene` _job (`e2e-send-video-queue.yml`) that drains once more, so a run that died mid-journey leaves nothing for the morning. A drain rejects only the **e2e personas'** requests, with the reason "Automated e2e queue cleanup"._
+- _**Anyone else's request is never rejected.** At the head of the regular queue it is **moved to the Specialist Review queue** (the portal's own transfer, with a note saying the e2e cleanup moved it), where a person reviews it and where it no longer stands in front of the journeys' uploads. At the head of the specialist queue there is nowhere left to move it, so the drain releases it and leaves that queue alone — which holds up only the cardless journey (`send-video-non-bcsc`), whose upload would queue behind it: that journey fails at its pre-submit check with the reason, and runs again once a person has reviewed the request. The scripted reviews do the same when a stranger's request turns up ahead of theirs._
 
 _On demand — locally with the IDCheck credentials above (and an allowlisted egress IP, e.g. the VPN), or from the Actions tab as **Drain send-video queue**:_
 
 ```bash
-yarn queue:drain                 # reject everything queued (scope all)
-yarn queue:drain --scope e2e     # only the e2e personas; stops at the first foreign request
+yarn queue:drain                 # reject the e2e personas' requests; move anyone else's to the specialist queue (scope e2e)
+yarn queue:drain --scope all     # reject EVERYTHING queued — a deliberate manual cleanup, never a default
 yarn queue:drain --dry-run       # log in and report which queues hold work; claims nothing
 ```
 
-_The journeys drain with scope_ `all` _by default (the nightly runs at midnight PT, when anything still queued is stale);_ `E2E_QUEUE_DRAIN_SCOPE=e2e` _keeps a daytime run to the e2e personas so it never touches a UAT tester's pending request._
+_Scope_ `e2e` _is the default everywhere (journeys, nightly, the workflow's inputs);_ `E2E_QUEUE_DRAIN_SCOPE=all` _(or_ `--scope all`_) is the only way to make a run reject requests that are not its own. A moved request keeps everything the tester submitted — the move is the portal's own transfer (reference capture 2026-11-03) — but loses its place in the regular queue, which matters to UAT scenarios meant to be worked from there._
 
 ## _Config Hierarchy_
 

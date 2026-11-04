@@ -29,6 +29,7 @@ export interface Developer {
   remoteDebugging: RemoteDebuggingState
   enableProxy: boolean
   enableAppToAppPersonFlow: boolean
+  enableAttestation: boolean
 }
 
 export interface DismissPersonCredentialOffer {
@@ -110,8 +111,6 @@ export interface BCSCState {
   deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
   hasSeenOnboardingIntro?: boolean
-  showAccountExpiryNotification?: boolean
-  showCardRenewalNotification?: boolean
   acceptedTermsOfUseVersion?: string
   installId?: string // Unique identifier for this app install (not a per-report id); preserved across CLEAR_BCSC
   /** ISO timestamp of the last automatic key-rotation attempt (success or failure), used to
@@ -286,6 +285,7 @@ enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
   TOGGLE_PROXY = 'developer/toggleProxy',
   TOGGLE_APP_TO_APP_PERSON_FLOW = 'developer/toggleAppToAppPersonFlow',
+  TOGGLE_ATTESTATION = 'developer/toggleAttestation',
 }
 
 enum DismissPersonCredentialOfferDispatchAction {
@@ -350,8 +350,6 @@ enum BCSCDispatchAction {
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
   DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
-  SET_ACCOUNT_EXPIRY_NOTIFICATION = 'bcsc/setAccountExpiryNotification',
-  SET_CARD_RENEWAL_NOTIFICATION = 'bcsc/setCardRenewalNotification',
   SET_INSTALL_ID = 'bcsc/setInstallId',
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
   RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
@@ -395,6 +393,7 @@ const developerState: Developer = {
   environment: getInitialEnvironment(),
   remoteDebugging: remoteDebuggingState,
   enableAppToAppPersonFlow: false,
+  enableAttestation: false,
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
@@ -469,6 +468,7 @@ export enum BCLocalStorageKeys {
   RemoteDebugging = 'RemoteDebugging',
   EnableProxy = 'EnableProxy',
   EnableAppToAppPersonFlow = 'EnableAppToAppPersonFlow',
+  EnableAttestation = 'EnableAttestation',
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
   BCSC = 'BCSC',
@@ -555,6 +555,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         BCLocalStorageKeys.EnableAppToAppPersonFlow,
         developer.enableAppToAppPersonFlow
       )
+
+      return { ...state, developer }
+    }
+    case DeveloperDispatchAction.TOGGLE_ATTESTATION: {
+      const enableAttestation: boolean = (action?.payload || []).pop() || false
+      const developer = { ...state.developer, enableAttestation }
+
+      PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.EnableAttestation, developer.enableAttestation)
 
       return { ...state, developer }
     }
@@ -897,22 +905,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCDispatchAction.UPDATE_CREDENTIAL_METADATA: {
       const credentialMetadata = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, credentialMetadata }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION: {
-      const show = ((action?.payload || []).pop() ?? false) as boolean
-      const bcsc = { ...state.bcsc, showAccountExpiryNotification: show }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION: {
-      const show = ((action?.payload || []).pop() ?? false) as boolean
-      const bcsc = { ...state.bcsc, showCardRenewalNotification: show }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

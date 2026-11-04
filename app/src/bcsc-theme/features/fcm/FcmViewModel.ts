@@ -2,7 +2,7 @@ import { Mode } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { toAppError } from '@bcsc-theme/utils/native-error-map'
+import { toDecodeAppError } from '@bcsc-theme/utils/native-error-map'
 import { AbstractBifoldLogger } from '@bifold/core'
 import notifee from '@notifee/react-native'
 import { getApp } from '@react-native-firebase/app'
@@ -63,7 +63,10 @@ export class FcmViewModel {
 
   public initialize() {
     if (this.initialized) {
-      this.logger.info('[FcmViewModel] Already initialized, skipping')
+      this.logger.info('[FcmViewModel] Already initialized, checking for a launch notification')
+      if (this.mode === Mode.BCSC) {
+        void this.initFcmService()
+      }
       return
     }
     this.initialized = true
@@ -80,12 +83,20 @@ export class FcmViewModel {
     // Subscribe BEFORE init so we don't miss any messages
     this.fcmService.subscribe(this.handleMessage.bind(this))
     this.logger.info('[FcmViewModel] Subscribed to FCM service')
-    this.fcmService.init()
+    void this.initFcmService()
     this.logger.info('[FcmViewModel] FCM service initialized')
     // Pre-fetch the server JWK for signature verification (if API client is ready)
     this.fetchServerJwk()
     // Log FCM token for debugging
     this.logFcmToken()
+  }
+
+  private async initFcmService(): Promise<void> {
+    try {
+      await this.fcmService.init()
+    } catch (error) {
+      this.logger.error('[FcmViewModel] Failed to initialize FCM service', error as Error)
+    }
   }
 
   private async logFcmToken(): Promise<void> {
@@ -189,10 +200,13 @@ export class FcmViewModel {
         source: 'fcm',
       })
     } catch (error) {
-      const appError = toAppError(error, ErrorRegistry.CLAIMS_SET_ERROR)
+      // An unusable server key or a verifier that could not run keeps its own code (ERR_111 /
+      // ERR_113) and reaches the user through the handler, as a signature mismatch does above.
+      const appError = toDecodeAppError(error, ErrorRegistry.CLAIMS_SET_ERROR)
       appError.handled = true
       const causeMessage = error instanceof Error ? error.message : String(error)
       this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to decode challenge: ${causeMessage}`, appError)
+      this.onError?.(appError)
     }
   }
 

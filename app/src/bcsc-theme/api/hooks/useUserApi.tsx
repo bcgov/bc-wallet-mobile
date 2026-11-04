@@ -1,5 +1,5 @@
 import { AppError, ErrorRegistry } from '@/errors'
-import { throwAppError } from '@bcsc-theme/utils/native-error-map'
+import { throwDecodeAppError } from '@bcsc-theme/utils/native-error-map'
 import { useCallback, useMemo } from 'react'
 import { decodePayload, DecodePayloadResult } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -48,7 +48,7 @@ const useUserApi = (apiClient: BCSCApiClient) => {
       try {
         result = await decodePayload(data, jwk)
       } catch (error) {
-        return throwAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
+        return throwDecodeAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
       }
 
       if (!result.verified) {

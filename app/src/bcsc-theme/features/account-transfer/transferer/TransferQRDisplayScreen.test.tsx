@@ -73,7 +73,7 @@ describe('TransferQRDisplayScreen', () => {
     jest.useRealTimers()
   })
 
-  it('renders correctly', () => {
+  it('renders correctly', async () => {
     const tree = render(
       <BasicAppContext>
         <TransferQRDisplayScreen />
@@ -81,6 +81,9 @@ describe('TransferQRDisplayScreen', () => {
     )
 
     expect(tree).toMatchSnapshot()
+
+    // Let the initial token creation settle inside act before the test ends
+    await act(async () => {})
   })
 
   it('shows account not found alert when getAccount returns null', async () => {

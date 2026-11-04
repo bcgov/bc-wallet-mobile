@@ -6,12 +6,21 @@ import { decodeCardBarcode, ScanableCode, toDriversLicenseMetadata } from '@/bcs
 import { CardScan, combineCardBarcodes, EMPTY_CARD_SCAN } from '@/bcsc-theme/utils/card-scan'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useTheme,
+} from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native'
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, Mask, Rect } from 'react-native-svg'
 import { useCameraPermission } from 'react-native-vision-camera'
@@ -32,6 +41,8 @@ type ScanSerialScreenProps = {
 type IdCardMaskOverlayProps = {
   width: number
   height: number
+  /** Preview kept visible above and below the card */
+  margin: number
   strokeColor: string
   overlayColor?: string
   overlayOpacity?: number
@@ -98,24 +109,21 @@ const BarcodeGuide: React.FC<BarcodeGuideProps> = ({
 }
 
 /**
- * Full-bleed dark overlay with a vertically-oriented ID-card cutout. Mirrors the
- * look of bifold's `MaskType.ID_CARD` (rounded-rect window + stroke) but stands
- * the card up in portrait orientation and is sized to the camera area rather than
- * the whole window — so the cutout lines up under the navigation header.
+ * Dark overlay with a vertically-oriented ID-card cutout. Mirrors the look of
+ * bifold's `MaskType.ID_CARD` (rounded-rect window + stroke) but stands the card
+ * up in portrait orientation and is sized to the camera area between the
+ * instruction banner and the buttons rather than the whole window.
  */
 const IdCardMaskOverlay: React.FC<IdCardMaskOverlayProps> = ({
   width,
   height,
+  margin,
   strokeColor,
   overlayColor = 'black',
   overlayOpacity = 0.6,
 }) => {
-  // Reserve space for the instruction banner (top) and the torch + manual-entry
-  // button (bottom) so the enlarged card sits cleanly between them.
-  const TOP_RESERVE = 0.18
-  const BOTTOM_RESERVE = 0.24
-  const availTop = height * TOP_RESERVE
-  const availHeight = height * (1 - TOP_RESERVE - BOTTOM_RESERVE)
+  const availTop = margin
+  const availHeight = height - 2 * margin
   // CR-80 ID card ratio (~1.585). bifold uses 1.6 for the landscape card; we
   // invert it (height = width × 1.6) so the card stands vertically. Fill the
   // available area, capped to 82% of the width.
@@ -304,11 +312,9 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       flex: 1,
       backgroundColor: '#000',
     },
+    // The banner and the buttons sit above and below the camera rather than on it, so the help text
+    // at large OS font sizes shrinks the preview instead of covering the card cutout (#4401)
     topBanner: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.lg,
       backgroundColor: ColorPalette.notification.popupOverlay,
@@ -327,11 +333,11 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       fontWeight: '400',
       marginTop: Spacing.sm,
     },
+    cameraArea: {
+      flex: 1,
+      overflow: 'hidden',
+    },
     bottomBar: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
       gap: Spacing.sm,
     },
     torchRow: {
@@ -374,52 +380,71 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
   return (
     <ScreenWrapper padded={false} scrollable={false} edges={[]}>
-      <View style={styles.container} onLayout={onContainerLayout}>
+      <View style={styles.container}>
         {cameraFailed ? (
           <View style={styles.cameraErrorBlock}>
-            <Text style={styles.instructionText}>{t('BCSC.CameraDisclosure.Error')}</Text>
-            <Text style={styles.instructionSubText}>{t('BCSC.CameraDisclosure.ErrorMessage')}</Text>
+            <ThemedText variant={'labelTitle'} style={styles.instructionText}>
+              {t('BCSC.CameraDisclosure.Error')}
+            </ThemedText>
+            <ThemedText variant={'labelSubtitle'} style={styles.instructionSubText}>
+              {t('BCSC.CameraDisclosure.ErrorMessage')}
+            </ThemedText>
           </View>
         ) : (
           <>
-            {/* Camera fills the entire screen */}
-            <CodeScanningCamera
-              key={cameraKey}
-              onCodeScanned={onCodeScanned}
-              cameraType={'back'}
-              initialZoom={2}
-              scanZones={BCSC_SN_SCAN_ZONES}
-              showScanZoneOverlay={false}
-              showZoomIndicator={false}
-              hideTorchButton
-              torchActive={torchOn}
-              onToggleTorch={toggleTorch}
-              onTorchAvailabilityChange={setHasTorch}
-              onError={onCameraError}
-              style={StyleSheet.absoluteFill}
-            />
-
-            {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
-            {size ? <IdCardMaskOverlay width={size.width} height={size.height} strokeColor={frameStrokeColor} /> : null}
-
             {/* Instruction text — initial guidance until the timeout, then steady-hold help */}
-            <View style={styles.topBanner} pointerEvents="none">
+            <View style={styles.topBanner}>
               {showHelp ? (
-                <Text style={styles.instructionText}>{t('BCSC.Scan.HoldSteadyHelp')}</Text>
+                <ThemedText variant={'labelTitle'} style={styles.instructionText}>
+                  {t('BCSC.Scan.HoldSteadyHelp')}
+                </ThemedText>
               ) : (
                 <>
-                  <Text style={styles.instructionText}>{t('BCSC.Scan.ScanYourCard')}</Text>
-                  <Text style={styles.instructionSubText}>{t('BCSC.Scan.LineUpHelp')}</Text>
+                  <ThemedText variant={'labelTitle'} style={styles.instructionText}>
+                    {t('BCSC.Scan.ScanYourCard')}
+                  </ThemedText>
+                  <ThemedText variant={'labelSubtitle'} style={styles.instructionSubText}>
+                    {t('BCSC.Scan.LineUpHelp')}
+                  </ThemedText>
                 </>
               )}
+            </View>
+
+            {/* Camera fills the space between the banner and the buttons */}
+            <View style={styles.cameraArea} onLayout={onContainerLayout}>
+              <CodeScanningCamera
+                key={cameraKey}
+                onCodeScanned={onCodeScanned}
+                cameraType={'back'}
+                initialZoom={2}
+                scanZones={BCSC_SN_SCAN_ZONES}
+                showScanZoneOverlay={false}
+                showZoomIndicator={false}
+                hideTorchButton
+                torchActive={torchOn}
+                onToggleTorch={toggleTorch}
+                onTorchAvailabilityChange={setHasTorch}
+                onError={onCameraError}
+                style={StyleSheet.absoluteFill}
+              />
+
+              {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
+              {size ? (
+                <IdCardMaskOverlay
+                  width={size.width}
+                  height={size.height}
+                  margin={Spacing.lg}
+                  strokeColor={frameStrokeColor}
+                />
+              ) : null}
             </View>
           </>
         )}
 
         {/* Torch + manual entry */}
-        <View style={styles.bottomBar} pointerEvents="box-none">
+        <View style={styles.bottomBar}>
           {cameraFailed || !hasTorch ? null : (
-            <View style={styles.torchRow} pointerEvents="box-none">
+            <View style={styles.torchRow}>
               <TorchButton active={torchOn} onPress={toggleTorch} />
             </View>
           )}

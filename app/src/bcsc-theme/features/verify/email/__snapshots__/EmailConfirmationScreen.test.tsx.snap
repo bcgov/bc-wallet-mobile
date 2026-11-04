@@ -148,7 +148,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
               }
             >
               <Text
-                maxFontSizeMultiplier={2}
+                maxFontSizeMultiplier={1}
                 onLayout={[Function]}
                 style={
                   [
@@ -184,7 +184,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 }
               />
               <Text
-                maxFontSizeMultiplier={2}
+                maxFontSizeMultiplier={1}
                 onLayout={[Function]}
                 style={
                   [
@@ -220,7 +220,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 }
               />
               <Text
-                maxFontSizeMultiplier={2}
+                maxFontSizeMultiplier={1}
                 onLayout={[Function]}
                 style={
                   [
@@ -256,7 +256,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 }
               />
               <Text
-                maxFontSizeMultiplier={2}
+                maxFontSizeMultiplier={1}
                 style={
                   [
                     {
@@ -277,7 +277,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 –
               </Text>
               <Text
-                maxFontSizeMultiplier={2}
+                maxFontSizeMultiplier={1}
                 onLayout={[Function]}
                 style={
                   [
@@ -313,7 +313,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 }
               />
               <Text
-                maxFontSizeMultiplier={2}
+                maxFontSizeMultiplier={1}
                 onLayout={[Function]}
                 style={
                   [
@@ -349,7 +349,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 }
               />
               <Text
-                maxFontSizeMultiplier={2}
+                maxFontSizeMultiplier={1}
                 onLayout={[Function]}
                 style={
                   [

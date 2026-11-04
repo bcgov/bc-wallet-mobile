@@ -67,6 +67,7 @@ exports[`VideoReview renders correctly 1`] = `
         <RCTVideo
           audioOutput="speaker"
           disableAudioSessionManagement={true}
+          onVideoError={[Function]}
           onVideoLoad={[Function]}
           paused={false}
           repeat={true}
@@ -241,7 +242,7 @@ exports[`VideoReview renders correctly 1`] = `
             {
               "busy": undefined,
               "checked": undefined,
-              "disabled": false,
+              "disabled": true,
               "expanded": undefined,
               "selected": undefined,
             }
@@ -256,7 +257,7 @@ exports[`VideoReview renders correctly 1`] = `
           }
           accessible={true}
           collapsable={false}
-          focusable={true}
+          focusable={false}
           onClick={[Function]}
           onResponderGrant={[Function]}
           onResponderMove={[Function]}
@@ -266,7 +267,7 @@ exports[`VideoReview renders correctly 1`] = `
           onStartShouldSetResponder={[Function]}
           style={
             {
-              "backgroundColor": "#003366",
+              "backgroundColor": "#757575",
               "borderRadius": 4,
               "opacity": 1,
               "padding": 16,
@@ -283,6 +284,52 @@ exports[`VideoReview renders correctly 1`] = `
               }
             }
           >
+            <View
+              style={
+                {
+                  "marginRight": 8,
+                }
+              }
+              testID="com.ariesbifold:id/ButtonLoading"
+            >
+              <View
+                collapsable={false}
+                style={
+                  {
+                    "transform": [
+                      {
+                        "rotate": "0deg",
+                      },
+                    ],
+                  }
+                }
+              >
+                <Text
+                  allowFontScaling={false}
+                  selectable={false}
+                  style={
+                    [
+                      {
+                        "color": undefined,
+                        "fontSize": 24,
+                      },
+                      {
+                        "color": "#FFFFFF",
+                      },
+                      {
+                        "fontFamily": "Material Design Icons",
+                        "fontStyle": "normal",
+                        "fontWeight": "normal",
+                      },
+                      {},
+                    ]
+                  }
+                  testID="com.ariesbifold:id/Loading"
+                >
+                  󰑐
+                </Text>
+              </View>
+            </View>
             <Text
               maxFontSizeMultiplier={2}
               style={
@@ -301,7 +348,13 @@ exports[`VideoReview renders correctly 1`] = `
                       "fontWeight": "bold",
                       "textAlign": "center",
                     },
-                    false,
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
                     false,
                   ],
                 ]

@@ -10,16 +10,24 @@ import {
   BCSCQRCoreTabParams,
   BCSCScreens,
 } from '@/bcsc-theme/types/navigators'
-import { HelpCentreUrl } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useDefaultStackOptions,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
@@ -68,7 +76,8 @@ const createTabBarIcon = (label: string, iconName: string) => {
           color={focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
         />
         {showLabels && (
-          <Text
+          <ThemedText
+            variant={'labelSubtitle'}
             style={{
               ...TabTheme.tabBarTextStyle,
               color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
@@ -76,7 +85,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
             }}
           >
             {label}
-          </Text>
+          </ThemedText>
         )}
       </View>
     )
@@ -87,13 +96,15 @@ const createTabBarIcon = (label: string, iconName: string) => {
 
 const QRCoreStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCQRCoreTabParams>()
-  const { TabTheme } = useTheme()
+  const theme = useTheme()
+  const { TabTheme } = theme
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { isActivelyVerified, isExpired } = useCardStatus()
   const { isAvailable: isServerAvailable } = useServerStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
+  const defaultStackOptions = useDefaultStackOptions(theme)
 
   const styles = StyleSheet.create({
     tabBarIcon: {
@@ -143,6 +154,10 @@ const QRCoreStack: React.FC = () => {
           },
         })}
         screenOptions={{
+          // Bifold's defaults supply the header title: capped at the theme font ceiling and shrunk to fit
+          // on one line. Without them the tab header falls back to React Navigation's own title, which
+          // follows the raw OS font scale and is cut off at large sizes.
+          ...defaultStackOptions,
           unmountOnBlur: false,
           lazy: true,
           tabBarStyle: TabTheme.tabBarStyle,
@@ -153,6 +168,7 @@ const QRCoreStack: React.FC = () => {
           headerShadowVisible: true,
           header: createTabHeader,
           headerTitleAlign: 'center',
+          headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
           headerLeft: createQRBackButton(),
         }}
       >

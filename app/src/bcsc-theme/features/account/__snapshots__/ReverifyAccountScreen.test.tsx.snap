@@ -114,7 +114,7 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
             <View
               style={
                 {
-                  "height": undefined,
+                  "height": 48,
                   "justifyContent": "center",
                   "marginHorizontal": 8,
                 }
@@ -178,7 +178,7 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
             <View
               style={
                 {
-                  "height": undefined,
+                  "height": 48,
                   "justifyContent": "center",
                   "marginHorizontal": 8,
                 }
@@ -242,7 +242,7 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
             <View
               style={
                 {
-                  "height": undefined,
+                  "height": 48,
                   "justifyContent": "center",
                   "marginHorizontal": 8,
                 }
@@ -306,7 +306,7 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
             <View
               style={
                 {
-                  "height": undefined,
+                  "height": 48,
                   "justifyContent": "center",
                   "marginHorizontal": 8,
                 }
@@ -562,7 +562,7 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
             <View
               style={
                 {
-                  "height": undefined,
+                  "height": 48,
                   "justifyContent": "center",
                   "marginHorizontal": 8,
                 }
@@ -626,7 +626,7 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
             <View
               style={
                 {
-                  "height": undefined,
+                  "height": 48,
                   "justifyContent": "center",
                   "marginHorizontal": 8,
                 }
@@ -690,7 +690,7 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
             <View
               style={
                 {
-                  "height": undefined,
+                  "height": 48,
                   "justifyContent": "center",
                   "marginHorizontal": 8,
                 }
@@ -754,7 +754,7 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
             <View
               style={
                 {
-                  "height": undefined,
+                  "height": 48,
                   "justifyContent": "center",
                   "marginHorizontal": 8,
                 }

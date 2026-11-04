@@ -37,7 +37,7 @@ const createContactListSeparator = (backgroundColor: ColorValue) => {
  */
 const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
   const { t } = useTranslation()
-  const { Spacing, ColorPalette } = useTheme()
+  const { Spacing, ColorPalette, maxFontSizeMultiplier } = useTheme()
   const { records: connectionRecords } = useConnections()
   const [store] = useStore()
   const [query, setQuery] = useState('')
@@ -146,6 +146,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
       <View style={styles.searchContainer}>
         <Icon name="search" size={20} color={ColorPalette.brand.primary} />
         <TextInput
+          maxFontSizeMultiplier={maxFontSizeMultiplier}
           style={styles.searchInput}
           value={query}
           onChangeText={setQuery}

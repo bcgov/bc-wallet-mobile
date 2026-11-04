@@ -1504,7 +1504,8 @@ class BcscCore: NSObject {
   ///   - key: Optional JWK public key used to verify the inner JWS signature. When omitted,
   ///     `verified` is `false` and the claims are still returned (the caller gates on `verified`).
   ///   - resolve: A `["verified": Bool, "claims": String]` map; `claims` is the decoded payload JSON string.
-  ///   - reject: An error if the JWE cannot be parsed/decrypted or the payload cannot be decoded.
+  ///   - reject: An error if the JWE cannot be parsed/decrypted, the payload cannot be decoded, or the
+  ///     key cannot verify it (E_INVALID_JWK, E_JWS_VERIFY_ERROR).
   func decodePayload(
     _ jweString: String, key: NSDictionary?,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -1550,9 +1551,10 @@ class BcscCore: NSObject {
         return
       }
 
-      // Parse the inner JWS and verify its signature. `verified` is a flag (never throws); the
-      // caller decides what to do when it is false. A malformed inner token maps to
-      // E_FAILED_TO_PARSE_JWS, distinct from the outer decrypt/parse failure handled by the catch.
+      // Parse the inner JWS and verify its signature. `verified` is false only for a missing key or
+      // a signature mismatch; an unusable key or a verifier that cannot run has already rejected.
+      // A malformed inner token maps to E_FAILED_TO_PARSE_JWS, distinct from the outer
+      // decrypt/parse failure handled by the catch.
       let jws: JWS
       do {
         jws = try JWS.parse(s: payload)
@@ -1560,7 +1562,9 @@ class BcscCore: NSObject {
         reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", error)
         return
       }
-      let verified = verifyJws(jws, key: key)
+      guard let verified = verifySignatureOrReject(jws, key: key, context: diagnostics, reject: reject) else {
+        return
+      }
 
       // Decode the claims segment (base64url) into the raw JSON string
       var base64String = segments[1]
@@ -1614,7 +1618,8 @@ class BcscCore: NSObject {
   ///   - jwt: The JWT string containing the login challenge.
   ///   - key: Optional JWK public key for signature verification.
   ///   - resolve: Returns LoginChallengeResult with verified status and decoded claims.
-  ///   - reject: An error if the JWT cannot be parsed.
+  ///   - reject: An error if the JWT cannot be parsed or the key cannot verify it (E_INVALID_JWK,
+  ///     E_JWS_VERIFY_ERROR).
   func decodeLoginChallenge(
     _ jwt: String, key: NSDictionary?,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -1648,8 +1653,10 @@ class BcscCore: NSObject {
         return
       }
 
-      // 3. Verify signature if key is provided
-      let verified = verifyJws(jws, key: key)
+      // 3. Verify the signature if a key is provided; an unusable key has already rejected
+      guard let verified = verifySignatureOrReject(jws, key: key, context: "", reject: reject) else {
+        return
+      }
 
       // 4. Build claims response
       let claims: [String: Any] = [
@@ -1678,17 +1685,42 @@ class BcscCore: NSObject {
 
   /// Verifies a JWS signature against an optional JWK public key.
   ///
-  /// Returns `false` when no key is provided, the JWK is invalid/unconvertible, or verification
-  /// fails. This never throws — an absent or failed verification is represented as `false`, not an
-  /// error, so callers can gate on the result (e.g. distinguish a missing key from a bad signature).
-  private func verifyJws(_ jws: JWS, key: NSDictionary?) -> Bool {
-    guard let keyDict = key, let jwk = JWK(json: keyDict),
-          let secKey = JWK.jwkToSecKey(jwk: jwk)
-    else {
+  /// `false` means no key was provided or the signature does not match, nothing else: a JWK that
+  /// cannot become a key rejects with E_INVALID_JWK and a verifier that cannot run (unsupported
+  /// alg) rejects with E_JWS_VERIFY_ERROR, both returning nil so the caller stops.
+  private func verifySignatureOrReject(
+    _ jws: JWS, key: NSDictionary?, context: String, reject: @escaping RCTPromiseRejectBlock
+  ) -> Bool? {
+    guard let keyDict = key else {
       return false
     }
-    let verifier = RSAVerifier(rsaKey: secKey)
-    return (try? jws.verify(verifier: verifier)) ?? false
+    let kid = keyDict["kid"] as? String ?? "?"
+    let alg = keyDict["alg"] as? String ?? "?"
+    let kty = keyDict["kty"] as? String ?? "?"
+    let secKey: SecKey
+    do {
+      guard let jwk = JWK(json: keyDict) else {
+        throw JWKError.missingFields(kid: kid)
+      }
+      secKey = try JWK.jwkToSecKey(jwk: jwk)
+    } catch {
+      reject(
+        "E_INVALID_JWK",
+        "Unusable JWK for signature verification (kid=\(kid), alg=\(alg), kty=\(kty)): \(errorMessage(error)) \(context)",
+        error
+      )
+      return nil
+    }
+    do {
+      return try jws.verify(verifier: RSAVerifier(rsaKey: secKey))
+    } catch {
+      reject(
+        "E_JWS_VERIFY_ERROR",
+        "JWS verification could not run (alg=\(jws.header.alg.name)): \(errorMessage(error)) \(context)",
+        error
+      )
+      return nil
+    }
   }
 
   /// Creates a quick login JWT assertion matching the format used in ias-ios app.
@@ -1726,9 +1758,12 @@ class BcscCore: NSObject {
       return
     }
 
-    // Convert JWK to SecKey
-    guard let publicKey = JWK.jwkToSecKey(jwk: jwk) else {
-      reject("E_JWK_TO_SECKEY_FAILED", "Failed to convert JWK to SecKey", nil)
+    // Build the in-memory encryption key from the JWK
+    let publicKey: SecKey
+    do {
+      publicKey = try JWK.jwkToSecKey(jwk: jwk)
+    } catch {
+      reject("E_INVALID_JWK", "Unusable JWK for quick login encryption: \(errorMessage(error))", error)
       return
     }
 
@@ -3888,6 +3923,14 @@ class BcscCore: NSObject {
     // iOS doesn't provide a public API to open the keyboard selector
     // resolve immediately
     logger.log("openKeyboardSelector: Unsupported on iOS")
+    resolve(nil)
+  }
+
+  func moveAppToBackground(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    // iOS doesn't provide a public API to background the app
+    logger.log("moveAppToBackground: Unsupported on iOS")
     resolve(nil)
   }
 
