@@ -2351,7 +2351,7 @@ __metadata:
 
 "@credo-ts/didcomm@patch:@credo-ts/didcomm@npm%3A0.7.0#~/.yarn/patches/@credo-ts-didcomm-npm-0.7.0-e7c274e2fd.patch":
   version: 0.7.0
-  resolution: "@credo-ts/didcomm@patch:@credo-ts/didcomm@npm%3A0.7.0#~/.yarn/patches/@credo-ts-didcomm-npm-0.7.0-e7c274e2fd.patch::version=0.7.0&hash=293e77"
+  resolution: "@credo-ts/didcomm@patch:@credo-ts/didcomm@npm%3A0.7.0#~/.yarn/patches/@credo-ts-didcomm-npm-0.7.0-e7c274e2fd.patch::version=0.7.0&hash=59cf60"
   dependencies:
     "@credo-ts/core": "npm:0.7.0"
     class-transformer: "npm:0.5.1"
@@ -2359,7 +2359,7 @@ __metadata:
     luxon: "npm:^3.7.2"
     query-string: "npm:^9.3.1"
     rxjs: "npm:^7.8.2"
-  checksum: 10c0/a515b166771aec2e0834a85fa17f2eeea6ffffbb895f4cc2e39bb088a741ad21c4906ee3e35a9efae5f08959cff1ee3c9ffba1692803b6cc5a220f6ed7b16794
+  checksum: 10c0/3f628bf5341436f2b66837a0a41b506948defebe824239fd9dab1a2c6a6dcbe0a551c2e517d8964e8ee7ded03756532470f117d91138a8fe6134e998c683a0a9
   languageName: node
   linkType: hard
 
