@@ -12,6 +12,7 @@ import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { AxiosError } from 'axios'
 import React from 'react'
 import { Alert, Linking } from 'react-native'
 import { ChallengeSource } from 'react-native-bcsc-core'
@@ -342,7 +343,7 @@ describe('ServiceLogin', () => {
       await waitFor(() => expect(mockLoginServerErrorAlert).not.toHaveBeenCalled())
     })
 
-    it('should show loginServerErrorAlert when pairing code error is not handled', async () => {
+    it('should report an unhandled non-HTTP pairing error as a device failure', async () => {
       const mockLoginServerErrorAlert = jest.fn()
       const tree = renderWithPairingCode(jest.fn().mockRejectedValue(new Error('unexpected failure')), {
         loginServerErrorAlert: mockLoginServerErrorAlert,
@@ -353,9 +354,29 @@ describe('ServiceLogin', () => {
       await waitFor(() =>
         expect(mockLoginServerErrorAlert).toHaveBeenCalledWith(
           expect.objectContaining({
+            appEvent: AppEventCode.LOGIN_DEVICE_ERROR,
             technicalMessage: 'unexpected failure',
             context: expect.objectContaining({ failure_flow: 'pairing', failure_step: 'login_by_pairing_code' }),
           })
+        )
+      )
+    })
+
+    it('should report an unhandled HTTP pairing error as a server failure', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      const httpError = new AppError(
+        'server error',
+        { category: ErrorCategory.NETWORK, appEvent: AppEventCode.SERVER_ERROR, statusCode: 2101 },
+        { cause: new AxiosError('Request failed with status code 502', 'ERR_BAD_RESPONSE'), track: false }
+      )
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(httpError), {
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      })
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+      await waitFor(() =>
+        expect(mockLoginServerErrorAlert).toHaveBeenCalledWith(
+          expect.objectContaining({ appEvent: AppEventCode.LOGIN_SERVER_ERROR, cause: httpError })
         )
       )
     })
@@ -429,7 +450,7 @@ describe('ServiceLogin', () => {
       const mockOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined)
       const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: true, url: quickLoginUrl })
 
-      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: jest.fn() })
+      const tree = renderWithService(mockGetQuickLoginURL, { loginDeviceErrorAlert: jest.fn() })
 
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
 
@@ -439,34 +460,34 @@ describe('ServiceLogin', () => {
       mockOpenURL.mockRestore()
     })
 
-    it('should show loginServerErrorAlert when quick login URL generation fails', async () => {
-      const mockLoginServerErrorAlert = jest.fn()
+    it('should show loginDeviceErrorAlert when quick login URL generation fails', async () => {
+      const mockLoginDeviceErrorAlert = jest.fn()
       const quickLoginError = new AppError(
         'test error',
-        { category: ErrorCategory.AUTHENTICATION, appEvent: AppEventCode.LOGIN_SERVER_ERROR, statusCode: 2204 },
+        { category: ErrorCategory.AUTHENTICATION, appEvent: AppEventCode.LOGIN_DEVICE_ERROR, statusCode: 2211 },
         { track: false }
       )
       const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: false, error: quickLoginError })
 
-      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: mockLoginServerErrorAlert })
+      const tree = renderWithService(mockGetQuickLoginURL, { loginDeviceErrorAlert: mockLoginDeviceErrorAlert })
 
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
 
-      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalledWith(quickLoginError))
+      await waitFor(() => expect(mockLoginDeviceErrorAlert).toHaveBeenCalledWith(quickLoginError))
     })
 
     it('should re-enable Continue without a second alert when the failure was already handled', async () => {
-      const mockLoginServerErrorAlert = jest.fn()
+      const mockLoginDeviceErrorAlert = jest.fn()
       const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: false, handled: true })
 
-      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: mockLoginServerErrorAlert })
+      const tree = renderWithService(mockGetQuickLoginURL, { loginDeviceErrorAlert: mockLoginDeviceErrorAlert })
 
       const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
       fireEvent.press(continueButton)
 
       await waitFor(() => expect(continueButton).toBeEnabled())
       expect(mockGetQuickLoginURL).toHaveBeenCalledTimes(1)
-      expect(mockLoginServerErrorAlert).not.toHaveBeenCalled()
+      expect(mockLoginDeviceErrorAlert).not.toHaveBeenCalled()
 
       // A second tap goes through, proving the button is usable again
       fireEvent.press(continueButton)
@@ -479,7 +500,7 @@ describe('ServiceLogin', () => {
       const mockAlert = jest.spyOn(Alert, 'alert').mockImplementation()
       const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: true, url: quickLoginUrl })
 
-      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: jest.fn() })
+      const tree = renderWithService(mockGetQuickLoginURL, { loginDeviceErrorAlert: jest.fn() })
 
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
 
@@ -492,10 +513,10 @@ describe('ServiceLogin', () => {
   })
 
   describe('onContinue fallback', () => {
-    it('shows loginServerErrorAlert when no service or pairing code is available', async () => {
-      const mockLoginServerErrorAlert = jest.fn()
+    it('shows loginDeviceErrorAlert when no service or pairing code is available', async () => {
+      const mockLoginDeviceErrorAlert = jest.fn()
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({
-        loginServerErrorAlert: mockLoginServerErrorAlert,
+        loginDeviceErrorAlert: mockLoginDeviceErrorAlert,
       } as any)
       mockedUseServiceLoginState.mockReturnValue({
         state: {
@@ -509,7 +530,7 @@ describe('ServiceLogin', () => {
       const tree = renderScreen(mockNavigation)
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
 
-      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+      await waitFor(() => expect(mockLoginDeviceErrorAlert).toHaveBeenCalled())
     })
   })
 

@@ -137,6 +137,12 @@ describe('useAlerts', () => {
       AppEventCode.LOGIN_SERVER_ERROR,
     ],
     [
+      'loginDeviceErrorAlert',
+      'Alerts.ProblemWithLogin.Title',
+      'Alerts.ProblemWithLogin.Description',
+      AppEventCode.LOGIN_DEVICE_ERROR,
+    ],
+    [
       'problemWithLoginAlert',
       'Alerts.ProblemWithLogin.Title',
       'Alerts.ProblemWithLogin.Description',

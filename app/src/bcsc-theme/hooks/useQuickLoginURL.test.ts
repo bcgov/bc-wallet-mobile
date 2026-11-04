@@ -21,7 +21,7 @@ jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
 jest.mock('@bcsc-theme/utils/push-notification-tokens')
 jest.mock('@/hooks/useAlerts')
 
-const failure = (step: string, technicalMessage: string, appEvent = AppEventCode.LOGIN_SERVER_ERROR) =>
+const failure = (step: string, technicalMessage: string, appEvent = AppEventCode.LOGIN_DEVICE_ERROR) =>
   expect.objectContaining({
     appEvent,
     technicalMessage: expect.stringContaining(technicalMessage),
