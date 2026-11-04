@@ -226,7 +226,8 @@ describe('FcmViewModel', () => {
       expect(showLocalNotification).not.toHaveBeenCalled()
     })
 
-    it('does not re-show a status notification the OS already presented', async () => {
+    // Tray taps and cold starts arrive with no delivery context: the OS has already shown the notification.
+    it('does not re-show a status notification opened from the tray (no delivery context)', async () => {
       const message = {
         type: 'status',
         data: {
@@ -244,6 +245,7 @@ describe('FcmViewModel', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Status notification received'))
       expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(notifee.displayNotification).not.toHaveBeenCalled()
     })
 
     it('routes notification messages to handleGenericNotification', async () => {
@@ -483,6 +485,40 @@ describe('FcmViewModel', () => {
         expect.anything()
       )
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['E_INVALID_JWK', AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK],
+      ['E_JWS_VERIFY_ERROR', AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION],
+    ])('surfaces a %s rejection to the error handler with its own code', async (code, appEvent) => {
+      const mockErrorHandler = jest.fn()
+      viewModel.setErrorHandler(mockErrorHandler)
+      const nativeError = Object.assign(new Error('verifier failure'), { code })
+      ;(decodeLoginChallenge as jest.Mock).mockRejectedValue(nativeError)
+
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'challenge-jwt' } } as FcmMessage)
+
+      expect(mockErrorHandler).toHaveBeenCalledTimes(1)
+      const error = mockErrorHandler.mock.calls[0][0]
+      expect(error).toBeInstanceOf(AppError)
+      expect(error.appEvent).toBe(appEvent)
+      expect(error.cause).toBe(nativeError)
+      expect(error.handled).toBe(true)
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(appEvent), error)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+    })
+
+    it('surfaces any other decode failure to the error handler as ERR_114', async () => {
+      const mockErrorHandler = jest.fn()
+      viewModel.setErrorHandler(mockErrorHandler)
+      ;(decodeLoginChallenge as jest.Mock).mockRejectedValue(new Error('Invalid JWT'))
+
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'invalid-jwt' } } as FcmMessage)
+
+      expect(mockErrorHandler).toHaveBeenCalledTimes(1)
+      expect(mockErrorHandler.mock.calls[0][0].appEvent).toBe(
+        AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY
+      )
     })
   })
 

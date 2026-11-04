@@ -239,3 +239,22 @@ store or account change.
 startup and cleared by hand, so a failed account load or a missed reset left a stale renewal notice (#4866, #4878).
 
 How to apply this to other state: [`docs/guides/derived-state-refactor.md`](docs/guides/derived-state-refactor.md).
+
+## Server keys: build them in memory, never in the keychain
+
+A server public key (the JWKS entry that verifies the ID token, user info and login challenge, and
+encrypts the quick-login hint) becomes an in-memory key: `JWK.jwkToSecKey` → `SecKeyCreateWithData` on
+iOS, `convertJWKToRSAPublicKey` → `KeyFactory` on Android. Never store it as a keychain or keystore
+item. In `decodePayload` and `decodeLoginChallenge`, `verified: false` means exactly "no key supplied" or
+"signature mismatch" (which includes a signature of another key size, on both platforms); a JWK that
+cannot become a key rejects with `E_INVALID_JWK`, a verifier that cannot run (unsupported `alg`, a
+`SecKeyRawVerify` status other than a mismatch) rejects with `E_JWS_VERIFY_ERROR`, and both messages name
+kid/alg/kty only, never key material. iOS `JWK(json:)` requires kid/alg/kty/n/e while Android needs
+kty/n/e; a JWKS entry has all of them. On the JS side, wrap a decode rejection with `toDecodeAppError`
+(`native-error-map.ts`): those two codes keep their own definitions (ERR_111, ERR_113) and every other
+rejection takes the caller's, so the FCM, user-info and ID-token paths all surface them.
+
+**Why:** iOS used to write the server key into the keychain under `com.mcsi.op.<kid>` and read it back
+before every signature check; any failure of that round trip returned `false`, which the app reported as
+error 2509 "signature does not match payload" with nothing to investigate. Verifying a signature needs no
+keychain, and the rejection codes let the next problem report explain itself.

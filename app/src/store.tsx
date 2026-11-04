@@ -29,6 +29,7 @@ export interface Developer {
   remoteDebugging: RemoteDebuggingState
   enableProxy: boolean
   enableAppToAppPersonFlow: boolean
+  enableAttestation: boolean
 }
 
 export interface DismissPersonCredentialOffer {
@@ -284,6 +285,7 @@ enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
   TOGGLE_PROXY = 'developer/toggleProxy',
   TOGGLE_APP_TO_APP_PERSON_FLOW = 'developer/toggleAppToAppPersonFlow',
+  TOGGLE_ATTESTATION = 'developer/toggleAttestation',
 }
 
 enum DismissPersonCredentialOfferDispatchAction {
@@ -391,6 +393,7 @@ const developerState: Developer = {
   environment: getInitialEnvironment(),
   remoteDebugging: remoteDebuggingState,
   enableAppToAppPersonFlow: false,
+  enableAttestation: false,
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
@@ -465,6 +468,7 @@ export enum BCLocalStorageKeys {
   RemoteDebugging = 'RemoteDebugging',
   EnableProxy = 'EnableProxy',
   EnableAppToAppPersonFlow = 'EnableAppToAppPersonFlow',
+  EnableAttestation = 'EnableAttestation',
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
   BCSC = 'BCSC',
@@ -551,6 +555,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         BCLocalStorageKeys.EnableAppToAppPersonFlow,
         developer.enableAppToAppPersonFlow
       )
+
+      return { ...state, developer }
+    }
+    case DeveloperDispatchAction.TOGGLE_ATTESTATION: {
+      const enableAttestation: boolean = (action?.payload || []).pop() || false
+      const developer = { ...state.developer, enableAttestation }
+
+      PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.EnableAttestation, developer.enableAttestation)
 
       return { ...state, developer }
     }

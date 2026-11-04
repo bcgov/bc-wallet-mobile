@@ -113,6 +113,35 @@ describe('useUserApi', () => {
       })
     })
 
+    it.each([
+      ['E_INVALID_JWK', AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK],
+      ['E_JWS_VERIFY_ERROR', AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION],
+    ])('should keep the verifier code %s instead of wrapping it as ERR_110', async (code, appEvent) => {
+      const decodePayloadMock = jest.mocked(BcscCore).decodePayload
+      const getAccountMock = jest.mocked(BcscCore).getAccount
+
+      const mockApiClient = {
+        get: jest.fn(),
+        fetchJwk: jest.fn().mockResolvedValue(mockJwk),
+        endpoints: {
+          userInfo: '/user/info',
+        },
+      }
+
+      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
+      const nativeError = Object.assign(new Error('verifier failure'), { code })
+      decodePayloadMock.mockRejectedValue(nativeError)
+
+      const hook = renderHook(() => useUserApi(mockApiClient as any))
+
+      await act(async () => {
+        await expect(hook.result.current.getUserInfo()).rejects.toThrow(
+          expect.objectContaining({ appEvent, cause: nativeError })
+        )
+      })
+    })
+
     it('should throw ERR_114 when decoded payload is null', async () => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
       const getAccountMock = jest.mocked(BcscCore).getAccount

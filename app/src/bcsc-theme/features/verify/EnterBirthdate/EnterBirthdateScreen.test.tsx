@@ -1,8 +1,9 @@
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
+import * as viewModel from './useEnterBirthdateViewModel'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 
@@ -77,7 +78,7 @@ describe('EnterBirthdate', () => {
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
-  it('allows Continue button after a valid date is typed', () => {
+  it('goes back when no serial is stored', () => {
     const { getByTestId } = renderScreen(mockNavigation as never)
 
     const input = getByTestId('com.ariesbifold:id/birthDate-input')
@@ -86,7 +87,26 @@ describe('EnterBirthdate', () => {
     const continueButton = getByTestId('com.ariesbifold:id/Continue')
     fireEvent.press(continueButton)
 
-    // handleSubmit runs — since vm.serial is undefined in test, it calls goBack
     expect(mockNavigation.goBack).toHaveBeenCalled()
+  })
+
+  it('authorizes the stored serial with the typed date after a valid date is typed', async () => {
+    const authorizeDevice = jest.fn().mockResolvedValue(undefined)
+    const actualUseViewModel = viewModel.useEnterBirthdateViewModel
+    const spy = jest
+      .spyOn(viewModel, 'useEnterBirthdateViewModel')
+      .mockImplementation((navigation) => ({ ...actualUseViewModel(navigation), serial: 'S12345678', authorizeDevice }))
+
+    try {
+      const { getByTestId } = renderScreen(mockNavigation as never)
+
+      fireEvent.changeText(getByTestId('com.ariesbifold:id/birthDate-input'), '1990/06/15')
+      fireEvent.press(getByTestId('com.ariesbifold:id/Continue'))
+
+      await waitFor(() => expect(authorizeDevice).toHaveBeenCalledWith('S12345678', new Date(1990, 5, 15)))
+      expect(mockNavigation.goBack).not.toHaveBeenCalled()
+    } finally {
+      spy.mockRestore()
+    }
   })
 })

@@ -316,39 +316,58 @@ describe('useEvidenceUploadModel', () => {
       }
     )
 
-    it('should emit fileUploadErrorAlert when photo or video data is missing', async () => {
+    // Every other submit guard passes, so only the guard under test can stop the run.
+    const submittableStore = (bcscOverrides: Partial<BCState['bcsc']>) =>
+      ({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+          ...bcscOverrides,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+        },
+      }) as BCState
+
+    it.each(['photoPath', 'videoPath', 'videoDuration'] as const)(
+      'should emit fileUploadErrorAlert when photo or video data is missing (%s)',
+      async (missing) => {
+        jest.mocked(Bifold.useStore).mockReturnValue([submittableStore({ [missing]: undefined }), jest.fn()])
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockFileUploadErrorAlert).toHaveBeenCalledTimes(1)
+        expect(mockFileUploadErrorAlert.mock.calls[0][0]).toHaveProperty('cause.message', 'Missing photo or video data')
+        expect(readFileInChunks).not.toHaveBeenCalled()
+      }
+    )
+
+    it.each([
+      ['empty', []],
+      ['undefined', undefined],
+    ])('should emit fileUploadErrorAlert when prompts are missing (%s)', async (_label, prompts) => {
+      jest.mocked(Bifold.useStore).mockReturnValue([submittableStore({ prompts }), jest.fn()])
+
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
       await act(async () => {
         await result.current.handleSend()
       })
 
-      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
-    })
-
-    it('should emit fileUploadErrorAlert when prompts are missing', async () => {
-      const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([
-        {
-          ...baseStore,
-          bcsc: {
-            ...baseStore.bcsc,
-            photoPath: '/photo.jpg',
-            videoPath: '/video.mp4',
-            videoDuration: 10,
-            prompts: [],
-          },
-        } as BCState,
-        jest.fn(),
-      ])
-
-      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
-
-      await act(async () => {
-        await result.current.handleSend()
-      })
-
-      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
+      expect(mockFileUploadErrorAlert).toHaveBeenCalledTimes(1)
+      expect(mockFileUploadErrorAlert.mock.calls[0][0]).toHaveProperty('cause.message', 'Missing video prompts data')
+      expect(readFileInChunks).not.toHaveBeenCalled()
     })
 
     it('routes back to Verification Method Selection and surfaces the error alert when sha is missing', async () => {

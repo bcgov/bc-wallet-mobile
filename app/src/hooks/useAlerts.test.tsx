@@ -131,6 +131,12 @@ describe('useAlerts', () => {
       AppEventCode.ERR_112_JWS_VERIFICATION_FAILED,
     ],
     [
+      'joseExceptionAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION,
+    ],
+    [
       'loginServerErrorAlert',
       'Alerts.ProblemWithLogin.Title',
       'Alerts.ProblemWithLogin.Description',
@@ -913,7 +919,8 @@ describe('useAlerts', () => {
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'Alerts.DeviceStorageFull.Title',
         'Alerts.DeviceStorageFull.Description',
-        expect.objectContaining({ appEvent: AppEventCode.DEVICE_STORAGE_FULL })
+        expect.objectContaining({ appEvent: AppEventCode.DEVICE_STORAGE_FULL }),
+        { action: { text: 'BCSC.Settings.OpenDeviceSettings', onPress: expect.any(Function) } }
       )
     })
 
@@ -933,8 +940,61 @@ describe('useAlerts', () => {
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'Alerts.DeviceStorageFull.Title',
         'Alerts.DeviceStorageFull.Description',
-        expect.objectContaining({ appEvent: AppEventCode.DEVICE_STORAGE_FULL })
+        expect.objectContaining({ appEvent: AppEventCode.DEVICE_STORAGE_FULL }),
+        { action: { text: 'BCSC.Settings.OpenDeviceSettings', onPress: expect.any(Function) } }
       )
+    })
+  })
+
+  describe('deviceStorageFullAlert', () => {
+    it('should open the internal storage settings on Android', async () => {
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+      const sendIntent = jest.spyOn(RN.Linking, 'sendIntent').mockResolvedValue(undefined)
+      const openSettings = jest.spyOn(RN.Linking, 'openSettings').mockResolvedValue(undefined)
+      Platform.OS = 'android'
+
+      const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
+      result.current.deviceStorageFullAlert()
+      await mockEmitErrorModal.mock.calls[0][3].action.onPress()
+
+      expect(sendIntent).toHaveBeenCalledWith('android.settings.INTERNAL_STORAGE_SETTINGS')
+      expect(openSettings).not.toHaveBeenCalled()
+    })
+
+    it('should fall back to the app settings when the Android storage intent fails', async () => {
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+      jest.spyOn(RN.Linking, 'sendIntent').mockRejectedValue(new Error('no activity'))
+      const openSettings = jest.spyOn(RN.Linking, 'openSettings').mockResolvedValue(undefined)
+      Platform.OS = 'android'
+
+      const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
+      result.current.deviceStorageFullAlert()
+      await mockEmitErrorModal.mock.calls[0][3].action.onPress()
+
+      expect(openSettings).toHaveBeenCalledTimes(1)
+    })
+
+    it('should open the app settings on iOS', async () => {
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+      const sendIntent = jest.spyOn(RN.Linking, 'sendIntent').mockResolvedValue(undefined)
+      const openSettings = jest.spyOn(RN.Linking, 'openSettings').mockResolvedValue(undefined)
+      Platform.OS = 'ios'
+
+      const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
+      result.current.deviceStorageFullAlert()
+      await mockEmitErrorModal.mock.calls[0][3].action.onPress()
+
+      expect(sendIntent).not.toHaveBeenCalled()
+      expect(openSettings).toHaveBeenCalledTimes(1)
     })
   })
 
