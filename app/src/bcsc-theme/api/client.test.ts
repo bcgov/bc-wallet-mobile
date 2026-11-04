@@ -1064,6 +1064,24 @@ describe('BCSC Client', () => {
         expect(trackErrorEventSpy).not.toHaveBeenCalled()
       })
 
+      it('keeps the reason for a failed fetch until a later fetch succeeds', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        client.client.defaults.adapter = (config: any) =>
+          Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config))
+
+        const failedFetch = client.fetchJwk()
+        await jest.advanceTimersByTimeAsync(1500)
+
+        expect(await failedFetch).toBeNull()
+        expect(client.lastJwkFetchError).toBeInstanceOf(AppError)
+
+        client.client.defaults.adapter = (config: any) =>
+          Promise.resolve({ data: { keys: [mockJwk] }, status: 200, statusText: 'OK', headers: {}, config })
+
+        expect(await client.fetchJwk()).toEqual(mockJwk)
+        expect(client.lastJwkFetchError).toBeUndefined()
+      })
+
       it('retries a rejected certificate like any other network error', async () => {
         const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)

@@ -350,7 +350,14 @@ describe('ServiceLogin', () => {
 
       const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
       fireEvent.press(continueButton)
-      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+      await waitFor(() =>
+        expect(mockLoginServerErrorAlert).toHaveBeenCalledWith(
+          expect.objectContaining({
+            technicalMessage: 'unexpected failure',
+            context: expect.objectContaining({ failure_flow: 'pairing', failure_step: 'login_by_pairing_code' }),
+          })
+        )
+      )
     })
 
     it.each([
@@ -434,13 +441,18 @@ describe('ServiceLogin', () => {
 
     it('should show loginServerErrorAlert when quick login URL generation fails', async () => {
       const mockLoginServerErrorAlert = jest.fn()
-      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ error: 'token expired' })
+      const quickLoginError = new AppError(
+        'test error',
+        { category: ErrorCategory.AUTHENTICATION, appEvent: AppEventCode.LOGIN_SERVER_ERROR, statusCode: 2204 },
+        { track: false }
+      )
+      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: false, error: quickLoginError })
 
       const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: mockLoginServerErrorAlert })
 
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
 
-      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalledWith(quickLoginError))
     })
 
     it('should re-enable Continue without a second alert when the failure was already handled', async () => {

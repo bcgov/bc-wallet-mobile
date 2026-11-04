@@ -21,6 +21,17 @@ jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
 jest.mock('@bcsc-theme/utils/push-notification-tokens')
 jest.mock('@/hooks/useAlerts')
 
+const failure = (step: string, technicalMessage: string, appEvent = AppEventCode.LOGIN_SERVER_ERROR) =>
+  expect.objectContaining({
+    appEvent,
+    technicalMessage: expect.stringContaining(technicalMessage),
+    context: expect.objectContaining({
+      failure_flow: 'quick_login',
+      failure_step: step,
+      failure_elapsed_ms: expect.any(Number),
+    }),
+  })
+
 describe('useQuickLoginURL', () => {
   beforeEach(() => {
     jest.resetAllMocks()
@@ -37,7 +48,7 @@ describe('useQuickLoginURL', () => {
     const hook = renderHook(() => useQuickLoginURL())
     const result = await hook.result.current({ client_ref_id: 'test' })
 
-    expect(result).toEqual({ success: false, error: expect.stringContaining('login unavailable') })
+    expect(result).toEqual({ success: false, error: failure('service_config', 'login unavailable') })
   })
 
   it('should return error when no client access token', async () => {
@@ -50,7 +61,7 @@ describe('useQuickLoginURL', () => {
     const hook = renderHook(() => useQuickLoginURL())
     const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
 
-    expect(result).toEqual({ success: false, error: expect.stringContaining('access token') })
+    expect(result).toEqual({ success: false, error: failure('access_token', 'access token') })
   })
 
   it('should return error when no notification tokens available', async () => {
@@ -69,7 +80,7 @@ describe('useQuickLoginURL', () => {
     const hook = renderHook(() => useQuickLoginURL())
     const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
 
-    expect(result).toEqual({ success: false, error: expect.stringContaining('notification tokens') })
+    expect(result).toEqual({ success: false, error: failure('notification_tokens', 'notification tokens') })
 
     expect(tokensMock.getNotificationTokens).toHaveBeenCalledTimes(1)
     expect(bcscCoreMock.getAccount).toHaveBeenCalledTimes(1)
@@ -92,7 +103,7 @@ describe('useQuickLoginURL', () => {
     const hook = renderHook(() => useQuickLoginURL())
     const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
 
-    expect(result).toEqual({ success: false, error: expect.stringContaining('account') })
+    expect(result).toEqual({ success: false, error: failure('account', 'account') })
 
     expect(tokensMock.getNotificationTokens).toHaveBeenCalledTimes(1)
     expect(bcscCoreMock.getAccount).toHaveBeenCalledTimes(1)
@@ -170,12 +181,83 @@ describe('useQuickLoginURL', () => {
     const hook = renderHook(() => useQuickLoginURL())
     const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
 
-    expect(result).toEqual({ success: false, error: expect.stringContaining('failed jwt') })
+    expect(result).toEqual({ success: false, error: failure('sign_jwt', 'failed jwt') })
 
     expect(tokensMock.getNotificationTokens).toHaveBeenCalledTimes(1)
     expect(bcscCoreMock.getAccount).toHaveBeenCalledTimes(1)
     expect(fetchJwkMock).toHaveBeenCalledTimes(1)
     expect(bcscCoreMock.createQuickLoginJWT).toHaveBeenCalledTimes(1)
+  })
+
+  it('should attach the failed step and the JWK fetch cause to the missing jwk alert', async () => {
+    const useClientMock = jest.mocked(useBCSCApiClient)
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const tokensMock = jest.mocked(tokens)
+
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
+    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
+    const mockAlerts = { missingJwkAlert: jest.fn() }
+
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwk: jest.fn().mockResolvedValue(null),
+      lastJwkFetchError: new Error('timeout of 15000ms exceeded'),
+    } as any)
+    bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+    jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+    const hook = renderHook(() => useQuickLoginURL())
+    await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
+
+    expect(mockAlerts.missingJwkAlert).toHaveBeenCalledWith(
+      failure('jwks', 'timeout of 15000ms', AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)
+    )
+  })
+
+  it('should keep the native error code when signing fails', async () => {
+    const useClientMock = jest.mocked(useBCSCApiClient)
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const tokensMock = jest.mocked(tokens)
+
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
+    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
+    bcscCoreMock.createQuickLoginJWT = jest
+      .fn()
+      .mockRejectedValue(Object.assign(new Error('No keys available'), { code: 'E_NO_KEYS_FOUND' }))
+
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwk: jest.fn().mockResolvedValue(true),
+    } as any)
+    bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+    const hook = renderHook(() => useQuickLoginURL())
+    const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
+
+    expect(result).toEqual({ success: false, error: failure('sign_jwt', 'E_NO_KEYS_FOUND: No keys available') })
+  })
+
+  it('should report the step when reading the account rejects', async () => {
+    const useClientMock = jest.mocked(useBCSCApiClient)
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const tokensMock = jest.mocked(tokens)
+
+    bcscCoreMock.getAccount = jest.fn().mockRejectedValue(new Error('storage read failed'))
+    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
+
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwk: jest.fn().mockResolvedValue(true),
+    } as any)
+    bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+    const hook = renderHook(() => useQuickLoginURL())
+    const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
+
+    expect(result).toEqual({ success: false, error: failure('account', 'storage read failed') })
   })
 
   it('should return the quick login URL', async () => {
