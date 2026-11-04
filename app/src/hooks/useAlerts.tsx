@@ -360,6 +360,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       failedToParseJwsAlert: _createBasicErrorModal(AppEventCode.ERR_117_FAILED_TO_PARSE_JWS, 'SomethingWentWrong'),
       tokenUnexpectedlyNullAlert: _createBasicErrorModal(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL, 'SomethingWentWrong'),
       loginServerErrorAlert: _createBasicErrorModal(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
+      loginDeviceErrorAlert: _createBasicErrorModal(AppEventCode.LOGIN_DEVICE_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
       problemWithLoginAlert: _createBasicErrorModal(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
       personCredentialSuspendedAlert: _createProblemWithAccountErrorModal(AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED, '3205'),
       personCredentialDeactivatedAlert: _createProblemWithAccountErrorModal(AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED, '3206'),

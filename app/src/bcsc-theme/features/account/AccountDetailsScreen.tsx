@@ -80,12 +80,12 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
         openedWebview.current = true
       } else if ('error' in result) {
         logger.debug(`AccountDetails: error generating quick login URL: ${result.error.fullMessage}`)
-        alerts.loginServerErrorAlert(result.error)
+        alerts.loginDeviceErrorAlert(result.error)
       }
     } catch (error) {
       logger.error(`Error opening account webview: ${error}`)
-      alerts.loginServerErrorAlert(
-        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
           flow: 'account_details',
           step: 'open_webview',
           cause: error,

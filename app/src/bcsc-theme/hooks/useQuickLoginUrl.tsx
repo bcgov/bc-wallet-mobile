@@ -63,7 +63,7 @@ export const useQuickLoginURL = () => {
       const createFailure = (
         step: QuickLoginStep,
         cause: unknown,
-        definition: ErrorDefinition = ErrorRegistry.LOGIN_SERVER_ERROR
+        definition: ErrorDefinition = ErrorRegistry.LOGIN_DEVICE_ERROR
       ) => createFailureError(definition, { flow: 'quick_login', step, startedAt, cause })
 
       const atStep = async <T,>(step: QuickLoginStep, work: () => Promise<T>): Promise<T> => {
@@ -133,7 +133,7 @@ export const useQuickLoginURL = () => {
         logger.error('Error creating quick login URL', error as Error)
         return {
           success: false,
-          error: isAppError(error, AppEventCode.LOGIN_SERVER_ERROR) ? error : createFailure('unexpected', error),
+          error: isAppError(error, AppEventCode.LOGIN_DEVICE_ERROR) ? error : createFailure('unexpected', error),
         }
       }
     },

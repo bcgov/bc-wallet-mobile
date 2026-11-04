@@ -308,7 +308,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.LOGIN_SERVER_ERROR,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.AUTHENTICATION,
-    message: 'Login failed — see failure_step and the technical message for the cause',
+    message: 'Auth server returned 5xx during login flow',
   },
   INVALID_PAIRING_CODE: {
     statusCode: 2205,
@@ -351,6 +351,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.AUTHENTICATION,
     message: 'HTTP 403 — authenticated but not permitted to access this resource',
+  },
+  LOGIN_DEVICE_ERROR: {
+    statusCode: 2211,
+    appEvent: AppEventCode.LOGIN_DEVICE_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.AUTHENTICATION,
+    message: 'Login failed on the device',
   },
 
   // ============================================

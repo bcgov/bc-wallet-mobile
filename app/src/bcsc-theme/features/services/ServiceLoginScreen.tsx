@@ -6,7 +6,7 @@ import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { ErrorRegistry } from '@/errors'
-import { isHandledAppError } from '@/errors/appError'
+import { isAxiosAppError, isHandledAppError } from '@/errors/appError'
 import { createFailureError } from '@/errors/failureContext'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
@@ -380,8 +380,10 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
       setIsContinueDisabled(false)
       if (!isHandledAppError(error)) {
+        // checks if error originated from the server or the device
+        const definition = isAxiosAppError(error) ? ErrorRegistry.LOGIN_SERVER_ERROR : ErrorRegistry.LOGIN_DEVICE_ERROR
         alerts.loginServerErrorAlert(
-          createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+          createFailureError(definition, {
             flow: 'pairing',
             step: 'login_by_pairing_code',
             startedAt,
@@ -402,8 +404,8 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     if (!state.service) {
       logger.error('ServiceLoginScreen: No service context available for quick login')
       setIsContinueDisabled(false)
-      alerts.loginServerErrorAlert(
-        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, { flow: 'quick_login', step: 'service_context' })
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, { flow: 'quick_login', step: 'service_context' })
       )
       return
     }
@@ -433,7 +435,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     // A handled result has already shown its own alert (e.g. missing JWK), so only alert here for unhandled errors
     if ('error' in result) {
       logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error.fullMessage}`)
-      alerts.loginServerErrorAlert(result.error)
+      alerts.loginDeviceErrorAlert(result.error)
     }
   }, [getQuickLoginURL, logger, state.service, navigation, alerts, t, setIsContinueDisabled])
 
@@ -445,8 +447,8 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     } else {
       logger.error('ServiceLoginScreen: No authentication method available')
       setIsContinueDisabled(false)
-      alerts.loginServerErrorAlert(
-        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, { flow: 'service_login', step: 'auth_method' })
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, { flow: 'service_login', step: 'auth_method' })
       )
     }
   }, [

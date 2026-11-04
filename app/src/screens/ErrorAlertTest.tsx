@@ -316,8 +316,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
    */
   const loginFailureCallbacks: Record<string, () => void> = {
     quick_login_access_token: () =>
-      alerts.loginServerErrorAlert(
-        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
           flow: 'quick_login',
           step: 'access_token',
           startedAt: Date.now(),
@@ -325,8 +325,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         })
       ),
     quick_login_account: () =>
-      alerts.loginServerErrorAlert(
-        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
           flow: 'quick_login',
           step: 'account',
           startedAt: Date.now() - 40,
@@ -343,8 +343,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         })
       ),
     quick_login_sign_jwt: () =>
-      alerts.loginServerErrorAlert(
-        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
           flow: 'quick_login',
           step: 'sign_jwt',
           startedAt: Date.now() - 120,
@@ -352,8 +352,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         })
       ),
     quick_login_unexpected: () =>
-      alerts.loginServerErrorAlert(
-        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
           flow: 'quick_login',
           step: 'unexpected',
           startedAt: Date.now() - 300,
@@ -361,8 +361,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         })
       ),
     pairing_sign: () =>
-      alerts.loginServerErrorAlert(
-        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
           flow: 'pairing',
           step: 'login_by_pairing_code',
           startedAt: Date.now() - 80,
@@ -373,8 +373,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         })
       ),
     account_details_open_webview: () =>
-      alerts.loginServerErrorAlert(
-        createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, {
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
           flow: 'account_details',
           step: 'open_webview',
           cause: new Error('Simulated: Unable to open URL'),
