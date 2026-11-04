@@ -1,15 +1,17 @@
 # Drain send-video queue
 #
-# The send-video e2e journeys upload real verification requests to the SIT IDcheck agent queue and
-# review them by script. The queue has no worklist — a review claims the NEXT request blindly — so
+# The send-video e2e journeys upload real verification requests to the SIT IDcheck agent queues and
+# review them by script. The queues have no worklist — a review claims the NEXT request blindly — so
 # anything a failed journey leaves behind is what the next run claims, or what the UAT team cleans
-# by hand in the morning. This workflow rejects whatever is queued, with the reason
-# "Automated e2e queue cleanup", and lists what it rejected in the run summary.
+# by hand in the morning. This workflow rejects the e2e personas' queued requests with the reason
+# "Automated e2e queue cleanup", moves anyone else's from the regular queue to the Specialist Review
+# queue (never rejecting it — the queues are shared with the UAT team), and lists what it did in the
+# run summary.
 #
-#   workflow_call     — after every e2e.yml suite that ran the send-video journeys, and once more at
-#                       the end of the nightly (e2e-nightly.yml)
-#   workflow_dispatch — on demand from the Actions tab: scope `all` (everything queued) or `e2e`
-#                       (only the e2e personas; stops at the first foreign request); `dry_run` only
+#   workflow_call     — at the end of the nightly (e2e-nightly.yml), after every lane has run
+#   workflow_dispatch — on demand from the Actions tab: scope `e2e` (only the e2e personas; anyone
+#                       else's request is moved to the specialist queue, or left alone there) or
+#                       `all` (reject everything queued — a deliberate manual cleanup); `dry_run` only
 #                       signs in and reports which queues hold work — the cheap sign-in check from
 #                       the runner's own egress IP
 #
@@ -25,10 +27,10 @@ on:
   workflow_call:
     inputs:
       scope:
-        description: 'all (everything queued) or e2e (only the e2e personas)'
+        description: 'e2e (only the e2e personas; anyone else''s request is moved to the specialist queue) or all (reject everything queued)'
         type: string
         required: false
-        default: all
+        default: e2e
       max_claims:
         description: 'Stop after this many claims'
         type: number
@@ -46,12 +48,12 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: 'What to reject: everything queued, or only the e2e personas'
+        description: 'What to reject: only the e2e personas (anyone else''s request is moved to the specialist queue), or everything queued'
         type: choice
         options:
-          - all
           - e2e
-        default: all
+          - all
+        default: e2e
       max_claims:
         description: 'Stop after this many claims'
         type: number

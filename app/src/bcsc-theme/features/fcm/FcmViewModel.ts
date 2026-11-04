@@ -63,7 +63,10 @@ export class FcmViewModel {
 
   public initialize() {
     if (this.initialized) {
-      this.logger.info('[FcmViewModel] Already initialized, skipping')
+      this.logger.info('[FcmViewModel] Already initialized, checking for a launch notification')
+      if (this.mode === Mode.BCSC) {
+        void this.initFcmService()
+      }
       return
     }
     this.initialized = true
@@ -80,12 +83,20 @@ export class FcmViewModel {
     // Subscribe BEFORE init so we don't miss any messages
     this.fcmService.subscribe(this.handleMessage.bind(this))
     this.logger.info('[FcmViewModel] Subscribed to FCM service')
-    this.fcmService.init()
+    void this.initFcmService()
     this.logger.info('[FcmViewModel] FCM service initialized')
     // Pre-fetch the server JWK for signature verification (if API client is ready)
     this.fetchServerJwk()
     // Log FCM token for debugging
     this.logFcmToken()
+  }
+
+  private async initFcmService(): Promise<void> {
+    try {
+      await this.fcmService.init()
+    } catch (error) {
+      this.logger.error('[FcmViewModel] Failed to initialize FCM service', error as Error)
+    }
   }
 
   private async logFcmToken(): Promise<void> {

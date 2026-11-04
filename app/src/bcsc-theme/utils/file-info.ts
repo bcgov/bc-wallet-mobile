@@ -128,7 +128,7 @@ export const removeFileSafely = async (path: string | undefined, logger: BifoldL
     logger.debug(`Removing file at path: ${path}`)
     await RNFS.unlink(path)
   } catch (error) {
-    logger.error('Error removing file safely', error as Error)
+    logger.error(`Error removing file at path '${path}'`, error as Error)
   }
 }
 

@@ -349,6 +349,21 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
     [emitAlert, t]
   )
 
+  const loginRequestExpiredAlert = useCallback(
+    (onAction: AlertOnPressAction) => {
+      emitAlert(t('Alerts.LoginRequestExpired.Title'), t('Alerts.LoginRequestExpired.Description'), {
+        event: AppEventCode.NOT_FOUND,
+        actions: [
+          {
+            text: t('Global.OK'),
+            onPress: onAction,
+          },
+        ],
+      })
+    },
+    [emitAlert, t]
+  )
+
   return useMemo(
     () =>
       // prettier-ignore
@@ -360,6 +375,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
+      loginRequestExpiredAlert,
       forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
 
       // ERROR MODALS
@@ -448,6 +464,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
+      loginRequestExpiredAlert,
       _createBasicAlert,
       unknownErrorModal,
       factoryResetErrorModal,

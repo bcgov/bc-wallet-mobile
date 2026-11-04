@@ -3,7 +3,7 @@ import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { CommonActions } from '@react-navigation/native'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert, Linking, Platform } from 'react-native'
 import Toast from 'react-native-toast-message'
@@ -64,17 +64,21 @@ describe('EmailConfirmation', () => {
   })
 
   describe('Submission', () => {
-    test('shows error when submitting empty code', () => {
+    test('shows error when submitting empty code', async () => {
       renderScreen()
-      fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
+      await act(async () => {
+        fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
+      })
       expect(screen.getByText('BCSC.EmailConfirmation.CodeError')).toBeTruthy()
     })
 
-    test('shows error when code is less than 6 digits', () => {
+    test('shows error when code is less than 6 digits', async () => {
       renderScreen()
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
       fireEvent.changeText(codeInput, '123')
-      fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
+      await act(async () => {
+        fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
+      })
       expect(screen.getByText('BCSC.EmailConfirmation.CodeError')).toBeTruthy()
     })
 

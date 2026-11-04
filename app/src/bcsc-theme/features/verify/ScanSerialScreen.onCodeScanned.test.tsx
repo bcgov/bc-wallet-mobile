@@ -66,12 +66,21 @@ const OTHER_BIRTH_DATE = new Date(1970, 8, 6)
 
 let navigation: unknown
 
-const renderScreen = () =>
-  render(
+// The screen swaps in its help text on a 0 ms timer from mount; let it land inside act.
+const settleHelpTimer = () =>
+  act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+
+const renderScreen = async () => {
+  const utils = render(
     <BasicAppContext>
       <ScanSerialScreen navigation={navigation as never} />
     </BasicAppContext>
   )
+  await settleHelpTimer()
+  return utils
+}
 
 const scan = async (codes: ScanableCode[]): Promise<void | boolean> => {
   let result: void | boolean = undefined
@@ -100,6 +109,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
         <ScanSerialScreen navigation={useNavigation() as never} />
       </BasicAppContext>
     )
+    await settleHelpTimer()
 
     const unknownCode: ScanableCode = { type: 'unknown', value: 'UNKNOWN-VALUE-1' }
     const serial: ScanableCode = { type: 'code-39', value: 'K12345678' }
@@ -144,7 +154,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
   describe('completing a scan', () => {
     it('completes when the serial and the licence arrive in one batch', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([serial, licence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
@@ -152,7 +162,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('completes when the licence comes before the serial in one batch', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([licence, serial])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
@@ -161,7 +171,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('completes when the serial arrives first and the licence in a later batch', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([serial])).toBe(false)
       expect(await scan([licence])).toBe(true)
@@ -170,7 +180,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('completes when the licence arrives first and the serial in a later batch', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([licence])).toBe(false)
       expect(await scan([serial])).toBe(true)
@@ -179,7 +189,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('keeps scanning on an empty batch', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([])).toBe(false)
       expect(mockHandleScanComboCard).not.toHaveBeenCalled()
@@ -187,7 +197,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('keeps scanning when a combo card is seen twice without a separate 1D serial', async () => {
-      renderScreen()
+      await renderScreen()
       const combo = pdf417(BC_COMBO_BARCODE_K)
 
       expect(await scan([combo])).toBe(false)
@@ -197,7 +207,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('uses the 1D serial, not the card number in the PDF-417, whichever card it is', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([pdf417(BC_BCID_BARCODE_Y)])).toBe(false)
       expect(await scan([pdf417(BC_BCSC_BARCODE_C)])).toBe(false)
@@ -205,7 +215,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('replaces the serial with the latest one read across batches', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([serial])).toBe(false)
       expect(await scan([otherSerial])).toBe(false)
@@ -215,7 +225,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('replaces the card with the latest one read across batches', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([otherLicence])).toBe(false)
       expect(await scan([licence])).toBe(false)
@@ -225,7 +235,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('treats a card with no card number in its security field like any other card', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([otherLicence])).toBe(false)
       expect(await scan([serial])).toBe(true)
@@ -236,7 +246,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
   describe('competing reads in one batch', () => {
     it('uses the later serial when two serials arrive before the licence', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([serial, otherSerial, licence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
@@ -244,7 +254,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('uses the later card when two cards arrive before the serial', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([licence, otherLicence, serial])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
@@ -252,7 +262,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('decides once, after the whole batch, so later replacements win over an earlier complete pair', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([serial, licence, otherSerial, otherLicence])).toBe(true)
       expect(mockHandleScanComboCard).toHaveBeenCalledTimes(1)
@@ -270,7 +280,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
       ['a code-128 with an empty value', code128('')],
       ['a QR code', { type: 'qr-code', value: 'A12345678' } as ScanableCode],
     ])('hands %s read first to the non-BCSC flow', async (_, unreadable) => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([unreadable])).toBe(true)
       expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
@@ -278,7 +288,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('hands the card to the non-BCSC flow when an unreadable code comes before the serial, and never reads the serial', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([damaged, serial])).toBe(true)
       expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
@@ -286,7 +296,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('ignores an unreadable code that comes after the serial, then completes on the licence', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([serial, damaged])).toBe(false)
       expect(await scan([licence])).toBe(true)
@@ -296,7 +306,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('ignores an unreadable code between the licence and the serial', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([licence])).toBe(false)
       expect(await scan([damaged])).toBe(false)
@@ -306,7 +316,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('skips an unknown code with no hook call', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([unknown])).toBe(false)
       expect(mockHandleScanNonBcsc).not.toHaveBeenCalled()
@@ -314,7 +324,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('hands the card to the non-BCSC flow when an unreadable code follows an unknown one', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([unknown, damaged])).toBe(true)
       expect(mockHandleScanNonBcsc).toHaveBeenCalledTimes(1)
@@ -324,7 +334,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
   describe('once a scan has finished', () => {
     it('ignores every later batch after a completed pair', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([serial, licence])).toBe(true)
       expect(await scan([damaged])).toBe(true)
@@ -334,7 +344,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('ignores every later batch after a non-BCSC reroute', async () => {
-      renderScreen()
+      await renderScreen()
 
       expect(await scan([damaged])).toBe(true)
       expect(await scan([serial, licence])).toBe(true)
@@ -346,7 +356,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
   describe('starting over', () => {
     // While the camera has failed the screen does not render CodeScanningCamera, so the mock only
     // recaptures onCodeScanned after Try Again remounts it.
-    const tryAgain = ({ getByTestId }: ReturnType<typeof renderScreen>) => {
+    const tryAgain = ({ getByTestId }: Awaited<ReturnType<typeof renderScreen>>) => {
       act(() => {
         mockCamera.onError?.()
       })
@@ -354,7 +364,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     }
 
     it('forgets the serial on Try Again', async () => {
-      const screen = renderScreen()
+      const screen = await renderScreen()
 
       expect(await scan([serial])).toBe(false)
       tryAgain(screen)
@@ -364,7 +374,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('forgets the card on Try Again', async () => {
-      const screen = renderScreen()
+      const screen = await renderScreen()
 
       expect(await scan([licence])).toBe(false)
       tryAgain(screen)
@@ -374,7 +384,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('scans again after a non-BCSC reroute and Try Again', async () => {
-      const screen = renderScreen()
+      const screen = await renderScreen()
 
       expect(await scan([damaged])).toBe(true)
       tryAgain(screen)
@@ -415,7 +425,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
         })
 
       it('forgets a partial scan', async () => {
-        renderScreen()
+        await renderScreen()
 
         expect(await scan([serial])).toBe(false)
         refocusScreen()
@@ -425,7 +435,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
       })
 
       it('scans a new pair after a completed one', async () => {
-        renderScreen()
+        await renderScreen()
 
         expect(await scan([serial, licence])).toBe(true)
         refocusScreen()
@@ -447,11 +457,11 @@ describe('ScanSerialScreen onCodeScanned', () => {
     }
 
     // The framing outline turns green once the screen locks; it only renders after the container is laid out.
-    const outlineColor = (screen: ReturnType<typeof renderScreen>) => {
+    const outlineColor = (screen: Awaited<ReturnType<typeof renderScreen>>) => {
       return screen.UNSAFE_getAllByType(Rect).find((rect) => rect.props.stroke)?.props.stroke
     }
 
-    const layOut = (screen: ReturnType<typeof renderScreen>) => {
+    const layOut = (screen: Awaited<ReturnType<typeof renderScreen>>) => {
       const container = screen.UNSAFE_root.findAll((node) => typeof node.props.onLayout === 'function')[0]
       act(() => {
         container.props.onLayout({ nativeEvent: { layout: { width: 300, height: 500 } } })
@@ -471,7 +481,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
       ['a completed pair', [serial, licence], mockHandleScanComboCard],
       ['a non-BCSC reroute', [damaged], mockHandleScanNonBcsc],
     ])('locks for %s before the hook call settles', async (_, codes, hook) => {
-      const screen = renderScreen()
+      const screen = await renderScreen()
       layOut(screen)
       const before = outlineColor(screen)
       expect(before).not.toBe('#00FF00')
@@ -496,7 +506,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
 
   describe('logging', () => {
     it('never logs the serial, the card number, the health number or the raw barcode', async () => {
-      renderScreen()
+      await renderScreen()
 
       await scan([serial, pdf417(BC_COMBO_BARCODE_K)])
 
@@ -507,7 +517,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('logs each decoded barcode with its type and source only', async () => {
-      renderScreen()
+      await renderScreen()
 
       await scan([serial, pdf417(BC_COMBO_BARCODE_K)])
 
@@ -522,7 +532,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('logs a failed decode with its type and reason only', async () => {
-      renderScreen()
+      await renderScreen()
 
       await scan([damaged])
 
@@ -533,7 +543,7 @@ describe('ScanSerialScreen onCodeScanned', () => {
     })
 
     it('logs that an unknown barcode was skipped, with no payload', async () => {
-      renderScreen()
+      await renderScreen()
 
       await scan([unknown])
 

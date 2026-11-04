@@ -110,12 +110,14 @@ describe('useVerificationMethodModel', () => {
   })
 
   describe('Initial state', () => {
-    it('should return initial loading states and verification options', () => {
+    it('should return initial loading states and verification options', async () => {
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
       expect(result.current.sendVideoLoading).toBe(false)
       expect(result.current.liveCallLoading).toBe(false)
       expect(result.current.verificationOptions).toEqual(['video_call', 'back_check', 'counter'])
+
+      await flushMountEffect(result)
     })
   })
 

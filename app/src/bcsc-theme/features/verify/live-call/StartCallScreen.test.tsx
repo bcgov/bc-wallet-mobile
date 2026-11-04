@@ -10,14 +10,12 @@ import { useMicrophonePermission } from 'react-native-vision-camera'
 import StartCallScreen from './StartCallScreen'
 
 const mockGetServiceHours = jest.fn().mockResolvedValue({})
+// Stable like the real memoized useApi; a fresh object per render re-runs the service-hours effect endlessly.
+const mockApi = { video: { getServiceHours: mockGetServiceHours } }
 
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
   __esModule: true,
-  default: jest.fn(() => ({
-    video: {
-      getServiceHours: mockGetServiceHours,
-    },
-  })),
+  default: jest.fn(() => mockApi),
 }))
 
 jest.mock('react-native-vision-camera', () => ({
@@ -48,7 +46,10 @@ describe('StartCall', () => {
     jest.useRealTimers()
   })
 
-  it('renders correctly', () => {
+  // Service hours load after mount; wait for them so the resulting state updates land inside act.
+  const serviceHoursListTestId = testIdWithKey(TestIds.verify.servicePeriods.list)
+
+  it('renders correctly', async () => {
     const tree = render(
       <BasicAppContext>
         <StartCallScreen navigation={mockNavigation as never} />
@@ -56,18 +57,22 @@ describe('StartCall', () => {
     )
 
     expect(tree).toMatchSnapshot()
+    expect(await tree.findByTestId(serviceHoursListTestId)).toBeTruthy()
   })
   describe('permission flow', () => {
     const startTestId = testIdWithKey(TestIds.verify.startCall.start)
     const continueTestId = testIdWithKey(TestIds.verify.bluetoothDisclosure.continue)
     const mockRequestMicrophonePermission = jest.fn()
 
-    const renderScreen = () =>
-      render(
+    const renderScreen = async () => {
+      const result = render(
         <BasicAppContext>
           <StartCallScreen navigation={mockNavigation as never} />
         </BasicAppContext>
       )
+      await result.findByTestId(serviceHoursListTestId)
+      return result
+    }
 
     const mockMicrophone = (hasPermission: boolean, requestResult = hasPermission) => {
       mockRequestMicrophonePermission.mockResolvedValue(requestResult)
@@ -88,7 +93,7 @@ describe('StartCall', () => {
 
     it('shows the microphone permission screen when microphone permission is denied', async () => {
       mockMicrophone(false)
-      const { getByTestId, findByText } = renderScreen()
+      const { getByTestId, findByText } = await renderScreen()
 
       fireEvent.press(getByTestId(startTestId))
 
@@ -98,7 +103,7 @@ describe('StartCall', () => {
 
     it('navigates to LiveCall when microphone is granted and Bluetooth permission is not needed', async () => {
       mockMicrophone(true)
-      const { getByTestId } = renderScreen()
+      const { getByTestId } = await renderScreen()
 
       fireEvent.press(getByTestId(startTestId))
 
@@ -108,7 +113,7 @@ describe('StartCall', () => {
     it('navigates to LiveCall when Bluetooth detection fails', async () => {
       mockMicrophone(true)
       mockDeviceRequiresBluetoothPermission.mockRejectedValue(new Error('detection failed'))
-      const { getByTestId } = renderScreen()
+      const { getByTestId } = await renderScreen()
 
       fireEvent.press(getByTestId(startTestId))
 
@@ -118,7 +123,7 @@ describe('StartCall', () => {
     it('shows the Bluetooth disclosure when Bluetooth permission is needed', async () => {
       mockMicrophone(true)
       mockDeviceRequiresBluetoothPermission.mockResolvedValue(true)
-      const { getByTestId, findByTestId } = renderScreen()
+      const { getByTestId, findByTestId } = await renderScreen()
 
       fireEvent.press(getByTestId(startTestId))
 
@@ -130,7 +135,7 @@ describe('StartCall', () => {
       mockMicrophone(true)
       mockDeviceRequiresBluetoothPermission.mockResolvedValue(true)
       jest.spyOn(PermissionsAndroid, 'request').mockResolvedValue(PermissionsAndroid.RESULTS.GRANTED)
-      const { getByTestId, findByTestId } = renderScreen()
+      const { getByTestId, findByTestId } = await renderScreen()
 
       fireEvent.press(getByTestId(startTestId))
       fireEvent.press(await findByTestId(continueTestId))
@@ -142,7 +147,7 @@ describe('StartCall', () => {
       mockMicrophone(true)
       mockDeviceRequiresBluetoothPermission.mockResolvedValue(true)
       jest.spyOn(PermissionsAndroid, 'request').mockResolvedValue(PermissionsAndroid.RESULTS.DENIED)
-      const { getByTestId, findByTestId, findByText } = renderScreen()
+      const { getByTestId, findByTestId, findByText } = await renderScreen()
 
       fireEvent.press(getByTestId(startTestId))
       fireEvent.press(await findByTestId(continueTestId))

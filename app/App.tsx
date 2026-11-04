@@ -21,6 +21,7 @@ import { RemoteConfigProvider } from '@/remote-config/RemoteConfig'
 import { initialState, reducer } from '@/store'
 import { themes } from '@/theme'
 import { initIssuer } from '@/utils/issuer'
+import { removeLegacyTxnCache } from '@/utils/legacy-txn-cache'
 import { appLogger } from '@/utils/logger'
 import tours from '@bcwallet-theme/features/tours'
 import {
@@ -102,6 +103,10 @@ const App = () => {
     // Hide the native splash / loading screen so
     // that our RN version can be displayed.
     SplashScreen.hide()
+  }, [])
+
+  useEffect(() => {
+    void removeLegacyTxnCache(appLogger)
   }, [])
 
   useEffect(() => {
