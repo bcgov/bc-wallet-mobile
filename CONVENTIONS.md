@@ -206,3 +206,16 @@ Rules that keep this consistent:
 **Why:** many people install the app only to verify their BC Services Card; an unverified Home is a dead end
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
 alone because starting from the Home card must not turn a skipper into a first-time verifier.
+
+## Error reports: record where and when a flow failed
+
+When a multi-step flow ends in a generic alert, build the error with `createFailureError`
+(`errors/failureContext.ts`) and pass it to the alert. Never call a catch-all alert with no error: the
+report then has no cause and no context, so it cannot say what failed.
+
+- `flow` and `step` are short, fixed names such as `quick_login` and `sign_jwt`. Never put personal data or
+  tokens in them.
+- Pass `startedAt` when the flow makes network calls: a 90 second failure is a timeout, an instant one isn't.
+- Pass the original error as `cause`. Its code and message reach the report through the AppError.
+- New context fields only become top-level Loki fields once added to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
+  `report-problem.ts`.
