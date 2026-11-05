@@ -5,8 +5,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -192,5 +194,98 @@ class NativeCompatibleStorageV3ProviderTest {
         assertNotNull(result)
         assertEquals("audience-as-client-id", result!!.clientID)
         assertEquals("https://idsit.gov.bc.ca", result.issuer)
+    }
+
+    private val providerJson =
+        """
+        {
+            "issuer": "https://idsit.gov.bc.ca",
+            "clientRegistration": {
+                "client_id": "v3-client-id",
+                "registration_access_token": "v3-registration-token",
+                "authorizationRequest": { "deviceCode": "device-abc" }
+            }
+        }
+        """.trimIndent()
+
+    private fun accountDir() = File(tempFolder.root, issuerName + File.separator + accountUuid)
+
+    @Test
+    fun `without markers both readers return v3 data`() {
+        stageProvider(providerJson)
+
+        assertEquals("device-abc", storage.readAuthorizationRequestFromV3Provider(issuerName, accountUuid)!!.deviceCode)
+        assertEquals("v3-registration-token", storage.readRegistrationTokenFromV3Provider(issuerName, accountUuid))
+    }
+
+    @Test
+    fun `retiring the authorization request leaves the registration token readable`() {
+        stageProvider(providerJson)
+
+        assertTrue(storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.AUTHORIZATION_REQUEST))
+
+        assertNull(storage.readAuthorizationRequestFromV3Provider(issuerName, accountUuid))
+        assertEquals("v3-registration-token", storage.readRegistrationTokenFromV3Provider(issuerName, accountUuid))
+    }
+
+    @Test
+    fun `retiring the registration token leaves the authorization request readable`() {
+        stageProvider(providerJson)
+
+        assertTrue(storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.REGISTRATION_TOKEN))
+
+        assertNull(storage.readRegistrationTokenFromV3Provider(issuerName, accountUuid))
+        assertEquals("device-abc", storage.readAuthorizationRequestFromV3Provider(issuerName, accountUuid)!!.deviceCode)
+    }
+
+    @Test
+    fun `retirement survives a new storage instance`() {
+        stageProvider(providerJson)
+        storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.AUTHORIZATION_REQUEST)
+        storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.REGISTRATION_TOKEN)
+
+        val restarted = spyk(NativeCompatibleStorage(context), recordPrivateCalls = true)
+        every { restarted.readEncryptedFile(any()) } returns providerJson
+
+        assertNull(restarted.readAuthorizationRequestFromV3Provider(issuerName, accountUuid))
+        assertNull(restarted.readRegistrationTokenFromV3Provider(issuerName, accountUuid))
+    }
+
+    @Test
+    fun `retiring the registration token works before the account directory or tokens file exist`() {
+        assertFalse(accountDir().exists())
+
+        assertTrue(storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.REGISTRATION_TOKEN))
+
+        // A later write that recreates the account directory and the v3 providers file must not reopen the fallback.
+        stageProvider(providerJson)
+        File(accountDir(), "tokens").writeText("encrypted-placeholder")
+        assertNull(storage.readRegistrationTokenFromV3Provider(issuerName, accountUuid))
+    }
+
+    @Test
+    fun `retiring is idempotent`() {
+        assertTrue(storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.AUTHORIZATION_REQUEST))
+        assertTrue(storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.AUTHORIZATION_REQUEST))
+    }
+
+    @Test
+    fun `retiring returns false when a regular file blocks the account directory`() {
+        File(tempFolder.root, issuerName).mkdirs()
+        File(tempFolder.root, issuerName + File.separator + accountUuid).writeText("not a directory")
+
+        assertFalse(storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.AUTHORIZATION_REQUEST))
+    }
+
+    @Test
+    fun `retiring leaves the v3 providers file untouched`() {
+        stageProvider(providerJson)
+        val providerFile = File(accountDir(), "providers")
+
+        storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.AUTHORIZATION_REQUEST)
+        storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.REGISTRATION_TOKEN)
+
+        assertTrue(providerFile.exists())
+        assertEquals("encrypted-placeholder", providerFile.readText())
     }
 }

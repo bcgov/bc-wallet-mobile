@@ -1,6 +1,8 @@
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { MinimumFreeStorageMb, useEnsureFreeStorage } from '@/bcsc-theme/hooks/useEnsureFreeStorage'
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -27,6 +29,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   const { refreshPrompts } = useVideoPrompts()
   const { videoPromptsMissingAlert } = useAlerts(navigation)
   const [promptsStatus, setPromptsStatus] = useState<PromptsStatus>('loading')
+  const ensureFreeStorage = useEnsureFreeStorage()
   const scrollViewRef = useRef<ScrollView>(null)
 
   /**
@@ -41,11 +44,11 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   const loadPrompts = useCallback(async (): Promise<void> => {
     setPromptsStatus('loading')
 
-    const ready = await refreshPrompts()
+    const prompts = await refreshPrompts()
 
-    setPromptsStatus(ready ? 'ready' : 'failed')
-    if (!ready) {
-      videoPromptsMissingAlert()
+    setPromptsStatus(prompts.ready ? 'ready' : 'failed')
+    if (!prompts.ready) {
+      videoPromptsMissingAlert(prompts.error)
     }
   }, [refreshPrompts, videoPromptsMissingAlert])
 
@@ -67,12 +70,6 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       height: 250,
       marginBottom: Spacing.md,
     },
-    bulletContainer: {
-      flexDirection: 'row',
-    },
-    bullet: {
-      marginRight: Spacing.xs,
-    },
   })
 
   const controls = (
@@ -80,7 +77,12 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
-        onPress={() => {
+        onPress={async () => {
+          const hasFreeStorage = await ensureFreeStorage(MinimumFreeStorageMb.LARGE)
+          if (!hasFreeStorage) {
+            return
+          }
+
           navigation.navigate(BCSCScreens.TakeVideo)
         }}
         testID={testIdWithKey(TestIds.verify.videoInstructions.startRecording)}
@@ -144,26 +146,11 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         {t('BCSC.SendVideo.VideoInstructions.YouShould')}
       </ThemedText>
 
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet1')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet2')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet3')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet4')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet5')}</ThemedText>
-      </View>
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet1'} />
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet2'} />
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet3'} />
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet4'} />
+      <BulletPointWithText translationKey={'BCSC.SendVideo.VideoInstructions.Bullet5'} />
       <View
         style={{
           flexDirection: 'row',

@@ -252,7 +252,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
             file: spec('main/unverified-main.journey.ts'),
             tests: [
               'the scan FAB opens the ungated QR scanner',
-              'an unrecognised QR raises the scan-error popup',
+              'an unrecognised QR raises the error modal',
               'an OpenID credential-offer QR is deliberately rejected',
               'a mediator-invitation QR is deliberately rejected',
             ],

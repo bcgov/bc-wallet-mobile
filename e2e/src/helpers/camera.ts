@@ -246,6 +246,16 @@ export async function injectScanTarget(source: string | Buffer, options: ScanTar
   await injectCameraImage(await composeScanTarget(source, options))
 }
 
+/** Inject a plain white frame, so a previously injected code leaves the camera view and cannot fire again. */
+export async function injectBlankFrame(): Promise<void> {
+  const blank = await sharp({
+    create: { width: 1920, height: 1080, channels: 3, background: { r: 255, g: 255, b: 255 } },
+  })
+    .png()
+    .toBuffer()
+  await injectCameraImage(blank.toString('base64'))
+}
+
 /** On-canvas size of a rendered QR — the size proven to decode on both platforms. */
 const QR_TARGET_PX = 800
 /**

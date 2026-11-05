@@ -708,7 +708,8 @@ const translation = {
     "ConfigureMediator": {
       "ScreenTitle": "Configure mediator (FR)",
       "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (FR)",
-      "ScanButton": "Scan mediator QR code (FR)"
+      "ScanButton": "Scan mediator QR code (FR)",
+      "Remove": "Remove {{mediator}} (FR)"
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (FR)",
@@ -809,28 +810,25 @@ const translation = {
       "EnterManually": "Enter Serial Number Manually (FR)",
     },
     "Scan": {
-      "NoAccountFound": "No account found, restart the app and try again. (FR)",
-      "NoAttestationResponse": "No attestation response, check your connection and try again. (FR)",
-      "NoDeviceCodeFound": "No device code found (FR)",
-      "InvalidQrCode": "Invalid QR code (FR)",
       "WillScanAutomatically": "A valid QR code will scan automatically (FR)",
       "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady. (FR)",
       "ScanYourCard": "Scan your card (FR)",
       "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically. (FR)",
       "TorchOn": "Turn flashlight on (FR)",
       "TorchOff": "Turn flashlight off (FR)",
-      "ErrorDetails": "Error details (FR)",
-      "Dismiss": "Dismiss (FR)",
       "SaveScanZones": "Save Scan Zones (FR)",
       "ContinueScanning": "Continue Scanning (FR)",
       "Confirm": "Confirm (FR)",
       "TryAgain": "Try Again (FR)",
       "Connecting": "Connecting… (FR)",
-      "UnrecognizedQR": "QR code not recognized. (FR)",
+      "UnrecognizedQR": "QR code not recognized (FR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (FR)",
       "FeatureUnavailable": "This action isn't available yet. (FR)",
       "AccountTransferErrorTitle": "Unable to add device (FR)",
       "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it. (FR)",
+      "UnrecognizedQRDescription": "We couldn't recognize this QR code. Make sure it's meant for this app. If it is, report this error. (FR)",
+      "CredentialQRScanFailedTitle": "Unable to process invitation (FR)",
+      "CredentialQRScanFailedDescription": "We couldn't process this invitation. If you think it should work, report this error. (FR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (FR)",
         "Mediator": "Mediator invitations aren't supported in BC Services Card. (FR)",
@@ -1237,6 +1235,13 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible) (FR)"
     },
     "VideoCall": {
+      "Controls": {
+        "Mute": "Mute (FR)",
+        "Unmute": "Unmute (FR)",
+        "HideVideo": "Hide Video (FR)",
+        "ShowVideo": "Show Video (FR)",
+        "EndCall": "End Call (FR)"
+      },
       "MissingSession": "Missing required parameters to end session (FR)",
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update (FR)",
       "DeviceCodeError": "Missing device or user code (FR)",
@@ -1354,6 +1359,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (FR)",
     },
     "Wallet": {
+      "Title": "Wallet (FR)",
       "EmptyMessage": "Your wallet is empty (FR)",
       "EmptyLearnMore": "Learn more about the wallet (FR)",
       "Reset": "Reset wallet (FR)",

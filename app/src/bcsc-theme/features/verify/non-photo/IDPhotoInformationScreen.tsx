@@ -1,4 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { MinimumFreeStorageMb, useEnsureFreeStorage } from '@/bcsc-theme/hooks/useEnsureFreeStorage'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointList from '@/components/BulletPointList'
 import { TestIds } from '@/test-ids/registry'
@@ -17,6 +18,7 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   const { cardType } = route.params
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
+  const ensureFreeStorage = useEnsureFreeStorage()
 
   const controls = (
     <ControlContainer>
@@ -24,7 +26,12 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
         title={t('BCSC.IDPhotoInformation.TakePhoto')}
         accessibilityLabel={t('BCSC.IDPhotoInformation.TakePhoto')}
         testID={testIdWithKey(TestIds.verify.idPhotoInformation.takePhoto)}
-        onPress={() => {
+        onPress={async () => {
+          const hasFreeStorage = await ensureFreeStorage(MinimumFreeStorageMb.SMALL)
+          if (!hasFreeStorage) {
+            return
+          }
+
           // push (not navigate) so the second ID opens a fresh capture screen instead of popping back
           // to the first ID's EvidenceCapture already in the stack.
           navigation.push(BCSCScreens.EvidenceCapture, {

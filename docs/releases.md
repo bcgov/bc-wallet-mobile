@@ -1,8 +1,8 @@
 # Releases
 
 Nothing ships on its own. Merging code produces build artifacts and stops there.
-A build reaches people only when someone runs the **Publish** workflow and says
-how far it should go.
+A build reaches people only when someone runs the **Publish** workflow, and
+each ring past the team only when that ring's approvers say so.
 
 For what CI runs and when, see [ci-cd.md](ci-cd.md).
 
@@ -18,11 +18,11 @@ A ring is an audience. Each one is wider than the last.
 | `ring-3` | Early adopters | `bcsc-approvers-ring-3-plus` |
 | `ring-4` | Everyone | `bcsc-approvers-ring-3-plus` |
 
-Publishing to a ring publishes every ring below it, so `ring-2` sends the build
-to ring-0, ring-1 and ring-2. The team gets it straight away, and each ring
-after that has its own gate, and its testers get the build as soon as that
-gate passes. Rejecting at any gate stops the run there, and every ring below
-already has it.
+Every publish heads for ring-4. The team gets the build straight away, and
+each ring after that has its own gate, in order; its testers get the build as
+soon as that gate passes. To stop short, reject the next ring's gate: the run
+stops there, and every ring below already has it. A rejected gate marks the
+run as failed, even though the rings before it published fine.
 
 BC Wallet is the exception. It is being retired after v4.1, so it publishes to
 the team and is left out of the wider rings rather than failing on groups that
@@ -44,12 +44,13 @@ is the one case where a build can knock another off a track.
 
 QA and UAT are separate rings with separate gates. ring-1 goes to QA testers,
 ring-2 to UAT testers, and each has its own approval even though the same
-people sit on both teams today. A ring-4 publish stops at all four gates in
+people sit on both teams today. Every publish stops at all four gates in
 turn, and the same team approves the last two.
 
 A run with nothing to widen asks for no approvals at all. Picking `targets`
 that no artifact in the build can reach, such as `google-store` on an
-iOS-only build, publishes ring-0 and skips every gate.
+iOS-only build, publishes nothing, skips every gate and creates no release
+tag.
 
 | Team | Approves | Who is on it |
 |---|---|---|
@@ -85,7 +86,6 @@ one; each ring past ring-0 waits for that ring's approvers.
 
 | Input | Leave it alone to | Use it to |
 |---|---|---|
-| `ring` | Publish to UAT | Stop at QA, or go further |
 | `build_number` | Publish the newest usable build | Publish an older build |
 | `targets` | Publish to all three stores | Retry one store after a failure |
 
@@ -101,9 +101,9 @@ what a tester installs is exactly what CI made.
 | Google Play | Internal testing | Closed testing, that ring's track |
 | Firebase | The `ring-0` group | That ring's group |
 
-`ring-0` with a hyphen means the ring you pick when running Publish. Each
-service spells its own groups differently, and Publish sends each the form it
-expects:
+`ring-0` with a hyphen is how the rings are named in Publish and its
+approvals. Each service spells its own groups differently, and Publish sends
+each the form it expects:
 
 | Service | Matches on | Spelling |
 |---|---|---|
@@ -114,9 +114,11 @@ expects:
 Two things that surprise people. TestFlight's ring-0 needs nothing from
 Publish: Apple gives internal testers every build automatically and refuses to
 assign one, so that group exists for the people in it. And approving a ring
-does not always reach iOS testers at once, because Apple reviews the first
-build of each version before external testers can install it, usually about a
-day. Play and Firebase have no such wait.
+does not always reach iOS testers at once. Publish submits each build for
+Apple's Beta App Review the first time it reaches an external ring. The first
+build of each version gets a full review, usually about a day; later builds of
+the same version are usually approved within minutes. Play and Firebase have
+no such wait.
 
 ### Which branch
 
@@ -128,7 +130,8 @@ version comes from the variant files, not the branch name.
 
 Publishes queue in the order they started rather than running together, so more
 than one can be waiting. A run waiting at any of its gates holds the queue, and
-a ring-4 publish has four, so approve or reject promptly.
+every publish has four, so approve or reject promptly. A run that is meant to
+stop at UAT still waits at the ring-3 gate until someone rejects it.
 
 ## Version numbers
 
@@ -189,7 +192,8 @@ in both places land on the release branch and are brought forward to `main`.
 ## Still done by hand
 
 **Submitting to the App Store.** Ring-4 gets the build to App Store Connect and
-out to every TestFlight ring. A person submits it for Apple's review.
+out to every TestFlight ring. Publish handles TestFlight's Beta App Review, but
+a person still submits the build for App Store review.
 
 **Releasing on Google Play.** Ring-4 puts the build on its closed track. A
 person promotes it to Production.

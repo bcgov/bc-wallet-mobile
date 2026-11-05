@@ -58,6 +58,24 @@ describe('ListButton', () => {
     expect(screen.getByTestId('id/explicit').props.accessibilityLabel).toBe('Custom Label')
   })
 
+  it('forwards accessibility actions, so a control nested in the row stays reachable by screen readers', () => {
+    const onAccessibilityAction = jest.fn()
+    render(
+      <ListButton
+        onPress={jest.fn()}
+        testID="id/actions"
+        accessibilityActions={[{ name: 'remove', label: 'Remove' }]}
+        onAccessibilityAction={onAccessibilityAction}
+      >
+        <Text>content</Text>
+      </ListButton>
+    )
+
+    expect(screen.getByTestId('id/actions').props.accessibilityActions).toEqual([{ name: 'remove', label: 'Remove' }])
+    fireEvent(screen.getByTestId('id/actions'), 'accessibilityAction', { nativeEvent: { actionName: 'remove' } })
+    expect(onAccessibilityAction).toHaveBeenCalledWith({ nativeEvent: { actionName: 'remove' } })
+  })
+
   it('derives no accessibility label for non-string children without an explicit label', () => {
     render(
       <ListButton onPress={jest.fn()} testID="id/node">

@@ -1,5 +1,5 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { testIdWithKey } from '@bifold/core'
+import { bifoldLoggerInstance, testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -26,6 +26,13 @@ const mockPerformDeviceAuthentication = jest.mocked(performDeviceAuthentication)
 describe('SecurityMethodSelector', () => {
   const mockOnDeviceAuthPress = jest.fn()
   const mockOnPINPress = jest.fn()
+
+  // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
+  const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
+
+  afterAll(() => {
+    errorSpy.mockRestore()
+  })
 
   const renderSubject = (props: Partial<React.ComponentProps<typeof SecurityMethodSelector>> = {}) =>
     render(
@@ -261,6 +268,7 @@ describe('SecurityMethodSelector', () => {
       await waitFor(() => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppNoDeviceAuthContent1')).toBeTruthy()
       })
+      expect(errorSpy).toHaveBeenCalledWith('Error checking device auth availability: Failed to check device auth')
     })
 
     it('handles device authentication failure gracefully', async () => {

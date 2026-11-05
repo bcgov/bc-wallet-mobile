@@ -2,7 +2,14 @@ import { PressableOpacity } from '@/components/PressableOpacity'
 import { a11yLabel } from '@/utils/accessibility'
 import { ThemedText, useTheme } from '@bifold/core'
 import React, { Children, isValidElement, ReactElement, ReactNode } from 'react'
-import { AccessibilityRole, AccessibilityState, StyleSheet, View } from 'react-native'
+import {
+  AccessibilityActionEvent,
+  AccessibilityActionInfo,
+  AccessibilityRole,
+  AccessibilityState,
+  StyleSheet,
+  View,
+} from 'react-native'
 
 interface ListButtonGroupProps {
   // Optional gap between buttons in the group. Defaults to theme Spacing.xs / 2
@@ -28,6 +35,12 @@ export interface ListButtonProps {
   /** Defaults to `button`. Override for rows that own a control, e.g. `switch`. */
   accessibilityRole?: AccessibilityRole
   accessibilityState?: AccessibilityState
+  /**
+   * Actions screen readers can take on the row besides pressing it. The row is a single accessibility
+   * element, so a control nested inside it cannot be focused on its own; offer its action here too.
+   */
+  accessibilityActions?: AccessibilityActionInfo[]
+  onAccessibilityAction?: (event: AccessibilityActionEvent) => void
   testID?: string
   disabled?: boolean
   position?: 'first' | 'middle' | 'last' | 'only' // Position in the list to determine border radius
@@ -106,6 +119,8 @@ export const ListButton = (props: ListButtonProps) => {
       accessibilityState={props.accessibilityState}
       accessibilityLabel={resolvedA11yLabel}
       accessibilityHint={props.accessibilityHint}
+      accessibilityActions={props.accessibilityActions}
+      onAccessibilityAction={props.onAccessibilityAction}
       testID={props.testID}
     >
       <View style={styles.contentContainer}>

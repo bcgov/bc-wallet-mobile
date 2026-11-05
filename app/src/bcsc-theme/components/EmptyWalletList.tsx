@@ -1,3 +1,4 @@
+import { useFloatingScanButtonClearance } from '@/bcsc-theme/features/scan'
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { hitSlop, WALLET_LEARN_MORE_URL } from '@/constants'
 import { TestIds } from '@/test-ids/registry'
@@ -7,14 +8,19 @@ import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import { useHeaderHeight } from '@react-navigation/elements'
 import { a11yLabel } from '@utils/accessibility'
-import React from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, useWindowDimensions, View } from 'react-native'
+import { LayoutChangeEvent, StyleSheet, useWindowDimensions, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    alignSelf: 'stretch',
     alignItems: 'center',
   },
   message: {
@@ -37,11 +43,26 @@ const EmptyWalletList: React.FC = () => {
   const { height } = useWindowDimensions()
   const headerHeight = useHeaderHeight()
   const tabBarHeight = useBottomTabBarHeight()
+  const { bottom: bottomInset } = useSafeAreaInsets()
+  const scanButtonClearance = useFloatingScanButtonClearance()
+  const [contentHeight, setContentHeight] = useState(0)
 
   // Bifold's credential FlatList renders this empty component without a growing
   // content container, so `flex: 1` collapses to content height. Size it to the
   // viewport between the header and tab bar so the illustration + heading center.
-  const minHeight = Math.max(0, height - headerHeight - tabBarHeight)
+  // The tab bar height excludes the bottom safe-area inset: TabStack draws that
+  // inset in its own SafeAreaView under the tab bar, so take it off as well.
+  const viewportHeight = Math.max(0, height - headerHeight - tabBarHeight - bottomInset)
+
+  // Centred content stays clear of the floating Scan button (TabStack) until it grows to within the
+  // button's footprint of the viewport edges, as it does at large OS font sizes. From then on keep the
+  // footprint free below the tile, so it either sits above the button or can scroll out from under it.
+  const keepClearOfScanButton = contentHeight > viewportHeight - 2 * scanButtonClearance
+  const paddingBottom = keepClearOfScanButton ? Spacing.lg + scanButtonClearance : Spacing.lg
+
+  const handleContentLayout = useCallback((event: LayoutChangeEvent) => {
+    setContentHeight(event.nativeEvent.layout.height)
+  }, [])
 
   const handleLearnMore = () => {
     openLink(WALLET_LEARN_MORE_URL)
@@ -49,43 +70,45 @@ const EmptyWalletList: React.FC = () => {
 
   return (
     <View
-      style={[styles.container, { padding: Spacing.lg, minHeight }]}
+      style={[styles.container, { padding: Spacing.lg, paddingBottom, minHeight: viewportHeight }]}
       testID={testIdWithKey(TestIds.main.wallet.empty)}
     >
-      <EmptyWalletIllustration
-        width={184}
-        height={167}
-        style={{ marginBottom: Spacing.lg }}
-        testID={testIdWithKey(TestIds.main.wallet.emptyIllustration)}
-      />
-      <ThemedText variant="headingThree" style={[styles.message, { color: ColorPalette.brand.primary }]}>
-        {t('BCSC.Wallet.EmptyMessage')}
-      </ThemedText>
-      <PressableOpacity
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={a11yLabel(t('BCSC.Wallet.EmptyLearnMore'))}
-        hitSlop={hitSlop}
-        onPress={handleLearnMore}
-        testID={testIdWithKey(TestIds.main.wallet.emptyLearnMore)}
-        style={{
-          alignSelf: 'stretch',
-          marginTop: Spacing.lg,
-          minHeight: 57,
-          backgroundColor: ColorPalette.brand.tertiaryBackground,
-          borderRadius: Spacing.xs,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: Spacing.sm,
-          paddingHorizontal: Spacing.md,
-          paddingVertical: Spacing.sm,
-        }}
-      >
-        <ThemedText variant="normal" style={{ flex: 1, fontSize: 18, color: ColorPalette.brand.primary }}>
-          {t('BCSC.Wallet.EmptyLearnMore')}
+      <View style={styles.content} onLayout={handleContentLayout}>
+        <EmptyWalletIllustration
+          width={184}
+          height={167}
+          style={{ marginBottom: Spacing.lg }}
+          testID={testIdWithKey(TestIds.main.wallet.emptyIllustration)}
+        />
+        <ThemedText variant="headingThree" style={[styles.message, { color: ColorPalette.brand.primary }]}>
+          {t('BCSC.Wallet.EmptyMessage')}
         </ThemedText>
-        <Icon name="open-in-new" size={24} color={ColorPalette.brand.primary} />
-      </PressableOpacity>
+        <PressableOpacity
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={a11yLabel(t('BCSC.Wallet.EmptyLearnMore'))}
+          hitSlop={hitSlop}
+          onPress={handleLearnMore}
+          testID={testIdWithKey(TestIds.main.wallet.emptyLearnMore)}
+          style={{
+            alignSelf: 'stretch',
+            marginTop: Spacing.lg,
+            minHeight: 57,
+            backgroundColor: ColorPalette.brand.tertiaryBackground,
+            borderRadius: Spacing.xs,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: Spacing.sm,
+            paddingHorizontal: Spacing.md,
+            paddingVertical: Spacing.sm,
+          }}
+        >
+          <ThemedText variant="normal" style={{ flex: 1, fontSize: 18, color: ColorPalette.brand.primary }}>
+            {t('BCSC.Wallet.EmptyLearnMore')}
+          </ThemedText>
+          <Icon name="open-in-new" size={24} color={ColorPalette.brand.primary} />
+        </PressableOpacity>
+      </View>
     </View>
   )
 }

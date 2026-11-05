@@ -668,14 +668,6 @@ export const TestIds = {
       loading: 'QRDisplay.Loading',
       error: 'QRDisplay.Error',
     },
-    /** The QR scanner's failed-scan popup (bifold `DismissiblePopupModal`). `okay` is its CTA
-     *  (labelled "Dismiss"); `header`/`body` are bifold-generic ids shared with the Home notification
-     *  card, so only assert them while the scanner is up. */
-    scanError: {
-      header: 'HeaderText',
-      body: 'BodyText',
-      okay: 'Okay',
-    },
     /** Main settings (minimal — the full screen is modeled later). `profile` is verified-gated. */
     /** Main settings menu (`SettingsContent.tsx`). The `AuthenticatedSection` rows render once
      *  `didAuthenticate`; the `isVerified`-gated rows (profile/editProfile/addDevice/myDevices/
@@ -770,6 +762,8 @@ export const TestIds = {
      *  or its host without the payload); `scan` opens the QR scanner, whose hand-off lands back here. */
     configureMediator: {
       mediatorRowPrefix: 'MediatorRow-',
+      /** Remove control on a mediator row, suffixed like `mediatorRowPrefix`; absent on the selected and built-in rows. */
+      removeRowPrefix: 'RemoveMediator-',
       scan: 'ScanMediator',
     },
     /** Edit-nickname form (verified-only; `InputWithValidation` id 'accountNickname'). Validation is
@@ -1013,6 +1007,7 @@ export const TestIds = {
     toggleWalletNaming: 'ToggleWalletNamingSwitch',
     togglePreventAutoLock: 'TogglePreventAutoLockSwitch',
     toggleEnableAppToAppPersonFlow: 'ToggleEnableAppToAppPersonFlow',
+    toggleEnableAttestation: 'ToggleEnableAttestation',
     toggleRemoteLogging: 'ToggleRemoteLoggingSwitch',
     toggleEnableProxy: 'ToggleEnableProxy',
     toggleTheme: 'ToggleTheme',

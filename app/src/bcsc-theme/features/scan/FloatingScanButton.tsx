@@ -12,6 +12,18 @@ const FAB_HEIGHT = 56
 const ICON_SIZE = 32
 const LABEL_SIZE = 20
 
+/**
+ * Vertical space the button takes above the tab bar: its height plus the gap that holds it off the
+ * tab bar. Scrolling tab screens pad their content by this much so the last item can scroll out from
+ * under the button instead of staying hidden behind it, which matters once large font sizes make the
+ * content taller than the screen.
+ */
+export const useFloatingScanButtonClearance = (): number => {
+  const { Spacing } = useTheme()
+
+  return FAB_HEIGHT + Spacing.xxl
+}
+
 interface FloatingScanButtonProps {
   /**
    * Active tab route name. The FAB hides itself when this is not Home or Wallet.
@@ -45,7 +57,8 @@ const FloatingScanButton: React.FC<FloatingScanButtonProps> = ({ activeTabName, 
       shadowOpacity: 0.25,
       shadowRadius: 4,
       elevation: 6,
-      marginBottom: Spacing.lg,
+      // Gap to the tab bar; TabStack places the container flush with the tab bar's top edge.
+      marginBottom: Spacing.xxl,
     },
     label: {
       color: ColorPalette.brand.primary,

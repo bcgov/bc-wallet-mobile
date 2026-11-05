@@ -1,7 +1,13 @@
 import Clipboard from '@react-native-clipboard/clipboard'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { ErrorInfoCard, ErrorInfoCardProps, colors as errorInfoCardColors } from './ErrorInfoCard'
+import { Dimensions, StyleSheet } from 'react-native'
+import {
+  ErrorInfoCard,
+  ErrorInfoCardProps,
+  MAX_CARD_HEIGHT_RATIO,
+  colors as errorInfoCardColors,
+} from './ErrorInfoCard'
 
 jest.mock('react-native-device-info', () => ({
   getVersion: () => '1.0.0',
@@ -48,6 +54,16 @@ describe('ErrorInfoCard', () => {
       const { getByTestId } = render(<ErrorInfoCard {...defaultProps} />)
 
       expect(getByTestId('com.aries.bifold:id/CloseButton')).toBeTruthy()
+    })
+  })
+
+  describe('layout', () => {
+    it('keeps the card within the window so long details scroll instead of pushing the close button off screen', () => {
+      const tree = render(<ErrorInfoCard {...defaultProps} message="Technical details" />)
+
+      const root = tree.toJSON()
+      const style = root && !Array.isArray(root) ? StyleSheet.flatten(root.props.style) : undefined
+      expect(style).toMatchObject({ maxHeight: Dimensions.get('window').height * MAX_CARD_HEIGHT_RATIO })
     })
   })
 

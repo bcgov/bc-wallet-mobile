@@ -80,6 +80,7 @@ exports[`Services renders loading indicator when services are loading 1`] = `
           <TextInput
             accessibilityLabel="BCSC.Services.CatalogueSearch"
             autoCorrect={false}
+            maxFontSizeMultiplier={2}
             onBlur={[Function]}
             onChangeText={[Function]}
             onFocus={[Function]}
@@ -194,6 +195,7 @@ exports[`Services renders service list when loading is complete 1`] = `
           <TextInput
             accessibilityLabel="BCSC.Services.CatalogueSearch"
             autoCorrect={false}
+            maxFontSizeMultiplier={2}
             onBlur={[Function]}
             onChangeText={[Function]}
             onFocus={[Function]}

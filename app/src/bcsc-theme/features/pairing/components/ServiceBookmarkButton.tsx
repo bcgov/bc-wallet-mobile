@@ -49,7 +49,7 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
       accessibilityLabel={t('BCSC.ManualPairing.BookmarkServiceButton')}
       testID={testIdWithKey(TestIds.main.pairing.bookmark)}
     >
-      <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
+      <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color, flexShrink: 1 }}>
         {t('BCSC.ManualPairing.BookmarkServiceButton')}
       </ThemedText>
       <Icon size={32} color={TextTheme.headingFour.color} name={bookmarked ? 'bookmark' : 'bookmark-outline'} />

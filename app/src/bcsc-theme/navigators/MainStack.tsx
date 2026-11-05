@@ -170,11 +170,8 @@ const MainStack: React.FC = () => {
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
 
   const mainStackChecks = useSystemChecks(SystemCheckScope.MAIN_STACK)
-  const accountChecks = useSystemChecks(SystemCheckScope.ACCOUNT)
   const { hasChecked: serverStatusChecked } = useServerStatus()
-  const isAwaitingSystemChecks = useSystemCheckLoadingGate(
-    mainStackChecks.hasSettled && accountChecks.hasSettled && serverStatusChecked
-  )
+  const isAwaitingSystemChecks = useSystemCheckLoadingGate(mainStackChecks.hasSettled && serverStatusChecked)
   useBCSCStack(BCSCStacks.Main)
 
   // Accept connection-invitation deep links (e.g. from the showcase) once the
@@ -267,7 +264,7 @@ const MainStack: React.FC = () => {
             component={CredentialJSONDetailsScreen}
             options={{
               headerShown: true,
-              headerTitle: t('Credentials.JSONDetailsTitle'),
+              title: t('Credentials.JSONDetailsTitle'),
             }}
           />
           <Stack.Screen

@@ -5,7 +5,7 @@ import { hitSlop } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { TestIds } from '@/test-ids/registry'
-import { DismissiblePopupModal, QrCodeScanError, ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
+import { ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -13,18 +13,18 @@ import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-nat
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useCameraPermission } from 'react-native-vision-camera'
 
+const RESCAN_DELAY_MS = 1000
+
 export interface QRScannerProps {
   isProcessing: boolean
-  scanError: QrCodeScanError | null
   onScan: (value: string) => Promise<void>
-  onDismissError: () => void
 }
 
 /**
  * Presentational QR scanner shared by every scan entry point. It owns the camera UI only; what a scanned
  * value means (strategies, API calls, navigation) belongs to the screen's ViewModel.
  */
-const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScannerProps) => {
+const QRScanner = ({ isProcessing, onScan }: QRScannerProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const [torchActive, setTorchActive] = useState(false)
@@ -70,10 +70,16 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
   )
 
   useEffect(() => {
-    if (modalWasVisibleRef.current && !isErrorModalVisible) {
-      setScannerKey((prevKey) => prevKey + 1) // remount ScanCamera to clear its frozen state
-    }
+    const modalJustClosed = modalWasVisibleRef.current && !isErrorModalVisible
     modalWasVisibleRef.current = isErrorModalVisible
+
+    if (!modalJustClosed) {
+      return
+    }
+
+    // Remount ScanCamera to clear its frozen state, once the modal has finished dismissing
+    const timer = setTimeout(() => setScannerKey((prevKey) => prevKey + 1), RESCAN_DELAY_MS)
+    return () => clearTimeout(timer)
   }, [isErrorModalVisible])
 
   if (isPermissionLoading) {
@@ -91,13 +97,7 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
     <View style={styles.container}>
       {/* Camera preview + bifold's unlabeled tap-to-focus Pressable: nothing here for a screen reader. */}
       <View style={StyleSheet.absoluteFill} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <ScanCamera
-          key={scannerKey}
-          handleCodeScan={onScan}
-          enableCameraOnError={true}
-          torchActive={torchActive}
-          error={scanError}
-        />
+        <ScanCamera key={scannerKey} handleCodeScan={onScan} torchActive={torchActive} />
       </View>
       <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
       <TouchableOpacity
@@ -114,15 +114,6 @@ const QRScanner = ({ isProcessing, scanError, onScan, onDismissError }: QRScanne
         <View style={styles.processingOverlay} pointerEvents="auto">
           <ActivityIndicator size="large" color={ColorPalette.grayscale.white} />
         </View>
-      )}
-      {scanError && (
-        <DismissiblePopupModal
-          title={t('BCSC.Scan.ErrorDetails')}
-          description={scanError.message}
-          onCallToActionLabel={t('BCSC.Scan.Dismiss')}
-          onCallToActionPressed={onDismissError}
-          onDismissPressed={onDismissError}
-        />
       )}
     </View>
   )

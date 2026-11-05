@@ -37,9 +37,9 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
    * challenge set issued here. The over-long recording is discarded, so rotating the sha costs nothing.
    */
   const onPressRetake = async () => {
-    const promptsReady = await refreshPrompts()
-    if (!promptsReady) {
-      videoPromptsMissingAlert()
+    const prompts = await refreshPrompts()
+    if (!prompts.ready) {
+      videoPromptsMissingAlert(prompts.error)
       return
     }
 

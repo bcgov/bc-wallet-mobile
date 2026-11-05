@@ -1,7 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { VerificationResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { isAxiosAppError } from '@/errors/appError'
+import { AppError, isAppError, isAxiosAppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -27,10 +28,41 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * race — landing the sha from one response beside the prompts from another. Every caller wants the same
  * thing, a fresh set in the store, so a second call joins the first rather than starting a rotation.
  */
-let inFlightRefresh: Promise<boolean> | null = null
+let inFlightRefresh: Promise<PromptsResult> | null = null
 
 /** IAS returns 500 for a verification id it has already deleted server-side. */
 const DELETED_VERIFICATION_REQUEST_STATUS = 500
+
+/** `recreate` is the create that replaces an id the server rejected with a 500. */
+type PromptsRequest = 'create' | 'refresh' | 'recreate'
+
+/** On failure, `error` is the 2412 to report, carrying the real cause so reports name it. */
+export type PromptsResult = { ready: true } | { ready: false; error: AppError }
+
+const promptsMissingError = (cause: unknown, request: PromptsRequest): AppError => {
+  const { http_route, http_method, http_status } = isAppError(cause) ? cause.context : {}
+
+  return AppError.fromErrorDefinition(ErrorRegistry.VIDEO_PROMPTS_MISSING, {
+    cause,
+    context: { prompts_request: request, http_route, http_method, http_status },
+  })
+}
+
+/**
+ * Describes the shape of an unusable `prompts` value for the 2412 report, never its contents. Stands
+ * alone rather than assuming why the caller rejected it.
+ */
+const describePrompts = (prompts: unknown): string => {
+  if (Array.isArray(prompts)) {
+    return prompts.length === 0 ? 'an empty array' : `an array of ${prompts.length}`
+  }
+
+  if (prompts === null) {
+    return 'null'
+  }
+
+  return typeof prompts
+}
 
 const useVideoPrompts = () => {
   const [store, dispatch] = useStore<BCState>()
@@ -54,8 +86,9 @@ const useVideoPrompts = () => {
    * only be finalized with the sha they arrived with, so storing one without the other strands the flow.
    */
   const _storeVerificationRequest = useCallback(
-    async (verificationRequest: VerificationResponseData): Promise<boolean> => {
-      const usable = Boolean(verificationRequest.prompts?.length)
+    async (verificationRequest: VerificationResponseData, request: PromptsRequest): Promise<PromptsResult> => {
+      const { prompts } = verificationRequest
+      const usable = Array.isArray(prompts) && prompts.length > 0
 
       await updateVerificationRequest(verificationRequest.id, usable ? verificationRequest.sha256 : null)
 
@@ -63,20 +96,23 @@ const useVideoPrompts = () => {
         // The previous prompts stay in the store deliberately. TakeVideoScreen hard-throws on an empty
         // set and is still mounted underneath on the retake paths, so clearing here would crash the
         // screen the caller is about to send the user back to. Callers block the attempt instead.
-        logger.error('[useVideoPrompts] Server returned an empty prompt set')
-        return false
+        logger.error('[useVideoPrompts] Server returned no usable prompt set')
+        const cause = new Error(`Server returned no usable prompts (prompts was ${describePrompts(prompts)})`)
+        return { ready: false, error: promptsMissingError(cause, request) }
       }
 
-      dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [verificationRequest.prompts] })
-      return true
+      dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
+      return { ready: true }
     },
     [dispatch, logger, updateVerificationRequest]
   )
 
-  const _refresh = useCallback(async (): Promise<boolean> => {
+  const _refresh = useCallback(async (): Promise<PromptsResult> => {
+    const requestId = verificationRequestIdRef.current
+    let request: PromptsRequest = requestId ? 'refresh' : 'create'
+
     try {
       let verificationRequest: VerificationResponseData
-      const requestId = verificationRequestIdRef.current
 
       if (requestId) {
         try {
@@ -90,6 +126,7 @@ const useVideoPrompts = () => {
           }
 
           logger.warn('[useVideoPrompts] Stored verification id was rejected by the server; creating a fresh request')
+          request = 'recreate'
           verificationRequest = await evidence.createVerificationRequest()
         }
       } else {
@@ -97,20 +134,21 @@ const useVideoPrompts = () => {
         verificationRequest = await evidence.createVerificationRequest()
       }
 
-      return await _storeVerificationRequest(verificationRequest)
+      return await _storeVerificationRequest(verificationRequest, request)
     } catch (error) {
       logger.error('[useVideoPrompts] Failed to refresh verification prompts', error as Error)
-      return false
+      return { ready: false, error: promptsMissingError(error, request) }
     }
   }, [_storeVerificationRequest, evidence, logger])
 
   /**
    * Fetches a fresh prompt set for the next recording. Call this from every gateway into TakeVideo.
    *
-   * @returns {Promise<boolean>} Whether a usable prompt set is now in the store. On `false` the caller
-   * must not start a recording — the previous prompts are still cached and would replay a stale challenge.
+   * @returns {Promise<PromptsResult>} Whether a usable prompt set is now in the store. When not ready the
+   * caller must not start a recording — the previous prompts are still cached and would replay a stale
+   * challenge — and should report the returned error.
    */
-  const refreshPrompts = useCallback(async (): Promise<boolean> => {
+  const refreshPrompts = useCallback(async (): Promise<PromptsResult> => {
     inFlightRefresh ??= _refresh().finally(() => {
       inFlightRefresh = null
     })
@@ -134,11 +172,15 @@ const useVideoPrompts = () => {
    * VideoInstructions, after the photo steps, rather than on this press; `refreshPrompts` recovers
    * from both there.
    *
-   * @returns {Promise<boolean>} Whether the flow can proceed.
+   * @returns {Promise<PromptsResult>} Whether the flow can proceed, with the error to report if not.
    */
-  const ensureVerificationRequest = useCallback(async (): Promise<boolean> => {
+  const ensureVerificationRequest = useCallback(async (): Promise<PromptsResult> => {
+    if (verificationRequestId) {
+      return { ready: true }
+    }
+
     // refreshPrompts creates a request when no id is stored, which is exactly this call.
-    return verificationRequestId ? true : refreshPrompts()
+    return await refreshPrompts()
   }, [refreshPrompts, verificationRequestId])
 
   return { refreshPrompts, ensureVerificationRequest, isRefreshingPrompts }

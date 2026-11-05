@@ -2,6 +2,8 @@ import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
+import { createTabHeader } from '../components/NavigationHeaders'
+import QRScannerScreen from '../features/qr-core/QRScannerScreen'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { BCSCModals, BCSCQRCoreScreens, BCSCScreens } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
@@ -34,6 +36,7 @@ jest.mock('../hooks/useCardStatus', () => ({
   useCardStatus: jest.fn(),
 }))
 jest.mock('@/constants', () => ({
+  DEFAULT_HEADER_TITLE_CONTAINER_STYLE: { flexShrink: 1, maxWidth: '68%' },
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
 }))
 jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
@@ -242,6 +245,25 @@ describe('QRCoreStack', () => {
     })
   })
 
+  describe('header', () => {
+    it('spreads the default stack options so the title shrinks instead of being cut off at large font sizes', () => {
+      const headerTitle = () => null
+      jest.mocked(Bifold.useDefaultStackOptions).mockReturnValue({ headerTitle, header: () => null } as any)
+
+      render(<QRCoreStack />)
+
+      expect(capturedNavigatorProps.screenOptions).toEqual(
+        expect.objectContaining({
+          headerTitle,
+          headerTitleAlign: 'center',
+          headerTitleContainerStyle: { flexShrink: 1, maxWidth: '68%' },
+          // The tab header still wins over the default stack header.
+          header: createTabHeader,
+        })
+      )
+    })
+  })
+
   describe('QRBackButton', () => {
     it('navigates to the parent goBack when pressed', () => {
       render(<QRCoreStack />)
@@ -264,10 +286,9 @@ describe('QRCoreStack', () => {
       return screens.find((s) => s.props.name === BCSCQRCoreScreens.Scanner)
     }
 
-    it('gates the scanner screen behind AgentReadyGate', () => {
-      const ScannerComponent = getScannerScreen().props.component
-      const tree = render(<ScannerComponent />)
-      expect(tree.toJSON()).toBeTruthy()
+    // The scanner is deliberately not behind an agent gate (see QRCoreStack), so a wrapper here is a regression.
+    it('mounts the scanner screen directly, without an agent gate', () => {
+      expect(getScannerScreen().props.component).toBe(QRScannerScreen)
     })
 
     const renderTabIcon = (focused: boolean, fontScale: number) => {

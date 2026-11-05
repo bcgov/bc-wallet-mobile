@@ -1,6 +1,7 @@
 import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
+import { AttestationMonitor as BCAttestationMonitor } from '@/services/attestation'
 import { BCState } from '@/store'
 import { activate, deactivate } from '@/utils/PushNotificationsHelper'
 import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
@@ -68,7 +69,15 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const mediatorUrl = store.preferences.selectedMediator
   const walletLabel = store.preferences.walletName || 'BC Wallet'
   const enableProxy = store.developer.enableProxy
+  const enableAttestation = store.developer.enableAttestation
   const usePushNotifications = store.preferences.usePushNotifications
+
+  useEffect(() => {
+    const monitor = attestationMonitor as BCAttestationMonitor | undefined
+    if (monitor) {
+      monitor.enabled = enableAttestation
+    }
+  }, [attestationMonitor, enableAttestation])
 
   // Cancel the background cache warm-up and wait for its in-flight promise to drain
   const stopWarmCache = useCallback(async () => {
@@ -151,7 +160,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     let cancelled = false
     let inFlightAgent: Agent | undefined
 
-    const startedAt = Date.now() // TEMP: agent init timing
+    const startedAt = Date.now()
 
     // Reuse the in-memory agent if it can be reopened. Returns 'ready' when reused,
     // 'rebuild' to fall through to a fresh build, or 'cancelled' if torn down mid-way.
@@ -271,7 +280,6 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       agentRef.current = inFlightAgent
       setAgent(inFlightAgent)
       setStatus('ready')
-      logger.info(`[AgentTiming] ready: total ${Date.now() - startedAt}ms`)
       inFlightAgent = undefined
     }
 
@@ -348,6 +356,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           await handleInitError(err)
         }
       } finally {
+        // Measured before teardown so a cancelled run's shutdown time isn't counted
+        const outcome = cancelled ? 'cancelled' : agentRef.current ? 'ready' : 'error'
+        logger.debug(`[Agent] Initialization ${outcome} after ${Date.now() - startedAt}ms`)
+
         if (inFlightAgent) {
           // Cancelled or partially-built agent — close its wallet handle. The
           // shutdown is serialized against the next build's open in agent-service.

@@ -1,7 +1,7 @@
-import { useTheme } from '@bifold/core'
+import { ThemedText, useTheme } from '@bifold/core'
 import type { RefObject } from 'react'
 import { useCallback, useState } from 'react'
-import { LayoutChangeEvent, Platform, Text, TextInput } from 'react-native'
+import { LayoutChangeEvent, Platform, TextInput } from 'react-native'
 import { InputWithValidation } from './InputWithValidation'
 
 interface DateInputProps {
@@ -48,17 +48,26 @@ const DateInput = ({ ref, id, label, value, onChange, error, subtext, onLayout }
 
   const remainingTemplate = DATE_TEMPLATE.slice(displayValue.length)
 
+  // Mirrors the TextInput's font so the template lines up with the typed digits at every OS font size:
+  // both are capped by the theme's maxFontSizeMultiplier. `labelTitle` carries no lineHeight (unlike
+  // `normal`), and the explicit size keeps the nested spans on the input's size rather than the theme's.
+  const overlayTextStyle = {
+    fontSize: Inputs.textInput.fontSize,
+    fontFamily: Inputs.textInput.fontFamily,
+  }
+
   const templateOverlay = (
-    <Text
-      style={{
-        marginBottom: Platform.OS === 'ios' ? Inputs.textInput.margin : 0,
-        fontSize: Inputs.textInput.fontSize,
-        fontFamily: Inputs.textInput.fontFamily,
-      }}
+    <ThemedText
+      variant={'labelTitle'}
+      style={[overlayTextStyle, { marginBottom: Platform.OS === 'ios' ? Inputs.textInput.margin : 0 }]}
     >
-      <Text style={{ color: 'transparent' }}>{displayValue}</Text>
-      <Text style={{ color: ColorPalette.grayscale.mediumGrey }}>{remainingTemplate}</Text>
-    </Text>
+      <ThemedText variant={'labelTitle'} style={[overlayTextStyle, { color: 'transparent' }]}>
+        {displayValue}
+      </ThemedText>
+      <ThemedText variant={'labelTitle'} style={[overlayTextStyle, { color: ColorPalette.grayscale.mediumGrey }]}>
+        {remainingTemplate}
+      </ThemedText>
+    </ThemedText>
   )
 
   const handleChangeText = useCallback(

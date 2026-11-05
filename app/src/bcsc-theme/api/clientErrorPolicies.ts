@@ -333,14 +333,15 @@ export const evidenceAlreadyApprovedErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Error policy for pairing code submission — 404 indicates a wrong or
+// Error policy for pairing code submission — a plain 404 indicates a wrong or
 // expired code, which is a user-input error. Suppress the global modal so the
-// ManualPairing screen can show its own alert error instead of the misleading
-// "App not installed correctly (error 209)" alert.
+// ManualPairing and ServiceLogin screens can show their own alert instead of the
+// misleading "App not installed correctly (error 209)" alert. A 404 carrying an
+// IAS error code is not assumed to mean this, so it stays unhandled here.
 const PAIRING_CODE_PATH_PATTERN = /\/v3\/mobile\/assertion/
 export const pairingCodeErrorPolicy: ErrorHandlingPolicy = {
-  matches: (_, context) => {
-    return context.statusCode === 404 && PAIRING_CODE_PATH_PATTERN.test(context.endpoint)
+  matches: (error, context) => {
+    return error.appEvent === AppEventCode.NOT_FOUND && PAIRING_CODE_PATH_PATTERN.test(context.endpoint)
   },
   handle: (_error, context) => {
     context.logger.info(

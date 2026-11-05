@@ -39,9 +39,10 @@ That's the end of it. No store, no testers, no notifications.
 
 ## Publishing
 
-Go to **Actions → Publish → Run workflow**, pick how far it should go, and run
-it. Anyone with write access can start one; each ring past ring-0 waits for
-that ring's approvers. Publish runs from `main` or a `release/*` branch only.
+Go to **Actions → Publish → Run workflow** and run it. Anyone with write
+access can start one. Every publish heads for ring-4, and each ring past
+ring-0 waits for that ring's approvers; rejecting a gate stops it there.
+Publish runs from `main` or a `release/*` branch only.
 
 Publish never builds. It uploads the artifacts an earlier run produced, so what
 a tester installs is exactly what CI made.

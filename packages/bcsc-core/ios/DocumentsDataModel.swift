@@ -468,13 +468,7 @@ class DocumentsArchiver {
   /// Register NSKeyedUnarchiver class mappings for all document model types.
   /// V3 archived these with module-prefixed class names.
   private func registerDecodingClassMappings() {
-    for cls in documentModelClasses {
-      let className = String(describing: cls)
-      let prodName = "bc_services_card.\(className)"
-      let devName = "bc_services_card_dev.\(className)"
-      NSKeyedUnarchiver.setClass(cls, forClassName: prodName)
-      NSKeyedUnarchiver.setClass(cls, forClassName: devName)
-    }
+    documentModelClasses.forEach { registerV3ClassNames(for: $0) }
   }
 
   /// Register NSKeyedArchiver class name mappings for all document model types.

@@ -1,9 +1,13 @@
+import { isAxiosAppError } from '@/errors/appError'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { createPreVerificationJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
+
+const SESSION_TIMED_OUT_STATUS = 'SESSION_TIMED_OUT'
+const SESSION_ENDED_STATUS = 'SESSION_ENDED'
 
 type SessionStatusType = 'session_granted' | 'session_not_granted' | 'session_failed' | 'session_ended'
 type CallStatusType =
@@ -167,13 +171,25 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
   const endVideoSession = useCallback(
     async (sessionId: string): Promise<void> => {
       return withAccount(async (account) => {
-        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
-        await apiClient.delete(`${apiClient.endpoints.video}/v2/sessions/${sessionId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          skipBearerAuth: true,
-        })
+        try {
+          const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+          await apiClient.delete(`${apiClient.endpoints.video}/v2/sessions/${sessionId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+            skipOnErrorHandler: true,
+            suppressStatusCodeLogs: [404],
+          })
+        } catch (error) {
+          if (isVideoSessionEndedError(error)) {
+            // If the session has already ended, we can consider it ended successfully.
+            return
+          }
+
+          // For any other errors, rethrow the error to be handled by the caller.
+          throw error
+        }
       })
     },
     [_getDeviceCode, apiClient]
@@ -224,6 +240,21 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
       getVideoDestinations,
       getServiceHours,
     ]
+  )
+}
+
+/**
+ * Checks if the provided error is a video session ended error.
+ * @param error - The error to check.
+ * @returns True if the error indicates that the video session has ended, false otherwise.
+ */
+function isVideoSessionEndedError(error: unknown): boolean {
+  return (
+    isAxiosAppError(error, 404) &&
+    Boolean(
+      error.technicalMessage?.includes(SESSION_TIMED_OUT_STATUS) ||
+        error.technicalMessage?.includes(SESSION_ENDED_STATUS)
+    )
   )
 }
 

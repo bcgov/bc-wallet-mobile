@@ -91,6 +91,21 @@ describe('ID Token Utils', () => {
       expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token', mockJwk)
     })
 
+    it.each([
+      ['E_INVALID_JWK', AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK],
+      ['E_JWS_VERIFY_ERROR', AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION],
+    ])('should keep the verifier code %s instead of wrapping it as ERR_105', async (code, appEvent) => {
+      const bcscCoreMock = jest.mocked(BcscCore)
+      const mockLogger = new MockLogger()
+      const nativeError = Object.assign(new Error('verifier failure'), { code })
+
+      bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(nativeError)
+
+      await expect(getIdTokenMetadata('token', mockJwk, mockLogger)).rejects.toThrow(
+        expect.objectContaining({ appEvent, cause: nativeError })
+      )
+    })
+
     it('should throw ERR_114 when decoded payload is null', async () => {
       const bcscCoreMock = jest.mocked(BcscCore)
       const mockLogger = new MockLogger()

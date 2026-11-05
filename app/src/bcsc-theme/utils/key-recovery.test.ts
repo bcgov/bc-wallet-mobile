@@ -108,12 +108,13 @@ describe('performKeyRecovery', () => {
     expect(result).toEqual({ status: 'recovered', newRegistrationAccessToken: undefined })
     expect(apiClient.get).toHaveBeenCalledWith(
       `${apiClient.endpoints.registration}/${CLIENT_ID}`,
-      expect.objectContaining({
+      // exact match: key recovery must send no timeout (that is opt-in for the drift confirmation only)
+      {
         skipBearerAuth: true,
         // silent background probe: a failure must not fire the client's global onError handler
         skipOnErrorHandler: true,
         headers: { Authorization: `Bearer ${REG_TOKEN}` },
-      })
+      }
     )
     expect(mockedSetActive).toHaveBeenCalledWith('rsa1')
     expect(mockedDeleteKey).toHaveBeenCalledTimes(1)

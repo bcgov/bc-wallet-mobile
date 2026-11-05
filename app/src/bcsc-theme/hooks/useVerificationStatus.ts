@@ -2,6 +2,25 @@ import { BCState, VerificationStatus } from '@/store'
 import { useStore } from '@bifold/core'
 import { useMemo } from 'react'
 
+interface VerificationStatusFacts {
+  verified?: boolean
+  verifiedStatus?: VerificationStatus
+}
+
+/** The single definition of the verification flags; the hook and the Home notice selector both use it. */
+export const getVerificationStatus = ({ verified, verifiedStatus }: VerificationStatusFacts) => {
+  const isVerified = Boolean(verified)
+  const isVerificationInProgress = verifiedStatus === VerificationStatus.IN_PROGRESS
+  const isDeactivated = verifiedStatus === VerificationStatus.DEACTIVATED
+
+  return {
+    isVerified,
+    isVerificationInProgress,
+    isDeactivated,
+    needsVerification: !isVerified && !isVerificationInProgress,
+  }
+}
+
 /**
  * Returns the current user verification status derived from secure state.
  *
@@ -14,16 +33,5 @@ export const useVerificationStatus = () => {
   const [store] = useStore<BCState>()
   const { verified, verifiedStatus } = store.bcscSecure
 
-  return useMemo(() => {
-    const isVerified = Boolean(verified)
-    const isVerificationInProgress = verifiedStatus === VerificationStatus.IN_PROGRESS
-    const isDeactivated = verifiedStatus === VerificationStatus.DEACTIVATED
-
-    return {
-      isVerified,
-      isVerificationInProgress,
-      isDeactivated,
-      needsVerification: !isVerified && !isVerificationInProgress,
-    }
-  }, [verified, verifiedStatus])
+  return useMemo(() => getVerificationStatus({ verified, verifiedStatus }), [verified, verifiedStatus])
 }

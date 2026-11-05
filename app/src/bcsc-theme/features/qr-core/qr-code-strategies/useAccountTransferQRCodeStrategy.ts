@@ -13,7 +13,7 @@ import { useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
-import { QRCodeStrategy } from '../useQRScanner'
+import { QRCodeStrategy, QRError } from '../useQRScanner'
 
 const TRANSFER_QR_PATH = /selfsetup\.html$/i
 
@@ -92,7 +92,7 @@ export const useAccountTransferQRCodeStrategy = (
       const account = await getAccount()
 
       if (!account) {
-        throw new Error('Local account not found')
+        throw new QRError('Local account not found')
       }
 
       // ias tokens expect times in seconds since epoch
@@ -111,7 +111,7 @@ export const useAccountTransferQRCodeStrategy = (
       updateStep('getDeviceCode')
       const deviceCode = deviceCodeRef.current
       if (!deviceCode) {
-        throw new Error('Device code not found')
+        throw new QRError('Device code not found')
       }
 
       // Attest: verify the new device
@@ -124,7 +124,7 @@ export const useAccountTransferQRCodeStrategy = (
       })
 
       if (!response) {
-        throw new Error('Attestation was not accepted')
+        throw new QRError('Attestation was not accepted')
       }
 
       // fetch tokens for the new device
@@ -164,7 +164,7 @@ export const useAccountTransferQRCodeStrategy = (
       const transferToken = extractTransferToken(uri)
       if (!transferToken) {
         logger.warn('[useAccountTransferQRCodeStrategy] matched but failed to extract transferToken')
-        throw new Error('Unable to extract transfer token from uri')
+        throw new QRError('Unable to extract transfer token from uri')
       }
 
       if (store.bcscSecure.verified && onAlreadyVerified) {

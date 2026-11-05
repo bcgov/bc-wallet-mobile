@@ -34,6 +34,7 @@ jest.mock('@react-native-firebase/messaging', () => {
   }
 })
 import * as messaging from '@react-native-firebase/messaging'
+import { AppState } from 'react-native'
 import { FcmService } from './fcm-service'
 
 const messagingMock = messaging as jest.Mocked<typeof messaging>
@@ -56,6 +57,7 @@ describe('FcmService', () => {
     messagingMock.getInitialNotification.mockClear()
     messagingMock.setBackgroundMessageHandler.mockClear()
     messagingMock.getMessaging.mockClear()
+    AppState.currentState = 'active'
     service = new FcmService()
   })
 
@@ -341,6 +343,69 @@ describe('FcmService', () => {
 
       expect(messagingMock.getInitialNotification).toHaveBeenCalledTimes(1)
       expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('waits for a resumed Activity before reading the initial notification', async () => {
+      let appStateCallback: ((state: string) => void) | undefined
+      const remove = jest.fn()
+      AppState.currentState = 'background'
+      const addEventSpy = jest.spyOn(AppState, 'addEventListener').mockImplementation((_, callback) => {
+        appStateCallback = callback as (state: string) => void
+        return { remove } as any
+      })
+
+      const initPromise = service.init()
+
+      expect(messagingMock.getInitialNotification).not.toHaveBeenCalled()
+      expect(mockState.onMessageCallback).not.toBeNull()
+
+      appStateCallback?.('inactive')
+      expect(remove).not.toHaveBeenCalled()
+
+      appStateCallback?.('active')
+      await initPromise
+
+      expect(remove).toHaveBeenCalledTimes(1)
+      expect(messagingMock.getInitialNotification).toHaveBeenCalledTimes(1)
+      addEventSpy.mockRestore()
+    })
+  })
+
+  describe('when the app remounts in a surviving JS runtime', () => {
+    const challenge = (messageId: string) => ({
+      messageId,
+      data: { bcsc_challenge_request: `jwt-${messageId}` },
+      notification: undefined,
+    })
+
+    it('emits the notification that started the new Activity without adding listeners', async () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+      await service.init()
+
+      mockState.initialNotification = challenge('second')
+      await service.init()
+
+      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler).toHaveBeenCalledWith(expect.objectContaining({ data: { jwt: 'jwt-second' } }), undefined)
+      expect(messagingMock.onMessage).toHaveBeenCalledTimes(1)
+      expect(messagingMock.onNotificationOpenedApp).toHaveBeenCalledTimes(1)
+      expect(messagingMock.setBackgroundMessageHandler).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not replay a notification already delivered through onNotificationOpenedApp', async () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+      await service.init()
+
+      mockState.onNotificationOpenedAppCallback?.(challenge('first'))
+      expect(handler).toHaveBeenCalledTimes(1)
+
+      // Firebase keeps this notification after onNewIntent until getInitialNotification reads it
+      mockState.initialNotification = challenge('first')
+      await service.init()
+
+      expect(handler).toHaveBeenCalledTimes(1)
     })
   })
 

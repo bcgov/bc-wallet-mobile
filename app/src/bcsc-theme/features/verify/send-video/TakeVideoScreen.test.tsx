@@ -95,9 +95,12 @@ const startRecordingScreen = async (
     cancelRecordingVideo: jest.fn().mockResolvedValue(undefined),
   }
   const realUseVisionCamera = jest.requireActual('@/bcsc-theme/hooks/useVisionCamera').useVisionCamera
+  // One ref object for the screen's lifetime, like useRef: React sets a ref it no longer receives to
+  // null, so a fresh object per render would fail the camera check after any mid-countdown re-render
+  const cameraRef = { current: {} }
   jest.spyOn(visionCamera, 'useVisionCamera').mockImplementation((options) => ({
     ...realUseVisionCamera(options),
-    cameraRef: { current: {} },
+    cameraRef,
     ...recorder,
   }))
 
@@ -354,7 +357,10 @@ describe('TakeVideoScreen', () => {
       expect(setIntervalSpy.mock.calls.some(([, delay]) => delay === 1000)).toBe(false)
       expect(navigation.goBack).toHaveBeenCalled()
       expect(removeFileSafely).toHaveBeenCalledWith('/tmp/thumbnail.jpg', expect.anything())
-      expect(screen.queryByTestId(testIdWithKey(TestIds.verify.takeVideo.cancel))).toBeNull()
+      // The recording controls are laid out from the start but only revealed once recording begins
+      expect(
+        screen.getByTestId(testIdWithKey(TestIds.verify.takeVideo.cancel), { includeHiddenElements: true })
+      ).not.toBeVisible()
     })
 
     it('does not go back again when the screen has already unmounted', async () => {
@@ -609,6 +615,56 @@ describe('TakeVideoScreen', () => {
       expect(navigation.goBack).not.toHaveBeenCalled()
 
       setAppState('active', rerender)
+      expect(navigation.goBack).toHaveBeenCalledTimes(1)
+    })
+
+    it('keeps the countdown going through a moment of inactivity, like the microphone prompt dismissing on iOS', async () => {
+      const navigation = useNavigation()
+      const { rerender, recorder } = await startRecordingScreen(navigation, 1000)
+
+      setAppState('inactive', rerender)
+      await advanceSeconds(0.2)
+      setAppState('active', rerender)
+      await advanceSeconds(2)
+
+      expect(recorder.cancelRecordingVideo).not.toHaveBeenCalled()
+      expect(recorder.takePhoto).toHaveBeenCalledTimes(1)
+      expect(recorder.startRecordingVideo).toHaveBeenCalledTimes(1)
+      expect(navigation.goBack).not.toHaveBeenCalled()
+    })
+
+    it('starts recording when the countdown began while the microphone prompt was still dismissing', async () => {
+      mockUseBCSCActivity.mockReturnValue({ appStateStatus: 'inactive' })
+      const navigation = useNavigation()
+      const { rerender, recorder } = await startRecordingScreen(navigation, 1000)
+
+      // iOS 26+ can follow the prompt's dismissal with a spare resign/activate pair
+      setAppState('active', rerender)
+      await advanceSeconds(0.2)
+      setAppState('inactive', rerender)
+      await advanceSeconds(0.2)
+      setAppState('active', rerender)
+      await advanceSeconds(2)
+
+      expect(recorder.takePhoto).toHaveBeenCalledTimes(1)
+      expect(recorder.startRecordingVideo).toHaveBeenCalledTimes(1)
+      expect(navigation.goBack).not.toHaveBeenCalled()
+    })
+
+    it('throws the attempt away when the app is still inactive as the countdown ends', async () => {
+      const navigation = useNavigation()
+      const { rerender, recorder } = await startRecordingScreen(navigation, 1000)
+
+      setAppState('inactive', rerender)
+      await advanceSeconds(2)
+
+      expect(recorder.takePhoto).not.toHaveBeenCalled()
+      expect(recorder.startRecordingVideo).not.toHaveBeenCalled()
+      // Not yet: the instructions screen loads new prompts, which shouldn't run while the app is away
+      expect(navigation.goBack).not.toHaveBeenCalled()
+
+      setAppState('active', rerender)
+
       expect(navigation.goBack).toHaveBeenCalledTimes(1)
     })
 

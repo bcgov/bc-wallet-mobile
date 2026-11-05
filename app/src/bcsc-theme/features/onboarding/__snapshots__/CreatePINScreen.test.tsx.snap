@@ -391,6 +391,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                           },
                           {
                             "color": "#313132",
+                            "flexShrink": 1,
                           },
                         ]
                       }

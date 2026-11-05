@@ -708,7 +708,8 @@ const translation = {
     "ConfigureMediator": {
       "ScreenTitle": "Configure mediator (PT-BR)",
       "Description": "Messages reach this wallet through the selected mediator. Scan a mediator invitation QR code to add one to the list. (PT-BR)",
-      "ScanButton": "Scan mediator QR code (PT-BR)"
+      "ScanButton": "Scan mediator QR code (PT-BR)",
+      "Remove": "Remove {{mediator}} (PT-BR)"
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices? (PT-BR)",
@@ -809,28 +810,25 @@ const translation = {
       "EnterManually": "Enter Serial Number Manually (PT-BR)",
     },
     "Scan": {
-      "NoAccountFound": "No account found, restart the app and try again. (PT-BR)",
-      "NoAttestationResponse": "No attestation response, check your connection and try again. (PT-BR)",
-      "NoDeviceCodeFound": "No device code found (PT-BR)",
-      "InvalidQrCode": "Invalid QR code (PT-BR)",
       "WillScanAutomatically": "A valid QR code will scan automatically (PT-BR)",
       "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady. (PT-BR)",
       "ScanYourCard": "Scan your card (PT-BR)",
       "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically. (PT-BR)",
       "TorchOn": "Turn flashlight on (PT-BR)",
       "TorchOff": "Turn flashlight off (PT-BR)",
-      "ErrorDetails": "Error details (PT-BR)",
-      "Dismiss": "Dismiss (PT-BR)",
       "SaveScanZones": "Save Scan Zones (PT-BR)",
       "ContinueScanning": "Continue Scanning (PT-BR)",
       "Confirm": "Confirm (PT-BR)",
       "TryAgain": "Try Again (PT-BR)",
       "Connecting": "Connecting… (PT-BR)",
-      "UnrecognizedQR": "QR code not recognized. (PT-BR)",
+      "UnrecognizedQR": "QR code not recognized (PT-BR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (PT-BR)",
       "FeatureUnavailable": "This action isn't available yet. (PT-BR)",
       "AccountTransferErrorTitle": "Unable to add device (PT-BR)",
       "AccountTransferErrorDescription": "Try scanning the QR code again. If the problem continues, report it. (PT-BR)",
+      "UnrecognizedQRDescription": "We couldn't recognize this QR code. Make sure it's meant for this app. If it is, report this error. (PT-BR)",
+      "CredentialQRScanFailedTitle": "Unable to process invitation (PT-BR)",
+      "CredentialQRScanFailedDescription": "We couldn't process this invitation. If you think it should work, report this error. (PT-BR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (PT-BR)",
         "Mediator": "Mediator invitations aren't supported in BC Services Card. (PT-BR)",
@@ -1237,6 +1235,13 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible) (PT-BR)"
     },
     "VideoCall": {
+      "Controls": {
+        "Mute": "Mute (PT-BR)",
+        "Unmute": "Unmute (PT-BR)",
+        "HideVideo": "Hide Video (PT-BR)",
+        "ShowVideo": "Show Video (PT-BR)",
+        "EndCall": "End Call (PT-BR)"
+      },
       "MissingSession": "Missing required parameters to end session (PT-BR)",
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update (PT-BR)",
       "DeviceCodeError": "Missing device or user code (PT-BR)",
@@ -1354,6 +1359,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (PT-BR)",
     },
     "Wallet": {
+      "Title": "Wallet (PT-BR)",
       "EmptyMessage": "Your wallet is empty (PT-BR)",
       "EmptyLearnMore": "Learn more about the wallet (PT-BR)",
       "Reset": "Reset wallet (PT-BR)",

@@ -1,4 +1,6 @@
-import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
+import useVideoPrompts, { PromptsResult } from '@/bcsc-theme/hooks/useVideoPrompts'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { testIdWithKey } from '@bifold/core'
 import { useFocusEffect } from '@mocks/@react-navigation/native'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
@@ -16,6 +18,8 @@ jest.mock('@/hooks/useAlerts', () => ({
 }))
 
 const promptsState = { bcsc: { prompts: [{ id: 1, prompt: 'Say your name' }] } } as any
+
+const promptsError = AppError.fromErrorDefinition(ErrorRegistry.VIDEO_PROMPTS_MISSING, { track: false })
 
 describe('VideoInstructions', () => {
   let mockNavigation: any
@@ -61,7 +65,7 @@ describe('VideoInstructions', () => {
         }
       }, [callback])
     })
-    mockRefreshPrompts.mockResolvedValue(true)
+    mockRefreshPrompts.mockResolvedValue({ ready: true })
     jest.mocked(useVideoPrompts).mockReturnValue({
       refreshPrompts: mockRefreshPrompts,
       ensureVerificationRequest: jest.fn(),
@@ -113,9 +117,9 @@ describe('VideoInstructions', () => {
   })
 
   it('withholds the prompt list and blocks recording until a fresh set lands', async () => {
-    let resolveRefresh: (value: boolean) => void
+    let resolveRefresh: (value: PromptsResult) => void
     mockRefreshPrompts.mockReturnValue(
-      new Promise<boolean>((resolve) => {
+      new Promise<PromptsResult>((resolve) => {
         resolveRefresh = resolve
       })
     )
@@ -128,7 +132,7 @@ describe('VideoInstructions', () => {
     expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeDisabled()
 
     await waitFor(async () => {
-      resolveRefresh!(true)
+      resolveRefresh!({ ready: true })
     })
 
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeEnabled())
@@ -138,11 +142,12 @@ describe('VideoInstructions', () => {
   it('alerts and keeps recording blocked when a fresh set cannot be issued', async () => {
     // Falling back to the cached set would put the user back in front of the camera answering a
     // challenge the server already issued — the bug this screen guards against.
-    mockRefreshPrompts.mockResolvedValue(false)
+    mockRefreshPrompts.mockResolvedValue({ ready: false, error: promptsError })
 
     const tree = renderScreen()
 
     await waitFor(() => expect(mockVideoPromptsMissingAlert).toHaveBeenCalledTimes(1))
+    expect(mockVideoPromptsMissingAlert).toHaveBeenCalledWith(promptsError)
 
     expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeDisabled()
     expect(tree.queryByText('Say your name')).toBeNull()
@@ -151,7 +156,7 @@ describe('VideoInstructions', () => {
   it('offers a retry instead of an endless spinner when the fetch fails', async () => {
     // The alert is dismiss-only and this screen sits after every photo step, so without a retry the
     // user's only escape is backing out and redoing the photos.
-    mockRefreshPrompts.mockResolvedValue(false)
+    mockRefreshPrompts.mockResolvedValue({ ready: false, error: promptsError })
 
     const tree = renderScreen()
 
@@ -160,12 +165,12 @@ describe('VideoInstructions', () => {
   })
 
   it('recovers when the retry succeeds', async () => {
-    mockRefreshPrompts.mockResolvedValue(false)
+    mockRefreshPrompts.mockResolvedValue({ ready: false, error: promptsError })
 
     const tree = renderScreen()
     await waitFor(() => expect(tree.queryByTestId(testIdWithKey('RetryLoadPrompts'))).not.toBeNull())
 
-    mockRefreshPrompts.mockResolvedValue(true)
+    mockRefreshPrompts.mockResolvedValue({ ready: true })
     fireEvent.press(tree.getByTestId(testIdWithKey('RetryLoadPrompts')))
 
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeEnabled())

@@ -3,6 +3,8 @@ import CodeInput from '@/bcsc-theme/components/CodeInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { PAIRING_CODE_LENGTH } from '@/constants'
+import { isAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
 import { TestIds } from '@/test-ids/registry'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
@@ -47,8 +49,8 @@ const ManualPairing: React.FC = () => {
       } catch (error) {
         logger.error(`Error submitting pairing code: ${error}`)
 
-        // Error 404 is assumed to be an incorrect pairing code
-        if ((error as any)?.cause?.status === 404) {
+        // A plain 404 is assumed to be an incorrect pairing code, which pairingCodeErrorPolicy leaves for this screen
+        if (isAppError(error, AppEventCode.NOT_FOUND)) {
           setError(t('BCSC.ManualPairing.CodeDoesNotMatchMessage'))
           Alert.alert(
             t('BCSC.ManualPairing.CouldNotVerifyPairingCodeTitle'),
