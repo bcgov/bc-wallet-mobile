@@ -10,6 +10,8 @@ import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
 
+const CACHE_DRAIN_TIMEOUT_MS = 5000 // max time to wait for warmCache() to drain on teardown
+
 import {
   AgentWalletSecret,
   buildAgent,
@@ -55,6 +57,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const agentPromiseRef = useRef<Promise<Agent | null> | null>(null)
   const initializingRef = useRef(false)
   const resettingRef = useRef(false)
+  const warmCacheRef = useRef<{ controller: AbortController; promise: Promise<void> } | null>(null)
   const statusRef = useRef<AgentSetupStatus>('idle')
   statusRef.current = status
   const loggerRef = useRef(logger)
@@ -66,6 +69,30 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const walletLabel = store.preferences.walletName || 'BC Wallet'
   const enableProxy = store.developer.enableProxy
   const usePushNotifications = store.preferences.usePushNotifications
+
+  // Cancel the background cache warm-up and wait for its in-flight promise to drain
+  const stopWarmCache = useCallback(async () => {
+    if (!warmCacheRef.current) {
+      return
+    }
+
+    const warmCache = warmCacheRef.current
+    warmCacheRef.current = null
+    warmCache.controller.abort() // inject the abort signal into warmCache()
+    await Promise.race([
+      warmCache.promise, // drain any in-flight promises
+      new Promise((resolve) => setTimeout(resolve, CACHE_DRAIN_TIMEOUT_MS)), // 5s timeout to avoid indefinite hang
+    ])
+  }, [])
+
+  // Stop the agent and its background cache warm-up. Used on sign-out, reset, and teardown.
+  const stopAgent = useCallback(
+    async (liveAgent: Agent) => {
+      await stopWarmCache() // stopWarmCache will not block shutdownAgent (5s timeout)
+      await shutdownAgent(liveAgent, loggerRef.current)
+    },
+    [stopWarmCache]
+  )
 
   const refreshMonitors = useCallback(
     (liveAgent: Agent) => {
@@ -95,15 +122,15 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       const liveAgent = agentRef.current
       if (liveAgent) {
         agentRef.current = null
-        shutdownAgent(liveAgent, loggerRef.current)
+        stopAgent(liveAgent)
       }
     }
-  }, [])
+  }, [stopAgent])
 
   useEffect(() => {
     if (!didAuthenticate) {
       if (agentRef.current) {
-        shutdownAgent(agentRef.current, logger)
+        stopAgent(agentRef.current)
         agentRef.current = null
         setAgent(null)
       }
@@ -136,7 +163,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       if (!restarted) {
         // Restart failed — old agent may still hold open transports/listeners.
         // Best-effort shut it down before falling through to build a fresh one.
-        await shutdownAgent(existing, logger)
+        await stopAgent(existing)
         agentRef.current = null
         // Setting agent to null causes BifoldScope to drop AgentProvider, which
         // remounts child components and clears stale hook state (e.g. useCredentials)
@@ -216,13 +243,17 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         return
       }
 
+      const warmCacheController = new AbortController()
       /**
        * This request can take upwards of 6000+ ms to complete
        * Warm the cache in the background to prevent blocking the agent initialization.
        */
-      void warmCache(inFlightAgent, credDefs, schemas, cachedLedgers, logger).catch((error) =>
-        logger.error('[Agent] Cache warm-up failed (continuing)', error)
-      )
+      warmCacheRef.current = {
+        controller: warmCacheController,
+        promise: warmCache(inFlightAgent, credDefs, schemas, cachedLedgers, logger, warmCacheController.signal).catch(
+          (error) => logger.error('[Agent] Cache warm-up failed (continuing)', error)
+        ),
+      }
 
       if (cancelled) {
         return
@@ -288,7 +319,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           `root cause stack: ${rootCause?.stack ?? 'none'}`
       )
       if (agentRef.current) {
-        await shutdownAgent(agentRef.current, logger)
+        await stopAgent(agentRef.current)
         agentRef.current = null
         setAgent(null)
       }
@@ -320,7 +351,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         if (inFlightAgent) {
           // Cancelled or partially-built agent — close its wallet handle. The
           // shutdown is serialized against the next build's open in agent-service.
-          await shutdownAgent(inFlightAgent, logger)
+          await stopAgent(inFlightAgent)
         }
         if (!cancelled) {
           initializingRef.current = false
@@ -349,6 +380,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     schemas,
     refreshMonitors,
     ocaBundleResolver,
+    stopAgent,
   ])
 
   const resetWallet = useCallback(async () => {
@@ -396,7 +428,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
 
       // 3. shut down the agent (closes connections, stops transports, etc.)
-      await shutdownAgent(currentAgent, logger)
+      await stopAgent(currentAgent)
 
       // 4. delete the wallet store (credential data, connections, ect.)
       try {
@@ -412,7 +444,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     } finally {
       resettingRef.current = false
     }
-  }, [logger, attestationMonitor, walletKey, mediatorUrl, walletLabel, enableProxy])
+  }, [logger, attestationMonitor, stopAgent, walletKey, mediatorUrl, walletLabel, enableProxy])
 
   // Permanent agent teardown (e.g. factory reset). Unlike resetWallet this never
   // re-initializes: it shuts down, deletes the wallet store, and nulls the agent so
@@ -445,7 +477,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       attestationMonitor?.stop()
       credentialProvisioningMonitor?.stop()
 
-      await shutdownAgent(currentAgent, logger)
+      await stopAgent(currentAgent)
 
       try {
         await deleteWalletStore(currentAgent)
@@ -459,7 +491,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       setStatus('idle')
       resettingRef.current = false
     }
-  }, [logger, attestationMonitor, credentialProvisioningMonitor])
+  }, [logger, attestationMonitor, credentialProvisioningMonitor, stopAgent])
 
   /**
    * Waits for the agent to be ready and returns it, or null if the agent is not ready or has failed to initialize.
