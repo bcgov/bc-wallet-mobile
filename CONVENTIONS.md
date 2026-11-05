@@ -325,3 +325,15 @@ navigation action, is two sources of truth that can disagree, across unlock, loc
 `continueVerificationProcess` callers, `useLeaveVerification`, the once-per-session resume and the outage
 fallback. The declarative switch had the slide available all along; it only needed the animation turned
 back on and told which way each change goes.
+
+## Safe areas: chrome in view on its first frame reads the hook
+
+A native `SafeAreaView` learns its inset after it mounts: the view reports the inset to the renderer as a
+state update, applied at least a frame later, so it lays out without the padding first. That is invisible
+for a screen that enters from off-screen and visible for anything in view on its first frame. The strip under
+the tab bar was one: when the main stack mounts beneath a pop (`verify → main`), Home is mostly in view at
+once, and the tab bar sat in the home-indicator area for a frame or two before jumping up. Chrome in view on
+its first frame sizes itself from `useSafeAreaInsets()`, which the root provider has right from the first
+render (`initialWindowMetrics`); `SafeAreaView` remains fine for content that slides in from off-screen.
+Bifold's `ScreenWrapper` wraps every screen in the same native view, so a stack's first screen shows the
+jump on a root slide too; that change belongs in Bifold and is tracked there.
