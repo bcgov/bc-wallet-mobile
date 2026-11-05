@@ -1,8 +1,9 @@
 ## After shipping a release: the e2e builds
 
-Every shipped version gets e2e builds so the upgrade lanes (previous release → current, plus a
-pinned copy per shipped version) can test future builds against it. A shipped build lives under
-one name on its release and in Sauce storage: `BCSC-v<version>.apk` / `.ipa`.
+Every shipped version gets e2e builds so the weekly upgrade run can test future builds against it
+(every version in `e2e/upgrade-sources.json`, in every state an account can be in when the app
+updates). A shipped build lives under one name on its release and in Sauce storage:
+`BCSC-v<version>.apk` / `.ipa`.
 
 1. **Create the GitHub release when the version ships** — a full release, not a pre-release, on
    the Publish tag of the shipped build (e.g. `bcsc-v4.1.1-8677`). Publishing it runs
@@ -11,22 +12,21 @@ one name on its release and in Sauce storage: `BCSC-v<version>.apk` / `.ipa`.
    release object sitting on an RC tag still gets the shipped build), takes the bcsc-dev
    `.apk`/`.ipa` from that `Native Build & Test` (`main.yaml`) run — its artifacts, or, once those
    have expired after **30 days**, the same build's Sauce storage copy `BCSC-Dev-<build>.*` (main
-   builds only, kept about 60 days) — attaches them to the release as `BCSC-v<version>.*`, uploads
-   the same name to Sauce Labs storage as the pinned copy and, at 4.1.0 or later, as
-   `BCSC-prev.apk` / `BCSC-prev.ipa`, the rolling previous release (never rolled back to an older
-   build). Binaries stamped with a different version or build number than the name stop the run
+   builds only, kept about 60 days) — attaches them to the release as `BCSC-v<version>.*` and
+   uploads the same name to Sauce Labs storage. Binaries stamped with a different version or build
+   number than the name stop the run
    before anything is attached. A run that cannot resolve the build fails and emails whoever
    published the release, saying what to dispatch by hand; until the first release has been seen
    through, that person also checks the run went green (Actions → Publish Release E2E Builds).
-2. Add the version to the manifest of **Refresh E2E Sauce Builds**
-   (`.github/workflows/refresh-e2e-sauce-builds.yml`), which re-uploads every pinned copy and
-   `BCSC-prev.*` from the release assets monthly, keeping the Sauce copies inside the 60-day
-   retention window; a release missing its assets fails its entry.
+2. Add the version to `e2e/upgrade-sources.json` (version, the release tag carrying the assets,
+   the platforms it shipped on). From then on the weekly upgrade run (**E2E Upgrade Weekly**,
+   `.github/workflows/e2e-upgrade-weekly.yml`) tests it in every state, and **Refresh E2E Sauce
+   Builds** re-uploads its Sauce copy from the release assets monthly, keeping it inside the
+   60-day retention window; a release missing an asset fails its entry.
 
 **Dispatching by hand** (Actions → Publish Release E2E Builds → Run workflow, or
 `gh workflow run publish-release-e2e-builds.yml -f release_tag=<tag> …`) covers what the
-automatic run does not: a pre-release RC (pinned copy only, `BCSC-prev.*` untouched); a
-pre-release flipped to a full release later (that fires a different event); a release created
+automatic run does not: a pre-release RC; a pre-release flipped to a full release later (that fires a different event); a release created
 before the build reached ring-0 (re-run it, or dispatch with `run_id`); a tag that does not carry
 the shipped version (`asset_name`, e.g. `BCSC-v4.0.3` on `bcsc-v4.0.2`); binaries gone from the
 run and from `BCSC-Dev-<build>.*` — release-branch builds never get a Sauce copy — (`sauce_source`
@@ -34,7 +34,7 @@ names any stored build); and `dry_run`, which resolves, downloads and checks but
 uploads nothing.
 
 A build that is in neither place must be built from its tag by hand (`e2e/apps/README.md`) and
-attached with `gh release upload`. See the "Upgrade Tests" section in `e2e/README.md` for how the
+attached with `gh release upload`. See the "Upgrade suites" section in `e2e/README.md` for how the
 suites consume these builds.
 
 ---
