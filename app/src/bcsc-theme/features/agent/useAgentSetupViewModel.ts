@@ -356,9 +356,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           await handleInitError(err)
         }
       } finally {
-        // Measured before teardown so a cancelled run's shutdown time isn't counted
-        const outcome = cancelled ? 'cancelled' : agentRef.current ? 'ready' : 'error'
-        logger.debug(`[Agent] Initialization ${outcome} after ${Date.now() - startedAt}ms`)
+        logger.debug(`[Agent] Initialized after ${Date.now() - startedAt}ms`)
 
         if (inFlightAgent) {
           // Cancelled or partially-built agent — close its wallet handle. The
