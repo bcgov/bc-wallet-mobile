@@ -1,0 +1,38 @@
+{
+  "readme": "The shipped builds the e2e upgrade suites start from. One entry per version: its GitHub release tag (the durable origin of BCSC-v<version>.apk / .ipa, attached per e2e/apps/README.md) and the platforms it ships for. Read by the weekly upgrade run (every version × every state its lineage supports), the monthly Sauce refresh, and the wdio upgrade configs (PREV_VERSION). Adding a version = attaching its assets to the release + one entry here.",
+  "sources": [
+    {
+      "version": "3.15.0",
+      "release_tag": "bcsc-v3",
+      "platforms": ["android", "ios"],
+      "note": "the native v3 app; driven over the raw selectors in src/v3TestIDs.ts"
+    },
+    {
+      "version": "3.15.1",
+      "release_tag": "bcsc-v3.15.1",
+      "platforms": ["ios"],
+      "note": "an iOS-only v3 release; the ipa is attached by hand"
+    },
+    {
+      "version": "4.0.3",
+      "release_tag": "bcsc-v4.0.2",
+      "platforms": ["android", "ios"],
+      "note": "the 4.0.3 hotfix is what shipped for 4.0.x and lives on the 4.0.2 release; driven by the frozen pre-rework walks in src/flows/*-v403.ts"
+    },
+    {
+      "version": "4.1.1",
+      "release_tag": "bcsc-v4.1.1-8724",
+      "platforms": ["android", "ios"]
+    },
+    {
+      "version": "4.1.2",
+      "release_tag": "bcsc-v4.1.2-8856",
+      "platforms": ["android", "ios"]
+    },
+    {
+      "version": "4.1.3",
+      "release_tag": "bcsc-v4.1.3-9234",
+      "platforms": ["android", "ios"]
+    }
+  ]
+}

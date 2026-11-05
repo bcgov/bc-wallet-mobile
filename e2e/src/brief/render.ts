@@ -1,10 +1,12 @@
 import { createHash } from 'node:crypto'
+import type { Lineage, SourcePlatform } from '../flows/prev-build/sources.js'
 import type { SessionTestRecord } from '../helpers/session-record.js'
 import type { A11yPlatformSummary } from './a11y-summary.js'
 import type { CellResult, EvaluatedSection, FailureDetail, PlatformTotals } from './evaluate.js'
-import { laneOf, type AttemptOutcome, type SessionAttempt, type SessionGroup } from './sessions.js'
+import { laneOf, versionOf, type AttemptOutcome, type SessionAttempt, type SessionGroup } from './sessions.js'
 import { specTitles } from './spec-titles.js'
 import { PLATFORM_LABEL, PLATFORMS, type Platform, type RunnerError } from './types.js'
+import { LINEAGE_LABEL } from './upgrade-map.js'
 
 /** Pure: a brief model → the markdown GitHub renders as the run summary (and the artifact page). */
 
@@ -17,6 +19,20 @@ export interface LaneResult {
   failedSuites: number
 }
 
+/** One shipped version of the weekly upgrade run: what the sessions booted and how every state fared. */
+export interface UpgradeVersionBrief {
+  version: string
+  lineage: Lineage
+  /** The platforms the version shipped on (3.15.1 is iOS only). */
+  platforms: SourcePlatform[]
+  /** The manifest's note on the version. */
+  note?: string
+  /** The builds the session records say were booted (`BCSC-v4.1.3.ipa`), per platform. */
+  booted: string[]
+  hasReports: boolean
+  sections: EvaluatedSection[]
+}
+
 export interface BriefModel {
   title: string
   generatedAt: string
@@ -26,6 +42,8 @@ export interface BriefModel {
   runnerErrors: RunnerError[]
   uat: EvaluatedSection[]
   other: EvaluatedSection[]
+  /** The weekly upgrade brief: one entry per shipped version (uat and other are empty then). */
+  upgrades?: UpgradeVersionBrief[]
   failures: FailureDetail[]
   /** Every attempt of every journey, with its Sauce job. */
   sessions: SessionGroup[]
@@ -102,8 +120,8 @@ function formatCell(result: CellResult, mode: 'auto' | 'manual' | 'na' | 'skippe
   return formatAuto(result)
 }
 
-function renderSectionTable(sections: EvaluatedSection[], firstColumn: string): string[] {
-  const lines = [`| ${firstColumn} | Row | iOS | Android | Note |`, '| --- | --- | --- | --- | --- |']
+function renderSectionTable(sections: EvaluatedSection[], firstColumn: string, rowColumn = 'Row'): string[] {
+  const lines = [`| ${firstColumn} | ${rowColumn} | iOS | Android | Note |`, '| --- | --- | --- | --- | --- |']
   for (const { section, rows } of sections) {
     for (const { row, cells } of rows) {
       const note = [row.note, row.link ? `[${row.link.split('/').pop()}](${row.link})` : undefined].filter(Boolean).join(' · ')
@@ -189,7 +207,9 @@ function renderFailures(model: BriefModel): string[] {
     const terminated = failure.terminated ? ' · 🔌 session terminated' : ''
     const job = failure.jobUrl ? ` · [Sauce job](${failure.jobUrl})` : ''
     const sig = ` · sig \`${failureSignature(failure.platform, failure.file, failure.checkpoint)}\``
-    out.push(`- **${PLATFORM_LABEL[failure.platform]} · ${failure.suite}** → ${checkpoint} — ${failure.message}${blocked}${terminated}${job}${sig}`)
+    // The weekly upgrade brief runs one wrapper under several versions: the version tells them apart.
+    const where = [PLATFORM_LABEL[failure.platform], model.upgrades ? versionOf(failure.source) : undefined, failure.suite].filter(Boolean).join(' · ')
+    out.push(`- **${where}** → ${checkpoint} — ${failure.message}${blocked}${terminated}${job}${sig}`)
   }
   if (model.failures.length > FAILURES_SHOWN) out.push(`- …and ${model.failures.length - FAILURES_SHOWN} more in brief.json`)
   if (model.failures.length) out.push('')
@@ -262,24 +282,46 @@ function renderA11ySection(model: BriefModel): string[] {
 
 function renderLegend(model: BriefModel): string[] {
   const sources = model.sources.length ? model.sources.map((source) => `\`${source}\``).join(', ') : 'none'
+  const na = model.upgrades ? '➖ n/a (the lineage cannot arrange the state, or the version never shipped on the platform)' : '➖ n/a on this platform'
+  const map = model.upgrades ? '`e2e/src/upgrade-matrix.ts` (rendered through `e2e/src/brief/upgrade-map.ts`)' : '`e2e/src/brief/coverage-map.ts`'
+  const flag = model.upgrades ? ' --upgrades' : ''
   return [
     '### Legend',
     '',
-    '✅ pass · ❌ fail · ⛔ blocked (an earlier checkpoint in the file failed — mochaOpts.bail) · ⏭️ skipped at runtime (env/data gate) · ⬜ not run (no result in these reports) · ➖ n/a on this platform · 📝 manual (UAT-owned) · 🔌 session terminated mid-journey (the app stopped answering the driver)',
+    `✅ pass · ❌ fail · ⛔ blocked (an earlier checkpoint in the file failed — mochaOpts.bail) · ⏭️ skipped at runtime (env/data gate) · ⬜ not run (no result in these reports) · ${na} · 📝 manual (UAT-owned) · 🔌 session terminated mid-journey (the app stopped answering the driver)`,
     '',
-    'Cells show `passed/listed` and tallies when not everything listed passed. The map behind the rows is `e2e/src/brief/coverage-map.ts`.',
+    `Cells show \`passed/listed\` and tallies when not everything listed passed. The map behind the rows is ${map}.`,
     '',
-    `Sources: ${sources}. Repro: \`gh run download <run-id> -p 'e2e-reports-*' -D e2e/artifacts && cd e2e && yarn brief --reports artifacts\``,
+    `Sources: ${sources}. Repro: \`gh run download <run-id> -p 'e2e-reports-*' -D e2e/artifacts && cd e2e && yarn brief --reports artifacts${flag}\``,
     '',
   ]
 }
 
-export function renderMarkdown(model: BriefModel): string {
+/** The weekly upgrade run: a block per shipped version — what it booted, then every state as a row. */
+function renderUpgrades(model: BriefModel): string[] {
+  const out = [
+    '### Upgrades to the build under test',
+    '',
+    'One block per shipped version in `e2e/upgrade-sources.json`, oldest first. A row is n/a when the lineage cannot arrange the state (the note says why) or the version never shipped on the platform; ⬜ means the run produced no result for it.',
+    '',
+  ]
+  for (const entry of model.upgrades ?? []) {
+    const booted = entry.booted.length
+      ? `booted ${entry.booted.map((app) => `\`${app}\``).join(', ')}`
+      : entry.hasReports
+        ? 'booted build not recorded'
+        : 'no reports'
+    const only = entry.platforms.length === 1 ? `${PLATFORM_LABEL[entry.platforms[0]]} only` : undefined
+    const facts = [LINEAGE_LABEL[entry.lineage], only, booted, entry.note].filter(Boolean).map((fact) => cell(fact as string))
+    out.push(`#### From ${entry.version}`, '', facts.join(' · '), '', ...renderSectionTable(entry.sections, 'State', 'Path'), '')
+  }
+  return out
+}
+
+/** The nightly: the UAT checklist and, folded, every other journey. */
+function renderCoverage(model: BriefModel): string[] {
   const journeyCount = model.other.reduce((n, section) => n + section.rows.length, 0)
   return [
-    ...renderHeader(model),
-    ...renderPlatformTable(model),
-    ...renderWarnings(model),
     '### UAT checklist',
     '',
     ...renderSectionTable(model.uat, 'Area'),
@@ -291,10 +333,19 @@ export function renderMarkdown(model: BriefModel): string {
     '',
     '</details>',
     '',
+  ]
+}
+
+export function renderMarkdown(model: BriefModel): string {
+  return [
+    ...renderHeader(model),
+    ...renderPlatformTable(model),
+    ...renderWarnings(model),
+    ...(model.upgrades ? renderUpgrades(model) : renderCoverage(model)),
     ...renderFailures(model),
     ...renderRetried(model),
     ...renderSessions(model),
-    ...renderA11ySection(model),
+    ...(model.upgrades ? [] : renderA11ySection(model)),
     ...renderLegend(model),
   ].join('\n')
 }

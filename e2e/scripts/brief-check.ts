@@ -1,16 +1,20 @@
 /**
- * Keep the coverage map honest, then prove the brief's rules on fixture reports.
+ * Keep the coverage map and the upgrade matrix honest, then prove the brief's rules on fixture reports.
  *
  * Map checks: unique row ids; every proof file (and source) exists; every `suite` is a describe in its
  * sources; every listed `it` title is in its file verbatim (a renamed checkpoint fails here instead of
  * quietly rendering as "not run"); no two titles in a file collide once the JUnit reporter sanitizes
- * them; every journey/spec under test/bcsc is mapped in OTHER_COVERAGE (bar the PR-gate smoke spec).
+ * them; every journey/spec under test/bcsc is mapped in OTHER_COVERAGE or the upgrade matrix (bar the
+ * PR-gate smoke spec). Matrix checks: every path has a spec or a reason per lineage, and every state
+ * has a spec on every lineage (an empty suite would fail the weekly job); the manifest parses.
  *
- * Self-test: `scripts/fixtures/brief/` holds hand-written reports covering the bail cascade (reported
- * and unreported), runtime skips (and the reporter's doubled skip), a retried suite, a failed before()
- * hook, a worker with no session, a session Sauce terminated (0-byte JUnit + session records, one that
- * died in a hook so its record never noticed), the
- * migration orchestrator's shared file and the a11y baseline — each asserted below.
+ * Self-test: `scripts/fixtures/brief/` holds hand-written nightly reports covering the bail cascade
+ * (reported and unreported), runtime skips (and the reporter's doubled skip), a retried suite, a failed
+ * before() hook, a worker with no session, a session Sauce terminated (0-byte JUnit + session records,
+ * one that died in a hook so its record never noticed) and the a11y baseline. `scripts/fixtures/
+ * brief-upgrade/` holds weekly upgrade artifacts: one wrapper reporting under two versions on one
+ * platform, a bail inside a scenario, the booted build read from the session record, and manifest
+ * versions with no reports — each asserted below.
  *
  *   yarn brief:check        exit 1 on any problem, listed on stderr
  */
@@ -26,22 +30,26 @@ import { parseJunitXml, sanitizeTitle } from '../src/brief/junit.js'
 import { renderMarkdown, type BriefModel } from '../src/brief/render.js'
 import { type SpecTitles, specTitles } from '../src/brief/spec-titles.js'
 import type { Platform } from '../src/brief/types.js'
+import { allUpgradeProofs, LINEAGES, upgradeSections } from '../src/brief/upgrade-map.js'
+import { loadUpgradeSources, MANIFEST_FILE } from '../src/flows/prev-build/sources.js'
+import { UPGRADE_PATHS, UPGRADE_STATES, upgradeSpecsFor } from '../src/upgrade-matrix.js'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const E2E_ROOT = resolve(SCRIPT_DIR, '..')
 const FIXTURES = join(SCRIPT_DIR, 'fixtures', 'brief')
+const UPGRADE_FIXTURES = join(SCRIPT_DIR, 'fixtures', 'brief-upgrade')
 
 const errors: string[] = []
 const fail = (message: string): void => {
   errors.push(message)
 }
 
-// --- the map ----------------------------------------------------------------------------------------
+// --- the maps ---------------------------------------------------------------------------------------
 
-/** Specs the PR gate runs and the nightly never schedules — a row would only ever read "not run". */
-const NOT_IN_NIGHTLY = new Set(['test/bcsc/smoke.spec.ts'])
+/** Specs the PR gate runs and no scheduled run schedules — a row would only ever read "not run". */
+const NOT_SCHEDULED = new Set(['test/bcsc/smoke.spec.ts'])
 
-/** Every spec the map names, for the collision check. */
+/** Every spec the maps name, for the collision check. */
 const mappedFiles = new Set<string>()
 
 function checkRow(row: CoverageRow, seenIds: Set<string>): void {
@@ -63,6 +71,37 @@ function checkRow(row: CoverageRow, seenIds: Set<string>): void {
   }
 }
 
+/** The matrix is consistent with itself and the manifest parses — before any brief reads either. */
+function checkUpgradeMatrix(): void {
+  const ids = new Set<string>()
+  for (const path of UPGRADE_PATHS) {
+    if (ids.has(path.id)) fail(`upgrade matrix: duplicate path id "${path.id}"`)
+    ids.add(path.id)
+    if (!UPGRADE_STATES.some((state) => state.id === path.state)) fail(`upgrade matrix: ${path.id} names an unknown state "${path.state}"`)
+    for (const lineage of LINEAGES) {
+      const spec = path.spec[lineage]
+      const reason = path.unsupported?.[lineage]
+      if (!spec && !reason) fail(`upgrade matrix: ${path.id} has neither a spec nor an "unsupported" reason for the ${lineage} lineage`)
+      if (spec && reason) fail(`upgrade matrix: ${path.id} has both a spec and an "unsupported" reason for the ${lineage} lineage`)
+    }
+    if (path.scenario) {
+      const wrappers = new Set(Object.values(path.spec))
+      if (wrappers.size !== 1) fail(`upgrade matrix: ${path.id} shares scenario ${path.scenario} across ${[...wrappers].join(', ')} — one wrapper per scenario`)
+    }
+  }
+  for (const state of UPGRADE_STATES) {
+    for (const lineage of LINEAGES) {
+      if (!upgradeSpecsFor(state.id, lineage).length) fail(`upgrade matrix: the ${state.suite} suite has no spec for the ${lineage} lineage — the weekly job would run an empty suite`)
+    }
+  }
+  try {
+    const sources = loadUpgradeSources()
+    if (!sources.length) fail(`${MANIFEST_FILE}: no sources`)
+  } catch (err) {
+    fail((err as Error).message)
+  }
+}
+
 function checkCollisions(): void {
   for (const file of mappedFiles) {
     const seen = new Map<string, string>()
@@ -77,13 +116,10 @@ function checkCollisions(): void {
 
 function checkUnmapped(): void {
   const mapped = new Set<string>()
-  for (const section of OTHER_COVERAGE) {
-    for (const row of section.rows) {
-      for (const proof of row.proof) {
-        mapped.add(proof.file)
-        for (const source of proof.sources ?? []) mapped.add(source)
-      }
-    }
+  const proofs = [...OTHER_COVERAGE.flatMap((section) => section.rows.flatMap((row) => row.proof)), ...allUpgradeProofs()]
+  for (const proof of proofs) {
+    mapped.add(proof.file)
+    for (const source of proof.sources ?? []) mapped.add(source)
   }
   const root = join(E2E_ROOT, 'test', 'bcsc')
   const specs = readdirSync(root, { recursive: true })
@@ -92,7 +128,7 @@ function checkUnmapped(): void {
     .map((entry) => `test/bcsc/${entry}`)
     .sort()
   for (const file of specs) {
-    if (!mapped.has(file) && !NOT_IN_NIGHTLY.has(file)) fail(`${file} is not in OTHER_COVERAGE — add a row so the brief shows it`)
+    if (!mapped.has(file) && !NOT_SCHEDULED.has(file)) fail(`${file} is in neither OTHER_COVERAGE nor the upgrade matrix — add a row so the brief shows it`)
   }
 }
 
@@ -100,22 +136,32 @@ const seenIds = new Set<string>()
 for (const section of [...UAT_CHECKLIST, ...OTHER_COVERAGE]) {
   for (const row of section.rows) checkRow(row, seenIds)
 }
+// The upgrade rows as the weekly brief builds them, once per lineage (the version only prefixes the id).
+for (const lineage of LINEAGES) {
+  for (const section of upgradeSections({ version: lineage, lineage, platforms: ['android', 'ios'] })) {
+    for (const row of section.rows) checkRow(row, seenIds)
+  }
+}
+checkUpgradeMatrix()
 checkCollisions()
 checkUnmapped()
 
 // --- the rules, on fixtures ---------------------------------------------------------------------------
 
-function cellOf(model: BriefModel, id: string, platform: Platform): CellResult {
-  for (const section of [...model.uat, ...model.other]) {
+function rowOf(model: BriefModel, id: string): { row: CoverageRow; cells: Record<Platform, CellResult> } {
+  const sections = [...model.uat, ...model.other, ...(model.upgrades ?? []).flatMap((entry) => entry.sections)]
+  for (const section of sections) {
     const found = section.rows.find((entry) => entry.row.id === id)
-    if (found) return found.cells[platform]
+    if (found) return found
   }
   throw new Error(`no row ${id}`)
 }
 
+const cellOf = (model: BriefModel, id: string, platform: Platform): CellResult => rowOf(model, id).cells[platform]
+
 function selfTest(): void {
   const reportDirs = resolveReportDirs([FIXTURES])
-  assert.equal(reportDirs.length, 4, 'four fixture report dirs')
+  assert.equal(reportDirs.length, 3, 'three fixture report dirs')
   const model = buildBrief({
     reportDirs,
     baselinePath: join(FIXTURES, 'a11y-baseline.json'),
@@ -162,25 +208,6 @@ function selfTest(): void {
   // the reporter writes a runtime skip twice; the brief counts it once
   const unverified = cellOf(model, 'j-unverified-main', 'ios')
   assert.deepEqual([unverified.listed, unverified.skipped], [7, 3])
-  // the migration orchestrator reports three suites under one file
-  const migration = cellOf(model, 'ext-migration-v3', 'android')
-  assert.deepEqual([migration.status, migration.passed, migration.listed], ['pass', 6, 6])
-  assert.equal(cellOf(model, 'j-migration-upgrade', 'android').status, 'pass')
-  // …and when it bails mid-file (iOS fixture): the remainder comes from the sources, and a describe it never reached is blocked
-  const migrationSources = ['v3-onboarding', 'v3-to-v4-upgrade', 'v4-unlock'].map((name) => `test/bcsc/migration/${name}.spec.ts`)
-  const migrationTitles = migrationSources.flatMap((source) => specTitles(source)?.its ?? [])
-  const migrationIos = cellOf(model, 'ext-migration-v3', 'ios')
-  assert.deepEqual(
-    [migrationIos.status, migrationIos.passed, migrationIos.failed, migrationIos.blocked, migrationIos.listed],
-    ['fail', 3, 1, migrationTitles.length - 4, migrationTitles.length]
-  )
-  const unlockIos = cellOf(model, 'j-migration-v4-unlock', 'ios')
-  // v4-unlock never runs in the bailed iOS fixture, so every one of its checkpoints is blocked — derive
-  // the count from the spec so adding checkpoints there (e.g. the verified-state asserts) doesn't rot this.
-  const v4UnlockCount = specTitles('test/bcsc/migration/v4-unlock.spec.ts')?.its.length ?? 0
-  assert.deepEqual([unlockIos.status, unlockIos.blocked, unlockIos.listed], ['blocked', v4UnlockCount, v4UnlockCount])
-  assert.equal(cellOf(model, 'j-migration-v3-add-card', 'ios').status, 'pass')
-  assert.equal(model.failures.find((entry) => entry.platform === 'ios' && entry.file.endsWith('migration.spec.ts'))?.blockedAfter, migrationTitles.length - 4)
   // a worker that never got a session
   assert.equal(model.runnerErrors.length, 1)
   assert.equal(model.runnerErrors[0].platform, 'android')
@@ -239,9 +266,76 @@ function selfTest(): void {
   )
 
   const markdown = renderMarkdown(model)
-  for (const heading of ['### UAT checklist', '### Failures (6)', '<summary>Sessions (3 journeys · 5 attempts)</summary>', '🔌 session terminated', 'send-video ❌ (job ✅)', '### Accessibility', '### Legend']) {
+  for (const heading of ['### UAT checklist', '### Failures (5)', '<summary>Sessions (3 journeys · 5 attempts)</summary>', '🔌 session terminated', 'send-video ❌ (job ✅)', '### Accessibility', '### Legend']) {
     assert.ok(markdown.includes(heading), `markdown has ${heading}`)
   }
+  assert.ok(!markdown.includes('### Upgrades'), 'the nightly brief has no upgrade block')
+}
+
+function upgradeSelfTest(): void {
+  const reportDirs = resolveReportDirs([UPGRADE_FIXTURES])
+  assert.equal(reportDirs.length, 4, 'four upgrade fixture report dirs')
+  const model = buildBrief({
+    reportDirs,
+    title: 'upgrade fixture',
+    upgrades: true,
+    lanes: [{ name: 'upgradeVerified', result: 'success' }, { name: 'upgradeSubmitted', result: 'success' }, { name: 'upgradePartial', result: 'skipped' }],
+    now: new Date('2026-10-31T16:00:00Z'),
+  })
+  // every manifest version has a block, oldest first, whether or not it has reports
+  const manifest = loadUpgradeSources().map((source) => source.version)
+  assert.deepEqual(model.upgrades?.map((entry) => entry.version), manifest)
+  assert.ok(manifest.includes('3.15.0') && manifest.includes('3.15.1') && manifest.includes('4.0.3') && manifest.includes('4.1.3'), 'the fixtures assume these manifest versions')
+  const entry = (version: string) => model.upgrades?.find((candidate) => candidate.version === version)
+  // one wrapper reporting under two versions on one platform keeps a result per version
+  const verifiedTitles = specTitles('test/bcsc/upgrade/scenarios/verified.scenario.ts')?.its ?? []
+  const v3Ios = cellOf(model, 'upgrade-3.15.0-verified', 'ios')
+  assert.deepEqual([v3Ios.status, v3Ios.passed, v3Ios.failed, v3Ios.blocked, v3Ios.listed], ['fail', 2, 1, verifiedTitles.length - 3, verifiedTitles.length])
+  const v413Ios = cellOf(model, 'upgrade-4.1.3-verified', 'ios')
+  assert.deepEqual([v413Ios.status, v413Ios.passed, v413Ios.listed], ['pass', verifiedTitles.length, verifiedTitles.length])
+  assert.equal(cellOf(model, 'upgrade-3.15.0-verified', 'android').status, 'pass')
+  assert.equal(cellOf(model, 'upgrade-4.1.3-verified', 'android').status, 'not-run')
+  // a lineage that cannot arrange a path is n/a with the matrix's reason; an iOS-only version is n/a on Android
+  const v3Serial = rowOf(model, 'upgrade-3.15.0-resume-serial')
+  assert.deepEqual([v3Serial.cells.ios.status, v3Serial.cells.android.status], ['na', 'na'])
+  assert.ok(v3Serial.row.note?.includes('not representable from v3'), 'the n/a row carries the reason')
+  assert.deepEqual([cellOf(model, 'upgrade-3.15.1-verified', 'android').status, cellOf(model, 'upgrade-3.15.1-verified', 'ios').status], ['na', 'not-run'])
+  assert.deepEqual(entry('3.15.1')?.platforms, ['ios'])
+  // a submitted-state wrapper that bailed inside its scenario: fail + the scenario's remainder blocked; its sibling never ran
+  const pendingTitles = specTitles('test/bcsc/upgrade/scenarios/in-person-pending.scenario.ts')?.its ?? []
+  const pending = cellOf(model, 'upgrade-4.1.3-in-person-pending', 'ios')
+  assert.deepEqual([pending.status, pending.passed, pending.failed, pending.blocked, pending.listed], ['fail', 4, 1, pendingTitles.length - 5, pendingTitles.length])
+  assert.equal(cellOf(model, 'upgrade-4.1.3-send-video-pending', 'ios').status, 'not-run')
+  assert.equal(model.failures.find((failure) => failure.file.endsWith('upgrade-in-person-pending.spec.ts'))?.blockedAfter, pendingTitles.length - 5)
+  // the booted build comes from the session records; a version with no reports says so
+  assert.deepEqual(entry('3.15.0')?.booted, ['BCSC-v3.15.0.apk'])
+  assert.deepEqual(entry('4.1.3')?.booted, ['BCSC-v4.1.3.ipa'])
+  assert.deepEqual([entry('4.0.3')?.hasReports, entry('4.0.3')?.booted], [false, []])
+  assert.ok(model.warnings.includes('No reports for the upgrade from 4.0.3.'))
+  // failures name their artifact (so the version); lanes match the versioned artifact names
+  const verifiedFailure = model.failures.find((failure) => failure.file.endsWith('upgrade-verified.spec.ts'))
+  assert.equal(verifiedFailure?.source, 'e2e-reports-upgradeVerified-3.15.0-iOS-18')
+  assert.deepEqual(model.lanes.map((lane) => [lane.hasReports, lane.failedSuites > 0]), [[true, true], [true, true], [false, false]])
+  // totals sum over the versions
+  assert.equal(model.platforms.ios?.suites, 3)
+  assert.equal(model.platforms.android?.suites, 1)
+
+  const markdown = renderMarkdown(model)
+  for (const text of [
+    '### Upgrades to the build under test',
+    '#### From 3.15.0',
+    '#### From 4.0.3',
+    'iOS only',
+    'booted `BCSC-v4.1.3.ipa`',
+    '| State | Path | iOS | Android | Note |',
+    '| Partial | Unverified account: PIN and settings survive |',
+    '**iOS · 3.15.0 · Upgrade with a verified account**',
+    '<summary>Sessions (2 journeys · 2 attempts)</summary>',
+    'upgradePartial ⏭️ (no reports)',
+  ]) {
+    assert.ok(markdown.includes(text), `upgrade markdown has ${text}`)
+  }
+  for (const text of ['### UAT checklist', '### Accessibility']) assert.ok(!markdown.includes(text), `upgrade markdown has no ${text}`)
 }
 
 try {
@@ -249,10 +343,15 @@ try {
 } catch (err) {
   fail(`fixture self-test: ${(err as Error).message}`)
 }
+try {
+  upgradeSelfTest()
+} catch (err) {
+  fail(`upgrade fixture self-test: ${(err as Error).message}`)
+}
 
 if (errors.length) {
   for (const message of errors) console.error(`[brief:check] ${message}`)
   console.error(`[brief:check] ${errors.length} problem(s)`)
   process.exit(1)
 }
-console.error('[brief:check] coverage map and fixture self-test OK')
+console.error('[brief:check] coverage map, upgrade matrix and fixture self-tests OK')
