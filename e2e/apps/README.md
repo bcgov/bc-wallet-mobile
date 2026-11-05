@@ -167,7 +167,7 @@ The upgrade suites boot a **shipped version** first (`PREV_VERSION`), then insta
 | Version | Lineage / driver          | Platforms                      | Release carrying `BCSC-v<version>.*`                                                   |
 | ------- | ------------------------- | ------------------------------ | -------------------------------------------------------------------------------------- |
 | 3.15.0  | `v3` (native selectors)   | Android + iOS                  | `bcsc-v3`                                                                              |
-| 3.15.1  | `v3`                      | iOS only (no Android 3.15.1)   | `bcsc-v3.15.1`                                                                         |
+| 3.15.1  | `v3`                      | iOS only (no Android 3.15.1)   | `bcsc-v3`                                                                              |
 | 4.0.3   | `v403` (frozen walks)     | Android + iOS                  | `bcsc-v4.0.2` (the 4.0.3 hotfix is what shipped; there is no `bcsc-v4.0.3` release)    |
 | 4.1.1   | `current` (today's DSL)   | Android + iOS                  | `bcsc-v4.1.1-8724`                                                                     |
 | 4.1.2   | `current`                 | Android + iOS                  | `bcsc-v4.1.2-8856`                                                                     |
@@ -185,6 +185,8 @@ gh workflow run publish-release-e2e-builds.yml -f release_tag=bcsc-v4.0.2 -f sau
 ```
 
 Then add the version to `e2e/upgrade-sources.json` (version, the release tag carrying the assets, the platforms it shipped on). A build that is in neither place must be rebuilt from its tag per the sections above — with its **original build number** (`VERSION_CODE`, e.g. 8724 for 4.1.1), since Android only installs the current build over an older versionCode — and attached with `gh release upload <tag> <files>`; an iOS-only version (3.15.1) carries only the `.ipa`.
+
+> **Rebuild an upgrade source as `bcsc-dev`**, not the `bcsc-test` variant the sections above apply (`node scripts/apply-variant.mjs bcsc-dev`). Every stored e2e build is bcsc-dev — SIT backend, iOS bundle id `ca.bc.gov.iddev.servicescard`, Android package `ca.bc.gov.id.servicescard.dev` — so a `bcsc-test` build, which carries other ids, installs beside the build under test instead of being upgraded.
 
 **Local runs** pull the same release assets, under the same name:
 

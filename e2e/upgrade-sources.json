@@ -9,7 +9,7 @@
     },
     {
       "version": "3.15.1",
-      "release_tag": "bcsc-v3.15.1",
+      "release_tag": "bcsc-v3",
       "platforms": ["ios"],
       "note": "an iOS-only v3 release; the ipa is attached by hand"
     },
