@@ -7,22 +7,20 @@ const none: VerificationFacts = {
   hasRefreshToken: false,
 }
 
-type Flags = Pick<VerificationState, 'isVerificationInProgress' | 'isDeactivated'>
-const noFlags: Flags = { isVerificationInProgress: false, isDeactivated: false }
-
-const verified = (flags: Partial<Flags> = {}): VerificationState => ({
-  ...noFlags,
-  ...flags,
+const verified = (isDeactivated = false): VerificationState => ({
+  isDeactivated,
   isVerified: true,
   isDeviceVerifiedByIas: true,
+  isVerificationInProgress: false,
   needsVerification: false,
 })
 
-const unverified = (
-  overrides: Partial<Flags & { isDeviceVerifiedByIas: boolean; needsVerification: boolean }> = {}
-): VerificationState => ({
-  ...noFlags,
+type Unverified = Extract<VerificationState, { isVerified: false }>
+
+const unverified = (overrides: Partial<Omit<Unverified, 'isVerified'>> = {}): VerificationState => ({
+  isDeactivated: false,
   isDeviceVerifiedByIas: false,
+  isVerificationInProgress: false,
   needsVerification: false,
   ...overrides,
   isVerified: false,
@@ -35,13 +33,9 @@ describe('getVerificationState', () => {
     [
       'a credential deactivated during the session',
       { hasCredential: true, credentialDeactivated: true },
-      verified({ isDeactivated: true }),
+      verified(true),
     ],
-    [
-      'a credential and the verify flow',
-      { hasCredential: true, inVerifyFlow: true },
-      verified({ isVerificationInProgress: true }),
-    ],
+    ['a credential and the verify flow', { hasCredential: true, inVerifyFlow: true }, verified()],
     [
       'tokens without a credential (an account transfer, or a failed finish step)',
       { hasRefreshToken: true },
