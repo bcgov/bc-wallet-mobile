@@ -1,88 +1,84 @@
 # Moving data from native storage to app storage
 
-The pattern to follow when a record that `react-native-bcsc-core` stores natively (in Swift and Kotlin) moves into app storage owned by TypeScript. It covers storage moves only: #4426 and #5009–#5012 under #4341. Other native-to-TypeScript work, such as notifications (#4420), PIN lockout rules (#4423) and the parked JWT tickets, needs its own approach.
+How to move a saved record from the native BCSC module (Swift and Kotlin) into app storage (TypeScript). It covers the storage tickets under #4341: #4426 and #5009–#5012. Other native work, such as notifications (#4420), PIN lockout (#4423) and the parked JWT tickets, needs its own approach.
 
-In short: **a versioned, one-time import that copies the data, confirms it, and then retires the native copy.** Every step must be safe to run again if the app is killed partway through.
+In short: **import the data once, check it, then retire the native copy.** Every step must be safe to repeat if the app is closed partway through.
 
 ## The rules
 
-### 1. Record that each import has run
+### 1. Track each import with a marker
 
-Give each record its own migration marker. Never decide to import because the app store is empty.
+Each record gets its own "imported" marker. Never import just because the app store is empty: an empty store may mean the user cleared it, and re-importing would bring deleted data back.
 
-Name markers with a version (for example `bookmarks.v1`) so a later re-import can run under a new marker. Keep each marker in the same account and environment scope as its record, so a new account or environment never inherits another's migration state.
+- Give markers a version (for example `bookmarks.v1`) so a later re-import can run under a new one.
+- Keep markers per account and environment, like their records.
+- Resets clear the record but keep the marker. Removing the account clears the marker only after the native data is gone.
 
-An empty store can mean "never imported" or "the user cleared it". If the two look the same, the old native data is imported again and deleted state comes back, for example a verification reset being undone on the next launch. Domain resets clear the record, not the marker. Full account removal may clear the marker only after the matching native data has been removed.
+### 2. Copy, check, retire, then mark done
 
-### 2. Copy, confirm, retire, then mark complete
+Read the native data, validate it, save it, confirm the save, retire the native copy, then set the marker. If the app crashes at any step, the import runs again next launch, and running it twice changes nothing.
 
-Read the native data, validate it, write it to the app store, confirm the write, retire the native copy, and only then set the marker. A crash at any point leaves the app able to run the import again safely, and running it twice changes nothing.
+The import has three outcomes:
 
-Native import readers must tell three cases apart: the data is present, it is absent, or it couldn't be read. Only success or genuine absence sets the marker. A failed import leaves the marker unset and tries again on the next launch. Code that depends on the record must not treat a failed import as empty, or overwrite anything because of it.
+- **Found:** import it and set the marker.
+- **Nothing there:** set the marker.
+- **Couldn't read it:** leave the marker unset and try again next launch. The app still starts, but the record is unavailable. Features that need it wait or retry. Don't fill in a default or change either copy.
 
-While an import has failed, the app still starts, but the record is unavailable. Only the features that depend on it wait or retry. Don't fill in a default value or write to either copy.
-
-If the app record exists but its marker doesn't (for example after a restore from backup), the app copy wins and the import completes. Nothing writes the native copy after retirement, so the app copy is always the newer one.
+If the app record already exists without a marker (for example after a backup restore), keep the app copy and set the marker. It's always the newer one.
 
 ### 3. Retire first, delete later
 
-When a record moves, retire the native copy: normal reads and writes move to the new owner, and only a read-only recovery path remains. Delete it in a later release, and only for users whose import has run.
+Retiring means the app stops using the native copy but keeps it for recovery. Delete it in a later release, and only for users whose import has run. Some native files hold several records, so never delete a shared file.
 
-While the retired copy exists, a fix release can still recover data that a buggy import missed. Some native files hold more than one record: never delete a shared file, just stop using the part you moved.
+### 4. Validate imported data
 
-### 4. Validate at the boundary
-
-Native and v3 formats are inconsistent, with mixed key styles, different timestamp units and missing fields. Parse imported data against a schema and normalise it in one place. Store records with a version number so later shape changes can be migrated step by step.
-
-Treat data that can't be read or doesn't validate as a failed import (rule 2). Don't block startup.
+Native and v3 data is inconsistent: different key names, timestamp units and missing fields. Check it against a schema and clean it up in one place. Store records with a version so their shape can change later. Bad data counts as a failed import (rule 2).
 
 ### 5. Files move with their record
 
-If a record points at files, make sure every file is in app-owned storage and readable before saving the record, and retire the native copy only once the record and its files are complete. A rerun must reuse or replace files safely, and clearing the record deletes its files too.
+If a record points at files, move and check the files before saving the record. Clearing the record deletes its files.
 
 ### 6. One owner per record
 
-Each record has one TypeScript module that reads, writes, clears and imports it, and nothing else touches its storage. All records share one storage adapter, so the storage choice is made once.
-
-Each record also declares which resets clear it. Not every reset clears everything.
+One TypeScript module reads, writes, clears and imports each record. Nothing else touches it. Each record states which resets clear it.
 
 ### 7. Import before anything reads
 
-Each import finishes before the record's first reader, once the storage it needs is available. No code reads or writes the record before then. The app sees either the old state or the fully imported state, never a mix.
+The import finishes before anything reads or writes the record. The app sees the old state or the new state, never a mix.
 
 ### 8. Log the outcome, never the data
 
-Log one line per record per import: imported, not present, already done, or failed (with a reason category). That shows when the native readers can be removed. Never log record contents or the raw input that failed validation.
+Log one line per import: imported, nothing there, already done, or failed (with a reason). Never log the record's contents.
 
 ### 9. Test the failure paths
 
-Cover native data that is missing, partial, corrupt, or in the v3 format, on both platforms. Also cover running the import twice, a crash at each step of rule 2, an app record with no marker, a reset followed by a restart, and an upgraded user keeping their data.
+On both platforms, test native data that is missing, partial, corrupt or in v3 format. Also test running twice, a crash at each step, an app record with no marker, a reset then restart, and an upgrade that keeps the user's data.
 
 ## Choosing the storage
 
-The shared storage adapter is chosen once, in #4426, which sets up the app-side store. The other tickets reuse it. It needs clear answers to these questions:
+#4426 picks one storage approach, and the other tickets reuse it. It should answer:
 
-- Is the data kept private to the app?
-- Can each record be read when it's needed, for example before the app is unlocked?
-- Are writes atomic and durable, so a crash never leaves half a record?
-- What happens on reinstall or restore from backup? On iOS, keychain items survive an uninstall, so old records and markers can come back.
-- Are records kept apart per account and per environment?
+- Is the data private to the app?
+- Can it be read when needed, for example before unlock?
+- Are writes all-or-nothing, so a crash never leaves half a record?
+- What happens on reinstall or backup restore? On iOS, keychain data survives an uninstall.
+- Is data kept separate per account and environment?
 
 ## What stays native
 
-Device keys, PBKDF2, biometrics, JWT signing, and the account and token records that native PIN and unlock code reads. Read-only native import readers also stay until the cleanup release removes them.
+Device keys, PBKDF2, biometrics, JWT signing, and the account and token records used by native PIN and unlock. The read-only import code also stays until a later cleanup release.
 
 ## Checklist
 
-- [ ] One owner module for the record, on the shared storage adapter
-- [ ] Imported data validated, and stored with a version
-- [ ] Native reader tells present, absent and failed apart
+- [ ] One owner module, using the shared storage
+- [ ] Imported data validated and versioned
+- [ ] Import tells found, nothing there and failed apart
 - [ ] Native copy retired, not deleted, before the marker is set
-- [ ] Migration marker versioned, scoped like its record, and set only on success or when there's nothing to import
+- [ ] Marker versioned, scoped like its record, set only on success or nothing to import
 - [ ] Failed import leaves the record unavailable, not empty
-- [ ] Any files the record points at moved and checked before the record is saved
-- [ ] Reset scope declared and tested
+- [ ] Files moved and checked before the record is saved
+- [ ] Reset behaviour declared and tested
 - [ ] Import runs before anything reads the record
 - [ ] Outcome logged, without the data
 - [ ] Failure paths tested
-- [ ] Follow-up filed to delete the retired native data and its reader
+- [ ] Follow-up ticket to delete the retired native data
