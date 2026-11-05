@@ -474,6 +474,43 @@ describe('useGetSystemChecks', () => {
       })
     })
 
+    describe('decidesHomeCard', () => {
+      const renderWithSecure = (bcscSecure: object) => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          {
+            stateLoaded: true,
+            developer: { environment: { analyticsAppId: 'test-app-id' } },
+            bcsc: { analyticsOptIn: true },
+            bcscSecure: { isHydrated: true, ...bcscSecure },
+          },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        jest.spyOn(React, 'useContext').mockReturnValue({})
+
+        return renderHook(() => useCreateSystemChecks()).result.current[SystemCheckScope.MAIN_STACK].decidesHomeCard
+      }
+
+      it('is false for an unverified user with nothing submitted, whose batch is the Terms of Use fetch', () => {
+        expect(renderWithSecure({ verified: false })).toBe(false)
+      })
+
+      it('is true while a verification request can resolve', () => {
+        expect(renderWithSecure({ verified: false, verificationRequestId: 'req-1' })).toBe(true)
+      })
+
+      it('is true while a pending verification can be recovered from its device codes', () => {
+        expect(renderWithSecure({ verified: false, deviceCode: 'device', userCode: 'user' })).toBe(true)
+      })
+
+      it('is false for a verified user, whose batch leaves the card alone', () => {
+        expect(renderWithSecure({ verified: true, verificationRequestId: 'req-1' })).toBe(false)
+      })
+    })
+
     describe('getSystemChecks', () => {
       it('should return the correct system checks for MAIN_STACK scope', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')

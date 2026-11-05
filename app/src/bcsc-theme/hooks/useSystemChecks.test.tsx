@@ -28,6 +28,7 @@ type ScopeDefinition = {
   isReady: boolean
   isApplicable: boolean
   sessionKey?: string
+  decidesHomeCard?: boolean
 }
 let mockScopes: Record<SystemCheckScope, ScopeDefinition>
 jest.mock('./useCreateSystemChecks', () => ({
@@ -102,6 +103,22 @@ describe('useSystemChecks', () => {
     }
   })
 
+  it('passes on whether the batch decides the Home card, false unless the scope says so', () => {
+    mockScopes = {
+      ...mockScopes,
+      [SystemCheckScope.MAIN_STACK]: scope({ sessionKey: 'MAIN_STACK:unverified', decidesHomeCard: true }),
+    }
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <BasicAppContext>
+        <SystemCheckSessionProvider>{children}</SystemCheckSessionProvider>
+      </BasicAppContext>
+    )
+    const decidesHomeCard = (checked: SystemCheckScope) =>
+      renderHook(() => useSystemChecks(checked), { wrapper }).result.current.decidesHomeCard
+
+    expect(decidesHomeCard(SystemCheckScope.MAIN_STACK)).toBe(true)
+    expect(decidesHomeCard(SystemCheckScope.VERIFY)).toBe(false)
+  })
   describe('a scope that runs once per mount (no session key)', () => {
     it('runs the batch on mount and settles once it has finished', async () => {
       const { rendered } = renderProbe({ scope: SystemCheckScope.VERIFY })

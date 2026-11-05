@@ -63,6 +63,12 @@ type UseGetSystemChecksReturn = Record<
      * `SystemCheckSessionProvider` records the run under. A different key is a new batch to run.
      */
     sessionKey?: string
+    /**
+     * True for a batch with a check that can change what the stack paints before the batch settles: for
+     * MAIN_STACK, the request-status checks that flip the Home card. The stack's loading gate holds for such
+     * a batch only; any other resolves after paint.
+     */
+    decidesHomeCard?: boolean
   }
 >
 
@@ -214,6 +220,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       systemChecks.push(new RefreshTokenExpiredSystemCheck(refreshTokenExpired, navigation, utils))
     }
 
+    // The two request-status checks below can flip the Home card (Start/Continue → Verified) once they
+    // resolve; `decidesHomeCard` tells the stack to wait for a batch that carries one
     if (!isVerified && verificationRequestId) {
       const { deviceCode, userCode } = store.bcscSecure
       systemChecks.push(
@@ -354,6 +362,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         // Once per session, and once more when the user verifies during it, as the id-token-backed checks only
         // join the batch then. A verify ↔ main change within a session doesn't run it again, so Home shows at once
         sessionKey: `MAIN_STACK:${isVerified ? 'verified' : 'unverified'}`,
+        decidesHomeCard:
+          !isVerified && Boolean(verificationRequestId || (store.bcscSecure.deviceCode && store.bcscSecure.userCode)),
       },
       [SystemCheckScope.VERIFY]: {
         getSystemChecks: getVerifySystemChecks,
@@ -370,5 +380,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     getVerifySystemChecks,
     accountContext?.isLoadingAccount,
     isVerified,
+    verificationRequestId,
+    store.bcscSecure.deviceCode,
+    store.bcscSecure.userCode,
   ])
 }

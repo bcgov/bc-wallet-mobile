@@ -31,7 +31,7 @@ export enum CustomNotificationId {
  * @returns An object containing an array of custom notifications to be displayed on the Home screen.
  */
 export const useCustomNotifications = () => {
-  const { needsVerification, isVerified } = useVerificationStatus()
+  const { isVerified } = useVerificationStatus()
   const [store] = useStore<BCState>()
   const accountPhase = useAccountPhase()
   const { verificationRequestStatus, verificationRequestId } = store.bcscSecure
@@ -59,11 +59,15 @@ export const useCustomNotifications = () => {
       return [<PendingReviewNotification key={CustomNotificationId.BCSCPendingReview} />]
     }
 
-    if (needsVerification && computeSetupStepCompletion(store).id.completed) {
+    // Keyed on verified rather than needsVerification: pressing Start or Continue sets verification in
+    // progress in the commit that swaps the root to the verify stack, and Home slides out as the closing
+    // card. Keyed on needsVerification, the card just pressed would vanish for those frames. In progress
+    // never shows Home otherwise
+    if (!isVerified && computeSetupStepCompletion(store).id.completed) {
       return [<ContinueVerificationNotification key={CustomNotificationId.BCSCContinueVerification} />]
     }
 
-    if (needsVerification && !verificationRequestId) {
+    if (!isVerified && !verificationRequestId) {
       return [<StartVerificationNotification key={CustomNotificationId.BCSCStartVerification} />]
     }
 
@@ -81,7 +85,7 @@ export const useCustomNotifications = () => {
     }
 
     return []
-  }, [verificationRequestStatus, verificationRequestId, needsVerification, isVerified, accountPhase, store])
+  }, [verificationRequestStatus, verificationRequestId, isVerified, accountPhase, store])
 
   return useMemo(
     () => ({

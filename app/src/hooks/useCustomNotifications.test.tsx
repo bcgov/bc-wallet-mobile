@@ -75,7 +75,9 @@ describe('useCustomNotifications', () => {
     mockIsUserVerified.mockReturnValue(false)
   })
 
-  it('returns an empty array when there is nothing to show', () => {
+  it('returns an empty array for a verified user with nothing to show', () => {
+    mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
+
     const { result } = renderHook(() => useCustomNotifications())
 
     expect(result.current.customNotifications).toHaveLength(0)
@@ -186,7 +188,7 @@ describe('useCustomNotifications', () => {
       mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: null, verificationRequestId: null }))
     })
 
-    it('is shown when needsVerification is true and there is no pending request', () => {
+    it('is shown for an unverified user with no pending request', () => {
       const { result } = renderHook(() => useCustomNotifications())
 
       expect(result.current.customNotifications).toHaveLength(1)
@@ -200,6 +202,20 @@ describe('useCustomNotifications', () => {
 
       expect(result.current.customNotifications).toHaveLength(0)
     })
+
+    it('stays while verification is in progress, as Home slides out beneath the verify stack', () => {
+      // Pressing the card sets the status in the commit that swaps the root; Home is the closing card
+      mockUseVerificationStatus.mockReturnValue({
+        ...baseVerificationStatus,
+        isVerificationInProgress: true,
+        needsVerification: false,
+      })
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCStartVerification)
+    })
   })
 
   describe('ContinueVerificationNotification', () => {
@@ -209,7 +225,7 @@ describe('useCustomNotifications', () => {
       mockComputeSetupStepCompletion.mockReturnValue(buildIdStepCompletion(true))
     })
 
-    it('is shown when needsVerification is true and id step is completed', () => {
+    it('is shown for an unverified user whose id step is completed', () => {
       const { result } = renderHook(() => useCustomNotifications())
 
       expect(result.current.customNotifications).toHaveLength(1)
@@ -225,12 +241,25 @@ describe('useCustomNotifications', () => {
       expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCStartVerification)
     })
 
-    it('is not shown when there is no needsVerification', () => {
-      mockUseVerificationStatus.mockReturnValue(baseVerificationStatus)
+    it('is not shown once the user is verified', () => {
+      mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
 
       const { result } = renderHook(() => useCustomNotifications())
 
       expect(result.current.customNotifications).toHaveLength(0)
+    })
+
+    it('stays while verification is in progress, as Home slides out beneath the verify stack', () => {
+      mockUseVerificationStatus.mockReturnValue({
+        ...baseVerificationStatus,
+        isVerificationInProgress: true,
+        needsVerification: false,
+      })
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCContinueVerification)
     })
 
     it('verified status takes priority over ContinueVerification', () => {
@@ -242,7 +271,7 @@ describe('useCustomNotifications', () => {
     })
   })
 
-  it('verified status takes priority over needsVerification', () => {
+  it('verified status takes priority over the Start card', () => {
     mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, needsVerification: true })
     mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: 'verified', verificationRequestId: null }))
 
@@ -253,6 +282,7 @@ describe('useCustomNotifications', () => {
 
   describe('CardExpiryNotification', () => {
     it('is shown when the account phase is expired', () => {
+      mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
       mockUseAccountPhase.mockReturnValue({ phase: AccountPhaseType.Expired })
 
       const { result } = renderHook(() => useCustomNotifications())
@@ -273,6 +303,7 @@ describe('useCustomNotifications', () => {
 
   describe('CardRenewalNotification', () => {
     it('is shown with the expiry date when the account phase is expiringSoon', () => {
+      mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, isVerified: true })
       mockUseAccountPhase.mockReturnValue({ phase: AccountPhaseType.ExpiringSoon, expiresAt })
 
       const { result } = renderHook(() => useCustomNotifications())
@@ -295,7 +326,7 @@ describe('useCustomNotifications', () => {
       expect(result.current.customNotifications).toHaveLength(0)
     })
 
-    it('is not shown when needsVerification takes priority', () => {
+    it('is not shown for an unverified user, whose Start card comes first', () => {
       mockUseAccountPhase.mockReturnValue({ phase: AccountPhaseType.ExpiringSoon, expiresAt })
       mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, needsVerification: true })
 

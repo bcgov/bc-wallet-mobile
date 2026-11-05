@@ -40,6 +40,12 @@ Keep waiting-screen colors in the theme and follow the
 
 Hidden loading views must not run animations. Concurrent operations own separate
 loading tokens; the overlay stays visible until all tokens are released.
+Releasing a token the overlay has shown takes effect one commit late: the commit the release lands in
+still renders beneath the overlay, and the drop is flushed before that commit paints. A route change
+dispatched in the same continuation as the release (every `handleSuccessfulAuth` caller) is therefore
+decided as a cut and the stack it mounts extends the overlay. With automatic batching the release would
+otherwise land in the same commit as the dispatch and reveal the screen the overlay had hidden as the
+first frame of a slide. A token released before it was shown is dropped at once.
 A phase stack's own loading state (MainStack's account load and system-check gate) extends an
 overlay that is already up when the stack mounts, and otherwise stays inside the stack's card: a
 plain backdrop that becomes the waiting screen only once the wait outlasts the root slide. It never
@@ -48,8 +54,11 @@ every slide into Home.
 Both waits belong to the session, not the stack: `BCSCAccountProvider` and `SystemCheckSessionProvider`
 are mounted above the root's route, so a stack that mounts again in the same session (verify → main and
 back) finds the account loaded and its checks settled, and its first frame is the screen itself. Only the
-session's first entry into Home waits, plus the first entry after the user verifies mid-session, when the
-id-token-backed checks run for the first time.
+session's first entry into Home waits, and only on the account load and on a check batch that can change
+the Home card: an unverified user's request-status checks (`decidesHomeCard` in `useCreateSystemChecks`).
+Any other batch, such as the Terms of Use fetch after a fresh skip or the id-token-backed checks after
+verifying mid-session, resolves after Home has painted, so a slide into Home carries Home rather than a
+blank card.
 The global overlay is raised only around work that will actually wait, such as a network round trip,
 never around a check that usually resolves at once: it hides the whole navigator, so an overlay that
 goes up and comes down within a frame or two flashes the loading screen. `AccountSetupScreen` checks
@@ -293,7 +302,9 @@ from the route being left and the one being entered:
   provider is disabled in the same commit and the store is cleared under the outgoing stack, so it must
   unmount at once rather than linger for a slide.
 - A change hidden by the global loading overlay: no animation. Callers of `handleSuccessfulAuth` release
-  their overlay in the same continuation as the dispatch for this reason.
+  their overlay in the same continuation as the dispatch, and the overlay provider applies that release one
+  commit late (see "Waiting screens"), so the change is decided beneath the overlay rather than in the
+  commit that lifts it.
 - The same phase under a new navigation key (the outage fallback re-registering the verify stack): no animation.
 - `verify → main`: pop when leaving a started, unfinished verification (back arrow, "Back to home", Skip after
   walking back to the prompt), so Home comes back from beneath; push otherwise (Skip on the fresh prompt,

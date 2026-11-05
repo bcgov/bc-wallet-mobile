@@ -33,10 +33,11 @@ export enum SystemCheckScope {
  * signed-in session however often that navigator mounts (the record lives in SystemCheckSessionProvider).
  *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
- * @returns Whether the scope has settled, i.e. its checks have finished running (or will never run).
- *   Callers that paint state the checks can change (see MainStack's loading gate) wait on this.
+ * @returns Whether the scope has settled, i.e. its checks have finished running (or will never run), and
+ *   whether its batch decides the Home card. A caller that paints state the checks can change (see
+ *   MainStack's loading gate) waits on the first when the second is true.
  */
-export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean } => {
+export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean; decidesHomeCard: boolean } => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
@@ -163,9 +164,10 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
   }, [logger, scope, scopeSystemCheck, startRun, runKey])
 
   const runStatus = runs.getRunStatus(runKey)
+  const decidesHomeCard = scopeSystemCheck.decidesHomeCard === true
 
   return useMemo(
-    () => ({ hasSettled: runStatus === 'settled' || !scopeSystemCheck.isApplicable }),
-    [runStatus, scopeSystemCheck.isApplicable]
+    () => ({ hasSettled: runStatus === 'settled' || !scopeSystemCheck.isApplicable, decidesHomeCard }),
+    [runStatus, scopeSystemCheck.isApplicable, decidesHomeCard]
   )
 }

@@ -70,7 +70,7 @@ jest.mock('../contexts/BCSCLoadingContext', () => ({
 jest.mock('../components/WaitingScreenContent', () => ({ WaitingScreenContent: 'WaitingScreenContent' }))
 jest.mock('../hooks/useSystemChecks', () => ({
   SystemCheckScope: { MAIN_STACK: 'MAIN_STACK' },
-  useSystemChecks: jest.fn(() => ({ hasSettled: true })),
+  useSystemChecks: jest.fn(() => ({ hasSettled: true, decidesHomeCard: true })),
 }))
 jest.mock('../contexts/ServerStatusContext', () => ({
   useServerStatus: jest.fn(() => ({ hasChecked: true })),
@@ -162,7 +162,7 @@ describe('MainStack', () => {
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
     jest.mocked(PairingModule.usePairingService).mockReturnValue(makePairingService() as any)
     jest.mocked(PairingModule.pairingPayloadToServiceLoginParams).mockReturnValue({ pairingCode: 'code' } as any)
-    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: true })
+    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: true, decidesHomeCard: true })
     jest.mocked(useServerStatus).mockReturnValue({ hasChecked: true } as any)
     jest.mocked(useVerificationStatus).mockReturnValue({ isVerified: true } as any)
   })
@@ -277,7 +277,7 @@ describe('MainStack', () => {
     })
 
     it('holds its own loading view over the stack while system checks are still settling', () => {
-      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: true })
 
       const view = render(<MainStack />)
 
@@ -289,7 +289,7 @@ describe('MainStack', () => {
     })
 
     it('hides the covered stack from assistive technology, and not the loading view over it', () => {
-      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: true })
 
       const [card, loadingView] = render(<MainStack />).toJSON() as any[]
 
@@ -302,7 +302,7 @@ describe('MainStack', () => {
 
     it('shows the waiting screen only once the wait outlasts the root slide', () => {
       jest.useFakeTimers()
-      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: true })
 
       try {
         const view = render(<MainStack />)
@@ -323,9 +323,19 @@ describe('MainStack', () => {
       expect(queryStackLoadingViews(render(<MainStack />))).toHaveLength(0)
     })
 
+    it('paints the stack at once when the batch cannot change the Home card, and lets it settle after', () => {
+      // A fresh skip: the unverified batch is the Terms of Use fetch, which navigates over Home if it fails
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: false })
+
+      const view = render(<MainStack />)
+
+      expect(queryNavigators(view)).toHaveLength(1)
+      expect(queryStackLoadingViews(view)).toHaveLength(0)
+    })
+
     it('releases its loading view when the system checks never settle', () => {
       jest.useFakeTimers()
-      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: true })
 
       try {
         const view = render(<MainStack />)
@@ -392,7 +402,7 @@ describe('MainStack', () => {
     })
 
     it('extends the overlay instead of showing its own view while system checks settle', () => {
-      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: true })
 
       const view = render(<MainStack />)
 
@@ -405,8 +415,17 @@ describe('MainStack', () => {
       expect(card).toMatchObject({ type: 'View', props: { importantForAccessibility: 'auto' } })
     })
 
+    it('does not hold the overlay for a batch that cannot change the Home card', () => {
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: false })
+
+      const view = render(<MainStack />)
+
+      expect(queryNavigators(view)).toHaveLength(1)
+      expect(queryLoadingScreens(view)).toHaveLength(0)
+    })
+
     it('keeps extending the overlay once it drops, rather than switching views mid-wait', () => {
-      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: true })
       const view = render(<MainStack />)
 
       mockOverlayUp.mockReturnValue(false)
