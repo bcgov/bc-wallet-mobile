@@ -1,7 +1,7 @@
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { testIdWithKey } from '@bifold/core'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import { default as React } from 'react'
 import { ScrollView, TextInput } from 'react-native'
