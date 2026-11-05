@@ -74,7 +74,9 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
           >
             BCSC.EnterEmail.EnterEmailAddress
           </Text>
-          <View>
+          <View
+            onLayout={[Function]}
+          >
             <View
               accessibilityState={
                 {

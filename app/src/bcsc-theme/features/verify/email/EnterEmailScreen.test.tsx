@@ -4,7 +4,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { Alert } from 'react-native'
+import { Alert, ScrollView, TextInput } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { BCSCScreens } from '../../../types/navigators'
 import EnterEmailScreen from './EnterEmailScreen'
@@ -503,6 +503,31 @@ describe('EnterEmailScreen', () => {
       await waitFor(() => {
         expect(mockNavigation.goBack).toHaveBeenCalled()
       })
+    })
+  })
+
+  describe('focus and scroll on invalid submit', () => {
+    it('jumps to and focuses the email field when the email is invalid', async () => {
+      const scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
+      const focusSpy = jest.spyOn(TextInput.prototype, 'focus')
+      const tree = render(
+        <BasicAppContext>
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
+        </BasicAppContext>
+      )
+
+      fireEvent(tree.getByTestId('com.ariesbifold:id/email-input'), 'layout', { nativeEvent: { layout: { y: 60 } } })
+      await act(async () => {
+        fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
+      })
+
+      expect(scrollToSpy).toHaveBeenCalledWith({ y: 60, animated: false })
+      expect(focusSpy.mock.instances.map((i: any) => i.props.testID)).toEqual(['com.ariesbifold:id/email-input'])
     })
   })
 })
