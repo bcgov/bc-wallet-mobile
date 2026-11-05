@@ -293,7 +293,10 @@ keychain, and the rejection codes let the next problem report explain itself.
 ## Root phase transitions: a declarative switch that slides
 
 `BCSCRootStack` registers exactly one route, the current phase's (`loading | onboarding | auth | recovery |
-verify | main`), decided from the store by `getRootPhase`. A phase change is a store dispatch; nothing
+verify | main`), decided from the store by `getRootPhase` in `useRootStackViewModel`
+(`navigators/useRootStackViewModel.ts`). The ViewModel owns the startup effects, the once-per-session verification
+routing, the phase and the transition decided for each change; the navigator holds the route table and the session
+providers only, the way a screen holds its JSX. A phase change is a store dispatch; nothing
 `navigate`s or `reset`s between phases. React Navigation treats the swapped route as a `replace` and animates
 it like one, with the direction decided per change by `getRootTransition` (`navigators/root-transition.ts`)
 from the route being left and the one being entered:
