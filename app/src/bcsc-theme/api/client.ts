@@ -19,22 +19,23 @@ import {
   isTransientRequestError,
   normalizeAxiosTimeoutError,
 } from '../utils/axios-error-utils'
+import { retryAsync } from '../utils/retry'
 import { isTokenExpired } from '../utils/token-expiry'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 import { loadPersistedJwk, persistJwk } from './jwk-cache'
 
-// Bounded retry for the JWKS fetch: 3 attempts total, with linear backoff delays of
-// 500ms then 1000ms between attempts. Only transient errors (network / 5xx) are retried —
-// see isRetryableJwkFetchError. Deliberately small and bounded: this is a background warm-up
+// Bounded retry for the JWKS fetch: 3 attempts total, with a delay of 500ms between
+// attempts. Only transient errors (network / 5xx) are retried —
+// see isTransientRequestError. Deliberately small and bounded: this is a background warm-up
 // and an inline verification-path call, not a user-facing loading state.
 const JWK_FETCH_MAX_ATTEMPTS = 3
-const JWK_FETCH_RETRY_BASE_DELAY_MS = 500
+const JWK_FETCH_RETRY_DELAY_MS = 500
 // Per-attempt timeout for the JWKS fetch. Timeouts are retried, so we keep this shorter than the normal 90s timeout
 const JWK_FETCH_TIMEOUT_MS = 15 * 1000
 
-// The retryable JWKS failure shapes (see isRetryableJwkFetchError): 0 for a network error or timeout (no HTTP
+// The retryable JWKS failure shapes (see isTransientRequestError): 0 for a network error or timeout (no HTTP
 // response — see the response interceptor's `error.response?.status ?? 0`), and the full 5xx range.
 // Passed as suppressStatusCodeLogs on the JWKS request so the interceptor's own log line + analytics
 // tracking (see getAppErrorFromAxiosError) don't fire on every retry attempt — fetchJwk already logs
@@ -508,16 +509,6 @@ class BCSCApiClient {
   }
 
   /**
-   * Gates the JWK fetch retry loop to transient failures only: a network error, a timeout, or an
-   * HTTP >= 500 (see isTransientRequestError). A deterministic 4xx (or any other error shape) is not
-   * retryable — retrying it would just waste the attempt budget on a request that will fail the same
-   * way every time.
-   */
-  private isRetryableJwkFetchError(error: unknown): boolean {
-    return isTransientRequestError(error)
-  }
-
-  /**
    * Fetches the first JWK from the server's JWKS endpoint. Used both to verify server-signed JWS
    * (ID token, FCM login challenge) and to encrypt the quick login JWE.
    *
@@ -530,8 +521,8 @@ class BCSCApiClient {
    *    an early verification call at startup — join the same retry loop instead of each racing
    *    their own, which would otherwise multiply network requests (up to JWK_FETCH_MAX_ATTEMPTS per
    *    caller) during an outage.
-   * 3. Network fetch, retried up to JWK_FETCH_MAX_ATTEMPTS times with linear backoff — but only for
-   *    transient errors (see isRetryableJwkFetchError); a deterministic failure or an empty key set
+   * 3. Network fetch, retried up to JWK_FETCH_MAX_ATTEMPTS times with a fixed delay — but only for
+   *    transient errors (see isTransientRequestError); a deterministic failure or an empty key set
    *    goes straight to step 4.
    * 4. On network exhaustion/empty, the last-known-good persisted key (survives cold starts) — this
    *    is network-first: the fallback never hydrates the in-memory cache, so the next call retries
@@ -604,22 +595,15 @@ class BCSCApiClient {
     let jwk: JWK | null = null
     let lastError: unknown
 
-    for (let attempt = 1; attempt <= JWK_FETCH_MAX_ATTEMPTS; attempt++) {
-      try {
-        jwk = await this.fetchJwkFromNetwork()
-        lastError = undefined
-        break
-      } catch (error) {
-        lastError = error
-
-        if (attempt >= JWK_FETCH_MAX_ATTEMPTS || !this.isRetryableJwkFetchError(error)) {
-          break
-        }
-
-        const message = error instanceof Error ? error.message : String(error)
-        this.logger.warn(`[BCSCApiClient] JWK fetch attempt ${attempt} failed, retrying: ${message}`)
-        await new Promise((resolve) => setTimeout(resolve, JWK_FETCH_RETRY_BASE_DELAY_MS * attempt))
-      }
+    try {
+      jwk = await retryAsync(() => this.fetchJwkFromNetwork(), {
+        attempts: JWK_FETCH_MAX_ATTEMPTS,
+        retryDelayMs: JWK_FETCH_RETRY_DELAY_MS,
+        shouldRetry: isTransientRequestError,
+      })
+      lastError = undefined
+    } catch (error) {
+      lastError = error
     }
 
     if (jwk) {
