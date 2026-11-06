@@ -265,8 +265,10 @@ resulting error to the alert. For a single failure outside a flow, use `createFa
   or tokens in them.
 - Errors a policy already handled are labeled but never alerted again. Callers still check
   `isHandledAppError`.
+- To re-wrap a labeled error for its alert, set it as the `cause` and copy nothing. Reports and analytics
+  read `AppError.getChainedContext()`, which merges context down the cause chain (outer errors win).
 - To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
-  `report-problem.ts`.
+  `report-problem.ts`. That list is the only one to update.
 - When something that fails silently could explain a step's failure, pass its health as that step's
   `context`, only on the steps it could explain. Use status codes only, never values: `getPushTokenStatus`
   (placeholder push tokens) and `getAccountReadStatus` from bcsc-core (why `getAccount` resolved null). Call

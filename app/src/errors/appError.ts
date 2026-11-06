@@ -33,6 +33,9 @@ export type ErrorIdentity = {
 // How many wrapped AppErrors to follow when summarizing a cause chain
 const MAX_CAUSE_DEPTH = 3
 
+// How many AppErrors to follow when merging context along a cause chain
+const MAX_CONTEXT_CHAIN_DEPTH = 10
+
 const summarizeCause = (cause: unknown, depth = 0): unknown => {
   if (!(cause instanceof Error)) {
     return cause
@@ -193,7 +196,8 @@ export class AppError extends Error {
     // which endpoint produced the error. The route template, never the raw path: the evidence paths
     // embed verification and email record IDs, and analytics must not carry them.
     const httpStatus = (this.cause as { response?: { status?: number } } | undefined)?.response?.status
-    const request = [this.context?.http_method, this.context?.http_route].filter(Boolean).join(' ')
+    const { http_method, http_route } = this.getChainedContext()
+    const request = [http_method, http_route].filter(Boolean).join(' ')
     const context = [httpStatus ? `HTTP ${httpStatus}` : undefined, request || undefined].filter(Boolean).join(' ')
 
     Analytics.trackErrorEvent({
@@ -239,6 +243,26 @@ export class AppError extends Error {
    */
   addContext(context: Record<string, unknown>): void {
     this.context = { ...this.context, ...context }
+  }
+
+  /**
+   * Merges the context of this error with the context of all AppErrors in its cause chain, up to a maximum depth.
+   *
+   * @returns The merged error chain context
+   */
+  getChainedContext(): Record<string, unknown> {
+    let merged: Record<string, unknown> = { ...this.context }
+    let current: unknown = this.cause
+    let depth = 1
+
+    while (current instanceof AppError && depth < MAX_CONTEXT_CHAIN_DEPTH) {
+      // Inner context goes first, so keys already collected from outer errors win
+      merged = { ...current.context, ...merged }
+      current = current.cause
+      depth++
+    }
+
+    return merged
   }
 
   /**

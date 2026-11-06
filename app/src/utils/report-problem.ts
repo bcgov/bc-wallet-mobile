@@ -138,9 +138,11 @@ const _flattenAppError = (error?: AppError) => {
     error_technical_message: error.technicalMessage,
   }
 
+  const context = error.getChainedContext()
+
   for (const key of FLATTENED_APP_ERROR_CONTEXT_KEYS) {
-    if (error.context?.[key] !== undefined) {
-      flattened[key] = error.context[key]
+    if (context[key] !== undefined) {
+      flattened[key] = context[key]
     }
   }
 

@@ -6,7 +6,7 @@ import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
-import { createQuickLoginJWT, getAccount, getAccountReadStatus, NativeAccountReadStatus } from 'react-native-bcsc-core'
+import { createQuickLoginJWT, getAccount, getAccountReadStatus } from 'react-native-bcsc-core'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { getNotificationTokens } from '../utils/push-notification-tokens'
 import { useBCSCApiClient } from './useBCSCApiClient'
@@ -60,18 +60,16 @@ export const useQuickLoginURL = () => {
     async (serviceClient: ClientMetadataStub): Promise<QuickLoginURLResult> => {
       const steps = trackFailureSteps<QuickLoginStep>('quick_login', { definition: ErrorRegistry.LOGIN_DEVICE_ERROR })
 
+      // Every failure thrown is labeled with its step; the catch below turns it into a result
       try {
         if (!serviceClient.initiate_login_uri) {
-          return {
-            success: false,
-            error: steps.fail('service_config', new Error('Quick login unavailable for this service')),
-          }
+          throw steps.fail('service_config', new Error('Quick login unavailable for this service'))
         }
 
         const accessToken = client.tokens?.access_token
 
         if (!accessToken) {
-          return { success: false, error: steps.fail('access_token', new Error('No access token available')) }
+          throw steps.fail('access_token', new Error('No access token available'))
         }
 
         // fetchJwkResult never rejects: a failure resolves with jwk null and the reason in error
@@ -82,20 +80,12 @@ export const useQuickLoginURL = () => {
         ])
 
         if (!tokens) {
-          return {
-            success: false,
-            error: steps.fail('notification_tokens', new Error('No notification tokens received')),
-          }
+          throw steps.fail('notification_tokens', new Error('No notification tokens received'))
         }
 
         if (!account) {
           // getAccount resolves null for a missing, unreadable or undecodable account; ask native which one
-          let readStatus: NativeAccountReadStatus | null = null
-          try {
-            readStatus = await getAccountReadStatus()
-          } catch {
-            // Diagnostics must never replace the real failure
-          }
+          const readStatus = await getAccountReadStatus()
           const context = readStatus
             ? {
                 account_read_status: readStatus.status,
@@ -104,7 +94,7 @@ export const useQuickLoginURL = () => {
                 account_legacy_status: readStatus.legacyStatus,
               }
             : undefined
-          return { success: false, error: steps.fail('account', new Error('No account data received'), { context }) }
+          throw steps.fail('account', new Error('No account data received'), { context })
         }
 
         const { jwk } = jwkResult
@@ -137,10 +127,11 @@ export const useQuickLoginURL = () => {
           return { success: false, handled: true }
         }
 
-        logger.error('Error creating quick login URL', error as Error)
+        // Labeled errors are returned as is; only an error thrown outside any step is labeled unexpected
+        const failure = steps.fail('unexpected', error)
+        logger.error(`Error creating quick login URL: ${failure.code}`, failure)
 
-        // Errors from a step are already handled, anything else is unexpected
-        return { success: false, error: steps.fail('unexpected', error) }
+        return { success: false, error: failure }
       }
     },
     [alerts, client, logger]

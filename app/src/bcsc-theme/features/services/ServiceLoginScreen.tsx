@@ -5,9 +5,9 @@ import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
-import { isAppError, isHandledAppError } from '@/errors/appError'
+import { AppError, isAppError, isHandledAppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { createFailureError, wrapKeepingFailureContext } from '@/errors/failureContext'
+import { createFailureError } from '@/errors/failureContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
@@ -407,8 +407,8 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       if (isAppError(error, AppEventCode.LOGIN_DEVICE_ERROR)) {
         alerts.loginDeviceErrorAlert(error)
       } else {
-        // Wrapped so analytics count it as a login server error, keeping where the flow failed for the report
-        alerts.loginServerErrorAlert(wrapKeepingFailureContext(ErrorRegistry.LOGIN_SERVER_ERROR, error))
+        // Wrapped so analytics count it as a login server error; the report reads where it failed from the cause
+        alerts.loginServerErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: error }))
       }
     }
   }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled, resetToHome])
