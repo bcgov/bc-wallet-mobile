@@ -743,19 +743,23 @@ type ApprovedLanding = 'success' | 'inPerson' | 'pendingReview' | 'method' | 'pr
 export async function finishApprovedVerification(method: 'in-person' | 'send-video'): Promise<void> {
   const deadline = Date.now() + REVIEW_DECISION_TIMEOUT_MS
   for (;;) {
-    const landed = await probeAnyScreen<ApprovedLanding>(
+    let landed = await probeAnyScreen<ApprovedLanding>(
       {
+        // Probed by its Skip button, and before `success`: the prompt's Continue id is the generic one many
+        // verify screens share, VerificationSuccess's marker included.
+        prompt: () => VerifyPromptScreen.isVisible('skipVerification'),
         success: VerificationSuccessScreen,
         inPerson: VerifyInPersonScreen,
         pendingReview: PendingReviewScreen,
         method: VerificationMethodSelectionScreen,
-        // Probed by its Skip button: the prompt's Continue id is the generic one many verify screens share.
-        prompt: () => VerifyPromptScreen.isVisible('skipVerification'),
         card: HomeNotificationCard, // before `home`: a Home with its card is the way back in
         home: HomeScreen,
       },
       RESUME_PROBE_ROUND_MS
     )
+    // The probes never scroll, and method selection's marker sits below the fold (see resumeVerification),
+    // so a round that found nothing gets one scrolling look for it.
+    if (!landed && (await isVisibleAfterScrolling(VerificationMethodSelectionScreen))) landed = 'method'
     switch (landed) {
       case 'success':
         await VerificationSuccessScreen.tap('primary') // Continue → exits the verify stack to Home
