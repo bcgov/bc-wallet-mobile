@@ -77,11 +77,32 @@ export const UPGRADE_STANDARD_SPECS = ALL_SPEC_FILES.filter((path) => isUpgradeS
  * brief reads the missing cell as n/a from the same matrix. With PREV_VERSION unset (every non-upgrade
  * run) a suite is the union over the lineages, and each wrapper names the missing variable as its
  * first failure.
+ *
+ * Built when called, not at import: `.env.saucelabs` may set PREV_VERSION, and the Sauce config loads
+ * it only after this module has evaluated, so that config calls this again once its env is in.
  */
-const prevVersion = process.env[PREV_VERSION_ENV]
-const prevLineage = prevVersion ? lineageOf(prevVersion) : undefined
-const upgradeSuite = (state: UpgradeState): string[] =>
-  upgradeSpecsFor(state, prevLineage).map((name) => resolve(__dirname, `../test/${variant}/upgrade/${name}.spec.ts`))
+export function upgradeSuites(): Record<string, string[]> {
+  const prevVersion = process.env[PREV_VERSION_ENV]
+  const prevLineage = prevVersion ? lineageOf(prevVersion) : undefined
+  const upgradeSuite = (state: UpgradeState): string[] =>
+    upgradeSpecsFor(state, prevLineage).map((name) => resolve(__dirname, `../test/${variant}/upgrade/${name}.spec.ts`))
+  return {
+    // Partial: nothing submitted — the unverified account (the base PIN/settings check, one spec per
+    // lineage), a saved serial, a captured document awaiting its number, partial non-BCSC progress.
+    // No IDCheck, no review queue: the platforms can run in parallel.
+    upgradePartial: upgradeSuite('partial'),
+    // Submitted: a request the server holds but has not decided — an unapproved in-person code, a
+    // pending send-video review (Android injection-off lane, the blind-FIFO queue drained first). One
+    // platform at a time: the queue, and the in-person approval verifies the shared persona.
+    upgradeSubmitted: upgradeSuite('submitted'),
+    // Approved, not finished in-app: the decision landed while the app was closed and the update came
+    // before the user reopened it. Same serial rules as upgradeSubmitted.
+    upgradeApproved: upgradeSuite('approved'),
+    // Completed: a verified account — the device credential must survive the swap. One platform at a
+    // time (the shared persona: SIT keeps one active device per card).
+    upgradeVerified: upgradeSuite('verified'),
+  }
+}
 
 /**
  * `E2E_EXCLUDE_SEND_VIDEO=1` drops the send-video journeys from whatever suite runs. They review a
@@ -156,20 +177,8 @@ export const config: WebdriverIO.Config = {
       resolve(__dirname, `../test/${variant}/a11y/*.journey.ts`),
       ...ANDROID_ONLY_SPECS,
     ],
-    // Partial: nothing submitted — the unverified account (the base PIN/settings check, one spec per
-    // lineage), a saved serial, a captured document awaiting its number, partial non-BCSC progress.
-    // No IDCheck, no review queue: the platforms can run in parallel.
-    upgradePartial: upgradeSuite('partial'),
-    // Submitted: a request the server holds but has not decided — an unapproved in-person code, a
-    // pending send-video review (Android injection-off lane, the blind-FIFO queue drained first). One
-    // platform at a time: the queue, and the in-person approval verifies the shared persona.
-    upgradeSubmitted: upgradeSuite('submitted'),
-    // Approved, not finished in-app: the decision landed while the app was closed and the update came
-    // before the user reopened it. Same serial rules as upgradeSubmitted.
-    upgradeApproved: upgradeSuite('approved'),
-    // Completed: a verified account — the device credential must survive the swap. One platform at a
-    // time (the shared persona: SIT keeps one active device per card).
-    upgradeVerified: upgradeSuite('verified'),
+    // The upgrade state groups — upgradePartial, upgradeSubmitted, upgradeApproved, upgradeVerified.
+    ...upgradeSuites(),
   },
   // iOS configs append ANDROID_ONLY_SPECS to this — append, never assign, or the env exclusion is lost.
   exclude: EXCLUDE_SEND_VIDEO ? [...SEND_VIDEO_SPECS] : [],
