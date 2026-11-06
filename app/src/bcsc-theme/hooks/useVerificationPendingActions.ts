@@ -1,7 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { selectVerificationState } from '@/bcsc-theme/state/verification/selectors'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
+import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from '@/bcsc-theme/utils/verification-status'
+import { isVerifiedByTokenExchange } from '@/bcsc-theme/utils/verification-token-exchange'
 import { VerificationRequestStatus } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
@@ -41,11 +43,14 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
   // that lands while a stale "pending" response is still in the air is not dropped
   const checkInFlightRef = useRef(false)
   const queuedCheckRef = useRef<CheckStatusOptions | undefined>(undefined)
+  // A response that lands after "Choose another way" belongs to a request that no longer exists; it must
+  // not be recorded or navigated on
+  const cancelledRequestIdRef = useRef<string | undefined>(undefined)
   const { cancelVerificationRequestAlert } = useAlerts(navigation)
   // Only these fields decide the check, so unrelated secure-state writes don't change its identity (the
   // pending screen re-checks whenever it does)
   const { verificationRequestId, deviceCode, userCode } = store.bcscSecure
-  const verified = isUserVerified(store.bcscSecure)
+  const verified = selectVerificationState(store).isDeviceVerifiedByIas
 
   /** One status check. Never throws: a failure is logged, and shown only when asked. */
   const runStatusCheck = useCallback(
@@ -56,28 +61,78 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
           return 'decided'
         }
 
+        // Choosing another way clears the request id before the screen leaves, which re-runs the focus check;
+        // that is not a missing id worth logging
+        if (
+          cancelledRequestIdRef.current &&
+          (!verificationRequestId || cancelledRequestIdRef.current === verificationRequestId)
+        ) {
+          return 'decided'
+        }
+
         if (!verificationRequestId) {
           throw new Error(t('BCSC.Steps.VerificationIDMissing'))
         }
 
-        const { status, status_message } = await evidenceService.getVerificationRequestStatus(verificationRequestId)
+        const { status: rawStatus, status_message } =
+          await evidenceService.getVerificationRequestStatus(verificationRequestId)
+        if (cancelledRequestIdRef.current === verificationRequestId) {
+          return 'decided'
+        }
+        const status = interpretVerificationStatus(rawStatus)
         if (status === VerificationRequestStatus.VERIFIED) {
           if (!deviceCode || !userCode) {
             throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
           }
 
           await token.checkDeviceCodeStatus(deviceCode, userCode)
+          dispatch({
+            type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+            payload: [{ status: VerificationRequestStatus.VERIFIED }],
+          })
           navigation.navigate(BCSCScreens.VerificationSuccess)
           return 'decided'
         }
 
         if (status === VerificationRequestStatus.CANCELLED) {
+          dispatch({
+            type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+            payload: [{ status: VerificationRequestStatus.CANCELLED, status_message }],
+          })
           navigation.navigate(BCSCScreens.CancelledReview, {
             agentReason: status_message,
           })
           return 'decided'
         }
 
+        if (status === UNKNOWN_VERIFICATION_STATUS) {
+          logger.warn(
+            `[useVerificationPendingActions] Unrecognised verification status '${rawStatus}'; asking the token endpoint`
+          )
+          if (!deviceCode || !userCode) {
+            throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
+          }
+
+          const exchanged = await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))
+          if (cancelledRequestIdRef.current === verificationRequestId) {
+            return 'decided'
+          }
+          if (exchanged) {
+            dispatch({
+              type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+              payload: [{ status: VerificationRequestStatus.VERIFIED }],
+            })
+            navigation.navigate(BCSCScreens.VerificationSuccess)
+            return 'decided'
+          }
+        }
+
+        if (status !== UNKNOWN_VERIFICATION_STATUS) {
+          dispatch({
+            type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+            payload: [{ status: VerificationRequestStatus.PENDING }],
+          })
+        }
         navigation.navigate(BCSCScreens.PendingReview)
         return 'pending'
       } catch (error) {
@@ -104,6 +159,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
       token,
       logger,
       emitErrorModal,
+      dispatch,
     ]
   )
 
@@ -120,7 +176,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         const outcome = await runStatusCheck({ surfaceErrors })
         const queued = queuedCheckRef.current
         queuedCheckRef.current = undefined
-        // A decided check has already navigated on; a queued trigger could only re-fetch the same decision
+        // Nothing left to re-fetch (decided or cancelled): the check has navigated on or the request is gone
         if (queued && outcome !== 'decided') {
           await runStatusCheck(queued)
         }
@@ -139,6 +195,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         if (!verificationRequestId) {
           return
         }
+        cancelledRequestIdRef.current = verificationRequestId
         await evidenceService.cancelVerificationRequest(verificationRequestId)
       } catch (error) {
         logger.error(`Error cancelling verification request: ${error}`)
@@ -147,6 +204,9 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
         dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
         dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
+        // The request no longer exists, so a recorded pending status must not outlive it on Home
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         await updateAccountFlags({
           userSubmittedVerificationVideo: false,
         }).catch((error) => {

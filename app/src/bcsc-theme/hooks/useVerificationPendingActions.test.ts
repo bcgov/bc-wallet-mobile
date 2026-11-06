@@ -1,9 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { VerificationRequestStatus } from '@/constants'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
+import { mockAppError } from '@mocks/helpers/error'
 import { act, renderHook } from '@testing-library/react-native'
 import { useEvidenceService } from '../services/hooks/useEvidenceService'
 import useSecureActions from './useSecureActions'
@@ -59,10 +61,32 @@ describe('useVerificationPendingActions', () => {
   })
 
   describe('handleCheckStatus', () => {
+    const expectOneStatusReceived = (payload: { status: string; status_message?: string }) => {
+      expect(dispatchMock).toHaveBeenCalledTimes(1)
+      expect(dispatchMock).toHaveBeenCalledWith({
+        type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+        payload: [payload],
+      })
+    }
+
     it('goes straight to the success screen when the user is already verified', async () => {
       jest
         .mocked(Bifold)
         .useStore.mockReturnValue([{ bcscSecure: { ...pendingRequest, verified: true } } as any, dispatchMock])
+      const { result } = renderHook(() => useVerificationPendingActions(navigation))
+
+      await act(async () => {
+        await result.current.handleCheckStatus()
+      })
+
+      expect(getVerificationRequestStatusMock).not.toHaveBeenCalled()
+      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+    })
+
+    it('goes to the success screen without a fetch when IAS already issued tokens, before setup finished', async () => {
+      jest
+        .mocked(Bifold)
+        .useStore.mockReturnValue([{ bcscSecure: { ...pendingRequest, refreshToken: 'token' } } as any, dispatchMock])
       const { result } = renderHook(() => useVerificationPendingActions(navigation))
 
       await act(async () => {
@@ -84,6 +108,7 @@ describe('useVerificationPendingActions', () => {
       expect(getVerificationRequestStatusMock).toHaveBeenCalledWith('request-id')
       expect(checkDeviceCodeStatusMock).toHaveBeenCalledWith('device-code', 'user-code')
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+      expectOneStatusReceived({ status: VerificationRequestStatus.VERIFIED })
     })
 
     it('moves on to the cancelled review, with the agent reason, once the review is rejected', async () => {
@@ -99,6 +124,8 @@ describe('useVerificationPendingActions', () => {
 
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.CancelledReview, { agentReason: 'Video too dark' })
       expect(checkDeviceCodeStatusMock).not.toHaveBeenCalled()
+      expectOneStatusReceived({ status: VerificationRequestStatus.CANCELLED, status_message: 'Video too dark' })
+      expect(dispatchMock.mock.invocationCallOrder[0]).toBeLessThan(navigation.navigate.mock.invocationCallOrder[0])
     })
 
     it('stays on the pending review while the request is still pending', async () => {
@@ -109,6 +136,145 @@ describe('useVerificationPendingActions', () => {
       })
 
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
+      expectOneStatusReceived({ status: VerificationRequestStatus.PENDING })
+    })
+
+    describe('unrecognised status', () => {
+      const checkStatus = async () => {
+        const { result } = renderHook(() => useVerificationPendingActions(navigation))
+        await act(async () => {
+          await result.current.handleCheckStatus()
+        })
+      }
+
+      beforeEach(() => {
+        getVerificationRequestStatusMock.mockResolvedValue({ status: 'expired' })
+      })
+
+      it('moves on to the success screen when the token exchange issues tokens', async () => {
+        await checkStatus()
+
+        expect(checkDeviceCodeStatusMock).toHaveBeenCalledWith('device-code', 'user-code')
+        expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+        expectOneStatusReceived({ status: VerificationRequestStatus.VERIFIED })
+        expect(loggerMock.warn).toHaveBeenCalledWith(
+          expect.stringContaining("Unrecognised verification status 'expired'")
+        )
+      })
+
+      it.each([AppEventCode.AUTHORIZATION_PENDING, AppEventCode.VERIFY_NOT_COMPLETE])(
+        'stays on the pending review when the exchange rejects with %s',
+        async (code) => {
+          checkDeviceCodeStatusMock.mockRejectedValue(mockAppError(code))
+
+          await checkStatus()
+
+          expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
+          expect(navigation.navigate).not.toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+          expect(dispatchMock).not.toHaveBeenCalled()
+        }
+      )
+
+      it('does not navigate when the exchange fails with ALREADY_VERIFIED', async () => {
+        checkDeviceCodeStatusMock.mockRejectedValue(mockAppError(AppEventCode.ALREADY_VERIFIED))
+
+        await checkStatus()
+
+        expect(navigation.navigate).not.toHaveBeenCalled()
+        expect(dispatchMock).not.toHaveBeenCalled()
+        expect(loggerMock.error).toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
+      })
+
+      it('does not exchange when the device or user code is missing', async () => {
+        jest
+          .mocked(Bifold)
+          .useStore.mockReturnValue([
+            { bcscSecure: { verificationRequestId: 'request-id', userCode: 'user-code' } } as any,
+            dispatchMock,
+          ])
+
+        await checkStatus()
+
+        expect(checkDeviceCodeStatusMock).not.toHaveBeenCalled()
+        expect(navigation.navigate).not.toHaveBeenCalled()
+      })
+    })
+
+    it('drops a response that lands after the request was cancelled', async () => {
+      let settle: (value: { status: VerificationRequestStatus; status_message?: string }) => void = () => undefined
+      getVerificationRequestStatusMock.mockReturnValueOnce(
+        new Promise((resolve) => {
+          settle = resolve
+        })
+      )
+      const { result } = renderHook(() => useVerificationPendingActions(navigation))
+
+      let check: Promise<void> = Promise.resolve()
+      act(() => {
+        check = result.current.handleCheckStatus()
+      })
+      await act(async () => {
+        await result.current.handleCancelVerification()
+      })
+      await act(async () => {
+        settle({ status: VerificationRequestStatus.CANCELLED, status_message: 'Too late' })
+        await check
+      })
+
+      expect(dispatchMock).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED })
+      )
+      expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(navigation.reset).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not log a missing request ID when the focus check re-runs after "Choose another way"', async () => {
+      const { result, rerender } = renderHook(() => useVerificationPendingActions(navigation))
+
+      await act(async () => {
+        await result.current.handleCancelVerification()
+      })
+      // The cancel clears the request from the store, which re-runs the focused screen's check
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: {} } as any, dispatchMock])
+      rerender({})
+      await act(async () => {
+        await result.current.handleCheckStatus({ surfaceErrors: true })
+      })
+
+      expect(loggerMock.error).not.toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      expect(getVerificationRequestStatusMock).not.toHaveBeenCalled()
+    })
+
+    it('does not land on the pending screen when the request is cancelled during the unrecognised-status exchange', async () => {
+      getVerificationRequestStatusMock.mockResolvedValue({ status: 'expired' })
+      let settleExchange: (reason: unknown) => void = () => undefined
+      checkDeviceCodeStatusMock.mockReturnValueOnce(
+        new Promise((_resolve, reject) => {
+          settleExchange = reject
+        })
+      )
+      const { result } = renderHook(() => useVerificationPendingActions(navigation))
+
+      let check: Promise<void> = Promise.resolve()
+      act(() => {
+        check = result.current.handleCheckStatus()
+      })
+      await act(async () => {
+        await Promise.resolve()
+      })
+      await act(async () => {
+        await result.current.handleCancelVerification()
+      })
+      await act(async () => {
+        settleExchange(mockAppError(AppEventCode.AUTHORIZATION_PENDING))
+        await check
+      })
+
+      expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(dispatchMock).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED })
+      )
     })
 
     it('only logs a failed automatic check', async () => {
@@ -122,6 +288,7 @@ describe('useVerificationPendingActions', () => {
       expect(loggerMock.error).toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
       expect(mockEmitErrorModal).not.toHaveBeenCalled()
       expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(dispatchMock).not.toHaveBeenCalled()
     })
 
     it('tells the user when a manual Check status fails, so silence never reads as "still pending"', async () => {
@@ -242,6 +409,14 @@ describe('useVerificationPendingActions', () => {
       })
       expect(dispatchMock).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
+        payload: [undefined],
+      })
+      expect(dispatchMock).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
+        payload: [undefined],
+      })
+      expect(dispatchMock).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
         payload: [undefined],
       })
       expect(updateAccountFlagsMock).toHaveBeenCalledWith({ userSubmittedVerificationVideo: false })

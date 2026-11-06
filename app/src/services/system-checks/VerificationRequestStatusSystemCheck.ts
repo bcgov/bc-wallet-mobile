@@ -1,4 +1,6 @@
 import { VerificationStatusResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from '@/bcsc-theme/utils/verification-status'
+import { isVerifiedByTokenExchange } from '@/bcsc-theme/utils/verification-token-exchange'
 import { VerificationRequestStatus } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
@@ -30,7 +32,18 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
   }
 
   async runCheck(): Promise<boolean> {
-    const { status, status_message } = await this.getVerificationRequestStatus()
+    const { status: rawStatus, status_message } = await this.getVerificationRequestStatus()
+    const status = interpretVerificationStatus(rawStatus)
+
+    if (status === UNKNOWN_VERIFICATION_STATUS) {
+      this.utils.logger.warn(
+        `[VerificationRequestStatusSystemCheck] Unrecognised verification status '${rawStatus}'; asking the token endpoint`
+      )
+      if (!(await isVerifiedByTokenExchange(this.checkDeviceCodeStatus))) {
+        return false
+      }
+      return true
+    }
 
     if (status === VerificationRequestStatus.PENDING || status === VerificationRequestStatus.CANCELLED) {
       this.status = status
@@ -40,30 +53,26 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
 
     // 'verified' — mirror the push notification (useVerificationResponseListener)
     await this.checkDeviceCodeStatus()
-    this.status = VerificationRequestStatus.VERIFIED
     return true
   }
 
   onFail() {
+    // No recognised status was captured, so keep whatever the store already holds
+    if (this.status === null) {
+      return
+    }
+
     this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-      payload: [this.status],
-    })
-    this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-      payload: [this.statusMessage],
+      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+      payload: [{ status: this.status, status_message: this.statusMessage }],
     })
   }
 
   onSuccess() {
     // Setting status to 'verified' surfaces the VerifiedNotification banner on Home screen
     this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-      payload: [this.status],
-    })
-    this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-      payload: [undefined],
+      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+      payload: [{ status: VerificationRequestStatus.VERIFIED }],
     })
   }
 }
