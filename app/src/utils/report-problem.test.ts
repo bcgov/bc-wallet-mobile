@@ -248,6 +248,29 @@ describe('report-problem', () => {
       expect(body.error_json).toEqual(error.toJSON())
     })
 
+    it('flattens the context of a wrapped error, letting the outer error win on a shared key', () => {
+      const identity = { category: ErrorCategory.NETWORK, appEvent: 'test-event' as AppEventCode, statusCode: 2100 }
+      const requestError = new AppError('Request failed', identity, {
+        track: false,
+        context: { http_route: '/assertion', http_status: 503, failure_step: 'verify_device_assertion' },
+      })
+      const error = new AppError('Login failed', identity, {
+        cause: requestError,
+        track: false,
+        context: { http_status: 500 },
+      })
+
+      const result = createReportProblemLokiPayload('7K2P-9XQF', { ...baseProblem, error })
+      const body = JSON.parse(result.streams[0].values[0][1])
+
+      expect(body).toMatchObject({
+        error_message: 'Login failed',
+        http_route: '/assertion',
+        http_status: 500,
+        failure_step: 'verify_device_assertion',
+      })
+    })
+
     it('omits an allow-listed context key from the flattened body when it is absent on the error', () => {
       const error = new AppError(
         'Failed to fetch resource',

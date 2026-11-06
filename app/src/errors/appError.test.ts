@@ -273,6 +273,54 @@ describe('AppError', () => {
       })
       expect(trackErrorEventSpy.mock.calls[0][0].message).not.toContain('MTIzNA')
     })
+
+    it('includes the route of a wrapped request error', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+      const requestError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
+        context: { http_method: 'POST', http_route: '/cardtap/v3/devices/assertion' },
+        track: false,
+      })
+
+      const error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: requestError })
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith({
+        code: AppEventCode.LOGIN_SERVER_ERROR,
+        message: `[${error.code}] POST /cardtap/v3/devices/assertion ${error.message}`,
+      })
+    })
+  })
+
+  describe('getChainedContext', () => {
+    it("merges the context of every wrapped AppError, letting the outer error's keys win", () => {
+      const inner = new AppError('inner', GENERAL_IDENTITY, {
+        context: { http_route: '/jwk', failure_step: 'jwks' },
+        track: false,
+      })
+      const middle = new AppError('middle', GENERAL_IDENTITY, {
+        cause: inner,
+        context: { failure_step: 'outer_step' },
+        track: false,
+      })
+      const outer = new AppError('outer', GENERAL_IDENTITY, { cause: middle, track: false })
+
+      expect(outer.getChainedContext()).toEqual({ http_route: '/jwk', failure_step: 'outer_step' })
+      expect(outer.context).toEqual({})
+    })
+
+    it('stops at a cause that is not an AppError', () => {
+      const cause = Object.assign(new Error('native'), { context: { secret: 'never read' } })
+      const error = new AppError('outer', GENERAL_IDENTITY, { cause, context: { a: 1 }, track: false })
+
+      expect(error.getChainedContext()).toEqual({ a: 1 })
+    })
+
+    it('stops following a cause cycle', () => {
+      const a = new AppError('a', GENERAL_IDENTITY, { context: { a: 1 }, track: false })
+      const b = new AppError('b', GENERAL_IDENTITY, { cause: a, context: { b: 2 }, track: false })
+      ;(a as { cause?: unknown }).cause = b
+
+      expect(b.getChainedContext()).toEqual({ a: 1, b: 2 })
+    })
   })
 
   describe('fromErrorDefinition', () => {

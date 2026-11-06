@@ -1,6 +1,6 @@
 import { AppError } from './appError'
 import { ErrorRegistry } from './errorRegistry'
-import { addFailureContext, createFailureError, trackFailureSteps, wrapKeepingFailureContext } from './failureContext'
+import { createFailureError, trackFailureSteps } from './failureContext'
 
 describe('createFailureError', () => {
   it('records the flow, step and cause', () => {
@@ -38,20 +38,20 @@ describe('createFailureError', () => {
     expect(error.context.failure_cause_code).toBe('E_NO_KEYS_FOUND')
   })
 
-  it('keeps the HTTP details of an AppError cause', () => {
+  it("leaves an AppError cause's context on the cause, where the chained context reads it", () => {
     const cause = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
-      context: { http_route: '/device/jwk', http_method: 'GET', http_status: 503, http_response_size: 10 },
+      context: { http_route: '/device/jwk', http_status: 503, push_fcm_status: 'fetch_failed' },
+      track: false,
     })
 
     const error = createFailureError(ErrorRegistry.MISSING_JWK_ERROR, { flow: 'f', step: 's', cause })
 
-    expect(error.context).toEqual({
-      failure_flow: 'f',
-      failure_step: 's',
-      failure_cause_code: cause.code,
+    expect(error.context).toEqual({ failure_flow: 'f', failure_step: 's', failure_cause_code: cause.code })
+    expect(error.getChainedContext()).toMatchObject({
       http_route: '/device/jwk',
-      http_method: 'GET',
       http_status: 503,
+      push_fcm_status: 'fetch_failed',
+      failure_step: 's',
     })
   })
 
@@ -67,78 +67,6 @@ describe('createFailureError', () => {
       failure_step: 'account',
       account_read_status: 'account_decode_failed',
     })
-  })
-
-  it('keeps the push token status of an AppError cause', () => {
-    const cause = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
-      context: { push_fcm_status: 'fetch_failed', push_apns_status: 'missing' },
-    })
-
-    const error = createFailureError(ErrorRegistry.LOGIN_SERVER_ERROR, { flow: 'pairing', step: 's', cause })
-
-    expect(error.context).toMatchObject({ push_fcm_status: 'fetch_failed', push_apns_status: 'missing' })
-  })
-})
-
-describe('addFailureContext', () => {
-  it('adds where and when the flow failed to the same error, keeping its code and context', () => {
-    jest.spyOn(Date, 'now').mockReturnValue(5000)
-    const error = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, {
-      context: { http_route: '/cardtap/v3/devices/assertion' },
-      track: false,
-    })
-
-    const result = addFailureContext(error, { flow: 'pairing', step: 'verify_device_assertion', startedAt: 2000 })
-
-    expect(result).toBe(error)
-    expect(result.appEvent).toBe(ErrorRegistry.NO_INTERNET.appEvent)
-    expect(result.context).toEqual({
-      http_route: '/cardtap/v3/devices/assertion',
-      failure_flow: 'pairing',
-      failure_step: 'verify_device_assertion',
-      failure_elapsed_ms: 3000,
-    })
-    jest.restoreAllMocks()
-  })
-})
-
-describe('wrapKeepingFailureContext', () => {
-  it("wraps an AppError, copying its HTTP and failure context and recording its code as the cause's", () => {
-    const requestError = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, {
-      context: { http_route: '/assertion', failure_flow: 'pairing', failure_step: 'verify', other: 'not copied' },
-      track: false,
-    })
-
-    const error = wrapKeepingFailureContext(ErrorRegistry.LOGIN_SERVER_ERROR, requestError)
-
-    expect(error.appEvent).toBe(ErrorRegistry.LOGIN_SERVER_ERROR.appEvent)
-    expect(error.cause).toBe(requestError)
-    expect(error.context).toEqual({
-      http_route: '/assertion',
-      failure_flow: 'pairing',
-      failure_step: 'verify',
-      failure_cause_code: requestError.code,
-    })
-  })
-
-  it('keeps a deeper cause code the error already recorded', () => {
-    const labeled = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_DEVICE_ERROR, {
-      context: { failure_cause_code: 'E_SIGN_FAILED' },
-      track: false,
-    })
-
-    const error = wrapKeepingFailureContext(ErrorRegistry.LOGIN_SERVER_ERROR, labeled)
-
-    expect(error.context.failure_cause_code).toBe('E_SIGN_FAILED')
-  })
-
-  it('wraps an error that is not an AppError with only its code', () => {
-    const cause = Object.assign(new Error('native'), { code: 'E_NATIVE' })
-
-    const error = wrapKeepingFailureContext(ErrorRegistry.LOGIN_SERVER_ERROR, cause)
-
-    expect(error.cause).toBe(cause)
-    expect(error.context).toEqual({ failure_cause_code: 'E_NATIVE' })
   })
 })
 
@@ -221,7 +149,23 @@ describe('trackFailureSteps', () => {
     const error = await rejection(track().run('second', () => Promise.reject(requestError), { keepAppError: true }))
 
     expect(error).toBe(requestError)
-    expect(error.context).toMatchObject({ failure_flow: 'test_flow', failure_step: 'second' })
+    expect(error.context).toMatchObject({
+      failure_flow: 'test_flow',
+      failure_step: 'second',
+      failure_cause_code: requestError.code,
+    })
+  })
+
+  it('leaves an error unchanged when an error it wraps is already labeled', () => {
+    const steps = track()
+    const labeled = steps.fail('second', new Error('inner'))
+    const wrapper = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: labeled, track: false })
+
+    const error = steps.fail('first', wrapper)
+
+    expect(error).toBe(wrapper)
+    expect(error.context.failure_step).toBeUndefined()
+    expect(error.getChainedContext().failure_step).toBe('second')
   })
 
   it('with keepAppError, still wraps an error that is not an AppError', () => {
