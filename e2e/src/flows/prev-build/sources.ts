@@ -32,7 +32,7 @@ export const PREV_VERSION_ENV = 'PREV_VERSION'
 export const MANIFEST_FILE = 'e2e/upgrade-sources.json'
 const MANIFEST_PATH = resolve(dirname(fileURLToPath(import.meta.url)), '../../../upgrade-sources.json')
 const VERSION = /^\d+\.\d+\.\d+$/
-const PLATFORMS: readonly SourcePlatform[] = ['android', 'ios']
+const PLATFORMS: ReadonlySet<SourcePlatform> = new Set(['android', 'ios'])
 
 /** Which driver a version takes — by major/minor, so a version the manifest does not list still resolves. */
 export function lineageOf(version: string): Lineage {
@@ -43,7 +43,7 @@ export function lineageOf(version: string): Lineage {
   return 'current'
 }
 
-const isPlatform = (value: unknown): value is SourcePlatform => PLATFORMS.includes(value as SourcePlatform)
+const isPlatform = (value: unknown): value is SourcePlatform => PLATFORMS.has(value as SourcePlatform)
 
 function parseSource(entry: unknown, index: number): UpgradeSource {
   const where = `${MANIFEST_FILE} sources[${index}]`
@@ -70,7 +70,7 @@ export function loadUpgradeSources(): UpgradeSource[] {
   if (cached) return cached
   const raw = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8')) as { sources?: unknown }
   if (!Array.isArray(raw.sources)) throw new Error(`${MANIFEST_FILE}: expected a "sources" array`)
-  const sources = raw.sources.map(parseSource)
+  const sources = raw.sources.map((entry, index) => parseSource(entry, index))
   const versions = sources.map((source) => source.version)
   const duplicate = versions.find((version, index) => versions.indexOf(version) !== index)
   if (duplicate) throw new Error(`${MANIFEST_FILE}: ${duplicate} is listed twice`)

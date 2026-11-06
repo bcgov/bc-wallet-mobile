@@ -328,13 +328,13 @@ jobs:
           [ "$MAX_PARALLEL" -ge 1 ] 2>/dev/null || MAX_PARALLEL=2
           # One platform at a time (mirrors strategy.max-parallel): the queue users and the suites that verify
           # with the shared persona.
-          case "$SUITE" in send-video | upgradeSubmitted | upgradeApproved | upgradeVerified) MAX_PARALLEL=1 ;; esac
+          case "$SUITE" in send-video | upgradeSubmitted | upgradeApproved | upgradeVerified) MAX_PARALLEL=1 ;; *) ;; esac
           PARALLEL_JOBS=$(( DEVICE_COUNT > MAX_PARALLEL ? MAX_PARALLEL : DEVICE_COUNT ))
           export SAUCE_MAX_INSTANCES=$(( SAUCE_RDS_CONCURRENCY / PARALLEL_JOBS ))
           # The send-video reviews use a blind-FIFO queue: one session at a time whatever the budget
           # (the Android lane caps itself, iOS has no per-lane cap). Same for the upgrade suites that
           # submit a send-video request (submitted / approved on the 4.1.x lineage).
-          case "$SUITE" in send-video | upgradeSubmitted | upgradeApproved) export SAUCE_MAX_INSTANCES=1 ;; esac
+          case "$SUITE" in send-video | upgradeSubmitted | upgradeApproved) export SAUCE_MAX_INSTANCES=1 ;; *) ;; esac
           echo "Devices: $DEVICE_COUNT | parallel jobs: $PARALLEL_JOBS | wdio maxInstances: $SAUCE_MAX_INSTANCES"
 
           # Those journeys must never run on two platforms at once — each platform's queue drain would
@@ -373,6 +373,11 @@ jobs:
                 no-platform)
                   echo "::notice::${PREV_VERSION} never shipped on ${PLATFORM} (e2e/upgrade-sources.json) — nothing to upgrade from on this platform"
                   exit 0
+                  ;;
+                ok) ;;
+                *)
+                  echo "::error::Unexpected manifest lookup result '${listed}' for ${PREV_VERSION} on ${PLATFORM}"
+                  exit 1
                   ;;
               esac
               # Probe that platform's file so a missing upload fails here by name, not behind a generic session error.

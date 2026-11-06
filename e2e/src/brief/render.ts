@@ -297,6 +297,13 @@ function renderLegend(model: BriefModel): string[] {
   ]
 }
 
+/** A version block's "booted" fact: the builds its sessions booted, or why none is named. */
+function bootedFact(entry: UpgradeVersionBrief): string {
+  if (!entry.booted.length) return entry.hasReports ? 'booted build not recorded' : 'no reports'
+  const apps = entry.booted.map((app) => `\`${app}\``).join(', ')
+  return `booted ${apps}`
+}
+
 /** The weekly upgrade run: a block per shipped version — what it booted, then every state as a row. */
 function renderUpgrades(model: BriefModel): string[] {
   const out = [
@@ -306,11 +313,7 @@ function renderUpgrades(model: BriefModel): string[] {
     '',
   ]
   for (const entry of model.upgrades ?? []) {
-    const booted = entry.booted.length
-      ? `booted ${entry.booted.map((app) => `\`${app}\``).join(', ')}`
-      : entry.hasReports
-        ? 'booted build not recorded'
-        : 'no reports'
+    const booted = bootedFact(entry)
     const only = entry.platforms.length === 1 ? `${PLATFORM_LABEL[entry.platforms[0]]} only` : undefined
     const facts = [LINEAGE_LABEL[entry.lineage], only, booted, entry.note].filter(Boolean).map((fact) => cell(fact as string))
     out.push(`#### From ${entry.version}`, '', facts.join(' · '), '', ...renderSectionTable(entry.sections, 'State', 'Path'), '')

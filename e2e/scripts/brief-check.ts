@@ -32,7 +32,7 @@ import { type SpecTitles, specTitles } from '../src/brief/spec-titles.js'
 import type { Platform } from '../src/brief/types.js'
 import { allUpgradeProofs, LINEAGES, upgradeSections } from '../src/brief/upgrade-map.js'
 import { loadUpgradeSources, MANIFEST_FILE } from '../src/flows/prev-build/sources.js'
-import { UPGRADE_PATHS, UPGRADE_STATES, upgradeSpecsFor } from '../src/upgrade-matrix.js'
+import { UPGRADE_PATHS, UPGRADE_STATES, upgradeSpecsFor, type UpgradePath } from '../src/upgrade-matrix.js'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const E2E_ROOT = resolve(SCRIPT_DIR, '..')
@@ -71,24 +71,27 @@ function checkRow(row: CoverageRow, seenIds: Set<string>): void {
   }
 }
 
+/** One matrix path: a unique id, a known state, a spec or a reason (never both) per lineage, one wrapper per scenario. */
+function checkUpgradePath(path: UpgradePath, ids: Set<string>): void {
+  if (ids.has(path.id)) fail(`upgrade matrix: duplicate path id "${path.id}"`)
+  ids.add(path.id)
+  if (!UPGRADE_STATES.some((state) => state.id === path.state)) fail(`upgrade matrix: ${path.id} names an unknown state "${path.state}"`)
+  for (const lineage of LINEAGES) {
+    const spec = path.spec[lineage]
+    const reason = path.unsupported?.[lineage]
+    if (!spec && !reason) fail(`upgrade matrix: ${path.id} has neither a spec nor an "unsupported" reason for the ${lineage} lineage`)
+    if (spec && reason) fail(`upgrade matrix: ${path.id} has both a spec and an "unsupported" reason for the ${lineage} lineage`)
+  }
+  if (path.scenario) {
+    const wrappers = new Set(Object.values(path.spec))
+    if (wrappers.size !== 1) fail(`upgrade matrix: ${path.id} shares scenario ${path.scenario} across ${[...wrappers].join(', ')} — one wrapper per scenario`)
+  }
+}
+
 /** The matrix is consistent with itself and the manifest parses — before any brief reads either. */
 function checkUpgradeMatrix(): void {
   const ids = new Set<string>()
-  for (const path of UPGRADE_PATHS) {
-    if (ids.has(path.id)) fail(`upgrade matrix: duplicate path id "${path.id}"`)
-    ids.add(path.id)
-    if (!UPGRADE_STATES.some((state) => state.id === path.state)) fail(`upgrade matrix: ${path.id} names an unknown state "${path.state}"`)
-    for (const lineage of LINEAGES) {
-      const spec = path.spec[lineage]
-      const reason = path.unsupported?.[lineage]
-      if (!spec && !reason) fail(`upgrade matrix: ${path.id} has neither a spec nor an "unsupported" reason for the ${lineage} lineage`)
-      if (spec && reason) fail(`upgrade matrix: ${path.id} has both a spec and an "unsupported" reason for the ${lineage} lineage`)
-    }
-    if (path.scenario) {
-      const wrappers = new Set(Object.values(path.spec))
-      if (wrappers.size !== 1) fail(`upgrade matrix: ${path.id} shares scenario ${path.scenario} across ${[...wrappers].join(', ')} — one wrapper per scenario`)
-    }
-  }
+  for (const path of UPGRADE_PATHS) checkUpgradePath(path, ids)
   for (const state of UPGRADE_STATES) {
     for (const lineage of LINEAGES) {
       if (!upgradeSpecsFor(state.id, lineage).length) fail(`upgrade matrix: the ${state.suite} suite has no spec for the ${lineage} lineage — the weekly job would run an empty suite`)
