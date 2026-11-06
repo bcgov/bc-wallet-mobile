@@ -599,13 +599,15 @@ describe('useAgentSetupViewModel', () => {
       expect(jest.mocked(agentService.buildAgent).mock.calls).toHaveLength(buildsBefore)
     })
 
-    it('is a no-op when no attestation monitor is registered', () => {
+    it('is a no-op when no attestation monitor is registered', async () => {
       jest
         .mocked(Bifold.useServices)
         .mockReturnValue([logger, undefined, undefined, [], [], ocaBundleResolver] as never)
       jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ developer: developerWith(true) }) as never)
 
-      expect(() => renderHook(() => useAgentSetupViewModel())).not.toThrow()
+      const { result } = renderHook(() => useAgentSetupViewModel())
+
+      await waitFor(() => expect(result.current.status).toBe('ready'))
     })
   })
 })
