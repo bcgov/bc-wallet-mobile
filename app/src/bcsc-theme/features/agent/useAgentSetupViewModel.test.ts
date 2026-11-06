@@ -553,7 +553,8 @@ describe('useAgentSetupViewModel', () => {
 
     unmount()
 
-    expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger)
+    // stopAgent drains the cache warm-up before shutting down, so the call lands a tick later
+    await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger))
   })
 
   it('does not call shutdown on unmount when no agent was ever built', async () => {
@@ -565,6 +566,148 @@ describe('useAgentSetupViewModel', () => {
     unmount()
 
     expect(agentService.shutdownAgent).not.toHaveBeenCalled()
+  })
+
+  describe('warmCache cancellation', () => {
+    const signalPassedToWarmCache = () => jest.mocked(agentService.warmCache).mock.calls[0][5] as AbortSignal
+
+    it('passes a live abort signal to warmCache and leaves it alone once the agent is ready', async () => {
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      expect(signalPassedToWarmCache().aborted).toBe(false)
+    })
+
+    it('aborts the warm-up signal when the provider unmounts', async () => {
+      const { result, unmount } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      unmount()
+
+      await waitFor(() => expect(signalPassedToWarmCache().aborted).toBe(true))
+    })
+
+    it('aborts the warm-up signal when didAuthenticate flips to false', async () => {
+      const store: Record<string, unknown> = {
+        authentication: { didAuthenticate: true },
+        bcscSecure: { walletKey: 'wallet-key-hash' },
+        preferences: { selectedMediator: 'https://m', walletName: 'BC Wallet', usePushNotifications: false },
+        developer: { enableProxy: false },
+        migration: { didMigrateToAskar: true },
+      }
+      jest.mocked(Bifold.useStore).mockImplementation(() => [store as never, jest.fn()])
+
+      const { result, rerender } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+      ;(store.authentication as Record<string, unknown>).didAuthenticate = false
+      rerender({})
+
+      await waitFor(() => expect(signalPassedToWarmCache().aborted).toBe(true))
+      expect(agentService.shutdownAgent).toHaveBeenCalled()
+    })
+
+    it('waits for the in-flight warm-up to settle before shutting the agent down', async () => {
+      let settleWarmCache!: () => void
+      jest.mocked(agentService.warmCache).mockReturnValue(
+        new Promise<void>((resolve) => {
+          settleWarmCache = resolve
+        })
+      )
+      const builtAgent = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(builtAgent)
+
+      const { result, unmount } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      unmount()
+      await act(async () => {})
+
+      // The signal is aborted, but the wallet stays open while the lookup is still in flight
+      expect(signalPassedToWarmCache().aborted).toBe(true)
+      expect(agentService.shutdownAgent).not.toHaveBeenCalled()
+
+      await act(async () => {
+        settleWarmCache()
+      })
+
+      await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger))
+    })
+
+    it('shuts the agent down anyway when the warm-up never settles', async () => {
+      jest.mocked(agentService.warmCache).mockReturnValue(new Promise<void>(() => {}))
+      const builtAgent = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(builtAgent)
+
+      const { result, unmount } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      jest.useFakeTimers()
+      try {
+        unmount()
+        await act(async () => {
+          await jest.advanceTimersByTimeAsync(5000)
+        })
+
+        expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger)
+      } finally {
+        jest.useRealTimers()
+      }
+    })
+
+    it('aborts the warm-up when the agent is cancelled before it is ready', async () => {
+      const builtAgent = mockAgent()
+      // Cancel mid-init: the unmount lands while the pickup request is still pending
+      let finishPickup!: () => void
+      builtAgent.didcomm.mediationRecipient.initiateMessagePickup.mockReturnValue(
+        new Promise<void>((resolve) => {
+          finishPickup = resolve
+        })
+      )
+      jest.mocked(agentService.buildAgent).mockReturnValue(builtAgent)
+
+      const { unmount } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(builtAgent.didcomm.mediationRecipient.initiateMessagePickup).toHaveBeenCalled())
+
+      unmount()
+      finishPickup()
+
+      await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger))
+      expect(agentService.warmCache).not.toHaveBeenCalled()
+    })
+
+    it('aborts the started warm-up and shuts the agent down when cancelled mid-init', async () => {
+      let finishLinkSecret!: () => void
+      jest.mocked(Bifold.createLinkSecretIfRequired).mockReturnValue(
+        new Promise<void>((resolve) => {
+          finishLinkSecret = resolve
+        }) as never
+      )
+      const builtAgent = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(builtAgent)
+
+      const { unmount } = renderHook(() => useAgentSetupViewModel())
+      // The warm-up starts before the link secret step, so it is already running here
+      await waitFor(() => expect(Bifold.createLinkSecretIfRequired).toHaveBeenCalled())
+      expect(agentService.warmCache).toHaveBeenCalledTimes(1)
+
+      unmount()
+      finishLinkSecret()
+
+      await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger))
+      expect(signalPassedToWarmCache().aborted).toBe(true)
+    })
+
+    it('logs and keeps the agent ready when the warm-up rejects', async () => {
+      const failure = new Error('ledger unreachable')
+      jest.mocked(agentService.warmCache).mockRejectedValue(failure)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+      await waitFor(() =>
+        expect(logger.error).toHaveBeenCalledWith('[Agent] Cache warm-up failed (continuing)', failure)
+      )
+    })
   })
 
   describe('attestation toggle', () => {
