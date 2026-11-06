@@ -373,6 +373,13 @@ const REVIEW_DECISION_TIMEOUT_MS = 180_000
 const REVIEW_DECISION_POLL_MS = 5_000
 
 /**
+ * How long a pending review is watched before its back arrow is taken. The screen's focus-time status
+ * check is still in the air when the screen itself appears, so this is the room that round trip gets
+ * to answer — generous against a single status call, since leaving too early is what costs a round.
+ */
+const FOCUS_CHECK_SETTLE_MS = 10_000
+
+/**
  * Submit a send-video verification: selfie photo, the prompted recording, upload, and out to Home —
  * the state in which an agent decision can be scripted (`reviewSendVideoRequest`) and then awaited
  * with {@link waitForSendVideoDecision}.
@@ -680,9 +687,10 @@ function assertExpectedDecision(actual: 'verified' | 'cancelled', expected: 'ver
  *
  * Home's pending card is the poll: re-entering through it mounts the pending review, whose focus check
  * re-fetches the request status and navigates the screen on by itself. So each round sees where the
- * screen settles and, if still pending, takes its back arrow out to Home for the next round an
- * interval later — the screen itself offers no manual check (#4968). Starting from Home is that same
- * loop one step in. The push notification is advisory and never navigates, so it is not waited on.
+ * screen settles and, if still pending, waits out that check before taking the back arrow to Home for
+ * the next round an interval later — the screen itself offers no manual check (#4968). Starting from
+ * Home is that same loop one step in. The push notification is advisory and never navigates, so it is
+ * not waited on.
  */
 export async function waitForSendVideoDecision(
   expected: 'verified' | 'cancelled',
@@ -704,7 +712,20 @@ export async function waitForSendVideoDecision(
         return settled
       }
 
-      // Out to Home, so the next round re-enters through its pending card and that mount re-checks
+      // The pending review being on screen does not mean it has heard back: its focus-time check is a
+      // round trip that only has to beat a 500ms probe, and the decision it carries navigates from this
+      // screen. Leaving now would unmount the navigator under that check and drop the decision — every
+      // round the same way, until the wait times out. So give the check its answer first.
+      const decided = await probeAnyScreen(
+        { verified: VerificationSuccessScreen, cancelled: CancelledReviewScreen },
+        FOCUS_CHECK_SETTLE_MS
+      )
+      if (decided) {
+        return decided
+      }
+
+      // It came back pending. Out to Home, so the next round re-enters through its pending card and
+      // that fresh mount checks again
       await PendingReviewScreen.back.tap()
       return false
     },
