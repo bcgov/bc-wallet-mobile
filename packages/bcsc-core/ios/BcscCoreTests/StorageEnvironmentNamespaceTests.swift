@@ -2,12 +2,14 @@
 import XCTest
 
 /// #4921 — the directory an account is filed under comes from `StorageService.basePath`, which is
-/// derived from the stored `issuer` file and silently falls back to PROD twice over. These tests pin
-/// the two halves of the reported failure: an account filed under the wrong environment, and an
-/// existing account going invisible when the issuer file is (re)seeded afterwards.
+/// derived from the stored `issuer` file and silently falls back to PROD twice over. These tests
+/// cover the two halves of the reported failure: an account filed under the wrong environment, and
+/// an existing account going invisible when the issuer file is (re)seeded afterwards.
 ///
-/// TODO (bm): these tests should fail once the environment switch issue is fixed. They pin current
-/// behaviour, not correct behaviour, and pass *because* the bug is present.
+/// Both assert how it *should* behave, wrapped in `XCTExpectFailure` so the suite stays green until
+/// the switch is fixed.
+///
+/// TODO (bm): drop the wrappers once it is fixed — XCTest flags them as unexpected passes.
 final class StorageEnvironmentNamespaceTests: XCTestCase {
   private let sitIssuer = "https://idsit.gov.bc.ca"
 
@@ -64,14 +66,15 @@ final class StorageEnvironmentNamespaceTests: XCTestCase {
 
   /// An account created in that window is filed under PROD even though the account itself (and the
   /// API traffic) belong to SIT. `setAccount` never uses the issuer it is handed to pick the path.
-  /// TODO: (bm): should fail once fixed — the account belongs in the environment its issuer names.
-  func testAccountIsFiledUnderProdWhileItsIssuerIsSit() throws {
+  func testAccountIsFiledUnderTheEnvironmentItsIssuerNames() throws {
     let accountID = try seedAccount(issuer: sitIssuer)
 
-    XCTAssertTrue(exists(accountsDirURL.appendingPathComponent("PROD/account_list")))
-    XCTAssertFalse(exists(accountsDirURL.appendingPathComponent("SIT/account_list")))
+    XCTExpectFailure("#4921: filed under PROD rather than the SIT issuer it was handed") {
+      XCTAssertTrue(exists(accountsDirURL.appendingPathComponent("SIT/account_list")))
+      XCTAssertFalse(exists(accountsDirURL.appendingPathComponent("PROD/account_list")))
+    }
 
-    // Still usable: the issuer-file read fails, but the directory scan infers PROD.
+    // Reachable either way — today only because the directory scan infers PROD.
     XCTAssertEqual(storage.currentAccountID, accountID)
     let readBack: Account? = storage.readData(
       file: .accountMetadata, pathDirectory: .applicationSupportDirectory
@@ -82,23 +85,20 @@ final class StorageEnvironmentNamespaceTests: XCTestCase {
   /// The lockout: `initIssuer` seeds the build-default issuer because `getIssuer` reported nil
   /// (PROD fallback + no issuer file), the namespace flips, and the existing account disappears.
   /// This is what surfaces at Unlock as E_ACCOUNT_NOT_FOUND / account_not_found (2822).
-  /// TODO: (bm): should fail once fixed — a known account must survive the issuer file being seeded.
-  func testSeedingTheIssuerFileHidesAnExistingAccount() throws {
+  func testAccountRemainsFoundAfterTheIssuerFileIsSeeded() throws {
     let accountID = try seedAccount(issuer: sitIssuer)
     XCTAssertEqual(storage.currentAccountID, accountID)
 
     XCTAssertTrue(storage.saveIssuerToFile(issuer: sitIssuer))
+    XCTAssertTrue(storage.basePath.hasSuffix("/accounts_dir/SIT"), "got \(storage.basePath)")
 
-    XCTAssertEqual(storage.basePath.hasSuffix("/accounts_dir/SIT"), true, "got \(storage.basePath)")
-    XCTAssertNil(storage.currentAccountID, "account_list is in PROD, the app now looks in SIT")
-    let readBack: Account? = storage.readData(
-      file: .accountMetadata, pathDirectory: .applicationSupportDirectory
-    )
-    XCTAssertNil(readBack, "the account is unreachable: unlock cannot read its security method")
-    XCTAssertTrue(
-      exists(accountsDirURL.appendingPathComponent("PROD/\(accountID)/account_metadata")),
-      "the files are still on disk, just in the other environment's directory"
-    )
+    XCTExpectFailure("#4921: seeding the issuer file moves the namespace out from under the account") {
+      XCTAssertEqual(storage.currentAccountID, accountID)
+      let readBack: Account? = storage.readData(
+        file: .accountMetadata, pathDirectory: .applicationSupportDirectory
+      )
+      XCTAssertEqual(readBack?.id, accountID, "unlock reads the security method from this record")
+    }
   }
 
   /// The inverse, and why "all my files were in PROD" and "stuck at Unlock" are the same bug: a
