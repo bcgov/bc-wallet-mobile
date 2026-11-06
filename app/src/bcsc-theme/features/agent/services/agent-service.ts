@@ -200,12 +200,17 @@ export const warmCache = async (
   credDefs: CachedItemId[],
   schemas: CachedItemId[],
   cachedLedgers: IndyVdrPoolConfig[] | undefined,
-  logger: BifoldLogger
+  logger: BifoldLogger,
+  signal: AbortSignal
 ): Promise<void> => {
   const poolService = agent.dependencyManager.resolve(IndyVdrPoolService)
 
   if (!cachedLedgers) {
     await refreshLedgerCache(poolService, logger)
+  }
+
+  if (signal.aborted) {
+    return
   }
 
   // Resolve each distinct issuer DID once, up front and sequentially, before firing
@@ -216,6 +221,10 @@ export const warmCache = async (
   // hits. Per-DID failures are non-fatal — warm-up is additive and must not block init.
   const uniqueDids = [...new Set([...credDefs, ...schemas].map(({ did }) => did))]
   for (const did of uniqueDids) {
+    if (signal.aborted) {
+      return
+    }
+
     try {
       await poolService.getPoolForDid(agent.context, did)
     } catch (error) {
@@ -225,24 +234,44 @@ export const warmCache = async (
 
   const credDefResults = await Promise.allSettled(
     credDefs.map(async ({ did, id }) => {
+      if (signal.aborted) {
+        return
+      }
+
       const pool = await poolService.getPoolForDid(agent.context, did)
+
+      if (signal.aborted) {
+        return
+      }
+
       await pool.pool.submitRequest(new GetCredentialDefinitionRequest({ credentialDefinitionId: id }))
     })
   )
+
   credDefResults.forEach((result, idx) => {
-    if (result.status === 'rejected') {
+    if (result.status === 'rejected' && !signal.aborted) {
       logger.warn(`Warm cache: credDef ${credDefs[idx].id} failed: ${result.reason}`)
     }
   })
 
   const schemaResults = await Promise.allSettled(
     schemas.map(async ({ did, id }) => {
+      if (signal.aborted) {
+        return
+      }
+
       const pool = await poolService.getPoolForDid(agent.context, did)
+
+      if (signal.aborted) {
+        return
+      }
+
       await pool.pool.submitRequest(new GetSchemaRequest({ schemaId: id }))
     })
   )
+
   schemaResults.forEach((result, idx) => {
-    if (result.status === 'rejected') {
+    if (result.status === 'rejected' && !signal.aborted) {
       logger.warn(`Warm cache: schema ${schemas[idx].id} failed: ${result.reason}`)
     }
   })
