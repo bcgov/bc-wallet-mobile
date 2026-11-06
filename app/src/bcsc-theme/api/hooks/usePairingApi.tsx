@@ -44,9 +44,6 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
           const tokens = await steps.run('notification_tokens', () => getNotificationTokens(logger))
           const { fcmDeviceToken, deviceToken } = tokens
 
-          // Placeholder push tokens are sent silently when Firebase fails; record it in case the server rejects them
-          steps.note(getPushTokenStatus(tokens))
-
           const signedCode = await steps.run('sign_pairing_code', async () => {
             let signed: string | null
             try {
@@ -68,7 +65,8 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
                 { assertion: signedCode },
                 { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
               ),
-            { keepAppError: true }
+            // Placeholder push tokens are sent silently when Firebase fails, and the server may reject them
+            { keepAppError: true, context: getPushTokenStatus(tokens) }
           )
 
           return response.data

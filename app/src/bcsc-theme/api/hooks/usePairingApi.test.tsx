@@ -209,6 +209,15 @@ describe('usePairingApi', () => {
       expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
       expect(error.context).toMatchObject({ push_fcm_status: 'fetch_failed', push_apns_status: 'ok' })
     })
+
+    it('does not add the push token status to a failure before the request', async () => {
+      ;(signPairingCode as jest.Mock).mockRejectedValue(new Error('signing failed'))
+
+      const error = await loginFailure()
+
+      expect(error.context.failure_step).toBe('sign_pairing_code')
+      expect(error.context.push_fcm_status).toBeUndefined()
+    })
   })
 
   describe('forgetAllPairings', () => {

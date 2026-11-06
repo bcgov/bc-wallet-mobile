@@ -105,9 +105,6 @@ describe('useQuickLoginURL', () => {
       detail: 'NSCocoaErrorDomain:4864',
     })
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue({ fcmDeviceToken: 'fcm', deviceToken: null })
-    tokensMock.getPushTokenStatus = jest
-      .fn()
-      .mockReturnValue({ push_fcm_status: 'fetch_failed', push_apns_status: 'missing' })
 
     useClientMock.useBCSCApiClient.mockReturnValue({
       tokens: { access_token: true },
@@ -123,8 +120,6 @@ describe('useQuickLoginURL', () => {
       account_read_status: 'account_decode_failed',
       account_read_environment: 'PROD',
       account_read_detail: 'NSCocoaErrorDomain:4864',
-      push_fcm_status: 'fetch_failed',
-      push_apns_status: 'missing',
     })
   })
 

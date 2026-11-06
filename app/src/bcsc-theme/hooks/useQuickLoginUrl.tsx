@@ -8,7 +8,7 @@ import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/
 import { useCallback } from 'react'
 import { createQuickLoginJWT, getAccount, getAccountReadStatus, NativeAccountReadStatus } from 'react-native-bcsc-core'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
-import { getNotificationTokens, getPushTokenStatus } from '../utils/push-notification-tokens'
+import { getNotificationTokens } from '../utils/push-notification-tokens'
 import { useBCSCApiClient } from './useBCSCApiClient'
 
 // Only a subset of the ClientMetadata is needed for this hook
@@ -88,9 +88,6 @@ export const useQuickLoginURL = () => {
           }
         }
 
-        // Placeholder push tokens are sent silently when Firebase fails; record it in case the server rejects them
-        steps.note(getPushTokenStatus(tokens))
-
         if (!account) {
           // getAccount resolves null for a missing, unreadable or undecodable account; ask native which one
           let readStatus: NativeAccountReadStatus | null = null
@@ -99,15 +96,15 @@ export const useQuickLoginURL = () => {
           } catch {
             // Diagnostics must never replace the real failure
           }
-          if (readStatus) {
-            steps.note({
-              account_read_status: readStatus.status,
-              account_read_environment: readStatus.environment,
-              account_read_detail: readStatus.detail,
-              account_legacy_status: readStatus.legacyStatus,
-            })
-          }
-          return { success: false, error: steps.fail('account', new Error('No account data received')) }
+          const context = readStatus
+            ? {
+                account_read_status: readStatus.status,
+                account_read_environment: readStatus.environment,
+                account_read_detail: readStatus.detail,
+                account_legacy_status: readStatus.legacyStatus,
+              }
+            : undefined
+          return { success: false, error: steps.fail('account', new Error('No account data received'), { context }) }
         }
 
         const { jwk } = jwkResult

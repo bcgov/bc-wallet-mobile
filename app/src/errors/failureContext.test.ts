@@ -233,32 +233,39 @@ describe('trackFailureSteps', () => {
     expect(error.cause).toBe(cause)
   })
 
-  it('attaches notes to a failure it wraps, without letting them override the step', () => {
-    const steps = track()
-    steps.note({ push_fcm_status: 'fetch_failed', failure_step: 'overridden' })
-
-    const error = steps.fail('second', new Error('native'))
+  it("adds a step's context to a failure it wraps, without letting it override the step", () => {
+    const error = track().fail('second', new Error('native'), {
+      context: { push_fcm_status: 'fetch_failed', failure_step: 'overridden' },
+    })
 
     expect(error.context).toMatchObject({ failure_step: 'second', push_fcm_status: 'fetch_failed' })
   })
 
-  it('attaches notes to an AppError it labels in place', () => {
-    const steps = track()
-    steps.note({ push_apns_status: 'missing' })
+  it("adds a step's context to an AppError it labels in place", async () => {
     const cause = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, { track: false })
 
-    const error = steps.fail('second', cause, { keepAppError: true })
+    const error = await rejection(
+      track().run('second', () => Promise.reject(cause), {
+        keepAppError: true,
+        context: { push_apns_status: 'missing' },
+      })
+    )
 
     expect(error).toBe(cause)
     expect(error.context).toMatchObject({ failure_step: 'second', push_apns_status: 'missing' })
   })
 
-  it('does not attach notes recorded after a failure was labeled', () => {
+  it("adds a step's context only to failures at that step", async () => {
     const steps = track()
-    const error = steps.fail('second', new Error('native'))
 
-    steps.note({ account_read_status: 'account_file_missing' })
+    const error = await rejection(
+      steps.run('first', () =>
+        steps.run('second', () => Promise.reject(new Error('inner')), { context: { push_fcm_status: 'ok' } })
+      )
+    )
+    const other = steps.fail('first', new Error('elsewhere'))
 
-    expect(error.context.account_read_status).toBeUndefined()
+    expect(error.context.push_fcm_status).toBe('ok')
+    expect(other.context.push_fcm_status).toBeUndefined()
   })
 })

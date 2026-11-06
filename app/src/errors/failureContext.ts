@@ -137,6 +137,11 @@ type StepOptions = {
    * errors already name the exact failure, such as a request (ie: no_internet, or an HTTP status).
    */
   keepAppError?: boolean
+  /**
+   * Diagnostics that could explain a failure at this step, ie: push token status on the request that sends
+   * them. Status codes only, never personal data or tokens. The step's own labels win over the same key.
+   */
+  context?: Record<string, unknown>
 }
 
 export type FailureSteps<TStep extends string> = {
@@ -146,11 +151,6 @@ export type FailureSteps<TStep extends string> = {
    * Labels an error as a failure at a step
    */
   fail: (step: TStep, error: unknown, options?: StepOptions) => AppError
-  /**
-   * Records diagnostics (status codes only, never personal data or tokens) to attach to any later failure,
-   * ie: whether push tokens were placeholders. Labels win over a note with the same key.
-   */
-  note: (context: Record<string, unknown>) => void
 }
 
 /**
@@ -163,18 +163,13 @@ export type FailureSteps<TStep extends string> = {
  *
  * @param flow - The name of the flow. ie: quick_login
  * @param options - The definition failures are wrapped in unless a step overrides it
- * @returns `run`, `fail` and `note`, sharing the flow's start time and notes
+ * @returns `run` and `fail`, sharing the flow's start time
  */
 export const trackFailureSteps = <TStep extends string>(
   flow: string,
   { definition }: { definition: ErrorDefinition }
 ): FailureSteps<TStep> => {
   const startedAt = Date.now()
-  const notes: Record<string, unknown> = {}
-
-  const note = (context: Record<string, unknown>) => {
-    Object.assign(notes, context)
-  }
 
   const fail = (step: TStep, error: unknown, options: StepOptions = {}): AppError => {
     // this has already been labeled, leave it as is
@@ -186,11 +181,13 @@ export const trackFailureSteps = <TStep extends string>(
 
     // add error context for handled or keepAppError errors
     if (error instanceof AppError && (error.handled || options.keepAppError)) {
-      error.addContext(notes)
+      if (options.context) {
+        error.addContext(options.context)
+      }
       return addFailureContext(error, location)
     }
 
-    return createFailureError(options.definition ?? definition, { ...location, cause: error, context: notes })
+    return createFailureError(options.definition ?? definition, { ...location, cause: error, context: options.context })
   }
 
   const run = async <T>(step: TStep, work: () => Promise<T>, options?: StepOptions): Promise<T> => {
@@ -201,5 +198,5 @@ export const trackFailureSteps = <TStep extends string>(
     }
   }
 
-  return { run, fail, note }
+  return { run, fail }
 }
