@@ -103,6 +103,57 @@ describe('retryAsync', () => {
     expect(fn).toHaveBeenCalledTimes(3)
   })
 
+  it('calls onRetry once per retry with the failed attempt number and error', async () => {
+    const first = new Error('First')
+    const second = new Error('Second')
+    const fn = jest.fn().mockRejectedValueOnce(first).mockRejectedValueOnce(second).mockResolvedValueOnce('Success')
+    const onRetry = jest.fn()
+
+    await expect(retryAsync(fn, { attempts: 3, retryDelayMs: 100, onRetry })).resolves.toBe('Success')
+
+    expect(onRetry).toHaveBeenCalledTimes(2)
+    expect(onRetry).toHaveBeenNthCalledWith(1, { attempt: 1, error: first })
+    expect(onRetry).toHaveBeenNthCalledWith(2, { attempt: 2, error: second })
+  })
+
+  it('does not call onRetry after the final attempt', async () => {
+    const fn = jest.fn().mockRejectedValue(new Error('Failed'))
+    const onRetry = jest.fn()
+
+    await expect(retryAsync(fn, { attempts: 2, retryDelayMs: 100, onRetry })).rejects.toThrow('Failed')
+    expect(onRetry).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not call onRetry when shouldRetry declines', async () => {
+    const fn = jest.fn().mockRejectedValue(new Error('Not retryable'))
+    const onRetry = jest.fn()
+
+    await expect(retryAsync(fn, { attempts: 3, retryDelayMs: 100, shouldRetry: () => false, onRetry })).rejects.toThrow(
+      'Not retryable'
+    )
+    expect(onRetry).not.toHaveBeenCalled()
+  })
+
+  it('calls onRetry with an undefined error when retrying a nullish result', async () => {
+    const fn = jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce('Success')
+    const onRetry = jest.fn()
+
+    await retryAsync(fn, { attempts: 3, retryDelayMs: 100, retryIfNullish: true, onRetry })
+
+    expect(onRetry).toHaveBeenCalledTimes(1)
+    expect(onRetry).toHaveBeenCalledWith({ attempt: 1, error: undefined })
+  })
+
+  it('does not treat an onRetry failure as a callback failure', async () => {
+    const fn = jest.fn().mockRejectedValue(new Error('Failed'))
+    const onRetry = jest.fn(() => {
+      throw new Error('onRetry blew up')
+    })
+
+    await expect(retryAsync(fn, { attempts: 3, retryDelayMs: 100, onRetry })).rejects.toThrow('onRetry blew up')
+    expect(fn).toHaveBeenCalledTimes(1)
+  })
+
   it.each([0, -1])('throws an error if maxRetries is %s', async (maxRetries) => {
     const fn = jest.fn().mockRejectedValue(new Error('Failed'))
 

@@ -1141,6 +1141,41 @@ describe('BCSC Client', () => {
         expect(persistJwk).toHaveBeenCalledWith('https://example.com', mockJwk, mockLogger)
       })
 
+      it('logs a warn for each retried attempt, even when a later attempt succeeds', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+        // Real adapter so the 503 hits the interceptor's suppressStatusCodeLogs gate — the per-retry
+        // warn is then the only trace of the failed attempt.
+        let attempts = 0
+        client.client.defaults.adapter = (config: any) => {
+          attempts += 1
+          if (attempts === 1) {
+            return Promise.reject(
+              new AxiosError('Service Unavailable', 'ERR_BAD_RESPONSE', config, null, {
+                status: 503,
+                data: {},
+                statusText: 'Service Unavailable',
+                headers: {} as any,
+                config,
+              })
+            )
+          }
+          return Promise.resolve({ data: { keys: [mockJwk] }, status: 200, statusText: 'OK', headers: {}, config })
+        }
+
+        const resultPromise = client.fetchJwk()
+        await jest.advanceTimersByTimeAsync(500)
+        const result = await resultPromise
+
+        expect(result).toEqual(mockJwk)
+        expect(mockLogger.warn).toHaveBeenCalledTimes(1)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('[BCSCApiClient] JWK fetch attempt 1 failed, retrying')
+        )
+        expect(mockLogger.error).not.toHaveBeenCalled()
+      })
+
       it('retries a request timeout and succeeds on the next attempt', async () => {
         const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
