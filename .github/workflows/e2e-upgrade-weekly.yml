@@ -98,7 +98,8 @@ jobs:
                         else {platform: "Android", device: "Google.*", os_version: "15"} end;
             ($wanted | split(",") | map(gsub("\\s"; "")) | map(select(length > 0))) as $only
             | [ .sources[]
-                | select(($only | length) == 0 or ($only | index(.version)) != null)
+                | .version as $version
+                | select(($only | length) == 0 or ($only | index($version)) != null)
                 | {version, device_matrix: ([.platforms[] | device] | tostring)} ]' e2e/upgrade-sources.json)
           for wanted in $(tr ',' ' ' <<<"$VERSIONS"); do
             if ! jq -e --arg v "$wanted" 'any(.[]; .version == $v)' <<<"$sources" >/dev/null; then
