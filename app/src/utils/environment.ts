@@ -1,6 +1,8 @@
 import { ANALYTICS_APP_ID_PREFIX, Mode } from '@/constants'
 import Config from 'react-native-config'
 
+// TODO (MD): Move these into state/environment
+
 export interface IASEnvironment {
   name: string
   iasAgentInviteUrl: string
