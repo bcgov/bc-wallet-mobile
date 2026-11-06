@@ -2,6 +2,7 @@ import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState } from '@/store'
 import { AccountPhase, getAccountPhase } from './account-phase'
+import { isRefreshTokenExpired } from './refresh-token'
 
 /**
  * Reads the expiry rule's inputs from the store and the in-memory account.
@@ -12,7 +13,7 @@ export const selectAccountPhase = (state: BCState, account: BCSCAccount | null, 
     {
       isVerified: Boolean(state.bcscSecure.verified),
       expiredByServer: state.bcsc.credentialMetadata?.bcscReason === BCSCReason.ExpiredBySystem,
-      credentialExpired: state.bcscSecure.refreshTokenExpired === true,
+      credentialExpired: isRefreshTokenExpired(state.bcscSecure.refreshToken, now.getTime()),
       cardExpiresAt: account?.account_expiration_date,
     },
     now

@@ -1,5 +1,6 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { getVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
+import { isRefreshTokenExpired } from '@/bcsc-theme/state/account/refresh-token'
 import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
 import { BCState } from '@/store'
@@ -15,7 +16,7 @@ export const selectHomeNotice = (state: BCState, account: BCSCAccount | null, no
     isVerified,
     needsVerification,
     deviceVerifiedByIas: isUserVerified(bcscSecure),
-    refreshTokenExpired: bcscSecure.refreshTokenExpired === true,
+    refreshTokenExpired: isRefreshTokenExpired(bcscSecure.refreshToken, now.getTime()),
     requestStatus: bcscSecure.verificationRequestStatus,
     hasVerificationRequest: Boolean(bcscSecure.verificationRequestId),
     isIdStepCompleted: () => computeSetupStepCompletion(state).id.completed,

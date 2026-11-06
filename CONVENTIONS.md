@@ -264,7 +264,7 @@ flag that something has to remember to set and clear. The three live together in
 
 - `getAccountPhase` (`account-phase.ts`) is the only definition of "expired" and "expiring soon".
 - `selectAccountPhase` (`selectors.ts`) reads its inputs: `bcscSecure.verified`, the ID token
-  `bcscReason`, `bcscSecure.refreshTokenExpired`, and the account's `account_expiration_date`.
+  `bcscReason`, the stored refresh token's expiry (`isRefreshTokenExpired`), and the account's `account_expiration_date`.
 - `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
   `selectHomeNotice` (Home notices, `bcsc-theme/state/home/`) both read it, so they cannot disagree.
 - `getHomeNotice` (`home-notice.ts`) is the only definition of which notice Home shows. `useCustomNotifications`
