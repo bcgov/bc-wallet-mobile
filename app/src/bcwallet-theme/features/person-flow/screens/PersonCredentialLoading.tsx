@@ -121,7 +121,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       }
     }
 
-    connect()
+    void connect()
   }, [agent, store.developer.environment.iasAgentInviteUrl, logger, t, setStep, store.preferences.walletName])
 
   // when a person credential offer is received, show the

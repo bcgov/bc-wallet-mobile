@@ -104,7 +104,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       const liveAgent = agentRef.current
       if (liveAgent) {
         agentRef.current = null
-        shutdownAgent(liveAgent, loggerRef.current)
+        void shutdownAgent(liveAgent, loggerRef.current)
       }
     }
   }, [])
@@ -112,7 +112,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   useEffect(() => {
     if (!didAuthenticate) {
       if (agentRef.current) {
-        shutdownAgent(agentRef.current, logger)
+        void shutdownAgent(agentRef.current, logger)
         agentRef.current = null
         setAgent(null)
       }

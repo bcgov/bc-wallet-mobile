@@ -128,7 +128,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     // Must be verified and on the main stack to see this alert
     no_tokens_returned: () => {
       onBack() // close the modal first
-      injectErrorCodeIntoAxiosResponse(client, 'no_tokens_returned', client.endpoints.token)
+      void injectErrorCodeIntoAxiosResponse(client, 'no_tokens_returned', client.endpoints.token)
     },
     unexpected_server_error_500: () => injectErrorCodeIntoAxiosResponse(client, '', undefined, 500),
     unexpected_server_error_503: () => injectErrorCodeIntoAxiosResponse(client, '', undefined, 503),
@@ -169,45 +169,45 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     already_verified: () => injectErrorCodeIntoAxiosResponse(client, 'already_verified', client.endpoints.token),
     client_login_rejected_400: () => {
       onBack() // close modal first
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.clientMetadata}`)
+      void injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.clientMetadata}`)
     },
     client_login_rejected_401: () => {
       onBack() // close modal first
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.clientMetadata}`)
+      void injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.clientMetadata}`)
     },
     client_login_rejected_403: () => {
       onBack() // close modal first
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.clientMetadata}`)
+      void injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.clientMetadata}`)
     },
     device_login_rejected_400: () => {
       onBack() // close modal first
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.deviceAuthorization}`)
+      void injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.deviceAuthorization}`)
     },
     device_login_rejected_401: () => {
       onBack() // close modal first
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.deviceAuthorization}`)
+      void injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.deviceAuthorization}`)
     },
     device_login_rejected_403: () => {
       onBack() // close modal first
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.deviceAuthorization}`)
+      void injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.deviceAuthorization}`)
     },
     invalid_token: () => {
       onBack() // close modal first
-      injectErrorCodeIntoAxiosResponse(client, 'invalid_token', `${client.endpoints.token}`)
+      void injectErrorCodeIntoAxiosResponse(client, 'invalid_token', `${client.endpoints.token}`)
     },
     // Person Credential creation (#3389) — HTTP 400 with error_description "suspended"/"deactivated"
     // on the credential endpoint. Exercises digitalServiceCardAccountUnavailableErrorPolicy, which
     // shows the generic "Problem with Account" modal (error 3205/3206).
     person_credential_suspended_400: () => {
       onBack() // close modal first
-      injectErrorCodeIntoAxiosResponse(client, 'unauthorized_client', client.endpoints.credential, 400, {
+      void injectErrorCodeIntoAxiosResponse(client, 'unauthorized_client', client.endpoints.credential, 400, {
         error: 'unauthorized_client',
         error_description: 'suspended',
       })
     },
     person_credential_deactivated_400: () => {
       onBack() // close modal first
-      injectErrorCodeIntoAxiosResponse(client, 'unauthorized_client', client.endpoints.credential, 400, {
+      void injectErrorCodeIntoAxiosResponse(client, 'unauthorized_client', client.endpoints.credential, 400, {
         error: 'unauthorized_client',
         error_description: 'deactivated',
       })

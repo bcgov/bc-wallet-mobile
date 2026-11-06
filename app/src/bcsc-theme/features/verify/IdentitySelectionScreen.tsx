@@ -42,7 +42,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
         // unmounting the flow to Home, and the overlay stops the user racing the re-registration from
         // the setup question. A resumed initial route leaves by REPLACE, which keeps progress instead
         const stopLoading = loadingScreen.startLoading()
-        verificationReset({ verifiedStatus: VerificationStatus.IN_PROGRESS }).finally(stopLoading)
+        void verificationReset({ verifiedStatus: VerificationStatus.IN_PROGRESS }).finally(stopLoading)
       }
     })
 

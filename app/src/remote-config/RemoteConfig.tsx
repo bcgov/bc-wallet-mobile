@@ -67,7 +67,7 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
     (newConfig: RemoteConfig) => {
       REMOTE_CONFIG_CACHE = newConfig
       setRemoteConfigState(newConfig)
-      cacheRemoteConfig(newConfig, props.logger)
+      void cacheRemoteConfig(newConfig, props.logger)
     },
     [props.logger]
   )
@@ -143,7 +143,7 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
       }
     }
 
-    load()
+    void load()
   }, [props.logger, props.initialConfig, setRemoteConfig])
 
   const context = useMemo(
