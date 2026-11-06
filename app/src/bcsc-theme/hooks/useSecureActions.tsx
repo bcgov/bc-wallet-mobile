@@ -4,14 +4,7 @@ import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import {
-  BCDispatchAction,
-  BCSCSecureState,
-  BCState,
-  NonBCSCUserMetadata,
-  ResidentialAddressDraft,
-  VerificationStatus,
-} from '@/store'
+import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
 import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
@@ -52,7 +45,7 @@ import {
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
-import { createVerifiedCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
+import { createVerifiedCredential, isCredentialDeactivated } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { KeyRecoveryStatus, performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import {
@@ -532,8 +525,8 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Enters (or re-enters) the verification flow: RootStack shows the VerifyStack while verification is
-   * IN_PROGRESS, and marking it started makes every later launch resume it until the user is verified.
+   * Enters (or re-enters) the verification flow: RootStack shows the VerifyStack while the user is in
+   * the verify flow, and marking it started makes every later launch resume it until the user is verified.
    */
   const continueVerificationProcess = useCallback(() => {
     dispatch({
@@ -541,8 +534,8 @@ export const useSecureActions = () => {
       payload: [true],
     })
     dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
-      payload: [VerificationStatus.IN_PROGRESS],
+      type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW,
+      payload: [true],
     })
   }, [dispatch])
 
@@ -1238,8 +1231,9 @@ export const useSecureActions = () => {
         }
       }
 
-      const verificationStatus = getCredentialVerificationStatus(credential ?? restoredCredential)
-      const verified = verificationStatus === VerificationStatus.VERIFIED
+      const record = credential ?? restoredCredential
+      const credentialDeactivated = isCredentialDeactivated(record)
+      const verified = Boolean(record) && !credentialDeactivated
 
       // A verified account with no refresh token is unrecoverable
       const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
@@ -1264,7 +1258,8 @@ export const useSecureActions = () => {
         ...effectiveTokens,
 
         verified,
-        verifiedStatus: verificationStatus,
+        credentialDeactivated,
+        inVerifyFlow: false,
 
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
         emailAddress: accountFlags.emailAddress ?? authRequest?.verifiedEmail,

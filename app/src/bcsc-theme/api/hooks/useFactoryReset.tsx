@@ -169,7 +169,7 @@ export const useFactoryReset = () => {
 
         // Reset BCSC state to initial state. CLEAR_BCSC (which flips hasAccount to
         // false) must dispatch BEFORE clearSecureState (which resets bcscSecure,
-        // including verifiedStatus out of IN_PROGRESS) — RootStack short-circuits to
+        // including inVerifyFlow) — RootStack short-circuits to
         // OnboardingStack on `hasAccount === false` before it ever derives
         // showVerifyStack, so ordering it first prevents the transient MainStack
         // mount that let Bifold's provider tree fire storage reads against the
