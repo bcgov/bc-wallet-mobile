@@ -189,7 +189,15 @@ const StackCard = ({
   </>
 )
 
-const MainStack: React.FC = () => {
+interface MainStackProps {
+  /**
+   * The root cut to this stack instead of sliding it in. Read at mount: with nothing sliding, a wait at
+   * mount shows the waiting screen at once (a verified session's first Home, loading the account).
+   */
+  enteredByCut?: boolean
+}
+
+const MainStack = ({ enteredByCut = false }: MainStackProps) => {
   const { currentStep } = useTour()
   const { isLoadingAccount } = useAccount()
   const { isVerified } = useVerificationStatus()
@@ -230,13 +238,14 @@ const MainStack: React.FC = () => {
     (mainStackChecks.hasSettled || !mainStackChecks.decidesHomeCard) && serverStatusChecked
   )
   const { isLoading: overlayUpNow } = useLoadingScreen()
-  // Decided at mount: a loading state here extends an overlay that is already up (the startup overlay on
-  // a cold start, a loader hiding the root's route change) and otherwise stays inside this card, so a
-  // root slide into this stack never blanks the whole app for its first frames
-  const [extendsGlobalOverlay] = useState(() => overlayUpNow)
-  const StackLoadingGate = extendsGlobalOverlay ? LoadingScreen : StackLoadingScreen
+  // Decided at mount: a loading state here uses the global overlay when one is already up (the startup
+  // overlay on a cold start, a loader hiding the root's route change) or when the root cut to this stack,
+  // as nothing slides then. Otherwise it stays inside this card, so a root slide into this stack never
+  // blanks the whole app for its first frames
+  const [usesGlobalOverlay] = useState(() => overlayUpNow || enteredByCut)
+  const StackLoadingGate = usesGlobalOverlay ? LoadingScreen : StackLoadingScreen
   // The tour and this stack's own loading view both hide the screens beneath them from assistive technology
-  const navigatorHidden = currentStep !== undefined || (isAwaitingSystemChecks && !extendsGlobalOverlay)
+  const navigatorHidden = currentStep !== undefined || (isAwaitingSystemChecks && !usesGlobalOverlay)
   useBCSCStack(BCSCStacks.Main)
 
   // Accept connection-invitation deep links (e.g. from the showcase) once the

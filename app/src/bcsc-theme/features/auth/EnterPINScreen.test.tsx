@@ -1,3 +1,4 @@
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
@@ -14,12 +15,6 @@ jest.mock('react-native-bcsc-core', () => ({
 }))
 
 const mockHandleSuccessfulAuth = jest.fn()
-const mockStopLoading = jest.fn()
-const mockStartLoading = jest.fn(() => mockStopLoading)
-
-jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
-  useLoadingScreen: () => ({ startLoading: mockStartLoading }),
-}))
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
@@ -103,44 +98,73 @@ describe('EnterPINScreen', () => {
           })
         )
       })
-      expect(mockStartLoading).not.toHaveBeenCalled()
     })
   })
 
-  it('starts account loading only after PIN verification succeeds and cleans up a hydration failure', async () => {
-    let resolveVerification!: (result: Awaited<ReturnType<typeof verifyPIN>>) => void
-    let rejectHydration!: (error: Error) => void
-    mockVerifyPIN.mockReturnValue(
-      new Promise((resolve) => {
-        resolveVerification = resolve
+  describe('the wait for the unlock', () => {
+    /** Renders the screen under the real overlay provider, enters a PIN and presses Continue. */
+    const submitPIN = () => {
+      const tree = render(
+        <BasicAppContext>
+          <BCSCLoadingProvider>
+            <EnterPINScreen navigation={mockNavigation} />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+      fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), '123456')
+      fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
+      return tree
+    }
+
+    const overlayShown = (tree: ReturnType<typeof render>) =>
+      tree.getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'), { includeHiddenElements: true }).props.accessible
+
+    it('stays on the button, and keeps spinning once the unlock succeeds as the root slides the screen away', async () => {
+      mockVerifyPIN.mockResolvedValueOnce({
+        success: true,
+        walletKey: 'test-key',
+        locked: false,
+        message: '',
+        remainingTime: 0,
       })
-    )
-    mockHandleSuccessfulAuth.mockReturnValue(
-      new Promise((_, reject) => {
-        rejectHydration = reject
+      let completeUnlock!: () => void
+      mockHandleSuccessfulAuth.mockReturnValueOnce(
+        new Promise<void>((resolve) => {
+          completeUnlock = resolve
+        })
+      )
+
+      const tree = submitPIN()
+      await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key'))
+      // No overlay while the unlock completes: it flashed the loading screen between this screen and the
+      // next phase
+      expect(overlayShown(tree)).toBe(false)
+      expect(tree.getByTestId(testIdWithKey('ButtonLoading'))).toBeTruthy()
+
+      await act(async () => {
+        completeUnlock()
       })
-    )
 
-    const tree = render(
-      <BasicAppContext>
-        <EnterPINScreen navigation={mockNavigation} />
-      </BasicAppContext>
-    )
-    fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), '123456')
-    fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
-    await waitFor(() => expect(mockVerifyPIN).toHaveBeenCalled())
-    expect(mockStartLoading).not.toHaveBeenCalled()
-
-    await act(async () => {
-      resolveVerification({ success: true, walletKey: 'test-key', locked: false, message: '', remainingTime: 0 })
+      expect(overlayShown(tree)).toBe(false)
+      expect(tree.getByTestId(testIdWithKey('ButtonLoading'))).toBeTruthy()
     })
-    expect(mockStartLoading).toHaveBeenCalledWith('BCSC.Loading.AppStartup')
-    expect(mockStopLoading).not.toHaveBeenCalled()
 
-    await act(async () => {
-      rejectHydration(new Error('hydration failed'))
+    it('stops spinning and shows the error when completing the unlock fails', async () => {
+      mockVerifyPIN.mockResolvedValueOnce({
+        success: true,
+        walletKey: 'test-key',
+        locked: false,
+        message: '',
+        remainingTime: 0,
+      })
+      mockHandleSuccessfulAuth.mockRejectedValueOnce(new Error('hydration failed'))
+
+      const tree = submitPIN()
+
+      await waitFor(() => expect(tree.getByText('An error occurred while verifying the PIN.')).toBeTruthy())
+      expect(tree.queryByTestId(testIdWithKey('ButtonLoading'))).toBeNull()
+      expect(overlayShown(tree)).toBe(false)
     })
-    expect(mockStopLoading).toHaveBeenCalledTimes(1)
   })
 
   describe('UI elements', () => {

@@ -12,11 +12,13 @@ import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { isUserVerified } from '../utils/bcsc-credential'
 import { toAppError } from '../utils/native-error-map'
 import {
   getRootRouteKey,
   getRootTransition,
   IDLE_ROOT_TRANSITION,
+  isSessionPhase,
   RootPhase,
   RootRoute,
   RootTransition,
@@ -260,9 +262,11 @@ export const useRootStackViewModel = (): RootStackViewModel => {
       // Started and unfinished: a verify → main change is the user leaving the flow, so Home comes back
       // from beneath rather than sliding in over it
       leavingStartedVerification: store.bcsc.verificationStarted === true && !isVerified,
+      // The users BCSCAccountProvider loads an account for
+      sessionLoadsAccount: isUserVerified(store.bcscSecure),
     }
   )
-  const inSession = phase === 'verify' || phase === 'main'
+  const inSession = isSessionPhase(phase)
 
   return { phase, transition, inSession, isVerified, verifyStackKey, showVerifyPrompt, onVerifyPromptAnswered }
 }

@@ -1,6 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, PIN_LENGTH } from '@/constants'
@@ -36,13 +35,13 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { handleSuccessfulAuth } = useSecureActions()
-  const { startLoading } = useLoadingScreen()
 
   const { Spacing } = useTheme()
 
   const verifyPINAndContinue = useCallback(
     async (pin: string) => {
-      let stopLoading: (() => void) | undefined
+      // Once the unlock succeeds the button keeps spinning: the root slides this screen away
+      let unlocked = false
       try {
         setLoading(true)
         setErrorMessage(undefined)
@@ -62,8 +61,11 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         const { success, walletKey, locked, message } = await verifyPIN(pin)
 
         if (success) {
-          stopLoading = startLoading(t('BCSC.Loading.AppStartup'))
+          // The rest of the wait stays on the button, not under the global overlay: for an unverified user
+          // it is local work that ends within a few frames, and the root then slides from this screen. A
+          // verified user's first Home loads the account; the root cuts to it and Home shows the waiting screen
           await handleSuccessfulAuth(walletKey)
+          unlocked = true
           logger.info('PIN verified successfully - navigating to main app')
         } else if (locked) {
           navigation.dispatch(
@@ -79,11 +81,12 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         setErrorMessage('An error occurred while verifying the PIN.')
         logger.error(`PIN verification error: ${error}`)
       } finally {
-        stopLoading?.()
-        setLoading(false)
+        if (!unlocked) {
+          setLoading(false)
+        }
       }
     },
-    [logger, handleSuccessfulAuth, navigation, startLoading, t]
+    [logger, handleSuccessfulAuth, navigation]
   )
 
   const onPressContinue = useCallback(async () => {

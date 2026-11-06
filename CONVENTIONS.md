@@ -42,15 +42,16 @@ Hidden loading views must not run animations. Concurrent operations own separate
 loading tokens; the overlay stays visible until all tokens are released.
 Releasing a token the overlay has shown takes effect one commit late: the commit the release lands in
 still renders beneath the overlay, and the drop is flushed before that commit paints. A route change
-dispatched in the same continuation as the release (every `handleSuccessfulAuth` caller) is therefore
-decided as a cut and the stack it mounts extends the overlay. With automatic batching the release would
+dispatched in the same continuation as the release (a `handleSuccessfulAuth` caller that waits under the
+overlay: the device-auth prompts) is therefore decided as a cut and the stack it mounts extends the overlay. With automatic batching the release would
 otherwise land in the same commit as the dispatch and reveal the screen the overlay had hidden as the
 first frame of a slide. A token released before it was shown is dropped at once.
 A phase stack's own loading state (MainStack's account load and system-check gate) extends an
-overlay that is already up when the stack mounts, and otherwise stays inside the stack's card: a
+overlay that is already up when the stack mounts, raises it when the root cut to the stack (nothing
+slides then, so the waiting screen shows at once), and otherwise stays inside the stack's card: a
 plain backdrop that becomes the waiting screen only once the wait outlasts the root slide. It never
-raises the global overlay from inside the card, which blanked the whole app for the first frames of
-every slide into Home.
+raises the global overlay in a card the root slides in, which blanked the whole app for the first
+frames of every slide into Home.
 Both waits belong to the session, not the stack: `BCSCAccountProvider` and `SystemCheckSessionProvider`
 are mounted above the root's route, so a stack that mounts again in the same session (verify → main and
 back) finds the account loaded and its checks settled, and its first frame is the screen itself. Only the
@@ -65,12 +66,17 @@ goes up and comes down within a frame or two flashes the loading screen. `Accoun
 the registration service's `isRegistered` before it waits on `ensureRegistered`, and `runDeviceAuth`
 checks device-auth availability before it raises the overlay for the OS prompt, for this reason.
 A wait that ends with a navigation inside a stack (a push, `goBack` or `pop`) stays inside the card
-instead: a spinner on the pressed button or beneath the input, with the inputs locked, so the slide
-starts from the screen the user is looking at rather than from one the overlay had just hidden.
+instead: a spinner on the pressed button or beneath the input, with the inputs locked and the button
+disabled (`disabled={loading}`, so it greys out and ignores further taps), so the slide starts from the
+screen the user is looking at rather than from one the overlay had just hidden.
 Account Setup's device registration, Manual Pairing's code check and the Change PIN forms wait this
 way. Back and the tab bar stay live during an in-card wait, so the completion checks
-`navigation.isFocused()` before it navigates. The overlay remains the tool for a wait that ends in a
-root phase swap, which is cut beneath it on purpose, or that navigates nowhere.
+`navigation.isFocused()` before it navigates. A wait that ends in a root phase swap stays on the button
+the same way: Enter PIN's unlock, which for an unverified user is local work done within a few frames,
+and Create PIN. The root then slides from the PIN screen, and the button keeps spinning while it slides
+out; a verified user's first Home is cut instead, as it still waits for the account ("Root phase
+transitions"). The overlay remains the tool for the device-auth prompts, where it is the backdrop of the
+OS dialog and the swap after it is cut beneath it, and for a wait that navigates nowhere.
 Video-call setup and video submission use `CancellableWaitingScreen` to reveal Cancel
 after 10 seconds without fading or shifting content (#4513). It keeps Cancel hidden
 from accessibility until available, then disables it for good once pressed so repeated
@@ -304,11 +310,14 @@ from the route being left and the one being entered:
 - Into `loading`, `auth` or `onboarding` (a lock, a removed account, a factory reset): no animation. The agent
   provider is disabled in the same commit and the store is cleared under the outgoing stack, so it must
   unmount at once rather than linger for a slide.
-- A change hidden by the global loading overlay: no animation. Callers of `handleSuccessfulAuth` release
-  their overlay in the same continuation as the dispatch, and the overlay provider applies that release one
-  commit late (see "Waiting screens"), so the change is decided beneath the overlay rather than in the
-  commit that lifts it.
+- A change hidden by the global loading overlay: no animation. The device-auth callers of
+  `handleSuccessfulAuth` release their overlay in the same continuation as the dispatch, and the overlay
+  provider applies that release one commit late (see "Waiting screens"), so the change is decided beneath
+  the overlay rather than in the commit that lifts it.
 - The same phase under a new navigation key (the outage fallback re-registering the verify stack): no animation.
+- Into `main` from outside the session (`auth`, `onboarding`, `recovery`) for a verified user: no animation.
+  The session starts with the change and its first Home waits for the account to load, so a slide would
+  carry in a blank card; the main stack shows the waiting screen at once instead.
 - `verify → main`: pop when leaving a started, unfinished verification (back arrow, "Back to home", Skip after
   walking back to the prompt), so Home comes back from beneath; push otherwise (Skip on the fresh prompt,
   Setup Complete).

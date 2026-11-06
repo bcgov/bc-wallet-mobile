@@ -414,7 +414,6 @@ const translation = {
       "MustCheckBox": "You must check this box to continue.",
       "PINTooShort": "PIN must be 6 digits",
       "PINsDoNotMatch": "PINs do not match",
-      "SettingUpAccount": "Setting up your account...",
       "FailedToSetPIN": "Failed to set PIN",
       "ErrorSettingPIN": "An error occurred while setting the PIN"
     },

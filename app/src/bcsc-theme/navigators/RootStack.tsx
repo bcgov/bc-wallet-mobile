@@ -56,6 +56,8 @@ const FcmCardExpirySync: React.FC = () => {
 const BCSCRootStack: React.FC = () => {
   const { phase, transition, inSession, isVerified, verifyStackKey, showVerifyPrompt, onVerifyPromptAnswered } =
     useRootStackViewModel()
+  // The main stack reads this at mount: a stack the root cuts in shows its wait at once
+  const enteredByCut = transition.animationEnabled === false
 
   return (
     <BCSCAgentProvider enabled={inSession}>
@@ -94,10 +96,10 @@ const BCSCRootStack: React.FC = () => {
                     <FcmCardExpirySync />
                     {isVerified ? (
                       <BCSCIdTokenProvider>
-                        <BCSCMainStack />
+                        <BCSCMainStack enteredByCut={enteredByCut} />
                       </BCSCIdTokenProvider>
                     ) : (
-                      <BCSCMainStack />
+                      <BCSCMainStack enteredByCut={enteredByCut} />
                     )}
                   </BCSCActivityProvider>
                 )}

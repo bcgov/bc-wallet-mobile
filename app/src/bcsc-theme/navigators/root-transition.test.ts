@@ -12,7 +12,11 @@ const PUSH = { animationEnabled: true, animationTypeForReplace: 'push' }
 const POP = { animationEnabled: true, animationTypeForReplace: 'pop' }
 
 const route = (phase: RootPhase, verifyStackKey?: string): RootRoute => ({ phase, verifyStackKey })
-const settled: RootTransitionContext = { globalLoading: false, leavingStartedVerification: false }
+const settled: RootTransitionContext = {
+  globalLoading: false,
+  leavingStartedVerification: false,
+  sessionLoadsAccount: false,
+}
 
 describe('getRootRouteKey', () => {
   it('tells the verify stack registrations apart by their navigation key', () => {
@@ -46,9 +50,13 @@ describe('getRootTransition', () => {
     ['a return to the loading route', route('main'), route('loading')],
   ])('cuts to the auth, onboarding or loading phase on %s, whatever else is going on', (_name, previous, next) => {
     expect(getRootTransition(previous, next, settled)).toEqual(NO_ANIMATION)
-    expect(getRootTransition(previous, next, { globalLoading: true, leavingStartedVerification: true })).toEqual(
-      NO_ANIMATION
-    )
+    expect(
+      getRootTransition(previous, next, {
+        globalLoading: true,
+        leavingStartedVerification: true,
+        sessionLoadsAccount: true,
+      })
+    ).toEqual(NO_ANIMATION)
   })
 
   it('does not animate a swap hidden by the global loading overlay', () => {
@@ -57,10 +65,29 @@ describe('getRootTransition', () => {
     ).toEqual(NO_ANIMATION)
     expect(
       getRootTransition(route('verify', 'verify'), route('main'), {
+        ...settled,
         globalLoading: true,
         leavingStartedVerification: true,
       })
     ).toEqual(NO_ANIMATION)
+  })
+
+  // The session starts with the change, and Home waits for the account: a slide would carry in a blank card
+  it.each<[string, RootRoute]>([
+    ['an unlock', route('auth')],
+    ['session recovery', route('recovery')],
+  ])("cuts into a verified session's first Home after %s", (_name, previous) => {
+    expect(getRootTransition(previous, route('main'), { ...settled, sessionLoadsAccount: true })).toEqual(NO_ANIMATION)
+  })
+
+  it('still slides a verified user between phases that do not start the session or wait for the account', () => {
+    const verified = { ...settled, sessionLoadsAccount: true }
+
+    // Within the session the account is already loaded
+    expect(getRootTransition(route('verify', 'verify'), route('main'), verified)).toEqual(PUSH)
+    expect(getRootTransition(route('main'), route('verify', 'verify'), verified)).toEqual(PUSH)
+    // The verify flow does not wait for the account
+    expect(getRootTransition(route('auth'), route('verify', 'verify'), verified)).toEqual(PUSH)
   })
 
   it('does not animate the verify stack re-registering under a new navigation key', () => {

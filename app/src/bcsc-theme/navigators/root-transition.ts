@@ -18,6 +18,8 @@ export type RootTransitionContext = {
   globalLoading: boolean
   /** The user started verification and has not finished it: `verify → main` is them leaving the flow. */
   leavingStartedVerification: boolean
+  /** The session loads the user's account (a verified user), so the session's first Home waits for it. */
+  sessionLoadsAccount: boolean
 }
 
 /**
@@ -33,6 +35,15 @@ const NO_ANIMATION: RootTransition = { animationEnabled: false }
 // disabled in the same commit and the store is cleared under the outgoing stack, so a lingering stack
 // could call into a context that is gone (useBCSCAgent throws into the error boundary). It unmounts at once.
 const PHASES_ENTERED_WITHOUT_ANIMATION: ReadonlySet<RootPhase> = new Set(['loading', 'auth', 'onboarding'])
+
+/**
+ * Whether `phase` belongs to a signed-in session. The agent, the account and the record of which system
+ * checks have run are enabled for these phases only, so a change between them keeps what the session loaded.
+ *
+ * @param phase - The phase.
+ * @returns True for the verify and main phases.
+ */
+export const isSessionPhase = (phase: RootPhase): boolean => phase === 'verify' || phase === 'main'
 
 /**
  * A string identity for the root's registered route, for telling one registration from the next.
@@ -57,7 +68,7 @@ export const getRootRouteKey = ({ phase, verifyStackKey }: RootRoute): string =>
 export const getRootTransition = (
   previous: RootRoute | undefined,
   next: RootRoute,
-  { globalLoading, leavingStartedVerification }: RootTransitionContext
+  { globalLoading, leavingStartedVerification, sessionLoadsAccount }: RootTransitionContext
 ): RootTransition => {
   // Startup: the loading route is the overlay, there is nothing to slide from
   if (previous === undefined || previous.phase === 'loading') {
@@ -74,6 +85,12 @@ export const getRootTransition = (
 
   // A navigation key change within a phase (the outage fallback) re-registers the same stack
   if (previous.phase === next.phase) {
+    return NO_ANIMATION
+  }
+
+  // The session starts with this change, and a verified session's first Home waits for the account to
+  // load: a slide would carry in a blank card, so it is cut and the main stack shows the waiting screen
+  if (next.phase === 'main' && !isSessionPhase(previous.phase) && sessionLoadsAccount) {
     return NO_ANIMATION
   }
 

@@ -4,7 +4,6 @@ import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navig
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
 
 interface CreatePINScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingCreatePIN>
@@ -16,7 +15,6 @@ interface CreatePINScreenProps {
  * Uses the shared PINEntryForm component.
  */
 export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
-  const { t } = useTranslation()
   const { handleSuccessfulAuth } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -31,8 +29,8 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
   return (
     <PINEntryForm
       onSuccess={handlePINSuccess}
-      // The whole app waits: completing auth swaps the root, which is cut beneath the overlay
-      overlayMessage={t('BCSC.PIN.SettingUpAccount')}
+      // Completing auth swaps the root, which slides this screen out with the button still spinning
+      keepLoadingOnSuccess
       translationPrefix="BCSC.PIN"
       creatingNewPIN={true}
     />

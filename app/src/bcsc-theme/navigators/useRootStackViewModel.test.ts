@@ -711,6 +711,30 @@ describe('useRootStackViewModel', () => {
           expect(swapTransitions()).toEqual([NO_ANIMATION, PUSH])
         })
 
+        it("cuts into a verified user's Home on the unlock, as Home waits for the account", () => {
+          const { result, apply } = renderColdStart(
+            mockStore({
+              bcsc: { hasAccount: true, verificationSkipped: true },
+              authentication: { didAuthenticate: true },
+              bcscSecure: { verified: true, verifiedStatus: VerificationStatus.VERIFIED },
+            })
+          )
+          expect(result.current.phase).toBe('main')
+
+          apply(lock)
+          expect(result.current.phase).toBe('auth')
+          // The unlock hydrates the verified status before SUCCESSFUL_AUTH
+          apply((current) => ({
+            ...unlock(current),
+            bcscSecure: { verified: true, verifiedStatus: VerificationStatus.VERIFIED, isHydrated: true },
+          }))
+          expect(result.current.phase).toBe('main')
+
+          expect(swapTransitions()).toEqual([NO_ANIMATION, NO_ANIMATION])
+          // A later change can still pop the route with an animation
+          expect(settledTransition()).toEqual(IDLE_ROOT_TRANSITION)
+        })
+
         it('cuts to onboarding when the account is removed', () => {
           const { result, apply } = renderColdStart(authedUnverified(SKIPPED))
 

@@ -435,4 +435,31 @@ describe('MainStack', () => {
       expect(queryStackLoadingViews(view)).toHaveLength(0)
     })
   })
+
+  // A verified session's first Home: the root cuts to the stack with the overlay down, and nothing slides
+  describe('when the root cut to it', () => {
+    it('raises the overlay instead of showing its own view while the account loads', () => {
+      jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
+
+      const view = render(<MainStack enteredByCut />)
+
+      expect(view.toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
+      expect(queryNavigators(view)).toHaveLength(0)
+      expect(queryStackLoadingViews(view)).toHaveLength(0)
+    })
+
+    it('keeps the overlay once the route has entered, rather than switching views mid-wait', () => {
+      jest
+        .mocked(useAccount)
+        .mockReturnValueOnce({ isLoadingAccount: true } as any)
+        .mockReturnValueOnce({ isLoadingAccount: true } as any)
+      const view = render(<MainStack enteredByCut />)
+
+      // The root's options settle on animated once the route has entered
+      view.rerender(<MainStack enteredByCut={false} />)
+
+      expect(queryLoadingScreens(view)).toHaveLength(1)
+      expect(queryStackLoadingViews(view)).toHaveLength(0)
+    })
+  })
 })

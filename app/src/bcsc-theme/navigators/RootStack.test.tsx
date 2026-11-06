@@ -11,6 +11,8 @@ let mockAccount: { account_expiration_date: Date } | null = null
 const mockViewModel = jest.fn()
 // Each render's registered screen and screen options: what the real navigator reads to animate a route change
 const mockNavigatorRender = jest.fn()
+// Records every render's props, so a test can check what the main stack is handed
+const mockMainStackProps = jest.fn()
 
 jest.mock('@bifold/core')
 jest.mock('./useRootStackViewModel', () => ({
@@ -44,7 +46,10 @@ jest.mock('./AuthStack', () => ({
 }))
 jest.mock('./MainStack', () => ({
   __esModule: true,
-  default: () => 'MainStack',
+  default: (props: any) => {
+    mockMainStackProps(props)
+    return 'MainStack'
+  },
 }))
 jest.mock('./OnboardingStack', () => ({
   __esModule: true,
@@ -223,6 +228,15 @@ describe('BCSCRootStack', () => {
 
       expect(toJSON()).toBe('MainStack')
       expect(mockIdTokenProviderRender).toHaveBeenCalled()
+    })
+
+    it('tells the main stack whether the root cut to it, so a wait at mount shows at once', () => {
+      const { rerender } = renderWith({ phase: 'main', transition: { animationEnabled: false } })
+      expect(mockMainStackProps).toHaveBeenLastCalledWith({ enteredByCut: true })
+
+      rerenderWith(rerender, { phase: 'main', transition: IDLE_ROOT_TRANSITION })
+
+      expect(mockMainStackProps).toHaveBeenLastCalledWith({ enteredByCut: false })
     })
 
     it('animates the route the way the ViewModel decided, with the header hidden and the gesture off', () => {
