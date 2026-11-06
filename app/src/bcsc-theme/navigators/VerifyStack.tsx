@@ -395,7 +395,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
               return navigation.goBack()
             }
 
-            clearAdditionalEvidence()
+            void clearAdditionalEvidence()
             navigation.replace(BCSCScreens.IdentitySelection)
           }),
         }}
@@ -420,7 +420,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
               return navigation.goBack()
             }
 
-            clearAdditionalEvidence()
+            void clearAdditionalEvidence()
             navigation.replace(BCSCScreens.IdentitySelection)
           }),
         }}

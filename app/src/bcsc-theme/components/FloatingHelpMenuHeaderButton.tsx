@@ -111,7 +111,7 @@ const GiveFeedbackListButton = ({ onClose, position }: MenuRowProps) => {
   const { ColorPalette } = useTheme()
 
   const handlePress = useCallback(() => {
-    openLink(FEEDBACK_URL)
+    void openLink(FEEDBACK_URL)
     onClose()
   }, [onClose])
 

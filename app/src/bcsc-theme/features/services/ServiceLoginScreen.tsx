@@ -196,7 +196,7 @@ const ServiceLoginDefaultView = ({
         disabled={isContinueDisabled}
         onPress={() => {
           setIsContinueDisabled(true)
-          onContinue()
+          void onContinue()
         }}
       />
       <Button

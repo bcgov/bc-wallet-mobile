@@ -551,7 +551,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           logger.error(`Error fetching app security method [${appError.appEvent}]`, appError)
         }
       }
-      fetchAccountSecurityMethod()
+      void fetchAccountSecurityMethod()
     }, [logger, isAuthenticated, accountSecurityMethod, dispatch])
   )
 

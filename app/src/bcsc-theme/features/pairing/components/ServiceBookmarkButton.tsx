@@ -37,7 +37,7 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
   }, [store.bcscSecure.savedServices, serviceId])
 
   const handleBookmarkPress = useCallback(() => {
-    updateSavedService(serviceId, !bookmarked, { clientName: serviceName })
+    void updateSavedService(serviceId, !bookmarked, { clientName: serviceName })
   }, [serviceId, bookmarked, serviceName, updateSavedService])
 
   return (

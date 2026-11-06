@@ -74,7 +74,7 @@ export const useInitializeAccountStatus = () => {
       return
     }
 
-    initializeAccountStatus()
+    void initializeAccountStatus()
   }, [
     hasCheckedAccount,
     initializeAccountStatus,

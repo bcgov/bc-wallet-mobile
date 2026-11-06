@@ -86,9 +86,9 @@ export class FcmViewModel {
     void this.initFcmService()
     this.logger.info('[FcmViewModel] FCM service initialized')
     // Pre-fetch the server JWK for signature verification (if API client is ready)
-    this.fetchServerJwk()
+    void this.fetchServerJwk()
     // Log FCM token for debugging
-    this.logFcmToken()
+    void this.logFcmToken()
   }
 
   private async initFcmService(): Promise<void> {

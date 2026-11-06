@@ -144,7 +144,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       }
     }
 
-    initAgentAsyncEffect()
+    void initAgentAsyncEffect()
   }, [
     initializeAgent,
     setStep,

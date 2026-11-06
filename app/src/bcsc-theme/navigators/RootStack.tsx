@@ -165,7 +165,7 @@ const BCSCRootStack: React.FC = () => {
   // Wait until the apiClient is ready and process any pending FCM Challenges
   useEffect(() => {
     if (isClientReady) {
-      fcmService.viewModel.processPendingChallenges()
+      void fcmService.viewModel.processPendingChallenges()
     }
   }, [isClientReady, fcmService.viewModel])
 
@@ -176,7 +176,7 @@ const BCSCRootStack: React.FC = () => {
     }
 
     try {
-      loadState(dispatch)
+      void loadState(dispatch)
     } catch (err) {
       emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
     }
