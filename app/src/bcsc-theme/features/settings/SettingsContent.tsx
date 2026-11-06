@@ -45,6 +45,8 @@ const SECTION_HEADER_ICON_SIZE = 22
 /** Explore-by-touch uses layout bounds (hitSlop does not grow them), so the chevron gets a 44dp box. */
 const SECTION_HEADER_CHEVRON_TARGET = 44
 const SECTION_HEADER_CHEVRON_OVERHANG = (SECTION_HEADER_CHEVRON_TARGET - SECTION_HEADER_ICON_SIZE) / 2
+/** Horizontal only: vertical slop reaches the control above, which loses its taps to the chevron on Android. */
+const SECTION_HEADER_CHEVRON_HIT_SLOP = { ...hitSlop, top: 0, bottom: 0 }
 
 const noop = () => {
   // TODO: wire to real handler once the destination screen exists
@@ -112,7 +114,7 @@ const SectionHeader: React.FC<
         </ThemedText>
         <PressableOpacity
           onPress={toggleSection}
-          hitSlop={hitSlop}
+          hitSlop={SECTION_HEADER_CHEVRON_HIT_SLOP}
           testID={testIdWithKey(TestIds.main.settings.sectionHeaderChevron)}
           accessibilityLabel={t(showSection ? 'Global.HideDetails' : 'Global.ShowDetails')}
           accessibilityRole="button"
