@@ -173,6 +173,7 @@ describe('ChangePINForm', () => {
     // The screen stays visible, so the navigation inside onSuccess slides from it rather than from
     // behind the overlay
     expect(tree.getByTestId('com.ariesbifold:id/ButtonLoading')).toBeTruthy()
+    expect(tree.getByTestId('com.ariesbifold:id/ChangePIN')).toBeDisabled()
     expect(
       tree.getByTestId('com.ariesbifold:id/BCSCLoadingProviderOverlay', { includeHiddenElements: true }).props
         .accessible
@@ -186,6 +187,7 @@ describe('ChangePINForm', () => {
     })
 
     expect(tree.queryByTestId('com.ariesbifold:id/ButtonLoading')).toBeNull()
+    expect(tree.getByTestId('com.ariesbifold:id/ChangePIN')).toBeEnabled()
     for (const input of tree.getAllByAccessibilityHint('Enter your 6-digit PIN')) {
       expect(input.props.editable).toBe(true)
     }

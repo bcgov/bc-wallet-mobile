@@ -195,6 +195,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess }: Chang
         title={t('BCSC.ChangePIN.ButtonTitle')}
         accessibilityLabel={t('BCSC.ChangePIN.ButtonTitle')}
         testID={testIdWithKey(TestIds.main.changePin.submit)}
+        disabled={loading}
         onPress={onPressChangePIN}
       >
         {loading && <ButtonLoading />}
