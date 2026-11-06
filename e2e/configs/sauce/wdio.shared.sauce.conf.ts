@@ -6,12 +6,16 @@ import { fileURLToPath } from 'node:url'
 import type { Options } from '@wdio/types'
 import dotenv from 'dotenv'
 import { recordTestResult } from '../../src/helpers/session-record.js'
-import { config as baseConfig, captureFailureScreenshot, wasSkipped } from '../wdio.shared.conf.js'
+import { config as baseConfig, captureFailureScreenshot, upgradeSuites, wasSkipped } from '../wdio.shared.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../../.env.saucelabs') })
 
 const config = { ...baseConfig }
+
+// The shared config built the upgrade suites before .env.saucelabs loaded: rebuild them, or a
+// PREV_VERSION set only there schedules every lineage's specs against the one build it boots.
+config.suites = { ...baseConfig.suites, ...upgradeSuites() }
 
 config.user = process.env.SAUCE_USERNAME
 config.key = process.env.SAUCE_ACCESS_KEY

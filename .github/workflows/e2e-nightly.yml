@@ -4,20 +4,15 @@
 # latest successful main build's SauceLabs artifacts, then the send-video
 # lane (the four send-video journeys, one platform at a time — they review
 # a shared, blind-FIFO SIT agent queue with shared personas, so they are
-# kept out of the concurrent regression matrix) alongside the migration
-# lane (v3 → current, verified; also one platform at a time so the pair fits
-# the two-session budget), then the remaining upgrade lanes (previous release →
-# current incl. a verified account, 4.0.3 → current incl. a verified account,
-# v3 → current unverified and with an in-progress verification, then a pending send-video
-# review across the upgrade — last among the queue users, one platform at a
-# time) as chained advisory jobs — each boots an OLD build via its own config,
-# so they cannot live inside the regression wdio suite itself — then the
-# device-auth lane (the device-authentication journey on a device with a
-# screen lock + biometric interception, a state no other journey may start
-# from, so it has its own Sauce capability lane). A final queue-hygiene job
-# drains the SIT review queue so the UAT team never starts the day behind e2e
-# leftovers. The costlier upgrade state-preservation checks (upgradeExtra,
-# upgrade403Extra) are dispatch-only.
+# kept out of the concurrent regression matrix), then the device-auth lane
+# (the device-authentication journey on a device with a screen lock +
+# biometric interception, a state no other journey may start from, so it
+# has its own Sauce capability lane). A final queue-hygiene job drains the
+# SIT review queue so the UAT team never starts the day behind e2e
+# leftovers. The upgrade suites (every shipped version → the current build,
+# in every state) run once a week in e2e-upgrade-weekly.yml, not here: each
+# boots an OLD build via its own config and the matrix is hours of serial
+# device time.
 #
 # Default device matrix: 1 iOS + 1 Android device (one modern OS major each).
 # os_version stays PINNED: unpinned, Sauce hands out iOS 15-era devices, where
@@ -28,9 +23,9 @@
 # Lane rules the chain depends on (see e2e/README.md → CI/CD → Nightly flake taxonomy):
 # the two platforms share the five SIT test personas and SIT keeps ONE active device
 # per card, so two lanes that verify the same persona at once invalidate each other's
-# device at the next cold start — upgrade and upgrade403 therefore run their platforms
-# one at a time (max_parallel: 1), and the IDCheck sign-in mints TOTP codes in a window
-# parity per platform (IDCHECK_TOTP_WINDOW_PARITY in e2e.yml).
+# device at the next cold start — the send-video lane runs its platforms one at a time
+# (max_parallel: 1), as do the weekly upgrade suites that verify, and the IDCheck sign-in
+# mints TOTP codes in a window parity per platform (IDCHECK_TOTP_WINDOW_PARITY in e2e.yml).
 #
 # Trigger modes:
 #   schedule         — runs every night at midnight PT (7 AM UTC)
@@ -76,13 +71,6 @@ on:
           - send-video
           - a11y
           - device-auth
-          - migration
-          - upgrade
-          - upgrade403
-          - upgradeSendVideo
-          - upgradeExtra
-          - upgrade403Extra
-          - upgradeV3
         default: regression
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
@@ -205,10 +193,9 @@ jobs:
   # ─── Send-video lane: one platform at a time ────────────────────
   # The four send-video journeys review a shared, blind-FIFO SIT agent queue with shared personas:
   # two platforms at once would review (or drain) each other's uploads. So they leave the concurrent
-  # regression matrix (exclude_send_video above) and run here iOS-then-Android at max_parallel 1 —
-  # alongside the Android-only migration lane, which keeps both Sauce sessions busy. Blocking, like
-  # the regression it belongs to; the journeys drain the review queue around their own uploads, and
-  # queue-hygiene below is the end-of-night double check.
+  # regression matrix (exclude_send_video above) and run here iOS-then-Android at max_parallel 1.
+  # Blocking, like the regression it belongs to; the journeys drain the review queue around their own
+  # uploads, and queue-hygiene below is the end-of-night double check.
   e2e-send-video:
     needs: [check-for-merges, resolve-build, e2e]
     if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
@@ -223,113 +210,16 @@ jobs:
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
-  # ─── Upgrade lanes: ride the nightly regression ─────────────────
-  # Chained serially after the regression to stay inside the Sauce real-device
-  # session budget; `!cancelled()` keeps each lane running when an earlier one
-  # (or the regression itself) goes red — every lane is advisory via
-  # continue-on-error in e2e.yml. They run only when the main call is the full
-  # regression (schedule, or a dispatch left on the default suite). The
-  # storage-based mid-session install passes Sauce resigning on both platforms
-  # (validated 2026-08-25). The migration lane runs beside the send-video lane,
-  # so its two platforms go one at a time to stay inside the 2-session budget
-  # (send-video 1 + migration 1).
-  e2e-migration:
-    needs: [check-for-merges, resolve-build, e2e]
-    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
-    uses: ./.github/workflows/e2e.yml
-    permissions:
-      contents: read
-    with:
-      suite: migration
-      build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
-      max_parallel: 1
-    secrets:
-      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-
-  # One platform at a time: both platforms verify the SAME persona within seconds of each other when
-  # they run in step, and SIT invalidates the earlier device (the post-upgrade unlock then reads
-  # "Device invalidated"); their cold IDCheck sign-ins also collided in one TOTP window. ~8 min more.
-  e2e-upgrade:
-    needs: [check-for-merges, resolve-build, e2e-migration, e2e-send-video]
-    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
-    uses: ./.github/workflows/e2e.yml
-    permissions:
-      contents: read
-    with:
-      suite: upgrade
-      build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
-      max_parallel: 1
-    secrets:
-      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-
-  # Serial for the same reason as e2e-upgrade (a verified account on both platforms).
-  e2e-upgrade403:
-    needs: [check-for-merges, resolve-build, e2e-upgrade]
-    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
-    uses: ./.github/workflows/e2e.yml
-    permissions:
-      contents: read
-    with:
-      suite: upgrade403
-      build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
-      max_parallel: 1
-    secrets:
-      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-
-  # ─── Upgrade from v3: unverified, and with an in-progress verification ───────────
-  # The migration lane covers a VERIFIED v3 account; this boots the same v3 build twice: once with no
-  # card (account + PIN survive, verification can start — no IDCheck), once showing an in-person code
-  # without approving it, then installs the current build and proves the request resumes and can be
-  # approved. Both platforms (every v3 spec ran green on iOS 18 on 2026-09-21); it has its chain slot to
-  # itself, so the two sessions fit the budget in parallel. Advisory.
-  e2e-upgrade-v3:
-    needs: [check-for-merges, resolve-build, e2e-upgrade403]
-    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
-    uses: ./.github/workflows/e2e.yml
-    permissions:
-      contents: read
-    with:
-      suite: upgradeV3
-      build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
-    secrets:
-      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-
-  # ─── Upgrade with a pending send-video review ───────────────────
-  # Proves a submitted-but-unreviewed send-video request survives the previous→current upgrade. It is a
-  # send-video journey in all but location: it reviews the shared blind-FIFO queue, so it runs LAST among
-  # the queue users, one platform at a time (its suite pins max_parallel 1), after the regular send-video
-  # lane has finished and drained. Its own `upgradeSendVideo` suite routes it to the Android injection-off
-  # upgrade lane (the recorder needs injection off). Advisory (continue-on-error in e2e.yml), regression
-  # runs only. The costlier upgrade state checks (upgradeExtra / upgrade403Extra: in-person pending, partial
-  # non-BCSC, the resume states) are dispatch-only — run them via the nightly's suite input or e2e.yml.
-  e2e-upgrade-send-video:
-    needs: [check-for-merges, resolve-build, e2e-upgrade-v3]
-    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
-    uses: ./.github/workflows/e2e.yml
-    permissions:
-      contents: read
-    with:
-      suite: upgradeSendVideo
-      build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"iOS","device":"iPhone 1[4-6].*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
-      max_parallel: 1
-    secrets:
-      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-
   # ─── Device-auth lane: a locked device with biometric interception ─
   # The device-authentication journey needs a Sauce session whose device carries a screen lock
   # (`setupDeviceLock`) and biometric interception (`biometricsInterception`) — the app offers device
   # auth only when the OS calls the device secure, and the prompts are answered through Sauce. Every
   # OTHER journey must never start from that state, so the suite has its own capability lane in the RDC
-  # configs (`--suite device-auth` schedules only that lane) and runs here, last in the chain, so its
-  # two sessions stay inside the account-wide cap. Blocking, like the regression: the coverage-map row
+  # configs (`--suite device-auth` schedules only that lane) and runs here, after the send-video lane,
+  # so its two sessions stay inside the account-wide cap. Blocking, like the regression: the coverage-map row
   # for "Change security method (biometrics)" is proved by this lane alone.
   e2e-device-auth:
-    needs: [check-for-merges, resolve-build, e2e-upgrade-send-video]
+    needs: [check-for-merges, resolve-build, e2e-send-video]
     if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
     uses: ./.github/workflows/e2e.yml
     permissions:
@@ -347,7 +237,7 @@ jobs:
   # never leaves a submission for the UAT team to clear in the morning. Scope e2e: only the e2e
   # personas' requests are rejected; anyone else's is moved to the Specialist Review queue instead.
   queue-hygiene:
-    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403, e2e-upgrade-v3, e2e-upgrade-send-video, e2e-device-auth]
+    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-device-auth]
     if: ${{ always() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' }}
     uses: ./.github/workflows/e2e-send-video-queue.yml
     permissions:
@@ -363,7 +253,7 @@ jobs:
   # reads the e2e-reports-* artifacts they uploaded, and writes the run summary + e2e-nightly-brief.
   brief:
     name: Nightly brief
-    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403, e2e-upgrade-v3, e2e-upgrade-send-video, e2e-device-auth, queue-hygiene]
+    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-device-auth, queue-hygiene]
     if: ${{ always() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' }}
     runs-on: ubuntu-22.04
     permissions:
@@ -375,7 +265,7 @@ jobs:
       - name: Setup E2E
         uses: ./.github/workflows/actions/setup-e2e
 
-      # A lane that uploaded nothing (upgrade skipping on a missing BCSC-prev.*) is normal — the page
+      # A lane that uploaded nothing (a dispatch on one suite skips the others) is normal — the page
       # shows it as "no reports" rather than the job failing here.
       - name: Download E2E reports
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -397,19 +287,11 @@ jobs:
           LANE_MAIN_SUITE: ${{ inputs.suite || 'regression' }}
           LANE_REGRESSION: ${{ needs.e2e.result }}
           LANE_SEND_VIDEO: ${{ needs.e2e-send-video.result }}
-          LANE_MIGRATION: ${{ needs.e2e-migration.result }}
-          LANE_UPGRADE: ${{ needs.e2e-upgrade.result }}
-          LANE_UPGRADE403: ${{ needs.e2e-upgrade403.result }}
-          LANE_UPGRADE_V3: ${{ needs.e2e-upgrade-v3.result }}
-          LANE_UPGRADE_SEND_VIDEO: ${{ needs.e2e-upgrade-send-video.result }}
           LANE_DEVICE_AUTH: ${{ needs.e2e-device-auth.result }}
         run: |
           ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts \
             --title "E2E nightly — build ${BUILD_NUMBER}" --run-url "$RUN_URL" \
             --lane "${LANE_MAIN_SUITE}=${LANE_REGRESSION}" --lane "send-video=${LANE_SEND_VIDEO}" \
-            --lane "migration=${LANE_MIGRATION}" \
-            --lane "upgrade=${LANE_UPGRADE}" --lane "upgrade403=${LANE_UPGRADE403}" \
-            --lane "upgradeV3=${LANE_UPGRADE_V3}" --lane "upgradeSendVideo=${LANE_UPGRADE_SEND_VIDEO}" \
             --lane "device-auth=${LANE_DEVICE_AUTH}" \
             --out brief.md --json brief.json
           cat brief.md >> "$GITHUB_STEP_SUMMARY"
