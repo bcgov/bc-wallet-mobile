@@ -149,15 +149,15 @@ export async function expectNoBackToHome(): Promise<void> {
 }
 
 /**
- * The pending review as a first-time verifier sees it: no back arrow and no "Back to home", so the
- * agent's decision has to be picked up from the screen itself (`waitForSendVideoDecision`).
+ * The pending review offers a way out of the flow, whoever the verifier is: a submitted request waits
+ * on an agent, so it must not hold a first-time verifier out of the rest of the app (#4968). Asserts
+ * the arrow without taking it, leaving the caller on the screen to poll for the decision.
  */
-export async function expectPendingReviewLocked(): Promise<void> {
+export async function expectPendingReviewOffersExit(): Promise<void> {
   await PendingReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  if (await PendingReviewScreen.isVisible('backArrow')) {
-    throw new Error('The pending review offers a back arrow, but a first-time verifier cannot leave it')
+  if (!(await PendingReviewScreen.isVisible('backArrow'))) {
+    throw new Error('The pending review offers no back arrow, so the user is locked into the verify flow')
   }
-  await expectNoBackToHome()
 }
 
 /**
@@ -678,12 +678,11 @@ function assertExpectedDecision(actual: 'verified' | 'cancelled', expected: 'ver
 /**
  * Wait for the agent's decision to reach the app, and assert it is the expected one.
  *
- * PendingReview is the poll: its "Check status" re-fetches the request status and the screen navigates
- * on by itself, so each round sees where the screen settles and, if still pending, taps Check status
- * for the next round an interval later — from the pending review itself, which a first-time verifier
- * cannot leave. Starting from Home (a deferred verifier who left) is tolerated: the verification card
- * re-enters the pending review first, and that mount re-checks too. The push notification is advisory
- * and never navigates, so it is not waited on.
+ * Home's pending card is the poll: re-entering through it mounts the pending review, whose focus check
+ * re-fetches the request status and navigates the screen on by itself. So each round sees where the
+ * screen settles and, if still pending, takes its back arrow out to Home for the next round an
+ * interval later — the screen itself offers no manual check (#4968). Starting from Home is that same
+ * loop one step in. The push notification is advisory and never navigates, so it is not waited on.
  */
 export async function waitForSendVideoDecision(
   expected: 'verified' | 'cancelled',
@@ -705,9 +704,8 @@ export async function waitForSendVideoDecision(
         return settled
       }
 
-      // Check status is disabled while a check is already running (the focus-time one, say); waiting for
-      // it makes this tap a fresh fetch rather than a dropped one. The next round reads what it fetched
-      await PendingReviewScreen.tapWhenEnabled('primary')
+      // Out to Home, so the next round re-enters through its pending card and that mount re-checks
+      await PendingReviewScreen.back.tap()
       return false
     },
     {
