@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { EMAIL_MAX_LENGTH, emailSchema, parseField } from '@/bcsc-theme/utils/validation'
@@ -27,6 +28,8 @@ import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
+const FIELD_ORDER = ['email'] as const
+
 type EnterEmailScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterEmail>
   route: {
@@ -48,6 +51,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
+  const { scrollViewRef, inputRefs, onFieldLayout, focusFirstInvalidField } = useFocusFirstInvalidField(FIELD_ORDER)
 
   const isBCSCFlow = cardProcess !== BCSCCardProcess.NonBCSC
 
@@ -59,7 +63,9 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     const parsedEmail = parseField(emailSchema, email)
 
     if (!parsedEmail.ok) {
-      setError(t(parsedEmail.errorKey))
+      const message = t(parsedEmail.errorKey)
+      setError(message)
+      focusFirstInvalidField({ email: message })
       return
     }
 
@@ -73,7 +79,9 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       await updateUserInfo({ email: normalizedEmail, isEmailVerified: false })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
-      setError(t('BCSC.EmailConfirmation.ErrorTitle'))
+      const message = t('BCSC.EmailConfirmation.ErrorTitle')
+      setError(message)
+      focusFirstInvalidField({ email: message })
 
       logger.error(t('BCSC.EmailConfirmation.ErrorTitle'), error)
     } finally {
@@ -129,6 +137,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       keyboardActive
       padded={false}
       controls={controls}
+      scrollViewRef={scrollViewRef}
       scrollViewContainerStyle={{
         flexGrow: 1,
         gap: Spacing.md,
@@ -138,6 +147,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       <ThemedText variant={'headingThree'}>{t('BCSC.EnterEmail.EnterEmailAddress')}</ThemedText>
 
       <InputWithValidation
+        ref={inputRefs.email}
         id={'email'}
         label={t('BCSC.EnterEmail.EmailAddress')}
         hideLabel
@@ -146,6 +156,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
         error={error}
         onErrorClear={() => setError(null)}
         keyboardType={'email-address'}
+        onLayout={onFieldLayout('email')}
         textInputProps={{
           maxLength: EMAIL_MAX_LENGTH,
           autoCorrect: false,
