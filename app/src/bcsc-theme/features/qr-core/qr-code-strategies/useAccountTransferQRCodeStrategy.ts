@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { selectVerificationState } from '@/bcsc-theme/state/verification/selectors'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
@@ -40,6 +41,7 @@ export const useAccountTransferQRCodeStrategy = (
   const apiClient = useBCSCApiClient()
   const { updateTokens, updateUserInfo, updateDeviceCodes } = useSecureActions()
   const [store] = useStore<BCState>()
+  const { isVerified } = selectVerificationState(store)
   // Shared by several scanner screens, so the origin screen for recovery is whichever one renders this hook
   const route = useRoute()
   const attemptWithRecovery = useDeviceAuthorizationRecovery()
@@ -167,7 +169,7 @@ export const useAccountTransferQRCodeStrategy = (
         throw new QRError('Unable to extract transfer token from uri')
       }
 
-      if (store.bcscSecure.verified && onAlreadyVerified) {
+      if (isVerified && onAlreadyVerified) {
         updateStep('alreadyVerified')
         onAlreadyVerified()
         return
@@ -182,7 +184,7 @@ export const useAccountTransferQRCodeStrategy = (
       updateStep('accountTransferSuccess')
       onSuccess()
     },
-    [logger, onAlreadyVerified, onSuccess, registerDevice, store.bcscSecure.verified, transferAccount]
+    [logger, onAlreadyVerified, onSuccess, registerDevice, isVerified, transferAccount]
   )
 
   /**

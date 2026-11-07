@@ -263,12 +263,16 @@ flag that something has to remember to set and clear. The three live together in
 (`bcsc-theme/state/account/`) is the example:
 
 - `getAccountPhase` (`account-phase.ts`) is the only definition of "expired" and "expiring soon".
-- `selectAccountPhase` (`selectors.ts`) reads its inputs: `bcscSecure.verified`, the ID token
-  `bcscReason`, the stored refresh token's expiry (`isRefreshTokenExpired`), and the account's `account_expiration_date`.
+- `selectAccountPhase` (`selectors.ts`) reads its inputs: verification (through `selectVerificationState`), the ID
+  token `bcscReason`, the stored refresh token's expiry (`isRefreshTokenExpired`), and the account's
+  `account_expiration_date`.
 - `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
   `selectHomeNotice` (Home notices, `bcsc-theme/state/home/`) both read it, so they cannot disagree.
 - `getHomeNotice` (`home-notice.ts`) is the only definition of which notice Home shows. `useCustomNotifications`
   only maps its result to a component.
+- `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
+  IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
+  or `selectVerificationState`, never from `bcscSecure.verified`, `verifiedStatus` or the tokens directly.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
