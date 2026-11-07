@@ -484,6 +484,28 @@ export const initialState: BCState = {
   mode: Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet,
 }
 
+const applyVerificationStatusReceived = (
+  state: BCState,
+  received: Partial<Pick<VerificationStatusResponseData, 'status' | 'status_message'>>
+): BCState => {
+  const verificationRequestStatus = interpretVerificationStatus(received.status)
+  // Never store an unrecognised status; the caller asks the token endpoint instead
+  if (verificationRequestStatus === UNKNOWN_VERIFICATION_STATUS) {
+    return state
+  }
+  // Only the cancelled banner shows the message
+  const verificationRequestStatusMessage =
+    verificationRequestStatus === VerificationRequestStatus.CANCELLED ? received.status_message : undefined
+  if (
+    verificationRequestStatus === state.bcscSecure.verificationRequestStatus &&
+    verificationRequestStatusMessage === state.bcscSecure.verificationRequestStatusMessage
+  ) {
+    return state
+  }
+  const bcscSecure = { ...state.bcscSecure, verificationRequestStatus, verificationRequestStatusMessage }
+  return { ...state, bcscSecure }
+}
+
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
     case MediatorDispatchAction.REMOVE_AVAILABLE_MEDIATOR: {
@@ -774,24 +796,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.VERIFICATION_STATUS_RECEIVED: {
-      const received: Partial<Pick<VerificationStatusResponseData, 'status' | 'status_message'>> =
-        (action?.payload || []).pop() ?? {}
-      const verificationRequestStatus = interpretVerificationStatus(received.status)
-      // Never store an unrecognised status; the caller asks the token endpoint instead
-      if (verificationRequestStatus === UNKNOWN_VERIFICATION_STATUS) {
-        return state
-      }
-      // Only the cancelled banner shows the message
-      const verificationRequestStatusMessage =
-        verificationRequestStatus === VerificationRequestStatus.CANCELLED ? received.status_message : undefined
-      if (
-        verificationRequestStatus === state.bcscSecure.verificationRequestStatus &&
-        verificationRequestStatusMessage === state.bcscSecure.verificationRequestStatusMessage
-      ) {
-        return state
-      }
-      const bcscSecure = { ...state.bcscSecure, verificationRequestStatus, verificationRequestStatusMessage }
-      return { ...state, bcscSecure }
+      return applyVerificationStatusReceived(state, (action?.payload || []).pop() ?? {})
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_OPTIONS: {
       const verificationOptions = (action?.payload || []).pop() ?? []
