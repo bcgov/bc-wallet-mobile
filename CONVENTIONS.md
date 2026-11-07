@@ -208,6 +208,17 @@ them natively on focus and re-renders, and a row whose gate is still unknown sta
 disappears after mount slides every row below it. "Change PIN" rendered on a default and was dropped
 once the native read reported device auth, so the whole list jumped on every open of Settings.
 
+## Touch targets: `hitSlop` never reaches another control
+
+Give a small control a 44dp box for its target, and point `hitSlop` only at empty space: zero every edge
+that faces another control. The settings section chevrons, stacked between rows, keep only left and right
+(`{ ...hitSlop, top: 0, bottom: 0 }`); the profile card's edit pencil, with the account name on its left and
+a chevron below, keeps only top and right (`{ ...hitSlop, left: 0, bottom: 0 }`).
+
+**Why:** on Android a `hitSlop` reaches past the control's parent and takes taps from any control rendered
+before it. The settings section chevrons' 44dp slop covered the profile card's edit pencil, so tapping the
+pencil collapsed the Features section instead of opening the nickname editor.
+
 ## Android: the JS runtime outlives the Activity
 
 To leave the app on Android, use `moveAppToBackground`, not `BackHandler.exitApp`. Hardware back can still
