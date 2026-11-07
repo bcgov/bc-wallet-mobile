@@ -1064,6 +1064,42 @@ describe('BCSC Client', () => {
         expect(trackErrorEventSpy).not.toHaveBeenCalled()
       })
 
+      it('resolves fetchJwkResult with the last network error when every attempt fails', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        client.client.defaults.adapter = (config: any) =>
+          Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config))
+
+        const resultPromise = client.fetchJwkResult()
+        await jest.advanceTimersByTimeAsync(1500)
+
+        const result = await resultPromise
+        expect(result.jwk).toBeNull()
+        expect(result.error).toBeInstanceOf(AppError)
+      })
+
+      it('resolves fetchJwkResult with a "no keys" error when the endpoint returns an empty key set', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [] } } as any)
+
+        const result = await client.fetchJwkResult()
+
+        expect(result).toEqual({ jwk: null, error: new Error('JWKS endpoint returned no keys') })
+      })
+
+      it('gives callers that join an in-flight fetch the same failure reason', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        client.client.defaults.adapter = (config: any) =>
+          Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config))
+
+        const firstPromise = client.fetchJwkResult()
+        const joinedPromise = client.fetchJwkResult()
+        await jest.advanceTimersByTimeAsync(1500)
+
+        const [first, joined] = await Promise.all([firstPromise, joinedPromise])
+        expect(first.error).toBeInstanceOf(AppError)
+        expect(joined.error).toBe(first.error)
+      })
+
       it('retries a rejected certificate like any other network error', async () => {
         const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
@@ -1103,6 +1139,41 @@ describe('BCSC Client', () => {
         expect(result).toEqual(mockJwk)
         expect(getSpy).toHaveBeenCalledTimes(2)
         expect(persistJwk).toHaveBeenCalledWith('https://example.com', mockJwk, mockLogger)
+      })
+
+      it('logs a warn for each retried attempt, even when a later attempt succeeds', async () => {
+        const mockLogger = createMockLogger()
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+        // Real adapter so the 503 hits the interceptor's suppressStatusCodeLogs gate — the per-retry
+        // warn is then the only trace of the failed attempt.
+        let attempts = 0
+        client.client.defaults.adapter = (config: any) => {
+          attempts += 1
+          if (attempts === 1) {
+            return Promise.reject(
+              new AxiosError('Service Unavailable', 'ERR_BAD_RESPONSE', config, null, {
+                status: 503,
+                data: {},
+                statusText: 'Service Unavailable',
+                headers: {} as any,
+                config,
+              })
+            )
+          }
+          return Promise.resolve({ data: { keys: [mockJwk] }, status: 200, statusText: 'OK', headers: {}, config })
+        }
+
+        const resultPromise = client.fetchJwk()
+        await jest.advanceTimersByTimeAsync(500)
+        const result = await resultPromise
+
+        expect(result).toEqual(mockJwk)
+        expect(mockLogger.warn).toHaveBeenCalledTimes(1)
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('[BCSCApiClient] JWK fetch attempt 1 failed, retrying')
+        )
+        expect(mockLogger.error).not.toHaveBeenCalled()
       })
 
       it('retries a request timeout and succeeds on the next attempt', async () => {

@@ -269,6 +269,19 @@ Rules that keep this consistent:
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
 alone because starting from the Home card must not turn a skipper into a first-time verifier.
 
+## Error reports: record where and when a flow failed
+
+Wrap each step of a multi-step flow with `trackFailureSteps` (`errors/failureContext.ts`), and pass the
+resulting error to the alert. For a single failure outside a flow, use `createFailureError`.
+
+- Never call a catch-all alert without an error, or the report can't say what failed.
+- Name flows and steps with short, fixed names such as `quick_login` and `sign_jwt`. Never put personal data
+  or tokens in them.
+- Errors a policy already handled are labeled but never alerted again. Callers still check
+  `isHandledAppError`.
+- To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
+  `report-problem.ts`.
+
 ## Derived state: compute it from its inputs, don't store a flag
 
 State that follows from other state is derived on read through a rule, a selector and a hook, never saved as a
