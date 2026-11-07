@@ -281,4 +281,11 @@ describe('SettingsContent', () => {
       expect(chevron.props.hitSlop).toMatchObject({ top: 0, bottom: 0 })
     }
   })
+
+  it('gives the edit pencil no left or bottom hitSlop, so it cannot take taps from the account name or the chevron below', async () => {
+    renderWithState({ authentication: { didAuthenticate: true }, bcscSecure: { verified: true } })
+
+    expect(screen.getByTestId(tid('EditProfile')).props.hitSlop).toMatchObject({ left: 0, bottom: 0 })
+    await waitForNotificationStatus()
+  })
 })
