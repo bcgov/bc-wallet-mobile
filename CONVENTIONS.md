@@ -238,11 +238,14 @@ verification sets it to `true` so a later renewal re-enters as a deferred verifi
 
 - **First-time verifier** (Continue at the prompt, or a v3 upgrade mid-verification): the flow is their whole
   app. The help menu has no "Back to home", the back arrow at the beginning of the stack `replace`s onto the
-  prompt (which has no arrow and swallows Android back), the pending review has no arrow and polls for the
-  agent's decision itself (focus, foreground, the review push, "Check status"), and the post-submit screen
-  continues to the pending review. Skip on the prompt is the one way to Home and makes them deferred.
+  prompt (which has no arrow and swallows Android back), and the post-submit screen continues to the pending
+  review. Skip on the prompt is the one way to Home and makes them deferred.
 - **Deferred verifier** (Skip at some point, re-entering from the Home card): keeps every exit, progress
   kept. Developer mode shows "Back to home" to everyone; arrows ignore it.
+- **A submitted request is the exception for both**: the pending review's back arrow leaves for Home whoever
+  the verifier is, because that wait is on an agent and not on the user (#4968). The screen carries no manual
+  check — Home's pending card is where a user asks for a fresh status, and the way back in — and picks the
+  decision up itself (focus, foreground, the review push) for a user who stays on it.
 
 Rules that keep this consistent:
 
