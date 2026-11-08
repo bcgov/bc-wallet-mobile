@@ -315,10 +315,8 @@ class BCSCApiClient {
       throw _error
     }
 
-    // 401 recovery: a bearer-authed request can fail with 401 when its access token is rejected
-    // server-side despite still looking valid locally (revoked token, or device clock skew). Refresh
-    // the tokens once and retry the request a single time before surfacing the error. Guards: only
-    // bearer requests (skipBearerAuth is excluded so the refresh call itself can't loop) and only once.
+    // 401 recovery: the server can reject a token that still looks valid locally (revoked, or device
+    // clock skew), so refresh the tokens and retry the request once before surfacing the error.
     const originalConfig = _error.config
     if (isRetryable401(_error.response?.status, originalConfig)) {
       originalConfig._retriedAfter401 = true
@@ -329,9 +327,8 @@ class BCSCApiClient {
       return this.client.request(originalConfig)
     }
 
-    // 1. Format the error: reclassify Android client timeouts first (so they never reach the TLS
-    // classification), then the IAS error body when there is a response, or the native reason the
-    // request died with when there is none
+    // 1. Format the error: reclassify Android client timeouts first (so they never reach TLS classification),
+    // then add the IAS error body, or the native reason the request died with when there is no response
     const error = formatNetworkAxiosError(formatIasAxiosResponseError(normalizeAxiosTimeoutError(_error)))
 
     // 2. Convert the axios error into an AppError
