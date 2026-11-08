@@ -7,7 +7,7 @@ import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { getUserAgentString } from '@utils/user-agent'
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import merge from 'lodash.merge'
 import { AppState, DeviceEventEmitter } from 'react-native'
 import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
@@ -102,6 +102,46 @@ export interface BCSCEndpoints {
  */
 export type JwkFetchResult = { jwk: JWK; error?: undefined } | { jwk: null; error: unknown }
 
+const createFallbackConfig = (): BCSCConfig => ({
+  pairDeviceWithQRCodeSupported: true,
+  maximumAccountsPerDevice: 0,
+  allowedIdentificationProcesses: [
+    'IDIM L3 Remote BCSC Photo Identity Verification',
+    'IDIM L3 Remote BCSC Non-Photo Identity Verification',
+    'IDIM L3 Remote Non-BCSC Identity Verification',
+  ],
+  credentialFlowsSupported: 'default_web_flow, bcwallet_initiated, bcsc_initiated',
+  multipleAccountsSupported: false,
+  attestationTimeToLive: 60,
+})
+
+const createFallbackEndpoints = (baseURL: string): BCSCEndpoints => ({
+  attestation: `${baseURL}/device/attestations`,
+  issuer: `${baseURL}/device/`,
+  authorization: `${baseURL}/device/authorize`,
+  userInfo: `${baseURL}/device/userinfo`,
+  deviceAuthorization: `${baseURL}/device/devicecode`,
+  jwksURI: `${baseURL}/device/jwk`,
+  registration: `${baseURL}/device/register`,
+  clientMetadata: `${baseURL}/device/clients/metadata`,
+  savedServices: `${baseURL}/device/services`,
+  token: `${baseURL}/device/token`,
+  credential: `${baseURL}/credentials/v1/person`,
+  evidence: `${baseURL}/evidence`,
+  video: `${baseURL}/video`,
+  cardTap: `${baseURL}/cardtap`,
+  barcodes: `${baseURL}/device/barcodes`,
+  accountDevices: `${baseURL}/account/embedded/devices`,
+  account: `${baseURL}/account`,
+})
+
+// Only bearer requests (skipBearerAuth is excluded so the refresh call itself can't loop) and only once.
+const isRetryable401 = (
+  status: number | undefined,
+  config: InternalAxiosRequestConfig | undefined
+): config is InternalAxiosRequestConfig =>
+  status === 401 && config !== undefined && !config.skipBearerAuth && !config._retriedAfter401
+
 class BCSCApiClient {
   readonly client: AxiosInstance
   readonly logger: RemoteLogger
@@ -136,109 +176,11 @@ class BCSCApiClient {
 
     this.tokensPromise = null
 
-    // fallback config
-    this.config = {
-      pairDeviceWithQRCodeSupported: true,
-      maximumAccountsPerDevice: 0,
-      allowedIdentificationProcesses: [
-        'IDIM L3 Remote BCSC Photo Identity Verification',
-        'IDIM L3 Remote BCSC Non-Photo Identity Verification',
-        'IDIM L3 Remote Non-BCSC Identity Verification',
-      ],
-      credentialFlowsSupported: 'default_web_flow, bcwallet_initiated, bcsc_initiated',
-      multipleAccountsSupported: false,
-      attestationTimeToLive: 60,
-    }
+    this.config = createFallbackConfig()
+    this.endpoints = createFallbackEndpoints(baseURL)
 
-    // fallback endpoints
-    this.endpoints = {
-      attestation: `${this.baseURL}/device/attestations`,
-      issuer: `${this.baseURL}/device/`,
-      authorization: `${this.baseURL}/device/authorize`,
-      userInfo: `${this.baseURL}/device/userinfo`,
-      deviceAuthorization: `${this.baseURL}/device/devicecode`,
-      jwksURI: `${this.baseURL}/device/jwk`,
-      registration: `${this.baseURL}/device/register`,
-      clientMetadata: `${this.baseURL}/device/clients/metadata`,
-      savedServices: `${this.baseURL}/device/services`,
-      token: `${this.baseURL}/device/token`,
-      credential: `${this.baseURL}/credentials/v1/person`,
-      evidence: `${this.baseURL}/evidence`,
-      video: `${this.baseURL}/video`,
-      cardTap: `${this.baseURL}/cardtap`,
-      barcodes: `${this.baseURL}/device/barcodes`,
-      accountDevices: `${this.baseURL}/account/embedded/devices`,
-      account: `${this.baseURL}/account`,
-    }
-
-    // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, async (_error: unknown) => {
-      // Pass through errors that are already AppErrors (e.g. from request interceptor)
-      if (_error instanceof AppError) {
-        throw _error
-      }
-
-      // Only handle AxiosErrors here; pass through all other error types unchanged
-      if (!axios.isAxiosError(_error)) {
-        throw _error
-      }
-
-      // 401 recovery: a bearer-authed request can fail with 401 when its access token is rejected
-      // server-side despite still looking valid locally (revoked token, or device clock skew). Refresh
-      // the tokens once and retry the request a single time before surfacing the error. Guards: only
-      // bearer requests (skipBearerAuth is excluded so the refresh call itself can't loop) and only once.
-      const originalConfig = _error.config
-      if (
-        _error.response?.status === 401 &&
-        originalConfig &&
-        !originalConfig.skipBearerAuth &&
-        !originalConfig._retriedAfter401
-      ) {
-        originalConfig._retriedAfter401 = true
-        this.logger.info('[BCSCApiClient] Access token rejected (401); refreshing tokens and retrying once')
-        // On refresh failure the error is already handled by its own interceptor pass and propagates;
-        // on success the retry's own interceptor pass handles any further failure (no double-handling).
-        await this.forceRefreshTokens()
-        return this.client.request(originalConfig)
-      }
-
-      // 1. Format the error: reclassify Android client timeouts first (so they never reach the TLS
-      // classification), then the IAS error body when there is a response, or the native reason the
-      // request died with when there is none
-      const error = formatNetworkAxiosError(formatIasAxiosResponseError(normalizeAxiosTimeoutError(_error)))
-
-      // 2. Convert the axios error into an AppError
-      const appError = getAppErrorFromAxiosError(error)
-
-      const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
-      const statusCode = error.response?.status ?? 0
-
-      // 3. Log if the status code is not in the suppress list
-      if (!suppressStatusCodeLogs.includes(statusCode)) {
-        const simpleAppError = appError.toJSON()
-        const { message, ...details } = simpleAppError
-        this.logger.error(`[BCSCApiClient] ${message}`, {
-          ...details,
-          cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
-        })
-      }
-
-      // 4. Invoke onError callback if provided which marks as handled
-      if (error.config?.skipOnErrorHandler !== true) {
-        try {
-          this.onError?.(appError as AxiosAppError, {
-            endpoint: String(error.config?.url),
-            statusCode: error.response?.status ?? 0,
-            apiEndpoints: this.endpoints,
-          })
-        } catch (handlerError) {
-          this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
-        }
-      }
-
-      throw appError
-    })
+    this.client.interceptors.response.use(undefined, this.handleResponseError.bind(this))
   }
 
   setErrorHandler(callback: BCSCClientOnErrorCallback) {
@@ -360,6 +302,80 @@ class BCSCApiClient {
   async getAccessToken(options?: { forceRefresh?: boolean }): Promise<string> {
     const tokens = options?.forceRefresh ? await this.forceRefreshTokens() : await this.ensureValidTokens()
     return tokens.access_token
+  }
+
+  private async handleResponseError(_error: unknown): Promise<AxiosResponse> {
+    // Pass through errors that are already AppErrors (e.g. from request interceptor)
+    if (_error instanceof AppError) {
+      throw _error
+    }
+
+    // Only handle AxiosErrors here; pass through all other error types unchanged
+    if (!axios.isAxiosError(_error)) {
+      throw _error
+    }
+
+    // 401 recovery: a bearer-authed request can fail with 401 when its access token is rejected
+    // server-side despite still looking valid locally (revoked token, or device clock skew). Refresh
+    // the tokens once and retry the request a single time before surfacing the error. Guards: only
+    // bearer requests (skipBearerAuth is excluded so the refresh call itself can't loop) and only once.
+    const originalConfig = _error.config
+    if (isRetryable401(_error.response?.status, originalConfig)) {
+      originalConfig._retriedAfter401 = true
+      this.logger.info('[BCSCApiClient] Access token rejected (401); refreshing tokens and retrying once')
+      // On refresh failure the error is already handled by its own interceptor pass and propagates;
+      // on success the retry's own interceptor pass handles any further failure (no double-handling).
+      await this.forceRefreshTokens()
+      return this.client.request(originalConfig)
+    }
+
+    // 1. Format the error: reclassify Android client timeouts first (so they never reach the TLS
+    // classification), then the IAS error body when there is a response, or the native reason the
+    // request died with when there is none
+    const error = formatNetworkAxiosError(formatIasAxiosResponseError(normalizeAxiosTimeoutError(_error)))
+
+    // 2. Convert the axios error into an AppError
+    const appError = getAppErrorFromAxiosError(error)
+
+    // 3. Log if the status code is not in the suppress list
+    this.logResponseError(error, appError)
+
+    // 4. Invoke onError callback if provided which marks as handled
+    this.notifyOnError(error, appError)
+
+    throw appError
+  }
+
+  private logResponseError(error: AxiosError, appError: AppError) {
+    const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
+    const statusCode = error.response?.status ?? 0
+
+    if (suppressStatusCodeLogs.includes(statusCode)) {
+      return
+    }
+
+    const simpleAppError = appError.toJSON()
+    const { message, ...details } = simpleAppError
+    this.logger.error(`[BCSCApiClient] ${message}`, {
+      ...details,
+      cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
+    })
+  }
+
+  private notifyOnError(error: AxiosError, appError: AppError) {
+    if (error.config?.skipOnErrorHandler === true) {
+      return
+    }
+
+    try {
+      this.onError?.(appError as AxiosAppError, {
+        endpoint: String(error.config?.url),
+        statusCode: error.response?.status ?? 0,
+        apiEndpoints: this.endpoints,
+      })
+    } catch (handlerError) {
+      this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
+    }
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
