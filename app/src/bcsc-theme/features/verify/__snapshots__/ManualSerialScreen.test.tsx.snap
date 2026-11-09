@@ -89,7 +89,9 @@ exports[`ManualSerial renders correctly 1`] = `
           >
             BCSC.ManualSerial.InputSubText
           </Text>
-          <View>
+          <View
+            onLayout={[Function]}
+          >
             <Text
               maxFontSizeMultiplier={2}
               style={
