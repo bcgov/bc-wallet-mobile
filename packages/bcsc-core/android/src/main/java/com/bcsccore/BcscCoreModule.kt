@@ -469,6 +469,48 @@ class BcscCoreModule internal constructor(
     /** Truncates for logging, matching iOS's redaction even though Android aliases (`rsa1`, `rsa2`, ...) aren't UUID-based. */
     private fun redactAlias(alias: String): String = if (alias.length <= 8) alias else "…" + alias.takeLast(8)
 
+    /**
+     * Rejects a JS promise with diagnostics. React Native puts userInfo on the rejected JS error as
+     * `error.userInfo`, and AppError.summarizeCause includes it in problem reports.
+     *
+     * Keep [code] the existing `E_…` code (JS maps it in native-error-map.ts) and use the same [site]
+     * (`methodName.stage`) as the iOS twin. [message] is a fixed sentence: don't interpolate `e.message` or
+     * `devMessage`, which can contain paths; the underlying error is reduced to `detail` here.
+     *
+     * [diagnostics] values must be String, Boolean, Int or Double and must never contain personal data,
+     * tokens, key material, file paths or account/device IDs. Use status codes and counts.
+     *
+     * Not usable with [com.bcsccore.util.GuardedPromise], which has no userInfo overload.
+     */
+    private fun rejectWithDiagnostics(
+        promise: Promise,
+        code: String,
+        message: String,
+        site: String,
+        error: Throwable? = null,
+        diagnostics: Map<String, Any> = emptyMap(),
+    ) {
+        val userInfo =
+            Arguments.createMap().apply {
+                // Diagnostics first, so site and detail win over the same key (matching iOS)
+                diagnostics.forEach { (key, value) ->
+                    // Never toString() an unknown value: it could print personal data
+                    when (value) {
+                        is String -> putString(key, value)
+                        is Boolean -> putBoolean(key, value)
+                        is Int -> putInt(key, value)
+                        is Double -> putDouble(key, value)
+                        else -> putString(key, "unsupported_type")
+                    }
+                }
+                putString("site", site)
+                // Class name only; exception messages can contain paths
+                error?.let { putString("detail", it.javaClass.simpleName) }
+            }
+        Log.e(NAME, "$site: $code $message", error)
+        promise.reject(code, message, error, userInfo)
+    }
+
     @ReactMethod
     override fun getToken(
         tokenType: Double,
@@ -1428,14 +1470,17 @@ class BcscCoreModule internal constructor(
         challengeSource: String,
         promise: Promise,
     ) {
+        // The stage reached, so a report tells a missing or broken key apart from a failed signature (sites match iOS)
+        var stage = "get_key"
         try {
             // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
-            // FIXME: Do we need this currentKeyPair? is the call doing something important but we don't need the ouput?
-            // Get the current (newest) key pair for signing
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
+            // Loads (or seeds) the newest key before signing. Signing loads it again, but this call's
+            // failure is reported as get_key, apart from a signing failure
+            keyPairSource.getCurrentBcscKeyPair()
 
+            stage = "build_claims"
             // Build JWT claims set for pairing code signing
             val claimsSet =
                 JWTClaimsSet
@@ -1459,6 +1504,7 @@ class BcscCoreModule internal constructor(
                     .claim("has_other_accounts", false) // This could be made dynamic
                     .build()
 
+            stage = "sign"
             // Sign the JWT using bcsc-keypair-port
             val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
 
@@ -1467,17 +1513,33 @@ class BcscCoreModule internal constructor(
                 "signPairingCode: Successfully signed pairing code with issuer: $issuer, clientID: $clientID",
             )
             promise.resolve(signedJWT)
-        } catch (e: BcscException) {
-            Log.e(NAME, "signPairingCode: BCSC signing error: ${e.devMessage}", e)
-            promise.reject(
-                "E_JWT_SIGN_FAILED",
-                "Error signing pairing code: ${e.devMessage}",
-                e,
-            )
         } catch (e: Exception) {
-            Log.e(NAME, "signPairingCode: Unexpected error: ${e.message}", e)
-            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error signing pairing code: ${e.message}", e)
+            rejectWithDiagnostics(
+                promise,
+                code = "E_JWT_SIGN_FAILED",
+                message = "Failed to sign the pairing code.",
+                site = "signPairingCode.$stage",
+                error = e,
+                diagnostics = signingErrorDiagnostics(e),
+            )
         }
+    }
+
+    /**
+     * A signing error's alert key (for a [BcscException]) and the number of stored key pairs. Status codes
+     * and counts only. Never throws: a diagnostic must not replace the real failure.
+     */
+    private fun signingErrorDiagnostics(error: Exception): Map<String, Any> {
+        val diagnostics = mutableMapOf<String, Any>()
+        if (error is BcscException) {
+            diagnostics["alertKey"] = error.alertKey.name
+        }
+        try {
+            diagnostics["keyCount"] = keyPairSource.getAllBcscKeyPairInfos().size
+        } catch (_: Exception) {
+            diagnostics["keyCount"] = "unavailable"
+        }
+        return diagnostics
     }
 
     @ReactMethod

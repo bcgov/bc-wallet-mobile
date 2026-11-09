@@ -84,8 +84,8 @@ export const useQuickLoginURL = () => {
         }
 
         if (!account) {
-          // getAccount resolves null for a missing, unreadable or undecodable account; ask native which one
-          const readStatus = await getAccountReadStatus()
+          // Diagnostics must never replace the real failure
+          const readStatus = await getAccountReadStatus().catch(() => null)
           const context = readStatus
             ? {
                 account_read_status: readStatus.status,

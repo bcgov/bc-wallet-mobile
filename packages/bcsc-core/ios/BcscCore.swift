@@ -165,6 +165,34 @@ class BcscCore: NSObject {
     )
   }
 
+  /// Rejects a JS promise with diagnostics. React Native puts the NSError's userInfo on the rejected JS error
+  /// as `error.userInfo`, and AppError.summarizeCause includes it in problem reports.
+  ///
+  /// Keep `code` the existing `E_…` code (JS maps it in native-error-map.ts) and use the same `site`
+  /// (`methodName.stage`) as the Android twin. `message` is a fixed sentence: don't interpolate
+  /// `localizedDescription`, which can contain paths; the underlying error is reduced to `detail` here.
+  ///
+  /// `diagnostics` values must be bridge-serializable (String, Int, Bool, or arrays of them) and must never
+  /// contain personal data, tokens, key material, file paths or account/device IDs. Use status codes and counts.
+  private func rejectWithDiagnostics(
+    _ reject: RCTPromiseRejectBlock,
+    code: String,
+    message: String,
+    site: String,
+    error: Error? = nil,
+    diagnostics: [String: Any] = [:]
+  ) {
+    var userInfo = diagnostics
+    userInfo[NSLocalizedDescriptionKey] = message
+    userInfo["site"] = site
+    if let nsError = error as NSError? {
+      // domain:code only; localizedDescription can contain paths
+      userInfo["detail"] = "\(nsError.domain):\(nsError.code)"
+    }
+    logger.error("\(site): \(code) \(message)")
+    reject(code, message, NSError(domain: "BcscCore", code: 0, userInfo: userInfo))
+  }
+
   /**
    * Compact key inventory for reject MESSAGE strings. The problem-report view
    * surfaces only the message text (via AppError.technicalMessage), not the
@@ -239,19 +267,29 @@ class BcscCore: NSObject {
     return "[keys=\(keys.count), newest=\(newest), jweParts=\(header.parts), jweAlg=\(header.alg), jweEnc=\(header.enc), jweKid=\(jweKid), kidMatchesLocal=\(kidMatchesLocal)]"
   }
 
-  private func signJWT(payload: JWTClaimsSet, reject: @escaping RCTPromiseRejectBlock) -> String? {
+  /// Signs `payload` with the newest key. `method` names the caller for diagnostics: each rejection's site
+  /// is `method.stage` (list_keys, select_key, get_key, sign), matching the Android twin where it has one.
+  private func signJWT(
+    payload: JWTClaimsSet, method: String = "signJWT", reject: @escaping RCTPromiseRejectBlock
+  ) -> String? {
     let keyPairManager = KeyPairManager()
     let keys: [PrivateKeyInfo]
     do {
       keys = try keyPairManager.findAllPrivateKeys()
     } catch {
-      reject("E_KEYSTORE_ERROR", "Failed to enumerate signing keys: \(error.localizedDescription)", error)
+      rejectWithDiagnostics(
+        reject, code: "E_KEYSTORE_ERROR", message: "Failed to enumerate signing keys.",
+        site: "\(method).list_keys", error: error, diagnostics: signingErrorDiagnostics(error)
+      )
       return nil
     }
     let signer: RSASigner
 
     guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
-      reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
+      rejectWithDiagnostics(
+        reject, code: "E_NO_KEYS_FOUND", message: "No keys available to sign the JWT.",
+        site: "\(method).select_key", diagnostics: ["keyCount": 0]
+      )
       return nil
     }
 
@@ -259,10 +297,16 @@ class BcscCore: NSObject {
       let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
       signer = RSASigner(privateKey: keyPair.private)
     } catch {
-      reject(
-        "E_KEYPAIR_RETRIEVAL_FAILED",
-        "Failed to retrieve key pair: \(error.localizedDescription) \(keyInventorySummary(keys))",
-        keychainDiagnosticsError(site: "sign_jwt", underlying: error, keys: keys)
+      var diagnostics = signingErrorDiagnostics(error)
+      diagnostics["keyCount"] = keys.count
+      // Creation dates only; key tags are identifiers
+      let iso8601 = ISO8601DateFormatter()
+      diagnostics["keyCreated"] = keys.sorted(by: { $0.created > $1.created })
+        .prefix(BcscCore.keychainDiagnosticsMaxKeys)
+        .map { iso8601.string(from: $0.created) }
+      rejectWithDiagnostics(
+        reject, code: "E_KEYPAIR_RETRIEVAL_FAILED", message: "Failed to retrieve the signing key pair.",
+        site: "\(method).get_key", error: error, diagnostics: diagnostics
       )
       return nil
     }
@@ -274,12 +318,29 @@ class BcscCore: NSObject {
       try jwt.sign(signer: signer)
       return try jwt.serialize()
     } catch {
-      reject(
-        "E_JWT_SIGN_FAILED",
-        "Failed to sign or serialize JWT: \(error.localizedDescription)", error
+      var diagnostics = signingErrorDiagnostics(error)
+      diagnostics["keyCount"] = keys.count
+      rejectWithDiagnostics(
+        reject, code: "E_JWT_SIGN_FAILED", message: "Failed to sign or serialize the JWT.",
+        site: "\(method).sign", error: error, diagnostics: diagnostics
       )
       return nil
     }
+  }
+
+  /// A signing error's type and, for keychain errors, its OSStatus. Never its description, which can
+  /// contain paths.
+  private func signingErrorDiagnostics(_ error: Error) -> [String: Any] {
+    var diagnostics: [String: Any] = ["errorType": String(describing: type(of: error))]
+    if let keychainError = error as? KeychainError {
+      switch keychainError {
+      case let .keychainUnavailable(status), let .unexpectedStatus(status):
+        diagnostics["osStatus"] = Int(status)
+      default:
+        break
+      }
+    }
+    return diagnostics
   }
 
   /// Deletes every Keychain item belonging to this app (all Sec item classes). Used by the
@@ -1198,7 +1259,7 @@ class BcscCore: NSObject {
 
     let payload = builder.build()
 
-    if let signedJWT = signJWT(payload: payload, reject: reject) {
+    if let signedJWT = signJWT(payload: payload, method: "signPairingCode", reject: reject) {
       resolve(signedJWT)
     }
   }

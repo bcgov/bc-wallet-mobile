@@ -38,6 +38,8 @@ describe('useQuickLoginURL', () => {
   beforeEach(() => {
     jest.resetAllMocks()
     jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+    // resetAllMocks clears the shared mock's default; the real wrapper always returns a promise
+    jest.mocked(BcscCore).getAccountReadStatus = jest.fn().mockResolvedValue({ status: 'ok' })
   })
 
   it('should return error when no initiate login uri', async () => {
