@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import DateInput from '@/bcsc-theme/components/DateInput'
 import { useIsDeviceAuthorizationRecovering } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
+import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { isHandledAppError } from '@/errors/appError'
@@ -23,6 +24,8 @@ import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
+const FIELD_ORDER = ['birthDate'] as const
+
 type EnterBirthdateScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
 }
@@ -39,6 +42,8 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const isBusy = loading || isRecovering
   const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY/MM/DD') : '')
   const [birthDateError, setBirthDateError] = useState<string | undefined>(undefined)
+  const { scrollViewRef, inputRefs, onContainerLayout, onFieldLayout, focusFirstInvalidField } =
+    useFocusFirstInvalidField(FIELD_ORDER)
 
   const isBirthDateComplete = birthDate.length === 10
 
@@ -52,7 +57,9 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     // Continue stays enabled for every input state; validate here so tapping it with an empty,
     // incomplete, or invalid date shows an error instead of silently doing nothing.
     if (!isBirthDateComplete || !vm.isDateValid(birthDate)) {
-      setBirthDateError(t('BCSC.Birthdate.InvalidDate'))
+      const message = t('BCSC.Birthdate.InvalidDate')
+      setBirthDateError(message)
+      focusFirstInvalidField({ birthDate: message })
       return
     }
 
@@ -93,12 +100,15 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       keyboardActive
       padded={false}
       controls={controls}
+      scrollViewRef={scrollViewRef}
       scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
     >
       <ThemedText variant={'headingThree'}>{t('BCSC.Birthdate.Heading')}</ThemedText>
       <ThemedText>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
-      <View style={{ width: '100%' }}>
+      <View style={{ width: '100%' }} onLayout={onContainerLayout}>
         <DateInput
+          ref={inputRefs.birthDate}
+          onLayout={onFieldLayout('birthDate')}
           id={'birthDate'}
           label={t('BCSC.Birthdate.Label')}
           value={birthDate}

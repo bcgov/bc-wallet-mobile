@@ -1,7 +1,8 @@
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { ScrollView, TextInput } from 'react-native'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import * as viewModel from './useEnterBirthdateViewModel'
 
@@ -51,6 +52,24 @@ describe('EnterBirthdate', () => {
     expect(getByText('BCSC.Birthdate.InvalidDate')).toBeTruthy()
     expect(mockNavigation.navigate).not.toHaveBeenCalled()
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
+  })
+
+  it('jumps to and focuses the date field when Continue is pressed with an invalid date', async () => {
+    const scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
+    const focusSpy = jest.spyOn(TextInput.prototype, 'focus')
+    const { getByTestId } = renderScreen(mockNavigation as never)
+
+    const input = getByTestId('com.ariesbifold:id/birthDate-input')
+    fireEvent(input, 'layout', { nativeEvent: { layout: { y: 60 } } })
+    fireEvent.changeText(input, '2999/99/99')
+    await act(async () => {
+      fireEvent.press(getByTestId('com.ariesbifold:id/Continue'))
+    })
+
+    expect(scrollToSpy).toHaveBeenCalledWith({ y: 60, animated: false })
+    expect(focusSpy.mock.instances.map((i: any) => i.props.testID)).toEqual(['com.ariesbifold:id/birthDate-input'])
+    scrollToSpy.mockRestore()
+    focusSpy.mockRestore()
   })
 
   it('updates birthdate field with typed slash date value', () => {

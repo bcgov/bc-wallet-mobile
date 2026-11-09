@@ -90,13 +90,16 @@ exports[`EnterBirthdate renders correctly 1`] = `
             BCSC.Birthdate.Paragraph
           </Text>
           <View
+            onLayout={[Function]}
             style={
               {
                 "width": "100%",
               }
             }
           >
-            <View>
+            <View
+              onLayout={[Function]}
+            >
               <Text
                 maxFontSizeMultiplier={2}
                 style={
