@@ -1,12 +1,14 @@
 import { getGlobalAlertMap } from '@/bcsc-theme/api/clientErrorPolicies'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
+import { useSwitchEnvironment } from '@/bcsc-theme/hooks/useSwitchEnvironment'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
 import { isAppError } from '@/errors/appError'
 import { ensureAppError, getRegistryAppError, isDeviceStorageFullError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
+import { IASEnvironment } from '@/utils/environment'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions, NavigationProp, useNavigation } from '@react-navigation/native'
@@ -46,6 +48,8 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
   // TODO (MD): Remove this dependency and inject into the alerts that need it (e.g., setupExpiredAlert, factoryResetErrorModal) to avoid unnecessary coupling.
   const factoryReset = useFactoryReset()
   const { stack } = useBCSCStack()
+
+  const switchEnvironment = useSwitchEnvironment()
 
   // Use the provided navigation prop if available. Otherwise, fall back to the default navigation
   // TODO (MD): Remove this dependency and inject into the alerts that need it (e.g., liveCallFileUploadAlert, dataUseWarningAlert) to avoid unnecessary coupling.
@@ -240,6 +244,22 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       )
     },
     [emitErrorModal, t, factoryReset, logger]
+  )
+
+  const invalidEnvironmentErrorModal = useCallback(
+    (error?: AppError | unknown) => {
+      emitErrorModal(
+        t('Alerts.EnvironmentMismatch.Title'),
+        t('Alerts.EnvironmentMismatch.Description'),
+        ensureAppError(error, AppEventCode.ENVIRONMENT_MISMATCH),
+        {
+          onDismiss: () => {
+            switchEnvironment(IASEnvironment.PROD)
+          },
+        }
+      )
+    },
+    [emitErrorModal, switchEnvironment, t]
   )
 
   const setupExpiredAlert = useCallback(() => {
@@ -457,6 +477,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'SomethingWentWrong'),
       registrationKeyNotConfirmedAlert: _createBasicErrorModal(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED, 'SomethingWentWrong'),
       deviceStorageFullAlert,
+      invalidEnvironmentErrorModal,
     }),
     [
       appUpdateRequiredAlert,
@@ -473,6 +494,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       failedToWriteToLocalStorageAlert,
       _createProblemWithAccountErrorModal,
       deviceStorageFullAlert,
+      invalidEnvironmentErrorModal,
     ]
   )
 }

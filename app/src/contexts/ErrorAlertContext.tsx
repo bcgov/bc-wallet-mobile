@@ -116,8 +116,13 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
    */
   const dismissErrorModal = useCallback((): void => {
     setErrorPayload(null)
+
+    if (errorModalOptions?.onDismiss) {
+      errorModalOptions.onDismiss()
+    }
+
     setErrorModalOptions(null)
-  }, [])
+  }, [errorModalOptions])
 
   const value: ErrorAlertContextType = useMemo(
     () => ({

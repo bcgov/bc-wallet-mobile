@@ -6,7 +6,7 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 /**
  * Checks if the app is running in a production bundle and if the environment stored in local storage is valid for production.
  */
-export class InvalidProductionEnvironmentSystemCheck implements SystemCheckStrategy {
+export class InvalidEnvironmentSystemCheck implements SystemCheckStrategy {
   private readonly invalidEnvironmentErrorModal: () => void
   private readonly utils: SystemCheckUtils
 
