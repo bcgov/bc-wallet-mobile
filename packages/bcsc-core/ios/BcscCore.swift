@@ -1799,20 +1799,25 @@ class BcscCore: NSObject {
     key: NSDictionary, fcmDeviceToken: String, deviceToken: String?,
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
+    // Sites are `createQuickLoginJWT.<stage>`, matching Android, so reports show which stage failed
+    let method = "createQuickLoginJWT"
+
     guard !accessToken.isEmpty, !clientId.isEmpty, !issuer.isEmpty, !clientRefId.isEmpty,
           !fcmDeviceToken.isEmpty
     else {
-      reject(
-        "E_INVALID_PARAMETERS",
-        "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) cannot be empty.",
-        nil
+      rejectWithDiagnostics(
+        reject, code: "E_INVALID_PARAMETERS",
+        message: "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) cannot be empty.",
+        site: "\(method).validate"
       )
       return
     }
 
     // Convert the JWK dictionary to JWK object
     guard let jwk = JWK(json: key) else {
-      reject("E_INVALID_JWK", "Invalid JWK format provided", nil)
+      rejectWithDiagnostics(
+        reject, code: "E_INVALID_JWK", message: "Invalid JWK format provided.", site: "\(method).parse_jwk"
+      )
       return
     }
 
@@ -1821,7 +1826,10 @@ class BcscCore: NSObject {
     do {
       publicKey = try JWK.jwkToSecKey(jwk: jwk)
     } catch {
-      reject("E_INVALID_JWK", "Unusable JWK for quick login encryption: \(errorMessage(error))", error)
+      rejectWithDiagnostics(
+        reject, code: "E_INVALID_JWK", message: "Unusable JWK for quick login encryption.",
+        site: "\(method).parse_jwk", error: error, diagnostics: signingErrorDiagnostics(error)
+      )
       return
     }
 
@@ -1833,13 +1841,12 @@ class BcscCore: NSObject {
       clientRefId: clientRefId,
       fcmDeviceToken: fcmDeviceToken,
       deviceToken: deviceToken,
+      method: method,
       reject: reject
     )
     else {
-      return // Error already handled in makeSignedJWT
+      return // Error already handled in makeSignedJWTForAccountLogin
     }
-
-    logger.log("signedJWT: \(signedJWT)")
 
     // Encrypt the signed JWT with the provided public key
     do {
@@ -1848,20 +1855,23 @@ class BcscCore: NSObject {
       )
 
       guard let finalJWT = encryptedJWT else {
-        reject("E_JWT_ENCRYPTION_FAILED", "Failed to encrypt JWT", nil)
+        rejectWithDiagnostics(
+          reject, code: "E_JWT_ENCRYPTION_FAILED", message: "Failed to encrypt JWT.", site: "\(method).encrypt"
+        )
         return
       }
 
       resolve(finalJWT)
     } catch {
-      reject(
-        "E_JWT_ENCRYPTION_ERROR",
-        "Failed to encrypt JWT: \(error.localizedDescription)", error
+      rejectWithDiagnostics(
+        reject, code: "E_JWT_ENCRYPTION_ERROR", message: "Failed to encrypt JWT.",
+        site: "\(method).encrypt", error: error, diagnostics: signingErrorDiagnostics(error)
       )
     }
   }
 
-  /// Creates a signed JWT following the ias-ios QuickLoginProtocol pattern
+  /// Creates a signed JWT following the ias-ios QuickLoginProtocol pattern. Rejects on failure, with sites under
+  /// `method` (build_claims here; signJWT adds list_keys, select_key, get_key and sign).
   private func makeSignedJWTForAccountLogin(
     accessToken: String,
     clientId: String,
@@ -1869,30 +1879,26 @@ class BcscCore: NSObject {
     clientRefId: String,
     fcmDeviceToken: String,
     deviceToken: String?,
+    method: String,
     reject: @escaping RCTPromiseRejectBlock
   ) -> String? {
-    do {
-      guard let payload = makeJWTPayloadForAccountLogin(
-        accessToken: accessToken,
-        clientId: clientId,
-        issuer: issuer,
-        clientRefId: clientRefId,
-        fcmDeviceToken: fcmDeviceToken,
-        deviceToken: deviceToken
-      )
-      else {
-        reject("E_JWT_PAYLOAD_CREATION_FAILED", "Failed to create JWT payload", nil)
-        return nil
-      }
-
-      return signJWT(payload: payload, method: "createQuickLoginJWT", reject: reject)
-    } catch {
-      reject(
-        "E_JWT_CREATION_FAILED",
-        "Failed to create account login JWT: \(error.localizedDescription)", error
+    guard let payload = makeJWTPayloadForAccountLogin(
+      accessToken: accessToken,
+      clientId: clientId,
+      issuer: issuer,
+      clientRefId: clientRefId,
+      fcmDeviceToken: fcmDeviceToken,
+      deviceToken: deviceToken
+    )
+    else {
+      rejectWithDiagnostics(
+        reject, code: "E_JWT_PAYLOAD_CREATION_FAILED", message: "Failed to create JWT payload.",
+        site: "\(method).build_claims"
       )
       return nil
     }
+
+    return signJWT(payload: payload, method: method, reject: reject)
   }
 
   /// Creates JWT payload following the ias-ios QuickLoginProtocol pattern

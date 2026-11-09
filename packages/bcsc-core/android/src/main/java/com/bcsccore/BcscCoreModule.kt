@@ -2071,21 +2071,29 @@ class BcscCoreModule internal constructor(
         deviceToken: String?,
         promise: Promise,
     ) {
+        // Sites are `createQuickLoginJWT.<stage>`, matching iOS, so reports show which stage failed
+        val method = "createQuickLoginJWT"
         try {
             // Validate required parameters
             if (accessToken.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || clientRefId.isEmpty()) {
-                promise.reject(
-                    "E_INVALID_PARAMETERS",
-                    "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) cannot be empty.",
+                rejectWithDiagnostics(
+                    promise,
+                    code = "E_INVALID_PARAMETERS",
+                    message =
+                        "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) " +
+                            "cannot be empty.",
+                    site = "$method.validate",
                 )
                 return
             }
 
             // Validate that key parameter is a valid JWK structure (matching iOS implementation)
             if (!key.hasKey("n") || !key.hasKey("e") || !key.hasKey("kty")) {
-                promise.reject(
-                    "E_INVALID_JWK",
-                    "Key parameter must be a valid JWK with n, e, and kty fields for encryption.",
+                rejectWithDiagnostics(
+                    promise,
+                    code = "E_INVALID_JWK",
+                    message = "Key parameter must be a valid JWK with n, e, and kty fields for encryption.",
+                    site = "$method.parse_jwk",
                 )
                 return
             }
@@ -2111,8 +2119,14 @@ class BcscCoreModule internal constructor(
                         actualDeviceToken,
                     )
                 } catch (e: Exception) {
-                    Log.e(NAME, "createQuickLoginJWT: Failed to create signed JWT: ${e.message}")
-                    promise.reject("E_JWT_CREATION_FAILED", "Failed to create signed JWT: ${e.message}", e)
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_CREATION_FAILED",
+                        message = "Failed to create signed JWT.",
+                        site = "$method.sign",
+                        error = e,
+                        diagnostics = signingErrorDiagnostics(e),
+                    )
                     return
                 }
 
@@ -2121,8 +2135,13 @@ class BcscCoreModule internal constructor(
                 try {
                     convertJWKToRSAPublicKey(key)
                 } catch (e: Exception) {
-                    Log.e(NAME, "createQuickLoginJWT: Failed to convert JWK to public key: ${e.message}")
-                    promise.reject("E_INVALID_JWK", "Failed to convert JWK to RSA public key: ${e.message}", e)
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_INVALID_JWK",
+                        message = "Failed to convert JWK to RSA public key.",
+                        site = "$method.parse_jwk",
+                        error = e,
+                    )
                     return
                 }
 
@@ -2131,19 +2150,28 @@ class BcscCoreModule internal constructor(
                 try {
                     encryptJWTWithRSAPublicKey(signedJWT, publicKey)
                 } catch (e: Exception) {
-                    Log.e(NAME, "createQuickLoginJWT: Failed to encrypt JWT: ${e.message}")
-                    promise.reject("E_JWT_ENCRYPTION_FAILED", "Failed to encrypt JWT: ${e.message}", e)
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_ENCRYPTION_FAILED",
+                        message = "Failed to encrypt JWT.",
+                        site = "$method.encrypt",
+                        error = e,
+                    )
                     return
                 }
 
             Log.d(NAME, "createQuickLoginJWT: Successfully created and encrypted quick login JWT")
             promise.resolve(encryptedJWT)
-        } catch (e: BcscException) {
-            Log.e(NAME, "createQuickLoginJWT: BCSC error: ${e.devMessage}", e)
-            promise.reject("E_JWT_SIGN_FAILED", "Error creating quick login JWT: ${e.devMessage}", e)
         } catch (e: Exception) {
-            Log.e(NAME, "createQuickLoginJWT: Unexpected error: ${e.message}", e)
-            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating quick login JWT: ${e.message}", e)
+            // Each stage catches its own errors, so this is only reached by something unexpected
+            rejectWithDiagnostics(
+                promise,
+                code = "E_JWT_SIGN_FAILED",
+                message = "Unexpected error creating quick login JWT.",
+                site = "$method.unexpected",
+                error = e,
+                diagnostics = signingErrorDiagnostics(e),
+            )
         }
     }
 
