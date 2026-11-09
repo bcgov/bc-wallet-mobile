@@ -1,7 +1,7 @@
 import { ThemedText, useTheme } from '@bifold/core'
 import type { RefObject } from 'react'
 import { useCallback, useState } from 'react'
-import { LayoutChangeEvent, Platform, TextInput } from 'react-native'
+import { LayoutChangeEvent, Platform, TextInput, View } from 'react-native'
 import { InputWithValidation } from './InputWithValidation'
 
 interface DateInputProps {
@@ -49,26 +49,27 @@ const DateInput = ({ ref, id, label, value, onChange, error, subtext, onLayout, 
 
   const remainingTemplate = DATE_TEMPLATE.slice(displayValue.length)
 
-  // Mirrors the TextInput's font so the template lines up with the typed digits at every OS font size:
-  // both are capped by the theme's maxFontSizeMultiplier. `labelTitle` carries no lineHeight (unlike
-  // `normal`), and the explicit size keeps the nested spans on the input's size rather than the theme's.
+  // Mirrors InputWithValidation's TextInput (system font, normal weight, no font padding) so the template
+  // lines up with the typed digits; both are capped by the theme's maxFontSizeMultiplier. `labelTitle`
+  // carries no lineHeight, unlike `normal`.
   const overlayTextStyle = {
     fontSize: Inputs.textInput.fontSize,
-    fontFamily: Inputs.textInput.fontFamily,
+    fontFamily: undefined,
+    fontWeight: 'normal' as const,
+    includeFontPadding: false,
   }
 
+  // Sibling texts rather than nested spans: Android ignores `color: 'transparent'` on a nested span and
+  // draws the spacer digits in the default colour, ghosting behind the input's own text.
   const templateOverlay = (
-    <ThemedText
-      variant={'labelTitle'}
-      style={[overlayTextStyle, { marginBottom: Platform.OS === 'ios' ? Inputs.textInput.margin : 0 }]}
-    >
-      <ThemedText variant={'labelTitle'} style={[overlayTextStyle, { color: 'transparent' }]}>
+    <View style={{ flexDirection: 'row', marginBottom: Platform.OS === 'ios' ? Inputs.textInput.margin : 0 }}>
+      <ThemedText variant={'labelTitle'} style={[overlayTextStyle, { opacity: 0 }]}>
         {displayValue}
       </ThemedText>
       <ThemedText variant={'labelTitle'} style={[overlayTextStyle, { color: ColorPalette.grayscale.mediumGrey }]}>
         {remainingTemplate}
       </ThemedText>
-    </ThemedText>
+    </View>
   )
 
   const handleChangeText = useCallback(

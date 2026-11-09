@@ -112,26 +112,12 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
           ]
         }
       >
-        <Text
-          maxFontSizeMultiplier={2}
+        <View
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 16,
-                "fontWeight": "bold",
-              },
-              [
-                {
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 16,
-                },
-                {
-                  "marginBottom": undefined,
-                },
-              ],
-            ]
+            {
+              "flexDirection": "row",
+              "marginBottom": undefined,
+            }
           }
         >
           <Text
@@ -146,11 +132,13 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
                 },
                 [
                   {
-                    "fontFamily": "BCSans-Regular",
+                    "fontFamily": undefined,
                     "fontSize": 16,
+                    "fontWeight": "normal",
+                    "includeFontPadding": false,
                   },
                   {
-                    "color": "transparent",
+                    "opacity": 0,
                   },
                 ],
               ]
@@ -168,8 +156,10 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
                 },
                 [
                   {
-                    "fontFamily": "BCSans-Regular",
+                    "fontFamily": undefined,
                     "fontSize": 16,
+                    "fontWeight": "normal",
+                    "includeFontPadding": false,
                   },
                   {
                     "color": "#606060",
@@ -180,7 +170,7 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
           >
             YYYY/MM/DD
           </Text>
-        </Text>
+        </View>
       </View>
       <TextInput
         accessibilityLabel="Date of Birth"
