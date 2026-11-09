@@ -29,7 +29,10 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  * to choose.
  *
  * Photo card, so no camera. Needs the IDCheck credentials on an allowlisted runner for the approval.
- * The binary-swap proof lives in the base upgrade spec.
+ * The binary-swap proof lives in the base upgrade spec. Every lineage arranges this state — it is the
+ * one in-progress state the native v3 driver can reach; a v3 request hydrates from v3's own storage (no
+ * v4 blob exists yet), so that post-swap resume goes VerifyPrompt → Skip → Home card, which
+ * `resumeVerification` accepts.
  */
 export function defineInPersonPendingUpgrade(prev: PrevBuild): void {
   let appId: string | undefined

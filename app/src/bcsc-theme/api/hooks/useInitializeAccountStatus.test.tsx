@@ -108,7 +108,11 @@ describe('useInitializeAccountStatus', () => {
 
     await act(async () => {})
 
-    expect(jest.mocked(retryModule.retryAsync)).toHaveBeenCalledWith(getAccount, 3, 500, true)
+    expect(jest.mocked(retryModule.retryAsync)).toHaveBeenCalledWith(getAccount, {
+      attempts: 3,
+      retryDelayMs: 500,
+      retryIfNullish: true,
+    })
     expect(mockDispatch).toHaveBeenCalledWith({
       type: BCDispatchAction.SET_HAS_ACCOUNT,
       payload: [true],
@@ -240,7 +244,11 @@ describe('useInitializeAccountStatus', () => {
 
       await act(async () => {})
 
-      expect(jest.mocked(retryModule.retryAsync)).toHaveBeenCalledWith(getAccount, 3, 500, true)
+      expect(jest.mocked(retryModule.retryAsync)).toHaveBeenCalledWith(getAccount, {
+        attempts: 3,
+        retryDelayMs: 500,
+        retryIfNullish: true,
+      })
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['Combo'],

@@ -7,7 +7,9 @@ import { browser } from '@wdio/globals'
 import type { Frameworks } from '@wdio/types'
 import dotenv from 'dotenv'
 import { getE2EConfig } from '../src/e2eConfig.js'
+import { lineageOf, PREV_VERSION_ENV } from '../src/flows/prev-build/sources.js'
 import { acceptSystemAlert } from '../src/helpers/alerts.js'
+import { upgradeSpecsFor, type UpgradeState } from '../src/upgrade-matrix.js'
 import { recordSessionEnd, recordSessionStart, recordTestResult } from '../src/helpers/session-record.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -60,13 +62,47 @@ export const NON_DEVICE_AUTH_SPECS = ALL_SPEC_FILES.filter((path) => !isDeviceAu
  * `send-video` lane uses (the injection instrumentation wrecks the recorder's stop/finalize), while
  * the other upgrade specs (non-BCSC capture) need injection ON. The Android upgrade config splits into
  * two lanes on these arrays, exactly like the RDC config's send-video split. iOS needs no split — its
- * recorder survives injection. Lane routing only: the suites below list their specs by name, because
- * one previous build is booted per session and each wrapper spec drives exactly one.
+ * recorder survives injection. Lane routing only: the upgrade suites below list their specs by name.
  */
 const isUpgradeSpec = (path: string) => /\/upgrade\/[^/]+\.spec\.ts$/.test(path)
 const isUpgradeSendVideoSpec = (path: string) => /\/upgrade\/upgrade-send-video-[^/]+\.spec\.ts$/.test(path)
 export const UPGRADE_SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter(isUpgradeSendVideoSpec)
 export const UPGRADE_STANDARD_SPECS = ALL_SPEC_FILES.filter((path) => isUpgradeSpec(path) && !isUpgradeSendVideoSpec(path))
+
+/**
+ * The upgrade suites are STATE GROUPS, one per column of the weekly upgrade matrix. Each boots the
+ * shipped build `PREV_VERSION` names (the upgrade configs resolve `BCSC-v<version>.*` from
+ * e2e/upgrade-sources.json) and schedules the wrapper specs src/upgrade-matrix.ts gives that build's
+ * lineage, so a lineage that cannot arrange a path schedules nothing for it — no runtime skips, and the
+ * brief reads the missing cell as n/a from the same matrix. With PREV_VERSION unset (every non-upgrade
+ * run) a suite is the union over the lineages, and each wrapper names the missing variable as its
+ * first failure.
+ *
+ * Built when called, not at import: `.env.saucelabs` may set PREV_VERSION, and the Sauce config loads
+ * it only after this module has evaluated, so that config calls this again once its env is in.
+ */
+export function upgradeSuites(): Record<string, string[]> {
+  const prevVersion = process.env[PREV_VERSION_ENV]
+  const prevLineage = prevVersion ? lineageOf(prevVersion) : undefined
+  const upgradeSuite = (state: UpgradeState): string[] =>
+    upgradeSpecsFor(state, prevLineage).map((name) => resolve(__dirname, `../test/${variant}/upgrade/${name}.spec.ts`))
+  return {
+    // Partial: nothing submitted — the unverified account (the base PIN/settings check, one spec per
+    // lineage), a saved serial, a captured document awaiting its number, partial non-BCSC progress.
+    // No IDCheck, no review queue: the platforms can run in parallel.
+    upgradePartial: upgradeSuite('partial'),
+    // Submitted: a request the server holds but has not decided — an unapproved in-person code, a
+    // pending send-video review (Android injection-off lane, the blind-FIFO queue drained first). One
+    // platform at a time: the queue, and the in-person approval verifies the shared persona.
+    upgradeSubmitted: upgradeSuite('submitted'),
+    // Approved, not finished in-app: the decision landed while the app was closed and the update came
+    // before the user reopened it. Same serial rules as upgradeSubmitted.
+    upgradeApproved: upgradeSuite('approved'),
+    // Completed: a verified account — the device credential must survive the swap. One platform at a
+    // time (the shared persona: SIT keeps one active device per card).
+    upgradeVerified: upgradeSuite('verified'),
+  }
+}
 
 /**
  * `E2E_EXCLUDE_SEND_VIDEO=1` drops the send-video journeys from whatever suite runs. They review a
@@ -131,8 +167,8 @@ export const config: WebdriverIO.Config = {
     // `regression` — see DEVICE_AUTH_SPECS.
     'device-auth': DEVICE_AUTH_SPECS,
     // Nightly full run: every per-area journey.
-    // Excludes `migration` and `upgrade` — those suites boot an OLD build via their own configs, so
-    // they cannot share this run's v4 RDC build (each stays its own suite + workflow path).
+    // Excludes the upgrade suites — they boot an OLD build via their own configs, so they cannot share
+    // this run's RDC build (each stays its own suite + workflow path).
     regression: [
       resolve(__dirname, `../test/${variant}/onboarding/*.journey.ts`),
       resolve(__dirname, `../test/${variant}/auth/*.journey.ts`),
@@ -141,45 +177,8 @@ export const config: WebdriverIO.Config = {
       resolve(__dirname, `../test/${variant}/a11y/*.journey.ts`),
       ...ANDROID_ONLY_SPECS,
     ],
-    migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
-    // The upgrade suites boot ONE previous build per session (the configs' PREV_*_APP), so every suite
-    // is an explicit list of the wrapper specs written for that build — a glob would pull in another
-    // lineage's wrappers, or the send-video spec that needs its own lane.
-    // Previous release → current, nightly: the base PIN/settings check plus the verified-account
-    // state-preservation check.
-    upgrade: [
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade.spec.ts`),
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-verified.spec.ts`),
-    ],
-    // The pending-send-video upgrade, nightly but on its own serial one-platform-at-a-time lane (the
-    // blind-FIFO review queue), Android injection-off. Same serial rules as the `send-video` suite.
-    upgradeSendVideo: [resolve(__dirname, `../test/${variant}/upgrade/upgrade-send-video-pending.spec.ts`)],
-    // The costlier upgrade state-preservation checks — dispatch-only (owner may promote to weekly):
-    // an unapproved in-person request, partial non-BCSC progress, and the two resume states.
-    upgradeExtra: [
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-in-person-pending.spec.ts`),
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-non-bcsc-partial.spec.ts`),
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-resume-serial.spec.ts`),
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-resume-capture.spec.ts`),
-    ],
-    // The shipped 4.0.3 → current (PREV_*_APP = BCSC-v4.0.3.*): its pre-rework onboarding and verify
-    // screens run via the frozen walks in flows/*-v403.ts. Nightly: the base check + a verified account.
-    upgrade403: [
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-from-v403.spec.ts`),
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-verified-v403.spec.ts`),
-    ],
-    // The 4.0.3 state-preservation checks that the frozen walks can arrange — dispatch-only.
-    upgrade403Extra: [
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-in-person-pending-v403.spec.ts`),
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-resume-serial-v403.spec.ts`),
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-resume-capture-v403.spec.ts`),
-    ],
-    // The legacy v3 app → current (PREV_*_APP = BCSC-v3.*): an unverified account, and the one in-progress
-    // state v3's native driver can arrange beyond the migration lane's verified account.
-    upgradeV3: [
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-from-v3.spec.ts`),
-      resolve(__dirname, `../test/${variant}/upgrade/upgrade-in-person-pending-v3.spec.ts`),
-    ],
+    // The upgrade state groups — upgradePartial, upgradeSubmitted, upgradeApproved, upgradeVerified.
+    ...upgradeSuites(),
   },
   // iOS configs append ANDROID_ONLY_SPECS to this — append, never assign, or the env exclusion is lost.
   exclude: EXCLUDE_SEND_VIDEO ? [...SEND_VIDEO_SPECS] : [],

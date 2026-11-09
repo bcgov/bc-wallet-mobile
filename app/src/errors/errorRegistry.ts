@@ -352,6 +352,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.AUTHENTICATION,
     message: 'HTTP 403 — authenticated but not permitted to access this resource',
   },
+  LOGIN_DEVICE_ERROR: {
+    statusCode: 2211,
+    appEvent: AppEventCode.LOGIN_DEVICE_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.AUTHENTICATION,
+    message: 'Login failed on the device',
+  },
 
   // ============================================
   // Credential/Card Errors (2300-2399)

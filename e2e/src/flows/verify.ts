@@ -149,15 +149,15 @@ export async function expectNoBackToHome(): Promise<void> {
 }
 
 /**
- * The pending review as a first-time verifier sees it: no back arrow and no "Back to home", so the
- * agent's decision has to be picked up from the screen itself (`waitForSendVideoDecision`).
+ * The pending review offers a way out of the flow, whoever the verifier is: a submitted request waits
+ * on an agent, so it must not hold a first-time verifier out of the rest of the app (#4968). Asserts
+ * the arrow without taking it, leaving the caller on the screen to poll for the decision.
  */
-export async function expectPendingReviewLocked(): Promise<void> {
+export async function expectPendingReviewOffersExit(): Promise<void> {
   await PendingReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  if (await PendingReviewScreen.isVisible('backArrow')) {
-    throw new Error('The pending review offers a back arrow, but a first-time verifier cannot leave it')
+  if (!(await PendingReviewScreen.isVisible('backArrow'))) {
+    throw new Error('The pending review offers no back arrow, so the user is locked into the verify flow')
   }
-  await expectNoBackToHome()
 }
 
 /**
@@ -373,6 +373,13 @@ const REVIEW_DECISION_TIMEOUT_MS = 180_000
 const REVIEW_DECISION_POLL_MS = 5_000
 
 /**
+ * How long a pending review is watched before its back arrow is taken. The screen's focus-time status
+ * check is still in the air when the screen itself appears, so this is the room that round trip gets
+ * to answer — generous against a single status call, since leaving too early is what costs a round.
+ */
+const FOCUS_CHECK_SETTLE_MS = 10_000
+
+/**
  * Submit a send-video verification: selfie photo, the prompted recording, upload, and out to Home —
  * the state in which an agent decision can be scripted (`reviewSendVideoRequest`) and then awaited
  * with {@link waitForSendVideoDecision}.
@@ -396,7 +403,7 @@ export async function submitSendVideoVerification(user: TestUser): Promise<void>
   await SuccessfullySentScreen.expectVisible(Timeouts.VIDEO_UPLOAD)
   markSubmissionQueued() // from here until the scripted review claims it, a failure leaves an orphan behind
   // The screen's only way out. A first-time verifier is kept in the flow, on the pending review; a deferred
-  // verifier — and every build before the exit rules, which the upgrade lane drives through here — goes
+  // verifier — and every build before the exit rules, which the upgrade suites drive through here — goes
   // Home, where the pending card is the way back in. Either landing is fine for the decision wait.
   await SuccessfullySentScreen.tapToNavigate('primary')
 
@@ -678,12 +685,12 @@ function assertExpectedDecision(actual: 'verified' | 'cancelled', expected: 'ver
 /**
  * Wait for the agent's decision to reach the app, and assert it is the expected one.
  *
- * PendingReview is the poll: its "Check status" re-fetches the request status and the screen navigates
- * on by itself, so each round sees where the screen settles and, if still pending, taps Check status
- * for the next round an interval later — from the pending review itself, which a first-time verifier
- * cannot leave. Starting from Home (a deferred verifier who left) is tolerated: the verification card
- * re-enters the pending review first, and that mount re-checks too. The push notification is advisory
- * and never navigates, so it is not waited on.
+ * Home's pending card is the poll: re-entering through it mounts the pending review, whose focus check
+ * re-fetches the request status and navigates the screen on by itself. So each round sees where the
+ * screen settles and, if still pending, waits out that check before taking the back arrow to Home for
+ * the next round an interval later — the screen itself offers no manual check (#4968). Starting from
+ * Home is that same loop one step in. The push notification is advisory and never navigates, so it is
+ * not waited on.
  */
 export async function waitForSendVideoDecision(
   expected: 'verified' | 'cancelled',
@@ -705,9 +712,21 @@ export async function waitForSendVideoDecision(
         return settled
       }
 
-      // Check status is disabled while a check is already running (the focus-time one, say); waiting for
-      // it makes this tap a fresh fetch rather than a dropped one. The next round reads what it fetched
-      await PendingReviewScreen.tapWhenEnabled('primary')
+      // The pending review being on screen does not mean it has heard back: its focus-time check is a
+      // round trip that only has to beat a 500ms probe, and the decision it carries navigates from this
+      // screen. Leaving now would unmount the navigator under that check and drop the decision — every
+      // round the same way, until the wait times out. So give the check its answer first.
+      const decided = await probeAnyScreen(
+        { verified: VerificationSuccessScreen, cancelled: CancelledReviewScreen },
+        FOCUS_CHECK_SETTLE_MS
+      )
+      if (decided) {
+        return decided
+      }
+
+      // It came back pending. Out to Home, so the next round re-enters through its pending card and
+      // that fresh mount checks again
+      await PendingReviewScreen.back.tap()
       return false
     },
     {
@@ -721,6 +740,101 @@ export async function waitForSendVideoDecision(
   )
 
   assertExpectedDecision(status, expected)
+}
+
+/** Where a relaunch can land once the approval has already happened server-side. */
+type ApprovedLanding = 'success' | 'inPerson' | 'pendingReview' | 'method' | 'prompt' | 'card' | 'home'
+
+/**
+ * A {@link finishApprovedVerification} round on the pending review. The screen has no manual check (#4968):
+ * it re-checks the status as it mounts and moves on by itself once it hears the approval. Give that check its
+ * answer; still pending, leave by the back arrow so the next round re-enters through the Home card and that
+ * fresh mount checks again.
+ */
+async function waitOutPendingReviewCheck(): Promise<void> {
+  const decided = await probeAnyScreen(
+    { success: VerificationSuccessScreen, cancelled: CancelledReviewScreen },
+    FOCUS_CHECK_SETTLE_MS
+  )
+  if (decided === 'cancelled') {
+    throw new Error('The pending review moved on to CancelledReview: the app does not read the request as approved')
+  }
+  if (!decided) await PendingReviewScreen.back.tap()
+}
+
+/**
+ * Finish a verification whose approval landed while the app was CLOSED — the "approved, not finished
+ * in-app" state an update can catch a user in: the code was shown at the counter (or the video
+ * uploaded), the agent approved it, and the app was updated before it was ever reopened.
+ *
+ * The relaunch may resume anywhere: straight onto VerificationSuccess, onto the step the user left (the
+ * code screen, the pending review), onto method selection, the verify prompt, or Home with its card.
+ * Each landing is driven one step on — Complete re-fetches the status the server already holds, and the
+ * pending review re-checks it whenever it mounts (still pending, it is left by its back arrow and re-entered
+ * through the Home card) — until VerificationSuccess is passed and Home is up, or Home shows no card at all
+ * (the app already reads the account as verified). The caller then asserts verified Settings.
+ *
+ * A fresh request minted on resume that orphans the approval, or a `method` landing after a send-video
+ * submission (the submitted flag was lost), fails here: a product finding, not flake.
+ */
+export async function finishApprovedVerification(method: 'in-person' | 'send-video'): Promise<void> {
+  const deadline = Date.now() + REVIEW_DECISION_TIMEOUT_MS
+  for (;;) {
+    let landed = await probeAnyScreen<ApprovedLanding>(
+      {
+        // Probed by its Skip button, and before `success`: the prompt's Continue id is the generic one many
+        // verify screens share, VerificationSuccess's marker included.
+        prompt: () => VerifyPromptScreen.isVisible('skipVerification'),
+        success: VerificationSuccessScreen,
+        inPerson: VerifyInPersonScreen,
+        pendingReview: PendingReviewScreen,
+        method: VerificationMethodSelectionScreen,
+        card: HomeNotificationCard, // before `home`: a Home with its card is the way back in
+        home: HomeScreen,
+      },
+      RESUME_PROBE_ROUND_MS
+    )
+    // The probes never scroll, and method selection's marker sits below the fold (see resumeVerification),
+    // so a round that found nothing gets one scrolling look for it.
+    if (!landed && (await isVisibleAfterScrolling(VerificationMethodSelectionScreen))) landed = 'method'
+    switch (landed) {
+      case 'success':
+        await VerificationSuccessScreen.tap('primary') // Continue → exits the verify stack to Home
+        await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+        return
+      case 'home':
+        console.log('[verify] Home without a verification card — the app already reads the account as verified')
+        return
+      case 'inPerson':
+        await VerifyInPersonScreen.tapWhenEnabled('primary') // Complete: re-fetches the status
+        break
+      case 'pendingReview':
+        await waitOutPendingReviewCheck()
+        break
+      case 'method':
+        if (method === 'send-video') {
+          throw new Error('Resumed onto method selection: the submitted send-video request did not survive the upgrade')
+        }
+        console.log('[verify] Resumed onto method selection — re-entering in person to complete the approved request')
+        await VerificationMethodSelectionScreen.link('inPerson')
+        break
+      case 'prompt':
+        console.log('[verify] The verify prompt is up — skipping it to resume through the Home card')
+        await VerifyPromptScreen.tapToReach('secondary', HomeNotificationCard)
+        break
+      case 'card':
+        await HomeNotificationCard.tapToNavigate('primary')
+        break
+      default:
+        break
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `The approved ${method} verification did not finish within ${REVIEW_DECISION_TIMEOUT_MS}ms of relaunching. ` +
+          `On screen: ${await describeCurrentScreen()}`
+      )
+    }
+  }
 }
 
 /**

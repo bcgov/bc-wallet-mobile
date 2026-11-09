@@ -206,6 +206,9 @@ describe('report-problem', () => {
             http_status: 500,
             http_response_size: 42,
             http_request_size: 0,
+            failure_flow: 'quick_login',
+            failure_step: 'sign_jwt',
+            failure_elapsed_ms: 120,
             not_allow_listed: 'should be dropped',
           },
         }
@@ -225,6 +228,9 @@ describe('report-problem', () => {
         http_status: 500,
         http_response_size: 42,
         http_request_size: 0,
+        failure_flow: 'quick_login',
+        failure_step: 'sign_jwt',
+        failure_elapsed_ms: 120,
       })
       expect(body).not.toHaveProperty('not_allow_listed')
       expect(body.error_json).toEqual(error.toJSON())

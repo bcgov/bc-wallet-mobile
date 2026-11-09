@@ -617,7 +617,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   useEffect(() => {
     if (!hasPermission) {
-      requestPermission()
+      void requestPermission()
     }
 
     // Cleanup timeout on unmount
@@ -964,7 +964,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // If the callback returns `false`, the scan was rejected — reset so the user can retry.
   useEffect(() => {
     if (!ENABLE_MANUAL_CONFIRM && scanState === 'locked') {
-      confirmScan()
+      void confirmScan()
     }
   }, [scanState, confirmScan])
 
