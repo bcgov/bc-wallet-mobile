@@ -15,7 +15,7 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  * the current build must pick the approval up from wherever it resumes and reach verified Home.
  *
  * The approval lives server-side; what the upgrade tests is that the current build re-fetches it
- * (Complete on the code screen, Check status, or the resume path — `finishApprovedVerification`)
+ * (Complete on the code screen, or the resume path — `finishApprovedVerification`)
  * instead of treating the request as new. A fresh code minted on resume that orphans the approval is a
  * product finding, and this fails on it — not flake. Every lineage can arrange it: the in-person path is
  * the one each previous-build driver has.

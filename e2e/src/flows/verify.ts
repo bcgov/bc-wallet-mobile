@@ -752,9 +752,10 @@ type ApprovedLanding = 'success' | 'inPerson' | 'pendingReview' | 'method' | 'pr
  *
  * The relaunch may resume anywhere: straight onto VerificationSuccess, onto the step the user left (the
  * code screen, the pending review), onto method selection, the verify prompt, or Home with its card.
- * Each landing is driven one step on — Complete and Check status re-fetch the status the server already
- * holds — until VerificationSuccess is passed and Home is up, or Home shows no card at all (the app
- * already reads the account as verified). The caller then asserts verified Settings.
+ * Each landing is driven one step on — Complete re-fetches the status the server already holds, and the
+ * pending review re-checks it whenever it mounts (still pending, it is left by its back arrow and re-entered
+ * through the Home card) — until VerificationSuccess is passed and Home is up, or Home shows no card at all
+ * (the app already reads the account as verified). The caller then asserts verified Settings.
  *
  * A fresh request minted on resume that orphans the approval, or a `method` landing after a send-video
  * submission (the submitted flag was lost), fails here: a product finding, not flake.
@@ -790,10 +791,22 @@ export async function finishApprovedVerification(method: 'in-person' | 'send-vid
       case 'inPerson':
         await VerifyInPersonScreen.tapWhenEnabled('primary') // Complete: re-fetches the status
         break
-      case 'pendingReview':
-        await PendingReviewScreen.tapWhenEnabled('primary') // Check status
-        await driver.pause(REVIEW_DECISION_POLL_MS)
+      case 'pendingReview': {
+        // The screen has no manual check (#4968): it re-checks the status as it mounts and moves on by itself
+        // once it hears the approval. Give that check its answer; still pending, leave by the back arrow so the
+        // next round re-enters through the Home card and that fresh mount checks again.
+        const decided = await probeAnyScreen(
+          { success: VerificationSuccessScreen, cancelled: CancelledReviewScreen },
+          FOCUS_CHECK_SETTLE_MS
+        )
+        if (decided === 'cancelled') {
+          throw new Error(
+            'The pending review moved on to CancelledReview: the app does not read the request as approved'
+          )
+        }
+        if (!decided) await PendingReviewScreen.back.tap()
         break
+      }
       case 'method':
         if (method === 'send-video') {
           throw new Error('Resumed onto method selection: the submitted send-video request did not survive the upgrade')

@@ -16,7 +16,7 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  * in-app": the user uploads their video, closes the app, the agent approves the request, and the app
  * is updated before they reopen it. Submit on the previous build, close the app, script the approval,
  * install the current build over the closed app, relaunch and unlock — the current build must pick
- * the decision up (Check status on the pending review, the Home card, or straight onto
+ * the decision up (the pending review's own re-check, the Home card, or straight onto
  * VerificationSuccess) and reach verified Home.
  *
  * Like the pending variant this is a send-video journey in all but location: it reviews the shared
