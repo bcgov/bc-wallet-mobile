@@ -10,8 +10,9 @@ import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { AbstractBifoldLogger, TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { TFunction } from 'i18next'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useEvidenceService } from '../services/hooks/useEvidenceService'
@@ -22,6 +23,103 @@ export type CheckStatusOptions = {
    * "still pending"; off for the automatic checks (focus, foreground, push), which only log it.
    */
   surfaceErrors?: boolean
+}
+
+type StatusDecision =
+  | { status: VerificationRequestStatus.VERIFIED | VerificationRequestStatus.PENDING }
+  | { status: VerificationRequestStatus.CANCELLED; status_message?: string }
+  // Pending, but not recorded: an unrecognised status is never stored
+  | { status: typeof UNKNOWN_VERIFICATION_STATUS }
+
+type StatusFetchContext = {
+  requestId?: string
+  deviceCode?: string
+  userCode?: string
+  evidenceService: ReturnType<typeof useEvidenceService>
+  token: ReturnType<typeof useApi>['token']
+  logger: AbstractBifoldLogger
+  t: TFunction
+  // True once "Choose another way" has cancelled this request; its responses are then ignored
+  isCancelled: () => boolean
+}
+
+const isCancelledRequest = (cancelledRequestId?: string, requestId?: string) =>
+  Boolean(cancelledRequestId) && (!requestId || cancelledRequestId === requestId)
+
+const requireCodes = ({ deviceCode, userCode, t }: StatusFetchContext) => {
+  if (!deviceCode || !userCode) {
+    throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
+  }
+  return [deviceCode, userCode] as const
+}
+
+const resolveUnknownStatus = async (
+  ctx: StatusFetchContext,
+  rawStatus: unknown
+): Promise<StatusDecision | 'abandoned'> => {
+  ctx.logger.warn(
+    `[useVerificationPendingActions] Unrecognised verification status '${rawStatus}'; asking the token endpoint`
+  )
+  const [deviceCode, userCode] = requireCodes(ctx)
+  const exchanged = await isVerifiedByTokenExchange(() => ctx.token.checkDeviceCodeStatus(deviceCode, userCode))
+  if (ctx.isCancelled()) {
+    return 'abandoned'
+  }
+  return { status: exchanged ? VerificationRequestStatus.VERIFIED : UNKNOWN_VERIFICATION_STATUS }
+}
+
+const fetchStatusDecision = async (ctx: StatusFetchContext): Promise<StatusDecision | 'abandoned'> => {
+  if (!ctx.requestId) {
+    throw new Error(ctx.t('BCSC.Steps.VerificationIDMissing'))
+  }
+  const { status: rawStatus, status_message } = await ctx.evidenceService.getVerificationRequestStatus(ctx.requestId)
+  if (ctx.isCancelled()) {
+    return 'abandoned'
+  }
+  const status = interpretVerificationStatus(rawStatus)
+  switch (status) {
+    case VerificationRequestStatus.VERIFIED:
+      await ctx.token.checkDeviceCodeStatus(...requireCodes(ctx))
+      return { status }
+    case VerificationRequestStatus.CANCELLED:
+      return { status, status_message }
+    case UNKNOWN_VERIFICATION_STATUS:
+      return resolveUnknownStatus(ctx, rawStatus)
+    default:
+      return { status: VerificationRequestStatus.PENDING }
+  }
+}
+
+type StoreDispatch = ReturnType<typeof useStore<BCState>>[1]
+
+const recordAndNavigate = (
+  dispatch: StoreDispatch,
+  navigation: StackNavigationProp<BCSCVerifyStackParams>,
+  decision: StatusDecision
+): 'decided' | 'pending' => {
+  if (decision.status !== UNKNOWN_VERIFICATION_STATUS) {
+    dispatch({ type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED, payload: [decision] })
+  }
+  switch (decision.status) {
+    case VerificationRequestStatus.VERIFIED:
+      navigation.navigate(BCSCScreens.VerificationSuccess)
+      return 'decided'
+    case VerificationRequestStatus.CANCELLED:
+      navigation.navigate(BCSCScreens.CancelledReview, { agentReason: decision.status_message })
+      return 'decided'
+    default:
+      navigation.navigate(BCSCScreens.PendingReview)
+      return 'pending'
+  }
+}
+
+const clearSubmittedRequest = (dispatch: StoreDispatch) => {
+  dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+  dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
+  dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
+  // The request no longer exists, so a recorded pending status must not outlive it on Home
+  dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
+  dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
 }
 
 /**
@@ -63,78 +161,24 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
 
         // Choosing another way clears the request id before the screen leaves, which re-runs the focus check;
         // that is not a missing id worth logging
-        if (
-          cancelledRequestIdRef.current &&
-          (!verificationRequestId || cancelledRequestIdRef.current === verificationRequestId)
-        ) {
+        if (isCancelledRequest(cancelledRequestIdRef.current, verificationRequestId)) {
           return 'decided'
         }
 
-        if (!verificationRequestId) {
-          throw new Error(t('BCSC.Steps.VerificationIDMissing'))
-        }
-
-        const { status: rawStatus, status_message } =
-          await evidenceService.getVerificationRequestStatus(verificationRequestId)
-        if (cancelledRequestIdRef.current === verificationRequestId) {
+        const decision = await fetchStatusDecision({
+          requestId: verificationRequestId,
+          deviceCode,
+          userCode,
+          evidenceService,
+          token,
+          logger,
+          t,
+          isCancelled: () => cancelledRequestIdRef.current === verificationRequestId,
+        })
+        if (decision === 'abandoned') {
           return 'decided'
         }
-        const status = interpretVerificationStatus(rawStatus)
-        if (status === VerificationRequestStatus.VERIFIED) {
-          if (!deviceCode || !userCode) {
-            throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
-          }
-
-          await token.checkDeviceCodeStatus(deviceCode, userCode)
-          dispatch({
-            type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-            payload: [{ status: VerificationRequestStatus.VERIFIED }],
-          })
-          navigation.navigate(BCSCScreens.VerificationSuccess)
-          return 'decided'
-        }
-
-        if (status === VerificationRequestStatus.CANCELLED) {
-          dispatch({
-            type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-            payload: [{ status: VerificationRequestStatus.CANCELLED, status_message }],
-          })
-          navigation.navigate(BCSCScreens.CancelledReview, {
-            agentReason: status_message,
-          })
-          return 'decided'
-        }
-
-        if (status === UNKNOWN_VERIFICATION_STATUS) {
-          logger.warn(
-            `[useVerificationPendingActions] Unrecognised verification status '${rawStatus}'; asking the token endpoint`
-          )
-          if (!deviceCode || !userCode) {
-            throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
-          }
-
-          const exchanged = await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))
-          if (cancelledRequestIdRef.current === verificationRequestId) {
-            return 'decided'
-          }
-          if (exchanged) {
-            dispatch({
-              type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-              payload: [{ status: VerificationRequestStatus.VERIFIED }],
-            })
-            navigation.navigate(BCSCScreens.VerificationSuccess)
-            return 'decided'
-          }
-        }
-
-        if (status !== UNKNOWN_VERIFICATION_STATUS) {
-          dispatch({
-            type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-            payload: [{ status: VerificationRequestStatus.PENDING }],
-          })
-        }
-        navigation.navigate(BCSCScreens.PendingReview)
-        return 'pending'
+        return recordAndNavigate(dispatch, navigation, decision)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         logger.error(`[useVerificationPendingActions] Failed to check status: ${message}`)
@@ -201,12 +245,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         logger.error(`Error cancelling verification request: ${error}`)
       } finally {
         await updateVerificationRequest(undefined, null)
-        dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
-        // The request no longer exists, so a recorded pending status must not outlive it on Home
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
+        clearSubmittedRequest(dispatch)
         await updateAccountFlags({
           userSubmittedVerificationVideo: false,
         }).catch((error) => {
