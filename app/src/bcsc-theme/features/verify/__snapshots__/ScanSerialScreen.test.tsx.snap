@@ -21,7 +21,6 @@ exports[`ScanSerial renders correctly 1`] = `
   }
 >
   <View
-    onLayout={[Function]}
     style={
       {
         "backgroundColor": "#000",
@@ -31,164 +30,181 @@ exports[`ScanSerial renders correctly 1`] = `
   >
     <View
       style={
-        [
-          {
-            "backgroundColor": "#F2F2F2",
-            "flex": 1,
-            "position": "relative",
-          },
-          {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-          },
-        ]
-      }
-    >
-      <View
-        onLayout={[Function]}
-        style={
-          {
-            "backgroundColor": "black",
-            "flex": 1,
-            "overflow": "hidden",
-            "position": "relative",
-          }
-        }
-        testID="camera-preview-container"
-      >
-        <VisionCamera
-          constraints={
-            [
-              {
-                "fps": 30,
-              },
-            ]
-          }
-          device={
-            {
-              "hasTorch": true,
-              "id": "back",
-              "maxZoom": 8,
-              "minZoom": 1,
-              "neutralZoom": 1,
-              "supportsFocus": true,
-            }
-          }
-          getInitialZoom={[Function]}
-          implementationMode="compatible"
-          isActive={true}
-          onError={[Function]}
-          onInterruptionEnded={[Function]}
-          onInterruptionStarted={[Function]}
-          onStarted={[Function]}
-          onStopped={[Function]}
-          outputs={
-            [
-              {},
-            ]
-          }
-          ref={
-            {
-              "current": null,
-            }
-          }
-          resizeMode="cover"
-          style={
-            {
-              "flex": 1,
-            }
-          }
-          testID="vision-camera"
-        />
-        <View
-          style={
-            [
-              {
-                "bottom": 0,
-                "left": 0,
-                "position": "absolute",
-                "right": 0,
-                "top": 0,
-              },
-              {
-                "pointerEvents": "none",
-                "zIndex": 2,
-              },
-            ]
-          }
-        />
-      </View>
-      <View
-        collapsable={false}
-        style={
-          {
-            "bottom": 0,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "top": 0,
-          }
-        }
-      />
-    </View>
-    <View
-      pointerEvents="none"
-      style={
         {
           "alignItems": "center",
           "backgroundColor": "rgba(0, 0, 0, 0.5)",
-          "left": 0,
           "paddingHorizontal": 24,
           "paddingVertical": 24,
-          "position": "absolute",
-          "right": 0,
-          "top": 0,
         }
       }
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#FFFFFF",
-            "fontSize": 16,
-            "fontWeight": "600",
-            "textAlign": "center",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 16,
+              "fontWeight": "bold",
+            },
+            {
+              "color": "#FFFFFF",
+              "fontSize": 16,
+              "fontWeight": "600",
+              "textAlign": "center",
+            },
+          ]
         }
       >
         BCSC.Scan.ScanYourCard
       </Text>
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#FFFFFF",
-            "fontSize": 14,
-            "fontWeight": "400",
-            "marginTop": 8,
-            "textAlign": "center",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 14,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#FFFFFF",
+              "fontSize": 14,
+              "fontWeight": "400",
+              "marginTop": 8,
+              "textAlign": "center",
+            },
+          ]
         }
       >
         BCSC.Scan.LineUpHelp
       </Text>
     </View>
     <View
-      pointerEvents="box-none"
+      onLayout={[Function]}
       style={
         {
-          "bottom": 0,
-          "gap": 8,
-          "left": 0,
-          "position": "absolute",
-          "right": 0,
+          "flex": 1,
+          "overflow": "hidden",
         }
       }
     >
       <View
-        pointerEvents="box-none"
+        style={
+          [
+            {
+              "backgroundColor": "#F2F2F2",
+              "flex": 1,
+              "position": "relative",
+            },
+            {
+              "bottom": 0,
+              "left": 0,
+              "position": "absolute",
+              "right": 0,
+              "top": 0,
+            },
+          ]
+        }
+      >
+        <View
+          onLayout={[Function]}
+          style={
+            {
+              "backgroundColor": "black",
+              "flex": 1,
+              "overflow": "hidden",
+              "position": "relative",
+            }
+          }
+          testID="camera-preview-container"
+        >
+          <VisionCamera
+            constraints={
+              [
+                {
+                  "fps": 30,
+                },
+              ]
+            }
+            device={
+              {
+                "hasTorch": true,
+                "id": "back",
+                "maxZoom": 8,
+                "minZoom": 1,
+                "neutralZoom": 1,
+                "supportsFocus": true,
+              }
+            }
+            getInitialZoom={[Function]}
+            implementationMode="compatible"
+            isActive={true}
+            onError={[Function]}
+            onInterruptionEnded={[Function]}
+            onInterruptionStarted={[Function]}
+            onStarted={[Function]}
+            onStopped={[Function]}
+            outputs={
+              [
+                {},
+              ]
+            }
+            ref={
+              {
+                "current": null,
+              }
+            }
+            resizeMode="cover"
+            style={
+              {
+                "flex": 1,
+              }
+            }
+            testID="vision-camera"
+          />
+          <View
+            style={
+              [
+                {
+                  "bottom": 0,
+                  "left": 0,
+                  "position": "absolute",
+                  "right": 0,
+                  "top": 0,
+                },
+                {
+                  "pointerEvents": "none",
+                  "zIndex": 2,
+                },
+              ]
+            }
+          />
+        </View>
+        <View
+          collapsable={false}
+          style={
+            {
+              "bottom": 0,
+              "left": 0,
+              "position": "absolute",
+              "right": 0,
+              "top": 0,
+            }
+          }
+        />
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "gap": 8,
+        }
+      }
+    >
+      <View
         style={
           {
             "alignItems": "flex-end",

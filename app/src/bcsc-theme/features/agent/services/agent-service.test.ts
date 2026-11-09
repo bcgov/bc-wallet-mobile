@@ -263,7 +263,7 @@ describe('warmCache', () => {
     ]
     const schemasDup = [{ did: 'did:indy:b', id: 'schema-1' }]
 
-    await warmCache(agent, credDefsDup, schemasDup, [], logger)
+    await warmCache(agent, credDefsDup, schemasDup, [], logger, new AbortController().signal)
 
     // Two distinct DIDs across the inputs → the sequential pre-resolve phase is the
     // first two getPoolForDid calls, one per unique DID (not one per cred-def/schema).
@@ -277,7 +277,7 @@ describe('warmCache', () => {
       .mockRejectedValueOnce(new Error('pool down')) // pre-resolve did:indy:a
       .mockResolvedValue({ pool: { submitRequest: jest.fn() } }) // everything else
 
-    await warmCache(agent, credDefs, schemas, [], logger)
+    await warmCache(agent, credDefs, schemas, [], logger, new AbortController().signal)
 
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('did:indy:a'))
   })
@@ -287,7 +287,7 @@ describe('warmCache', () => {
     mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest: jest.fn() } })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await warmCache(agent, credDefs, schemas, [{ id: 'cached' } as any], logger)
+    await warmCache(agent, credDefs, schemas, [{ id: 'cached' } as any], logger, new AbortController().signal)
 
     expect(mockPoolService.refreshPoolConnections).not.toHaveBeenCalled()
   })
@@ -297,7 +297,7 @@ describe('warmCache', () => {
     mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest: jest.fn() } })
     mockPoolService.getAllPoolTransactions.mockResolvedValue([])
 
-    await warmCache(agent, credDefs, schemas, undefined, logger)
+    await warmCache(agent, credDefs, schemas, undefined, logger, new AbortController().signal)
 
     expect(mockPoolService.refreshPoolConnections).toHaveBeenCalled()
   })
@@ -311,7 +311,7 @@ describe('warmCache', () => {
       .mockResolvedValue(undefined) // schemas
     mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest } })
 
-    await warmCache(agent, credDefs, schemas, [], logger)
+    await warmCache(agent, credDefs, schemas, [], logger, new AbortController().signal)
 
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('cred-def-1'))
     expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('cred-def-2'))
@@ -327,10 +327,97 @@ describe('warmCache', () => {
       .mockResolvedValueOnce(undefined) // schema 2
     mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest } })
 
-    await warmCache(agent, credDefs, schemas, [], logger)
+    await warmCache(agent, credDefs, schemas, [], logger, new AbortController().signal)
 
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('schema-1'))
     expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('schema-2'))
+  })
+
+  describe('abort signal', () => {
+    it('makes no ledger requests when the signal is already aborted', async () => {
+      const agent = makeAgent()
+      const submitRequest = jest.fn()
+      mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest } })
+      const controller = new AbortController()
+      controller.abort()
+
+      await warmCache(agent, credDefs, schemas, [], logger, controller.signal)
+
+      expect(mockPoolService.getPoolForDid).not.toHaveBeenCalled()
+      expect(submitRequest).not.toHaveBeenCalled()
+    })
+
+    it('stops resolving DIDs once the signal is aborted mid pre-resolve', async () => {
+      const agent = makeAgent()
+      const submitRequest = jest.fn()
+      const controller = new AbortController()
+      mockPoolService.getPoolForDid.mockImplementation(async () => {
+        controller.abort() // abort during the first DID lookup
+        return { pool: { submitRequest } }
+      })
+
+      await warmCache(agent, credDefs, schemas, [], logger, controller.signal)
+
+      expect(mockPoolService.getPoolForDid).toHaveBeenCalledTimes(1)
+      expect(submitRequest).not.toHaveBeenCalled()
+    })
+
+    it('skips submitRequest when aborted between the pool lookup and the request', async () => {
+      const agent = makeAgent()
+      const submitRequest = jest.fn()
+      const controller = new AbortController()
+      // The two pre-resolve calls pass; abort during the first parallel cred-def lookup
+      mockPoolService.getPoolForDid
+        .mockResolvedValueOnce({ pool: { submitRequest } }) // pre-resolve did:indy:a
+        .mockResolvedValueOnce({ pool: { submitRequest } }) // pre-resolve did:indy:b
+        .mockImplementation(async () => {
+          controller.abort()
+          return { pool: { submitRequest } }
+        })
+
+      await warmCache(agent, credDefs, schemas, [], logger, controller.signal)
+
+      expect(submitRequest).not.toHaveBeenCalled()
+    })
+
+    it('does not start the schema stage when aborted during the cred-def stage', async () => {
+      const agent = makeAgent()
+      const controller = new AbortController()
+      const submitRequest = jest.fn().mockImplementation(async () => {
+        controller.abort() // abort once the first cred-def request is in flight
+      })
+      mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest } })
+
+      await warmCache(agent, credDefs, schemas, [], logger, controller.signal)
+
+      // Only the first cred-def request fired: the second skips at its post-lookup check and no schema request starts
+      expect(submitRequest).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not log request failures that happen after the signal is aborted', async () => {
+      const agent = makeAgent()
+      const controller = new AbortController()
+      const submitRequest = jest.fn().mockImplementation(async () => {
+        controller.abort()
+        throw new Error('pool closed')
+      })
+      mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest } })
+
+      await warmCache(agent, credDefs, schemas, [], logger, controller.signal)
+
+      expect(logger.warn).not.toHaveBeenCalled()
+    })
+
+    it('still logs request failures when the signal is not aborted', async () => {
+      const agent = makeAgent()
+      const submitRequest = jest.fn().mockRejectedValue(new Error('pool down'))
+      mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest } })
+
+      await warmCache(agent, credDefs, schemas, [], logger, new AbortController().signal)
+
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('cred-def-1'))
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('schema-1'))
+    })
   })
 })
 

@@ -17,7 +17,7 @@ export const MandatoryUpdate = (): React.ReactElement => {
 
   const handleGoToStore = () => {
     try {
-      Linking.openURL(getBCSCAppStoreUrl())
+      void Linking.openURL(getBCSCAppStoreUrl())
     } catch (error) {
       logger.error('MandatoryUpdate: Failed to open app store link.', error as Error)
     }

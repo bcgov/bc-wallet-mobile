@@ -310,17 +310,10 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         component={PendingReviewScreen}
         options={{
           header: createProgressHeader(5, 80),
-          // A deferred verifier leaves for Home, progress kept (the Home card is the way back in). A
-          // first-time verifier has no arrow here and hardware back does nothing: the screen picks up the
-          // decision itself. "Choose another way to verify" is the in-flow way off it for both.
-          headerLeft: createVerifyHeaderBackButton(
-            (_navigation, leaveVerification, { isFirstTimeVerifier }) => {
-              if (!isFirstTimeVerifier) {
-                leaveVerification()
-              }
-            },
-            { hidden: ({ isFirstTimeVerifier }) => isFirstTimeVerifier }
-          ),
+          // Back leaves for Home for every verifier, progress kept: a submitted request waits on an
+          // agent, not on the user, so it must not hold them out of the rest of the app (#4968). Home's
+          // pending card is the way back in; "Choose another way to verify" is the in-flow way off it.
+          headerLeft: createVerifyHeaderBackButton((_navigation, leaveVerification) => leaveVerification()),
           title: t('BCSC.Steps.Status'),
         }}
       />
@@ -395,7 +388,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
               return navigation.goBack()
             }
 
-            clearAdditionalEvidence()
+            void clearAdditionalEvidence()
             navigation.replace(BCSCScreens.IdentitySelection)
           }),
         }}
@@ -420,7 +413,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
               return navigation.goBack()
             }
 
-            clearAdditionalEvidence()
+            void clearAdditionalEvidence()
             navigation.replace(BCSCScreens.IdentitySelection)
           }),
         }}

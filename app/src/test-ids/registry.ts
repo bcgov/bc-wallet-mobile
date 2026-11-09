@@ -427,7 +427,6 @@ export const TestIds = {
      *  a poll too. `chooseAnotherWay` cancels the request (confirm-gated) and returns to method
      *  selection. */
     pendingReview: {
-      checkStatus: 'CheckStatus',
       chooseAnotherWay: 'ChooseAnotherWayToVerify',
     },
     /** `CancelledReview` and its MainStack twin (same component on both stacks). The agent's reason is
@@ -1007,6 +1006,7 @@ export const TestIds = {
     toggleWalletNaming: 'ToggleWalletNamingSwitch',
     togglePreventAutoLock: 'TogglePreventAutoLockSwitch',
     toggleEnableAppToAppPersonFlow: 'ToggleEnableAppToAppPersonFlow',
+    toggleEnableAttestation: 'ToggleEnableAttestation',
     toggleRemoteLogging: 'ToggleRemoteLoggingSwitch',
     toggleEnableProxy: 'ToggleEnableProxy',
     toggleTheme: 'ToggleTheme',

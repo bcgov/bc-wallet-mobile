@@ -1,4 +1,6 @@
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
 import { ChallengeSource, signPairingCode } from 'react-native-bcsc-core'
@@ -84,32 +86,102 @@ describe('usePairingApi', () => {
       }
     )
 
-    it('maps a native signPairingCode rejection through the native mapper', async () => {
+    // Resolves with the error loginByPairingCode rejects with; fails the test if it resolves instead
+    const loginFailure = async (): Promise<AppError> => {
+      const { result } = renderHook(() => usePairingApi(mockApiClient))
+      try {
+        await result.current.loginByPairingCode('pairing-code', ChallengeSource.PushNotification)
+      } catch (error) {
+        return error as AppError
+      }
+      throw new Error('Expected loginByPairingCode to reject')
+    }
+
+    it('reports a native signPairingCode rejection as a device failure at the signing step', async () => {
       ;(signPairingCode as jest.Mock).mockRejectedValue(
         Object.assign(new Error('native failure'), { code: 'E_JWT_SIGN_FAILED' })
       )
 
-      const { result } = renderHook(() => usePairingApi(mockApiClient))
+      const error = await loginFailure()
 
-      await expect(
-        result.current.loginByPairingCode('pairing-code', ChallengeSource.PushNotification)
-      ).rejects.toMatchObject({
-        appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
+      expect(error).toMatchObject({
+        appEvent: AppEventCode.LOGIN_DEVICE_ERROR,
+        context: expect.objectContaining({ failure_flow: 'pairing', failure_step: 'sign_pairing_code' }),
       })
+      // The native mapper's error is kept as the cause
+      expect((error.cause as AppError).appEvent).toBe(AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET)
+      expect(error.context.failure_cause_code).toBe((error.cause as AppError).code)
       expect(mockApiClient.post).not.toHaveBeenCalled()
     })
 
-    it('throws SIGN_CLAIMS_ERROR when signPairingCode resolves null', async () => {
+    it('reports a null signPairingCode result as a device failure caused by SIGN_CLAIMS_ERROR', async () => {
       ;(signPairingCode as jest.Mock).mockResolvedValue(null)
 
-      const { result } = renderHook(() => usePairingApi(mockApiClient))
+      const error = await loginFailure()
 
-      await expect(
-        result.current.loginByPairingCode('pairing-code', ChallengeSource.PushNotification)
-      ).rejects.toMatchObject({
-        appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
-      })
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context.failure_step).toBe('sign_pairing_code')
+      expect((error.cause as AppError).appEvent).toBe(AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET)
       expect(mockApiClient.post).not.toHaveBeenCalled()
+    })
+
+    it('reports a missing account as a device failure at the account step', async () => {
+      const accountError = new Error('No account found. Please register first.')
+      ;(withAccount as jest.Mock).mockRejectedValue(accountError)
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context.failure_step).toBe('account')
+      expect(error.cause).toBe(accountError)
+    })
+
+    it('keeps the code of an unhandled request error and adds where it failed', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      const requestError = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, { track: false })
+      mockApiClient.post.mockRejectedValue(requestError)
+
+      const error = await loginFailure()
+
+      // The same error, not a wrapper: its own code (no_internet) is the most precise label available
+      expect(error).toBe(requestError)
+      expect(error.appEvent).toBe(AppEventCode.NO_INTERNET)
+      expect(error.context).toMatchObject({
+        failure_flow: 'pairing',
+        failure_step: 'verify_device_assertion',
+        failure_elapsed_ms: expect.any(Number),
+      })
+    })
+
+    it('rethrows a request error a policy already handled, still handled, with where it failed added', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      const handledError = AppError.fromErrorDefinition(ErrorRegistry.INVALID_PAIRING_CODE, { track: false })
+      handledError.handled = true
+      mockApiClient.post.mockRejectedValue(handledError)
+
+      const error = await loginFailure()
+
+      expect(error).toBe(handledError)
+      expect(error.handled).toBe(true)
+      expect(error.appEvent).toBe(ErrorRegistry.INVALID_PAIRING_CODE.appEvent)
+      expect(error.context).toMatchObject({
+        failure_flow: 'pairing',
+        failure_step: 'verify_device_assertion',
+        failure_elapsed_ms: expect.any(Number),
+      })
+    })
+
+    it('reports a non-AppError at the request step as a device failure', async () => {
+      // ie: a native failure in the request interceptor, which passes non-Axios errors through unchanged
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      const nativeError = Object.assign(new Error('keychain unavailable'), { code: 'E_KEYCHAIN' })
+      mockApiClient.post.mockRejectedValue(nativeError)
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context).toMatchObject({ failure_step: 'verify_device_assertion', failure_cause_code: 'E_KEYCHAIN' })
+      expect(error.cause).toBe(nativeError)
     })
   })
 

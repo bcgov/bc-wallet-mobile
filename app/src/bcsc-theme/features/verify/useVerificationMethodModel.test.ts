@@ -133,7 +133,9 @@ describe('useVerificationMethodModel', () => {
       const clearCacheMock = jest.mocked(VerificationVideoCache.clearCache)
       const removeFileSafelyMock = jest.mocked(removeFileSafely)
       removeFileSafelyMock.mockResolvedValue(undefined)
-      jest.mocked(checkFileSystemFreeStorage).mockResolvedValue({ hasFreeStorage: true, freeStorageMb: 1000 })
+      jest
+        .mocked(checkFileSystemFreeStorage)
+        .mockResolvedValue({ hasFreeStorage: true, freeStorageMb: 1000, totalStorageMb: 64000 })
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -245,7 +247,9 @@ describe('useVerificationMethodModel', () => {
       mockEvidenceApi.createVerificationRequest.mockResolvedValue(mockVerificationRequest)
       const removeFileSafelyMock = jest.mocked(removeFileSafely)
       removeFileSafelyMock.mockRejectedValue(new Error('Failed to remove file'))
-      jest.mocked(checkFileSystemFreeStorage).mockResolvedValue({ hasFreeStorage: true, freeStorageMb: 1000 })
+      jest
+        .mocked(checkFileSystemFreeStorage)
+        .mockResolvedValue({ hasFreeStorage: true, freeStorageMb: 1000, totalStorageMb: 64000 })
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -273,7 +277,9 @@ describe('useVerificationMethodModel', () => {
       }
       jest.mocked(Bifold).useStore.mockReturnValue([fullyHydrated, mockDispatch])
       jest.mocked(removeFileSafely).mockResolvedValue(undefined)
-      jest.mocked(checkFileSystemFreeStorage).mockResolvedValue({ hasFreeStorage: true, freeStorageMb: 1000 })
+      jest
+        .mocked(checkFileSystemFreeStorage)
+        .mockResolvedValue({ hasFreeStorage: true, freeStorageMb: 1000, totalStorageMb: 64000 })
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -298,7 +304,9 @@ describe('useVerificationMethodModel', () => {
         prompts: [{ id: 1, prompt: 'Say your name' }],
       })
       jest.mocked(removeFileSafely).mockResolvedValue(undefined)
-      jest.mocked(checkFileSystemFreeStorage).mockResolvedValue({ hasFreeStorage: false, freeStorageMb: 120 })
+      jest
+        .mocked(checkFileSystemFreeStorage)
+        .mockResolvedValue({ hasFreeStorage: false, freeStorageMb: 120, totalStorageMb: 64000 })
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 

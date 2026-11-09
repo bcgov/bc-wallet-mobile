@@ -2,7 +2,7 @@ import { Mode } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { toAppError } from '@bcsc-theme/utils/native-error-map'
+import { toDecodeAppError } from '@bcsc-theme/utils/native-error-map'
 import { AbstractBifoldLogger } from '@bifold/core'
 import notifee from '@notifee/react-native'
 import { getApp } from '@react-native-firebase/app'
@@ -86,9 +86,9 @@ export class FcmViewModel {
     void this.initFcmService()
     this.logger.info('[FcmViewModel] FCM service initialized')
     // Pre-fetch the server JWK for signature verification (if API client is ready)
-    this.fetchServerJwk()
+    void this.fetchServerJwk()
     // Log FCM token for debugging
-    this.logFcmToken()
+    void this.logFcmToken()
   }
 
   private async initFcmService(): Promise<void> {
@@ -200,10 +200,13 @@ export class FcmViewModel {
         source: 'fcm',
       })
     } catch (error) {
-      const appError = toAppError(error, ErrorRegistry.CLAIMS_SET_ERROR)
+      // An unusable server key or a verifier that could not run keeps its own code (ERR_111 /
+      // ERR_113) and reaches the user through the handler, as a signature mismatch does above.
+      const appError = toDecodeAppError(error, ErrorRegistry.CLAIMS_SET_ERROR)
       appError.handled = true
       const causeMessage = error instanceof Error ? error.message : String(error)
       this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to decode challenge: ${causeMessage}`, appError)
+      this.onError?.(appError)
     }
   }
 

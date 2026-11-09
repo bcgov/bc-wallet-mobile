@@ -110,6 +110,43 @@ not as an error, and iOS restarts the session after a media services reset (our 
 this the preview sits black with no explanation, or the user sees "camera broken" for a camera that
 is about to come back.
 
+## Large text: every screen works at the OS's largest font size
+
+The theme caps text at `maxFontSizeMultiplier` (2x, the WCAG 1.4.4 floor); only text that goes through
+it is capped. In `bcsc-theme`, render text with `ThemedText` (lint rejects `Text` from React Native), and
+give `TextInput` and `Animated.Text` the theme's `maxFontSizeMultiplier` (lint requires the prop). Lay
+screens out so text can grow:
+
+- Text beside something else (an icon, a value, a button) gets `flexShrink: 1`, or `flex: 1` when it
+  should fill the row; label and value pairs wrap with `flexWrap: 'wrap'` on the row.
+- A box around text has a `minHeight`, not a `height`. Fixed boxes that cannot grow (PIN and pairing
+  code cells, a 40pt avatar initial, the tab bar badge) cap their text at 1x on purpose, like `PINInput`.
+- Screens scroll (`ScreenWrapper` default). Notification banners are part of the scroll content, so a
+  tall banner does not pin the page below it off-screen.
+- Rows that no longer fit side by side flip to a column from `fontScale >= 1.5` (`AccountDetailsScreen`).
+
+Jest already renders at the cap (`fontScale: 2`); check new screens on a device or simulator at the
+largest accessibility size as well (iOS `xcrun simctl ui booted content_size accessibility-extra-extra-extra-large`,
+Android `adb shell settings put system font_scale 2.0`).
+
+**Why:** at the largest iOS accessibility size uncapped text is 3.57x and translucent overlays, fixed heights
+and non-shrinking row text clipped or hid content across the verification flows (#4401).
+
+## Cameras: text and controls sit beside the preview, not on it
+
+Lay a camera screen out as a column: text bar, preview, controls. The preview takes the remaining height
+(`flex: 1`, `overflow: 'hidden'`, VisionCamera's default `cover`), so long text shrinks the preview instead
+of covering it. Draw a mask (the selfie oval, the ID-card cutout, the QR reticle) from the preview box
+measured with `onLayout`, with the window only as the first-render stand-in; keep the shape's geometry a
+pure, tested function. Controls that appear later (the recording controls after the countdown) are laid out
+from the start and revealed with opacity and `pointerEvents`, as the waiting screens do with Cancel, so the
+preview does not resize. Side-by-side controls get a vertical `hitSlop` only; a horizontal one steals taps
+from the neighbour. Scan zones are fractions of the camera's own container, which is the measured preview
+box, so they need no change. The photo, video and barcode outputs are independent of the preview box.
+
+**Why:** overlays sized from the window covered the face oval, the card cutout and most of the preview at
+large OS font sizes (#4401).
+
 ## Recording: an inactive app is not a user who left
 
 During the video countdown, act on an `inactive` app state only if it lasts until the countdown ends.
@@ -171,6 +208,17 @@ them natively on focus and re-renders, and a row whose gate is still unknown sta
 disappears after mount slides every row below it. "Change PIN" rendered on a default and was dropped
 once the native read reported device auth, so the whole list jumped on every open of Settings.
 
+## Touch targets: `hitSlop` never reaches another control
+
+Give a small control a 44dp box for its target, and point `hitSlop` only at empty space: zero every edge
+that faces another control. The settings section chevrons, stacked between rows, keep only left and right
+(`{ ...hitSlop, top: 0, bottom: 0 }`); the profile card's edit pencil, with the account name on its left and
+a chevron below, keeps only top and right (`{ ...hitSlop, left: 0, bottom: 0 }`).
+
+**Why:** on Android a `hitSlop` reaches past the control's parent and takes taps from any control rendered
+before it. The settings section chevrons' 44dp slop covered the profile card's edit pencil, so tapping the
+pencil collapsed the Features section instead of opening the nickname editor.
+
 ## Android: the JS runtime outlives the Activity
 
 To leave the app on Android, use `moveAppToBackground`, not `BackHandler.exitApp`. Hardware back can still
@@ -190,11 +238,14 @@ verification sets it to `true` so a later renewal re-enters as a deferred verifi
 
 - **First-time verifier** (Continue at the prompt, or a v3 upgrade mid-verification): the flow is their whole
   app. The help menu has no "Back to home", the back arrow at the beginning of the stack `replace`s onto the
-  prompt (which has no arrow and swallows Android back), the pending review has no arrow and polls for the
-  agent's decision itself (focus, foreground, the review push, "Check status"), and the post-submit screen
-  continues to the pending review. Skip on the prompt is the one way to Home and makes them deferred.
+  prompt (which has no arrow and swallows Android back), and the post-submit screen continues to the pending
+  review. Skip on the prompt is the one way to Home and makes them deferred.
 - **Deferred verifier** (Skip at some point, re-entering from the Home card): keeps every exit, progress
   kept. Developer mode shows "Back to home" to everyone; arrows ignore it.
+- **A submitted request is the exception for both**: the pending review's back arrow leaves for Home whoever
+  the verifier is, because that wait is on an agent and not on the user (#4968). The screen carries no manual
+  check — Home's pending card is where a user asks for a fresh status, and the way back in — and picks the
+  decision up itself (focus, foreground, the review push) for a user who stays on it.
 
 Rules that keep this consistent:
 
@@ -218,6 +269,19 @@ Rules that keep this consistent:
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
 alone because starting from the Home card must not turn a skipper into a first-time verifier.
 
+## Error reports: record where and when a flow failed
+
+Wrap each step of a multi-step flow with `trackFailureSteps` (`errors/failureContext.ts`), and pass the
+resulting error to the alert. For a single failure outside a flow, use `createFailureError`.
+
+- Never call a catch-all alert without an error, or the report can't say what failed.
+- Name flows and steps with short, fixed names such as `quick_login` and `sign_jwt`. Never put personal data
+  or tokens in them.
+- Errors a policy already handled are labeled but never alerted again. Callers still check
+  `isHandledAppError`.
+- To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
+  `report-problem.ts`.
+
 ## Derived state: compute it from its inputs, don't store a flag
 
 State that follows from other state is derived on read through a rule, a selector and a hook, never saved as a
@@ -229,7 +293,9 @@ flag that something has to remember to set and clear. The three live together in
 - `selectAccountPhase` (`selectors.ts`) reads its inputs: `bcscSecure.verified`, the ID token
   `bcscReason`, `bcscSecure.refreshTokenExpired`, and the account's `account_expiration_date`.
 - `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
-  `useCustomNotifications` (Home notices) both read it, so they cannot disagree.
+  `selectHomeNotice` (Home notices, `bcsc-theme/state/home/`) both read it, so they cannot disagree.
+- `getHomeNotice` (`home-notice.ts`) is the only definition of which notice Home shows. `useCustomNotifications`
+  only maps its result to a component.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
@@ -239,3 +305,22 @@ store or account change.
 startup and cleared by hand, so a failed account load or a missed reset left a stale renewal notice (#4866, #4878).
 
 How to apply this to other state: [`docs/guides/derived-state-refactor.md`](docs/guides/derived-state-refactor.md).
+
+## Server keys: build them in memory, never in the keychain
+
+A server public key (the JWKS entry that verifies the ID token, user info and login challenge, and
+encrypts the quick-login hint) becomes an in-memory key: `JWK.jwkToSecKey` → `SecKeyCreateWithData` on
+iOS, `convertJWKToRSAPublicKey` → `KeyFactory` on Android. Never store it as a keychain or keystore
+item. In `decodePayload` and `decodeLoginChallenge`, `verified: false` means exactly "no key supplied" or
+"signature mismatch" (which includes a signature of another key size, on both platforms); a JWK that
+cannot become a key rejects with `E_INVALID_JWK`, a verifier that cannot run (unsupported `alg`, a
+`SecKeyRawVerify` status other than a mismatch) rejects with `E_JWS_VERIFY_ERROR`, and both messages name
+kid/alg/kty only, never key material. iOS `JWK(json:)` requires kid/alg/kty/n/e while Android needs
+kty/n/e; a JWKS entry has all of them. On the JS side, wrap a decode rejection with `toDecodeAppError`
+(`native-error-map.ts`): those two codes keep their own definitions (ERR_111, ERR_113) and every other
+rejection takes the caller's, so the FCM, user-info and ID-token paths all surface them.
+
+**Why:** iOS used to write the server key into the keychain under `com.mcsi.op.<kid>` and read it back
+before every signature check; any failure of that round trip returned `false`, which the app reported as
+error 2509 "signature does not match payload" with nothing to investigate. Verifying a signature needs no
+keychain, and the rejection codes let the next problem report explain itself.

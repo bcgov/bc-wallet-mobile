@@ -19,25 +19,26 @@ import {
   isTransientRequestError,
   normalizeAxiosTimeoutError,
 } from '../utils/axios-error-utils'
+import { retryAsync } from '../utils/retry'
 import { isTokenExpired } from '../utils/token-expiry'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 import { loadPersistedJwk, persistJwk } from './jwk-cache'
 
-// Bounded retry for the JWKS fetch: 3 attempts total, with linear backoff delays of
-// 500ms then 1000ms between attempts. Only transient errors (network / 5xx) are retried —
-// see isRetryableJwkFetchError. Deliberately small and bounded: this is a background warm-up
+// Bounded retry for the JWKS fetch: 3 attempts total, with a delay of 500ms between
+// attempts. Only transient errors (network / 5xx) are retried —
+// see isTransientRequestError. Deliberately small and bounded: this is a background warm-up
 // and an inline verification-path call, not a user-facing loading state.
 const JWK_FETCH_MAX_ATTEMPTS = 3
-const JWK_FETCH_RETRY_BASE_DELAY_MS = 500
+const JWK_FETCH_RETRY_DELAY_MS = 500
 // Per-attempt timeout for the JWKS fetch. Timeouts are retried, so we keep this shorter than the normal 90s timeout
 const JWK_FETCH_TIMEOUT_MS = 15 * 1000
 
-// The retryable JWKS failure shapes (see isRetryableJwkFetchError): 0 for a network error or timeout (no HTTP
+// The retryable JWKS failure shapes (see isTransientRequestError): 0 for a network error or timeout (no HTTP
 // response — see the response interceptor's `error.response?.status ?? 0`), and the full 5xx range.
 // Passed as suppressStatusCodeLogs on the JWKS request so the interceptor's own log line + analytics
-// tracking (see getAppErrorFromAxiosError) don't fire on every retry attempt — fetchJwk already logs
+// tracking (see getAppErrorFromAxiosError) don't fire on every retry attempt — fetchJwkWithRetry logs
 // a warn per retry and a single error on total exhaustion, so a transient outage isn't amplified 3x
 // across dashboards. A deterministic 4xx is a single, non-retried attempt and is left to log/track
 // normally, since it may indicate a real configuration problem worth surfacing distinctly.
@@ -95,6 +96,12 @@ export interface BCSCEndpoints {
   account: string
 }
 
+/**
+ * The outcome of a JWK fetch. On failure, `error` is the reason: the last network attempt's error, or
+ * a "no keys" error when the JWKS endpoint returned an empty key set.
+ */
+export type JwkFetchResult = { jwk: JWK; error?: undefined } | { jwk: null; error: unknown }
+
 class BCSCApiClient {
   readonly client: AxiosInstance
   readonly logger: RemoteLogger
@@ -107,7 +114,7 @@ class BCSCApiClient {
   private cachedJwk: JWK | null = null // in-memory JWK cache, invalidated when baseURL changes
   private cachedJwkBaseUrl: string | null = null
   private cachedJwkFetchedAt: number | null = null // epoch ms, compared against JWK_CACHE_TTL_MS
-  private jwkFetchPromise: Promise<JWK | null> | null = null // single-flight in-progress JWK fetch
+  private jwkFetchPromise: Promise<JwkFetchResult> | null = null // single-flight in-progress JWK fetch
   private jwkFetchPromiseBaseUrl: string | null = null // baseURL the in-flight fetch was started for
 
   constructor(baseURL: string, logger: RemoteLogger) {
@@ -481,8 +488,8 @@ class BCSCApiClient {
    * `skipOnErrorHandler` keeps the global alert policy from firing on every retry attempt.
    * `suppressStatusCodeLogs` additionally silences the interceptor's own log line + analytics
    * tracking for the retryable failure shapes (network / 5xx, see JWK_FETCH_RETRYABLE_STATUS_CODES)
-   * so a transient outage isn't amplified across the retry loop — fetchJwk's own logging (a warn per
-   * retry, one error on total exhaustion, one warn if a fallback is used) is the sole signal for
+   * so a transient outage isn't amplified across the retry loop — fetchJwkWithRetry's own logging (a
+   * warn per retry, one error on total exhaustion, one warn if a fallback is used) is the sole signal for
    * those. A deterministic 4xx is a single, non-retried attempt and still logs/tracks normally via
    * the interceptor, same as any other endpoint.
    */
@@ -502,16 +509,6 @@ class BCSCApiClient {
   }
 
   /**
-   * Gates the JWK fetch retry loop to transient failures only: a network error, a timeout, or an
-   * HTTP >= 500 (see isTransientRequestError). A deterministic 4xx (or any other error shape) is not
-   * retryable — retrying it would just waste the attempt budget on a request that will fail the same
-   * way every time.
-   */
-  private isRetryableJwkFetchError(error: unknown): boolean {
-    return isTransientRequestError(error)
-  }
-
-  /**
    * Fetches the first JWK from the server's JWKS endpoint. Used both to verify server-signed JWS
    * (ID token, FCM login challenge) and to encrypt the quick login JWE.
    *
@@ -524,8 +521,8 @@ class BCSCApiClient {
    *    an early verification call at startup — join the same retry loop instead of each racing
    *    their own, which would otherwise multiply network requests (up to JWK_FETCH_MAX_ATTEMPTS per
    *    caller) during an outage.
-   * 3. Network fetch, retried up to JWK_FETCH_MAX_ATTEMPTS times with linear backoff — but only for
-   *    transient errors (see isRetryableJwkFetchError); a deterministic failure or an empty key set
+   * 3. Network fetch, retried up to JWK_FETCH_MAX_ATTEMPTS times with a fixed delay — but only for
+   *    transient errors (see isTransientRequestError); a deterministic failure or an empty key set
    *    goes straight to step 4.
    * 4. On network exhaustion/empty, the last-known-good persisted key (survives cold starts) — this
    *    is network-first: the fallback never hydrates the in-memory cache, so the next call retries
@@ -540,6 +537,14 @@ class BCSCApiClient {
    * TODO: This should probably not be in the client, move logic elsewhere.
    */
   async fetchJwk(): Promise<JWK | null> {
+    return (await this.fetchJwkResult()).jwk
+  }
+
+  /**
+   * Like {@link fetchJwk}, but includes the failure reason in the result. Never rejects; callers
+   * joining an in-flight fetch receive the same result.
+   */
+  async fetchJwkResult(): Promise<JwkFetchResult> {
     if (
       this.cachedJwk &&
       this.cachedJwkBaseUrl === this.baseURL &&
@@ -549,7 +554,7 @@ class BCSCApiClient {
       this.logger.info(
         `[BCSCApiClient] JWK served from in-memory cache (kid: ${this.cachedJwk.kid}, baseURL: ${this.baseURL})`
       )
-      return this.cachedJwk
+      return { jwk: this.cachedJwk }
     }
 
     // Join an in-flight fetch for the same baseURL rather than starting a parallel retry loop. A
@@ -578,34 +583,31 @@ class BCSCApiClient {
   }
 
   /**
-   * The retry loop + persisted fallback behind fetchJwk's cache/single-flight gate above. Always
+   * The retry loop + persisted fallback behind fetchJwkResult's cache/single-flight gate above. Always
    * resolves, never rejects — fetchJwkFromNetwork's thrown errors are caught here, and
-   * persistJwk/loadPersistedJwk never throw — so fetchJwk's shared promise is always safe to await
+   * persistJwk/loadPersistedJwk never throw — so the shared in-flight promise is always safe to await
    * or fire-and-forget.
    *
-   * @param baseURL - The baseURL this fetch was started for (captured by fetchJwk at call time, not
+   * @param baseURL - The baseURL this fetch was started for (captured by fetchJwkResult at call time, not
    *   re-read from `this.baseURL`, so a baseURL change mid-flight can't misattribute the result).
    */
-  private async fetchJwkWithRetry(baseURL: string): Promise<JWK | null> {
+  private async fetchJwkWithRetry(baseURL: string): Promise<JwkFetchResult> {
     let jwk: JWK | null = null
     let lastError: unknown
 
-    for (let attempt = 1; attempt <= JWK_FETCH_MAX_ATTEMPTS; attempt++) {
-      try {
-        jwk = await this.fetchJwkFromNetwork()
-        lastError = undefined
-        break
-      } catch (error) {
-        lastError = error
-
-        if (attempt >= JWK_FETCH_MAX_ATTEMPTS || !this.isRetryableJwkFetchError(error)) {
-          break
-        }
-
-        const message = error instanceof Error ? error.message : String(error)
-        this.logger.warn(`[BCSCApiClient] JWK fetch attempt ${attempt} failed, retrying: ${message}`)
-        await new Promise((resolve) => setTimeout(resolve, JWK_FETCH_RETRY_BASE_DELAY_MS * attempt))
-      }
+    try {
+      jwk = await retryAsync(() => this.fetchJwkFromNetwork(), {
+        attempts: JWK_FETCH_MAX_ATTEMPTS,
+        retryDelayMs: JWK_FETCH_RETRY_DELAY_MS,
+        shouldRetry: isTransientRequestError,
+        onRetry: ({ attempt, error }) => {
+          const message = error instanceof Error ? error.message : String(error)
+          this.logger.warn(`[BCSCApiClient] JWK fetch attempt ${attempt} failed, retrying: ${message}`)
+        },
+      })
+      lastError = undefined
+    } catch (error) {
+      lastError = error
     }
 
     if (jwk) {
@@ -615,10 +617,12 @@ class BCSCApiClient {
       this.logger.info(`[BCSCApiClient] JWK fetched from network (kid: ${jwk.kid}, baseURL: ${baseURL})`)
       // Logs its own success/failure — see persistJwk in jwk-cache.ts.
       await persistJwk(baseURL, jwk, this.logger)
-      return jwk
+      return { jwk }
     }
 
-    if (lastError) {
+    const requestFailed = lastError !== undefined
+
+    if (requestFailed) {
       const lastErrorMessage = lastError instanceof Error ? lastError.message : String(lastError)
       this.logger.error(`Failed to fetch JWK: ${lastErrorMessage}`)
     } else {
@@ -628,10 +632,11 @@ class BCSCApiClient {
     const persistedJwk = await loadPersistedJwk(baseURL, this.logger)
     if (persistedJwk) {
       this.logger.warn('[BCSCApiClient] Live JWKS fetch failed; using persisted last-known-good JWK')
-      return persistedJwk
+      return { jwk: persistedJwk }
     }
 
-    return null
+    // No network error means the endpoint answered with an empty key set
+    return { jwk: null, error: requestFailed ? lastError : new Error('JWKS endpoint returned no keys') }
   }
 }
 

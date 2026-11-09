@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Security
 
 /**
 
@@ -21,6 +22,27 @@ import Foundation
  "alg":"RS256",
  "kid":"2011-04-29"}
  */
+/// Why a JWK could not become a verification key. Names kid/alg/kty only, never key material.
+enum JWKError: Error, LocalizedError {
+  case missingFields(kid: String)
+  case unsupportedKeyType(kty: String, kid: String)
+  case malformedComponent(name: String, kid: String)
+  case keyCreationFailed(kid: String, alg: String, detail: String)
+
+  var errorDescription: String? {
+    switch self {
+    case let .missingFields(kid):
+      return "JWK kid=\(kid) is missing one of kty/alg/kid/n/e"
+    case let .unsupportedKeyType(kty, kid):
+      return "JWK kid=\(kid) has unsupported key type \(kty)"
+    case let .malformedComponent(name, kid):
+      return "JWK kid=\(kid) component \(name) is not base64url"
+    case let .keyCreationFailed(kid, alg, detail):
+      return "JWK kid=\(kid) alg=\(alg) could not become a SecKey: \(detail)"
+    }
+  }
+}
+
 class JWK: NSObject, NSCoding {
   enum KeyType: String {
     case EC
@@ -110,12 +132,31 @@ class JWK: NSObject, NSCoding {
     )
   }
 
-  class func jwkToSecKey(jwk: JWK) -> SecKey? {
-    let exponent = Base64URL.decode(jwk.e)
-    let modulus = Base64URL.decode(jwk.n)
+  /// Builds the server's RSA public key in memory. Nothing is written to the keychain.
+  class func jwkToSecKey(jwk: JWK) throws -> SecKey {
+    guard jwk.kty == .RSA else {
+      throw JWKError.unsupportedKeyType(kty: jwk.kty.rawValue, kid: jwk.kid)
+    }
+    guard let modulus = Base64URL.decodeOrNil(jwk.n), !modulus.isEmpty else {
+      throw JWKError.malformedComponent(name: "n", kid: jwk.kid)
+    }
+    guard let exponent = Base64URL.decodeOrNil(jwk.e), !exponent.isEmpty else {
+      throw JWKError.malformedComponent(name: "e", kid: jwk.kid)
+    }
 
-    let tag = "com.mcsi.op." + jwk.kid
-    return RSAUtil.insertPublicKey(tag: tag, exponent: exponent, modulus: modulus)
+    let keyData = Data(modulus: modulus, exponent: exponent)
+    let keySizeInBits = (modulus.first == 0x00 ? modulus.count - 1 : modulus.count) * 8
+    let attributes: [CFString: Any] = [
+      kSecAttrKeyType: kSecAttrKeyTypeRSA,
+      kSecAttrKeyClass: kSecAttrKeyClassPublic,
+      kSecAttrKeySizeInBits: keySizeInBits,
+    ]
+    var error: Unmanaged<CFError>?
+    guard let key = SecKeyCreateWithData(keyData as CFData, attributes as CFDictionary, &error) else {
+      let detail = error.map { String(describing: $0.takeRetainedValue()) } ?? "unknown error"
+      throw JWKError.keyCreationFailed(kid: jwk.kid, alg: jwk.alg, detail: detail)
+    }
+    return key
   }
 
   class func jwkSetFromJson(jsonString: String) -> [String: JWK] {

@@ -160,11 +160,47 @@ exports[`VideoInstructions renders correctly 1`] = `
       </Text>
       <View
         style={
-          {
-            "flexDirection": "row",
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+            },
+            undefined,
+          ]
         }
       >
+        <View
+          style={
+            {
+              "height": 48,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 8,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰝥
+          </Text>
+        </View>
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -176,37 +212,59 @@ exports[`VideoInstructions renders correctly 1`] = `
                 "fontWeight": "normal",
               },
               {
-                "marginRight": 4,
+                "flexShrink": 1,
               },
             ]
           }
         >
-          •
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.SendVideo.VideoInstructions.Bullet1
+          <span>
+            BCSC.SendVideo.VideoInstructions.Bullet1
+          </span>
         </Text>
       </View>
       <View
         style={
-          {
-            "flexDirection": "row",
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+            },
+            undefined,
+          ]
         }
       >
+        <View
+          style={
+            {
+              "height": 48,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 8,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰝥
+          </Text>
+        </View>
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -218,37 +276,59 @@ exports[`VideoInstructions renders correctly 1`] = `
                 "fontWeight": "normal",
               },
               {
-                "marginRight": 4,
+                "flexShrink": 1,
               },
             ]
           }
         >
-          •
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.SendVideo.VideoInstructions.Bullet2
+          <span>
+            BCSC.SendVideo.VideoInstructions.Bullet2
+          </span>
         </Text>
       </View>
       <View
         style={
-          {
-            "flexDirection": "row",
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+            },
+            undefined,
+          ]
         }
       >
+        <View
+          style={
+            {
+              "height": 48,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 8,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰝥
+          </Text>
+        </View>
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -260,37 +340,59 @@ exports[`VideoInstructions renders correctly 1`] = `
                 "fontWeight": "normal",
               },
               {
-                "marginRight": 4,
+                "flexShrink": 1,
               },
             ]
           }
         >
-          •
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.SendVideo.VideoInstructions.Bullet3
+          <span>
+            BCSC.SendVideo.VideoInstructions.Bullet3
+          </span>
         </Text>
       </View>
       <View
         style={
-          {
-            "flexDirection": "row",
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+            },
+            undefined,
+          ]
         }
       >
+        <View
+          style={
+            {
+              "height": 48,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 8,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰝥
+          </Text>
+        </View>
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -302,37 +404,59 @@ exports[`VideoInstructions renders correctly 1`] = `
                 "fontWeight": "normal",
               },
               {
-                "marginRight": 4,
+                "flexShrink": 1,
               },
             ]
           }
         >
-          •
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.SendVideo.VideoInstructions.Bullet4
+          <span>
+            BCSC.SendVideo.VideoInstructions.Bullet4
+          </span>
         </Text>
       </View>
       <View
         style={
-          {
-            "flexDirection": "row",
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+            },
+            undefined,
+          ]
         }
       >
+        <View
+          style={
+            {
+              "height": 48,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 8,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰝥
+          </Text>
+        </View>
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -344,28 +468,14 @@ exports[`VideoInstructions renders correctly 1`] = `
                 "fontWeight": "normal",
               },
               {
-                "marginRight": 4,
+                "flexShrink": 1,
               },
             ]
           }
         >
-          •
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.SendVideo.VideoInstructions.Bullet5
+          <span>
+            BCSC.SendVideo.VideoInstructions.Bullet5
+          </span>
         </Text>
       </View>
       <View

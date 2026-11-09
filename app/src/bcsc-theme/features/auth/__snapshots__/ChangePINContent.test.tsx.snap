@@ -1486,6 +1486,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                           },
                           {
                             "color": "#313132",
+                            "flexShrink": 1,
                           },
                         ]
                       }

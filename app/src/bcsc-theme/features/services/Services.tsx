@@ -35,7 +35,7 @@ const Services: React.FC = () => {
   const token = useTokenService()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { ColorPalette, Spacing, TextTheme, Inputs } = useTheme()
+  const { ColorPalette, Spacing, TextTheme, Inputs, maxFontSizeMultiplier } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
   const [search, setSearch] = useState('')
   const [sortVersion, setSortVersion] = useState(0)
@@ -125,6 +125,7 @@ const Services: React.FC = () => {
         <View ref={searchInputRef} style={styles.searchInput}>
           <Icon name="search" size={24} color={TextTheme.headingFour.color} />
           <TextInput
+            maxFontSizeMultiplier={maxFontSizeMultiplier}
             placeholder={t('BCSC.Services.CatalogueSearch')}
             placeholderTextColor={ColorPalette.brand.tertiary}
             value={search}

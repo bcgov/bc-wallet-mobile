@@ -23,200 +23,17 @@ exports[`TakePhoto renders correctly 1`] = `
   <View
     style={
       {
-        "backgroundColor": "black",
+        "backgroundColor": "#000000",
         "flex": 1,
-        "position": "relative",
       }
     }
   >
-    <Camera
-      device={
-        {
-          "id": "mock-device",
-        }
-      }
-      implementationMode="compatible"
-      isActive={true}
-      mirrorMode={[Function]}
-      onConfigured={[Function]}
-      onError={[Function]}
-      onInterruptionEnded={[Function]}
-      onInterruptionStarted={[Function]}
-      onStarted={[Function]}
-      onStopped={[Function]}
-      orientationSource="interface"
-      outputs={
-        [
-          {
-            "capturePhotoToFile": [MockFunction],
-          },
-        ]
-      }
-      ref={
-        {
-          "current": null,
-        }
-      }
-      style={
-        {
-          "flex": 1,
-        }
-      }
-    />
-    <RNSVGSvgView
-      bbHeight={1334}
-      bbWidth={750}
-      focusable={false}
-      height={1334}
-      style={
-        [
-          {
-            "backgroundColor": "transparent",
-            "borderWidth": 0,
-          },
-          {
-            "position": "absolute",
-          },
-          {
-            "flex": 0,
-            "height": 1334,
-            "width": 750,
-          },
-        ]
-      }
-      width={750}
-    >
-      <RNSVGGroup
-        fill={
-          {
-            "payload": 4278190080,
-            "type": 0,
-          }
-        }
-      >
-        <RNSVGDefs>
-          <RNSVGMask
-            fill={
-              {
-                "payload": 4278190080,
-                "type": 0,
-              }
-            }
-            height="100%"
-            maskContentUnits={1}
-            maskType={0}
-            maskUnits={0}
-            name="overlayMask"
-            width="100%"
-            x="0%"
-            y="0%"
-          >
-            <RNSVGRect
-              fill={
-                {
-                  "payload": 4294967295,
-                  "type": 0,
-                }
-              }
-              height={1334}
-              propList={
-                [
-                  "fill",
-                ]
-              }
-              width={750}
-              x={0}
-              y={0}
-            />
-            <RNSVGEllipse
-              cx={375}
-              cy={637}
-              fill={
-                {
-                  "payload": 4278190080,
-                  "type": 0,
-                }
-              }
-              propList={
-                [
-                  "fill",
-                  "stroke",
-                  "strokeWidth",
-                ]
-              }
-              rx={337.5}
-              ry={373.52000000000004}
-              stroke={
-                {
-                  "payload": 4294752793,
-                  "type": 0,
-                }
-              }
-              strokeWidth={4}
-            />
-          </RNSVGMask>
-        </RNSVGDefs>
-        <RNSVGRect
-          fill={
-            {
-              "payload": 4278190080,
-              "type": 0,
-            }
-          }
-          fillOpacity={0.6}
-          height={1334}
-          mask="overlayMask"
-          propList={
-            [
-              "fill",
-              "fillOpacity",
-            ]
-          }
-          width={750}
-          x={0}
-          y={0}
-        />
-        <RNSVGEllipse
-          cx={375}
-          cy={637}
-          fill={
-            {
-              "payload": 0,
-              "type": 0,
-            }
-          }
-          propList={
-            [
-              "fill",
-              "stroke",
-              "strokeWidth",
-            ]
-          }
-          rx={337.5}
-          ry={373.52000000000004}
-          stroke={
-            {
-              "payload": 4294752793,
-              "type": 0,
-            }
-          }
-          strokeWidth={4}
-        />
-      </RNSVGGroup>
-    </RNSVGSvgView>
     <View
       style={
         {
           "alignItems": "center",
-          "backgroundColor": "rgba(0, 0, 0, 0.6)",
-          "flex": 1,
-          "fontWeight": "normal",
           "justifyContent": "center",
-          "left": 0,
           "padding": 24,
-          "position": "absolute",
-          "right": 0,
-          "zIndex": 5,
         }
       }
     >
@@ -241,16 +58,200 @@ exports[`TakePhoto renders correctly 1`] = `
       </Text>
     </View>
     <View
+      onLayout={[Function]}
+      style={
+        {
+          "flex": 1,
+          "overflow": "hidden",
+        }
+      }
+    >
+      <Camera
+        device={
+          {
+            "id": "mock-device",
+          }
+        }
+        implementationMode="compatible"
+        isActive={true}
+        mirrorMode={[Function]}
+        onConfigured={[Function]}
+        onError={[Function]}
+        onInterruptionEnded={[Function]}
+        onInterruptionStarted={[Function]}
+        onStarted={[Function]}
+        onStopped={[Function]}
+        orientationSource="interface"
+        outputs={
+          [
+            {
+              "capturePhotoToFile": [MockFunction],
+            },
+          ]
+        }
+        ref={
+          {
+            "current": null,
+          }
+        }
+        style={
+          {
+            "flex": 1,
+          }
+        }
+      />
+      <View
+        pointerEvents="none"
+        style={
+          {
+            "bottom": 0,
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "top": 0,
+          }
+        }
+      >
+        <RNSVGSvgView
+          bbHeight={1334}
+          bbWidth={750}
+          focusable={false}
+          height={1334}
+          style={
+            [
+              {
+                "backgroundColor": "transparent",
+                "borderWidth": 0,
+              },
+              {
+                "flex": 0,
+                "height": 1334,
+                "width": 750,
+              },
+            ]
+          }
+          width={750}
+        >
+          <RNSVGGroup
+            fill={
+              {
+                "payload": 4278190080,
+                "type": 0,
+              }
+            }
+          >
+            <RNSVGDefs>
+              <RNSVGMask
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                height="100%"
+                maskContentUnits={1}
+                maskType={0}
+                maskUnits={0}
+                name="ovalMask"
+                width="100%"
+                x="0%"
+                y="0%"
+              >
+                <RNSVGRect
+                  fill={
+                    {
+                      "payload": 4294967295,
+                      "type": 0,
+                    }
+                  }
+                  height={1334}
+                  propList={
+                    [
+                      "fill",
+                    ]
+                  }
+                  width={750}
+                  x={0}
+                  y={0}
+                />
+                <RNSVGEllipse
+                  cx={375}
+                  cy={667}
+                  fill={
+                    {
+                      "payload": 4278190080,
+                      "type": 0,
+                    }
+                  }
+                  propList={
+                    [
+                      "fill",
+                    ]
+                  }
+                  rx={306.2864}
+                  ry={373.52000000000004}
+                />
+              </RNSVGMask>
+            </RNSVGDefs>
+            <RNSVGRect
+              fill={
+                {
+                  "payload": 4278190080,
+                  "type": 0,
+                }
+              }
+              fillOpacity={0.6}
+              height={1334}
+              mask="ovalMask"
+              propList={
+                [
+                  "fill",
+                  "fillOpacity",
+                ]
+              }
+              width={750}
+              x={0}
+              y={0}
+            />
+            <RNSVGEllipse
+              cx={375}
+              cy={667}
+              fill={
+                {
+                  "payload": 0,
+                  "type": 0,
+                }
+              }
+              propList={
+                [
+                  "fill",
+                  "stroke",
+                  "strokeWidth",
+                ]
+              }
+              rx={306.2864}
+              ry={373.52000000000004}
+              stroke={
+                {
+                  "payload": 4294752793,
+                  "type": 0,
+                }
+              }
+              strokeWidth={4}
+            />
+          </RNSVGGroup>
+        </RNSVGSvgView>
+      </View>
+    </View>
+    <View
       style={
         {
           "alignItems": "center",
-          "bottom": 30,
-          "flex": 1,
           "flexDirection": "row",
           "justifyContent": "space-between",
-          "marginBottom": 0,
+          "paddingBottom": 24,
           "paddingHorizontal": 24,
-          "position": "absolute",
+          "paddingTop": 24,
         }
       }
     >
@@ -277,6 +278,12 @@ exports[`TakePhoto renders correctly 1`] = `
         accessible={true}
         collapsable={false}
         focusable={true}
+        hitSlop={
+          {
+            "bottom": 44,
+            "top": 44,
+          }
+        }
         onClick={[Function]}
         onResponderGrant={[Function]}
         onResponderMove={[Function]}
@@ -334,6 +341,12 @@ exports[`TakePhoto renders correctly 1`] = `
         accessible={true}
         collapsable={false}
         focusable={false}
+        hitSlop={
+          {
+            "bottom": 44,
+            "top": 44,
+          }
+        }
         onClick={[Function]}
         onResponderGrant={[Function]}
         onResponderMove={[Function]}

@@ -2,6 +2,7 @@ import { throwAppError, throwNativeBcscError } from '@/bcsc-theme/utils/native-e
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { trackFailureSteps } from '@/errors/failureContext'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { ChallengeSource, signPairingCode } from 'react-native-bcsc-core'
@@ -19,6 +20,9 @@ export interface PairingCodeLoginClientMetadata {
   usage_date: string
 }
 
+// Where logging in by pairing code can fail, reported as `failure_step`
+type PairingStep = 'account' | 'notification_tokens' | 'sign_pairing_code' | 'verify_device_assertion'
+
 const usePairingApi = (apiClient: BCSCApiClient) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -31,26 +35,43 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
    */
   const loginByPairingCode = useCallback(
     async (code: string, challengeSource: ChallengeSource) => {
-      return withAccount<PairingCodeLoginClientMetadata>(async (account) => {
-        const { issuer, clientID } = account
-        const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
-        let signedCode: string | null
-        try {
-          signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken, challengeSource)
-        } catch (error) {
-          return throwNativeBcscError(error)
-        }
-        if (!signedCode) {
-          return throwAppError(new Error('signPairingCode returned null'), ErrorRegistry.SIGN_CLAIMS_ERROR)
-        }
-        const response = await apiClient.post<PairingCodeLoginClientMetadata>(
-          `${apiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
-          { assertion: signedCode },
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-        )
+      const steps = trackFailureSteps<PairingStep>('pairing', { definition: ErrorRegistry.LOGIN_DEVICE_ERROR })
 
-        return response.data
-      })
+      return steps.run('account', () =>
+        withAccount<PairingCodeLoginClientMetadata>(async (account) => {
+          const { issuer, clientID } = account
+
+          const { fcmDeviceToken, deviceToken } = await steps.run('notification_tokens', () =>
+            getNotificationTokens(logger)
+          )
+
+          const signedCode = await steps.run('sign_pairing_code', async () => {
+            let signed: string | null
+            try {
+              signed = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken, challengeSource)
+            } catch (error) {
+              return throwNativeBcscError(error)
+            }
+            if (!signed) {
+              return throwAppError(new Error('signPairingCode returned null'), ErrorRegistry.SIGN_CLAIMS_ERROR)
+            }
+            return signed
+          })
+
+          const response = await steps.run(
+            'verify_device_assertion',
+            () =>
+              apiClient.post<PairingCodeLoginClientMetadata>(
+                `${apiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
+                { assertion: signedCode },
+                { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+              ),
+            { keepAppError: true }
+          )
+
+          return response.data
+        })
+      )
     },
     [apiClient, logger]
   )

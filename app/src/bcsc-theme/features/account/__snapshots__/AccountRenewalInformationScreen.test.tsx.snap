@@ -78,6 +78,7 @@ exports[`AccountRenewalInformation renders correctly 1`] = `
           {
             "display": "flex",
             "flexDirection": "row",
+            "flexWrap": "wrap",
           }
         }
       >
@@ -119,7 +120,9 @@ exports[`AccountRenewalInformation renders correctly 1`] = `
                 "fontSize": 18,
                 "fontWeight": "normal",
               },
-              undefined,
+              {
+                "flexShrink": 1,
+              },
             ]
           }
         >

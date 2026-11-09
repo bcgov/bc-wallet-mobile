@@ -1,5 +1,6 @@
 import { AppError, ErrorRegistry } from '@/errors'
-import { isAppError } from '@/errors/appError'
+import { isAppError, isHandledAppError } from '@/errors/appError'
+import { trackFailureSteps } from '@/errors/failureContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
@@ -16,8 +17,18 @@ type ClientMetadataStub = Pick<ClientMetadata, 'client_ref_id' | 'initiate_login
 // Discriminated union for clearer guarantees
 type QuickLoginURLResult =
   | { success: true; url: string }
-  | { success: false; error: string; cause?: unknown }
+  | { success: false; error: AppError }
   | { success: false; handled: true }
+
+// Where quick login can fail, reported as `failure_step`
+type QuickLoginStep =
+  | 'service_config'
+  | 'access_token'
+  | 'notification_tokens'
+  | 'account'
+  | 'jwks'
+  | 'sign_jwt'
+  | 'unexpected'
 
 // Represents a stub service client with an empty client_ref_id
 export const STUB_SERVICE_CLIENT: ClientMetadataStub = { client_ref_id: '' }
@@ -42,57 +53,79 @@ export const useQuickLoginURL = () => {
    * Generates a quick login URL for the given service client.
    *
    * @param {ClientMetadataStub} serviceClient - The service client metadata.
-   * @returns {*} {Promise<QuickLoginURLResult>} An object containing the quick login URL or an error message.
+   * @returns {*} {Promise<QuickLoginURLResult>} An object containing the quick login URL or an AppError
+   * recording which step failed.
    */
   const getQuickLoginURL = useCallback(
     async (serviceClient: ClientMetadataStub): Promise<QuickLoginURLResult> => {
+      const steps = trackFailureSteps<QuickLoginStep>('quick_login', { definition: ErrorRegistry.LOGIN_DEVICE_ERROR })
+
       try {
         if (!serviceClient.initiate_login_uri) {
-          return { success: false, error: 'Quick login unavailable for this service' }
+          return {
+            success: false,
+            error: steps.fail('service_config', new Error('Quick login unavailable for this service')),
+          }
         }
 
-        if (!client.tokens?.access_token) {
-          return { success: false, error: 'No access token available' }
+        const accessToken = client.tokens?.access_token
+
+        if (!accessToken) {
+          return { success: false, error: steps.fail('access_token', new Error('No access token available')) }
         }
 
-        const [tokens, account, jwk] = await Promise.all([
-          getNotificationTokens(logger),
-          getAccount(),
-          client.fetchJwk(),
+        // fetchJwkResult never rejects: a failure resolves with jwk null and the reason in error
+        const [tokens, account, jwkResult] = await Promise.all([
+          steps.run('notification_tokens', () => getNotificationTokens(logger)),
+          steps.run('account', () => getAccount()),
+          client.fetchJwkResult(),
         ])
 
         if (!tokens) {
-          return { success: false, error: 'No notification tokens received' }
+          return {
+            success: false,
+            error: steps.fail('notification_tokens', new Error('No notification tokens received')),
+          }
         }
 
         if (!account) {
-          return { success: false, error: 'No account data received' }
+          return { success: false, error: steps.fail('account', new Error('No account data received')) }
         }
+
+        const { jwk } = jwkResult
 
         if (!jwk) {
-          throw AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+          throw steps.fail('jwks', jwkResult.error, { definition: ErrorRegistry.MISSING_JWK_ERROR })
         }
 
-        const loginHint = await createQuickLoginJWT(
-          client.tokens.access_token,
-          account.clientID,
-          account.issuer,
-          serviceClient.client_ref_id,
-          jwk,
-          tokens.fcmDeviceToken,
-          tokens.deviceToken
+        const loginHint = await steps.run('sign_jwt', () =>
+          createQuickLoginJWT(
+            accessToken,
+            account.clientID,
+            account.issuer,
+            serviceClient.client_ref_id,
+            jwk,
+            tokens.fcmDeviceToken,
+            tokens.deviceToken
+          )
         )
 
         const encodedTokenHint = encodeURIComponent(loginHint)
         return { success: true, url: `${serviceClient.initiate_login_uri}?login_hint=${encodedTokenHint}` }
       } catch (error) {
+        if (isHandledAppError(error)) {
+          return { success: false, handled: true }
+        }
+
         if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
-          alerts.missingJwkAlert()
+          alerts.missingJwkAlert(error)
           return { success: false, handled: true }
         }
 
         logger.error('Error creating quick login URL', error as Error)
-        return { success: false, error: `Error creating quick login URL: ${(error as Error).message}`, cause: error }
+
+        // Errors from a step are already handled, anything else is unexpected
+        return { success: false, error: steps.fail('unexpected', error) }
       }
     },
     [alerts, client, logger]

@@ -36,11 +36,11 @@ const Preface: React.FC = () => {
   }
 
   const onPressInfoLink = () => {
-    Linking.openURL('https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet#where')
+    void Linking.openURL('https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet#where')
   }
 
   const onPressShowcaseLink = () => {
-    Linking.openURL('https://digital.gov.bc.ca/digital-trust/showcase/')
+    void Linking.openURL('https://digital.gov.bc.ca/digital-trust/showcase/')
   }
 
   const controls = (

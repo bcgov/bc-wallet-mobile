@@ -45,7 +45,7 @@ const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onPress, testI
   return (
     <ListButton onPress={onPress} testID={testID} accessibilityLabel={a11yLabel(label)} position={position}>
       <CommunityIcon name={icon} size={22} color={ColorPalette.brand.primary} />
-      <ThemedText style={{ color: ColorPalette.brand.primary }}>{label}</ThemedText>
+      <ThemedText style={{ color: ColorPalette.brand.primary, flexShrink: 1 }}>{label}</ThemedText>
     </ListButton>
   )
 }
@@ -102,6 +102,7 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
       gap: Spacing.md,
     },
     removeLabel: {
+      flexShrink: 1,
       color: ColorPalette.semantic.error,
     },
   })
