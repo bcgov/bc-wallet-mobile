@@ -22,6 +22,7 @@ jest.mock('@bifold/core', () => {
 const mockUseBCSCApiClientState = jest.mocked(useBCSCApiClientState)
 const mockDispatch = jest.fn()
 const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() }
+const mockClient = { recordServerTime: jest.fn() }
 
 const wrapper = ({ children }: { children: React.ReactNode }) => <ServerStatusProvider>{children}</ServerStatusProvider>
 const renderProvider = () => renderHook(() => useServerStatus(), { wrapper })
@@ -31,8 +32,51 @@ describe('ServerStatusProvider', () => {
     jest.clearAllMocks()
     jest.mocked(Bifold.useStore).mockReturnValue([{} as never, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as never)
-    mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true } as never)
+    mockUseBCSCApiClientState.mockReturnValue({ client: mockClient, isClientReady: true } as never)
     mockGetServerStatus.mockResolvedValue({ status: 'ok' })
+  })
+
+  describe('clock reading', () => {
+    it('records the server time from each status fetch on the client', async () => {
+      const serverTimestamp = new Date('2026-11-04T19:41:17Z')
+      mockGetServerStatus.mockResolvedValue({ status: 'ok', serverTimestamp })
+
+      const { result } = renderProvider()
+      await waitFor(() => expect(result.current.hasChecked).toBe(true))
+
+      expect(mockClient.recordServerTime).toHaveBeenCalledWith(serverTimestamp)
+    })
+
+    it('forgets the reading when the status fetch fails, so token requests are not refused on a stale one', async () => {
+      mockGetServerStatus.mockRejectedValue(new Error('network'))
+
+      const { result } = renderProvider()
+      await waitFor(() => expect(result.current.hasChecked).toBe(true))
+
+      expect(mockClient.recordServerTime).toHaveBeenCalledWith()
+    })
+
+    it('forgets the reading when the app goes to the background, and takes a new one on return', async () => {
+      let appStateCallback: (state: AppStateStatus) => void = () => undefined
+      jest.spyOn(AppState, 'addEventListener').mockImplementation((_, callback) => {
+        appStateCallback = callback as (state: AppStateStatus) => void
+        return { remove: jest.fn() } as any
+      })
+      const serverTimestamp = new Date('2026-11-04T19:41:17Z')
+      mockGetServerStatus.mockResolvedValue({ status: 'ok', serverTimestamp })
+
+      const { result } = renderProvider()
+      await waitFor(() => expect(result.current.hasChecked).toBe(true))
+      mockClient.recordServerTime.mockClear()
+
+      act(() => appStateCallback('background'))
+      expect(mockClient.recordServerTime).toHaveBeenCalledWith()
+
+      await act(async () => {
+        appStateCallback('active')
+      })
+      expect(mockClient.recordServerTime).toHaveBeenLastCalledWith(serverTimestamp)
+    })
   })
 
   it('does not fetch until the API client is ready', () => {

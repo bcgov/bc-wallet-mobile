@@ -324,3 +324,15 @@ rejection takes the caller's, so the FCM, user-info and ID-token paths all surfa
 before every signature check; any failure of that round trip returned `false`, which the app reported as
 error 2509 "signature does not match payload" with nothing to investigate. Verifying a signature needs no
 keychain, and the rejection codes let the next problem report explain itself.
+
+## Device clock: no token request while it is off
+
+The `Date` header of the status call is the clock check. `ServerStatusProvider` records it on the API client
+at startup and on every return to the foreground, and forgets it when the app goes to the background or the
+check fails. While the device clock is five minutes or more off, the client refuses token requests before
+sending them, since each carries an assertion stamped by that clock. An IAS 401 rejecting an assertion for its
+time stamp (`Assertion Token was issued in the future` or `… is expired`) maps to `CLOCK_SKEW_ERROR` as well.
+Both show the clock alert through the global alert policy, and unlock never runs key recovery for them.
+
+**Why:** with the clock an hour ahead, every token refresh failed with a generic 2111, and unlock took it for
+a key problem and ran key recovery. Fixing the clock is the only fix.

@@ -1604,4 +1604,156 @@ describe('BCSC Client', () => {
       expect(authorizationByUrl['/endpointC']).toBe('Bearer newAccessToken')
     })
   })
+
+  describe('device clock', () => {
+    const DEVICE_NOW = Date.parse('2026-11-04T20:41:16Z')
+    const MINUTE_MS = 60 * 1000
+
+    // A device clock an hour ahead, as in the field report
+    const createSkewedClient = (mockLogger = createMockLogger()) => {
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      client.recordServerTime(new Date(DEVICE_NOW - 60 * MINUTE_MS))
+      return client
+    }
+
+    const resolveOk = (config: any) =>
+      Promise.resolve({ status: 200, data: { ok: true }, statusText: 'OK', headers: {} as any, config })
+
+    beforeEach(() => {
+      jest.spyOn(Date, 'now').mockReturnValue(DEVICE_NOW)
+    })
+
+    it('has no reading until a status check records one', () => {
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+
+      expect(client.clockSkewSeconds).toBeNull()
+      expect(client.isClockSkewed).toBe(false)
+    })
+
+    it.each([
+      ['an hour ahead', -60 * MINUTE_MS, true],
+      ['five minutes ahead', -5 * MINUTE_MS, true],
+      ['under five minutes ahead', -5 * MINUTE_MS + 1000, false],
+      ['in sync', 0, false],
+      ['under five minutes behind', 5 * MINUTE_MS - 1000, false],
+      ['five minutes behind', 5 * MINUTE_MS, true],
+    ])('reads a device clock %s as skewed: %s', (_label, serverMinusDeviceMs, skewed) => {
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+
+      client.recordServerTime(new Date(DEVICE_NOW + serverMinusDeviceMs))
+
+      expect(client.isClockSkewed).toBe(skewed)
+      expect(client.clockSkewSeconds).toBe(serverMinusDeviceMs / 1000)
+    })
+
+    it('forgets the reading when recorded without a time', () => {
+      const client = createSkewedClient()
+
+      client.recordServerTime()
+
+      expect(client.clockSkewSeconds).toBeNull()
+      expect(client.isClockSkewed).toBe(false)
+    })
+
+    it('refuses a token request without sending it, and hands the error to the error policies', async () => {
+      const client = createSkewedClient()
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+      const adapter = jest.fn(resolveOk)
+      client.client.defaults.adapter = adapter
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+      ).rejects.toMatchObject({
+        appEvent: AppEventCode.CLOCK_SKEW_ERROR,
+        technicalMessage: expect.stringContaining('device clock is 3600s ahead of the server'),
+      })
+
+      expect(adapter).not.toHaveBeenCalled()
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({ appEvent: AppEventCode.CLOCK_SKEW_ERROR }),
+        expect.objectContaining({ endpoint: client.endpoints.token, statusCode: 0 })
+      )
+    })
+
+    it('keeps the refused request body, which holds the refresh token, out of the logs', async () => {
+      const mockLogger = createMockLogger()
+      const client = createSkewedClient(mockLogger)
+      client.client.defaults.adapter = jest.fn(resolveOk)
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token&refresh_token=secret-refresh-token', {
+          skipBearerAuth: true,
+        })
+      ).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR })
+
+      expect(mockLogger.error).toHaveBeenCalled()
+      expect(JSON.stringify(mockLogger.error.mock.calls)).not.toContain('secret-refresh-token')
+    })
+
+    it('refuses the token refresh a bearer request needs, so neither request is sent', async () => {
+      const client = createSkewedClient()
+      client.tokens = { access_token: 'expired-access', refresh_token: 'valid-refresh' } as any
+      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      ;(getRefreshTokenRequestBody as jest.Mock).mockResolvedValue('grant_type=refresh_token')
+      ;(jwtDecode as jest.Mock).mockImplementation((token: string) => ({
+        exp: token === 'expired-access' ? 0 : Math.floor(DEVICE_NOW / 1000) + 3600,
+      }))
+      const adapter = jest.fn(resolveOk)
+      client.client.defaults.adapter = adapter
+
+      await expect(client.get('/protected')).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR })
+
+      expect(adapter).not.toHaveBeenCalled()
+    })
+
+    it('sends requests that carry no device assertion while the clock is off', async () => {
+      const client = createSkewedClient()
+      client.client.defaults.adapter = resolveOk
+
+      await expect(client.get('/cardtap/v3/status/ios/mobile_card', { skipBearerAuth: true })).resolves.toMatchObject({
+        status: 200,
+      })
+    })
+
+    it('sends token requests again once the reading is forgotten', async () => {
+      const client = createSkewedClient()
+      const adapter = jest.fn(resolveOk)
+      client.client.defaults.adapter = adapter
+
+      client.recordServerTime()
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+      ).resolves.toMatchObject({ status: 200 })
+      expect(adapter).toHaveBeenCalledTimes(1)
+    })
+
+    it.each([
+      'Assertion Token was issued in the future: Wed Nov 04 12:41:16 PST 2026',
+      'Assertion Token is expired: Wed Nov 04 12:41:16 PST 2026',
+    ])('reports an IAS 401 "%s" as CLOCK_SKEW_ERROR when there was no reading', async (errorDescription) => {
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+      client.client.defaults.adapter = (config: any) =>
+        Promise.reject(
+          new AxiosError('Request failed', 'ERR_BAD_REQUEST', config, null, {
+            status: 401,
+            data: { error: 'unauthorized', error_description: errorDescription },
+            statusText: 'Unauthorized',
+            headers: {} as any,
+            config,
+          })
+        )
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+      ).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR, technicalMessage: errorDescription })
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({ appEvent: AppEventCode.CLOCK_SKEW_ERROR }),
+        expect.objectContaining({ statusCode: 401 })
+      )
+    })
+  })
 })

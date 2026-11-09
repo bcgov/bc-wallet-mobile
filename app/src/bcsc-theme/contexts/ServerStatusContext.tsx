@@ -96,8 +96,11 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
       let newState: ServerStatusState = { kind: 'unknown' }
       try {
         const status = await configApi.getServerStatus()
+        // The status call is also the clock check: the client refuses token requests while the clock is off
+        client?.recordServerTime(status.serverTimestamp)
         newState = { kind: 'loaded', data: status }
       } catch (error) {
+        client?.recordServerTime()
         logger.error('ServerStatusProvider: failed to fetch server status', error as Error)
         newState = { kind: 'error' }
       } finally {
@@ -112,7 +115,7 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
 
     inFlightRef.current = run
     return run
-  }, [configApi, logger])
+  }, [client, configApi, logger])
 
   const refresh = useCallback(
     async (options?: { force?: boolean }): Promise<ServerStatusRefreshResult> => {
@@ -147,7 +150,10 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
     }
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
+      if (nextAppState === 'background') {
+        // The user may change the clock while away; a stale reading would refuse requests after they fix it
+        client.recordServerTime()
+      } else if (nextAppState === 'active') {
         void fetchStatus()
       }
     })
