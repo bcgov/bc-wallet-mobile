@@ -38,7 +38,7 @@ const JWK_FETCH_TIMEOUT_MS = 15 * 1000
 // The retryable JWKS failure shapes (see isTransientRequestError): 0 for a network error or timeout (no HTTP
 // response — see the response interceptor's `error.response?.status ?? 0`), and the full 5xx range.
 // Passed as suppressStatusCodeLogs on the JWKS request so the interceptor's own log line + analytics
-// tracking (see getAppErrorFromAxiosError) don't fire on every retry attempt — fetchJwk already logs
+// tracking (see getAppErrorFromAxiosError) don't fire on every retry attempt — fetchJwkWithRetry logs
 // a warn per retry and a single error on total exhaustion, so a transient outage isn't amplified 3x
 // across dashboards. A deterministic 4xx is a single, non-retried attempt and is left to log/track
 // normally, since it may indicate a real configuration problem worth surfacing distinctly.
@@ -488,8 +488,8 @@ class BCSCApiClient {
    * `skipOnErrorHandler` keeps the global alert policy from firing on every retry attempt.
    * `suppressStatusCodeLogs` additionally silences the interceptor's own log line + analytics
    * tracking for the retryable failure shapes (network / 5xx, see JWK_FETCH_RETRYABLE_STATUS_CODES)
-   * so a transient outage isn't amplified across the retry loop — fetchJwk's own logging (a warn per
-   * retry, one error on total exhaustion, one warn if a fallback is used) is the sole signal for
+   * so a transient outage isn't amplified across the retry loop — fetchJwkWithRetry's own logging (a
+   * warn per retry, one error on total exhaustion, one warn if a fallback is used) is the sole signal for
    * those. A deterministic 4xx is a single, non-retried attempt and still logs/tracks normally via
    * the interceptor, same as any other endpoint.
    */
@@ -600,6 +600,10 @@ class BCSCApiClient {
         attempts: JWK_FETCH_MAX_ATTEMPTS,
         retryDelayMs: JWK_FETCH_RETRY_DELAY_MS,
         shouldRetry: isTransientRequestError,
+        onRetry: ({ attempt, error }) => {
+          const message = error instanceof Error ? error.message : String(error)
+          this.logger.warn(`[BCSCApiClient] JWK fetch attempt ${attempt} failed, retrying: ${message}`)
+        },
       })
       lastError = undefined
     } catch (error) {

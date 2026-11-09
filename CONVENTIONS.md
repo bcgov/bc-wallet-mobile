@@ -208,6 +208,17 @@ them natively on focus and re-renders, and a row whose gate is still unknown sta
 disappears after mount slides every row below it. "Change PIN" rendered on a default and was dropped
 once the native read reported device auth, so the whole list jumped on every open of Settings.
 
+## Touch targets: `hitSlop` never reaches another control
+
+Give a small control a 44dp box for its target, and point `hitSlop` only at empty space: zero every edge
+that faces another control. The settings section chevrons, stacked between rows, keep only left and right
+(`{ ...hitSlop, top: 0, bottom: 0 }`); the profile card's edit pencil, with the account name on its left and
+a chevron below, keeps only top and right (`{ ...hitSlop, left: 0, bottom: 0 }`).
+
+**Why:** on Android a `hitSlop` reaches past the control's parent and takes taps from any control rendered
+before it. The settings section chevrons' 44dp slop covered the profile card's edit pencil, so tapping the
+pencil collapsed the Features section instead of opening the nickname editor.
+
 ## Android: the JS runtime outlives the Activity
 
 To leave the app on Android, use `moveAppToBackground`, not `BackHandler.exitApp`. Hardware back can still
@@ -227,11 +238,14 @@ verification sets it to `true` so a later renewal re-enters as a deferred verifi
 
 - **First-time verifier** (Continue at the prompt, or a v3 upgrade mid-verification): the flow is their whole
   app. The help menu has no "Back to home", the back arrow at the beginning of the stack `replace`s onto the
-  prompt (which has no arrow and swallows Android back), the pending review has no arrow and polls for the
-  agent's decision itself (focus, foreground, the review push, "Check status"), and the post-submit screen
-  continues to the pending review. Skip on the prompt is the one way to Home and makes them deferred.
+  prompt (which has no arrow and swallows Android back), and the post-submit screen continues to the pending
+  review. Skip on the prompt is the one way to Home and makes them deferred.
 - **Deferred verifier** (Skip at some point, re-entering from the Home card): keeps every exit, progress
   kept. Developer mode shows "Back to home" to everyone; arrows ignore it.
+- **A submitted request is the exception for both**: the pending review's back arrow leaves for Home whoever
+  the verifier is, because that wait is on an agent and not on the user (#4968). The screen carries no manual
+  check — Home's pending card is where a user asks for a fresh status, and the way back in — and picks the
+  decision up itself (focus, foreground, the review push) for a user who stays on it.
 
 Rules that keep this consistent:
 

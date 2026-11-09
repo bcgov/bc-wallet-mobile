@@ -11,8 +11,9 @@ import { useMemo } from 'react'
 export type VerificationExitPolicy = {
   /**
    * Chose to verify at the prompt and has not finished. The flow is their whole app, so it offers no
-   * way out to Home: the back arrow at the beginning of the stack returns to the prompt instead, the
-   * pending-review screen has no arrow at all, and the help menu has no "Back to home".
+   * way out to Home: the back arrow at the beginning of the stack returns to the prompt instead, and
+   * the help menu has no "Back to home". The pending review is the exception — a submitted request
+   * waits on an agent, so its arrow leaves for Home whoever the verifier is.
    */
   isFirstTimeVerifier: boolean
   /**
