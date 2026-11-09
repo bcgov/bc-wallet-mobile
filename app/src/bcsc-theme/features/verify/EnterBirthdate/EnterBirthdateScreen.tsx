@@ -42,7 +42,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const isBusy = loading || isRecovering
   const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY/MM/DD') : '')
   const [birthDateError, setBirthDateError] = useState<string | undefined>(undefined)
-  const { scrollViewRef, inputRefs, onContainerLayout, onFieldLayout, focusFirstInvalidField } =
+  const { scrollViewRef, inputRefs, onContainerLayout, onFieldLayout, focusFirstInvalidField, scrollToField } =
     useFocusFirstInvalidField(FIELD_ORDER)
 
   const isBirthDateComplete = birthDate.length === 10
@@ -114,6 +114,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         <DateInput
           ref={inputRefs.birthDate}
           onLayout={onFieldLayout('birthDate')}
+          onFocus={() => scrollToField('birthDate')}
           id={'birthDate'}
           label={t('BCSC.Birthdate.Label')}
           value={birthDate}

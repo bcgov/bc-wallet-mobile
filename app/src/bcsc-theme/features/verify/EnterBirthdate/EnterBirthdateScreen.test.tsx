@@ -72,6 +72,20 @@ describe('EnterBirthdate', () => {
     focusSpy.mockRestore()
   })
 
+  it('jumps the date field to the top when it gains focus', async () => {
+    const scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
+    const { getByTestId } = renderScreen(mockNavigation as never)
+
+    const input = getByTestId('com.ariesbifold:id/birthDate-input')
+    fireEvent(input, 'layout', { nativeEvent: { layout: { y: 60 } } })
+    await act(async () => {
+      fireEvent(input, 'focus')
+    })
+
+    expect(scrollToSpy).toHaveBeenCalledWith({ y: 60, animated: false })
+    scrollToSpy.mockRestore()
+  })
+
   it('jumps to the date field as soon as a complete invalid date is typed', async () => {
     const scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
     const { getByTestId } = renderScreen(mockNavigation as never)

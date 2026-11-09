@@ -11,6 +11,7 @@ interface DateInputProps {
   value: string
   onChange: (value: string) => void
   onLayout?: (e: LayoutChangeEvent) => void
+  onFocus?: () => void
   error?: string | null
   subtext?: string
 }
@@ -42,7 +43,7 @@ const formatDigits = (digits: string): string => {
   return `${digits.slice(0, 4)}/${digits.slice(4, 6)}/${digits.slice(6)}`
 }
 
-const DateInput = ({ ref, id, label, value, onChange, error, subtext, onLayout }: DateInputProps) => {
+const DateInput = ({ ref, id, label, value, onChange, error, subtext, onLayout, onFocus }: DateInputProps) => {
   const { Inputs, ColorPalette } = useTheme()
   const [displayValue, setDisplayValue] = useState(formatDigits(getDigits(value)))
 
@@ -98,6 +99,7 @@ const DateInput = ({ ref, id, label, value, onChange, error, subtext, onLayout }
       error={error}
       subtext={subtext}
       onLayout={onLayout}
+      onFocus={onFocus}
       inputOverlay={templateOverlay}
       textInputProps={{
         keyboardType: 'number-pad',
