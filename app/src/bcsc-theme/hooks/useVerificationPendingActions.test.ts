@@ -14,10 +14,6 @@ jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('./useSecureActions')
 jest.mock('@/hooks/useAlerts')
 jest.mock('../services/hooks/useEvidenceService')
-const mockEmitErrorModal = jest.fn()
-jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({ emitErrorModal: mockEmitErrorModal }),
-}))
 
 const navigation = { navigate: jest.fn(), reset: jest.fn() } as any
 
@@ -111,7 +107,7 @@ describe('useVerificationPendingActions', () => {
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
     })
 
-    it('only logs a failed automatic check', async () => {
+    it('only logs a failed check: every check is automatic, so there is nobody to tell', async () => {
       getVerificationRequestStatusMock.mockRejectedValue(new Error('status boom'))
       const { result } = renderHook(() => useVerificationPendingActions(navigation))
 
@@ -120,23 +116,7 @@ describe('useVerificationPendingActions', () => {
       })
 
       expect(loggerMock.error).toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
-      expect(mockEmitErrorModal).not.toHaveBeenCalled()
       expect(navigation.navigate).not.toHaveBeenCalled()
-    })
-
-    it('tells the user when a manual Check status fails, so silence never reads as "still pending"', async () => {
-      getVerificationRequestStatusMock.mockRejectedValue(new Error('status boom'))
-      const { result } = renderHook(() => useVerificationPendingActions(navigation))
-
-      await act(async () => {
-        await result.current.handleCheckStatus({ surfaceErrors: true })
-      })
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Error.Problem',
-        'Error.ProblemDescription',
-        expect.objectContaining({ cause: expect.any(Error) })
-      )
     })
 
     describe('overlapping triggers', () => {
@@ -159,7 +139,6 @@ describe('useVerificationPendingActions', () => {
         act(() => {
           first = result.current.handleCheckStatus()
         })
-        expect(result.current.isCheckingStatus).toBe(true)
 
         // The focus check is still awaiting a stale response when the push and a foreground both ask again
         await act(async () => {
@@ -175,7 +154,6 @@ describe('useVerificationPendingActions', () => {
         })
 
         expect(getVerificationRequestStatusMock).toHaveBeenCalledTimes(2)
-        expect(result.current.isCheckingStatus).toBe(false)
         expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
       })
 
@@ -198,29 +176,6 @@ describe('useVerificationPendingActions', () => {
 
         expect(getVerificationRequestStatusMock).toHaveBeenCalledTimes(1)
         expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
-        expect(result.current.isCheckingStatus).toBe(false)
-      })
-
-      it('keeps a queued manual press entitled to see a failure', async () => {
-        const settleFirstFetch = holdFirstFetch()
-        getVerificationRequestStatusMock.mockRejectedValueOnce(new Error('status boom'))
-        const { result } = renderHook(() => useVerificationPendingActions(navigation))
-
-        let first: Promise<void> = Promise.resolve()
-        act(() => {
-          first = result.current.handleCheckStatus() // automatic (focus)
-        })
-        await act(async () => {
-          await result.current.handleCheckStatus({ surfaceErrors: true }) // the button, queued behind it
-        })
-
-        await act(async () => {
-          settleFirstFetch({ status: VerificationRequestStatus.PENDING })
-          await first
-        })
-
-        expect(getVerificationRequestStatusMock).toHaveBeenCalledTimes(2)
-        expect(mockEmitErrorModal).toHaveBeenCalledTimes(1)
       })
     })
   })

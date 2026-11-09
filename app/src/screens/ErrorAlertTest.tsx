@@ -1,10 +1,12 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { getAppErrorFromAxiosError } from '@/bcsc-theme/utils/axios-error-utils'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
+import { createFailureError } from '@/errors/failureContext'
 import { useAlerts } from '@/hooks/useAlerts'
 import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useTheme } from '@bifold/core'
 import { crash, getCrashlytics, recordError } from '@react-native-firebase/crashlytics'
@@ -295,6 +297,91 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     untrusted_root: () => requestLiveTlsFailure('https://untrusted-root.badssl.com/'),
   }
 
+  // A native module rejection: an Error carrying the native code, as bcsc-core rejects
+  const simulatedNativeError = (code: string, message: string) =>
+    Object.assign(new Error(`Simulated: ${message}`), { code })
+
+  // The AppError the response interceptor builds for a JWKS 503, with its real HTTP context.
+  // The status is suppressed, as on the real JWKS fetch, so it isn't tracked in analytics.
+  const simulatedJwks503 = () => {
+    const config = { url: client.endpoints.jwksURI, method: 'get', suppressStatusCodeLogs: [503] } as any
+    const error = new AxiosError('Simulated: Request failed with status code 503', 'ERR_BAD_RESPONSE', config)
+    error.response = { status: 503, statusText: 'Service Unavailable', data: '', headers: {}, config }
+    return getAppErrorFromAxiosError(error)
+  }
+
+  /**
+   * Shows the alert each login failure ends in, carrying the failure context the real flow attaches,
+   * so "Report this problem" sends a realistic report to Loki. Login itself is never changed.
+   */
+  const loginFailureCallbacks: Record<string, () => void> = {
+    quick_login_access_token: () =>
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
+          flow: 'quick_login',
+          step: 'access_token',
+          startedAt: Date.now(),
+          cause: new Error('Simulated: No access token available'),
+        })
+      ),
+    quick_login_account: () =>
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
+          flow: 'quick_login',
+          step: 'account',
+          startedAt: Date.now() - 40,
+          cause: simulatedNativeError('E_ACCOUNT_READ_ERROR', 'Failed to read account'),
+        })
+      ),
+    quick_login_jwks_503: () =>
+      alerts.missingJwkAlert(
+        createFailureError(ErrorRegistry.MISSING_JWK_ERROR, {
+          flow: 'quick_login',
+          step: 'jwks',
+          startedAt: Date.now() - 1500,
+          cause: simulatedJwks503(),
+        })
+      ),
+    quick_login_sign_jwt: () =>
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
+          flow: 'quick_login',
+          step: 'sign_jwt',
+          startedAt: Date.now() - 120,
+          cause: simulatedNativeError('E_NO_KEYS_FOUND', 'No keys available to sign the JWT.'),
+        })
+      ),
+    quick_login_unexpected: () =>
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
+          flow: 'quick_login',
+          step: 'unexpected',
+          startedAt: Date.now() - 300,
+          cause: new TypeError("Simulated: Cannot read property 'length' of undefined"),
+        })
+      ),
+    pairing_sign: () =>
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
+          flow: 'pairing',
+          step: 'sign_pairing_code',
+          startedAt: Date.now() - 80,
+          cause: toAppError(
+            simulatedNativeError('E_KEYPAIR_RETRIEVAL_FAILED', 'Failed to retrieve key pair'),
+            ErrorRegistry.NO_SIGNING_KEYS
+          ),
+        })
+      ),
+    account_details_open_webview: () =>
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
+          flow: 'account_details',
+          step: 'open_webview',
+          cause: new Error('Simulated: Unable to open URL'),
+        })
+      ),
+  }
+
   const getCategoryIcon = (category: ErrorCategory): string => {
     const icons: Record<ErrorCategory, string> = {
       [ErrorCategory.CAMERA]: 'camera-alt',
@@ -458,6 +545,30 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
               </View>
             )
           })}
+        </View>
+
+        {/* Login failure reports — failure_* context sent with "Report this problem" */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'Login failure reports'}</Text>
+          <Text style={styles.description}>
+            {'Shows the alert a login failure ends in, with the failure context the real flow attaches. ' +
+              'Tap "Report this problem" and check failure_flow, failure_step, failure_elapsed_ms and the ' +
+              'technical message in Loki.'}
+          </Text>
+          {Object.keys(loginFailureCallbacks).map((key) => (
+            <View key={key} style={styles.buttonRow}>
+              <Button
+                title={key}
+                accessibilityLabel={`Trigger login failure ${key}`}
+                testID={`login-failure-${key}`}
+                buttonType={ButtonType.Secondary}
+                onPress={() => {
+                  onBack()
+                  loginFailureCallbacks[key]()
+                }}
+              />
+            </View>
+          ))}
         </View>
 
         {/* Native decode diagnostics — real decodePayload failure (2507) */}

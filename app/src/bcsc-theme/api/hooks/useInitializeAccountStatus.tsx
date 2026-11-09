@@ -33,7 +33,11 @@ export const useInitializeAccountStatus = () => {
   const initializeAccountStatus = useCallback(async () => {
     try {
       // TEMP (MD): Patch until BcscCore package correctly bubbles errors https://github.com/bcgov/bc-wallet-mobile/issues/3372
-      const account = await retryAsync(getAccount, ACCOUNT_FETCH_MAX_RETRIES, ACCOUNT_FETCH_RETRY_DELAY_MS, true)
+      const account = await retryAsync(getAccount, {
+        attempts: ACCOUNT_FETCH_MAX_RETRIES,
+        retryDelayMs: ACCOUNT_FETCH_RETRY_DELAY_MS,
+        retryIfNullish: true,
+      })
 
       // Preserve existing semantics: never downgrade a persisted hasAccount=true
       // on a transient native read failure (see #3405 verification-loop fix)
