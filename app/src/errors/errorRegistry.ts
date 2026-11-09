@@ -931,6 +931,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.DEVICE,
     message: 'Device UUID is not available',
   },
+  ENVIRONMENT_MISMATCH: {
+    statusCode: 2711,
+    appEvent: AppEventCode.ENVIRONMENT_MISMATCH,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.DEVICE,
+    message: 'Production app was set to a non-production environment — app data must be reset',
+  },
 
   // ============================================
   // General/Registration Errors (2800-2899)

@@ -1578,6 +1578,11 @@ const translation = {
       "Description": "You must correct it before you can use this app. Go to your Settings to update the date and time, or change it to be set automatically. (PT-BR)",
       "Action1": "Open Settings (PT-BR)",
     },
+    "EnvironmentMismatch": {
+      "Title": "App Needs to Be Reset (PT-BR)",
+      "Description": "This app was switched to the wrong environment by mistake, so your account can't be used. Reset the app to fix this. Your account will be removed from this device and you'll need to set it up again. (PT-BR)",
+      "Action1": "Reset App (PT-BR)",
+    },
     "AlreadyVerified": {
       "Title": "Problem Checking Status (PT-BR)",
       "Description": "Please close the app and try again. (PT-BR)",
