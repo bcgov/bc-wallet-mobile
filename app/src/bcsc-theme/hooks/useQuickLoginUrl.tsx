@@ -6,8 +6,9 @@ import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
-import { createQuickLoginJWT, getAccount, getAccountReadStatus } from 'react-native-bcsc-core'
+import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
+import { getAccountReadContext } from '../utils/account-read-status'
 import { getNotificationTokens } from '../utils/push-notification-tokens'
 import { useBCSCApiClient } from './useBCSCApiClient'
 
@@ -84,16 +85,7 @@ export const useQuickLoginURL = () => {
         }
 
         if (!account) {
-          // Diagnostics must never replace the real failure
-          const readStatus = await getAccountReadStatus().catch(() => null)
-          const context = readStatus
-            ? {
-                account_read_status: readStatus.status,
-                account_read_environment: readStatus.environment,
-                account_read_detail: readStatus.detail,
-                account_legacy_status: readStatus.legacyStatus,
-              }
-            : undefined
+          const context = await getAccountReadContext()
           throw steps.fail('account', new Error('No account data received'), { context })
         }
 

@@ -128,7 +128,7 @@ class BcscCore: NSObject {
 
     let payload = builder.build()
 
-    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+    guard let serializedJWT = signJWT(payload: payload, method: "createClientAssertionJWT", reject: reject) else {
       return nil // Error already handled by signJWT
     }
 
@@ -157,9 +157,10 @@ class BcscCore: NSObject {
       code: 0,
       userInfo: [
         "site": site,
-        "underlying": underlying.localizedDescription,
+        // domain:code only, like rejectWithDiagnostics: localizedDescription can contain paths, and key tags
+        // are identifiers. This userInfo reaches remote logs and problem reports via AppError.summarizeCause
+        "underlying": "\((underlying as NSError).domain):\((underlying as NSError).code)",
         "keyCount": keys.count,
-        "keyTags": newestFirst.map(\.tag),
         "keyCreated": newestFirst.map { iso8601.string(from: $0.created) },
       ]
     )
@@ -188,9 +189,9 @@ class BcscCore: NSObject {
   }
 
   /**
-   * Compact key inventory for reject MESSAGE strings. The problem-report view
-   * surfaces only the message text (via AppError.technicalMessage), not the
-   * structured userInfo, so the essentials must ride in the message itself.
+   * Compact key inventory for reject MESSAGE strings. Problem reports now also carry a rejection's
+   * structured userInfo (AppError.summarizeCause), so new diagnostics belong in `rejectWithDiagnostics`
+   * instead. Note this summary includes the newest key's tag, which is an identifier.
    */
   private func keyInventorySummary(_ keys: [PrivateKeyInfo]) -> String {
     guard let newest = keys.sorted(by: { $0.created > $1.created }).first else {
@@ -243,8 +244,8 @@ class BcscCore: NSObject {
     )
   }
 
-  /// Compact decrypt diagnostics for reject MESSAGE strings (the problem-report view
-  /// surfaces only the message text, not the structured userInfo). Carries the key
+  /// Compact decrypt diagnostics for reject MESSAGE strings (problem reports now also carry
+  /// userInfo, via AppError.summarizeCause; see `rejectWithDiagnostics`). Carries the key
   /// inventory plus the incoming JWE header and whether its kid matches any local key —
   /// the essentials for telling "no key" / "wrong key" / "unsupported alg" / "corrupt"
   /// apart from a field report alone.
@@ -261,10 +262,11 @@ class BcscCore: NSObject {
     return "[keys=\(keys.count), newest=\(newest), jweParts=\(header.parts), jweAlg=\(header.alg), jweEnc=\(header.enc), jweKid=\(jweKid), kidMatchesLocal=\(kidMatchesLocal)]"
   }
 
-  /// Signs `payload` with the newest key. Rejections use the site `method.stage` (list_keys, select_key,
+  /// Signs `payload` with the newest key. `method` names the JS-facing caller so reports can tell quick login,
+  /// pairing and the other signers apart: rejections use the site `method.stage` (list_keys, select_key,
   /// get_key, sign).
   private func signJWT(
-    payload: JWTClaimsSet, method: String = "signJWT", reject: @escaping RCTPromiseRejectBlock
+    payload: JWTClaimsSet, method: String, reject: @escaping RCTPromiseRejectBlock
   ) -> String? {
     let keyPairManager = KeyPairManager()
     let keys: [PrivateKeyInfo]
@@ -872,13 +874,8 @@ class BcscCore: NSObject {
       .claim(name: "client_id", value: clientID)
 
     let payload = builder.build()
-    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
-      reject(
-        "E_INVALID_ACCOUNT_DATA",
-        "Account must have an 'issuer', 'clientID' and 'securityMethod' fields",
-        nil
-      ) // Error already handled by signJWT
-      return
+    guard let serializedJWT = signJWT(payload: payload, method: "createPreVerificationJWT", reject: reject) else {
+      return // Error already handled by signJWT; a second reject is an illegal callback invocation
     }
     resolve(serializedJWT)
   }
@@ -904,7 +901,7 @@ class BcscCore: NSObject {
 
     let payload = builder.build()
 
-    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+    guard let serializedJWT = signJWT(payload: payload, method: "createSignedJWT", reject: reject) else {
       return // Error already handled by signJWT
     }
 
@@ -1888,7 +1885,7 @@ class BcscCore: NSObject {
         return nil
       }
 
-      return signJWT(payload: payload, reject: reject)
+      return signJWT(payload: payload, method: "createQuickLoginJWT", reject: reject)
     } catch {
       reject(
         "E_JWT_CREATION_FAILED",

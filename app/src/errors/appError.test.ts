@@ -496,7 +496,7 @@ describe('AppError', () => {
       // Mimic an iOS native rejection carrying keychain diagnostics in userInfo.
       const nativeLike = Object.assign(new Error('Failed to retrieve key pair'), {
         code: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
-        userInfo: { site: 'retrieve_latest', keyCount: 2, keyTags: ['a/1', 'b/2'] },
+        userInfo: { site: 'retrieve_latest', keyCount: 2, keyCreated: ['2024-01-01T00:00:00Z'] },
       })
       const error = new AppError('Keychain lookup returned nil', identity, { cause: nativeLike, track: false })
 
@@ -506,7 +506,7 @@ describe('AppError', () => {
         name: 'Error',
         message: 'Failed to retrieve key pair',
         code: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
-        userInfo: { site: 'retrieve_latest', keyCount: 2, keyTags: ['a/1', 'b/2'] },
+        userInfo: { site: 'retrieve_latest', keyCount: 2, keyCreated: ['2024-01-01T00:00:00Z'] },
       })
     })
 

@@ -287,7 +287,7 @@ resulting error to the alert. For a single failure outside a flow, use `createFa
   `context`, only on the steps it could explain. Use status codes only, never values: `getPushTokenStatus`
   (placeholder push tokens) and `getAccountReadStatus` from bcsc-core (why `getAccount` resolved null). Call
   `getAccountReadStatus` only after `getAccount` returns null, and never let a diagnostic call replace the
-  real failure.
+  real failure. `withAccount` already does this: its `AccountNotFoundError` carries the status as `readContext`.
 
 ## Derived state: compute it from its inputs, don't store a flag
 

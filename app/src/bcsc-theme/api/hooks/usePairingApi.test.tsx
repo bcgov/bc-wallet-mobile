@@ -1,3 +1,4 @@
+import { getPushTokenStatus } from '@/bcsc-theme/utils/push-notification-tokens'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
@@ -5,7 +6,7 @@ import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
 import { ChallengeSource, signPairingCode } from 'react-native-bcsc-core'
 import usePairingApi from './usePairingApi'
-import { withAccount } from './withAccountGuard'
+import { AccountNotFoundError, withAccount } from './withAccountGuard'
 
 // Prettier automatically adds a ; at the start of some lines, which causes eslint no-extra-semi to complain
 /* eslint-disable no-extra-semi */
@@ -34,6 +35,7 @@ jest.mock('react-native-bcsc-core', () => ({
 }))
 
 jest.mock('./withAccountGuard', () => ({
+  AccountNotFoundError: jest.requireActual('./withAccountGuard').AccountNotFoundError,
   withAccount: jest.fn(),
 }))
 
@@ -135,6 +137,38 @@ describe('usePairingApi', () => {
       expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
       expect(error.context.failure_step).toBe('account')
       expect(error.cause).toBe(accountError)
+    })
+
+    it('records why the account could not be read when it is missing', async () => {
+      const readContext = { account_read_status: 'account_decode_failed', account_read_environment: 'PROD' }
+      ;(withAccount as jest.Mock).mockRejectedValue(new AccountNotFoundError(readContext))
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context).toMatchObject({ failure_step: 'account', ...readContext })
+    })
+
+    it('blames the account step, without a read status, when reading the account rejects', async () => {
+      ;(withAccount as jest.Mock).mockRejectedValue(new Error('native read failed'))
+
+      const error = await loginFailure()
+
+      expect(error.context.failure_step).toBe('account')
+      expect(error.context.account_read_status).toBeUndefined()
+    })
+
+    it('reports a plain error after the account is read as unexpected, not as an account failure', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      jest.mocked(getPushTokenStatus).mockImplementationOnce(() => {
+        throw new TypeError('bad tokens')
+      })
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context.failure_step).toBe('unexpected')
+      expect(error.context.account_read_status).toBeUndefined()
     })
 
     it('keeps the code of an unhandled request error and adds where it failed', async () => {
