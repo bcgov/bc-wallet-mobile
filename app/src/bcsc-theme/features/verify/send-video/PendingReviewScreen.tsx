@@ -38,7 +38,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   // Check status when the screen is visible
   useFocusEffect(
     useCallback(() => {
-      handleCheckStatus()
+      void handleCheckStatus()
     }, [handleCheckStatus])
   )
 
@@ -48,7 +48,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
     useCallback(() => {
       const subscription = AppState.addEventListener('change', (nextAppState) => {
         if (nextAppState === 'active') {
-          handleCheckStatus()
+          void handleCheckStatus()
         }
       })
 
@@ -63,7 +63,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   // verificationRequestStatus. A decided status is acted on straight away rather than at the next focus
   useEffect(() => {
     if (navigation.isFocused() && isDecided(verificationRequestStatus)) {
-      handleCheckStatus()
+      void handleCheckStatus()
     }
   }, [navigation, verificationRequestStatus, handleCheckStatus])
 

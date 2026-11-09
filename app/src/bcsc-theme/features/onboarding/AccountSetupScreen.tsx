@@ -74,7 +74,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
             logger.error('[AccountSetupScreen] Failed to clear transfer device authorization', error as Error)
           }
         }
-        cleanUpAbandonedTransfer().finally(stopLoading)
+        void cleanUpAbandonedTransfer().finally(stopLoading)
       }
     }, [dispatch, clearDeviceCodes, logger])
   )

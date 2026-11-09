@@ -3,10 +3,10 @@ import { acceptSystemAlert } from '../helpers/alerts.js'
 import { V3 } from '../v3TestIDs.js'
 
 /**
- * Driving steps for the legacy native v3 app (`BCSC-v3.*`), one per screen, over the raw selectors in
- * `v3TestIDs.ts`. The migration lane runs them one checkpoint each; the upgrade scenarios compose
- * them through the v3 previous-build driver. Only the in-person path exists — v3 has no selectors for
- * send-video, address, email or non-BCSC capture.
+ * Driving steps for the legacy native v3 app (`BCSC-v3.15.x.*`), one per screen, over the raw selectors
+ * in `v3TestIDs.ts`; the upgrade scenarios compose them through the v3 previous-build driver
+ * (`prev-build/v3.ts`). Only the in-person path exists — v3 has no selectors for send-video, address,
+ * email or non-BCSC capture.
  */
 
 /** The PIN created on v3 and reused to unlock v4 after the swap. */

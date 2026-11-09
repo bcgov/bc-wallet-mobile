@@ -83,7 +83,7 @@ const ManualPairing: React.FC = () => {
     if (pre?.length === PAIRING_CODE_LENGTH) {
       setCode(pre)
       // Only QRScanner sets this param, so a pre-populated code is a QR scan
-      onSubmit(pre, ChallengeSource.RemotePairingQrCode)
+      void onSubmit(pre, ChallengeSource.RemotePairingQrCode)
       tabNavigation.setParams({ pairingCode: undefined })
     }
   }, [route.params?.pairingCode, onSubmit, tabNavigation])
@@ -97,7 +97,7 @@ const ManualPairing: React.FC = () => {
 
       // Auto submit
       if (cleanCode.length === PAIRING_CODE_LENGTH) {
-        onSubmit(cleanCode, ChallengeSource.RemotePairingCode)
+        void onSubmit(cleanCode, ChallengeSource.RemotePairingCode)
       }
     },
     [onSubmit]

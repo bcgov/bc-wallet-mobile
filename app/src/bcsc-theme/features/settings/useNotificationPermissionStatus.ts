@@ -41,11 +41,11 @@ export const useNotificationPermissionStatus = (): NotificationPermissionStatusR
   // also fires on initial focus), but jest mocks useFocusEffect as a no-op, so this
   // is the only path that populates status under test. Do not remove it.
   useEffect(() => {
-    refresh()
+    void refresh()
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
-        refresh()
+        void refresh()
       }
     })
 
@@ -55,7 +55,7 @@ export const useNotificationPermissionStatus = (): NotificationPermissionStatusR
   // Refresh when the screen regains focus (e.g. returning from the notification settings sub-screen).
   useFocusEffect(
     useCallback(() => {
-      refresh()
+      void refresh()
     }, [refresh])
   )
 

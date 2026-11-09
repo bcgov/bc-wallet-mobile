@@ -497,6 +497,24 @@ describe('BCSC Client', () => {
       })
     })
 
+    it('should not call onError when skipOnErrorHandler is set, but still log the error', async () => {
+      const mockLogger = createMockLogger()
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+      client.client.defaults.adapter = rejectWithStatus(500, 'Internal Server Error')
+
+      await expect(client.get('/endpoint', { skipBearerAuth: true, skipOnErrorHandler: true })).rejects.toBeInstanceOf(
+        AppError
+      )
+
+      expect(onError).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('[BCSCApiClient]'),
+        expect.objectContaining({ code: expect.any(String) })
+      )
+    })
+
     describe('network errors (no response)', () => {
       const TLS_NATIVE_TEXT =
         'Hostname id.example.com not verified:\n    certificate: sha256/abc=\n    subjectAltNames: [other.example.com]'
@@ -626,6 +644,54 @@ describe('BCSC Client', () => {
       expect(forceRefreshSpy).toHaveBeenCalledTimes(1)
       expect(callCount).toBe(2) // original + one retry, then surfaced
     })
+
+    it('should propagate a failed token refresh as-is, without retrying or running the error pipeline', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupBearerClient(mockLogger)
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+
+      const refreshError = new Error('refresh failed')
+      jest.spyOn(BCSCApiClient.prototype as any, 'forceRefreshTokens').mockRejectedValue(refreshError)
+
+      let callCount = 0
+      client.client.defaults.adapter = (config: any) => {
+        callCount += 1
+        return reject401(config)
+      }
+
+      await expect(client.get('/protected')).rejects.toBe(refreshError)
+
+      expect(callCount).toBe(1) // no retry was sent
+      expect(onError).not.toHaveBeenCalled()
+      expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('[BCSCApiClient]'), expect.anything())
+    })
+
+    it('should handle a failed refresh request once, in its own interceptor pass, and rethrow it from the 401 pass', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupBearerClient(mockLogger)
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+      ;(getRefreshTokenRequestBody as jest.Mock).mockResolvedValueOnce('grant_type=refresh_token')
+
+      let protectedCalls = 0
+      client.client.defaults.adapter = (config: any) => {
+        if (config.url === client.endpoints.token) {
+          return rejectWithStatus(400, 'Bad Request')(config)
+        }
+        protectedCalls += 1
+        return reject401(config)
+      }
+
+      await expect(client.get('/protected')).rejects.toBeInstanceOf(AppError)
+
+      expect(protectedCalls).toBe(1) // no retry was sent
+      expect(onError).toHaveBeenCalledTimes(1)
+      expect(onError).toHaveBeenCalledWith(
+        expect.any(AppError),
+        expect.objectContaining({ endpoint: client.endpoints.token, statusCode: 400 })
+      )
+    })
   })
 
   describe('fetchEndpointsAndConfig', () => {
@@ -670,6 +736,35 @@ describe('BCSC Client', () => {
       expect(client.endpoints.attestation).toBe('https://example.com/attestation-new')
       expect(client.endpoints.token).toBe('https://example.com/token-new')
       expect(client.endpoints.video).toBe('https://example.com/video-new')
+    })
+
+    it('should not share fallback config or endpoints between client instances', async () => {
+      const clientA = new BCSCApiClient('https://example.com', createMockLogger() as any)
+
+      jest.spyOn(clientA, 'get').mockResolvedValue({
+        data: {
+          maximum_accounts_per_device: 5,
+          allowed_identification_processes: ['process1'],
+          token_endpoint: 'https://example.com/token-new',
+        },
+      } as any)
+      await clientA.fetchEndpointsAndConfig()
+
+      const clientB = new BCSCApiClient('https://example.com', createMockLogger() as any)
+
+      expect(clientA.config.allowedIdentificationProcesses).toEqual([
+        'process1',
+        expect.any(String),
+        expect.any(String),
+      ])
+      expect(clientB.config.maximumAccountsPerDevice).toBe(0)
+      expect(clientB.config.allowedIdentificationProcesses).toEqual([
+        'IDIM L3 Remote BCSC Photo Identity Verification',
+        'IDIM L3 Remote BCSC Non-Photo Identity Verification',
+        'IDIM L3 Remote Non-BCSC Identity Verification',
+      ])
+      expect(clientB.config.allowedIdentificationProcesses).not.toBe(clientA.config.allowedIdentificationProcesses)
+      expect(clientB.endpoints.token).toBe('https://example.com/device/token')
     })
   })
 

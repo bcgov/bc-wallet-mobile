@@ -16,7 +16,7 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
   const { t } = useTranslation()
 
   useEffect(() => {
-    handleSend()
+    void handleSend()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Start once on entry; store updates must not resubmit evidence.
   }, [])
 

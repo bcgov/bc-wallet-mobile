@@ -22,12 +22,12 @@ import {
 import type { PrevBuild } from './types.js'
 
 /**
- * The rolling previous release (`BCSC-prev.*`, 4.1.0 or later): today's onboarding + verify DSL
- * drives it as-is. A release that renames a verify testID or reshapes onboarding surfaces here as a
- * phase-1 failure — upgrade signal, not flake.
+ * Any shipped 4.1.0-or-later build (`BCSC-v4.1.x.*`): today's onboarding + verify DSL drives it as-is.
+ * A release that renames a verify testID or reshapes onboarding surfaces here as a phase-1 failure —
+ * upgrade signal, not flake. The label is the default; `prevBuildFromEnv` sets the version booted.
  */
 export const currentPrevBuild: PrevBuild = {
-  label: 'previous release',
+  label: '4.1.x',
   pin: TEST_PIN,
   bcscUser: TestUsers.photo,
   nonBcscUser: TestUsers.na,

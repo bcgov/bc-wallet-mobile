@@ -294,8 +294,8 @@ export async function tapResetAppConfirm(appearTimeoutMs = DEFAULT_APPEAR_TIMEOU
   }
   // iOS: `acceptAlert` taps the non-cancel action, which is Reset App given
   // the action order in SettingsContent.tsx `onPressRemoveAccount`. The
-  // try/catch handles configs with autoAcceptAlerts enabled (e.g. the
-  // migration device config), where the dialog may already be gone.
+  // try/catch handles configs with autoAcceptAlerts enabled, where the dialog
+  // may already be gone.
   await driver.pause(2000)
   try {
     await driver.acceptAlert()

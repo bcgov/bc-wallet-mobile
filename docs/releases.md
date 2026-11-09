@@ -167,8 +167,8 @@ alone if it's already there.
 The release object is still created by a person, and one thing rides on it:
 publishing a full `bcsc-v*` release runs **Publish Release E2E Builds** on its
 own, which attaches the shipped bcsc-dev binaries to the release as
-`BCSC-v<version>.apk` / `.ipa` and points the nightly e2e upgrade lane at them
-(see `RELEASE.md`). So create the release when the version ships, as a full
+`BCSC-v<version>.apk` / `.ipa` and copies them to Sauce storage for the weekly e2e
+upgrade run (see `RELEASE.md`). So create the release when the version ships, as a full
 release, on the Publish tag of the shipped build (`bcsc-v4.1.1-8677`). The run
 resolves the build from that tag — or, for a tag without a build number, from
 the newest Publish tag of the version — so a release created before the build
@@ -198,10 +198,11 @@ a person still submits the build for App Store review.
 **Releasing on Google Play.** Ring-4 puts the build on its closed track. A
 person promotes it to Production.
 
-**Listing a shipped version for the e2e refresh.** The e2e builds publish on
-their own when the release is published (above); the monthly Refresh E2E Sauce
-Builds run that keeps their Sauce copies alive still learns about a version
-from a manifest line a person adds. See `RELEASE.md`.
+**Listing a shipped version for the e2e upgrade run.** The e2e builds publish
+on their own when the release is published (above); the weekly upgrade run and
+the monthly Refresh E2E Sauce Builds run that keeps the Sauce copies alive still
+learn about a version from a line a person adds to `e2e/upgrade-sources.json`.
+See `RELEASE.md`.
 
 The store steps are on the list to automate. None of these blocks a release today.
 

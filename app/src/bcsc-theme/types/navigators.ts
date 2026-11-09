@@ -65,6 +65,7 @@ export enum BCSCScreens {
   TakeVideo = 'Selfie Video Capture',
   VideoReview = 'Selfie Video Confirmation',
   VideoTooLong = 'Selfie Video Too Long',
+  VideoExpired = 'Selfie Video Expired',
   PendingReview = 'Send Video Check Status',
   CancelledReview = 'BCSCCancelledReview', // FIXME (MD): Not sure which V3 screen this maps to...
   EvidenceUploading = 'Send Video Uploading',
@@ -237,6 +238,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
+  [BCSCScreens.VideoExpired]: undefined
   [BCSCScreens.EvidenceUploading]: undefined
   [BCSCScreens.SuccessfullySent]: { avgTurnaroundTimeMessage?: string } | undefined
   [BCSCScreens.PendingReview]: undefined

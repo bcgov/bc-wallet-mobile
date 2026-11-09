@@ -1110,6 +1110,11 @@ const translation = {
         "RetakeVideo": "Retake video",
         "TogglePlayPause": "Toggle play pause",
       },
+      "VideoExpired": {
+        "Heading": "Your video has expired",
+        "Description": "Recorded videos expire after 5 minutes. To continue, you'll need to retake the video.",
+        "ButtonText": "Retake video",
+      },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long.",
         "Description1": "Your video has to be less than 30 seconds.",

@@ -1,7 +1,7 @@
-import { currentPrevBuild } from '../../../src/flows/prev-build/current.js'
+import { prevBuildFromEnv } from '../../../src/flows/prev-build/index.js'
 import { defineNonBcscPartialUpgrade } from './scenarios/non-bcsc-partial.scenario.js'
 
-/** Previous release → current with partial non-BCSC progress. Checkpoints: `scenarios/non-bcsc-partial.scenario.ts`. */
+/** The PREV_VERSION build → current with partial non-BCSC progress (4.1.x only; the upgradePartial suite). Checkpoints: `scenarios/non-bcsc-partial.scenario.ts`. */
 describe('Upgrade with partial non-BCSC progress', () => {
-  defineNonBcscPartialUpgrade(currentPrevBuild)
+  defineNonBcscPartialUpgrade(prevBuildFromEnv())
 })
