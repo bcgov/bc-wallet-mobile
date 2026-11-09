@@ -8,6 +8,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { EMAIL_MAX_LENGTH, emailSchema, parseField } from '@/bcsc-theme/utils/validation'
 import BulletPointList from '@/components/BulletPointList'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
+import { isHandledAppError } from '@/errors/appError'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -81,8 +82,14 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     } catch (error: any) {
       const message = t('BCSC.EmailConfirmation.ErrorTitle')
       setError(message)
-      focusFirstInvalidField({ email: message })
 
+      // A handled error has already surfaced its own UI (eg. the session-expired modal); refocusing would
+      // raise the keyboard over it, and the API client has already logged it.
+      if (isHandledAppError(error)) {
+        return
+      }
+
+      focusFirstInvalidField({ email: message })
       logger.error(t('BCSC.EmailConfirmation.ErrorTitle'), error)
     } finally {
       setLoading(false)

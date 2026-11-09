@@ -1,4 +1,5 @@
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
+import { AppError, ErrorRegistry } from '@/errors'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -528,6 +529,31 @@ describe('EnterEmailScreen', () => {
 
       expect(scrollToSpy).toHaveBeenCalledWith({ y: 60, animated: false })
       expect(focusSpy.mock.instances.map((i: any) => i.props.testID)).toEqual(['com.ariesbifold:id/email-input'])
+    })
+
+    it('does not focus the email field when the API error was already handled', async () => {
+      const handledError = new AppError('session expired', ErrorRegistry.ACCOUNT_NOT_REGISTERED, { track: false })
+      handledError.handled = true
+      mockCreateEmailVerification.mockRejectedValue(handledError)
+      const focusSpy = jest.spyOn(TextInput.prototype, 'focus')
+      const tree = render(
+        <BasicAppContext>
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
+        </BasicAppContext>
+      )
+
+      fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/email-input'), 'test@example.com')
+      await act(async () => {
+        fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
+      })
+
+      expect(mockCreateEmailVerification).toHaveBeenCalled()
+      expect(focusSpy).not.toHaveBeenCalled()
     })
   })
 })
