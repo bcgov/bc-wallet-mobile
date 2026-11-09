@@ -67,9 +67,8 @@ const rotateKey = async ({
   updateTokens: ReturnType<typeof useSecureActions>['updateTokens']
   fallbackRegistrationAccessToken?: string
 }): Promise<KeyRotationResult> => {
-  // Read fresh, not the store fallback: UpdateDeviceRegistrationSystemCheck's onFail may
-  // have already rotated this token earlier in the same (sequential) onFail pass. Both native
-  // reads reject (not resolve null) on failure, so degrade to null or the fallback is unreachable.
+  // Read fresh, not the store fallback: UpdateDeviceRegistrationSystemCheck's onFail may have rotated it this pass.
+  // Both native reads reject (not resolve null) on failure, so degrade to null or the fallback is unreachable.
   const [tokenInfo, account] = await Promise.all([
     getToken(TokenType.Registration).catch(() => null),
     getAccount().catch(() => null),
@@ -223,9 +222,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // `!!` (not `Boolean()`) keeps TS narrowing in the branches; the `else if` below keeps the two exclusive.
     const shouldCheckVerificationRequest = !isVerified && !!verificationRequestId
     const shouldRecoverPendingVerification = !isVerified && !!deviceCode && !!userCode
-    // updateRegistration needs the user's chosen nickname. Without one (e.g. during initial onboarding) there is
-    // nothing to re-register, and the check would fail with "No client name found for registration update" on every
-    // launch until setup completes.
+    // Needs the user's chosen nickname: without one (e.g. during initial onboarding) the check fails with
+    // "No client name found for registration update" on every launch until setup completes.
     const shouldUpdateRegistration =
       isBCServicesCardBundle && !!store.bcscSecure.registrationAccessToken && !!store.bcsc.selectedNickname
     // Key rotation (#3876): gated like the registration update but deliberately skips selectedNickname
