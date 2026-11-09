@@ -2,6 +2,7 @@ import * as useFactoryResetModule from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as ErrorAlertContext from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
+import { IASEnvironment } from '@/utils/environment'
 import { mockAppError } from '@mocks/helpers/error'
 import { CommonActions } from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
@@ -19,6 +20,12 @@ type Alerts = ReturnType<typeof useAlerts>
 type AlertName = { [K in keyof Alerts]: Alerts[K] extends () => void ? K : never }[keyof Alerts]
 
 jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
+const mockSwitchEnvironment = jest.fn()
+
+// Factory mock: automocking would load the real hook, which pulls in the store and the partial @bifold/core mock below
+jest.mock('@/bcsc-theme/hooks/useSwitchEnvironment', () => ({
+  useSwitchEnvironment: () => mockSwitchEnvironment,
+}))
 
 const mockUseStore = jest.fn()
 const mockUseServices = jest.fn()
@@ -289,6 +296,55 @@ describe('useAlerts', () => {
         event: AppEventCode.FORGET_ALL_PAIRINGS,
         actions: [{ text: 'Global.OK' }],
       })
+    })
+  })
+
+  describe('invalidEnvironmentErrorModal', () => {
+    it('should show the environment mismatch error modal', () => {
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+
+      const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
+
+      result.current.invalidEnvironmentErrorModal()
+
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'Alerts.EnvironmentMismatch.Title',
+        'Alerts.EnvironmentMismatch.Description',
+        expect.objectContaining({ appEvent: AppEventCode.ENVIRONMENT_MISMATCH }),
+        expect.any(Object)
+      )
+    })
+
+    it('should not switch the environment until the modal is dismissed', () => {
+      mockSwitchEnvironment.mockClear()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: jest.fn() } as any)
+
+      const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
+
+      result.current.invalidEnvironmentErrorModal()
+
+      expect(mockSwitchEnvironment).not.toHaveBeenCalled()
+    })
+
+    it('should switch to the production environment when the modal is dismissed', () => {
+      mockSwitchEnvironment.mockClear()
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+
+      const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
+
+      result.current.invalidEnvironmentErrorModal()
+      mockEmitErrorModal.mock.calls[0][3].onDismiss()
+
+      expect(mockSwitchEnvironment).toHaveBeenCalledTimes(1)
+      expect(mockSwitchEnvironment).toHaveBeenCalledWith(IASEnvironment.PROD)
     })
   })
 
