@@ -1105,9 +1105,14 @@ export const useSecureActions = () => {
             logger.error(
               '[hydrateSecureState] event=refresh_token_rejected server rejected a locally-valid refresh token (invalid_token); skipping key recovery'
             )
+          } else if (isAppError(error, AppEventCode.CLOCK_SKEW_ERROR)) {
+            // The keys are fine: the refresh was refused, or its assertion rejected, for the device clock
+            logger.warn(
+              '[hydrateSecureState] event=clock_skew token refresh failed on the device clock; skipping key recovery'
+            )
           } else {
             // Only a 401 naming an unknown client, or one that doesn't own the token, proves the stored ID is
-            // bad. Other 401s (bad signature, clock skew) and network/timeout/5xx go straight to key recovery.
+            // bad. Other 401s (bad signature) and network/timeout/5xx go straight to key recovery.
             if (driftDetected && isUnusableClientIdError(error)) {
               const repaired = await repairClientIdDrift()
               if (repaired) {
