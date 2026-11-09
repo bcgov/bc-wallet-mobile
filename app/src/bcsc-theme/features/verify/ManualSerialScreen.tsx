@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { firstErrorKey, serialSchema } from '@/bcsc-theme/utils/validation'
@@ -15,6 +16,7 @@ import { Image } from 'react-native'
 const SERIAL_HIGHLIGHT_IMAGE = Image.resolveAssetSource(SerialHighlightImage).uri
 
 const maxSerialNumberLength = 15
+const FIELD_ORDER = ['serial'] as const
 
 type ManualSerialScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
@@ -27,6 +29,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   const { updateUserInfo } = useSecureActions()
   const [serial, setSerial] = useState(store.bcscSecure.serial ?? '')
   const [error, setError] = useState<string | null>(null)
+  const { scrollViewRef, inputRefs, onFieldLayout, focusFirstInvalidField } = useFocusFirstInvalidField(FIELD_ORDER)
 
   const handleChangeText = useCallback((text: string) => {
     setSerial(text.replace(/\s/g, ''))
@@ -36,13 +39,15 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
     const errorKey = firstErrorKey(serialSchema, serial)
 
     if (errorKey) {
-      setError(t(errorKey))
+      const message = t(errorKey)
+      setError(message)
+      focusFirstInvalidField({ serial: message })
       return
     }
 
     await updateUserInfo({ serial })
     navigation.navigate(BCSCScreens.EnterBirthdate)
-  }, [serial, t, navigation, updateUserInfo])
+  }, [serial, t, navigation, updateUserInfo, focusFirstInvalidField])
 
   const controls = (
     <ControlContainer>
@@ -61,18 +66,21 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       padded={false}
       keyboardActive
       controls={controls}
+      scrollViewRef={scrollViewRef}
       scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
     >
       <ThemedText variant={'headingThree'}>{t('BCSC.ManualSerial.InputTitle')}</ThemedText>
       <ThemedText>{t('BCSC.ManualSerial.InputSubText')}</ThemedText>
 
       <InputWithValidation
+        ref={inputRefs.serial}
         id={'serial'}
         label={t('BCSC.ManualSerial.InputLabel')}
         value={serial}
         onChangeText={handleChangeText}
         error={error}
         onErrorClear={() => setError(null)}
+        onLayout={onFieldLayout('serial')}
         textInputProps={{
           maxLength: maxSerialNumberLength,
           autoCapitalize: 'characters',
