@@ -746,6 +746,23 @@ export async function waitForSendVideoDecision(
 type ApprovedLanding = 'success' | 'inPerson' | 'pendingReview' | 'method' | 'prompt' | 'card' | 'home'
 
 /**
+ * A {@link finishApprovedVerification} round on the pending review. The screen has no manual check (#4968):
+ * it re-checks the status as it mounts and moves on by itself once it hears the approval. Give that check its
+ * answer; still pending, leave by the back arrow so the next round re-enters through the Home card and that
+ * fresh mount checks again.
+ */
+async function waitOutPendingReviewCheck(): Promise<void> {
+  const decided = await probeAnyScreen(
+    { success: VerificationSuccessScreen, cancelled: CancelledReviewScreen },
+    FOCUS_CHECK_SETTLE_MS
+  )
+  if (decided === 'cancelled') {
+    throw new Error('The pending review moved on to CancelledReview: the app does not read the request as approved')
+  }
+  if (!decided) await PendingReviewScreen.back.tap()
+}
+
+/**
  * Finish a verification whose approval landed while the app was CLOSED — the "approved, not finished
  * in-app" state an update can catch a user in: the code was shown at the counter (or the video
  * uploaded), the agent approved it, and the app was updated before it was ever reopened.
@@ -791,22 +808,9 @@ export async function finishApprovedVerification(method: 'in-person' | 'send-vid
       case 'inPerson':
         await VerifyInPersonScreen.tapWhenEnabled('primary') // Complete: re-fetches the status
         break
-      case 'pendingReview': {
-        // The screen has no manual check (#4968): it re-checks the status as it mounts and moves on by itself
-        // once it hears the approval. Give that check its answer; still pending, leave by the back arrow so the
-        // next round re-enters through the Home card and that fresh mount checks again.
-        const decided = await probeAnyScreen(
-          { success: VerificationSuccessScreen, cancelled: CancelledReviewScreen },
-          FOCUS_CHECK_SETTLE_MS
-        )
-        if (decided === 'cancelled') {
-          throw new Error(
-            'The pending review moved on to CancelledReview: the app does not read the request as approved'
-          )
-        }
-        if (!decided) await PendingReviewScreen.back.tap()
+      case 'pendingReview':
+        await waitOutPendingReviewCheck()
         break
-      }
       case 'method':
         if (method === 'send-video') {
           throw new Error('Resumed onto method selection: the submitted send-video request did not survive the upgrade')
