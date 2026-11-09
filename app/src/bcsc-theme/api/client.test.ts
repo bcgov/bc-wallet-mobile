@@ -666,6 +666,32 @@ describe('BCSC Client', () => {
       expect(onError).not.toHaveBeenCalled()
       expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('[BCSCApiClient]'), expect.anything())
     })
+
+    it('should handle a failed refresh request once, in its own interceptor pass, and rethrow it from the 401 pass', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupBearerClient(mockLogger)
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+      ;(getRefreshTokenRequestBody as jest.Mock).mockResolvedValueOnce('grant_type=refresh_token')
+
+      let protectedCalls = 0
+      client.client.defaults.adapter = (config: any) => {
+        if (config.url === client.endpoints.token) {
+          return rejectWithStatus(400, 'Bad Request')(config)
+        }
+        protectedCalls += 1
+        return reject401(config)
+      }
+
+      await expect(client.get('/protected')).rejects.toBeInstanceOf(AppError)
+
+      expect(protectedCalls).toBe(1) // no retry was sent
+      expect(onError).toHaveBeenCalledTimes(1)
+      expect(onError).toHaveBeenCalledWith(
+        expect.any(AppError),
+        expect.objectContaining({ endpoint: client.endpoints.token, statusCode: 400 })
+      )
+    })
   })
 
   describe('fetchEndpointsAndConfig', () => {
