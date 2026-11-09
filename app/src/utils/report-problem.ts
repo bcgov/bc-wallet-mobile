@@ -1,6 +1,7 @@
 import { getNavigationBreadcrumbs } from '@/bcsc-theme/navigators/stack-utils'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppError } from '@/errors'
+import { getNativeErrorFields } from '@/errors/nativeErrorFields'
 import { AppEventCode } from '@/events/appEventCode'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios from 'axios'
@@ -145,6 +146,9 @@ const _flattenAppError = (error?: AppError) => {
       flattened[key] = context[key]
     }
   }
+
+  // The native code and site of a native rejection beneath the error
+  Object.assign(flattened, getNativeErrorFields(error))
 
   // Append the error json to the end of the flattened object to expose additional context
   flattened.error_json = error.toJSON()
