@@ -11,7 +11,7 @@ export type NonBcscTestUser = Extract<TestUser, { flow: 'non-bcsc' }>
  * lineage cannot arrange has no wrapper spec for it, so nothing skips at runtime.
  */
 export interface PrevBuild {
-  /** Names the build in annotations, e.g. 'previous release', '4.0.3', 'v3'. */
+  /** Names the build in annotations — the version booted (`prevBuildFromEnv`), e.g. '4.1.3'. */
   readonly label: string
   /** The PIN created on this build and used to unlock the current one after the swap. */
   readonly pin: string

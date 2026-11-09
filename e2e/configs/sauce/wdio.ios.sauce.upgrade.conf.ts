@@ -1,22 +1,24 @@
 // sauce/wdio.ios.sauce.upgrade.conf.ts
 /**
- * SauceLabs iOS config for upgrade tests (previous release → current).
+ * SauceLabs iOS config for the upgrade suites (a shipped version → the current build).
  *
- * Starts with the previous released iOS build (PREV_IOS_APP — default `BCSC-prev.ipa`, the
- * rolling Sauce storage name refreshed by the publish/refresh workflows). The upgrade suite
- * installs the current build over it mid-test using `driver.installApp()`.
+ * Starts with the shipped iOS build `PREV_VERSION` names — `BCSC-v<version>.ipa` in Sauce storage,
+ * kept there by the publish + refresh workflows for every version in e2e/upgrade-sources.json
+ * (`PREV_IOS_APP` overrides the file: any older build still in storage). The upgrade suites install
+ * the current build over it mid-test using `driver.installApp()`.
  *
  * Mid-test installs use the storage-based `mobile: installApp`, which passes through Sauce
  * resigning on public RDC (validated 2026-08-25, 7/7). A local real-device alternative remains:
  * configs/local/wdio.ios.local.device.upgrade.conf.ts.
  *
  * Key differences from the standard iOS sauce config:
- * - `appium:app` points to the previous release (PREV_IOS_APP)
+ * - `appium:app` points to the previous build (PREV_VERSION / PREV_IOS_APP)
  * - `appium:noReset: false` and `appium:fullReset: true` for a clean start
  */
+import { resolvePrevApp } from '../../src/flows/prev-build/sources.js'
 import { config as sauceConfig, sauceRdcOptions } from './wdio.shared.sauce.conf.js'
 
-const prevAppFilename = process.env.PREV_IOS_APP || 'BCSC-prev.ipa'
+const prev = resolvePrevApp('ios')
 
 const config = { ...sauceConfig }
 
@@ -25,7 +27,7 @@ config.capabilities = [
     platformName: 'iOS',
     'appium:deviceName': process.env.IOS_DEVICE_NAME || 'iPhone.*',
     'appium:automationName': 'XCUITest',
-    'appium:app': `storage:filename=${prevAppFilename}`,
+    'appium:app': `storage:filename=${prev.app}`,
     'appium:noReset': false,
     'appium:fullReset': true,
     'appium:newCommandTimeout': 240,
@@ -35,7 +37,7 @@ config.capabilities = [
     }),
     'sauce:options': {
       ...sauceRdcOptions,
-      name: process.env.TEST_NAME || 'Upgrade from previous release (iOS)',
+      name: process.env.TEST_NAME || `Upgrade from ${prev.version} (iOS)`,
       // Allow app install during test
       resigningEnabled: true,
     },
