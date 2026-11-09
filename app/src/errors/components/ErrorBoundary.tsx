@@ -12,12 +12,7 @@ import { ErrorInfoCard } from './ErrorInfoCard'
 // Innermost frames name the failing component and its screen; outer frames are the same provider shell every time
 const MAX_COMPONENT_STACK_FRAMES = 50
 
-/**
- * Keeps the innermost frames of React's component stack as a single string, because Loki's
- * `| json` parser skips arrays.
- *
- * @returns the trimmed stack, or undefined when React supplied no stack
- */
+// One string, not an array: Loki's `| json` parser skips arrays
 export const trimComponentStack = (componentStack?: string | null): string | undefined => {
   const frames = (componentStack ?? '')
     .split('\n')
@@ -64,7 +59,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     const { error: appError } = this.state
     const componentStack = trimComponentStack(errorInfo.componentStack)
 
-    // Added before track() and deliberately not part of the analytics event, which carries only code and message
+    // Report-only context: track() sends analytics just the code and message
     if (componentStack) {
       appError?.addContext({ component_stack: componentStack })
     }

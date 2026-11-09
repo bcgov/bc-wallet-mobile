@@ -200,25 +200,30 @@ describe('ErrorBoundaryWrapper', () => {
       expect(frames[0]).toContain('ThrowingComponent')
     })
 
-    it.each([[''], [null], [undefined]])('skips addContext but still logs and tracks when React gives %p', (stack) => {
-      const addContextSpy = jest.spyOn(AppError.prototype, 'addContext')
-      const trackSpy = jest.spyOn(AppError.prototype, 'track')
-      const boundary = new ErrorBoundary({ children: null, t: (key: string) => key, logger: mockLogger as any })
-      boundary.state = {
-        hasError: true,
-        error: ErrorBoundary.getDerivedStateFromError(new Error('boom')).error ?? null,
+    it.each([[''], ['  \n  '], [null], [undefined]])(
+      'skips addContext but still logs, tracks and reports when React gives %j',
+      (stack) => {
+        const addContextSpy = jest.spyOn(AppError.prototype, 'addContext')
+        const trackSpy = jest.spyOn(AppError.prototype, 'track')
+        const boundary = new ErrorBoundary({ children: null, t: (key: string) => key, logger: mockLogger as any })
+        boundary.state = {
+          hasError: true,
+          error: ErrorBoundary.getDerivedStateFromError(new Error('boom')).error ?? null,
+        }
+
+        boundary.componentDidCatch(new Error('boom'), { componentStack: stack } as any)
+
+        expect(addContextSpy).not.toHaveBeenCalled()
+        expect(trackSpy).toHaveBeenCalledTimes(1)
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'ErrorBoundary caught an error:',
+          { component_stack: undefined },
+          expect.any(Error)
+        )
+        expect(boundary.handleReport()).toBe('TEST-CODE')
+        expect(reportProblem).toHaveBeenCalledWith(expect.objectContaining({ error: boundary.state.error }))
       }
-
-      boundary.componentDidCatch(new Error('boom'), { componentStack: stack } as any)
-
-      expect(addContextSpy).not.toHaveBeenCalled()
-      expect(trackSpy).toHaveBeenCalledTimes(1)
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'ErrorBoundary caught an error:',
-        { component_stack: undefined },
-        expect.any(Error)
-      )
-    })
+    )
   })
 
   describe('trimComponentStack', () => {
