@@ -1,13 +1,45 @@
 /* eslint-disable react/prop-types */
 import { reportProblem } from '@/utils/logger'
 import { AbstractBifoldLogger } from '@bifold/core'
-import React, { ReactNode } from 'react'
+import React, { ErrorInfo, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { AppError } from '../appError'
 import { ErrorRegistry } from '../errorRegistry'
 import { ErrorInfoCard } from './ErrorInfoCard'
+
+// Innermost frames name the failing component and its screen; outer frames are the same provider shell every time
+const MAX_COMPONENT_STACK_FRAMES = 100
+const MAX_COMPONENT_STACK_LENGTH = 8000 // UTF-16 code units (JS string length)
+
+/**
+ * Reduces React's component stack to a bounded single string (innermost frames first).
+ * Frame names are not length-bounded, so both a frame cap and a character cap apply; a single
+ * string is used because Loki's `| json` parser skips arrays.
+ *
+ * @returns the trimmed stack, or undefined when React supplied no stack
+ */
+export const trimComponentStack = (componentStack?: string | null): string | undefined => {
+  const frames = (componentStack ?? '')
+    .split('\n')
+    .map((frame) => frame.trim())
+    .filter(Boolean)
+
+  const kept: string[] = []
+  let length = 0
+  for (const frame of frames.slice(0, MAX_COMPONENT_STACK_FRAMES)) {
+    const nextLength = length + frame.length + (kept.length ? 1 : 0)
+    if (nextLength > MAX_COMPONENT_STACK_LENGTH) {
+      break
+    }
+    kept.push(frame)
+    length = nextLength
+  }
+
+  // An oversized innermost frame is still the most useful one, so keep it truncated
+  return kept.length ? kept.join('\n') : frames[0]?.slice(0, MAX_COMPONENT_STACK_LENGTH)
+}
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -28,7 +60,7 @@ interface ErrorBoundaryState {
  * using hardcoded fallback colors. This avoids depending on ThemeProvider
  * or any other context that lives below it.
  */
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasError: false, error: null }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
@@ -40,11 +72,18 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     return { hasError: true, error: appError }
   }
 
-  componentDidCatch(error: Error): void {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const { logger } = this.props
+    const { error: appError } = this.state
+    const componentStack = trimComponentStack(errorInfo.componentStack)
 
-    logger.error('ErrorBoundary caught an error:', error)
-    this.state.error?.track()
+    // Added before track() and deliberately not part of the analytics event, which carries only code and message
+    if (componentStack) {
+      appError?.addContext({ component_stack: componentStack })
+    }
+
+    logger.error('ErrorBoundary caught an error:', { component_stack: componentStack }, error)
+    appError?.track()
   }
 
   handleDismiss = (): void => {
