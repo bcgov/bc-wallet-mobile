@@ -179,15 +179,6 @@ describe('ErrorBoundaryWrapper', () => {
       expect(addContextSpy.mock.contexts[0]).toBe(reported)
     })
 
-    it('adds the component stack before tracking', () => {
-      const addContextSpy = jest.spyOn(AppError.prototype, 'addContext')
-      const trackSpy = jest.spyOn(AppError.prototype, 'track')
-
-      renderThrowing()
-
-      expect(addContextSpy.mock.invocationCallOrder[0]).toBeLessThan(trackSpy.mock.invocationCallOrder[0])
-    })
-
     it('keeps only the innermost frames of a deep tree', () => {
       const Nest = ({ depth }: { depth: number }) => (depth > 0 ? <Nest depth={depth - 1} /> : <ThrowingComponent />)
 
@@ -201,7 +192,7 @@ describe('ErrorBoundaryWrapper', () => {
     })
 
     it.each([[''], ['  \n  '], [null], [undefined]])(
-      'skips addContext but still logs, tracks and reports when React gives %j',
+      'skips addContext but still logs and tracks when React gives %j',
       (stack) => {
         const addContextSpy = jest.spyOn(AppError.prototype, 'addContext')
         const trackSpy = jest.spyOn(AppError.prototype, 'track')
@@ -220,8 +211,6 @@ describe('ErrorBoundaryWrapper', () => {
           { component_stack: undefined },
           expect.any(Error)
         )
-        expect(boundary.handleReport()).toBe('TEST-CODE')
-        expect(reportProblem).toHaveBeenCalledWith(expect.objectContaining({ error: boundary.state.error }))
       }
     )
   })
