@@ -22,7 +22,7 @@ jest.mock('@bifold/core', () => {
 const mockUseBCSCApiClientState = jest.mocked(useBCSCApiClientState)
 const mockDispatch = jest.fn()
 const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() }
-const mockClient = { recordServerTime: jest.fn() }
+const mockClient = { recordServerTime: jest.fn(), setClockCheck: jest.fn() }
 
 const wrapper = ({ children }: { children: React.ReactNode }) => <ServerStatusProvider>{children}</ServerStatusProvider>
 const renderProvider = () => renderHook(() => useServerStatus(), { wrapper })
@@ -53,7 +53,49 @@ describe('ServerStatusProvider', () => {
       const { result } = renderProvider()
       await waitFor(() => expect(result.current.hasChecked).toBe(true))
 
-      expect(mockClient.recordServerTime).toHaveBeenCalledWith()
+      expect(mockClient.recordServerTime).toHaveBeenCalledWith(undefined)
+    })
+
+    it('registers its status fetch as the check a token request runs when there is no reading', async () => {
+      const { result } = renderProvider()
+      await waitFor(() => expect(result.current.hasChecked).toBe(true))
+
+      const clockCheck = mockClient.setClockCheck.mock.lastCall?.[0]
+      await act(async () => {
+        await clockCheck()
+      })
+
+      expect(mockGetServerStatus).toHaveBeenCalledTimes(2)
+    })
+
+    it('ignores a status fetch that started before the app went to the background', async () => {
+      let appStateCallback: (state: AppStateStatus) => void = () => undefined
+      jest.spyOn(AppState, 'addEventListener').mockImplementation((_, callback) => {
+        appStateCallback = callback as (state: AppStateStatus) => void
+        return { remove: jest.fn() } as any
+      })
+      let resolveStaleFetch: (status: unknown) => void = () => undefined
+      mockGetServerStatus.mockReturnValueOnce(new Promise((resolve) => (resolveStaleFetch = resolve)))
+      const staleTimestamp = new Date('2026-11-04T19:00:00Z')
+      const freshTimestamp = new Date('2026-11-04T19:41:17Z')
+
+      const { result } = renderProvider()
+      act(() => appStateCallback('background'))
+
+      // The fetch on return starts fresh rather than joining the one from before
+      mockGetServerStatus.mockResolvedValue({ status: 'ok', serverTimestamp: freshTimestamp })
+      await act(async () => {
+        appStateCallback('active')
+      })
+      expect(mockGetServerStatus).toHaveBeenCalledTimes(2)
+
+      await act(async () => {
+        resolveStaleFetch({ status: 'ok', serverTimestamp: staleTimestamp })
+      })
+
+      expect(mockClient.recordServerTime).not.toHaveBeenCalledWith(staleTimestamp)
+      expect(mockClient.recordServerTime).toHaveBeenLastCalledWith(freshTimestamp)
+      expect(result.current.serverStatus?.serverTimestamp).toBe(freshTimestamp)
     })
 
     it('forgets the reading when the app goes to the background, and takes a new one on return', async () => {

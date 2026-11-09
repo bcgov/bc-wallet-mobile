@@ -1716,7 +1716,7 @@ describe('BCSC Client', () => {
       })
     })
 
-    it('sends token requests again once the reading is forgotten', async () => {
+    it('sends token requests once the reading is forgotten and there is no clock check to run', async () => {
       const client = createSkewedClient()
       const adapter = jest.fn(resolveOk)
       client.client.defaults.adapter = adapter
@@ -1727,6 +1727,54 @@ describe('BCSC Client', () => {
         client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
       ).resolves.toMatchObject({ status: 200 })
       expect(adapter).toHaveBeenCalledTimes(1)
+    })
+
+    describe('with no reading', () => {
+      const postToken = (client: BCSCApiClient) =>
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+
+      it('runs the clock check before the token request, and refuses it when the clock is off', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        const adapter = jest.fn(resolveOk)
+        client.client.defaults.adapter = adapter
+        const clockCheck = jest.fn(async () => client.recordServerTime(new Date(DEVICE_NOW - 60 * MINUTE_MS)))
+        client.setClockCheck(clockCheck)
+
+        await expect(postToken(client)).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR })
+
+        expect(clockCheck).toHaveBeenCalledTimes(1)
+        expect(adapter).not.toHaveBeenCalled()
+      })
+
+      it('sends the token request when the check finds the clock in sync', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        const adapter = jest.fn(resolveOk)
+        client.client.defaults.adapter = adapter
+        client.setClockCheck(async () => client.recordServerTime(new Date(DEVICE_NOW)))
+
+        await expect(postToken(client)).resolves.toMatchObject({ status: 200 })
+        expect(adapter).toHaveBeenCalledTimes(1)
+      })
+
+      it('sends the token request when the check fails', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        const adapter = jest.fn(resolveOk)
+        client.client.defaults.adapter = adapter
+        client.setClockCheck(() => Promise.reject(new Error('status fetch failed')))
+
+        await expect(postToken(client)).resolves.toMatchObject({ status: 200 })
+        expect(adapter).toHaveBeenCalledTimes(1)
+      })
+
+      it('does not run the check when there is a reading', async () => {
+        const client = createSkewedClient()
+        client.client.defaults.adapter = jest.fn(resolveOk)
+        const clockCheck = jest.fn(async () => undefined)
+        client.setClockCheck(clockCheck)
+
+        await expect(postToken(client)).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR })
+        expect(clockCheck).not.toHaveBeenCalled()
+      })
     })
 
     it.each([
