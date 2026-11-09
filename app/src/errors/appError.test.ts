@@ -288,6 +288,21 @@ describe('AppError', () => {
         message: `[${error.code}] POST /cardtap/v3/devices/assertion ${error.message}`,
       })
     })
+    it('includes the HTTP status of a wrapped request error', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+      const requestError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
+        cause: { response: { status: 403 } },
+        context: { http_method: 'POST', http_route: '/cardtap/v3/devices/assertion', http_status: 403 },
+        track: false,
+      })
+
+      const error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: requestError })
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith({
+        code: AppEventCode.LOGIN_SERVER_ERROR,
+        message: `[${error.code}] HTTP 403 POST /cardtap/v3/devices/assertion ${error.message}`,
+      })
+    })
   })
 
   describe('getChainedContext', () => {
@@ -398,6 +413,24 @@ describe('AppError', () => {
         cause: { name: 'Error', message: 'Technical message' },
         handled: false,
         context: {},
+      })
+    })
+
+    it("keeps a wrapped error's failure and request context, so remote logs still say where it failed", () => {
+      const inner = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
+        context: { http_route: '/cardtap/v3/devices/assertion', failure_flow: 'pairing', failure_step: 'verify' },
+        track: false,
+      })
+
+      const json = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, {
+        cause: inner,
+        track: false,
+      }).toJSON()
+
+      expect(json.context).toMatchObject({
+        http_route: '/cardtap/v3/devices/assertion',
+        failure_flow: 'pairing',
+        failure_step: 'verify',
       })
     })
 

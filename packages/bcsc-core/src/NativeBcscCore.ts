@@ -160,10 +160,7 @@ export type NativeFilesScan = {
   fileCount: number;
 };
 
-/**
- * Why `getAccount` resolves null. Diagnostic only: status codes, the environment directory name,
- * and an error class/domain — never paths, IDs, or file contents.
- */
+/** Why `getAccount` resolved null. Never contains paths, IDs or file contents. */
 export type NativeAccountReadStatus = {
   /** e.g. 'ok', 'account_list_missing', 'account_file_missing', 'account_decode_failed', 'account_decrypt_failed' */
   status: string;

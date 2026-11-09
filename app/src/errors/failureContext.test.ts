@@ -156,16 +156,22 @@ describe('trackFailureSteps', () => {
     })
   })
 
-  it('leaves an error unchanged when an error it wraps is already labeled', () => {
-    const steps = track()
-    const labeled = steps.fail('second', new Error('inner'))
-    const wrapper = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: labeled, track: false })
+  it('wraps an error whose label is only deeper in its cause chain, so a stale label never wins', () => {
+    const otherFlowLabel = trackFailureSteps('other_flow', { definition: ErrorRegistry.LOGIN_DEVICE_ERROR }).fail(
+      'second',
+      new Error('inner')
+    )
+    const wrapper = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, {
+      cause: otherFlowLabel,
+      track: false,
+    })
 
-    const error = steps.fail('first', wrapper)
+    const error = track().fail('first', wrapper)
 
-    expect(error).toBe(wrapper)
-    expect(error.context.failure_step).toBeUndefined()
-    expect(error.getChainedContext().failure_step).toBe('second')
+    expect(error).not.toBe(wrapper)
+    expect(error.cause).toBe(wrapper)
+    expect(error.appEvent).toBe(ErrorRegistry.LOGIN_DEVICE_ERROR.appEvent)
+    expect(error.getChainedContext()).toMatchObject({ failure_flow: 'test_flow', failure_step: 'first' })
   })
 
   it('with keepAppError, still wraps an error that is not an AppError', () => {

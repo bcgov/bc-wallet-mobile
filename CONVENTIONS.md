@@ -280,7 +280,7 @@ resulting error to the alert. For a single failure outside a flow, use `createFa
 - Errors a policy already handled are labeled but never alerted again. Callers still check
   `isHandledAppError`.
 - To re-wrap a labeled error for its alert, set it as the `cause` and copy nothing. Reports and analytics
-  read `AppError.getChainedContext()`, which merges context down the cause chain (outer errors win).
+  read `AppError.getChainedContext()` (as does `toJSON()`, for remote logs), which merges context down the cause chain (outer errors win).
 - To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
   `report-problem.ts`. That list is the only one to update.
 - When something that fails silently could explain a step's failure, pass its health as that step's

@@ -333,9 +333,8 @@ class NativeCompatibleStorage(
     }
 
     /**
-     * Explains why [readAccounts] would return null or empty, without changing that read.
-     * Diagnostic only: returns a status code and, on failure, the exception class name —
-     * never paths, IDs, or file contents.
+     * Explains why [readAccounts] would return null or empty. Returns a status code and, on failure,
+     * the exception class name; never paths, IDs or file contents.
      */
     fun accountsReadStatus(issuerName: String): Pair<String, String?> {
         val file = getAccountsFile(issuerName)

@@ -226,9 +226,8 @@ class StorageService {
     }
   }
 
-  /// Explains why the account metadata read (`readData(file: .accountMetadata)`) would return nil, without
-  /// changing that read. Diagnostic only: values are status codes, the environment directory name, and
-  /// error domains/codes — never paths, IDs, or file contents.
+  /// Explains why reading `.accountMetadata` would return nil. Returns status codes, the environment name and
+  /// error `domain:code`; never paths, IDs or file contents.
   func accountReadStatus() -> [String: String] {
     var result: [String: String] = ["environment": getIssuerNameFromIssuer(issuer: issuer)]
 

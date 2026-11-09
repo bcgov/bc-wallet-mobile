@@ -489,9 +489,7 @@ export const getAccount = async (): Promise<NativeAccount | null> => {
 };
 
 /**
- * Diagnoses why {@link getAccount} resolved null — missing vs unreadable vs undecodable storage —
- * without changing that read. Call it only after getAccount returns null, to attach the reason to an error report.
- * Never rejects on the native side; values contain no paths, IDs, or file contents.
+ * Explains why {@link getAccount} resolved null, for attaching to error reports. Never rejects.
  * @returns A promise that resolves to the account read status.
  */
 export const getAccountReadStatus = async (): Promise<NativeAccountReadStatus> => {

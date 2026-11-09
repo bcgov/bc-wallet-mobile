@@ -165,15 +165,9 @@ class BcscCore: NSObject {
     )
   }
 
-  /// Rejects a JS promise with diagnostics. React Native puts the NSError's userInfo on the rejected JS error
-  /// as `error.userInfo`, and AppError.summarizeCause includes it in problem reports.
-  ///
-  /// Keep `code` the existing `E_…` code (JS maps it in native-error-map.ts) and use the same `site`
-  /// (`methodName.stage`) as the Android twin. `message` is a fixed sentence: don't interpolate
-  /// `localizedDescription`, which can contain paths; the underlying error is reduced to `detail` here.
-  ///
-  /// `diagnostics` values must be bridge-serializable (String, Int, Bool, or arrays of them) and must never
-  /// contain personal data, tokens, key material, file paths or account/device IDs. Use status codes and counts.
+  /// Rejects with diagnostics in userInfo, which JS sees as `error.userInfo` and adds to problem reports.
+  /// Use the same `site` as Android and a fixed `message` (no `localizedDescription`, it can
+  /// contain paths). `diagnostics` hold status codes and counts only
   private func rejectWithDiagnostics(
     _ reject: RCTPromiseRejectBlock,
     code: String,
@@ -267,8 +261,8 @@ class BcscCore: NSObject {
     return "[keys=\(keys.count), newest=\(newest), jweParts=\(header.parts), jweAlg=\(header.alg), jweEnc=\(header.enc), jweKid=\(jweKid), kidMatchesLocal=\(kidMatchesLocal)]"
   }
 
-  /// Signs `payload` with the newest key. `method` names the caller for diagnostics: each rejection's site
-  /// is `method.stage` (list_keys, select_key, get_key, sign), matching the Android twin where it has one.
+  /// Signs `payload` with the newest key. Rejections use the site `method.stage` (list_keys, select_key,
+  /// get_key, sign).
   private func signJWT(
     payload: JWTClaimsSet, method: String = "signJWT", reject: @escaping RCTPromiseRejectBlock
   ) -> String? {
@@ -328,8 +322,7 @@ class BcscCore: NSObject {
     }
   }
 
-  /// A signing error's type and, for keychain errors, its OSStatus. Never its description, which can
-  /// contain paths.
+  /// Error type and, for keychain errors, OSStatus. Never the description, which can contain paths.
   private func signingErrorDiagnostics(_ error: Error) -> [String: Any] {
     var diagnostics: [String: Any] = ["errorType": String(describing: type(of: error))]
     if let keychainError = error as? KeychainError {
@@ -1122,7 +1115,7 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Diagnoses why `getAccount` resolves nil (missing vs unreadable vs undecodable). Read-only; never rejects.
+  /// Explains why `getAccount` resolves nil. Never rejects.
   func getAccountReadStatus(
     _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
   ) {

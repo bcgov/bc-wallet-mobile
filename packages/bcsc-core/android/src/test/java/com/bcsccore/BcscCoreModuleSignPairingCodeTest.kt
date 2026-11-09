@@ -23,10 +23,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/**
- * A pairing code that can't be signed must say which stage failed and why, with status codes only:
- * the report must tell a missing or broken key apart from a failed signature, without leaking dev messages.
- */
+/** Signing failures report the failed stage and status codes, without leaking dev messages. */
 @RunWith(RobolectricTestRunner::class)
 class BcscCoreModuleSignPairingCodeTest {
     private lateinit var keyPairSource: BcscKeyPairSource

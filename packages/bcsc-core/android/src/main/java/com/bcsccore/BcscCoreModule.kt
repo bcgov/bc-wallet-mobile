@@ -470,17 +470,10 @@ class BcscCoreModule internal constructor(
     private fun redactAlias(alias: String): String = if (alias.length <= 8) alias else "…" + alias.takeLast(8)
 
     /**
-     * Rejects a JS promise with diagnostics. React Native puts userInfo on the rejected JS error as
-     * `error.userInfo`, and AppError.summarizeCause includes it in problem reports.
-     *
-     * Keep [code] the existing `E_…` code (JS maps it in native-error-map.ts) and use the same [site]
-     * (`methodName.stage`) as the iOS twin. [message] is a fixed sentence: don't interpolate `e.message` or
-     * `devMessage`, which can contain paths; the underlying error is reduced to `detail` here.
-     *
-     * [diagnostics] values must be String, Boolean, Int or Double and must never contain personal data,
-     * tokens, key material, file paths or account/device IDs. Use status codes and counts.
-     *
-     * Not usable with [com.bcsccore.util.GuardedPromise], which has no userInfo overload.
+     * Rejects [promise] with diagnostics in userInfo, which JS sees as `error.userInfo` and adds to problem reports.
+     * Use the same [site] as iOS and a fixed [message] (no `e.message`, it can contain paths).
+     * [diagnostics] hold status codes and counts only
+     * Not usable with [com.bcsccore.util.GuardedPromise].
      */
     private fun rejectWithDiagnostics(
         promise: Promise,
@@ -492,9 +485,9 @@ class BcscCoreModule internal constructor(
     ) {
         val userInfo =
             Arguments.createMap().apply {
-                // Diagnostics first, so site and detail win over the same key (matching iOS)
+                // Diagnostics first so site and detail take precedence (matches iOS)
                 diagnostics.forEach { (key, value) ->
-                    // Never toString() an unknown value: it could print personal data
+                    // Don't toString() unknown types: they could contain personal data
                     when (value) {
                         is String -> putString(key, value)
                         is Boolean -> putBoolean(key, value)
@@ -504,7 +497,7 @@ class BcscCoreModule internal constructor(
                     }
                 }
                 putString("site", site)
-                // Class name only; exception messages can contain paths
+                // Class name only; messages can contain paths
                 error?.let { putString("detail", it.javaClass.simpleName) }
             }
         Log.e(NAME, "$site: $code $message", error)
@@ -1175,10 +1168,7 @@ class BcscCoreModule internal constructor(
         promise.resolve(null)
     }
 
-    /**
-     * Diagnoses why [getAccount] resolves null (missing vs unreadable vs undecryptable vs unparseable)
-     * for the issuer-scoped store, plus whether a legacy flat-file store is present. Read-only; never rejects.
-     */
+    /** Returns why getAccount resolves null, and whether a legacy accounts file exists. Never rejects. */
     @ReactMethod
     override fun getAccountReadStatus(promise: Promise) {
         val result = Arguments.createMap()
@@ -1470,14 +1460,13 @@ class BcscCoreModule internal constructor(
         challengeSource: String,
         promise: Promise,
     ) {
-        // The stage reached, so a report tells a missing or broken key apart from a failed signature (sites match iOS)
+        // Reported in the site so key failures can be told apart from signing failures (matches iOS)
         var stage = "get_key"
         try {
             // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
-            // Loads (or seeds) the newest key before signing. Signing loads it again, but this call's
-            // failure is reported as get_key, apart from a signing failure
+            // Load the key up front so a key failure is reported as get_key, not sign
             keyPairSource.getCurrentBcscKeyPair()
 
             stage = "build_claims"
@@ -1525,10 +1514,7 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * A signing error's alert key (for a [BcscException]) and the number of stored key pairs. Status codes
-     * and counts only. Never throws: a diagnostic must not replace the real failure.
-     */
+    /** Alert key and stored key count for a signing failure. Never throws, so it can't mask the real error. */
     private fun signingErrorDiagnostics(error: Exception): Map<String, Any> {
         val diagnostics = mutableMapOf<String, Any>()
         if (error is BcscException) {

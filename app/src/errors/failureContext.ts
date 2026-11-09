@@ -124,8 +124,9 @@ export const trackFailureSteps = <TStep extends string>(
   const startedAt = Date.now()
 
   const fail = (step: TStep, error: unknown, options: StepOptions = {}): AppError => {
-    // Already labeled by an inner step: the innermost step is where it really failed
-    if (error instanceof AppError && error.getChainedContext().failure_step !== undefined) {
+    // Already labeled by an inner step: the innermost step is where it really failed. Only the error's own
+    // context counts, so a stale label deeper in the chain (e.g. from another flow) can't skip this flow's wrap
+    if (error instanceof AppError && error.context.failure_step !== undefined) {
       return error
     }
 

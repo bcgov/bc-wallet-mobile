@@ -195,8 +195,11 @@ export class AppError extends Error {
     // every 4xx into a single code, so without this the dashboard cannot tell 400/401/403/404 apart — nor
     // which endpoint produced the error. The route template, never the raw path: the evidence paths
     // embed verification and email record IDs, and analytics must not carry them.
-    const httpStatus = (this.cause as { response?: { status?: number } } | undefined)?.response?.status
-    const { http_method, http_route } = this.getChainedContext()
+    const { http_method, http_route, http_status } = this.getChainedContext()
+    // A wrapper's cause is an AppError, not the Axios error, so fall back to the status recorded down the chain
+    const httpStatus =
+      (this.cause as { response?: { status?: number } } | undefined)?.response?.status ??
+      (typeof http_status === 'number' ? http_status : undefined)
     const request = [http_method, http_route].filter(Boolean).join(' ')
     const context = [httpStatus ? `HTTP ${httpStatus}` : undefined, request || undefined].filter(Boolean).join(' ')
 
@@ -279,7 +282,8 @@ export class AppError extends Error {
       code: this.code,
       timestamp: this.timestamp,
       handled: this.handled,
-      context: this.context,
+      // The whole chain's context, so a wrapped error still logs where and why it failed
+      context: this.getChainedContext(),
       cause: summarizeCause(this.cause),
     }
   }
