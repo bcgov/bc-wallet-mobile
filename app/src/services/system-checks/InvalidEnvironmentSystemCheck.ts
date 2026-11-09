@@ -2,7 +2,11 @@ import { IASEnvironment, isProductionBundle, isProductionEnvironment } from '@/u
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
- * Checks if the app is running in a production bundle and if the environment stored in local storage is valid for production.
+ * Checks if the production app is using the correct environment.
+ *
+ * Why? Previous versions of the app allowed possible pocket-dial situations where a user could open the Developer settings
+ * and change the environment to a non-production environment accidentally. This causes verification requests to end up
+ * in a non-production environment.
  */
 export class InvalidEnvironmentSystemCheck implements SystemCheckStrategy {
   private readonly environment: IASEnvironment
@@ -17,7 +21,7 @@ export class InvalidEnvironmentSystemCheck implements SystemCheckStrategy {
 
   async runCheck() {
     if (!isProductionBundle()) {
-      // If the app is not runnin a production bundle, this check does not apply
+      // If the app is not running a production bundle, this check does not apply
       return true
     }
 
