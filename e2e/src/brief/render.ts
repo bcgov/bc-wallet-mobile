@@ -15,7 +15,7 @@ export interface LaneResult {
   /** GitHub job result: success | failure | cancelled | skipped. */
   result: string
   hasReports: boolean
-  /** Suites in the lane's reports that failed or lost their session — an advisory lane's job stays green through those. */
+  /** Suites in the lane's reports that failed or lost their session. */
   failedSuites: number
 }
 
@@ -163,7 +163,7 @@ function renderHeader(model: BriefModel): string[] {
   if (model.lanes.length) {
     const lanes = model.lanes.map((lane) => {
       const job = LANE_SYMBOL[lane.result] ?? lane.result
-      // The reports outrank the job result: an advisory lane's job is green whatever its journeys did.
+      // The reports outrank the job result: a job that passed while a suite in its reports failed still reads ❌.
       const status = lane.failedSuites && lane.result === 'success' ? `❌ (job ${job})` : job
       return `${lane.name} ${status}${lane.hasReports ? '' : ' (no reports)'}`
     })

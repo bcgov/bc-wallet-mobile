@@ -12,9 +12,9 @@
 #   upgradeVerified  — a verified account with its device credential
 # Each (suite, version) pair is one call of e2e.yml, which boots BCSC-v<version>.*
 # from Sauce storage and installs the build under test over it; a lineage that cannot
-# arrange a state schedules nothing for it (the brief reads the gap as n/a). Every
-# suite is advisory (continue-on-error in e2e.yml); the brief at the end renders the
-# version × state matrix from the reports.
+# arrange a state schedules nothing for it (the brief reads the gap as n/a). A failed
+# pair turns the run red but stops nothing: the other pairs still run, and the brief at
+# the end renders the version × state matrix from the reports.
 #
 # Order and concurrency (the Sauce account allows 2 real-device sessions):
 #   upgradePartial — no IDCheck, no review queue: both platforms in parallel, the

@@ -22,7 +22,7 @@
 #                  BCSC-v<version>.* in Sauce storage, listed in e2e/upgrade-sources.json) → the build
 #                  under test, one suite per state the account is in when the app updates. The weekly
 #                  e2e-upgrade-weekly.yml runs every version × state; dispatch one pair by hand with
-#                  prev_version. Advisory (continue-on-error).
+#                  prev_version.
 #
 # All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
 # SAUCE_ACCESS_KEY and the IDCHECK_* sign-in (user, password, TOTP secret) are all
@@ -180,8 +180,6 @@ jobs:
   #   everything else (smoke,  → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
   #    onboarding, auth, main,    (device-auth selects that config's locked-device capability lane)
   #    verify, regression)
-  #
-  # Non-blocking suites (the four upgrade suites): failures are reported but do not gate the pipeline.
   e2e-tests:
     name: "${{ inputs.suite }}${{ inputs.prev_version && format(' from {0}', inputs.prev_version) || '' }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}"
     runs-on: ${{ inputs.runner_label }}
@@ -192,7 +190,6 @@ jobs:
     # install and retries (the submitted/approved ones wait on a scripted review); other suites (merge-queue
     # smoke) stay tight
     timeout-minutes: ${{ (inputs.suite == 'regression' && 180) || (inputs.suite == 'send-video' && 90) || (inputs.suite == 'upgradePartial' && 120) || (contains(fromJSON('["upgradeSubmitted","upgradeApproved"]'), inputs.suite) && 90) || (inputs.suite == 'upgradeVerified' && 60) || 45 }}
-    continue-on-error: ${{ contains(fromJSON('["upgradePartial","upgradeSubmitted","upgradeApproved","upgradeVerified"]'), inputs.suite) }}
     strategy:
       # Pinned to 1: send-video and the submitted/approved upgrade suites review the blind-FIFO queue, and
       # every upgrade suite that verifies does so with the shared SIT persona (one active device per card) —
