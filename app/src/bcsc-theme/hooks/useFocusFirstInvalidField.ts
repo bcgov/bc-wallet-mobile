@@ -2,7 +2,8 @@ import { createRef, RefObject, useCallback, useEffect, useRef, useState } from '
 import { LayoutChangeEvent, ScrollView, TextInput } from 'react-native'
 import { KeyboardEvents } from 'react-native-keyboard-controller'
 
-type FocusRequest<F extends string> = { field: F }
+// `focus: false` is for callers already inside the field's onFocus.
+type FocusRequest<F extends string> = { field: F; focus: boolean }
 
 /**
  * Scrolls to and focuses the first invalid field on a form after a failed submit.
@@ -22,7 +23,7 @@ const useFocusFirstInvalidField = <F extends string>(fieldOrder: readonly F[]) =
     if (!request) {
       return
     }
-    const { field } = request
+    const { field, focus } = request
     const fieldY = fieldYOffsets.current[field]
     const jumpToField = () => {
       if (fieldY !== undefined) {
@@ -37,7 +38,9 @@ const useFocusFirstInvalidField = <F extends string>(fieldOrder: readonly F[]) =
     if (!inputRefs[field].current) {
       return
     }
-    inputRefs[field].current?.focus()
+    if (focus) {
+      inputRefs[field].current?.focus()
+    }
 
     // Re-jump once the keyboard opens: the pre-focus jump can clamp at max offset and leave the error text
     // under the keyboard. isFocused() stops a parked listener re-jumping after the user taps elsewhere.
@@ -56,11 +59,13 @@ const useFocusFirstInvalidField = <F extends string>(fieldOrder: readonly F[]) =
       const field = fieldOrder.find((f) => errors[f] !== undefined)
       if (field) {
         // Always a fresh object: identity is what re-fires the focus effect on an identical resubmit.
-        setRequest({ field })
+        setRequest({ field, focus: true })
       }
     },
     [fieldOrder]
   )
+
+  const scrollToField = useCallback((field: F) => setRequest({ field, focus: false }), [])
 
   return {
     scrollViewRef,
@@ -72,6 +77,7 @@ const useFocusFirstInvalidField = <F extends string>(fieldOrder: readonly F[]) =
       fieldYOffsets.current[field] = e.nativeEvent.layout.y
     },
     focusFirstInvalidField,
+    scrollToField,
   }
 }
 

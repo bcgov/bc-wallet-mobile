@@ -90,13 +90,16 @@ exports[`EnterBirthdate renders correctly 1`] = `
             BCSC.Birthdate.Paragraph
           </Text>
           <View
+            onLayout={[Function]}
             style={
               {
                 "width": "100%",
               }
             }
           >
-            <View>
+            <View
+              onLayout={[Function]}
+            >
               <Text
                 maxFontSizeMultiplier={2}
                 style={
@@ -207,26 +210,12 @@ exports[`EnterBirthdate renders correctly 1`] = `
                       ]
                     }
                   >
-                    <Text
-                      maxFontSizeMultiplier={2}
+                    <View
                       style={
-                        [
-                          {
-                            "color": "#313132",
-                            "fontFamily": "BCSans-Regular",
-                            "fontSize": 16,
-                            "fontWeight": "bold",
-                          },
-                          [
-                            {
-                              "fontFamily": "BCSans-Regular",
-                              "fontSize": 16,
-                            },
-                            {
-                              "marginBottom": undefined,
-                            },
-                          ],
-                        ]
+                        {
+                          "flexDirection": "row",
+                          "marginBottom": undefined,
+                        }
                       }
                     >
                       <Text
@@ -241,11 +230,13 @@ exports[`EnterBirthdate renders correctly 1`] = `
                             },
                             [
                               {
-                                "fontFamily": "BCSans-Regular",
+                                "fontFamily": undefined,
                                 "fontSize": 16,
+                                "fontWeight": "normal",
+                                "includeFontPadding": false,
                               },
                               {
-                                "color": "transparent",
+                                "opacity": 0,
                               },
                             ],
                           ]
@@ -263,8 +254,10 @@ exports[`EnterBirthdate renders correctly 1`] = `
                             },
                             [
                               {
-                                "fontFamily": "BCSans-Regular",
+                                "fontFamily": undefined,
                                 "fontSize": 16,
+                                "fontWeight": "normal",
+                                "includeFontPadding": false,
                               },
                               {
                                 "color": "#606060",
@@ -275,7 +268,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                       >
                         YYYY/MM/DD
                       </Text>
-                    </Text>
+                    </View>
                   </View>
                   <TextInput
                     accessibilityLabel="BCSC.Birthdate.Label"

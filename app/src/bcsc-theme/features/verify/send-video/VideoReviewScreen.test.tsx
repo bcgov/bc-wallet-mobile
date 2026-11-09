@@ -1,5 +1,6 @@
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { SELFIE_VIDEO_EXPIRY_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import * as readFile from '@/utils/read-file'
@@ -152,6 +153,62 @@ describe('VideoReview', () => {
 
     expect(tree.getByText('BCSC.SendVideo.VideoReview.UseVideo')).toBeDisabled()
     expect(tree.getByText('BCSC.SendVideo.VideoReview.RetakeVideo')).toBeDisabled()
+  })
+
+  describe('expiry', () => {
+    // IAS rejects a finalize whose video capture date is over five minutes old (#4998). The screen
+    // retires the recording 30s short of that so the user is told before an upload fails.
+    const advance = (ms: number) =>
+      act(() => {
+        jest.advanceTimersByTime(ms)
+      })
+
+    it('holds the recording for the whole window', () => {
+      renderScreen()
+
+      advance(SELFIE_VIDEO_EXPIRY_MS - 1000)
+
+      expect(mockNavigation.replace).not.toHaveBeenCalled()
+    })
+
+    it('retires the recording and shows the expired screen once the window passes', () => {
+      const tree = renderScreen()
+
+      advance(SELFIE_VIDEO_EXPIRY_MS)
+
+      expect(mockNavigation.replace).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.replace).toHaveBeenCalledWith(BCSCScreens.VideoExpired)
+      // Replace, not push: the expired recording is gone, so there is nothing here to come back to.
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+
+      // Later ticks must not dispatch a second replace onto a screen that has already moved on
+      advance(SELFIE_VIDEO_EXPIRY_MS)
+      expect(mockNavigation.replace).toHaveBeenCalledTimes(1)
+      tree.unmount()
+    })
+
+    it('refuses a Use Video press that lands before the next tick', async () => {
+      // JS timers are frozen while the app is backgrounded, so the first tick after it wakes can be
+      // beaten by a tap. Without this guard that tap uploads a video the server will reject.
+      jest.spyOn(readFile, 'default').mockResolvedValue(Buffer.from('video'))
+      const tree = renderScreen()
+
+      await act(async () => {
+        await tree.UNSAFE_getByType(Video).props.onLoad({ duration: 5 })
+      })
+
+      jest.setSystemTime(Date.now() + SELFIE_VIDEO_EXPIRY_MS)
+      const [useVideo] = tree
+        .UNSAFE_getAllByType(Button)
+        .filter((button) => button.props.title === 'BCSC.SendVideo.VideoReview.UseVideo')
+
+      act(() => {
+        useVideo.props.onPress()
+      })
+
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+      expect(mockNavigation.replace).toHaveBeenCalledWith(BCSCScreens.VideoExpired)
+    })
   })
 
   describe('back interception', () => {
