@@ -67,6 +67,7 @@ import PendingReviewScreen from '../features/verify/send-video/PendingReviewScre
 import SuccessfullySentScreen from '../features/verify/send-video/SuccessfullySentScreen'
 import TakeVideoScreen from '../features/verify/send-video/TakeVideoScreen'
 import UploadingScreen from '../features/verify/send-video/UploadingScreen'
+import VideoExpiredScreen from '../features/verify/send-video/VideoExpiredScreen'
 import VideoInstructionsScreen from '../features/verify/send-video/VideoInstructionsScreen'
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
@@ -328,6 +329,19 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         // Retake and Cancel are the only ways out; back would pop to TakeVideo and re-record against the
         // prompt set the over-long recording already answered. Pairs with usePreventGestureBack for Android.
         options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VideoExpired}
+        component={VideoExpiredScreen}
+        options={{
+          headerLeft: createVerifyHeaderBackButton(
+            (navigation) => {
+              navigation.navigate(BCSCScreens.VideoInstructions)
+            },
+            { hidden: true }
+          ),
+          gestureEnabled: false,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceUploading}
