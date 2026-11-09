@@ -617,10 +617,11 @@ describe('useGetSystemChecks', () => {
         const mockMainStackStore = ({
           bcscSecure = {},
           bcsc = {},
-        }: { bcscSecure?: Record<string, unknown>; bcsc?: Record<string, unknown> } = {}) => {
+          bundleId = 'ca.bc.gov.id.servicescard',
+        }: { bcscSecure?: Record<string, unknown>; bcsc?: Record<string, unknown>; bundleId?: string } = {}) => {
           const updateRegistration = jest.fn()
-          jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-          mockGetBundleId.mockReturnValue('ca.bc.gov.id.servicescard')
+          jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue(bundleId)
+          mockGetBundleId.mockReturnValue(bundleId)
           mockUseStore.mockReturnValue([
             {
               stateLoaded: true,
@@ -678,6 +679,32 @@ describe('useGetSystemChecks', () => {
           mockMainStackStore()
 
           expect(await getCheckNames()).toEqual(['TermsOfUseSystemCheck'])
+        })
+
+        const verifiedUserChecksWithoutRegistrationUpdate = [
+          'DeviceCountSystemCheck',
+          'EventReasonAlertsSystemCheck',
+          'RefreshTokenExpiredSystemCheck',
+          'TermsOfUseSystemCheck',
+        ]
+
+        it('skips the registration update and key rotation on a non-BCSC bundle, even with a nickname and token', async () => {
+          mockMainStackStore({
+            bundleId: 'ca.bc.gov.BCWallet',
+            bcscSecure: { verified: true, registrationAccessToken: 'test-registration-token' },
+            bcsc: { selectedNickname: 'Test Device' },
+          })
+
+          expect(await getCheckNames()).toEqual(verifiedUserChecksWithoutRegistrationUpdate)
+        })
+
+        it('skips the registration update and key rotation without a registration token, even with a nickname', async () => {
+          mockMainStackStore({
+            bcscSecure: { verified: true },
+            bcsc: { selectedNickname: 'Test Device' },
+          })
+
+          expect(await getCheckNames()).toEqual(verifiedUserChecksWithoutRegistrationUpdate)
         })
 
         it('passes the registration token and nickname to the registration service, suppressing transient alerts', async () => {
