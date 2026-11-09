@@ -71,7 +71,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
       }
     }
 
-    checkLockStatus()
+    void checkLockStatus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -84,7 +84,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
       setRemainingSeconds((prev) => {
         const newValue = prev - 1
         if (newValue <= 0) {
-          authentication.unlockApp()
+          void authentication.unlockApp()
           return 0
         }
         return newValue
