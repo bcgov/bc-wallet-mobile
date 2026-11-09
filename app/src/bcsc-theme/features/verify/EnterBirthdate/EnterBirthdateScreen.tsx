@@ -50,7 +50,12 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const handleChangeBirthDate = (value: string) => {
     setBirthDate(value)
     // Surface the invalid-date error as soon as a full date is typed; clear it while editing.
-    setBirthDateError(value.length === 10 && !vm.isDateValid(value) ? t('BCSC.Birthdate.InvalidDate') : undefined)
+    const error = value.length === 10 && !vm.isDateValid(value) ? t('BCSC.Birthdate.InvalidDate') : undefined
+    setBirthDateError(error)
+    // The keyboard is already up here, so the error would otherwise render beneath it.
+    if (error) {
+      focusFirstInvalidField({ birthDate: error })
+    }
   }
 
   const handleSubmit = async () => {
