@@ -9,6 +9,7 @@ import { useRemoteConfig } from '@/remote-config/RemoteConfig'
 import { AutoCredentialMonitor } from '@/services/auto-credential'
 import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
+import { isProductionBundle } from '@/utils/environment'
 import {
   CredentialProvisioningEventTypes,
   DispatchAction,
@@ -458,20 +459,25 @@ const Developer: React.FC = () => {
       >
         <RemoteLogWarning onBackPressed={onRemoteLoggingBackPressed} onEnablePressed={onEnableRemoteLoggingPressed} />
       </SafeAreaModal>
-      <SafeAreaModal
-        visible={environmentModalVisible}
-        transparent={false}
-        animationType={'slide'}
-        onRequestClose={() => {
-          return
-        }}
-      >
-        {BCSCMode ? (
-          <IASEnvironment shouldDismissModal={shouldDismissModal} />
-        ) : (
-          <WalletEnvironment shouldDismissModal={shouldDismissModal} />
-        )}
-      </SafeAreaModal>
+      {
+        // safeguard: only render the environment modal in non-production builds
+        isProductionBundle() ? null : (
+          <SafeAreaModal
+            visible={environmentModalVisible}
+            transparent={false}
+            animationType={'slide'}
+            onRequestClose={() => {
+              return
+            }}
+          >
+            {BCSCMode ? (
+              <IASEnvironment shouldDismissModal={shouldDismissModal} />
+            ) : (
+              <WalletEnvironment shouldDismissModal={shouldDismissModal} />
+            )}
+          </SafeAreaModal>
+        )
+      }
       <SafeAreaModal
         visible={errorAlertTestModalVisible}
         transparent={false}
@@ -500,21 +506,24 @@ const Developer: React.FC = () => {
       <View style={styles.sectionContainer}>
         <ListButtonGroup>
           {[
-            <ListButton
-              key="environment"
-              onPress={() => setEnvironmentModalVisible(true)}
-              accessibilityLabel={t('Developer.Environment')}
-              testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
-            >
-              <Row
-                title={t('Developer.Environment')}
-                endAdornment={
-                  <ThemedText variant="bold" style={{ color: ColorPalette.brand.primary }}>
-                    {store.developer.environment.name.toUpperCase()}
-                  </ThemedText>
-                }
-              />
-            </ListButton>,
+            // safeguard: only render the environment switch in non-production builds
+            isProductionBundle() ? null : (
+              <ListButton
+                key="environment"
+                onPress={() => setEnvironmentModalVisible(true)}
+                accessibilityLabel={t('Developer.Environment')}
+                testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
+              >
+                <Row
+                  title={t('Developer.Environment')}
+                  endAdornment={
+                    <ThemedText variant="bold" style={{ color: ColorPalette.brand.primary }}>
+                      {store.developer.environment.name.toUpperCase()}
+                    </ThemedText>
+                  }
+                />
+              </ListButton>
+            ),
             BCSCMode ? null : (
               <ToggleRow
                 key="shareableLink"

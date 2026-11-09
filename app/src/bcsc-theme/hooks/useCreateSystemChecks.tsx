@@ -7,6 +7,7 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
+import { InvalidProductionEnvironmentSystemCheck } from '@/services/system-checks/EnvironmentResetSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
 import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
@@ -37,6 +38,7 @@ import { useEvidenceService } from '../services/hooks/useEvidenceService'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useTokenService } from '../services/hooks/useTokenService'
 import useSecureActions from './useSecureActions'
+import { useSwitchEnvironment } from './useSwitchEnvironment'
 import { SystemCheckScope } from './useSystemChecks'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
@@ -84,6 +86,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const accountContext = useContext(BCSCAccountContext)
   const { emitAlert } = useErrorAlert()
   const { serverStatus: cachedServerStatus, refresh: refreshServerStatus } = useServerStatus()
+  const switchEnvironment = useSwitchEnvironment()
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
   const appVersion = getVersion()
@@ -110,6 +113,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
     const systemChecks: SystemCheckStrategy[] = [
+      new InvalidProductionEnvironmentSystemCheck(() => {}, utils),
       new InstallIdSystemCheck(store.bcsc.installId, dispatch),
       new AnalyticsSystemCheck(
         store.bcsc.analyticsOptIn,
