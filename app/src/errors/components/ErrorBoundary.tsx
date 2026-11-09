@@ -10,13 +10,11 @@ import { ErrorRegistry } from '../errorRegistry'
 import { ErrorInfoCard } from './ErrorInfoCard'
 
 // Innermost frames name the failing component and its screen; outer frames are the same provider shell every time
-const MAX_COMPONENT_STACK_FRAMES = 100
-const MAX_COMPONENT_STACK_LENGTH = 8000 // UTF-16 code units (JS string length)
+const MAX_COMPONENT_STACK_FRAMES = 50
 
 /**
- * Reduces React's component stack to a bounded single string (innermost frames first).
- * Frame names are not length-bounded, so both a frame cap and a character cap apply; a single
- * string is used because Loki's `| json` parser skips arrays.
+ * Keeps the innermost frames of React's component stack as a single string, because Loki's
+ * `| json` parser skips arrays.
  *
  * @returns the trimmed stack, or undefined when React supplied no stack
  */
@@ -25,20 +23,9 @@ export const trimComponentStack = (componentStack?: string | null): string | und
     .split('\n')
     .map((frame) => frame.trim())
     .filter(Boolean)
+    .slice(0, MAX_COMPONENT_STACK_FRAMES)
 
-  const kept: string[] = []
-  let length = 0
-  for (const frame of frames.slice(0, MAX_COMPONENT_STACK_FRAMES)) {
-    const nextLength = length + frame.length + (kept.length ? 1 : 0)
-    if (nextLength > MAX_COMPONENT_STACK_LENGTH) {
-      break
-    }
-    kept.push(frame)
-    length = nextLength
-  }
-
-  // An oversized innermost frame is still the most useful one, so keep it truncated
-  return kept.length ? kept.join('\n') : frames[0]?.slice(0, MAX_COMPONENT_STACK_LENGTH)
+  return frames.length ? frames.join('\n') : undefined
 }
 
 interface ErrorBoundaryProps {

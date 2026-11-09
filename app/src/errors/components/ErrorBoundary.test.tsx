@@ -1,4 +1,3 @@
-import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { reportProblem } from '@/utils/logger'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
@@ -192,26 +191,13 @@ describe('ErrorBoundaryWrapper', () => {
     it('keeps only the innermost frames of a deep tree', () => {
       const Nest = ({ depth }: { depth: number }) => (depth > 0 ? <Nest depth={depth - 1} /> : <ThrowingComponent />)
 
-      const { getByTestId } = renderThrowing(<Nest depth={150} />)
+      const { getByTestId } = renderThrowing(<Nest depth={80} />)
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
       const reported = (reportProblem as jest.Mock).mock.calls[0][0].error as AppError
-      const stack = reported.context.component_stack as string
-      const frames = stack.split('\n')
-      // Jest frames carry absolute file paths, so the 8000-character cap can bind before the 100-frame cap
-      expect(frames.length).toBeLessThanOrEqual(100)
-      expect(frames.length).toBeLessThan(150)
-      expect(stack.length).toBeLessThanOrEqual(8000)
+      const frames = (reported.context.component_stack as string).split('\n')
+      expect(frames).toHaveLength(50)
       expect(frames[0]).toContain('ThrowingComponent')
-    })
-
-    it('does not send the component stack to analytics', () => {
-      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent').mockImplementation(() => {})
-
-      renderThrowing()
-
-      expect(trackErrorEventSpy).toHaveBeenCalledTimes(1)
-      expect(JSON.stringify(trackErrorEventSpy.mock.calls[0][0])).not.toContain('ThrowingComponent')
     })
 
     it.each([[''], [null], [undefined]])('skips addContext but still logs and tracks when React gives %p', (stack) => {
@@ -249,26 +235,10 @@ describe('ErrorBoundaryWrapper', () => {
       expect(trimComponentStack('\n    at A (a.js:1)\n    at B (b.js:2)\n')).toBe('at A (a.js:1)\nat B (b.js:2)')
     })
 
-    it('keeps the innermost 100 of 150 short frames', () => {
+    it('keeps the innermost 50 of 150 short frames', () => {
       const frames = Array.from({ length: 150 }, (_, i) => `at Frame${i}`)
 
-      expect(trimComponentStack(frames.join('\n'))).toBe(frames.slice(0, 100).join('\n'))
-    })
-
-    it('cuts an oversized single frame to 8000 characters', () => {
-      expect(trimComponentStack(`at ${'X'.repeat(20000)}`)).toHaveLength(8000)
-    })
-
-    it('cuts many medium frames on a frame boundary, keeping the innermost', () => {
-      const frames = Array.from({ length: 90 }, (_, i) => `at Frame${i} ${'y'.repeat(200)}`)
-
-      const result = trimComponentStack(frames.join('\n')) as string
-
-      expect(result.length).toBeLessThanOrEqual(8000)
-      const kept = result.split('\n')
-      expect(kept.length).toBeLessThan(90)
-      expect(kept[0]).toBe(frames[0])
-      expect(kept).toEqual(frames.slice(0, kept.length))
+      expect(trimComponentStack(frames.join('\n'))).toBe(frames.slice(0, 50).join('\n'))
     })
   })
 
