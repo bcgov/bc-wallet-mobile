@@ -409,6 +409,11 @@ export const TestIds = {
       retake: 'VideoTooLongRetake',
       cancel: 'VideoTooLongCancel',
     },
+    /** `VideoExpired` — a recording left unsubmitted past its TTL lands here instead of uploading.
+     *  Screen-prefixed for the same reason as `videoTooLong`: all three follow a stopped recording. */
+    videoExpired: {
+      retake: 'VideoExpiredRetake',
+    },
     /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
     evidenceUploading: {
       screen: 'UploadingScreen',
