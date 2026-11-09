@@ -113,7 +113,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
     const systemChecks: SystemCheckStrategy[] = [
-      new InvalidEnvironmentSystemCheck(invalidEnvironmentErrorModal, utils),
+      new InvalidEnvironmentSystemCheck(store.developer.environment, invalidEnvironmentErrorModal, utils),
       new InstallIdSystemCheck(store.bcsc.installId, dispatch),
       new AnalyticsSystemCheck(
         store.bcsc.analyticsOptIn,
@@ -138,11 +138,11 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   }, [
     cachedServerStatus,
     refreshServerStatus,
-    invalidEnvironmentErrorModal,
-    utils,
+    store.developer.environment,
     store.bcsc.installId,
     store.bcsc.analyticsOptIn,
-    store.developer.environment.analyticsAppId,
+    invalidEnvironmentErrorModal,
+    utils,
     dispatch,
     logger,
     emitAlert,

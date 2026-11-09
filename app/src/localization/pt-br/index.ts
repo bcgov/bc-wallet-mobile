@@ -1580,7 +1580,7 @@ const translation = {
     },
     "EnvironmentMismatch": {
       "Title": "App Needs to Be Reset (PT-BR)",
-      "Description": "This app was switched to the wrong environment by mistake, so your account can't be used. Reset the app to fix this. Your account will be removed from this device and you'll need to set it up again. (PT-BR)",
+      "Description": "This app was switched to the wrong environment by mistake. Closing this resets it, and you'll need to set up your account again. (PT-BR)",
       "Action1": "Reset App (PT-BR)",
     },
     "AlreadyVerified": {

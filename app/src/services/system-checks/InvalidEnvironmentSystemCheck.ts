@@ -1,16 +1,16 @@
-import { BCLocalStorageKeys } from '@/store'
-import { IASEnvironment, isProductionBundle } from '@/utils/environment'
-import { PersistentStorage } from '@bifold/core'
+import { IASEnvironment, isProductionBundle, isProductionEnvironment } from '@/utils/environment'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
  * Checks if the app is running in a production bundle and if the environment stored in local storage is valid for production.
  */
 export class InvalidEnvironmentSystemCheck implements SystemCheckStrategy {
+  private readonly environment: IASEnvironment
   private readonly invalidEnvironmentErrorModal: () => void
   private readonly utils: SystemCheckUtils
 
-  constructor(invalidEnvironmentErrorModal: () => void, utils: SystemCheckUtils) {
+  constructor(environment: IASEnvironment, invalidEnvironmentErrorModal: () => void, utils: SystemCheckUtils) {
+    this.environment = environment
     this.invalidEnvironmentErrorModal = invalidEnvironmentErrorModal
     this.utils = utils
   }
@@ -21,17 +21,8 @@ export class InvalidEnvironmentSystemCheck implements SystemCheckStrategy {
       return true
     }
 
-    const environment = await PersistentStorage.fetchValueForKey<IASEnvironment>(BCLocalStorageKeys.Environment)
-
-    if (!environment) {
-      this.utils.logger.debug(
-        '[InvalidProductionEnvironmentSystemCheck] No environment set in storage, assuming valid for production.'
-      )
-      // If the environment is not set, we assume it's valid for production.
-      return true
-    }
-
-    return environment.iasApiBaseUrl === IASEnvironment.PROD.iasApiBaseUrl
+    // If the app is running in a production bundle, check if the environment is valid for production
+    return isProductionEnvironment(this.environment)
   }
 
   onFail() {
