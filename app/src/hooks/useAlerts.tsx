@@ -254,7 +254,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
         ensureAppError(error, AppEventCode.ENVIRONMENT_MISMATCH),
         {
           onDismiss: () => {
-            switchEnvironment(IASEnvironment.PROD)
+            void switchEnvironment(IASEnvironment.PROD)
           },
         }
       )
