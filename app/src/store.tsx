@@ -8,7 +8,7 @@ import {
   PersistentStorage,
   ReducerAction,
 } from '@bifold/core'
-import { getInitialEnvironment, IASEnvironment } from '@utils/environment'
+import { getInitialEnvironment, IASEnvironment, isProductionBundle } from '@utils/environment'
 import { AccountSecurityMethod, BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
@@ -390,6 +390,12 @@ const remoteDebuggingState: RemoteDebuggingState = {
 
 const developerState: Developer = {
   enableProxy: false,
+  /**
+   * TODO (MD):
+   * 1. Store the fact not the entire environment object ie: "PROD" | "SIT"
+   * 2. Derive the environment object from the fact. (ie: bcsc-theme/state/environment).
+   * 3. Migrate the the old persisted environment value to the new enum value
+   */
   environment: getInitialEnvironment(),
   remoteDebugging: remoteDebuggingState,
   enableAppToAppPersonFlow: false,
@@ -531,7 +537,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case DeveloperDispatchAction.UPDATE_ENVIRONMENT: {
-      const environment: IASEnvironment = (action?.payload || []).pop()
+      const environment: IASEnvironment = isProductionBundle() ? IASEnvironment.PROD : (action?.payload || []).pop()
       const developer = { ...state.developer, environment }
 
       // Persist IAS environment between app restarts
