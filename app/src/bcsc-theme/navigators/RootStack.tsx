@@ -14,6 +14,7 @@ import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useServerStatus } from '../contexts/ServerStatusContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
+import { InvalidEnvironment } from '../features/modal/InvalidEnvironment'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -181,6 +182,13 @@ const BCSCRootStack: React.FC = () => {
       emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
     }
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
+
+  // Recovery gate: blocks every stack, independent of account state, until the environment is valid again
+  // TODO (MD): Remove this gate after all users are on v4.2.0+
+  // if (store.stateLoaded && isProductionBundle() && !isProductionEnvironment(store.developer.environment)) {
+  if (store.stateLoaded) {
+    return <InvalidEnvironment />
+  }
 
   // Loading until the app is ready and, for a would-resume user, IAS status is known
   if (!appReady || awaitingStatusForResume) {

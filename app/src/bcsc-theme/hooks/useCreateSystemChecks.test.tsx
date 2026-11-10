@@ -116,10 +116,6 @@ jest.mock('@/services/system-checks/EventReasonAlertsSystemCheck', () => ({
   EventReasonAlertsSystemCheck: class EventReasonAlertsSystemCheck {},
 }))
 
-jest.mock('@/services/system-checks/InvalidEnvironmentSystemCheck', () => ({
-  InvalidEnvironmentSystemCheck: class InvalidEnvironmentSystemCheck {},
-}))
-
 jest.mock('@/services/system-checks/InstallIdSystemCheck', () => ({
   InstallIdSystemCheck: class InstallIdSystemCheck {},
 }))
@@ -277,13 +273,11 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
 
-        // InvalidEnvironmentSystemCheck, InstallIdSystemCheck, AnalyticsSystemCheck, ServerClockSkewSystemCheck, UpdateAppSystemCheck
-        expect(systemChecks).toHaveLength(5)
-        expect(systemChecks[0].constructor.name).toBe('InvalidEnvironmentSystemCheck')
-        expect(systemChecks[1].constructor.name).toBe('InstallIdSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('AnalyticsSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('ServerClockSkewSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('UpdateAppSystemCheck')
+        expect(systemChecks).toHaveLength(4) // InstallIdSystemCheck, AnalyticsSystemCheck, ServerClockSkewSystemCheck, UpdateAppSystemCheck
+        expect(systemChecks[0].constructor.name).toBe('InstallIdSystemCheck')
+        expect(systemChecks[1].constructor.name).toBe('AnalyticsSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('ServerClockSkewSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('UpdateAppSystemCheck')
       })
 
       it('should not include UpdateAppSystemCheck for non-BCSC builds', async () => {
@@ -324,12 +318,10 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
 
-        // InvalidEnvironmentSystemCheck, InstallIdSystemCheck, AnalyticsSystemCheck, ServerClockSkewSystemCheck
-        expect(systemChecks).toHaveLength(4)
-        expect(systemChecks[0].constructor.name).toBe('InvalidEnvironmentSystemCheck')
-        expect(systemChecks[1].constructor.name).toBe('InstallIdSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('AnalyticsSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('ServerClockSkewSystemCheck')
+        expect(systemChecks).toHaveLength(3) // InstallIdSystemCheck, AnalyticsSystemCheck, ServerClockSkewSystemCheck
+        expect(systemChecks[0].constructor.name).toBe('InstallIdSystemCheck')
+        expect(systemChecks[1].constructor.name).toBe('AnalyticsSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('ServerClockSkewSystemCheck')
       })
 
       it('omits the clock-skew and update checks when the server status is unknown', async () => {
@@ -351,11 +343,7 @@ describe('useGetSystemChecks', () => {
         const { result } = renderHook(() => useCreateSystemChecks())
         const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
 
-        expect(systemChecks.map((c) => c.constructor.name)).toEqual([
-          'InvalidEnvironmentSystemCheck',
-          'InstallIdSystemCheck',
-          'AnalyticsSystemCheck',
-        ])
+        expect(systemChecks.map((c) => c.constructor.name)).toEqual(['InstallIdSystemCheck', 'AnalyticsSystemCheck'])
       })
 
       it('forces a fresh fetch when no status is cached yet, instead of skipping the update/clock-skew checks', async () => {
@@ -381,7 +369,6 @@ describe('useGetSystemChecks', () => {
 
         expect(refresh).toHaveBeenCalledWith({ force: true })
         expect(systemChecks.map((c) => c.constructor.name)).toEqual([
-          'InvalidEnvironmentSystemCheck',
           'InstallIdSystemCheck',
           'AnalyticsSystemCheck',
           'ServerClockSkewSystemCheck',

@@ -16,7 +16,6 @@ export enum BCSCStacks {
 export enum BCSCModals {
   InternetDisconnected = 'BCSCNoInternet',
   MandatoryUpdate = 'BCSCMandatoryUpdate',
-  InvalidEnvironment = 'BCSCInvalidEnvironment',
   DeviceInvalidated = 'BCSCDeviceInvalidated',
   ServiceOutage = 'BCSCServiceOutage',
   TermsOfUseUpdated = 'BCSCTermsOfUseUpdated',
@@ -356,7 +355,6 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.AuthDeveloper]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
-  [BCSCModals.InvalidEnvironment]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.ServiceOutage]: ServiceOutageParams
 }

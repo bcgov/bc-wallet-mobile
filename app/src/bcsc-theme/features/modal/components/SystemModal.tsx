@@ -4,6 +4,7 @@ import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ReactNode } from 'react'
 import { StyleSheet } from 'react-native'
+import { Edges } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 export interface SystemModalProps {
@@ -40,6 +41,10 @@ export interface SystemModalProps {
    */
   testID?: string
   /**
+   * Safe area edges to respect (default: all but top, which the navigation header handles)
+   */
+  edges?: Edges
+  /**
    * Optional content rendered after the content text (e.g. a line containing a link)
    */
   children?: ReactNode
@@ -60,6 +65,7 @@ export const SystemModal = ({
   onButtonPress,
   buttonDisabled,
   testID,
+  edges = ['bottom', 'left', 'right'],
   children,
 }: SystemModalProps): React.ReactElement => {
   const { Spacing, ColorPalette } = useTheme()
@@ -94,12 +100,7 @@ export const SystemModal = ({
   )
 
   return (
-    <ScreenWrapper
-      padded={false}
-      controls={controls}
-      edges={['bottom', 'left', 'right']}
-      scrollViewContainerStyle={styles.content}
-    >
+    <ScreenWrapper padded={false} controls={controls} edges={edges} scrollViewContainerStyle={styles.content}>
       {iconName ? <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} /> : null}
       <ThemedText variant="headingThree">{headerText}</ThemedText>
       {contentText.filter(Boolean).map((text) => (

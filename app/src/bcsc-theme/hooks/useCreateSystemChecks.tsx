@@ -9,7 +9,6 @@ import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCh
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
-import { InvalidEnvironmentSystemCheck } from '@/services/system-checks/InvalidEnvironmentSystemCheck'
 import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
 import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
 import { RefreshTokenExpiredSystemCheck } from '@/services/system-checks/RefreshTokenExpiredSystemCheck'
@@ -111,7 +110,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
     const systemChecks: SystemCheckStrategy[] = [
-      new InvalidEnvironmentSystemCheck(store.developer.environment, navigation, utils),
       new InstallIdSystemCheck(store.bcsc.installId, dispatch),
       new AnalyticsSystemCheck(
         store.bcsc.analyticsOptIn,
@@ -136,15 +134,15 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   }, [
     cachedServerStatus,
     refreshServerStatus,
-    store.developer.environment,
-    store.bcsc.installId,
-    store.bcsc.analyticsOptIn,
-    utils,
     dispatch,
-    logger,
     emitAlert,
     isBCServicesCardBundle,
+    logger,
     navigation,
+    store.bcsc.analyticsOptIn,
+    store.bcsc.installId,
+    store.developer.environment.analyticsAppId,
+    utils,
   ])
 
   /**

@@ -41,6 +41,8 @@ export const InvalidEnvironment = (): React.ReactElement => {
       buttonText={t('BCSC.Modals.InvalidEnvironment.ResetButton')}
       onButtonPress={handleReset}
       buttonDisabled={resetting}
+      // Rendered at the root without a navigation header, so the top inset is ours to handle
+      edges={['top', 'bottom', 'left', 'right']}
       testID={testIdWithKey(TestIds.systemModal.invalidEnvironment.reset)}
     >
       <ThemedText>

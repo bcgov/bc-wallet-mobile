@@ -51,9 +51,6 @@ jest.mock('../features/auth/LockoutScreen', () => ({
 jest.mock('../features/modal/InternetDisconnected', () => ({
   InternetDisconnected: 'InternetDisconnected',
 }))
-jest.mock('../features/modal/InvalidEnvironment', () => ({
-  InvalidEnvironment: 'InvalidEnvironment',
-}))
 jest.mock('../features/modal/MandatoryUpdate', () => ({
   MandatoryUpdate: 'MandatoryUpdate',
 }))
@@ -109,7 +106,6 @@ describe('AuthStack', () => {
       BCSCScreens.PairingConfirmation,
       BCSCScreens.EditNickname,
       BCSCModals.InternetDisconnected,
-      BCSCModals.InvalidEnvironment,
       BCSCModals.MandatoryUpdate,
       BCSCModals.ServiceOutage,
     ])
@@ -146,14 +142,12 @@ describe('AuthStack', () => {
     expect(optionsFor(screen).headerLeft()).toBeNull()
   })
 
-  it.each([
-    BCSCModals.InternetDisconnected,
-    BCSCModals.MandatoryUpdate,
-    BCSCModals.InvalidEnvironment,
-    BCSCModals.ServiceOutage,
-  ])('presents %s as a non-dismissable modal', (modal) => {
-    renderStack()
+  it.each([BCSCModals.InternetDisconnected, BCSCModals.MandatoryUpdate, BCSCModals.ServiceOutage])(
+    'presents %s as a non-dismissable modal',
+    (modal) => {
+      renderStack()
 
-    expect(optionsFor(modal)).toEqual(expect.objectContaining({ presentation: 'modal', gestureEnabled: false }))
-  })
+      expect(optionsFor(modal)).toEqual(expect.objectContaining({ presentation: 'modal', gestureEnabled: false }))
+    }
+  )
 })
