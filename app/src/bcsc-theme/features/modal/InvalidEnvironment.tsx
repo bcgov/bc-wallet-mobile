@@ -1,5 +1,6 @@
 import { useSwitchEnvironment } from '@/bcsc-theme/hooks/useSwitchEnvironment'
 import { CONTACT_US_HELP_URL } from '@/constants'
+import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
 import { IASEnvironment } from '@/utils/environment'
 import { openLink } from '@/utils/links'
@@ -17,13 +18,19 @@ import { SystemModal } from './components/SystemModal'
 export const InvalidEnvironment = (): React.ReactElement => {
   const { t } = useTranslation()
   const switchEnvironment = useSwitchEnvironment()
+  const { unknownErrorModal } = useAlerts()
   const [resetting, setResetting] = useState(false)
 
   const handleReset = useCallback(async () => {
     setResetting(true)
-    await switchEnvironment(IASEnvironment.PROD)
+    const switched = await switchEnvironment(IASEnvironment.PROD)
+
+    if (!switched) {
+      unknownErrorModal(new Error('[InvalidEnvironment] Failed to switch to production environment'))
+    }
+
     setResetting(false)
-  }, [switchEnvironment])
+  }, [switchEnvironment, unknownErrorModal])
 
   return (
     <SystemModal

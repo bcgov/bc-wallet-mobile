@@ -16,21 +16,21 @@ export const useSwitchEnvironment = () => {
   const factoryReset = useFactoryReset()
 
   const switchEnvironment = useCallback(
-    async (environment: IASEnvironment) => {
+    async (environment: IASEnvironment): Promise<boolean> => {
       try {
         // hard factory reset, no state saved
         const result = await factoryReset()
 
         if (!result.success) {
           logger.error('[useSwitchEnvironment] Factory reset failed, environment not switched:', result.error)
-          return
+          return false
         }
 
         const success = await setIssuer(environment.iasApiBaseUrl)
 
         if (!success) {
           logger.error('[useSwitchEnvironment] Failed to persist issuer, environment not switched')
-          return
+          return false
         }
 
         // Update the analytics tracker with the new app ID for the selected environment
@@ -45,8 +45,11 @@ export const useSwitchEnvironment = () => {
           type: BCDispatchAction.UPDATE_ENVIRONMENT,
           payload: [environment],
         })
+
+        return true
       } catch (error) {
         logger.error('[useSwitchEnvironment] Error during factory reset for environment change:', error as Error)
+        return false
       }
     },
     [dispatch, factoryReset, logger]
