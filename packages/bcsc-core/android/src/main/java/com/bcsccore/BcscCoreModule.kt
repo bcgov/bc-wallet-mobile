@@ -1494,12 +1494,6 @@ class BcscCoreModule internal constructor(
                     .build()
 
             stage = "sign"
-            if (challengeSource == "push_notification") {
-                throw BcscException(
-                    com.bcsccore.keypair.core.exceptions.AlertKey.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
-                    "forced for testing",
-                )
-            }
             // Sign the JWT using bcsc-keypair-port
             val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
 
