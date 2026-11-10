@@ -1,10 +1,10 @@
 /**
- * Shared HTTP core for the e2e support-API layer (see ../../docs/SUPPORT-API.md).
+ * Shared HTTP core for the e2e support-API layer (see "Runner-side API clients" in ../../README.md).
  *
  * Every runner-driven API client goes through these two primitives so failures read the same way
- * everywhere: a non-2xx is an {@link ApiError} carrying the status + a body snippet, and OUR OWN
- * timeout is named as a budget — never mistakable for a server rejection (the same convention as
- * `helpers/approval.ts`).
+ * everywhere: a non-2xx is an {@link ApiError} carrying the status + a body snippet, no response is
+ * an {@link ApiTransportError}, and OUR OWN timeout is named as a budget — never mistakable for a
+ * server rejection (the same convention as `helpers/approval.ts`).
  */
 
 /** A non-2xx response, with enough context to diagnose from a CI log alone. */
@@ -20,14 +20,35 @@ export class ApiError extends Error {
   }
 }
 
+/** No response at all: our own request budget ran out, or the transport failed. */
+export class ApiTransportError extends Error {
+  constructor(
+    readonly method: string,
+    readonly url: string,
+    /** What happened, without the URL (`after 10004ms: fetch failed (UND_ERR_CONNECT_TIMEOUT)`). */
+    readonly detail: string,
+    /** The socket error's code, when the transport named one. */
+    readonly code?: string
+  ) {
+    super(`${method} ${url} failed ${detail}`)
+    this.name = 'ApiTransportError'
+  }
+}
+
 /** A caught `unknown` as a readable string — its `Error.message`, or the value itself. */
 export function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
+/** Undici's bare "fetch failed" keeps the socket error on `cause`. */
+function transportErrorCode(error: unknown): string | undefined {
+  const code = (error as { cause?: { code?: unknown } } | undefined)?.cause?.code
+  return typeof code === 'string' ? code : undefined
+}
+
 export interface ApiFetchOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
-  /** JSON-serialized when provided. */
+  /** JSON-serialized when provided; a `URLSearchParams` is sent as a form instead. */
   body?: unknown
   headers?: Record<string, string>
   timeoutMs?: number
@@ -44,6 +65,9 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 30_000
  */
 export async function apiFetch<T>(url: string, options: ApiFetchOptions = {}): Promise<T> {
   const { method = 'GET', body, headers = {}, timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS, allowStatuses = [] } = options
+  // fetch labels a URLSearchParams body as a form itself.
+  const form = body instanceof URLSearchParams ? body : undefined
+  const json = body === undefined || form ? undefined : JSON.stringify(body)
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   const startedAt = Date.now()
@@ -52,13 +76,16 @@ export async function apiFetch<T>(url: string, options: ApiFetchOptions = {}): P
   try {
     response = await fetch(url, {
       method,
-      headers: { ...(body === undefined ? {} : { 'content-type': 'application/json' }), ...headers },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: { ...(json === undefined ? {} : { 'content-type': 'application/json' }), ...headers },
+      body: form ?? json,
       signal: controller.signal,
     })
   } catch (error: unknown) {
-    const detail = controller.signal.aborted ? `the ${timeoutMs}ms request budget ran out` : describeError(error)
-    throw new Error(`${method} ${url} failed after ${Date.now() - startedAt}ms: ${detail}`)
+    const code = controller.signal.aborted ? undefined : transportErrorCode(error)
+    const reason = controller.signal.aborted
+      ? `the ${timeoutMs}ms request budget ran out`
+      : `${describeError(error)}${code ? ` (${code})` : ''}`
+    throw new ApiTransportError(method, url, `after ${Date.now() - startedAt}ms: ${reason}`, code)
   } finally {
     clearTimeout(timeoutId)
   }
