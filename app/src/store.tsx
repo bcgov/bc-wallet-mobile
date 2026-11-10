@@ -105,7 +105,6 @@ export interface BCSCState {
   bannerMessages: BCSCBannerMessage[]
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
-  hasDismissedExpiryAlert?: boolean
   hasDismissedThirdPartyKeyboardAlert?: boolean
   hasDismissedDeviceAuthInfo?: boolean
   deviceLimitBannerDismissedAt?: string
@@ -245,8 +244,6 @@ export interface BCSCSecureState {
    */
   securityMethod?: AccountSecurityMethod
 
-  hasDismissedExpiryAlert?: boolean
-
   /**
    * Set during hydration when a native account record exists but its tokens file is
    * unreadable/corrupt — i.e. neither a refresh nor a registration token survived
@@ -346,7 +343,6 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
-  DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
   DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
@@ -875,15 +871,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.ACCOUNT_SETUP_TYPE: {
       const accountType = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, accountSetupType: accountType }
-      const newState = { ...state, bcsc }
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.DISMISSED_EXPIRY_ALERT: {
-      // this should use the date as a key, so this variable is always up to date...
-      const hasDismissed = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, hasDismissedExpiryAlert: hasDismissed }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
