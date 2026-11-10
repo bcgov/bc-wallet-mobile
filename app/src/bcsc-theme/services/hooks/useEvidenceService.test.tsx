@@ -48,8 +48,6 @@ const mockAlerts = {
   unknownErrorModal: mockUnknownErrorModal,
   appUpdateRequiredAlert: mockAppUpdateRequiredAlert,
 }
-// requireActual below loads the real useAlerts, whose switch-environment hook would pull in the store and its @bifold/core dependencies
-jest.mock('@/bcsc-theme/hooks/useSwitchEnvironment', () => ({ useSwitchEnvironment: jest.fn() }))
 jest.mock('@/hooks/useAlerts', () => ({
   ...jest.requireActual('@/hooks/useAlerts'),
   useAlerts: () => mockAlerts,
