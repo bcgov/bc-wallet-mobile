@@ -2,6 +2,7 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { isProductionBundle, isProductionEnvironment } from '@/utils/environment'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -185,8 +186,7 @@ const BCSCRootStack: React.FC = () => {
 
   // Recovery gate: blocks every stack, independent of account state, until the environment is valid again
   // TODO (MD): Remove this gate after all users are on v4.2.0+
-  // if (store.stateLoaded && isProductionBundle() && !isProductionEnvironment(store.developer.environment)) {
-  if (store.stateLoaded) {
+  if (store.stateLoaded && isProductionBundle() && !isProductionEnvironment(store.developer.environment)) {
     return <InvalidEnvironment />
   }
 
