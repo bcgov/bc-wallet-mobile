@@ -19,16 +19,26 @@ export const useSwitchEnvironment = () => {
     async (environment: IASEnvironment) => {
       try {
         // hard factory reset, no state saved
-        await factoryReset()
+        const result = await factoryReset()
+
+        if (!result.success) {
+          logger.error('[useSwitchEnvironment] Factory reset failed, environment not switched:', result.error)
+          return
+        }
 
         const success = await setIssuer(environment.iasApiBaseUrl)
+
+        if (!success) {
+          logger.error('[useSwitchEnvironment] Failed to persist issuer, environment not switched')
+          return
+        }
 
         // Update the analytics tracker with the new app ID for the selected environment
         Analytics.setAppId(environment.analyticsAppId)
 
-        logger.info('[BCSCCore] persisting issuer:', {
+        logger.info('[useSwitchEnvironment] persisting issuer:', {
           issuer: environment.iasApiBaseUrl,
-          success: success,
+          success,
         })
 
         dispatch({
