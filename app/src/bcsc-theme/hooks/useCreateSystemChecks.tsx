@@ -5,7 +5,6 @@ import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
-import { useAlerts } from '@/hooks/useAlerts'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
@@ -86,7 +85,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const accountContext = useContext(BCSCAccountContext)
   const { emitAlert } = useErrorAlert()
   const { serverStatus: cachedServerStatus, refresh: refreshServerStatus } = useServerStatus()
-  const { invalidEnvironmentErrorModal } = useAlerts()
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
   const appVersion = getVersion()
@@ -113,7 +111,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
     const systemChecks: SystemCheckStrategy[] = [
-      new InvalidEnvironmentSystemCheck(store.developer.environment, invalidEnvironmentErrorModal, utils),
+      new InvalidEnvironmentSystemCheck(store.developer.environment, utils),
       new InstallIdSystemCheck(store.bcsc.installId, dispatch),
       new AnalyticsSystemCheck(
         store.bcsc.analyticsOptIn,
@@ -141,7 +139,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.developer.environment,
     store.bcsc.installId,
     store.bcsc.analyticsOptIn,
-    invalidEnvironmentErrorModal,
     utils,
     dispatch,
     logger,

@@ -1578,11 +1578,6 @@ const translation = {
       "Description": "You must correct it before you can use this app. Go to your Settings to update the date and time, or change it to be set automatically. (FR)",
       "Action1": "Open Settings (FR)",
     },
-    "EnvironmentMismatch": {
-      "Title": "App Needs to Be Reset (FR)",
-      "Description": "This app was switched to the wrong environment by mistake. Closing this resets it, and you'll need to set up your account again. (FR)",
-      "Action1": "Reset App (FR)",
-    },
     "AlreadyVerified": {
       "Title": "Problem Checking Status (FR)",
       "Description": "Please close the app and try again. (FR)",

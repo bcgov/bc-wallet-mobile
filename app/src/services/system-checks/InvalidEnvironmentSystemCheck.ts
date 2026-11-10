@@ -10,12 +10,10 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
  */
 export class InvalidEnvironmentSystemCheck implements SystemCheckStrategy {
   private readonly environment: IASEnvironment
-  private readonly invalidEnvironmentErrorModal: () => void
   private readonly utils: SystemCheckUtils
 
-  constructor(environment: IASEnvironment, invalidEnvironmentErrorModal: () => void, utils: SystemCheckUtils) {
+  constructor(environment: IASEnvironment, utils: SystemCheckUtils) {
     this.environment = environment
-    this.invalidEnvironmentErrorModal = invalidEnvironmentErrorModal
     this.utils = utils
   }
 
@@ -30,10 +28,7 @@ export class InvalidEnvironmentSystemCheck implements SystemCheckStrategy {
   }
 
   onFail() {
-    this.utils.logger.debug(
-      '[InvalidProductionEnvironmentSystemCheck] Invalid environment detected for production. Switching to production environment.'
-    )
-    this.invalidEnvironmentErrorModal()
+    this.utils.logger.debug('[InvalidEnvironmentSystemCheck] Non-production environment detected on production bundle')
   }
 
   onSuccess() {}
