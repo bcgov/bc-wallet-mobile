@@ -25,9 +25,10 @@
 #                  prev_version.
 #
 # All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
-# SAUCE_ACCESS_KEY and the IDCHECK_* sign-in (user, password, TOTP secret) are all
+# SAUCE_ACCESS_KEY, the IDCHECK_* sign-in (user, password, TOTP secret) and the
+# IAS_TEST_API_* client (host, client id, client secret of the SIT test API) are all
 # loaded from the bcsc-mobile-app-cd 1Password vault unconditionally, even for
-# suites (smoke, onboarding, auth) that don't use the IDCHECK_* values.
+# suites (smoke, onboarding, auth) that don't use them.
 #
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
@@ -104,12 +105,17 @@ on:
         type: number
         required: false
         default: 2
+      approval_source:
+        description: 'Who records the agent decision: idcheck (ID Check portal) or api (IAS E2E Test API). For now api only adds the test-API preflight; the journeys still approve through the portal'
+        type: string
+        required: false
+        default: 'idcheck'
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN:
         required: true
         description: >
           1Password service account token. This job loads SAUCE_USERNAME,
-          SAUCE_ACCESS_KEY and the IDCHECK_* sign-in from the
+          SAUCE_ACCESS_KEY, the IDCHECK_* sign-in and the IAS_TEST_API_* client from the
           bcsc-mobile-app-cd vault itself (in addition to the traction issuer
           credentials it already loaded — see e2e/issuer/README.md), so
           callers only need to pass this one bootstrap secret through. The
@@ -168,6 +174,13 @@ on:
         description: 'Matrix jobs allowed at once — 1 serialises the platforms (send-video is always 1)'
         type: number
         default: 2
+      approval_source:
+        description: 'Who records the agent decision: idcheck (ID Check portal) or api (IAS E2E Test API). For now api only adds the test-API preflight; the journeys still approve through the portal'
+        type: choice
+        options:
+          - idcheck
+          - api
+        default: idcheck
 
 jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
@@ -190,6 +203,10 @@ jobs:
     # install and retries (the submitted/approved ones wait on a scripted review); other suites (merge-queue
     # smoke) stay tight
     timeout-minutes: ${{ (inputs.suite == 'regression' && 180) || (inputs.suite == 'send-video' && 90) || (inputs.suite == 'upgradePartial' && 120) || (contains(fromJSON('["upgradeSubmitted","upgradeApproved"]'), inputs.suite) && 90) || (inputs.suite == 'upgradeVerified' && 60) || 45 }}
+    env:
+      # Who records the agent's decision on a verification. `api` runs the test-API preflight below;
+      # the journeys do not read this yet and still approve through the ID Check portal.
+      E2E_APPROVAL_SOURCE: ${{ inputs.approval_source || 'idcheck' }}
     strategy:
       # Pinned to 1: send-video and the submitted/approved upgrade suites review the blind-FIFO queue, and
       # every upgrade suite that verifies does so with the shared SIT persona (one active device per card) —
@@ -246,8 +263,8 @@ jobs:
           ./node_modules/.bin/tsx scripts/issuer-provision.ts >> "$GITHUB_ENV"
 
       # Outputs (not export-env) keep these values scoped to only the
-      # step below that references them.
-      - name: Load SauceLabs and IDCheck secrets from 1Password
+      # steps below that reference them.
+      - name: Load SauceLabs, IDCheck and test-API secrets from 1Password
         id: op_e2e
         uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         env:
@@ -258,6 +275,22 @@ jobs:
           IDCHECK_USER: op://bcsc-mobile-app-cd/bcsc-ias-test-account/email
           IDCHECK_PASSWORD: op://bcsc-mobile-app-cd/bcsc-ias-test-account/credential
           IDCHECK_TOTP_SECRET: op://bcsc-mobile-app-cd/bcsc-ias-test-account/password
+          # The SIT client of the IAS E2E Test API (e2e/src/api/ias-test.ts): url = host, username = client id, credential = client secret
+          IAS_TEST_API_HOST: op://bcsc-mobile-app-cd/ias-test-api-sit/url
+          IAS_TEST_API_CLIENT_ID: op://bcsc-mobile-app-cd/ias-test-api-sit/username
+          IAS_TEST_API_CLIENT_SECRET: op://bcsc-mobile-app-cd/ias-test-api-sit/credential
+
+      # Mints a token, checks both scopes and probes the decision route with a usercode that does not
+      # exist. A missing scope, or a host whose build lacks the route, fails here by name before any
+      # Sauce session is paid for.
+      - name: Test API preflight
+        if: env.E2E_APPROVAL_SOURCE == 'api'
+        working-directory: e2e
+        env:
+          IAS_TEST_API_HOST: ${{ steps.op_e2e.outputs.IAS_TEST_API_HOST }}
+          IAS_TEST_API_CLIENT_ID: ${{ steps.op_e2e.outputs.IAS_TEST_API_CLIENT_ID }}
+          IAS_TEST_API_CLIENT_SECRET: ${{ steps.op_e2e.outputs.IAS_TEST_API_CLIENT_SECRET }}
+        run: ./node_modules/.bin/tsx scripts/test-api-check.ts
 
       - name: Run WDIO tests
         working-directory: e2e
@@ -267,6 +300,9 @@ jobs:
           IDCHECK_USER: ${{ steps.op_e2e.outputs.IDCHECK_USER }}
           IDCHECK_PASSWORD: ${{ steps.op_e2e.outputs.IDCHECK_PASSWORD }}
           IDCHECK_TOTP_SECRET: ${{ steps.op_e2e.outputs.IDCHECK_TOTP_SECRET }}
+          IAS_TEST_API_HOST: ${{ steps.op_e2e.outputs.IAS_TEST_API_HOST }}
+          IAS_TEST_API_CLIENT_ID: ${{ steps.op_e2e.outputs.IAS_TEST_API_CLIENT_ID }}
+          IAS_TEST_API_CLIENT_SECRET: ${{ steps.op_e2e.outputs.IAS_TEST_API_CLIENT_SECRET }}
           # Persistent-profile + circuit-breaker state; runner.temp is per-job and writable (see idcheck-session.mjs).
           # No cross-run actions/cache of this dir: matrix jobs are separate ephemeral runners, and caching it
           # would persist live Entra session cookies in the repo-scoped cache. One cold sign-in per job is fine.
