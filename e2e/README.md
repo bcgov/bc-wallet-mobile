@@ -244,7 +244,7 @@ VARIANT=bcsc yarn test:android:sauce
 
 _Two env files split general e2e config (including the IDCheck credentials) from SauceLabs credentials:_
 
-- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_. Includes the IDCheck credentials used by the in-person verification approval flow._
+- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_. Includes the IDCheck credentials used by the in-person verification approval flow and the IAS test-API client._
 - **`.env.saucelabs`** _— loaded only for sauce runs. Copy from_ `.env.saucelabs.example`_._
 
 ### _General (`.env.e2e`)_
@@ -330,6 +330,32 @@ yarn queue:drain --dry-run       # log in and report which queues hold work; cla
 ```
 
 _Scope_ `e2e` _is the default everywhere (journeys, nightly, the workflow's inputs);_ `E2E_QUEUE_DRAIN_SCOPE=all` _(or_ `--scope all`_) is the only way to make a run reject requests that are not its own. A moved request keeps everything the tester submitted — the move is the portal's own transfer (reference capture 2026-11-03) — but loses its place in the regular queue, which matters to UAT scenarios meant to be worked from there._
+
+### IAS E2E Test API (in `.env.e2e`)
+
+IAS's non-production test API (`https://<host>/test/idv/v1`) mints BC Services Card test identities and records the agent's side of a verification, keyed by the usercode the app shows. `src/api/ias-test.ts` is the runner's client for it. IAS issued one OAuth 2.0 client per environment, kept in 1Password (`bcsc-mobile-app-cd`: `ias-test-api-dev` and `ias-test-api-sit`); CI loads the SIT one in `e2e.yml`.
+
+| Variable | Description |
+| --- | --- |
+| `IAS_TEST_API_HOST` | The environment's host: `idsit.gov.bc.ca` (SIT) or `iddev.gov.bc.ca` (DEV). A URL works too; only its origin is used (the item's `url`) |
+| `IAS_TEST_API_CLIENT_ID` | The environment's client id (the item's `username`) |
+| `IAS_TEST_API_CLIENT_SECRET` | The client secret (the item's `credential`) |
+
+```bash
+yarn test-api:check              # mint a token, check both scopes, probe the decision route with a usercode that does not exist
+yarn test-api:spec-check         # compare src/api/ias-test-api.yaml with the spec each host publishes (warns, never fails)
+```
+
+The hosts do not always run the same build, and the client names what a host answers instead of failing opaquely (`IasTestApiError.kind`):
+
+| Answer | Kind | Meaning |
+| --- | --- | --- |
+| `501` | `not-implemented` | The route is served but not built yet: a journey can skip with that reason |
+| `403` with a token that holds the route's scope | `route-absent` | The host's build does not have the route |
+| `400` with an empty body, on a route keyed by a usercode | `unknown-usercode` | The usercode is unknown, or not in a state the call can act on |
+| `400` with a body | `unexpected` | The host rejected the request itself (a field it cannot read) |
+
+`yarn test-api:check` exits non-zero unless the decision route is live. `e2e.yml` runs it before any Sauce session when it is dispatched with `approval_source: api`. Errors name the route with its usercode or serial masked and never carry the secret, the token or a response body.
 
 ## _Config Hierarchy_
 
@@ -452,6 +478,18 @@ Run just the file you are iterating on:
 ```bash
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/verify/verified-photo.journey.ts
 ```
+
+### Runner-side API clients
+
+`src/api/` holds the HTTP clients the runner drives itself, to arrange, assert or clean up, as opposed to anything the device does:
+
+| File | Talks to |
+| --- | --- |
+| `http.ts` | The shared core. `apiFetch`: a request budget, a non-2xx as `ApiError`, no response as `ApiTransportError`. `pollUntil`: a named budget, with the last observation in the timeout error |
+| `issuer.ts` | The e2e issuer and verifier, a Traction tenant (`issuer/README.md`) |
+| `ias-test.ts` | IAS's E2E Test API: test identities and agent decisions (see **IAS E2E Test API**) |
+
+A client goes through `apiFetch` and `pollUntil`, reads its credentials from env, and keeps secrets, tokens and card-holder values out of logs and error text; for the IAS client that includes the usercode or serial in a request path and every response body. The helpers that predate this layer (`helpers/pairing-code.ts`, `helpers/approval.ts` with `scripts/login.mjs`, `helpers/email.ts`) keep their own transport.
 
 <a id="accessibility-audits"></a>
 
@@ -712,6 +750,8 @@ e2e/
 │   ├── generate-scan-assets.mjs             # combo-card backs for the scan suite
 │   ├── issuer-provision.ts                  # issuer tenant bootstrap / CI preflight (yarn issuer:provision)
 │   ├── issuer-smoke.ts                      # issuer API smoke, no device (yarn issuer:smoke)
+│   ├── test-api-check.ts                    # IAS test-API preflight: token, scopes, decision route (yarn test-api:check)
+│   ├── test-api-spec-check.ts               # committed test-API spec vs the one each host publishes (yarn test-api:spec-check)
 │   ├── idcheck-session.mjs                  # IDCheck sign-in (headless Chrome → cookie jar), cached per process
 │   ├── login.mjs                            # IDCheck portal driver: in-person approval, send-video review, queue drain
 │   ├── setup-drivers.mjs                    # installs Appium drivers (yarn setup)
@@ -727,6 +767,12 @@ e2e/
 │   ├── e2eConfig.ts                         # variant detection (bcsc / bc-wallet)
 │   ├── upgrade-matrix.ts                    # the upgrade matrix: state × path → wrapper spec per lineage (the suites and the weekly brief read it)
 │   ├── v3TestIDs.ts                         # v3 native app selectors (iOS + Android) for the v3 previous-build driver
+│   │
+│   ├── api/                                 # HTTP clients the runner drives itself (not the device)
+│   │   ├── http.ts                          # apiFetch + pollUntil: request budgets and typed errors
+│   │   ├── issuer.ts                        # the e2e issuer/verifier (Traction tenant)
+│   │   ├── ias-test.ts                      # IAS E2E Test API: test identities, agent decisions
+│   │   └── ias-test-api.yaml                # that API's contract, as DEV publishes it
 │   │
 │   ├── brief/                               # the nightly brief: JUnit → coverage map → markdown
 │   │   ├── coverage-map.ts                  # UAT rows + every journey → proving spec files / it titles, per platform
