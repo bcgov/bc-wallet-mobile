@@ -2,6 +2,7 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { isRefreshTokenExpired } from '@/bcsc-theme/state/account/refresh-token'
 import { rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
@@ -194,7 +195,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     }
 
     const systemChecks: SystemCheckStrategy[] = []
-    const refreshTokenExpired = Boolean(store.bcscSecure.refreshTokenExpired)
+    const refreshTokenExpired = isRefreshTokenExpired(store.bcscSecure.refreshToken)
 
     // DeviceCount and EventReasonAlerts need a verified user's cached id token; hydration never
     // fetches one when the stored refresh token is expired, so they'd misfire on that path (#4654).

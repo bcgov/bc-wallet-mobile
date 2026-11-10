@@ -1282,7 +1282,6 @@ export const useSecureActions = () => {
         savedServices,
 
         sessionRecoveryRequired,
-        refreshTokenExpired,
       }
 
       logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)

@@ -1,3 +1,4 @@
+import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCDispatchAction } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
@@ -482,6 +483,7 @@ describe('useGetSystemChecks', () => {
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('EventReasonAlertsSystemCheck')
         expect(systemChecks[2].constructor.name).toBe('RefreshTokenExpiredSystemCheck')
+        expect(systemChecks[2].runCheck()).toBe(true)
         expect(systemChecks[3].constructor.name).toBe('TermsOfUseSystemCheck')
         expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
         expect(systemChecks[5].constructor.name).toBe('KeyRotationSystemCheck')
@@ -504,7 +506,7 @@ describe('useGetSystemChecks', () => {
             bcscSecure: {
               isHydrated: true,
               verified: true,
-              refreshTokenExpired: true,
+              refreshToken: EXPIRED_JWT,
               registrationAccessToken: 'test-registration-token',
             },
           },
@@ -533,6 +535,7 @@ describe('useGetSystemChecks', () => {
         expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
         expect(names).toContain('RefreshTokenExpiredSystemCheck')
+        expect(systemChecks[names.indexOf('RefreshTokenExpiredSystemCheck')].runCheck()).toBe(false)
       })
 
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
