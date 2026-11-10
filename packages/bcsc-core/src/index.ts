@@ -493,7 +493,7 @@ export const getAccount = async (): Promise<NativeAccount | null> => {
  * @returns A promise that resolves to the account read status.
  */
 export const getAccountReadStatus = async (): Promise<NativeAccountReadStatus> => {
-  return BcscCore.getAccountReadStatus();
+  return await BcscCore.getAccountReadStatus();
 };
 
 /**
