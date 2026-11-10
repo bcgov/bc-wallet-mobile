@@ -2,6 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { ReactNode } from 'react'
 import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -38,6 +39,10 @@ export interface SystemModalProps {
    * Optional testID for the button
    */
   testID?: string
+  /**
+   * Optional content rendered after the content text (e.g. a line containing a link)
+   */
+  children?: ReactNode
 }
 
 /**
@@ -55,6 +60,7 @@ export const SystemModal = ({
   onButtonPress,
   buttonDisabled,
   testID,
+  children,
 }: SystemModalProps): React.ReactElement => {
   const { Spacing, ColorPalette } = useTheme()
 
@@ -99,6 +105,7 @@ export const SystemModal = ({
       {contentText.filter(Boolean).map((text) => (
         <ThemedText key={text}>{text}</ThemedText>
       ))}
+      {children}
     </ScreenWrapper>
   )
 }
