@@ -111,7 +111,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
     const systemChecks: SystemCheckStrategy[] = [
-      new InvalidEnvironmentSystemCheck(store.developer.environment, utils),
+      new InvalidEnvironmentSystemCheck(store.developer.environment, navigation, utils),
       new InstallIdSystemCheck(store.bcsc.installId, dispatch),
       new AnalyticsSystemCheck(
         store.bcsc.analyticsOptIn,
