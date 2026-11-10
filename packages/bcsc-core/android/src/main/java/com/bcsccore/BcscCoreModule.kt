@@ -2107,10 +2107,25 @@ class BcscCoreModule internal constructor(
                     "clientRefId: $clientRefId",
             )
 
-            // Create signed JWT following iOS pattern (makeSignedJWTForAccountLogin)
-            val signedJWT =
+            // Load the key up front so a key failure is reported as get_key, not sign (matches iOS signJWT)
+            try {
+                keyPairSource.getCurrentBcscKeyPair()
+            } catch (e: Exception) {
+                rejectWithDiagnostics(
+                    promise,
+                    code = "E_KEYPAIR_RETRIEVAL_FAILED",
+                    message = "Failed to retrieve the signing key pair.",
+                    site = "$method.get_key",
+                    error = e,
+                    diagnostics = signingErrorDiagnostics(e),
+                )
+                return
+            }
+
+            // Build claims following iOS pattern (makeSignedJWTForAccountLogin)
+            val claimsSet =
                 try {
-                    createSignedJWTForAccountLogin(
+                    buildAccountLoginClaims(
                         accessToken,
                         clientId,
                         issuer,
@@ -2118,6 +2133,20 @@ class BcscCoreModule internal constructor(
                         fcmDeviceToken,
                         actualDeviceToken,
                     )
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_PAYLOAD_CREATION_FAILED",
+                        message = "Failed to create JWT payload.",
+                        site = "$method.build_claims",
+                        error = e,
+                    )
+                    return
+                }
+
+            val signedJWT =
+                try {
+                    keyPairSource.signAndSerializeClaimsSet(claimsSet)
                 } catch (e: Exception) {
                     rejectWithDiagnostics(
                         promise,
@@ -2176,17 +2205,17 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Creates a signed JWT for account login following iOS QuickLoginProtocol pattern
-     * This matches the makeSignedJWTForAccountLogin method in iOS
+     * Builds the account login claims following iOS QuickLoginProtocol pattern (makeSignedJWTForAccountLogin).
+     * Signing is a separate stage in createQuickLoginJWT so failures report the right site.
      */
-    private fun createSignedJWTForAccountLogin(
+    private fun buildAccountLoginClaims(
         accessToken: String,
         clientId: String,
         issuer: String,
         clientRefId: String,
         fcmDeviceToken: String,
         deviceToken: String,
-    ): String {
+    ): JWTClaimsSet {
         // Generate random UUID for JWT ID (matching iOS pattern)
         val randomUUID = UUID.randomUUID().toString().lowercase()
         val seconds = Date().time / 1000 // Unix timestamp in seconds
@@ -2195,30 +2224,26 @@ class BcscCoreModule internal constructor(
         val hmacNonce = createAssertionFactoryHMAC(accessToken, randomUUID, clientId.lowercase())
 
         // Build JWT claims following BCSC pattern
-        val claimsSet =
-            JWTClaimsSet
-                .Builder()
-                .audience(issuer)
-                .issuer(clientId.lowercase()) // Match iOS lowercasing
-                .claim("client_ref_id", clientRefId)
-                .claim("nonce", hmacNonce)
-                .issueTime(Date(seconds * 1000)) // Convert back to Date
-                .jwtID(randomUUID)
-                // Add device information claims (matching iOS addDeviceInfoClaims)
-                .claim("system_name", "Android")
-                .claim("system_version", Build.VERSION.RELEASE)
-                .claim("device_model", Build.MODEL)
-                .claim("device_id", UUID.randomUUID().toString())
-                .claim("device_token", deviceToken)
-                .claim("fcm_device_token", fcmDeviceToken)
-                .claim("mobile_id_version", getAppVersion())
-                .claim("mobile_id_build", getAppBuildNumber())
-                .claim("app_set_id", getAppSetId())
-                .claim("has_other_accounts", false)
-                .build()
-
-        // Sign the JWT using current key pair (matching iOS signJWT)
-        return keyPairSource.signAndSerializeClaimsSet(claimsSet)
+        return JWTClaimsSet
+            .Builder()
+            .audience(issuer)
+            .issuer(clientId.lowercase()) // Match iOS lowercasing
+            .claim("client_ref_id", clientRefId)
+            .claim("nonce", hmacNonce)
+            .issueTime(Date(seconds * 1000)) // Convert back to Date
+            .jwtID(randomUUID)
+            // Add device information claims (matching iOS addDeviceInfoClaims)
+            .claim("system_name", "Android")
+            .claim("system_version", Build.VERSION.RELEASE)
+            .claim("device_model", Build.MODEL)
+            .claim("device_id", UUID.randomUUID().toString())
+            .claim("device_token", deviceToken)
+            .claim("fcm_device_token", fcmDeviceToken)
+            .claim("mobile_id_version", getAppVersion())
+            .claim("mobile_id_build", getAppBuildNumber())
+            .claim("app_set_id", getAppSetId())
+            .claim("has_other_accounts", false)
+            .build()
     }
 
     /**
