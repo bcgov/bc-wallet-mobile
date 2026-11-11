@@ -579,6 +579,15 @@ const translation = {
         "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
       },
+      "InvalidEnvironment": {
+        "Header": "App needs to be reset (PT-BR)",
+        "ContentA": "Your app is in a version that isn’t supported. Resetting the app will return it to a version that is supported. You will need to set up your account again. (PT-BR)",
+        "ContentB": "If you had intentionally changed the app’s environment, this option is no longer available. (PT-BR)",
+        "NeedHelpPrefix": "If you need help, (PT-BR)",
+        "ContactUsLink": "contact us (PT-BR)",
+        "NeedHelpSuffix": ".",
+        "ResetButton": "Reset the app (PT-BR)",
+      },
       "ServiceOutage": {
         "Header": "Service unavailable (PT-BR)",
         "CheckAgainButton": "Check again (PT-BR)",
@@ -1235,6 +1244,13 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible) (PT-BR)"
     },
     "VideoCall": {
+      "Controls": {
+        "Mute": "Mute (PT-BR)",
+        "Unmute": "Unmute (PT-BR)",
+        "HideVideo": "Hide Video (PT-BR)",
+        "ShowVideo": "Show Video (PT-BR)",
+        "EndCall": "End Call (PT-BR)"
+      },
       "MissingSession": "Missing required parameters to end session (PT-BR)",
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update (PT-BR)",
       "DeviceCodeError": "Missing device or user code (PT-BR)",
@@ -1352,6 +1368,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (PT-BR)",
     },
     "Wallet": {
+      "Title": "Wallet (PT-BR)",
       "EmptyMessage": "Your wallet is empty (PT-BR)",
       "EmptyLearnMore": "Learn more about the wallet (PT-BR)",
       "Reset": "Reset wallet (PT-BR)",

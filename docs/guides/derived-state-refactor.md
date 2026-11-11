@@ -38,6 +38,7 @@ facts (store / context)  →  selector  →  rule (pure fn)  →  hook  →  UI
 - Order checks by authority: not applicable → authoritative server signals → missing data → computed values.
 - Distinguish "nothing to judge" (`None`) from "can't tell" (`Unknown`). Never let missing data read as healthy.
 - Compare dates as calendar days, not milliseconds.
+- When callers need several answers that can hold at once, return a record of booleans rather than one enum kind. Split the type on the deciding flag so combinations the rule can't produce don't type-check (`getVerificationState` splits on `isVerified`).
 
 ## Side effects
 
@@ -56,5 +57,6 @@ facts (store / context)  →  selector  →  rule (pure fn)  →  hook  →  UI
 
 - Refactor is behaviour-preserving unless a change is explicitly agreed; list any behaviour change in the PR.
 - Remove now-dead code (system checks, scopes, flags) in the same PR; grep for log lines or queries that referenced it.
+- Once a rule exists, move every reader of its raw inputs onto the rule or its selector and delete the helpers it replaces (`isUserVerified`, `useVerificationStatus`). Grep the store fields to prove it: only diagnostics (problem reports, logs) still read them directly.
 - Don't add re-render triggers (e.g. midnight timers) speculatively; recompute on store/context change until a need is shown.
 - Comments say why, 1–3 lines; enum variants with non-obvious meaning get one.

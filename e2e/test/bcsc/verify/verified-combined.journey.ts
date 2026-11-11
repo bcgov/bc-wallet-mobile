@@ -512,10 +512,8 @@ describe('Verified journey: combined card', () => {
   it('verified: edits the account nickname and it persists on the profile card', async () => {
     await HomeScreen.tap('menu')
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    // The pencil in the (verified-only) ProfileCard → EditNickname, as a confirmed-arrival tap: a tap the
-    // app discards mid-transition is re-tapped, and a build on which the pencil never navigates (Android
-    // from build 8944 — the tap reaches the view and nothing follows; red every nightly since) fails
-    // HERE naming Settings, rather than a scroll hunt later naming the nickname field.
+    // ProfileCard pencil → EditNickname as a confirmed-arrival tap: a discarded tap is re-tapped, and a pencil
+    // that never navigates fails here naming Settings, not later in a scroll hunt for the nickname field.
     await SettingsScreen.linkToReach('editProfile', EditNicknameScreen)
     await EditNicknameScreen.fill('nickname', NEW_NICKNAME) // NB may need a clear first if the field pre-fills
     await EditNicknameScreen.tap('primary') // SaveAndContinue → goBack to Settings

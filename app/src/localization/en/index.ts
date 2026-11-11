@@ -580,6 +580,15 @@ const translation = {
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
       },
+      "InvalidEnvironment": {
+        "Header": "App needs to be reset",
+        "ContentA": "Your app is in a version that isn’t supported. Resetting the app will return it to a version that is supported. You will need to set up your account again.",
+        "ContentB": "If you had intentionally changed the app’s environment, this option is no longer available.",
+        "NeedHelpPrefix": "If you need help, ",
+        "ContactUsLink": "contact us",
+        "NeedHelpSuffix": ".",
+        "ResetButton": "Reset the app",
+      },
       "ServiceOutage": {
         "Header": "Service unavailable",
         "CheckAgainButton": "Check again",
@@ -1110,6 +1119,11 @@ const translation = {
         "RetakeVideo": "Retake video",
         "TogglePlayPause": "Toggle play pause",
       },
+      "VideoExpired": {
+        "Heading": "Your video has expired",
+        "Description": "Recorded videos expire after 5 minutes. To continue, you'll need to retake the video.",
+        "ButtonText": "Retake video",
+      },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long.",
         "Description1": "Your video has to be less than 30 seconds.",
@@ -1299,6 +1313,13 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible)"
     },
     "VideoCall": {
+      "Controls": {
+        "Mute": "Mute",
+        "Unmute": "Unmute",
+        "HideVideo": "Hide Video",
+        "ShowVideo": "Show Video",
+        "EndCall": "End Call"
+      },
       "MissingSession": "Missing required parameters to end session",
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update",
       "DeviceCodeError": "Missing device or user code",
@@ -1424,6 +1445,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Wallet": {
+      "Title": "Wallet",
       "EmptyMessage": "Your wallet is empty",
       "EmptyLearnMore": "Learn more about the wallet",
       "Reset": "Reset wallet",

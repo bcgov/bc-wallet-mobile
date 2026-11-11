@@ -20,7 +20,8 @@ const useCancelledReviewViewModel = () => {
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
-    updateAccountFlags({ userSubmittedVerificationVideo: false })
+    // TODO (bm): should be awaited
+    void updateAccountFlags({ userSubmittedVerificationVideo: false })
   }, [dispatch, updateAccountFlags, updateVerificationRequest])
   // Not named for a screen: VerifyStack picks the landing step via getResumeStepRoute
   // (IdentitySelection after a full reset).

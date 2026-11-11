@@ -27,12 +27,15 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
   const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
-    bulletContainer: { width: '100%', marginBottom: Spacing.lg, marginLeft: Spacing.lg },
+    bulletContainer: { alignSelf: 'stretch', marginBottom: Spacing.lg, paddingLeft: Spacing.lg },
     bulletItemContainer: {
       flexDirection: 'row',
     },
     bullet: {
       marginRight: Spacing.xs,
+    },
+    bulletText: {
+      flex: 1,
     },
     descriptions: {
       width: '100%',
@@ -58,7 +61,7 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
           {bullets?.map((bullet) => (
             <View style={styles.bulletItemContainer} key={bullet}>
               <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-              <ThemedText>{bullet}</ThemedText>
+              <ThemedText style={styles.bulletText}>{bullet}</ThemedText>
             </View>
           ))}
         </View>

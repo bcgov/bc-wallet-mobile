@@ -16,6 +16,7 @@ jest.mock('react-native-device-info', () => ({
   getSystemName: jest.fn(() => 'iOS'),
   getSystemVersion: jest.fn(() => '17.4'),
   getDeviceId: jest.fn(() => 'iPhone15,2'),
+  getBundleId: jest.fn(() => 'ca.bc.gov.id.servicescard.dev'),
 }))
 
 jest.mock('react-native-bcsc-core', () => ({}))
@@ -29,6 +30,9 @@ jest.mock('@bifold/core', () => ({
 }))
 
 import { PersistentStorage } from '@bifold/core'
+import { getBundleId } from 'react-native-device-info'
+import { BCSC_PROD_BUNDLE_ID } from './constants'
+import { IASEnvironment } from './utils/environment'
 
 const mockedStoreValueForKey = PersistentStorage.storeValueForKey as jest.Mock
 
@@ -43,6 +47,30 @@ describe('reducer', () => {
 
     expect(result.bcsc.appVersion).toBe('4.0.0')
     expect(result.bcsc.appBuildNumber).toBe('100')
+  })
+
+  describe('UPDATE_ENVIRONMENT', () => {
+    it('sets and persists the selected environment on a non-production bundle', () => {
+      const result = reducer(initialState, {
+        type: BCDispatchAction.UPDATE_ENVIRONMENT,
+        payload: [IASEnvironment.QA],
+      })
+
+      expect(result.developer.environment).toBe(IASEnvironment.QA)
+      expect(mockedStoreValueForKey).toHaveBeenCalledWith(BCLocalStorageKeys.Environment, IASEnvironment.QA)
+    })
+
+    it('forces and persists the production environment on the production bundle', () => {
+      jest.mocked(getBundleId).mockReturnValueOnce(BCSC_PROD_BUNDLE_ID)
+
+      const result = reducer(initialState, {
+        type: BCDispatchAction.UPDATE_ENVIRONMENT,
+        payload: [IASEnvironment.QA],
+      })
+
+      expect(result.developer.environment).toBe(IASEnvironment.PROD)
+      expect(mockedStoreValueForKey).toHaveBeenCalledWith(BCLocalStorageKeys.Environment, IASEnvironment.PROD)
+    })
   })
 
   it('CLEAR_BCSC preserves installId while resetting other bcsc fields', () => {

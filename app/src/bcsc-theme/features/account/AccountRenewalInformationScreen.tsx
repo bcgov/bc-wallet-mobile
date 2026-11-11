@@ -26,6 +26,10 @@ export const AccountRenewalInformationScreen = ({
     linkContainer: {
       display: 'flex',
       flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    linkTrailingText: {
+      flexShrink: 1,
     },
     divider: {
       height: 2,
@@ -49,7 +53,7 @@ export const AccountRenewalInformationScreen = ({
           linkText={t('BCSC.AccountRenewal.InformationGetNewCardA')}
           onPress={() => Linking.openURL(GET_BCSC_CARD_URL)}
         />
-        <ThemedText> {t('BCSC.AccountRenewal.InformationGetNewCardB')}</ThemedText>
+        <ThemedText style={styles.linkTrailingText}> {t('BCSC.AccountRenewal.InformationGetNewCardB')}</ThemedText>
       </View>
       <View style={styles.divider} />
       <ThemedText variant="headingFour">{t('BCSC.AccountRenewal.InformationPhotoIdSubHeader')}</ThemedText>

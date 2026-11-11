@@ -12,7 +12,7 @@ import { approvalInputForUser } from '../verify.js'
 import type { PrevBuild } from './types.js'
 
 /**
- * The legacy native v3 app (`BCSC-v3.*`), driven by the raw selectors in `v3TestIDs.ts`. Only the
+ * The legacy native v3 app (`BCSC-v3.15.x.*`), driven by the raw selectors in `v3TestIDs.ts`. Only the
  * in-person path is driven. No partial state survives from v3: a typed serial sits in v3's own
  * `add_card_info` file, which the current build never reads (v3 writes the serial into the
  * authorization request only once the birthdate is submitted), and a captured document hydrates but a

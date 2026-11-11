@@ -110,6 +110,43 @@ not as an error, and iOS restarts the session after a media services reset (our 
 this the preview sits black with no explanation, or the user sees "camera broken" for a camera that
 is about to come back.
 
+## Large text: every screen works at the OS's largest font size
+
+The theme caps text at `maxFontSizeMultiplier` (2x, the WCAG 1.4.4 floor); only text that goes through
+it is capped. In `bcsc-theme`, render text with `ThemedText` (lint rejects `Text` from React Native), and
+give `TextInput` and `Animated.Text` the theme's `maxFontSizeMultiplier` (lint requires the prop). Lay
+screens out so text can grow:
+
+- Text beside something else (an icon, a value, a button) gets `flexShrink: 1`, or `flex: 1` when it
+  should fill the row; label and value pairs wrap with `flexWrap: 'wrap'` on the row.
+- A box around text has a `minHeight`, not a `height`. Fixed boxes that cannot grow (PIN and pairing
+  code cells, a 40pt avatar initial, the tab bar badge) cap their text at 1x on purpose, like `PINInput`.
+- Screens scroll (`ScreenWrapper` default). Notification banners are part of the scroll content, so a
+  tall banner does not pin the page below it off-screen.
+- Rows that no longer fit side by side flip to a column from `fontScale >= 1.5` (`AccountDetailsScreen`).
+
+Jest already renders at the cap (`fontScale: 2`); check new screens on a device or simulator at the
+largest accessibility size as well (iOS `xcrun simctl ui booted content_size accessibility-extra-extra-extra-large`,
+Android `adb shell settings put system font_scale 2.0`).
+
+**Why:** at the largest iOS accessibility size uncapped text is 3.57x and translucent overlays, fixed heights
+and non-shrinking row text clipped or hid content across the verification flows (#4401).
+
+## Cameras: text and controls sit beside the preview, not on it
+
+Lay a camera screen out as a column: text bar, preview, controls. The preview takes the remaining height
+(`flex: 1`, `overflow: 'hidden'`, VisionCamera's default `cover`), so long text shrinks the preview instead
+of covering it. Draw a mask (the selfie oval, the ID-card cutout, the QR reticle) from the preview box
+measured with `onLayout`, with the window only as the first-render stand-in; keep the shape's geometry a
+pure, tested function. Controls that appear later (the recording controls after the countdown) are laid out
+from the start and revealed with opacity and `pointerEvents`, as the waiting screens do with Cancel, so the
+preview does not resize. Side-by-side controls get a vertical `hitSlop` only; a horizontal one steals taps
+from the neighbour. Scan zones are fractions of the camera's own container, which is the measured preview
+box, so they need no change. The photo, video and barcode outputs are independent of the preview box.
+
+**Why:** overlays sized from the window covered the face oval, the card cutout and most of the preview at
+large OS font sizes (#4401).
+
 ## Recording: an inactive app is not a user who left
 
 During the video countdown, act on an `inactive` app state only if it lasts until the countdown ends.
@@ -171,6 +208,17 @@ them natively on focus and re-renders, and a row whose gate is still unknown sta
 disappears after mount slides every row below it. "Change PIN" rendered on a default and was dropped
 once the native read reported device auth, so the whole list jumped on every open of Settings.
 
+## Touch targets: `hitSlop` never reaches another control
+
+Give a small control a 44dp box for its target, and point `hitSlop` only at empty space: zero every edge
+that faces another control. The settings section chevrons, stacked between rows, keep only left and right
+(`{ ...hitSlop, top: 0, bottom: 0 }`); the profile card's edit pencil, with the account name on its left and
+a chevron below, keeps only top and right (`{ ...hitSlop, left: 0, bottom: 0 }`).
+
+**Why:** on Android a `hitSlop` reaches past the control's parent and takes taps from any control rendered
+before it. The settings section chevrons' 44dp slop covered the profile card's edit pencil, so tapping the
+pencil collapsed the Features section instead of opening the nickname editor.
+
 ## Android: the JS runtime outlives the Activity
 
 To leave the app on Android, use `moveAppToBackground`, not `BackHandler.exitApp`. Hardware back can still
@@ -190,11 +238,14 @@ verification sets it to `true` so a later renewal re-enters as a deferred verifi
 
 - **First-time verifier** (Continue at the prompt, or a v3 upgrade mid-verification): the flow is their whole
   app. The help menu has no "Back to home", the back arrow at the beginning of the stack `replace`s onto the
-  prompt (which has no arrow and swallows Android back), the pending review has no arrow and polls for the
-  agent's decision itself (focus, foreground, the review push, "Check status"), and the post-submit screen
-  continues to the pending review. Skip on the prompt is the one way to Home and makes them deferred.
+  prompt (which has no arrow and swallows Android back), and the post-submit screen continues to the pending
+  review. Skip on the prompt is the one way to Home and makes them deferred.
 - **Deferred verifier** (Skip at some point, re-entering from the Home card): keeps every exit, progress
   kept. Developer mode shows "Back to home" to everyone; arrows ignore it.
+- **A submitted request is the exception for both**: the pending review's back arrow leaves for Home whoever
+  the verifier is, because that wait is on an agent and not on the user (#4968). The screen carries no manual
+  check — Home's pending card is where a user asks for a fresh status, and the way back in — and picks the
+  decision up itself (focus, foreground, the review push) for a user who stays on it.
 
 Rules that keep this consistent:
 
@@ -217,6 +268,19 @@ Rules that keep this consistent:
 **Why:** many people install the app only to verify their BC Services Card; an unverified Home is a dead end
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
 alone because starting from the Home card must not turn a skipper into a first-time verifier.
+
+## Error reports: record where and when a flow failed
+
+Wrap each step of a multi-step flow with `trackFailureSteps` (`errors/failureContext.ts`), and pass the
+resulting error to the alert. For a single failure outside a flow, use `createFailureError`.
+
+- Never call a catch-all alert without an error, or the report can't say what failed.
+- Name flows and steps with short, fixed names such as `quick_login` and `sign_jwt`. Never put personal data
+  or tokens in them.
+- Errors a policy already handled are labeled but never alerted again. Callers still check
+  `isHandledAppError`.
+- To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
+  `report-problem.ts`.
 
 ## Derived state: compute it from its inputs, don't store a flag
 

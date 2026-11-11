@@ -278,4 +278,19 @@ describe('SettingsContent', () => {
     expect(screen.getByTestId(tid('ContactUs'))).toBeTruthy()
     expect(screen.getByTestId(tid('Feedback'))).toBeTruthy()
   })
+
+  it('gives the section chevrons no vertical hitSlop, so they cannot take taps from the control above', () => {
+    renderWithState()
+
+    for (const chevron of screen.getAllByTestId(tid('SectionHeaderChevron'))) {
+      expect(chevron.props.hitSlop).toMatchObject({ top: 0, bottom: 0 })
+    }
+  })
+
+  it('gives the edit pencil no left or bottom hitSlop, so it cannot take taps from the account name or the chevron below', async () => {
+    renderWithState({ authentication: { didAuthenticate: true }, bcscSecure: { verified: true } })
+
+    expect(screen.getByTestId(tid('EditProfile')).props.hitSlop).toMatchObject({ left: 0, bottom: 0 })
+    await waitForNotificationStatus()
+  })
 })

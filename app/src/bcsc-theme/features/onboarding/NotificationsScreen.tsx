@@ -66,14 +66,14 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
   }, [])
 
   useEffect(() => {
-    checkPermissions()
+    void checkPermissions()
   }, [checkPermissions])
 
   // Re-check permissions when user returns from settings
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
-        checkPermissions()
+        void checkPermissions()
       }
     })
 

@@ -3,7 +3,16 @@ import { hitSlop, SHADOW_COLOR, SHADOW_RADIUS } from '@/constants'
 import { ThemedText, useTheme } from '@bifold/core'
 import { PropsWithChildren, useCallback, useImperativeHandle, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Animated, Easing, Modal, StyleSheet, TouchableWithoutFeedback, useWindowDimensions, View } from 'react-native'
+import {
+  Animated,
+  Easing,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  useWindowDimensions,
+  View,
+} from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -107,6 +116,8 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
       padding: Spacing.md,
       gap: Spacing.md,
       minWidth: MENU_MIN_WIDTH,
+      // Bounded by the screen so large-text menu items scroll instead of running off the bottom
+      maxHeight: '100%',
     },
     headerContainer: {
       flexDirection: 'row',
@@ -116,6 +127,10 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
     versionContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
+    },
+    childrenScroll: {
+      flexGrow: 0,
+      flexShrink: 1,
     },
     childrenContainer: {
       flexDirection: 'row',
@@ -147,7 +162,9 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
                   </PressableOpacity>
                   <ThemedText variant="headingFour">{t('BCSC.HelpMenu.Title')}</ThemedText>
                 </View>
-                <View style={styles.childrenContainer}>{props.children}</View>
+                <ScrollView style={styles.childrenScroll} contentContainerStyle={styles.childrenContainer}>
+                  {props.children}
+                </ScrollView>
                 <View style={styles.versionContainer}>
                   <ThemedText>
                     {t('BCSC.HelpMenu.Version', { version: getVersion(), build: getBuildNumber() })}

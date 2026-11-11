@@ -349,7 +349,7 @@ export const useSecureActions = () => {
           year: 'numeric',
         })
         // doesn't throw
-        scheduleVerificationReminders(
+        void scheduleVerificationReminders(
           codes.deviceCodeExpiresAt,
           {
             title: t('BCSC.VerificationReminder.Title'),

@@ -1,8 +1,8 @@
-import { fireEvent, render } from '@testing-library/react-native'
+import { fireEvent, render, renderHook } from '@testing-library/react-native'
 import React from 'react'
 
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import FloatingScanButton from './FloatingScanButton'
+import FloatingScanButton, { useFloatingScanButtonClearance } from './FloatingScanButton'
 import useFloatingScanButtonViewModel from './useFloatingScanButtonViewModel'
 
 jest.mock('react-i18next', () => ({
@@ -20,7 +20,7 @@ jest.mock('@bifold/core', () => ({
       brand: { primary: '#FCBA19', primaryBackground: '#013366' },
       grayscale: { black: '#000' },
     },
-    Spacing: { sm: 8, md: 16, lg: 24 },
+    Spacing: { sm: 8, md: 16, lg: 24, xxl: 40 },
   }),
 }))
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
@@ -56,5 +56,11 @@ describe('FloatingScanButton', () => {
     const button = getByTestId('com.ariesbifold:id/FloatingScanButton')
     expect(button.props.accessibilityRole).toBe('button')
     expect(button.props.accessibilityLabel).toBe('AddCredentialSlider.ScanQRCode')
+  })
+
+  it('reports the space it takes above the tab bar so pages can scroll clear of it', () => {
+    const { result } = renderHook(() => useFloatingScanButtonClearance())
+    // Button height plus the gap to the tab bar.
+    expect(result.current).toBe(56 + 40)
   })
 })

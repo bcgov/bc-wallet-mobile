@@ -136,37 +136,44 @@ describe('createVerifyHeaderBackButton', () => {
       expect(navigation.replace).not.toHaveBeenCalled()
       expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('true')
     })
+  })
 
-    // The pending-review configuration: deferred verifiers leave, first-time verifiers have no way out
+  // The pending-review configuration: a submitted request waits on an agent, so every verifier may
+  // leave it for Home with their progress kept (#4968)
+  describe('pending review', () => {
     const createPendingReviewBackButton = () =>
-      createVerifyHeaderBackButton(
-        (_navigation, leaveVerification, { isFirstTimeVerifier }) => {
-          if (!isFirstTimeVerifier) {
-            leaveVerification()
-          }
-        },
-        { hidden: ({ isFirstTimeVerifier }) => isFirstTimeVerifier }
-      )
+      createVerifyHeaderBackButton((_navigation, leaveVerification) => leaveVerification())
 
-    it('decides per exit policy: a first-time verifier gets no arrow and hardware back does nothing', () => {
-      const spy = jest.spyOn(BackHandler, 'addEventListener')
+    it('keeps the arrow for a first-time verifier and leaves for Home', () => {
       const tree = renderButton(createPendingReviewBackButton(), FIRST_TIMER)
 
-      expect(tree.queryByTestId(BACK_ID)).toBeNull()
       act(() => {
-        expect(lastHardwareBackHandler(spy)()).toBe(true)
+        fireEvent.press(tree.getByTestId(BACK_ID))
       })
 
-      expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('true')
+      expect(navigation.replace).not.toHaveBeenCalled()
+      expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('false')
     })
 
-    it('decides per exit policy: a deferred verifier keeps the arrow and leaves for Home', () => {
+    it('keeps the arrow for a deferred verifier and leaves for Home', () => {
       const tree = renderButton(createPendingReviewBackButton(), DEFERRED)
 
       act(() => {
         fireEvent.press(tree.getByTestId(BACK_ID))
       })
 
+      expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('false')
+    })
+
+    it('leaves for Home from Android hardware back too', () => {
+      const spy = jest.spyOn(BackHandler, 'addEventListener')
+      const tree = renderButton(createPendingReviewBackButton(), FIRST_TIMER)
+
+      act(() => {
+        expect(lastHardwareBackHandler(spy)()).toBe(true)
+      })
+
+      expect(navigation.goBack).not.toHaveBeenCalled()
       expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('false')
     })
   })

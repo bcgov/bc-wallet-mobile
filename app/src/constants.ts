@@ -56,6 +56,7 @@ export const BCThemeNames = {
 } as const
 
 // BCSC Constants
+export const BCSC_PROD_BUNDLE_ID = 'ca.bc.gov.id.servicescard'
 export const BCSC_EMAIL_NOT_PROVIDED = 'Not provided'
 export const BCSC_APPLE_STORE_URL = 'https://apps.apple.com/us/app/id1234298467'
 export const BCSC_GOOGLE_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=ca.bc.gov.id.servicescard'
@@ -174,6 +175,8 @@ export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
 export const VIDEO_MP4_MIME_TYPE = 'video/mp4'
 export const MIN_PROMPT_DURATION_SECONDS = 2
 export const MIN_SELFIE_VIDEO_DURATION_SECONDS = 6
+export const SELFIE_VIDEO_EXPIRY_MS = 4.5 * 60 * 1000
+export const SELFIE_VIDEO_EXPIRY_CHECK_INTERVAL_MS = 1000
 export const enum LIVE_CALL_UNAVAILABLE_REASONS {
   MAINTENANCE = 'MAINTENANCE',
   HOLIDAY = 'HOLIDAY',

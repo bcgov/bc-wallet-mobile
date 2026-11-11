@@ -6,7 +6,7 @@ import React from 'react'
 import { FloatingScanButton } from '../features/scan'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
-import BCSCTabStack from './TabStack'
+import BCSCTabStack, { getTabBarBadgeStyle } from './TabStack'
 
 const mockUseServerStatus = jest.fn()
 jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
@@ -108,6 +108,7 @@ describe('BCSCTabStack', () => {
         notification: { errorIcon: '#f00' },
       },
       Spacing: { md: 16, lg: 24 },
+      maxFontSizeMultiplier: 2,
     } as any)
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
@@ -277,5 +278,42 @@ describe('BCSCTabStack', () => {
 
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe('getTabBarBadgeStyle', () => {
+  const BADGE_SIZE = 18.75
+  const RED = '#ff0000'
+
+  it('keeps React Navigation defaults at the default font scale', () => {
+    expect(getTabBarBadgeStyle(1, 2, RED)).toEqual({
+      backgroundColor: RED,
+      height: BADGE_SIZE,
+      minWidth: BADGE_SIZE,
+      borderRadius: BADGE_SIZE / 2,
+      fontSize: 14,
+      lineHeight: BADGE_SIZE - 1,
+    })
+  })
+
+  it('grows the box with the font scale up to the theme cap', () => {
+    const style = getTabBarBadgeStyle(2, 2, RED)
+
+    expect(style.height).toBe(BADGE_SIZE * 2)
+    expect(style.minWidth).toBe(BADGE_SIZE * 2)
+    expect(style.borderRadius).toBe(BADGE_SIZE)
+    // Text is left alone: RN already multiplies it by the fontScale
+    expect(style.fontSize).toBe(14)
+    expect(style.lineHeight).toBe(BADGE_SIZE - 1)
+  })
+
+  it('caps the box and shrinks the text style above the theme cap so the digits still fit', () => {
+    const fontScale = 3.5
+    const style = getTabBarBadgeStyle(fontScale, 2, RED)
+
+    expect(style.height).toBe(BADGE_SIZE * 2)
+    // Rendered size = style * fontScale, which must equal the capped 2x
+    expect(style.fontSize * fontScale).toBeCloseTo(14 * 2)
+    expect(style.lineHeight * fontScale).toBeCloseTo((BADGE_SIZE - 1) * 2)
   })
 })

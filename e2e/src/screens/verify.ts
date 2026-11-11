@@ -278,25 +278,24 @@ export const SuccessfullySentScreen = defineScreen({
 })
 
 /**
- * `PendingReview` ('Send Video Check Status') — where a submitted request waits for its agent
- * decision. The screen re-checks the status on focus, on return to the foreground, when the review
- * push lands and on `primary` (CheckStatus), and navigates on to VerificationSuccess or
- * CancelledReview once a decision has landed — so tapping Check status is the app's own poll (see
- * `waitForSendVideoDecision`).
+ * `PendingReview` — where a submitted request waits for its agent decision. The screen carries NO
+ * manual check of its own (#4968): it re-checks the status on focus, on return to the foreground and
+ * when the review push lands, and navigates on to VerificationSuccess or CancelledReview once a
+ * decision has landed. A fresh status therefore means re-entering the screen, which is what
+ * `waitForSendVideoDecision` polls with.
  *
- * `back` exists only for a deferred verifier: it does not pop but marks the account unverified, which
- * swaps the whole stack back to Home. A first-time verifier has no arrow (`backArrow` is not visible)
- * and no "Back to home" (`expectPendingReviewLocked`). `secondary` (ChooseAnotherWayToVerify) cancels
- * the request behind a confirmation alert — the in-flow way off this screen for everyone.
+ * `back` is offered to every verifier (`expectPendingReviewOffersExit`): it does not pop but marks the
+ * account unverified, which swaps the whole stack back to Home, where the pending card re-enters.
+ * `secondary` (ChooseAnotherWayToVerify) cancels the request behind a confirmation alert — the in-flow
+ * way off this screen, and the screen's only button, so it is deliberately not `primary`: nothing
+ * should reach for it as a screen's default action.
  */
 export const PendingReviewScreen = defineScreen({
   self: bcsc(v.pendingReview.chooseAnotherWay),
-  primary: bcsc(v.pendingReview.checkStatus),
   secondary: bcsc(v.pendingReview.chooseAnotherWay),
   back: bcsc(common.back),
   elements: {
     backArrow: bcsc(common.back),
-    checkStatus: bcsc(v.pendingReview.checkStatus),
   },
 })
 

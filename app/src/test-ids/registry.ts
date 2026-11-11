@@ -90,6 +90,10 @@ export const TestIds = {
     sessionExpired: {
       button: 'VerificationSessionExpiredButton',
     },
+    invalidEnvironment: {
+      reset: 'InvalidEnvironmentReset',
+      contactUs: 'InvalidEnvironmentContactUs',
+    },
     /** ServiceOutage does NOT use `SystemModal` — it is its own component with two buttons. */
     serviceOutage: {
       /** Secondary button, onboarding only: skip verification and continue to Home. */
@@ -409,6 +413,11 @@ export const TestIds = {
       retake: 'VideoTooLongRetake',
       cancel: 'VideoTooLongCancel',
     },
+    /** `VideoExpired` — a recording left unsubmitted past its TTL lands here instead of uploading.
+     *  Screen-prefixed for the same reason as `videoTooLong`: all three follow a stopped recording. */
+    videoExpired: {
+      retake: 'VideoExpiredRetake',
+    },
     /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
     evidenceUploading: {
       screen: 'UploadingScreen',
@@ -427,7 +436,6 @@ export const TestIds = {
      *  a poll too. `chooseAnotherWay` cancels the request (confirm-gated) and returns to method
      *  selection. */
     pendingReview: {
-      checkStatus: 'CheckStatus',
       chooseAnotherWay: 'ChooseAnotherWayToVerify',
     },
     /** `CancelledReview` and its MainStack twin (same component on both stacks). The agent's reason is
