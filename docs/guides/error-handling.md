@@ -10,7 +10,7 @@ Read before adding error handling to a hook, ViewModel or screen. When editing e
 
 ## Surfacing an error
 
-Every error is shown as an `AppError`. `ensureAppError(error, AppEventCode.XXX)` (`app/src/errors/errorHandler.ts`) returns the error unchanged if it is already an `AppError`, and otherwise wraps it with the fallback event code.
+Error modals take an `AppError`. `ensureAppError(error, AppEventCode.XXX)` (`app/src/errors/errorHandler.ts`) returns the error unchanged if it is already an `AppError`, and otherwise wraps it with the fallback event code.
 
 **BCSC features: use a named alert from `useAlerts()`** (`app/src/hooks/useAlerts.tsx`). Each alert has its own copy and event code, so call the one that matches the failure.
 
@@ -34,7 +34,7 @@ Example: `app/src/bcsc-theme/features/verify/useResidentialAddressModel.tsx` doe
 
 ## Errors a policy already handled
 
-`BCSCApiClientContext` runs the matching client error policy (`app/src/bcsc-theme/api/clientErrorPolicies.ts`) and then sets `handled` on the `AppError`. The policy has already shown an alert or navigated away, so skip these in your catch block:
+`BCSCApiClientContext` runs the matching client error policy (`app/src/bcsc-theme/api/clientErrorPolicies.ts`) and then sets `handled` on the `AppError`, even when the policy only suppresses the global alert. Skip handled errors in your catch block:
 
 ```ts
 if (isHandledAppError(error)) {
@@ -42,11 +42,11 @@ if (isHandledAppError(error)) {
 }
 ```
 
-To act on one specific failure, branch with `isAppError(error, AppEventCode.XXX)`. It narrows the type; `error.appEvent` is that code.
+To act on one specific failure, branch with `isAppError(error, AppEventCode.XXX)`. It narrows the type; `error.appEvent` is that code. Check it before `isHandledAppError` when a suppressing policy leaves that failure for your screen to show, as `app/src/bcsc-theme/features/services/ServiceLoginScreen.tsx` does for an expired pairing code.
 
 ## Native errors
 
-Map `bcsc-core` rejections with `throwNativeBcscError(error)` or `mapNativeBcscError(error)` (`app/src/bcsc-theme/utils/native-error-map.ts`). Mapped native codes become their specific `AppError`; unmapped ones become `UNMAPPED_NATIVE_ERROR` with the raw code kept on `cause`. An `AppError` passes through unchanged.
+Map `bcsc-core` rejections with `throwNativeBcscError(error)` or `mapNativeBcscError(error)` (`app/src/bcsc-theme/utils/native-error-map.ts`). Mapped native codes become their specific `AppError`; unmapped ones become `UNMAPPED_NATIVE_ERROR` with the raw code kept on `cause`. An `AppError` passes through unchanged. A `decodePayload` / `decodeLoginChallenge` rejection uses `toDecodeAppError(error, fallback)` instead (see "Server keys" in [`CONVENTIONS.md`](../../CONVENTIONS.md)).
 
 The caller decides whether the failure is critical (surface it) or intentionally non-critical (log it and carry on).
 
