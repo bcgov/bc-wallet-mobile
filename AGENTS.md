@@ -59,9 +59,9 @@ Use Node 24 and the Yarn version pinned in `package.json`. From the repo root:
 - API hooks return data and throw, without UI side effects. Service/UI hooks
   catch and surface errors. In BCSC features, use the matching named alert
   from `useAlerts()` (error modals take the caught error; informational
-  alerts take no arguments) or, for screen-specific copy, `emitErrorModal`
+  alerts take no error) or, for screen-specific copy, `emitErrorModal`
   from `useErrorAlert()` with `ensureAppError(error, AppEventCode.XXX)` as the
-  error. Skip errors a policy already surfaced (`isHandledAppError`). For
+  error. Skip errors a policy already handled (`isHandledAppError`). For
   multi-step flows see "Error reports" in `CONVENTIONS.md`.
 - Map native `bcsc-core` rejections through `throwNativeBcscError` /
   `mapNativeBcscError` in `app/src/bcsc-theme/utils/native-error-map.ts`.
