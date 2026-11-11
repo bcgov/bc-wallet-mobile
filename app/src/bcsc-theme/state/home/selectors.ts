@@ -16,7 +16,7 @@ export const selectHomeNotice = (state: BCState, account: BCSCAccount | null, no
     isVerified,
     needsVerification,
     deviceVerifiedByIas: isUserVerified(bcscSecure),
-    refreshTokenExpired: isRefreshTokenExpired(bcscSecure.refreshToken, now.getTime()),
+    refreshTokenExpired: isRefreshTokenExpired(bcscSecure.refreshToken, now),
     requestStatus: bcscSecure.verificationRequestStatus,
     hasVerificationRequest: Boolean(bcscSecure.verificationRequestId),
     isIdStepCompleted: () => computeSetupStepCompletion(state).id.completed,

@@ -195,7 +195,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     }
 
     const systemChecks: SystemCheckStrategy[] = []
-    const refreshTokenExpired = isRefreshTokenExpired(store.bcscSecure.refreshToken)
+    const refreshTokenExpired = isRefreshTokenExpired(store.bcscSecure.refreshToken, new Date())
 
     // DeviceCount and EventReasonAlerts need a verified user's cached id token; hydration never
     // fetches one when the stored refresh token is expired, so they'd misfire on that path (#4654).

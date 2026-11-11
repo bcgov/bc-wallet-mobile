@@ -13,7 +13,7 @@ export const selectAccountPhase = (state: BCState, account: BCSCAccount | null, 
     {
       isVerified: Boolean(state.bcscSecure.verified),
       expiredByServer: state.bcsc.credentialMetadata?.bcscReason === BCSCReason.ExpiredBySystem,
-      credentialExpired: isRefreshTokenExpired(state.bcscSecure.refreshToken, now.getTime()),
+      credentialExpired: isRefreshTokenExpired(state.bcscSecure.refreshToken, now),
       cardExpiresAt: account?.account_expiration_date,
     },
     now
