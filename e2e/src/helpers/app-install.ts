@@ -6,10 +6,9 @@ import { isSauceLabs } from './sauce.js'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 /**
- * Mid-session in-place upgrades. The migration (v3 → v4) and upgrade (previous release → current)
- * suites both boot an OLD build via their own config, then swap in the build under test with
- * `driver.installApp()`. Same application id per variant ⇒ app data (keychain, preferences,
- * secure storage) survives the install.
+ * Mid-session in-place upgrades. The upgrade suites boot a shipped build via their own configs
+ * (`PREV_VERSION` → `BCSC-v<version>.*`), then swap in the build under test with `driver.installApp()`.
+ * Same application id per variant ⇒ app data (keychain, preferences, secure storage) survives the install.
  */
 
 /** Sauce storage refs and URLs pass through; bare filenames get the storage:filename= prefix. */
@@ -37,21 +36,37 @@ export function resolveCurrentBuildRef(): string {
 }
 
 /**
- * Install the current build over the RUNNING app and return its app id — captured BEFORE the
- * install, because the platform kills the process on package replace so it cannot be read after.
+ * Install the current build over the app `appId` names, running or closed.
  *
  * On Sauce RDC the plain installApp endpoint rejects `storage:` refs (http/https only) — the
  * documented mid-session install path is the `mobile: installApp` execute script, which accepts
  * Sauce Storage refs (and ONLY those; upgrades only, downgrades refuse).
  */
-export async function installCurrentBuildOverRunningApp(): Promise<string> {
-  const appId = await getCurrentAppId()
+export async function installCurrentBuildOver(appId: string): Promise<string> {
   const appRef = resolveCurrentBuildRef()
   if (isSauceLabs()) {
     await driver.execute('mobile: installApp', { appPath: appRef })
   } else {
     await driver.installApp(appRef)
   }
+  return appId
+}
+
+/**
+ * Install the current build over the RUNNING app and return its app id — captured BEFORE the
+ * install, because the platform kills the process on package replace so it cannot be read after.
+ */
+export async function installCurrentBuildOverRunningApp(): Promise<string> {
+  return installCurrentBuildOver(await getCurrentAppId())
+}
+
+/**
+ * Close the running app and return its id — for the states a user reaches with the app shut (an
+ * approval that lands while it is closed), so the install and relaunch still know what to target.
+ */
+export async function closeRunningApp(): Promise<string> {
+  const appId = await getCurrentAppId()
+  await driver.terminateApp(appId)
   return appId
 }
 

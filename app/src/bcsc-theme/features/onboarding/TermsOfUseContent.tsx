@@ -89,7 +89,7 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
   }, [config, logger, emitErrorModal, loadFailedTitle, loadFailedDescription])
 
   useEffect(() => {
-    fetchTermsOfUse()
+    void fetchTermsOfUse()
   }, [fetchTermsOfUse])
 
   const styles = StyleSheet.create({

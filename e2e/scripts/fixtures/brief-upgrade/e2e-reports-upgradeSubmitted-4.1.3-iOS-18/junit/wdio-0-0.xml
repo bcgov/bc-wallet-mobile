@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="5" failures="1" errors="0" skipped="0">
+  <testsuite name="Upgrade with an unapproved in person request" timestamp="2026-10-31T13:20:05" time="206.000" tests="5" failures="1" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Upgrade with an unapproved in-person request"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/upgrade/upgrade-in-person-pending.spec.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_with_an_unapproved_in-person_request" name="onboards on the previous build" time="30.500"/>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_with_an_unapproved_in-person_request" name="authorizes and displays an in person code on the previous build without approving" time="31.500"/>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_with_an_unapproved_in-person_request" name="installs the current build over the previous build" time="32.500"/>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_with_an_unapproved_in-person_request" name="relaunches as the current build" time="33.500"/>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_with_an_unapproved_in-person_request" name="resume lands on method selection after the upgrade the authorized request survived" time="34.500">
+      <failure message="Expected VerificationMethodSelection, got VerifyPrompt (describeCurrentScreen: VerifyPrompt — skipVerification visible)"/>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -580,6 +580,15 @@ const translation = {
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
       },
+      "InvalidEnvironment": {
+        "Header": "App needs to be reset",
+        "ContentA": "Your app is in a version that isn’t supported. Resetting the app will return it to a version that is supported. You will need to set up your account again.",
+        "ContentB": "If you had intentionally changed the app’s environment, this option is no longer available.",
+        "NeedHelpPrefix": "If you need help, ",
+        "ContactUsLink": "contact us",
+        "NeedHelpSuffix": ".",
+        "ResetButton": "Reset the app",
+      },
       "ServiceOutage": {
         "Header": "Service unavailable",
         "CheckAgainButton": "Check again",
@@ -1109,6 +1118,11 @@ const translation = {
         "UseVideo": "Use this video",
         "RetakeVideo": "Retake video",
         "TogglePlayPause": "Toggle play pause",
+      },
+      "VideoExpired": {
+        "Heading": "Your video has expired",
+        "Description": "Recorded videos expire after 5 minutes. To continue, you'll need to retake the video.",
+        "ButtonText": "Retake video",
       },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long.",

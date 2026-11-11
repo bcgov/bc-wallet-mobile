@@ -25,6 +25,8 @@ export interface SessionAttempt {
   outcome: AttemptOutcome
   jobUrl?: string
   device?: string
+  /** What the session booted (`storage:filename=BCSC-v4.1.3.ipa`, or a local path), when recorded. */
+  app?: string
   /** Why the attempt counts as lost: the error that reported the session gone, or its empty JUnit. */
   lost?: string
   tests: SessionTestRecord[]
@@ -84,6 +86,7 @@ export function loadSessions(reportDirs: ReportDir[]): SessionAttempt[] {
           outcome: outcomeOf(record),
           jobUrl: caps.testobject_test_report_url,
           device: deviceOf(caps),
+          app: caps['appium:app'],
           lost: record.lost,
           tests: record.tests ?? [],
         })
@@ -193,4 +196,9 @@ export function applySessions(results: RunResults, groups: SessionGroup[]): void
 /** `e2e-reports-regression-iOS-18` → `regression`; anything else as is. */
 export function laneOf(source: string): string {
   return /^e2e-reports-(.+)-(ios|android)-/i.exec(source)?.[1] ?? source
+}
+
+/** `e2e-reports-upgradeVerified-4.1.3-iOS-18` → `4.1.3`: the version a weekly upgrade artifact upgraded from. */
+export function versionOf(source: string): string | undefined {
+  return /-(\d+\.\d+\.\d+)-(ios|android)-/i.exec(source)?.[1]
 }

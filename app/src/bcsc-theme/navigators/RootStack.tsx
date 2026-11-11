@@ -2,6 +2,7 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { isProductionBundle, isProductionEnvironment } from '@/utils/environment'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,6 +15,7 @@ import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useServerStatus } from '../contexts/ServerStatusContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
+import { InvalidEnvironment } from '../features/modal/InvalidEnvironment'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -165,7 +167,7 @@ const BCSCRootStack: React.FC = () => {
   // Wait until the apiClient is ready and process any pending FCM Challenges
   useEffect(() => {
     if (isClientReady) {
-      fcmService.viewModel.processPendingChallenges()
+      void fcmService.viewModel.processPendingChallenges()
     }
   }, [isClientReady, fcmService.viewModel])
 
@@ -176,11 +178,17 @@ const BCSCRootStack: React.FC = () => {
     }
 
     try {
-      loadState(dispatch)
+      void loadState(dispatch)
     } catch (err) {
       emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
     }
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
+
+  // Recovery gate: blocks every stack, independent of account state, until the environment is valid again
+  // TODO (MD): Remove this gate after all users are on v4.2.0+
+  if (store.stateLoaded && isProductionBundle() && !isProductionEnvironment(store.developer.environment)) {
+    return <InvalidEnvironment />
+  }
 
   // Loading until the app is ready and, for a would-resume user, IAS status is known
   if (!appReady || awaitingStatusForResume) {

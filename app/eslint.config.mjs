@@ -155,4 +155,21 @@ export default [
       ],
     },
   },
+  // Unawaited promises (SonarCloud): a fire-and-forget call must be marked `void` so a genuinely
+  // missing `await` stands out. Type-aware, so it is scoped to src and needs the project service;
+  // tests are exempt to match .sonarcloud.properties.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/__mocks__/**'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
+    },
+  },
 ]

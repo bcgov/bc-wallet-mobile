@@ -74,7 +74,9 @@ exports[`EditNickname renders correctly 1`] = `
           >
             BCSC.NicknameAccount.EnterNickname
           </Text>
-          <View>
+          <View
+            onLayout={[Function]}
+          >
             <View
               accessibilityState={
                 {

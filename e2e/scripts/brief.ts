@@ -7,8 +7,10 @@
  *
  * Options: --reports <dir> (repeatable) · --out <file> (default: stdout) · --json <file> ·
  * --baseline <file> (default e2e/a11y-baseline.json) · --title <text> · --run-url <url> ·
- * --lane <name=result> (repeatable; the nightly's job results). A --reports dir holding junit/ or
- * a11y/ is one report dir; otherwise each child dir that does is one.
+ * --lane <name=result> (repeatable; the run's job results) · --upgrades (the weekly upgrade run:
+ * per-version `e2e-reports-<suite>-<version>-<platform>-<os>` artifacts, rendered as the version ×
+ * state matrix). A --reports dir holding junit/ or a11y/ is one report dir; otherwise each child dir
+ * that does is one.
  *
  * Report-only: problems are rendered into the page; the exit code is 0 unless the arguments are wrong.
  */
@@ -29,17 +31,22 @@ interface Args {
   title: string
   runUrl?: string
   lanes: { name: string; result: string }[]
+  upgrades: boolean
 }
 
 function usage(message: string): never {
-  console.error(`[brief] ${message}\nusage: yarn brief --reports <dir> [--reports <dir>…] [--out brief.md] [--json brief.json] [--baseline file] [--title text] [--run-url url] [--lane name=result]…`)
+  console.error(`[brief] ${message}\nusage: yarn brief --reports <dir> [--reports <dir>…] [--out brief.md] [--json brief.json] [--baseline file] [--title text] [--run-url url] [--lane name=result]… [--upgrades]`)
   process.exit(2)
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { reports: [], baseline: DEFAULT_BASELINE, title: 'E2E brief', lanes: [] }
+  const args: Args = { reports: [], baseline: DEFAULT_BASELINE, title: 'E2E brief', lanes: [], upgrades: false }
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i]
+    if (flag === '--upgrades') {
+      args.upgrades = true
+      continue
+    }
     const value = argv[i + 1]
     if (value === undefined) usage(`${flag} needs a value`)
     switch (flag) {
@@ -80,7 +87,7 @@ const args = parseArgs(process.argv.slice(2))
 const reportDirs = resolveReportDirs(args.reports)
 console.error(`[brief] ${reportDirs.length} report dir(s): ${reportDirs.map((dir) => dir.name).join(', ') || '(none)'}`)
 
-const model = buildBrief({ reportDirs, baselinePath: args.baseline, title: args.title, runUrl: args.runUrl, lanes: args.lanes })
+const model = buildBrief({ reportDirs, baselinePath: args.baseline, title: args.title, runUrl: args.runUrl, lanes: args.lanes, upgrades: args.upgrades })
 const markdown = renderMarkdown(model)
 
 if (args.json) writeFileSync(args.json, JSON.stringify(model, null, 2))

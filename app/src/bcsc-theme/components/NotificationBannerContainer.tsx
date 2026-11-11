@@ -43,7 +43,7 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
     }
 
     if (banner.id === BCSCBanner.IAS_SERVER_UNAVAILABLE && typeof banner.metadata?.contactLink === 'string') {
-      openLink(banner.metadata.contactLink)
+      void openLink(banner.metadata.contactLink)
     }
 
     if (banner.id === BCSCBanner.APP_UPDATE_AVAILABLE) {
@@ -65,7 +65,7 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
 
   const handleDeleteDeviceCountMessage = useCallback(() => {
     dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED] })
-    setMaxDevicesBannerLastDisplayedDate(Date.now())
+    void setMaxDevicesBannerLastDisplayedDate(Date.now())
     handleCloseDevicesModal({ shouldAnimate: true })
   }, [dispatch, handleCloseDevicesModal])
 

@@ -89,7 +89,7 @@ export const useConnectionInvitationDeepLink = (): void => {
       }
     }
 
-    accept()
+    void accept()
 
     return () => {
       cancelled = true

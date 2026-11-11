@@ -1,5 +1,6 @@
-import { ANALYTICS_APP_ID_PREFIX, Mode } from '@/constants'
+import { ANALYTICS_APP_ID_PREFIX, BCSC_PROD_BUNDLE_ID, Mode } from '@/constants'
 import Config from 'react-native-config'
+import { getBundleId } from 'react-native-device-info'
 
 export interface IASEnvironment {
   name: string
@@ -72,6 +73,10 @@ export const IASEnvironment = {
 }
 
 export const getInitialEnvironment = (): IASEnvironment => {
+  if (isProductionBundle()) {
+    return IASEnvironment.PROD
+  }
+
   const envName = Config.DEFAULT_ENVIRONMENT?.toUpperCase()
   if (envName && envName in IASEnvironment) {
     return IASEnvironment[envName as keyof typeof IASEnvironment]
@@ -83,4 +88,21 @@ export const getInitialEnvironment = (): IASEnvironment => {
   }
 
   return IASEnvironment.PROD
+}
+
+/**
+ * Determines if the current bundle ID corresponds to the production BCSC bundle.
+ * @returns True if the current bundle ID is the production BCSC bundle ID, false otherwise.
+ */
+export const isProductionBundle = (): boolean => {
+  return getBundleId() === BCSC_PROD_BUNDLE_ID
+}
+
+/**
+ * Determines if the given IAS environment is the production environment.
+ * @param environment - The IAS environment to check.
+ * @returns True if the given environment is the production environment, false otherwise.
+ */
+export const isProductionEnvironment = (environment: IASEnvironment): boolean => {
+  return environment.iasApiBaseUrl === IASEnvironment.PROD.iasApiBaseUrl
 }

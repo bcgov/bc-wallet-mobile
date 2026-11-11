@@ -356,7 +356,7 @@ export const useSecureActions = () => {
           year: 'numeric',
         })
         // doesn't throw
-        scheduleVerificationReminders(
+        void scheduleVerificationReminders(
           codes.deviceCodeExpiresAt,
           {
             title: t('BCSC.VerificationReminder.Title'),
@@ -1282,7 +1282,6 @@ export const useSecureActions = () => {
         savedServices,
 
         sessionRecoveryRequired,
-        refreshTokenExpired,
       }
 
       logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)

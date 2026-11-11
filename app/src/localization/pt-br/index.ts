@@ -579,6 +579,15 @@ const translation = {
         "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
       },
+      "InvalidEnvironment": {
+        "Header": "App needs to be reset (PT-BR)",
+        "ContentA": "Your app is in a version that isn’t supported. Resetting the app will return it to a version that is supported. You will need to set up your account again. (PT-BR)",
+        "ContentB": "If you had intentionally changed the app’s environment, this option is no longer available. (PT-BR)",
+        "NeedHelpPrefix": "If you need help, (PT-BR)",
+        "ContactUsLink": "contact us (PT-BR)",
+        "NeedHelpSuffix": ".",
+        "ResetButton": "Reset the app (PT-BR)",
+      },
       "ServiceOutage": {
         "Header": "Service unavailable (PT-BR)",
         "CheckAgainButton": "Check again (PT-BR)",

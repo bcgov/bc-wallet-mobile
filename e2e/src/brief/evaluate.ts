@@ -45,6 +45,8 @@ export interface FailureDetail {
   platform: Platform
   file: string
   suite: string
+  /** The report dir the suite came from (the weekly upgrade brief reads the version off it). */
+  source: string
   checkpoint: string
   message: string
   /** Checkpoints the failure blocked behind it in the same file. */
@@ -212,14 +214,14 @@ export function evaluateSections(
 export function collectFailures(results: RunResults, titlesOf: SpecTitleLookup = noSpecTitles): FailureDetail[] {
   const failures: FailureDetail[] = []
   for (const run of Object.values(results)) {
-    // Several describes can share a file (the migration orchestrator): the remainder is the FILE's.
+    // Several describes can share a file: the remainder is the FILE's.
     const reportedByFile = new Map<string, TestResult[]>()
     for (const suite of run.suites) reportedByFile.set(suite.file, [...(reportedByFile.get(suite.file) ?? []), ...suite.tests])
     for (const suite of run.suites) {
       // Bail's unreported remainder lands on the failing checkpoint, or on the hook when nothing ran.
       const unreported = unreportedTitles(titlesOf(suite.file) ?? [], reportedByFile.get(suite.file) ?? []).length
       const failedTest = suite.tests.some((test) => test.status === 'fail')
-      const where = { platform: suite.platform, file: suite.file, suite: suite.title, jobUrl: suite.jobUrl, terminated: suite.terminated }
+      const where = { platform: suite.platform, file: suite.file, suite: suite.title, source: suite.source, jobUrl: suite.jobUrl, terminated: suite.terminated }
       for (const hook of suite.hookFailures) {
         failures.push({ ...where, checkpoint: hook.title, message: hook.message, blockedAfter: failedTest ? 0 : unreported, kind: 'hook' })
       }
