@@ -50,7 +50,7 @@ Roughly in order:
   layout characters such as `\n`.
 - **Error handling** — errors surface, never swallowed. API hooks throw; service
   and UI hooks catch and surface. Deleting something absent should succeed, not
-  throw. Native errors go through `throwNativeError` / `toNativeAppError`.
+  throw. Native errors go through `throwNativeBcscError` / `mapNativeBcscError`.
 - **Architecture** — new work is MVVM (no JSX in ViewModel hooks); existing work
   follows the pattern in the file it's in.
 

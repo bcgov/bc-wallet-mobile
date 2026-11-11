@@ -41,7 +41,7 @@ costs the team. Review accordingly.
   layout `\n`.
 - **Error handling** — errors surface, never swallowed. API hooks throw; service
   and UI hooks catch. Deleting something absent should succeed. Native errors go
-  through `throwNativeError`/`toNativeAppError`.
+  through `throwNativeBcscError`/`mapNativeBcscError`.
 - **Architecture** — new work is MVVM; existing work follows the file it's in.
 
 ## Leave alone

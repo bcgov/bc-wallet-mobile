@@ -37,7 +37,7 @@ Conclusions computed from state (`isExpired`, a phase, which notice to show) bel
 - Name it `use<Feature>ViewModel`. It takes only what it can't read itself, typically `navigation`.
 - Return a flat object of display values and handlers: `headerText`, `sections`, `isLoading`, `handleContactUs`. Handlers are `handle<Action>`.
 - Memoize derived values with `useMemo` and handlers with `useCallback` so the Screen re-renders only on real change.
-- Async handlers own their errors: catch, then surface them with `emitErrorAlert` (see Error handling in `AGENTS.md`). The Screen calls the handler and renders the result.
+- Async handlers own their errors: catch, then surface them with a `useAlerts()` alert or `emitErrorModal` (see Implementation rules in `AGENTS.md`). The Screen calls the handler and renders the result.
 
 ## Testing
 
