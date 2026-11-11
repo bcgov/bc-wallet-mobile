@@ -139,53 +139,39 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
   const verified = selectVerificationState(store).isDeviceVerifiedByIas
 
   /** One status check. Never throws: a failure is logged and left to the next trigger. */
-  const runStatusCheck = useCallback(
-    async (): Promise<'decided' | 'pending' | 'failed'> => {
-      try {
-        if (verified) {
-          navigation.navigate(BCSCScreens.VerificationSuccess)
-          return 'decided'
-        }
-
-        // Choosing another way clears the request id before the screen leaves, which re-runs the focus check;
-        // that is not a missing id worth logging
-        if (isCancelledRequest(cancelledRequestIdRef.current, verificationRequestId)) {
-          return 'decided'
-        }
-
-        const decision = await fetchStatusDecision({
-          requestId: verificationRequestId,
-          deviceCode,
-          userCode,
-          evidenceService,
-          token,
-          logger,
-          t,
-          isCancelled: () => cancelledRequestIdRef.current === verificationRequestId,
-        })
-        if (decision === 'abandoned') {
-          return 'decided'
-        }
-        return recordAndNavigate(dispatch, navigation, decision)
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        logger.error(`[useVerificationPendingActions] Failed to check status: ${message}`)
-        return 'failed'
+  const runStatusCheck = useCallback(async (): Promise<'decided' | 'pending' | 'failed'> => {
+    try {
+      if (verified) {
+        navigation.navigate(BCSCScreens.VerificationSuccess)
+        return 'decided'
       }
-    },
-    [
-      verified,
-      verificationRequestId,
-      deviceCode,
-      userCode,
-      evidenceService,
-      navigation,
-      t,
-      token,
-      logger,
-      dispatch,
-    ]
-  )
+
+      // Choosing another way clears the request id before the screen leaves, which re-runs the focus check;
+      // that is not a missing id worth logging
+      if (isCancelledRequest(cancelledRequestIdRef.current, verificationRequestId)) {
+        return 'decided'
+      }
+
+      const decision = await fetchStatusDecision({
+        requestId: verificationRequestId,
+        deviceCode,
+        userCode,
+        evidenceService,
+        token,
+        logger,
+        t,
+        isCancelled: () => cancelledRequestIdRef.current === verificationRequestId,
+      })
+      if (decision === 'abandoned') {
+        return 'decided'
+      }
+      return recordAndNavigate(dispatch, navigation, decision)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`[useVerificationPendingActions] Failed to check status: ${message}`)
+      return 'failed'
+    }
+  }, [verified, verificationRequestId, deviceCode, userCode, evidenceService, navigation, t, token, logger, dispatch])
 
   const handleCheckStatus = useCallback(async () => {
     if (checkInFlightRef.current) {
