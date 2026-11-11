@@ -105,7 +105,6 @@ export interface BCSCState {
   bannerMessages: BCSCBannerMessage[]
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
-  hasDismissedExpiryAlert?: boolean
   hasDismissedThirdPartyKeyboardAlert?: boolean
   hasDismissedDeviceAuthInfo?: boolean
   deviceLimitBannerDismissedAt?: string
@@ -244,8 +243,6 @@ export interface BCSCSecureState {
    * can read it on their first render. Hydrated at launch; updated when the user switches method.
    */
   securityMethod?: AccountSecurityMethod
-
-  hasDismissedExpiryAlert?: boolean
 
   /**
    * Set during hydration when a native account record exists but its tokens file is
@@ -869,15 +866,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.ACCOUNT_SETUP_TYPE: {
       const accountType = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, accountSetupType: accountType }
-      const newState = { ...state, bcsc }
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.DISMISSED_EXPIRY_ALERT: {
-      // this should use the date as a key, so this variable is always up to date...
-      const hasDismissed = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, hasDismissedExpiryAlert: hasDismissed }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
