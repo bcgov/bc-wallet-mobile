@@ -56,9 +56,9 @@ Use Node 24 and the Yarn version pinned in `package.json`. From the repo root:
 - New features use MVVM: a `use<Feature>ViewModel` hook holds the logic and
   the Screen renders. Read `docs/guides/mvvm.md` before building a new screen
   or feature. When editing existing code, follow the file's current pattern.
-- API hooks throw; service hooks and ViewModels catch and surface. Map native
-  errors through `native-error-map.ts`. Read `docs/guides/error-handling.md`
-  before adding error handling.
+- API hooks throw. One layer, a service hook or the ViewModel, surfaces each
+  failure. Map native errors through `native-error-map.ts`. Read
+  `docs/guides/error-handling.md` before adding error handling.
 - Every `TouchableOpacity` and `Pressable` needs `accessibilityLabel`,
   `accessibilityRole`, `hitSlop`, and `testID`.
 - Localize all user-facing text. Use interpolation rather than concatenation;

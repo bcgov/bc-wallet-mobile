@@ -6,6 +6,7 @@ Read before adding error handling to a hook, ViewModel or screen. When editing e
 
 - **API hooks** (`api/hooks/`) return data and throw. No UI side effects.
 - **Service hooks and ViewModels** catch and surface. An async ViewModel handler owns its errors; the Screen just calls it (see `docs/guides/mvvm.md`).
+- **Exactly one layer presents a given failure.** Either the service hook surfaces it or the ViewModel does, never both. See "One owner per failure" below.
 - Favour idempotency over erroring: deleting something that is already absent succeeds instead of throwing.
 
 ## Surfacing an error
@@ -32,15 +33,21 @@ Example: `app/src/bcsc-theme/features/verify/useResidentialAddressModel.tsx` doe
 
 **BC Wallet features** use `useErrorAlert()` directly, as in `app/src/bcwallet-theme/features/person-flow/screens/PersonCredentialLoading.tsx`. `ErrorAlertProvider` wraps both modes in `app/App.tsx`. For an informational native alert use `emitAlert(title, description, { actions, event })` from the same hook.
 
-## Errors a policy already handled
+## One owner per failure
 
-`BCSCApiClientContext` runs the matching client error policy (`app/src/bcsc-theme/api/clientErrorPolicies.ts`) and then sets `handled` on the `AppError`, even when the policy only suppresses the global alert. Skip handled errors in your catch block:
+The layer that shows the alert owns the failure. The rule:
+
+- If a service hook surfaces the error, it sets `error.handled = true` and rethrows. It never resolves normally after alerting, so a caller cannot mistake the failure for success and navigate on. Examples: `useEvidenceService.tsx` (`handleEvidenceApiError`, then `throw error`), `useAuthorizationService.tsx` (`handleAuthorizationError`, then `throw error`) and `useRegistrationService.tsx` (alert, `appError.handled = true`, `throw appError`), all under `app/src/bcsc-theme/services/hooks/`.
+- If a service hook does not surface it, it just throws and the ViewModel surfaces it.
+- Callers treat rejection as the failure signal and skip handled errors, so nothing is shown twice:
 
 ```ts
 if (isHandledAppError(error)) {
   return
 }
 ```
+
+A client error policy is one instance of this. `BCSCApiClientContext` runs the matching policy (`app/src/bcsc-theme/api/clientErrorPolicies.ts`) and then sets `handled` on the `AppError`, even when the policy only suppresses the global alert.
 
 To act on one specific failure, branch with `isAppError(error, AppEventCode.XXX)`. It narrows the type; `error.appEvent` is that code. Check it before `isHandledAppError` when a suppressing policy leaves that failure for your screen to show, as `app/src/bcsc-theme/features/services/ServiceLoginScreen.tsx` does for an expired pairing code.
 
@@ -49,6 +56,8 @@ To act on one specific failure, branch with `isAppError(error, AppEventCode.XXX)
 Map `bcsc-core` rejections with `throwNativeBcscError(error)` or `mapNativeBcscError(error)` (`app/src/bcsc-theme/utils/native-error-map.ts`). Mapped native codes become their specific `AppError`; unmapped ones become `UNMAPPED_NATIVE_ERROR` with the raw code kept on `cause`. An `AppError` passes through unchanged. A `decodePayload` / `decodeLoginChallenge` rejection uses `toDecodeAppError(error, fallback)` instead (see "Server keys" in [`CONVENTIONS.md`](../../CONVENTIONS.md)).
 
 The caller decides whether the failure is critical (surface it) or intentionally non-critical (log it and carry on).
+
+**A user cancelling is not an error.** `E_DEVICE_AUTH_CANCELLED` is deliberately left out of the map (`native-error-map.ts`), so mapping it would turn Cancel into `UNMAPPED_NATIVE_ERROR`. Handle cancellation before mapping and show no alert. Only Android's `performDeviceAuthentication` rejects with that code. `unlockWithDeviceSecurity` resolves `{ success: false }` on cancel on both platforms, and `useAuthentication.tsx` returns quietly in that case. There is no shared constant or helper for the code; compare `error.code` after `isBcscNativeError(error)` (from `react-native-bcsc-core`) if you need to detect it.
 
 ## Multi-step flows
 
