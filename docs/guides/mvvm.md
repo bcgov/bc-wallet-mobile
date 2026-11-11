@@ -2,9 +2,11 @@
 
 Read before building a new screen or feature. New work uses MVVM. When editing existing code, follow the pattern in the file you're in; migrate to MVVM only when the issue asks for it. Reference implementation: `app/src/bcsc-theme/features/service-notice/`.
 
+The paths below are for BCSC (`bcsc-theme`). BC Wallet has a `features/` folder too (`app/src/bcwallet-theme/features/`, currently `person-flow` and `tours`, with no ViewModels yet); a new BC Wallet feature there follows the same layers.
+
 ## Layout
 
-A feature lives in `app/src/bcsc-theme/features/<feature>/`, with tests beside the code:
+A feature lives in `app/src/bcsc-theme/features/<feature>/`, with tests beside the code.
 
 ```
 features/service-notice/
@@ -30,14 +32,14 @@ store / contexts / state/<domain> hooks  ↗
 | **ViewModel**                  | Read store, contexts, services and derived-state hooks; expose display values and handlers. May translate and navigate. | Contain JSX, components, styles or theme values.                 |
 | **Screen**                     | Call its ViewModel once and render: layout, theme, styles, `testID`s, accessibility props.                              | Read the store, call services or APIs, or decide business rules. |
 
-Conclusions computed from state (`isExpired`, a phase, which notice to show) belong in `bcsc-theme/state/<domain>/`, not the ViewModel. The ViewModel calls the `use<Concept>` hook and passes the result through. Use the `app-state` skill before adding one.
+Conclusions computed from state (`isExpired`, a phase, which notice to show) belong in `bcsc-theme/state/<domain>/`, not the ViewModel. The ViewModel calls the `use<Concept>` hook and passes the result through. Read [`derived-state-refactor.md`](derived-state-refactor.md) before adding one.
 
 ## ViewModel shape
 
 - Name it `use<Feature>ViewModel`. It takes only what it can't read itself, typically `navigation`.
 - Return a flat object of display values and handlers: `headerText`, `sections`, `isLoading`, `handleContactUs`. Handlers are `handle<Action>`.
 - Memoize derived values with `useMemo` and handlers with `useCallback` so the Screen re-renders only on real change.
-- Async handlers own their errors: catch, then surface them with a `useAlerts()` alert (BCSC features) or `emitErrorModal` (see Implementation rules in `AGENTS.md`). The Screen calls the handler and renders the result.
+- Async handlers own their errors: catch, then surface them (see [`error-handling.md`](error-handling.md)). The Screen calls the handler and renders the result.
 
 ## Testing
 

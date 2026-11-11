@@ -51,6 +51,7 @@ Roughly in order:
 - **Error handling** — errors surface, never swallowed. API hooks throw; service
   and UI hooks catch and surface. Deleting something absent should succeed, not
   throw. Native errors go through `throwNativeBcscError` / `mapNativeBcscError`.
+  See `docs/guides/error-handling.md`.
 - **Architecture** — new work is MVVM (no JSX in ViewModel hooks); existing work
   follows the pattern in the file it's in.
 

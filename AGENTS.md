@@ -56,18 +56,9 @@ Use Node 24 and the Yarn version pinned in `package.json`. From the repo root:
 - New features use MVVM: a `use<Feature>ViewModel` hook holds the logic and
   the Screen renders. Read `docs/guides/mvvm.md` before building a new screen
   or feature. When editing existing code, follow the file's current pattern.
-- API hooks return data and throw, without UI side effects. Service/UI hooks
-  catch and surface errors. In BCSC features, use the matching named alert
-  from `useAlerts()` (error modals take the caught error; informational
-  alerts take no error) or, for screen-specific copy, `emitErrorModal`
-  from `useErrorAlert()` with `ensureAppError(error, AppEventCode.XXX)` as the
-  error. Skip errors a policy already handled (`isHandledAppError`). For
-  multi-step flows see "Error reports" in `CONVENTIONS.md`.
-- Map native `bcsc-core` rejections through `throwNativeBcscError` /
-  `mapNativeBcscError` in `app/src/bcsc-theme/utils/native-error-map.ts`.
-  Callers branch on `isAppError(error, AppEventCode.XXX)` and decide whether
-  failure is critical or intentionally non-critical. Prefer idempotency, such
-  as successful deletion when the item is already absent.
+- API hooks throw; service hooks and ViewModels catch and surface. Map native
+  errors through `native-error-map.ts`. Read `docs/guides/error-handling.md`
+  before adding error handling.
 - Every `TouchableOpacity` and `Pressable` needs `accessibilityLabel`,
   `accessibilityRole`, `hitSlop`, and `testID`.
 - Localize all user-facing text. Use interpolation rather than concatenation;
