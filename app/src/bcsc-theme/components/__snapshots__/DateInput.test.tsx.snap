@@ -112,36 +112,70 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
           ]
         }
       >
-        <Text
+        <View
           style={
             {
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 16,
+              "flexDirection": "row",
               "marginBottom": undefined,
             }
           }
         >
           <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "color": "transparent",
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 16,
+                  "fontWeight": "bold",
+                },
+                [
+                  {
+                    "fontFamily": undefined,
+                    "fontSize": 16,
+                    "fontWeight": "normal",
+                    "includeFontPadding": false,
+                  },
+                  {
+                    "opacity": 0,
+                  },
+                ],
+              ]
             }
           />
           <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "color": "#606060",
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 16,
+                  "fontWeight": "bold",
+                },
+                [
+                  {
+                    "fontFamily": undefined,
+                    "fontSize": 16,
+                    "fontWeight": "normal",
+                    "includeFontPadding": false,
+                  },
+                  {
+                    "color": "#606060",
+                  },
+                ],
+              ]
             }
           >
             YYYY/MM/DD
           </Text>
-        </Text>
+        </View>
       </View>
       <TextInput
         accessibilityLabel="Date of Birth"
         keyboardType="number-pad"
+        maxFontSizeMultiplier={2}
         onBlur={[Function]}
         onChange={[Function]}
         onChangeText={[Function]}

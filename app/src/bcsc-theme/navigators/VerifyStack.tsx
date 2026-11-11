@@ -67,6 +67,7 @@ import PendingReviewScreen from '../features/verify/send-video/PendingReviewScre
 import SuccessfullySentScreen from '../features/verify/send-video/SuccessfullySentScreen'
 import TakeVideoScreen from '../features/verify/send-video/TakeVideoScreen'
 import UploadingScreen from '../features/verify/send-video/UploadingScreen'
+import VideoExpiredScreen from '../features/verify/send-video/VideoExpiredScreen'
 import VideoInstructionsScreen from '../features/verify/send-video/VideoInstructionsScreen'
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
@@ -310,17 +311,10 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         component={PendingReviewScreen}
         options={{
           header: createProgressHeader(5, 80),
-          // A deferred verifier leaves for Home, progress kept (the Home card is the way back in). A
-          // first-time verifier has no arrow here and hardware back does nothing: the screen picks up the
-          // decision itself. "Choose another way to verify" is the in-flow way off it for both.
-          headerLeft: createVerifyHeaderBackButton(
-            (_navigation, leaveVerification, { isFirstTimeVerifier }) => {
-              if (!isFirstTimeVerifier) {
-                leaveVerification()
-              }
-            },
-            { hidden: ({ isFirstTimeVerifier }) => isFirstTimeVerifier }
-          ),
+          // Back leaves for Home for every verifier, progress kept: a submitted request waits on an
+          // agent, not on the user, so it must not hold them out of the rest of the app (#4968). Home's
+          // pending card is the way back in; "Choose another way to verify" is the in-flow way off it.
+          headerLeft: createVerifyHeaderBackButton((_navigation, leaveVerification) => leaveVerification()),
           title: t('BCSC.Steps.Status'),
         }}
       />
@@ -335,6 +329,19 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         // Retake and Cancel are the only ways out; back would pop to TakeVideo and re-record against the
         // prompt set the over-long recording already answered. Pairs with usePreventGestureBack for Android.
         options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VideoExpired}
+        component={VideoExpiredScreen}
+        options={{
+          headerLeft: createVerifyHeaderBackButton(
+            (navigation) => {
+              navigation.navigate(BCSCScreens.VideoInstructions)
+            },
+            { hidden: true }
+          ),
+          gestureEnabled: false,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceUploading}
@@ -395,7 +402,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
               return navigation.goBack()
             }
 
-            clearAdditionalEvidence()
+            void clearAdditionalEvidence()
             navigation.replace(BCSCScreens.IdentitySelection)
           }),
         }}
@@ -420,7 +427,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
               return navigation.goBack()
             }
 
-            clearAdditionalEvidence()
+            void clearAdditionalEvidence()
             navigation.replace(BCSCScreens.IdentitySelection)
           }),
         }}

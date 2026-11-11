@@ -5,8 +5,9 @@ import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
-import { AppError, isAppError, isHandledAppError } from '@/errors/appError'
+import { isAppError, isHandledAppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { createFailureError, wrapKeepingFailureContext } from '@/errors/failureContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
@@ -83,9 +84,9 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
       <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
         {t('BCSC.Services.PreferOtherDevice')}
       </ThemedText>
-      <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.xs }}>
         <ThemedText>{t('BCSC.Services.Goto')}</ThemedText>
-        <ThemedText selectable={true}>
+        <ThemedText selectable={true} style={{ flexShrink: 1 }}>
           <Link
             linkText={serviceClientUri}
             testID={testIdWithKey(TestIds.main.serviceLogin.serviceClientLink)}
@@ -196,7 +197,7 @@ const ServiceLoginDefaultView = ({
         disabled={isContinueDisabled}
         onPress={() => {
           setIsContinueDisabled(true)
-          onContinue()
+          void onContinue()
         }}
       />
       <Button
@@ -206,8 +207,6 @@ const ServiceLoginDefaultView = ({
         buttonType={ButtonType.Secondary}
         onPress={onCancel}
       />
-
-      <ReportSuspiciousLink t={t} testID={testIdWithKey(TestIds.main.serviceLogin.reportSuspicious)} />
     </ControlContainer>
   )
 
@@ -239,7 +238,7 @@ const ServiceLoginDefaultView = ({
               marginBottom: Spacing.sm,
             }}
           >
-            <ThemedText style={styles.infoHeader}>{t('BCSC.Services.FromAccount')}</ThemedText>
+            <ThemedText style={[styles.infoHeader, { flexShrink: 1 }]}>{t('BCSC.Services.FromAccount')}</ThemedText>
             <TouchableOpacity
               testID={testIdWithKey(TestIds.main.serviceLogin.help)}
               accessibilityLabel={a11yLabel(t('BCSC.Screens.HelpCentre'))}
@@ -269,6 +268,8 @@ const ServiceLoginDefaultView = ({
           </TouchableOpacity>
         ) : null}
       </View>
+
+      <ReportSuspiciousLink t={t} testID={testIdWithKey(TestIds.main.serviceLogin.reportSuspicious)} />
     </ScreenWrapper>
   )
 }
@@ -387,7 +388,8 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
       setIsContinueDisabled(false)
 
-      // An expired or used code returns a 404, which pairingCodeErrorPolicy leaves for the screen to surface
+      // An expired or used code returns a 404, which pairingCodeErrorPolicy leaves for the screen to surface.
+      // Checked before isHandledAppError: that policy marks the error handled without showing an alert
       if (isAppError(error, AppEventCode.NOT_FOUND)) {
         alerts.loginRequestExpiredAlert(() => {
           // A newer login can arrive on this same screen while the alert is open, so don't navigate away from it
@@ -398,8 +400,15 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
         return
       }
 
-      if (!isHandledAppError(error)) {
-        alerts.loginServerErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: error }))
+      if (isHandledAppError(error)) {
+        return
+      }
+
+      if (isAppError(error, AppEventCode.LOGIN_DEVICE_ERROR)) {
+        alerts.loginDeviceErrorAlert(error)
+      } else {
+        // Wrapped so analytics count it as a login server error, keeping where the flow failed for the report
+        alerts.loginServerErrorAlert(wrapKeepingFailureContext(ErrorRegistry.LOGIN_SERVER_ERROR, error))
       }
     }
   }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled, resetToHome])
@@ -414,7 +423,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     if (!state.service) {
       logger.error('ServiceLoginScreen: No service context available for quick login')
       setIsContinueDisabled(false)
-      alerts.loginServerErrorAlert()
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, { flow: 'quick_login', step: 'service_context' })
+      )
       return
     }
 
@@ -439,12 +450,8 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 
     // A handled result has already shown its own alert (e.g. missing JWK), so only alert here for unhandled errors
     if ('error' in result) {
-      logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
-      alerts.loginServerErrorAlert(
-        AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, {
-          cause: result.cause ?? new Error(result.error),
-        })
-      )
+      logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error.fullMessage}`)
+      alerts.loginDeviceErrorAlert(result.error)
     }
   }, [getQuickLoginURL, logger, state.service, alerts, t, setIsContinueDisabled, resetToHome])
 
@@ -456,7 +463,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     } else {
       logger.error('ServiceLoginScreen: No authentication method available')
       setIsContinueDisabled(false)
-      alerts.loginServerErrorAlert()
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, { flow: 'service_login', step: 'auth_method' })
+      )
     }
   }, [
     logger,

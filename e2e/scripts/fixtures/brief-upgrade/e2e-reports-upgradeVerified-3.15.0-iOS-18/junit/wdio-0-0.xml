@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="3" failures="1" errors="0" skipped="0">
+  <testsuite name="Upgrade with a verified account" timestamp="2026-10-31T12:30:05" time="123.600" tests="3" failures="1" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Upgrade with a verified account"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/upgrade/upgrade-verified.spec.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_with_a_verified_account" name="onboards on the previous build" time="30.500"/>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_with_a_verified_account" name="verifies in person on the previous build" time="31.500"/>
+    <testcase classname="ios.5fc23a1b909c4d.Upgrade_with_a_verified_account" name="installs the current build over the previous build" time="32.500">
+      <failure message="mobile: installApp failed: The application at storage:filename=BCSC-Dev-9301.ipa could not be installed (resigning timed out)"/>
+    </testcase>
+  </testsuite>
+</testsuites>

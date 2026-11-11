@@ -91,6 +91,9 @@ was expected fails that job rather than passing quietly.
 | `quality.yml` | Unit tests, lint, type check, coverage |
 | `e2e.yml` | Reusable E2E suite, called by the build workflow |
 | `e2e-nightly.yml` | Scheduled full E2E run |
+| `e2e-upgrade-weekly.yml` | Scheduled weekly upgrade matrix: every shipped version in `e2e/upgrade-sources.json` → the current build, in every state |
+| `publish-release-e2e-builds.yml` | Attaches a shipped release's e2e builds to it and copies them to Sauce storage |
+| `refresh-e2e-sauce-builds.yml` | Monthly re-upload of every upgrade-source build from its release assets |
 | `pr-hygiene.yml` | Checks a PR links an issue and fills the template |
 | `lockfile-check.yml` | Catches lockfile drift |
 | `scanner.yml` | Scans for known malicious packages |

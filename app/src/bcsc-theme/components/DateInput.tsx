@@ -1,7 +1,7 @@
-import { useTheme } from '@bifold/core'
+import { ThemedText, useTheme } from '@bifold/core'
 import type { RefObject } from 'react'
 import { useCallback, useState } from 'react'
-import { LayoutChangeEvent, Platform, Text, TextInput } from 'react-native'
+import { LayoutChangeEvent, Platform, TextInput, View } from 'react-native'
 import { InputWithValidation } from './InputWithValidation'
 
 interface DateInputProps {
@@ -11,6 +11,7 @@ interface DateInputProps {
   value: string
   onChange: (value: string) => void
   onLayout?: (e: LayoutChangeEvent) => void
+  onFocus?: () => void
   error?: string | null
   subtext?: string
 }
@@ -42,23 +43,33 @@ const formatDigits = (digits: string): string => {
   return `${digits.slice(0, 4)}/${digits.slice(4, 6)}/${digits.slice(6)}`
 }
 
-const DateInput = ({ ref, id, label, value, onChange, error, subtext, onLayout }: DateInputProps) => {
+const DateInput = ({ ref, id, label, value, onChange, error, subtext, onLayout, onFocus }: DateInputProps) => {
   const { Inputs, ColorPalette } = useTheme()
   const [displayValue, setDisplayValue] = useState(formatDigits(getDigits(value)))
 
   const remainingTemplate = DATE_TEMPLATE.slice(displayValue.length)
 
+  // Mirrors InputWithValidation's TextInput (system font, normal weight, no font padding) so the template
+  // lines up with the typed digits; both are capped by the theme's maxFontSizeMultiplier. `labelTitle`
+  // carries no lineHeight, unlike `normal`.
+  const overlayTextStyle = {
+    fontSize: Inputs.textInput.fontSize,
+    fontFamily: undefined,
+    fontWeight: 'normal' as const,
+    includeFontPadding: false,
+  }
+
+  // Sibling texts rather than nested spans: Android ignores `color: 'transparent'` on a nested span and
+  // draws the spacer digits in the default colour, ghosting behind the input's own text.
   const templateOverlay = (
-    <Text
-      style={{
-        marginBottom: Platform.OS === 'ios' ? Inputs.textInput.margin : 0,
-        fontSize: Inputs.textInput.fontSize,
-        fontFamily: Inputs.textInput.fontFamily,
-      }}
-    >
-      <Text style={{ color: 'transparent' }}>{displayValue}</Text>
-      <Text style={{ color: ColorPalette.grayscale.mediumGrey }}>{remainingTemplate}</Text>
-    </Text>
+    <View style={{ flexDirection: 'row', marginBottom: Platform.OS === 'ios' ? Inputs.textInput.margin : 0 }}>
+      <ThemedText variant={'labelTitle'} style={[overlayTextStyle, { opacity: 0 }]}>
+        {displayValue}
+      </ThemedText>
+      <ThemedText variant={'labelTitle'} style={[overlayTextStyle, { color: ColorPalette.grayscale.mediumGrey }]}>
+        {remainingTemplate}
+      </ThemedText>
+    </View>
   )
 
   const handleChangeText = useCallback(
@@ -89,6 +100,7 @@ const DateInput = ({ ref, id, label, value, onChange, error, subtext, onLayout }
       error={error}
       subtext={subtext}
       onLayout={onLayout}
+      onFocus={onFocus}
       inputOverlay={templateOverlay}
       textInputProps={{
         keyboardType: 'number-pad',

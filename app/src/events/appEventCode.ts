@@ -47,6 +47,7 @@ export enum AppEventCode {
   IN_CALL_HAVING_TROUBLE = 'in_call_having_trouble',
   IOS_APP_UPDATE_REQUIRED = 'ios_app_update_required',
   IOS_DEVICE_PROTECTION_REQUIRED = 'ios_device_protection_required',
+  LOGIN_DEVICE_ERROR = 'login_device_error',
   LOGIN_PARSE_URI = 'login_parse_uri',
   LOGIN_REJECTED_400 = 'login_rejected_400',
   LOGIN_REJECTED_401 = 'login_rejected_401',
