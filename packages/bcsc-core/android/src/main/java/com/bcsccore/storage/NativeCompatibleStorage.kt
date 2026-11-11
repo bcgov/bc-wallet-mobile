@@ -24,6 +24,66 @@ enum class V3ProviderRecord(
     REGISTRATION_TOKEN("v3_registration_token_retired"),
 }
 
+/** Outcome of [NativeCompatibleStorage.readEncryptedFileResult]. */
+internal sealed class EncryptedFileRead {
+    data class Content(
+        val text: String,
+    ) : EncryptedFileRead()
+
+    object Missing : EncryptedFileRead()
+
+    data class Unreadable(
+        val error: Exception,
+    ) : EncryptedFileRead()
+
+    data class DecryptFailed(
+        val error: Exception,
+    ) : EncryptedFileRead()
+}
+
+/**
+ * The result of reading the accounts file: the accounts, or the reason there are none.
+ * `getAccountReadStatus` reports [statusCode] and [detail], so they must never hold paths, IDs or file contents.
+ */
+sealed class AccountsRead(
+    val statusCode: String,
+) {
+    /** Parsed successfully. [accounts] is null or empty when the file holds no accounts. */
+    data class Parsed(
+        val accounts: List<NativeAccount>?,
+    ) : AccountsRead(if (accounts.isNullOrEmpty()) "account_list_empty" else "ok")
+
+    object FileMissing : AccountsRead("account_file_missing")
+
+    data class FileUnreadable(
+        val error: Exception,
+    ) : AccountsRead("account_file_unreadable")
+
+    data class DecryptFailed(
+        val error: Exception,
+    ) : AccountsRead("account_decrypt_failed")
+
+    data class ParseFailed(
+        val error: Exception,
+    ) : AccountsRead("account_parse_failed")
+
+    /** The issuer, and so the accounts file location, could not be resolved. */
+    data class StorageUnavailable(
+        val error: Exception,
+    ) : AccountsRead("storage_root_unavailable")
+
+    /** The exception class name behind the failure, if any. */
+    val detail: String?
+        get() =
+            when (this) {
+                is FileUnreadable -> error.javaClass.simpleName
+                is DecryptFailed -> error.javaClass.simpleName
+                is ParseFailed -> error.javaClass.simpleName
+                is StorageUnavailable -> error.javaClass.simpleName
+                is Parsed, FileMissing -> null
+            }
+}
+
 /**
  * Native-compatible storage that matches the ias-android storage format.
  * This enables rollback capability between bcsc-core and native ias-android.
@@ -195,27 +255,37 @@ class NativeCompatibleStorage(
 
     // MARK: - Low-level I/O with Encryption
 
-    internal fun readEncryptedFile(file: File): String? {
+    internal fun readEncryptedFile(file: File): String? =
+        (readEncryptedFileResult(file) as? EncryptedFileRead.Content)?.text
+
+    /** [readEncryptedFile], but says why there is no content. The single read path for encrypted files. */
+    internal fun readEncryptedFileResult(file: File): EncryptedFileRead {
         if (!file.exists() || !file.isFile) {
-            return null
+            return EncryptedFileRead.Missing
         }
 
-        return try {
-            val encryptedBytes =
+        val encryptedBytes =
+            try {
                 FileInputStream(file).use { fis ->
                     val data = ByteArray(file.length().toInt())
                     fis.read(data)
                     data
                 }
-            if (isFilePlainText(encryptedBytes)) {
-                Log.d(TAG, "File appears to be plain text, skipping decryption: ${file.absolutePath}")
-                return String(encryptedBytes)
-            } else {
-                return encryption.decrypt(encryptedBytes)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to read/decrypt file: ${file.absolutePath}", e)
+                return EncryptedFileRead.Unreadable(e)
             }
+
+        if (isFilePlainText(encryptedBytes)) {
+            Log.d(TAG, "File appears to be plain text, skipping decryption: ${file.absolutePath}")
+            return EncryptedFileRead.Content(String(encryptedBytes))
+        }
+
+        return try {
+            EncryptedFileRead.Content(encryption.decrypt(encryptedBytes))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to read/decrypt file: ${file.absolutePath}", e)
-            null
+            EncryptedFileRead.DecryptFailed(e)
         }
     }
 
@@ -317,62 +387,31 @@ class NativeCompatibleStorage(
     /**
      * Reads accounts from native-compatible encrypted storage.
      */
-    fun readAccounts(issuerName: String): List<NativeAccount>? {
+    fun readAccounts(issuerName: String): List<NativeAccount>? =
+        (readAccountsResult(issuerName) as? AccountsRead.Parsed)?.accounts
+
+    /**
+     * Does the actual read and returns an [AccountsRead] saying why there are no accounts, instead of null.
+     */
+    fun readAccountsResult(issuerName: String): AccountsRead {
         val file = getAccountsFile(issuerName)
         Log.d(TAG, "Reading accounts from: ${file.absolutePath}")
 
-        val jsonContent = readEncryptedFile(file) ?: return null
+        val jsonContent =
+            when (val read = readEncryptedFileResult(file)) {
+                is EncryptedFileRead.Content -> read.text
+                EncryptedFileRead.Missing -> return AccountsRead.FileMissing
+                is EncryptedFileRead.Unreadable -> return AccountsRead.FileUnreadable(read.error)
+                is EncryptedFileRead.DecryptFailed -> return AccountsRead.DecryptFailed(read.error)
+            }
 
         return try {
             val type = object : com.google.gson.reflect.TypeToken<List<NativeAccount>>() {}.type
-            gson.fromJson<List<NativeAccount>>(jsonContent, type)
+            AccountsRead.Parsed(gson.fromJson<List<NativeAccount>>(jsonContent, type))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse accounts JSON", e)
-            null
+            AccountsRead.ParseFailed(e)
         }
-    }
-
-    /**
-     * Explains why [readAccounts] would return null or empty. Returns a status code and, on failure,
-     * the exception class name; never paths, IDs or file contents.
-     */
-    fun accountsReadStatus(issuerName: String): Pair<String, String?> {
-        val file = getAccountsFile(issuerName)
-        if (!file.exists() || !file.isFile) {
-            return "account_file_missing" to null
-        }
-
-        val bytes =
-            try {
-                FileInputStream(file).use { fis ->
-                    val data = ByteArray(file.length().toInt())
-                    fis.read(data)
-                    data
-                }
-            } catch (e: Exception) {
-                return "account_file_unreadable" to e.javaClass.simpleName
-            }
-
-        val json =
-            if (isFilePlainText(bytes)) {
-                String(bytes)
-            } else {
-                try {
-                    encryption.decrypt(bytes)
-                } catch (e: Exception) {
-                    return "account_decrypt_failed" to e.javaClass.simpleName
-                }
-            }
-
-        val accounts =
-            try {
-                val type = object : com.google.gson.reflect.TypeToken<List<NativeAccount>>() {}.type
-                gson.fromJson<List<NativeAccount>>(json, type)
-            } catch (e: Exception) {
-                return "account_parse_failed" to e.javaClass.simpleName
-            }
-
-        return if (accounts.isNullOrEmpty()) "account_list_empty" to null else "ok" to null
     }
 
     /**

@@ -100,6 +100,7 @@ import com.bcsccore.authentication.PinService
 import com.bcsccore.util.GuardedPromise
 
 // Native-compatible storage imports
+import com.bcsccore.storage.AccountsRead
 import com.bcsccore.storage.KeychainClearingService
 import com.bcsccore.storage.NativeCompatibleStorage
 import com.bcsccore.storage.NativeAccount
@@ -1168,24 +1169,19 @@ class BcscCoreModule internal constructor(
         promise.resolve(null)
     }
 
-    /** Returns why getAccount resolves null, and whether a legacy accounts file exists. Never rejects. */
+    /**
+     * Returns why getAccount resolves null by running the same resolution for the native-compatible store.
+     * `legacyStatus` is a fallback for the flat-file. 
+     * Never rejects.
+     */
     @ReactMethod
     override fun getAccountReadStatus(promise: Promise) {
+        val resolution = resolveAccountsWithStatus()
         val result = Arguments.createMap()
-        try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            result.putString("environment", issuerName)
-            val (status, detail) = nativeStorage.accountsReadStatus(issuerName)
-            result.putString("status", status)
-            detail?.let { result.putString("detail", it) }
-        } catch (e: Exception) {
-            result.putString("status", "storage_root_unavailable")
-            result.putString("detail", e.javaClass.simpleName)
-        }
-
-        val legacyFile = java.io.File(reactApplicationContext.filesDir, "accounts")
-        result.putString("legacyStatus", if (legacyFile.exists()) "present" else "absent")
-
+        resolution.environment?.let { result.putString("environment", it) }
+        result.putString("status", resolution.native.statusCode)
+        resolution.native.detail?.let { result.putString("detail", it) }
+        result.putString("legacyStatus", resolution.legacy.statusCode)
         promise.resolve(result)
     }
 
@@ -1225,39 +1221,86 @@ class BcscCoreModule internal constructor(
      * first, then the legacy flat-file format. Auth/PIN methods must use this so an account
      * that exists for routing isn't read as "not found" and surfaced as a device-auth failure.
      */
-    private fun resolveAccounts(): List<NativeAccount>? {
-        try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val accounts = nativeStorage.readAccounts(issuerName)
-            if (!accounts.isNullOrEmpty()) {
-                return accounts
+    private fun resolveAccounts(): List<NativeAccount>? = resolveAccountsWithStatus().accounts
+
+    /** Outcome of the legacy flat-file read in [resolveAccountsWithStatus]. */
+    private sealed class LegacyAccountsRead(
+        val statusCode: String,
+    ) {
+        /** Native storage had accounts, so the legacy file was never read. */
+        object Skipped : LegacyAccountsRead("skipped")
+
+        object Absent : LegacyAccountsRead("absent")
+
+        object Unreadable : LegacyAccountsRead("unreadable")
+
+        object Empty : LegacyAccountsRead("empty")
+
+        object ParseFailed : LegacyAccountsRead("parse_failed")
+
+        data class Found(
+            val accounts: List<NativeAccount>,
+        ) : LegacyAccountsRead("ok")
+    }
+
+    private data class AccountResolution(
+        val environment: String?,
+        val native: AccountsRead,
+        val legacy: LegacyAccountsRead,
+        val accounts: List<NativeAccount>?,
+    )
+
+    /**
+     * Finds the accounts (native storage first, then the legacy file) and records what each step found.
+     */
+    private fun resolveAccountsWithStatus(): AccountResolution {
+        var environment: String? = null
+        val native =
+            try {
+                val issuerName = nativeStorage.getDefaultIssuerName()
+                environment = issuerName
+                nativeStorage.readAccountsResult(issuerName)
+            } catch (e: Exception) {
+                Log.w(NAME, "resolveAccounts - error reading native storage: ${e.message}")
+                AccountsRead.StorageUnavailable(e)
             }
-            Log.d(NAME, "resolveAccounts - no accounts in native storage for issuer: $issuerName")
-        } catch (e: Exception) {
-            Log.w(NAME, "resolveAccounts - error reading native storage: ${e.message}")
+
+        val nativeAccounts = (native as? AccountsRead.Parsed)?.accounts
+        if (!nativeAccounts.isNullOrEmpty()) {
+            return AccountResolution(environment, native, LegacyAccountsRead.Skipped, nativeAccounts)
+        }
+        Log.d(NAME, "resolveAccounts - no accounts in native storage for issuer: $environment")
+
+        val legacy = readLegacyAccounts()
+        return AccountResolution(environment, native, legacy, (legacy as? LegacyAccountsRead.Found)?.accounts)
+    }
+
+    private fun readLegacyAccounts(): LegacyAccountsRead {
+        // SimpleFileReader returns null for both "missing" and "IOException", so check existence first.
+        if (!java.io.File(reactApplicationContext.filesDir, "accounts").isFile) {
+            return LegacyAccountsRead.Absent
         }
 
-        // Fall back to legacy flat-file format
-        try {
+        return try {
             val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
-            val accountFileBytes = fileReader.readFile("accounts")
-            if (accountFileBytes != null && accountFileBytes.isNotEmpty()) {
-                val content = String(accountFileBytes, Charsets.UTF_8)
-                val jsonArray = org.json.JSONArray(content)
-                if (jsonArray.length() > 0) {
-                    val accounts =
-                        (0 until jsonArray.length()).map { i ->
-                            nativeAccountFromLegacyJson(jsonArray.getJSONObject(i))
-                        }
-                    Log.d(NAME, "resolveAccounts - found ${accounts.size} account(s) in legacy storage")
-                    return accounts
-                }
+            val accountFileBytes = fileReader.readFile("accounts") ?: return LegacyAccountsRead.Unreadable
+            if (accountFileBytes.isEmpty()) {
+                return LegacyAccountsRead.Empty
             }
+            val jsonArray = org.json.JSONArray(String(accountFileBytes, Charsets.UTF_8))
+            if (jsonArray.length() == 0) {
+                return LegacyAccountsRead.Empty
+            }
+            val accounts =
+                (0 until jsonArray.length()).map { i ->
+                    nativeAccountFromLegacyJson(jsonArray.getJSONObject(i))
+                }
+            Log.d(NAME, "resolveAccounts - found ${accounts.size} account(s) in legacy storage")
+            LegacyAccountsRead.Found(accounts)
         } catch (e: Exception) {
             Log.w(NAME, "resolveAccounts - error reading legacy storage: ${e.message}")
+            LegacyAccountsRead.ParseFailed
         }
-
-        return null
     }
 
     private fun resolveFirstAccount(): NativeAccount? = resolveAccounts()?.firstOrNull()

@@ -168,7 +168,10 @@ export type NativeAccountReadStatus = {
   environment?: string;
   /** iOS: NSError `domain:code`; Android: exception class name */
   detail?: string;
-  /** Android only: whether the legacy flat-file accounts store is 'present' or 'absent' */
+  /**
+   * Android only: outcome of the legacy flat-file fallback read: 'ok', 'absent', 'unreadable', 'empty',
+   * 'parse_failed', or 'skipped' when the native-compatible store already had accounts
+   */
   legacyStatus?: string;
 };
 
