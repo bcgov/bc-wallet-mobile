@@ -82,9 +82,10 @@ export async function apiFetch<T>(url: string, options: ApiFetchOptions = {}): P
     })
   } catch (error: unknown) {
     const code = controller.signal.aborted ? undefined : transportErrorCode(error)
+    const codeSuffix = code ? ` (${code})` : ''
     const reason = controller.signal.aborted
       ? `the ${timeoutMs}ms request budget ran out`
-      : `${describeError(error)}${code ? ` (${code})` : ''}`
+      : `${describeError(error)}${codeSuffix}`
     throw new ApiTransportError(method, url, `after ${Date.now() - startedAt}ms: ${reason}`, code)
   } finally {
     clearTimeout(timeoutId)

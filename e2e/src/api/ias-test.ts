@@ -291,7 +291,8 @@ function oauthErrorCode(body: string): string | undefined {
 
 function tokenError(label: string, { status, body }: Rejection): IasTestApiError {
   const code = oauthErrorCode(body)
-  const answer = `${label} → ${status}${code ? ` ${code}` : ''}`
+  const codeSuffix = code ? ` ${code}` : ''
+  const answer = `${label} → ${status}${codeSuffix}`
   if (status === 401 || code === 'invalid_client') {
     return new IasTestApiError(
       'unauthorized',
@@ -309,15 +310,14 @@ async function getToken(config: IasTestApiConfig): Promise<Token> {
   if (cached && Date.now() < cached.expiresAt) return cached
 
   const label = `POST ${config.origin}${TOKEN_PATH}`
+  const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64')
   const reply = await exchange<{ access_token?: unknown; expires_in?: unknown; scope?: unknown }>(
     label,
     `${config.origin}${TOKEN_PATH}`,
     {
       method: 'POST',
       body: new URLSearchParams({ grant_type: 'client_credentials', scope: IAS_TEST_API_SCOPES.join(' ') }),
-      headers: {
-        authorization: `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64')}`,
-      },
+      headers: { authorization: `Basic ${credentials}` },
     }
   )
   if ('rejection' in reply) throw tokenError(label, reply.rejection)
