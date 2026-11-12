@@ -18,6 +18,7 @@ export interface BCSCBannerMessage {
   type: BannerType
   dismissible?: boolean
   metadata?: Record<string, unknown>
+  onPress?: (id: string) => void // TODO (MD): Remove the id from the params
 }
 
 export interface AppBannerSectionProps extends BCSCBannerMessage {
