@@ -1,7 +1,7 @@
 import { TestIds } from '@/test-ids/registry'
 import { BannerColors, BannerType } from '@bcwallet-theme/theme'
 import { ThemedText, testIdWithKey, useTheme } from '@bifold/core'
-import React, { useState } from 'react'
+import React, { Fragment, useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -43,15 +43,18 @@ export const AppBanner: React.FC<AppBannerProps> = ({ messages }: AppBannerProps
   return (
     <View>
       {ordered.map((message) => (
-        <AppBannerSection
-          key={message.id}
-          id={message.id}
-          title={message.title}
-          description={message.description}
-          type={message.type}
-          onPress={message.onPress}
-          dismissible={message.dismissible}
-        />
+        <Fragment key={message.id}>
+          <AppBannerSection
+            key={message.id}
+            id={message.id}
+            title={message.title}
+            description={message.description}
+            type={message.type}
+            onPress={message.onPress}
+            dismissible={message.dismissible}
+          />
+          <View style={{ height: 2 }} />
+        </Fragment>
       ))}
     </View>
   )
