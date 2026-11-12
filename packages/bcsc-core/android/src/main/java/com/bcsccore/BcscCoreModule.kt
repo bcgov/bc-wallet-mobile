@@ -1509,20 +1509,21 @@ class BcscCoreModule internal constructor(
             // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
-            // Load the key up front so a key failure is reported as get_key, not sign (matches iOS signJWT)
-            try {
-                keyPairSource.getCurrentBcscKeyPair()
-            } catch (e: Exception) {
-                rejectWithDiagnostics(
-                    promise,
-                    code = "E_KEYPAIR_RETRIEVAL_FAILED",
-                    message = "Failed to retrieve the signing key pair.",
-                    site = "$method.get_key",
-                    error = e,
-                    diagnostics = signingErrorDiagnostics(e),
-                )
-                return
-            }
+            // Load the key once and sign with it, so a key failure is reported as get_key, not sign (matches iOS signJWT)
+            val keyPair =
+                try {
+                    keyPairSource.getCurrentBcscKeyPair()
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_KEYPAIR_RETRIEVAL_FAILED",
+                        message = "Failed to retrieve the signing key pair.",
+                        site = "$method.get_key",
+                        error = e,
+                        diagnostics = signingErrorDiagnostics(e),
+                    )
+                    return
+                }
 
             // Build JWT claims set for pairing code signing
             val claimsSet =
@@ -1561,7 +1562,7 @@ class BcscCoreModule internal constructor(
             // Sign the JWT using bcsc-keypair-port
             val signedJWT =
                 try {
-                    keyPairSource.signAndSerializeClaimsSet(claimsSet)
+                    keyPairSource.signAndSerializeClaimsSet(claimsSet, keyPair)
                 } catch (e: Exception) {
                     rejectWithDiagnostics(
                         promise,
@@ -2185,20 +2186,21 @@ class BcscCoreModule internal constructor(
                     "clientRefId: $clientRefId",
             )
 
-            // Load the key up front so a key failure is reported as get_key, not sign (matches iOS signJWT)
-            try {
-                keyPairSource.getCurrentBcscKeyPair()
-            } catch (e: Exception) {
-                rejectWithDiagnostics(
-                    promise,
-                    code = "E_KEYPAIR_RETRIEVAL_FAILED",
-                    message = "Failed to retrieve the signing key pair.",
-                    site = "$method.get_key",
-                    error = e,
-                    diagnostics = signingErrorDiagnostics(e),
-                )
-                return
-            }
+            // Load the key once and sign with it, so a key failure is reported as get_key, not sign (matches iOS signJWT)
+            val keyPair =
+                try {
+                    keyPairSource.getCurrentBcscKeyPair()
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_KEYPAIR_RETRIEVAL_FAILED",
+                        message = "Failed to retrieve the signing key pair.",
+                        site = "$method.get_key",
+                        error = e,
+                        diagnostics = signingErrorDiagnostics(e),
+                    )
+                    return
+                }
 
             // Build claims following iOS pattern (makeSignedJWTForAccountLogin)
             val claimsSet =
@@ -2224,7 +2226,7 @@ class BcscCoreModule internal constructor(
 
             val signedJWT =
                 try {
-                    keyPairSource.signAndSerializeClaimsSet(claimsSet)
+                    keyPairSource.signAndSerializeClaimsSet(claimsSet, keyPair)
                 } catch (e: Exception) {
                     rejectWithDiagnostics(
                         promise,

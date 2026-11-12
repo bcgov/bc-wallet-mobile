@@ -3,6 +3,7 @@ package com.bcsccore
 import com.bcsccore.keypair.core.exceptions.AlertKey
 import com.bcsccore.keypair.core.exceptions.BcscException
 import com.bcsccore.keypair.core.interfaces.BcscKeyPairSource
+import com.bcsccore.keypair.core.models.BcscKeyPair
 import com.bcsccore.keypair.core.models.KeyPairInfo
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.JavaOnlyMap
@@ -81,17 +82,22 @@ class BcscCoreModuleQuickLoginTest {
         assertEquals("GENERAL", userInfo.getString("alertKey"))
         assertEquals(2, userInfo.getInt("keyCount"))
         assertFalse(userInfo.toHashMap().values.any { it.toString().contains("/data/secret") })
-        verify(exactly = 0) { keyPairSource.signAndSerializeClaimsSet(any()) }
+        verify(exactly = 0) { keyPairSource.signAndSerializeClaimsSet(any(), any()) }
     }
 
     @Test
-    fun `reports a signing failure at sign`() {
-        every { keyPairSource.signAndSerializeClaimsSet(any()) } throws
+    fun `reports a signing failure at sign, signing with the key loaded at get_key`() {
+        val keyPair = mockk<BcscKeyPair>()
+        every { keyPairSource.getCurrentBcscKeyPair() } returns keyPair
+        every { keyPairSource.signAndSerializeClaimsSet(any(), keyPair) } throws
             BcscException(AlertKey.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, "signature failed")
 
         val (_, userInfo) = createAndCaptureRejection("E_JWT_SIGN_FAILED", "Failed to sign or serialize the JWT.")
 
         assertEquals("createQuickLoginJWT.sign", userInfo.getString("site"))
         assertEquals("ERR_207_UNABLE_TO_SIGN_CLAIMS_SET", userInfo.getString("alertKey"))
+        // The key is loaded once, never reloaded by the signer
+        verify(exactly = 1) { keyPairSource.getCurrentBcscKeyPair() }
+        verify(exactly = 0) { keyPairSource.signAndSerializeClaimsSet(any()) }
     }
 }
