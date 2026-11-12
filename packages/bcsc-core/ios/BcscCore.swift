@@ -167,23 +167,7 @@ class BcscCore: NSObject {
   }
 
   /// Rejects with diagnostics in userInfo, which JS sees as `error.userInfo` and adds to problem reports.
-  /// Use the same `site` as Android and a fixed `message` (no `localizedDescription`, it can
-  /// contain paths). `diagnostics` hold status codes and counts only
-  private func rejectWithDiagnostics(
-    _ reject: RCTPromiseRejectBlock,
-    code: String,
-    message: String,
-    site: String,
-    error: Error? = nil,
-    diagnostics: [String: Any] = [:]
-  ) {
-    rejectWithDiagnostics(
-      reject,
-      DiagnosticRejection(code: code, message: message, site: site, error: error, diagnostics: diagnostics)
-    )
-  }
-
-  /// Sends a `DiagnosticRejection`
+  /// Use the same `site` as Android and a fixed `message`; see `DiagnosticRejection` for what is safe to send.
   private func rejectWithDiagnostics(_ reject: RCTPromiseRejectBlock, _ rejection: DiagnosticRejection) {
     logger.error("\(rejection.site): \(rejection.code) \(rejection.message)")
     reject(rejection.code, rejection.message, rejection.nsError)
@@ -275,10 +259,10 @@ class BcscCore: NSObject {
       rejectWithDiagnostics(reject, rejection)
     } catch {
       // JWTSigning only throws DiagnosticRejection; kept so a future change still rejects.
-      rejectWithDiagnostics(
-        reject, code: "E_JWT_SIGN_FAILED", message: "Failed to sign or serialize the JWT.",
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_JWT_SIGN_FAILED", message: "Failed to sign or serialize the JWT.",
         site: "\(method).sign", error: error, diagnostics: signingErrorDiagnostics(error)
-      )
+      ))
     }
     return nil
   }
@@ -1754,19 +1738,19 @@ class BcscCore: NSObject {
     guard !accessToken.isEmpty, !clientId.isEmpty, !issuer.isEmpty, !clientRefId.isEmpty,
           !fcmDeviceToken.isEmpty
     else {
-      rejectWithDiagnostics(
-        reject, code: "E_INVALID_PARAMETERS",
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_INVALID_PARAMETERS",
         message: "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) cannot be empty.",
         site: "\(method).validate"
-      )
+      ))
       return
     }
 
     // Convert the JWK dictionary to JWK object
     guard let jwk = JWK(json: key) else {
-      rejectWithDiagnostics(
-        reject, code: "E_INVALID_JWK", message: "Invalid JWK format provided.", site: "\(method).parse_jwk"
-      )
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_INVALID_JWK", message: "Invalid JWK format provided.", site: "\(method).parse_jwk"
+      ))
       return
     }
 
@@ -1775,10 +1759,10 @@ class BcscCore: NSObject {
     do {
       publicKey = try JWK.jwkToSecKey(jwk: jwk)
     } catch {
-      rejectWithDiagnostics(
-        reject, code: "E_INVALID_JWK", message: "Unusable JWK for quick login encryption.",
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_INVALID_JWK", message: "Unusable JWK for quick login encryption.",
         site: "\(method).parse_jwk", error: error, diagnostics: signingErrorDiagnostics(error)
-      )
+      ))
       return
     }
 
@@ -1804,18 +1788,18 @@ class BcscCore: NSObject {
       )
 
       guard let finalJWT = encryptedJWT else {
-        rejectWithDiagnostics(
-          reject, code: "E_JWT_ENCRYPTION_FAILED", message: "Failed to encrypt JWT.", site: "\(method).encrypt"
-        )
+        rejectWithDiagnostics(reject, DiagnosticRejection(
+          code: "E_JWT_ENCRYPTION_FAILED", message: "Failed to encrypt JWT.", site: "\(method).encrypt"
+        ))
         return
       }
 
       resolve(finalJWT)
     } catch {
-      rejectWithDiagnostics(
-        reject, code: "E_JWT_ENCRYPTION_ERROR", message: "Failed to encrypt JWT.",
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_JWT_ENCRYPTION_ERROR", message: "Failed to encrypt JWT.",
         site: "\(method).encrypt", error: error, diagnostics: signingErrorDiagnostics(error)
-      )
+      ))
     }
   }
 
@@ -1840,10 +1824,10 @@ class BcscCore: NSObject {
       deviceToken: deviceToken
     )
     else {
-      rejectWithDiagnostics(
-        reject, code: "E_JWT_PAYLOAD_CREATION_FAILED", message: "Failed to create JWT payload.",
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_JWT_PAYLOAD_CREATION_FAILED", message: "Failed to create JWT payload.",
         site: "\(method).build_claims"
-      )
+      ))
       return nil
     }
 
