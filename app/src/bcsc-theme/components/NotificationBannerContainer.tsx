@@ -1,5 +1,5 @@
-import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { MIGRATED_BANNER_IDS, useBanners } from '@/bcsc-theme/state/banners/useBanners'
+import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { openLink } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
