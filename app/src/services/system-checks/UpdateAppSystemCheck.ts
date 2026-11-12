@@ -1,8 +1,5 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction } from '@/store'
-import { isNewerVersion } from '@/utils/version'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
@@ -83,39 +80,5 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
       minVersion: this.serverStatus.minVersion,
     })
     this.navigation.navigate(BCSCModals.MandatoryUpdate)
-  }
-
-  /**
-   * Handles a build at or above the minimum build: shows the update banner when a supported version is newer than
-   * the app version, otherwise removes it.
-   *
-   * @returns {*} {void}
-   */
-  onSuccess() {
-    const { supportedVersions } = this.serverStatus
-    const versions: unknown[] = Array.isArray(supportedVersions) ? supportedVersions : []
-    const updateAvailable = versions.some((v) => typeof v === 'string' && isNewerVersion(v, this.appVersion))
-
-    if (updateAvailable) {
-      this.utils.logger.info('[UpdateAppSystemCheck] result: optional update', { appVersion: this.appVersion })
-      this.utils.dispatch({
-        type: BCDispatchAction.ADD_BANNER_MESSAGE,
-        payload: [
-          {
-            id: BCSCBanner.APP_UPDATE_AVAILABLE,
-            title: this.utils.translation('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'),
-            type: 'info',
-            dismissible: true,
-          },
-        ],
-      })
-      return
-    }
-
-    this.utils.logger.info('[UpdateAppSystemCheck] result: no update', {
-      appVersion: this.appVersion,
-      appBuild: this.appBuild,
-    })
-    this.utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.APP_UPDATE_AVAILABLE] })
   }
 }
