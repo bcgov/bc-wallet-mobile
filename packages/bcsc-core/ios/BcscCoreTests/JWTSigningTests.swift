@@ -25,11 +25,23 @@ final class JWTSigningTests: XCTestCase {
       return try getKeyPairResult.get()
     }
 
-    func deleteKey(withLabel _: String) -> Bool { false }
-    func findPrivateKey(with _: String) -> PrivateKeyInfo? { nil }
+    func deleteKey(withLabel _: String) -> Bool {
+      false
+    }
+
+    func findPrivateKey(with _: String) -> PrivateKeyInfo? {
+      nil
+    }
+
     func generateKeyPair(withLabel _: String, keyType _: KeyType, keySize _: Int) throws
-      -> (public: SecKey, private: SecKey) { throw KeychainError.keyGenError }
-    func keyPairExists(with _: String) throws -> Bool { false }
+      -> (public: SecKey, private: SecKey)
+    {
+      throw KeychainError.keyGenError
+    }
+
+    func keyPairExists(with _: String) throws -> Bool {
+      false
+    }
   }
 
   private var keyPairManager = MockKeyPairManager()
