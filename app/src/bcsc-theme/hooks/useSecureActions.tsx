@@ -1,3 +1,4 @@
+import { isRefreshTokenExpired } from '@/bcsc-theme/state/account/refresh-token'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import {
@@ -60,7 +61,6 @@ import {
   getRegistrationTokenClientId,
   isUnusableClientIdError,
 } from '../utils/registration-token'
-import { isTokenExpired } from '../utils/token-expiry'
 import { stripDisallowedNameCharacters } from '../utils/validation'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
@@ -1073,7 +1073,7 @@ export const useSecureActions = () => {
       let recoveredRegistrationAccessToken: string | undefined
       // Production never rotates the refresh token, so its `exp` is the device credential's
       // 5-year lifetime (#4654): when expired, skip the refresh and key recovery — renewal is the only fix.
-      const refreshTokenExpired = Boolean(refreshToken) && isTokenExpired(refreshToken)
+      const refreshTokenExpired = isRefreshTokenExpired(refreshToken)
 
       if (refreshTokenExpired) {
         logger.warn(
