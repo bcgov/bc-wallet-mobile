@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
@@ -18,6 +18,7 @@ import {
   VerificationMethodSelectionScreen,
 } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /**
  * Verified journey: photo card — the lightest verified path (serial + dob only), so it is the first
@@ -32,8 +33,8 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * mocha bail makes the checkpoints fail-fast within this file only; every other journey still runs.
  */
 describe('Verified journey: photo card', () => {
-  before(() => {
-    setTestUser(TestUsers.photo)
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo'))
   })
 
   it('onboards to the verify prompt', async () => {
