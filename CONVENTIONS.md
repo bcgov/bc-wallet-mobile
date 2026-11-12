@@ -283,11 +283,14 @@ resulting error to the alert. For a single failure outside a flow, use `createFa
   read `AppError.getChainedContext()` (as does `toJSON()`, for remote logs), which merges context down the cause chain (outer errors win).
 - To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
   `report-problem.ts`. Native rejection fields are separate: see below.
-- Native modules reject with `rejectWithDiagnostics` (bcsc-core, iOS and Android): a fixed message (never an
-  error description, which can contain paths), a `site` of `method.stage` named the same on both platforms, and
-  status-code `userInfo`. Reports promote the rejection's code and `site`, `detail` and `osStatus` from anywhere in
-  the cause chain to `native_*` fields (`nativeErrorFields.ts`); other `userInfo` stays in `error_json`. Promote a
-  new `userInfo` key there only when reports filter on it, and only scalar status values.
+- New and changed native rejections use `rejectWithDiagnostics` (bcsc-core, iOS and Android): a fixed
+  message (never an error description, which can contain paths), a `site` of `method.stage` named the same
+  on both platforms, and status-code `userInfo`. Older methods still call `reject` directly and report only
+  a code; migrate a method when you change it. Reports promote the rejection's code and
+  `site`, `detail` and `osStatus` from anywhere in the cause chain to `native_*` fields (`nativeErrorFields.ts`);
+  other `userInfo` stays in `error_json`. Promote a new `userInfo` key there only when reports filter on it,
+  and only scalar status values.
+
 - When something that fails silently could explain a step's failure, pass its health as that step's
   `context`, only on the steps it could explain. Use status codes only, never values: `getPushTokenStatus`
   (placeholder push tokens) and `getAccountReadStatus` from bcsc-core (why `getAccount` resolved null). Call
