@@ -3,7 +3,7 @@ import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { selectUpdateBannerVisible } from './selectors'
+import { selectOptionalUpdateAvailable } from './selectors'
 
 /**
  * TODO (MD): Remove this once every banner is derived by useBanners.
@@ -40,9 +40,9 @@ export const useUpdateBanner = (): BCSCBannerMessage | null => {
       return null
     }
 
-    const showUpdateBanner = selectUpdateBannerVisible(serverStatus)
+    const optionalUpdateAvailable = selectOptionalUpdateAvailable(serverStatus)
 
-    if (!showUpdateBanner) {
+    if (!optionalUpdateAvailable) {
       return null
     }
 
