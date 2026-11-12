@@ -1503,42 +1503,76 @@ class BcscCoreModule internal constructor(
         challengeSource: String,
         promise: Promise,
     ) {
-        // Reported in the site so key failures can be told apart from signing failures (matches iOS)
-        var stage = "get_key"
+        // Sites are `signPairingCode.<stage>`, matching iOS, so reports show which stage failed
+        val method = "signPairingCode"
         try {
             // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
-            // Load the key up front so a key failure is reported as get_key, not sign
-            keyPairSource.getCurrentBcscKeyPair()
+            // Load the key up front so a key failure is reported as get_key, not sign (matches iOS signJWT)
+            try {
+                keyPairSource.getCurrentBcscKeyPair()
+            } catch (e: Exception) {
+                rejectWithDiagnostics(
+                    promise,
+                    code = "E_KEYPAIR_RETRIEVAL_FAILED",
+                    message = "Failed to retrieve the signing key pair.",
+                    site = "$method.get_key",
+                    error = e,
+                    diagnostics = signingErrorDiagnostics(e),
+                )
+                return
+            }
 
-            stage = "build_claims"
             // Build JWT claims set for pairing code signing
             val claimsSet =
-                JWTClaimsSet
-                    .Builder()
-                    .audience(issuer)
-                    .issuer(clientID)
-                    .issueTime(Date())
-                    .claim("challenge", code)
-                    .claim("challenge_source", challengeSource)
-                    .claim("apns_token", actualDeviceToken)
-                    .claim("fcm_device_token", fcmDeviceToken)
-                    // Add device information claims
-                    .claim("system_name", "Android")
-                    .claim("system_version", Build.VERSION.RELEASE)
-                    .claim("device_model", Build.MODEL)
-                    .claim("device_id", getDeviceIdSync()) // Use proper device ID
-                    .claim("device_token", actualDeviceToken)
-                    .claim("device_name", getDeviceName())
-                    .claim("mobile_id_version", getAppVersion())
-                    .claim("mobile_id_build", getAppBuildNumber())
-                    .claim("has_other_accounts", false) // This could be made dynamic
-                    .build()
+                try {
+                    JWTClaimsSet
+                        .Builder()
+                        .audience(issuer)
+                        .issuer(clientID)
+                        .issueTime(Date())
+                        .claim("challenge", code)
+                        .claim("challenge_source", challengeSource)
+                        .claim("apns_token", actualDeviceToken)
+                        .claim("fcm_device_token", fcmDeviceToken)
+                        // Add device information claims
+                        .claim("system_name", "Android")
+                        .claim("system_version", Build.VERSION.RELEASE)
+                        .claim("device_model", Build.MODEL)
+                        .claim("device_id", getDeviceIdSync()) // Use proper device ID
+                        .claim("device_token", actualDeviceToken)
+                        .claim("device_name", getDeviceName())
+                        .claim("mobile_id_version", getAppVersion())
+                        .claim("mobile_id_build", getAppBuildNumber())
+                        .claim("has_other_accounts", false) // This could be made dynamic
+                        .build()
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_PAYLOAD_CREATION_FAILED",
+                        message = "Failed to create JWT payload.",
+                        site = "$method.build_claims",
+                        error = e,
+                    )
+                    return
+                }
 
-            stage = "sign"
             // Sign the JWT using bcsc-keypair-port
-            val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
+            val signedJWT =
+                try {
+                    keyPairSource.signAndSerializeClaimsSet(claimsSet)
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_SIGN_FAILED",
+                        message = "Failed to sign the pairing code.",
+                        site = "$method.sign",
+                        error = e,
+                        diagnostics = signingErrorDiagnostics(e),
+                    )
+                    return
+                }
 
             Log.d(
                 NAME,
@@ -1546,11 +1580,12 @@ class BcscCoreModule internal constructor(
             )
             promise.resolve(signedJWT)
         } catch (e: Exception) {
+            // Each stage catches its own errors, so this is only reached by something unexpected
             rejectWithDiagnostics(
                 promise,
                 code = "E_JWT_SIGN_FAILED",
-                message = "Failed to sign the pairing code.",
-                site = "signPairingCode.$stage",
+                message = "Unexpected error signing the pairing code.",
+                site = "$method.unexpected",
                 error = e,
                 diagnostics = signingErrorDiagnostics(e),
             )
@@ -2193,8 +2228,8 @@ class BcscCoreModule internal constructor(
                 } catch (e: Exception) {
                     rejectWithDiagnostics(
                         promise,
-                        code = "E_JWT_CREATION_FAILED",
-                        message = "Failed to create signed JWT.",
+                        code = "E_JWT_SIGN_FAILED",
+                        message = "Failed to sign or serialize the JWT.",
                         site = "$method.sign",
                         error = e,
                         diagnostics = signingErrorDiagnostics(e),

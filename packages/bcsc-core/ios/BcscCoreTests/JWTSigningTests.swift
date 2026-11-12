@@ -14,7 +14,9 @@ final class JWTSigningTests: XCTestCase {
     var requestedTag: String?
 
     func findAllPrivateKeys() throws -> [PrivateKeyInfo] {
-      if let findAllError { throw findAllError }
+      if let findAllError {
+        throw findAllError
+      }
       return keys
     }
 

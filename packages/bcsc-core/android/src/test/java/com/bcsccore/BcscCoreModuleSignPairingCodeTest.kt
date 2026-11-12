@@ -46,23 +46,27 @@ class BcscCoreModuleSignPairingCodeTest {
         unmockkStatic(Arguments::class)
     }
 
-    private fun signAndCaptureRejection(): Pair<Throwable, WritableMap> {
+    private fun signAndCaptureRejection(
+        code: String,
+        message: String,
+    ): Pair<Throwable, WritableMap> {
         val error = slot<Throwable>()
         val userInfo = slot<WritableMap>()
         module.signPairingCode("ABC123", "https://idsit.gov.bc.ca/device/", "client", "fcm", null, "push", promise)
-        verify(exactly = 1) {
-            promise.reject("E_JWT_SIGN_FAILED", "Failed to sign the pairing code.", capture(error), capture(userInfo))
-        }
+        verify(exactly = 1) { promise.reject(code, message, capture(error), capture(userInfo)) }
         verify(exactly = 0) { promise.resolve(any()) }
         return error.captured to userInfo.captured
     }
+
+    private fun signAndCaptureKeyRejection() =
+        signAndCaptureRejection("E_KEYPAIR_RETRIEVAL_FAILED", "Failed to retrieve the signing key pair.")
 
     @Test
     fun `reports a key failure at get_key with its alert key and key count`() {
         val keyError = BcscException(AlertKey.GENERAL, "keystore path /data/secret")
         every { keyPairSource.getCurrentBcscKeyPair() } throws keyError
 
-        val (error, userInfo) = signAndCaptureRejection()
+        val (error, userInfo) = signAndCaptureKeyRejection()
 
         assertEquals(keyError, error)
         assertEquals("signPairingCode.get_key", userInfo.getString("site"))
@@ -70,6 +74,7 @@ class BcscCoreModuleSignPairingCodeTest {
         assertEquals("GENERAL", userInfo.getString("alertKey"))
         assertEquals(2, userInfo.getInt("keyCount"))
         assertFalse(userInfo.toHashMap().values.any { it.toString().contains("/data/secret") })
+        verify(exactly = 0) { keyPairSource.signAndSerializeClaimsSet(any()) }
     }
 
     @Test
@@ -77,7 +82,7 @@ class BcscCoreModuleSignPairingCodeTest {
         every { keyPairSource.signAndSerializeClaimsSet(any()) } throws
             BcscException(AlertKey.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, "signature failed")
 
-        val (_, userInfo) = signAndCaptureRejection()
+        val (_, userInfo) = signAndCaptureRejection("E_JWT_SIGN_FAILED", "Failed to sign the pairing code.")
 
         assertEquals("signPairingCode.sign", userInfo.getString("site"))
         assertEquals("ERR_207_UNABLE_TO_SIGN_CLAIMS_SET", userInfo.getString("alertKey"))
@@ -88,7 +93,7 @@ class BcscCoreModuleSignPairingCodeTest {
         every { keyPairSource.getCurrentBcscKeyPair() } throws BcscException(AlertKey.GENERAL)
         every { keyPairSource.getAllBcscKeyPairInfos() } throws BcscException(AlertKey.GENERAL)
 
-        val (_, userInfo) = signAndCaptureRejection()
+        val (_, userInfo) = signAndCaptureKeyRejection()
 
         assertEquals("signPairingCode.get_key", userInfo.getString("site"))
         assertEquals("unavailable", userInfo.getString("keyCount"))

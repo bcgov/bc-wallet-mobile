@@ -89,7 +89,7 @@ class BcscCoreModuleQuickLoginTest {
         every { keyPairSource.signAndSerializeClaimsSet(any()) } throws
             BcscException(AlertKey.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, "signature failed")
 
-        val (_, userInfo) = createAndCaptureRejection("E_JWT_CREATION_FAILED", "Failed to create signed JWT.")
+        val (_, userInfo) = createAndCaptureRejection("E_JWT_SIGN_FAILED", "Failed to sign or serialize the JWT.")
 
         assertEquals("createQuickLoginJWT.sign", userInfo.getString("site"))
         assertEquals("ERR_207_UNABLE_TO_SIGN_CLAIMS_SET", userInfo.getString("alertKey"))
