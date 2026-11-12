@@ -6,15 +6,10 @@ import { getUpdateBannerVisible } from './update-banner'
  * Determines whether the update banner should be visible based on the server status and app version.
  *
  * @param serverStatus - The server status response data.
- * @param isChecking - A boolean indicating whether the server status is currently being checked.
- * @param isDismissed - A boolean indicating whether the update banner has been dismissed by the user.
  * @returns - True if an update is available, false otherwise.
  */
-export const selectUpdateBannerVisible = (
-  serverStatus: ServerStatusResponseData | null,
-  isChecking: boolean
-): boolean => {
-  if (!serverStatus || isChecking) {
+export const selectUpdateBannerVisible = (serverStatus: ServerStatusResponseData | null): boolean => {
+  if (!serverStatus) {
     return false
   }
 

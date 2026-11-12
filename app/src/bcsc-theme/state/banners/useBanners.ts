@@ -31,7 +31,7 @@ export const useBanners = (): BCSCBannerMessage[] => {
  */
 export const useUpdateBanner = (): BCSCBannerMessage | null => {
   const { t } = useTranslation()
-  const { serverStatus, isChecking } = useServerStatus()
+  const { serverStatus } = useServerStatus()
   const [dismissed, setDismissed] = useState(false)
 
   return useMemo(() => {
@@ -40,7 +40,7 @@ export const useUpdateBanner = (): BCSCBannerMessage | null => {
       return null
     }
 
-    const showUpdateBanner = selectUpdateBannerVisible(serverStatus, isChecking)
+    const showUpdateBanner = selectUpdateBannerVisible(serverStatus)
 
     if (!showUpdateBanner) {
       return null
@@ -56,5 +56,5 @@ export const useUpdateBanner = (): BCSCBannerMessage | null => {
         void openLink(getBCSCAppStoreUrl())
       },
     }
-  }, [dismissed, isChecking, serverStatus, t])
+  }, [dismissed, serverStatus, t])
 }
