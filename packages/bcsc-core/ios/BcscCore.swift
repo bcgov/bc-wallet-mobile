@@ -136,7 +136,7 @@ class BcscCore: NSObject {
   }
 
   /// Diagnostics list the newest N keys; keyCount still reports the true total.
-  private static let keychainDiagnosticsMaxKeys = 5
+  private static let keychainDiagnosticsMaxKeys = SigningDiagnostics.maxKeys
 
   /**
    * Builds an NSError whose userInfo carries keychain diagnostics across the RN bridge.
@@ -177,15 +177,16 @@ class BcscCore: NSObject {
     error: Error? = nil,
     diagnostics: [String: Any] = [:]
   ) {
-    var userInfo = diagnostics
-    userInfo[NSLocalizedDescriptionKey] = message
-    userInfo["site"] = site
-    if let nsError = error as NSError? {
-      // domain:code only; localizedDescription can contain paths
-      userInfo["detail"] = "\(nsError.domain):\(nsError.code)"
-    }
-    logger.error("\(site): \(code) \(message)")
-    reject(code, message, NSError(domain: "BcscCore", code: 0, userInfo: userInfo))
+    rejectWithDiagnostics(
+      reject,
+      DiagnosticRejection(code: code, message: message, site: site, error: error, diagnostics: diagnostics)
+    )
+  }
+
+  /// Sends a `DiagnosticRejection`
+  private func rejectWithDiagnostics(_ reject: RCTPromiseRejectBlock, _ rejection: DiagnosticRejection) {
+    logger.error("\(rejection.site): \(rejection.code) \(rejection.message)")
+    reject(rejection.code, rejection.message, rejection.nsError)
   }
 
   /**
@@ -264,78 +265,26 @@ class BcscCore: NSObject {
 
   /// Signs `payload` with the newest key. `method` names the JS-facing caller so reports can tell quick login,
   /// pairing and the other signers apart: rejections use the site `method.stage` (list_keys, select_key,
-  /// get_key, sign).
+  /// get_key, sign). The stages live in `JWTSigning` so they can be unit tested.
   private func signJWT(
     payload: JWTClaimsSet, method: String, reject: @escaping RCTPromiseRejectBlock
   ) -> String? {
-    let keyPairManager = KeyPairManager()
-    let keys: [PrivateKeyInfo]
     do {
-      keys = try keyPairManager.findAllPrivateKeys()
+      return try JWTSigning(keyPairManager: KeyPairManager()).sign(payload: payload, method: method)
+    } catch let rejection as DiagnosticRejection {
+      rejectWithDiagnostics(reject, rejection)
     } catch {
-      rejectWithDiagnostics(
-        reject, code: "E_KEYSTORE_ERROR", message: "Failed to enumerate signing keys.",
-        site: "\(method).list_keys", error: error, diagnostics: signingErrorDiagnostics(error)
-      )
-      return nil
-    }
-    let signer: RSASigner
-
-    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
-      rejectWithDiagnostics(
-        reject, code: "E_NO_KEYS_FOUND", message: "No keys available to sign the JWT.",
-        site: "\(method).select_key", diagnostics: ["keyCount": 0]
-      )
-      return nil
-    }
-
-    do {
-      let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
-      signer = RSASigner(privateKey: keyPair.private)
-    } catch {
-      var diagnostics = signingErrorDiagnostics(error)
-      diagnostics["keyCount"] = keys.count
-      // Creation dates only; key tags are identifiers
-      let iso8601 = ISO8601DateFormatter()
-      diagnostics["keyCreated"] = keys.sorted(by: { $0.created > $1.created })
-        .prefix(BcscCore.keychainDiagnosticsMaxKeys)
-        .map { iso8601.string(from: $0.created) }
-      rejectWithDiagnostics(
-        reject, code: "E_KEYPAIR_RETRIEVAL_FAILED", message: "Failed to retrieve the signing key pair.",
-        site: "\(method).get_key", error: error, diagnostics: diagnostics
-      )
-      return nil
-    }
-
-    let header = JWSHeader(alg: .RS512, kid: latestKeyInfo.tag)
-    var jwt = JWS(header: header, payload: payload)
-
-    do {
-      try jwt.sign(signer: signer)
-      return try jwt.serialize()
-    } catch {
-      var diagnostics = signingErrorDiagnostics(error)
-      diagnostics["keyCount"] = keys.count
+      // JWTSigning only throws DiagnosticRejection; kept so a future change still rejects.
       rejectWithDiagnostics(
         reject, code: "E_JWT_SIGN_FAILED", message: "Failed to sign or serialize the JWT.",
-        site: "\(method).sign", error: error, diagnostics: diagnostics
+        site: "\(method).sign", error: error, diagnostics: signingErrorDiagnostics(error)
       )
-      return nil
     }
+    return nil
   }
 
-  /// Error type and, for keychain errors, OSStatus. Never the description, which can contain paths.
   private func signingErrorDiagnostics(_ error: Error) -> [String: Any] {
-    var diagnostics: [String: Any] = ["errorType": String(describing: type(of: error))]
-    if let keychainError = error as? KeychainError {
-      switch keychainError {
-      case let .keychainUnavailable(status), let .unexpectedStatus(status):
-        diagnostics["osStatus"] = Int(status)
-      default:
-        break
-      }
-    }
-    return diagnostics
+    SigningDiagnostics.errorDiagnostics(error)
   }
 
   /// Deletes every Keychain item belonging to this app (all Sec item classes). Used by the
