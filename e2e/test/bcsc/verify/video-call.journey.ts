@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
@@ -22,6 +22,7 @@ import {
   VerifyNotCompleteScreen,
 } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /**
  * Verify journey: video call — the live-call method driven through a REAL call and back, stopping
@@ -51,8 +52,8 @@ describe('Verify journey: video call to the approval boundary', () => {
   let callOutcome: 'waiting' | 'connected' | undefined
   let callExit: LiveCallExit | undefined
 
-  before(() => {
-    setTestUser(TestUsers.photo)
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo'))
   })
 
   it('onboards to the verify prompt', async () => {

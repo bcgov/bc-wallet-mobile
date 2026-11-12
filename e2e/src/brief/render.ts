@@ -3,7 +3,7 @@ import type { Lineage, SourcePlatform } from '../flows/prev-build/sources.js'
 import type { SessionTestRecord } from '../helpers/session-record.js'
 import type { A11yPlatformSummary } from './a11y-summary.js'
 import type { CellResult, EvaluatedSection, FailureDetail, PlatformTotals } from './evaluate.js'
-import { laneOf, versionOf, type AttemptOutcome, type SessionAttempt, type SessionGroup } from './sessions.js'
+import { laneOf, mintedIdentities, versionOf, type AttemptOutcome, type SessionAttempt, type SessionGroup } from './sessions.js'
 import { specTitles } from './spec-titles.js'
 import { PLATFORM_LABEL, PLATFORMS, type Platform, type RunnerError } from './types.js'
 import { LINEAGE_LABEL } from './upgrade-map.js'
@@ -256,7 +256,9 @@ function renderRetried(model: BriefModel): string[] {
 function renderSessions(model: BriefModel): string[] {
   if (!model.sessions.length) return []
   const attempts = model.sessions.reduce((n, group) => n + group.attempts.length, 0)
-  const out = ['<details>', `<summary>Sessions (${model.sessions.length} journeys · ${attempts} attempts)</summary>`, '', '| Lane | Platform | Journey | Attempts |', '| --- | --- | --- | --- |']
+  const minted = mintedIdentities(model.sessions)
+  const counts = [`${model.sessions.length} journeys`, `${attempts} attempts`, ...(minted > 0 ? [`${minted} test ${minted === 1 ? 'identity' : 'identities'} minted`] : [])]
+  const out = ['<details>', `<summary>Sessions (${counts.join(' · ')})</summary>`, '', '| Lane | Platform | Journey | Attempts |', '| --- | --- | --- | --- |']
   for (const group of model.sessions) {
     const journey = specTitles(group.file)?.describes[0] ?? group.file
     const cells = group.attempts.map((attempt, index) => {

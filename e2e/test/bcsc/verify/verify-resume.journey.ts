@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
+import { TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { unlockWithPin } from '../../../src/flows/auth.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
@@ -24,6 +24,7 @@ import {
   IDPhotoInformationScreen,
 } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /** The first-ID list row to select but never capture — the same slot the non-BCSC journey proves. */
 const INTERRUPTED_EVIDENCE_MATCH = 'BC Drivers Licence'
@@ -52,8 +53,8 @@ const INTERRUPTED_EVIDENCE_MATCH = 'BC Drivers Licence'
  * is what clears them for the evidence rows.
  */
 describe('Verify journey: resume routing', () => {
-  before(() => {
-    setTestUser(TestUsers.photo)
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo'))
   })
 
   it('onboards to the verify prompt', async () => {

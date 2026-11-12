@@ -1,4 +1,4 @@
-import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
+import { TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { relaunchApp, selectAccountLandingIfPresent, submitPin } from '../../../src/flows/auth.js'
 import { chooseAddAccount, leaveVerificationToHome, skipPromptAndStartFromHome } from '../../../src/flows/verify.js'
 import { auditScreen, reportA11ySummary } from '../../../src/helpers/a11y-audit.js'
@@ -40,6 +40,7 @@ import {
   ScanSerialScreen,
 } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 import { TestIds } from '../../../src/test-ids/registry.js'
 
 /**
@@ -64,8 +65,8 @@ import { TestIds } from '../../../src/test-ids/registry.js'
 const engine = new BaseScreen()
 
 describe('Accessibility journey: automated audits over the core screens', () => {
-  before(() => {
-    setTestUser(TestUsers.photo)
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo'))
   })
 
   it('audits the onboarding intro on cold start', async () => {

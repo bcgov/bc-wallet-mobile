@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
+import { TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { unlockWithPin } from '../../../src/flows/auth.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
@@ -21,7 +21,8 @@ import {
   EvidenceTypeListScreen,
   VerificationMethodSelectionScreen,
 } from '../../../src/screens/verify.js'
-import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { getNonPhotoTestUser, getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /** Engine handle for the one screen anchored on visible copy (EvidenceTypeList has no container testID). */
 const engine = new BaseScreen()
@@ -46,8 +47,8 @@ const OTHER_ID_OPTIONS_HEADING = 'Other ID options'
  * additional photo ID (pick → capture → typed number) → method selection → in-person → verified Home.
  */
 describe('Verified journey: non-photo card', () => {
-  before(() => {
-    setTestUser(TestUsers.nonPhoto)
+  before(async () => {
+    setTestUser(await arrangeTestUser('nonPhoto'))
   })
 
   it('onboards to the verify prompt', async () => {
@@ -87,7 +88,7 @@ describe('Verified journey: non-photo card', () => {
   })
 
   it('types the captured document number', async () => {
-    await submitEvidenceIdCollection(getTestUser().documentNumber)
+    await submitEvidenceIdCollection(getNonPhotoTestUser().documentNumber)
   })
 
   it('resumes to the verification method selection after the document', async () => {
