@@ -1,12 +1,10 @@
+import * as ServerStatusContext from '@/bcsc-theme/contexts/ServerStatusContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
 import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
-import { useStore } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { useNavigation } from '@react-navigation/native'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { Text } from 'react-native'
 import { BCSCBanner, BCSCBannerMessage } from './AppBanner'
 import { NotificationBannerContainer } from './NotificationBannerContainer'
 
@@ -43,20 +41,6 @@ const serverUnavailableBanner: BCSCBannerMessage = {
   type: 'info',
   dismissible: false,
   metadata: { contactLink: 'https://example.com/contact-us.html' },
-}
-
-const updateAvailableBanner: BCSCBannerMessage = {
-  id: BCSCBanner.APP_UPDATE_AVAILABLE,
-  title: 'Update available',
-  type: 'info',
-  dismissible: true,
-}
-
-const updateAvailableState = { bcsc: { bannerMessages: [updateAvailableBanner] } } as unknown as Partial<BCState>
-
-const StoredBannerIds = () => {
-  const [store] = useStore<BCState>()
-  return <Text testID="stored-banner-ids">{store.bcsc.bannerMessages.map((banner) => banner.id).join(',')}</Text>
 }
 
 describe('NotificationBannerContainer', () => {
@@ -156,21 +140,43 @@ describe('NotificationBannerContainer', () => {
     expect(useNavigation().navigate).not.toHaveBeenCalled()
   })
 
-  it('opens the app store and removes the banner when the update banner is pressed', () => {
+  it('opens the app store and hides the banner when the derived update banner is pressed', () => {
+    const serverStatusSpy = jest.spyOn(ServerStatusContext, 'useServerStatus').mockReturnValue({
+      isAvailable: true,
+      serverStatus: { minVersion: '100', supportedVersions: ['4.0.0', '4.1.0'] } as any,
+      isChecking: false,
+      hasChecked: true,
+      refresh: jest.fn(),
+    })
+
+    try {
+      const tree = render(
+        <BasicAppContext>
+          <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[]} />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(tree.getByText('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'))
+
+      expect(getBCSCAppStoreUrl).toHaveBeenCalled()
+      expect(openLink).toHaveBeenCalledWith('https://example.com/store')
+      expect(useNavigation().navigate).not.toHaveBeenCalled()
+      expect(tree.queryByText('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle')).toBeNull()
+    } finally {
+      serverStatusSpy.mockRestore()
+    }
+  })
+
+  it('ignores a stored update banner because useBanners owns it', () => {
     const tree = render(
-      <BasicAppContext initialStateOverride={updateAvailableState}>
-        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[updateAvailableBanner]} />
-        <StoredBannerIds />
+      <BasicAppContext>
+        <NotificationBannerContainer
+          onManageDevices={onManageDevices}
+          bannerMessages={[{ id: BCSCBanner.APP_UPDATE_AVAILABLE, title: 'Stored update', type: 'info' }]}
+        />
       </BasicAppContext>
     )
 
-    expect(tree.getByTestId('stored-banner-ids').props.children).toBe(BCSCBanner.APP_UPDATE_AVAILABLE)
-
-    fireEvent.press(tree.getByText('Update available'))
-
-    expect(getBCSCAppStoreUrl).toHaveBeenCalled()
-    expect(openLink).toHaveBeenCalledWith('https://example.com/store')
-    expect(useNavigation().navigate).not.toHaveBeenCalled()
-    expect(tree.getByTestId('stored-banner-ids').props.children).toBe('')
+    expect(tree.queryByText('Stored update')).toBeNull()
   })
 })
