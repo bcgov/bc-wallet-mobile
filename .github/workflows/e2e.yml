@@ -259,8 +259,8 @@ jobs:
           IDCHECK_USER: op://bcsc-mobile-app-cd/bcsc-ias-test-account/email
           IDCHECK_PASSWORD: op://bcsc-mobile-app-cd/bcsc-ias-test-account/credential
           IDCHECK_TOTP_SECRET: op://bcsc-mobile-app-cd/bcsc-ias-test-account/password
-          # The SIT client of the IAS E2E Test API (e2e/src/api/ias-test.ts): url = host, username = client id, credential = client secret
-          IAS_TEST_API_HOST: op://bcsc-mobile-app-cd/ias-test-api-sit/url
+          # The SIT client of the IAS E2E Test API (e2e/src/api/ias-test.ts): hostname = host, username = client id, credential = client secret
+          IAS_TEST_API_HOST: op://bcsc-mobile-app-cd/ias-test-api-sit/hostname
           IAS_TEST_API_CLIENT_ID: op://bcsc-mobile-app-cd/ias-test-api-sit/username
           IAS_TEST_API_CLIENT_SECRET: op://bcsc-mobile-app-cd/ias-test-api-sit/credential
 

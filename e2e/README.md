@@ -337,8 +337,8 @@ IAS's non-production test API (`https://<host>/test/idv/v1`) mints BC Services C
 
 | Variable | Description |
 | --- | --- |
-| `IAS_TEST_API_HOST` | The environment's host: `idsit.gov.bc.ca` (SIT) or `iddev.gov.bc.ca` (DEV). A URL works too; only its origin is used (the item's `url`) |
-| `IAS_TEST_API_CLIENT_ID` | The environment's client id (the item's `username`) |
+| `IAS_TEST_API_HOST` | The environment's host: `idsit.gov.bc.ca` (SIT) or `iddev.gov.bc.ca` (DEV). A URL works too; only its origin is used (the item's `hostname`) |
+| `IAS_TEST_API_CLIENT_ID` | The environment's client id (the item's `username`, which 1Password shows as "key name") |
 | `IAS_TEST_API_CLIENT_SECRET` | The client secret (the item's `credential`) |
 
 ```bash
