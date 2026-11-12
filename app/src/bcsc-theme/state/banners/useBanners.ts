@@ -20,7 +20,7 @@ export const useBanners = (): BCSCBannerMessage[] => {
   const updateBanner = useUpdateBanner()
 
   return useMemo(() => {
-    return [updateBanner].filter(Boolean) as BCSCBannerMessage[]
+    return [updateBanner].filter((banner) => banner !== null)
   }, [updateBanner])
 }
 
@@ -31,15 +31,16 @@ export const useBanners = (): BCSCBannerMessage[] => {
  */
 export const useUpdateBanner = (): BCSCBannerMessage | null => {
   const { t } = useTranslation()
-  const { serverStatus } = useServerStatus()
+  const { serverStatus, isChecking } = useServerStatus()
   const [dismissed, setDismissed] = useState(false)
 
   return useMemo(() => {
     if (dismissed) {
+      // note: purely ui state, not to be injected into the selector
       return null
     }
 
-    const showUpdateBanner = selectUpdateBannerVisible(serverStatus)
+    const showUpdateBanner = selectUpdateBannerVisible(serverStatus, isChecking)
 
     if (!showUpdateBanner) {
       return null
@@ -55,5 +56,5 @@ export const useUpdateBanner = (): BCSCBannerMessage | null => {
         void openLink(getBCSCAppStoreUrl())
       },
     }
-  }, [dismissed, serverStatus, t])
+  }, [dismissed, isChecking, serverStatus, t])
 }

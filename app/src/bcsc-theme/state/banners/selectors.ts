@@ -1,15 +1,20 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import { getVersion } from 'react-native-device-info'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { getUpdateBannerVisible } from './update-banner'
 
 /**
  * Determines whether the update banner should be visible based on the server status and app version.
  *
  * @param serverStatus - The server status response data.
+ * @param isChecking - A boolean indicating whether the server status is currently being checked.
+ * @param isDismissed - A boolean indicating whether the update banner has been dismissed by the user.
  * @returns - True if an update is available, false otherwise.
  */
-export const selectUpdateBannerVisible = (serverStatus: ServerStatusResponseData | null): boolean => {
-  if (!serverStatus) {
+export const selectUpdateBannerVisible = (
+  serverStatus: ServerStatusResponseData | null,
+  isChecking: boolean
+): boolean => {
+  if (!serverStatus || isChecking) {
     return false
   }
 
@@ -19,6 +24,8 @@ export const selectUpdateBannerVisible = (serverStatus: ServerStatusResponseData
 
   return getUpdateBannerVisible({
     appVersion: getVersion(),
+    appBuild: Number(getBuildNumber()),
+    minBuild: Number(serverStatus.minVersion),
     supportedVersions: serverStatus.supportedVersions,
   })
 }
