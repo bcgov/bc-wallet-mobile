@@ -16,7 +16,7 @@ export interface BCSCBannerMessage {
   title: string | undefined
   description?: string
   type: BannerType
-  dismissible?: boolean
+  dismissible?: boolean // TODO (MD): Remove this once every banner is derived by useBanners
   metadata?: Record<string, unknown>
   onPress?: (id: string) => void // TODO (MD): Remove the id from the params
 }

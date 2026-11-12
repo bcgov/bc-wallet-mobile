@@ -1,9 +1,15 @@
 import { BCSCBanner, BCSCBannerMessage } from '@/bcsc-theme/components/AppBanner'
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { selectUpdateBannerVisible } from './selectors'
+
+/**
+ * TODO (MD): Remove this once every banner is derived by useBanners.
+ * Banner ids derived by useBanners, which take precedence over the same ids in the store
+ * */
+export const MIGRATED_BANNER_IDS: BCSCBanner[] = [BCSCBanner.APP_UPDATE_AVAILABLE]
 
 /**
  * Returns an array of banner messages to be displayed in the app.
@@ -26,8 +32,13 @@ export const useBanners = (): BCSCBannerMessage[] => {
 export const useUpdateBanner = (): BCSCBannerMessage | null => {
   const { t } = useTranslation()
   const { serverStatus } = useServerStatus()
+  const [dismissed, setDismissed] = useState(false)
 
   return useMemo(() => {
+    if (dismissed) {
+      return null
+    }
+
     const showUpdateBanner = selectUpdateBannerVisible(serverStatus)
 
     if (!showUpdateBanner) {
@@ -40,8 +51,9 @@ export const useUpdateBanner = (): BCSCBannerMessage | null => {
       type: 'info',
       dismissible: true,
       onPress: () => {
+        setDismissed(true)
         void openLink(getBCSCAppStoreUrl())
       },
     }
-  }, [serverStatus, t])
+  }, [dismissed, serverStatus, t])
 }

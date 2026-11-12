@@ -1,10 +1,11 @@
 import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { MIGRATED_BANNER_IDS, useBanners } from '@/bcsc-theme/state/banners/useBanners'
 import { BCDispatchAction, BCState } from '@/store'
-import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
+import { openLink } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { View } from 'react-native'
 import { setMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
@@ -29,10 +30,20 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
   const navigation = useNavigation<StackNavigationProp<ServiceNoticeParamList>>()
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
+  const derivedBanners = useBanners()
+
+  // TODO (MD): Remove the store banners once every banner is derived by useBanners
+  const banners = useMemo(
+    () => [...derivedBanners, ...bannerMessages.filter((banner) => !MIGRATED_BANNER_IDS.includes(banner.id))],
+    [derivedBanners, bannerMessages]
+  )
 
   const handleBannerPress = async (banner: BCSCBannerMessage): Promise<void> => {
     const bannerId = banner.id
-    // Handle other banner types as needed
+    // Derived banners own their press behaviour
+    if (banner.onPress) {
+      return banner.onPress(bannerId)
+    }
 
     if (banner.id === BCSCBanner.DEVICE_LIMIT_EXCEEDED) {
       return setDevicesModalVisible(true)
@@ -44,10 +55,6 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
 
     if (banner.id === BCSCBanner.IAS_SERVER_UNAVAILABLE && typeof banner.metadata?.contactLink === 'string') {
       void openLink(banner.metadata.contactLink)
-    }
-
-    if (banner.id === BCSCBanner.APP_UPDATE_AVAILABLE) {
-      void openLink(getBCSCAppStoreUrl())
     }
 
     const message = store.bcsc.bannerMessages.find((banner) => banner.id === bannerId)
@@ -86,7 +93,7 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
       </SafeAreaModal>
 
       <AppBanner
-        messages={bannerMessages.map((banner) => ({
+        messages={banners.map((banner) => ({
           id: banner.id,
           title: banner.title,
           description: banner.description,
