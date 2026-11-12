@@ -41,14 +41,12 @@ async function fetchSpec(host: string): Promise<string> {
   return response.text()
 }
 
-async function compare(host: string, committed: string): Promise<void> {
-  let published: string
-  try {
-    published = await fetchSpec(host)
-  } catch (error) {
-    warn(`${host}: could not read the published spec (${describeError(error)})`)
+function compare(host: string, committed: string, fetched: PromiseSettledResult<string>): void {
+  if (fetched.status === 'rejected') {
+    warn(`${host}: could not read the published spec (${describeError(fetched.reason)})`)
     return
   }
+  const published = fetched.value
 
   const [ours, theirs] = [lines(committed), lines(published)]
   if (ours.join('\n') === theirs.join('\n')) {
@@ -73,6 +71,8 @@ async function compare(host: string, committed: string): Promise<void> {
 }
 
 const committed = readFileSync(COMMITTED_SPEC, 'utf8')
-for (const host of HOSTS) {
-  await compare(host, committed)
+// Every host is read at once; the report keeps the order of HOSTS.
+const fetches = await Promise.allSettled(HOSTS.map((host) => fetchSpec(host)))
+for (const [index, host] of HOSTS.entries()) {
+  compare(host, committed, fetches[index])
 }
