@@ -2,9 +2,9 @@
  * Preflight for the IAS E2E Test API client (src/api/ias-test.ts): `yarn test-api:check`.
  *
  * Mints a token, checks it holds both scopes, then sends a counter approval for a usercode that does
- * not exist, which creates nothing, to learn what the host's build serves. Locally it proves the
- * IAS_TEST_API_* values in e2e/.env.e2e; in CI (e2e.yml, when approvals go through the API) it fails
- * by name before any Sauce session is paid for. Exits non-zero unless the decision route is live.
+ * not exist, which creates nothing, to learn what the host's build serves. It proves the
+ * IAS_TEST_API_* values in e2e/.env.e2e and names a host whose build lacks the decision route.
+ * Exits non-zero unless that route is live.
  */
 import dotenv from 'dotenv'
 import { dirname, resolve } from 'node:path'
