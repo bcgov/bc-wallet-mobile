@@ -100,7 +100,7 @@ export type FailureSteps<TStep extends string> = {
   /** Runs one step of the flow, rethrowing any failure labeled with that step */
   run: <T>(step: TStep, work: () => Promise<T>, options?: StepOptions) => Promise<T>
   /**
-   * Labels an error as a failure at a step`
+   * Labels an error as a failure at a step
    */
   fail: (step: TStep, error: unknown, options?: StepOptions) => AppError
 }

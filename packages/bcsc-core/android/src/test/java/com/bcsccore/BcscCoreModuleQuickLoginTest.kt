@@ -23,8 +23,11 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.security.KeyPairGenerator
+import java.security.interfaces.RSAPublicKey
+import java.util.Base64
 
-/** Quick login reports key and signing failures at separate sites, matching iOS. */
+/** Quick login reports each failing stage at its own site, in the same order as iOS. */
 @RunWith(RobolectricTestRunner::class)
 class BcscCoreModuleQuickLoginTest {
     private lateinit var keyPairSource: BcscKeyPairSource
@@ -47,26 +50,86 @@ class BcscCoreModuleQuickLoginTest {
         unmockkStatic(Arguments::class)
     }
 
-    private fun createAndCaptureRejection(
-        code: String,
-        message: String,
-    ): Pair<Throwable, WritableMap> {
-        val jwk = JavaOnlyMap.of("kty", "RSA", "n", "AQAB", "e", "AQAB")
-        val error = slot<Throwable>()
-        val userInfo = slot<WritableMap>()
+    // A real RSA key: the JWK is converted before signing, and KeyFactory rejects toy moduli
+    private fun validJwk(): JavaOnlyMap {
+        val publicKey =
+            KeyPairGenerator
+                .getInstance("RSA")
+                .apply { initialize(2048) }
+                .generateKeyPair()
+                .public as RSAPublicKey
+        val encoder = Base64.getUrlEncoder().withoutPadding()
+        return JavaOnlyMap.of(
+            "kty",
+            "RSA",
+            "n",
+            encoder.encodeToString(publicKey.modulus.toByteArray()),
+            "e",
+            encoder.encodeToString(publicKey.publicExponent.toByteArray()),
+        )
+    }
+
+    private fun createQuickLoginJWT(
+        jwk: JavaOnlyMap = validJwk(),
+        fcmDeviceToken: String = "fcm",
+    ) {
         module.createQuickLoginJWT(
             "access-token",
             "client",
             "https://idsit.gov.bc.ca/device/",
             "client-ref",
             jwk,
-            "fcm",
+            fcmDeviceToken,
             null,
             promise,
         )
+    }
+
+    private fun createAndCaptureRejection(
+        code: String,
+        message: String,
+    ): Pair<Throwable, WritableMap> {
+        val error = slot<Throwable>()
+        val userInfo = slot<WritableMap>()
+        createQuickLoginJWT()
         verify(exactly = 1) { promise.reject(code, message, capture(error), capture(userInfo)) }
         verify(exactly = 0) { promise.resolve(any()) }
         return error.captured to userInfo.captured
+    }
+
+    private fun captureRejectionWithoutError(code: String): WritableMap {
+        val userInfo = slot<WritableMap>()
+        verify(exactly = 1) { promise.reject(code, any<String>(), isNull<Throwable>(), capture(userInfo)) }
+        verify(exactly = 0) { promise.resolve(any()) }
+        return userInfo.captured
+    }
+
+    @Test
+    fun `rejects an empty fcmDeviceToken at validate, like iOS`() {
+        createQuickLoginJWT(fcmDeviceToken = "")
+
+        val userInfo = captureRejectionWithoutError("E_INVALID_PARAMETERS")
+        assertEquals("createQuickLoginJWT.validate", userInfo.getString("site"))
+        verify(exactly = 0) { keyPairSource.getCurrentBcscKeyPair() }
+    }
+
+    @Test
+    fun `reports an unusable JWK at parse_jwk before touching the keystore`() {
+        every { keyPairSource.getCurrentBcscKeyPair() } throws BcscException(AlertKey.GENERAL, "unavailable")
+        createQuickLoginJWT(jwk = JavaOnlyMap.of("kty", "EC", "n", "AQAB", "e", "AQAB"))
+
+        val error = slot<Throwable>()
+        val userInfo = slot<WritableMap>()
+        verify(exactly = 1) {
+            promise.reject(
+                "E_INVALID_JWK",
+                "Failed to convert JWK to RSA public key.",
+                capture(error),
+                capture(userInfo),
+            )
+        }
+        assertEquals("createQuickLoginJWT.parse_jwk", userInfo.captured.getString("site"))
+        verify(exactly = 0) { keyPairSource.getCurrentBcscKeyPair() }
     }
 
     @Test

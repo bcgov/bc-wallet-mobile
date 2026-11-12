@@ -135,35 +135,22 @@ class BcscCore: NSObject {
     return serializedJWT
   }
 
-  /// Diagnostics list the newest N keys; keyCount still reports the true total.
-  private static let keychainDiagnosticsMaxKeys = SigningDiagnostics.maxKeys
-
   /**
    * Builds an NSError whose userInfo carries keychain diagnostics across the RN bridge.
    * React Native serializes the NSError's userInfo onto the rejected JS error, so problem
    * reports can show which lookup failed and what the keychain contained at the time.
    *
-   * userInfo values must stay bridge-serializable (strings, numbers, arrays thereof),
-   * and the per-key arrays are capped so the payload size stays predictable.
    */
   private func keychainDiagnosticsError(
     site: String, underlying: Error, keys: [PrivateKeyInfo]
   ) -> NSError {
-    let iso8601 = ISO8601DateFormatter()
-    let newestFirst = keys.sorted(by: { $0.created > $1.created })
-      .prefix(BcscCore.keychainDiagnosticsMaxKeys)
-    return NSError(
-      domain: "BcscCore",
-      code: 0,
-      userInfo: [
-        "site": site,
-        // domain:code only, like rejectWithDiagnostics: localizedDescription can contain paths, and key tags
-        // are identifiers. This userInfo reaches remote logs and problem reports via AppError.summarizeCause
-        "underlying": "\((underlying as NSError).domain):\((underlying as NSError).code)",
-        "keyCount": keys.count,
-        "keyCreated": newestFirst.map { iso8601.string(from: $0.created) },
-      ]
-    )
+    var userInfo = SigningDiagnostics.errorDiagnostics(underlying)
+    userInfo["site"] = site
+    // domain:code only: localizedDescription can contain paths. This reaches remote logs and problem reports
+    userInfo["detail"] = "\((underlying as NSError).domain):\((underlying as NSError).code)"
+    userInfo["keyCount"] = keys.count
+    userInfo["keyCreated"] = SigningDiagnostics.keyCreatedDates(keys)
+    return NSError(domain: "BcscCore", code: 0, userInfo: userInfo)
   }
 
   /// Rejects with diagnostics in userInfo, which JS sees as `error.userInfo` and adds to problem reports.
@@ -261,14 +248,10 @@ class BcscCore: NSObject {
       // JWTSigning only throws DiagnosticRejection; kept so a future change still rejects.
       rejectWithDiagnostics(reject, DiagnosticRejection(
         code: "E_JWT_SIGN_FAILED", message: "Failed to sign or serialize the JWT.",
-        site: "\(method).sign", error: error, diagnostics: signingErrorDiagnostics(error)
+        site: "\(method).sign", error: error, diagnostics: SigningDiagnostics.errorDiagnostics(error)
       ))
     }
     return nil
-  }
-
-  private func signingErrorDiagnostics(_ error: Error) -> [String: Any] {
-    SigningDiagnostics.errorDiagnostics(error)
   }
 
   /// Deletes every Keychain item belonging to this app (all Sec item classes). Used by the
@@ -1761,7 +1744,7 @@ class BcscCore: NSObject {
     } catch {
       rejectWithDiagnostics(reject, DiagnosticRejection(
         code: "E_INVALID_JWK", message: "Unusable JWK for quick login encryption.",
-        site: "\(method).parse_jwk", error: error, diagnostics: signingErrorDiagnostics(error)
+        site: "\(method).parse_jwk", error: error, diagnostics: SigningDiagnostics.errorDiagnostics(error)
       ))
       return
     }
@@ -1798,7 +1781,7 @@ class BcscCore: NSObject {
     } catch {
       rejectWithDiagnostics(reject, DiagnosticRejection(
         code: "E_JWT_ENCRYPTION_ERROR", message: "Failed to encrypt JWT.",
-        site: "\(method).encrypt", error: error, diagnostics: signingErrorDiagnostics(error)
+        site: "\(method).encrypt", error: error, diagnostics: SigningDiagnostics.errorDiagnostics(error)
       ))
     }
   }

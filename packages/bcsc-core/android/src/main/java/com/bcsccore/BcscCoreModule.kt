@@ -2154,7 +2154,9 @@ class BcscCoreModule internal constructor(
         val method = "createQuickLoginJWT"
         try {
             // Validate required parameters
-            if (accessToken.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || clientRefId.isEmpty()) {
+            if (accessToken.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || clientRefId.isEmpty() ||
+                fcmDeviceToken.isEmpty()
+            ) {
                 rejectWithDiagnostics(
                     promise,
                     code = "E_INVALID_PARAMETERS",
@@ -2186,18 +2188,17 @@ class BcscCoreModule internal constructor(
                     "clientRefId: $clientRefId",
             )
 
-            // Load the key once and sign with it, so a key failure is reported as get_key, not sign (matches iOS signJWT)
-            val keyPair =
+            // Build the encryption key before any keystore work, so a bad JWK fails at parse_jwk (matches iOS)
+            val publicKey =
                 try {
-                    keyPairSource.getCurrentBcscKeyPair()
+                    convertJWKToRSAPublicKey(key)
                 } catch (e: Exception) {
                     rejectWithDiagnostics(
                         promise,
-                        code = "E_KEYPAIR_RETRIEVAL_FAILED",
-                        message = "Failed to retrieve the signing key pair.",
-                        site = "$method.get_key",
+                        code = "E_INVALID_JWK",
+                        message = "Failed to convert JWK to RSA public key.",
+                        site = "$method.parse_jwk",
                         error = e,
-                        diagnostics = signingErrorDiagnostics(e),
                     )
                     return
                 }
@@ -2224,6 +2225,22 @@ class BcscCoreModule internal constructor(
                     return
                 }
 
+            // Load the key once and sign with it, so a key failure is reported as get_key, not sign (matches iOS signJWT)
+            val keyPair =
+                try {
+                    keyPairSource.getCurrentBcscKeyPair()
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_KEYPAIR_RETRIEVAL_FAILED",
+                        message = "Failed to retrieve the signing key pair.",
+                        site = "$method.get_key",
+                        error = e,
+                        diagnostics = signingErrorDiagnostics(e),
+                    )
+                    return
+                }
+
             val signedJWT =
                 try {
                     keyPairSource.signAndSerializeClaimsSet(claimsSet, keyPair)
@@ -2235,21 +2252,6 @@ class BcscCoreModule internal constructor(
                         site = "$method.sign",
                         error = e,
                         diagnostics = signingErrorDiagnostics(e),
-                    )
-                    return
-                }
-
-            // Convert JWK ReadableMap to RSA public key for encryption (matching iOS)
-            val publicKey =
-                try {
-                    convertJWKToRSAPublicKey(key)
-                } catch (e: Exception) {
-                    rejectWithDiagnostics(
-                        promise,
-                        code = "E_INVALID_JWK",
-                        message = "Failed to convert JWK to RSA public key.",
-                        site = "$method.parse_jwk",
-                        error = e,
                     )
                     return
                 }

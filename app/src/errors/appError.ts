@@ -21,6 +21,12 @@ export type ErrorIdentity = {
   statusCode: number
 }
 
+// How many wrapped AppErrors to follow when summarizing a cause chain
+const MAX_CAUSE_DEPTH = 3
+
+// How many AppErrors to follow when merging context along a cause chain
+const MAX_CONTEXT_CHAIN_DEPTH = 10
+
 /**
  * Reduce a `cause` to a small, safe-to-serialize summary.
  *
@@ -30,12 +36,6 @@ export type ErrorIdentity = {
  * memory, so toJSON() keeps only lightweight identifying fields and drops the nested
  * chain/body. The live `cause` property is left untouched for runtime logic.
  */
-// How many wrapped AppErrors to follow when summarizing a cause chain
-const MAX_CAUSE_DEPTH = 3
-
-// How many AppErrors to follow when merging context along a cause chain
-const MAX_CONTEXT_CHAIN_DEPTH = 10
-
 const summarizeCause = (cause: unknown, depth = 0): unknown => {
   if (!(cause instanceof Error)) {
     return cause
