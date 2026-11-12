@@ -1171,7 +1171,7 @@ class BcscCoreModule internal constructor(
 
     /**
      * Returns why getAccount resolves null by running the same resolution for the native-compatible store.
-     * `legacyStatus` is a fallback for the flat-file. 
+     * `legacyStatus` is a fallback for the flat-file.
      * Never rejects.
      */
     @ReactMethod
