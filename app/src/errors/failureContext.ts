@@ -100,17 +100,17 @@ export type FailureSteps<TStep extends string> = {
   /** Runs one step of the flow, rethrowing any failure labeled with that step */
   run: <T>(step: TStep, work: () => Promise<T>, options?: StepOptions) => Promise<T>
   /**
-   * Labels an error as a failure at a step
+   * Labels an error as a failure at a step`
    */
   fail: (step: TStep, error: unknown, options?: StepOptions) => AppError
 }
 
 /**
- * Tracks the steps of a multi-step work flow so any failure tracks where it happend and how long it's been running for.
+ * Tracks the steps of a multi-step work flow so any failure tracks where it happened and how long it's been running for.
  *
  * A failing step:
  * 1. Rethrows an error already labeled with a step
- * 2. Lables a handled AppError or any AppError when `keepAppError` is set
+ * 2. Labels a handled AppError or any AppError when `keepAppError` is set
  * 3. Otherwise wraps the error with a step
  *
  * @param flow - The name of the flow. ie: quick_login
