@@ -59,6 +59,44 @@ const findByTechnicalMessage = <T,>(
   return matchedEvent ? map[matchedEvent] : undefined
 }
 
+const isCardAdd = (serial?: string, birthdate?: Date) => Boolean(serial && birthdate)
+
+/**
+ * Card add's share of the rate limit: blocks a request while the server's wait lasts and records a new one.
+ * A block lands on the same screens as the 503 policy; with `skipErrorHandling` it rejects untouched.
+ * Only requests with a serial and birthdate count: the QR transfer calls the same endpoint with neither.
+ */
+const useCardAddRateLimit = (navigation: StackNavigationProp<BCSCVerifyStackParams>) => {
+  const { getWait, recordRateLimit } = useRateLimit()
+
+  const assertCardAddAllowed = useCallback(
+    (serial?: string, birthdate?: Date, options?: AuthorizationServiceCallOptions) => {
+      if (!isCardAdd(serial, birthdate) || getWait(RateLimitedAction.CardAdd).type !== RateLimitWaitType.Waiting) {
+        return
+      }
+
+      const blocked = AppError.fromErrorDefinition(ErrorRegistry.RETRY_LATER, { track: false })
+      if (!options?.skipErrorHandling) {
+        navigation.dispatch(birthdateLockoutResetAction())
+        blocked.handled = true
+      }
+      throw blocked
+    },
+    [getWait, navigation]
+  )
+
+  const recordCardAddFailure = useCallback(
+    (serial: string | undefined, birthdate: Date | undefined, error: unknown) => {
+      if (isCardAdd(serial, birthdate)) {
+        recordRateLimit(RateLimitedAction.CardAdd, error)
+      }
+    },
+    [recordRateLimit]
+  )
+
+  return { assertCardAddAllowed, recordCardAddFailure }
+}
+
 /**
  * Service layer hook for the device authorization (device/code) api.
  * Business logic related to device authorization errors and error-screen navigation should be
@@ -70,7 +108,7 @@ export const useAuthorizationService = () => {
   const { authorization: authorizationApi } = useApi()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const alerts = useAlerts(navigation)
-  const { getWait, recordRateLimit } = useRateLimit()
+  const { assertCardAddAllowed, recordCardAddFailure } = useCardAddRateLimit(navigation)
 
   /**
    * Emits a global alert for the error's appEvent, if one is registered.
@@ -150,7 +188,6 @@ export const useAuthorizationService = () => {
    * @param serial - BCSC serial number
    * @param birthdate - Birth date
    * @param options - Set `skipErrorHandling` to rethrow errors untouched instead of navigating/alerting
-   * @throws A handled RETRY_LATER error, without sending a request, while a card add rate limit is in effect
    */
   const authorizeDevice = useCallback(
     async (
@@ -158,24 +195,12 @@ export const useAuthorizationService = () => {
       birthdate?: Date,
       options?: AuthorizationServiceCallOptions
     ): Promise<DeviceAuthorizationResponse> => {
-      // The same endpoint also serves the QR transfer call with no card, which this limit must not touch
-      const isCardAdd = Boolean(serial && birthdate)
-
-      if (isCardAdd && getWait(RateLimitedAction.CardAdd).type === RateLimitWaitType.Waiting) {
-        const blocked = AppError.fromErrorDefinition(ErrorRegistry.RETRY_LATER, { track: false })
-        if (!options?.skipErrorHandling) {
-          navigation.dispatch(birthdateLockoutResetAction())
-          blocked.handled = true
-        }
-        throw blocked
-      }
+      assertCardAddAllowed(serial, birthdate, options)
 
       try {
         return await authorizationApi.authorizeDevice(serial, birthdate)
       } catch (error) {
-        if (isCardAdd) {
-          recordRateLimit(RateLimitedAction.CardAdd, error)
-        }
+        recordCardAddFailure(serial, birthdate, error)
         if (options?.skipErrorHandling) {
           throw error
         }
@@ -183,7 +208,7 @@ export const useAuthorizationService = () => {
         throw error
       }
     },
-    [authorizationApi, handleAuthorizationError, navigation, getWait, recordRateLimit]
+    [authorizationApi, handleAuthorizationError, assertCardAddAllowed, recordCardAddFailure]
   )
 
   /**
