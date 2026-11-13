@@ -1,4 +1,10 @@
-import { formatCalendarDate, formatExpiryBadge, formatTimestamp, getProofRequestExpiry, isAccountExpired } from './datetime-utils'
+import {
+  formatCalendarDate,
+  formatExpiryBadge,
+  formatTimestamp,
+  getProofRequestExpiry,
+  isAccountExpired,
+} from './datetime-utils'
 
 const NOW = new Date('2026-06-04T12:00:00.000Z')
 const minutes = (n: number) => n * 60_000
