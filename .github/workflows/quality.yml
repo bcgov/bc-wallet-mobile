@@ -160,7 +160,7 @@ jobs:
         working-directory: e2e
         run: yarn typecheck
 
-      # E2E helper contracts (IDCheck circuit breaker and live-call exits), without devices or secrets.
+      # E2E helper contracts (IDCheck circuit breaker, live-call exits, the test-API client), without devices or secrets.
       - name: Unit tests
         working-directory: e2e
         run: yarn test:unit

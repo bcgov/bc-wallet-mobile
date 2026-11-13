@@ -25,9 +25,10 @@
 #                  prev_version.
 #
 # All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
-# SAUCE_ACCESS_KEY and the IDCHECK_* sign-in (user, password, TOTP secret) are all
+# SAUCE_ACCESS_KEY, the IDCHECK_* sign-in (user, password, TOTP secret) and the
+# IAS_TEST_API_* client (host, client id, client secret of the SIT test API) are all
 # loaded from the bcsc-mobile-app-cd 1Password vault unconditionally, even for
-# suites (smoke, onboarding, auth) that don't use the IDCHECK_* values.
+# suites (smoke, onboarding, auth) that don't use them.
 #
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
@@ -109,7 +110,7 @@ on:
         required: true
         description: >
           1Password service account token. This job loads SAUCE_USERNAME,
-          SAUCE_ACCESS_KEY and the IDCHECK_* sign-in from the
+          SAUCE_ACCESS_KEY, the IDCHECK_* sign-in and the IAS_TEST_API_* client from the
           bcsc-mobile-app-cd vault itself (in addition to the traction issuer
           credentials it already loaded — see e2e/issuer/README.md), so
           callers only need to pass this one bootstrap secret through. The
@@ -247,7 +248,7 @@ jobs:
 
       # Outputs (not export-env) keep these values scoped to only the
       # step below that references them.
-      - name: Load SauceLabs and IDCheck secrets from 1Password
+      - name: Load SauceLabs, IDCheck and test-API secrets from 1Password
         id: op_e2e
         uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         env:
@@ -258,6 +259,10 @@ jobs:
           IDCHECK_USER: op://bcsc-mobile-app-cd/bcsc-ias-test-account/email
           IDCHECK_PASSWORD: op://bcsc-mobile-app-cd/bcsc-ias-test-account/credential
           IDCHECK_TOTP_SECRET: op://bcsc-mobile-app-cd/bcsc-ias-test-account/password
+          # The SIT client of the IAS E2E Test API (e2e/src/api/ias-test.ts): hostname = host, username = client id, credential = client secret
+          IAS_TEST_API_HOST: op://bcsc-mobile-app-cd/ias-test-api-sit/hostname
+          IAS_TEST_API_CLIENT_ID: op://bcsc-mobile-app-cd/ias-test-api-sit/username
+          IAS_TEST_API_CLIENT_SECRET: op://bcsc-mobile-app-cd/ias-test-api-sit/credential
 
       - name: Run WDIO tests
         working-directory: e2e
@@ -267,6 +272,9 @@ jobs:
           IDCHECK_USER: ${{ steps.op_e2e.outputs.IDCHECK_USER }}
           IDCHECK_PASSWORD: ${{ steps.op_e2e.outputs.IDCHECK_PASSWORD }}
           IDCHECK_TOTP_SECRET: ${{ steps.op_e2e.outputs.IDCHECK_TOTP_SECRET }}
+          IAS_TEST_API_HOST: ${{ steps.op_e2e.outputs.IAS_TEST_API_HOST }}
+          IAS_TEST_API_CLIENT_ID: ${{ steps.op_e2e.outputs.IAS_TEST_API_CLIENT_ID }}
+          IAS_TEST_API_CLIENT_SECRET: ${{ steps.op_e2e.outputs.IAS_TEST_API_CLIENT_SECRET }}
           # Persistent-profile + circuit-breaker state; runner.temp is per-job and writable (see idcheck-session.mjs).
           # No cross-run actions/cache of this dir: matrix jobs are separate ephemeral runners, and caching it
           # would persist live Entra session cookies in the repo-scoped cache. One cold sign-in per job is fine.

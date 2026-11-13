@@ -8,6 +8,9 @@ name: Verify Allowlist Connectivity
 # (e2e/src/helpers/pairing-code.ts) and reports TCP/TLS handshake times, so
 # that when the nightly's mint reports UND_ERR_CONNECT_TIMEOUT a stalled
 # handshake can be told from a dropped SYN, from the runner's own egress.
+#
+# The IAS E2E Test API (e2e/src/api/ias-test.ts) is probed on both hosts too.
+# It has no allowlist: unauthenticated, its token and base endpoints answer 401.
 
 on:
   workflow_dispatch:
@@ -102,6 +105,11 @@ jobs:
             "idsit /demo/rp1/login|idsit.gov.bc.ca|/demo/rp1/login"
             "idsit /login/saml2|idsit.gov.bc.ca|/login/saml2"
             "support.idsit|support.idsit.gov.bc.ca|/"
+            # the IAS E2E Test API: token endpoint and base path; a bare GET answers 401, which is the pass
+            "iddev /oauth2/token|iddev.gov.bc.ca|/oauth2/token"
+            "iddev /test/idv/v1/accounts|iddev.gov.bc.ca|/test/idv/v1/accounts"
+            "idsit /oauth2/token|idsit.gov.bc.ca|/oauth2/token"
+            "idsit /test/idv/v1/accounts|idsit.gov.bc.ca|/test/idv/v1/accounts"
             # the IDcheck sign-in hops (BC Gov SSO, then Entra ID) — public, but the approval depends on them
             "sso dev.loginproxy|dev.loginproxy.gov.bc.ca|/auth/realms/standard/.well-known/openid-configuration"
             "entra login.microsoftonline|login.microsoftonline.com|/6fdb5200-3d0d-4a8a-b036-d3685e359adc/v2.0/.well-known/openid-configuration"
