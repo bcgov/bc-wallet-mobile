@@ -13,11 +13,24 @@ import { useAuthorizationService } from './useAuthorizationService'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 
+// Shared by the service's own alerts and the policy context, so any alert either one raises is observed
+const mockAnyAlert = jest.fn()
+jest.mock('@/hooks/useAlerts', () => ({
+  useAlerts: () => new Proxy({}, { get: () => mockAnyAlert }),
+}))
+
+// Keys with their interpolated minutes, so the screen text proves the stored time
+jest.mock('react-i18next', () => ({
+  ...jest.requireActual('react-i18next'),
+  useTranslation: () => ({
+    t: (key: string, options?: { minutes?: number }) => (options ? `${key}:${options.minutes}` : key),
+  }),
+}))
+
 // Real store, rate-limit hook, service and lockout screen; only the API call and navigation are faked
 describe('card add rate limit (connected)', () => {
   const endpoint = '/device/code'
   const mockAuthorizeDevice = jest.fn()
-  const globalAlert = jest.fn()
   const policyDispatch = jest.fn()
   let service: ReturnType<typeof useAuthorizationService>
 
@@ -46,12 +59,14 @@ describe('card add rate limit (connected)', () => {
       apiEndpoints: { deviceAuthorization: endpoint },
       navigation: { dispatch: policyDispatch },
       logger: { info: jest.fn(), warn: jest.fn() },
-      alerts: new Proxy({}, { get: () => globalAlert }),
+      alerts: new Proxy({}, { get: () => mockAnyAlert }),
       getResumeRoute: jest.fn(),
     }
     const policy = ClientErrorHandlingPolicies.find((candidate) => candidate.matches(error as never, context as never))
-    policy?.handle(error as never, context as never)
-    error.handled = true
+    if (policy) {
+      policy.handle(error as never, context as never)
+      error.handled = true
+    }
   }
 
   beforeEach(() => {
@@ -79,9 +94,9 @@ describe('card add rate limit (connected)', () => {
       await service.authorizeDevice('12345', new Date('1990-01-01')).catch(() => undefined)
     })
 
-    expect(message()).toBe('BCSC.BirthdateLockout.WaitMinutes')
+    expect(message()).toBe('BCSC.BirthdateLockout.WaitMinutes:10')
     expect(policyDispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'RESET' }))
-    expect(globalAlert).not.toHaveBeenCalled()
+    expect(mockAnyAlert).not.toHaveBeenCalled()
 
     // The next attempt is blocked locally: the API is not called again
     await act(async () => {

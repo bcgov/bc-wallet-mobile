@@ -125,7 +125,7 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     expect(storeValueForKeySpy).not.toHaveBeenCalled()
   })
 
-  it('loads a persisted rate-limit wait, and an older blob without the field', async () => {
+  it('does not strip a persisted rateLimitRetryAt on load, and loads an older blob without it', async () => {
     const retryAt = { cardAdd: '2026-01-01T00:10:00.000Z' }
     mockStoredValues[BCLocalStorageKeys.BCSC] = { appVersion: '1.0.0', installId: 'id', rateLimitRetryAt: retryAt }
 

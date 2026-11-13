@@ -72,6 +72,31 @@ describe('useRateLimitWait (connected)', () => {
     expect(hook.result.current.wait).toEqual({ type: RateLimitWaitType.None })
   })
 
+  it('computes a wait recorded after the clock moved on from the fresh clock, not the stale one', () => {
+    const { hook, record } = setup()
+    expect(hook.result.current.wait).toEqual({ type: RateLimitWaitType.None })
+
+    // The hook last read the clock at mount; move it without running timers
+    jest.setSystemTime(new Date(START.getTime() + 30 * 60_000))
+    record(new Date(START.getTime() + 33 * 60_000).toISOString())
+
+    expect(hook.result.current.wait).toMatchObject({ type: RateLimitWaitType.Waiting, minutes: 3 })
+  })
+
+  it('ends a short wait recorded on a stale clock at its retry time, not the next minute tick', () => {
+    const { hook, record } = setup()
+
+    jest.setSystemTime(new Date(START.getTime() + 30 * 60_000))
+    record(new Date(START.getTime() + 30 * 60_000 + 20_000).toISOString())
+    expect(hook.result.current.wait).toMatchObject({ type: RateLimitWaitType.Waiting })
+
+    act(() => {
+      jest.advanceTimersByTime(20_000)
+    })
+
+    expect(hook.result.current.wait).toEqual({ type: RateLimitWaitType.None })
+  })
+
   it('re-derives on app foreground after the time has passed', () => {
     let onChange: (state: string) => void = () => {}
     jest.spyOn(AppState, 'addEventListener').mockImplementation((_event, listener) => {

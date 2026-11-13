@@ -132,6 +132,21 @@ describe('useAuthorizationService', () => {
         expect(mockRecordRateLimit).not.toHaveBeenCalled()
       })
 
+      it.each([
+        ['no arguments (QR transfer)', [undefined, undefined]],
+        ['a serial without a birthdate', ['12345', undefined]],
+      ])('does not record a rate-limit failure for %s', async (_label, args) => {
+        const error = buildError('rate limited')
+        mockAuthorizeDevice.mockRejectedValue(error)
+        const { result } = renderHook(() => useAuthorizationService())
+
+        await expect(
+          result.current.authorizeDevice(...(args as [string?, Date?]), { skipErrorHandling: true })
+        ).rejects.toThrow(error)
+
+        expect(mockRecordRateLimit).not.toHaveBeenCalled()
+      })
+
       it('records a failure from a card add on both the normal and skipErrorHandling paths', async () => {
         const error = buildError('too many attempts')
         mockAuthorizeDevice.mockRejectedValue(error)
