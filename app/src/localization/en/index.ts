@@ -1219,8 +1219,8 @@ const translation = {
     "BirthdateLockout": {
       "Heading": "Sorry, you've tried too many times",
       "Message": "Please try again later.",
-      "WaitMinutes": "Try again in about {{minutes}} minutes.",
-      "WaitOneMinute": "Try again in about 1 minute.",
+      "WaitMinutes": "Try again in {{minutes}} minutes.",
+      "WaitOneMinute": "Try again in 1 minute.",
       "WaitOver": "You can try again now.",
     },
     "PhotoInstructions": {

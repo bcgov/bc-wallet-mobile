@@ -13,7 +13,7 @@ describe('BirthdateLockoutScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.mocked(useBirthdateLockoutViewModel).mockReturnValue({ message: 'Try again in about 4 minutes.', handleClose })
+    jest.mocked(useBirthdateLockoutViewModel).mockReturnValue({ message: 'Try again in 4 minutes.', handleClose })
   })
 
   const renderScreen = () =>
@@ -27,7 +27,7 @@ describe('BirthdateLockoutScreen', () => {
     const { getByTestId } = renderScreen()
 
     expect(getByTestId(testIdWithKey(TestIds.verify.birthdateLockout.message))).toHaveTextContent(
-      'Try again in about 4 minutes.'
+      'Try again in 4 minutes.'
     )
   })
 

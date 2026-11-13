@@ -331,7 +331,7 @@ When the server rate-limits an action, the app waits for the `Retry-After` it se
   and the action is not paused; the screen shows the untimed copy.
 - "Waiting" is derived, never stored: `getRateLimitWait` is the only definition. Check `useRateLimit().getWait`
   immediately before the request, so a stale render cannot let one through.
-- Show the wait rounded up to whole minutes ("Try again in about N minutes"), never a second-by-second countdown.
+- Show the wait rounded up to whole minutes ("Try again in N minutes"), never a second-by-second countdown.
   The display hook (`useRateLimitWait`) refreshes once a minute, at the retry time and on app foreground, and the
   screen then says "You can try again now." without navigating. This is deliberate and differs from the card
   expiry phase above, which does not refresh on a timer.
