@@ -38,7 +38,7 @@ export const useRateLimit = () => {
 
       const retryAt = parseRetryAfter(error.cause.response?.headers?.['retry-after'], new Date())
       if (!retryAt) {
-        // Action and status only: the request behind this error carries personal data
+        // Action only: the request behind this error carries personal data
         logger.warn(`[RateLimit] ${action} limited without a usable Retry-After, not pausing`)
         return
       }

@@ -62,9 +62,8 @@ const findByTechnicalMessage = <T,>(
 const isCardAdd = (serial?: string, birthdate?: Date) => Boolean(serial && birthdate)
 
 /**
- * Card add's share of the rate limit: blocks a request while the server's wait lasts and records a new one.
- * A block lands on the same screens as the 503 policy; with `skipErrorHandling` it rejects untouched.
- * Only requests with a serial and birthdate count: the QR transfer calls the same endpoint with neither.
+ * Blocks card add during the server's wait, landing where the 503 policy does unless `skipErrorHandling` is set.
+ * Only serial + birthdate requests count: QR transfer calls the same endpoint with neither.
  */
 const useCardAddRateLimit = (navigation: StackNavigationProp<BCSCVerifyStackParams>) => {
   const { getWait, recordRateLimit } = useRateLimit()
