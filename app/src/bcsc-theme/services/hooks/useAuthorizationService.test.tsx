@@ -1,9 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceAuthorizationError } from '@/bcsc-theme/features/verify/deviceAuthorizationError'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
+import { RateLimitedAction, RateLimitWaitType } from '@/bcsc-theme/state/rate-limit/rate-limit'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
+import { CommonActions } from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
@@ -15,7 +17,8 @@ jest.mock('@bifold/core', () => ({
 }))
 
 const mockNavigate = jest.fn()
-const mockNavigation = { navigate: mockNavigate }
+const mockDispatch = jest.fn()
+const mockNavigation = { navigate: mockNavigate, dispatch: mockDispatch }
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useNavigation: () => mockNavigation,
@@ -29,6 +32,12 @@ const mockAlerts = {
 }
 jest.mock('@/hooks/useAlerts', () => ({
   useAlerts: () => mockAlerts,
+}))
+
+const mockGetWait = jest.fn()
+const mockRecordRateLimit = jest.fn()
+jest.mock('./useRateLimit', () => ({
+  useRateLimit: () => ({ getWait: mockGetWait, recordRateLimit: mockRecordRateLimit }),
 }))
 
 jest.mock('@/contexts/NavigationContainerContext', () => ({
@@ -49,6 +58,7 @@ describe('useAuthorizationService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockGetWait.mockReturnValue({ type: RateLimitWaitType.None })
     jest.mocked(useApi).mockReturnValue({
       authorization: {
         authorizeDevice: mockAuthorizeDevice,
@@ -69,6 +79,86 @@ describe('useAuthorizationService', () => {
       expect(response).toEqual(mockResponse)
       expect(mockAuthorizeDevice).toHaveBeenCalledWith('12345', new Date('1990-01-01'))
       expect(mockNavigate).not.toHaveBeenCalled()
+    })
+
+    describe('card add rate limit', () => {
+      const waiting = { type: RateLimitWaitType.Waiting, retryAt: new Date(), minutes: 5 }
+      const birthdate = new Date('1990-01-01')
+
+      it('sends no request, resets to the lockout screen and rejects with a handled RETRY_LATER while waiting', async () => {
+        mockGetWait.mockReturnValue(waiting)
+        const { result } = renderHook(() => useAuthorizationService())
+
+        const rejection = await result.current.authorizeDevice('12345', birthdate).catch((e) => e)
+
+        expect(rejection).toBeInstanceOf(AppError)
+        expect(rejection.appEvent).toBe(AppEventCode.ERR_212_RETRY_LATER)
+        expect(rejection.handled).toBe(true)
+        expect(mockGetWait).toHaveBeenCalledWith(RateLimitedAction.CardAdd)
+        expect(mockAuthorizeDevice).not.toHaveBeenCalled()
+        expect(mockDispatch).toHaveBeenCalledTimes(1)
+        expect(CommonActions.reset).toHaveBeenCalledWith({
+          index: 1,
+          routes: [{ name: BCSCScreens.IdentitySelection }, { name: BCSCScreens.BirthdateLockout }],
+        })
+      })
+
+      it('rejects without navigating or marking handled when skipErrorHandling is set', async () => {
+        mockGetWait.mockReturnValue(waiting)
+        const { result } = renderHook(() => useAuthorizationService())
+
+        const rejection = await result.current
+          .authorizeDevice('12345', birthdate, { skipErrorHandling: true })
+          .catch((e) => e)
+
+        expect(rejection.appEvent).toBe(AppEventCode.ERR_212_RETRY_LATER)
+        expect(rejection.handled).toBe(false)
+        expect(mockAuthorizeDevice).not.toHaveBeenCalled()
+        expect(mockDispatch).not.toHaveBeenCalled()
+      })
+
+      it.each([
+        ['no arguments (QR transfer)', [undefined, undefined]],
+        ['a serial without a birthdate', ['12345', undefined]],
+      ])('is never guarded or recorded for %s', async (_label, args) => {
+        mockGetWait.mockReturnValue(waiting)
+        mockAuthorizeDevice.mockResolvedValue({ device_code: 'abc' })
+        const { result } = renderHook(() => useAuthorizationService())
+
+        await result.current.authorizeDevice(...(args as [string?, Date?]))
+
+        expect(mockAuthorizeDevice).toHaveBeenCalled()
+        expect(mockGetWait).not.toHaveBeenCalled()
+        expect(mockRecordRateLimit).not.toHaveBeenCalled()
+      })
+
+      it('records a failure from a card add on both the normal and skipErrorHandling paths', async () => {
+        const error = buildError('too many attempts')
+        mockAuthorizeDevice.mockRejectedValue(error)
+        const { result } = renderHook(() => useAuthorizationService())
+
+        await expect(result.current.authorizeDevice('12345', birthdate)).rejects.toThrow(error)
+        await expect(result.current.authorizeDevice('12345', birthdate, { skipErrorHandling: true })).rejects.toThrow(
+          error
+        )
+
+        expect(mockRecordRateLimit).toHaveBeenCalledTimes(2)
+        expect(mockRecordRateLimit).toHaveBeenCalledWith(RateLimitedAction.CardAdd, error)
+      })
+
+      it('does not guard or record the unknown-BCSC and barcode calls', async () => {
+        mockGetWait.mockReturnValue(waiting)
+        mockAuthorizeDeviceWithUnknownBCSC.mockRejectedValue(buildError('x'))
+        mockAuthorizeDeviceWithBarcodes.mockRejectedValue(buildError('x'))
+        const { result } = renderHook(() => useAuthorizationService())
+
+        await result.current.authorizeDeviceWithUnknownBCSC({} as never, { skipErrorHandling: true }).catch(() => {})
+        await result.current.authorizeDeviceWithBarcodes([], { skipErrorHandling: true }).catch(() => {})
+
+        expect(mockAuthorizeDeviceWithUnknownBCSC).toHaveBeenCalled()
+        expect(mockAuthorizeDeviceWithBarcodes).toHaveBeenCalled()
+        expect(mockRecordRateLimit).not.toHaveBeenCalled()
+      })
     })
 
     it('rethrows without navigating or marking handled when skipErrorHandling is set', async () => {

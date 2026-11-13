@@ -1,18 +1,21 @@
-import { getGlobalAlertMap } from '@/bcsc-theme/api/clientErrorPolicies'
+import { birthdateLockoutResetAction, getGlobalAlertMap } from '@/bcsc-theme/api/clientErrorPolicies'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import {
   AuthorizeDeviceUnknownBCSCConfig,
   DeviceAuthorizationResponse,
 } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { DeviceAuthorizationError } from '@/bcsc-theme/features/verify/deviceAuthorizationError'
+import { RateLimitedAction, RateLimitWaitType } from '@/bcsc-theme/state/rate-limit/rate-limit'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { isAppError, isHandledAppError } from '@/errors/appError'
+import { AppError, isAppError, isHandledAppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
 import type { BarcodePayload } from 'react-native-bcsc-core'
+import { useRateLimit } from './useRateLimit'
 
 // Codes routed to the generic title/description/link-out-button DeviceAuthorizationErrorScreen.
 const DEVICE_AUTHORIZATION_ERROR_MAP: Partial<Record<AppEventCode, DeviceAuthorizationError>> = {
@@ -67,6 +70,7 @@ export const useAuthorizationService = () => {
   const { authorization: authorizationApi } = useApi()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const alerts = useAlerts(navigation)
+  const { getWait, recordRateLimit } = useRateLimit()
 
   /**
    * Emits a global alert for the error's appEvent, if one is registered.
@@ -146,6 +150,7 @@ export const useAuthorizationService = () => {
    * @param serial - BCSC serial number
    * @param birthdate - Birth date
    * @param options - Set `skipErrorHandling` to rethrow errors untouched instead of navigating/alerting
+   * @throws A handled RETRY_LATER error, without sending a request, while a card add rate limit is in effect
    */
   const authorizeDevice = useCallback(
     async (
@@ -153,9 +158,24 @@ export const useAuthorizationService = () => {
       birthdate?: Date,
       options?: AuthorizationServiceCallOptions
     ): Promise<DeviceAuthorizationResponse> => {
+      // The same endpoint also serves the QR transfer call with no card, which this limit must not touch
+      const isCardAdd = Boolean(serial && birthdate)
+
+      if (isCardAdd && getWait(RateLimitedAction.CardAdd).type === RateLimitWaitType.Waiting) {
+        const blocked = AppError.fromErrorDefinition(ErrorRegistry.RETRY_LATER, { track: false })
+        if (!options?.skipErrorHandling) {
+          navigation.dispatch(birthdateLockoutResetAction())
+          blocked.handled = true
+        }
+        throw blocked
+      }
+
       try {
         return await authorizationApi.authorizeDevice(serial, birthdate)
       } catch (error) {
+        if (isCardAdd) {
+          recordRateLimit(RateLimitedAction.CardAdd, error)
+        }
         if (options?.skipErrorHandling) {
           throw error
         }
@@ -163,7 +183,7 @@ export const useAuthorizationService = () => {
         throw error
       }
     },
-    [authorizationApi, handleAuthorizationError]
+    [authorizationApi, handleAuthorizationError, navigation, getWait, recordRateLimit]
   )
 
   /**
