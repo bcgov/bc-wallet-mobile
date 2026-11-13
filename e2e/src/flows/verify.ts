@@ -313,9 +313,9 @@ export async function reachVerificationMethod(): Promise<void> {
 
 /**
  * VerificationMethodSelection → In-Person → the confirmation code, read off VerifyInPerson and
- * returned WITHOUT approving. The half of {@link completeVerification} that runs before the real
- * IDCheck approval, split out so the upgrade suite can display the code on the previous build and
- * approve it after the binary swap.
+ * returned WITHOUT approving. The half of {@link completeVerification} that runs before the approval,
+ * split out so the upgrade suite can display the code on the previous build and approve it after the
+ * binary swap.
  */
 export async function reachInPersonConfirmationCode(): Promise<string> {
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -326,9 +326,11 @@ export async function reachInPersonConfirmationCode(): Promise<string> {
 }
 
 /**
- * From VerifyInPerson with `formattedCode` already displayed: drive the real IDCheck SIT approval
- * (needs `IDCHECK_USER`/`IDCHECK_PASSWORD`/`IDCHECK_TOTP_SECRET` and an allowlisted runner IP), then
- * Complete → VerificationSuccess → Home. The half of {@link completeVerification} after the code is read.
+ * From VerifyInPerson with `formattedCode` already displayed: have the request approved, then
+ * Complete → VerificationSuccess → Home. The approval is the real IDCheck SIT one (needs
+ * `IDCHECK_USER`/`IDCHECK_PASSWORD`/`IDCHECK_TOTP_SECRET` and an allowlisted runner IP), or one call to
+ * the IAS test API with `E2E_APPROVAL_SOURCE=api`. The half of {@link completeVerification} after the
+ * code is read.
  */
 export async function approveInPersonAndComplete(user: TestUser, formattedCode: string): Promise<void> {
   await approveInPersonRequest(formattedCode, approvalInputForUser(user))
@@ -342,8 +344,8 @@ export async function approveInPersonAndComplete(user: TestUser, formattedCode: 
 
 /**
  * Complete verification via the IN-PERSON method — the only CI-completable one (send-video and
- * live-call open camera screens). From VerificationMethodSelection: read the confirmation code, drive
- * the real IDCheck SIT approval, then Complete → VerificationSuccess → Home.
+ * live-call open camera screens). From VerificationMethodSelection: read the confirmation code, have
+ * it approved ({@link approveInPersonAndComplete}), then Complete → VerificationSuccess → Home.
  */
 export async function completeVerification(user: TestUser): Promise<void> {
   const confirmationCode = await reachInPersonConfirmationCode()

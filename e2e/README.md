@@ -287,7 +287,7 @@ _Two env files split general e2e config (including the IDCheck credentials) from
 
 ### _IDCheck sign-in (in_ `.env.e2e`_)_
 
-_The in-person verification approval (`approveInPersonRequest` in_ `src/helpers/approval.ts`_), the send-video review and the queue drain all act in the IDCheck SIT portal, which signs its agents in through BC Gov SSO (Keycloak) and Entra ID ("IDIR - MFA"). The sign-in is a short drive of the Microsoft pages in a headless Chrome (`scripts/idcheck-session.mjs`); everything after it is plain cookie-bound HTTP (`scripts/login.mjs`). One sign-in is cached per process, so a journey's drain → review → drain signs in once. The account is the shared IAS test IDIR (`bcsc-ias-test-account` in 1Password); its sign-in name is the account's gov email. Credentials come from_ `process.env` _— locally from_ `e2e/.env.e2e` _(loaded by_ `configs/wdio.shared.conf.ts`_), in CI from 1Password via_ `.github/workflows/e2e.yml`_:_
+_The in-person verification approval (`approveInPersonRequest` in_ `src/helpers/approval.ts`_; with_ `E2E_APPROVAL_SOURCE=api` _the IAS test API decides it instead, see **[In-person approvals](#in-person-approvals)**), the send-video review and the queue drain all act in the IDCheck SIT portal, which signs its agents in through BC Gov SSO (Keycloak) and Entra ID ("IDIR - MFA"). The sign-in is a short drive of the Microsoft pages in a headless Chrome (`scripts/idcheck-session.mjs`); everything after it is plain cookie-bound HTTP (`scripts/login.mjs`). One sign-in is cached per process, so a journey's drain → review → drain signs in once. The account is the shared IAS test IDIR (`bcsc-ias-test-account` in 1Password); its sign-in name is the account's gov email. Credentials come from_ `process.env` _— locally from_ `e2e/.env.e2e` _(loaded by_ `configs/wdio.shared.conf.ts`_), in CI from 1Password via_ `.github/workflows/e2e.yml`_:_
 
 | _Variable_             | _Description_                                                                                                                                            |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -333,7 +333,7 @@ _Scope_ `e2e` _is the default everywhere (journeys, nightly, the workflow's inpu
 
 ### IAS E2E Test API (in `.env.e2e`)
 
-IAS's non-production test API (`https://<host>/test/idv/v1`) mints BC Services Card test identities and records the agent's side of a verification, keyed by the usercode the app shows. `src/api/ias-test.ts` is the runner's client for it. IAS issued one OAuth 2.0 client per environment, kept in 1Password (`bcsc-mobile-app-cd`: `ias-test-api-dev` and `ias-test-api-sit`); CI loads the SIT one in `e2e.yml`. Nothing in CI uses the API yet: the journeys move onto it locally first, behind the setting below, and the workflows follow once that runs clean.
+IAS's non-production test API (`https://<host>/test/idv/v1`) mints BC Services Card test identities and records the agent's side of a verification, keyed by the usercode the app shows. `src/api/ias-test.ts` is the runner's client for it. IAS issued one OAuth 2.0 client per environment, kept in 1Password (`bcsc-mobile-app-cd`: `ias-test-api-dev` and `ias-test-api-sit`); CI loads the SIT one in `e2e.yml`. Nothing in CI uses the API yet: the journeys move onto it locally first, behind the two settings below, and the workflows follow once that runs clean.
 
 | Variable | Description |
 | --- | --- |
@@ -341,6 +341,7 @@ IAS's non-production test API (`https://<host>/test/idv/v1`) mints BC Services C
 | `IAS_TEST_API_CLIENT_ID` | The environment's client id (the item's `username`, which 1Password shows as "key name") |
 | `IAS_TEST_API_CLIENT_SECRET` | The client secret (the item's `credential`) |
 | `E2E_IDENTITY_SOURCE` | `api` mints a card for each session; `personas` (the default) takes the fixed SIT personas. See **[Card holders](#card-holders)** |
+| `E2E_APPROVAL_SOURCE` | `api` approves an in-person request with one call to the decision route; `idcheck` (the default) replays the ID Check portal. See **[In-person approvals](#in-person-approvals)** |
 
 ```bash
 yarn test-api:check              # mint a token, check both scopes, probe the decision route with a usercode that does not exist
@@ -511,9 +512,26 @@ What a mint sends and gets back:
 - A card minted on SIT comes with a verified email, as the personas' do. One minted on DEV does not: there the app shows the email step after the birthdate, and `reachVerificationMethod` skips it.
 - A minted holder's values are registered with the redaction (`src/helpers/redact.ts`) and read `<minted>` in failure text. Each mint logs one `[identity]` line and is counted in the session record, which the brief totals in its Sessions line.
 
-The approval is unchanged and still goes through the ID Check portal, which finds a card by its serial and birthdate whichever source it came from.
+Who approves the holder's request is a setting of its own (see **[In-person approvals](#in-person-approvals)**). The ID Check portal finds a minted card by its serial and birthdate, as it does a persona's.
 
 Three groups stay on the personas whatever the source: the send-video journeys (the portal review checks which persona a claimed request belongs to), the scan suite (its committed card backs carry the personas' serials) and the upgrade suites.
+
+<a id="in-person-approvals"></a>
+
+### In-person approvals
+
+A verified journey shows its confirmation code on the in-person screen and has an agent approve it. `approveInPersonRequest` (`src/helpers/approval.ts`) is that agent for every caller: the verified journeys, the upgrade scenarios and the old-build drivers. `E2E_APPROVAL_SOURCE` decides how it approves:
+
+- **`idcheck`** (the default, and what CI runs): the ID Check portal, replayed after an Entra sign-in. It takes the code with the card's serial and birthdate (the two document numbers for a holder without a card), needs the `IDCHECK_*` credentials and an allowlisted address, and exists for SIT only.
+- **`api`**: one call to the IAS test API (`decideVerification` in `src/api/ias-test.ts`, a `COUNTER` `APPROVE`), keyed by the code alone. No sign-in, no serial, no birthdate, and the only way to approve on DEV.
+
+What the API path depends on:
+
+- The host has to serve the decision route. DEV does; SIT answers `route-absent` until IAS deploys the current build there. `yarn test-api:check` says which, before a session is spent finding out.
+- `IAS_TEST_API_HOST` has to name the environment the app is on, as it does for a minted card.
+- The API decides no registration without a card (an empty 400 on DEV). That request goes to the portal whatever the source, so the cardless journey still needs SIT and the `IDCHECK_*` credentials.
+
+Either way the journey taps Complete itself afterwards: a decision does not move the app. The log line for an approval names the flow and the source, never the code.
 
 ### Runner-side API clients
 
@@ -840,7 +858,7 @@ e2e/
 │   │   ├── a11y-audit.ts                    # auditScreen(): iOS XCTest audit engine + report/roll-up (non-blocking)
 │   │   ├── a11y-android.ts                  # Android heuristics: unlabeled controls, touch targets, screenshot contrast
 │   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
-│   │   ├── approval.ts                      # in-person approval + send-video review via the IDCheck portal
+│   │   ├── approval.ts                      # in-person approval (IDCheck portal or the IAS test API) + send-video review via the portal
 │   │   ├── biometrics.ts                    # biometric simulation (Sauce Labs RDC)
 │   │   ├── camera.ts                        # camera image injection + padding (photos, QR, video)
 │   │   ├── deep-link.ts                     # dispatch <scheme>:// deep links (pairing / login)
