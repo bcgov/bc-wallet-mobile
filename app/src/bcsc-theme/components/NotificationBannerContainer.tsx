@@ -4,7 +4,7 @@ import { openLink } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { View } from 'react-native'
 import { setMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
@@ -25,13 +25,19 @@ interface NotificationBannerContainerProps {
  * @param {NotificationBannerContainerProps} props - The properties for the NotificationBannerContainer component.
  * @returns {*} {React.ReactElement} The NotificationBannerContainer component.
  */
-export const NotificationBannerContainer = ({ onManageDevices }: NotificationBannerContainerProps) => {
+export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }: NotificationBannerContainerProps) => {
   const [, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<ServiceNoticeParamList>>()
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
 
   const appBanners = useBanners()
+
+  // NOTE: temp while migrating the banners to this new system
+  const filteredBanners = useMemo(
+    () => bannerMessages.filter((banner) => banner.id !== BCSCBanner.APP_UPDATE_AVAILABLE),
+    [bannerMessages]
+  )
 
   const handleBannerPress = async (banner: BCSCBannerMessage): Promise<void> => {
     const bannerId = banner.id
@@ -53,7 +59,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
       void openLink(banner.metadata.contactLink)
     }
 
-    const message = appBanners.find((banner) => banner.id === bannerId)
+    const message = filteredBanners.find((banner) => banner.id === bannerId)
     // Only dismiss the banner if it is marked as dismissable
     if (message?.dismissible) {
       // Default action: remove the banner permanently on press
@@ -89,7 +95,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
       </SafeAreaModal>
 
       <AppBanner
-        messages={appBanners.map((banner) => ({
+        messages={[...appBanners, ...filteredBanners].map((banner) => ({
           id: banner.id,
           title: banner.title,
           description: banner.description,

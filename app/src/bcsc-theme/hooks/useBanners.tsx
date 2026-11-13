@@ -21,12 +21,6 @@ export const useBanners = (): BCSCBannerMessage[] => {
   const [store, dispatch] = useStore<BCState>()
   const appUpdate = useAppUpdate()
 
-  // NOTE: temp while migrating the banners to this new system
-  const filteredStoreBanners = useMemo(
-    () => store.bcsc.bannerMessages.filter((banner) => banner.id !== BCSCBanner.APP_UPDATE_AVAILABLE),
-    [store.bcsc.bannerMessages]
-  )
-
   const dismissBanner = useCallback(
     (bannerId: BCSCBanner, dismissedForMs: number) => {
       dispatch({
@@ -56,5 +50,5 @@ export const useBanners = (): BCSCBannerMessage[] => {
     return banners.filter((banner) => selectBannerDismissal(store, banner.id) !== BannerDismissal.Dismissed)
   }, [appUpdate, dismissBanner, store, t])
 
-  return useMemo(() => [...appBanners, ...filteredStoreBanners], [filteredStoreBanners, appBanners])
+  return appBanners
 }
