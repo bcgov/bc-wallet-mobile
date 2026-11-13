@@ -1,6 +1,7 @@
-import { TestUsers } from '../../../src/constants.js'
+import type { TestUser } from '../../../src/constants.js'
 import { presentBcscCardAsEvidence } from '../../../src/flows/verify.js'
 import { canInjectCardBarcodes } from '../../../src/helpers/camera.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 import { expectRerouteToMethodSelection, reachFirstIdCapture } from './reroute-context.js'
 
 /**
@@ -19,10 +20,14 @@ import { expectRerouteToMethodSelection, reachFirstIdCapture } from './reroute-c
  * why each card type gets its own file (and so its own fully-reset install).
  */
 describe('Scan journey: non-BCSC reroutes to a photo card', () => {
-  before(function () {
+  /** Whose card is photographed. */
+  let cardHolder: TestUser
+
+  before(async function () {
     if (!canInjectCardBarcodes()) {
       return this.skip()
     }
+    cardHolder = await arrangeTestUser('photo')
   })
 
   it('reaches the first non-BCSC document capture', async () => {
@@ -30,7 +35,7 @@ describe('Scan journey: non-BCSC reroutes to a photo card', () => {
   })
 
   it('reroutes to the method choice when the photographed ID is a real photo card', async () => {
-    await presentBcscCardAsEvidence(TestUsers.photo.cardScanTarget)
+    await presentBcscCardAsEvidence(cardHolder)
     // A photo card's serial completes the ID step on its own, so the reroute skips the rest of the
     // two-ID flow entirely — no second document, no address, no email.
     await expectRerouteToMethodSelection()

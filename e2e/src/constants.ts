@@ -70,12 +70,10 @@ export const BACKGROUND_NO_LOCK_SECONDS = 5
  * The hand-minted SIT personas, shared by both platforms and every lane. Legacy: a journey asks
  * `arrangeTestUser` (src/support/identity.ts) for its holder, which mints one per session when the run
  * is on the test API. Still the only holders for the send-video journeys (the portal review checks the
- * persona), the scan suite (its committed card backs) and the upgrade suites.
+ * persona) and the upgrade suites.
  *
- * `cardScanImage` is a photo of the card, for EVIDENCE capture. `cardScanTarget` is a generated
- * combo-card back carrying that persona's own serial (code-39) and birthdate (PDF-417) — the pair
- * `ScanSerial` needs — built by `scripts/generate-scan-assets.mjs`. Fred has neither: the non-BCSC
- * persona has no card serial.
+ * `cardScanImage` is a photo of the card, for EVIDENCE capture. A card back to SCAN is rendered from
+ * the holder's serial, name and birthdate (src/helpers/card-back.ts).
  */
 export const TestUsers = {
   photo: {
@@ -87,7 +85,6 @@ export const TestUsers = {
     primaryDocumentNumber: '4124657708',
     primaryDocumentTypeId: '18',
     cardScanImage: 'images/dl_shaggy.jpg',
-    cardScanTarget: 'images/scan/card_shaggy.png',
     selfieImage: 'images/id_shaggy.jpg',
     firstName: 'Shaggy',
     lastName: 'Rogers',
@@ -99,7 +96,6 @@ export const TestUsers = {
     dob: '19951217',
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_velma.jpg',
-    cardScanTarget: 'images/scan/card_velma.png',
     selfieImage: 'images/id_velma.jpg',
     firstName: 'Velma',
     lastName: 'Dinkley',
@@ -112,7 +108,6 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     documentTypeId: '12',
     cardScanImage: 'images/dl_daphne.jpg',
-    cardScanTarget: 'images/scan/card_daphne.png',
     selfieImage: 'images/id_daphne.jpg',
     firstName: 'Daphne',
     lastName: 'Blake',
@@ -161,8 +156,6 @@ interface TestUserBase {
   /** A photo of a card, for evidence capture. */
   cardScanImage: string
   selfieImage: string
-  /** A generated card back carrying this holder's serial and birthdate. Only the personas have one. */
-  cardScanTarget?: string
 }
 
 /** A photo card, standalone or combined: the serial and the birthdate are all the flow asks for. */

@@ -11,6 +11,7 @@ import {
 } from '../helpers/approval.js'
 import type { ImageMaskRegion } from '../helpers/camera.js'
 import { canInjectImages, injectPhoto, injectScanTarget } from '../helpers/camera.js'
+import { cardBackOf, renderCardBack } from '../helpers/card-back.js'
 import { getEmailConfirmationCode, getLatestMailId, getTempEmailAddress } from '../helpers/email.js'
 import { swipeUpBy } from '../helpers/gestures.js'
 import {
@@ -1395,16 +1396,19 @@ export async function openSerialScanner(): Promise<void> {
  * into THAT card's own setup flow, discarding the evidence. Where it lands depends on the card process
  * the backend returns, so the caller asserts it.
  *
+ * The card is `holder`'s, its back rendered here from the serial, name and birthdate.
+ *
  * ANDROID ONLY: iOS cannot fire code-39/PDF-417 from injection at all, so the reroute can never happen
  * there. Sauce-only for the same reason injection is.
  *
  * Stops at the UsePhoto tap — a second side never comes, because the reroute replaces the whole stack.
  */
-export async function presentBcscCardAsEvidence(scanTarget: string): Promise<void> {
+export async function presentBcscCardAsEvidence(holder: TestUser): Promise<void> {
+  const cardBack = await renderCardBack(cardBackOf(holder))
   await IDPhotoInformationScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   await IDPhotoInformationScreen.tapToNavigate('primary')
   await reachEvidenceCamera()
-  await injectScanTarget(scanTarget)
+  await injectScanTarget(cardBack)
   // The scanner must read the card BEFORE the shutter: UsePhoto only asks the backend when a serial
   // AND a licence were already captured off the live frame stream. Nothing on screen reports a read,
   // so the dwell is blind — see Timeouts.CARD_SCAN_DWELL.
