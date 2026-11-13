@@ -33,6 +33,22 @@ function calendarTime(date: Date, withYear: boolean): string {
 }
 
 /**
+ * Formats a calendar date with no time of day (e.g. a birthdate) as "January 1, 2000".
+ *
+ * Formats in UTC from the Date's local calendar fields. Hermes builds local dates with the device's
+ * current offset while `Intl` applies the offset in force on that date, so formatting in the device
+ * timezone can shift the day (e.g. every pre-2026-11-01 date after BC moved to permanent UTC-7).
+ */
+export function formatCalendarDate(date: Date, locale: string): string {
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())).toLocaleDateString(locale, {
+    timeZone: 'UTC',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+/**
  * Format a timestamp for notification cards, using the following breakpoints:
  *
  * under a minute: "Just now"
