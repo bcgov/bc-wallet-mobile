@@ -15,10 +15,11 @@ export const parseRetryAfter = (value: unknown, now: Date): Date | null => {
   }
 
   const seconds = Number(trimmed)
-  if (!Number.isFinite(seconds) || seconds <= 0) {
+  if (seconds <= 0) {
     return null
   }
 
+  // Also rejects Infinity from an overflowing digit string
   const retryAtMs = now.getTime() + seconds * 1000
-  return Number.isFinite(retryAtMs) && retryAtMs <= MAX_DATE_MS ? new Date(retryAtMs) : null
+  return retryAtMs <= MAX_DATE_MS ? new Date(retryAtMs) : null
 }
