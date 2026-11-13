@@ -9,12 +9,9 @@ Static image files used by camera injection helpers during E2E tests.
 | `dl_*.jpg`          | Driver's licence photos                            | JPG or PNG, ≤ 5 MB |
 | `id_*.jpg`          | BC Services Card / ID photos                       | JPG or PNG, ≤ 5 MB |
 | `passport.jpg`      | Passport photo                                     | JPG or PNG, ≤ 5 MB |
-| `scan/card_*.png`   | Generated combo-card backs, for SCANNING not photos | PNG, ≤ 5 MB        |
 
-The `scan/` images are **generated, not photographed** — `scripts/generate-scan-assets.mjs` writes one
-card back per BCSC persona carrying that persona's own serial (code-39) and birthdate (PDF-417). Rerun
-the script rather than editing them by hand. See the e2e README's "Scanning from injection" section
-for the authoring rules they follow.
+Card backs for SCANNING are not kept here: `src/helpers/card-back.ts` renders one at run time for the
+holder a journey scans. See the e2e README's "Scanning from injection" section.
 
 ## Image Requirements (Sauce Labs)
 

@@ -16,15 +16,15 @@ import { EnterEmailScreen, VerificationMethodSelectionScreen } from '../../../sr
  *
  * Each journey is its own file because a reroute is irreversible: it authorizes the device against the
  * scanned card and rewrites the card process, and `fullReset` gives every spec file a fresh install.
- * Only the persona and the landing differ, so both live here.
+ * Only the card holder and the landing differ, so both live here.
  *
- * The cards come from `assets/images/scan/`, NOT the shared `dl_*.jpg` template — every copy of that
- * template carries the same baked-in barcode (daphne's C26444539), so it could only ever reroute to one
- * persona. The generated cards carry each persona's real serial, name and birthdate, but a synthetic
- * licence number, address and expiry, and `/device/barcodes` is sent all of those. If SIT turns out to
- * match on a field we invent, the reroute will not fire and `expectEvidenceReroute` will report the
- * card as "captured as ordinary evidence" — the fix is to put each persona's real licence data in the
- * generator, not to change these journeys.
+ * The card is rendered for the holder each journey arranges (`src/helpers/card-back.ts`), NOT taken
+ * from the shared `dl_*.jpg` template — every copy of that template carries the same baked-in barcode,
+ * so it could only ever reroute to one persona. A rendered card carries its holder's real serial, name
+ * and birthdate, but a synthetic licence number, address and expiry, and `/device/barcodes` is sent
+ * all of those. If the backend turns out to match on a field we invent, the reroute will not fire and
+ * `expectEvidenceReroute` will report the card as "captured as ordinary evidence" — the fix is to give
+ * the card its holder's real licence data, not to change these journeys.
  */
 
 /**

@@ -1,6 +1,7 @@
-import { TestUsers } from '../../../src/constants.js'
+import type { TestUser } from '../../../src/constants.js'
 import { presentBcscCardAsEvidence } from '../../../src/flows/verify.js'
 import { canInjectCardBarcodes } from '../../../src/helpers/camera.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 import { expectRerouteIntoIdStep, reachFirstIdCapture } from './reroute-context.js'
 
 /**
@@ -14,10 +15,14 @@ import { expectRerouteIntoIdStep, reachFirstIdCapture } from './reroute-context.
  * ANDROID + SAUCE ONLY, one-way per session — see the photo-card journey for why.
  */
 describe('Scan journey: non-BCSC reroutes to a non-photo card', () => {
-  before(function () {
+  /** Whose card is photographed. */
+  let cardHolder: TestUser
+
+  before(async function () {
     if (!canInjectCardBarcodes()) {
       return this.skip()
     }
+    cardHolder = await arrangeTestUser('nonPhoto')
   })
 
   it('reaches the first non-BCSC document capture', async () => {
@@ -25,7 +30,7 @@ describe('Scan journey: non-BCSC reroutes to a non-photo card', () => {
   })
 
   it('reroutes back into the ID step when the photographed ID is a real non-photo card', async () => {
-    await presentBcscCardAsEvidence(TestUsers.nonPhoto.cardScanTarget)
+    await presentBcscCardAsEvidence(cardHolder)
     await expectRerouteIntoIdStep()
   })
 })
