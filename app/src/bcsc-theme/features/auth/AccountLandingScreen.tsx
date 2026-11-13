@@ -1,8 +1,8 @@
 import BCSCLogo from '@/assets/img/BCSCLogo.svg'
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
+import { BannersScope } from '@/bcsc-theme/hooks/useBanners'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -55,10 +55,7 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
       {/* Banners scroll with the page rather than pinning above it, so they cannot crowd out the content
           at large OS font sizes. noop handler: DEVICE_LIMIT_EXCEEDED is the only banner that invokes it
           and is filtered out below. */}
-      <NotificationBannerContainer
-        onManageDevices={() => {}}
-        bannerMessages={store.bcsc.bannerMessages.filter((b) => b.id !== BCSCBanner.DEVICE_LIMIT_EXCEEDED)}
-      />
+      <NotificationBannerContainer scope={BannersScope.Auth} bannerMessages={store.bcsc.bannerMessages} />
       <View style={styles.content}>
         <BCSCLogo width={160} height={160} />
         <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.primary }}>
