@@ -1,3 +1,4 @@
+import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
 import { useStore } from '@bifold/core'
@@ -17,6 +18,9 @@ export enum BannersScope {
 }
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
+const DEVICE_COUNT_BANNER_COOLDOWN_MS = __DEV__
+  ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV
+  : DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD
 const BANNERS_BY_SCOPE: Record<BannersScope, Set<BCSCBanner>> = {
   [BannersScope.Home]: new Set([BCSCBanner.APP_UPDATE_AVAILABLE, BCSCBanner.DEVICE_LIMIT_EXCEEDED]),
   [BannersScope.Auth]: new Set([BCSCBanner.APP_UPDATE_AVAILABLE]),
@@ -44,10 +48,16 @@ export const useBanners = (options: BannersOptions) => {
   const deviceLimit = useDeviceLimit()
 
   const dismissBanner = useCallback(
-    (bannerId: BCSCBanner, dismissedForMs: number) => {
+    (bannerId: BCSCBanner) => {
+      let cooldownMs = ONE_DAY_MS
+
+      if (bannerId === BCSCBanner.DEVICE_LIMIT_EXCEEDED) {
+        cooldownMs = DEVICE_COUNT_BANNER_COOLDOWN_MS
+      }
+
       dispatch({
         type: BCDispatchAction.DISMISS_BANNER,
-        payload: [{ bannerId: bannerId, dismissedUntil: Date.now() + dismissedForMs }],
+        payload: [{ bannerId: bannerId, dismissedUntil: Date.now() + cooldownMs }],
       })
     },
     [dispatch]
@@ -63,7 +73,7 @@ export const useBanners = (options: BannersOptions) => {
         type: 'info',
         dismissible: true,
         onPress: () => {
-          dismissBanner(BCSCBanner.APP_UPDATE_AVAILABLE, ONE_DAY_MS)
+          dismissBanner(BCSCBanner.APP_UPDATE_AVAILABLE)
           void openLink(getBCSCAppStoreUrl())
         },
       })
@@ -90,5 +100,14 @@ export const useBanners = (options: BannersOptions) => {
     )
   }, [appUpdate, deviceLimit.limit, dismissBanner, options.onDeviceLimitPress, options.scope, store, t])
 
-  return { banners: appBanners, dismissBanner, metadata: { deviceLimit } }
+  return useMemo(
+    () => ({
+      banners: appBanners,
+      dismissBanner,
+      metadata: {
+        deviceLimit,
+      },
+    }),
+    [appBanners, dismissBanner, deviceLimit]
+  )
 }

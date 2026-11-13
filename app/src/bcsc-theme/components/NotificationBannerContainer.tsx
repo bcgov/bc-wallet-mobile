@@ -1,5 +1,4 @@
 import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { openLink } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
@@ -13,21 +12,18 @@ import { DeviceLimit } from '../state/devices/device-limit'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 
 const DEFAULT_MAX_DEVICES = 5
-const MAX_DEVICES_BANNER_COOLDOWN_MS = __DEV__
-  ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV
-  : DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD
 
 /** The container renders on Home (MainStack) and account landing (AuthStack); both register this route. */
 type ServiceNoticeParamList = Pick<BCSCMainStackParams & BCSCAuthStackParams, BCSCScreens.ServiceNotice>
 
 type NotificationBannerContainerProps =
   | {
-      scope: BannersScope
+      scope: BannersScope.Home
       bannerMessages: BCSCBannerMessage[]
       onManageDevices: () => void
     }
   | {
-      scope: BannersScope
+      scope: BannersScope.Auth
       bannerMessages: BCSCBannerMessage[]
       onManageDevices?: never
     }
@@ -91,14 +87,14 @@ export const NotificationBannerContainer = ({
   }, [])
 
   const handleDeleteDeviceCountMessage = useCallback(() => {
-    dismissBanner(BCSCBanner.DEVICE_LIMIT_EXCEEDED, MAX_DEVICES_BANNER_COOLDOWN_MS)
+    dismissBanner(BCSCBanner.DEVICE_LIMIT_EXCEEDED)
     // void setMaxDevicesBannerLastDisplayedDate(Date.now()) // THOUGHT: Any cleanup here required?
     handleCloseDevicesModal({ shouldAnimate: true })
   }, [dismissBanner, handleCloseDevicesModal])
 
   return (
     <View>
-      {metadata.deviceLimit.limit === DeviceLimit.Unknown ? null : (
+      {metadata.deviceLimit.limit === DeviceLimit.Unknown || scope === BannersScope.Auth ? null : (
         <SafeAreaModal
           visible={devicesModalVisible}
           onRequestClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
@@ -109,7 +105,7 @@ export const NotificationBannerContainer = ({
             maxDevices={metadata.deviceLimit.deviceLimit || DEFAULT_MAX_DEVICES}
             handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
             handleDelete={handleDeleteDeviceCountMessage}
-            onManageDevices={onManageDevices ?? (() => {})}
+            onManageDevices={onManageDevices}
           />
         </SafeAreaModal>
       )}

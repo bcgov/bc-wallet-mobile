@@ -7,7 +7,6 @@ import { rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
-import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
 import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
@@ -28,7 +27,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getAccount, getMaxDevicesBannerLastDisplayedDate, getToken, TokenType } from 'react-native-bcsc-core'
+import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 import { getBuildNumber, getBundleId, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
@@ -153,12 +152,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    */
   const getMainSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
     // Guard the native call so a failure here cannot throw away the whole batch
-    let dismissedAt: number | undefined
-    try {
-      dismissedAt = await getMaxDevicesBannerLastDisplayedDate()
-    } catch {
-      dismissedAt = undefined
-    }
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
     const updateRegistration = () =>
       registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, {
@@ -201,7 +194,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // fetches one when the stored refresh token is expired, so they'd misfire on that path (#4654).
     if (isVerified && !refreshTokenExpired) {
       systemChecks.push(
-        new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
         new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
       )
     }
