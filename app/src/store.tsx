@@ -51,6 +51,8 @@ export interface BCSCAlertEvent {
   reason: string
 }
 
+export type DismissedBanners = Partial<Record<BCSCBanner, { dismissedAt: number; dismissedUntil?: number }>>
+
 /**
  * Collection of metadata needed when a user is registering for the application
  * using non-bcsc identification cards. ie: drivers license + birth certificate etc...
@@ -149,6 +151,12 @@ export interface BCSCState {
    * `verificationSkipped`.
    */
   verificationStarted?: boolean
+
+  /**
+   * Dismissed banners, keyed by BCSCBanner id.
+   * The value is the timestamp of when the user dismissed it.
+   */
+  dismissedBanners?: DismissedBanners
 }
 
 export enum VerificationStatus {
@@ -297,6 +305,7 @@ enum BCSCDispatchAction {
   ADD_SAVED_SERVICE = 'bcsc/addSavedService',
   REMOVE_SAVED_SERVICE = 'bcsc/removeSavedService',
   CLEAR_BCSC = 'bcsc/clearBCSC',
+  DISMISS_BANNER = 'bcsc/dismissBanner',
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
@@ -823,6 +832,18 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         installId: state.bcsc.installId ?? partialBcscState.installId,
       }
       const newState = { ...state, bcsc }
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.DISMISS_BANNER: {
+      const payload: { bannerId: BCSCBanner; dismissedUntil?: number } = (action?.payload || []).pop()
+      const dismissedBanners = state.bcsc.dismissedBanners ?? {}
+      dismissedBanners[payload.bannerId] = { dismissedAt: Date.now(), dismissedUntil: payload.dismissedUntil }
+
+      const bcsc = { ...state.bcsc, dismissedBanners }
+      const newState = { ...state, bcsc }
+
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }

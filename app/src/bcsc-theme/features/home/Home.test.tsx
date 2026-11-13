@@ -1,5 +1,6 @@
 import { BCSCBanner, BCSCBannerMessage } from '@/bcsc-theme/components/AppBanner'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import * as ServerStatusContext from '@/bcsc-theme/contexts/ServerStatusContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { initialState } from '@/store'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
@@ -155,13 +156,6 @@ describe('Home (default export, v4.1)', () => {
     dismissible: false,
   }
 
-  const appUpdateBanner: BCSCBannerMessage = {
-    id: BCSCBanner.APP_UPDATE_AVAILABLE,
-    title: 'Update available',
-    type: 'info',
-    dismissible: true,
-  }
-
   const serverNotificationBanner: BCSCBannerMessage = {
     id: BCSCBanner.IAS_SERVER_NOTIFICATION,
     title: 'Server notification',
@@ -181,11 +175,31 @@ describe('Home (default export, v4.1)', () => {
     jest.clearAllMocks()
   })
 
-  it('renders the device-limit and app-update banners on Home', () => {
-    const tree = renderHome([deviceLimitBanner, appUpdateBanner])
+  it('renders the device-limit banner from the store and the app-update banner from the server status on Home', () => {
+    const serverStatusSpy = jest.spyOn(ServerStatusContext, 'useServerStatus').mockReturnValue({
+      isAvailable: true,
+      serverStatus: { minVersion: '100', supportedVersions: ['4.0.0', '4.1.0'] } as any,
+      isChecking: false,
+      hasChecked: true,
+      refresh: jest.fn(),
+    })
 
-    expect(tree.getByText('Device limit reached')).toBeTruthy()
-    expect(tree.getByText('Update available')).toBeTruthy()
+    try {
+      const tree = renderHome([deviceLimitBanner])
+
+      expect(tree.getByText('Device limit reached')).toBeTruthy()
+      expect(tree.getByText('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle')).toBeTruthy()
+    } finally {
+      serverStatusSpy.mockRestore()
+    }
+  })
+
+  it('ignores an app-update banner saved in the store when the server status has no newer version', () => {
+    const tree = renderHome([
+      { id: BCSCBanner.APP_UPDATE_AVAILABLE, title: 'Stale update banner', type: 'info', dismissible: true },
+    ])
+
+    expect(tree.queryByText('Stale update banner')).toBeNull()
   })
 
   it('renders a server notification banner on Home', () => {
@@ -198,7 +212,7 @@ describe('Home (default export, v4.1)', () => {
     const tree = renderHome([])
 
     expect(tree.queryByText('Device limit reached')).toBeNull()
-    expect(tree.queryByText('Update available')).toBeNull()
+    expect(tree.queryByText('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle')).toBeNull()
     expect(tree.queryByText('Server notification')).toBeNull()
     expect(tree.getByText('Notification.EmptyNotification.Title')).toBeTruthy()
   })
