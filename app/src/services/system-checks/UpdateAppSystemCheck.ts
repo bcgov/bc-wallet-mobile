@@ -1,6 +1,6 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import { AppUpdate } from '@/bcsc-theme/state/app-update/app-update'
-import { selectAppUpdate } from '@/bcsc-theme/state/app-update/selectors'
+import { AppUpdate } from '@/bcsc-theme/state/update/app-update'
+import { selectAppUpdate } from '@/bcsc-theme/state/update/selectors'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'

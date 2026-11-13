@@ -4,10 +4,10 @@ import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BCSCBanner, BCSCBannerMessage } from '../components/AppBanner'
-import { AppUpdate } from '../state/app-update/app-update'
-import { useAppUpdate } from '../state/app-update/useAppUpdate'
 import { BannerDismissal } from '../state/banners/banner-dismissal'
 import { selectBannerDismissal } from '../state/banners/selectors'
+import { AppUpdate } from '../state/update/app-update'
+import { useAppUpdate } from '../state/update/useAppUpdate'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
