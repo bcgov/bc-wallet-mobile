@@ -37,7 +37,7 @@ export const getDeviceLimit = (facts: DeviceLimitFacts): DeviceLimitResult => {
     }
   }
 
-  if (facts.deviceCount > facts.deviceLimit) {
+  if (facts.deviceCount >= facts.deviceLimit) {
     return {
       limit: DeviceLimit.Over,
       deviceLimit: facts.deviceLimit,

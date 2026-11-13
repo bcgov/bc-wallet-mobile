@@ -35,9 +35,9 @@ type BannersOptions =
 /**
  * Returns the list of banners to be displayed in the app, including both shared banners and banners from the store.
  *
- * @returns An array of BCSCBannerMessage objects representing the banners to be displayed.
+ * @returns
  */
-export const useBanners = (options: BannersOptions): BCSCBannerMessage[] => {
+export const useBanners = (options: BannersOptions) => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const appUpdate = useAppUpdate()
@@ -90,5 +90,5 @@ export const useBanners = (options: BannersOptions): BCSCBannerMessage[] => {
     )
   }, [appUpdate, deviceLimit.limit, dismissBanner, options.onDeviceLimitPress, options.scope, store, t])
 
-  return appBanners
+  return { banners: appBanners, dismissBanner, metadata: { deviceLimit } }
 }

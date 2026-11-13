@@ -1,4 +1,5 @@
 import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { openLink } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
@@ -6,10 +7,15 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { View } from 'react-native'
-import { setMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { BannersScope, useBanners } from '../hooks/useBanners'
+import { DeviceLimit } from '../state/devices/device-limit'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
+
+const DEFAULT_MAX_DEVICES = 5
+const MAX_DEVICES_BANNER_COOLDOWN_MS = __DEV__
+  ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV
+  : DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD
 
 /** The container renders on Home (MainStack) and account landing (AuthStack); both register this route. */
 type ServiceNoticeParamList = Pick<BCSCMainStackParams & BCSCAuthStackParams, BCSCScreens.ServiceNotice>
@@ -42,7 +48,7 @@ export const NotificationBannerContainer = ({
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
   const setDeviceLimitPress = useCallback(() => setDevicesModalVisible(true), [])
-  const appBanners = useBanners(
+  const { banners, dismissBanner, metadata } = useBanners(
     scope === BannersScope.Home ? { scope, onDeviceLimitPress: setDeviceLimitPress } : { scope }
   )
 
@@ -85,29 +91,31 @@ export const NotificationBannerContainer = ({
   }, [])
 
   const handleDeleteDeviceCountMessage = useCallback(() => {
-    dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED] })
-    void setMaxDevicesBannerLastDisplayedDate(Date.now())
+    dismissBanner(BCSCBanner.DEVICE_LIMIT_EXCEEDED, MAX_DEVICES_BANNER_COOLDOWN_MS)
+    // void setMaxDevicesBannerLastDisplayedDate(Date.now()) // THOUGHT: Any cleanup here required?
     handleCloseDevicesModal({ shouldAnimate: true })
-  }, [dispatch, handleCloseDevicesModal])
+  }, [dismissBanner, handleCloseDevicesModal])
 
   return (
     <View>
-      <SafeAreaModal
-        visible={devicesModalVisible}
-        onRequestClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
-        transparent={true}
-        animationType={devicesModalShouldAnimate.current ? 'slide' : 'none'}
-      >
-        <ReviewDevices
-          maxDevices={3}
-          handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
-          handleDelete={handleDeleteDeviceCountMessage}
-          onManageDevices={onManageDevices ?? (() => {})}
-        />
-      </SafeAreaModal>
+      {metadata.deviceLimit.limit === DeviceLimit.Unknown ? null : (
+        <SafeAreaModal
+          visible={devicesModalVisible}
+          onRequestClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
+          transparent={true}
+          animationType={devicesModalShouldAnimate.current ? 'slide' : 'none'}
+        >
+          <ReviewDevices
+            maxDevices={metadata.deviceLimit.deviceLimit || DEFAULT_MAX_DEVICES}
+            handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
+            handleDelete={handleDeleteDeviceCountMessage}
+            onManageDevices={onManageDevices ?? (() => {})}
+          />
+        </SafeAreaModal>
+      )}
 
       <AppBanner
-        messages={[...appBanners, ...filteredBanners].map((banner) => ({
+        messages={[...banners, ...filteredBanners].map((banner) => ({
           id: banner.id,
           title: banner.title,
           description: banner.description,
