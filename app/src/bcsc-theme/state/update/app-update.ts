@@ -30,7 +30,7 @@ export const getAppUpdate = (facts: AppUpdateFacts): AppUpdate => {
     return AppUpdate.Unknown
   }
 
-  if (isNaN(facts.minBuild)) {
+  if (Number.isNaN(facts.minBuild)) {
     return AppUpdate.Unknown
   }
 
