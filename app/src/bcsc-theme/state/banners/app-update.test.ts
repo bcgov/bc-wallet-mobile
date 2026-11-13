@@ -1,35 +1,47 @@
-import { getOptionalUpdateAvailable } from './optional-update'
+import { AppUpdate, getAppUpdate } from './app-update'
 
-describe('getOptionalUpdateAvailable', () => {
+describe('getAppUpdate', () => {
   const facts = { appVersion: '3.0.0', appBuild: 101, minBuild: 100, supportedVersions: ['3.0.0', '3.1.0'] }
 
-  it('returns true when a supported version is newer than the app', () => {
-    expect(getOptionalUpdateAvailable(facts)).toBe(true)
+  it('returns Optional when a supported version is newer than the app', () => {
+    expect(getAppUpdate(facts)).toBe(AppUpdate.Optional)
   })
 
-  it('returns false when no supported version is newer than the app', () => {
-    expect(getOptionalUpdateAvailable({ ...facts, appVersion: '3.1.0' })).toBe(false)
+  it('returns None when no supported version is newer than the app', () => {
+    expect(getAppUpdate({ ...facts, appVersion: '3.1.0' })).toBe(AppUpdate.None)
   })
 
-  it('returns false when the supported versions are empty', () => {
-    expect(getOptionalUpdateAvailable({ ...facts, supportedVersions: [] })).toBe(false)
+  it('returns None when the supported versions are empty', () => {
+    expect(getAppUpdate({ ...facts, supportedVersions: [] })).toBe(AppUpdate.None)
   })
 
   it('ignores invalid entries and still finds a newer valid one', () => {
     const supportedVersions = [null, 42, '3.1.0'] as unknown as string[]
 
-    expect(getOptionalUpdateAvailable({ ...facts, supportedVersions })).toBe(true)
+    expect(getAppUpdate({ ...facts, supportedVersions })).toBe(AppUpdate.Optional)
   })
 
-  it('returns false when the build is below the minimum build', () => {
-    expect(getOptionalUpdateAvailable({ ...facts, appBuild: 99 })).toBe(false)
+  it('returns Mandatory when the build is below the minimum build', () => {
+    expect(getAppUpdate({ ...facts, appBuild: 99 })).toBe(AppUpdate.Mandatory)
   })
 
-  it('returns true when the build equals the minimum build', () => {
-    expect(getOptionalUpdateAvailable({ ...facts, appBuild: 100 })).toBe(true)
+  it('returns Mandatory when the build is below the minimum build, whatever the supported versions', () => {
+    expect(getAppUpdate({ ...facts, appBuild: 99, supportedVersions: [] })).toBe(AppUpdate.Mandatory)
   })
 
-  it('fails open when the minimum build is not a number', () => {
-    expect(getOptionalUpdateAvailable({ ...facts, minBuild: NaN })).toBe(true)
+  it('returns Optional when the build equals the minimum build', () => {
+    expect(getAppUpdate({ ...facts, appBuild: 100 })).toBe(AppUpdate.Optional)
+  })
+
+  it('returns Unknown when the minimum build is missing', () => {
+    expect(getAppUpdate({ ...facts, minBuild: undefined })).toBe(AppUpdate.Unknown)
+  })
+
+  it('returns Unknown when the minimum build is not a number', () => {
+    expect(getAppUpdate({ ...facts, minBuild: NaN })).toBe(AppUpdate.Unknown)
+  })
+
+  it('returns Unknown when the supported versions are missing', () => {
+    expect(getAppUpdate({ ...facts, supportedVersions: undefined })).toBe(AppUpdate.Unknown)
   })
 })

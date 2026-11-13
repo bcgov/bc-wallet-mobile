@@ -1,6 +1,6 @@
 import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { openLink } from '@/utils/links'
+import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -19,7 +19,7 @@ type ServiceNoticeParamList = Pick<BCSCMainStackParams & BCSCAuthStackParams, BC
 interface NotificationBannerContainerProps {
   onManageDevices: () => void
   bannerMessages: BCSCBannerMessage[]
-  excludedBannerIds?: BCSCBanner[]
+  hiddenBannerIds?: BCSCBanner[]
 }
 
 /**
@@ -31,21 +31,29 @@ interface NotificationBannerContainerProps {
 export const NotificationBannerContainer = ({
   onManageDevices,
   bannerMessages,
-  excludedBannerIds,
+  hiddenBannerIds,
 }: NotificationBannerContainerProps) => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<ServiceNoticeParamList>>()
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
   const appUpdate = useAppUpdate()
 
-  // NOTE: this function will be deprecated once all banners are migrated
+  // NOTE: this memo and below handleBannerPress func will be deprecated once all banners are migrated
+  const filteredStoreBanners = useMemo(
+    () =>
+      bannerMessages.filter((banner) => {
+        return banner.id !== BCSCBanner.APP_UPDATE_AVAILABLE
+      }),
+    [bannerMessages]
+  )
+
   const handleBannerPress = async (banner: BCSCBannerMessage): Promise<void> => {
     const bannerId = banner.id
     // Handle other banner types as needed
 
-    if (banner?.onPress) {
+    if (banner.onPress) {
       return banner.onPress(bannerId)
     }
 
@@ -61,7 +69,7 @@ export const NotificationBannerContainer = ({
       void openLink(banner.metadata.contactLink)
     }
 
-    const message = store.bcsc.bannerMessages.find((banner) => banner.id === bannerId)
+    const message = filteredStoreBanners.find((banner) => banner.id === bannerId)
     // Only dismiss the banner if it is marked as dismissable
     if (message?.dismissible) {
       // Default action: remove the banner permanently on press
@@ -69,9 +77,14 @@ export const NotificationBannerContainer = ({
     }
   }
 
+  /**
+   * Returns an array of banner messages to be displayed, excluding any banners that are marked as hidden.
+   *  App Banners:
+   *    1. "App Update Available" - shown when an optional app update is available.
+   */
   const appBanners = useMemo(() => {
     const bannerMessages: BCSCBannerMessage[] = []
-    const excluded = new Set(excludedBannerIds ?? [])
+    const hidden = new Set(hiddenBannerIds ?? [])
 
     if (appUpdate === AppUpdate.Optional) {
       bannerMessages.push({
@@ -79,11 +92,14 @@ export const NotificationBannerContainer = ({
         title: t('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'),
         type: 'info',
         dismissible: true,
+        onPress: () => {
+          void openLink(getBCSCAppStoreUrl())
+        },
       })
     }
-    // Add other banner messages as needed, filtering out excluded banners
-    return bannerMessages.filter((banner) => !excluded.has(banner.id))
-  }, [appUpdate, excludedBannerIds, t])
+    // Add other banner messages as needed, filtering out hidden banners
+    return bannerMessages.filter((banner) => !hidden.has(banner.id))
+  }, [appUpdate, hiddenBannerIds, t])
 
   const handleCloseDevicesModal = useCallback(({ shouldAnimate }: { shouldAnimate: boolean }) => {
     devicesModalShouldAnimate.current = shouldAnimate
@@ -113,7 +129,7 @@ export const NotificationBannerContainer = ({
       </SafeAreaModal>
 
       <AppBanner
-        messages={[...appBanners, ...bannerMessages].map((banner) => ({
+        messages={[...appBanners, ...filteredStoreBanners].map((banner) => ({
           id: banner.id,
           title: banner.title,
           description: banner.description,

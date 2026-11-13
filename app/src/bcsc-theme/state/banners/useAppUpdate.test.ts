@@ -1,8 +1,7 @@
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import * as ServerStatusContext from '@/bcsc-theme/contexts/ServerStatusContext'
-import * as links from '@/utils/links'
-import { act, renderHook } from '@testing-library/react-native'
-import { MIGRATED_BANNER_IDS, useBanners, useUpdateBanner } from './useAppUpdate'
+import { renderHook } from '@testing-library/react-native'
+import { AppUpdate } from './app-update'
+import { useAppUpdate } from './useAppUpdate'
 
 // The device-info mock reports app version 4.0.0 and build 142
 const mockServerStatus = (serverStatus: unknown) =>
@@ -14,82 +13,59 @@ const mockServerStatus = (serverStatus: unknown) =>
     refresh: jest.fn(),
   })
 
-const newerVersionStatus = { minVersion: '100', supportedVersions: ['4.0.0', '4.1.0'] }
-
-describe('MIGRATED_BANNER_IDS', () => {
-  it('includes the update banner', () => {
-    expect(MIGRATED_BANNER_IDS).toContain(BCSCBanner.APP_UPDATE_AVAILABLE)
-  })
-})
-
-describe('useUpdateBanner', () => {
+describe('useAppUpdate', () => {
   afterEach(() => {
     jest.restoreAllMocks()
   })
 
-  it('returns the info banner when a newer version is available', () => {
-    mockServerStatus(newerVersionStatus)
+  it('returns Optional when a supported version is newer than the app', () => {
+    mockServerStatus({ minVersion: '100', supportedVersions: ['4.0.0', '4.1.0'] })
 
-    const { result } = renderHook(() => useUpdateBanner())
+    const { result } = renderHook(() => useAppUpdate())
 
-    expect(result.current).toMatchObject({
-      id: BCSCBanner.APP_UPDATE_AVAILABLE,
-      title: 'BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle',
-      type: 'info',
-      dismissible: true,
-    })
+    expect(result.current).toBe(AppUpdate.Optional)
   })
 
-  it('returns null when no newer version is available', () => {
+  it('returns None when no supported version is newer than the app', () => {
     mockServerStatus({ minVersion: '100', supportedVersions: ['4.0.0'] })
 
-    const { result } = renderHook(() => useUpdateBanner())
+    const { result } = renderHook(() => useAppUpdate())
 
-    expect(result.current).toBeNull()
+    expect(result.current).toBe(AppUpdate.None)
   })
 
-  it('returns null when the server status is unavailable', () => {
+  it('returns Mandatory when the app build is below the minimum build', () => {
+    mockServerStatus({ minVersion: '200', supportedVersions: ['4.0.0', '4.1.0'] })
+
+    const { result } = renderHook(() => useAppUpdate())
+
+    expect(result.current).toBe(AppUpdate.Mandatory)
+  })
+
+  it('returns Unknown when the server status is unavailable', () => {
     mockServerStatus(null)
 
-    const { result } = renderHook(() => useUpdateBanner())
+    const { result } = renderHook(() => useAppUpdate())
 
-    expect(result.current).toBeNull()
+    expect(result.current).toBe(AppUpdate.Unknown)
   })
 
-  it('opens the app store and hides the banner when pressed', () => {
-    mockServerStatus(newerVersionStatus)
-    jest.spyOn(links, 'getBCSCAppStoreUrl').mockReturnValue('https://example.com/store')
-    const openLinkSpy = jest.spyOn(links, 'openLink').mockResolvedValue(undefined as any)
+  it('updates when the server status changes', () => {
+    const spy = mockServerStatus({ minVersion: '100', supportedVersions: ['4.0.0'] })
 
-    const { result } = renderHook(() => useUpdateBanner())
+    const { result, rerender } = renderHook(() => useAppUpdate())
 
-    act(() => {
-      result.current?.onPress?.(BCSCBanner.APP_UPDATE_AVAILABLE)
+    expect(result.current).toBe(AppUpdate.None)
+
+    spy.mockReturnValue({
+      isAvailable: true,
+      serverStatus: { minVersion: '100', supportedVersions: ['4.0.0', '4.1.0'] } as any,
+      isChecking: false,
+      hasChecked: true,
+      refresh: jest.fn(),
     })
+    rerender({})
 
-    expect(openLinkSpy).toHaveBeenCalledWith('https://example.com/store')
-    expect(result.current).toBeNull()
-  })
-})
-
-describe('useBanners', () => {
-  afterEach(() => {
-    jest.restoreAllMocks()
-  })
-
-  it('returns the update banner when it applies', () => {
-    mockServerStatus(newerVersionStatus)
-
-    const { result } = renderHook(() => useBanners())
-
-    expect(result.current.map((banner) => banner.id)).toEqual([BCSCBanner.APP_UPDATE_AVAILABLE])
-  })
-
-  it('returns an empty array when no banner applies', () => {
-    mockServerStatus(null)
-
-    const { result } = renderHook(() => useBanners())
-
-    expect(result.current).toEqual([])
+    expect(result.current).toBe(AppUpdate.Optional)
   })
 })

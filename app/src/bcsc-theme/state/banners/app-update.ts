@@ -26,7 +26,11 @@ interface AppUpdateFacts {
  * @returns - The kind of update that applies.
  */
 export const getAppUpdate = (facts: AppUpdateFacts): AppUpdate => {
-  if (facts.minBuild === undefined || isNaN(facts.minBuild)) {
+  if (facts.minBuild === undefined) {
+    return AppUpdate.Unknown
+  }
+
+  if (isNaN(facts.minBuild)) {
     return AppUpdate.Unknown
   }
 
@@ -36,10 +40,6 @@ export const getAppUpdate = (facts: AppUpdateFacts): AppUpdate => {
 
   if (facts.appBuild < facts.minBuild) {
     return AppUpdate.Mandatory
-  }
-
-  if (facts.supportedVersions.length === 0) {
-    return AppUpdate.None
   }
 
   const optionalUpdateAvailable = facts.supportedVersions.some(
