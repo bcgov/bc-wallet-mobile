@@ -1,6 +1,7 @@
-import { TestUsers } from '../../../src/constants.js'
+import type { TestUser } from '../../../src/constants.js'
 import { presentBcscCardAsEvidence } from '../../../src/flows/verify.js'
 import { canInjectCardBarcodes } from '../../../src/helpers/camera.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 import { expectRerouteToMethodSelection, reachFirstIdCapture } from './reroute-context.js'
 
 /**
@@ -15,10 +16,14 @@ import { expectRerouteToMethodSelection, reachFirstIdCapture } from './reroute-c
  * ANDROID + SAUCE ONLY, one-way per session — see the photo-card journey for why.
  */
 describe('Scan journey: non-BCSC reroutes to a combined card', () => {
-  before(function () {
+  /** Whose card is photographed. */
+  let cardHolder: TestUser
+
+  before(async function () {
     if (!canInjectCardBarcodes()) {
       return this.skip()
     }
+    cardHolder = await arrangeTestUser('combined')
   })
 
   it('reaches the first non-BCSC document capture', async () => {
@@ -26,7 +31,7 @@ describe('Scan journey: non-BCSC reroutes to a combined card', () => {
   })
 
   it('reroutes to the method choice when the photographed ID is a real combined card', async () => {
-    await presentBcscCardAsEvidence(TestUsers.combined.cardScanTarget)
+    await presentBcscCardAsEvidence(cardHolder)
     await expectRerouteToMethodSelection()
   })
 })
