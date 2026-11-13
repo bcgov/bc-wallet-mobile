@@ -277,6 +277,64 @@ describe('reducer', () => {
 
     expect(result.bcsc.verificationStarted).toBeUndefined()
   })
+
+  describe('VERIFICATION_STATUS_RECEIVED', () => {
+    const received = (state: typeof initialState, payload: object[]) =>
+      reducer(state, { type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED, payload })
+
+    it('stores a cancelled status together with its message', () => {
+      const result = received(initialState, [{ status: 'cancelled', status_message: 'Face does not match' }])
+
+      expect(result.bcscSecure.verificationRequestStatus).toBe('cancelled')
+      expect(result.bcscSecure.verificationRequestStatusMessage).toBe('Face does not match')
+    })
+
+    it('stores pending and leaves the message undefined', () => {
+      const cancelled = received(initialState, [{ status: 'cancelled', status_message: 'Face does not match' }])
+      const result = received(cancelled, [{ status: 'pending', status_message: 'Waiting' }])
+
+      expect(result.bcscSecure.verificationRequestStatus).toBe('pending')
+      expect(result.bcscSecure.verificationRequestStatusMessage).toBeUndefined()
+    })
+
+    it('clears an earlier cancelled message when verified arrives', () => {
+      const cancelled = received(initialState, [{ status: 'cancelled', status_message: 'Face does not match' }])
+      const result = received(cancelled, [{ status: 'verified' }])
+
+      expect(result.bcscSecure.verificationRequestStatus).toBe('verified')
+      expect(result.bcscSecure.verificationRequestStatusMessage).toBeUndefined()
+    })
+
+    it('ignores an unrecognised status and leaves the stored state untouched', () => {
+      const pending = received(initialState, [{ status: 'pending' }])
+      const result = received(pending, [{ status: 'expired', status_message: 'x' }])
+
+      expect(result).toBe(pending)
+      expect(result.bcscSecure.verificationRequestStatus).toBe('pending')
+      expect(result.bcscSecure.verificationRequestStatusMessage).toBeUndefined()
+    })
+
+    it('ignores an empty payload', () => {
+      const pending = received(initialState, [{ status: 'pending' }])
+
+      expect(received(pending, [])).toBe(pending)
+    })
+
+    it.each([
+      ['pending', [{ status: 'pending' }]],
+      ['cancelled with a message', [{ status: 'cancelled', status_message: 'Face does not match' }]],
+    ])('returns the same state object when an identical %s result is repeated', (_label, payload) => {
+      const first = received(initialState, structuredClone(payload))
+
+      expect(received(first, structuredClone(payload))).toBe(first)
+    })
+
+    it('does not write to persistent storage', () => {
+      received(initialState, [{ status: 'cancelled', status_message: 'Face does not match' }])
+
+      expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+    })
+  })
 })
 
 describe('REMOVE_AVAILABLE_MEDIATOR', () => {

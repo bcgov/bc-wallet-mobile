@@ -33,27 +33,16 @@ describe('PendingVerificationRecoverySystemCheck', () => {
   })
 
   describe('onSuccess', () => {
-    it('sets the verification request status to verified, same as the backcheck check', () => {
+    it('records a verified status through the status-received action, same as the backcheck check', () => {
       const utils = makeUtils()
       const check = new PendingVerificationRecoverySystemCheck(jest.fn(), utils)
 
       check.onSuccess()
 
+      expect(utils.dispatch).toHaveBeenCalledTimes(1)
       expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-        payload: ['verified'],
-      })
-    })
-
-    it('clears the verification request status message', () => {
-      const utils = makeUtils()
-      const check = new PendingVerificationRecoverySystemCheck(jest.fn(), utils)
-
-      check.onSuccess()
-
-      expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-        payload: [undefined],
+        type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+        payload: [{ status: 'verified' }],
       })
     })
   })

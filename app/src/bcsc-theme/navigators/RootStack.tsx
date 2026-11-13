@@ -19,8 +19,8 @@ import { InvalidEnvironment } from '../features/modal/InvalidEnvironment'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { useAccountPhase } from '../state/account/useAccountPhase'
+import { useVerificationState } from '../state/verification/useVerificationState'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
@@ -55,7 +55,7 @@ const FcmCardExpirySync: React.FC = () => {
  */
 const useVerificationRouting = (appReady: boolean) => {
   const [store, dispatch] = useStore<BCState>()
-  const { needsVerification, isVerified, isVerificationInProgress, isDeactivated } = useVerificationStatus()
+  const { needsVerification, isVerified, isVerificationInProgress, isDeactivated } = useVerificationState()
   const { isAvailable: isServerAvailable, hasChecked: serverStatusChecked } = useServerStatus()
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
   // Once per session: whether the auto-resume below has been decided. State, not a ref, so the
@@ -155,7 +155,7 @@ const BCSCRootStack: React.FC = () => {
   const { emitErrorModal } = useErrorAlert()
   const { isNavigationReady } = useNavigationContainer()
   const { initializingAccount } = useInitializeAccountStatus()
-  const { isVerified } = useVerificationStatus()
+  const { isVerified } = useVerificationState()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
