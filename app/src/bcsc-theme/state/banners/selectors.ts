@@ -1,15 +1,16 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
-import { AppUpdate, getOptionalUpdateAvailable } from './optional-update'
+import { AppUpdate, getAppUpdate } from './app-update'
 
 /**
- * Determines whether an optional update is available based on the server status and app version.
+ * Selects the kind of app update that applies from the server status and the installed app version and build.
+ * A missing server status gives `AppUpdate.Unknown`.
  *
- * @param serverStatus - The server status response data.
- * @returns - True if an optional update is available, false otherwise.
+ * @param serverStatus - The server status response data, or null when it has not loaded.
+ * @returns - The kind of update that applies, see `getAppUpdate`.
  */
-export const selectOptionalUpdateAvailable = (serverStatus: ServerStatusResponseData | null): AppUpdate => {
-  return getOptionalUpdateAvailable({
+export const selectAppUpdate = (serverStatus: ServerStatusResponseData | null): AppUpdate => {
+  return getAppUpdate({
     appVersion: getVersion(),
     appBuild: Number(getBuildNumber()),
     minBuild: serverStatus?.minVersion ? Number(serverStatus.minVersion) : undefined,

@@ -2,7 +2,7 @@ import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import * as ServerStatusContext from '@/bcsc-theme/contexts/ServerStatusContext'
 import * as links from '@/utils/links'
 import { act, renderHook } from '@testing-library/react-native'
-import { MIGRATED_BANNER_IDS, useBanners, useUpdateBanner } from './useBanners'
+import { MIGRATED_BANNER_IDS, useBanners, useUpdateBanner } from './useAppUpdate'
 
 // The device-info mock reports app version 4.0.0 and build 142
 const mockServerStatus = (serverStatus: unknown) =>

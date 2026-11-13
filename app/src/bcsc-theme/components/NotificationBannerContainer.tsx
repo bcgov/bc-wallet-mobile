@@ -1,4 +1,3 @@
-import { MIGRATED_BANNER_IDS, useBanners } from '@/bcsc-theme/state/banners/useBanners'
 import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { openLink } from '@/utils/links'
@@ -6,9 +5,12 @@ import { SafeAreaModal, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import { setMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
+import { AppUpdate } from '../state/banners/app-update'
+import { useAppUpdate } from '../state/banners/useAppUpdate'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 
 /** The container renders on Home (MainStack) and account landing (AuthStack); both register this route. */
@@ -17,6 +19,7 @@ type ServiceNoticeParamList = Pick<BCSCMainStackParams & BCSCAuthStackParams, BC
 interface NotificationBannerContainerProps {
   onManageDevices: () => void
   bannerMessages: BCSCBannerMessage[]
+  excludedBannerIds?: BCSCBanner[]
 }
 
 /**
@@ -25,23 +28,24 @@ interface NotificationBannerContainerProps {
  * @param {NotificationBannerContainerProps} props - The properties for the NotificationBannerContainer component.
  * @returns {*} {React.ReactElement} The NotificationBannerContainer component.
  */
-export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }: NotificationBannerContainerProps) => {
+export const NotificationBannerContainer = ({
+  onManageDevices,
+  bannerMessages,
+  excludedBannerIds,
+}: NotificationBannerContainerProps) => {
+  const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<ServiceNoticeParamList>>()
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
-  const derivedBanners = useBanners()
+  const appUpdate = useAppUpdate()
 
-  // TODO (MD): Remove the store banners once every banner is derived by useBanners
-  const banners = useMemo(
-    () => [...derivedBanners, ...bannerMessages.filter((banner) => !MIGRATED_BANNER_IDS.includes(banner.id))],
-    [derivedBanners, bannerMessages]
-  )
-
+  // NOTE: this function will be deprecated once all banners are migrated
   const handleBannerPress = async (banner: BCSCBannerMessage): Promise<void> => {
     const bannerId = banner.id
-    // Derived banners own their press behaviour
-    if (banner.onPress) {
+    // Handle other banner types as needed
+
+    if (banner?.onPress) {
       return banner.onPress(bannerId)
     }
 
@@ -64,6 +68,22 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
       dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
     }
   }
+
+  const appBanners = useMemo(() => {
+    const bannerMessages: BCSCBannerMessage[] = []
+    const excluded = new Set(excludedBannerIds ?? [])
+
+    if (appUpdate === AppUpdate.Optional) {
+      bannerMessages.push({
+        id: BCSCBanner.APP_UPDATE_AVAILABLE,
+        title: t('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'),
+        type: 'info',
+        dismissible: true,
+      })
+    }
+    // Add other banner messages as needed, filtering out excluded banners
+    return bannerMessages.filter((banner) => !excluded.has(banner.id))
+  }, [appUpdate, excludedBannerIds, t])
 
   const handleCloseDevicesModal = useCallback(({ shouldAnimate }: { shouldAnimate: boolean }) => {
     devicesModalShouldAnimate.current = shouldAnimate
@@ -93,7 +113,7 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
       </SafeAreaModal>
 
       <AppBanner
-        messages={banners.map((banner) => ({
+        messages={[...appBanners, ...bannerMessages].map((banner) => ({
           id: banner.id,
           title: banner.title,
           description: banner.description,
