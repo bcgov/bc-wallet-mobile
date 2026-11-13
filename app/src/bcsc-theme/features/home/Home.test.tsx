@@ -2,6 +2,7 @@ import { BCSCBanner, BCSCBannerMessage } from '@/bcsc-theme/components/AppBanner
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import * as ServerStatusContext from '@/bcsc-theme/contexts/ServerStatusContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { IdToken } from '@/bcsc-theme/utils/id-token'
 import { initialState } from '@/store'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -149,12 +150,9 @@ describe('Home', () => {
 describe('Home (default export, v4.1)', () => {
   let mockNavigation: any
 
-  const deviceLimitBanner: BCSCBannerMessage = {
-    id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
-    title: 'Device limit reached',
-    type: 'warning',
-    dismissible: false,
-  }
+  // The device-limit banner is derived from the id token, not saved in the store
+  const overLimitIdToken = { bcsc_devices_count: 4, bcsc_max_devices: 3 }
+  const deviceLimitTitle = 'BCSC.SystemChecks.Devices.DeviceLimitReachedBannerTitle'
 
   const serverNotificationBanner: BCSCBannerMessage = {
     id: BCSCBanner.IAS_SERVER_NOTIFICATION,
@@ -163,9 +161,12 @@ describe('Home (default export, v4.1)', () => {
     dismissible: true,
   }
 
-  const renderHome = (bannerMessages: BCSCBannerMessage[]) =>
+  const renderHome = (bannerMessages: BCSCBannerMessage[], idTokenOverride?: Partial<IdToken>) =>
     render(
-      <BasicAppContext initialStateOverride={{ bcsc: { ...initialState.bcsc, bannerMessages } }}>
+      <BasicAppContext
+        initialStateOverride={{ bcsc: { ...initialState.bcsc, bannerMessages } }}
+        idTokenOverride={idTokenOverride}
+      >
         <DefaultHome navigation={mockNavigation} route={{ key: 'home', name: 'Home' } as any} />
       </BasicAppContext>
     )
@@ -175,7 +176,7 @@ describe('Home (default export, v4.1)', () => {
     jest.clearAllMocks()
   })
 
-  it('renders the device-limit banner from the store and the app-update banner from the server status on Home', () => {
+  it('renders the device-limit banner from the id token and the app-update banner from the server status on Home', () => {
     const serverStatusSpy = jest.spyOn(ServerStatusContext, 'useServerStatus').mockReturnValue({
       isAvailable: true,
       serverStatus: { minVersion: '100', supportedVersions: ['4.0.0', '4.1.0'] } as any,
@@ -185,9 +186,9 @@ describe('Home (default export, v4.1)', () => {
     })
 
     try {
-      const tree = renderHome([deviceLimitBanner])
+      const tree = renderHome([], overLimitIdToken)
 
-      expect(tree.getByText('Device limit reached')).toBeTruthy()
+      expect(tree.getByText(deviceLimitTitle)).toBeTruthy()
       expect(tree.getByText('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle')).toBeTruthy()
     } finally {
       serverStatusSpy.mockRestore()
@@ -211,18 +212,18 @@ describe('Home (default export, v4.1)', () => {
   it('renders no banners and still shows the empty-notifications copy when bannerMessages is empty', () => {
     const tree = renderHome([])
 
-    expect(tree.queryByText('Device limit reached')).toBeNull()
+    expect(tree.queryByText(deviceLimitTitle)).toBeNull()
     expect(tree.queryByText('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle')).toBeNull()
     expect(tree.queryByText('Server notification')).toBeNull()
     expect(tree.getByText('Notification.EmptyNotification.Title')).toBeTruthy()
   })
 
   it('shows the ReviewDevices modal content when the device-limit banner is tapped', () => {
-    const tree = renderHome([deviceLimitBanner])
+    const tree = renderHome([], overLimitIdToken)
 
     expect(tree.queryByText('BCSC.SystemChecks.Devices.ReviewDevicesTitle')).toBeNull()
 
-    fireEvent.press(tree.getByText('Device limit reached'))
+    fireEvent.press(tree.getByText(deviceLimitTitle))
 
     expect(tree.getByText('BCSC.SystemChecks.Devices.ReviewDevicesTitle')).toBeTruthy()
 

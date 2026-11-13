@@ -1,4 +1,5 @@
 import * as ServerStatusContext from '@/bcsc-theme/contexts/ServerStatusContext'
+import { BannersScope } from '@/bcsc-theme/hooks/useBanners'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -13,12 +14,9 @@ jest.mock('@/utils/links', () => ({
   getBCSCAppStoreUrl: jest.fn(() => 'https://example.com/store'),
 }))
 
-const deviceLimitBanner: BCSCBannerMessage = {
-  id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
-  title: 'Device limit reached',
-  type: 'warning',
-  dismissible: false,
-}
+// The device-limit banner is derived from the id token, not saved in the store
+const overLimitIdToken = { bcsc_devices_count: 4, bcsc_max_devices: 3 }
+const deviceLimitTitle = 'BCSC.SystemChecks.Devices.DeviceLimitReachedBannerTitle'
 
 const serverNotificationBanner: BCSCBannerMessage = {
   id: BCSCBanner.IAS_SERVER_NOTIFICATION,
@@ -50,61 +48,81 @@ describe('NotificationBannerContainer', () => {
     jest.clearAllMocks()
   })
 
-  it('renders the banners passed via bannerMessages', () => {
+  it('renders the store banners and the device-limit banner from the id token', () => {
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext idTokenOverride={overLimitIdToken}>
         <NotificationBannerContainer
+          scope={BannersScope.Home}
           onManageDevices={onManageDevices}
-          bannerMessages={[deviceLimitBanner, serverNotificationBanner]}
+          bannerMessages={[serverNotificationBanner]}
         />
       </BasicAppContext>
     )
 
-    expect(tree.getByText('Device limit reached')).toBeTruthy()
+    expect(tree.getByText(deviceLimitTitle)).toBeTruthy()
     expect(tree.getByText('Server notification')).toBeTruthy()
   })
 
   it('renders nothing when bannerMessages is empty', () => {
     const tree = render(
       <BasicAppContext>
-        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[]} />
+        <NotificationBannerContainer scope={BannersScope.Home} onManageDevices={onManageDevices} bannerMessages={[]} />
       </BasicAppContext>
     )
 
-    expect(tree.queryByText('Device limit reached')).toBeNull()
+    expect(tree.queryByText(deviceLimitTitle)).toBeNull()
     expect(tree.queryByText('Server notification')).toBeNull()
   })
 
-  it('only renders banners the caller provides', () => {
+  it('does not render the device-limit banner when the id token is unavailable', () => {
     const tree = render(
       <BasicAppContext>
-        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[serverNotificationBanner]} />
+        <NotificationBannerContainer
+          scope={BannersScope.Home}
+          onManageDevices={onManageDevices}
+          bannerMessages={[serverNotificationBanner]}
+        />
       </BasicAppContext>
     )
 
-    expect(tree.queryByText('Device limit reached')).toBeNull()
+    expect(tree.queryByText(deviceLimitTitle)).toBeNull()
     expect(tree.getByText('Server notification')).toBeTruthy()
+  })
+
+  it('does not render the device-limit banner on the auth scope, even when over the limit', () => {
+    const tree = render(
+      <BasicAppContext idTokenOverride={overLimitIdToken}>
+        <NotificationBannerContainer scope={BannersScope.Auth} bannerMessages={[]} />
+      </BasicAppContext>
+    )
+
+    expect(tree.queryByText(deviceLimitTitle)).toBeNull()
   })
 
   it('renders banners in severity order regardless of prop order', () => {
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext idTokenOverride={overLimitIdToken}>
         <NotificationBannerContainer
+          scope={BannersScope.Home}
           onManageDevices={onManageDevices}
-          bannerMessages={[serverNotificationBanner, deviceLimitBanner]}
+          bannerMessages={[serverNotificationBanner]}
         />
       </BasicAppContext>
     )
 
     const titles = tree.getAllByTestId(/text-(error|warning|info|success)$/).map((node) => node.props.children)
 
-    expect(titles).toEqual(['Device limit reached', 'Server notification'])
+    expect(titles).toEqual([deviceLimitTitle, 'Server notification'])
   })
 
   it('hides a dismissible banner after it is pressed', () => {
     const tree = render(
       <BasicAppContext>
-        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[serverNotificationBanner]} />
+        <NotificationBannerContainer
+          scope={BannersScope.Home}
+          onManageDevices={onManageDevices}
+          bannerMessages={[serverNotificationBanner]}
+        />
       </BasicAppContext>
     )
 
@@ -115,7 +133,11 @@ describe('NotificationBannerContainer', () => {
   it('opens the service notice screen when the notice banner is pressed', () => {
     const tree = render(
       <BasicAppContext>
-        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[serviceNoticeBanner]} />
+        <NotificationBannerContainer
+          scope={BannersScope.Home}
+          onManageDevices={onManageDevices}
+          bannerMessages={[serviceNoticeBanner]}
+        />
       </BasicAppContext>
     )
 
@@ -130,7 +152,11 @@ describe('NotificationBannerContainer', () => {
   it('opens the contact link when the outage banner is pressed', () => {
     const tree = render(
       <BasicAppContext>
-        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[serverUnavailableBanner]} />
+        <NotificationBannerContainer
+          scope={BannersScope.Home}
+          onManageDevices={onManageDevices}
+          bannerMessages={[serverUnavailableBanner]}
+        />
       </BasicAppContext>
     )
 
@@ -152,7 +178,11 @@ describe('NotificationBannerContainer', () => {
     try {
       const tree = render(
         <BasicAppContext>
-          <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[]} />
+          <NotificationBannerContainer
+            scope={BannersScope.Home}
+            onManageDevices={onManageDevices}
+            bannerMessages={[]}
+          />
         </BasicAppContext>
       )
 
@@ -171,6 +201,7 @@ describe('NotificationBannerContainer', () => {
     const tree = render(
       <BasicAppContext>
         <NotificationBannerContainer
+          scope={BannersScope.Home}
           onManageDevices={onManageDevices}
           bannerMessages={[{ id: BCSCBanner.APP_UPDATE_AVAILABLE, title: 'Stored update', type: 'info' }]}
         />
