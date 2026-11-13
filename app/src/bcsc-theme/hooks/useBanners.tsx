@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next'
 import { BCSCBanner, BCSCBannerMessage } from '../components/AppBanner'
 import { AppUpdate } from '../state/app-update/app-update'
 import { useAppUpdate } from '../state/app-update/useAppUpdate'
+import { BannerDismissal } from '../state/banners/banner-dismissal'
+import { selectBannerDismissal } from '../state/banners/selectors'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
@@ -26,10 +28,10 @@ export const useBanners = (): BCSCBannerMessage[] => {
   )
 
   const dismissBanner = useCallback(
-    (bannerId: BCSCBanner, dismissedFor: number) => {
+    (bannerId: BCSCBanner, dismissedForMs: number) => {
       dispatch({
         type: BCDispatchAction.DISMISS_BANNER,
-        payload: [{ id: bannerId, dismissedFor }],
+        payload: [{ bannerId: bannerId, dismissedUntil: Date.now() + dismissedForMs }],
       })
     },
     [dispatch]
@@ -51,8 +53,8 @@ export const useBanners = (): BCSCBannerMessage[] => {
       })
     }
 
-    return banners
-  }, [appUpdate, dismissBanner, t])
+    return banners.filter((banner) => selectBannerDismissal(store, banner.id) !== BannerDismissal.Dismissed)
+  }, [appUpdate, dismissBanner, store, t])
 
   return useMemo(() => [...appBanners, ...filteredStoreBanners], [filteredStoreBanners, appBanners])
 }

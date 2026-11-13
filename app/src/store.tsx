@@ -51,7 +51,7 @@ export interface BCSCAlertEvent {
   reason: string
 }
 
-export type DismissedBanners = Partial<Record<BCSCBanner, { dismissedAt: number; dismissedFor?: number }>>
+export type DismissedBanners = Partial<Record<BCSCBanner, { dismissedAt: number; dismissedUntil?: number }>>
 
 /**
  * Collection of metadata needed when a user is registering for the application
@@ -841,9 +841,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
 
     case BCSCDispatchAction.DISMISS_BANNER: {
-      const payload: { id: BCSCBanner; dismissedFor?: number } = (action?.payload || []).pop()
+      const payload: { bannerId: BCSCBanner; dismissedUntil?: number } = (action?.payload || []).pop()
       const dismissedBanners = state.bcsc.dismissedBanners ?? {}
-      dismissedBanners[payload.id] = { dismissedAt: Date.now(), dismissedFor: payload.dismissedFor }
+      dismissedBanners[payload.bannerId] = { dismissedAt: Date.now(), dismissedUntil: payload.dismissedUntil }
 
       const bcsc = { ...state.bcsc, dismissedBanners }
       const newState = { ...state, bcsc }
