@@ -1,4 +1,6 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
+import { AppUpdate } from '@/bcsc-theme/state/banners/app-update'
+import { selectAppUpdate } from '@/bcsc-theme/state/banners/selectors'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
@@ -60,13 +62,7 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
       supportedVersions: this.serverStatus.supportedVersions,
     })
 
-    const minBuild = Number(this.serverStatus.minVersion)
-    // Fail open: a missing or non-numeric minimum must not block every user
-    if (Number.isNaN(minBuild)) {
-      return true
-    }
-
-    return this.appBuild >= minBuild
+    return selectAppUpdate(this.serverStatus) !== AppUpdate.Mandatory
   }
 
   /**
