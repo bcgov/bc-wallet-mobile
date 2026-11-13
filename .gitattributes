@@ -1,0 +1,8 @@
+# Marked generated so GitHub collapses them in PR diffs; still expand them
+# when they change unexpectedly.
+*.snap linguist-generated=true
+**/__snapshots__/** linguist-generated=true
+yarn.lock linguist-generated=true
+package-lock.json linguist-generated=true
+Podfile.lock linguist-generated=true
+Gemfile.lock linguist-generated=true
