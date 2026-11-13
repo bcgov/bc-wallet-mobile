@@ -1219,6 +1219,9 @@ const translation = {
     "BirthdateLockout": {
       "Heading": "Sorry, you've tried too many times",
       "Message": "Please try again later.",
+      "WaitMinutes": "Try again in about {{minutes}} minutes.",
+      "WaitOneMinute": "Try again in about 1 minute.",
+      "WaitOver": "You can try again now.",
     },
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity.",

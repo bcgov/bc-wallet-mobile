@@ -317,6 +317,7 @@ export const TestIds = {
     /** `BirthdateLockout` — too many wrong birthdates. `close` just goes back; there is no header. */
     birthdateLockout: {
       close: 'Close',
+      message: 'Message',
     },
     /** `VerificationCardError` — the authorize-failure screen at the EnterBirthdate submit. The
      *  `MismatchedSerial` variant (CSN/birthdate mismatch or card-not-found — the unhandled-error path)
