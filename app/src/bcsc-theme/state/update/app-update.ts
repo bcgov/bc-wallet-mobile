@@ -26,7 +26,6 @@ interface AppUpdateFacts {
  * @returns - The kind of update that applies.
  */
 export const getAppUpdate = (facts: AppUpdateFacts): AppUpdate => {
-  return AppUpdate.Optional
   if (facts.minBuild === undefined) {
     return AppUpdate.Unknown
   }
