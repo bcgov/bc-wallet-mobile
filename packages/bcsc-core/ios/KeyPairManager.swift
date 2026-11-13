@@ -155,14 +155,10 @@ class KeyPairManager: KeyPairManagerProtocol {
           let tag = String(data: tagData, encoding: .utf8),
           let keySize = dictionary[kSecAttrKeySizeInBits as String] as? Int,
           let created = dictionary[kSecAttrCreationDate as String] as? Date,
-          let typ = dictionary[kSecAttrKeyType as String] as? Int
-    else {
-      return nil
-    }
-
-    guard let keyType = (kSecAttrKeyTypeRSA as String) == String(typ) ? KeyType.RSA :
-      (kSecAttrKeyTypeEC as String) == String(typ) ? KeyType.EC :
-      (kSecAttrKeyTypeECSECPrimeRandom as String) == String(typ) ? KeyType.ECSECPR : nil
+          let typ = dictionary[kSecAttrKeyType as String] as? Int,
+          let keyType = (kSecAttrKeyTypeRSA as String) == String(typ) ? KeyType.RSA :
+          (kSecAttrKeyTypeEC as String) == String(typ) ? KeyType.EC :
+          (kSecAttrKeyTypeECSECPrimeRandom as String) == String(typ) ? KeyType.ECSECPR : nil
     else {
       return nil
     }

@@ -1,6 +1,9 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
+import * as useAlertsModule from '@/hooks/useAlerts'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation, useRoute } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -30,9 +33,13 @@ jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
 describe('ManualPairing', () => {
   let mockNavigation: any
   let alertSpy: any
+  const mockLoginDeviceErrorAlert = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest
+      .spyOn(useAlertsModule, 'useAlerts')
+      .mockReturnValue({ loginDeviceErrorAlert: mockLoginDeviceErrorAlert } as any)
     mockNavigation = useNavigation()
     jest.mocked(useRoute).mockReturnValue({ params: {} } as ReturnType<typeof useRoute>)
     mockUseServerStatus.mockReturnValue({ isAvailable: true })
@@ -160,6 +167,36 @@ describe('ManualPairing', () => {
       })
       expect(screen.queryByText('BCSC.ManualPairing.CodeDoesNotMatchMessage')).toBeNull()
       expect(alertSpy).not.toHaveBeenCalled()
+      // A server response is shown inline only, never as a device failure
+      expect(mockLoginDeviceErrorAlert).not.toHaveBeenCalled()
+    })
+
+    test('alerts with a way to report it when the device fails, keeping the inline failure', async () => {
+      const deviceError = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_DEVICE_ERROR, {
+        cause: new Error('signing failed'),
+        context: { failure_flow: 'pairing', failure_step: 'sign_pairing_code' },
+        track: false,
+      })
+      mockLoginByPairingCode.mockRejectedValue(deviceError)
+      renderScreen()
+
+      const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
+      fireEvent.changeText(codeInput, 'ABCDEF')
+
+      await waitFor(() => expect(mockLoginDeviceErrorAlert).toHaveBeenCalledWith(deviceError))
+      expect(screen.getByText('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage')).toBeTruthy()
+    })
+
+    test('does not alert for a plain 404, which is an incorrect code', async () => {
+      alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+      mockLoginByPairingCode.mockRejectedValue(mockAssertion404('<html>Not Found</html>').appError)
+      renderScreen()
+
+      const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
+      fireEvent.changeText(codeInput, 'ABCDEF')
+
+      await waitFor(() => expect(alertSpy).toHaveBeenCalled())
+      expect(mockLoginDeviceErrorAlert).not.toHaveBeenCalled()
     })
 
     test('navigates to PairingConfirmation on success', async () => {

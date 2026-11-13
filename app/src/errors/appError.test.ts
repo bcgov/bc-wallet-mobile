@@ -273,6 +273,69 @@ describe('AppError', () => {
       })
       expect(trackErrorEventSpy.mock.calls[0][0].message).not.toContain('MTIzNA')
     })
+
+    it('includes the route of a wrapped request error', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+      const requestError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
+        context: { http_method: 'POST', http_route: '/cardtap/v3/devices/assertion' },
+        track: false,
+      })
+
+      const error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: requestError })
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith({
+        code: AppEventCode.LOGIN_SERVER_ERROR,
+        message: `[${error.code}] POST /cardtap/v3/devices/assertion ${error.message}`,
+      })
+    })
+    it('includes the HTTP status of a wrapped request error', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+      const requestError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
+        cause: { response: { status: 403 } },
+        context: { http_method: 'POST', http_route: '/cardtap/v3/devices/assertion', http_status: 403 },
+        track: false,
+      })
+
+      const error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: requestError })
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith({
+        code: AppEventCode.LOGIN_SERVER_ERROR,
+        message: `[${error.code}] HTTP 403 POST /cardtap/v3/devices/assertion ${error.message}`,
+      })
+    })
+  })
+
+  describe('getChainedContext', () => {
+    it("merges the context of every wrapped AppError, letting the outer error's keys win", () => {
+      const inner = new AppError('inner', GENERAL_IDENTITY, {
+        context: { http_route: '/jwk', failure_step: 'jwks' },
+        track: false,
+      })
+      const middle = new AppError('middle', GENERAL_IDENTITY, {
+        cause: inner,
+        context: { failure_step: 'outer_step' },
+        track: false,
+      })
+      const outer = new AppError('outer', GENERAL_IDENTITY, { cause: middle, track: false })
+
+      expect(outer.getChainedContext()).toEqual({ http_route: '/jwk', failure_step: 'outer_step' })
+      expect(outer.context).toEqual({})
+    })
+
+    it('stops at a cause that is not an AppError', () => {
+      const cause = Object.assign(new Error('native'), { context: { secret: 'never read' } })
+      const error = new AppError('outer', GENERAL_IDENTITY, { cause, context: { a: 1 }, track: false })
+
+      expect(error.getChainedContext()).toEqual({ a: 1 })
+    })
+
+    it('stops following a cause cycle', () => {
+      const a = new AppError('a', GENERAL_IDENTITY, { context: { a: 1 }, track: false })
+      const b = new AppError('b', GENERAL_IDENTITY, { cause: a, context: { b: 2 }, track: false })
+      ;(a as { cause?: unknown }).cause = b
+
+      expect(b.getChainedContext()).toEqual({ a: 1, b: 2 })
+    })
   })
 
   describe('fromErrorDefinition', () => {
@@ -353,6 +416,24 @@ describe('AppError', () => {
       })
     })
 
+    it("keeps a wrapped error's failure and request context, so remote logs still say where it failed", () => {
+      const inner = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, {
+        context: { http_route: '/cardtap/v3/devices/assertion', failure_flow: 'pairing', failure_step: 'verify' },
+        track: false,
+      })
+
+      const json = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, {
+        cause: inner,
+        track: false,
+      }).toJSON()
+
+      expect(json.context).toMatchObject({
+        http_route: '/cardtap/v3/devices/assertion',
+        failure_flow: 'pairing',
+        failure_step: 'verify',
+      })
+    })
+
     it('summarizes the cause so a large request body is never serialized', () => {
       const identity = {
         category: ErrorCategory.NETWORK,
@@ -415,7 +496,7 @@ describe('AppError', () => {
       // Mimic an iOS native rejection carrying keychain diagnostics in userInfo.
       const nativeLike = Object.assign(new Error('Failed to retrieve key pair'), {
         code: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
-        userInfo: { site: 'retrieve_latest', keyCount: 2, keyTags: ['a/1', 'b/2'] },
+        userInfo: { site: 'retrieve_latest', keyCount: 2, keyCreated: ['2024-01-01T00:00:00Z'] },
       })
       const error = new AppError('Keychain lookup returned nil', identity, { cause: nativeLike, track: false })
 
@@ -425,8 +506,50 @@ describe('AppError', () => {
         name: 'Error',
         message: 'Failed to retrieve key pair',
         code: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
-        userInfo: { site: 'retrieve_latest', keyCount: 2, keyTags: ['a/1', 'b/2'] },
+        userInfo: { site: 'retrieve_latest', keyCount: 2, keyCreated: ['2024-01-01T00:00:00Z'] },
       })
+    })
+
+    it('follows a wrapped AppError to keep the native code and userInfo of its cause', () => {
+      const nativeLike = Object.assign(new Error('No keys available to sign the JWT.'), {
+        code: 'E_NO_KEYS_FOUND',
+        userInfo: { site: 'sign_jwt' },
+      })
+      const mapped = AppError.fromErrorDefinition(ErrorRegistry.NO_SIGNING_KEYS, { cause: nativeLike, track: false })
+      const error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: mapped, track: false })
+
+      const json = error.toJSON()
+
+      expect(json.cause).toEqual({
+        name: 'AppError',
+        message: mapped.message,
+        code: mapped.code,
+        cause: {
+          name: 'Error',
+          message: 'No keys available to sign the JWT.',
+          code: 'E_NO_KEYS_FOUND',
+          userInfo: { site: 'sign_jwt' },
+        },
+      })
+    })
+
+    it('stops following wrapped AppErrors after a fixed depth', () => {
+      let error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, {
+        cause: new Error('root'),
+        track: false,
+      })
+      for (let i = 0; i < 10; i++) {
+        error = AppError.fromErrorDefinition(ErrorRegistry.LOGIN_SERVER_ERROR, { cause: error, track: false })
+      }
+
+      let depth = 0
+      let node = error.toJSON().cause as { cause?: unknown } | undefined
+      while (node?.cause) {
+        depth++
+        node = node.cause as { cause?: unknown }
+      }
+
+      expect(depth).toBe(3)
     })
   })
 

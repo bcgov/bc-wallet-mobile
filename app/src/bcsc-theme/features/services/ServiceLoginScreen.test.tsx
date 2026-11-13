@@ -456,6 +456,8 @@ describe('ServiceLogin', () => {
           track: false,
         }
       )
+      // As trackFailureSteps labels a request error it keeps
+      requestError.addContext({ failure_cause_code: requestError.code })
       const tree = renderWithPairingCode(jest.fn().mockRejectedValue(requestError), {
         loginServerErrorAlert: mockLoginServerErrorAlert,
         loginDeviceErrorAlert: mockLoginDeviceErrorAlert,
@@ -467,8 +469,8 @@ describe('ServiceLogin', () => {
       const reported = mockLoginServerErrorAlert.mock.calls[0][0]
       expect(reported.appEvent).toBe(AppEventCode.LOGIN_SERVER_ERROR)
       expect(reported.cause).toBe(requestError)
-      // The report only flattens the outer error's context, so the wrapper carries it
-      expect(reported.context).toMatchObject({
+      // The wrapper copies nothing; the report reads where it failed through the cause chain
+      expect(reported.getChainedContext()).toMatchObject({
         failure_flow: 'pairing',
         failure_step: 'verify_device_assertion',
         failure_elapsed_ms: 120,
