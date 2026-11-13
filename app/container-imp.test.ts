@@ -125,6 +125,22 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     expect(storeValueForKeySpy).not.toHaveBeenCalled()
   })
 
+  it('loads a persisted rate-limit wait, and an older blob without the field', async () => {
+    const retryAt = { cardAdd: '2026-01-01T00:10:00.000Z' }
+    mockStoredValues[BCLocalStorageKeys.BCSC] = { appVersion: '1.0.0', installId: 'id', rateLimitRetryAt: retryAt }
+
+    const { registrations } = buildContainer()
+    const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
+    const dispatch = jest.fn()
+    await loadState(dispatch)
+    expect(dispatch.mock.calls[0][0].payload[0].bcsc.rateLimitRetryAt).toEqual(retryAt)
+
+    mockStoredValues[BCLocalStorageKeys.BCSC] = { appVersion: '1.0.0', installId: 'id' }
+    const older = jest.fn()
+    await loadState(older)
+    expect(older.mock.calls[0][0].payload[0].bcsc.rateLimitRetryAt).toBeUndefined()
+  })
+
   it('drops a persisted update-available banner on load but keeps other banners', async () => {
     const serviceNotice = {
       id: BCSCBanner.IAS_SERVER_NOTIFICATION,

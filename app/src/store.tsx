@@ -15,6 +15,7 @@ import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
+import type { RateLimitedAction } from './bcsc-theme/state/rate-limit/rate-limit'
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { appLogger } from './utils/logger'
@@ -115,6 +116,8 @@ export interface BCSCState {
   /** ISO timestamp of the last automatic key-rotation attempt (success or failure), used to
    * throttle retries — see KeyRotationSystemCheck. Not PII. */
   lastKeyRotationAttemptAt?: string
+  /** ISO time each rate-limited action may be retried, from the server's Retry-After. Not PII. */
+  rateLimitRetryAt?: Partial<Record<RateLimitedAction, string>>
   /**
    * App version/build seen the last time the main-stack system checks ran, stamped whenever it
    * differs from the running app (see getMainSystemChecks) — deliberately distinct from
@@ -342,6 +345,7 @@ enum BCSCDispatchAction {
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
   SET_INSTALL_ID = 'bcsc/setInstallId',
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
+  RATE_LIMIT_RECEIVED = 'bcsc/rateLimitReceived', // payload: [{ action, retryAt }]
   RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
   SET_VERIFICATION_SKIPPED = 'bcsc/setVerificationSkipped',
   SET_VERIFICATION_STARTED = 'bcsc/setVerificationStarted',
@@ -919,6 +923,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.KEY_ROTATION_ATTEMPTED: {
       const lastKeyRotationAttemptAt = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, lastKeyRotationAttemptAt }
+      const newState = { ...state, bcsc }
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.RATE_LIMIT_RECEIVED: {
+      const { action: limitedAction, retryAt } = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, rateLimitRetryAt: { ...state.bcsc.rateLimitRetryAt, [limitedAction]: retryAt } }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
