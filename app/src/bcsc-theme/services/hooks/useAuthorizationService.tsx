@@ -1,18 +1,21 @@
-import { getGlobalAlertMap } from '@/bcsc-theme/api/clientErrorPolicies'
+import { birthdateLockoutResetAction, getGlobalAlertMap } from '@/bcsc-theme/api/clientErrorPolicies'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import {
   AuthorizeDeviceUnknownBCSCConfig,
   DeviceAuthorizationResponse,
 } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { DeviceAuthorizationError } from '@/bcsc-theme/features/verify/deviceAuthorizationError'
+import { RateLimitedAction, RateLimitWaitType } from '@/bcsc-theme/state/rate-limit/rate-limit'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { isAppError, isHandledAppError } from '@/errors/appError'
+import { AppError, isAppError, isHandledAppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
 import type { BarcodePayload } from 'react-native-bcsc-core'
+import { useRateLimit } from './useRateLimit'
 
 // Codes routed to the generic title/description/link-out-button DeviceAuthorizationErrorScreen.
 const DEVICE_AUTHORIZATION_ERROR_MAP: Partial<Record<AppEventCode, DeviceAuthorizationError>> = {
@@ -56,6 +59,43 @@ const findByTechnicalMessage = <T,>(
   return matchedEvent ? map[matchedEvent] : undefined
 }
 
+const isCardAdd = (serial?: string, birthdate?: Date) => Boolean(serial && birthdate)
+
+/**
+ * Blocks card add during the server's wait, landing where the 503 policy does unless `skipErrorHandling` is set.
+ * Only serial + birthdate requests count: QR transfer calls the same endpoint with neither.
+ */
+const useCardAddRateLimit = (navigation: StackNavigationProp<BCSCVerifyStackParams>) => {
+  const { getWait, recordRateLimit } = useRateLimit()
+
+  const assertCardAddAllowed = useCallback(
+    (serial?: string, birthdate?: Date, options?: AuthorizationServiceCallOptions) => {
+      if (!isCardAdd(serial, birthdate) || getWait(RateLimitedAction.CardAdd).type !== RateLimitWaitType.Waiting) {
+        return
+      }
+
+      const blocked = AppError.fromErrorDefinition(ErrorRegistry.RETRY_LATER, { track: false })
+      if (!options?.skipErrorHandling) {
+        navigation.dispatch(birthdateLockoutResetAction())
+        blocked.handled = true
+      }
+      throw blocked
+    },
+    [getWait, navigation]
+  )
+
+  const recordCardAddFailure = useCallback(
+    (serial: string | undefined, birthdate: Date | undefined, error: unknown) => {
+      if (isCardAdd(serial, birthdate)) {
+        recordRateLimit(RateLimitedAction.CardAdd, error)
+      }
+    },
+    [recordRateLimit]
+  )
+
+  return { assertCardAddAllowed, recordCardAddFailure }
+}
+
 /**
  * Service layer hook for the device authorization (device/code) api.
  * Business logic related to device authorization errors and error-screen navigation should be
@@ -67,6 +107,7 @@ export const useAuthorizationService = () => {
   const { authorization: authorizationApi } = useApi()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const alerts = useAlerts(navigation)
+  const { assertCardAddAllowed, recordCardAddFailure } = useCardAddRateLimit(navigation)
 
   /**
    * Emits a global alert for the error's appEvent, if one is registered.
@@ -153,9 +194,12 @@ export const useAuthorizationService = () => {
       birthdate?: Date,
       options?: AuthorizationServiceCallOptions
     ): Promise<DeviceAuthorizationResponse> => {
+      assertCardAddAllowed(serial, birthdate, options)
+
       try {
         return await authorizationApi.authorizeDevice(serial, birthdate)
       } catch (error) {
+        recordCardAddFailure(serial, birthdate, error)
         if (options?.skipErrorHandling) {
           throw error
         }
@@ -163,7 +207,7 @@ export const useAuthorizationService = () => {
         throw error
       }
     },
-    [authorizationApi, handleAuthorizationError]
+    [authorizationApi, handleAuthorizationError, assertCardAddAllowed, recordCardAddFailure]
   )
 
   /**

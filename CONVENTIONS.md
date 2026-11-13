@@ -321,6 +321,22 @@ startup and cleared by hand, so a failed account load or a missed reset left a s
 
 How to apply this to other state: [`docs/guides/derived-state-refactor.md`](docs/guides/derived-state-refactor.md).
 
+## Rate limits: pause for exactly what the server sends
+
+When the server rate-limits an action, the app waits for the `Retry-After` it sent, never a duration of its own
+(`bcsc-theme/state/rate-limit/`, card add first):
+
+- `useRateLimit().recordRateLimit` is the only writer. It stores one absolute ISO time per action in
+  `bcsc.rateLimitRetryAt`, and only when `Retry-After` is delay-seconds. With no usable header it stores nothing
+  and the action is not paused; the screen shows the untimed copy.
+- "Waiting" is derived, never stored: `getRateLimitWait` is the only definition. Check `useRateLimit().getWait`
+  immediately before the request, so a stale render cannot let one through.
+- Show the wait rounded up to whole minutes ("Try again in N minutes"), never a second-by-second countdown.
+  The display hook (`useRateLimitWait`) refreshes once a minute, at the retry time and on app foreground, and the
+  screen then says "You can try again now." without navigating. This is deliberate and differs from the card
+  expiry phase above, which does not refresh on a timer.
+- The wait is persisted best effort, like other `bcsc` fields.
+
 ## Server keys: build them in memory, never in the keychain
 
 A server public key (the JWKS entry that verifies the ID token, user info and login challenge, and
