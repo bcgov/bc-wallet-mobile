@@ -29,6 +29,8 @@ export interface SessionAttempt {
   app?: string
   /** Why the attempt counts as lost: the error that reported the session gone, or its empty JUnit. */
   lost?: string
+  /** Test identities the session minted. */
+  minted?: number
   tests: SessionTestRecord[]
 }
 
@@ -88,12 +90,22 @@ export function loadSessions(reportDirs: ReportDir[]): SessionAttempt[] {
           device: deviceOf(caps),
           app: caps['appium:app'],
           lost: record.lost,
+          minted: record.minted,
           tests: record.tests ?? [],
         })
       }
     }
   }
   return attempts
+}
+
+/** Test identities minted across the run. A record with several specs is one session: counted once. */
+export function mintedIdentities(sessions: SessionGroup[]): number {
+  const bySession = new Map<string, number>()
+  for (const attempt of sessions.flatMap((group) => group.attempts)) {
+    bySession.set(`${attempt.source}|${attempt.cid}|${attempt.startedAt}`, attempt.minted ?? 0)
+  }
+  return [...bySession.values()].reduce((sum, count) => sum + count, 0)
 }
 
 export function groupAttempts(attempts: SessionAttempt[]): SessionGroup[] {

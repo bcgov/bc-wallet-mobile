@@ -67,6 +67,11 @@ export const BACKGROUND_LOCK_SECONDS = 70
 export const BACKGROUND_NO_LOCK_SECONDS = 5
 
 /**
+ * The hand-minted SIT personas, shared by both platforms and every lane. Legacy: a journey asks
+ * `arrangeTestUser` (src/support/identity.ts) for its holder, which mints one per session when the run
+ * is on the test API. Still the only holders for the send-video journeys (the portal review checks the
+ * persona), the scan suite (its committed card backs) and the upgrade suites.
+ *
  * `cardScanImage` is a photo of the card, for EVIDENCE capture. `cardScanTarget` is a generated
  * combo-card back carrying that persona's own serial (code-39) and birthdate (PDF-417) — the pair
  * `ScanSerial` needs — built by `scripts/generate-scan-assets.mjs`. Fred has neither: the non-BCSC
@@ -143,7 +148,46 @@ export const TestUsers = {
   },
 }
 
-export type TestUser = (typeof TestUsers)[keyof typeof TestUsers]
+/** What every card holder carries, whether a persona above or an identity minted for the session. */
+interface TestUserBase {
+  /** The account nickname, on the builds that ask for one. */
+  username: string
+  firstName: string
+  lastName: string
+  /** `YYYYMMDD`, as the birthdate fields take it. */
+  dob: string
+  /** `N/A` for a holder without a BC Services Card. */
+  cardSerial: string
+  /** A photo of a card, for evidence capture. */
+  cardScanImage: string
+  selfieImage: string
+  /** A generated card back carrying this holder's serial and birthdate. Only the personas have one. */
+  cardScanTarget?: string
+}
+
+/** A photo card, standalone or combined: the serial and the birthdate are all the flow asks for. */
+export interface PhotoCardUser extends TestUserBase {
+  flow: 'photo'
+}
+
+/** A non-photo card: the flow adds one photo ID. `documentTypeId` is the type the portal files it under. */
+export interface NonPhotoCardUser extends TestUserBase {
+  flow: 'non-photo'
+  documentNumber: string
+  documentTypeId: string
+}
+
+/** No card: two IDs, the first one typed with the name and the birthdate. */
+export interface NonBcscUser extends TestUserBase {
+  flow: 'non-bcsc'
+  primaryDocumentNumber: string
+  primaryDocumentTypeId: string
+  documentNumber: string
+  documentTypeId: string
+}
+
+/** The card holder a journey drives. `flow` says which verify path it takes and what it carries. */
+export type TestUser = PhotoCardUser | NonPhotoCardUser | NonBcscUser
 
 /**
  * Window-relative tap for camera tap-to-focus after Sauce image injection (0–1).

@@ -12,6 +12,7 @@
   "startedAt": "2026-08-28T07:10:00.000Z",
   "endedAt": "2026-08-28T07:20:10.000Z",
   "failures": 1,
+  "minted": 1,
   "tests": [
     { "suite": "Verified journey: non-photo card, send video", "title": "clears the review queue before submitting", "status": "pass" },
     { "suite": "Verified journey: non-photo card, send video", "title": "onboards to the verify prompt", "status": "pass" },

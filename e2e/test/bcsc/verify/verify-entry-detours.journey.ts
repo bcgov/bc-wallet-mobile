@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import { chooseAddAccount, enterSerialManually, startVerification } from '../../../src/flows/verify.js'
 import { dismissSystemAlert } from '../../../src/helpers/alerts.js'
@@ -16,6 +16,7 @@ import {
   VerifyWebViewScreen,
 } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /** Engine handle for the one screen anchored on visible copy (EvidenceTypeList has no container testID). */
 const engine = new BaseScreen()
@@ -56,8 +57,8 @@ const SERIAL_FORMAT_ERROR = 'Enter a valid card serial number'
  * card journey).
  */
 describe('Verify journey: entry detours', () => {
-  before(() => {
-    setTestUser(TestUsers.photo)
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo'))
   })
 
   it('onboards to the verify prompt', async () => {

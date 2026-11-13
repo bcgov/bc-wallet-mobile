@@ -1,8 +1,9 @@
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import { chooseAddAccount, enterSerialManually, startVerification } from '../../../src/flows/verify.js'
 import { EnterBirthdateScreen } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /**
  * Verify journey: entry spine.
@@ -17,8 +18,8 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * A separate entry-detours journey extends this area.
  */
 describe('Verify journey: entry spine', () => {
-  before(() => {
-    setTestUser(TestUsers.photo)
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo'))
   })
 
   it('onboards to the verify prompt', async () => {
