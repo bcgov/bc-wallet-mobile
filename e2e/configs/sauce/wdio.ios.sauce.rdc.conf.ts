@@ -1,5 +1,10 @@
 // sauce/wdio.ios.sauce.rdc.conf.ts
-import { ANDROID_ONLY_SPECS, DEVICE_AUTH_SPECS, NON_DEVICE_AUTH_SPECS } from '../wdio.shared.conf.js'
+import {
+  ANDROID_ONLY_SPECS,
+  DEVICE_AUTH_SPECS,
+  IOS_TIME_ZONE_CAPS,
+  NON_DEVICE_AUTH_SPECS,
+} from '../wdio.shared.conf.js'
 import { DEVICE_SECURITY_LANE, config as sauceConfig, sauceRdcOptions } from './wdio.shared.sauce.conf.js'
 
 const appFilename = process.env.IOS_APP_FILENAME || 'BCSC-Dev-latest.ipa'
@@ -14,6 +19,7 @@ const iosCaps = {
   platformName: 'iOS',
   'appium:deviceName': process.env.IOS_DEVICE_NAME || 'iPhone.*',
   'appium:automationName': 'XCUITest',
+  ...IOS_TIME_ZONE_CAPS,
   'appium:app': `storage:filename=${appFilename}`,
   'appium:noReset': false,
   'appium:fullReset': true,

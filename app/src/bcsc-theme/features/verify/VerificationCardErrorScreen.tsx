@@ -1,4 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { formatCalendarDate } from '@/bcsc-theme/utils/datetime-utils'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
@@ -28,6 +29,7 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
   const { params } = useRoute<RouteProp<BCSCVerifyStackParams, BCSCScreens.VerificationCardError>>()
 
   const errorType = params.errorType
+  const birthdate = store.bcscSecure.birthdate
 
   const styles = StyleSheet.create({
     image: {
@@ -88,13 +90,9 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
         <ThemedText variant={'bold'}>
           {t('BCSC.MismatchedSerial.SerialNumber', { serial: store.bcscSecure.serial })}
         </ThemedText>
-        <ThemedText variant={'bold'}>
+        <ThemedText variant={'bold'} testID={testIdWithKey(TestIds.verify.verificationCardError.birthdate)}>
           {t('BCSC.MismatchedSerial.Birthdate', {
-            birthdate: store.bcscSecure.birthdate?.toLocaleString(t('BCSC.LocaleStringFormat'), {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-            }),
+            birthdate: birthdate && formatCalendarDate(birthdate, t('BCSC.LocaleStringFormat')),
           })}
         </ThemedText>
       </View>

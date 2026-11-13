@@ -1,7 +1,7 @@
 // local/wdio.ios.local.device.conf.ts — iOS real device (USB-connected)
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { ANDROID_ONLY_SPECS } from '../wdio.shared.conf.js'
+import { ANDROID_ONLY_SPECS, IOS_TIME_ZONE_CAPS } from '../wdio.shared.conf.js'
 import { config as localConfig } from './wdio.shared.local.appium.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -19,6 +19,7 @@ config.capabilities = [
     'appium:platformVersion': process.env.IOS_VERSION || '',
     'appium:udid': process.env.IOS_UDID || '',
     'appium:automationName': 'XCUITest',
+    ...IOS_TIME_ZONE_CAPS,
     'appium:app': resolve(__dirname, '../../apps', process.env.IOS_APP_DEVICE || 'BCWallet.ipa'),
     'appium:xcodeOrgId': process.env.XCODE_ORG_ID || '',
     // Matches WDA automatic signing (Xcode 15+ rejects legacy "iPhone Developer" here).

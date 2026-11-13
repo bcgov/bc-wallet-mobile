@@ -16,6 +16,7 @@
  * - `appium:noReset: false` and `appium:fullReset: true` for a clean start
  */
 import { resolvePrevApp } from '../../src/flows/prev-build/sources.js'
+import { IOS_TIME_ZONE_CAPS } from '../wdio.shared.conf.js'
 import { config as sauceConfig, sauceRdcOptions } from './wdio.shared.sauce.conf.js'
 
 const prev = resolvePrevApp('ios')
@@ -27,6 +28,7 @@ config.capabilities = [
     platformName: 'iOS',
     'appium:deviceName': process.env.IOS_DEVICE_NAME || 'iPhone.*',
     'appium:automationName': 'XCUITest',
+    ...IOS_TIME_ZONE_CAPS,
     'appium:app': `storage:filename=${prev.app}`,
     'appium:noReset': false,
     'appium:fullReset': true,
