@@ -82,6 +82,8 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
 
   // Wait for the request to finish before starting another
   const inFlightRef = useRef<Promise<ServerStatusRefreshResult> | null>(null)
+  // Bumped when the app goes to the background: a fetch started before then may bring back a stale Date header
+  const generationRef = useRef(0)
   const fetchedForClientRef = useRef<BCSCApiClient | null>(null)
   const serverStatusStateRef = useRef(serverStatusState)
   serverStatusStateRef.current = serverStatusState
@@ -91,6 +93,7 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
       return inFlightRef.current
     }
 
+    const generation = generationRef.current
     const run = (async (): Promise<ServerStatusRefreshResult> => {
       setIsChecking(true)
       let newState: ServerStatusState = { kind: 'unknown' }
@@ -100,19 +103,25 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
       } catch (error) {
         logger.error('ServerStatusProvider: failed to fetch server status', error as Error)
         newState = { kind: 'error' }
-      } finally {
-        setIsChecking(false)
-        setHasChecked(true)
-        inFlightRef.current = null
       }
 
+      // Started before the app went to the background; the fetch on return replaces it
+      if (generation !== generationRef.current) {
+        return toResult(newState)
+      }
+
+      // The status call is also the clock check: the client refuses token requests while the clock is off
+      client?.recordServerTime(newState.kind === 'loaded' ? newState.data.serverTimestamp : undefined)
+      setIsChecking(false)
+      setHasChecked(true)
+      inFlightRef.current = null
       setServerStatusState(newState)
       return toResult(newState)
     })()
 
     inFlightRef.current = run
     return run
-  }, [configApi, logger])
+  }, [client, configApi, logger])
 
   const refresh = useCallback(
     async (options?: { force?: boolean }): Promise<ServerStatusRefreshResult> => {
@@ -147,12 +156,27 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
     }
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
+      if (nextAppState === 'background') {
+        // The user may change the clock while away, so drop the reading and any fetch still in flight
+        generationRef.current += 1
+        inFlightRef.current = null
+        client.recordServerTime()
+      } else if (nextAppState === 'active') {
         void fetchStatus()
       }
     })
 
     return () => subscription.remove()
+  }, [isClientReady, client, fetchStatus])
+
+  // A token request with no clock reading runs this fetch first
+  useEffect(() => {
+    if (!isClientReady || !client) {
+      return
+    }
+
+    client.setClockCheck(fetchStatus)
+    return () => client.setClockCheck(undefined)
   }, [isClientReady, client, fetchStatus])
 
   // Keep the outage and banner in sync with the latest known status

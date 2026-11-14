@@ -281,6 +281,93 @@ describe('useAlerts', () => {
     expect(mockEmitErrorModal).toHaveBeenCalledWith(title, description, expect.objectContaining({ appEvent }))
   })
 
+  describe('clockSkewAlert', () => {
+    // The one-at-a-time guard is app-wide, so every test closes the alert it opens
+    const renderClockSkewAlert = () => {
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
+      const pressAction = (index: number) => mockEmitAlert.mock.lastCall[2].actions[index].onPress()
+
+      return { clockSkewAlert: result.current.clockSkewAlert, mockEmitAlert, pressAction }
+    }
+
+    it('should show the clock alert with Close and Open Settings', () => {
+      const { clockSkewAlert, mockEmitAlert, pressAction } = renderClockSkewAlert()
+
+      clockSkewAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ClockSkewError.Title', 'Alerts.ClockSkewError.Description', {
+        event: AppEventCode.CLOCK_SKEW_ERROR,
+        actions: [
+          { text: 'Global.Close', onPress: expect.any(Function) },
+          { text: 'Alerts.ClockSkewError.Action1', onPress: expect.any(Function) },
+        ],
+      })
+      pressAction(0)
+    })
+
+    it('should open the device settings from Open Settings', async () => {
+      const openSettings = jest.spyOn(RN.Linking, 'openSettings').mockResolvedValue(undefined)
+      const { clockSkewAlert, pressAction } = renderClockSkewAlert()
+
+      clockSkewAlert()
+      await pressAction(1)
+
+      expect(openSettings).toHaveBeenCalledTimes(1)
+    })
+
+    it('should show one alert at a time, and again once it is closed', async () => {
+      jest.spyOn(RN.Linking, 'openSettings').mockResolvedValue(undefined)
+      const { clockSkewAlert, mockEmitAlert, pressAction } = renderClockSkewAlert()
+
+      clockSkewAlert()
+      clockSkewAlert()
+      expect(mockEmitAlert).toHaveBeenCalledTimes(1)
+
+      pressAction(0)
+      clockSkewAlert()
+      expect(mockEmitAlert).toHaveBeenCalledTimes(2)
+
+      await pressAction(1)
+      clockSkewAlert()
+      expect(mockEmitAlert).toHaveBeenCalledTimes(3)
+      pressAction(0)
+    })
+
+    it('should show it again after 30 seconds, in case it went away without a button press', () => {
+      const shownAt = 1_000_000_000_000
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(shownAt)
+      const { clockSkewAlert, mockEmitAlert, pressAction } = renderClockSkewAlert()
+
+      clockSkewAlert()
+      nowSpy.mockReturnValue(shownAt + 29_999)
+      clockSkewAlert()
+      expect(mockEmitAlert).toHaveBeenCalledTimes(1)
+
+      nowSpy.mockReturnValue(shownAt + 30_000)
+      clockSkewAlert()
+      expect(mockEmitAlert).toHaveBeenCalledTimes(2)
+
+      pressAction(0)
+      nowSpy.mockRestore()
+    })
+
+    it('should show it again when the device clock jumps back', () => {
+      const shownAt = 1_000_000_000_000
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(shownAt)
+      const { clockSkewAlert, mockEmitAlert, pressAction } = renderClockSkewAlert()
+
+      clockSkewAlert()
+      nowSpy.mockReturnValue(shownAt - 60 * 60 * 1000)
+      clockSkewAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledTimes(2)
+      pressAction(0)
+      nowSpy.mockRestore()
+    })
+  })
+
   describe('forgetPairingsAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }

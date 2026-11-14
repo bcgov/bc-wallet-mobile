@@ -464,6 +464,52 @@ describe('Error Utils', () => {
       expect(formattedError.code).toBe('A')
       expect(formattedError.message).toBe('B')
     })
+
+    describe('assertion time stamp rejections', () => {
+      const iasError = (status: number, errorDescription: string) =>
+        ({
+          response: { status, data: { error: 'unauthorized', error_description: errorDescription } },
+          code: 'ERR_BAD_REQUEST',
+          message: 'Request failed',
+        }) as any
+
+      it.each([
+        'Assertion Token was issued in the future: Wed Nov 04 12:41:16 PST 2026',
+        'Assertion Token is expired: Wed Nov 04 12:41:16 PST 2026',
+      ])('reclassifies a 401 "%s" as CLOCK_SKEW_ERROR, keeping the server reason', (errorDescription) => {
+        const formattedError = formatIasAxiosResponseError(iasError(401, errorDescription))
+
+        expect(formattedError.code).toBe(AppEventCode.CLOCK_SKEW_ERROR)
+        expect(formattedError.message).toBe(errorDescription)
+      })
+
+      it.each([
+        [401, 'Signature did not validate for presented JWT authentication.'],
+        [401, 'Could not find client: abc'],
+        [400, 'Assertion Token was issued in the future: Wed Nov 04 12:41:16 PST 2026'],
+      ])('keeps the IAS code for a %s "%s"', (status, errorDescription) => {
+        expect(formatIasAxiosResponseError(iasError(status, errorDescription)).code).toBe('unauthorized')
+      })
+
+      it('maps the reclassified error to the registry CLOCK_SKEW_ERROR definition', () => {
+        const axiosError = new AxiosError('Request failed', 'ERR_BAD_REQUEST', { url: '/device/token' } as any, null, {
+          status: 401,
+          data: {
+            error: 'unauthorized',
+            error_description: 'Assertion Token was issued in the future: Wed Nov 04 12:41:16 PST 2026',
+          },
+          statusText: 'Unauthorized',
+          headers: {},
+          config: {} as any,
+        })
+
+        const appError = getAppErrorFromAxiosError(formatIasAxiosResponseError(axiosError))
+
+        expect(appError.appEvent).toBe(AppEventCode.CLOCK_SKEW_ERROR)
+        expect(appError.statusCode).toBe(ErrorRegistry.CLOCK_SKEW_ERROR.statusCode)
+        expect(appError.context.http_status).toBe(401)
+      })
+    })
   })
 
   describe('getAxiosErrorDefinition', () => {

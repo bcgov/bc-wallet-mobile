@@ -403,6 +403,48 @@ describe('useGetSystemChecks', () => {
         expect(refresh).not.toHaveBeenCalled()
       })
     })
+
+    describe('getForegroundSystemChecks', () => {
+      const renderWithClient = (client: unknown) => {
+        const refresh = jest.fn().mockResolvedValue({ serverStatus: { serverTimestamp: new Date() } })
+        mockUseServerStatus.mockReturnValue({ serverStatus: { serverTimestamp: new Date() }, refresh })
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client, isClientReady: Boolean(client) })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
+        mockUseConfigApi.mockReturnValue({ getServerStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        return { refresh, systemChecks: result.current }
+      }
+
+      it('re-checks the clock against a fresh server time', async () => {
+        const { refresh, systemChecks } = renderWithClient({})
+
+        const checks = await systemChecks[SystemCheckScope.STARTUP].getForegroundSystemChecks?.()
+
+        expect(refresh).toHaveBeenCalledWith({ force: true })
+        expect(checks?.map((c) => c.constructor.name)).toEqual(['ServerClockSkewSystemCheck'])
+      })
+
+      it('has nothing to check before the API client exists', async () => {
+        const { systemChecks } = renderWithClient(null)
+
+        await expect(systemChecks[SystemCheckScope.STARTUP].getForegroundSystemChecks?.()).resolves.toEqual([])
+      })
+
+      it('is only defined for the startup scope', () => {
+        const { systemChecks } = renderWithClient({})
+
+        expect(systemChecks[SystemCheckScope.MAIN_STACK].getForegroundSystemChecks).toBeUndefined()
+        expect(systemChecks[SystemCheckScope.VERIFY].getForegroundSystemChecks).toBeUndefined()
+      })
+    })
   })
 
   describe('MAIN_STACK scope', () => {

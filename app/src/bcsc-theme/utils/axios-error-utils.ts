@@ -29,13 +29,27 @@ interface LogAxiosErrorOptions {
   suppressStackTrace: boolean
 }
 
+// IAS's reasons for a 401 on a client assertion stamped five minutes or more off its clock
+const ASSERTION_CLOCK_SKEW_REASONS = ['Assertion Token was issued in the future', 'Assertion Token is expired']
+
+/** Whether IAS rejected the request's client assertion for its time stamp, i.e. the device clock is off. */
+const isAssertionClockSkew = (status: number | undefined, description: string): boolean =>
+  status === 401 && ASSERTION_CLOCK_SKEW_REASONS.some((reason) => description.startsWith(reason))
+
+/**
+ * Takes the error code and message from an IAS error body. An assertion rejected for its time stamp is
+ * reclassified as CLOCK_SKEW_ERROR: the device clock is the problem, not the request or its keys.
+ */
 export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosError => {
   if (
     typeof axiosError.response?.data?.error === 'string' &&
     typeof axiosError.response?.data?.error_description === 'string'
   ) {
-    axiosError.code = axiosError.response.data.error
-    axiosError.message = axiosError.response.data.error_description
+    const description = axiosError.response.data.error_description
+    axiosError.code = isAssertionClockSkew(axiosError.response.status, description)
+      ? AppEventCode.CLOCK_SKEW_ERROR
+      : axiosError.response.data.error
+    axiosError.message = description
   }
 
   return axiosError

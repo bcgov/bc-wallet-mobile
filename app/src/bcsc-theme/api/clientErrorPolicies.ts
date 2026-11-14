@@ -79,6 +79,8 @@ const _getHTTPAlertMap = (alerts?: AppAlerts) => {
     [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutAlert],
     [AppEventCode.SERVER_ERROR, alerts?.serverErrorAlert],
     [AppEventCode.TOO_MANY_ATTEMPTS, alerts?.tooManyAttemptsAlert],
+    // A token request refused for the device clock, or one IAS rejected for its assertion's time stamp
+    [AppEventCode.CLOCK_SKEW_ERROR, alerts?.clockSkewAlert],
   ])
 }
 

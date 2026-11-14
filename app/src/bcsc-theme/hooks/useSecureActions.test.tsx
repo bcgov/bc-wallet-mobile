@@ -806,6 +806,21 @@ describe('useSecureActions', () => {
       expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
       expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
     })
+
+    it('skips key recovery and re-registration when the refresh fails on the device clock, and still unlocks', async () => {
+      mockGetTokensForRefreshToken.mockRejectedValue(AppError.fromErrorDefinition(ErrorRegistry.CLOCK_SKEW_ERROR))
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(performKeyRecovery).not.toHaveBeenCalled()
+      expect(reRegisterNewestKey).not.toHaveBeenCalled()
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
+      expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
+      expect(captureHydrateField('isHydrated')).toBe(true)
+    })
   })
 
   describe('hydrateSecureState expired refresh token (#4654)', () => {
@@ -1183,8 +1198,6 @@ describe('useSecureActions', () => {
 
       it.each([
         ['a bad signature', 'Signature did not validate for presented JWT authentication.'],
-        ['an expired assertion', 'Assertion Token is expired: Tue Jan 01 00:00:00 GMT 2030'],
-        ['a future-dated assertion', 'Assertion Token was issued in the future: Tue Jan 01 00:00:00 GMT 2030'],
         ['no server message', ''],
       ])('does not switch the client ID when the 401 is %s', async (_label, errorDescription) => {
         mockGetTokensForRefreshToken.mockRejectedValue(
@@ -1199,6 +1212,23 @@ describe('useSecureActions', () => {
         expect(setAccount).not.toHaveBeenCalled()
         expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
         expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, REG_TOKEN, expect.anything())
+      })
+
+      it.each([
+        ['an expired assertion', 'Assertion Token is expired: Tue Jan 01 00:00:00 GMT 2030'],
+        ['a future-dated assertion', 'Assertion Token was issued in the future: Tue Jan 01 00:00:00 GMT 2030'],
+      ])('neither switches the client ID nor recovers keys when the 401 is %s', async (_label, errorDescription) => {
+        // The API client reports these as CLOCK_SKEW_ERROR, keeping the status and the server reason
+        const cause = Object.assign(new Error(errorDescription), { isAxiosError: true, name: 'AxiosError' })
+        mockGetTokensForRefreshToken.mockRejectedValue(
+          AppError.fromErrorDefinition(ErrorRegistry.CLOCK_SKEW_ERROR, { cause, context: { http_status: 401 } })
+        )
+
+        await hydrate()
+
+        expect(confirmRegistrationClientId).not.toHaveBeenCalled()
+        expect(setAccount).not.toHaveBeenCalled()
+        expect(performKeyRecovery).not.toHaveBeenCalled()
       })
 
       it('does not confirm when the server rejected the refresh token as invalid_token', async () => {

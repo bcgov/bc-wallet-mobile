@@ -16,6 +16,17 @@ import { Linking, Platform } from 'react-native'
 
 const ANDROID_STORAGE_SETTINGS_INTENT = 'android.settings.INTERNAL_STORAGE_SETTINGS'
 
+// App-wide, not per hook: refused token requests arrive in bursts and share one clock alert. The hold
+// also lapses on its own, since Android drops an alert without a button press when another replaces it.
+const CLOCK_SKEW_ALERT_HOLD_MS = 30 * 1000
+let clockSkewAlertShownAt: number | undefined
+
+// A clock that jumped back (the user fixing it) ends the hold too
+const isClockSkewAlertHeld = (now: number) =>
+  clockSkewAlertShownAt !== undefined &&
+  now >= clockSkewAlertShownAt &&
+  now - clockSkewAlertShownAt < CLOCK_SKEW_ALERT_HOLD_MS
+
 export type AppAlerts = ReturnType<typeof useAlerts>
 type AlertOnPressAction = () => void | Promise<void>
 
@@ -194,6 +205,40 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
 
   // COMPLEX ALERTS - These alerts require additional actions beyond just displaying a message.
 
+  // The device clock is too far off the server's for signed requests; skipped while one is on screen
+  const clockSkewAlert = useCallback(() => {
+    const now = Date.now()
+    if (isClockSkewAlertHeld(now)) {
+      return
+    }
+
+    clockSkewAlertShownAt = now
+    const onClose = () => {
+      clockSkewAlertShownAt = undefined
+    }
+
+    emitAlert(t('Alerts.ClockSkewError.Title'), t('Alerts.ClockSkewError.Description'), {
+      event: AppEventCode.CLOCK_SKEW_ERROR,
+      actions: [
+        {
+          text: t('Global.Close'),
+          onPress: onClose,
+        },
+        {
+          text: t('Alerts.ClockSkewError.Action1'),
+          onPress: async () => {
+            onClose()
+            try {
+              await Linking.openSettings()
+            } catch (error) {
+              logger.error('[ClockSkewAlert] Failed to open device settings', error as Error)
+            }
+          },
+        },
+      ],
+    })
+  }, [emitAlert, logger, t])
+
   const appUpdateRequiredAlert = useCallback(() => {
     emitAlert(t('Alerts.AppUpdateRequired.Title'), t('Alerts.AppUpdateRequired.Description'), {
       event: Platform.OS === 'ios' ? AppEventCode.IOS_APP_UPDATE_REQUIRED : AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
@@ -369,6 +414,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       // prettier-ignore
       ({
       // ALERTS
+      clockSkewAlert,
       appUpdateRequiredAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
@@ -460,6 +506,7 @@ export const useAlerts = (navigationProp?: NavigationProp<any>) => {
       deviceStorageFullAlert,
     }),
     [
+      clockSkewAlert,
       appUpdateRequiredAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,

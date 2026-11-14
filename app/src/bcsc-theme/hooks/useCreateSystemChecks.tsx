@@ -7,6 +7,7 @@ import { selectVerificationState } from '@/bcsc-theme/state/verification/selecto
 import { rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
+import { useAlerts } from '@/hooks/useAlerts'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
@@ -52,6 +53,10 @@ type UseGetSystemChecksReturn = Record<
      */
     getSystemChecks: () => Promise<SystemCheckStrategy[]>
     /**
+     * Callback to get the checks to run again each time the app returns to the foreground
+     */
+    getForegroundSystemChecks?: () => Promise<SystemCheckStrategy[]>
+    /**
      * Indicates if the system checks for the scope are ready to be run
      */
     isReady: boolean
@@ -85,6 +90,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { isNavigationReady } = useNavigationContainer()
   const accountContext = useContext(BCSCAccountContext)
   const { emitAlert } = useErrorAlert()
+  const { clockSkewAlert } = useAlerts()
   const { serverStatus: cachedServerStatus, refresh: refreshServerStatus } = useServerStatus()
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
@@ -121,10 +127,12 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       ),
     ]
 
-    // Clock-skew and update checks both need the server payload; skip them (rather than aborting
-    // the whole batch) if the status fetch failed.
+    // Clock-skew and update checks both need the status fetch (it records the server's time on the
+    // client); skip them (rather than aborting the whole batch) if it failed.
     if (serverStatus) {
-      systemChecks.push(new ServerClockSkewSystemCheck(serverStatus.serverTimestamp, new Date(), emitAlert, utils))
+      if (client) {
+        systemChecks.push(new ServerClockSkewSystemCheck(client, clockSkewAlert, utils))
+      }
 
       // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
       if (isBCServicesCardBundle) {
@@ -136,8 +144,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   }, [
     cachedServerStatus,
     refreshServerStatus,
+    client,
+    clockSkewAlert,
     dispatch,
-    emitAlert,
     isBCServicesCardBundle,
     logger,
     navigation,
@@ -146,6 +155,19 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.developer.environment.analyticsAppId,
     utils,
   ])
+
+  /**
+   * Get system checks to run again each time the app returns to the foreground
+   *
+   * @returns Array of system check strategies
+   */
+  const getForegroundSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+    // The user may have changed the clock while away. Joins the status fetch ServerStatusProvider
+    // starts on foreground, which records a fresh server time on the client.
+    await refreshServerStatus({ force: true })
+
+    return client ? [new ServerClockSkewSystemCheck(client, clockSkewAlert, utils)] : []
+  }, [client, clockSkewAlert, refreshServerStatus, utils])
 
   /**
    * Get system checks to run on main stack
@@ -341,6 +363,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return {
       [SystemCheckScope.STARTUP]: {
         getSystemChecks: getStartupSystemChecks,
+        getForegroundSystemChecks,
         isReady: Boolean(defaultReadiness && store.stateLoaded),
         isApplicable: true,
       },
@@ -359,6 +382,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     defaultReadiness,
     getMainSystemChecks,
     getStartupSystemChecks,
+    getForegroundSystemChecks,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
     getVerifySystemChecks,
