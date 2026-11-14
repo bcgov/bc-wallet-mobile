@@ -1,6 +1,5 @@
-import { VerificationStatus } from '@/store'
 import { BCSCAccountType, BCSCCardProcess, BCSCCardType, CredentialInfo } from 'react-native-bcsc-core'
-import { createMinimalCredential, createVerifiedCredential, getCredentialVerificationStatus } from './bcsc-credential'
+import { createMinimalCredential, createVerifiedCredential, isCredentialDeactivated } from './bcsc-credential'
 import { BCSCEvent, BCSCReason } from './id-token'
 
 describe('createMinimalCredential', () => {
@@ -85,7 +84,7 @@ describe('createVerifiedCredential', () => {
   })
 })
 
-describe('getCredentialVerificationStatus', () => {
+describe('isCredentialDeactivated', () => {
   const baseCredential: CredentialInfo = {
     issuer: 'https://issuer.example.com',
     subject: 'user-123',
@@ -95,37 +94,17 @@ describe('getCredentialVerificationStatus', () => {
     bcscReason: BCSCReason.ApprovedByAgent,
   }
 
-  it('should return UNVERIFIED when credential is null', () => {
-    expect(getCredentialVerificationStatus(null)).toBe(VerificationStatus.UNVERIFIED)
+  it.each([
+    [BCSCEvent.Authorization, false],
+    [BCSCEvent.Renewal, false],
+    [BCSCEvent.Replace, false],
+    [BCSCEvent.Cancel, true],
+    [BCSCEvent.Expire, true],
+  ])('reads a %s record as deactivated: %s', (bcscEvent, expected) => {
+    expect(isCredentialDeactivated({ ...baseCredential, bcscEvent })).toBe(expected)
   })
 
-  it('should return VERIFIED for Authorization event', () => {
-    expect(getCredentialVerificationStatus({ ...baseCredential, bcscEvent: BCSCEvent.Authorization })).toBe(
-      VerificationStatus.VERIFIED
-    )
-  })
-
-  it('should return VERIFIED for Renewal event', () => {
-    expect(getCredentialVerificationStatus({ ...baseCredential, bcscEvent: BCSCEvent.Renewal })).toBe(
-      VerificationStatus.VERIFIED
-    )
-  })
-
-  it('should return VERIFIED for Replace event', () => {
-    expect(getCredentialVerificationStatus({ ...baseCredential, bcscEvent: BCSCEvent.Replace })).toBe(
-      VerificationStatus.VERIFIED
-    )
-  })
-
-  it('should return DEACTIVATED for Cancel event', () => {
-    expect(getCredentialVerificationStatus({ ...baseCredential, bcscEvent: BCSCEvent.Cancel })).toBe(
-      VerificationStatus.DEACTIVATED
-    )
-  })
-
-  it('should return DEACTIVATED for Expire event', () => {
-    expect(getCredentialVerificationStatus({ ...baseCredential, bcscEvent: BCSCEvent.Expire })).toBe(
-      VerificationStatus.DEACTIVATED
-    )
+  it('is not deactivated when there is no record', () => {
+    expect(isCredentialDeactivated(null)).toBe(false)
   })
 })

@@ -1,4 +1,4 @@
-import { BCLocalStorageKeys, BCState, initialState, VerificationStatus } from '@/store'
+import { BCLocalStorageKeys, BCState, initialState } from '@/store'
 import { PersistentStorage, useStore } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -12,10 +12,10 @@ jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
   useServerStatus: () => mockUseServerStatus(),
 }))
 
-/** Exposes the current verified status in the tree so tests can observe useLeaveVerification. */
-const VerifiedStatusProbe = () => {
+/** Exposes whether the user is in the verify flow so tests can observe useLeaveVerification. */
+const InVerifyFlowProbe = () => {
   const [store] = useStore<BCState>()
-  return <Text testID="VerifiedStatusProbe">{store.bcscSecure.verifiedStatus}</Text>
+  return <Text testID="InVerifyFlowProbe">{String(store.bcscSecure.inVerifyFlow)}</Text>
 }
 
 describe('VerifyPromptScreen', () => {
@@ -66,17 +66,17 @@ describe('VerifyPromptScreen', () => {
   })
 
   it('leaves the flow when a first-time verifier walks back to the prompt and skips', async () => {
-    // Back from the first step replaced onto the prompt: verification is still IN_PROGRESS, which alone
-    // keeps VerifyStack mounted, so Skip has to move the status out of it to reach Home
+    // Back from the first step replaced onto the prompt: the user is still in the verify flow, which alone
+    // keeps VerifyStack mounted, so Skip has to leave it to reach Home
     const tree = render(
       <BasicAppContext
         initialStateOverride={{
           bcsc: { ...initialState.bcsc, verificationSkipped: false, verificationStarted: true },
-          bcscSecure: { ...initialState.bcscSecure, verifiedStatus: VerificationStatus.IN_PROGRESS },
+          bcscSecure: { ...initialState.bcscSecure, inVerifyFlow: true },
         }}
       >
         <VerifyPromptScreen />
-        <VerifiedStatusProbe />
+        <InVerifyFlowProbe />
       </BasicAppContext>
     )
 
@@ -84,7 +84,7 @@ describe('VerifyPromptScreen', () => {
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/SkipVerification'))
     })
 
-    expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.UNVERIFIED)
+    expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('false')
     expect(bcscWrites()).toContainEqual(expect.objectContaining({ verificationSkipped: true }))
     // Progress is kept: started stays set, so the Home card (and the next launch) resume the step
     expect(bcscWrites()).not.toContainEqual(expect.objectContaining({ verificationStarted: false }))

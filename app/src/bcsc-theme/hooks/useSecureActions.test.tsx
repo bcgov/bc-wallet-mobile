@@ -5,7 +5,7 @@ import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import { BCDispatchAction, VerificationStatus } from '@/store'
+import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { Platform } from 'react-native'
@@ -674,6 +674,26 @@ describe('useSecureActions', () => {
       })
 
       expect(captureSessionRecoveryRequired()).toBe(false)
+    })
+
+    it.each([
+      ['no record', null, { verified: false, credentialDeactivated: false }],
+      ['an Authorization record', { bcscEvent: 'Authorization' }, { verified: true, credentialDeactivated: false }],
+      ['a Cancel record', { bcscEvent: 'Cancel' }, { verified: false, credentialDeactivated: true }],
+      ['an Expire record', { bcscEvent: 'Expire' }, { verified: false, credentialDeactivated: true }],
+    ])('hydrates the verification facts from %s', async (_label, record, facts) => {
+      jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest.mocked(getCredential).mockResolvedValue(record as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureHydrateField('verified')).toBe(facts.verified)
+      expect(captureHydrateField('credentialDeactivated')).toBe(facts.credentialDeactivated)
+      expect(captureHydrateField('inVerifyFlow')).toBe(false)
     })
 
     it('flags sessionRecoveryRequired when a verified user has a registration token but no refresh token', async () => {
@@ -1440,7 +1460,8 @@ describe('useSecureActions', () => {
         expect.objectContaining({ issuer: account.issuer, subject: account.clientID, bcscEvent: 'Authorization' })
       )
       expect(captureHydrateField('verified')).toBe(true)
-      expect(captureHydrateField('verifiedStatus')).toBe(VerificationStatus.VERIFIED)
+      expect(captureHydrateField('credentialDeactivated')).toBe(false)
+      expect(captureHydrateField('inVerifyFlow')).toBe(false)
       expect(captureHydrateField('sessionRecoveryRequired')).toBe(false)
     })
 
@@ -1455,7 +1476,8 @@ describe('useSecureActions', () => {
 
       expect(setCredential).not.toHaveBeenCalled()
       expect(captureHydrateField('verified')).toBe(false)
-      expect(captureHydrateField('verifiedStatus')).toBe(VerificationStatus.UNVERIFIED)
+      expect(captureHydrateField('credentialDeactivated')).toBe(false)
+      expect(captureHydrateField('inVerifyFlow')).toBe(false)
     })
 
     it('leaves the device unverified while a started verification is being resumed, so the finish step completes setup', async () => {
@@ -1770,21 +1792,21 @@ describe('useSecureActions', () => {
   })
 
   describe('continueVerificationProcess', () => {
-    it('marks verification started and in progress', () => {
+    it('marks verification started and the user in the verify flow', () => {
       const { result } = renderHook(() => useSecureActions())
 
       act(() => {
         result.current.continueVerificationProcess()
       })
 
-      // Started makes every later launch resume the flow; IN_PROGRESS shows it now
+      // Started makes every later launch resume the flow; the verify flag shows it now
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.SET_VERIFICATION_STARTED,
         payload: [true],
       })
       expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
-        payload: [VerificationStatus.IN_PROGRESS],
+        type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW,
+        payload: [true],
       })
     })
 

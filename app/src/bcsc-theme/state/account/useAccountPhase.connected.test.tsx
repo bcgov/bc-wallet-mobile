@@ -4,7 +4,7 @@ import { makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
-import { BCDispatchAction, BCState, initialBCSCSecureState, VerificationStatus } from '@/store'
+import { BCDispatchAction, BCState, initialBCSCSecureState } from '@/store'
 import { useStore } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
@@ -56,7 +56,6 @@ const userData = (daysUntilExpiry: number) => ({
 const verified = {
   ...initialBCSCSecureState,
   verified: true,
-  verifiedStatus: VerificationStatus.VERIFIED,
   refreshToken: 'stored-refresh',
 }
 

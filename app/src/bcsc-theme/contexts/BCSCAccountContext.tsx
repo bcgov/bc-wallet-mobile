@@ -2,7 +2,7 @@ import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { isAppError } from '@/errors/appError'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { BCState, VerificationStatus } from '@/store'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import moment from 'moment'
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
@@ -35,10 +35,10 @@ interface AccountLoadDiagnostics {
   navigationReady: boolean
   appState: AppStateStatus
   connectivity?: ReconnectEvent
-  /** The raw "verified" flag from secure state - the one input to the account-load guard not already
-   *  captured by verifiedStatus/hasRefreshToken below, so together they reconstruct it. */
+  /** The raw "verified" flag from secure state. With credentialDeactivated and hasRefreshToken below, these
+   *  are all the inputs to the account-load guard, so together they reconstruct it. */
   verified: boolean
-  verifiedStatus: VerificationStatus
+  credentialDeactivated: boolean
   /** Never the token value itself - only whether one exists. */
   hasRefreshToken: boolean
 }
@@ -73,7 +73,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
         appState: AppState.currentState,
         ...(connectivity ? { connectivity } : {}),
         verified: Boolean(store.bcscSecure.verified),
-        verifiedStatus: store.bcscSecure.verifiedStatus,
+        credentialDeactivated: store.bcscSecure.credentialDeactivated,
         hasRefreshToken: Boolean(store.bcscSecure.refreshToken),
       }
       lastLoadRef.current = diagnostics

@@ -17,7 +17,11 @@ import { VerificationPrompt, VerificationStatusResponseData } from './bcsc-theme
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
-import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from './bcsc-theme/utils/verification-status'
+import {
+  interpretVerificationStatus,
+  isDecidedVerificationStatus,
+  UNKNOWN_VERIFICATION_STATUS,
+} from './bcsc-theme/utils/verification-status'
 import { appLogger } from './utils/logger'
 
 export type RemoteDebuggingState = {
@@ -152,13 +156,6 @@ export interface BCSCState {
   verificationStarted?: boolean
 }
 
-export enum VerificationStatus {
-  VERIFIED = 'VERIFIED', // Credential is valid (not cancelled or expired)
-  UNVERIFIED = 'UNVERIFIED', // Credential does't exist or we haven't verified it's status
-  DEACTIVATED = 'DEACTIVATED', // Credential was deactivated (cancelled or expired)
-  IN_PROGRESS = 'IN_PROGRESS', // Verification is currently in progress
-}
-
 /**
  * Secure state containing PII and sensitive data.
  *
@@ -171,10 +168,12 @@ export interface BCSCSecureState {
   /** Whether secure state has been loaded from native storage */
   isHydrated: boolean
 
-  /** Account verification status - determined from presence of valid credential */
+  /** A valid (not deactivated) credential record exists */
   verified?: boolean
-  /** Account verification status value (VERIFIED, UNVERIFIED, DEACTIVATED) */
-  verifiedStatus: VerificationStatus
+  /** The credential was cancelled or expired */
+  credentialDeactivated: boolean
+  /** The user is in the verify flow this session */
+  inVerifyFlow: boolean
 
   // === from Tokens ===
   /** OAuth refresh token for API authentication */
@@ -257,7 +256,8 @@ export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
   savedServices: [],
-  verifiedStatus: VerificationStatus.UNVERIFIED,
+  credentialDeactivated: false,
+  inVerifyFlow: false,
 }
 
 export enum AccountSetupType {
@@ -334,7 +334,8 @@ enum BCSCDispatchAction {
   VERIFICATION_STATUS_RECEIVED = 'bcsc/verificationStatusReceived',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
-  UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus', //controls whether the VerifyStack or the MainStack are displayed
+  UPDATE_SECURE_IN_VERIFY_FLOW = 'bcsc/updateSecureInVerifyFlow', // controls whether the VerifyStack or the MainStack are displayed
+  UPDATE_SECURE_CREDENTIAL_DEACTIVATED = 'bcsc/updateSecureCredentialDeactivated',
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
   UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
@@ -495,6 +496,17 @@ const applyVerificationStatusReceived = (
   if (verificationRequestStatus === UNKNOWN_VERIFICATION_STATUS) {
     return state
   }
+  // A pending answer fetched before a push landed must not replace the decision. A change of request
+  // ID clears the status, so a decision still held here belongs to the current request.
+  if (
+    verificationRequestStatus === VerificationRequestStatus.PENDING &&
+    isDecidedVerificationStatus(state.bcscSecure.verificationRequestStatus)
+  ) {
+    appLogger.info('Ignored a late pending verification status; a decision is already recorded', {
+      recordedStatus: state.bcscSecure.verificationRequestStatus,
+    })
+    return state
+  }
   // Only the cancelled banner shows the message
   const verificationRequestStatusMessage =
     verificationRequestStatus === VerificationRequestStatus.CANCELLED ? received.status_message : undefined
@@ -505,6 +517,20 @@ const applyVerificationStatusReceived = (
     return state
   }
   const bcscSecure = { ...state.bcscSecure, verificationRequestStatus, verificationRequestStatusMessage }
+  return { ...state, bcscSecure }
+}
+
+// A status belongs to one request, so it must not outlive a change of request ID
+const applyVerificationRequestId = (state: BCState, verificationRequestId?: string): BCState => {
+  if (verificationRequestId === state.bcscSecure.verificationRequestId) {
+    return state
+  }
+  const bcscSecure = {
+    ...state.bcscSecure,
+    verificationRequestId,
+    verificationRequestStatus: undefined,
+    verificationRequestStatusMessage: undefined,
+  }
   return { ...state, bcscSecure }
 }
 
@@ -781,9 +807,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID: {
-      const verificationRequestId = (action?.payload || []).pop() ?? undefined
-      const bcscSecure = { ...state.bcscSecure, verificationRequestId }
-      return { ...state, bcscSecure }
+      return applyVerificationRequestId(state, (action?.payload || []).pop() ?? undefined)
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA: {
       const verificationRequestSha = (action?.payload || []).pop() ?? undefined
@@ -813,14 +837,21 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = {
         ...state.bcscSecure,
         verified,
-        // QUESTION (MD): Should we handle DEACTIVATED here?
-        verifiedStatus: verified ? VerificationStatus.VERIFIED : VerificationStatus.UNVERIFIED,
+        inVerifyFlow: false,
+        credentialDeactivated: false,
       }
       return { ...state, bcscSecure }
     }
-    case BCSCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS: {
-      const verifiedStatus = (action?.payload || []).pop() ?? VerificationStatus.UNVERIFIED
-      const bcscSecure = { ...state.bcscSecure, verifiedStatus }
+    // The two facts below used to share one saved status, so each write replaced the other; that is
+    // kept until deactivation is allowed to outlive the verify flow (#5008)
+    case BCSCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW: {
+      const inVerifyFlow = (action?.payload || []).pop() ?? false
+      const bcscSecure = { ...state.bcscSecure, inVerifyFlow, credentialDeactivated: false }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED: {
+      const credentialDeactivated = (action?.payload || []).pop() ?? false
+      const bcscSecure = { ...state.bcscSecure, credentialDeactivated, inVerifyFlow: false }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {

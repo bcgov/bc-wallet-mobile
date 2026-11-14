@@ -4,7 +4,7 @@ import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
 import { AppEventCode } from '@/events/appEventCode'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { SystemCheckNavigation, SystemCheckUtils } from '@/services/system-checks/system-checks'
-import { BCDispatchAction, VerificationStatus } from '@/store'
+import { BCDispatchAction } from '@/store'
 
 describe('EventReasonAlertsSystemCheck', () => {
   let mockUtils: SystemCheckUtils
@@ -239,9 +239,10 @@ describe('EventReasonAlertsSystemCheck', () => {
         payload: [expect.objectContaining({ bcscReason: BCSCReason.ExpiredBySystem })],
       })
       expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
-        payload: [VerificationStatus.DEACTIVATED],
+        type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED,
+        payload: [true],
       })
+      expect(mockUtils.dispatch).toHaveBeenCalledTimes(2)
       // ias-ios suppresses the expiry alert deliberately (IASP-12489); v4 matches it.
       expect(emitAlert).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()

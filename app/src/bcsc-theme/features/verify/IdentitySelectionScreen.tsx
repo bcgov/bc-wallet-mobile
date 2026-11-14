@@ -3,7 +3,7 @@ import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCState, VerificationStatus } from '@/store'
+import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import ScanExampleImage from '@assets/img/scan_example.png'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -38,11 +38,11 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
         store.bcscSecure.userCode
       ) {
         // If the user has registered and backs out, reset the card registration process. The pop goes
-        // ahead (the setup question is beneath), so the reset keeps verification IN_PROGRESS rather than
+        // ahead (the setup question is beneath), so the reset keeps the user in the verify flow rather than
         // unmounting the flow to Home, and the overlay stops the user racing the re-registration from
         // the setup question. A resumed initial route leaves by REPLACE, which keeps progress instead
         const stopLoading = loadingScreen.startLoading()
-        void verificationReset({ verifiedStatus: VerificationStatus.IN_PROGRESS }).finally(stopLoading)
+        void verificationReset({ inVerifyFlow: true }).finally(stopLoading)
       }
     })
 

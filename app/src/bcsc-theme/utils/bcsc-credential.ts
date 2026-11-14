@@ -1,4 +1,3 @@
-import { VerificationStatus } from '@/store'
 import { BCSCAccountType, BCSCCardProcess, BCSCCardType, CredentialInfo } from 'react-native-bcsc-core'
 import { BCSCEvent, BCSCReason } from './id-token'
 
@@ -57,20 +56,7 @@ export function createVerifiedCredential(
   }
 }
 
-/**
- * Determines the verification status of a credential based on its properties.
- *
- * @param credential The credential information to evaluate
- * @returns VerificationStatus indicating if the credential is VERIFIED, DEACTIVATED, or UNVERIFIED
- */
-export function getCredentialVerificationStatus(credential: CredentialInfo | null): VerificationStatus {
-  if (!credential) {
-    return VerificationStatus.UNVERIFIED
-  }
-
-  if (credential.bcscEvent === BCSCEvent.Cancel || credential.bcscEvent === BCSCEvent.Expire) {
-    return VerificationStatus.DEACTIVATED
-  }
-
-  return VerificationStatus.VERIFIED
+/** Whether the credential record says the card was cancelled or expired. */
+export function isCredentialDeactivated(credential: CredentialInfo | null): boolean {
+  return credential?.bcscEvent === BCSCEvent.Cancel || credential?.bcscEvent === BCSCEvent.Expire
 }

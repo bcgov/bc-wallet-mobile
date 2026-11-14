@@ -1,5 +1,5 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCState, initialState, VerificationStatus } from '@/store'
+import { BCState, initialState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useStore } from '@bifold/core'
 import { useFocusEffect, useNavigation } from '@mocks/@react-navigation/native'
@@ -9,10 +9,10 @@ import React, { useEffect } from 'react'
 import { BackHandler, Text } from 'react-native'
 import { createVerifyHeaderBackButton } from './VerifyHeaderBackButton'
 
-/** Exposes the current verified status in the tree so tests can observe useLeaveVerification. */
-const VerifiedStatusProbe = () => {
+/** Exposes whether the user is in the verify flow so tests can observe useLeaveVerification. */
+const InVerifyFlowProbe = () => {
   const [store] = useStore<BCState>()
-  return <Text testID="VerifiedStatusProbe">{store.bcscSecure.verifiedStatus}</Text>
+  return <Text testID="InVerifyFlowProbe">{String(store.bcscSecure.inVerifyFlow)}</Text>
 }
 
 const BACK_ID = testIdWithKey(TestIds.common.back)
@@ -21,7 +21,7 @@ const headerProps = { canGoBack: true, testID: BACK_ID, accessibilityLabel: 'Bac
 
 const inProgress = (verificationSkipped: boolean): Partial<BCState> => ({
   bcsc: { ...initialState.bcsc, verificationSkipped },
-  bcscSecure: { ...initialState.bcscSecure, verifiedStatus: VerificationStatus.IN_PROGRESS },
+  bcscSecure: { ...initialState.bcscSecure, inVerifyFlow: true },
 })
 const FIRST_TIMER = inProgress(false)
 const DEFERRED = inProgress(true)
@@ -44,7 +44,7 @@ describe('createVerifyHeaderBackButton', () => {
     render(
       <BasicAppContext initialStateOverride={state}>
         <BackButton {...headerProps} />
-        <VerifiedStatusProbe />
+        <InVerifyFlowProbe />
       </BasicAppContext>
     )
 
@@ -58,7 +58,7 @@ describe('createVerifyHeaderBackButton', () => {
 
     expect(navigation.goBack).toHaveBeenCalledTimes(1)
     expect(navigation.replace).not.toHaveBeenCalled()
-    expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.IN_PROGRESS)
+    expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('true')
   })
 
   it('returns a first-time verifier at the beginning of the stack to the verify prompt, staying in the flow', () => {
@@ -68,7 +68,7 @@ describe('createVerifyHeaderBackButton', () => {
 
     expect(navigation.replace).toHaveBeenCalledWith(BCSCScreens.VerifyPrompt)
     expect(navigation.goBack).not.toHaveBeenCalled()
-    expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.IN_PROGRESS)
+    expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('true')
   })
 
   it('leaves a deferred verifier at the beginning of the stack for Home, progress kept', () => {
@@ -79,7 +79,7 @@ describe('createVerifyHeaderBackButton', () => {
     })
 
     expect(navigation.replace).not.toHaveBeenCalled()
-    expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.UNVERIFIED)
+    expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('false')
   })
 
   it('hands a custom handler the navigation, the leave action and the exit policy', () => {
@@ -134,7 +134,7 @@ describe('createVerifyHeaderBackButton', () => {
 
       expect(navigation.goBack).not.toHaveBeenCalled()
       expect(navigation.replace).not.toHaveBeenCalled()
-      expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.IN_PROGRESS)
+      expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('true')
     })
   })
 
@@ -152,7 +152,7 @@ describe('createVerifyHeaderBackButton', () => {
       })
 
       expect(navigation.replace).not.toHaveBeenCalled()
-      expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.UNVERIFIED)
+      expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('false')
     })
 
     it('keeps the arrow for a deferred verifier and leaves for Home', () => {
@@ -162,7 +162,7 @@ describe('createVerifyHeaderBackButton', () => {
         fireEvent.press(tree.getByTestId(BACK_ID))
       })
 
-      expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.UNVERIFIED)
+      expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('false')
     })
 
     it('leaves for Home from Android hardware back too', () => {
@@ -174,7 +174,7 @@ describe('createVerifyHeaderBackButton', () => {
       })
 
       expect(navigation.goBack).not.toHaveBeenCalled()
-      expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.UNVERIFIED)
+      expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('false')
     })
   })
 })

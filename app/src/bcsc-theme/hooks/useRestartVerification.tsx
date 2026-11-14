@@ -12,8 +12,8 @@ import { useVerificationReset } from './useVerificationReset'
  * Returns a callback that asks the user to confirm restarting the identity verification process.
  *
  * On confirmation, all verification progress is reset (see {@link useVerificationReset}) behind
- * a loading screen, then the verification status is set back to in-progress so the RootStack
- * remounts the VerifyStack at the first verification step.
+ * a loading screen, then the user re-enters the verify flow so the RootStack remounts the
+ * VerifyStack at the first verification step.
  *
  * @returns {(onConfirm?: () => void) => void} Callback that shows the confirmation alert. The
  * optional `onConfirm` is invoked when the user confirms, before the reset starts (e.g. to

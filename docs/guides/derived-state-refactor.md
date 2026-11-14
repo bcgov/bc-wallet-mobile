@@ -7,6 +7,7 @@ Read before refactoring app state that is computed from other state. Reference i
 - Store only **facts**: raw data from the server, device, or user. Never store conclusions ("isExpired", "showRenewalNotice").
 - Compute conclusions on read. A stored conclusion goes stale and disagrees with its facts.
 - Delete actions, reducer cases, persisted fields, and launch-time resets that only existed to hold a conclusion.
+- A stored value that mixes facts with conclusions (the old `verifiedStatus` enum) is split into one fact per source (`credentialDeactivated`, `inVerifyFlow`); the conclusions move into the rule.
 
 ## Layers
 
@@ -49,6 +50,7 @@ facts (store / context)  →  selector  →  rule (pure fn)  →  hook  →  UI
 - Rule: table-driven unit tests covering every branch and boundary (day 0, warning-window edge, invalid date).
 - Selector: maps state → facts correctly.
 - Hook: one connected test with the real providers.
+- Before changing what the reducer stores, pin its transitions in tests against the old actions, then port only the dispatches; the expected values must not change (`verification-transitions.test.ts`).
 - Prove tests aren't theater: gut the implementation and confirm they fail.
 
 ## Scope discipline
