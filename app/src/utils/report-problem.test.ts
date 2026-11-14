@@ -1,5 +1,8 @@
+import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { NAVIGATION_TRAIL } from '@/contexts/NavigationContainerContext'
 import { AppError, ErrorCategory } from '@/errors'
+import { ErrorRegistry } from '@/errors/errorRegistry'
+import { trackFailureSteps } from '@/errors/failureContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios from 'axios'
@@ -209,6 +212,12 @@ describe('report-problem', () => {
             failure_flow: 'quick_login',
             failure_step: 'sign_jwt',
             failure_elapsed_ms: 120,
+            push_fcm_status: 'fetch_failed',
+            push_apns_status: 'missing',
+            account_read_status: 'account_decode_failed',
+            account_read_environment: 'PROD',
+            account_read_detail: 'NSCocoaErrorDomain:4864',
+            account_legacy_status: 'absent',
             not_allow_listed: 'should be dropped',
           },
         }
@@ -231,9 +240,80 @@ describe('report-problem', () => {
         failure_flow: 'quick_login',
         failure_step: 'sign_jwt',
         failure_elapsed_ms: 120,
+        push_fcm_status: 'fetch_failed',
+        push_apns_status: 'missing',
+        account_read_status: 'account_decode_failed',
+        account_read_environment: 'PROD',
+        account_read_detail: 'NSCocoaErrorDomain:4864',
+        account_legacy_status: 'absent',
       })
       expect(body).not.toHaveProperty('not_allow_listed')
       expect(body.error_json).toEqual(error.toJSON())
+    })
+
+    it('flattens the context of a wrapped error, letting the outer error win on a shared key', () => {
+      const identity = { category: ErrorCategory.NETWORK, appEvent: 'test-event' as AppEventCode, statusCode: 2100 }
+      const requestError = new AppError('Request failed', identity, {
+        track: false,
+        context: { http_route: '/assertion', http_status: 503, failure_step: 'verify_device_assertion' },
+      })
+      const error = new AppError('Login failed', identity, {
+        cause: requestError,
+        track: false,
+        context: { http_status: 500 },
+      })
+
+      const result = createReportProblemLokiPayload('7K2P-9XQF', { ...baseProblem, error })
+      const body = JSON.parse(result.streams[0].values[0][1])
+
+      expect(body).toMatchObject({
+        error_message: 'Login failed',
+        http_route: '/assertion',
+        http_status: 500,
+        failure_step: 'verify_device_assertion',
+      })
+    })
+
+    it('flattens the native code and site of a native rejection from a login flow step', async () => {
+      // Shaped like a React Native rejection from bcsc-core's rejectWithDiagnostics
+      const rejection = Object.assign(new Error('Failed to sign the pairing code.'), {
+        code: 'E_JWT_SIGN_FAILED',
+        userInfo: { site: 'signPairingCode.sign', detail: 'KeyStoreException', keyCount: 2 },
+      })
+      const steps = trackFailureSteps('pairing', { definition: ErrorRegistry.LOGIN_DEVICE_ERROR })
+
+      // The same path as pairing: a native error is mapped, then labeled by its step
+      const error: AppError = await steps
+        .run('sign_pairing_code', async () => throwNativeBcscError(rejection))
+        .catch((e) => e)
+
+      const result = createReportProblemLokiPayload('7K2P-9XQF', { ...baseProblem, error })
+      const body = JSON.parse(result.streams[0].values[0][1])
+
+      expect(body).toMatchObject({
+        failure_flow: 'pairing',
+        failure_step: 'sign_pairing_code',
+        native_code: 'E_JWT_SIGN_FAILED',
+        native_site: 'signPairingCode.sign',
+        native_detail: 'KeyStoreException',
+      })
+      // Diagnostics not promoted to the top level stay in the error json
+      expect(body).not.toHaveProperty('keyCount')
+      expect(JSON.stringify(body.error_json)).toContain('"keyCount":2')
+    })
+
+    it('omits native fields when the error has no native rejection beneath it', () => {
+      const error = new AppError(
+        'Failed to fetch resource',
+        { category: ErrorCategory.NETWORK, appEvent: 'test-event' as AppEventCode, statusCode: 2100 },
+        { track: false, cause: new Error('boom') }
+      )
+
+      const result = createReportProblemLokiPayload('7K2P-9XQF', { ...baseProblem, error })
+      const body = JSON.parse(result.streams[0].values[0][1])
+
+      expect(body).not.toHaveProperty('native_code')
+      expect(body).not.toHaveProperty('native_site')
     })
 
     it('omits an allow-listed context key from the flattened body when it is absent on the error', () => {

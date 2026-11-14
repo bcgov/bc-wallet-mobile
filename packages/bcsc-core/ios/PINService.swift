@@ -71,10 +71,8 @@ struct PINService: PINServiceProtocol {
   func deletePIN(issuer: String, accountID: String) throws {
     let secretID = PINSecret.composeID(issuer: issuer, accountID: accountID)
 
-    if keychainService.getSecret(secretID) != nil {
-      if let error = keychainService.deleteSecret(secretID) {
-        throw error
-      }
+    if keychainService.getSecret(secretID) != nil, let error = keychainService.deleteSecret(secretID) {
+      throw error
     }
   }
 

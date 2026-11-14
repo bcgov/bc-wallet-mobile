@@ -1,4 +1,4 @@
-# Derived-State Refactor Guide (for agents)
+# Derived-State Refactor Guide
 
 Read before refactoring app state that is computed from other state. Reference implementation: bc-wallet-mobile PR #4882 (card expiry phase).
 

@@ -1,4 +1,4 @@
-import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { getNotificationTokens, getPushTokenStatus } from '@/bcsc-theme/utils/push-notification-tokens'
 import { MockLogger } from '@bifold/core'
 import {
   getAPNSToken,
@@ -242,5 +242,56 @@ describe('getNotificationTokens', () => {
       })
       expect(getAPNSToken).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe('getPushTokenStatus', () => {
+  const originalOS = Platform.OS
+
+  afterEach(() => {
+    Object.defineProperty(Platform, 'OS', { writable: true, value: originalOS })
+  })
+
+  const withOS = (os: 'ios' | 'android') => Object.defineProperty(Platform, 'OS', { writable: true, value: os })
+
+  it('reports real tokens as ok on iOS', () => {
+    withOS('ios')
+    expect(getPushTokenStatus({ fcmDeviceToken: 'fcm', deviceToken: 'apns' })).toEqual({
+      push_fcm_status: 'ok',
+      push_apns_status: 'ok',
+    })
+  })
+
+  it('reports a missing APNS token on iOS', () => {
+    withOS('ios')
+    expect(getPushTokenStatus({ fcmDeviceToken: 'fcm', deviceToken: null }).push_apns_status).toBe('missing')
+  })
+
+  it('reports APNS as not applicable on Android', () => {
+    withOS('android')
+    expect(getPushTokenStatus({ fcmDeviceToken: 'fcm', deviceToken: null }).push_apns_status).toBe('not_applicable')
+  })
+
+  it('recognizes the placeholder sent when Firebase registration fails', () => {
+    expect(
+      getPushTokenStatus({ fcmDeviceToken: 'missing_token_due_to_rnf_registration_failure', deviceToken: null })
+        .push_fcm_status
+    ).toBe('registration_failed')
+  })
+
+  it('recognizes the placeholder sent when the FCM token fetch fails', () => {
+    expect(
+      getPushTokenStatus({ fcmDeviceToken: 'missing_token_due_to_fetch_failure', deviceToken: null }).push_fcm_status
+    ).toBe('fetch_failed')
+  })
+
+  it('reports the placeholders produced by getNotificationTokens', async () => {
+    withOS('android')
+    ;(isDeviceRegisteredForRemoteMessages as jest.Mock).mockReturnValue(true)
+    ;(getToken as jest.Mock).mockResolvedValue(null)
+
+    const tokens = await getNotificationTokens(new MockLogger())
+
+    expect(getPushTokenStatus(tokens).push_fcm_status).toBe('fetch_failed')
   })
 })

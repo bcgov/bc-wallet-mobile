@@ -38,6 +38,8 @@ describe('useQuickLoginURL', () => {
   beforeEach(() => {
     jest.resetAllMocks()
     jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+    // resetAllMocks clears the shared mock's default; the real wrapper always returns a promise
+    jest.mocked(BcscCore).getAccountReadStatus = jest.fn().mockResolvedValue({ status: 'ok' })
   })
 
   it('should return error when no initiate login uri', async () => {
@@ -90,6 +92,59 @@ describe('useQuickLoginURL', () => {
     expect(tokensMock.getNotificationTokens).toHaveBeenCalledTimes(1)
     expect(bcscCoreMock.getAccount).toHaveBeenCalledTimes(1)
     expect(fetchJwkMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('records why the native account read returned nothing', async () => {
+    const useClientMock = jest.mocked(useBCSCApiClient)
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const tokensMock = jest.mocked(tokens)
+
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(null)
+    bcscCoreMock.getAccountReadStatus = jest.fn().mockResolvedValue({
+      status: 'account_decode_failed',
+      environment: 'PROD',
+      detail: 'NSCocoaErrorDomain:4864',
+    })
+    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue({ fcmDeviceToken: 'fcm', deviceToken: null })
+
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwkResult: jest.fn().mockResolvedValue({ jwk: {}, error: null }),
+    } as any)
+    bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+    const hook = renderHook(() => useQuickLoginURL())
+    const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
+
+    expect(result).toEqual({ success: false, error: failure('account', 'account') })
+    expect((result as { error: { context: unknown } }).error.context).toMatchObject({
+      account_read_status: 'account_decode_failed',
+      account_read_environment: 'PROD',
+      account_read_detail: 'NSCocoaErrorDomain:4864',
+    })
+  })
+
+  it('still reports the account failure when the read status lookup fails', async () => {
+    const useClientMock = jest.mocked(useBCSCApiClient)
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const tokensMock = jest.mocked(tokens)
+
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(null)
+    bcscCoreMock.getAccountReadStatus = jest.fn().mockRejectedValue(new Error('not linked'))
+    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
+
+    useClientMock.useBCSCApiClient.mockReturnValue({ tokens: { access_token: true }, fetchJwkResult: jest.fn() } as any)
+    bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+    const hook = renderHook(() => useQuickLoginURL())
+    const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
+
+    expect(result).toEqual({ success: false, error: failure('account', 'account') })
+    expect(
+      (result as { error: { context: Record<string, unknown> } }).error.context.account_read_status
+    ).toBeUndefined()
   })
 
   it('should return error when no account available', async () => {

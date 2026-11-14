@@ -1,6 +1,7 @@
 import { getNavigationBreadcrumbs } from '@/bcsc-theme/navigators/stack-utils'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppError } from '@/errors'
+import { getNativeErrorFields } from '@/errors/nativeErrorFields'
 import { AppEventCode } from '@/events/appEventCode'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios from 'axios'
@@ -32,6 +33,12 @@ const FLATTENED_APP_ERROR_CONTEXT_KEYS = new Set([
   'failure_step',
   'failure_elapsed_ms',
   'failure_cause_code',
+  'push_fcm_status',
+  'push_apns_status',
+  'account_read_status',
+  'account_read_environment',
+  'account_read_detail',
+  'account_legacy_status',
 ])
 
 /**
@@ -132,11 +139,16 @@ const _flattenAppError = (error?: AppError) => {
     error_technical_message: error.technicalMessage,
   }
 
+  const context = error.getChainedContext()
+
   for (const key of FLATTENED_APP_ERROR_CONTEXT_KEYS) {
-    if (error.context?.[key] !== undefined) {
-      flattened[key] = error.context[key]
+    if (context[key] !== undefined) {
+      flattened[key] = context[key]
     }
   }
+
+  // The native code and site of a native rejection beneath the error
+  Object.assign(flattened, getNativeErrorFields(error))
 
   // Append the error json to the end of the flattened object to expose additional context
   flattened.error_json = error.toJSON()

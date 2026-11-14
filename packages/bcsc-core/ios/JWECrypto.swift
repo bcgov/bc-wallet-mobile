@@ -217,10 +217,8 @@ class AESCBC {
       iv: iv
     )
 
-    if let cipherText = cryptor.update(data: Data(clearText))?.final() {
-      if !cipherText.isEmpty {
-        return Data(bytes: cipherText, count: cipherText.count)
-      }
+    if let cipherText = cryptor.update(data: Data(clearText))?.final(), !cipherText.isEmpty {
+      return Data(bytes: cipherText, count: cipherText.count)
     }
     return nil
   }
@@ -256,10 +254,8 @@ class AESCBC {
       key: keyDataBytes,
       iv: iv.arrayOfBytes()
     )
-    if let plainText = cryptor.update(data: e)?.final() {
-      if !plainText.isEmpty {
-        return Data(bytes: plainText, count: plainText.count)
-      }
+    if let plainText = cryptor.update(data: e)?.final(), !plainText.isEmpty {
+      return Data(bytes: plainText, count: plainText.count)
     }
     return nil
   }
