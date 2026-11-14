@@ -1,5 +1,5 @@
 import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
-import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
+import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { ACCESSIBILITY_URL, DEFAULT_AUTO_LOCK_TIME_MIN, FEEDBACK_URL, hitSlop, TERMS_OF_USE_URL } from '@/constants'
@@ -274,10 +274,9 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
 }) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  // Use the canonical verification check (same as getResumeStepRoute) rather than the raw
-  // `verified` flag: device transfer marks the user verified via a refresh token without setting
-  // that flag, and such users still need the device-management options (e.g. "Add another device").
-  const isVerified = isUserVerified(store.bcscSecure)
+  // Device transfer marks the user verified via a refresh token without setting the `verified` flag, and such
+  // users still need the device-management options (e.g. "Add another device"), so gate on IAS, not setup.
+  const { isDeviceVerifiedByIas: isVerified } = useVerificationState()
 
   const { status: notificationStatus } = useNotificationPermissionStatus()
 

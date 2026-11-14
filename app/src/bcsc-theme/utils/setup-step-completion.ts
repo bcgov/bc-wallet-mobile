@@ -1,5 +1,6 @@
 import { AccountSetupType, BCState } from '@/store'
 import { BCSCCardProcess, EvidenceMetadata } from 'react-native-bcsc-core'
+import { selectVerificationState } from '../state/verification/selectors'
 
 /**
  * Validates that an evidence item is fully completed.
@@ -101,18 +102,12 @@ export interface StepCompletionResult {
  * to compute the next step before React commits the dispatched updates.
  */
 export const computeSetupStepCompletion = (store: BCState): StepCompletionResult => {
-  const {
-    emailAddress,
-    isEmailVerified,
-    userSkippedEmailVerification,
-    deviceCode,
-    verified,
-    userSubmittedVerificationVideo,
-  } = store.bcscSecure
+  const { emailAddress, isEmailVerified, userSkippedEmailVerification, deviceCode, userSubmittedVerificationVideo } =
+    store.bcscSecure
 
   const idStatus = computeIdStepStatus(store)
 
-  const step4Completed = Boolean(verified || userSubmittedVerificationVideo)
+  const step4Completed = Boolean(selectVerificationState(store).isVerified || userSubmittedVerificationVideo)
   const step1Completed = step4Completed || idStatus.registered
   const step2Completed = step4Completed || (step1Completed && Boolean(deviceCode))
   const emailStepSatisfied =

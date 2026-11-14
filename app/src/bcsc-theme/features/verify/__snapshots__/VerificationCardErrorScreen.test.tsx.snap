@@ -302,6 +302,7 @@ exports[`VerificationCardErrorScreen renders MismatchedSerial variant correctly 
               undefined,
             ]
           }
+          testID="com.ariesbifold:id/MismatchedSerialBirthdate"
         >
           BCSC.MismatchedSerial.Birthdate
         </Text>

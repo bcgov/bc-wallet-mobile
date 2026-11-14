@@ -1,14 +1,14 @@
 import { IColorPalette } from '@bifold/core'
 import { Platform } from 'react-native'
 import { TermsOfUseResponseData } from '../api/hooks/useConfigApi'
+import { formatCalendarDate } from './datetime-utils'
 
 /**
  * Formats a date string (yyyy-MM-dd) to a long date format (e.g. "June 6, 2025").
  */
 const formatLongDate = (dateStr: string): string => {
   const [year, month, day] = dateStr.split('-').map(Number)
-  const date = new Date(year, month - 1, day)
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  return formatCalendarDate(new Date(year, month - 1, day), 'en-US')
 }
 
 /**
