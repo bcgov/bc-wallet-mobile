@@ -5,7 +5,7 @@ export interface ExpiryFacts {
   isVerified: boolean
   /** ID token `bcsc_reason` is 'Expired by System' */
   expiredByServer: boolean
-  /** Hydration found the stored refresh token expired (#4654) */
+  /** The stored refresh token has expired (#4654) */
   credentialExpired: boolean
   /** Undefined until the account loads */
   cardExpiresAt?: Date

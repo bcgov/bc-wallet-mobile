@@ -1,6 +1,6 @@
 # Derived-State Refactor Guide
 
-Read before refactoring app state that is computed from other state. Reference implementation: bc-wallet-mobile PR #4882 (card expiry phase).
+Read before refactoring app state that is computed from other state. Reference implementations: PR #4882 (card expiry phase, `state/account/`), PR #4977 (Home notice, `state/home/`), PR #4981 (refresh token expiry, `state/account/refresh-token.ts`).
 
 ## Core rule: derive, don't store
 
@@ -14,12 +14,12 @@ Read before refactoring app state that is computed from other state. Reference i
 facts (store / context)  →  selector  →  rule (pure fn)  →  hook  →  UI
 ```
 
-| Layer            | Job                                                                     | Must not                                       |
-| ---------------- | ----------------------------------------------------------------------- | ---------------------------------------------- |
-| **Rule**         | Pure fn `(facts, now) => result`. The single definition of the concept. | Import React, the store, or call `new Date()`. |
-| **Selector**     | Picks facts out of state and calls the rule.                            | Contain business logic.                        |
-| **Hook**         | Reads store/context, calls the selector, memoizes.                      | Log, dispatch, or re-implement the rule.       |
-| **UI / effects** | Branch on the result.                                                   | Re-derive the answer.                          |
+| Layer            | Job                                                                     | Must not                                    |
+| ---------------- | ----------------------------------------------------------------------- | ------------------------------------------- |
+| **Rule**         | Pure fn `(facts, now) => result`. The single definition of the concept. | Import React, the store, or read the clock. |
+| **Selector**     | Picks facts out of state and calls the rule.                            | Contain business logic.                     |
+| **Hook**         | Reads store/context, calls the selector, memoizes.                      | Log, dispatch, or re-implement the rule.    |
+| **UI / effects** | Branch on the result.                                                   | Re-derive the answer.                       |
 
 ## Naming
 
@@ -27,15 +27,18 @@ facts (store / context)  →  selector  →  rule (pure fn)  →  hook  →  UI
 - Selectors use the Redux-style `select<Concept>` prefix (`selectAccountPhase`).
 - Rule, selector and hook live together in `bcsc-theme/state/<domain>/` (`account-phase.ts`, `selectors.ts`, `useAccountPhase.ts`).
 - Rules are `get<Concept>`: `getAccountPhase`. Hooks are `use<Concept>`: `useAccountPhase`.
+- A rule whose callers only need yes/no is an `is<Concept>` predicate returning `boolean` (`isRefreshTokenExpired`). Switch it to an enum result once a caller needs a third state.
 - Result kinds are a string `enum` (`AccountPhaseType.Expired`), never bare string literals.
 
 ## Rule design
 
 - One function answers the question everywhere. If two places decide it, merge them.
 - Return a discriminated union; attach data only to the variants that have it (`expiresAt` on `Active`/`ExpiringSoon`).
-- Take `now` as a parameter so tests control time.
+- Take `now: Date` as a required parameter so tests control time; no `Date.now()` default. Only the hook (or an imperative caller such as a system check) creates `now`, once, and passes it to every selector so composed rules agree on the time.
+- Build on another rule's result instead of repeating its logic: pass it in as a fact (`getHomeNotice` takes `accountPhase`). A rule that does no date math of its own takes no `now`.
 - Order checks by authority: not applicable → authoritative server signals → missing data → computed values.
 - Distinguish "nothing to judge" (`None`) from "can't tell" (`Unknown`). Never let missing data read as healthy.
+- State what a missing input means in a comment on the rule. A predicate may treat missing as `false` when missing is "nothing to judge", not "fine": `isRefreshTokenExpired` returns `false` with no token because there is no session to renew, and `getAccountPhase` still reports `Unknown` without a date.
 - Compare dates as calendar days, not milliseconds.
 - When callers need several answers that can hold at once, return a record of booleans rather than one enum kind. Split the type on the deciding flag so combinations the rule can't produce don't type-check (`getVerificationState` splits on `isVerified`).
 
