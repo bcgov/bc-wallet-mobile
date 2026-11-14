@@ -11,6 +11,9 @@ on:
       - '**/build.gradle'
       - '**/settings.gradle'
       - '**/gradle.lockfile'
+      - '**/buildscript-gradle.lockfile'
+      - '**/Gemfile'
+      - '**/Gemfile.lock'
       - '**/Podfile'
       - '**/Podfile.lock'
   merge_group:
@@ -82,10 +85,13 @@ jobs:
         working-directory: app/android
         run: ./gradlew app:dependencies --write-locks
 
-      - name: Check gradle.lockfile is up to date
+      - name: Check Gradle lockfiles are up to date
         run: |
-          if ! git diff --exit-code app/android/app/gradle.lockfile; then
-            echo "::error::gradle.lockfile is out of sync. Run 'yarn android:setup' from /app and commit the result."
+          lockfiles="app/android/app/gradle.lockfile app/android/buildscript-gradle.lockfile"
+          if [ -n "$(git status --porcelain -- $lockfiles)" ]; then
+            git status --porcelain -- $lockfiles
+            git diff -- $lockfiles
+            echo "::error::Gradle lockfiles are out of sync. Run 'yarn android:setup' from /app and commit the result."
             exit 1
           fi
 
@@ -123,6 +129,8 @@ jobs:
 
       - name: Bundle install
         working-directory: app
+        env:
+          BUNDLE_FROZEN: true
         run: bundle install
 
       - name: Cache CocoaPods
