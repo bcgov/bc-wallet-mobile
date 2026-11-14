@@ -17,7 +17,7 @@ done
 # above, so a same-named branch can never shadow the tag.
 date_a=$(git log -1 --format=%ct "refs/tags/${TAG_A}")
 date_b=$(git log -1 --format=%ct "refs/tags/${TAG_B}")
-if [ "${date_a}" -le "${date_b}" ]; then
+if [[ "${date_a}" -le "${date_b}" ]]; then
   older="${TAG_A}"; newer="${TAG_B}"
 else
   older="${TAG_B}"; newer="${TAG_A}"
@@ -39,7 +39,7 @@ pr_numbers=$(printf '%s\n' "${commit_subjects}" \
   | sed -En 's/.*\(#([0-9]+)\)[[:space:]]*$/\1/p' \
   | sort -un)
 
-if [ -z "${pr_numbers}" ]; then
+if [[ -z "${pr_numbers}" ]]; then
   echo "::notice::No PRs found between ${older} and ${newer} (matching '(#N)' at the end of a commit subject) — the report will be posted with empty tables."
   echo "pr_numbers=[]" >> "${GITHUB_OUTPUT}"
 else
