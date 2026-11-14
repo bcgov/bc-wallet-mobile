@@ -35,8 +35,8 @@ type Step = (state: BCState) => BCState
 const apply = (state: BCState, ...actions: { type: BCDispatchAction; payload?: unknown[] }[]): BCState =>
   actions.reduce((current, action) => reducer(current, action as any), state)
 
-// The dispatches below are the only part of this file that follows the store's shape; the expected
-// observations must not change when the saved status is replaced with facts.
+// Only the dispatches below follow the store's shape; the expected observations are what users see
+// and must survive a store reshape.
 const unlock =
   (record: CredentialInfo | null): Step =>
   (state) => {
@@ -147,8 +147,8 @@ const row = (
   resumeRoute: ResumeStepRoute['name'] | null
 ): Observation => ({ verifyStackShown, accountLoadingAllowed, homeNotice, resumeRoute })
 
-// One row per step: the start, each transition in order, then unlocking again. Recorded from the
-// saved-status implementation, so a change here is a change in what users see.
+// One row per step: the start, each transition in order, then unlocking again. A change here is a
+// change in what users see.
 const expected: Record<string, Observation[]> = {
   'unlocked with a deactivated record': [
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
