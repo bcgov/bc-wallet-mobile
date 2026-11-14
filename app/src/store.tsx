@@ -168,7 +168,7 @@ export interface BCSCSecureState {
   /** Whether secure state has been loaded from native storage */
   isHydrated: boolean
 
-  /** Account verification status - determined from presence of valid credential */
+  /** A valid (not deactivated) credential record exists */
   verified?: boolean
   /** The credential was cancelled or expired */
   credentialDeactivated: boolean
@@ -496,12 +496,15 @@ const applyVerificationStatusReceived = (
   if (verificationRequestStatus === UNKNOWN_VERIFICATION_STATUS) {
     return state
   }
-  // A pending answer fetched before a push landed must not replace the decision. Every request end
-  // clears the status, so a decision still held here belongs to the current request.
+  // A pending answer fetched before a push landed must not replace the decision. A change of request
+  // ID clears the status, so a decision still held here belongs to the current request.
   if (
     verificationRequestStatus === VerificationRequestStatus.PENDING &&
     isDecidedVerificationStatus(state.bcscSecure.verificationRequestStatus)
   ) {
+    appLogger.info('Ignored a late pending verification status; a decision is already recorded', {
+      recordedStatus: state.bcscSecure.verificationRequestStatus,
+    })
     return state
   }
   // Only the cancelled banner shows the message
@@ -514,6 +517,20 @@ const applyVerificationStatusReceived = (
     return state
   }
   const bcscSecure = { ...state.bcscSecure, verificationRequestStatus, verificationRequestStatusMessage }
+  return { ...state, bcscSecure }
+}
+
+// A status belongs to one request, so it must not outlive a change of request ID
+const applyVerificationRequestId = (state: BCState, verificationRequestId?: string): BCState => {
+  if (verificationRequestId === state.bcscSecure.verificationRequestId) {
+    return state
+  }
+  const bcscSecure = {
+    ...state.bcscSecure,
+    verificationRequestId,
+    verificationRequestStatus: undefined,
+    verificationRequestStatusMessage: undefined,
+  }
   return { ...state, bcscSecure }
 }
 
@@ -790,9 +807,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID: {
-      const verificationRequestId = (action?.payload || []).pop() ?? undefined
-      const bcscSecure = { ...state.bcscSecure, verificationRequestId }
-      return { ...state, bcscSecure }
+      return applyVerificationRequestId(state, (action?.payload || []).pop() ?? undefined)
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA: {
       const verificationRequestSha = (action?.payload || []).pop() ?? undefined

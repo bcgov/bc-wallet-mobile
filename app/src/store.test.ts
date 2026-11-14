@@ -41,6 +41,9 @@ describe('reducer', () => {
     jest.clearAllMocks()
   })
 
+  const requestId = (state: typeof initialState, id?: string) =>
+    reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID, payload: [id] })
+
   it('UPDATE_APP_VERSION sets appVersion and appBuildNumber', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, appVersion: '', appBuildNumber: '' } }
     const result = reducer(state, { type: BCDispatchAction.UPDATE_APP_VERSION })
@@ -314,6 +317,28 @@ describe('reducer', () => {
     expect(result.bcsc.verificationStarted).toBeUndefined()
   })
 
+  describe('UPDATE_SECURE_VERIFICATION_REQUEST_ID', () => {
+    const cancelled = reducer(requestId(initialState, 'request-a'), {
+      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+      payload: [{ status: 'cancelled', status_message: 'Face does not match' }],
+    })
+
+    it.each([
+      ['a new request', 'request-b'],
+      ['no request', undefined],
+    ])('clears the status and its message when the ID changes to %s', (_label, id) => {
+      const result = requestId(cancelled, id)
+
+      expect(result.bcscSecure.verificationRequestId).toBe(id)
+      expect(result.bcscSecure.verificationRequestStatus).toBeUndefined()
+      expect(result.bcscSecure.verificationRequestStatusMessage).toBeUndefined()
+    })
+
+    it('keeps the status when the same ID is stored again', () => {
+      expect(requestId(cancelled, 'request-a')).toBe(cancelled)
+    })
+  })
+
   describe('VERIFICATION_STATUS_RECEIVED', () => {
     const received = (state: typeof initialState, payload: object[]) =>
       reducer(state, { type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED, payload })
@@ -359,6 +384,14 @@ describe('reducer', () => {
         const cleared = reducer(verified, { type: BCDispatchAction.CLEAR_SECURE_STATE })
 
         expect(received(cleared, [{ status: 'pending' }]).bcscSecure.verificationRequestStatus).toBe('pending')
+      })
+
+      it('is recorded for a new request that follows a decided one', () => {
+        const first = requestId(initialState, 'request-a')
+        const cancelled = received(first, [{ status: 'cancelled', status_message: 'Face does not match' }])
+        const second = requestId(cancelled, 'request-b')
+
+        expect(received(second, [{ status: 'pending' }]).bcscSecure.verificationRequestStatus).toBe('pending')
       })
     })
 
