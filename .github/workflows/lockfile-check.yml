@@ -11,7 +11,6 @@ on:
       - '**/build.gradle'
       - '**/settings.gradle'
       - '**/gradle.lockfile'
-      - '**/buildscript-gradle.lockfile'
       - '**/Gemfile'
       - '**/Gemfile.lock'
       - '**/Podfile'
@@ -85,13 +84,13 @@ jobs:
         working-directory: app/android
         run: ./gradlew app:dependencies --write-locks
 
-      - name: Check Gradle lockfiles are up to date
+      - name: Check gradle.lockfile is up to date
         run: |
-          lockfiles="app/android/app/gradle.lockfile app/android/buildscript-gradle.lockfile"
-          if [ -n "$(git status --porcelain -- $lockfiles)" ]; then
-            git status --porcelain -- $lockfiles
-            git diff -- $lockfiles
-            echo "::error::Gradle lockfiles are out of sync. Run 'yarn android:setup' from /app and commit the result."
+          lockfile=app/android/app/gradle.lockfile
+          if [ -n "$(git status --porcelain -- $lockfile)" ]; then
+            git status --porcelain -- $lockfile
+            git diff -- $lockfile
+            echo "::error::gradle.lockfile is out of sync. Run 'yarn android:setup' from /app and commit the result."
             exit 1
           fi
 
