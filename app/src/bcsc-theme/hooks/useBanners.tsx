@@ -1,4 +1,3 @@
-import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
 import { useStore } from '@bifold/core'
@@ -17,10 +16,6 @@ export enum BannersScope {
   Auth = 'auth',
 }
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000
-const DEVICE_COUNT_BANNER_COOLDOWN_MS = __DEV__
-  ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV
-  : DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD
 const BANNERS_BY_SCOPE: Record<BannersScope, Set<BCSCBanner>> = {
   [BannersScope.Home]: new Set([BCSCBanner.APP_UPDATE_AVAILABLE, BCSCBanner.DEVICE_LIMIT_EXCEEDED]),
   [BannersScope.Auth]: new Set([BCSCBanner.APP_UPDATE_AVAILABLE]),
@@ -49,15 +44,9 @@ export const useBanners = (options: BannersOptions) => {
 
   const dismissBanner = useCallback(
     (bannerId: BCSCBanner) => {
-      let cooldownMs = ONE_DAY_MS
-
-      if (bannerId === BCSCBanner.DEVICE_LIMIT_EXCEEDED) {
-        cooldownMs = DEVICE_COUNT_BANNER_COOLDOWN_MS
-      }
-
       dispatch({
         type: BCDispatchAction.DISMISS_BANNER,
-        payload: [{ bannerId: bannerId, dismissedUntil: Date.now() + cooldownMs }],
+        payload: [{ bannerId: bannerId }],
       })
     },
     [dispatch]

@@ -34,12 +34,12 @@ export const getAppUpdate = (facts: AppUpdateFacts): AppUpdate => {
     return AppUpdate.Unknown
   }
 
-  if (facts.supportedVersions === undefined) {
-    return AppUpdate.Unknown
-  }
-
   if (facts.appBuild < facts.minBuild) {
     return AppUpdate.Mandatory
+  }
+
+  if (facts.supportedVersions === undefined) {
+    return AppUpdate.Unknown
   }
 
   const optionalUpdateAvailable = facts.supportedVersions.some(

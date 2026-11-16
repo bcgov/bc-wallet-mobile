@@ -16,7 +16,7 @@ export const selectBannerDismissal = (state: BCState, bannerId: BCSCBanner): Ban
 
   return getBannerDismissal({
     now: Date.now(),
+    bannerId,
     dismissedAt: dismissedBanner?.dismissedAt ?? null,
-    dismissedUntil: dismissedBanner?.dismissedUntil ?? null,
   })
 }
