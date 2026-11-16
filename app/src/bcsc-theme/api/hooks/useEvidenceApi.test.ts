@@ -379,6 +379,7 @@ describe('useEvidenceApi - error handling opt-out', () => {
     get: jest.fn(),
     put: jest.fn(),
     post: jest.fn(),
+    delete: jest.fn(),
     logger: mockLogger,
   }
 
@@ -417,5 +418,20 @@ describe('useEvidenceApi - error handling opt-out', () => {
       'https://example.test/evidence/v1/verifications/v1',
       expect.objectContaining({ skipBearerAuth: true, skipOnErrorHandler: true })
     )
+  })
+
+  it('cancels a verification request with a pre-verification token and no global error handling', async () => {
+    apiClient.delete.mockResolvedValue({ data: {} })
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.cancelVerificationRequest('v1')
+    })
+
+    expect(apiClient.delete).toHaveBeenCalledWith('https://example.test/evidence/v1/verifications/v1', {
+      headers: { Authorization: 'Bearer mock-pre-verification-jwt' },
+      skipBearerAuth: true,
+      skipOnErrorHandler: true,
+    })
   })
 })
