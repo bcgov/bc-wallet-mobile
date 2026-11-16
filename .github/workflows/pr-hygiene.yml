@@ -14,9 +14,7 @@ on:
     types: [opened, reopened, ready_for_review, converted_to_draft, edited, synchronize, labeled, unlabeled]
   merge_group:
 
-permissions:
-  contents: read
-  pull-requests: read
+permissions: {}
 
 concurrency:
   group: pr-hygiene-${{ github.event.pull_request.number || github.ref }}
@@ -26,6 +24,9 @@ jobs:
   check:
     name: PR hygiene
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
