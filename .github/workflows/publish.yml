@@ -386,6 +386,9 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      created: ${{ steps.tag.outputs.created }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -397,14 +400,17 @@ jobs:
           variant: bcsc-prod
 
       - name: Create and push the tag
+        id: tag
         env:
           BUILD_NUMBER: ${{ needs.resolve-build.outputs.run_number }}
           HEAD_SHA: ${{ needs.resolve-build.outputs.head_sha }}
         run: |
           set -euo pipefail
           TAG="bcsc-v${APP_VERSION}-${BUILD_NUMBER}"
+          echo "tag=${TAG}" >> "${GITHUB_OUTPUT}"
           if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
             echo "Tag ${TAG} already exists — nothing to do."
+            echo "created=false" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
           git config user.name  "github-actions[bot]"
@@ -412,6 +418,62 @@ jobs:
           git tag -a "${TAG}" "${HEAD_SHA}" -m "Published build ${BUILD_NUMBER} to ring-0"
           git push origin "refs/tags/${TAG}"
           echo "Tagged ${HEAD_SHA} as ${TAG}"
+          echo "created=true" >> "${GITHUB_OUTPUT}"
+
+  # ─── Release notes ──────────────────────────────────────────────────
+  # Two reports per release tag: what this build changed (against the
+  # previous build of the same version) and what the release changes
+  # (against the last build of the previous version). The second one also
+  # asks for the plain-language summary, since that is the one the store
+  # description comes from.
+  #
+  # Dispatched rather than called, so a report that is slow or fails on an
+  # expired project token never holds up a publish, and only for a tag this
+  # run created — a single-store retry re-runs the tag job and must not post
+  # the same reports again.
+  release-notes:
+    name: Trigger release notes
+    needs: tag-ring-0
+    if: needs.tag-ring-0.outputs.created == 'true'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Both comparison tags are found by listing tags locally, so the
+          # clone needs all of them.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Resolve the tags to compare against
+        id: previous
+        env:
+          TAG: ${{ needs.tag-ring-0.outputs.tag }}
+        run: python3 .github/scripts/previous_release_tags.py
+
+      - name: Dispatch the release notes reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ github.ref_name }}
+          TAG: ${{ needs.tag-ring-0.outputs.tag }}
+          PREVIOUS_BUILD_TAG: ${{ steps.previous.outputs.previous_build_tag }}
+          PREVIOUS_VERSION_TAG: ${{ steps.previous.outputs.previous_version_tag }}
+        run: |
+          set -euo pipefail
+          dispatch() {
+            local older="$1" summarize="$2" what="$3"
+            if [ -z "${older}" ]; then
+              echo "::notice::No ${what} before ${TAG}, so that report is skipped."
+              return 0
+            fi
+            gh workflow run release-notes.yml --ref "${REF}" \
+              -f tag_a="${older}" -f tag_b="${TAG}" -f summarize="${summarize}"
+            echo "Dispatched release notes for ${older}..${TAG} (summary: ${summarize})"
+          }
+          dispatch "${PREVIOUS_BUILD_TAG}" no "previous build of this version"
+          dispatch "${PREVIOUS_VERSION_TAG}" yes "build of a previous version"
 
   # ─── The approval gates ──────────────────────────────────────────────
   # Each gate is its own environment, so who approves ring-4 is configured
