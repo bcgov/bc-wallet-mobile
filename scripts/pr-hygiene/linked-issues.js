@@ -28,8 +28,9 @@ const linkedIssues = async ({ github, context, core }) => {
   let linked = await query({ github, context })
   for (let attempt = 1; linked.length === 0 && attempt <= RETRIES; attempt++) {
     core.info(`No linked issue yet — retrying in ${RETRY_DELAY_MS / 1000}s (${attempt}/${RETRIES})`)
-    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
-    linked = await query({ github, context })
+    // NOSONAR on the next two lines: retries must run one after another, with a wait between.
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS)) // NOSONAR
+    linked = await query({ github, context }) // NOSONAR
   }
   return linked
 }
