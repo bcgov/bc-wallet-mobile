@@ -4,7 +4,7 @@ import { DeviceLimitResult } from './device-limit'
 import { selectDeviceLimit } from './selectors'
 
 /**
- * Returns the device limit information from the server status.
+ * Returns the device limit information from the id token.
  *
  * @returns The device limit information.
  */

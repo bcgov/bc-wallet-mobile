@@ -1,3 +1,4 @@
+import { BCSCBanner } from '@/bcsc-theme/types/banners'
 import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
@@ -17,7 +18,7 @@ export const useBannersWriter = () => {
    * @returns void
    */
   const recordBannerDismissal = useCallback(
-    (bannerId: string) => {
+    (bannerId: BCSCBanner) => {
       dispatch({
         type: BCDispatchAction.DISMISS_BANNER,
         payload: [{ bannerId: bannerId }],
