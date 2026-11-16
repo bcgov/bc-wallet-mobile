@@ -17,6 +17,7 @@ data class NativeAccount(
     val clientId: String,
     @SerializedName("createdAt")
     val createdAt: Long = System.currentTimeMillis(),
+    // Not used: PIN attempts are counted in TypeScript. Kept so the file still matches ias-android's.
     @SerializedName("penalty")
     val penalty: NativePenalty = NativePenalty(),
     @SerializedName("accountSecurityType")
@@ -24,7 +25,8 @@ data class NativeAccount(
 )
 
 /**
- * Native-compatible Penalty model.
+ * Native-compatible Penalty model. Never read or updated: it only keeps the stored account in
+ * ias-android's shape.
  */
 data class NativePenalty(
     @SerializedName("penaltyAttempts")

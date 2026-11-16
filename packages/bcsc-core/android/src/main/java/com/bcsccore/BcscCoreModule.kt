@@ -105,7 +105,6 @@ import com.bcsccore.storage.KeychainClearingService
 import com.bcsccore.storage.NativeCompatibleStorage
 import com.bcsccore.storage.NativeAccount
 import com.bcsccore.storage.NativeAccountSecurityType
-import com.bcsccore.storage.NativePenalty
 import com.bcsccore.storage.NativeTokens
 import com.bcsccore.storage.NativeToken
 import com.bcsccore.storage.NativeTokenType
@@ -1106,14 +1105,6 @@ class BcscCoreModule internal constructor(
                         else -> null
                     }
 
-                // Get optional penalty info
-                val failedAttempts =
-                    if (account.hasKey("failedAttemptCount")) {
-                        account.getInt("failedAttemptCount")
-                    } else {
-                        0
-                    }
-
                 // Create native-compatible account object
                 val nativeAccount =
                     NativeAccount(
@@ -1122,7 +1113,6 @@ class BcscCoreModule internal constructor(
                         issuer = issuer,
                         clientId = clientID,
                         createdAt = createdAt,
-                        penalty = NativePenalty(penaltyAttempts = failedAttempts),
                         accountSecurityType = accountSecurityType,
                     )
 
@@ -1210,7 +1200,6 @@ class BcscCoreModule internal constructor(
             account.putString("nickname", nickname)
         }
 
-        account.putInt("failedAttemptCount", nativeAccount.penalty.penaltyAttempts)
         account.putBoolean("didPostNicknameToServer", false)
 
         return account
@@ -1322,20 +1311,12 @@ class BcscCoreModule internal constructor(
                 }
             }
 
-        val penaltyObj = accountObj.optJSONObject("penalty")
-        val penalty =
-            NativePenalty(
-                penaltyAttempts = penaltyObj?.optInt("penaltyAttempts", 0) ?: 0,
-                penaltyEndTime = penaltyObj?.optLong("penaltyEndTime", 0L) ?: 0L,
-            )
-
         return NativeAccount(
             uuid = accountObj.optString("uuid", "unknown"),
             nickName = accountObj.optString("nickName", "").ifEmpty { null },
             issuer = accountObj.optString("issuer", ""),
             clientId = accountObj.optString("clientId", ""),
             createdAt = accountObj.optLong("createdAt", System.currentTimeMillis()),
-            penalty = penalty,
             accountSecurityType = securityType,
         )
     }
@@ -2713,9 +2694,10 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Verifies a PIN for the current account.
+     * Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
+     * lockouts enforced, in TypeScript.
      * Matches TypeScript: verifyPIN(pin: string): Promise<PINVerificationResult>
-     * Returns: { success: boolean, locked: boolean, remainingTime: number, walletKey?: string, title?: string, message?: string }
+     * Returns: { success: boolean, walletKey?: string }
      */
     @ReactMethod
     override fun verifyPIN(
@@ -2723,85 +2705,34 @@ class BcscCoreModule internal constructor(
         promise: Promise,
     ) {
         try {
-            val account = resolveFirstAccount()
+            val resolution = resolveAccountsWithStatus()
+            val account = resolution.accounts?.firstOrNull()
             if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
-            // Penalty writes below always target native storage, migrating legacy accounts forward
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val accountID = account.uuid
-            val currentTimeMillis = System.currentTimeMillis()
-
-            // Check if account is currently locked
-            val remainingPenaltyTime = getRemainingPenaltyTime(account.penalty, currentTimeMillis)
-            if (remainingPenaltyTime > 0) {
-                val result = Arguments.createMap()
-                result.putBoolean("success", false)
-                result.putBoolean("locked", true)
-                result.putInt("remainingTime", (remainingPenaltyTime / 1000).toInt()) // Convert to seconds
-                result.putString("title", "Too Many Attempts")
-                result.putString("message", "Please wait before trying again")
-                Log.d(NAME, "verifyPIN: Account locked, remaining time: ${remainingPenaltyTime}ms")
-                promise.resolve(result)
+            // PinService finds the PIN through the account in native storage, so an account that is
+            // only in the legacy file is copied there first. Without the copy its PIN never verifies.
+            if (resolution.legacy is LegacyAccountsRead.Found &&
+                !nativeStorage.saveAccounts(listOf(account), nativeStorage.getDefaultIssuerName())
+            ) {
+                promise.reject("E_STORAGE_ERROR", "Failed to copy the legacy account to native storage")
                 return
             }
 
             // Validate PIN and get hash if successful
-            val validationResult = pinService.validatePINReturningHash(accountID, pin)
+            val validationResult = pinService.validatePINReturningHash(account.uuid, pin)
 
             val result = Arguments.createMap()
             result.putBoolean("success", validationResult.first)
 
-            if (validationResult.first) {
-                // Reset penalty on successful verification
-                val updatedAccount =
-                    account.copy(
-                        penalty = NativePenalty(penaltyAttempts = 0, penaltyEndTime = 0L),
-                    )
-                nativeStorage.saveAccounts(listOf(updatedAccount), issuerName)
-
-                result.putBoolean("locked", false)
-                result.putInt("remainingTime", 0)
-
-                // Include the wallet key (hash) on successful verification
-                validationResult.second?.let { hash ->
-                    result.putString("walletKey", hash)
-                }
-                Log.d(NAME, "verifyPIN: Success, penalty reset")
-            } else {
-                // Increment failed attempts and calculate penalty
-                val newFailedAttempts = account.penalty.penaltyAttempts + 1
-                val penaltyDuration = calculatePenaltyDuration(newFailedAttempts)
-                val penaltyEndTime = if (penaltyDuration > 0) currentTimeMillis + penaltyDuration else 0L
-
-                val updatedAccount =
-                    account.copy(
-                        penalty =
-                            NativePenalty(
-                                penaltyAttempts = newFailedAttempts,
-                                penaltyEndTime = penaltyEndTime,
-                            ),
-                    )
-                nativeStorage.saveAccounts(listOf(updatedAccount), issuerName)
-
-                val (title, message) = getPenaltyMessage(newFailedAttempts, penaltyDuration)
-
-                if (penaltyDuration > 0) {
-                    result.putBoolean("locked", true)
-                    result.putInt("remainingTime", (penaltyDuration / 1000).toInt())
-                } else {
-                    result.putBoolean("locked", false)
-                    result.putInt("remainingTime", 0)
-                }
-
-                result.putString("title", title)
-                result.putString("message", message)
-
-                Log.d(NAME, "verifyPIN: Failed, attempts=$newFailedAttempts, penalty=${penaltyDuration}ms")
+            // Include the wallet key (hash) on successful verification
+            validationResult.second?.let { hash ->
+                result.putString("walletKey", hash)
             }
 
+            Log.d(NAME, "verifyPIN: success=${validationResult.first}")
             promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "verifyPIN error: ${e.message}", e)
@@ -3085,45 +3016,6 @@ class BcscCoreModule internal constructor(
         } catch (e: Exception) {
             Log.e(NAME, "getAccountSecurityMethod error: ${e.message}", e)
             promise.reject("E_GET_SECURITY_METHOD_ERROR", "Error getting account security method: ${e.message}", e)
-        }
-    }
-
-    /**
-     * Checks if the current account is currently locked due to failed PIN attempts.
-     * Matches TypeScript: isAccountLocked(): Promise<AccountLockStatus>
-     * Returns: { locked: boolean, remainingTime: number }
-     */
-    @ReactMethod
-    override fun isAccountLocked(promise: Promise) {
-        try {
-            val account = resolveFirstAccount()
-            if (account == null) {
-                // No account means no lock
-                val result = Arguments.createMap()
-                result.putBoolean("locked", false)
-                result.putInt("remainingTime", 0)
-                promise.resolve(result)
-                return
-            }
-
-            val currentTimeMillis = System.currentTimeMillis()
-            val remainingPenaltyTime = getRemainingPenaltyTime(account.penalty, currentTimeMillis)
-
-            val result = Arguments.createMap()
-            if (remainingPenaltyTime > 0) {
-                result.putBoolean("locked", true)
-                result.putInt("remainingTime", (remainingPenaltyTime / 1000).toInt()) // Convert to seconds
-                Log.d(NAME, "isAccountLocked: locked=true, remainingTime=${remainingPenaltyTime}ms")
-            } else {
-                result.putBoolean("locked", false)
-                result.putInt("remainingTime", 0)
-                Log.d(NAME, "isAccountLocked: locked=false")
-            }
-
-            promise.resolve(result)
-        } catch (e: Exception) {
-            Log.e(NAME, "isAccountLocked error: ${e.message}", e)
-            promise.reject("E_IS_ACCOUNT_LOCKED_ERROR", "Error checking account lock status: ${e.message}", e)
         }
     }
 
@@ -5002,101 +4894,6 @@ class BcscCoreModule internal constructor(
 
         return nativeStorage.readEncryptedFile(targetFile)
     }
-
-    // MARK: - PIN Penalty Helper Methods
-
-    /**
-     * Calculates remaining penalty time in milliseconds.
-     * Returns 0 if no penalty is active.
-     */
-    private fun getRemainingPenaltyTime(
-        penalty: NativePenalty,
-        currentTimeMillis: Long,
-    ): Long {
-        if (penalty.penaltyEndTime <= 0) {
-            return 0L
-        }
-        val remaining = penalty.penaltyEndTime - currentTimeMillis
-        return if (remaining > 0) remaining else 0L
-    }
-
-    /**
-     * Calculates penalty duration in milliseconds based on failed attempt count.
-     * Matches iOS penalty schedule:
-     * - 5 attempts: 30 seconds
-     * - 6 attempts: 1 minute
-     * - 7 attempts: 5 minutes
-     * - 8+ attempts (every 3): 15 minutes
-     */
-    private fun calculatePenaltyDuration(failedAttempts: Int): Long =
-        when (failedAttempts) {
-            5 -> {
-                30_000L
-            }
-
-            // 30 seconds
-            6 -> {
-                60_000L
-            }
-
-            // 1 minute
-            7 -> {
-                300_000L
-            }
-
-            // 5 minutes
-            else -> {
-                // For 8+ attempts, apply 15 minute penalty every 3 attempts
-                if (failedAttempts >= 8 && failedAttempts % 3 == 0) {
-                    900_000L // 15 minutes
-                } else {
-                    0L // No penalty
-                }
-            }
-        }
-
-    /**
-     * Gets appropriate title and message for penalty state.
-     * Returns pair of (title, message).
-     */
-    private fun getPenaltyMessage(
-        failedAttempts: Int,
-        penaltyDuration: Long,
-    ): Pair<String, String> =
-        if (penaltyDuration > 0) {
-            Pair("Too Many Attempts", "Please wait before trying again")
-        } else {
-            // Calculate remaining attempts until next penalty
-            val attemptsUntilPenalty =
-                when {
-                    failedAttempts < 5 -> {
-                        5 - failedAttempts
-                    }
-
-                    failedAttempts < 6 -> {
-                        6 - failedAttempts
-                    }
-
-                    failedAttempts < 7 -> {
-                        7 - failedAttempts
-                    }
-
-                    else -> {
-                        // After 7, penalty every 3 attempts
-                        val nextPenaltyAttempt = ((failedAttempts / 3) + 1) * 3
-                        nextPenaltyAttempt - failedAttempts
-                    }
-                }
-
-            val message =
-                if (attemptsUntilPenalty == 1) {
-                    "Enter your PIN. For security, if you enter another incorrect PIN, it will temporarily lock the app."
-                } else {
-                    "Incorrect PIN"
-                }
-
-            Pair("Incorrect PIN", message)
-        }
 
     @ReactMethod
     override fun decodeLoginChallenge(

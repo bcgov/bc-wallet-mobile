@@ -159,8 +159,6 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun getAccountSecurityMethod(promise: Promise)
 
-    abstract fun isAccountLocked(promise: Promise)
-
     // Device Security Methods (for biometric/device authentication)
     abstract fun setupDeviceSecurity(promise: Promise)
 

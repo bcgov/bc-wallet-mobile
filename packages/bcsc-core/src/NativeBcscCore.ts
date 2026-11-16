@@ -127,16 +127,7 @@ export enum BiometricType {
 
 export type PINVerificationResult = {
   success: boolean;
-  locked: boolean;
-  remainingTime: number;
   walletKey?: string; // PBKDF2 hash of PIN, only present on success
-  title?: string;
-  message?: string;
-};
-
-export type AccountLockStatus = {
-  locked: boolean;
-  remainingTime: number;
 };
 
 export type PINSetupResult = {
@@ -245,10 +236,6 @@ export type NativeAccount = {
   displayName?: string;
   didPostNicknameToServer?: boolean;
   nickname?: string;
-  failedAttemptCount?: number;
-  // lastAttemptDate?: number; // Timestamp
-  // Penalties are not directly included as it's a computed property
-  // with complex structure
 };
 
 export type NativeAccountWithoutId = {
@@ -258,7 +245,6 @@ export type NativeAccountWithoutId = {
   displayName?: string;
   didPostNicknameToServer?: boolean;
   nickname?: string;
-  failedAttemptCount?: number;
 };
 
 export type NativeSavedService = {
@@ -382,6 +368,9 @@ export interface Spec extends TurboModule {
 
   // PIN Authentication Methods
   setPIN(pin: string): Promise<PINSetupResult>;
+  /**
+   * Only checks the PIN. Wrong attempts are counted, and lockouts enforced, by the caller.
+   */
   verifyPIN(pin: string): Promise<PINVerificationResult>;
   deletePIN(): Promise<boolean>;
   hasPINSet(): Promise<boolean>;
@@ -395,7 +384,6 @@ export interface Spec extends TurboModule {
   // Account Security Methods
   setAccountSecurityMethod(securityMethod: AccountSecurityMethod): Promise<boolean>;
   getAccountSecurityMethod(): Promise<AccountSecurityMethod>;
-  isAccountLocked(): Promise<AccountLockStatus>;
 
   // Device Security Methods
   setupDeviceSecurity(): Promise<PINSetupResult>;
