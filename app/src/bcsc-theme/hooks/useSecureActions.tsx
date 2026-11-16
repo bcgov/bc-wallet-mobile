@@ -1073,7 +1073,7 @@ export const useSecureActions = () => {
       let recoveredRegistrationAccessToken: string | undefined
       // Production never rotates the refresh token, so its `exp` is the device credential's
       // 5-year lifetime (#4654): when expired, skip the refresh and key recovery — renewal is the only fix.
-      const refreshTokenExpired = isRefreshTokenExpired(refreshToken)
+      const refreshTokenExpired = isRefreshTokenExpired(refreshToken, new Date())
 
       if (refreshTokenExpired) {
         logger.warn(
