@@ -432,6 +432,7 @@ describe('useEvidenceApi - error handling opt-out', () => {
       headers: { Authorization: 'Bearer mock-pre-verification-jwt' },
       skipBearerAuth: true,
       skipOnErrorHandler: true,
+      suppressStatusCodeLogs: [404],
     })
   })
 })

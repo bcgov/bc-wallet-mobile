@@ -164,6 +164,7 @@ describe('useRestartVerification', () => {
     expect(mockContinueVerificationProcess).toHaveBeenCalledTimes(1)
     expect(mockStopLoading).toHaveBeenCalledTimes(1)
     expect(mockEmitAlert).toHaveBeenCalledTimes(1)
+    expect(mockLogger.info).toHaveBeenCalledTimes(1)
     expect(mockLogger.warn).not.toHaveBeenCalled()
   })
 
