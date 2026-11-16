@@ -6,3 +6,4 @@ yarn.lock linguist-generated=true
 package-lock.json linguist-generated=true
 Podfile.lock linguist-generated=true
 Gemfile.lock linguist-generated=true
+*.lockfile linguist-generated=true
