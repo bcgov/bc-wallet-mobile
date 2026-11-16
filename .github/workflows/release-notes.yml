@@ -13,6 +13,13 @@
 #      Debt/Spike/Other) from its issue type and labels.
 #   4. Render it all as Markdown tables, grouped by category, and post as a
 #      new Discussion.
+#   5. Optionally ask GitHub Models for a plain-language version of that
+#      report and post it as a comment on the discussion.
+#
+# publish.yml dispatches this twice for every build it tags: once against the
+# previous build of the same version, and once against the last build of the
+# previous version — that second one carrying the summary. It stays available
+# on demand for any other two tags.
 #
 # The step scripts live in scripts/release-notes/ — see that directory for
 # the actual logic.
@@ -37,8 +44,19 @@ on:
         description: 'The other git tag in the range'
         required: true
         type: string
+      summarize:
+        description: 'Also post a plain-language version of the report, drafted by Copilot, as a comment'
+        required: false
+        default: 'yes'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
 
 permissions: {}
+
+env:
+  SUMMARY_MODEL: openai/gpt-4.1
 
 # Queue instead of cancel: overlapping runs would each post a duplicate
 # Discussion, and runs are rare enough that queueing is fine.
@@ -53,6 +71,7 @@ jobs:
     permissions:
       contents: read
       discussions: write
+      models: read
     timeout-minutes: 15
     steps:
       - name: Check secrets are available
@@ -98,6 +117,7 @@ jobs:
 
       - name: Check for an existing release notes discussion
         env:
+          OLDER_TAG: ${{ steps.range.outputs.older }}
           NEWER_TAG: ${{ steps.range.outputs.newer }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -120,8 +140,10 @@ jobs:
             await script({ github, context, core })
 
       - name: Create the discussion
+        id: discussion
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
+          OLDER_TAG: ${{ steps.range.outputs.older }}
           NEWER_TAG: ${{ steps.range.outputs.newer }}
           BODY: ${{ steps.report.outputs.body }}
           REPOSITORY_ID: ${{ steps.category.outputs.repository_id }}
@@ -130,4 +152,22 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const script = require('./scripts/release-notes/create-discussion.js')
+            await script({ github, core })
+
+      # Runs after the discussion exists, and never fails the run: the report
+      # is the deliverable, and the summary is a draft to edit on top of it.
+      - name: Post a plain-language summary
+        if: inputs.summarize == 'yes'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          OLDER_TAG: ${{ steps.range.outputs.older }}
+          NEWER_TAG: ${{ steps.range.outputs.newer }}
+          BODY: ${{ steps.report.outputs.body }}
+          DISCUSSION_ID: ${{ steps.discussion.outputs.discussion_id }}
+          MODEL: ${{ env.SUMMARY_MODEL }}
+          MODELS_TOKEN: ${{ github.token }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const script = require('./scripts/release-notes/summarize-report.js')
             await script({ github, core })

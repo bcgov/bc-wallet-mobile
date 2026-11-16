@@ -99,4 +99,4 @@ was expected fails that job rather than passing quietly.
 | `scanner.yml` | Scans for known malicious packages |
 | `update-ledgers.yml` | Keeps Indy ledger config current |
 | `maintenance.yml` | Nightly housekeeping |
-| `release-notes.yml` | On-demand release notes Discussion, from two tags |
+| `release-notes.yml` | Release notes Discussion from two tags, with a plain-language summary comment. Dispatched twice per release tag by Publish, and available on demand |
