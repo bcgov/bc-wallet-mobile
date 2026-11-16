@@ -49,8 +49,14 @@ module.exports = async ({ github, context, core }) => {
     )
   }
 
-  // Guidance lives in HTML comments, so strip them before measuring.
-  const body = (pr.body ?? '').replace(/<!--[\s\S]*?-->/g, '')
+  // Guidance lives in HTML comments, so strip them before measuring. Repeat until
+  // stable so nested fragments can't reassemble a comment; an unclosed `<!--`
+  // hides the rest of the body on GitHub, so it counts as empty here too.
+  let body = pr.body ?? ''
+  for (let previous; previous !== body; ) {
+    previous = body
+    body = body.replace(/<!--[\s\S]*?(?:-->|$)/g, '')
+  }
 
   for (const heading of SECTIONS) {
     const re = new RegExp(`^#{1,6}\\s*${heading}\\s*$([\\s\\S]*?)(?=^#{1,6}\\s|$(?![\\s\\S]))`, 'im')
