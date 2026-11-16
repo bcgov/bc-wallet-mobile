@@ -324,6 +324,7 @@ export const TestIds = {
     verificationCardError: {
       tryAnother: 'TryAnother',
       getBcsc: 'GetBCSC',
+      birthdate: 'MismatchedSerialBirthdate',
     },
     /** `DeviceAuthorizationError` — device-authorization failure; its only control is the help link. */
     deviceAuthorizationError: {

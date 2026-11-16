@@ -160,6 +160,21 @@ export type NativeFilesScan = {
   fileCount: number;
 };
 
+/** Why `getAccount` resolved null. Never contains paths, IDs or file contents. */
+export type NativeAccountReadStatus = {
+  /** e.g. 'ok', 'account_list_missing', 'account_file_missing', 'account_decode_failed', 'account_decrypt_failed' */
+  status: string;
+  /** The issuer-scoped storage directory name, e.g. 'PROD' */
+  environment?: string;
+  /** iOS: NSError `domain:code`; Android: exception class name */
+  detail?: string;
+  /**
+   * Android only: outcome of the legacy flat-file fallback read: 'ok', 'absent', 'unreadable', 'empty',
+   * 'parse_failed', or 'skipped' when the native-compatible store already had accounts
+   */
+  legacyStatus?: string;
+};
+
 export type NativeAddress = {
   streetAddress?: string;
   locality?: string;
@@ -316,6 +331,7 @@ export interface Spec extends TurboModule {
   getIssuer(): Promise<string | null>;
   getNativeFilesScan(): Promise<NativeFilesScan>;
   getAccount(): Promise<NativeAccount | null>;
+  getAccountReadStatus(): Promise<NativeAccountReadStatus>;
   setAccount(account: NativeAccountWithoutId): Promise<void>;
   getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;
   signPairingCode(

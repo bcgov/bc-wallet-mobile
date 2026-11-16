@@ -1,5 +1,6 @@
 // sauce/wdio.android.sauce.rdc.conf.ts
 import {
+  ANDROID_TIME_ZONE_CAPS,
   DEVICE_AUTH_SPECS,
   NON_DEVICE_AUTH_SPECS,
   NON_SEND_VIDEO_SPECS,
@@ -20,6 +21,7 @@ const androidCaps = {
   platformName: 'Android',
   'appium:deviceName': process.env.ANDROID_DEVICE_NAME || 'Google.*',
   'appium:automationName': 'UiAutomator2',
+  ...ANDROID_TIME_ZONE_CAPS,
   'appium:app': `storage:filename=${appFilename}`,
   'appium:noReset': false,
   'appium:fullReset': true,

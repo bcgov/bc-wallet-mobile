@@ -104,12 +104,9 @@ class JWK: NSObject, NSCoding {
           let e = json["e"] as? String,
           let n = json["n"] as? String,
           let ktyJson = json["kty"] as? String,
-          let alg = json["alg"] as? String
+          let alg = json["alg"] as? String,
+          let kty = KeyType(rawValue: ktyJson)
     else {
-      return nil
-    }
-
-    guard let kty = KeyType(rawValue: ktyJson) else {
       return nil
     }
     self.kid = kid

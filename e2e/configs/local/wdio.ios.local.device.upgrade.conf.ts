@@ -13,6 +13,7 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolvePrevApp } from '../../src/flows/prev-build/sources.js'
+import { IOS_TIME_ZONE_CAPS } from '../wdio.shared.conf.js'
 import { config as localConfig } from './wdio.shared.local.appium.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -26,6 +27,7 @@ config.capabilities = [
     'appium:platformVersion': process.env.IOS_VERSION || '',
     'appium:udid': process.env.IOS_UDID || '',
     'appium:automationName': 'XCUITest',
+    ...IOS_TIME_ZONE_CAPS,
     'appium:app': resolve(__dirname, '../../apps', resolvePrevApp('ios').app),
     'appium:noReset': false,
     'appium:fullReset': true,

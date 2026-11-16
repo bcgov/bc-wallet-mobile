@@ -31,6 +31,7 @@ let package = Package(
                 "JWSSigner.swift",
                 "JWSVerifier.swift",
                 "JWTClaimsSet.swift",
+                "JWTSigning.swift",
                 "KeychainClearingService.swift",
                 "KeyPairManager.swift",
                 "LAContext+Extensions.swift",

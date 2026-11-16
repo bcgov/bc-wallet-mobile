@@ -13,10 +13,11 @@ import { AccountSecurityMethod, BCSCCardProcess, EvidenceMetadata, PhotoMetadata
 import Config from 'react-native-config'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
-import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
+import { VerificationPrompt, VerificationStatusResponseData } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
+import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from './bcsc-theme/utils/verification-status'
 import { appLogger } from './utils/logger'
 
 export type RemoteDebuggingState = {
@@ -107,7 +108,6 @@ export interface BCSCState {
   bannerMessages: BCSCBannerMessage[]
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
-  hasDismissedExpiryAlert?: boolean
   hasDismissedThirdPartyKeyboardAlert?: boolean
   hasDismissedDeviceAuthInfo?: boolean
   credentialMetadata?: CredentialMetadata
@@ -252,8 +252,6 @@ export interface BCSCSecureState {
    */
   securityMethod?: AccountSecurityMethod
 
-  hasDismissedExpiryAlert?: boolean
-
   /**
    * Set during hydration when a native account record exists but its tokens file is
    * unreadable/corrupt — i.e. neither a refresh nor a registration token survived
@@ -341,6 +339,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFICATION_REQUEST_SHA = 'bcsc/updateSecureVerificationRequestSha',
   UPDATE_SECURE_VERIFICATION_REQUEST_STATUS = 'bcsc/updateSecureVerificationRequestStatus',
   UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE = 'bcsc/updateSecureVerificationRequestStatusMessage',
+  VERIFICATION_STATUS_RECEIVED = 'bcsc/verificationStatusReceived',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
   UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus', //controls whether the VerifyStack or the MainStack are displayed
@@ -348,7 +347,6 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
-  DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
   SET_INSTALL_ID = 'bcsc/setInstallId',
@@ -493,6 +491,28 @@ export const initialState: BCState = {
   bcsc: initialBCSCState,
   bcscSecure: initialBCSCSecureState,
   mode: Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet,
+}
+
+const applyVerificationStatusReceived = (
+  state: BCState,
+  received: Partial<Pick<VerificationStatusResponseData, 'status' | 'status_message'>>
+): BCState => {
+  const verificationRequestStatus = interpretVerificationStatus(received.status)
+  // Never store an unrecognised status; the caller asks the token endpoint instead
+  if (verificationRequestStatus === UNKNOWN_VERIFICATION_STATUS) {
+    return state
+  }
+  // Only the cancelled banner shows the message
+  const verificationRequestStatusMessage =
+    verificationRequestStatus === VerificationRequestStatus.CANCELLED ? received.status_message : undefined
+  if (
+    verificationRequestStatus === state.bcscSecure.verificationRequestStatus &&
+    verificationRequestStatusMessage === state.bcscSecure.verificationRequestStatusMessage
+  ) {
+    return state
+  }
+  const bcscSecure = { ...state.bcscSecure, verificationRequestStatus, verificationRequestStatusMessage }
+  return { ...state, bcscSecure }
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
@@ -787,6 +807,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = { ...state.bcscSecure, verificationRequestStatusMessage }
       return { ...state, bcscSecure }
     }
+    case BCSCDispatchAction.VERIFICATION_STATUS_RECEIVED: {
+      return applyVerificationStatusReceived(state, (action?.payload || []).pop() ?? {})
+    }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_OPTIONS: {
       const verificationOptions = (action?.payload || []).pop() ?? []
       const bcscSecure = { ...state.bcscSecure, verificationOptions }
@@ -890,15 +913,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.ACCOUNT_SETUP_TYPE: {
       const accountType = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, accountSetupType: accountType }
-      const newState = { ...state, bcsc }
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.DISMISSED_EXPIRY_ALERT: {
-      // this should use the date as a key, so this variable is always up to date...
-      const hasDismissed = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, hasDismissedExpiryAlert: hasDismissed }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

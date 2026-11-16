@@ -887,9 +887,9 @@ describe('useSecureActions', () => {
       expect(captureHydrateField('refreshToken')).toBe('stale-refresh-token')
     })
 
-    it('does not call isTokenExpired and stores no token when there is no stored refresh token (session recovery case)', async () => {
-      // isTokenExpired is mocked true to prove the `Boolean(refreshToken) &&` short-circuit:
-      // without it, a missing token (session recovery) logs a spurious expired-token warning.
+    it('treats a missing refresh token as not expired and stores no token (session recovery case)', async () => {
+      // isTokenExpired is mocked true to prove isRefreshTokenExpired checks for a token first:
+      // without that check, a missing token (session recovery) logs a spurious expired-token warning.
       jest.mocked(getToken).mockImplementation(async (type: any) => {
         if (type === TokenType.Registration) {
           return { id: 'g', type, token: 'stored-reg-token', created: 0 } as any
@@ -905,6 +905,7 @@ describe('useSecureActions', () => {
       })
 
       expect(isTokenExpired).not.toHaveBeenCalled()
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('event=refresh_token_expired'))
       expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
       expect(captureHydrateField('refreshToken')).toBeUndefined()
       expect(captureHydrateField('sessionRecoveryRequired')).toBe(true)

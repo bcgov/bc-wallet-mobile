@@ -116,6 +116,7 @@ export const getRegistrationToken = jest.fn().mockResolvedValue(null)
 // Account Management
 export const setAccount = jest.fn().mockResolvedValue(undefined)
 export const getAccount = jest.fn().mockResolvedValue(null)
+export const getAccountReadStatus = jest.fn().mockResolvedValue({ status: 'ok' })
 export const isAccountRegistered = jest.fn((account: { clientID?: string } | null) => Boolean(account?.clientID))
 export const removeAccount = jest.fn().mockResolvedValue(undefined)
 export const clearAllKeychainData = jest.fn().mockResolvedValue(undefined)

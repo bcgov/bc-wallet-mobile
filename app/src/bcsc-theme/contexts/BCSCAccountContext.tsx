@@ -11,8 +11,8 @@ import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
 import { ReconnectEvent, useRetryOnReconnect } from '../hooks/useRetryOnReconnect'
 import { useUserService } from '../services/hooks/useUserService'
+import { selectVerificationState } from '../state/verification/selectors'
 import { formatAccountName } from '../utils/account-utils'
-import { isUserVerified } from '../utils/bcsc-credential'
 
 export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
   picture: string | null // URI to the user's profile picture
@@ -35,8 +35,8 @@ interface AccountLoadDiagnostics {
   navigationReady: boolean
   appState: AppStateStatus
   connectivity?: ReconnectEvent
-  /** The raw "verified" flag from secure state - the one isUserVerified() input not already
-   *  captured by verifiedStatus/hasRefreshToken below, so together they reconstruct its guard. */
+  /** The raw "verified" flag from secure state - the one input to the account-load guard not already
+   *  captured by verifiedStatus/hasRefreshToken below, so together they reconstruct it. */
   verified: boolean
   verifiedStatus: VerificationStatus
   /** Never the token value itself - only whether one exists. */
@@ -91,7 +91,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
     }
   )
 
-  const canLoadAccount = isUserVerified(store.bcscSecure)
+  const canLoadAccount = selectVerificationState(store).isDeviceVerifiedByIas
 
   const startAccountLoad = useCallback(
     (trigger: AccountLoadTrigger, connectivity?: ReconnectEvent) => {
