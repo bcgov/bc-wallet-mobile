@@ -1,6 +1,7 @@
 import * as ServerStatusContext from '@/bcsc-theme/contexts/ServerStatusContext'
 import { BCSCBanner } from '@/bcsc-theme/types/banners'
 import { IdToken } from '@/bcsc-theme/utils/id-token'
+import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 import { DismissedBanners, initialState } from '@/store'
 import * as links from '@/utils/links'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -9,6 +10,8 @@ import React from 'react'
 import { BannersScope, useBanners } from './useBanners'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
+// Same choice as the dismissal rule: the short cooldown in dev builds, which includes jest
+const DEVICE_LIMIT_COOLDOWN_MS = __DEV__ ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV : DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD
 const UPDATE_TITLE = 'BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'
 const DEVICE_LIMIT_TITLE = 'BCSC.SystemChecks.Devices.DeviceLimitReachedBannerTitle'
 
@@ -173,9 +176,21 @@ describe('useBanners', () => {
       expect(result.current.banners).toEqual([])
     })
 
-    it('is not hidden by a recorded dismissal, since it cannot be dismissed', () => {
+    it('stays hidden while the dismissal cooldown is running', () => {
       mockServerStatus(noUpdate)
-      jest.spyOn(Date, 'now').mockReturnValue(2000)
+      jest.spyOn(Date, 'now').mockReturnValue(1000 + DEVICE_LIMIT_COOLDOWN_MS - 1)
+
+      const { result } = renderBanners(
+        { scope: BannersScope.Home, onDeviceLimitPress: jest.fn() },
+        { idToken: overLimitIdToken, dismissedBanners: { [BCSCBanner.DEVICE_LIMIT_EXCEEDED]: { dismissedAt: 1000 } } }
+      )
+
+      expect(result.current.banners).toEqual([])
+    })
+
+    it('shows again once the dismissal cooldown has ended', () => {
+      mockServerStatus(noUpdate)
+      jest.spyOn(Date, 'now').mockReturnValue(1000 + DEVICE_LIMIT_COOLDOWN_MS)
 
       const { result } = renderBanners(
         { scope: BannersScope.Home, onDeviceLimitPress: jest.fn() },
