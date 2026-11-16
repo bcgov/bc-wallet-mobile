@@ -285,6 +285,7 @@ const translation = {
       "ManageDevices": "Manage Devices",
       "Nickname": "Nickname",
       "AccountDetails": "Account information",
+      "EnterPIN": "Enter PIN",
     },
     "HelpMenu": {
       "Title": "Need help?",
@@ -421,7 +422,28 @@ const translation = {
     },
     "EnterPIN": {
       "Title": "Enter your 6-digit PIN",
-      "Description": "The one you chose to secure this app"
+      "Description": "The one you chose to secure this app",
+      "IncorrectPIN": "Incorrect PIN",
+      "LastAttemptWarning": "Incorrect PIN. For security, if you enter another incorrect PIN, it will temporarily lock the app.",
+      "VerifyError": "An error occurred while verifying the PIN."
+    },
+    "Lockout": {
+      "Title": "Too many PIN attempts",
+      "Description": "This app is temporarily locked because you've entered an incorrect PIN too many times.",
+      "TryAgainIn": "You can try again in:",
+      "ForgotPINTitle": "Cannot remember your PIN?",
+      "ForgotPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us.",
+      "SetUpAgain": "If you've forgotten your PIN you'll need to set up this app again.",
+      "Countdown": {
+        "Hours_one": "{{ count }} hour",
+        "Hours_other": "{{ count }} hours",
+        "Minutes_one": "{{ count }} minute",
+        "Minutes_other": "{{ count }} minutes",
+        "Seconds_one": "{{ count }} second",
+        "Seconds_other": "{{ count }} seconds",
+        "HoursMinutesSeconds": "{{ hours }} {{ minutes }} {{ seconds }}",
+        "MinutesSeconds": "{{ minutes }} {{ seconds }}"
+      }
     },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN",
