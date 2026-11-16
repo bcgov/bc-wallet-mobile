@@ -934,9 +934,6 @@ class BcscCore: NSObject {
       if let nickname = account["nickname"] as? String {
         accountToSave.nickname = nickname
       }
-      if let failedAttemptCount = account["failedAttemptCount"] as? Int {
-        accountToSave.failedAttemptCount = failedAttemptCount
-      }
     } else {
       // Create new account with new ID
       logger.log("setAccount - Creating new account")
@@ -955,10 +952,6 @@ class BcscCore: NSObject {
 
       if let nickname = account["nickname"] as? String {
         accountToSave.nickname = nickname
-      }
-
-      if let failedAttemptCount = account["failedAttemptCount"] as? Int {
-        accountToSave.failedAttemptCount = failedAttemptCount
       }
 
       // Ensure account structure exists before writing
@@ -1017,10 +1010,6 @@ class BcscCore: NSObject {
         "displayName": acc.displayName,
         "didPostNicknameToServer": acc.didPostNicknameToServer,
         "nickname": acc.nickname,
-        "failedAttemptCount": acc.failedAttemptCount,
-        // "lastAttemptDate": acc.lastAttemptDate?.timeIntervalSince1970, // Convert Date to timestamp or nil
-        // penalties is a computed property and might not be directly encodable or needed.
-        // If it's needed, it requires specific handling to convert to a plist-compatible format.
       ]
       resolve(result)
     } else {
@@ -2052,11 +2041,11 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Verifies a PIN for the specified account
+  /// Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
+  /// lockouts enforced, in TypeScript.
   /// - Parameters:
-  ///   - accountID: The account identifier
   ///   - pin: The PIN to verify
-  ///   - resolve: Returns verification result object with walletKey on success
+  ///   - resolve: Returns `success`, with `walletKey` when the PIN is correct
   ///   - reject: Returns error on failure
   func verifyPIN(
     _ pin: String, resolve: @escaping RCTPromiseResolveBlock,
@@ -2077,49 +2066,15 @@ class BcscCore: NSObject {
       return
     }
 
-    let pinService = PINService()
-    let walletKey = pinService.verifyPINAndGetHash(
+    guard let walletKey = PINService().verifyPINAndGetHash(
       issuer: account.issuer, accountID: account.id, pin: pin
     )
-    let isSuccess = walletKey != nil
-
-    // Use account's verifyPIN for penalty tracking
-    let result = account.verifyPIN(pin)
-
-    // Save updated account (with updated penalty state)
-    let success = storage.writeData(
-      data: account,
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-
-    if !success {
-      logger.warning("Failed to save account state after PIN verification")
+    else {
+      resolve(["success": false])
+      return
     }
 
-    switch result {
-    case .success:
-      resolve([
-        "success": true,
-        "locked": false,
-        "remainingTime": 0,
-        "walletKey": walletKey ?? "",
-      ])
-    case let .failedWithAlert(title, message):
-      resolve([
-        "success": false,
-        "locked": false,
-        "remainingTime": 0,
-        "title": title,
-        "message": message,
-      ])
-    case let .failedWithPenalty(remainingTime):
-      resolve([
-        "success": false,
-        "locked": true,
-        "remainingTime": max(0, remainingTime),
-      ])
-    }
+    resolve(["success": true, "walletKey": walletKey])
   }
 
   /// Deletes the PIN for the specified account
@@ -2305,31 +2260,6 @@ class BcscCore: NSObject {
 
     let securityMethod = account.securityMethod.rawValue
     resolve(securityMethod)
-  }
-
-  /// Checks if the account is currently locked due to failed PIN attempts
-  /// - Parameters:
-  ///   - accountID: The account identifier
-  ///   - resolve: Returns lock status object with locked boolean and remaining time
-  ///   - reject: Returns error on failure
-  func isAccountLocked(
-    _ resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock
-  ) {
-    let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
-      return
-    }
-
-    let remainingTime = account.isServingPenalty()
-    let isLocked = remainingTime > 0
-
-    resolve(["locked": isLocked, "remainingTime": max(0, remainingTime)])
   }
 
   // MARK: - Device Security Methods
