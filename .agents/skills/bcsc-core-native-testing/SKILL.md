@@ -120,17 +120,20 @@ final class MockPINService: PINServiceProtocol {
 
 ### Android — MockK
 
-Use MockK's `mockk<T>()` for mocking classes and interfaces:
+Use MockK's `mockk<T>()` for mocking classes and interfaces. Module methods are tested through `BcscCoreModule` itself under Robolectric: mock the React context over a temporary files directory, call the method, and assert on the promise (see `BcscCoreModuleSecurityMethodTest.kt`):
 
 ```kotlin
-val mockPinService = mockk<PinService>()
-every { mockPinService.validatePIN(any(), "1234") } returns true
-every { mockPinService.hasPIN(any()) } returns true
+val context = mockk<ReactApplicationContext>(relaxed = true)
+every { context.filesDir } returns tempFolder.root // empty: no stored account
+val promise = mockk<Promise>(relaxed = true)
 
-val account = Account(id = "test", issuer = "https://idsit.gov.bc.ca", clientID = "client")
-val result = account.verifyPIN("1234", mockPinService)
-assertTrue(result.success)
+BcscCoreModule(context).getAccountSecurityMethod(promise)
+
+verify(exactly = 1) { promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found") }
+verify(exactly = 0) { promise.resolve(any()) }
 ```
+
+To give the module stored data, write plain JSON into the files directory; the storage reads plain JSON without the keystore (see `BcscCoreModuleV3RetirementTest.kt`).
 
 For data classes (e.g., `NativeAccount`), test serialization round-trips with Gson directly — no mocking needed.
 
@@ -138,9 +141,9 @@ For data classes (e.g., `NativeAccount`), test serialization round-trips with Gs
 
 ### Time-dependent tests (eg. PIN penalty logic)
 
-The penalty system locks users out after failed PIN attempts. Both platforms accept an injectable "current time" parameter to make tests deterministic.
+The iOS penalty system locks users out after failed PIN attempts. It accepts an injectable "current time" parameter to make tests deterministic.
 
-**iOS**: Pass `verifyDate:` parameter:
+Pass the `verifyDate:` parameter:
 
 ```swift
 let start = Date()
@@ -149,14 +152,6 @@ for i in 0..<5 {
 }
 // Advance past penalty before next batch
 let afterPenalty = start.addingTimeInterval(65)
-```
-
-**Android**: Pass timestamp to `verifyPIN` and `isServingPenalty`:
-
-```kotlin
-val now = System.currentTimeMillis()
-account.verifyPIN("wrong", mockPinService, now)
-val penalty = account.isServingPenalty(now)
 ```
 
 **Important**: When testing escalating penalties, you must advance time past each penalty tier before triggering the next. Calling `verifyPIN` while a penalty is active will return "locked" without incrementing the attempt counter.
@@ -185,19 +180,6 @@ assertEquals(original.uuid, restored.uuid)
 
 **iOS**: `test{Behavior}` in camelCase — e.g., `testVerifyPINReturnsSuccessOnCorrectPIN`
 **Android**: Backtick-quoted descriptive names — e.g., `` `verifyPIN returns success when PIN is correct` ``
-
-### Helper factories
-
-**Android** — Create a `createAccount()` helper with defaults to reduce boilerplate:
-
-```kotlin
-private fun createAccount(
-    id: String = "test-uuid",
-    issuer: String = "https://idsit.gov.bc.ca",
-    clientID: String = "test-client-id",
-    securityMethod: AccountSecurityMethod = AccountSecurityMethod.PIN_NO_DEVICE_AUTH,
-): Account = Account(id = id, issuer = issuer, clientID = clientID, securityMethod = securityMethod)
-```
 
 ## Checklist for adding tests
 
