@@ -23,6 +23,17 @@ const { variant } = getE2EConfig()
 const REPORTS_DIR = resolve(__dirname, '../reports')
 
 /**
+ * Every session runs in BC's current offset: permanent UTC-7, encoded as standard time from 2026-11-01.
+ * Whitehorse has had that same encoding since 2020, so it reproduces BC's date bugs (e.g. Hermes
+ * formatting pre-change calendar dates a day early) on devices whose timezone data predates BC's change.
+ * iOS overrides the app process only (`TZ`); Android sets the device zone, which persists after the
+ * session — so the local physical-device Android configs leave it out.
+ */
+export const E2E_TIME_ZONE = 'America/Whitehorse'
+export const IOS_TIME_ZONE_CAPS = { 'appium:appTimeZone': E2E_TIME_ZONE }
+export const ANDROID_TIME_ZONE_CAPS = { 'appium:timeZone': E2E_TIME_ZONE }
+
+/**
  * Card-barcode scanning journeys — ANDROID ONLY. Android reads codes off the frame buffer with MLKit,
  * which Sauce's injection replaces wholesale; iOS scans via `AVCaptureMetadataOutput`, which Sauce
  * feeds for QR alone. Every iOS config sets `exclude` to this, so a run never spends a session just to

@@ -5,6 +5,7 @@ import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { PAIRING_CODE_LENGTH } from '@/constants'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
+import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
@@ -28,6 +29,7 @@ const ManualPairing: React.FC = () => {
   const { pairing } = useApi()
   const loadingScreen = useLoadingScreen()
   const { isAvailable: isServerAvailable } = useServerStatus()
+  const alerts = useAlerts(navigation)
 
   const onSubmit = useCallback(
     async (pairingCode: string, challengeSource: ChallengeSource) => {
@@ -47,7 +49,7 @@ const ManualPairing: React.FC = () => {
           serviceName: serviceClient.client_name,
         })
       } catch (error) {
-        logger.error(`Error submitting pairing code: ${error}`)
+        logger.error('Error submitting pairing code', error as Error)
 
         // A plain 404 is assumed to be an incorrect pairing code, which pairingCodeErrorPolicy leaves for this screen
         if (isAppError(error, AppEventCode.NOT_FOUND)) {
@@ -59,12 +61,17 @@ const ManualPairing: React.FC = () => {
           )
         } else {
           setError(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
+
+          // A failure here came from the device; show an alert
+          if (isAppError(error, AppEventCode.LOGIN_DEVICE_ERROR)) {
+            alerts.loginDeviceErrorAlert(error)
+          }
         }
       } finally {
         stopLoading()
       }
     },
-    [isServerAvailable, loadingScreen, logger, navigation, pairing, t]
+    [isServerAvailable, loadingScreen, logger, navigation, pairing, t, alerts]
   )
 
   // QRCoreStack keeps tabs mounted (unmountOnBlur: false), so a pre-populated

@@ -103,6 +103,9 @@ export const EnterBirthdateScreen = defineScreen({
 export const VerificationCardErrorScreen = defineScreen({
   self: bcsc(v.verificationCardError.tryAnother),
   primary: bcsc(v.verificationCardError.tryAnother),
+  elements: {
+    birthdate: bcsc(v.verificationCardError.birthdate),
+  },
 })
 
 /**

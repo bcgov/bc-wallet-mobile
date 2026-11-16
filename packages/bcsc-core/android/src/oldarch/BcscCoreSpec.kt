@@ -263,6 +263,8 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun getNativeFilesScan(promise: Promise)
 
+    abstract fun getAccountReadStatus(promise: Promise)
+
     // Saved Services (Client Metadata) Storage Methods
     abstract fun getSavedServices(promise: Promise)
 

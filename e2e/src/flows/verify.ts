@@ -763,6 +763,20 @@ async function waitOutPendingReviewCheck(): Promise<void> {
 }
 
 /**
+ * A {@link finishApprovedVerification} round on the code screen. Complete re-fetches the status, and the
+ * screen stays up, its button disabled, until the answer is in — only then does an approved request move on
+ * to VerificationSuccess. Give that check its answer as well: a round that looks while it is still in the air
+ * finds the code screen again and goes for a second Complete, on a button about to leave with its screen
+ * (the weekly's upgradeApproved from 4.1.2 on Android, both attempts; the lanes that passed had only just
+ * won the same race). Not approved, the screen stays and the next round taps Complete again.
+ */
+async function tapCompleteAndWaitOutCheck(): Promise<void> {
+  await VerifyInPersonScreen.tapWhenEnabled('primary')
+  // The room `approveInPersonAndComplete` gives the same tap. Whatever it left up is the next round's to read.
+  await VerificationSuccessScreen.isPresent(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
  * Finish a verification whose approval landed while the app was CLOSED — the "approved, not finished
  * in-app" state an update can catch a user in: the code was shown at the counter (or the video
  * uploaded), the agent approved it, and the app was updated before it was ever reopened.
@@ -771,8 +785,9 @@ async function waitOutPendingReviewCheck(): Promise<void> {
  * code screen, the pending review), onto method selection, the verify prompt, or Home with its card.
  * Each landing is driven one step on — Complete re-fetches the status the server already holds, and the
  * pending review re-checks it whenever it mounts (still pending, it is left by its back arrow and re-entered
- * through the Home card) — until VerificationSuccess is passed and Home is up, or Home shows no card at all
- * (the app already reads the account as verified). The caller then asserts verified Settings.
+ * through the Home card), each check given its answer before the next round looks — until VerificationSuccess
+ * is passed and Home is up, or Home shows no card at all (the app already reads the account as verified). The
+ * caller then asserts verified Settings.
  *
  * A fresh request minted on resume that orphans the approval, or a `method` landing after a send-video
  * submission (the submitted flag was lost), fails here: a product finding, not flake.
@@ -806,7 +821,7 @@ export async function finishApprovedVerification(method: 'in-person' | 'send-vid
         console.log('[verify] Home without a verification card — the app already reads the account as verified')
         return
       case 'inPerson':
-        await VerifyInPersonScreen.tapWhenEnabled('primary') // Complete: re-fetches the status
+        await tapCompleteAndWaitOutCheck() // Complete: re-fetches the status
         break
       case 'pendingReview':
         await waitOutPendingReviewCheck()

@@ -1,7 +1,7 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-import { isUserVerified } from './bcsc-credential'
+import { selectVerificationState } from '../state/verification/selectors'
 import { isEvidenceAwaitingDocumentNumber, isEvidenceCaptureIncomplete } from './card-utils'
 import { computeSetupStepCompletion, StepCompletionResult } from './setup-step-completion'
 
@@ -74,7 +74,7 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
     return { name: BCSCScreens.SessionRecovery }
   }
 
-  if (isUserVerified(store.bcscSecure)) {
+  if (selectVerificationState(store).isDeviceVerifiedByIas) {
     return { name: BCSCScreens.VerificationSuccess }
   }
 

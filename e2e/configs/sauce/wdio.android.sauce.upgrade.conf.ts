@@ -22,7 +22,7 @@
  * lanes; every other suite + lineage the injection-on lane alone).
  */
 import { resolvePrevApp } from '../../src/flows/prev-build/sources.js'
-import { UPGRADE_SEND_VIDEO_SPECS, UPGRADE_STANDARD_SPECS } from '../wdio.shared.conf.js'
+import { ANDROID_TIME_ZONE_CAPS, UPGRADE_SEND_VIDEO_SPECS, UPGRADE_STANDARD_SPECS } from '../wdio.shared.conf.js'
 import {
   config as sauceConfig,
   sauceRdcOptions,
@@ -37,6 +37,7 @@ const androidCaps = {
   platformName: 'Android',
   'appium:deviceName': process.env.ANDROID_DEVICE_NAME || 'Google.*',
   'appium:automationName': 'UiAutomator2',
+  ...ANDROID_TIME_ZONE_CAPS,
   'appium:app': `storage:filename=${prev.app}`,
   'appium:noReset': false,
   'appium:fullReset': true,

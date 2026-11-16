@@ -328,8 +328,9 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-            // Note: Errors handled in `useEvidenceService`
+            // Note: Errors handled by callers (`useEvidenceService`, `useRestartVerification`); 404 is expected
             skipOnErrorHandler: true,
+            suppressStatusCodeLogs: [404],
           }
         )
 

@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { AccountPhaseType } from '../state/account/account-phase'
 import { useAccountPhase } from '../state/account/useAccountPhase'
-import { useVerificationStatus } from './useVerificationStatus'
+import { useVerificationState } from '../state/verification/useVerificationState'
 
 /**
- * Extends useVerificationStatus with card expiry awareness.
+ * Extends useVerificationState with card expiry awareness.
  *
  * - `isActivelyVerified` — true when the user is verified AND their card has not expired; use this for feature gating
  * - `isExpired` — true when the user has a verified card that IAS has expired server-side, whose expiry
@@ -13,16 +13,16 @@ import { useVerificationStatus } from './useVerificationStatus'
  * Must be used within BCSCAccountProvider.
  */
 export const useCardStatus = () => {
-  const verificationStatus = useVerificationStatus()
+  const verificationState = useVerificationState()
   const { phase } = useAccountPhase()
 
   return useMemo(() => {
     const isExpired = phase === AccountPhaseType.Expired
 
     return {
-      ...verificationStatus,
+      ...verificationState,
       isExpired,
-      isActivelyVerified: verificationStatus.isVerified && !isExpired,
+      isActivelyVerified: verificationState.isVerified && !isExpired,
     }
-  }, [verificationStatus, phase])
+  }, [verificationState, phase])
 }

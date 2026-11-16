@@ -14,6 +14,7 @@
  *
  * ```typescript
  * import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+ * import { AppEventCode } from '@/events/appEventCode'
  *
  * const MyComponent = () => {
  *   const { emitErrorModal, emitAlert } = useErrorAlert()
@@ -24,7 +25,7 @@
  *   // Show informational native alert
  *   emitAlert('Update available', 'A new version is ready', {
  *    actions: [{ text: 'Update Now', onPress: updateApp }],
- *    appEvent: AppEventCode.UPDATE_APP_EVENT
+ *    event: AppEventCode.NEW_UPDATE_AVAILABLE
  *   })
  * }
  * ```

@@ -101,6 +101,18 @@ public interface BcscKeyPairSource {
   String signAndSerializeClaimsSet(@NonNull JWTClaimsSet claimsSet) throws BcscException;
 
   /**
+   * Sign a JWT claims set with an already-loaded key pair and return the serialized JWT string.
+   * Lets callers load the key once, so a key failure is never reported as a signing failure.
+   * @param claimsSet the claims to sign
+   * @param keyPair the key pair to sign with, from {@link #getCurrentBcscKeyPair()}
+   * @return the signed JWT as a string
+   * @throws BcscException if signing fails
+   */
+  @NonNull
+  String signAndSerializeClaimsSet(@NonNull JWTClaimsSet claimsSet, @NonNull BcscKeyPair keyPair)
+      throws BcscException;
+
+  /**
    * Sign a JWT claims set and return the SignedJWT object.
    * @param claimsSet the claims to sign
    * @return the signed JWT object

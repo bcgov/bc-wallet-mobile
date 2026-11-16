@@ -279,8 +279,23 @@ resulting error to the alert. For a single failure outside a flow, use `createFa
   or tokens in them.
 - Errors a policy already handled are labeled but never alerted again. Callers still check
   `isHandledAppError`.
+- To re-wrap a labeled error for its alert, set it as the `cause` and copy nothing. Reports and analytics
+  read `AppError.getChainedContext()` (as does `toJSON()`, for remote logs), which merges context down the cause chain (outer errors win).
 - To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
-  `report-problem.ts`.
+  `report-problem.ts`. Native rejection fields are separate: see below.
+- New and changed native rejections use `rejectWithDiagnostics` (bcsc-core, iOS and Android): a fixed
+  message (never an error description, which can contain paths), a `site` of `method.stage` named the same
+  on both platforms, and status-code `userInfo`. Older methods still call `reject` directly and report only
+  a code; migrate a method when you change it. Reports promote the rejection's code and
+  `site`, `detail` and `osStatus` from anywhere in the cause chain to `native_*` fields (`nativeErrorFields.ts`);
+  other `userInfo` stays in `error_json`. Promote a new `userInfo` key there only when reports filter on it,
+  and only scalar status values.
+
+- When something that fails silently could explain a step's failure, pass its health as that step's
+  `context`, only on the steps it could explain. Use status codes only, never values: `getPushTokenStatus`
+  (placeholder push tokens) and `getAccountReadStatus` from bcsc-core (why `getAccount` resolved null). Call
+  `getAccountReadStatus` only after `getAccount` returns null, and never let a diagnostic call replace the
+  real failure. `withAccount` already does this: its `AccountNotFoundError` carries the status as `readContext`.
 
 ## Derived state: compute it from its inputs, don't store a flag
 
@@ -290,12 +305,16 @@ flag that something has to remember to set and clear. The three live together in
 (`bcsc-theme/state/account/`) is the example:
 
 - `getAccountPhase` (`account-phase.ts`) is the only definition of "expired" and "expiring soon".
-- `selectAccountPhase` (`selectors.ts`) reads its inputs: `bcscSecure.verified`, the ID token
-  `bcscReason`, the stored refresh token's expiry (`isRefreshTokenExpired`), and the account's `account_expiration_date`.
+- `selectAccountPhase` (`selectors.ts`) reads its inputs: verification (through `selectVerificationState`), the ID
+  token `bcscReason`, the stored refresh token's expiry (`isRefreshTokenExpired`), and the account's
+  `account_expiration_date`.
 - `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
   `selectHomeNotice` (Home notices, `bcsc-theme/state/home/`) both read it, so they cannot disagree.
 - `getHomeNotice` (`home-notice.ts`) is the only definition of which notice Home shows. `useCustomNotifications`
   only maps its result to a component.
+- `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
+  IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
+  or `selectVerificationState`, never from `bcscSecure.verified`, `verifiedStatus` or the tokens directly.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next

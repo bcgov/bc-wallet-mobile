@@ -5,6 +5,7 @@ import NativeBcscCoreSpec, {
   type JWTClaims,
   type LoginChallengeResult,
   type NativeAccount,
+  type NativeAccountReadStatus,
   type NativeAuthorizationRequest,
   type NativeFilesScan,
   type NativeSavedService,
@@ -16,6 +17,7 @@ export type {
   LoginChallenge,
   LoginChallengeResult,
   NativeAccount,
+  NativeAccountReadStatus,
   NativeAddress,
   NativeAuthorizationRequest,
   NativeFilesScan,
@@ -484,6 +486,14 @@ export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<vo
  */
 export const getAccount = async (): Promise<NativeAccount | null> => {
   return BcscCore.getAccount();
+};
+
+/**
+ * Explains why {@link getAccount} resolved null, for attaching to error reports. Never rejects.
+ * @returns A promise that resolves to the account read status.
+ */
+export const getAccountReadStatus = async (): Promise<NativeAccountReadStatus> => {
+  return await BcscCore.getAccountReadStatus();
 };
 
 /**

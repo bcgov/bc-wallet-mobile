@@ -554,13 +554,36 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   @Override
   @NonNull
   public SignedJWT signClaimsSet(@NonNull JWTClaimsSet claimsSet) throws BcscException {
+    BcscKeyPair currentKeyPair;
     try {
-      BcscKeyPair currentKeyPair = getCurrentBcscKeyPair();
+      currentKeyPair = getCurrentBcscKeyPair();
+    } catch (Exception e) {
+      throw new BcscException(AlertKey.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, e.getMessage());
+    }
+    return signClaimsSet(claimsSet, currentKeyPair);
+  }
+
+  @Override
+  @NonNull
+  public String signAndSerializeClaimsSet(@NonNull JWTClaimsSet claimsSet, @NonNull BcscKeyPair keyPair)
+      throws BcscException {
+    try {
+      return signClaimsSet(claimsSet, keyPair).serialize();
+    } catch (Exception e) {
+      throw new BcscException(AlertKey.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, e.getMessage());
+    }
+  }
+
+  /** Signs with the given key pair, without reloading it from the keystore. */
+  @NonNull
+  private SignedJWT signClaimsSet(@NonNull JWTClaimsSet claimsSet, @NonNull BcscKeyPair keyPair)
+      throws BcscException {
+    try {
       JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS512)
-          .keyID(currentKeyPair.getKeyInfo().getAlias())
+          .keyID(keyPair.getKeyInfo().getAlias())
           .build();
       SignedJWT signedJWT = new SignedJWT(header, claimsSet);
-      signedJWT.sign(new RSASSASigner(currentKeyPair.getKeyPair().getPrivate()));
+      signedJWT.sign(new RSASSASigner(keyPair.getKeyPair().getPrivate()));
       return signedJWT;
     } catch (Exception e) {
       throw new BcscException(AlertKey.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, e.getMessage());

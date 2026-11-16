@@ -1,10 +1,11 @@
-import { withAccount } from '@/bcsc-theme/api/hooks/withAccountGuard'
+import { AccountNotFoundError, withAccount } from '@/bcsc-theme/api/hooks/withAccountGuard'
 import { AppError, isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
-import { getAccount } from 'react-native-bcsc-core'
+import { getAccount, getAccountReadStatus } from 'react-native-bcsc-core'
 
 jest.mock('react-native-bcsc-core', () => ({
   getAccount: jest.fn(),
+  getAccountReadStatus: jest.fn(),
   isAccountRegistered: (account: { clientID?: string } | null) => Boolean(account?.clientID),
 }))
 
@@ -16,15 +17,31 @@ describe('withAccount', () => {
     jest.clearAllMocks()
   })
 
-  it('throws the plain no-account Error, without running the wrapped function, when there is no account', async () => {
+  it('throws a plain AccountNotFoundError, without running the wrapped function, when there is no account', async () => {
     jest.mocked(getAccount).mockResolvedValue(null)
+    jest.mocked(getAccountReadStatus).mockResolvedValue({ status: 'account_decode_failed', environment: 'PROD' })
 
-    const error = (await withAccount(fn).catch((e) => e)) as Error
+    const error = (await withAccount(fn).catch((e) => e)) as AccountNotFoundError
 
+    expect(error).toBeInstanceOf(AccountNotFoundError)
     expect(error).toBeInstanceOf(Error)
     expect(isAppError(error)).toBe(false)
     expect(error.message).toBe('No account found. Please register first.')
+    expect(error.readContext).toMatchObject({
+      account_read_status: 'account_decode_failed',
+      account_read_environment: 'PROD',
+    })
     expect(fn).not.toHaveBeenCalled()
+  })
+
+  it('still throws AccountNotFoundError when the read status lookup fails', async () => {
+    jest.mocked(getAccount).mockResolvedValue(null)
+    jest.mocked(getAccountReadStatus).mockRejectedValue(new Error('not linked'))
+
+    const error = (await withAccount(fn).catch((e) => e)) as AccountNotFoundError
+
+    expect(error).toBeInstanceOf(AccountNotFoundError)
+    expect(error.readContext).toBeUndefined()
   })
 
   it('throws ACCOUNT_NOT_REGISTERED when the account is only a temporary one', async () => {
@@ -57,5 +74,7 @@ describe('withAccount', () => {
     expect(error).toBe(nativeError)
     expect(isAppError(error)).toBe(false)
     expect(fn).not.toHaveBeenCalled()
+    // The read status explains only a null read, never a rejection
+    expect(getAccountReadStatus).not.toHaveBeenCalled()
   })
 })
