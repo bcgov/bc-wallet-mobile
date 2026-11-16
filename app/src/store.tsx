@@ -474,6 +474,8 @@ export enum BCLocalStorageKeys {
   CachedJWK = 'CachedJWK',
   /** MEDIATOR_URL the mediator preferences were last reconciled with */
   MediatorUrl = 'MediatorUrl',
+  /** Wrong PIN attempts in a row; read and written only by pin-lockout-service */
+  PinAttempts = 'PinAttempts',
 }
 
 export const initialState: BCState = {
