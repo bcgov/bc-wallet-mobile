@@ -175,11 +175,14 @@ Tagging a build also starts **Release Notes** twice, as two separate runs:
 Each one posts a Discussion in the **Release notes** category, titled
 `<tag> release notes (since <older tag>)`. The release-wide one also gets a
 comment with a plain-language version of the report, drafted from the ticket
-titles by a GitHub Models model (`SUMMARY_MODEL` in `release-notes.yml`) in the
-format the store descriptions use. Treat it as a draft: it can only be as
+titles by the Copilot CLI (`SUMMARY_MODEL` and `COPILOT_CLI_VERSION` in
+`release-notes.yml`, prompt in `scripts/release-notes/summary-prompt.md`) in
+the format the store descriptions use. Treat it as a draft: it can only be as
 accurate as the titles it was given, and it is the starting point for the
-App Store and Play listing text, not the finished copy. If GitHub Models is
-unavailable the comment is skipped and the report is still posted.
+App Store and Play listing text, not the finished copy. The comment is skipped
+and the report still posted if the draft does not arrive — that needs
+**Allow use of Copilot CLI billed to the organization** to be on for bcgov,
+and the run itself consumes the org's AI credits.
 
 Only the run that creates a tag dispatches these, so a single-store retry does
 not post the same reports twice. The first build of a version has no previous
