@@ -343,3 +343,24 @@ rejection takes the caller's, so the FCM, user-info and ID-token paths all surfa
 before every signature check; any failure of that round trip returned `false`, which the app reported as
 error 2509 "signature does not match payload" with nothing to investigate. Verifying a signature needs no
 keychain, and the rejection codes let the next problem report explain itself.
+
+## PIN lockout: one schedule, counted before the PIN is checked
+
+Wrong PINs are counted, and lockouts enforced, in TypeScript, the same on iOS and Android. Native `verifyPIN`
+only says whether a PIN is right.
+
+- `getPinLockout` (`bcsc-theme/state/pin-lockout/pin-lockout.ts`) is the only definition of the schedule: 5
+  wrong PINs in a row lock PIN entry for 1 minute, 10 for 10 minutes, 15 for 1 hour, then 20 and every 5th
+  after it for 1 day. The wrong PIN before each lock comes with a warning.
+- `pin-lockout-service.ts` (`bcsc-theme/features/auth/services/`) owns the attempt record, an AsyncStorage key
+  of its own (`BCLocalStorageKeys.PinAttempts`), and is the only caller of native `verifyPIN`; ESLint blocks
+  the import everywhere else. Check a PIN with `verifyPinWithLockout` and read the lock with `readPinLockout`,
+  which works before the app is unlocked.
+- The attempt is saved **before** the PIN is checked, so closing the app during a check cannot buy a guess
+  that was never counted. If the record cannot be read or saved the PIN is not checked and the unlock fails
+  with an error; a lock is never assumed away.
+- A correct PIN, a newly set PIN and removing the account clear the count. Waiting out a lock does not: the
+  count carries on to the next, longer lock.
+
+**Why:** each platform kept its own schedule and English messages in native code, so the same five wrong PINs
+locked iOS for a minute and Android for 30 seconds, and the lock screen copy could not be translated (#4423).

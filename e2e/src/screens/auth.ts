@@ -78,7 +78,7 @@ export const DeviceAuthAppResetScreen = defineScreen({
 
 /**
  * Timed lockout screen (route "Too many PIN attempts") — shown after five consecutive wrong PINs.
- * The native attempt counter persists across relaunches and escalates (5 → 1 min, 10 → 10 min, …);
+ * The app's attempt count persists across relaunches and escalates (5 → 1 min, 10 → 10 min, …);
  * `AccountLanding`'s Unlock goes straight here while locked. `RemoveAccount` (factory reset) is the
  * screen's only testID; the wrong-PIN inline error on EnterPIN has none (match its "Incorrect PIN"
  * copy by text).

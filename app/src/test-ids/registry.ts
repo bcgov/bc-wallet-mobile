@@ -241,7 +241,7 @@ export const TestIds = {
       continue: 'Continue',
       getHelp: 'GetHelp',
     },
-    /** Timed lockout screen after 5 consecutive wrong PINs (native counter, persisted across relaunches). */
+    /** Timed lockout screen after 5 consecutive wrong PINs (the count is persisted across relaunches). */
     lockout: {
       removeAccount: 'RemoveAccount',
     },
