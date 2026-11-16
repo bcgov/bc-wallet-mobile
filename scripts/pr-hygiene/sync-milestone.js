@@ -15,6 +15,11 @@ const syncMilestone = async ({ github, context, core }) => {
     )
   }
 
+  // The payload is a snapshot; a milestone set by hand while this job queued or
+  // waited on the link retries must still win.
+  const { data: current } = await github.rest.issues.get({ ...context.repo, issue_number: pr.number })
+  if (current.milestone) return core.info(`PR now in milestone "${current.milestone.title}" — leaving it.`)
+
   const [[number, title]] = milestones
   try {
     await github.rest.issues.update({ ...context.repo, issue_number: pr.number, milestone: number })

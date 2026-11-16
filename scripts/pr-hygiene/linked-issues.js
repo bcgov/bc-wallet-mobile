@@ -13,7 +13,7 @@ const query = async ({ github, context }) => {
     `query($owner:String!, $repo:String!, $number:Int!) {
        repository(owner:$owner, name:$repo) {
          pullRequest(number:$number) {
-           closingIssuesReferences(first: 5) {
+           closingIssuesReferences(first: 100) {
              nodes { number milestone { number title } }
            }
          }
