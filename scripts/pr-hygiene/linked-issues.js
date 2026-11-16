@@ -24,7 +24,7 @@ const query = async ({ github, context }) => {
   return repository.pullRequest.closingIssuesReferences.nodes
 }
 
-module.exports = async ({ github, context, core }) => {
+const linkedIssues = async ({ github, context, core }) => {
   let linked = await query({ github, context })
   for (let attempt = 1; linked.length === 0 && attempt <= RETRIES; attempt++) {
     core.info(`No linked issue yet — retrying in ${RETRY_DELAY_MS / 1000}s (${attempt}/${RETRIES})`)
@@ -33,3 +33,5 @@ module.exports = async ({ github, context, core }) => {
   }
   return linked
 }
+
+module.exports = linkedIssues

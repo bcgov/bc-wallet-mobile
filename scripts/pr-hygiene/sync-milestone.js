@@ -2,7 +2,7 @@
 // already on the PR is left alone so a developer's manual choice sticks.
 const linkedIssues = require('./linked-issues.js')
 
-module.exports = async ({ github, context, core }) => {
+const syncMilestone = async ({ github, context, core }) => {
   const pr = context.payload.pull_request
   if (pr.milestone) return core.info(`PR already in milestone "${pr.milestone.title}" — leaving it.`)
 
@@ -25,3 +25,5 @@ module.exports = async ({ github, context, core }) => {
     core.notice(`No write access from this PR — set milestone "${title}" by hand.`)
   }
 }
+
+module.exports = syncMilestone

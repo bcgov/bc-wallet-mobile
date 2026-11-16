@@ -5,7 +5,7 @@ const linkedIssues = require('./linked-issues.js')
 const SECTIONS = ['What changed', 'What should the reviewer focus on', 'How to test']
 const MIN = 15
 
-module.exports = async ({ github, context, core }) => {
+const checkPrHygiene = async ({ github, context, core }) => {
   const pr = context.payload.pull_request
 
   const pass = async (reason) => {
@@ -27,9 +27,9 @@ module.exports = async ({ github, context, core }) => {
   const login = pr.user?.login ?? ''
   if (pr.user?.type === 'Bot' || login.endsWith('[bot]')) return pass(`bot author (${login})`)
 
-  const labels = pr.labels.map((l) => l.name)
+  const labels = new Set(pr.labels.map((l) => l.name))
   for (const skip of ['dependencies', 'status/no-issue']) {
-    if (labels.includes(skip)) return pass(`\`${skip}\` label`)
+    if (labels.has(skip)) return pass(`\`${skip}\` label`)
   }
 
   // Prefixes for work that structurally cannot have an issue. `chore:` is
@@ -59,7 +59,7 @@ module.exports = async ({ github, context, core }) => {
   }
 
   for (const heading of SECTIONS) {
-    const re = new RegExp(`^#{1,6}\\s*${heading}\\s*$([\\s\\S]*?)(?=^#{1,6}\\s|$(?![\\s\\S]))`, 'im')
+    const re = new RegExp(String.raw`^#{1,6}\s*${heading}\s*$([\s\S]*?)(?=^#{1,6}\s|$(?![\s\S]))`, 'im')
     const match = body.match(re)
     if (!match) {
       problems.push(`Missing section: **${heading}**`)
@@ -71,3 +71,5 @@ module.exports = async ({ github, context, core }) => {
   if (problems.length) return fail(problems)
   await pass(`linked to #${linked.map((n) => n.number).join(', #')}, all sections filled in`)
 }
+
+module.exports = checkPrHygiene
