@@ -277,6 +277,118 @@ describe('reducer', () => {
 
     expect(result.bcsc.verificationStarted).toBeUndefined()
   })
+
+  describe('DISMISS_BANNER', () => {
+    const dismiss = (state: typeof initialState, bannerId: BCSCBanner) =>
+      reducer(state, { type: BCDispatchAction.DISMISS_BANNER, payload: [{ bannerId }] })
+
+    it('records when the banner was dismissed', () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000)
+
+      try {
+        const result = dismiss(initialState, BCSCBanner.APP_UPDATE_AVAILABLE)
+
+        expect(result.bcsc.dismissedBanners).toEqual({ [BCSCBanner.APP_UPDATE_AVAILABLE]: { dismissedAt: 1000 } })
+      } finally {
+        nowSpy.mockRestore()
+      }
+    })
+
+    it('keeps the dismissals of other banners', () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(2000)
+      const state = {
+        ...initialState,
+        bcsc: {
+          ...initialState.bcsc,
+          dismissedBanners: { [BCSCBanner.IAS_SERVER_NOTIFICATION]: { dismissedAt: 500 } },
+        },
+      }
+
+      try {
+        const result = dismiss(state, BCSCBanner.APP_UPDATE_AVAILABLE)
+
+        expect(result.bcsc.dismissedBanners).toEqual({
+          [BCSCBanner.IAS_SERVER_NOTIFICATION]: { dismissedAt: 500 },
+          [BCSCBanner.APP_UPDATE_AVAILABLE]: { dismissedAt: 2000 },
+        })
+      } finally {
+        nowSpy.mockRestore()
+      }
+    })
+
+    it('moves the dismissal time forward when the same banner is dismissed again', () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(5000)
+      const state = {
+        ...initialState,
+        bcsc: {
+          ...initialState.bcsc,
+          dismissedBanners: { [BCSCBanner.APP_UPDATE_AVAILABLE]: { dismissedAt: 1000 } },
+        },
+      }
+
+      try {
+        const result = dismiss(state, BCSCBanner.APP_UPDATE_AVAILABLE)
+
+        expect(result.bcsc.dismissedBanners).toEqual({ [BCSCBanner.APP_UPDATE_AVAILABLE]: { dismissedAt: 5000 } })
+      } finally {
+        nowSpy.mockRestore()
+      }
+    })
+
+    it('does not change the previous state', () => {
+      const dismissedBanners = { [BCSCBanner.IAS_SERVER_NOTIFICATION]: { dismissedAt: 500 } }
+      const state = { ...initialState, bcsc: { ...initialState.bcsc, dismissedBanners } }
+
+      const result = dismiss(state, BCSCBanner.APP_UPDATE_AVAILABLE)
+
+      expect(result).not.toBe(state)
+      expect(result.bcsc.dismissedBanners).not.toBe(dismissedBanners)
+      expect(dismissedBanners).toEqual({ [BCSCBanner.IAS_SERVER_NOTIFICATION]: { dismissedAt: 500 } })
+      expect(state.bcsc.dismissedBanners).toBe(dismissedBanners)
+    })
+
+    it('leaves the rest of the BCSC state alone', () => {
+      const bannerMessages: BCSCBannerMessage[] = [
+        { id: BCSCBanner.IAS_SERVER_NOTIFICATION, title: 'Notice', type: 'info' },
+      ]
+      const state = { ...initialState, bcsc: { ...initialState.bcsc, bannerMessages } }
+
+      const result = dismiss(state, BCSCBanner.APP_UPDATE_AVAILABLE)
+
+      expect(result.bcsc.bannerMessages).toBe(bannerMessages)
+    })
+
+    it('persists the BCSC state with the dismissal', () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000)
+
+      try {
+        dismiss(initialState, BCSCBanner.APP_UPDATE_AVAILABLE)
+
+        expect(mockedStoreValueForKey).toHaveBeenCalledWith(
+          BCLocalStorageKeys.BCSC,
+          expect.objectContaining({
+            dismissedBanners: { [BCSCBanner.APP_UPDATE_AVAILABLE]: { dismissedAt: 1000 } },
+          })
+        )
+      } finally {
+        nowSpy.mockRestore()
+      }
+    })
+
+    it('is cleared by CLEAR_BCSC', () => {
+      const state = {
+        ...initialState,
+        bcsc: {
+          ...initialState.bcsc,
+          dismissedBanners: { [BCSCBanner.APP_UPDATE_AVAILABLE]: { dismissedAt: 1000 } },
+        },
+      }
+
+      const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })
+
+      expect(result.bcsc.dismissedBanners).toBeUndefined()
+    })
+  })
 })
 
 describe('REMOVE_AVAILABLE_MEDIATOR', () => {
