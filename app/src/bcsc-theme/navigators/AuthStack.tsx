@@ -87,7 +87,7 @@ const AuthStack = (): React.ReactElement => {
         name={BCSCScreens.EnterPIN}
         component={EnterPINScreen}
         options={{
-          title: 'Enter PIN',
+          title: t('BCSC.Screens.EnterPIN'),
         }}
       />
       {/* TODO (bm): Hook up to show users on first device auth usage */}
