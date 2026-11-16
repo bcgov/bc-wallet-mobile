@@ -184,7 +184,9 @@ jobs:
           SUMMARY_FILE: ${{ runner.temp }}/summary.md
         run: |
           set -euo pipefail
-          npm install -g "@github/copilot@${COPILOT_CLI_VERSION}"
+          # --ignore-scripts: the package ships no lifecycle scripts, and its
+          # bin resolves the platform binary at runtime, so nothing is lost.
+          npm install -g --ignore-scripts "@github/copilot@${COPILOT_CLI_VERSION}"
 
           {
             cat scripts/release-notes/summary-prompt.md

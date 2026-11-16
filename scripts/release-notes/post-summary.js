@@ -7,7 +7,7 @@
 // reaches a store listing, and the CLI and its service are dependencies
 // outside this repo — none of that is worth failing a release on. Whatever
 // went wrong, and the draft itself if there is one, lands in the run summary.
-const fs = require('fs')
+const fs = require('node:fs')
 
 module.exports = async ({ github, core }) => {
   const { SUMMARY_FILE, DISCUSSION_ID, MODEL } = process.env
