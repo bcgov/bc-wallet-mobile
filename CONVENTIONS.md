@@ -364,3 +364,18 @@ only says whether a PIN is right.
 
 **Why:** each platform kept its own schedule and English messages in native code, so the same five wrong PINs
 locked iOS for a minute and Android for 30 seconds, and the lock screen copy could not be translated (#4423).
+
+## Removing an account: a usable account is confirmed first
+
+A control that removes an account the user could still use opens `RemoveAccountConfirmationScreen` (the shared
+`DestructiveConfirmationScreen`) and never calls `useFactoryReset` itself. The header Back is the cancel.
+Settings, the transfer-complete screen, the "Problem with account" error and the PIN lockout screen all go
+through it. Register the screen in the stack that offers the control, under that stack's own route name
+(`<Stack>RemoveAccountConfirmation`).
+
+A reset the app itself requires skips the confirmation, because the account is already unusable and there is
+nothing left to keep: device authentication turned off, a session that cannot be recovered, an invalidated
+device, an expired setup.
+
+**Why:** Remove account is the PIN lockout screen's only button and it removed the account on the first tap,
+although the same account would have been usable again as soon as the lock ended.

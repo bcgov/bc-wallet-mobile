@@ -1,4 +1,3 @@
-import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { formatLockoutCountdown } from '@/bcsc-theme/features/auth/lockout-countdown'
 import { readPinLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { PinLockoutType } from '@/bcsc-theme/state/pin-lockout/pin-lockout'
@@ -11,7 +10,6 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
-  useAnimatedComponents,
   useServices,
   useTheme,
 } from '@bifold/core'
@@ -28,14 +26,11 @@ interface LockoutScreenProps {
 }
 
 export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
-  const { ButtonLoading } = useAnimatedComponents()
-  const [isLoading, setIsLoading] = useState(false)
   const { TextTheme, Spacing } = useTheme()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   // Undefined until the lock has been read
   const [remainingMs, setRemainingMs] = useState<number | undefined>(undefined)
-  const factoryReset = useFactoryReset()
 
   const styles = StyleSheet.create({
     hr: {
@@ -115,17 +110,10 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
     }, [logger, navigation])
   )
 
-  const onPressRemoveAccount = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      await factoryReset()
-    } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error)
-      logger.error(`Error removing account: ${errMessage}`)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [logger, factoryReset])
+  // The account is still usable once the lock ends, so removing it is confirmed on its own screen
+  const onPressRemoveAccount = useCallback(() => {
+    navigation.navigate(BCSCScreens.AuthRemoveAccountConfirmation)
+  }, [navigation])
 
   const controls = (
     <Button
@@ -134,10 +122,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
       accessibilityLabel={t('BCSC.Account.RemoveAccount')}
       testID={testIdWithKey(TestIds.auth.lockout.removeAccount)}
       onPress={onPressRemoveAccount}
-      disabled={isLoading}
-    >
-      {isLoading && <ButtonLoading />}
-    </Button>
+    />
   )
 
   return (

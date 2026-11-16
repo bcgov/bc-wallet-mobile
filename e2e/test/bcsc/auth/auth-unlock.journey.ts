@@ -15,7 +15,7 @@ import {
 import { skipToHome } from '../../../src/flows/onboarding.js'
 import { expectWebViewOpen } from '../../../src/helpers/webview.js'
 import { AccountLandingScreen, EnterPINScreen, LockoutScreen } from '../../../src/screens/auth.js'
-import { AutoLockScreen, HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
+import { AutoLockScreen, HomeScreen, RemoveAccountConfirmScreen, SettingsScreen } from '../../../src/screens/main.js'
 
 /**
  * Auth/unlock journey.
@@ -24,8 +24,8 @@ import { AutoLockScreen, HomeScreen, SettingsScreen } from '../../../src/screens
  * AccountLanding → EnterPIN (`didAuthenticate` is in-memory). Ordered checkpoints, slowest and most
  * state-changing last: unlock happy path → wrong-PIN inline error (single miss; the attempt
  * count resets on the subsequent success) → five consecutive misses → the timed Lockout screen →
- * its unattended expiry → the background-timeout lock (TERMINAL: it leaves auto-lock at 1 minute,
- * which would race every checkpoint after it).
+ * its Remove account confirmation, cancelled → the lock's unattended expiry → the background-timeout
+ * lock (TERMINAL: it leaves auto-lock at 1 minute, which would race every checkpoint after it).
  *
  * The two unattended waits (~1-minute lockout countdown, 70s background) make this the longest of
  * the cheap journeys. Both are the assertion, not overhead.
@@ -91,6 +91,16 @@ describe('Auth journey: unlock', () => {
         break
       }
     }
+    await LockoutScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('asks before removing the account from the lockout screen', async () => {
+    // Remove account is the Lockout screen's only button, and the account is usable again once the
+    // lock ends, so one stray tap must not remove it: the button opens the confirmation Settings
+    // uses, and header Back cancels. The lock is measured against the clock, so this detour costs the
+    // next checkpoint nothing; unlocking there with the PIN is what proves the account survived.
+    await LockoutScreen.tapToReach('primary', RemoveAccountConfirmScreen)
+    await RemoveAccountConfirmScreen.back.tap() // header Back = cancel
     await LockoutScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

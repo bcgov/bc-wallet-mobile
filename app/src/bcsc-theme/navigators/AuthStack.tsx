@@ -11,6 +11,7 @@ import { createStackHeader } from '../components/NavigationHeaders'
 import { createAuthSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
+import { AuthRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import AccountLanding from '../features/auth/AccountLandingScreen'
 import { ConfirmDeviceAuthInfoScreen } from '../features/auth/ConfirmDeviceAuthInfoScreen'
 import { DeviceAuthAppResetScreen } from '../features/auth/DeviceAuthAppResetScreen'
@@ -104,6 +105,15 @@ const AuthStack = (): React.ReactElement => {
         options={{
           title: '',
           headerLeft: () => null,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.AuthRemoveAccountConfirmation}
+        component={AuthRemoveAccountConfirmationScreen}
+        options={{
+          title: t('BCSC.Account.RemoveAccount'),
+          // Back is this screen's cancel, so it has to be addressable
+          headerBackTestID: testIdWithKey(TestIds.common.back),
         }}
       />
       <Stack.Screen

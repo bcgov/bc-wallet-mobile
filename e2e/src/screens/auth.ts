@@ -79,12 +79,15 @@ export const DeviceAuthAppResetScreen = defineScreen({
 /**
  * Timed lockout screen (route "Too many PIN attempts") — shown after five consecutive wrong PINs.
  * The app's attempt count persists across relaunches and escalates (5 → 1 min, 10 → 10 min, …);
- * `AccountLanding`'s Unlock goes straight here while locked. `RemoveAccount` (factory reset) is the
- * screen's only testID; the wrong-PIN inline error on EnterPIN has none (match its "Incorrect PIN"
- * copy by text).
+ * `AccountLanding`'s Unlock goes straight here while locked. `RemoveAccount` is the screen's only
+ * testID; the wrong-PIN inline error on EnterPIN has none (match its "Incorrect PIN" copy by text).
+ * `primary` removes nothing itself: it opens the shared remove-account confirmation
+ * (`RemoveAccountConfirmScreen` in `main.ts`), the one AuthStack screen whose header Back is
+ * addressable, and Back returns here.
  */
 export const LockoutScreen = defineScreen({
   self: bcsc(auth.lockout.removeAccount),
+  primary: bcsc(auth.lockout.removeAccount),
 })
 
 // NB: there is deliberately no AuthWebView descriptor. Unlike MainStack/OnboardingStack, AuthStack sets

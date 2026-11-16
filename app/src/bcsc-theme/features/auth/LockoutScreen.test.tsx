@@ -2,18 +2,13 @@ import { LockoutScreen } from '@/bcsc-theme/features/auth/LockoutScreen'
 import { readPinLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { PinLockoutType } from '@/bcsc-theme/state/pin-lockout/pin-lockout'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { bifoldLoggerInstance } from '@bifold/core'
+import { TestIds } from '@/test-ids/registry'
+import { bifoldLoggerInstance, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { useFocusEffect } from '@react-navigation/native'
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render } from '@testing-library/react-native'
 import React, { useEffect, useState } from 'react'
-
-const mockFactoryReset = jest.fn()
-
-jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
-  useFactoryReset: () => mockFactoryReset,
-}))
 
 jest.mock('@/bcsc-theme/features/auth/services/pin-lockout-service', () => ({
   ...jest.requireActual('@/bcsc-theme/features/auth/services/pin-lockout-service'),
@@ -234,31 +229,13 @@ describe('LockoutScreen', () => {
   })
 
   describe('remove account', () => {
-    it('calls factoryReset when Remove Account is pressed', async () => {
-      mockFactoryReset.mockResolvedValue(undefined)
-
+    it('asks for confirmation on its own screen when Remove Account is pressed', async () => {
       const tree = await renderScreen()
 
-      const removeButton = tree.getByTestId('com.ariesbifold:id/RemoveAccount')
-      fireEvent.press(removeButton)
+      fireEvent.press(tree.getByTestId(testIdWithKey(TestIds.auth.lockout.removeAccount)))
 
-      await waitFor(() => {
-        expect(mockFactoryReset).toHaveBeenCalled()
-      })
-    })
-
-    it('handles error when factoryReset fails gracefully', async () => {
-      mockFactoryReset.mockRejectedValue(new Error('Reset failed'))
-
-      const tree = await renderScreen()
-
-      const removeButton = tree.getByTestId('com.ariesbifold:id/RemoveAccount')
-      fireEvent.press(removeButton)
-
-      await waitFor(() => {
-        expect(errorSpy).toHaveBeenCalledWith('Error removing account: Reset failed')
-      })
-      expect(removeButton).toBeEnabled()
+      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AuthRemoveAccountConfirmation)
     })
   })
 
