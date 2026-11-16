@@ -8,6 +8,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { View } from 'react-native'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { BannersScope, useBanners } from '../hooks/useBanners'
+import { useBannersWriter } from '../state/banners/useBannersWriter'
 import { DeviceLimit } from '../state/devices/device-limit'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 
@@ -44,7 +45,8 @@ export const NotificationBannerContainer = ({
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
   const setDeviceLimitPress = useCallback(() => setDevicesModalVisible(true), [])
-  const { banners, dismissBanner, metadata } = useBanners(
+  const { recordBannerDismissal } = useBannersWriter()
+  const { banners, metadata } = useBanners(
     scope === BannersScope.Home ? { scope, onDeviceLimitPress: setDeviceLimitPress } : { scope }
   )
 
@@ -87,10 +89,10 @@ export const NotificationBannerContainer = ({
   }, [])
 
   const handleDeleteDeviceCountMessage = useCallback(() => {
-    dismissBanner(BCSCBanner.DEVICE_LIMIT_EXCEEDED)
+    recordBannerDismissal(BCSCBanner.DEVICE_LIMIT_EXCEEDED)
     // void setMaxDevicesBannerLastDisplayedDate(Date.now()) // THOUGHT: Any cleanup here required?
     handleCloseDevicesModal({ shouldAnimate: true })
-  }, [dismissBanner, handleCloseDevicesModal])
+  }, [handleCloseDevicesModal, recordBannerDismissal])
 
   return (
     <View>
