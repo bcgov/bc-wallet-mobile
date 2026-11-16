@@ -4,9 +4,8 @@ import { NotificationBannerContainer } from '@/bcsc-theme/components/Notificatio
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BannersScope } from '@/bcsc-theme/hooks/useBanners'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,7 +16,6 @@ interface AccountLandingScreenProps {
 }
 
 const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
-  const [store] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const authentication = useAuthentication(navigation)
@@ -55,7 +53,7 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
       {/* Banners scroll with the page rather than pinning above it, so they cannot crowd out the content
           at large OS font sizes. noop handler: DEVICE_LIMIT_EXCEEDED is the only banner that invokes it
           and is filtered out below. */}
-      <NotificationBannerContainer scope={BannersScope.Auth} bannerMessages={store.bcsc.bannerMessages} />
+      <NotificationBannerContainer scope={BannersScope.Auth} />
       <View style={styles.content}>
         <BCSCLogo width={160} height={160} />
         <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.primary }}>
