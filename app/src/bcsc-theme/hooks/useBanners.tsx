@@ -9,8 +9,6 @@ import { selectBannerDismissal } from '../state/banners/selectors'
 import { AppUpdate } from '../state/update/app-update'
 import { useAppUpdate } from '../state/update/useAppUpdate'
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000
-
 /**
  * Returns the list of banners to be displayed in the app, including both shared banners and banners from the store.
  *
@@ -22,10 +20,10 @@ export const useBanners = (): BCSCBannerMessage[] => {
   const appUpdate = useAppUpdate()
 
   const dismissBanner = useCallback(
-    (bannerId: BCSCBanner, dismissedForMs: number) => {
+    (bannerId: BCSCBanner) => {
       dispatch({
         type: BCDispatchAction.DISMISS_BANNER,
-        payload: [{ bannerId: bannerId, dismissedUntil: Date.now() + dismissedForMs }],
+        payload: [{ bannerId: bannerId }],
       })
     },
     [dispatch]
@@ -41,7 +39,7 @@ export const useBanners = (): BCSCBannerMessage[] => {
         type: 'info',
         dismissible: true,
         onPress: () => {
-          dismissBanner(BCSCBanner.APP_UPDATE_AVAILABLE, ONE_DAY_MS)
+          dismissBanner(BCSCBanner.APP_UPDATE_AVAILABLE)
           void openLink(getBCSCAppStoreUrl())
         },
       })
