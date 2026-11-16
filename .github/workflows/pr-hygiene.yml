@@ -1,6 +1,7 @@
 # Checks that a PR asking for review is linked to an issue and has its template
 # sections filled in. Deterministic — no judgement calls, and one GraphQL query
-# unless it has to wait for GitHub to register the issue link.
+# unless it has to wait for GitHub to register the issue link. A second job
+# copies the linked issue's milestone onto the PR.
 #
 # Lands non-blocking. Make it a required check on `main` and `release/**` only
 # after it has run quietly for a week (see the rollout plan).
@@ -116,3 +117,62 @@ jobs:
 
             if (problems.length) return fail(problems)
             await pass(`linked to #${linked.map((n) => n.number).join(', #')}, all sections filled in`)
+
+  # Copies the linked issue's milestone onto a PR that has none. A milestone
+  # already on the PR is left alone so a developer's manual choice sticks.
+  milestone:
+    name: Sync milestone
+    if: github.event_name == 'pull_request' && !contains(fromJSON('["labeled","unlabeled","synchronize"]'), github.event.action)
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const pr = context.payload.pull_request
+            if (pr.milestone) return core.info(`PR already in milestone "${pr.milestone.title}" — leaving it.`)
+
+            const closingIssues = async () => {
+              const { repository } = await github.graphql(
+                `query($owner:String!, $repo:String!, $number:Int!) {
+                   repository(owner:$owner, name:$repo) {
+                     pullRequest(number:$number) {
+                       closingIssuesReferences(first: 5) {
+                         nodes { number milestone { number title } }
+                       }
+                     }
+                   }
+                 }`,
+                { owner: context.repo.owner, repo: context.repo.repo, number: pr.number }
+              )
+              return repository.pullRequest.closingIssuesReferences.nodes
+            }
+
+            // Same race as the hygiene check: the `Closes #` link lands a few seconds late.
+            let linked = await closingIssues()
+            for (let attempt = 1; linked.length === 0 && attempt <= 3; attempt++) {
+              await new Promise((resolve) => setTimeout(resolve, 7000))
+              linked = await closingIssues()
+            }
+
+            const milestones = new Map(
+              linked.filter((i) => i.milestone).map((i) => [i.milestone.number, i.milestone.title])
+            )
+            if (milestones.size === 0) return core.info('No linked issue has a milestone — nothing to sync.')
+            if (milestones.size > 1) {
+              return core.warning(`Linked issues span milestones (${[...milestones.values()].join(', ')}) — set the PR milestone by hand.`)
+            }
+
+            const [[number, title]] = milestones
+
+            try {
+              await github.rest.issues.update({ ...context.repo, issue_number: pr.number, milestone: number })
+              core.info(`Set milestone "${title}".`)
+            } catch (error) {
+              // Fork and Dependabot PRs get a read-only token on `pull_request`.
+              if (error.status !== 403) throw error
+              core.notice(`No write access from this PR — set milestone "${title}" by hand.`)
+            }
