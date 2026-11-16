@@ -48,7 +48,7 @@ exports[`LockoutScreen snapshots renders correctly when locked 1`] = `
           ]
         }
       >
-        Too many PIN attempts
+        BCSC.Lockout.Title
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -64,7 +64,7 @@ exports[`LockoutScreen snapshots renders correctly when locked 1`] = `
           ]
         }
       >
-        This app is temporarily locked because you've entered an incorrect PIN too many times.
+        BCSC.Lockout.Description
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -80,7 +80,7 @@ exports[`LockoutScreen snapshots renders correctly when locked 1`] = `
           ]
         }
       >
-        You can try again in:
+        BCSC.Lockout.TryAgainIn
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -96,7 +96,7 @@ exports[`LockoutScreen snapshots renders correctly when locked 1`] = `
           ]
         }
       >
-        30 seconds
+        30000 ms left
       </Text>
       <View
         style={
@@ -121,7 +121,7 @@ exports[`LockoutScreen snapshots renders correctly when locked 1`] = `
           ]
         }
       >
-        Cannot remember your PIN?
+        BCSC.Lockout.ForgotPINTitle
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -137,7 +137,7 @@ exports[`LockoutScreen snapshots renders correctly when locked 1`] = `
           ]
         }
       >
-        We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us.
+        BCSC.Lockout.ForgotPINDescription
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -153,7 +153,7 @@ exports[`LockoutScreen snapshots renders correctly when locked 1`] = `
           ]
         }
       >
-        If you've forgotten your PIN you'll need to set up this app again.
+        BCSC.Lockout.SetUpAgain
       </Text>
     </View>
   </RCTScrollView>
