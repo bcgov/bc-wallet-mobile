@@ -175,9 +175,6 @@ RCT_EXTERN_METHOD(setSavedServices : (NSArray *)services resolve : (RCTPromiseRe
 
 RCT_EXTERN_METHOD(deleteSavedServices : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(showLocalNotification : (NSString *)title message : (NSString *)
-                      message resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
-
 RCT_EXTERN_METHOD(isThirdPartyKeyboardActive : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(openKeyboardSelector : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)

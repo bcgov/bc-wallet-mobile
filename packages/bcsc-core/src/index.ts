@@ -1254,16 +1254,6 @@ export async function hasCredential(): Promise<boolean> {
   return BcscCore.hasCredential();
 }
 /**
- * Displays a local notification on the device.
- * @param title The notification title
- * @param message The notification body/message
- * @returns A promise that resolves when the notification has been displayed.
- */
-export const showLocalNotification = async (title: string, message: string): Promise<void> => {
-  return BcscCore.showLocalNotification(title, message);
-};
-
-/**
  *  A native module function that checks if a 3rd party keyboard is currently active on an android device.
  *  iOS does not support this check and will always return false.
  *
