@@ -4,7 +4,7 @@ import { BannerDismissal, getBannerDismissal } from './banner-dismissal'
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 describe('getBannerDismissal', () => {
-  // APP_UPDATE_AVAILABLE is dismissed for one day; DEVICE_LIMIT_EXCEEDED cannot be dismissed (duration 0)
+  // APP_UPDATE_AVAILABLE is dismissed for one day; LIVE_CALL_STATUS cannot be dismissed (duration 0)
   const facts = { now: 1000, bannerId: BCSCBanner.APP_UPDATE_AVAILABLE, dismissedAt: 500 }
 
   it('returns NotDismissed when no dismissal is recorded', () => {
@@ -12,15 +12,13 @@ describe('getBannerDismissal', () => {
   })
 
   it('returns NotDismissed when no dismissal is recorded, even for a banner that cannot be dismissed', () => {
-    expect(getBannerDismissal({ ...facts, bannerId: BCSCBanner.DEVICE_LIMIT_EXCEEDED, dismissedAt: null })).toBe(
+    expect(getBannerDismissal({ ...facts, bannerId: BCSCBanner.LIVE_CALL_STATUS, dismissedAt: null })).toBe(
       BannerDismissal.NotDismissed
     )
   })
 
   it('returns NotDismissed for a banner that cannot be dismissed, even when a dismissal is recorded', () => {
-    expect(getBannerDismissal({ ...facts, bannerId: BCSCBanner.DEVICE_LIMIT_EXCEEDED })).toBe(
-      BannerDismissal.NotDismissed
-    )
+    expect(getBannerDismissal({ ...facts, bannerId: BCSCBanner.LIVE_CALL_STATUS })).toBe(BannerDismissal.NotDismissed)
   })
 
   it('returns DismissalEnded when the dismissal was recorded in the future', () => {
