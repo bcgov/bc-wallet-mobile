@@ -32,8 +32,7 @@ Use Node 24 and the Yarn version pinned in `package.json`. From the repo root:
   build, coverage (`yarn coverage`), or native tests.
 - Native lint/format requires `swiftformat`, `clang-format`, and `ktlint`.
   Missing-tool install hints mean validation is incomplete.
-- App Jest tests use `TZ=GMT`. Co-locate tests; use Testing Library's
-  `renderHook` for ViewModels and mock the ViewModel when testing a View.
+- App Jest tests use `TZ=GMT`. Co-locate tests.
 - Native tests run from `packages/bcsc-core`: `yarn test:ios`,
   `yarn test:android`, or `yarn test` for both. Android requires **JDK 17**;
   set `JAVA_HOME` accordingly. Before adding native tests, read
@@ -43,21 +42,23 @@ Use Node 24 and the Yarn version pinned in `package.json`. From the repo root:
 
 ## Implementation rules
 
-- New features use MVVM: `use[Feature]ViewModel` consumes store/API/services
-  and exposes state and handlers; Screens render. ViewModels may translate
-  and navigate but contain **no JSX or UI components**. Follow existing
-  patterns when editing existing code; avoid incidental MVVM migrations.
-- Keep components within their feature until a second feature needs them.
-  Use `useMemo` for derived state and `useCallback` for stable handlers.
-- API hooks return data and throw, without UI side effects. Service/UI hooks
-  catch and surface errors. In Views/ViewModels, prefer `emitErrorAlert` with
-  `AppError.fromErrorDefinition(ErrorRegistry.XXX, { cause: error })` over
-  `emitError` with registry keys.
-- Map native errors through `throwNativeError` / `toNativeAppError` in
-  `app/src/bcsc-theme/utils/native-error-map.ts`. Callers inspect the type
-  (e.g. `isBcscNativeError`) and decide whether failure is critical or
-  intentionally non-critical. Prefer idempotency, such as successful deletion
-  when the item is already absent.
+- Own the tactical decisions (naming, structure, test layout, which existing
+  pattern to follow): match the surrounding code and note the choice in the
+  PR's reviewer-focus section.
+- Ask before building on a material decision: unspecified user-visible flow
+  or copy; persisted store shape or app-state ownership; an IAS/API contract;
+  a native module interface; key, token, or attestation handling; or issue
+  readings that lead to different behaviour. Batch the questions into one ask,
+  each with your recommended answer.
+- Drive the issue to done: finish what the work uncovers in the same PR.
+  Raise only what is material or would roughly double the PR, recommending
+  fold-in or drop; whether a new issue exists is the user's call.
+- New features use MVVM: a `use<Feature>ViewModel` hook holds the logic and
+  the Screen renders. Read `docs/guides/mvvm.md` before building a new screen
+  or feature. When editing existing code, follow the file's current pattern.
+- API hooks throw. One layer, a service hook or the ViewModel, surfaces each
+  failure. Map native errors through `native-error-map.ts`. Read
+  `docs/guides/error-handling.md` before adding error handling.
 - Every `TouchableOpacity` and `Pressable` needs `accessibilityLabel`,
   `accessibilityRole`, `hitSlop`, and `testID`.
 - Localize all user-facing text. Use interpolation rather than concatenation;

@@ -1,4 +1,4 @@
-import { useIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
+import { useOptionalIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { useMemo } from 'react'
 import { DeviceLimitResult } from './device-limit'
 import { selectDeviceLimit } from './selectors'
@@ -9,7 +9,7 @@ import { selectDeviceLimit } from './selectors'
  * @returns The device limit information.
  */
 export const useDeviceLimit = (): DeviceLimitResult => {
-  const { idToken } = useIdToken()
+  const { idToken } = useOptionalIdToken()
 
   return useMemo(() => {
     return selectDeviceLimit(idToken)

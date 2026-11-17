@@ -324,7 +324,7 @@ jobs:
       - name: Build iOS JS bundle
         working-directory: app
         run: |
-          npx react-native bundle \
+          yarn react-native bundle \
             --platform ios \
             --dev false \
             --entry-file index.js \
@@ -444,7 +444,7 @@ jobs:
         working-directory: app
         run: |
           mkdir -p android/app/src/main/assets
-          npx react-native bundle \
+          yarn react-native bundle \
             --platform android \
             --dev false \
             --entry-file index.js \

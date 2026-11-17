@@ -13,6 +13,13 @@
 #      Debt/Spike/Other) from its issue type and labels.
 #   4. Render it all as Markdown tables, grouped by category, and post as a
 #      new Discussion.
+#   5. Optionally ask the Copilot CLI for a plain-language version of that
+#      report and post it as a comment on the discussion.
+#
+# publish.yml dispatches this twice for every build it tags: once against the
+# previous build of the same version, and once against the last build of the
+# previous version — that second one carrying the summary. It stays available
+# on demand for any other two tags.
 #
 # The step scripts live in scripts/release-notes/ — see that directory for
 # the actual logic.
@@ -37,14 +44,33 @@ on:
         description: 'The other git tag in the range'
         required: true
         type: string
+      summarize:
+        description: 'Also post a plain-language version of the report, drafted by Copilot, as a comment'
+        required: false
+        default: 'yes'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
 
 permissions: {}
 
+env:
+  # 'auto' lets Copilot pick; pin a model id for more predictable drafts.
+  SUMMARY_MODEL: auto
+  # Pinned, with the CLI's self-update off, so a release of it cannot change
+  # what this workflow does without a commit here.
+  COPILOT_CLI_VERSION: 1.0.112
+
 # Queue instead of cancel: overlapping runs would each post a duplicate
-# Discussion, and runs are rare enough that queueing is fine.
+# Discussion, and runs are rare enough that queueing is fine. `queue: max`
+# because publish.yml dispatches two reports at once: without it only one run
+# can be pending, so the second dispatch would replace the first and one of
+# the two comparisons would be silently lost.
 concurrency:
   group: release-notes
   cancel-in-progress: false
+  queue: max
 
 jobs:
   release-notes:
@@ -53,6 +79,8 @@ jobs:
     permissions:
       contents: read
       discussions: write
+      # Lets the Copilot CLI bill its requests to the org from this job.
+      copilot-requests: write
     timeout-minutes: 15
     steps:
       - name: Check secrets are available
@@ -98,6 +126,7 @@ jobs:
 
       - name: Check for an existing release notes discussion
         env:
+          OLDER_TAG: ${{ steps.range.outputs.older }}
           NEWER_TAG: ${{ steps.range.outputs.newer }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -120,8 +149,10 @@ jobs:
             await script({ github, context, core })
 
       - name: Create the discussion
+        id: discussion
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
+          OLDER_TAG: ${{ steps.range.outputs.older }}
           NEWER_TAG: ${{ steps.range.outputs.newer }}
           BODY: ${{ steps.report.outputs.body }}
           REPOSITORY_ID: ${{ steps.category.outputs.repository_id }}
@@ -130,4 +161,63 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const script = require('./scripts/release-notes/create-discussion.js')
+            await script({ github, core })
+
+      # Both of these run after the discussion exists and neither fails the
+      # run: the report is the deliverable and is already posted by now, so a
+      # draft that does not arrive is reported and stepped over.
+      #
+      # The CLI gets no tool, path or URL permission. Non-interactive mode
+      # denies whatever is not pre-approved and nothing here is, so it can
+      # only read the prompt and answer. It runs from RUNNER_TEMP rather than
+      # the checkout, so the repo's copilot-instructions.md — written for
+      # changing code here — cannot steer a writing task.
+      - name: Draft a plain-language summary
+        if: inputs.summarize == 'yes'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OLDER_TAG: ${{ steps.range.outputs.older }}
+          NEWER_TAG: ${{ steps.range.outputs.newer }}
+          BODY: ${{ steps.report.outputs.body }}
+          PROMPT_FILE: ${{ runner.temp }}/summary-prompt.md
+          SUMMARY_FILE: ${{ runner.temp }}/summary.md
+        run: |
+          set -euo pipefail
+          # --ignore-scripts: the package ships no lifecycle scripts, and its
+          # bin resolves the platform binary at runtime, so nothing is lost.
+          npm install -g --ignore-scripts "@github/copilot@${COPILOT_CLI_VERSION}"
+
+          {
+            cat scripts/release-notes/summary-prompt.md
+            printf '\nThe report covers everything between `%s` and `%s`:\n\n' "${OLDER_TAG}" "${NEWER_TAG}"
+            printf '%s\n' "${BODY}"
+          } > "${PROMPT_FILE}"
+
+          copilot -p "$(cat "${PROMPT_FILE}")" \
+            --silent \
+            --no-color \
+            --no-custom-instructions \
+            --no-auto-update \
+            --disable-builtin-mcps \
+            --model "${SUMMARY_MODEL}" \
+            -C "${RUNNER_TEMP}" > "${SUMMARY_FILE}"
+
+          if [ ! -s "${SUMMARY_FILE}" ]; then
+            echo "::error::The Copilot CLI exited cleanly but wrote nothing."
+            exit 1
+          fi
+          echo "Drafted $(wc -l < "${SUMMARY_FILE}") line(s)."
+
+      - name: Post the plain-language summary
+        if: inputs.summarize == 'yes'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SUMMARY_FILE: ${{ runner.temp }}/summary.md
+          DISCUSSION_ID: ${{ steps.discussion.outputs.discussion_id }}
+          MODEL: ${{ env.SUMMARY_MODEL }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const script = require('./scripts/release-notes/post-summary.js')
             await script({ github, core })

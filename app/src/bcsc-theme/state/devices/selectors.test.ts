@@ -32,7 +32,7 @@ describe('selectDeviceLimit', () => {
 
   it('returns Over when the id token is at the limit', () => {
     expect(selectDeviceLimit(buildIdToken({ bcsc_devices_count: 3 }))).toEqual({
-      limit: DeviceLimit.Over,
+      limit: DeviceLimit.AtOrOver,
       deviceCount: 3,
       deviceLimit: 3,
     })

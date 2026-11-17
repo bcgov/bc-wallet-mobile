@@ -73,7 +73,7 @@ import CancelledReview from '../features/verify/send-video/CancelledReview'
 import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { useVerificationState } from '../state/verification/useVerificationState'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
@@ -137,7 +137,7 @@ const useSystemCheckLoadingGate = (hasSettled: boolean) => {
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
   const { isLoadingAccount } = useAccount()
-  const { isVerified } = useVerificationStatus()
+  const { isVerified } = useVerificationState()
   const theme = useTheme()
   const { t } = useTranslation()
   const Stack = createStackNavigator<BCSCMainStackParams>()
@@ -533,7 +533,7 @@ const MainStack: React.FC = () => {
               own when it remounts under BCSCIdTokenProvider. With the route gone, React Navigation drops
               it from that state (falling back to initialRouteName if nothing else is left) instead of
               stranding the user on a Continue with nothing left to do (#4719). Keyed on `verified`, not
-              isUserVerified(): that turns true once tokens arrive, before the user can open this screen. */}
+              isDeviceVerifiedByIas: that turns true once tokens arrive, before the user can open this screen. */}
           {isVerified ? null : (
             <Stack.Screen
               name={BCSCScreens.VerificationSuccess}

@@ -5,7 +5,7 @@ import { DeviceLimit } from './device-limit'
 import { useDeviceLimit } from './useDeviceLimit'
 
 const mockIdToken = (idToken: Partial<IdToken> | null) =>
-  jest.spyOn(IdTokenContext, 'useIdToken').mockReturnValue({
+  jest.spyOn(IdTokenContext, 'useOptionalIdToken').mockReturnValue({
     idToken: idToken as IdToken | null,
     isLoading: false,
     refreshIdToken: jest.fn(),
@@ -37,7 +37,7 @@ describe('useDeviceLimit', () => {
 
     const { result } = renderHook(() => useDeviceLimit())
 
-    expect(result.current).toEqual({ limit: DeviceLimit.Over, deviceCount: 3, deviceLimit: 3 })
+    expect(result.current).toEqual({ limit: DeviceLimit.AtOrOver, deviceCount: 3, deviceLimit: 3 })
   })
 
   it('updates when the id token changes', () => {
@@ -53,7 +53,7 @@ describe('useDeviceLimit', () => {
     })
     rerender({})
 
-    expect(result.current.limit).toBe(DeviceLimit.Over)
+    expect(result.current.limit).toBe(DeviceLimit.AtOrOver)
   })
 
   it('returns the same result between renders while the id token is unchanged', () => {

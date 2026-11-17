@@ -1,12 +1,12 @@
 export enum DeviceLimit {
-  Over = 'over',
+  AtOrOver = 'over',
   Under = 'under',
   Unknown = 'unknown',
 }
 
 export type DeviceLimitResult =
   | {
-      limit: DeviceLimit.Over
+      limit: DeviceLimit.AtOrOver
       deviceLimit: number
       deviceCount: number
     }
@@ -39,7 +39,7 @@ export const getDeviceLimit = (facts: DeviceLimitFacts): DeviceLimitResult => {
 
   if (facts.deviceCount >= facts.deviceLimit) {
     return {
-      limit: DeviceLimit.Over,
+      limit: DeviceLimit.AtOrOver,
       deviceLimit: facts.deviceLimit,
       deviceCount: facts.deviceCount,
     }

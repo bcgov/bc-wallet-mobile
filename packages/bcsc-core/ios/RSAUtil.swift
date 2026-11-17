@@ -135,25 +135,25 @@ class RSAUtil {
       i += 1
     }
     // Total length of the container
-    if let _ = NSInteger(octetBytes: keyBytes, startIdx: &i) {
-      // First component is the modulus
-      if keyBytes[i] == 0x02 {
-        i += 1
-        if let modulusLength = NSInteger(octetBytes: keyBytes, startIdx: &i) {
-          // NSRange(location: i, length: modulusLength).toRange()!
-          let modulus = keyData.subdata(in: Range(NSRange(location: i, length: modulusLength))!)
-          // var k = Range.i
-          i += modulusLength
+    if let _ = NSInteger(octetBytes: keyBytes, startIdx: &i),
+       // First component is the modulus
+       keyBytes[i] == 0x02
+    {
+      i += 1
+      if let modulusLength = NSInteger(octetBytes: keyBytes, startIdx: &i) {
+        // NSRange(location: i, length: modulusLength).toRange()!
+        let modulus = keyData.subdata(in: Range(NSRange(location: i, length: modulusLength))!)
+        // var k = Range.i
+        i += modulusLength
 
-          // Second should be the exponent
-          if keyBytes[i] == 0x02 {
-            i += 1
-            if let exponentLength = NSInteger(octetBytes: keyBytes, startIdx: &i) {
-              let exponent = keyData.subdata(in: Range(NSRange(location: i, length: exponentLength))!)
-              i += exponentLength
+        // Second should be the exponent
+        if keyBytes[i] == 0x02 {
+          i += 1
+          if let exponentLength = NSInteger(octetBytes: keyBytes, startIdx: &i) {
+            let exponent = keyData.subdata(in: Range(NSRange(location: i, length: exponentLength))!)
+            i += exponentLength
 
-              return (modulus, exponent)
-            }
+            return (modulus, exponent)
           }
         }
       }
@@ -218,23 +218,23 @@ private extension Data {
       i += 1
     }
     // Total length of the container
-    if let _ = NSInteger(octetBytes: keyBytes, startIdx: &i) {
-      // First component is the modulus
-      if keyBytes[i] == 0x02 {
-        i += 1
-        if let modulusLength = NSInteger(octetBytes: keyBytes, startIdx: &i) {
-          let modulus = self.subdata(in: Range(NSRange(location: i, length: modulusLength))!)
-          i += modulusLength
+    if let _ = NSInteger(octetBytes: keyBytes, startIdx: &i),
+       // First component is the modulus
+       keyBytes[i] == 0x02
+    {
+      i += 1
+      if let modulusLength = NSInteger(octetBytes: keyBytes, startIdx: &i) {
+        let modulus = self.subdata(in: Range(NSRange(location: i, length: modulusLength))!)
+        i += modulusLength
 
-          // Second should be the exponent
-          if keyBytes[i] == 0x02 {
-            i += 1
-            if let exponentLength = NSInteger(octetBytes: keyBytes, startIdx: &i) {
-              let exponent = self.subdata(in: Range(NSRange(location: i, length: exponentLength))!)
-              i += exponentLength
+        // Second should be the exponent
+        if keyBytes[i] == 0x02 {
+          i += 1
+          if let exponentLength = NSInteger(octetBytes: keyBytes, startIdx: &i) {
+            let exponent = self.subdata(in: Range(NSRange(location: i, length: exponentLength))!)
+            i += exponentLength
 
-              return (modulus, exponent)
-            }
+            return (modulus, exponent)
           }
         }
       }

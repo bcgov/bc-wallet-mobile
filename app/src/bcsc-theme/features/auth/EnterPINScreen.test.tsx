@@ -1,16 +1,19 @@
+import {
+  PinVerification,
+  PinVerificationType,
+  verifyPinWithLockout,
+} from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { verifyPIN } from 'react-native-bcsc-core'
 import { EnterPINScreen } from './EnterPINScreen'
 
-jest.mock('react-native-bcsc-core', () => ({
-  verifyPIN: jest
-    .fn()
-    .mockResolvedValue({ success: false, walletKey: '', locked: false, message: 'Incorrect PIN', remainingTime: 0 }),
+jest.mock('@/bcsc-theme/features/auth/services/pin-lockout-service', () => ({
+  ...jest.requireActual('@/bcsc-theme/features/auth/services/pin-lockout-service'),
+  verifyPinWithLockout: jest.fn(),
 }))
 
 const mockHandleSuccessfulAuth = jest.fn()
@@ -28,7 +31,7 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   }),
 }))
 
-const mockVerifyPIN = jest.mocked(verifyPIN)
+const mockVerifyPinWithLockout = jest.mocked(verifyPinWithLockout)
 
 const mockNavigation = {
   navigate: jest.fn(),
@@ -46,13 +49,7 @@ describe('EnterPINScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
-    mockVerifyPIN.mockResolvedValue({
-      success: false,
-      walletKey: '',
-      locked: false,
-      message: 'Incorrect PIN',
-      remainingTime: 0,
-    })
+    mockVerifyPinWithLockout.mockResolvedValue({ type: PinVerificationType.Incorrect, isLastAttempt: false })
   })
 
   afterEach(() => {
@@ -77,7 +74,10 @@ describe('EnterPINScreen', () => {
 
   describe('PIN verification - locked account', () => {
     it('navigates to Lockout screen when PIN verification returns locked', async () => {
-      mockVerifyPIN.mockResolvedValue({ success: false, walletKey: '', locked: true, message: '', remainingTime: 60 })
+      mockVerifyPinWithLockout.mockResolvedValue({
+        type: PinVerificationType.Locked,
+        until: new Date('2026-11-16T12:01:00.000Z'),
+      })
 
       const tree = render(
         <BasicAppContext>
@@ -107,10 +107,68 @@ describe('EnterPINScreen', () => {
     })
   })
 
+  describe('PIN verification - wrong PIN', () => {
+    const enterPIN = (pin: string) => {
+      const tree = render(
+        <BasicAppContext>
+          <EnterPINScreen navigation={mockNavigation} />
+        </BasicAppContext>
+      )
+
+      fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), pin)
+      fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
+
+      return tree
+    }
+
+    it('says the PIN is incorrect', async () => {
+      const tree = enterPIN('123456')
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.EnterPIN.IncorrectPIN')).toBeTruthy()
+      })
+      expect(mockVerifyPinWithLockout).toHaveBeenCalledWith('123456', expect.anything())
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+      expect(mockHandleSuccessfulAuth).not.toHaveBeenCalled()
+    })
+
+    it('warns when one more wrong PIN would lock the app', async () => {
+      mockVerifyPinWithLockout.mockResolvedValue({ type: PinVerificationType.Incorrect, isLastAttempt: true })
+
+      const tree = enterPIN('123456')
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.EnterPIN.LastAttemptWarning')).toBeTruthy()
+      })
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+    })
+
+    it('does not check a PIN that is too short', async () => {
+      const tree = enterPIN('123')
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.PIN.PINTooShort')).toBeTruthy()
+      })
+      expect(mockVerifyPinWithLockout).not.toHaveBeenCalled()
+    })
+
+    it('shows an error and stays on the screen when the PIN cannot be checked', async () => {
+      mockVerifyPinWithLockout.mockRejectedValue(new Error('storage failed'))
+
+      const tree = enterPIN('123456')
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.EnterPIN.VerifyError')).toBeTruthy()
+      })
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+      expect(mockHandleSuccessfulAuth).not.toHaveBeenCalled()
+    })
+  })
+
   it('starts account loading only after PIN verification succeeds and cleans up a hydration failure', async () => {
-    let resolveVerification!: (result: Awaited<ReturnType<typeof verifyPIN>>) => void
+    let resolveVerification!: (result: PinVerification) => void
     let rejectHydration!: (error: Error) => void
-    mockVerifyPIN.mockReturnValue(
+    mockVerifyPinWithLockout.mockReturnValue(
       new Promise((resolve) => {
         resolveVerification = resolve
       })
@@ -128,13 +186,14 @@ describe('EnterPINScreen', () => {
     )
     fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), '123456')
     fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
-    await waitFor(() => expect(mockVerifyPIN).toHaveBeenCalled())
+    await waitFor(() => expect(mockVerifyPinWithLockout).toHaveBeenCalled())
     expect(mockStartLoading).not.toHaveBeenCalled()
 
     await act(async () => {
-      resolveVerification({ success: true, walletKey: 'test-key', locked: false, message: '', remainingTime: 0 })
+      resolveVerification({ type: PinVerificationType.Success, walletKey: 'test-key' })
     })
     expect(mockStartLoading).toHaveBeenCalledWith('BCSC.Loading.AppStartup')
+    expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key')
     expect(mockStopLoading).not.toHaveBeenCalled()
 
     await act(async () => {

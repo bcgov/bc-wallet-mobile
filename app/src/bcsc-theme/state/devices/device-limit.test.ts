@@ -31,7 +31,7 @@ describe('getDeviceLimit', () => {
 
   it('returns Over when the count reaches the limit', () => {
     expect(getDeviceLimit({ deviceCount: 3, deviceLimit: 3 })).toEqual({
-      limit: DeviceLimit.Over,
+      limit: DeviceLimit.AtOrOver,
       deviceCount: 3,
       deviceLimit: 3,
     })
@@ -39,7 +39,7 @@ describe('getDeviceLimit', () => {
 
   it('returns Over when the count is above the limit', () => {
     expect(getDeviceLimit({ deviceCount: 5, deviceLimit: 3 })).toEqual({
-      limit: DeviceLimit.Over,
+      limit: DeviceLimit.AtOrOver,
       deviceCount: 5,
       deviceLimit: 3,
     })
@@ -47,7 +47,7 @@ describe('getDeviceLimit', () => {
 
   it('treats a count of zero and a limit of zero as Over, since the limit is reached', () => {
     expect(getDeviceLimit({ deviceCount: 0, deviceLimit: 0 })).toEqual({
-      limit: DeviceLimit.Over,
+      limit: DeviceLimit.AtOrOver,
       deviceCount: 0,
       deviceLimit: 0,
     })

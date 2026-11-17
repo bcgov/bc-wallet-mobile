@@ -76,6 +76,11 @@ describe('SettingsContent', () => {
     expect(screen.getByTestId(tid('RemoveAccount'))).toBeTruthy()
   })
 
+  it('shows the device-management rows for a device that IAS verified by transfer, before setup is finished', async () => {
+    renderWithState({ authentication: { didAuthenticate: true }, bcscSecure: { refreshToken: 'token' } })
+    expect(await screen.findByTestId(tid('ForgetPairings'))).toBeTruthy()
+  })
+
   describe('ChangePIN row', () => {
     const focusEffectMock = useFocusEffect as jest.Mock
 

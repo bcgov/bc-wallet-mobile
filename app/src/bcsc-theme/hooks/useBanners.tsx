@@ -68,7 +68,7 @@ export const useBanners = (options: BannersOptions) => {
             void openLink(server.contactLink)
           }
           void server.refresh()
-          // Note: This banner is non-dismissible
+          // Note: This banner is non-dismissible (wait for server to come back online)
         },
       })
     }
@@ -99,7 +99,7 @@ export const useBanners = (options: BannersOptions) => {
       })
     }
 
-    if (deviceLimit.limit === DeviceLimit.Over) {
+    if (deviceLimit.limit === DeviceLimit.AtOrOver) {
       banners.push({
         id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
         title: t('BCSC.SystemChecks.Devices.DeviceLimitReachedBannerTitle'),
@@ -110,11 +110,12 @@ export const useBanners = (options: BannersOptions) => {
     }
 
     const allowedBanners = BANNERS_BY_SCOPE[options.scope]
+    const now = Date.now() // stable timestamp for the current render
 
     return (
       banners
         // 1. Filter out banners that have been dismissed
-        .filter((banner) => selectBannerDismissal(store, banner.id) !== BannerDismissal.Dismissed)
+        .filter((banner) => selectBannerDismissal(store, banner.id, now) !== BannerDismissal.Dismissed)
         // 2. Filter out banners that are not allowed in the current scope
         .filter((banner) => allowedBanners.has(banner.id))
     )

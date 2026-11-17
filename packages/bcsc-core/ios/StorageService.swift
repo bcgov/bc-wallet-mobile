@@ -45,6 +45,47 @@ enum AccountFiles: String {
   case documents
 }
 
+/// The reasons reading a stored account file can fail. `readData` throws these away and returns nil;
+/// `getAccountReadStatus` reports them, so we can see why `getAccount` found no account.
+enum AccountReadFailure: Error {
+  case storageRootUnavailable(Error)
+  case accountListMissing
+  case accountListUnreadable(Error)
+  case accountListEmpty
+  case fileMissing
+  case fileUnreadable(Error)
+  /// The unarchiver threw: corrupt archive or unknown class name.
+  case decodeFailed(Error)
+  /// The archive decoded but held no object for the current `provider` (e.g. archived under another issuer).
+  case noObjectForProvider
+
+  /// The code `getAccountReadStatus` reports when reading `.accountMetadata` fails this way.
+  var accountStatusCode: String {
+    switch self {
+    case .storageRootUnavailable: return "storage_root_unavailable"
+    case .accountListMissing: return "account_list_missing"
+    case .accountListUnreadable: return "account_list_unreadable"
+    case .accountListEmpty: return "account_list_empty"
+    case .fileMissing: return "account_file_missing"
+    case .fileUnreadable: return "account_file_unreadable"
+    case .decodeFailed: return "account_decode_failed"
+    case .noObjectForProvider: return "account_provider_mismatch"
+    }
+  }
+
+  /// `domain:code` of the underlying system error, if any. Never a message, path or ID.
+  var detail: String? {
+    switch self {
+    case let .storageRootUnavailable(error), let .accountListUnreadable(error),
+         let .fileUnreadable(error), let .decodeFailed(error):
+      let nsError = error as NSError
+      return "\(nsError.domain):\(nsError.code)"
+    case .accountListMissing, .accountListEmpty, .fileMissing, .noObjectForProvider:
+      return nil
+    }
+  }
+}
+
 class StorageService {
   let logger = AppLogger(
     subsystem: Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard",
@@ -88,42 +129,53 @@ class StorageService {
   /// only uses the *first* account ID found. For current practical purposes,
   /// there should only be one account ID present in the 'accounts' array.
   var currentAccountID: String? {
-    let pathDirectory = defaultSearchPathDirectory
+    try? resolveCurrentAccountID()
+  }
 
+  /// `currentAccountID`, but throws an `AccountReadFailure` saying why there is none.
+  func resolveCurrentAccountID() throws -> String {
+    let rootDirectoryURL: URL
     do {
-      let rootDirectoryURL = try FileManager.default.url(
-        for: pathDirectory,
+      rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
         in: .userDomainMask,
         appropriateFor: nil,
         create: false
       )
-      let accountListFileUrl =
-        rootDirectoryURL
-          .appendingPathComponent(self.basePath)
-          .appendingPathComponent(accountListURLComponent)
-
-      guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
-        return nil
-      }
-
-      let data = try Data(contentsOf: accountListFileUrl)
-
-      if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-         let accounts = json["accounts"] as? [String],
-         let firstAccountID = accounts.first, !firstAccountID.isEmpty
-      {
-        // logger.log("StorageService: Successfully loaded account ID \(firstAccountID) from account_list.")
-        return firstAccountID
-      } else {
-        logger.error(
-          "Failed to parse account_list JSON or accounts array is empty/first ID is empty."
-        )
-        return nil
-      }
     } catch {
       logger.error("Could not access or read account_list: \(error).")
-      return nil
+      throw AccountReadFailure.storageRootUnavailable(error)
     }
+
+    let accountListFileUrl =
+      rootDirectoryURL
+        .appendingPathComponent(self.basePath)
+        .appendingPathComponent(accountListURLComponent)
+
+    guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
+      throw AccountReadFailure.accountListMissing
+    }
+
+    let json: Any
+    do {
+      let data = try Data(contentsOf: accountListFileUrl)
+      json = try JSONSerialization.jsonObject(with: data, options: [])
+    } catch {
+      logger.error("Could not access or read account_list: \(error).")
+      throw AccountReadFailure.accountListUnreadable(error)
+    }
+
+    guard let dict = json as? [String: Any],
+          let accounts = dict["accounts"] as? [String],
+          let firstAccountID = accounts.first, !firstAccountID.isEmpty
+    else {
+      logger.error(
+        "Failed to parse account_list JSON or accounts array is empty/first ID is empty."
+      )
+      throw AccountReadFailure.accountListEmpty
+    }
+
+    return firstAccountID
   }
 
   var issuer: String {
@@ -170,60 +222,109 @@ class StorageService {
   func readData<T: NSObject & NSCoding & NSSecureCoding>(
     file: AccountFiles,
     pathDirectory: FileManager.SearchPathDirectory
-  ) -> T? { // Added file parameter
+  ) -> T? {
+    try? readDataOrThrow(file: file, pathDirectory: pathDirectory)
+  }
+
+  /// Does the actual read and throws an `AccountReadFailure` instead of returning nil. `readData` wraps
+  /// this, so the status report always matches what the app really sees.
+  func readDataOrThrow<T: NSObject & NSCoding & NSSecureCoding>(
+    file: AccountFiles,
+    pathDirectory: FileManager.SearchPathDirectory
+  ) throws -> T {
+    let accountID: String
     do {
-      guard let accountID = self.currentAccountID else {
-        logger.error("readData: currentAccountID is nil. Cannot read data for file: \(file.rawValue)")
-        return nil
-      }
-      let rootDirectoryURL = try FileManager.default.url(
+      accountID = try resolveCurrentAccountID()
+    } catch {
+      logger.error("readData: currentAccountID is nil. Cannot read data for file: \(file.rawValue)")
+      throw error
+    }
+
+    let rootDirectoryURL: URL
+    do {
+      rootDirectoryURL = try FileManager.default.url(
         for: pathDirectory,
         in: .userDomainMask,
         appropriateFor: nil,
         create: false
       )
-      let fileUrl =
-        rootDirectoryURL
-          .appendingPathComponent(self.basePath)
-          .appendingPathComponent(accountID) // Use unwrapped accountID
-          .appendingPathComponent(file.rawValue)
-
-      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
-        return nil
-      }
-
-      let accessGranted = fileUrl.startAccessingSecurityScopedResource()
-
-      defer {
-        if accessGranted {
-          fileUrl.stopAccessingSecurityScopedResource()
-        }
-      }
-
-      let data = try Data(contentsOf: fileUrl)
-      logger.log("Data read from file: \(data)")
-
-      if let obj: T = try? decodeArchivedObject(from: data) {
-        logger.log("Decoded object: \(obj)")
-
-        if let account = obj as? Account, account.clientIDMissingFromArchive,
-           account.clientID.isEmpty,
-           let recovered = readClientRegistrationClientID(pathDirectory: pathDirectory),
-           !recovered.isEmpty
-        {
-          logger.log("readData: repaired empty Account.clientID from client_registration")
-          account.clientID = recovered
-        }
-
-        return obj
-      }
-
-      logger.error("Failed to decode object from data.")
-
-      return nil
     } catch {
-      return nil
+      throw AccountReadFailure.storageRootUnavailable(error)
     }
+
+    let fileUrl =
+      rootDirectoryURL
+        .appendingPathComponent(self.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(file.rawValue)
+
+    guard FileManager.default.fileExists(atPath: fileUrl.path) else {
+      throw AccountReadFailure.fileMissing
+    }
+
+    let accessGranted = fileUrl.startAccessingSecurityScopedResource()
+
+    defer {
+      if accessGranted {
+        fileUrl.stopAccessingSecurityScopedResource()
+      }
+    }
+
+    let data: Data
+    do {
+      data = try Data(contentsOf: fileUrl)
+    } catch {
+      throw AccountReadFailure.fileUnreadable(error)
+    }
+    logger.log("Data read from file: \(data)")
+
+    let decoded: T?
+    do {
+      decoded = try decodeArchivedObject(from: data)
+    } catch {
+      logger.error("Failed to decode object from data.")
+      throw AccountReadFailure.decodeFailed(error)
+    }
+
+    guard let obj = decoded else {
+      logger.error("Failed to decode object from data.")
+      throw AccountReadFailure.noObjectForProvider
+    }
+
+    logger.log("Decoded object: \(obj)")
+
+    if let account = obj as? Account, account.clientIDMissingFromArchive,
+       account.clientID.isEmpty,
+       let recovered = readClientRegistrationClientID(pathDirectory: pathDirectory),
+       !recovered.isEmpty
+    {
+      logger.log("readData: repaired empty Account.clientID from client_registration")
+      account.clientID = recovered
+    }
+
+    return obj
+  }
+
+  /// Explains why `readData(file: .accountMetadata, ...)` (and so `getAccount`) returns nil, by running that
+  /// same read. Returns a status code, the environment name and error `domain:code`; never paths, IDs or
+  /// file contents.
+  func accountReadStatus() -> [String: String] {
+    var result: [String: String] = ["environment": getIssuerNameFromIssuer(issuer: issuer)]
+
+    do {
+      let _: Account = try readDataOrThrow(file: .accountMetadata, pathDirectory: defaultSearchPathDirectory)
+      result["status"] = "ok"
+    } catch let failure as AccountReadFailure {
+      result["status"] = failure.accountStatusCode
+      if let detail = failure.detail {
+        result["detail"] = detail
+      }
+    } catch {
+      // readDataOrThrow only throws AccountReadFailure; kept so a future change can't crash the report.
+      result["status"] = "unknown"
+    }
+
+    return result
   }
 
   /// Reads `clientID` straight out of the client_registration file. Used as a fallback if the account itself
