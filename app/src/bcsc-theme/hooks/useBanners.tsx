@@ -60,7 +60,7 @@ export const useBanners = (options: BannersOptions) => {
       })
     }
 
-    if (deviceLimit.limit === DeviceLimit.Over) {
+    if (deviceLimit.limit === DeviceLimit.AtOrOver) {
       banners.push({
         id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
         title: t('BCSC.SystemChecks.Devices.DeviceLimitReachedBannerTitle'),

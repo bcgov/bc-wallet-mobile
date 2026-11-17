@@ -52,9 +52,7 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
 
   return (
     <ScreenWrapper padded={false} scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
-      {/* Banners scroll with the page rather than pinning above it, so they cannot crowd out the content
-          at large OS font sizes. noop handler: DEVICE_LIMIT_EXCEEDED is the only banner that invokes it
-          and is filtered out below. */}
+      {/* Banners scroll with the page rather than pinning above it, so they cannot crowd out the content at large OS font sizes. */}
       <NotificationBannerContainer scope={BannersScope.Auth} bannerMessages={store.bcsc.bannerMessages} />
       <View style={styles.content}>
         <BCSCLogo width={160} height={160} />

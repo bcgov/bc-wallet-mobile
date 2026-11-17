@@ -90,7 +90,6 @@ export const NotificationBannerContainer = ({
 
   const handleDeleteDeviceCountMessage = useCallback(() => {
     recordBannerDismissal(BCSCBanner.DEVICE_LIMIT_EXCEEDED)
-    // void setMaxDevicesBannerLastDisplayedDate(Date.now()) // THOUGHT: Any cleanup here required?
     handleCloseDevicesModal({ shouldAnimate: true })
   }, [handleCloseDevicesModal, recordBannerDismissal])
 
