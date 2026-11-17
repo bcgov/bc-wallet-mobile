@@ -1141,6 +1141,18 @@ const translation = {
       "Birthdate": "Birthdate: {{birthdate}} (FR)",
       "TryAnotherCard": "Try another card (FR)",
     },
+    "CardScanningError": {
+      "Heading": "Problem scanning the card (FR)",
+      "Description1": "The serial number captured does not match our records. (FR)",
+      "SerialNumber": "Serial number: {{serial}} (FR)",
+      "Description2": "Make sure you're scanning a BC Services Card. (FR) ",
+      "CheckCardLink": "Check if you have a BC Services Card (FR)",
+      "Description3": "Check the serial number matches what is on your card. If the serial number doesn't match: (FR)",
+      "EnterManually": "Enter serial number manually (FR)",
+      "ScanAgain": "Scan again (FR)",
+      "Description4": "If problems scanning the card continues: (FR)",
+      "TryAnotherCard": "Try another card (FR)",
+    },
     "VerificationCardError": {
       "CardExpired": {
         "Heading": "Sorry, you can't add this card. (FR)",

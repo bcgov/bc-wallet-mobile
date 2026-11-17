@@ -1,15 +1,23 @@
 import { ListButton } from '@/bcsc-theme/components/ListButton'
-import { ICON_SIZE } from '@/constants'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl, ICON_SIZE } from '@/constants'
 import { a11yLabel } from '@/utils/accessibility'
 import HighlightSerialBarcodeImage from '@assets/img/highlight_serial_barcode.png'
-import { ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { Link, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const SCAN_CARD_EXAMPLE_IMAGE = Image.resolveAssetSource(HighlightSerialBarcodeImage).uri
-const CardScanningError = () => {
-  //   const { t } = useTranslation()
+
+type CardScanningErrorProps = {
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.CardScanningError>
+}
+
+const CardScanningError = ({ navigation }: CardScanningErrorProps) => {
+  const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const { width } = useWindowDimensions()
 
@@ -41,29 +49,37 @@ const CardScanningError = () => {
     },
   })
 
+  const learnAboutServicesCard = () => {
+    navigation.navigate(BCSCScreens.VerifyWebView, {
+      title: t('BCSC.Screens.HelpCentre'),
+      url: HelpCentreUrl.HELP_CHECK_BCSC,
+    })
+  }
+
   return (
     <ScreenWrapper scrollViewContainerStyle={styles.pageHeaderContainer}>
-      <ThemedText variant="headingThree">Problem scanning the card</ThemedText>
-      <ThemedText style={styles.description}>The serial number captured does not match our records.</ThemedText>
-      <ThemedText style={{ fontWeight: 'bold' }}>Serial Number: 123456789</ThemedText>
+      <ThemedText variant="headingThree">{t('BCSC.CardScanningError.Heading')}</ThemedText>
+      <ThemedText style={styles.description}>{t('BCSC.CardScanningError.Description1')}</ThemedText>
+      <ThemedText style={{ fontWeight: 'bold' }}>
+        {t('BCSC.CardScanningError.SerialNumber', { serial: '123456789' })}
+      </ThemedText>
       <ThemedText style={styles.description}>
-        {`Make sure you're scanning a BC Services Card. Check if you have a BC Services Card`}
+        {t('BCSC.CardScanningError.Description2')}
+        <Link linkText={t('BCSC.CardScanningError.CheckCardLink')} onPress={learnAboutServicesCard} />
       </ThemedText>
 
       <Image source={{ uri: SCAN_CARD_EXAMPLE_IMAGE }} style={styles.image} resizeMode={'contain'} />
 
-      <ThemedText style={styles.description}>
-        {`Check the serial number matches what is on your card. If the serial number doesn't match:`}
-      </ThemedText>
+      <ThemedText style={styles.description}>{t('BCSC.CardScanningError.Description3')}</ThemedText>
       <ListButton
         position="only"
         onPress={() => {
           console.log('Enter manually')
         }}
-        accessibilityLabel={a11yLabel('Enter serial number manually')}
+        accessibilityLabel={a11yLabel(t('BCSC.CardScanningError.EnterManually'))}
       >
         <View style={styles.listButtonContainer}>
-          <ThemedText style={styles.listButtonTitle}>{`Enter serial number manually`}</ThemedText>
+          <ThemedText style={styles.listButtonTitle}>{t('BCSC.CardScanningError.EnterManually')}</ThemedText>
           <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={ColorPalette.brand.headerText} />
         </View>
       </ListButton>
@@ -72,25 +88,23 @@ const CardScanningError = () => {
         onPress={() => {
           console.log('Scan again')
         }}
-        accessibilityLabel={a11yLabel('Scan again')}
+        accessibilityLabel={a11yLabel(t('BCSC.CardScanningError.ScanAgain'))}
       >
         <View style={styles.listButtonContainer}>
-          <ThemedText style={styles.listButtonTitle}>{`Scan again`}</ThemedText>
+          <ThemedText style={styles.listButtonTitle}>{t('BCSC.CardScanningError.ScanAgain')}</ThemedText>
           <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={ColorPalette.brand.headerText} />
         </View>
       </ListButton>
-      <ThemedText style={{ ...styles.description, marginTop: Spacing.lg }}>
-        If problems scanning the card continues:
-      </ThemedText>
+      <ThemedText style={{ marginTop: Spacing.lg }}>{t('BCSC.CardScanningError.Description4')}</ThemedText>
       <ListButton
         position="only"
         onPress={() => {
           console.log('Try another card')
         }}
-        accessibilityLabel={a11yLabel('Try another card')}
+        accessibilityLabel={a11yLabel(t('BCSC.CardScanningError.TryAnotherCard'))}
       >
         <View style={styles.listButtonContainer}>
-          <ThemedText style={styles.listButtonTitle}>{`Try another card`}</ThemedText>
+          <ThemedText style={styles.listButtonTitle}>{t('BCSC.CardScanningError.TryAnotherCard')}</ThemedText>
           <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={ColorPalette.brand.headerText} />
         </View>
       </ListButton>
