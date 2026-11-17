@@ -47,10 +47,9 @@ for (const packageDir of packageDirs) {
   })
   extraExclusionList.push(...modules.map((m) => path.join(packageDir, 'node_modules', m)))
 
-  modules.reduce((acc, name) => {
-    acc[name] = path.join(__dirname, 'node_modules', name)
-    return acc
-  }, extraNodeModules)
+  for (const name of modules) {
+    extraNodeModules[name] = path.join(__dirname, 'node_modules', name)
+  }
 }
 
 const defaultConfig = getDefaultConfig(__dirname)

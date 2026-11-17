@@ -189,7 +189,7 @@ export default function useDataLoader<ResponseType>(
   // Executes fetchData once; no-ops on subsequent calls
   const load = useCallback(() => {
     if (!isLoadingRef.current && !isOneTimeLoadRef.current) {
-      loadData()
+      void loadData()
     }
   }, [loadData])
 
@@ -201,7 +201,7 @@ export default function useDataLoader<ResponseType>(
     }
     setError(undefined)
     isOneTimeLoadRef.current = false
-    loadData()
+    void loadData()
   }, [loadData])
 
   const clear = useCallback(() => {

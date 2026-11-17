@@ -23,6 +23,18 @@ const CallIconButton = ({
 }: CallIconButtonProps) => {
   const { Spacing } = useTheme()
   const styles = StyleSheet.create({
+    // Each control owns a third of the row so its label wraps in its own column at large OS font
+    // sizes instead of colliding with its neighbours (#4401)
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    label: {
+      color: primaryColor,
+      marginTop: Spacing.xs,
+      textAlign: 'center',
+    },
     iconButton: {
       width: size,
       height: size,
@@ -40,12 +52,15 @@ const CallIconButton = ({
       onPress={onPress}
       testID={testIdWithKey(testIDKey)}
       accessibilityLabel={label}
-      style={{ justifyContent: 'center', alignItems: 'center' }}
+      accessibilityRole="button"
+      // Side by side with its neighbours, so the slop is vertical only and stays inside the row
+      hitSlop={{ top: Spacing.sm, bottom: Spacing.sm }}
+      style={styles.container}
     >
       <View style={styles.iconButton}>
         <Icon name={iconName} size={size - 32} color={primaryColor} />
       </View>
-      <ThemedText style={{ color: primaryColor, marginTop: Spacing.xs }}>{label}</ThemedText>
+      <ThemedText style={styles.label}>{label}</ThemedText>
     </TouchableOpacity>
   )
 }

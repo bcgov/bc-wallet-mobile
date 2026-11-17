@@ -1,6 +1,7 @@
 import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
+import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
@@ -150,6 +151,9 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         const { success, walletKey } = await setNativePIN(pin1)
 
         if (success) {
+          // Wrong attempts at the PIN this one replaces say nothing about the new one
+          await clearPinAttempts(logger)
+
           // Call the success handler with the wallet key
           await onSuccess({ success, walletKey })
           succeeded = true
@@ -268,7 +272,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         </View>
         <Callout>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm }}>
-            <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
+            <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color, flexShrink: 1 }}>
               {tWithPrefix('ThisPINIsUnique')}
             </ThemedText>
             <Icon name="information-outline" size={24} color={TextTheme.headingFour.color} />

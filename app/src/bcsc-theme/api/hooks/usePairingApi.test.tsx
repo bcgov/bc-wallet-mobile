@@ -1,9 +1,12 @@
+import { getPushTokenStatus } from '@/bcsc-theme/utils/push-notification-tokens'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
 import { ChallengeSource, signPairingCode } from 'react-native-bcsc-core'
 import usePairingApi from './usePairingApi'
-import { withAccount } from './withAccountGuard'
+import { AccountNotFoundError, withAccount } from './withAccountGuard'
 
 // Prettier automatically adds a ; at the start of some lines, which causes eslint no-extra-semi to complain
 /* eslint-disable no-extra-semi */
@@ -32,6 +35,7 @@ jest.mock('react-native-bcsc-core', () => ({
 }))
 
 jest.mock('./withAccountGuard', () => ({
+  AccountNotFoundError: jest.requireActual('./withAccountGuard').AccountNotFoundError,
   withAccount: jest.fn(),
 }))
 
@@ -40,6 +44,7 @@ jest.mock('@/bcsc-theme/utils/push-notification-tokens', () => ({
     fcmDeviceToken: 'mock-fcm-token',
     deviceToken: 'mock-device-token',
   }),
+  getPushTokenStatus: jest.fn().mockReturnValue({ push_fcm_status: 'fetch_failed', push_apns_status: 'ok' }),
 }))
 
 const mockAccount = { clientID: 'mock-client-id', issuer: 'mock-issuer' }
@@ -84,32 +89,168 @@ describe('usePairingApi', () => {
       }
     )
 
-    it('maps a native signPairingCode rejection through the native mapper', async () => {
+    // Resolves with the error loginByPairingCode rejects with; fails the test if it resolves instead
+    const loginFailure = async (): Promise<AppError> => {
+      const { result } = renderHook(() => usePairingApi(mockApiClient))
+      try {
+        await result.current.loginByPairingCode('pairing-code', ChallengeSource.PushNotification)
+      } catch (error) {
+        return error as AppError
+      }
+      throw new Error('Expected loginByPairingCode to reject')
+    }
+
+    it('reports a native signPairingCode rejection as a device failure at the signing step', async () => {
       ;(signPairingCode as jest.Mock).mockRejectedValue(
         Object.assign(new Error('native failure'), { code: 'E_JWT_SIGN_FAILED' })
       )
 
-      const { result } = renderHook(() => usePairingApi(mockApiClient))
+      const error = await loginFailure()
 
-      await expect(
-        result.current.loginByPairingCode('pairing-code', ChallengeSource.PushNotification)
-      ).rejects.toMatchObject({
-        appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
+      expect(error).toMatchObject({
+        appEvent: AppEventCode.LOGIN_DEVICE_ERROR,
+        context: expect.objectContaining({ failure_flow: 'pairing', failure_step: 'sign_pairing_code' }),
       })
+      // The native mapper's error is kept as the cause
+      expect((error.cause as AppError).appEvent).toBe(AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET)
+      expect(error.context.failure_cause_code).toBe((error.cause as AppError).code)
       expect(mockApiClient.post).not.toHaveBeenCalled()
     })
 
-    it('throws SIGN_CLAIMS_ERROR when signPairingCode resolves null', async () => {
+    it('reports a null signPairingCode result as a device failure caused by SIGN_CLAIMS_ERROR', async () => {
       ;(signPairingCode as jest.Mock).mockResolvedValue(null)
 
-      const { result } = renderHook(() => usePairingApi(mockApiClient))
+      const error = await loginFailure()
 
-      await expect(
-        result.current.loginByPairingCode('pairing-code', ChallengeSource.PushNotification)
-      ).rejects.toMatchObject({
-        appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
-      })
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context.failure_step).toBe('sign_pairing_code')
+      expect((error.cause as AppError).appEvent).toBe(AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET)
       expect(mockApiClient.post).not.toHaveBeenCalled()
+    })
+
+    it('reports a missing account as a device failure at the account step', async () => {
+      const accountError = new Error('No account found. Please register first.')
+      ;(withAccount as jest.Mock).mockRejectedValue(accountError)
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context.failure_step).toBe('account')
+      expect(error.cause).toBe(accountError)
+    })
+
+    it('records why the account could not be read when it is missing', async () => {
+      const readContext = { account_read_status: 'account_decode_failed', account_read_environment: 'PROD' }
+      ;(withAccount as jest.Mock).mockRejectedValue(new AccountNotFoundError(readContext))
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context).toMatchObject({ failure_step: 'account', ...readContext })
+    })
+
+    it('blames the account step, without a read status, when reading the account rejects', async () => {
+      ;(withAccount as jest.Mock).mockRejectedValue(new Error('native read failed'))
+
+      const error = await loginFailure()
+
+      expect(error.context.failure_step).toBe('account')
+      expect(error.context.account_read_status).toBeUndefined()
+    })
+
+    it('reports a plain error after the account is read as unexpected, not as an account failure', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      jest.mocked(getPushTokenStatus).mockImplementationOnce(() => {
+        throw new TypeError('bad tokens')
+      })
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context.failure_step).toBe('unexpected')
+      expect(error.context.account_read_status).toBeUndefined()
+    })
+
+    it('keeps the code of an unhandled request error and adds where it failed', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      const requestError = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, { track: false })
+      mockApiClient.post.mockRejectedValue(requestError)
+
+      const error = await loginFailure()
+
+      // The same error, not a wrapper: its own code (no_internet) is the most precise label available
+      expect(error).toBe(requestError)
+      expect(error.appEvent).toBe(AppEventCode.NO_INTERNET)
+      expect(error.context).toMatchObject({
+        failure_flow: 'pairing',
+        failure_step: 'verify_device_assertion',
+        failure_elapsed_ms: expect.any(Number),
+      })
+    })
+
+    it('rethrows a request error a policy already handled, still handled, with where it failed added', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      const handledError = AppError.fromErrorDefinition(ErrorRegistry.INVALID_PAIRING_CODE, { track: false })
+      handledError.handled = true
+      mockApiClient.post.mockRejectedValue(handledError)
+
+      const error = await loginFailure()
+
+      expect(error).toBe(handledError)
+      expect(error.handled).toBe(true)
+      expect(error.appEvent).toBe(ErrorRegistry.INVALID_PAIRING_CODE.appEvent)
+      expect(error.context).toMatchObject({
+        failure_flow: 'pairing',
+        failure_step: 'verify_device_assertion',
+        failure_elapsed_ms: expect.any(Number),
+      })
+    })
+
+    it('reports a non-AppError at the request step as a device failure', async () => {
+      // ie: a native failure in the request interceptor, which passes non-Axios errors through unchanged
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      const nativeError = Object.assign(new Error('keychain unavailable'), { code: 'E_KEYCHAIN' })
+      mockApiClient.post.mockRejectedValue(nativeError)
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context).toMatchObject({ failure_step: 'verify_device_assertion', failure_cause_code: 'E_KEYCHAIN' })
+      expect(error.cause).toBe(nativeError)
+    })
+
+    it('adds the push token status to a request error it keeps', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      const requestError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { track: false })
+      mockApiClient.post.mockRejectedValue(requestError)
+
+      const error = await loginFailure()
+
+      expect(error).toBe(requestError)
+      expect(error.context).toMatchObject({
+        failure_step: 'verify_device_assertion',
+        push_fcm_status: 'fetch_failed',
+        push_apns_status: 'ok',
+      })
+    })
+
+    it('adds the push token status to a request error it wraps', async () => {
+      ;(signPairingCode as jest.Mock).mockResolvedValue('signed-assertion')
+      mockApiClient.post.mockRejectedValue(new Error('socket hang up'))
+
+      const error = await loginFailure()
+
+      expect(error.appEvent).toBe(AppEventCode.LOGIN_DEVICE_ERROR)
+      expect(error.context).toMatchObject({ push_fcm_status: 'fetch_failed', push_apns_status: 'ok' })
+    })
+
+    it('does not add the push token status to a failure before the request', async () => {
+      ;(signPairingCode as jest.Mock).mockRejectedValue(new Error('signing failed'))
+
+      const error = await loginFailure()
+
+      expect(error.context.failure_step).toBe('sign_pairing_code')
+      expect(error.context.push_fcm_status).toBeUndefined()
     })
   })
 

@@ -21,6 +21,11 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
 const engine = new BaseScreen()
 /** A valid-format birthdate that does NOT match the photo card, to force the CSN/birthdate mismatch. */
 const MISMATCH_DOB = '19800101'
+/**
+ * MISMATCH_DOB as the error screen must echo it. Device-timezone formatting showed "December 31, 1979"
+ * in BC's permanent UTC-7 zone; the configs pin every session to one (E2E_TIME_ZONE) so this catches it.
+ */
+const MISMATCH_DOB_DISPLAYED = 'Birthdate: January 1, 1980'
 /** Shorter than the serial schema's 3-character minimum, so it trips the format rule rather than the empty one. */
 const TOO_SHORT_SERIAL = 'AB'
 /** ManualSerial's two reachable inline errors — asserted verbatim, as only the message tells them apart. */
@@ -113,7 +118,7 @@ describe('Verify journey: entry detours', () => {
     await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
-  it('rejects a mismatched serial + birthdate and offers Try Another', async () => {
+  it('rejects a mismatched serial + birthdate, echoes the birthdate, and offers Try Another', async () => {
     // The one backend authorize on this journey: a REAL card serial + a deliberately WRONG birthdate.
     // authorizeDevice rejects the CSN/birthdate match; that error is unhandled (a handled AppError would
     // stay on EnterBirthdate), so the submit navigates to VerificationCardError (MismatchedSerial).
@@ -122,6 +127,7 @@ describe('Verify journey: entry detours', () => {
     await engine.dismissKeyboard()
     await EnterBirthdateScreen.tapWhenEnabled('primary') // authorizeDevice → rejects
     await VerificationCardErrorScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // TryAnother marker
+    assert.equal(await VerificationCardErrorScreen.read('birthdate'), MISMATCH_DOB_DISPLAYED)
     await VerificationCardErrorScreen.tap('primary') // Try Another → back to IdentitySelection
     await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })

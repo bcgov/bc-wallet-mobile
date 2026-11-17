@@ -163,6 +163,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]
@@ -318,6 +319,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]
@@ -854,6 +856,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]
@@ -968,6 +971,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                         },
                         {
                           "color": "#313132",
+                          "flexShrink": 1,
                           "fontSize": 16,
                         },
                       ]

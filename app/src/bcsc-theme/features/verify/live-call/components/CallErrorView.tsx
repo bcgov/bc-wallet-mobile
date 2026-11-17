@@ -38,8 +38,13 @@ const CallErrorView = ({ title, message, onRetry, onGoBack }: CallErrorViewProps
   )
 
   return (
-    <ScreenWrapper padded={false} scrollable={false} edges={['top', 'bottom', 'left', 'right']} controls={controls}>
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: Spacing.lg }}>
+    <ScreenWrapper
+      padded={false}
+      edges={['top', 'bottom', 'left', 'right']}
+      scrollViewContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+      controls={controls}
+    >
+      <View style={{ alignItems: 'center', padding: Spacing.lg }}>
         <Icon name="alert-circle" size={64} color={ColorPalette.semantic.error} />
         <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.lg, textAlign: 'center' }}>
           {title || t('BCSC.VideoCall.Errors.ConnectionError')}

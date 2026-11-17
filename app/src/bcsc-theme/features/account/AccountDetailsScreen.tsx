@@ -5,6 +5,8 @@ import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { ErrorRegistry } from '@/errors'
+import { createFailureError } from '@/errors/failureContext'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TestIds } from '@/test-ids/registry'
 
@@ -25,7 +27,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppState, AppStateStatus, Linking, StyleSheet, View } from 'react-native'
+import { AppState, AppStateStatus, Linking, StyleSheet, useWindowDimensions, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
@@ -37,6 +39,7 @@ interface AccountDetailsScreenProps {
 const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, Buttons } = useTheme()
+  const { fontScale } = useWindowDimensions()
   const { metadata } = useApi()
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -77,12 +80,18 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
         await Linking.openURL(result.url)
         openedWebview.current = true
       } else if ('error' in result) {
-        logger.debug(`AccountDetails: error generating quick login URL: ${result.error}`)
-        alerts.loginServerErrorAlert()
+        logger.debug(`AccountDetails: error generating quick login URL: ${result.error.fullMessage}`)
+        alerts.loginDeviceErrorAlert(result.error)
       }
     } catch (error) {
       logger.error(`Error opening account webview: ${error}`)
-      alerts.loginServerErrorAlert()
+      alerts.loginDeviceErrorAlert(
+        createFailureError(ErrorRegistry.LOGIN_DEVICE_ERROR, {
+          flow: 'account_details',
+          step: 'open_webview',
+          cause: error,
+        })
+      )
     } finally {
       setIsDisabled(false)
     }
@@ -96,9 +105,11 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
     container: {
       padding: Spacing.lg,
     },
+    // Beside the 130pt photo the heading-sized name breaks mid-word once the OS font is large, so
+    // stack the two instead (same switch Bifold's Settings screen makes for its rows).
     photoAndNameContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: fontScale >= 1.5 ? 'column' : 'row',
+      alignItems: fontScale >= 1.5 ? 'flex-start' : 'center',
       gap: Spacing.md,
     },
     name: {

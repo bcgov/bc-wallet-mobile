@@ -24,7 +24,7 @@ export class DeepLinkViewModel {
       this.subscribed = true
       this.deepLinkService.subscribe(this.handleDeepLink.bind(this))
     }
-    this.deepLinkService.init()
+    void this.deepLinkService.init()
   }
 
   private handleDeepLink(payload: DeepLinkPayload) {

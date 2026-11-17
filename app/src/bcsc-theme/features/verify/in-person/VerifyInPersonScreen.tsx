@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import BulletPointWithText from '@/components/BulletPointWithText'
 import { BC_SERVICE_LOCATION_URL } from '@/constants'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -38,12 +39,6 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    bulletContainer: {
-      flexDirection: 'row',
-    },
-    bullet: {
-      marginRight: Spacing.xs,
-    },
     // Section headings ("Where to go", "What to bring", etc.) rendered in heading blue.
     sectionHeading: {
       color: ColorPalette.brand.headerText,
@@ -143,18 +138,14 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         <ThemedText variant={'bold'} style={styles.sectionHeading}>
           {t('BCSC.VerifyIdentity.WhatToBring')}
         </ThemedText>
-        <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('BCSC.VerifyIdentity.ThisDevice')}</ThemedText>
-        </View>
-        <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>
-            {store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
-              ? t('BCSC.VerifyIdentity.PiecesOfID')
-              : t('BCSC.VerifyIdentity.YourBCServicesCard')}
-          </ThemedText>
-        </View>
+        <BulletPointWithText translationKey={'BCSC.VerifyIdentity.ThisDevice'} />
+        <BulletPointWithText
+          translationKey={
+            store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
+              ? 'BCSC.VerifyIdentity.PiecesOfID'
+              : 'BCSC.VerifyIdentity.YourBCServicesCard'
+          }
+        />
       </View>
       <View>
         <ThemedText variant={'bold'} style={styles.sectionHeading}>
@@ -164,6 +155,9 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
           testID={testIdWithKey(TestIds.verify.verifyInPerson.confirmationCode)}
           variant={'headingTwo'}
           style={[styles.dataValue, { marginBottom: Spacing.md, letterSpacing: 7 }]}
+          // A code split across lines reads as two codes; shrink it instead at large OS font sizes
+          numberOfLines={1}
+          adjustsFontSizeToFit
         >
           {/* User codes are 8 digits and are to be formatted as XXXX-XXXX in UI */}
           {`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}

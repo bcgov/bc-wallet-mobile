@@ -59,7 +59,7 @@ const requestNotificationPermission = async (): Promise<PermissionStatus> => {
       resolve(NotificationPermissionStatus.BLOCKED)
     }, REQUEST_NOTIFICATIONS_TIMEOUT_MS)
 
-    requestNotifications()
+    void requestNotifications()
       .then(({ status }) => {
         resolve(status)
       })

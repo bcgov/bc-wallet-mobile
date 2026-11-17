@@ -100,9 +100,9 @@ exports[`SuccessfullySent renders correctly 1`] = `
       <View
         style={
           {
+            "alignSelf": "stretch",
             "marginBottom": 24,
-            "marginLeft": 24,
-            "width": "100%",
+            "paddingLeft": 24,
           }
         }
       >
@@ -141,7 +141,9 @@ exports[`SuccessfullySent renders correctly 1`] = `
                   "fontSize": 18,
                   "fontWeight": "normal",
                 },
-                undefined,
+                {
+                  "flex": 1,
+                },
               ]
             }
           >
@@ -183,7 +185,9 @@ exports[`SuccessfullySent renders correctly 1`] = `
                   "fontSize": 18,
                   "fontWeight": "normal",
                 },
-                undefined,
+                {
+                  "flex": 1,
+                },
               ]
             }
           >

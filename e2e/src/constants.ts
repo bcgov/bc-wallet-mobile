@@ -29,7 +29,7 @@ export enum Timeouts {
   /** First checkpoint of a journey file: the run's FIRST session may also pay simulator/device
    *  boot + WebDriverAgent install + first-ever app launch, all competing for CPU. */
   COLD_START = 60_000,
-  /** A timed lockout releasing itself. The first native tier is 1 minute (5 wrong PINs); the extra
+  /** A timed lockout releasing itself. The first tier is 1 minute (5 wrong PINs); the extra
    *  headroom covers a slow mount reading the remaining time late. */
   LOCKOUT_AUTO_UNLOCK = 120_000,
   /** Dwell on a live document camera after injecting, so the scanner behind the shutter can read the

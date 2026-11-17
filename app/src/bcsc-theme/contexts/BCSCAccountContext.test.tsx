@@ -334,10 +334,8 @@ describe('BCSCAccountContext', () => {
       expect(mockGetUserMetadata).not.toHaveBeenCalled()
     })
 
-    // The transferred fixture has no `verified` flag set (isUserVerified() allows the load
-    // through via the refresh token instead), so this pins the diagnostics' `verified` field
-    // to the raw legacy flag rather than the already-gated isUserVerified() result - the two
-    // are indistinguishable on the `verified` fixture used elsewhere in this file.
+    // Only a transfer (refresh token, no `verified` flag) tells the raw flag apart from the gated result,
+    // so this pins the diagnostics' `verified` field to the raw flag
     it('records the raw (unset) verified flag for a token-backed transfer load failure', async () => {
       const tokenNullError = AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
       mockGetUserMetadata.mockRejectedValueOnce(tokenNullError)

@@ -169,7 +169,7 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
       logoUrl={connection?.imageUrl}
       status={isRead ? NotificationCardStatus.Read : NotificationCardStatus.Unread}
       onPress={() => {
-        markRead()
+        void markRead()
         navigation.navigate(BCSCScreens.ContactChat, { connectionId: basicMessage.connectionId })
       }}
       onClose={handleClose}
@@ -210,7 +210,7 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
         // timing is optional, ignore errors
       }
     }
-    fetchTiming()
+    void fetchTiming()
   }, [agent, credential.id])
 
   const credentialDisplayName = version ? `${name} v${version}` : name
@@ -239,7 +239,7 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
       logoUrl={connection?.imageUrl}
       status={getTimeSensitiveStatus(isRead, expiresTime)}
       onPress={() => {
-        markOfferSeen()
+        void markOfferSeen()
         navigation.navigate(BCSCScreens.ConnectionLoading, { credentialId: credential.id })
       }}
       onClose={handleClose}
@@ -276,7 +276,7 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
         // timing is optional, ignore errors
       }
     }
-    fetchTiming()
+    void fetchTiming()
   }, [agent, proof.id])
 
   // Per the designs: verifier name when the request comes from a connection,
@@ -311,16 +311,17 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
 
   const handlePress = () => {
     if (isDone && agent) {
-      markProofAsViewed(agent, proof)
+      void markProofAsViewed(agent, proof)
     } else {
-      markRequestSeen()
+      void markRequestSeen()
     }
     navigation.navigate(BCSCScreens.ConnectionLoading, { proofId: proof.id })
   }
 
   const handleClose = async () => {
     if (isDone && agent) {
-      markProofAsViewed(agent, proof)
+      // TODO (bm): should be awaited
+      void markProofAsViewed(agent, proof)
     } else {
       await declineProofRequest()
     }

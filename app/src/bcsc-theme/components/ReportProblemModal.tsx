@@ -34,7 +34,7 @@ export interface ReportProblemModalProps {
 export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { Spacing, ColorPalette, TextTheme } = useTheme()
+  const { Spacing, ColorPalette, TextTheme, maxFontSizeMultiplier } = useTheme()
   // Inset works inside this RN Modal because the app's root SafeAreaProvider context crosses the
   // modal boundary; applied as scroll padding so the action button clears the home indicator.
   const insets = useSafeAreaInsets()
@@ -211,6 +211,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
           {t('BCSC.ReportProblem.DescriptionLabel')}
         </ThemedText>
         <TextInput
+          maxFontSizeMultiplier={maxFontSizeMultiplier}
           style={styles.input}
           multiline
           maxLength={DESCRIPTION_MAX_LENGTH}

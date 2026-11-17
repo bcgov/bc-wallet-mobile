@@ -285,6 +285,7 @@ const translation = {
       "ManageDevices": "Manage Devices",
       "Nickname": "Nickname",
       "AccountDetails": "Account information",
+      "EnterPIN": "Enter PIN",
     },
     "HelpMenu": {
       "Title": "Need help?",
@@ -419,7 +420,28 @@ const translation = {
     },
     "EnterPIN": {
       "Title": "Enter your 6-digit PIN",
-      "Description": "The one you chose to secure this app"
+      "Description": "The one you chose to secure this app",
+      "IncorrectPIN": "Incorrect PIN",
+      "LastAttemptWarning": "Incorrect PIN. For security, if you enter another incorrect PIN, it will temporarily lock the app.",
+      "VerifyError": "An error occurred while verifying the PIN."
+    },
+    "Lockout": {
+      "Title": "Too many PIN attempts",
+      "Description": "This app is temporarily locked because you've entered an incorrect PIN too many times.",
+      "TryAgainIn": "You can try again in:",
+      "ForgotPINTitle": "Cannot remember your PIN?",
+      "ForgotPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us.",
+      "SetUpAgain": "If you've forgotten your PIN you'll need to set up this app again.",
+      "Countdown": {
+        "Hours_one": "{{ count }} hour",
+        "Hours_other": "{{ count }} hours",
+        "Minutes_one": "{{ count }} minute",
+        "Minutes_other": "{{ count }} minutes",
+        "Seconds_one": "{{ count }} second",
+        "Seconds_other": "{{ count }} seconds",
+        "HoursMinutesSeconds": "{{ hours }} {{ minutes }} {{ seconds }}",
+        "MinutesSeconds": "{{ minutes }} {{ seconds }}"
+      }
     },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN",
@@ -576,6 +598,15 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app.",
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
+      },
+      "InvalidEnvironment": {
+        "Header": "App needs to be reset",
+        "ContentA": "Your app is in a version that isn’t supported. Resetting the app will return it to a version that is supported. You will need to set up your account again.",
+        "ContentB": "If you had intentionally changed the app’s environment, this option is no longer available.",
+        "NeedHelpPrefix": "If you need help, ",
+        "ContactUsLink": "contact us",
+        "NeedHelpSuffix": ".",
+        "ResetButton": "Reset the app",
       },
       "ServiceOutage": {
         "Header": "Service unavailable",
@@ -1107,6 +1138,11 @@ const translation = {
         "RetakeVideo": "Retake video",
         "TogglePlayPause": "Toggle play pause",
       },
+      "VideoExpired": {
+        "Heading": "Your video has expired",
+        "Description": "Recorded videos expire after 5 minutes. To continue, you'll need to retake the video.",
+        "ButtonText": "Retake video",
+      },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long.",
         "Description1": "Your video has to be less than 30 seconds.",
@@ -1296,6 +1332,13 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible)"
     },
     "VideoCall": {
+      "Controls": {
+        "Mute": "Mute",
+        "Unmute": "Unmute",
+        "HideVideo": "Hide Video",
+        "ShowVideo": "Show Video",
+        "EndCall": "End Call"
+      },
       "MissingSession": "Missing required parameters to end session",
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update",
       "DeviceCodeError": "Missing device or user code",
@@ -1421,6 +1464,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Wallet": {
+      "Title": "Wallet",
       "EmptyMessage": "Your wallet is empty",
       "EmptyLearnMore": "Learn more about the wallet",
       "Reset": "Reset wallet",

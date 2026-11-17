@@ -1,12 +1,13 @@
 import { throwAppError, throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
-import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { getNotificationTokens, getPushTokenStatus } from '@/bcsc-theme/utils/push-notification-tokens'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { trackFailureSteps } from '@/errors/failureContext'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { ChallengeSource, signPairingCode } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
-import { withAccount } from './withAccountGuard'
+import { AccountNotFoundError, withAccount } from './withAccountGuard'
 
 export interface PairingCodeLoginClientMetadata {
   transaction_id: string
@@ -18,6 +19,9 @@ export interface PairingCodeLoginClientMetadata {
   application_type: string
   usage_date: string
 }
+
+// Where logging in by pairing code can fail, reported as `failure_step`
+type PairingStep = 'account' | 'notification_tokens' | 'sign_pairing_code' | 'verify_device_assertion' | 'unexpected'
 
 const usePairingApi = (apiClient: BCSCApiClient) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -31,25 +35,49 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
    */
   const loginByPairingCode = useCallback(
     async (code: string, challengeSource: ChallengeSource) => {
+      const steps = trackFailureSteps<PairingStep>('pairing', { definition: ErrorRegistry.LOGIN_DEVICE_ERROR })
+
+      // Set once withAccount hands over the account, so a failure before then is blamed on reading it
+      let hasAccount = false
+
       return withAccount<PairingCodeLoginClientMetadata>(async (account) => {
+        hasAccount = true
         const { issuer, clientID } = account
-        const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
-        let signedCode: string | null
-        try {
-          signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken, challengeSource)
-        } catch (error) {
-          return throwNativeBcscError(error)
-        }
-        if (!signedCode) {
-          return throwAppError(new Error('signPairingCode returned null'), ErrorRegistry.SIGN_CLAIMS_ERROR)
-        }
-        const response = await apiClient.post<PairingCodeLoginClientMetadata>(
-          `${apiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
-          { assertion: signedCode },
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+
+        const tokens = await steps.run('notification_tokens', () => getNotificationTokens(logger))
+        const { fcmDeviceToken, deviceToken } = tokens
+
+        const signedCode = await steps.run('sign_pairing_code', async () => {
+          let signed: string | null
+          try {
+            signed = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken, challengeSource)
+          } catch (error) {
+            return throwNativeBcscError(error)
+          }
+          if (!signed) {
+            return throwAppError(new Error('signPairingCode returned null'), ErrorRegistry.SIGN_CLAIMS_ERROR)
+          }
+          return signed
+        })
+
+        const response = await steps.run(
+          'verify_device_assertion',
+          () =>
+            apiClient.post<PairingCodeLoginClientMetadata>(
+              `${apiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
+              { assertion: signedCode },
+              { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+            ),
+          // Placeholder push tokens are sent silently when Firebase fails, and the server may reject them
+          { keepAppError: true, context: getPushTokenStatus(tokens) }
         )
 
         return response.data
+      }).catch((error) => {
+        // An error an inner step already labeled passes through unchanged
+        throw steps.fail(hasAccount ? 'unexpected' : 'account', error, {
+          context: error instanceof AccountNotFoundError ? error.readContext : undefined,
+        })
       })
     },
     [apiClient, logger]

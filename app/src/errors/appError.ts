@@ -21,6 +21,12 @@ export type ErrorIdentity = {
   statusCode: number
 }
 
+// How many wrapped AppErrors to follow when summarizing a cause chain
+const MAX_CAUSE_DEPTH = 3
+
+// How many AppErrors to follow when merging context along a cause chain
+const MAX_CONTEXT_CHAIN_DEPTH = 10
+
 /**
  * Reduce a `cause` to a small, safe-to-serialize summary.
  *
@@ -30,7 +36,7 @@ export type ErrorIdentity = {
  * memory, so toJSON() keeps only lightweight identifying fields and drops the nested
  * chain/body. The live `cause` property is left untouched for runtime logic.
  */
-const summarizeCause = (cause: unknown): unknown => {
+const summarizeCause = (cause: unknown, depth = 0): unknown => {
   if (!(cause instanceof Error)) {
     return cause
   }
@@ -50,6 +56,11 @@ const summarizeCause = (cause: unknown): unknown => {
   const responseData = (cause as { response?: { data?: unknown } }).response?.data
   if (typeof responseData === 'string' && responseData.length <= 500) {
     summary.responseData = responseData
+  }
+  // A wrapped AppError (e.g. a mapped native error re-wrapped as a login failure) would otherwise hide
+  // its own cause — and with it the native code and iOS userInfo diagnostics — so follow the chain
+  if (cause instanceof AppError && cause.cause !== undefined && depth < MAX_CAUSE_DEPTH) {
+    summary.cause = summarizeCause(cause.cause, depth + 1)
   }
   return summary
 }
@@ -184,8 +195,12 @@ export class AppError extends Error {
     // every 4xx into a single code, so without this the dashboard cannot tell 400/401/403/404 apart — nor
     // which endpoint produced the error. The route template, never the raw path: the evidence paths
     // embed verification and email record IDs, and analytics must not carry them.
-    const httpStatus = (this.cause as { response?: { status?: number } } | undefined)?.response?.status
-    const request = [this.context?.http_method, this.context?.http_route].filter(Boolean).join(' ')
+    const { http_method, http_route, http_status } = this.getChainedContext()
+    // A wrapper's cause is an AppError, not the Axios error, so fall back to the status recorded down the chain
+    const httpStatus =
+      (this.cause as { response?: { status?: number } } | undefined)?.response?.status ??
+      (typeof http_status === 'number' ? http_status : undefined)
+    const request = [http_method, http_route].filter(Boolean).join(' ')
     const context = [httpStatus ? `HTTP ${httpStatus}` : undefined, request || undefined].filter(Boolean).join(' ')
 
     Analytics.trackErrorEvent({
@@ -234,6 +249,26 @@ export class AppError extends Error {
   }
 
   /**
+   * Merges the context of this error with the context of all AppErrors in its cause chain, up to a maximum depth.
+   *
+   * @returns The merged error chain context
+   */
+  getChainedContext(): Record<string, unknown> {
+    let merged: Record<string, unknown> = { ...this.context }
+    let current: unknown = this.cause
+    let depth = 1
+
+    while (current instanceof AppError && depth < MAX_CONTEXT_CHAIN_DEPTH) {
+      // Inner context goes first, so keys already collected from outer errors win
+      merged = { ...current.context, ...merged }
+      current = current.cause
+      depth++
+    }
+
+    return merged
+  }
+
+  /**
    * Serialize the AppError to a JSON object. Useful for logging.
    *
    * @return An object containing the serialized error details.
@@ -247,7 +282,8 @@ export class AppError extends Error {
       code: this.code,
       timestamp: this.timestamp,
       handled: this.handled,
-      context: this.context,
+      // The whole chain's context, so a wrapped error still logs where and why it failed
+      context: this.getChainedContext(),
       cause: summarizeCause(this.cause),
     }
   }

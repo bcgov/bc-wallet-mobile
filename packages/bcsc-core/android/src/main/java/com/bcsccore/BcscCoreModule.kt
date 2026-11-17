@@ -100,11 +100,11 @@ import com.bcsccore.authentication.PinService
 import com.bcsccore.util.GuardedPromise
 
 // Native-compatible storage imports
+import com.bcsccore.storage.AccountsRead
 import com.bcsccore.storage.KeychainClearingService
 import com.bcsccore.storage.NativeCompatibleStorage
 import com.bcsccore.storage.NativeAccount
 import com.bcsccore.storage.NativeAccountSecurityType
-import com.bcsccore.storage.NativePenalty
 import com.bcsccore.storage.NativeTokens
 import com.bcsccore.storage.NativeToken
 import com.bcsccore.storage.NativeTokenType
@@ -468,6 +468,41 @@ class BcscCoreModule internal constructor(
 
     /** Truncates for logging, matching iOS's redaction even though Android aliases (`rsa1`, `rsa2`, ...) aren't UUID-based. */
     private fun redactAlias(alias: String): String = if (alias.length <= 8) alias else "…" + alias.takeLast(8)
+
+    /**
+     * Rejects [promise] with diagnostics in userInfo, which JS sees as `error.userInfo` and adds to problem reports.
+     * Use the same [site] as iOS and a fixed [message] (no `e.message`, it can contain paths).
+     * [diagnostics] hold status codes and counts only
+     * Not usable with [com.bcsccore.util.GuardedPromise].
+     */
+    private fun rejectWithDiagnostics(
+        promise: Promise,
+        code: String,
+        message: String,
+        site: String,
+        error: Throwable? = null,
+        diagnostics: Map<String, Any> = emptyMap(),
+    ) {
+        val userInfo =
+            Arguments.createMap().apply {
+                // Diagnostics first so site and detail take precedence (matches iOS)
+                diagnostics.forEach { (key, value) ->
+                    // Don't toString() unknown types: they could contain personal data
+                    when (value) {
+                        is String -> putString(key, value)
+                        is Boolean -> putBoolean(key, value)
+                        is Int -> putInt(key, value)
+                        is Double -> putDouble(key, value)
+                        else -> putString(key, "unsupported_type")
+                    }
+                }
+                putString("site", site)
+                // Class name only; messages can contain paths
+                error?.let { putString("detail", it.javaClass.simpleName) }
+            }
+        Log.e(NAME, "$site: $code $message", error)
+        promise.reject(code, message, error, userInfo)
+    }
 
     @ReactMethod
     override fun getToken(
@@ -1070,14 +1105,6 @@ class BcscCoreModule internal constructor(
                         else -> null
                     }
 
-                // Get optional penalty info
-                val failedAttempts =
-                    if (account.hasKey("failedAttemptCount")) {
-                        account.getInt("failedAttemptCount")
-                    } else {
-                        0
-                    }
-
                 // Create native-compatible account object
                 val nativeAccount =
                     NativeAccount(
@@ -1086,7 +1113,6 @@ class BcscCoreModule internal constructor(
                         issuer = issuer,
                         clientId = clientID,
                         createdAt = createdAt,
-                        penalty = NativePenalty(penaltyAttempts = failedAttempts),
                         accountSecurityType = accountSecurityType,
                     )
 
@@ -1134,6 +1160,22 @@ class BcscCoreModule internal constructor(
     }
 
     /**
+     * Returns why getAccount resolves null by running the same resolution for the native-compatible store.
+     * `legacyStatus` is a fallback for the flat-file.
+     * Never rejects.
+     */
+    @ReactMethod
+    override fun getAccountReadStatus(promise: Promise) {
+        val resolution = resolveAccountsWithStatus()
+        val result = Arguments.createMap()
+        resolution.environment?.let { result.putString("environment", it) }
+        result.putString("status", resolution.native.statusCode)
+        resolution.native.detail?.let { result.putString("detail", it) }
+        result.putString("legacyStatus", resolution.legacy.statusCode)
+        promise.resolve(result)
+    }
+
+    /**
      * Converts a NativeAccount to a WritableMap for React Native.
      */
     private fun convertNativeAccountToWritableMap(nativeAccount: NativeAccount): WritableMap {
@@ -1158,7 +1200,6 @@ class BcscCoreModule internal constructor(
             account.putString("nickname", nickname)
         }
 
-        account.putInt("failedAttemptCount", nativeAccount.penalty.penaltyAttempts)
         account.putBoolean("didPostNicknameToServer", false)
 
         return account
@@ -1169,39 +1210,86 @@ class BcscCoreModule internal constructor(
      * first, then the legacy flat-file format. Auth/PIN methods must use this so an account
      * that exists for routing isn't read as "not found" and surfaced as a device-auth failure.
      */
-    private fun resolveAccounts(): List<NativeAccount>? {
-        try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val accounts = nativeStorage.readAccounts(issuerName)
-            if (!accounts.isNullOrEmpty()) {
-                return accounts
+    private fun resolveAccounts(): List<NativeAccount>? = resolveAccountsWithStatus().accounts
+
+    /** Outcome of the legacy flat-file read in [resolveAccountsWithStatus]. */
+    private sealed class LegacyAccountsRead(
+        val statusCode: String,
+    ) {
+        /** Native storage had accounts, so the legacy file was never read. */
+        object Skipped : LegacyAccountsRead("skipped")
+
+        object Absent : LegacyAccountsRead("absent")
+
+        object Unreadable : LegacyAccountsRead("unreadable")
+
+        object Empty : LegacyAccountsRead("empty")
+
+        object ParseFailed : LegacyAccountsRead("parse_failed")
+
+        data class Found(
+            val accounts: List<NativeAccount>,
+        ) : LegacyAccountsRead("ok")
+    }
+
+    private data class AccountResolution(
+        val environment: String?,
+        val native: AccountsRead,
+        val legacy: LegacyAccountsRead,
+        val accounts: List<NativeAccount>?,
+    )
+
+    /**
+     * Finds the accounts (native storage first, then the legacy file) and records what each step found.
+     */
+    private fun resolveAccountsWithStatus(): AccountResolution {
+        var environment: String? = null
+        val native =
+            try {
+                val issuerName = nativeStorage.getDefaultIssuerName()
+                environment = issuerName
+                nativeStorage.readAccountsResult(issuerName)
+            } catch (e: Exception) {
+                Log.w(NAME, "resolveAccounts - error reading native storage: ${e.message}")
+                AccountsRead.StorageUnavailable(e)
             }
-            Log.d(NAME, "resolveAccounts - no accounts in native storage for issuer: $issuerName")
-        } catch (e: Exception) {
-            Log.w(NAME, "resolveAccounts - error reading native storage: ${e.message}")
+
+        val nativeAccounts = (native as? AccountsRead.Parsed)?.accounts
+        if (!nativeAccounts.isNullOrEmpty()) {
+            return AccountResolution(environment, native, LegacyAccountsRead.Skipped, nativeAccounts)
+        }
+        Log.d(NAME, "resolveAccounts - no accounts in native storage for issuer: $environment")
+
+        val legacy = readLegacyAccounts()
+        return AccountResolution(environment, native, legacy, (legacy as? LegacyAccountsRead.Found)?.accounts)
+    }
+
+    private fun readLegacyAccounts(): LegacyAccountsRead {
+        // SimpleFileReader returns null for both "missing" and "IOException", so check existence first.
+        if (!java.io.File(reactApplicationContext.filesDir, "accounts").isFile) {
+            return LegacyAccountsRead.Absent
         }
 
-        // Fall back to legacy flat-file format
-        try {
+        return try {
             val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
-            val accountFileBytes = fileReader.readFile("accounts")
-            if (accountFileBytes != null && accountFileBytes.isNotEmpty()) {
-                val content = String(accountFileBytes, Charsets.UTF_8)
-                val jsonArray = org.json.JSONArray(content)
-                if (jsonArray.length() > 0) {
-                    val accounts =
-                        (0 until jsonArray.length()).map { i ->
-                            nativeAccountFromLegacyJson(jsonArray.getJSONObject(i))
-                        }
-                    Log.d(NAME, "resolveAccounts - found ${accounts.size} account(s) in legacy storage")
-                    return accounts
-                }
+            val accountFileBytes = fileReader.readFile("accounts") ?: return LegacyAccountsRead.Unreadable
+            if (accountFileBytes.isEmpty()) {
+                return LegacyAccountsRead.Empty
             }
+            val jsonArray = org.json.JSONArray(String(accountFileBytes, Charsets.UTF_8))
+            if (jsonArray.length() == 0) {
+                return LegacyAccountsRead.Empty
+            }
+            val accounts =
+                (0 until jsonArray.length()).map { i ->
+                    nativeAccountFromLegacyJson(jsonArray.getJSONObject(i))
+                }
+            Log.d(NAME, "resolveAccounts - found ${accounts.size} account(s) in legacy storage")
+            LegacyAccountsRead.Found(accounts)
         } catch (e: Exception) {
             Log.w(NAME, "resolveAccounts - error reading legacy storage: ${e.message}")
+            LegacyAccountsRead.ParseFailed
         }
-
-        return null
     }
 
     private fun resolveFirstAccount(): NativeAccount? = resolveAccounts()?.firstOrNull()
@@ -1223,20 +1311,12 @@ class BcscCoreModule internal constructor(
                 }
             }
 
-        val penaltyObj = accountObj.optJSONObject("penalty")
-        val penalty =
-            NativePenalty(
-                penaltyAttempts = penaltyObj?.optInt("penaltyAttempts", 0) ?: 0,
-                penaltyEndTime = penaltyObj?.optLong("penaltyEndTime", 0L) ?: 0L,
-            )
-
         return NativeAccount(
             uuid = accountObj.optString("uuid", "unknown"),
             nickName = accountObj.optString("nickName", "").ifEmpty { null },
             issuer = accountObj.optString("issuer", ""),
             clientId = accountObj.optString("clientId", ""),
             createdAt = accountObj.optLong("createdAt", System.currentTimeMillis()),
-            penalty = penalty,
             accountSecurityType = securityType,
         )
     }
@@ -1404,56 +1484,108 @@ class BcscCoreModule internal constructor(
         challengeSource: String,
         promise: Promise,
     ) {
+        // Sites are `signPairingCode.<stage>`, matching iOS, so reports show which stage failed
+        val method = "signPairingCode"
         try {
             // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
-            // FIXME: Do we need this currentKeyPair? is the call doing something important but we don't need the ouput?
-            // Get the current (newest) key pair for signing
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
+            // Load the key once and sign with it, so a key failure is reported as get_key, not sign (matches iOS signJWT)
+            val keyPair =
+                try {
+                    keyPairSource.getCurrentBcscKeyPair()
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_KEYPAIR_RETRIEVAL_FAILED",
+                        message = "Failed to retrieve the signing key pair.",
+                        site = "$method.get_key",
+                        error = e,
+                        diagnostics = signingErrorDiagnostics(e),
+                    )
+                    return
+                }
 
             // Build JWT claims set for pairing code signing
             val claimsSet =
-                JWTClaimsSet
-                    .Builder()
-                    .audience(issuer)
-                    .issuer(clientID)
-                    .issueTime(Date())
-                    .claim("challenge", code)
-                    .claim("challenge_source", challengeSource)
-                    .claim("apns_token", actualDeviceToken)
-                    .claim("fcm_device_token", fcmDeviceToken)
-                    // Add device information claims
-                    .claim("system_name", "Android")
-                    .claim("system_version", Build.VERSION.RELEASE)
-                    .claim("device_model", Build.MODEL)
-                    .claim("device_id", getDeviceIdSync()) // Use proper device ID
-                    .claim("device_token", actualDeviceToken)
-                    .claim("device_name", getDeviceName())
-                    .claim("mobile_id_version", getAppVersion())
-                    .claim("mobile_id_build", getAppBuildNumber())
-                    .claim("has_other_accounts", false) // This could be made dynamic
-                    .build()
+                try {
+                    JWTClaimsSet
+                        .Builder()
+                        .audience(issuer)
+                        .issuer(clientID)
+                        .issueTime(Date())
+                        .claim("challenge", code)
+                        .claim("challenge_source", challengeSource)
+                        .claim("apns_token", actualDeviceToken)
+                        .claim("fcm_device_token", fcmDeviceToken)
+                        // Add device information claims
+                        .claim("system_name", "Android")
+                        .claim("system_version", Build.VERSION.RELEASE)
+                        .claim("device_model", Build.MODEL)
+                        .claim("device_id", getDeviceIdSync()) // Use proper device ID
+                        .claim("device_token", actualDeviceToken)
+                        .claim("device_name", getDeviceName())
+                        .claim("mobile_id_version", getAppVersion())
+                        .claim("mobile_id_build", getAppBuildNumber())
+                        .claim("has_other_accounts", false) // This could be made dynamic
+                        .build()
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_PAYLOAD_CREATION_FAILED",
+                        message = "Failed to create JWT payload.",
+                        site = "$method.build_claims",
+                        error = e,
+                    )
+                    return
+                }
 
             // Sign the JWT using bcsc-keypair-port
-            val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
+            val signedJWT =
+                try {
+                    keyPairSource.signAndSerializeClaimsSet(claimsSet, keyPair)
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_SIGN_FAILED",
+                        message = "Failed to sign the pairing code.",
+                        site = "$method.sign",
+                        error = e,
+                        diagnostics = signingErrorDiagnostics(e),
+                    )
+                    return
+                }
 
             Log.d(
                 NAME,
                 "signPairingCode: Successfully signed pairing code with issuer: $issuer, clientID: $clientID",
             )
             promise.resolve(signedJWT)
-        } catch (e: BcscException) {
-            Log.e(NAME, "signPairingCode: BCSC signing error: ${e.devMessage}", e)
-            promise.reject(
-                "E_JWT_SIGN_FAILED",
-                "Error signing pairing code: ${e.devMessage}",
-                e,
-            )
         } catch (e: Exception) {
-            Log.e(NAME, "signPairingCode: Unexpected error: ${e.message}", e)
-            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error signing pairing code: ${e.message}", e)
+            // Each stage catches its own errors, so this is only reached by something unexpected
+            rejectWithDiagnostics(
+                promise,
+                code = "E_JWT_SIGN_FAILED",
+                message = "Unexpected error signing the pairing code.",
+                site = "$method.unexpected",
+                error = e,
+                diagnostics = signingErrorDiagnostics(e),
+            )
         }
+    }
+
+    /** Alert key and stored key count for a signing failure. Never throws, so it can't mask the real error. */
+    private fun signingErrorDiagnostics(error: Exception): Map<String, Any> {
+        val diagnostics = mutableMapOf<String, Any>()
+        if (error is BcscException) {
+            diagnostics["alertKey"] = error.alertKey.name
+        }
+        try {
+            diagnostics["keyCount"] = keyPairSource.getAllBcscKeyPairInfos().size
+        } catch (_: Exception) {
+            diagnostics["keyCount"] = "unavailable"
+        }
+        return diagnostics
     }
 
     @ReactMethod
@@ -1999,21 +2131,31 @@ class BcscCoreModule internal constructor(
         deviceToken: String?,
         promise: Promise,
     ) {
+        // Sites are `createQuickLoginJWT.<stage>`, matching iOS, so reports show which stage failed
+        val method = "createQuickLoginJWT"
         try {
             // Validate required parameters
-            if (accessToken.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || clientRefId.isEmpty()) {
-                promise.reject(
-                    "E_INVALID_PARAMETERS",
-                    "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) cannot be empty.",
+            if (accessToken.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || clientRefId.isEmpty() ||
+                fcmDeviceToken.isEmpty()
+            ) {
+                rejectWithDiagnostics(
+                    promise,
+                    code = "E_INVALID_PARAMETERS",
+                    message =
+                        "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) " +
+                            "cannot be empty.",
+                    site = "$method.validate",
                 )
                 return
             }
 
             // Validate that key parameter is a valid JWK structure (matching iOS implementation)
             if (!key.hasKey("n") || !key.hasKey("e") || !key.hasKey("kty")) {
-                promise.reject(
-                    "E_INVALID_JWK",
-                    "Key parameter must be a valid JWK with n, e, and kty fields for encryption.",
+                rejectWithDiagnostics(
+                    promise,
+                    code = "E_INVALID_JWK",
+                    message = "Key parameter must be a valid JWK with n, e, and kty fields for encryption.",
+                    site = "$method.parse_jwk",
                 )
                 return
             }
@@ -2027,10 +2169,25 @@ class BcscCoreModule internal constructor(
                     "clientRefId: $clientRefId",
             )
 
-            // Create signed JWT following iOS pattern (makeSignedJWTForAccountLogin)
-            val signedJWT =
+            // Build the encryption key before any keystore work, so a bad JWK fails at parse_jwk (matches iOS)
+            val publicKey =
                 try {
-                    createSignedJWTForAccountLogin(
+                    convertJWKToRSAPublicKey(key)
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_INVALID_JWK",
+                        message = "Failed to convert JWK to RSA public key.",
+                        site = "$method.parse_jwk",
+                        error = e,
+                    )
+                    return
+                }
+
+            // Build claims following iOS pattern (makeSignedJWTForAccountLogin)
+            val claimsSet =
+                try {
+                    buildAccountLoginClaims(
                         accessToken,
                         clientId,
                         issuer,
@@ -2039,18 +2196,44 @@ class BcscCoreModule internal constructor(
                         actualDeviceToken,
                     )
                 } catch (e: Exception) {
-                    Log.e(NAME, "createQuickLoginJWT: Failed to create signed JWT: ${e.message}")
-                    promise.reject("E_JWT_CREATION_FAILED", "Failed to create signed JWT: ${e.message}", e)
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_PAYLOAD_CREATION_FAILED",
+                        message = "Failed to create JWT payload.",
+                        site = "$method.build_claims",
+                        error = e,
+                    )
                     return
                 }
 
-            // Convert JWK ReadableMap to RSA public key for encryption (matching iOS)
-            val publicKey =
+            // Load the key once and sign with it, so a key failure is reported as get_key, not sign (matches iOS signJWT)
+            val keyPair =
                 try {
-                    convertJWKToRSAPublicKey(key)
+                    keyPairSource.getCurrentBcscKeyPair()
                 } catch (e: Exception) {
-                    Log.e(NAME, "createQuickLoginJWT: Failed to convert JWK to public key: ${e.message}")
-                    promise.reject("E_INVALID_JWK", "Failed to convert JWK to RSA public key: ${e.message}", e)
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_KEYPAIR_RETRIEVAL_FAILED",
+                        message = "Failed to retrieve the signing key pair.",
+                        site = "$method.get_key",
+                        error = e,
+                        diagnostics = signingErrorDiagnostics(e),
+                    )
+                    return
+                }
+
+            val signedJWT =
+                try {
+                    keyPairSource.signAndSerializeClaimsSet(claimsSet, keyPair)
+                } catch (e: Exception) {
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_SIGN_FAILED",
+                        message = "Failed to sign or serialize the JWT.",
+                        site = "$method.sign",
+                        error = e,
+                        diagnostics = signingErrorDiagnostics(e),
+                    )
                     return
                 }
 
@@ -2059,34 +2242,43 @@ class BcscCoreModule internal constructor(
                 try {
                     encryptJWTWithRSAPublicKey(signedJWT, publicKey)
                 } catch (e: Exception) {
-                    Log.e(NAME, "createQuickLoginJWT: Failed to encrypt JWT: ${e.message}")
-                    promise.reject("E_JWT_ENCRYPTION_FAILED", "Failed to encrypt JWT: ${e.message}", e)
+                    rejectWithDiagnostics(
+                        promise,
+                        code = "E_JWT_ENCRYPTION_FAILED",
+                        message = "Failed to encrypt JWT.",
+                        site = "$method.encrypt",
+                        error = e,
+                    )
                     return
                 }
 
             Log.d(NAME, "createQuickLoginJWT: Successfully created and encrypted quick login JWT")
             promise.resolve(encryptedJWT)
-        } catch (e: BcscException) {
-            Log.e(NAME, "createQuickLoginJWT: BCSC error: ${e.devMessage}", e)
-            promise.reject("E_JWT_SIGN_FAILED", "Error creating quick login JWT: ${e.devMessage}", e)
         } catch (e: Exception) {
-            Log.e(NAME, "createQuickLoginJWT: Unexpected error: ${e.message}", e)
-            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating quick login JWT: ${e.message}", e)
+            // Each stage catches its own errors, so this is only reached by something unexpected
+            rejectWithDiagnostics(
+                promise,
+                code = "E_JWT_SIGN_FAILED",
+                message = "Unexpected error creating quick login JWT.",
+                site = "$method.unexpected",
+                error = e,
+                diagnostics = signingErrorDiagnostics(e),
+            )
         }
     }
 
     /**
-     * Creates a signed JWT for account login following iOS QuickLoginProtocol pattern
-     * This matches the makeSignedJWTForAccountLogin method in iOS
+     * Builds the account login claims following iOS QuickLoginProtocol pattern (makeSignedJWTForAccountLogin).
+     * Signing is a separate stage in createQuickLoginJWT so failures report the right site.
      */
-    private fun createSignedJWTForAccountLogin(
+    private fun buildAccountLoginClaims(
         accessToken: String,
         clientId: String,
         issuer: String,
         clientRefId: String,
         fcmDeviceToken: String,
         deviceToken: String,
-    ): String {
+    ): JWTClaimsSet {
         // Generate random UUID for JWT ID (matching iOS pattern)
         val randomUUID = UUID.randomUUID().toString().lowercase()
         val seconds = Date().time / 1000 // Unix timestamp in seconds
@@ -2095,30 +2287,26 @@ class BcscCoreModule internal constructor(
         val hmacNonce = createAssertionFactoryHMAC(accessToken, randomUUID, clientId.lowercase())
 
         // Build JWT claims following BCSC pattern
-        val claimsSet =
-            JWTClaimsSet
-                .Builder()
-                .audience(issuer)
-                .issuer(clientId.lowercase()) // Match iOS lowercasing
-                .claim("client_ref_id", clientRefId)
-                .claim("nonce", hmacNonce)
-                .issueTime(Date(seconds * 1000)) // Convert back to Date
-                .jwtID(randomUUID)
-                // Add device information claims (matching iOS addDeviceInfoClaims)
-                .claim("system_name", "Android")
-                .claim("system_version", Build.VERSION.RELEASE)
-                .claim("device_model", Build.MODEL)
-                .claim("device_id", UUID.randomUUID().toString())
-                .claim("device_token", deviceToken)
-                .claim("fcm_device_token", fcmDeviceToken)
-                .claim("mobile_id_version", getAppVersion())
-                .claim("mobile_id_build", getAppBuildNumber())
-                .claim("app_set_id", getAppSetId())
-                .claim("has_other_accounts", false)
-                .build()
-
-        // Sign the JWT using current key pair (matching iOS signJWT)
-        return keyPairSource.signAndSerializeClaimsSet(claimsSet)
+        return JWTClaimsSet
+            .Builder()
+            .audience(issuer)
+            .issuer(clientId.lowercase()) // Match iOS lowercasing
+            .claim("client_ref_id", clientRefId)
+            .claim("nonce", hmacNonce)
+            .issueTime(Date(seconds * 1000)) // Convert back to Date
+            .jwtID(randomUUID)
+            // Add device information claims (matching iOS addDeviceInfoClaims)
+            .claim("system_name", "Android")
+            .claim("system_version", Build.VERSION.RELEASE)
+            .claim("device_model", Build.MODEL)
+            .claim("device_id", UUID.randomUUID().toString())
+            .claim("device_token", deviceToken)
+            .claim("fcm_device_token", fcmDeviceToken)
+            .claim("mobile_id_version", getAppVersion())
+            .claim("mobile_id_build", getAppBuildNumber())
+            .claim("app_set_id", getAppSetId())
+            .claim("has_other_accounts", false)
+            .build()
     }
 
     /**
@@ -2506,9 +2694,10 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Verifies a PIN for the current account.
+     * Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
+     * lockouts enforced, in TypeScript.
      * Matches TypeScript: verifyPIN(pin: string): Promise<PINVerificationResult>
-     * Returns: { success: boolean, locked: boolean, remainingTime: number, walletKey?: string, title?: string, message?: string }
+     * Returns: { success: boolean, walletKey?: string }
      */
     @ReactMethod
     override fun verifyPIN(
@@ -2516,85 +2705,34 @@ class BcscCoreModule internal constructor(
         promise: Promise,
     ) {
         try {
-            val account = resolveFirstAccount()
+            val resolution = resolveAccountsWithStatus()
+            val account = resolution.accounts?.firstOrNull()
             if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
-            // Penalty writes below always target native storage, migrating legacy accounts forward
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val accountID = account.uuid
-            val currentTimeMillis = System.currentTimeMillis()
-
-            // Check if account is currently locked
-            val remainingPenaltyTime = getRemainingPenaltyTime(account.penalty, currentTimeMillis)
-            if (remainingPenaltyTime > 0) {
-                val result = Arguments.createMap()
-                result.putBoolean("success", false)
-                result.putBoolean("locked", true)
-                result.putInt("remainingTime", (remainingPenaltyTime / 1000).toInt()) // Convert to seconds
-                result.putString("title", "Too Many Attempts")
-                result.putString("message", "Please wait before trying again")
-                Log.d(NAME, "verifyPIN: Account locked, remaining time: ${remainingPenaltyTime}ms")
-                promise.resolve(result)
+            // PinService finds the PIN through the account in native storage, so an account that is
+            // only in the legacy file is copied there first. Without the copy its PIN never verifies.
+            if (resolution.legacy is LegacyAccountsRead.Found &&
+                !nativeStorage.saveAccounts(listOf(account), nativeStorage.getDefaultIssuerName())
+            ) {
+                promise.reject("E_STORAGE_ERROR", "Failed to copy the legacy account to native storage")
                 return
             }
 
             // Validate PIN and get hash if successful
-            val validationResult = pinService.validatePINReturningHash(accountID, pin)
+            val validationResult = pinService.validatePINReturningHash(account.uuid, pin)
 
             val result = Arguments.createMap()
             result.putBoolean("success", validationResult.first)
 
-            if (validationResult.first) {
-                // Reset penalty on successful verification
-                val updatedAccount =
-                    account.copy(
-                        penalty = NativePenalty(penaltyAttempts = 0, penaltyEndTime = 0L),
-                    )
-                nativeStorage.saveAccounts(listOf(updatedAccount), issuerName)
-
-                result.putBoolean("locked", false)
-                result.putInt("remainingTime", 0)
-
-                // Include the wallet key (hash) on successful verification
-                validationResult.second?.let { hash ->
-                    result.putString("walletKey", hash)
-                }
-                Log.d(NAME, "verifyPIN: Success, penalty reset")
-            } else {
-                // Increment failed attempts and calculate penalty
-                val newFailedAttempts = account.penalty.penaltyAttempts + 1
-                val penaltyDuration = calculatePenaltyDuration(newFailedAttempts)
-                val penaltyEndTime = if (penaltyDuration > 0) currentTimeMillis + penaltyDuration else 0L
-
-                val updatedAccount =
-                    account.copy(
-                        penalty =
-                            NativePenalty(
-                                penaltyAttempts = newFailedAttempts,
-                                penaltyEndTime = penaltyEndTime,
-                            ),
-                    )
-                nativeStorage.saveAccounts(listOf(updatedAccount), issuerName)
-
-                val (title, message) = getPenaltyMessage(newFailedAttempts, penaltyDuration)
-
-                if (penaltyDuration > 0) {
-                    result.putBoolean("locked", true)
-                    result.putInt("remainingTime", (penaltyDuration / 1000).toInt())
-                } else {
-                    result.putBoolean("locked", false)
-                    result.putInt("remainingTime", 0)
-                }
-
-                result.putString("title", title)
-                result.putString("message", message)
-
-                Log.d(NAME, "verifyPIN: Failed, attempts=$newFailedAttempts, penalty=${penaltyDuration}ms")
+            // Include the wallet key (hash) on successful verification
+            validationResult.second?.let { hash ->
+                result.putString("walletKey", hash)
             }
 
+            Log.d(NAME, "verifyPIN: success=${validationResult.first}")
             promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "verifyPIN error: ${e.message}", e)
@@ -2878,45 +3016,6 @@ class BcscCoreModule internal constructor(
         } catch (e: Exception) {
             Log.e(NAME, "getAccountSecurityMethod error: ${e.message}", e)
             promise.reject("E_GET_SECURITY_METHOD_ERROR", "Error getting account security method: ${e.message}", e)
-        }
-    }
-
-    /**
-     * Checks if the current account is currently locked due to failed PIN attempts.
-     * Matches TypeScript: isAccountLocked(): Promise<AccountLockStatus>
-     * Returns: { locked: boolean, remainingTime: number }
-     */
-    @ReactMethod
-    override fun isAccountLocked(promise: Promise) {
-        try {
-            val account = resolveFirstAccount()
-            if (account == null) {
-                // No account means no lock
-                val result = Arguments.createMap()
-                result.putBoolean("locked", false)
-                result.putInt("remainingTime", 0)
-                promise.resolve(result)
-                return
-            }
-
-            val currentTimeMillis = System.currentTimeMillis()
-            val remainingPenaltyTime = getRemainingPenaltyTime(account.penalty, currentTimeMillis)
-
-            val result = Arguments.createMap()
-            if (remainingPenaltyTime > 0) {
-                result.putBoolean("locked", true)
-                result.putInt("remainingTime", (remainingPenaltyTime / 1000).toInt()) // Convert to seconds
-                Log.d(NAME, "isAccountLocked: locked=true, remainingTime=${remainingPenaltyTime}ms")
-            } else {
-                result.putBoolean("locked", false)
-                result.putInt("remainingTime", 0)
-                Log.d(NAME, "isAccountLocked: locked=false")
-            }
-
-            promise.resolve(result)
-        } catch (e: Exception) {
-            Log.e(NAME, "isAccountLocked error: ${e.message}", e)
-            promise.reject("E_IS_ACCOUNT_LOCKED_ERROR", "Error checking account lock status: ${e.message}", e)
         }
     }
 
@@ -4795,101 +4894,6 @@ class BcscCoreModule internal constructor(
 
         return nativeStorage.readEncryptedFile(targetFile)
     }
-
-    // MARK: - PIN Penalty Helper Methods
-
-    /**
-     * Calculates remaining penalty time in milliseconds.
-     * Returns 0 if no penalty is active.
-     */
-    private fun getRemainingPenaltyTime(
-        penalty: NativePenalty,
-        currentTimeMillis: Long,
-    ): Long {
-        if (penalty.penaltyEndTime <= 0) {
-            return 0L
-        }
-        val remaining = penalty.penaltyEndTime - currentTimeMillis
-        return if (remaining > 0) remaining else 0L
-    }
-
-    /**
-     * Calculates penalty duration in milliseconds based on failed attempt count.
-     * Matches iOS penalty schedule:
-     * - 5 attempts: 30 seconds
-     * - 6 attempts: 1 minute
-     * - 7 attempts: 5 minutes
-     * - 8+ attempts (every 3): 15 minutes
-     */
-    private fun calculatePenaltyDuration(failedAttempts: Int): Long =
-        when (failedAttempts) {
-            5 -> {
-                30_000L
-            }
-
-            // 30 seconds
-            6 -> {
-                60_000L
-            }
-
-            // 1 minute
-            7 -> {
-                300_000L
-            }
-
-            // 5 minutes
-            else -> {
-                // For 8+ attempts, apply 15 minute penalty every 3 attempts
-                if (failedAttempts >= 8 && failedAttempts % 3 == 0) {
-                    900_000L // 15 minutes
-                } else {
-                    0L // No penalty
-                }
-            }
-        }
-
-    /**
-     * Gets appropriate title and message for penalty state.
-     * Returns pair of (title, message).
-     */
-    private fun getPenaltyMessage(
-        failedAttempts: Int,
-        penaltyDuration: Long,
-    ): Pair<String, String> =
-        if (penaltyDuration > 0) {
-            Pair("Too Many Attempts", "Please wait before trying again")
-        } else {
-            // Calculate remaining attempts until next penalty
-            val attemptsUntilPenalty =
-                when {
-                    failedAttempts < 5 -> {
-                        5 - failedAttempts
-                    }
-
-                    failedAttempts < 6 -> {
-                        6 - failedAttempts
-                    }
-
-                    failedAttempts < 7 -> {
-                        7 - failedAttempts
-                    }
-
-                    else -> {
-                        // After 7, penalty every 3 attempts
-                        val nextPenaltyAttempt = ((failedAttempts / 3) + 1) * 3
-                        nextPenaltyAttempt - failedAttempts
-                    }
-                }
-
-            val message =
-                if (attemptsUntilPenalty == 1) {
-                    "Enter your PIN. For security, if you enter another incorrect PIN, it will temporarily lock the app."
-                } else {
-                    "Incorrect PIN"
-                }
-
-            Pair("Incorrect PIN", message)
-        }
 
     @ReactMethod
     override fun decodeLoginChallenge(

@@ -1,3 +1,4 @@
+import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import * as Bifold from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
@@ -39,6 +40,9 @@ jest.mock('../features/fcm', () => ({
 }))
 jest.mock('../contexts/BCSCLoadingContext', () => ({
   LoadingScreen: 'LoadingScreen',
+}))
+jest.mock('../features/modal/InvalidEnvironment', () => ({
+  InvalidEnvironment: () => 'InvalidEnvironment',
 }))
 jest.mock('./AuthStack', () => ({
   __esModule: true,
@@ -122,6 +126,7 @@ jest.mock('../contexts/BCSCIdTokenContext', () => ({
 }))
 
 const viewModel = (overrides: Partial<RootStackViewModel> = {}): RootStackViewModel => ({
+  showInvalidEnvironment: false,
   phase: 'main',
   transition: IDLE_ROOT_TRANSITION,
   inSession: true,
@@ -279,6 +284,27 @@ describe('BCSCRootStack', () => {
     })
   })
 
+  describe('the invalid environment recovery gate', () => {
+    it('stands in for the navigator and the session providers, whatever the phase', () => {
+      const { toJSON } = renderWith({ showInvalidEnvironment: true, phase: 'main' })
+
+      expect(toJSON()).toBe('InvalidEnvironment')
+      expect(mockNavigatorRender).not.toHaveBeenCalled()
+      expect(mockAgentProviderRender).not.toHaveBeenCalled()
+      expect(mockAccountProviderRender).not.toHaveBeenCalled()
+      expect(mockSessionProviderRender).not.toHaveBeenCalled()
+    })
+
+    it('gives way to the phase route once the environment is valid again', () => {
+      const { rerender, toJSON } = renderWith({ showInvalidEnvironment: true, phase: 'onboarding', inSession: false })
+
+      rerenderWith(rerender, { phase: 'onboarding', inSession: false })
+
+      expect(toJSON()).toBe('OnboardingStack')
+      expect(lastNavigatorRender().screen.name).toBe(BCSCStacks.Onboarding)
+    })
+  })
+
   describe('card expiry, synced to FCM from inside the main route', () => {
     const useStoreWith = (secure: Record<string, any>) =>
       jest.mocked(Bifold.useStore).mockReturnValue([mockStore(secure), jest.fn()] as any)
@@ -289,7 +315,7 @@ describe('BCSCRootStack', () => {
       const { rerender } = render(<BCSCRootStack />)
       expect(mockSetCardExpired).toHaveBeenLastCalledWith(false)
 
-      useStoreWith({ refreshTokenExpired: true })
+      useStoreWith({ refreshToken: EXPIRED_JWT })
       rerender(<BCSCRootStack />)
 
       expect(mockSetCardExpired).toHaveBeenLastCalledWith(true)
@@ -319,7 +345,7 @@ describe('BCSCRootStack', () => {
       rerender(<BCSCRootStack />)
       expect(phaseLogs()).toHaveLength(1)
 
-      useStoreWith({ refreshTokenExpired: true })
+      useStoreWith({ refreshToken: EXPIRED_JWT })
       rerender(<BCSCRootStack />)
 
       expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: unknown', '[RootStack] Card expiry phase: expired'])

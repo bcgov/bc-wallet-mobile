@@ -1,6 +1,7 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { isProductionBundle, isProductionEnvironment } from '@/utils/environment'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -11,8 +12,7 @@ import { useServerStatus } from '../contexts/ServerStatusContext'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
-import { isUserVerified } from '../utils/bcsc-credential'
+import { useVerificationState } from '../state/verification/useVerificationState'
 import { toAppError } from '../utils/native-error-map'
 import {
   getRootRouteKey,
@@ -33,7 +33,7 @@ import {
  */
 const useVerificationRouting = (appReady: boolean) => {
   const [store, dispatch] = useStore<BCState>()
-  const { needsVerification, isVerified, isVerificationInProgress, isDeactivated } = useVerificationStatus()
+  const { needsVerification, isVerified, isVerificationInProgress, isDeactivated } = useVerificationState()
   const { isAvailable: isServerAvailable, hasChecked: serverStatusChecked } = useServerStatus()
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
   // Once per session: whether the auto-resume below has been decided. State, not a ref, so the
@@ -186,6 +186,11 @@ const useRootTransition = (route: RootRoute, context: RootTransitionContext): Ro
 }
 
 export interface RootStackViewModel {
+  /**
+   * Whether a production bundle is pointed at a non-production environment. The root then shows the
+   * recovery screen in place of every route, whatever the phase, until the environment is valid again.
+   */
+  showInvalidEnvironment: boolean
   /** The phase whose route the root registers; see {@link RootPhase}. */
   phase: RootPhase
   /** How the latest phase change animates, as the screen options of the registered route. */
@@ -224,7 +229,7 @@ export const useRootStackViewModel = (): RootStackViewModel => {
   const fcmService = useFcmService()
   const { emitErrorModal } = useErrorAlert()
   const { initializingAccount } = useInitializeAccountStatus()
-  const { isVerified } = useVerificationStatus()
+  const { isVerified, isDeviceVerifiedByIas } = useVerificationState()
   const { isLoading: globalLoading } = useLoadingScreen()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
@@ -237,7 +242,7 @@ export const useRootStackViewModel = (): RootStackViewModel => {
   // Wait until the apiClient is ready and process any pending FCM Challenges
   useEffect(() => {
     if (isClientReady) {
-      fcmService.viewModel.processPendingChallenges()
+      void fcmService.viewModel.processPendingChallenges()
     }
   }, [isClientReady, fcmService.viewModel])
 
@@ -248,11 +253,16 @@ export const useRootStackViewModel = (): RootStackViewModel => {
     }
 
     try {
-      loadState(dispatch)
+      void loadState(dispatch)
     } catch (err) {
       emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
     }
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
+
+  // Recovery gate: blocks every stack, independent of account state, until the environment is valid again
+  // TODO (MD): Remove this gate after all users are on v4.2.0+
+  const showInvalidEnvironment =
+    store.stateLoaded && isProductionBundle() && !isProductionEnvironment(store.developer.environment)
 
   const phase = getRootPhase(store, appReady, awaitingStatusForResume, showVerifyStack)
   const transition = useRootTransition(
@@ -263,10 +273,19 @@ export const useRootStackViewModel = (): RootStackViewModel => {
       // from beneath rather than sliding in over it
       leavingStartedVerification: store.bcsc.verificationStarted === true && !isVerified,
       // The users BCSCAccountProvider loads an account for
-      sessionLoadsAccount: isUserVerified(store.bcscSecure),
+      sessionLoadsAccount: isDeviceVerifiedByIas,
     }
   )
   const inSession = isSessionPhase(phase)
 
-  return { phase, transition, inSession, isVerified, verifyStackKey, showVerifyPrompt, onVerifyPromptAnswered }
+  return {
+    showInvalidEnvironment,
+    phase,
+    transition,
+    inSession,
+    isVerified,
+    verifyStackKey,
+    showVerifyPrompt,
+    onVerifyPromptAnswered,
+  }
 }

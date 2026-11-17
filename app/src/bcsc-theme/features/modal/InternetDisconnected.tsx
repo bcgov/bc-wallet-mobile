@@ -34,7 +34,7 @@ export const InternetDisconnected = (): React.ReactElement => {
   }, [isConnected, isInternetReachable, logger, navigation])
 
   useEffect(() => {
-    handleRetry()
+    void handleRetry()
   }, [handleRetry])
 
   return (

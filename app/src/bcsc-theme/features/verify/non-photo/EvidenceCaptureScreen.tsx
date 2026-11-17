@@ -132,18 +132,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      position: 'relative',
-    },
-    reticleContainer: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      justifyContent: 'center',
-      backgroundColor: 'transparent',
-      alignItems: 'center',
-      pointerEvents: 'none', // Allow touch events to pass through
     },
   })
 
@@ -251,7 +239,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
      * Next Step: Navigate to evidence ID collection (after all photos captured)
      */
     if (licenseRef.current) {
-      scanner.handleScanDriversLicense(licenseRef.current)
+      void scanner.handleScanDriversLicense(licenseRef.current)
     }
 
     // Wrap getPhotoMetadata with alert

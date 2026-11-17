@@ -150,7 +150,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     }
 
-    configureClient()
+    void configureClient()
   }, [logger, store.developer.environment.iasApiBaseUrl, store.developer.environment.name, store.stateLoaded])
 
   useEffect(() => {

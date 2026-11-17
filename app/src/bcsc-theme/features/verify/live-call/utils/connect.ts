@@ -209,8 +209,9 @@ const establishConnection = async (
   })
 
   logger.info('Setting local and remote descriptions...')
-  peerConnection.setLocalDescription(offer)
-  peerConnection.setRemoteDescription({
+  // TODO (bm): should be awaited
+  void peerConnection.setLocalDescription(offer)
+  void peerConnection.setRemoteDescription({
     sdp: response.data.result.sdp,
     type: 'answer',
   })
@@ -487,7 +488,7 @@ const sendCandidate = (req: {
   token: string
   iceCandidate: RTCIceCandidate
 }) => {
-  newCandidate({
+  void newCandidate({
     fetcher: withToken(fetch, req.token),
     body: {
       candidate: req.iceCandidate.candidate,

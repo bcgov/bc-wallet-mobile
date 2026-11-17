@@ -45,8 +45,9 @@ const SuccessfullySentScreen = ({ navigation, route }: SuccessfullySentScreenPro
   })
 
   // The screen's only way out. A deferred verifier goes Home, where the pending card is the way back
-  // in. A first-time verifier has no Home to go to: they wait on the pending screen, which notices the
-  // decision itself. The upload reset the stack to this screen, so replacing it leaves nothing beneath
+  // in. A first-time verifier is shown the pending screen instead, which notices the decision itself
+  // and whose own back arrow is their way to Home. The upload reset the stack to this screen, so
+  // replacing it leaves nothing beneath
   const handleNext = useCallback(() => {
     if (isFirstTimeVerifier) {
       navigation.replace(BCSCScreens.PendingReview)

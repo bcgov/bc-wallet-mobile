@@ -147,6 +147,43 @@ not as an error, and iOS restarts the session after a media services reset (our 
 this the preview sits black with no explanation, or the user sees "camera broken" for a camera that
 is about to come back.
 
+## Large text: every screen works at the OS's largest font size
+
+The theme caps text at `maxFontSizeMultiplier` (2x, the WCAG 1.4.4 floor); only text that goes through
+it is capped. In `bcsc-theme`, render text with `ThemedText` (lint rejects `Text` from React Native), and
+give `TextInput` and `Animated.Text` the theme's `maxFontSizeMultiplier` (lint requires the prop). Lay
+screens out so text can grow:
+
+- Text beside something else (an icon, a value, a button) gets `flexShrink: 1`, or `flex: 1` when it
+  should fill the row; label and value pairs wrap with `flexWrap: 'wrap'` on the row.
+- A box around text has a `minHeight`, not a `height`. Fixed boxes that cannot grow (PIN and pairing
+  code cells, a 40pt avatar initial, the tab bar badge) cap their text at 1x on purpose, like `PINInput`.
+- Screens scroll (`ScreenWrapper` default). Notification banners are part of the scroll content, so a
+  tall banner does not pin the page below it off-screen.
+- Rows that no longer fit side by side flip to a column from `fontScale >= 1.5` (`AccountDetailsScreen`).
+
+Jest already renders at the cap (`fontScale: 2`); check new screens on a device or simulator at the
+largest accessibility size as well (iOS `xcrun simctl ui booted content_size accessibility-extra-extra-extra-large`,
+Android `adb shell settings put system font_scale 2.0`).
+
+**Why:** at the largest iOS accessibility size uncapped text is 3.57x and translucent overlays, fixed heights
+and non-shrinking row text clipped or hid content across the verification flows (#4401).
+
+## Cameras: text and controls sit beside the preview, not on it
+
+Lay a camera screen out as a column: text bar, preview, controls. The preview takes the remaining height
+(`flex: 1`, `overflow: 'hidden'`, VisionCamera's default `cover`), so long text shrinks the preview instead
+of covering it. Draw a mask (the selfie oval, the ID-card cutout, the QR reticle) from the preview box
+measured with `onLayout`, with the window only as the first-render stand-in; keep the shape's geometry a
+pure, tested function. Controls that appear later (the recording controls after the countdown) are laid out
+from the start and revealed with opacity and `pointerEvents`, as the waiting screens do with Cancel, so the
+preview does not resize. Side-by-side controls get a vertical `hitSlop` only; a horizontal one steals taps
+from the neighbour. Scan zones are fractions of the camera's own container, which is the measured preview
+box, so they need no change. The photo, video and barcode outputs are independent of the preview box.
+
+**Why:** overlays sized from the window covered the face oval, the card cutout and most of the preview at
+large OS font sizes (#4401).
+
 ## Recording: an inactive app is not a user who left
 
 During the video countdown, act on an `inactive` app state only if it lasts until the countdown ends.
@@ -208,6 +245,17 @@ them natively on focus and re-renders, and a row whose gate is still unknown sta
 disappears after mount slides every row below it. "Change PIN" rendered on a default and was dropped
 once the native read reported device auth, so the whole list jumped on every open of Settings.
 
+## Touch targets: `hitSlop` never reaches another control
+
+Give a small control a 44dp box for its target, and point `hitSlop` only at empty space: zero every edge
+that faces another control. The settings section chevrons, stacked between rows, keep only left and right
+(`{ ...hitSlop, top: 0, bottom: 0 }`); the profile card's edit pencil, with the account name on its left and
+a chevron below, keeps only top and right (`{ ...hitSlop, left: 0, bottom: 0 }`).
+
+**Why:** on Android a `hitSlop` reaches past the control's parent and takes taps from any control rendered
+before it. The settings section chevrons' 44dp slop covered the profile card's edit pencil, so tapping the
+pencil collapsed the Features section instead of opening the nickname editor.
+
 ## Android: the JS runtime outlives the Activity
 
 To leave the app on Android, use `moveAppToBackground`, not `BackHandler.exitApp`. Hardware back can still
@@ -227,11 +275,14 @@ verification sets it to `true` so a later renewal re-enters as a deferred verifi
 
 - **First-time verifier** (Continue at the prompt, or a v3 upgrade mid-verification): the flow is their whole
   app. The help menu has no "Back to home", the back arrow at the beginning of the stack `replace`s onto the
-  prompt (which has no arrow and swallows Android back), the pending review has no arrow and polls for the
-  agent's decision itself (focus, foreground, the review push, "Check status"), and the post-submit screen
-  continues to the pending review. Skip on the prompt is the one way to Home and makes them deferred.
+  prompt (which has no arrow and swallows Android back), and the post-submit screen continues to the pending
+  review. Skip on the prompt is the one way to Home and makes them deferred.
 - **Deferred verifier** (Skip at some point, re-entering from the Home card): keeps every exit, progress
   kept. Developer mode shows "Back to home" to everyone; arrows ignore it.
+- **A submitted request is the exception for both**: the pending review's back arrow leaves for Home whoever
+  the verifier is, because that wait is on an agent and not on the user (#4968). The screen carries no manual
+  check — Home's pending card is where a user asks for a fresh status, and the way back in — and picks the
+  decision up itself (focus, foreground, the review push) for a user who stays on it.
 
 Rules that keep this consistent:
 
@@ -255,6 +306,34 @@ Rules that keep this consistent:
 for them and was causing abandoned verifications (#4776). The two kinds are told apart by the prompt answer
 alone because starting from the Home card must not turn a skipper into a first-time verifier.
 
+## Error reports: record where and when a flow failed
+
+Wrap each step of a multi-step flow with `trackFailureSteps` (`errors/failureContext.ts`), and pass the
+resulting error to the alert. For a single failure outside a flow, use `createFailureError`.
+
+- Never call a catch-all alert without an error, or the report can't say what failed.
+- Name flows and steps with short, fixed names such as `quick_login` and `sign_jwt`. Never put personal data
+  or tokens in them.
+- Errors a policy already handled are labeled but never alerted again. Callers still check
+  `isHandledAppError`.
+- To re-wrap a labeled error for its alert, set it as the `cause` and copy nothing. Reports and analytics
+  read `AppError.getChainedContext()` (as does `toJSON()`, for remote logs), which merges context down the cause chain (outer errors win).
+- To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
+  `report-problem.ts`. Native rejection fields are separate: see below.
+- New and changed native rejections use `rejectWithDiagnostics` (bcsc-core, iOS and Android): a fixed
+  message (never an error description, which can contain paths), a `site` of `method.stage` named the same
+  on both platforms, and status-code `userInfo`. Older methods still call `reject` directly and report only
+  a code; migrate a method when you change it. Reports promote the rejection's code and
+  `site`, `detail` and `osStatus` from anywhere in the cause chain to `native_*` fields (`nativeErrorFields.ts`);
+  other `userInfo` stays in `error_json`. Promote a new `userInfo` key there only when reports filter on it,
+  and only scalar status values.
+
+- When something that fails silently could explain a step's failure, pass its health as that step's
+  `context`, only on the steps it could explain. Use status codes only, never values: `getPushTokenStatus`
+  (placeholder push tokens) and `getAccountReadStatus` from bcsc-core (why `getAccount` resolved null). Call
+  `getAccountReadStatus` only after `getAccount` returns null, and never let a diagnostic call replace the
+  real failure. `withAccount` already does this: its `AccountNotFoundError` carries the status as `readContext`.
+
 ## Derived state: compute it from its inputs, don't store a flag
 
 State that follows from other state is derived on read through a rule, a selector and a hook, never saved as a
@@ -263,10 +342,16 @@ flag that something has to remember to set and clear. The three live together in
 (`bcsc-theme/state/account/`) is the example:
 
 - `getAccountPhase` (`account-phase.ts`) is the only definition of "expired" and "expiring soon".
-- `selectAccountPhase` (`selectors.ts`) reads its inputs: `bcscSecure.verified`, the ID token
-  `bcscReason`, `bcscSecure.refreshTokenExpired`, and the account's `account_expiration_date`.
+- `selectAccountPhase` (`selectors.ts`) reads its inputs: verification (through `selectVerificationState`), the ID
+  token `bcscReason`, the stored refresh token's expiry (`isRefreshTokenExpired`), and the account's
+  `account_expiration_date`.
 - `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
-  `useCustomNotifications` (Home notices) both read it, so they cannot disagree.
+  `selectHomeNotice` (Home notices, `bcsc-theme/state/home/`) both read it, so they cannot disagree.
+- `getHomeNotice` (`home-notice.ts`) is the only definition of which notice Home shows. `useCustomNotifications`
+  only maps its result to a component.
+- `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
+  IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
+  or `selectVerificationState`, never from `bcscSecure.verified`, `verifiedStatus` or the tokens directly.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
@@ -295,6 +380,42 @@ rejection takes the caller's, so the FCM, user-info and ID-token paths all surfa
 before every signature check; any failure of that round trip returned `false`, which the app reported as
 error 2509 "signature does not match payload" with nothing to investigate. Verifying a signature needs no
 keychain, and the rejection codes let the next problem report explain itself.
+
+## PIN lockout: one schedule, counted before the PIN is checked
+
+Wrong PINs are counted, and lockouts enforced, in TypeScript, the same on iOS and Android. Native `verifyPIN`
+only says whether a PIN is right.
+
+- `getPinLockout` (`bcsc-theme/state/pin-lockout/pin-lockout.ts`) is the only definition of the schedule: 5
+  wrong PINs in a row lock PIN entry for 1 minute, 10 for 10 minutes, 15 for 1 hour, then 20 and every 5th
+  after it for 1 day. The wrong PIN before each lock comes with a warning.
+- `pin-lockout-service.ts` (`bcsc-theme/features/auth/services/`) owns the attempt record, an AsyncStorage key
+  of its own (`BCLocalStorageKeys.PinAttempts`), and is the only caller of native `verifyPIN`; ESLint blocks
+  the import everywhere else. Check a PIN with `verifyPinWithLockout` and read the lock with `readPinLockout`,
+  which works before the app is unlocked.
+- The attempt is saved **before** the PIN is checked, so closing the app during a check cannot buy a guess
+  that was never counted. If the record cannot be read or saved the PIN is not checked and the unlock fails
+  with an error; a lock is never assumed away.
+- A correct PIN, a newly set PIN and removing the account clear the count. Waiting out a lock does not: the
+  count carries on to the next, longer lock.
+
+**Why:** each platform kept its own schedule and English messages in native code, so the same five wrong PINs
+locked iOS for a minute and Android for 30 seconds, and the lock screen copy could not be translated (#4423).
+
+## Removing an account: a usable account is confirmed first
+
+A control that removes an account the user could still use opens `RemoveAccountConfirmationScreen` (the shared
+`DestructiveConfirmationScreen`) and never calls `useFactoryReset` itself. The header Back is the cancel.
+Settings, the transfer-complete screen, the "Problem with account" error and the PIN lockout screen all go
+through it. Register the screen in the stack that offers the control, under that stack's own route name
+(`<Stack>RemoveAccountConfirmation`).
+
+A reset the app itself requires skips the confirmation, because the account is already unusable and there is
+nothing left to keep: device authentication turned off, a session that cannot be recovered, an invalidated
+device, an expired setup.
+
+**Why:** Remove account is the PIN lockout screen's only button and it removed the account on the first tap,
+although the same account would have been usable again as soon as the lock ended.
 
 ## Root phase transitions: a declarative switch that slides
 

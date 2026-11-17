@@ -1,5 +1,5 @@
 import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
-import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
+import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { ACCESSIBILITY_URL, DEFAULT_AUTO_LOCK_TIME_MIN, FEEDBACK_URL, hitSlop, TERMS_OF_USE_URL } from '@/constants'
@@ -42,9 +42,15 @@ const TRANSITION_OUT_DURATION = 150
 const DEFAULT_ROTATION = 0
 const HALF_ROTATION = 180
 const SECTION_HEADER_ICON_SIZE = 22
-/** Explore-by-touch uses layout bounds (hitSlop does not grow them), so the chevron gets a 44dp box. */
-const SECTION_HEADER_CHEVRON_TARGET = 44
-const SECTION_HEADER_CHEVRON_OVERHANG = (SECTION_HEADER_CHEVRON_TARGET - SECTION_HEADER_ICON_SIZE) / 2
+/** Explore-by-touch uses layout bounds (hitSlop does not grow them), so icon buttons get a 44dp box. */
+const TOUCH_TARGET = 44
+const SECTION_HEADER_CHEVRON_OVERHANG = (TOUCH_TARGET - SECTION_HEADER_ICON_SIZE) / 2
+/** Horizontal only: vertical slop reaches the control above, which loses its taps to the chevron on Android. */
+const SECTION_HEADER_CHEVRON_HIT_SLOP = { ...hitSlop, top: 0, bottom: 0 }
+const PROFILE_EDIT_ICON_SIZE = 20
+const PROFILE_EDIT_OVERHANG = (TOUCH_TARGET - PROFILE_EDIT_ICON_SIZE) / 2
+/** Top and right only: the account name sits to its left and a section chevron below. */
+const PROFILE_EDIT_HIT_SLOP = { ...hitSlop, left: 0, bottom: 0 }
 
 const noop = () => {
   // TODO: wire to real handler once the destination screen exists
@@ -112,7 +118,7 @@ const SectionHeader: React.FC<
         </ThemedText>
         <PressableOpacity
           onPress={toggleSection}
-          hitSlop={hitSlop}
+          hitSlop={SECTION_HEADER_CHEVRON_HIT_SLOP}
           testID={testIdWithKey(TestIds.main.settings.sectionHeaderChevron)}
           accessibilityLabel={t(showSection ? 'Global.HideDetails' : 'Global.ShowDetails')}
           accessibilityRole="button"
@@ -211,12 +217,13 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         {onEditNickname ? (
           <PressableOpacity
             onPress={onEditNickname}
-            hitSlop={hitSlop}
+            hitSlop={PROFILE_EDIT_HIT_SLOP}
             accessibilityRole="button"
             accessibilityLabel={t('BCSC.Settings.EditNickname')}
             testID={testIdWithKey(TestIds.main.settings.editProfile)}
+            style={styles.profileEdit}
           >
-            <Icon name="pencil" size={20} color={ColorPalette.brand.primary} />
+            <Icon name="pencil" size={PROFILE_EDIT_ICON_SIZE} color={ColorPalette.brand.primary} />
           </PressableOpacity>
         ) : null}
       </View>
@@ -267,10 +274,9 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
 }) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  // Use the canonical verification check (same as getResumeStepRoute) rather than the raw
-  // `verified` flag: device transfer marks the user verified via a refresh token without setting
-  // that flag, and such users still need the device-management options (e.g. "Add another device").
-  const isVerified = isUserVerified(store.bcscSecure)
+  // Device transfer marks the user verified via a refresh token without setting the `verified` flag, and such
+  // users still need the device-management options (e.g. "Add another device"), so gate on IAS, not setup.
+  const { isDeviceVerifiedByIas: isVerified } = useVerificationState()
 
   const { status: notificationStatus } = useNotificationPermissionStatus()
 
@@ -464,8 +470,8 @@ const makeStyles = (
     },
     sectionHeaderChevron: {
       marginLeft: 'auto',
-      minWidth: SECTION_HEADER_CHEVRON_TARGET,
-      minHeight: SECTION_HEADER_CHEVRON_TARGET,
+      minWidth: TOUCH_TARGET,
+      minHeight: TOUCH_TARGET,
       // Icon pinned to the right edge; the box grows leftwards and into the row padding, staying
       // inside the row (Android clips a11y bounds to the parent) without moving the icon.
       alignItems: 'flex-end',
@@ -488,6 +494,14 @@ const makeStyles = (
     profileName: {
       flexShrink: 1,
       color: ColorPalette.brand.headerText,
+    },
+    profileEdit: {
+      minWidth: TOUCH_TARGET,
+      minHeight: TOUCH_TARGET,
+      // Like the chevron: icon pinned right, the box grows leftwards and into the card padding.
+      alignItems: 'flex-end',
+      justifyContent: 'center',
+      marginVertical: -PROFILE_EDIT_OVERHANG,
     },
     versionContainer: {
       paddingTop: Spacing.md,
@@ -551,7 +565,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           logger.error(`Error fetching app security method [${appError.appEvent}]`, appError)
         }
       }
-      fetchAccountSecurityMethod()
+      void fetchAccountSecurityMethod()
     }, [logger, isAuthenticated, accountSecurityMethod, dispatch])
   )
 

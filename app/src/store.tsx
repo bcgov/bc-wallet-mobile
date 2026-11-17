@@ -8,15 +8,16 @@ import {
   PersistentStorage,
   ReducerAction,
 } from '@bifold/core'
-import { getInitialEnvironment, IASEnvironment } from '@utils/environment'
+import { getInitialEnvironment, IASEnvironment, isProductionBundle } from '@utils/environment'
 import { AccountSecurityMethod, BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
-import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
+import { VerificationPrompt, VerificationStatusResponseData } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
+import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from './bcsc-theme/utils/verification-status'
 import { appLogger } from './utils/logger'
 
 export type RemoteDebuggingState = {
@@ -50,6 +51,8 @@ export interface BCSCAlertEvent {
   event: string
   reason: string
 }
+
+export type DismissedBanners = Partial<Record<BCSCBanner, { dismissedAt: number }>>
 
 /**
  * Collection of metadata needed when a user is registering for the application
@@ -105,7 +108,6 @@ export interface BCSCState {
   bannerMessages: BCSCBannerMessage[]
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
-  hasDismissedExpiryAlert?: boolean
   hasDismissedThirdPartyKeyboardAlert?: boolean
   hasDismissedDeviceAuthInfo?: boolean
   deviceLimitBannerDismissedAt?: string
@@ -150,6 +152,12 @@ export interface BCSCState {
    * `verificationSkipped`.
    */
   verificationStarted?: boolean
+
+  /**
+   * Dismissed banners, keyed by BCSCBanner id.
+   * The value is the timestamp of when the user dismissed it.
+   */
+  dismissedBanners?: DismissedBanners
 }
 
 export enum VerificationStatus {
@@ -245,19 +253,11 @@ export interface BCSCSecureState {
    */
   securityMethod?: AccountSecurityMethod
 
-  hasDismissedExpiryAlert?: boolean
-
   /**
    * Set during hydration when a native account record exists but its tokens file is
    * unreadable/corrupt — i.e. neither a refresh nor a registration token survived
    */
   sessionRecoveryRequired?: boolean
-
-  /**
-   * Set during hydration when the stored refresh token's `exp` has passed — the device credential's
-   * 5-year lifetime is over and the account must be renewed (#4654). Never sent to the server.
-   */
-  refreshTokenExpired?: boolean
 }
 
 /** Initial secure state - unhydrated with no data */
@@ -306,6 +306,7 @@ enum BCSCDispatchAction {
   ADD_SAVED_SERVICE = 'bcsc/addSavedService',
   REMOVE_SAVED_SERVICE = 'bcsc/removeSavedService',
   CLEAR_BCSC = 'bcsc/clearBCSC',
+  DISMISS_BANNER = 'bcsc/dismissBanner',
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
@@ -339,6 +340,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFICATION_REQUEST_SHA = 'bcsc/updateSecureVerificationRequestSha',
   UPDATE_SECURE_VERIFICATION_REQUEST_STATUS = 'bcsc/updateSecureVerificationRequestStatus',
   UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE = 'bcsc/updateSecureVerificationRequestStatusMessage',
+  VERIFICATION_STATUS_RECEIVED = 'bcsc/verificationStatusReceived',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
   UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus', //controls whether the VerifyStack or the MainStack are displayed
@@ -346,7 +348,6 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
-  DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
   DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
@@ -390,6 +391,12 @@ const remoteDebuggingState: RemoteDebuggingState = {
 
 const developerState: Developer = {
   enableProxy: false,
+  /**
+   * TODO (MD):
+   * 1. Store the fact not the entire environment object ie: "PROD" | "SIT"
+   * 2. Derive the environment object from the fact. (ie: bcsc-theme/state/environment).
+   * 3. Migrate the the old persisted environment value to the new enum value
+   */
   environment: getInitialEnvironment(),
   remoteDebugging: remoteDebuggingState,
   enableAppToAppPersonFlow: false,
@@ -476,6 +483,8 @@ export enum BCLocalStorageKeys {
   CachedJWK = 'CachedJWK',
   /** MEDIATOR_URL the mediator preferences were last reconciled with */
   MediatorUrl = 'MediatorUrl',
+  /** Wrong PIN attempts in a row; read and written only by pin-lockout-service */
+  PinAttempts = 'PinAttempts',
 }
 
 export const initialState: BCState = {
@@ -486,6 +495,28 @@ export const initialState: BCState = {
   bcsc: initialBCSCState,
   bcscSecure: initialBCSCSecureState,
   mode: Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet,
+}
+
+const applyVerificationStatusReceived = (
+  state: BCState,
+  received: Partial<Pick<VerificationStatusResponseData, 'status' | 'status_message'>>
+): BCState => {
+  const verificationRequestStatus = interpretVerificationStatus(received.status)
+  // Never store an unrecognised status; the caller asks the token endpoint instead
+  if (verificationRequestStatus === UNKNOWN_VERIFICATION_STATUS) {
+    return state
+  }
+  // Only the cancelled banner shows the message
+  const verificationRequestStatusMessage =
+    verificationRequestStatus === VerificationRequestStatus.CANCELLED ? received.status_message : undefined
+  if (
+    verificationRequestStatus === state.bcscSecure.verificationRequestStatus &&
+    verificationRequestStatusMessage === state.bcscSecure.verificationRequestStatusMessage
+  ) {
+    return state
+  }
+  const bcscSecure = { ...state.bcscSecure, verificationRequestStatus, verificationRequestStatusMessage }
+  return { ...state, bcscSecure }
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
@@ -501,7 +532,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         ...state.preferences,
         availableMediators: availableMediators.filter((url) => url !== mediatorUrl),
       }
-      PersistentStorage.storeValueForKey(LocalStorageKeys.Preferences, preferences)
+      void PersistentStorage.storeValueForKey(LocalStorageKeys.Preferences, preferences)
       return { ...state, preferences }
     }
     case ModeDispatchAction.UPDATE_MODE: {
@@ -511,7 +542,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         return state
       }
       const newState = { ...state, mode }
-      PersistentStorage.storeValueForKey<Mode>(BCLocalStorageKeys.Mode, mode)
+      void PersistentStorage.storeValueForKey<Mode>(BCLocalStorageKeys.Mode, mode)
       return newState
     }
     case RemoteDebuggingDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE: {
@@ -520,22 +551,22 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, developer }
 
       if (enabledAt) {
-        PersistentStorage.storeValueForKey<RemoteDebuggingState>(
+        void PersistentStorage.storeValueForKey<RemoteDebuggingState>(
           BCLocalStorageKeys.RemoteDebugging,
           developer.remoteDebugging
         )
       } else {
-        PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
+        void PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
       }
 
       return newState
     }
     case DeveloperDispatchAction.UPDATE_ENVIRONMENT: {
-      const environment: IASEnvironment = (action?.payload || []).pop()
+      const environment: IASEnvironment = isProductionBundle() ? IASEnvironment.PROD : (action?.payload || []).pop()
       const developer = { ...state.developer, environment }
 
       // Persist IAS environment between app restarts
-      PersistentStorage.storeValueForKey<IASEnvironment>(BCLocalStorageKeys.Environment, developer.environment)
+      void PersistentStorage.storeValueForKey<IASEnvironment>(BCLocalStorageKeys.Environment, developer.environment)
 
       return { ...state, developer }
     }
@@ -543,7 +574,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const enableProxy: boolean = (action?.payload || []).pop() || false
       const developer = { ...state.developer, enableProxy }
 
-      PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.EnableProxy, developer.enableProxy)
+      void PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.EnableProxy, developer.enableProxy)
 
       return { ...state, developer }
     }
@@ -551,7 +582,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const enableAppToAppPersonFlow: boolean = (action?.payload || []).pop() || false
       const developer = { ...state.developer, enableAppToAppPersonFlow }
 
-      PersistentStorage.storeValueForKey<boolean>(
+      void PersistentStorage.storeValueForKey<boolean>(
         BCLocalStorageKeys.EnableAppToAppPersonFlow,
         developer.enableAppToAppPersonFlow
       )
@@ -562,7 +593,10 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const enableAttestation: boolean = (action?.payload || []).pop() || false
       const developer = { ...state.developer, enableAttestation }
 
-      PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.EnableAttestation, developer.enableAttestation)
+      void PersistentStorage.storeValueForKey<boolean>(
+        BCLocalStorageKeys.EnableAttestation,
+        developer.enableAttestation
+      )
 
       return { ...state, developer }
     }
@@ -572,7 +606,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, dismissPersonCredentialOffer }
 
       // save to storage so notification doesn't reapper on app restart
-      PersistentStorage.storeValueForKey<DismissPersonCredentialOffer>(
+      void PersistentStorage.storeValueForKey<DismissPersonCredentialOffer>(
         BCLocalStorageKeys.PersonCredentialOfferDismissed,
         newState.dismissPersonCredentialOffer
       )
@@ -583,20 +617,20 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const hasAccount = (action?.payload || []).pop() ?? false
       const bcsc = { ...state.bcsc, hasAccount }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.UPDATE_APP_VERSION: {
       const bcsc = { ...state.bcsc, appVersion: getVersion(), appBuildNumber: getBuildNumber() }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.UPDATE_NICKNAME: {
       const nickname = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, selectedNickname: nickname }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.UPDATE_VIDEO_PROMPTS: {
@@ -652,7 +686,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.SUCCESSFUL_AUTH: {
       const authentication = { ...state.authentication, didAuthenticate: true }
       const bcsc = { ...state.bcsc, hasAccount: true }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return { ...state, bcsc, authentication }
     }
     // Secure state management - not persisted to AsyncStorage
@@ -777,6 +811,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = { ...state.bcscSecure, verificationRequestStatusMessage }
       return { ...state, bcscSecure }
     }
+    case BCSCDispatchAction.VERIFICATION_STATUS_RECEIVED: {
+      return applyVerificationStatusReceived(state, (action?.payload || []).pop() ?? {})
+    }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_OPTIONS: {
       const verificationOptions = (action?.payload || []).pop() ?? []
       const bcscSecure = { ...state.bcscSecure, verificationOptions }
@@ -824,7 +861,21 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         installId: state.bcsc.installId ?? partialBcscState.installId,
       }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.DISMISS_BANNER: {
+      const payload: { bannerId: BCSCBanner } = (action?.payload || []).pop()
+      const dismissedBanners = {
+        ...state.bcsc.dismissedBanners,
+        [payload.bannerId]: { dismissedAt: Date.now() },
+      }
+
+      const bcsc = { ...state.bcsc, dismissedBanners }
+      const newState = { ...state, bcsc }
+
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -839,7 +890,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcsc = { ...state.bcsc, bannerMessages }
       const newState = { ...state, bcsc }
 
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.REMOVE_BANNER_MESSAGE: {
@@ -851,7 +902,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcsc = { ...state.bcsc, bannerMessages }
       const newState = { ...state, bcsc }
 
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -859,7 +910,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const analyticsOptIn = (action?.payload || []).pop() ?? false
       const bcsc = { ...state.bcsc, analyticsOptIn }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -867,16 +918,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const accountType = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, accountSetupType: accountType }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.DISMISSED_EXPIRY_ALERT: {
-      // this should use the date as a key, so this variable is always up to date...
-      const hasDismissed = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, hasDismissedExpiryAlert: hasDismissed }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -885,28 +927,28 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const hasDismissed = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, hasDismissedThirdPartyKeyboardAlert: hasDismissed }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER: {
       const dismissedAt = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, deviceLimitBannerDismissedAt: dismissedAt }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.SEEN_ONBOARDING_INTRO: {
       const hasSeen = (action?.payload || []).pop() ?? true
       const bcsc = { ...state.bcsc, hasSeenOnboardingIntro: hasSeen }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCDispatchAction.UPDATE_CREDENTIAL_METADATA: {
       const credentialMetadata = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, credentialMetadata }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -914,7 +956,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const acceptedTermsOfUseVersion = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, acceptedTermsOfUseVersion }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -922,7 +964,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const installId = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, installId }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -930,7 +972,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const lastKeyRotationAttemptAt = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, lastKeyRotationAttemptAt }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -938,7 +980,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const { version: lastSeenAppVersion, buildNumber: lastSeenAppBuildNumber } = (action?.payload || []).pop() ?? {}
       const bcsc = { ...state.bcsc, lastSeenAppVersion, lastSeenAppBuildNumber }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -946,7 +988,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const verificationSkipped: boolean | undefined = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, verificationSkipped }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
@@ -954,7 +996,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const verificationStarted: boolean | undefined = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, verificationStarted }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 

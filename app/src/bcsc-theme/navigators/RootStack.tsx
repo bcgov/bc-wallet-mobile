@@ -9,6 +9,7 @@ import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { SystemCheckSessionProvider } from '../contexts/SystemCheckSessionContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
+import { InvalidEnvironment } from '../features/modal/InvalidEnvironment'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { useAccountPhase } from '../state/account/useAccountPhase'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
@@ -54,10 +55,23 @@ const FcmCardExpirySync: React.FC = () => {
  * signed-in phases only.
  */
 const BCSCRootStack: React.FC = () => {
-  const { phase, transition, inSession, isVerified, verifyStackKey, showVerifyPrompt, onVerifyPromptAnswered } =
-    useRootStackViewModel()
+  const {
+    showInvalidEnvironment,
+    phase,
+    transition,
+    inSession,
+    isVerified,
+    verifyStackKey,
+    showVerifyPrompt,
+    onVerifyPromptAnswered,
+  } = useRootStackViewModel()
   // The main stack reads this at mount: a stack the root cuts in shows its wait at once
   const enteredByCut = transition.animationEnabled === false
+
+  // Stands in for the navigator and the session providers alike: no route is reachable until the reset
+  if (showInvalidEnvironment) {
+    return <InvalidEnvironment />
+  }
 
   return (
     <BCSCAgentProvider enabled={inSession}>

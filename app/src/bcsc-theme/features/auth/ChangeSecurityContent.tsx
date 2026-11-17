@@ -47,7 +47,7 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
       }
     }
 
-    loadCurrentMethod()
+    void loadCurrentMethod()
   }, [logger, t, emitAlert])
 
   const handleDeviceAuthPress = useCallback(async () => {

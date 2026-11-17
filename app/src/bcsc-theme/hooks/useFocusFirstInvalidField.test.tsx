@@ -114,6 +114,24 @@ describe('useFocusFirstInvalidField', () => {
     expect(firstSubscription.remove).toHaveBeenCalledTimes(1)
   })
 
+  it('scrollToField scrolls and re-jumps on keyboardDidShow without calling focus', () => {
+    const { tree, apiRef } = renderHarness()
+    fireLayout(tree, 'container', 100)
+    fireLayout(tree, 'field-b', 40)
+
+    act(() => {
+      apiRef.current!.scrollToField('b')
+    })
+    expect(scrollToSpy).toHaveBeenCalledWith({ y: 140, animated: false })
+    expect(focusSpy).not.toHaveBeenCalled()
+
+    const [, onKeyboardDidShow] = jest.mocked(KeyboardEvents.addListener).mock.calls[0]
+    act(() => onKeyboardDidShow({} as never))
+
+    expect(scrollToSpy).toHaveBeenCalledTimes(2)
+    expect(focusSpy).not.toHaveBeenCalled()
+  })
+
   it('re-issues the scroll on keyboardDidShow when still focused', () => {
     const { tree, apiRef } = renderHarness()
     fireLayout(tree, 'container', 0)

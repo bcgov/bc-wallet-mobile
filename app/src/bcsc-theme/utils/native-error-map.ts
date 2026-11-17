@@ -154,7 +154,6 @@ export const nativeBcscErrorMap: ReadonlyMap<string, ErrorDefinition> = new Map<
   ['E_VERIFY_PIN_ERROR', ErrorRegistry.PIN_OPERATION_ERROR],
   ['E_HAS_PIN_SET_ERROR', ErrorRegistry.PIN_OPERATION_ERROR],
   ['E_IS_PIN_AUTO_GENERATED_ERROR', ErrorRegistry.PIN_OPERATION_ERROR],
-  ['E_IS_ACCOUNT_LOCKED_ERROR', ErrorRegistry.PIN_OPERATION_ERROR],
   ['E_GET_SECURITY_METHOD_ERROR', ErrorRegistry.PIN_OPERATION_ERROR],
   ['E_SET_SECURITY_METHOD_ERROR', ErrorRegistry.PIN_OPERATION_ERROR],
 ])

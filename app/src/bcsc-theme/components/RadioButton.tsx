@@ -1,6 +1,6 @@
-import { useTheme } from '@bifold/core'
+import { ThemedText, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 
 interface RadioButtonProps<T> {
   label: string
@@ -70,7 +70,7 @@ export const RadioButton = <T,>({
       accessibilityLabel={label}
       testID={testID}
     >
-      <Text style={styles.label}>{label}</Text>
+      <ThemedText style={styles.label}>{label}</ThemedText>
       <View style={styles.radioCircle}>{selected && <View style={styles.innerCircle} />}</View>
     </Pressable>
   )

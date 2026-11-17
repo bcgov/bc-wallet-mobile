@@ -102,7 +102,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
   }, [])
 
   useEffect(() => {
-    isBCServicesCardInstalled().then((result) => {
+    void isBCServicesCardInstalled().then((result) => {
       setAppInstalled(result)
     })
   }, [isBCServicesCardInstalled])

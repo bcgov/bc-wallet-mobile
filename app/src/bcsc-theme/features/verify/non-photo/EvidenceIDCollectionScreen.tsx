@@ -15,7 +15,6 @@ import {
   ButtonType,
   ScreenWrapper,
   testIdWithKey,
-  Text,
   ThemedText,
   TOKENS,
   useAnimatedComponents,
@@ -224,7 +223,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       <ThemedText variant={'headingThree'}>{cardType.evidence_type_label}</ThemedText>
       <ThemedText style={{ paddingVertical: 16 }}>
         {t('BCSC.EvidenceIDCollection.Heading1')}{' '}
-        <Text style={{ fontWeight: 'bold' }}>{t('BCSC.EvidenceIDCollection.Heading2')}</Text>{' '}
+        <ThemedText variant={'bold'}>{t('BCSC.EvidenceIDCollection.Heading2')}</ThemedText>{' '}
         {t('BCSC.EvidenceIDCollection.Heading3')}
       </ThemedText>
       <View style={{ marginVertical: 10, width: '100%', gap: 18 }} onLayout={onContainerLayout}>

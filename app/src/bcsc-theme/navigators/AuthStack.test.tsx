@@ -35,6 +35,9 @@ jest.mock('../components/SettingsHeaderButton', () => ({
   createAuthSettingsHeaderButton: jest.fn(() => () => 'SettingsHeaderButton'),
 }))
 jest.mock('../../screens/Developer', () => 'Developer')
+jest.mock('../features/account/RemoveAccountConfirmationScreen', () => ({
+  AuthRemoveAccountConfirmationScreen: 'AuthRemoveAccountConfirmationScreen',
+}))
 jest.mock('../features/auth/AccountLandingScreen', () => 'AccountLanding')
 jest.mock('../features/auth/ConfirmDeviceAuthInfoScreen', () => ({
   ConfirmDeviceAuthInfoScreen: 'ConfirmDeviceAuthInfoScreen',
@@ -86,6 +89,7 @@ describe('AuthStack', () => {
     capturedNavigatorProps = undefined
     jest.mocked(Bifold.useDefaultStackOptions).mockReturnValue({} as any)
     jest.mocked(Bifold.useTheme).mockReturnValue({} as any)
+    jest.mocked(Bifold.testIdWithKey).mockImplementation((key) => `testID/${key}`)
   })
 
   it('registers every auth screen and modal', () => {
@@ -97,6 +101,7 @@ describe('AuthStack', () => {
       BCSCScreens.EnterPIN,
       BCSCScreens.DeviceAuthInfo,
       BCSCScreens.Lockout,
+      BCSCScreens.AuthRemoveAccountConfirmation,
       BCSCScreens.DeviceAuthAppReset,
       BCSCScreens.AuthSettings,
       BCSCScreens.AuthWebView,
@@ -140,6 +145,16 @@ describe('AuthStack', () => {
     renderStack()
 
     expect(optionsFor(screen).headerLeft()).toBeNull()
+  })
+
+  it('keeps the back button on the remove account confirmation, as its cancel', () => {
+    renderStack()
+
+    // No headerLeft of its own, so the stack's back button stays, unlike on the lockout screen
+    expect(optionsFor(BCSCScreens.AuthRemoveAccountConfirmation)).toEqual({
+      title: 'BCSC.Account.RemoveAccount',
+      headerBackTestID: 'testID/Back',
+    })
   })
 
   it.each([BCSCModals.InternetDisconnected, BCSCModals.MandatoryUpdate, BCSCModals.ServiceOutage])(

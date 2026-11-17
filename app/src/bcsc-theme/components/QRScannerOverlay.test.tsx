@@ -26,4 +26,24 @@ describe('QRScannerOverlay', () => {
     expect(cutout.x).toBeCloseTo(60.5)
     expect(cutout.y).toBeCloseTo(199)
   })
+
+  it('keeps the design position while the content above the reticle fits in the gap', () => {
+    expect(getCutoutRect(DESIGN_WIDTH, DESIGN_HEIGHT, 150)).toEqual(getCutoutRect(DESIGN_WIDTH, DESIGN_HEIGHT))
+  })
+
+  it('moves the reticle down below taller content and keeps its size while there is room', () => {
+    const cutout = getCutoutRect(DESIGN_WIDTH, DESIGN_HEIGHT, 300)
+
+    expect(cutout.y).toBe(300)
+    expect(cutout.size).toBeCloseTo(254)
+    expect(cutout.x).toBeCloseTo(60.5)
+  })
+
+  it('shrinks the reticle, re-centered, once it would run off the bottom of the camera area', () => {
+    const cutout = getCutoutRect(DESIGN_WIDTH, DESIGN_HEIGHT, 500)
+
+    expect(cutout.y).toBe(500)
+    expect(cutout.size).toBe(DESIGN_HEIGHT - 24 - 500)
+    expect(cutout.x).toBeCloseTo((DESIGN_WIDTH - cutout.size) / 2)
+  })
 })

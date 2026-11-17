@@ -8,7 +8,7 @@ import {
   clearReviewQueueBeforeSubmit,
   enterBirthdate,
   enterSerialManually,
-  expectPendingReviewLocked,
+  expectPendingReviewOffersExit,
   reachVerificationMethod,
   resumeVerification,
   startVerification,
@@ -72,9 +72,9 @@ describe('Verified journey: send video, approved', () => {
     // has to route back to the status screen, rather than the in-memory flag carrying it.
     await unlockWithPin(TEST_PIN, { relaunch: true, landing: 'any' })
     await resumeVerification(PendingReviewScreen, Timeouts.APP_LAUNCH)
-    // A first-time verifier (Continue at the prompt) cannot leave the pending review — no back arrow, no
-    // Back to home — so the decision wait below polls from here with Check status.
-    await expectPendingReviewLocked()
+    // Even a first-time verifier (Continue at the prompt) can leave the pending review by its back
+    // arrow (#4968); this journey stays on it, so the decision wait below polls from here.
+    await expectPendingReviewOffersExit()
   })
 
   it('is approved by the agent (scripted against the SIT review portal)', async () => {

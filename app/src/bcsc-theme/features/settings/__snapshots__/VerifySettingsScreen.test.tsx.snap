@@ -127,10 +127,10 @@ exports[`VerifySettings renders correctly when authenticated 1`] = `
                 focusable={true}
                 hitSlop={
                   {
-                    "bottom": 44,
+                    "bottom": 0,
                     "left": 44,
                     "right": 44,
-                    "top": 44,
+                    "top": 0,
                   }
                 }
                 onBlur={[Function]}
@@ -834,10 +834,10 @@ exports[`VerifySettings renders correctly when authenticated 1`] = `
                 focusable={true}
                 hitSlop={
                   {
-                    "bottom": 44,
+                    "bottom": 0,
                     "left": 44,
                     "right": 44,
-                    "top": 44,
+                    "top": 0,
                   }
                 }
                 onBlur={[Function]}
@@ -1250,10 +1250,10 @@ exports[`VerifySettings renders correctly when authenticated 1`] = `
                 focusable={true}
                 hitSlop={
                   {
-                    "bottom": 44,
+                    "bottom": 0,
                     "left": 44,
                     "right": 44,
-                    "top": 44,
+                    "top": 0,
                   }
                 }
                 onBlur={[Function]}
@@ -2124,10 +2124,10 @@ exports[`VerifySettings renders correctly when unauthenticated 1`] = `
                 focusable={true}
                 hitSlop={
                   {
-                    "bottom": 44,
+                    "bottom": 0,
                     "left": 44,
                     "right": 44,
-                    "top": 44,
+                    "top": 0,
                   }
                 }
                 onBlur={[Function]}
@@ -2540,10 +2540,10 @@ exports[`VerifySettings renders correctly when unauthenticated 1`] = `
                 focusable={true}
                 hitSlop={
                   {
-                    "bottom": 44,
+                    "bottom": 0,
                     "left": 44,
                     "right": 44,
-                    "top": 44,
+                    "top": 0,
                   }
                 }
                 onBlur={[Function]}

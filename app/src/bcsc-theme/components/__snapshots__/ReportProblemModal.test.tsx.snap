@@ -235,6 +235,7 @@ exports[`ReportProblemModal renders correctly 1`] = `
               </Text>
               <TextInput
                 accessibilityLabel="BCSC.ReportProblem.DescriptionLabel"
+                maxFontSizeMultiplier={2}
                 maxLength={500}
                 multiline={true}
                 onChangeText={[Function]}

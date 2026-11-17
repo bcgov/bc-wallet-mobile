@@ -1,5 +1,5 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
+import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
@@ -11,7 +11,7 @@ import { useCallback } from 'react'
 const useCancelledReviewViewModel = () => {
   const [, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
-  const { isVerificationInProgress } = useVerificationStatus()
+  const { isVerificationInProgress } = useVerificationState()
   const { updateAccountFlags, updateVerificationRequest, continueVerificationProcess } = useSecureActions()
   const cleanUpVerificationData = useCallback(async () => {
     await updateVerificationRequest(undefined, null)
@@ -20,7 +20,8 @@ const useCancelledReviewViewModel = () => {
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
-    updateAccountFlags({ userSubmittedVerificationVideo: false })
+    // TODO (bm): should be awaited
+    void updateAccountFlags({ userSubmittedVerificationVideo: false })
   }, [dispatch, updateAccountFlags, updateVerificationRequest])
   // Not named for a screen: VerifyStack picks the landing step via getResumeStepRoute
   // (IdentitySelection after a full reset).

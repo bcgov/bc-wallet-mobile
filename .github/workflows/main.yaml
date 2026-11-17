@@ -324,7 +324,7 @@ jobs:
       - name: Build iOS JS bundle
         working-directory: app
         run: |
-          npx react-native bundle \
+          yarn react-native bundle \
             --platform ios \
             --dev false \
             --entry-file index.js \
@@ -444,7 +444,7 @@ jobs:
         working-directory: app
         run: |
           mkdir -p android/app/src/main/assets
-          npx react-native bundle \
+          yarn react-native bundle \
             --platform android \
             --dev false \
             --entry-file index.js \
@@ -550,7 +550,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Configure ruby
-        uses: ruby/setup-ruby@26e5b7d197ebf60545ee9667bcbace0be11ccaec # v1.334.0
+        uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
         with:
           working-directory: ./app
 

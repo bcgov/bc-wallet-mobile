@@ -160,7 +160,7 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean;
       }
     }
 
-    runSystemChecksByScope()
+    void runSystemChecksByScope()
   }, [logger, scope, scopeSystemCheck, startRun, runKey])
 
   const runStatus = runs.getRunStatus(runKey)

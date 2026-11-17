@@ -65,6 +65,7 @@ export enum BCSCScreens {
   TakeVideo = 'Selfie Video Capture',
   VideoReview = 'Selfie Video Confirmation',
   VideoTooLong = 'Selfie Video Too Long',
+  VideoExpired = 'Selfie Video Expired',
   PendingReview = 'Send Video Check Status',
   CancelledReview = 'BCSCCancelledReview', // FIXME (MD): Not sure which V3 screen this maps to...
   EvidenceUploading = 'Send Video Uploading',
@@ -106,6 +107,7 @@ export enum BCSCScreens {
   MainResetWalletConfirmation = `${BCSCStacks.Main} Reset Wallet Warning`,
   VerifyRemoveAccountConfirmation = `${BCSCStacks.Verify} Reset App Warning`,
   OnboardingRemoveAccountConfirmation = `${BCSCStacks.Onboarding} Reset App Warning`,
+  AuthRemoveAccountConfirmation = `${BCSCStacks.Auth} Reset App Warning`,
   TransferAccountInstructions = 'QR Get Instructions',
   TransferAccountQRDisplay = 'QR Code Display',
   TransferAccountQRScan = 'Scan QR Code',
@@ -238,6 +240,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
+  [BCSCScreens.VideoExpired]: undefined
   [BCSCScreens.EvidenceUploading]: undefined
   [BCSCScreens.SuccessfullySent]: { avgTurnaroundTimeMessage?: string } | undefined
   [BCSCScreens.PendingReview]: undefined
@@ -346,6 +349,7 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined
   [BCSCScreens.Lockout]: undefined
+  [BCSCScreens.AuthRemoveAccountConfirmation]: undefined
   [BCSCScreens.DeviceAuthAppReset]: undefined
   [BCSCScreens.AuthSettings]: undefined
   [BCSCScreens.AuthWebView]: { url: string; title: string }

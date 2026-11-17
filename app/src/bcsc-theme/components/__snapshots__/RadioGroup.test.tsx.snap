@@ -71,14 +71,23 @@ exports[`RadioGroup Component Edge Cases handles single option 1`] = `
       testID="test-radio-group-option-OnlyOption"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#313132",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Only Option
@@ -158,14 +167,23 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
       testID="test-radio-group-option-Option1"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#313132",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Option 1
@@ -236,14 +254,23 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
       testID="test-radio-group-option-Option2"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#313132",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Option 2
@@ -314,14 +341,23 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
       testID="test-radio-group-option-Option3"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#313132",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Option 3
@@ -401,14 +437,23 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
       testID="test-radio-group-option-Option1"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#313132",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Option 1
@@ -479,14 +524,23 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
       testID="test-radio-group-option-Option2(Disabled)"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#606060",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#606060",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Option 2 (Disabled)
@@ -557,14 +611,23 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
       testID="test-radio-group-option-Option3"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#313132",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Option 3
@@ -644,14 +707,23 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
       testID="test-radio-group-option-Option1"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#313132",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Option 1
@@ -722,14 +794,23 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
       testID="test-radio-group-option-Option2"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#313132",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Option 2
@@ -811,14 +892,23 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
       testID="test-radio-group-option-Option3"
     >
       <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#313132",
+              "flex": 1,
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+          ]
         }
       >
         Option 3

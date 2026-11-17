@@ -62,8 +62,9 @@ Approving is separate from receiving: being on an approver team does not put
 you in that ring's tester group, and vice versa.
 
 Anyone in the team can approve, and membership is managed in the team, so
-nothing here changes when someone joins or leaves. You cannot approve your own
-run, so a publish always needs a second person.
+nothing here changes when someone joins or leaves. Starting a publish does not
+stop you from approving it, so one approver can take a build all the way out
+on their own.
 
 The comment you leave when approving ring-1 or ring-2 is required. It becomes
 the build's TestFlight **What to Test**, in both English (U.S.) and English
@@ -162,13 +163,44 @@ ring-0 upload failed, so a run limited to one store via `targets` still gets
 tagged, and a retry after a partial failure re-runs it safely: the tag is left
 alone if it's already there.
 
+## Release notes
+
+Tagging a build also starts **Release Notes** twice, as two separate runs:
+
+| Report | Range | Answers |
+|---|---|---|
+| This build | The previous `bcsc-v*` tag of the same version | What changed in this build |
+| This release | The last tag of the previous version | What changed since the version people have |
+
+Each one posts a Discussion in the **Release notes** category, titled
+`<tag> release notes (since <older tag>)`. The release-wide one also gets a
+comment with a plain-language version of the report, drafted from the ticket
+titles by the Copilot CLI (`SUMMARY_MODEL` and `COPILOT_CLI_VERSION` in
+`release-notes.yml`, prompt in `scripts/release-notes/summary-prompt.md`) in
+the format the store descriptions use. Treat it as a draft: it can only be as
+accurate as the titles it was given, and it is the starting point for the
+App Store and Play listing text, not the finished copy. The comment is skipped
+and the report still posted if the draft does not arrive — that needs
+**Allow use of Copilot CLI billed to the organization** to be on for bcgov,
+and the run itself consumes the org's AI credits.
+
+Only the run that creates a tag dispatches these, so a single-store retry does
+not post the same reports twice. The first build of a version has no previous
+build and the first version has no previous version, so those reports are
+skipped with a notice. Reading the Sprint and Priority columns needs the
+fine-grained PAT at `op://bcsc-mobile-app-cd/github-projects/credential`, which
+bcgov expires every 90 days — a failed report is usually that.
+
+You can also run **Release Notes** yourself from **Actions** for any two tags,
+in either order, and turn the summary comment off with `summarize`.
+
 ## The GitHub release
 
 The release object is still created by a person, and one thing rides on it:
 publishing a full `bcsc-v*` release runs **Publish Release E2E Builds** on its
 own, which attaches the shipped bcsc-dev binaries to the release as
-`BCSC-v<version>.apk` / `.ipa` and points the nightly e2e upgrade lane at them
-(see `RELEASE.md`). So create the release when the version ships, as a full
+`BCSC-v<version>.apk` / `.ipa` and copies them to Sauce storage for the weekly e2e
+upgrade run (see `RELEASE.md`). So create the release when the version ships, as a full
 release, on the Publish tag of the shipped build (`bcsc-v4.1.1-8677`). The run
 resolves the build from that tag — or, for a tag without a build number, from
 the newest Publish tag of the version — so a release created before the build
@@ -198,10 +230,11 @@ a person still submits the build for App Store review.
 **Releasing on Google Play.** Ring-4 puts the build on its closed track. A
 person promotes it to Production.
 
-**Listing a shipped version for the e2e refresh.** The e2e builds publish on
-their own when the release is published (above); the monthly Refresh E2E Sauce
-Builds run that keeps their Sauce copies alive still learns about a version
-from a manifest line a person adds. See `RELEASE.md`.
+**Listing a shipped version for the e2e upgrade run.** The e2e builds publish
+on their own when the release is published (above); the weekly upgrade run and
+the monthly Refresh E2E Sauce Builds run that keeps the Sauce copies alive still
+learn about a version from a line a person adds to `e2e/upgrade-sources.json`.
+See `RELEASE.md`.
 
 The store steps are on the list to automate. None of these blocks a release today.
 

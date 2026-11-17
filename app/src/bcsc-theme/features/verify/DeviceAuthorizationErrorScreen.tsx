@@ -29,7 +29,7 @@ const DeviceAuthorizationErrorScreen = () => {
         onPress={() => openLink(config.buttonUrl)}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <ThemedText style={Buttons.primaryText}>{t(config.buttonTextKey)}</ThemedText>
+          <ThemedText style={[Buttons.primaryText, { flexShrink: 1 }]}>{t(config.buttonTextKey)}</ThemedText>
           <Icon name="open-in-new" size={20} color={ColorPalette.brand.headerText} style={{ marginLeft: Spacing.sm }} />
         </View>
       </Button>

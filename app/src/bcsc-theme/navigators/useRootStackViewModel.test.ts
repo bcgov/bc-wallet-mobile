@@ -1,5 +1,7 @@
 import { ErrorRegistry } from '@/errors'
 import { VerificationStatus } from '@/store'
+import * as environment from '@/utils/environment'
+import { IASEnvironment } from '@/utils/environment'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { useEffect } from 'react'
@@ -194,6 +196,56 @@ describe('useRootStackViewModel', () => {
       const { result } = renderViewModel()
 
       expect(result.current.phase).toBe(expectedPhase)
+    })
+  })
+
+  describe('the invalid environment recovery gate', () => {
+    let isProductionBundleSpy: jest.SpyInstance
+
+    afterEach(() => {
+      isProductionBundleSpy.mockRestore()
+    })
+
+    const renderOn = (storeOverrides: Record<string, any>, isProduction: boolean) => {
+      isProductionBundleSpy = jest.spyOn(environment, 'isProductionBundle').mockReturnValue(isProduction)
+      jest.mocked(Bifold.useStore).mockReturnValue([mockStore(storeOverrides), jest.fn()] as any)
+
+      return renderViewModel()
+    }
+
+    it('is up on a production bundle with a non-production environment, even with no account', () => {
+      const { result } = renderOn({ developer: { environment: IASEnvironment.SIT } }, true)
+
+      expect(result.current.showInvalidEnvironment).toBe(true)
+    })
+
+    it('is up even when the API client is not ready', () => {
+      mockIsClientReady.mockReturnValue(false)
+
+      const { result } = renderOn({ developer: { environment: IASEnvironment.SIT } }, true)
+
+      expect(result.current.showInvalidEnvironment).toBe(true)
+    })
+
+    it('is down on a production bundle with the production environment', () => {
+      const { result } = renderOn({ developer: { environment: IASEnvironment.PROD } }, true)
+
+      expect(result.current.showInvalidEnvironment).toBe(false)
+      expect(result.current.phase).toBe('onboarding')
+    })
+
+    it('is down on a non-production bundle', () => {
+      const { result } = renderOn({ developer: { environment: IASEnvironment.SIT } }, false)
+
+      expect(result.current.showInvalidEnvironment).toBe(false)
+      expect(result.current.phase).toBe('onboarding')
+    })
+
+    it('is down before the state has loaded', () => {
+      const { result } = renderOn({ stateLoaded: false, developer: { environment: IASEnvironment.SIT } }, true)
+
+      expect(result.current.showInvalidEnvironment).toBe(false)
+      expect(result.current.phase).toBe('loading')
     })
   })
 

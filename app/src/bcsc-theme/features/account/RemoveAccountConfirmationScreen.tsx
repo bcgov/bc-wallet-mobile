@@ -40,4 +40,8 @@ export const OnboardingRemoveAccountConfirmationScreen = () => {
   return <RemoveAccountConfirmationScreen />
 }
 
+export const AuthRemoveAccountConfirmationScreen = () => {
+  return <RemoveAccountConfirmationScreen />
+}
+
 export default RemoveAccountConfirmationScreen

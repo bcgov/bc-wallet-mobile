@@ -17,8 +17,6 @@ jest.mock('@/bcsc-theme/hooks/useVerificationPendingActions', () => ({
   default: jest.fn(),
 }))
 
-const CHECK_STATUS = 'com.ariesbifold:id/CheckStatus'
-
 /** Writes a review status the way useVerificationResponseListener does when the review push lands. */
 const ReviewPush = ({ status }: { status: VerificationRequestStatus }) => {
   const [, dispatch] = useStore<BCState>()
@@ -38,11 +36,10 @@ describe('PendingReview', () => {
   const handleCheckStatus = jest.fn()
   const handleCancelVerification = jest.fn()
 
-  const mockActions = (isCheckingStatus = false) =>
+  const mockActions = () =>
     jest.mocked(useVerificationPendingActions).mockReturnValue({
       handleCheckStatus,
       handleCancelVerification,
-      isCheckingStatus,
     } as any)
 
   beforeEach(() => {
@@ -89,26 +86,6 @@ describe('PendingReview', () => {
     expect(handleCheckStatus).toHaveBeenCalledWith()
   })
 
-  it('offers Check status, and that press surfaces a failure to the user', () => {
-    const tree = renderScreen()
-    handleCheckStatus.mockClear()
-
-    fireEvent.press(tree.getByTestId(CHECK_STATUS))
-
-    expect(handleCheckStatus).toHaveBeenCalledTimes(1)
-    expect(handleCheckStatus).toHaveBeenCalledWith({ surfaceErrors: true })
-  })
-
-  it('disables Check status while a check is running', () => {
-    mockActions(true)
-    const tree = renderScreen()
-    handleCheckStatus.mockClear()
-
-    fireEvent.press(tree.getByTestId(CHECK_STATUS))
-
-    expect(handleCheckStatus).not.toHaveBeenCalled()
-  })
-
   it('re-checks when the app returns to the foreground while it is focused', () => {
     const spy = jest.spyOn(AppState, 'addEventListener')
     renderScreen()
@@ -152,6 +129,12 @@ describe('PendingReview', () => {
     })
 
     expect(handleCheckStatus).not.toHaveBeenCalled()
+  })
+
+  it("offers no check of its own — the status is asked for from Home's pending card", () => {
+    const tree = renderScreen()
+
+    expect(tree.queryByText('BCSC.Steps.CheckStatus')).toBeNull()
   })
 
   it('cancels the request from Choose another way to verify', () => {

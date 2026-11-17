@@ -1,28 +1,43 @@
 import { LockoutScreen } from '@/bcsc-theme/features/auth/LockoutScreen'
-import { bifoldLoggerInstance } from '@bifold/core'
+import { readPinLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
+import { PinLockoutType } from '@/bcsc-theme/state/pin-lockout/pin-lockout'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
+import { bifoldLoggerInstance, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
-import React from 'react'
-import * as BcscCore from 'react-native-bcsc-core'
+import { useFocusEffect } from '@react-navigation/native'
+import { act, fireEvent, render } from '@testing-library/react-native'
+import React, { useEffect, useState } from 'react'
 
-const mockFactoryReset = jest.fn()
-
-jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
-  useFactoryReset: () => mockFactoryReset,
+jest.mock('@/bcsc-theme/features/auth/services/pin-lockout-service', () => ({
+  ...jest.requireActual('@/bcsc-theme/features/auth/services/pin-lockout-service'),
+  readPinLockout: jest.fn(),
 }))
 
-const mockUnlockApp = jest.fn()
-
-jest.mock('@/bcsc-theme/hooks/useAuthentication', () => ({
-  useAuthentication: () => ({
-    unlockApp: mockUnlockApp,
-  }),
+// The wording is covered by lockout-countdown.test.ts; here the countdown shows the time it was given
+jest.mock('@/bcsc-theme/features/auth/lockout-countdown', () => ({
+  formatLockoutCountdown: (_t: unknown, remainingMs: number) => `${remainingMs} ms left`,
 }))
+
+const mockReadPinLockout = jest.mocked(readPinLockout)
+
+const SECOND = 1000
+const NOW = new Date('2026-11-16T12:00:00.000Z').getTime()
+
+const lockedFor = (remainingMs: number) => ({
+  type: PinLockoutType.Locked as const,
+  until: new Date(NOW + remainingMs),
+})
+
+const pinEntryReset = {
+  type: 'RESET',
+  payload: { index: 1, routes: [{ name: BCSCScreens.AccountLanding }, { name: BCSCScreens.EnterPIN }] },
+}
 
 describe('LockoutScreen', () => {
   let mockNavigation: ReturnType<typeof useNavigation>
-  let mockIsAccountLocked: jest.SpyInstance
+  let setScreenFocused: (focused: boolean) => void
 
   // The container's init() swaps in this shared logger, whatever BasicAppContext registers.
   const errorSpy = jest.spyOn(bifoldLoggerInstance, 'error').mockImplementation(() => undefined)
@@ -35,11 +50,16 @@ describe('LockoutScreen', () => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
     jest.useFakeTimers()
+    jest.setSystemTime(NOW)
+    mockReadPinLockout.mockResolvedValue(lockedFor(30 * SECOND))
 
-    // Mock isAccountLocked to return locked state with remaining time
-    mockIsAccountLocked = jest.spyOn(BcscCore, 'isAccountLocked').mockResolvedValue({
-      locked: true,
-      remainingTime: 30, // 30 seconds
+    // Mirrors the real hook: the callback runs while the screen is focused and is cleaned up on blur
+    jest.mocked(useFocusEffect).mockImplementation((callback: () => void | (() => void)) => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [focused, setFocused] = useState(true)
+      setScreenFocused = setFocused
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useEffect(() => (focused ? callback() : undefined), [callback, focused])
     })
   })
 
@@ -47,236 +67,189 @@ describe('LockoutScreen', () => {
     jest.useRealTimers()
   })
 
+  /** Renders the screen and lets its read of the lock settle */
+  const renderScreen = async () => {
+    const tree = render(
+      <BasicAppContext>
+        <LockoutScreen navigation={mockNavigation as never} />
+      </BasicAppContext>
+    )
+
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(0)
+    })
+
+    return tree
+  }
+
+  const advance = async (ms: number) => {
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(ms)
+    })
+  }
+
   describe('snapshots', () => {
     it('renders correctly when locked', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      const tree = await renderScreen()
 
-      await waitFor(() => {
-        expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
-      })
-
+      expect(tree.getByText('30000 ms left')).toBeTruthy()
       expect(tree).toMatchSnapshot()
     })
   })
 
-  describe('time formatting', () => {
-    it('displays time in minutes and seconds format', async () => {
-      mockIsAccountLocked.mockResolvedValue({
-        locked: true,
-        remainingTime: 90, // 1 minute 30 seconds
-      })
+  describe('countdown', () => {
+    it('shows the time left until the lock ends', async () => {
+      mockReadPinLockout.mockResolvedValue(lockedFor(90 * SECOND))
 
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      const tree = await renderScreen()
 
-      await waitFor(() => {
-        expect(tree.getByText('1 minute 30 seconds')).toBeTruthy()
-      })
+      expect(tree.getByText('BCSC.Lockout.TryAgainIn')).toBeTruthy()
+      expect(tree.getByText('90000 ms left')).toBeTruthy()
     })
 
-    it('displays singular minute correctly', async () => {
-      mockIsAccountLocked.mockResolvedValue({
-        locked: true,
-        remainingTime: 61, // 1 minute 1 second
-      })
+    it('counts down every second', async () => {
+      const tree = await renderScreen()
 
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      await advance(SECOND)
+      expect(tree.getByText('29000 ms left')).toBeTruthy()
 
-      await waitFor(() => {
-        expect(tree.getByText('1 minute 1 second')).toBeTruthy()
-      })
+      await advance(2 * SECOND)
+      expect(tree.getByText('27000 ms left')).toBeTruthy()
     })
 
-    it('displays only seconds when under a minute', async () => {
-      mockIsAccountLocked.mockResolvedValue({
-        locked: true,
-        remainingTime: 45,
-      })
+    it('measures the time left against the clock, not the number of ticks', async () => {
+      const tree = await renderScreen()
 
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      // The app was suspended for 20 seconds: no ticks ran, but the clock moved on
+      jest.setSystemTime(NOW + 20 * SECOND)
+      await advance(SECOND)
 
-      await waitFor(() => {
-        expect(tree.getByText('45 seconds')).toBeTruthy()
-      })
+      expect(tree.getByText('9000 ms left')).toBeTruthy()
     })
 
-    it('displays singular second correctly', async () => {
-      mockIsAccountLocked.mockResolvedValue({
-        locked: true,
-        remainingTime: 1,
-      })
+    it('shows no countdown until the lock has been read', async () => {
+      mockReadPinLockout.mockReturnValue(new Promise(() => {}))
 
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      const tree = await renderScreen()
 
-      await waitFor(() => {
-        expect(tree.getByText('1 second')).toBeTruthy()
-      })
+      expect(tree.getByText('BCSC.Lockout.Title')).toBeTruthy()
+      expect(tree.queryByText('BCSC.Lockout.TryAgainIn')).toBeNull()
     })
   })
 
-  describe('navigation', () => {
-    it('calls unlockApp when account is not locked', async () => {
-      mockIsAccountLocked.mockResolvedValue({
-        locked: false,
-        remainingTime: 0,
-      })
+  describe('release', () => {
+    it('opens PIN entry over the landing screen when the lock ends', async () => {
+      await renderScreen()
 
-      render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      await advance(29 * SECOND)
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
 
-      await waitFor(() => {
-        expect(mockUnlockApp).toHaveBeenCalled()
-      })
+      await advance(SECOND)
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(pinEntryReset)
     })
 
-    it('calls unlockApp when remaining time is 0', async () => {
-      mockIsAccountLocked.mockResolvedValue({
-        locked: true,
-        remainingTime: 0,
-      })
+    it('opens PIN entry only once', async () => {
+      await renderScreen()
 
-      render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      await advance(60 * SECOND)
 
-      await waitFor(() => {
-        expect(mockUnlockApp).toHaveBeenCalled()
-      })
+      expect(mockNavigation.dispatch).toHaveBeenCalledTimes(1)
+    })
+
+    it('opens PIN entry on the next tick when the clock jumps past the end of the lock', async () => {
+      await renderScreen()
+
+      jest.setSystemTime(NOW + 60 * SECOND)
+      await advance(SECOND)
+
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(pinEntryReset)
+    })
+
+    it('opens PIN entry straight away when PIN entry is not locked', async () => {
+      mockReadPinLockout.mockResolvedValue({ type: PinLockoutType.Open })
+
+      const tree = await renderScreen()
+
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(pinEntryReset)
+      expect(tree.queryByText('BCSC.Lockout.TryAgainIn')).toBeNull()
+    })
+
+    it('does not open PIN entry while another screen is in front, and checks the lock again on return', async () => {
+      await renderScreen()
+      expect(mockReadPinLockout).toHaveBeenCalledTimes(1)
+
+      act(() => setScreenFocused(false))
+      await advance(60 * SECOND)
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+
+      mockReadPinLockout.mockResolvedValue({ type: PinLockoutType.Open })
+      act(() => setScreenFocused(true))
+      await advance(0)
+
+      expect(mockReadPinLockout).toHaveBeenCalledTimes(2)
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(pinEntryReset)
+    })
+
+    it('shows the new deadline when the screen comes back into view while still locked', async () => {
+      const tree = await renderScreen()
+
+      act(() => setScreenFocused(false))
+      jest.setSystemTime(NOW + 10 * SECOND)
+      act(() => setScreenFocused(true))
+      await advance(0)
+
+      expect(tree.getByText('20000 ms left')).toBeTruthy()
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+    })
+
+    it('stops counting when the screen is removed', async () => {
+      const tree = await renderScreen()
+
+      tree.unmount()
+      await advance(60 * SECOND)
+
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
     })
   })
 
   describe('error handling', () => {
-    it('handles error when checking lock status gracefully', async () => {
-      mockIsAccountLocked.mockRejectedValue(new Error('Network error'))
+    it('goes back to the landing screen, without opening PIN entry, when the lock cannot be read', async () => {
+      const readError = new Error('read failed')
+      mockReadPinLockout.mockRejectedValue(readError)
 
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      await renderScreen()
 
-      await waitFor(() => {
-        expect(errorSpy).toHaveBeenCalledWith('Error checking lock status: Network error')
+      expect(errorSpy).toHaveBeenCalledWith('Error checking lock status: read failed', readError)
+      expect(mockNavigation.dispatch).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith({
+        type: 'RESET',
+        payload: { index: 0, routes: [{ name: BCSCScreens.AccountLanding }] },
       })
-      expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
-      expect(mockUnlockApp).not.toHaveBeenCalled()
     })
   })
 
   describe('remove account', () => {
-    it('calls factoryReset when Remove Account is pressed', async () => {
-      mockFactoryReset.mockResolvedValue(undefined)
+    it('asks for confirmation on its own screen when Remove Account is pressed', async () => {
+      const tree = await renderScreen()
 
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      fireEvent.press(tree.getByTestId(testIdWithKey(TestIds.auth.lockout.removeAccount)))
 
-      await waitFor(() => {
-        expect(tree.getByText('BCSC.Account.RemoveAccount')).toBeTruthy()
-      })
-
-      const removeButton = tree.getByTestId('com.ariesbifold:id/RemoveAccount')
-      fireEvent.press(removeButton)
-
-      await waitFor(() => {
-        expect(mockFactoryReset).toHaveBeenCalled()
-      })
-    })
-
-    it('handles error when factoryReset fails gracefully', async () => {
-      mockFactoryReset.mockRejectedValue(new Error('Reset failed'))
-
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(tree.getByText('BCSC.Account.RemoveAccount')).toBeTruthy()
-      })
-
-      const removeButton = tree.getByTestId('com.ariesbifold:id/RemoveAccount')
-      fireEvent.press(removeButton)
-
-      await waitFor(() => {
-        expect(errorSpy).toHaveBeenCalledWith('Error removing account: Reset failed')
-      })
-      expect(removeButton).toBeEnabled()
-    })
-  })
-
-  describe('when unlockApp throws', () => {
-    it('renders gracefully when unlockApp rejects on initial load (not locked)', async () => {
-      mockUnlockApp.mockRejectedValue(new Error('auth error'))
-      mockIsAccountLocked.mockResolvedValue({
-        locked: false,
-        remainingTime: 0,
-      })
-
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(mockUnlockApp).toHaveBeenCalled()
-      })
-
-      expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
+      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AuthRemoveAccountConfirmation)
     })
   })
 
   describe('UI content', () => {
     it('displays all informational text', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <LockoutScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+      const tree = await renderScreen()
 
-      await waitFor(() => {
-        expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
-      })
-
-      expect(
-        tree.getByText("This app is temporarily locked because you've entered an incorrect PIN too many times.")
-      ).toBeTruthy()
-      expect(tree.getByText('You can try again in:')).toBeTruthy()
-      expect(tree.getByText('Cannot remember your PIN?')).toBeTruthy()
-      expect(
-        tree.getByText(
-          "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us."
-        )
-      ).toBeTruthy()
-      expect(tree.getByText("If you've forgotten your PIN you'll need to set up this app again.")).toBeTruthy()
+      expect(tree.getByText('BCSC.Lockout.Title')).toBeTruthy()
+      expect(tree.getByText('BCSC.Lockout.Description')).toBeTruthy()
+      expect(tree.getByText('BCSC.Lockout.TryAgainIn')).toBeTruthy()
+      expect(tree.getByText('BCSC.Lockout.ForgotPINTitle')).toBeTruthy()
+      expect(tree.getByText('BCSC.Lockout.ForgotPINDescription')).toBeTruthy()
+      expect(tree.getByText('BCSC.Lockout.SetUpAgain')).toBeTruthy()
+      expect(tree.getByText('BCSC.Account.RemoveAccount')).toBeTruthy()
     })
   })
 })

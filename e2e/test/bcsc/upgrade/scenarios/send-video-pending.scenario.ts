@@ -5,7 +5,7 @@ import { capability, type PrevBuild } from '../../../../src/flows/prev-build/typ
 import {
   cleanUpQueuedSubmission,
   clearReviewQueueBeforeSubmit,
-  expectPendingReviewLocked,
+  expectPendingReviewOffersExit,
   resumeVerification,
   waitForSendVideoDecision,
 } from '../../../../src/flows/verify.js'
@@ -81,9 +81,9 @@ export function defineSendVideoPendingUpgrade(prev: PrevBuild): void {
     // screen. Landing anywhere else (method selection, the ID step) would mean the flag was wiped.
     await unlockWithPin(prev.pin, { relaunch: false, landing: 'any' })
     await resumeVerification(PendingReviewScreen, Timeouts.APP_LAUNCH)
-    // The previous build's Continue carried over as a first-time verifier, who cannot leave the pending
-    // review on the current build — no back arrow, no Back to home. The decision wait polls from here.
-    await expectPendingReviewLocked()
+    // The previous build's Continue carried over as a first-time verifier, who can still leave the
+    // pending review on the current build by its back arrow (#4968). The decision wait polls from here.
+    await expectPendingReviewOffersExit()
   })
 
   it('is approved by the agent (scripted against the SIT review portal)', async () => {

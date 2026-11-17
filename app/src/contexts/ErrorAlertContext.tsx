@@ -145,7 +145,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
 /**
  * Hook to access error and alert functionality
  *
- * @returns Error alert context with methods: emitErrorModal, emitAlert, dismiss
+ * @returns Error alert context with members: emitErrorModal, emitAlert, isErrorModalVisible
  * @throws Error if used outside of ErrorAlertProvider
  */
 export const useErrorAlert = (): ErrorAlertContextType => {

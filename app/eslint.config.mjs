@@ -120,7 +120,64 @@ export default [
           selector: "JSXAttribute[name.name='testIDKey'] :matches(Literal, TemplateLiteral[expressions.length=0])",
           message: 'Pass a key from src/test-ids/registry.ts to testIDKey, not a string literal.',
         },
+        // Large OS font sizes (#4401): the theme caps text at `maxFontSizeMultiplier` (2x), but TextInput
+        // and Animated.Text only honour the cap when the prop is passed explicitly, so require it.
+        {
+          selector:
+            "JSXOpeningElement[name.name='TextInput']:not(:has(JSXAttribute[name.name='maxFontSizeMultiplier']))",
+          message: 'Pass maxFontSizeMultiplier (from useTheme()) to TextInput so large OS font sizes stay capped.',
+        },
+        {
+          selector:
+            "JSXOpeningElement[name.object.name='Animated'][name.property.name='Text']:not(:has(JSXAttribute[name.name='maxFontSizeMultiplier']))",
+          message: 'Pass maxFontSizeMultiplier (from useTheme()) to Animated.Text so large OS font sizes stay capped.',
+        },
       ],
+    },
+  },
+  {
+    files: ['src/bcsc-theme/**'],
+    ignores: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            // Large OS font sizes (#4401): a raw react-native Text scales without limit (3.57x on iOS).
+            // Bifold's ThemedText applies the theme's cap, so BCSC screens use it exclusively.
+            {
+              name: 'react-native',
+              importNames: ['Text'],
+              message: "Use ThemedText from '@bifold/core' so the theme's font-scale cap applies.",
+            },
+            // PIN lockout (#4423): wrong PINs are counted in TypeScript, so a PIN checked anywhere but
+            // the lockout service is a guess that never counts towards a lock.
+            {
+              name: 'react-native-bcsc-core',
+              importNames: ['verifyPIN'],
+              message:
+                'Check PINs with verifyPinWithLockout (features/auth/services/pin-lockout-service) so the attempt is counted.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Unawaited promises (SonarCloud): a fire-and-forget call must be marked `void` so a genuinely
+  // missing `await` stands out. Type-aware, so it is scoped to src and needs the project service;
+  // tests are exempt to match .sonarcloud.properties.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/__mocks__/**'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
     },
   },
 ]

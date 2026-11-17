@@ -49,7 +49,7 @@ type InputWithValidationProps = {
  * @returns {*} {React.ReactElement}
  */
 export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
-  const { Inputs, ColorPalette, Spacing, TextTheme } = useTheme()
+  const { Inputs, ColorPalette, Spacing, TextTheme, maxFontSizeMultiplier } = useTheme()
   const { reportActivity } = useBCSCActivity() ?? {}
   const _inputRef = useRef<TextInput>(null)
   const [isFocused, setIsFocused] = useState(false)
@@ -128,6 +128,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
             </View>
           )}
           <TextInput
+            maxFontSizeMultiplier={maxFontSizeMultiplier}
             ref={inputRef}
             style={[styles.input, props.inputProps]}
             value={props.value}

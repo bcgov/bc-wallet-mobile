@@ -97,7 +97,8 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
       }
 
       // Note: Video output settings must be set before creating the recorder
-      videoOutput.setOutputSettings({ codec: DEFAULT_VIDEO_OUTPUT_CODEC })
+      // TODO (bm): should be awaited
+      void videoOutput.setOutputSettings({ codec: DEFAULT_VIDEO_OUTPUT_CODEC })
       recorderRef.current = await videoOutput.createRecorder({})
       recordedDurationAtStopRef.current = null
 
