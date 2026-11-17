@@ -1,4 +1,6 @@
+import { BCSCIdTokenContext } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { BCSCStackProvider } from '@/bcsc-theme/contexts/BCSCStackContext'
+import { IdToken } from '@/bcsc-theme/utils/id-token'
 import { BCThemeNames } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { RemoteConfigProvider } from '@/remote-config/RemoteConfig'
@@ -13,9 +15,14 @@ import { container } from 'tsyringe'
 
 interface BasicAppContextProps extends PropsWithChildren {
   initialStateOverride?: Partial<BCState>
+  idTokenOverride?: Partial<IdToken> | null // Defaults to no id token (device limit unknown)
 }
 
-export const BasicAppContext: React.FC<BasicAppContextProps> = ({ children, initialStateOverride }) => {
+export const BasicAppContext: React.FC<BasicAppContextProps> = ({
+  children,
+  initialStateOverride,
+  idTokenOverride = null,
+}) => {
   const context = useMemo(() => {
     const childContainer = container.createChildContainer()
     childContainer.registerInstance(TOKENS.UTIL_LOGGER, new MockLogger())
@@ -40,14 +47,21 @@ export const BasicAppContext: React.FC<BasicAppContextProps> = ({ children, init
     [initialStateOverride]
   )
 
+  const idTokenContextValue = useMemo(
+    () => ({ isLoading: false, data: idTokenOverride as IdToken | null, refreshData: () => {} }),
+    [idTokenOverride]
+  )
+
   return (
     <ContainerProvider value={context}>
       <StoreProvider initialState={testInitialState} reducer={reducer}>
         <RemoteConfigProvider logger={new MockLogger() as any} initialConfig={getBundledRemoteConfig()}>
           <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
-            <BCSCStackProvider>
-              <ErrorAlertProvider>{children}</ErrorAlertProvider>
-            </BCSCStackProvider>
+            <BCSCIdTokenContext.Provider value={idTokenContextValue}>
+              <BCSCStackProvider>
+                <ErrorAlertProvider>{children}</ErrorAlertProvider>
+              </BCSCStackProvider>
+            </BCSCIdTokenContext.Provider>
           </ThemeProvider>
         </RemoteConfigProvider>
       </StoreProvider>

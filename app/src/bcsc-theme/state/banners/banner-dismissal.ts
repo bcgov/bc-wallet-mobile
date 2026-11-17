@@ -1,7 +1,11 @@
 import { BCSCBanner } from '@/bcsc-theme/types/banners'
+import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 const TEMP_NOT_DISMISSIBLE = 0 // TEMP: Used while refactoring banners (prevents permanent dismissal)
+const DEVICE_LIMIT_BANNER_COOLDOWN_MS = __DEV__
+  ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV // 30 mins
+  : DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD // 30 days
 
 /**
  * How long a banner stays hidden after the user dismisses it, in milliseconds. Every banner must be listed.
@@ -9,13 +13,12 @@ const TEMP_NOT_DISMISSIBLE = 0 // TEMP: Used while refactoring banners (prevents
  *   - `Infinity`: the banner stays hidden until the dismissal is cleared (never reappears on its own).
  *     Use it only on purpose, since nothing resets it but a factory reset or an explicit clear.
  */
-const BANNER_DISMISS_DURATION_MS: Record<BCSCBanner, number> = {
+export const BANNER_DISMISS_DURATION_MS: Record<BCSCBanner, number> = {
   [BCSCBanner.APP_UPDATE_AVAILABLE]: ONE_DAY_MS,
   [BCSCBanner.IAS_SERVER_UNAVAILABLE]: TEMP_NOT_DISMISSIBLE,
   [BCSCBanner.IAS_SERVER_NOTIFICATION]: TEMP_NOT_DISMISSIBLE,
-  [BCSCBanner.DEVICE_LIMIT_EXCEEDED]: TEMP_NOT_DISMISSIBLE,
+  [BCSCBanner.DEVICE_LIMIT_EXCEEDED]: DEVICE_LIMIT_BANNER_COOLDOWN_MS,
   [BCSCBanner.LIVE_CALL_STATUS]: TEMP_NOT_DISMISSIBLE,
-  [BCSCBanner.ACCOUNT_EXPIRED]: TEMP_NOT_DISMISSIBLE,
 }
 
 export enum BannerDismissal {

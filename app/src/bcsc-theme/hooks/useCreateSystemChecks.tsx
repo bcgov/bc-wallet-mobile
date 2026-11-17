@@ -8,7 +8,6 @@ import { KeyRotationResult, rotateSigningKey } from '@/bcsc-theme/utils/key-rota
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
-import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
 import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
@@ -29,7 +28,7 @@ import { BifoldLogger, TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getAccount, getMaxDevicesBannerLastDisplayedDate, getToken, TokenType } from 'react-native-bcsc-core'
+import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 import { getBuildNumber, getBundleId, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
@@ -102,7 +101,7 @@ type UseGetSystemChecksReturn = Record<
      * Callback to get system checks for the scope
      * @return Array of system check strategies
      */
-    getSystemChecks: () => Promise<SystemCheckStrategy[]>
+    getSystemChecks: () => Promise<SystemCheckStrategy[]> | SystemCheckStrategy[]
     /**
      * Indicates if the system checks for the scope are ready to be run
      */
@@ -204,14 +203,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    *
    * @returns Array of system check strategies
    */
-  const getMainSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+  const getMainSystemChecks = useCallback((): SystemCheckStrategy[] => {
     // Guard the native call so a failure here cannot throw away the whole batch
-    let dismissedAt: number | undefined
-    try {
-      dismissedAt = await getMaxDevicesBannerLastDisplayedDate()
-    } catch {
-      dismissedAt = undefined
-    }
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
 
     const systemChecks: SystemCheckStrategy[] = []
@@ -234,7 +227,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     if (shouldRunIdTokenChecks) {
       systemChecks.push(
-        new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
         new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
       )
     }
