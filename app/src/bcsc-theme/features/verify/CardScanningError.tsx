@@ -1,78 +1,24 @@
+import { ListButton } from '@/bcsc-theme/components/ListButton'
+import { ICON_SIZE } from '@/constants'
+import { a11yLabel } from '@/utils/accessibility'
 import HighlightSerialBarcodeImage from '@assets/img/highlight_serial_barcode.png'
 import { ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
-import { PressableOpacity } from '@components/PressableOpacity'
 import React from 'react'
-import { Image, StyleSheet, useWindowDimensions } from 'react-native'
+import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const SCAN_CARD_EXAMPLE_IMAGE = Image.resolveAssetSource(HighlightSerialBarcodeImage).uri
 const CardScanningError = () => {
   //   const { t } = useTranslation()
-  const { Spacing } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const { width } = useWindowDimensions()
 
   const styles = StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: '#FFFFFF',
-    },
-    container: {
-      flex: 1,
-      justifyContent: 'space-between',
-      paddingHorizontal: 24,
-      paddingVertical: 32,
-    },
-    content: {
-      paddingTop: 24,
-    },
-    title: {
-      color: '#242424',
-      fontSize: 28,
-      fontWeight: '700',
-      lineHeight: 36,
-      marginBottom: 16,
-    },
-    description: {
-      color: '#4B4B4B',
-      fontSize: 16,
-      lineHeight: 24,
-    },
-    actions: {
-      gap: 12,
-    },
-    primaryButton: {
-      alignItems: 'center',
-      backgroundColor: '#003366',
-      borderRadius: 4,
-      minHeight: 52,
-      justifyContent: 'center',
-      paddingHorizontal: 16,
-    },
-    primaryButtonText: {
-      color: '#FFFFFF',
-      fontSize: 16,
-      fontWeight: '700',
-    },
-    secondaryButton: {
-      alignItems: 'center',
-      borderColor: '#003366',
-      borderRadius: 4,
-      borderWidth: 1,
-      minHeight: 52,
-      justifyContent: 'center',
-      paddingHorizontal: 16,
-    },
-    secondaryButtonText: {
-      color: '#003366',
-      fontSize: 16,
-      fontWeight: '700',
-    },
-    pressed: {
-      opacity: 0.75,
-    },
+    description: {},
     pageHeaderContainer: {
       marginTop: Spacing.md,
       paddingHorizontal: Spacing.lg,
-      marginBottom: Spacing.sm,
+      paddingBottom: Spacing.xxl,
       gap: Spacing.sm,
     },
     image: {
@@ -82,12 +28,23 @@ const CardScanningError = () => {
       alignSelf: 'center',
       marginBottom: Spacing.lg,
     },
+    listButtonContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    listButtonTitle: {
+      flex: 1,
+      color: ColorPalette.brand.headerText,
+      fontWeight: 'bold',
+    },
   })
 
   return (
     <ScreenWrapper scrollViewContainerStyle={styles.pageHeaderContainer}>
       <ThemedText variant="headingThree">Problem scanning the card</ThemedText>
-      <ThemedText style={{}}>The serial number captured does not match our records.</ThemedText>
+      <ThemedText style={styles.description}>The serial number captured does not match our records.</ThemedText>
       <ThemedText style={{ fontWeight: 'bold' }}>Serial Number: 123456789</ThemedText>
       <ThemedText style={styles.description}>
         {`Make sure you're scanning a BC Services Card. Check if you have a BC Services Card`}
@@ -98,28 +55,45 @@ const CardScanningError = () => {
       <ThemedText style={styles.description}>
         {`Check the serial number matches what is on your card. If the serial number doesn't match:`}
       </ThemedText>
-      <PressableOpacity
+      <ListButton
+        position="only"
         onPress={() => {
           console.log('Enter manually')
         }}
+        accessibilityLabel={a11yLabel('Enter serial number manually')}
       >
-        <ThemedText>{`Enter serial number manually`}</ThemedText>
-      </PressableOpacity>
-      <PressableOpacity
+        <View style={styles.listButtonContainer}>
+          <ThemedText style={styles.listButtonTitle}>{`Enter serial number manually`}</ThemedText>
+          <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={ColorPalette.brand.headerText} />
+        </View>
+      </ListButton>
+      <ListButton
+        position="only"
         onPress={() => {
           console.log('Scan again')
         }}
+        accessibilityLabel={a11yLabel('Scan again')}
       >
-        <ThemedText>{`Scan again`}</ThemedText>
-      </PressableOpacity>
-      <ThemedText style={styles.description}>We couldn’t scan your card</ThemedText>
-      <PressableOpacity
+        <View style={styles.listButtonContainer}>
+          <ThemedText style={styles.listButtonTitle}>{`Scan again`}</ThemedText>
+          <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={ColorPalette.brand.headerText} />
+        </View>
+      </ListButton>
+      <ThemedText style={{ ...styles.description, marginTop: Spacing.lg }}>
+        If problems scanning the card continues:
+      </ThemedText>
+      <ListButton
+        position="only"
         onPress={() => {
           console.log('Try another card')
         }}
+        accessibilityLabel={a11yLabel('Try another card')}
       >
-        <ThemedText>{`Try another card`}</ThemedText>
-      </PressableOpacity>
+        <View style={styles.listButtonContainer}>
+          <ThemedText style={styles.listButtonTitle}>{`Try another card`}</ThemedText>
+          <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={ColorPalette.brand.headerText} />
+        </View>
+      </ListButton>
     </ScreenWrapper>
   )
 }
