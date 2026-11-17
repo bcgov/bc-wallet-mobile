@@ -1,9 +1,9 @@
 import { Mode } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
-import notifee from '@notifee/react-native'
+import notifee, { AndroidImportance } from '@notifee/react-native'
 import { DeviceEventEmitter, Platform } from 'react-native'
-import { decodeLoginChallenge, showLocalNotification } from 'react-native-bcsc-core'
+import { decodeLoginChallenge } from 'react-native-bcsc-core'
 import { BCSCEventTypes } from '../../../events/eventTypes'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { BCSCEvent, BCSCReason } from '../../utils/id-token'
@@ -23,7 +23,6 @@ jest.mock('@/utils/analytics/analytics-singleton', () => ({
 // Mock dependencies
 jest.mock('react-native-bcsc-core', () => ({
   decodeLoginChallenge: jest.fn(),
-  showLocalNotification: jest.fn(),
   isBcscNativeError: (error: unknown): boolean => {
     return error instanceof Error && 'code' in error
   },
@@ -223,7 +222,7 @@ describe('FcmViewModel', () => {
       await capturedMessageHandler?.(message)
 
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Status notification received'))
-      expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(notifee.displayNotification).not.toHaveBeenCalled()
     })
 
     // Tray taps and cold starts arrive with no delivery context: the OS has already shown the notification.
@@ -244,7 +243,6 @@ describe('FcmViewModel', () => {
       await capturedMessageHandler?.(message)
 
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Status notification received'))
-      expect(showLocalNotification).not.toHaveBeenCalled()
       expect(notifee.displayNotification).not.toHaveBeenCalled()
     })
 
@@ -537,7 +535,6 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message, { source })
 
-      expect(showLocalNotification).not.toHaveBeenCalled()
       expect(notifee.displayNotification).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Notification not owned by BCSC'))
     })
@@ -563,25 +560,47 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message, { source: 'foreground' })
 
-      expect(notifee.displayNotification).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'Status Update', body: 'Approved!' })
-      )
-      expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(notifee.createChannel).not.toHaveBeenCalled()
+      expect(notifee.displayNotification).toHaveBeenCalledWith({
+        title: 'Status Update',
+        body: 'Approved!',
+        ios: { sound: 'default', foregroundPresentationOptions: { banner: true, list: true, sound: true } },
+        android: expect.any(Object),
+      })
     })
 
-    it('displays via the native local notification on Android', async () => {
+    it('displays via notifee on Android with the existing channel, icon and sound', async () => {
       Platform.OS = 'android'
 
       await capturedMessageHandler?.(message, { source: 'foreground' })
 
-      expect(showLocalNotification).toHaveBeenCalledWith('Status Update', 'Approved!')
-      expect(notifee.displayNotification).not.toHaveBeenCalled()
+      expect(notifee.createChannel).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'bcsc_foreground_notifications',
+          importance: AndroidImportance.HIGH,
+          sound: 'default',
+          vibration: false,
+          lights: false,
+        })
+      )
+      expect(notifee.displayNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Status Update',
+          body: 'Approved!',
+          android: expect.objectContaining({
+            channelId: 'bcsc_foreground_notifications',
+            smallIcon: 'ic_notification',
+            showTimestamp: true,
+            pressAction: { id: 'default' },
+          }),
+        })
+      )
     })
 
     it('leaves background delivery to the OS', async () => {
       await capturedMessageHandler?.(message, { source: 'background' })
 
-      expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(notifee.createChannel).not.toHaveBeenCalled()
       expect(notifee.displayNotification).not.toHaveBeenCalled()
     })
 
@@ -593,6 +612,20 @@ describe('FcmViewModel', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to show local notification'))
     })
+
+    it.each(['createChannel', 'displayNotification'] as const)(
+      'logs and still refreshes tokens when Android %s fails',
+      async (method) => {
+        Platform.OS = 'android'
+        mockGetTokensForRefreshToken.mockResolvedValue({})
+        ;(notifee[method] as jest.Mock).mockRejectedValueOnce(new Error('Notification failed'))
+
+        await capturedMessageHandler?.(message, { source: 'foreground' })
+
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to show local notification'))
+        expect(mockGetTokensForRefreshToken).toHaveBeenCalled()
+      }
+    )
   })
 
   describe('fetchServerJwk', () => {
