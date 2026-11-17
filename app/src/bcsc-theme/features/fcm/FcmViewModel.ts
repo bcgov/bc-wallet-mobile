@@ -275,10 +275,8 @@ export class FcmViewModel {
    * does either since `messaging_ios_foreground_presentation_options` is empty (that config is
    * all-or-nothing, so leaving it on would also surface mediator notifications).
    *
-   * Both platforms go through notifee. On iOS it carries its own per-notification presentation options
-   * and so is unaffected by the empty messaging config; a plain UNNotificationRequest would be
-   * suppressed by it. On Android it needs a channel, created here with the sound explicitly set because
-   * notifee's channels are silent by default.
+   * Both platforms use notifee: on iOS its presentation options bypass the empty messaging config, and
+   * on Android its channels are silent by default, so the channel sets the sound explicitly.
    */
   private async showForegroundNotification(title: string, body: string): Promise<void> {
     this.logger.info(`[FcmViewModel] Showing local notification: title="${title}", body="${body}"`)
