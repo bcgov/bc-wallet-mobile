@@ -284,6 +284,7 @@ const translation = {
       "ManageDevices": "Manage Devices (FR)",
       "Nickname": "Nickname (FR)",
       "AccountDetails": "Account information (FR)",
+      "EnterPIN": "Enter PIN (FR)",
     },
     "HelpMenu": {
       "Title": "Need help? (FR)",
@@ -420,7 +421,28 @@ const translation = {
     },
     "EnterPIN": {
       "Title": "Enter your 6-digit PIN (FR)",
-      "Description": "The one you chose to secure this app (FR)"
+      "Description": "The one you chose to secure this app (FR)",
+      "IncorrectPIN": "Incorrect PIN (FR)",
+      "LastAttemptWarning": "Incorrect PIN. For security, if you enter another incorrect PIN, it will temporarily lock the app. (FR)",
+      "VerifyError": "An error occurred while verifying the PIN. (FR)"
+    },
+    "Lockout": {
+      "Title": "Too many PIN attempts (FR)",
+      "Description": "This app is temporarily locked because you've entered an incorrect PIN too many times. (FR)",
+      "TryAgainIn": "You can try again in: (FR)",
+      "ForgotPINTitle": "Cannot remember your PIN? (FR)",
+      "ForgotPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (FR)",
+      "SetUpAgain": "If you've forgotten your PIN you'll need to set up this app again. (FR)",
+      "Countdown": {
+        "Hours_one": "{{ count }} hour (FR)",
+        "Hours_other": "{{ count }} hours (FR)",
+        "Minutes_one": "{{ count }} minute (FR)",
+        "Minutes_other": "{{ count }} minutes (FR)",
+        "Seconds_one": "{{ count }} second (FR)",
+        "Seconds_other": "{{ count }} seconds (FR)",
+        "HoursMinutesSeconds": "{{ hours }} {{ minutes }} {{ seconds }}",
+        "MinutesSeconds": "{{ minutes }} {{ seconds }}"
+      }
     },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN (FR)",
@@ -578,6 +600,15 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (FR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (FR)",
         "OKButton": "OK (FR)",
+      },
+      "InvalidEnvironment": {
+        "Header": "App needs to be reset (FR)",
+        "ContentA": "Your app is in a version that isn’t supported. Resetting the app will return it to a version that is supported. You will need to set up your account again. (FR)",
+        "ContentB": "If you had intentionally changed the app’s environment, this option is no longer available. (FR)",
+        "NeedHelpPrefix": "If you need help, (FR)",
+        "ContactUsLink": "contact us (FR)",
+        "NeedHelpSuffix": ".",
+        "ResetButton": "Reset the app (FR)",
       },
       "ServiceOutage": {
         "Header": "Service unavailable (FR)",

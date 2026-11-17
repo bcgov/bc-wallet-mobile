@@ -1,5 +1,6 @@
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { HomeNoticeType } from '@/bcsc-theme/state/home/home-notice'
+import { makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
@@ -59,9 +60,9 @@ const verified = {
   refreshToken: 'stored-refresh',
 }
 
-const renderHome = () => {
+const renderHome = (refreshToken = verified.refreshToken) => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <BasicAppContext initialStateOverride={{ bcscSecure: verified }}>
+    <BasicAppContext initialStateOverride={{ bcscSecure: { ...verified, refreshToken } }}>
       <BCSCAccountProvider>{children}</BCSCAccountProvider>
     </BasicAppContext>
   )
@@ -146,5 +147,42 @@ describe('card expiry notices, from the account provider to Home', () => {
 
     expect(result.current.cardStatus.isExpired).toBe(true)
     expect(notificationKeys(result.current.notifications)).toEqual([HomeNoticeType.AccountExpired])
+  })
+
+  describe('when the refresh token expires mid-session', () => {
+    const START = new Date('2026-10-19T12:00:00.000Z')
+    const HOUR_MS = 3600_000
+    const expiringIn = (ms: number, from: Date) => makeJwt({ exp: (from.getTime() + ms) / 1000 })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    it('expires the card on the next store change, and clears when a new token arrives', async () => {
+      jest.useFakeTimers({ now: START })
+      mockGetUserMetadata.mockResolvedValue(userData(365))
+      const { result } = renderHome(expiringIn(HOUR_MS, START))
+      await waitFor(() => expect(result.current.cardStatus.isActivelyVerified).toBe(true))
+      expect(result.current.cardStatus.isExpired).toBe(false)
+
+      const later = new Date(START.getTime() + 2 * HOUR_MS)
+      jest.setSystemTime(later)
+      act(() => {
+        result.current.dispatch({ type: BCDispatchAction.UPDATE_SECURE_ACCESS_TOKEN, payload: ['unrelated'] })
+      })
+
+      expect(result.current.cardStatus.isExpired).toBe(true)
+      expect(notificationKeys(result.current.notifications)).toEqual([HomeNoticeType.AccountExpired])
+
+      act(() => {
+        result.current.dispatch({
+          type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN,
+          payload: [expiringIn(HOUR_MS, later)],
+        })
+      })
+
+      expect(result.current.cardStatus.isExpired).toBe(false)
+      expect(result.current.notifications).toHaveLength(0)
+    })
   })
 })

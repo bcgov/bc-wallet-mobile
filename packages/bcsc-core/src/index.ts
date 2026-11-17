@@ -5,6 +5,7 @@ import NativeBcscCoreSpec, {
   type JWTClaims,
   type LoginChallengeResult,
   type NativeAccount,
+  type NativeAccountReadStatus,
   type NativeAuthorizationRequest,
   type NativeFilesScan,
   type NativeSavedService,
@@ -16,6 +17,7 @@ export type {
   LoginChallenge,
   LoginChallengeResult,
   NativeAccount,
+  NativeAccountReadStatus,
   NativeAddress,
   NativeAuthorizationRequest,
   NativeFilesScan,
@@ -487,6 +489,14 @@ export const getAccount = async (): Promise<NativeAccount | null> => {
 };
 
 /**
+ * Explains why {@link getAccount} resolved null, for attaching to error reports. Never rejects.
+ * @returns A promise that resolves to the account read status.
+ */
+export const getAccountReadStatus = async (): Promise<NativeAccountReadStatus> => {
+  return await BcscCore.getAccountReadStatus();
+};
+
+/**
  * Checks if an account is registered by verifying the presence of a client ID.
  * @param account The Account object to check (without securityMethod).
  * @returns True if an account is registered, false otherwise.
@@ -718,12 +728,7 @@ export const clearAllKeychainData = async (): Promise<void> => {
 
 // Export authentication types
 export { BiometricType } from './NativeBcscCore';
-export type {
-  AccountLockStatus,
-  DeviceSecurityUnlockResult,
-  PINSetupResult,
-  PINVerificationResult,
-} from './NativeBcscCore';
+export type { DeviceSecurityUnlockResult, PINSetupResult, PINVerificationResult } from './NativeBcscCore';
 
 /**
  * Sets a user-created PIN for the current account.
@@ -735,9 +740,10 @@ export const setPIN = async (pin: string): Promise<import('./NativeBcscCore').PI
 };
 
 /**
- * Verifies a PIN for the current account.
+ * Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
+ * lockouts enforced, by the caller.
  * @param pin The PIN to verify
- * @returns A promise that resolves to verification result with success status, lock status, remaining penalty time, and wallet key hash on success
+ * @returns A promise that resolves to verification result with success status and wallet key hash on success
  */
 export const verifyPIN = async (pin: string): Promise<import('./NativeBcscCore').PINVerificationResult> => {
   return BcscCore.verifyPIN(pin);
@@ -810,14 +816,6 @@ export const setAccountSecurityMethod = async (
  */
 export const getAccountSecurityMethod = async (): Promise<import('./NativeBcscCore').AccountSecurityMethod> => {
   return BcscCore.getAccountSecurityMethod();
-};
-
-/**
- * Checks if the current account is currently locked due to failed PIN attempts.
- * @returns A promise that resolves to lock status with locked boolean and remaining time
- */
-export const isAccountLocked = async (): Promise<import('./NativeBcscCore').AccountLockStatus> => {
-  return BcscCore.isAccountLocked();
 };
 
 /**

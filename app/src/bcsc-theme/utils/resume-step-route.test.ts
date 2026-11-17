@@ -1,5 +1,5 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { AccountSetupType, initialState } from '@/store'
+import { AccountSetupType, initialState, VerificationStatus } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { getResumeStepRoute } from './resume-step-route'
 
@@ -27,6 +27,19 @@ describe('getResumeStepRoute', () => {
     store.bcsc.accountSetupType = AccountSetupType.TransferAccount
     store.bcscSecure.verified = true
     expect(getResumeStepRoute(store).name).toBe(BCSCScreens.VerificationSuccess)
+  })
+
+  it('routes a device that holds tokens but has not finished setup to the success screen', () => {
+    const store = structuredClone(initialState)
+    store.bcscSecure.refreshToken = 'token'
+    expect(getResumeStepRoute(store).name).toBe(BCSCScreens.VerificationSuccess)
+  })
+
+  it('does not treat tokens as verified once the credential is deactivated', () => {
+    const store = structuredClone(initialState)
+    store.bcscSecure.refreshToken = 'token'
+    store.bcscSecure.verifiedStatus = VerificationStatus.DEACTIVATED
+    expect(getResumeStepRoute(store).name).not.toBe(BCSCScreens.VerificationSuccess)
   })
 
   it('resumes a user with verification progress but no recorded setup type instead of bouncing to the setup question', () => {

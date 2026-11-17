@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { PinVerificationType, verifyPinWithLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import {
@@ -18,7 +19,7 @@ import {
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
-import { setPIN as setNativePIN, verifyPIN } from 'react-native-bcsc-core'
+import { setPIN as setNativePIN } from 'react-native-bcsc-core'
 import { PINEntryResult } from './PINEntryForm'
 
 interface ChangePINFormProps {
@@ -108,14 +109,16 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         // Show loading indicator
         stopLoading = startLoading(loadingMessage ?? t('BCSC.ChangePIN.ChangingPIN'))
 
-        // Verify current PIN first
-        const verifyResult = await verifyPIN(current)
-        if (!verifyResult.success) {
-          if (verifyResult.locked) {
-            setCurrentPINError(verifyResult.message || t('BCSC.ChangePIN.AccountLocked'))
-          } else {
-            setCurrentPINError(t('BCSC.ChangePIN.IncorrectPIN'))
-          }
+        // Verify current PIN first. A wrong one counts towards the same lock as the unlock screen.
+        const verification = await verifyPinWithLockout(current, logger)
+        if (verification.type !== PinVerificationType.Success) {
+          setCurrentPINError(
+            t(
+              verification.type === PinVerificationType.Locked
+                ? 'BCSC.ChangePIN.AccountLocked'
+                : 'BCSC.ChangePIN.IncorrectPIN'
+            )
+          )
           setLoading(false)
           stopLoading()
           return

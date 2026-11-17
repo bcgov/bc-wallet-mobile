@@ -1,5 +1,8 @@
+import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { ErrorRegistry } from '@/errors'
 import { VerificationStatus } from '@/store'
+import * as environment from '@/utils/environment'
+import { IASEnvironment } from '@/utils/environment'
 import * as Bifold from '@bifold/core'
 import { act, render } from '@testing-library/react-native'
 import React from 'react'
@@ -39,6 +42,9 @@ jest.mock('../hooks/useSystemChecks', () => ({
 }))
 jest.mock('../contexts/BCSCLoadingContext', () => ({
   LoadingScreen: 'LoadingScreen',
+}))
+jest.mock('../features/modal/InvalidEnvironment', () => ({
+  InvalidEnvironment: () => 'InvalidEnvironment',
 }))
 jest.mock('./AuthStack', () => ({
   __esModule: true,
@@ -136,6 +142,53 @@ describe('BCSCRootStack', () => {
     const { toJSON } = render(<BCSCRootStack />)
 
     expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
+  })
+
+  describe('invalid environment recovery gate', () => {
+    let isProductionBundleSpy: jest.SpyInstance
+
+    afterEach(() => {
+      isProductionBundleSpy.mockRestore()
+    })
+
+    const renderWith = (storeOverrides: Record<string, any>, isProduction: boolean) => {
+      isProductionBundleSpy = jest.spyOn(environment, 'isProductionBundle').mockReturnValue(isProduction)
+      jest.mocked(Bifold.useStore).mockReturnValue([mockStore(storeOverrides), jest.fn()] as any)
+
+      return render(<BCSCRootStack />)
+    }
+
+    it('renders InvalidEnvironment on a production bundle with a non-production environment and no account', () => {
+      const { toJSON } = renderWith({ developer: { environment: IASEnvironment.SIT } }, true)
+
+      expect(toJSON()).toBe('InvalidEnvironment')
+    })
+
+    it('renders InvalidEnvironment even when the API client is not ready', () => {
+      mockIsClientReady.mockReturnValue(false)
+
+      const { toJSON } = renderWith({ developer: { environment: IASEnvironment.SIT } }, true)
+
+      expect(toJSON()).toBe('InvalidEnvironment')
+    })
+
+    it('does not render InvalidEnvironment on a production bundle with the production environment', () => {
+      const { toJSON } = renderWith({ developer: { environment: IASEnvironment.PROD } }, true)
+
+      expect(toJSON()).toBe('OnboardingStack')
+    })
+
+    it('does not render InvalidEnvironment on a non-production bundle', () => {
+      const { toJSON } = renderWith({ developer: { environment: IASEnvironment.SIT } }, false)
+
+      expect(toJSON()).toBe('OnboardingStack')
+    })
+
+    it('does not render InvalidEnvironment before the state has loaded', () => {
+      const { toJSON } = renderWith({ stateLoaded: false, developer: { environment: IASEnvironment.SIT } }, true)
+
+      expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
+    })
   })
 
   it('renders LoadingScreen when initializingAccount is true', () => {
@@ -717,7 +770,7 @@ describe('BCSCRootStack', () => {
     jest
       .mocked(Bifold.useStore)
       .mockReturnValue([
-        mockStore({ ...verified, bcscSecure: { verified: true, refreshTokenExpired: true } }),
+        mockStore({ ...verified, bcscSecure: { verified: true, refreshToken: EXPIRED_JWT } }),
         jest.fn(),
       ] as any)
     rerender(<BCSCRootStack />)
@@ -762,7 +815,7 @@ describe('BCSCRootStack', () => {
       rerender(<BCSCRootStack />)
       expect(phaseLogs()).toHaveLength(1)
 
-      useVerifiedStore({ refreshTokenExpired: true })
+      useVerifiedStore({ refreshToken: EXPIRED_JWT })
       rerender(<BCSCRootStack />)
 
       expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: unknown', '[RootStack] Card expiry phase: expired'])

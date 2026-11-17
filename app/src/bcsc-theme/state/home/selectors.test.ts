@@ -1,4 +1,5 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { EXPIRED_JWT, UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { VerificationRequestStatus } from '@/constants'
 import { BCSCSecureState, BCState, initialBCSCSecureState, initialState, VerificationStatus } from '@/store'
@@ -44,10 +45,8 @@ describe('selectHomeNotice', () => {
   })
 
   it('shows Finish for a device with a refresh token, until that token expires', () => {
-    expect(select(buildState({ refreshToken: 'token' })).type).toBe(HomeNoticeType.BCSCVerified)
-    expect(select(buildState({ refreshToken: 'token', refreshTokenExpired: true })).type).toBe(
-      HomeNoticeType.BCSCStartVerification
-    )
+    expect(select(buildState({ refreshToken: UNEXPIRED_JWT })).type).toBe(HomeNoticeType.BCSCVerified)
+    expect(select(buildState({ refreshToken: EXPIRED_JWT })).type).toBe(HomeNoticeType.BCSCStartVerification)
   })
 
   it('shows Continue when the ID step is complete', () => {

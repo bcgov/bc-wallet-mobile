@@ -1,0 +1,364 @@
+# E2E Upgrade Weekly
+#
+# The upgrade matrix: every shipped version in e2e/upgrade-sources.json → the latest
+# viable main build, in every state an account can be in when the app updates
+# (e2e/src/upgrade-matrix.ts):
+#   upgradePartial   — nothing submitted: an unverified account, a saved serial, a
+#                      captured document, partial non-BCSC progress
+#   upgradeSubmitted — a request the server holds but has not decided: an in-person
+#                      code, a send-video review
+#   upgradeApproved  — approved while the app was closed; the update came before the
+#                      user reopened it
+#   upgradeVerified  — a verified account with its device credential
+# Each (suite, version) pair is one call of e2e.yml, which boots BCSC-v<version>.*
+# from Sauce storage and installs the build under test over it; a lineage that cannot
+# arrange a state schedules nothing for it (the brief reads the gap as n/a). A failed
+# pair turns the run red but stops nothing: the other pairs still run, and the brief at
+# the end renders the version × state matrix from the reports.
+#
+# Order and concurrency (the Sauce account allows 2 real-device sessions):
+#   upgradePartial — no IDCheck, no review queue: both platforms in parallel, the
+#                    versions one after another
+#   upgradeSubmitted, upgradeApproved, upgradeVerified — one version at a time with
+#                    its platforms serialised: the in-person approval and the verified
+#                    account use the shared SIT persona (SIT keeps ONE active device per
+#                    card), and the send-video specs review the blind-FIFO queue
+# A version the manifest marks iOS-only (3.15.1) gets an iOS-only device matrix.
+#
+# Trigger modes:
+#   schedule          — Saturday 12:00 UTC (05:00 PT), after the Saturday nightly
+#   workflow_dispatch — a subset: versions and suites (comma-separated), or an explicit
+#                       build under test
+#
+# The build under test resolves like the nightly's: the latest main run of the past
+# 7 days whose bcsc-dev builds and Sauce uploads all succeeded. The in-person approval
+# runs on the runner, so the e2e jobs stay on the allowlisted runner e2e.yml defaults to.
+name: E2E Upgrade Weekly
+
+on:
+  schedule:
+    - cron: '0 12 * * 6' # Saturdays at noon UTC
+  workflow_dispatch:
+    inputs:
+      versions:
+        description: 'Versions to upgrade from, comma-separated (empty = every version in e2e/upgrade-sources.json)'
+        type: string
+        required: false
+        default: ''
+      suites:
+        description: 'Suites to run, comma-separated'
+        type: string
+        required: false
+        default: 'upgradePartial,upgradeSubmitted,upgradeApproved,upgradeVerified'
+      build_number:
+        description: 'Build under test: a main build run number (empty = the latest viable main build of the past 7 days)'
+        type: string
+        required: false
+        default: ''
+      app_name:
+        description: 'Build under test: a Sauce storage name without extension (e.g. BCSC-v4.2.0); overrides build_number'
+        type: string
+        required: false
+        default: ''
+
+# One matrix at a time: two would fight over the two Sauce sessions and the shared personas
+concurrency:
+  group: e2e-upgrade-weekly
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan the matrix
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    timeout-minutes: 10
+    outputs:
+      sources: ${{ steps.plan.outputs.sources }}
+      suites: ${{ steps.plan.outputs.suites }}
+      build_number: ${{ steps.build.outputs.build_number }}
+      app_name: ${{ steps.build.outputs.app_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: e2e/upgrade-sources.json
+          sparse-checkout-cone-mode: false
+
+      - name: Pick the versions and suites
+        id: plan
+        env:
+          VERSIONS: ${{ inputs.versions }}
+          SUITES: ${{ inputs.suites || 'upgradePartial,upgradeSubmitted,upgradeApproved,upgradeVerified' }}
+        run: |
+          # One matrix entry per version, oldest first; its device matrix lists only the platforms it shipped on
+          # (the same device patterns the nightly pins — see e2e-nightly.yml).
+          sources=$(jq -c --arg wanted "$VERSIONS" '
+            def device: if . == "ios" then {platform: "iOS", device: "iPhone 1[4-6].*", os_version: "18"}
+                        else {platform: "Android", device: "Google.*", os_version: "15"} end;
+            ($wanted | split(",") | map(gsub("\\s"; "")) | map(select(length > 0))) as $only
+            | [ .sources[]
+                | .version as $version
+                | select(($only | length) == 0 or ($only | index($version)) != null)
+                | {version, device_matrix: ([.platforms[] | device] | tostring)} ]' e2e/upgrade-sources.json)
+          for wanted in $(tr ',' ' ' <<<"$VERSIONS"); do
+            if ! jq -e --arg v "$wanted" 'any(.[]; .version == $v)' <<<"$sources" >/dev/null; then
+              echo "::error::${wanted} is not in e2e/upgrade-sources.json"
+              exit 1
+            fi
+          done
+          if [ "$(jq 'length' <<<"$sources")" = "0" ]; then
+            echo "::error::No versions to run — e2e/upgrade-sources.json is empty"
+            exit 1
+          fi
+          suites=$(jq -cR 'split(",") | map(gsub("\\s"; "")) | map(select(length > 0))' <<<"$SUITES")
+          for suite in $(jq -r '.[]' <<<"$suites"); do
+            case "$suite" in
+              upgradePartial | upgradeSubmitted | upgradeApproved | upgradeVerified) ;;
+              *)
+                echo "::error::Unknown suite '${suite}' — the upgrade suites are upgradePartial, upgradeSubmitted, upgradeApproved, upgradeVerified"
+                exit 1
+                ;;
+            esac
+          done
+          if [ "$(jq 'length' <<<"$suites")" = "0" ]; then
+            echo "::error::No suites to run"
+            exit 1
+          fi
+          {
+            echo "sources=$sources"
+            echo "suites=$suites"
+          } >> "$GITHUB_OUTPUT"
+          echo "Versions: $(jq -r '[.[].version] | join(", ")' <<<"$sources") · suites: $(jq -r 'join(", ")' <<<"$suites")"
+
+      - name: Resolve the build under test
+        id: build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_NUMBER_INPUT: ${{ inputs.build_number }}
+          APP_NAME_INPUT: ${{ inputs.app_name }}
+        run: |
+          if [ -n "$APP_NAME_INPUT" ] || [ -n "$BUILD_NUMBER_INPUT" ]; then
+            {
+              echo "build_number=$BUILD_NUMBER_INPUT"
+              echo "app_name=$APP_NAME_INPUT"
+            } >> "$GITHUB_OUTPUT"
+            echo "Build under test: ${APP_NAME_INPUT:-BCSC-Dev-${BUILD_NUMBER_INPUT}} (dispatch input)"
+            exit 0
+          fi
+
+          SINCE=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+              || date -u -v-7d +%Y-%m-%dT%H:%M:%SZ)
+
+          # The same viability rule as the nightly's resolve-build: the bcsc-dev builds and their
+          # SauceLabs uploads succeeded; unrelated failures in the main workflow don't matter.
+          REQUIRED_JOBS=(
+            "Build iOS - bcsc-dev"
+            "Build Android - bcsc-dev"
+            "Ship to SauceLabs - bcsc-dev - ios"
+            "Ship to SauceLabs - bcsc-dev - android"
+          )
+
+          BUILD_NUMBER=""
+          while IFS=$'\t' read -r RUN_ID RUN_NUM; do
+            [ -z "$RUN_ID" ] && continue
+
+            JOBS_JSON=$(gh api \
+              "repos/${{ github.repository }}/actions/runs/${RUN_ID}/jobs?per_page=100")
+
+            ALL_OK=true
+            for job in "${REQUIRED_JOBS[@]}"; do
+              RESULT=$(echo "$JOBS_JSON" | jq -r \
+                --arg name "$job" '.jobs[] | select(.name == $name) | .conclusion')
+              if [ "$RESULT" != "success" ]; then
+                ALL_OK=false
+                echo "Run #${RUN_NUM}: '${job}' conclusion=${RESULT:-missing} — skipping"
+                break
+              fi
+            done
+
+            if [ "$ALL_OK" = true ]; then
+              BUILD_NUMBER="$RUN_NUM"
+              echo "Run #${RUN_NUM}: all required bcsc-dev jobs succeeded"
+              break
+            fi
+          done < <(gh api \
+            "repos/${{ github.repository }}/actions/workflows/main.yaml/runs?branch=main&status=completed&created=>=${SINCE}&per_page=50" \
+            --jq '.workflow_runs[] | "\(.id)\t\(.run_number)"')
+
+          if [ -z "$BUILD_NUMBER" ]; then
+            echo "::error::No main run since ${SINCE} produced viable bcsc-dev SauceLabs artifacts — refusing to test"
+            exit 1
+          fi
+
+          {
+            echo "build_number=${BUILD_NUMBER}"
+            echo "app_name="
+          } >> "$GITHUB_OUTPUT"
+          echo "Build under test: BCSC-Dev-${BUILD_NUMBER}"
+
+  # ─── The four states, one stage each ───────────────────────────────────
+  # A stage is a matrix over the versions, one e2e.yml call per version (max-parallel 1 keeps the
+  # versions serial). `!cancelled()` lets a stage run after a skipped or red predecessor; a stage
+  # whose suite the dispatch left out is skipped.
+  partial:
+    name: upgradePartial
+    needs: [plan]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && contains(fromJSON(needs.plan.outputs.suites), 'upgradePartial') }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.sources) }}
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+    with:
+      suite: upgradePartial
+      build_number: ${{ needs.plan.outputs.build_number }}
+      app_name: ${{ needs.plan.outputs.app_name }}
+      prev_version: ${{ matrix.source.version }}
+      device_matrix: ${{ matrix.source.device_matrix }}
+      max_parallel: 2
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  submitted:
+    name: upgradeSubmitted
+    needs: [plan, partial]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && contains(fromJSON(needs.plan.outputs.suites), 'upgradeSubmitted') }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.sources) }}
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+    with:
+      suite: upgradeSubmitted
+      build_number: ${{ needs.plan.outputs.build_number }}
+      app_name: ${{ needs.plan.outputs.app_name }}
+      prev_version: ${{ matrix.source.version }}
+      device_matrix: ${{ matrix.source.device_matrix }}
+      max_parallel: 1
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  approved:
+    name: upgradeApproved
+    needs: [plan, submitted]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && contains(fromJSON(needs.plan.outputs.suites), 'upgradeApproved') }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.sources) }}
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+    with:
+      suite: upgradeApproved
+      build_number: ${{ needs.plan.outputs.build_number }}
+      app_name: ${{ needs.plan.outputs.app_name }}
+      prev_version: ${{ matrix.source.version }}
+      device_matrix: ${{ matrix.source.device_matrix }}
+      max_parallel: 1
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  verified:
+    name: upgradeVerified
+    needs: [plan, approved]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && contains(fromJSON(needs.plan.outputs.suites), 'upgradeVerified') }}
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        source: ${{ fromJSON(needs.plan.outputs.sources) }}
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+    with:
+      suite: upgradeVerified
+      build_number: ${{ needs.plan.outputs.build_number }}
+      app_name: ${{ needs.plan.outputs.app_name }}
+      prev_version: ${{ matrix.source.version }}
+      device_matrix: ${{ matrix.source.device_matrix }}
+      max_parallel: 1
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  # ─── Queue hygiene: the last word on the SIT review queues ──────────────
+  # The send-video upgrade specs drain the queue around their own uploads; this is the end-of-run
+  # double check, whatever the stages did (always()). Scope e2e: only the e2e personas' requests are
+  # rejected; anyone else's is moved to the Specialist Review queue instead.
+  queue-hygiene:
+    needs: [plan, partial, submitted, approved, verified]
+    if: ${{ always() && needs.plan.result == 'success' }}
+    uses: ./.github/workflows/e2e-send-video-queue.yml
+    permissions:
+      contents: read
+    with:
+      scope: e2e
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  # ─── Weekly upgrade brief ────────────────────────────────────────────────
+  # One block per version: the build the sessions booted and every state as a row (n/a where the
+  # lineage cannot arrange it), then every failure named by version. Reads the per-version
+  # e2e-reports-<suite>-<version>-* artifacts, whatever the stages did (always()).
+  brief:
+    name: Upgrade brief
+    needs: [plan, partial, submitted, approved, verified, queue-hygiene]
+    if: ${{ always() && needs.plan.result == 'success' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup E2E
+        uses: ./.github/workflows/actions/setup-e2e
+
+      # A stage that uploaded nothing (left out of the dispatch, or a platform the version never
+      # shipped on) is normal — the page shows ⬜ / "no reports" rather than the job failing here.
+      - name: Download E2E reports
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          pattern: e2e-reports-*
+          path: e2e/artifacts
+
+      - name: Check the coverage map and the upgrade matrix
+        working-directory: e2e
+        run: ./node_modules/.bin/tsx scripts/brief-check.ts
+
+      - name: Render the brief
+        working-directory: e2e
+        env:
+          BUILD_LABEL: ${{ needs.plan.outputs.app_name || format('build {0}', needs.plan.outputs.build_number) }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          LANE_PARTIAL: ${{ needs.partial.result }}
+          LANE_SUBMITTED: ${{ needs.submitted.result }}
+          LANE_APPROVED: ${{ needs.approved.result }}
+          LANE_VERIFIED: ${{ needs.verified.result }}
+        run: |
+          ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts --upgrades \
+            --title "E2E upgrade weekly — ${BUILD_LABEL}" --run-url "$RUN_URL" \
+            --lane "upgradePartial=${LANE_PARTIAL}" --lane "upgradeSubmitted=${LANE_SUBMITTED}" \
+            --lane "upgradeApproved=${LANE_APPROVED}" --lane "upgradeVerified=${LANE_VERIFIED}" \
+            --out brief.md --json brief.json
+          cat brief.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload brief
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-upgrade-weekly-brief
+          path: |
+            e2e/brief.md
+            e2e/brief.json
+          if-no-files-found: warn
+          retention-days: 30

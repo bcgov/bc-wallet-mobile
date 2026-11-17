@@ -90,6 +90,10 @@ export const TestIds = {
     sessionExpired: {
       button: 'VerificationSessionExpiredButton',
     },
+    invalidEnvironment: {
+      reset: 'InvalidEnvironmentReset',
+      contactUs: 'InvalidEnvironmentContactUs',
+    },
     /** ServiceOutage does NOT use `SystemModal` — it is its own component with two buttons. */
     serviceOutage: {
       /** Secondary button, onboarding only: skip verification and continue to Home. */
@@ -237,7 +241,9 @@ export const TestIds = {
       continue: 'Continue',
       getHelp: 'GetHelp',
     },
-    /** Timed lockout screen after 5 consecutive wrong PINs (native counter, persisted across relaunches). */
+    /** Timed lockout screen after 5 consecutive wrong PINs (the count is persisted across relaunches).
+     *  `removeAccount` removes nothing itself: it opens the remove-account confirmation
+     *  (`main.removeAccount.confirm`), whose header Back returns here. */
     lockout: {
       removeAccount: 'RemoveAccount',
     },
@@ -320,6 +326,7 @@ export const TestIds = {
     verificationCardError: {
       tryAnother: 'TryAnother',
       getBcsc: 'GetBCSC',
+      birthdate: 'MismatchedSerialBirthdate',
     },
     /** `DeviceAuthorizationError` — device-authorization failure; its only control is the help link. */
     deviceAuthorizationError: {
@@ -408,6 +415,11 @@ export const TestIds = {
     videoTooLong: {
       retake: 'VideoTooLongRetake',
       cancel: 'VideoTooLongCancel',
+    },
+    /** `VideoExpired` — a recording left unsubmitted past its TTL lands here instead of uploading.
+     *  Screen-prefixed for the same reason as `videoTooLong`: all three follow a stopped recording. */
+    videoExpired: {
+      retake: 'VideoExpiredRetake',
     },
     /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
     evidenceUploading: {

@@ -34,12 +34,8 @@ export class PendingVerificationRecoverySystemCheck implements SystemCheckStrate
   onSuccess() {
     // Set request status to verified to display a CTA to "complete" the verification process
     this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-      payload: [VerificationRequestStatus.VERIFIED],
-    })
-    this.utils.dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-      payload: [undefined],
+      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+      payload: [{ status: VerificationRequestStatus.VERIFIED }],
     })
   }
 }

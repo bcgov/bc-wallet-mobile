@@ -293,6 +293,7 @@ runs:
             exit 1
           fi
           echo "✅ Enabled"
+          AUTO_NOTIFY_ENABLED=true
         fi
         echo "::endgroup::"
 
@@ -422,18 +423,30 @@ runs:
             echo "✅ Submitted for Beta App Review"
             ;;
           BETA_APPROVED|READY_FOR_BETA_TESTING)
-            HTTP_CODE=$(curl -s -o /tmp/beta_notify_response.json -w '%{http_code}' \
-              -X POST \
-              -H "$AUTH" \
-              -H "Content-Type: application/json" \
-              -d "{\"data\":{\"type\":\"buildBetaNotifications\",\"relationships\":{\"build\":{\"data\":{\"type\":\"builds\",\"id\":\"${BUILD_ID}\"}}}}}" \
-              "${API}/buildBetaNotifications")
-            if [ "$HTTP_CODE" -ge 400 ]; then
-              echo "❌ Build is approved but notifying testers failed (HTTP ${HTTP_CODE}):"
-              python3 -m json.tool < /tmp/beta_notify_response.json 2>/dev/null || cat /tmp/beta_notify_response.json 2>/dev/null || true
-              exit 1
+            # Apple rejects an explicit notification while automatic
+            # notification is on — 409 "Auto-notify already enabled" — and
+            # auto-notify covers a group added after approval anyway. So the
+            # push is only sent for a build that opted out, and a 409 saying
+            # auto-notify is on describes the same outcome, not a failure.
+            if [ "$AUTO_NOTIFY_ENABLED" = "true" ]; then
+              echo "✅ Approved; automatic notification distributes it to the groups"
+            else
+              HTTP_CODE=$(curl -s -o /tmp/beta_notify_response.json -w '%{http_code}' \
+                -X POST \
+                -H "$AUTH" \
+                -H "Content-Type: application/json" \
+                -d "{\"data\":{\"type\":\"buildBetaNotifications\",\"relationships\":{\"build\":{\"data\":{\"type\":\"builds\",\"id\":\"${BUILD_ID}\"}}}}}" \
+                "${API}/buildBetaNotifications")
+              if [ "$HTTP_CODE" = "409" ] && grep -qi 'auto-notify already enabled' /tmp/beta_notify_response.json; then
+                echo "✅ Approved; automatic notification distributes it to the groups"
+              elif [ "$HTTP_CODE" -ge 400 ]; then
+                echo "❌ Build is approved but notifying testers failed (HTTP ${HTTP_CODE}):"
+                python3 -m json.tool < /tmp/beta_notify_response.json 2>/dev/null || cat /tmp/beta_notify_response.json 2>/dev/null || true
+                exit 1
+              else
+                echo "✅ Approved build distributed to testers"
+              fi
             fi
-            echo "✅ Approved build distributed to testers"
             ;;
           WAITING_FOR_BETA_REVIEW|IN_BETA_REVIEW)
             echo "✅ In review (${EXTERNAL_STATE}); testers are notified automatically once it is approved"

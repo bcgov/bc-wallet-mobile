@@ -1,4 +1,10 @@
-import { formatExpiryBadge, formatTimestamp, getProofRequestExpiry, isAccountExpired } from './datetime-utils'
+import {
+  formatCalendarDate,
+  formatExpiryBadge,
+  formatTimestamp,
+  getProofRequestExpiry,
+  isAccountExpired,
+} from './datetime-utils'
 
 const NOW = new Date('2026-06-04T12:00:00.000Z')
 const minutes = (n: number) => n * 60_000
@@ -13,6 +19,17 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.useRealTimers()
+})
+
+describe('formatCalendarDate', () => {
+  it("formats the Date's local calendar day, whatever its time of day", () => {
+    expect(formatCalendarDate(new Date(2000, 0, 1), 'en-CA')).toBe('January 1, 2000')
+    expect(formatCalendarDate(new Date(2000, 0, 1, 23, 59), 'en-CA')).toBe('January 1, 2000')
+  })
+
+  it('localizes the month name', () => {
+    expect(formatCalendarDate(new Date(1980, 0, 1), 'fr-CA')).toBe('1 janvier 1980')
+  })
 })
 
 describe('formatTimestamp', () => {

@@ -2,6 +2,7 @@ import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
 import { formStringLengths } from '@/constants'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -21,6 +22,8 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { getNicknameValidationErrorKey } from '../../../utils/account-utils'
 
+const FIELD_ORDER = ['accountNickname'] as const
+
 interface NicknameFormProps {
   onSubmit: (trimmedNickname: string) => Promise<void> | void
   isRenaming?: boolean
@@ -34,6 +37,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
   const [accountNickname, setAccountNickname] = useState(store.bcsc.selectedNickname ?? '')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const { scrollViewRef, inputRefs, onFieldLayout, focusFirstInvalidField } = useFocusFirstInvalidField(FIELD_ORDER)
 
   const styles = StyleSheet.create({
     bulletPointContainer: {
@@ -57,7 +61,9 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
     const validationErrorKey = getNicknameValidationErrorKey(store, trimmedAccountNickname)
 
     if (validationErrorKey) {
-      setError(t(validationErrorKey))
+      const message = t(validationErrorKey)
+      setError(message)
+      focusFirstInvalidField({ accountNickname: message })
       return
     }
 
@@ -69,7 +75,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
     } finally {
       setLoading(false)
     }
-  }, [accountNickname, onSubmit, store, t])
+  }, [accountNickname, onSubmit, store, t, focusFirstInvalidField])
 
   const controls = (
     <ControlContainer>
@@ -87,12 +93,19 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
   )
 
   return (
-    <ScreenWrapper padded={false} keyboardActive controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
+    <ScreenWrapper
+      padded={false}
+      keyboardActive
+      controls={controls}
+      scrollViewRef={scrollViewRef}
+      scrollViewContainerStyle={{ padding: Spacing.lg }}
+    >
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.NicknameAccount.EnterNickname')}
       </ThemedText>
 
       <InputWithValidation
+        ref={inputRefs.accountNickname}
         id={'accountNickname'}
         label={t('BCSC.NicknameAccount.AccountName')}
         hideLabel
@@ -100,6 +113,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
         onChangeText={handleChangeText}
         error={error}
         onErrorClear={() => setError(null)}
+        onLayout={onFieldLayout('accountNickname')}
         textInputProps={{
           maxLength: formStringLengths.maximumLength,
           autoCorrect: false,

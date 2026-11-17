@@ -1,8 +1,12 @@
+import BCSCApiClient from '@/bcsc-theme/api/client'
+import useEvidenceApi from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { isAxiosAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSecureActions } from './useSecureActions'
@@ -11,9 +15,10 @@ import { useVerificationReset } from './useVerificationReset'
 /**
  * Returns a callback that asks the user to confirm restarting the identity verification process.
  *
- * On confirmation, all verification progress is reset (see {@link useVerificationReset}) behind
- * a loading screen, then the verification status is set back to in-progress so the RootStack
- * remounts the VerifyStack at the first verification step.
+ * On confirmation, any pending verification request is first cancelled with IAS (best effort: a
+ * failed cancel is logged and the restart carries on), then all verification progress is reset
+ * (see {@link useVerificationReset}) behind a loading screen, then the verification status is set
+ * back to in-progress so the RootStack remounts the VerifyStack at the first verification step.
  *
  * @returns {(onConfirm?: () => void) => void} Callback that shows the confirmation alert. The
  * optional `onConfirm` is invoked when the user confirms, before the reset starts (e.g. to
@@ -25,12 +30,38 @@ export const useRestartVerification = () => {
   const loadingScreen = useLoadingScreen()
   const verificationReset = useVerificationReset()
   const { continueVerificationProcess } = useSecureActions()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { client } = useBCSCApiClientState()
+  const evidenceApi = useEvidenceApi(client as BCSCApiClient)
+  const verificationRequestId = store.bcscSecure.verificationRequestId
+
+  const cancelPendingVerificationRequest = useCallback(async (): Promise<void> => {
+    if (!verificationRequestId) {
+      return
+    }
+
+    try {
+      await evidenceApi.cancelVerificationRequest(verificationRequestId)
+    } catch (error) {
+      if (isAxiosAppError(error, 404)) {
+        logger.info('[useRestartVerification] Verification request already cancelled or decided')
+        return
+      }
+
+      logger.warn('[useRestartVerification] Failed to cancel the pending verification request; restarting anyway', {
+        error,
+      })
+    }
+  }, [verificationRequestId, evidenceApi, logger])
 
   const restartVerification = useCallback(async () => {
     const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
 
     try {
+      // Must run first: the reset clears the request id and device code the cancel needs
+      await cancelPendingVerificationRequest()
+
       const success = await verificationReset()
 
       // On failure the reset already shows a factory reset alert, so only re-enter the verify flow on success
@@ -45,7 +76,7 @@ export const useRestartVerification = () => {
     } finally {
       stopLoading()
     }
-  }, [loadingScreen, t, verificationReset, continueVerificationProcess, dispatch])
+  }, [loadingScreen, t, cancelPendingVerificationRequest, verificationReset, continueVerificationProcess, dispatch])
 
   const promptRestartVerification = useCallback(
     (onConfirm?: () => void) => {

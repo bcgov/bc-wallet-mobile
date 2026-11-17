@@ -8,7 +8,7 @@ import { useServerStatus } from '../contexts/ServerStatusContext'
 import * as PairingModule from '../features/pairing'
 import { PairingNavigationListener, PairingPayload } from '../features/pairing/types'
 import { useSystemChecks } from '../hooks/useSystemChecks'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { useVerificationState } from '../state/verification/useVerificationState'
 import { BCSCScreens } from '../types/navigators'
 import MainStack from './MainStack'
 
@@ -69,8 +69,8 @@ jest.mock('../hooks/useSystemChecks', () => ({
 jest.mock('../contexts/ServerStatusContext', () => ({
   useServerStatus: jest.fn(() => ({ hasChecked: true })),
 }))
-jest.mock('../hooks/useVerificationStatus', () => ({
-  useVerificationStatus: jest.fn(() => ({ isVerified: true })),
+jest.mock('../state/verification/useVerificationState', () => ({
+  useVerificationState: jest.fn(() => ({ isVerified: true })),
 }))
 jest.mock('../features/pairing', () => ({
   usePairingService: jest.fn(),
@@ -157,7 +157,7 @@ describe('MainStack', () => {
     jest.mocked(PairingModule.pairingPayloadToServiceLoginParams).mockReturnValue({ pairingCode: 'code' } as any)
     jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: true })
     jest.mocked(useServerStatus).mockReturnValue({ hasChecked: true } as any)
-    jest.mocked(useVerificationStatus).mockReturnValue({ isVerified: true } as any)
+    jest.mocked(useVerificationState).mockReturnValue({ isVerified: true } as any)
   })
 
   const queryLoadingScreens = (view: ReturnType<typeof render>) => view.UNSAFE_queryAllByType('LoadingScreen' as any)
@@ -234,7 +234,7 @@ describe('MainStack', () => {
   })
 
   it('registers VerificationSuccess for an unverified user, who opens it from the Home "Verified" card', () => {
-    jest.mocked(useVerificationStatus).mockReturnValue({ isVerified: false } as any)
+    jest.mocked(useVerificationState).mockReturnValue({ isVerified: false } as any)
 
     expect(queryScreenNames(render(<MainStack />))).toContain(BCSCScreens.VerificationSuccess)
   })
