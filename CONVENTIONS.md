@@ -49,6 +49,32 @@ existing cancellation destination: verification-method selection (#4585).
 Startup and post-call verification checks have no Cancel control. Post-call checks
 show the existing verification message without a progress bar.
 
+## Skeleton loading: the frame of the real content, pulsing only its fills
+
+Where a short first load is replaced by content whose layout is known, show a skeleton of that layout
+rather than a spinner. The Wallet tab shows `CredentialListSkeleton` until the agent has started and the
+stored credentials have loaded (#4741), following the
+[style guide](https://www.figma.com/design/Npt3lfaWT9oU4N4KBwhB1p/BCSC-Style-Guide?node-id=0-4032).
+
+- The frame (list margins, stripe, logo tile, padding, minimum height) uses the same screen-relative
+  sizes as the live credential card, so a card does not move when it replaces its placeholder. Bifold
+  does not export those sizes; `getCredentialCardFrame` mirrors them, so check it when Bifold is
+  upgraded. The bars inside the card and the shadows follow the style guide instead.
+- Only the grey fills pulse (opacity 1 to 0.4 and back over 2 seconds). The card and logo tile stay
+  solid: an elevated view that fades shows its own shadow through itself on Android.
+- The pulse is one looped native timing with an interpolated opacity, as in `BCAnimatedLoadingIcon`.
+  A looped `Animated.sequence` restarts from JavaScript every cycle and stalls while start-up work
+  holds that thread, which is exactly when a skeleton is on screen.
+- Waits that follow each other share one skeleton. A single gate decides failed, loading or ready
+  (`CredentialsReadyGate`) so the pulse never restarts between them.
+- Like any loading view it stops animating while hidden: pass `active`, from `useIsFocused` in a tab.
+- A skeleton is one screen-reader element ("Loading...", busy) with its blocks hidden from assistive
+  technology.
+- The fill colour is design-fixed (`SKELETON_FILL_COLOR`), like the banner colours.
+
+**Why:** the Wallet tab showed two identical spinners one after the other, which said nothing about
+what was loading and made the swap to the cards abrupt.
+
 ## Submits: one run per request, however many screens mount
 
 A screen that submits on mount (the send-video `UploadingScreen`) keeps its in-flight run in a

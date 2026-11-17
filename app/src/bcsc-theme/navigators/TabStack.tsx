@@ -24,7 +24,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createTabHeader } from '../components/NavigationHeaders'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
-import { AgentReadyGate, CredentialsReadyGate } from '../features/agent'
+import { CredentialsReadyGate } from '../features/agent'
 import Home from '../features/home/Home'
 import { FloatingScanButton } from '../features/scan'
 import Services from '../features/services/Services'
@@ -32,13 +32,11 @@ import { useCardStatus } from '../hooks/useCardStatus'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks, BCSCTabStackParams } from '../types/navigators'
 
 const ScopedCredentialStack: React.FC = () => (
-  <AgentReadyGate testID={testIdWithKey(TestIds.main.wallet.loading)}>
+  <CredentialsReadyGate testID={testIdWithKey(TestIds.main.wallet.loading)}>
     <OpenIDCredentialRecordProvider>
-      <CredentialsReadyGate testID={testIdWithKey(TestIds.main.wallet.loading)}>
-        <CredentialStack />
-      </CredentialsReadyGate>
+      <CredentialStack />
     </OpenIDCredentialRecordProvider>
-  </AgentReadyGate>
+  </CredentialsReadyGate>
 )
 
 type TabBarIconProps = {

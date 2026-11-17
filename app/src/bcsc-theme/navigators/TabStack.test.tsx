@@ -38,7 +38,6 @@ jest.mock('@react-navigation/bottom-tabs', () => {
 jest.mock('../features/home/Home', () => 'Home')
 jest.mock('../features/services/Services', () => 'Services')
 jest.mock('../features/agent', () => ({
-  AgentReadyGate: 'AgentReadyGate',
   CredentialsReadyGate: 'CredentialsReadyGate',
 }))
 jest.mock('../features/scan', () => ({
