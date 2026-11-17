@@ -13,7 +13,7 @@ const DEVICE_LIMIT_BANNER_COOLDOWN_MS = __DEV__
  *   - `Infinity`: the banner stays hidden until the dismissal is cleared (never reappears on its own).
  *     Use it only on purpose, since nothing resets it but a factory reset or an explicit clear.
  */
-const BANNER_DISMISS_DURATION_MS: Record<BCSCBanner, number> = {
+export const BANNER_DISMISS_DURATION_MS: Record<BCSCBanner, number> = {
   [BCSCBanner.APP_UPDATE_AVAILABLE]: ONE_DAY_MS,
   [BCSCBanner.IAS_SERVER_UNAVAILABLE]: TEMP_NOT_DISMISSIBLE,
   [BCSCBanner.IAS_SERVER_NOTIFICATION]: TEMP_NOT_DISMISSIBLE,
