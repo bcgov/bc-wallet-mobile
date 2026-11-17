@@ -5,7 +5,7 @@ import { DeviceLimit } from './device-limit'
 import { useDeviceLimit } from './useDeviceLimit'
 
 const mockIdToken = (idToken: Partial<IdToken> | null) =>
-  jest.spyOn(IdTokenContext, 'useIdToken').mockReturnValue({
+  jest.spyOn(IdTokenContext, 'useOptionalIdToken').mockReturnValue({
     idToken: idToken as IdToken | null,
     isLoading: false,
     refreshIdToken: jest.fn(),
