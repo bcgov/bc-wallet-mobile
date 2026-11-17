@@ -2,6 +2,8 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
+import { useRateLimit } from '@/bcsc-theme/services/hooks/useRateLimit'
+import { RateLimitedAction, RateLimitWaitType } from '@/bcsc-theme/state/rate-limit/rate-limit'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState, VerificationStatus } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -28,6 +30,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   const { updateCardProcess, deleteScannedCardData: deleteCardInfo } = useSecureActions()
   const verificationReset = useVerificationReset()
   const loadingScreen = useLoadingScreen()
+  const { getWait } = useRateLimit()
 
   // Reset the card registration process when the user navigates back
   useEffect(() => {
@@ -50,12 +53,17 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [verificationReset, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode, loadingScreen])
 
   const onPressScan = useCallback(async () => {
+    if (getWait(RateLimitedAction.CardAdd).type === RateLimitWaitType.Waiting) {
+      navigation.navigate(BCSCScreens.BirthdateLockout)
+      return
+    }
+
     navigation.navigate(BCSCScreens.ScanSerial)
     if (store.bcscSecure.birthdate || store.bcscSecure.serial) {
       await deleteCardInfo()
     }
     await updateCardProcess(null)
-  }, [deleteCardInfo, navigation, store.bcscSecure.birthdate, store.bcscSecure.serial, updateCardProcess])
+  }, [deleteCardInfo, getWait, navigation, store.bcscSecure.birthdate, store.bcscSecure.serial, updateCardProcess])
 
   const onPressOtherID = useCallback(async () => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)

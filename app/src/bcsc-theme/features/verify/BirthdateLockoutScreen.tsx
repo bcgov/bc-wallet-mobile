@@ -3,6 +3,7 @@ import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { useBirthdateLockoutViewModel } from './useBirthdateLockoutViewModel'
 
 interface BirthdateLockoutScreenProps {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.BirthdateLockout>
@@ -12,9 +13,7 @@ export const BirthdateLockoutScreen = ({ navigation }: BirthdateLockoutScreenPro
   const { Spacing } = useTheme()
   const { t } = useTranslation()
 
-  const handleClose = () => {
-    navigation.goBack()
-  }
+  const { message, handleClose } = useBirthdateLockoutViewModel(navigation)
 
   const controls = (
     <Button
@@ -29,7 +28,7 @@ export const BirthdateLockoutScreen = ({ navigation }: BirthdateLockoutScreenPro
   return (
     <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.md }}>
       <ThemedText variant={'headingThree'}>{t('BCSC.BirthdateLockout.Heading')}</ThemedText>
-      <ThemedText>{t('BCSC.BirthdateLockout.Message')}</ThemedText>
+      <ThemedText testID={testIdWithKey(TestIds.verify.birthdateLockout.message)}>{message}</ThemedText>
     </ScreenWrapper>
   )
 }

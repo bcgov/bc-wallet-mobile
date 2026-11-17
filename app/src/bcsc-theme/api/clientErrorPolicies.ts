@@ -394,6 +394,13 @@ export const alreadyRegisteredErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Shared with useAuthorizationService, which lands a locally blocked card request on the same screens
+export const birthdateLockoutResetAction = () =>
+  CommonActions.reset({
+    index: 1,
+    routes: [{ name: BCSCScreens.IdentitySelection }, { name: BCSCScreens.BirthdateLockout }],
+  })
+
 // Error policy for device authorization endpoint (too many birthdate + serial attempts)
 // Handles 503 errors from deviceAuthorization endpoint, with or without retry-after header
 export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
@@ -402,12 +409,7 @@ export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
   },
   handle: (error, context) => {
     context.logger.info(`[BirthdateLockoutErrorPolicy] Lockout with error:`, { error })
-    context.navigation.dispatch(
-      CommonActions.reset({
-        index: 1,
-        routes: [{ name: BCSCScreens.IdentitySelection }, { name: BCSCScreens.BirthdateLockout }],
-      })
-    )
+    context.navigation.dispatch(birthdateLockoutResetAction())
   },
 }
 

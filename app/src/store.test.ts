@@ -1,5 +1,6 @@
 import type { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 // Not imported via AppBanner: that would load the theme, which this suite's @bifold/core mock cannot support
+import { RateLimitedAction } from './bcsc-theme/state/rate-limit/rate-limit'
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { InstallIdSystemCheck } from './services/system-checks/InstallIdSystemCheck'
 import {
@@ -139,6 +140,33 @@ describe('reducer', () => {
       BCLocalStorageKeys.BCSC,
       expect.objectContaining({ lastKeyRotationAttemptAt: '2026-01-01T00:00:00.000Z' })
     )
+  })
+
+  describe('RATE_LIMIT_RECEIVED', () => {
+    const received = (state: typeof initialState, action: RateLimitedAction, retryAt: string) =>
+      reducer(state, { type: BCDispatchAction.RATE_LIMIT_RECEIVED, payload: [{ action, retryAt }] })
+
+    it('stores the retry time for one action, keeps the others and persists the blob', () => {
+      const first = received(initialState, RateLimitedAction.QRTransfer, '2026-01-01T00:05:00.000Z')
+      const second = received(first, RateLimitedAction.CardAdd, '2026-01-01T00:10:00.000Z')
+
+      expect(second.bcsc.rateLimitRetryAt).toEqual({
+        [RateLimitedAction.QRTransfer]: '2026-01-01T00:05:00.000Z',
+        [RateLimitedAction.CardAdd]: '2026-01-01T00:10:00.000Z',
+      })
+      expect(mockedStoreValueForKey).toHaveBeenLastCalledWith(
+        BCLocalStorageKeys.BCSC,
+        expect.objectContaining({ rateLimitRetryAt: second.bcsc.rateLimitRetryAt })
+      )
+    })
+
+    it('is dropped by CLEAR_BCSC', () => {
+      const waiting = received(initialState, RateLimitedAction.CardAdd, '2026-01-01T00:10:00.000Z')
+
+      const cleared = reducer(waiting, { type: BCDispatchAction.CLEAR_BCSC })
+
+      expect(cleared.bcsc.rateLimitRetryAt).toBeUndefined()
+    })
   })
 
   it('RECORD_APP_LAUNCH_VERSION sets and persists lastSeenAppVersion/lastSeenAppBuildNumber', () => {
