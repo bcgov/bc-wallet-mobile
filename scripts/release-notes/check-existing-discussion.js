@@ -1,9 +1,11 @@
 // Guards against posting a duplicate release notes discussion for the same
-// tag. Requires NEWER_TAG in the environment.
+// tag range. Requires OLDER_TAG and NEWER_TAG in the environment.
+const discussionTitle = require('./discussion-title.js')
+
 module.exports = async ({ github, context, core }) => {
   const { owner, repo } = context.repo
-  const { NEWER_TAG } = process.env
-  const title = `${NEWER_TAG} release notes`
+  const { OLDER_TAG, NEWER_TAG } = process.env
+  const title = discussionTitle({ olderTag: OLDER_TAG, newerTag: NEWER_TAG })
 
   // GitHub's search is tokenized, not exact — "in:title" can surface
   // near matches (e.g. v1.2.3 vs v1.2.30), so confirm an exact title
