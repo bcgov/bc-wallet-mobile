@@ -684,7 +684,6 @@ describe('useGetSystemChecks', () => {
         })
 
         const verifiedUserChecksWithoutRegistrationUpdate = [
-          'DeviceCountSystemCheck',
           'EventReasonAlertsSystemCheck',
           'RefreshTokenExpiredSystemCheck',
           'TermsOfUseSystemCheck',

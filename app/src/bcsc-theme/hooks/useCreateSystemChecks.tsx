@@ -101,7 +101,7 @@ type UseGetSystemChecksReturn = Record<
      * Callback to get system checks for the scope
      * @return Array of system check strategies
      */
-    getSystemChecks: () => Promise<SystemCheckStrategy[]>
+    getSystemChecks: () => Promise<SystemCheckStrategy[]> | SystemCheckStrategy[]
     /**
      * Indicates if the system checks for the scope are ready to be run
      */
@@ -203,7 +203,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    *
    * @returns Array of system check strategies
    */
-  const getMainSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+  const getMainSystemChecks = useCallback((): SystemCheckStrategy[] => {
     // Guard the native call so a failure here cannot throw away the whole batch
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
 

@@ -75,7 +75,7 @@ export const useBanners = (options: BannersOptions) => {
     return (
       banners
         // 1. Filter out banners that have been dismissed
-        .filter((banner) => selectBannerDismissal(store, banner.id) !== BannerDismissal.Dismissed)
+        .filter((banner) => selectBannerDismissal(store, banner.id, Date.now()) !== BannerDismissal.Dismissed)
         // 2. Filter out banners that are not allowed in the current scope
         .filter((banner) => allowedBanners.has(banner.id))
     )
