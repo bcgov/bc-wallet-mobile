@@ -52,6 +52,8 @@ export interface BCSCAlertEvent {
   reason: string
 }
 
+export type DismissedBanners = Partial<Record<BCSCBanner, { dismissedAt: number }>>
+
 /**
  * Collection of metadata needed when a user is registering for the application
  * using non-bcsc identification cards. ie: drivers license + birth certificate etc...
@@ -108,7 +110,6 @@ export interface BCSCState {
   accountSetupType?: AccountSetupType
   hasDismissedThirdPartyKeyboardAlert?: boolean
   hasDismissedDeviceAuthInfo?: boolean
-  deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
   hasSeenOnboardingIntro?: boolean
   acceptedTermsOfUseVersion?: string
@@ -150,6 +151,12 @@ export interface BCSCState {
    * `verificationSkipped`.
    */
   verificationStarted?: boolean
+
+  /**
+   * Dismissed banners, keyed by BCSCBanner id.
+   * The value is the timestamp of when the user dismissed it.
+   */
+  dismissedBanners?: DismissedBanners
 }
 
 export enum VerificationStatus {
@@ -298,6 +305,7 @@ enum BCSCDispatchAction {
   ADD_SAVED_SERVICE = 'bcsc/addSavedService',
   REMOVE_SAVED_SERVICE = 'bcsc/removeSavedService',
   CLEAR_BCSC = 'bcsc/clearBCSC',
+  DISMISS_BANNER = 'bcsc/dismissBanner',
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
@@ -340,7 +348,6 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
-  DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
   SET_INSTALL_ID = 'bcsc/setInstallId',
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
@@ -474,6 +481,8 @@ export enum BCLocalStorageKeys {
   CachedJWK = 'CachedJWK',
   /** MEDIATOR_URL the mediator preferences were last reconciled with */
   MediatorUrl = 'MediatorUrl',
+  /** Wrong PIN attempts in a row; read and written only by pin-lockout-service */
+  PinAttempts = 'PinAttempts',
 }
 
 export const initialState: BCState = {
@@ -854,6 +863,20 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
 
+    case BCSCDispatchAction.DISMISS_BANNER: {
+      const payload: { bannerId: BCSCBanner } = (action?.payload || []).pop()
+      const dismissedBanners = {
+        ...state.bcsc.dismissedBanners,
+        [payload.bannerId]: { dismissedAt: Date.now() },
+      }
+
+      const bcsc = { ...state.bcsc, dismissedBanners }
+      const newState = { ...state, bcsc }
+
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
     case BCSCDispatchAction.ADD_BANNER_MESSAGE: {
       const bannerMessage: BCSCBannerMessage = (action?.payload || []).pop()
 
@@ -901,13 +924,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // this should use the date as a key, so this variable is always up to date...
       const hasDismissed = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, hasDismissedThirdPartyKeyboardAlert: hasDismissed }
-      const newState = { ...state, bcsc }
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCSCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER: {
-      const dismissedAt = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, deviceLimitBannerDismissedAt: dismissedAt }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

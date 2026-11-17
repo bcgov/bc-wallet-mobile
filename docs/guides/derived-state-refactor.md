@@ -21,12 +21,24 @@ facts (store / context)  →  selector  →  rule (pure fn)  →  hook  →  UI
 | **Hook**         | Reads store/context, calls the selector, memoizes.                      | Log, dispatch, or re-implement the rule.    |
 | **UI / effects** | Branch on the result.                                                   | Re-derive the answer.                       |
 
+## Facts outside the store
+
+When the facts live in device storage that one service owns (for example the PIN attempt record):
+
+- The rule stays a pure `get<Concept>(facts, now)` in `bcsc-theme/state/<domain>/`.
+- The service's reader does the selector's job: it reads the raw record, turns it into `<Concept>Facts`, and calls the rule. Keep the step from raw record to facts a pure function.
+- If a decision is followed by a write (check the lock, then record the attempt), the service does both in one step. Don't give screens a hook value to decide on; it can be out of date by the time they act.
+- Add a hook only when a screen needs to follow the value live.
+
+Reference: PR #5128 (PIN lockout).
+
 ## Naming
 
 - Raw-input types end in `Fact`/`Facts`: `ExpiryFacts`. Readers know it is unprocessed data.
 - Selectors use the Redux-style `select<Concept>` prefix (`selectAccountPhase`).
 - Rule, selector and hook live together in `bcsc-theme/state/<domain>/` (`account-phase.ts`, `selectors.ts`, `useAccountPhase.ts`).
 - Rules are `get<Concept>`: `getAccountPhase`. Hooks are `use<Concept>`: `useAccountPhase`.
+- When the facts live outside the store, the async reader that gathers them and calls the rule is `read<Concept>` (`readPinLockout`), not `select…`: it can throw.
 - A rule whose callers only need yes/no is an `is<Concept>` predicate returning `boolean` (`isRefreshTokenExpired`). Switch it to an enum result once a caller needs a third state.
 - Result kinds are a string `enum` (`AccountPhaseType.Expired`), never bare string literals.
 

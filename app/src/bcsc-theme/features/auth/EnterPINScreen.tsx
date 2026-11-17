@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { PinVerificationType, verifyPinWithLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, PIN_LENGTH } from '@/constants'
@@ -22,7 +23,6 @@ import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { InteractionManager, View } from 'react-native'
-import { verifyPIN } from 'react-native-bcsc-core'
 
 interface EnterPINScreenProps {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.EnterPIN>
@@ -54,18 +54,18 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         })
 
         if (pin.length < PIN_LENGTH) {
-          setErrorMessage('PIN must be 6 digits')
+          setErrorMessage(t('BCSC.PIN.PINTooShort'))
           setLoading(false)
           return
         }
 
-        const { success, walletKey, locked, message } = await verifyPIN(pin)
+        const verification = await verifyPinWithLockout(pin, logger)
 
-        if (success) {
+        if (verification.type === PinVerificationType.Success) {
           stopLoading = startLoading(t('BCSC.Loading.AppStartup'))
-          await handleSuccessfulAuth(walletKey)
+          await handleSuccessfulAuth(verification.walletKey)
           logger.info('PIN verified successfully - navigating to main app')
-        } else if (locked) {
+        } else if (verification.type === PinVerificationType.Locked) {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
@@ -73,10 +73,12 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
             })
           )
         } else {
-          setErrorMessage(message || 'Incorrect PIN')
+          setErrorMessage(
+            t(verification.isLastAttempt ? 'BCSC.EnterPIN.LastAttemptWarning' : 'BCSC.EnterPIN.IncorrectPIN')
+          )
         }
       } catch (error) {
-        setErrorMessage('An error occurred while verifying the PIN.')
+        setErrorMessage(t('BCSC.EnterPIN.VerifyError'))
         logger.error(`PIN verification error: ${error}`)
       } finally {
         stopLoading?.()

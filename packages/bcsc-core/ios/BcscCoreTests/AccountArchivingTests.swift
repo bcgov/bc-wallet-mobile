@@ -19,7 +19,9 @@ private final class LegacyV3Account: NSObject, NSCoding {
   var securityMethod: String?
   var displayName: String?
   var nickname: String?
+  /// v3 and early v4 counted wrong PINs in the account. v4 now ignores both fields.
   var failedAttemptCount: Int
+  var lastAttemptDate: Date?
   /// When true, nil fields are encoded as nil rather than having the key omitted entirely.
   /// v3 called `encoder.encode(clientID, forKey:)` unconditionally, so both shapes occur.
   var encodeNilsExplicitly: Bool
@@ -32,6 +34,7 @@ private final class LegacyV3Account: NSObject, NSCoding {
     displayName: String? = "Jane Doe",
     nickname: String? = "Janey",
     failedAttemptCount: Int = 3,
+    lastAttemptDate: Date? = Date(timeIntervalSince1970: 1_700_000_000),
     encodeNilsExplicitly: Bool = false
   ) {
     self.id = id
@@ -41,6 +44,7 @@ private final class LegacyV3Account: NSObject, NSCoding {
     self.displayName = displayName
     self.nickname = nickname
     self.failedAttemptCount = failedAttemptCount
+    self.lastAttemptDate = lastAttemptDate
     self.encodeNilsExplicitly = encodeNilsExplicitly
   }
 
@@ -56,6 +60,7 @@ private final class LegacyV3Account: NSObject, NSCoding {
     encodeField(coder, displayName, "display_name")
     encodeField(coder, nickname, "nickname")
     coder.encode(failedAttemptCount, forKey: "failed_attempt_count")
+    coder.encode(lastAttemptDate, forKey: "last_attempt_date")
     coder.encode(false, forKey: "did_post_nickname_to_server")
   }
 
@@ -99,6 +104,30 @@ private func decodeAsV4Account(_ data: Data) throws -> Account? {
   let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
   unarchiver.requiresSecureCoding = false
   return try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey) as? Account
+}
+
+/// Decode-only stand-in that records which keys an archived account holds.
+@objc(BCSCTestArchivedAccountKeys)
+private final class ArchivedAccountKeys: NSObject, NSCoding {
+  let hasID: Bool
+  let hasFailedAttemptCount: Bool
+  let hasLastAttemptDate: Bool
+
+  required init?(coder: NSCoder) {
+    hasID = coder.containsValue(forKey: "id")
+    hasFailedAttemptCount = coder.containsValue(forKey: "failed_attempt_count")
+    hasLastAttemptDate = coder.containsValue(forKey: "last_attempt_date")
+  }
+
+  func encode(with _: NSCoder) {} // probe is decode-only
+}
+
+/// The keys of an archive whose root object was archived under `className`.
+private func archivedAccountKeys(in data: Data, className: String) throws -> ArchivedAccountKeys? {
+  let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+  unarchiver.requiresSecureCoding = false
+  unarchiver.setClass(ArchivedAccountKeys.self, forClassName: className)
+  return try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey) as? ArchivedAccountKeys
 }
 
 // MARK: - Decoder Tests
@@ -242,7 +271,32 @@ final class AccountArchivingTests: XCTestCase {
     XCTAssertEqual(account?.issuer, "https://idsit.gov.bc.ca")
     XCTAssertEqual(account?.displayName, "Jane Doe")
     XCTAssertEqual(account?.nickname, "Janey")
-    XCTAssertEqual(account?.failedAttemptCount, 3)
+  }
+
+  // MARK: Retired PIN attempt fields
+
+  /// Wrong PINs are counted in TypeScript now (#4423). An archive written while the account was
+  /// locked out still has to decode, and what it recorded must not be carried into the next save.
+  func testRecordedPINAttemptsAreIgnoredAndDroppedOnTheNextSave() throws {
+    let lockedOut = LegacyV3Account(
+      clientID: "client-123", securityMethod: "app_pin_no_device_authn",
+      failedAttemptCount: 20, lastAttemptDate: Date()
+    )
+    let legacyArchive = archiveAsV3(lockedOut)
+    let legacyKeys = try archivedAccountKeys(in: legacyArchive, className: v3AccountClassName)
+    XCTAssertEqual(legacyKeys?.hasFailedAttemptCount, true, "The fixture must hold the retired count")
+    XCTAssertEqual(legacyKeys?.hasLastAttemptDate, true, "The fixture must hold the retired date")
+
+    let account = try XCTUnwrap(decodeAsV4Account(legacyArchive))
+    XCTAssertEqual(account.id, "v3-account-id")
+    XCTAssertEqual(account.securityMethod, .pinNoDeviceAuth)
+
+    let saved = try NSKeyedArchiver.archivedData(withRootObject: account, requiringSecureCoding: true)
+    let savedKeys = try archivedAccountKeys(in: saved, className: NSStringFromClass(Account.self))
+
+    XCTAssertEqual(savedKeys?.hasID, true, "The probe must be reading the saved account")
+    XCTAssertEqual(savedKeys?.hasFailedAttemptCount, false)
+    XCTAssertEqual(savedKeys?.hasLastAttemptDate, false)
   }
 
   // MARK: Corrupt input
@@ -270,7 +324,6 @@ final class AccountArchivingTests: XCTestCase {
     )
     original.displayName = "John Smith"
     original.nickname = "Johnny"
-    original.failedAttemptCount = 2
 
     let archiver = NSKeyedArchiver(requiringSecureCoding: false)
     archiver.encode(original, forKey: NSKeyedArchiveRootObjectKey)
@@ -286,7 +339,6 @@ final class AccountArchivingTests: XCTestCase {
     XCTAssertEqual(decoded?.securityMethod, .deviceAuth)
     XCTAssertEqual(decoded?.displayName, "John Smith")
     XCTAssertEqual(decoded?.nickname, "Johnny")
-    XCTAssertEqual(decoded?.failedAttemptCount, 2)
   }
 }
 

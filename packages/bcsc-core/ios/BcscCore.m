@@ -117,8 +117,6 @@ RCT_EXTERN_METHOD(setAccountSecurityMethod : (NSString *)securityMethod resolve 
 
 RCT_EXTERN_METHOD(getAccountSecurityMethod : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(isAccountLocked : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
-
 // Device Security Methods
 RCT_EXTERN_METHOD(setupDeviceSecurity : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 

@@ -284,6 +284,7 @@ const translation = {
       "ManageDevices": "Manage Devices (PT-BR)",
       "Nickname": "Nickname (PT-BR)",
       "AccountDetails": "Account information (PT-BR)",
+      "EnterPIN": "Enter PIN (PT-BR)",
     },
     "HelpMenu": {
       "Title": "Need help? (PT-BR)",
@@ -420,7 +421,28 @@ const translation = {
     },
     "EnterPIN": {
       "Title": "Enter your 6-digit PIN (PT-BR)",
-      "Description": "The one you chose to secure this app (PT-BR)"
+      "Description": "The one you chose to secure this app (PT-BR)",
+      "IncorrectPIN": "Incorrect PIN (PT-BR)",
+      "LastAttemptWarning": "Incorrect PIN. For security, if you enter another incorrect PIN, it will temporarily lock the app. (PT-BR)",
+      "VerifyError": "An error occurred while verifying the PIN. (PT-BR)"
+    },
+    "Lockout": {
+      "Title": "Too many PIN attempts (PT-BR)",
+      "Description": "This app is temporarily locked because you've entered an incorrect PIN too many times. (PT-BR)",
+      "TryAgainIn": "You can try again in: (PT-BR)",
+      "ForgotPINTitle": "Cannot remember your PIN? (PT-BR)",
+      "ForgotPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (PT-BR)",
+      "SetUpAgain": "If you've forgotten your PIN you'll need to set up this app again. (PT-BR)",
+      "Countdown": {
+        "Hours_one": "{{ count }} hour (PT-BR)",
+        "Hours_other": "{{ count }} hours (PT-BR)",
+        "Minutes_one": "{{ count }} minute (PT-BR)",
+        "Minutes_other": "{{ count }} minutes (PT-BR)",
+        "Seconds_one": "{{ count }} second (PT-BR)",
+        "Seconds_other": "{{ count }} seconds (PT-BR)",
+        "HoursMinutesSeconds": "{{ hours }} {{ minutes }} {{ seconds }}",
+        "MinutesSeconds": "{{ minutes }} {{ seconds }}"
+      }
     },
     "ChangePIN": {
       "ScreenTitle": "Change your PIN (PT-BR)",

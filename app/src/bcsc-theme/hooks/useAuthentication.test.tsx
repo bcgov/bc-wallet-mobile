@@ -1,3 +1,5 @@
+import { readPinLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
+import { PinLockoutType } from '@/bcsc-theme/state/pin-lockout/pin-lockout'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
@@ -10,7 +12,6 @@ import {
   canPerformDeviceAuthentication,
   getAccountSecurityMethod,
   getHideDeviceAuthPrepFlag,
-  isAccountLocked,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
 import * as BCSCLoadingContext from '../contexts/BCSCLoadingContext'
@@ -25,7 +26,6 @@ jest.mock('react-native-bcsc-core', () => ({
   },
   getAccountSecurityMethod: jest.fn(),
   getHideDeviceAuthPrepFlag: jest.fn(),
-  isAccountLocked: jest.fn(),
   canPerformDeviceAuthentication: jest.fn(),
   unlockWithDeviceSecurity: jest.fn(),
   BcscNativeErrorCodes: jest.requireActual('../../../__mocks__/react-native-bcsc-core').BcscNativeErrorCodes,
@@ -33,10 +33,16 @@ jest.mock('react-native-bcsc-core', () => ({
   isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
 }))
 
+jest.mock('@/bcsc-theme/features/auth/services/pin-lockout-service', () => ({
+  readPinLockout: jest.fn(),
+}))
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
 jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext')
 jest.mock('@bifold/core')
 jest.mock('@/hooks/useAlerts')
+
+const openLockout = { type: PinLockoutType.Open } as const
+const lockedLockout = { type: PinLockoutType.Locked, until: new Date('2026-11-16T12:01:00.000Z') } as const
 
 describe('useAuthentication', () => {
   beforeEach(() => {
@@ -63,9 +69,12 @@ describe('useAuthentication', () => {
   })
 
   describe('PIN mode', () => {
-    it('navigates to EnterPIN when account is not locked', async () => {
+    it.each([
+      ['no wrong PINs are recorded', openLockout],
+      ['one more wrong PIN would lock', { type: PinLockoutType.LastAttempt } as const],
+    ])('navigates to EnterPIN when %s', async (_, lockout) => {
       jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
-      jest.mocked(isAccountLocked).mockResolvedValue({ locked: false, remainingTime: 0 })
+      jest.mocked(readPinLockout).mockResolvedValue(lockout)
 
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
       const { result } = renderHook(() => useAuthentication(navigation))
@@ -77,9 +86,9 @@ describe('useAuthentication', () => {
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.EnterPIN)
     })
 
-    it('navigates to Lockout when account is locked', async () => {
+    it('navigates to Lockout when PIN entry is locked', async () => {
       jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
-      jest.mocked(isAccountLocked).mockResolvedValue({ locked: true, remainingTime: 60 })
+      jest.mocked(readPinLockout).mockResolvedValue(lockedLockout)
 
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
       const { result } = renderHook(() => useAuthentication(navigation))
@@ -96,6 +105,21 @@ describe('useAuthentication', () => {
           }),
         })
       )
+      expect(navigation.navigate).not.toHaveBeenCalled()
+    })
+
+    it('does not read the PIN lock for device authentication', async () => {
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.DeviceAuth)
+      jest.mocked(getHideDeviceAuthPrepFlag).mockResolvedValue(false)
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+
+      expect(readPinLockout).not.toHaveBeenCalled()
     })
   })
 
@@ -121,15 +145,16 @@ describe('useAuthentication', () => {
       )
     })
 
-    it('shows an error modal when unlockApp fails before device auth', async () => {
+    it('shows an error modal, and opens neither PIN entry nor Lockout, when the PIN lock cannot be read', async () => {
       const problemWithAppAlert = jest.fn()
       jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
         deviceAuthenticationErrorAlert: jest.fn(),
         problemWithAppAlert,
       } as any)
-      jest
-        .mocked(isAccountLocked)
-        .mockRejectedValue(Object.assign(new Error('native failure'), { code: 'E_IS_ACCOUNT_LOCKED_ERROR' }))
+      const storageError = AppError.fromErrorDefinition(ErrorRegistry.STORAGE_READ_ERROR, {
+        cause: new Error('read failed'),
+      })
+      jest.mocked(readPinLockout).mockRejectedValue(storageError)
       jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
 
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
@@ -139,11 +164,11 @@ describe('useAuthentication', () => {
         await result.current.unlockApp()
       })
 
+      // The storage error reaches the alert as it is, not re-wrapped as an unmapped native error
       expect(problemWithAppAlert).toHaveBeenCalledTimes(1)
-      expect(problemWithAppAlert).toHaveBeenCalledWith(
-        expect.objectContaining({ appEvent: AppEventCode.PIN_OPERATION_ERROR })
-      )
+      expect(problemWithAppAlert).toHaveBeenCalledWith(storageError)
       expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(navigation.dispatch).not.toHaveBeenCalled()
     })
 
     it('surfaces a non-cancel native device auth failure with its OS error code', async () => {
@@ -591,14 +616,14 @@ describe('useAuthentication', () => {
         'EnterPIN',
         () => {
           jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
-          jest.mocked(isAccountLocked).mockResolvedValue({ locked: false, remainingTime: 0 })
+          jest.mocked(readPinLockout).mockResolvedValue(openLockout)
         },
       ],
       [
         'Lockout',
         () => {
           jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
-          jest.mocked(isAccountLocked).mockResolvedValue({ locked: true, remainingTime: 60 })
+          jest.mocked(readPinLockout).mockResolvedValue(lockedLockout)
         },
       ],
       [
@@ -810,7 +835,7 @@ describe('useAuthentication', () => {
         startLoading: mockStartLoading,
       } as any)
       jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
-      jest.mocked(isAccountLocked).mockResolvedValue({ locked: false, remainingTime: 0 })
+      jest.mocked(readPinLockout).mockResolvedValue(openLockout)
 
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
       const { result } = renderHook(() => useAuthentication(navigation))

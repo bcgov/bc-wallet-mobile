@@ -109,6 +109,7 @@ export enum BCSCScreens {
   MainResetWalletConfirmation = `${BCSCStacks.Main} Reset Wallet Warning`,
   VerifyRemoveAccountConfirmation = `${BCSCStacks.Verify} Reset App Warning`,
   OnboardingRemoveAccountConfirmation = `${BCSCStacks.Onboarding} Reset App Warning`,
+  AuthRemoveAccountConfirmation = `${BCSCStacks.Auth} Reset App Warning`,
   TransferAccountInstructions = 'QR Get Instructions',
   TransferAccountQRDisplay = 'QR Code Display',
   TransferAccountQRScan = 'Scan QR Code',
@@ -351,6 +352,7 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined
   [BCSCScreens.Lockout]: undefined
+  [BCSCScreens.AuthRemoveAccountConfirmation]: undefined
   [BCSCScreens.DeviceAuthAppReset]: undefined
   [BCSCScreens.AuthSettings]: undefined
   [BCSCScreens.AuthWebView]: { url: string; title: string }
