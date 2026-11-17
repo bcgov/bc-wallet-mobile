@@ -1,4 +1,5 @@
 import * as BCSCLoadingContextModule from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import en from '@/localization/en'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -275,5 +276,9 @@ describe('CancelledReview', () => {
     expect(mockVerificationReset).not.toHaveBeenCalled()
     expect(mockResumeVerification).not.toHaveBeenCalled()
     expect(mockStartLoading).not.toHaveBeenCalled()
+  })
+
+  it('labels the top button without prescribing a retry', () => {
+    expect(en.BCSC.CancelledVerification.RetryButton).toBe('Verify a different way')
   })
 })
