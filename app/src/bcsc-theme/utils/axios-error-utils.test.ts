@@ -466,9 +466,9 @@ describe('Error Utils', () => {
     })
 
     describe('assertion time stamp rejections', () => {
-      const iasError = (status: number, errorDescription: string) =>
+      const iasError = (status: number, errorDescription: string, headers?: Record<string, string>) =>
         ({
-          response: { status, data: { error: 'unauthorized', error_description: errorDescription } },
+          response: { status, headers, data: { error: 'unauthorized', error_description: errorDescription } },
           code: 'ERR_BAD_REQUEST',
           message: 'Request failed',
         }) as any
@@ -508,6 +508,69 @@ describe('Error Utils', () => {
         expect(appError.appEvent).toBe(AppEventCode.CLOCK_SKEW_ERROR)
         expect(appError.statusCode).toBe(ErrorRegistry.CLOCK_SKEW_ERROR.statusCode)
         expect(appError.context.http_status).toBe(401)
+      })
+
+      // An assertion sent long after it was signed is expired too, so the response's Date header is checked
+      describe('with a Date header on the response', () => {
+        const DEVICE_NOW = Date.parse('2026-11-04T20:41:16Z')
+        const MINUTE_MS = 60 * 1000
+        const EXPIRED = 'Assertion Token is expired: Wed Nov 04 12:41:16 PST 2026'
+        const ISSUED_IN_FUTURE = 'Assertion Token was issued in the future: Wed Nov 04 12:41:16 PST 2026'
+
+        const dateHeader = (serverMinusDeviceMs: number) => ({
+          date: new Date(DEVICE_NOW + serverMinusDeviceMs).toUTCString(),
+        })
+
+        beforeEach(() => {
+          jest.spyOn(Date, 'now').mockReturnValue(DEVICE_NOW)
+        })
+
+        afterEach(() => {
+          jest.restoreAllMocks()
+        })
+
+        it.each([
+          ['in sync', 0],
+          ['under five minutes behind', 5 * MINUTE_MS - 1000],
+          ['under five minutes ahead', -5 * MINUTE_MS + 1000],
+        ])(
+          'keeps the IAS code for an expired assertion while the device clock is %s',
+          (_label, serverMinusDeviceMs) => {
+            const formattedError = formatIasAxiosResponseError(iasError(401, EXPIRED, dateHeader(serverMinusDeviceMs)))
+
+            expect(formattedError.code).toBe('unauthorized')
+            expect(formattedError.message).toBe(EXPIRED)
+          }
+        )
+
+        it.each([
+          ['five minutes behind', 5 * MINUTE_MS],
+          ['over an hour behind', 66 * MINUTE_MS],
+          ['five minutes ahead', -5 * MINUTE_MS],
+        ])(
+          'reclassifies an expired assertion as CLOCK_SKEW_ERROR while the device clock is %s',
+          (_label, serverMinusDeviceMs) => {
+            const formattedError = formatIasAxiosResponseError(iasError(401, EXPIRED, dateHeader(serverMinusDeviceMs)))
+
+            expect(formattedError.code).toBe(AppEventCode.CLOCK_SKEW_ERROR)
+            expect(formattedError.message).toBe(EXPIRED)
+          }
+        )
+
+        it.each([
+          ['missing', {}],
+          ['unreadable', { date: 'not a date' }],
+        ])('reclassifies an expired assertion as CLOCK_SKEW_ERROR when the Date header is %s', (_label, headers) => {
+          const formattedError = formatIasAxiosResponseError(iasError(401, EXPIRED, headers))
+
+          expect(formattedError.code).toBe(AppEventCode.CLOCK_SKEW_ERROR)
+        })
+
+        it('reclassifies a future-dated assertion as CLOCK_SKEW_ERROR whatever the Date header says', () => {
+          const formattedError = formatIasAxiosResponseError(iasError(401, ISSUED_IN_FUTURE, dateHeader(0)))
+
+          expect(formattedError.code).toBe(AppEventCode.CLOCK_SKEW_ERROR)
+        })
       })
     })
   })

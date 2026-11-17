@@ -355,6 +355,10 @@ rejecting an assertion for its time stamp (`Assertion Token was issued in the fu
 to `CLOCK_SKEW_ERROR` as well. Both show the clock alert through the global alert policy, and unlock never runs
 key recovery for them.
 
+`… is expired` alone does not prove a slow clock: an assertion sent long after it was signed expires too. When
+that 401's own `Date` header puts the device within five minutes of the server, the error keeps IAS's code and
+unlock recovers as for any other 401. With no usable `Date` header the clock is blamed.
+
 **Why:** with the clock an hour ahead, every token refresh failed with a generic 2111, and unlock took it for
 a key problem and ran key recovery. Fixing the clock is the only fix.
 

@@ -1,7 +1,8 @@
+import { FIVE_MINUTES_IN_SECONDS } from '@/constants'
 import { AppError, ErrorDefinition, ErrorRegistry } from '@/errors'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AppEventCode, isAppEventCode } from '@/events/appEventCode'
-import { AxiosError } from 'axios'
+import { AxiosError, AxiosResponse } from 'axios'
 import { Platform } from 'react-native'
 import z from 'zod'
 
@@ -30,15 +31,29 @@ interface LogAxiosErrorOptions {
 }
 
 // IAS's reasons for a 401 on a client assertion stamped five minutes or more off its clock
-const ASSERTION_CLOCK_SKEW_REASONS = ['Assertion Token was issued in the future', 'Assertion Token is expired']
+const ASSERTION_ISSUED_IN_FUTURE_REASON = 'Assertion Token was issued in the future'
+const ASSERTION_EXPIRED_REASON = 'Assertion Token is expired'
 
-/** Whether IAS rejected the request's client assertion for its time stamp, i.e. the device clock is off. */
-const isAssertionClockSkew = (status: number | undefined, description: string): boolean =>
-  status === 401 && ASSERTION_CLOCK_SKEW_REASONS.some((reason) => description.startsWith(reason))
+/** Whether the response's own Date header puts the device clock within five minutes of the server's. */
+const isDeviceClockInSync = (response: AxiosResponse): boolean => {
+  const serverTime = Date.parse(response.headers?.date)
+  return !Number.isNaN(serverTime) && Math.abs(serverTime - Date.now()) < FIVE_MINUTES_IN_SECONDS * 1000
+}
 
 /**
- * Takes the error code and message from an IAS error body. An assertion rejected for its time stamp is
- * reclassified as CLOCK_SKEW_ERROR: the device clock is the problem, not the request or its keys.
+ * Whether IAS rejected the request's client assertion because the device clock is off. Only a fast clock
+ * stamps an assertion in the future. An expired one has two causes: a slow clock, or an assertion sent long
+ * after it was signed, so that reason counts only while the response's Date header does not show the clock
+ * in sync. With no header to check, the clock is blamed: missing a clock problem sends unlock to key recovery.
+ */
+const isAssertionClockSkew = (response: AxiosResponse, description: string): boolean =>
+  response.status === 401 &&
+  (description.startsWith(ASSERTION_ISSUED_IN_FUTURE_REASON) ||
+    (description.startsWith(ASSERTION_EXPIRED_REASON) && !isDeviceClockInSync(response)))
+
+/**
+ * Takes the error code and message from an IAS error body. An assertion rejected because the device clock
+ * is off is reclassified as CLOCK_SKEW_ERROR: the clock is the problem, not the request or its keys.
  */
 export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosError => {
   if (
@@ -46,7 +61,7 @@ export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosE
     typeof axiosError.response?.data?.error_description === 'string'
   ) {
     const description = axiosError.response.data.error_description
-    axiosError.code = isAssertionClockSkew(axiosError.response.status, description)
+    axiosError.code = isAssertionClockSkew(axiosError.response, description)
       ? AppEventCode.CLOCK_SKEW_ERROR
       : axiosError.response.data.error
     axiosError.message = description

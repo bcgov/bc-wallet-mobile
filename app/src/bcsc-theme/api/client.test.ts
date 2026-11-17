@@ -1803,5 +1803,25 @@ describe('BCSC Client', () => {
         expect.objectContaining({ statusCode: 401 })
       )
     })
+
+    it('keeps the IAS code for an expired assertion when the 401 shows the device clock in sync', async () => {
+      // Sent long after it was signed: the clock is not the cause, so unlock still gets to recover
+      const errorDescription = 'Assertion Token is expired: Wed Nov 04 12:41:16 PST 2026'
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+      client.client.defaults.adapter = (config: any) =>
+        Promise.reject(
+          new AxiosError('Request failed', 'ERR_BAD_REQUEST', config, null, {
+            status: 401,
+            data: { error: 'unauthorized', error_description: errorDescription },
+            statusText: 'Unauthorized',
+            headers: { date: new Date(DEVICE_NOW).toUTCString() } as any,
+            config,
+          })
+        )
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+      ).rejects.toMatchObject({ appEvent: AppEventCode.UNKNOWN_SERVER_ERROR, technicalMessage: errorDescription })
+    })
   })
 })

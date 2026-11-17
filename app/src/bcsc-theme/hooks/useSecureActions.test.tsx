@@ -1198,6 +1198,8 @@ describe('useSecureActions', () => {
 
       it.each([
         ['a bad signature', 'Signature did not validate for presented JWT authentication.'],
+        // Expired because it was sent long after it was signed; the API client does not report that as a clock error
+        ['a stale assertion', 'Assertion Token is expired: Tue Jan 01 00:00:00 GMT 2030'],
         ['no server message', ''],
       ])('does not switch the client ID when the 401 is %s', async (_label, errorDescription) => {
         mockGetTokensForRefreshToken.mockRejectedValue(
