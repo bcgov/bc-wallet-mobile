@@ -4,8 +4,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
 import { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { useCallback } from 'react'
-import * as BcscCore from 'react-native-bcsc-core'
-import { deleteToken, TokenType } from 'react-native-bcsc-core'
+import { deleteToken, getToken, TokenType } from 'react-native-bcsc-core'
 import { withAccount } from '../api/hooks/withAccountGuard'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useSecureActions } from './useSecureActions'
@@ -56,7 +55,7 @@ export const useVerificationReset = () => {
 
         if (!registrationAccessToken) {
           // Note: This allows a verification reset before secure state has been hydrated
-          const nativeToken = await BcscCore.getToken(BcscCore.TokenType.Registration)
+          const nativeToken = await getToken(TokenType.Registration)
           registrationAccessToken = nativeToken?.token
         }
 

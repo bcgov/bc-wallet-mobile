@@ -1,5 +1,6 @@
-import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
+import { formatLockoutCountdown } from '@/bcsc-theme/features/auth/lockout-countdown'
+import { readPinLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
+import { PinLockoutType } from '@/bcsc-theme/state/pin-lockout/pin-lockout'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -9,41 +10,27 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
-  useAnimatedComponents,
   useServices,
   useTheme,
 } from '@bifold/core'
+import { CommonActions, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { isAccountLocked } from 'react-native-bcsc-core'
 
-const formatTime = (seconds: number): string => {
-  // Ensure we're working with whole seconds
-  const wholeSeconds = Math.ceil(seconds)
-  const minutes = Math.floor(wholeSeconds / 60)
-  const remainingSecs = wholeSeconds % 60
-
-  if (minutes > 0) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ${remainingSecs} second${remainingSecs === 1 ? '' : 's'}`
-  }
-  return `${remainingSecs} second${remainingSecs === 1 ? '' : 's'}`
-}
+const COUNTDOWN_TICK_MS = 1000
 
 interface LockoutScreenProps {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.Lockout>
 }
 
 export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
-  const { ButtonLoading } = useAnimatedComponents()
-  const [isLoading, setIsLoading] = useState(false)
   const { TextTheme, Spacing } = useTheme()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(0)
-  const factoryReset = useFactoryReset()
-  const authentication = useAuthentication(navigation)
+  // Undefined until the lock has been read
+  const [remainingMs, setRemainingMs] = useState<number | undefined>(undefined)
 
   const styles = StyleSheet.create({
     hr: {
@@ -53,58 +40,80 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
     },
   })
 
-  useEffect(() => {
-    const checkLockStatus = async () => {
-      try {
-        const { locked, remainingTime } = await isAccountLocked()
+  // Runs while the screen is in view, so a lock that ends behind another screen is released on return
+  useFocusEffect(
+    useCallback(() => {
+      let isFocused = true
+      let intervalId: ReturnType<typeof setInterval> | undefined
 
-        if (!locked || remainingTime <= 0) {
-          await authentication.unlockApp()
-          return
-        }
-
-        // Round up to nearest second to avoid showing decimals
-        setRemainingSeconds(Math.ceil(remainingTime))
-      } catch (error) {
-        const errMessage = error instanceof Error ? error.message : String(error)
-        logger.error(`Error checking lock status: ${errMessage}`)
+      // Rebuilds the stack as a normal unlock leaves it, so Back from PIN entry goes to the landing
+      // screen and not to a lock that is over
+      const openPinEntry = () => {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 1,
+            routes: [{ name: BCSCScreens.AccountLanding }, { name: BCSCScreens.EnterPIN }],
+          })
+        )
       }
-    }
 
-    void checkLockStatus()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+      const startCountdown = async () => {
+        try {
+          const lockout = await readPinLockout(logger)
 
-  useEffect(() => {
-    if (remainingSeconds <= 0) {
-      return
-    }
+          if (!isFocused) {
+            return
+          }
 
-    const intervalId = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        const newValue = prev - 1
-        if (newValue <= 0) {
-          void authentication.unlockApp()
-          return 0
+          if (lockout.type !== PinLockoutType.Locked) {
+            openPinEntry()
+            return
+          }
+
+          const lockedUntil = lockout.until.getTime()
+
+          // Measured against the clock on every tick, so time the app spent suspended still counts
+          const tick = () => {
+            const remaining = lockedUntil - Date.now()
+
+            if (remaining > 0) {
+              setRemainingMs(remaining)
+              return
+            }
+
+            clearInterval(intervalId)
+            openPinEntry()
+          }
+
+          intervalId = setInterval(tick, COUNTDOWN_TICK_MS)
+          tick()
+        } catch (error) {
+          const errMessage = error instanceof Error ? error.message : String(error)
+          logger.error(`Error checking lock status: ${errMessage}`, error as Error)
+
+          if (!isFocused) {
+            return
+          }
+
+          // With no deadline there is nothing to count down to. Unlocking from the landing screen
+          // reads the lock again, and reports the failure if it is still there.
+          navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountLanding }] }))
         }
-        return newValue
-      })
-    }, 1000)
+      }
 
-    return () => clearInterval(intervalId)
-  }, [authentication, remainingSeconds])
+      void startCountdown()
 
-  const onPressRemoveAccount = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      await factoryReset()
-    } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error)
-      logger.error(`Error removing account: ${errMessage}`)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [logger, factoryReset])
+      return () => {
+        isFocused = false
+        clearInterval(intervalId)
+      }
+    }, [logger, navigation])
+  )
+
+  // The account is still usable once the lock ends, so removing it is confirmed on its own screen
+  const onPressRemoveAccount = useCallback(() => {
+    navigation.navigate(BCSCScreens.AuthRemoveAccountConfirmation)
+  }, [navigation])
 
   const controls = (
     <Button
@@ -113,22 +122,23 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
       accessibilityLabel={t('BCSC.Account.RemoveAccount')}
       testID={testIdWithKey(TestIds.auth.lockout.removeAccount)}
       onPress={onPressRemoveAccount}
-      disabled={isLoading}
-    >
-      {isLoading && <ButtonLoading />}
-    </Button>
+    />
   )
 
   return (
     <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
-      <ThemedText variant={'headingThree'}>{`Too many PIN attempts`}</ThemedText>
-      <ThemedText>{`This app is temporarily locked because you've entered an incorrect PIN too many times.`}</ThemedText>
-      <ThemedText variant={'bold'}>{`You can try again in:`}</ThemedText>
-      <ThemedText variant={'bold'}>{formatTime(remainingSeconds)}</ThemedText>
+      <ThemedText variant={'headingThree'}>{t('BCSC.Lockout.Title')}</ThemedText>
+      <ThemedText>{t('BCSC.Lockout.Description')}</ThemedText>
+      {remainingMs === undefined ? null : (
+        <>
+          <ThemedText variant={'bold'}>{t('BCSC.Lockout.TryAgainIn')}</ThemedText>
+          <ThemedText variant={'bold'}>{formatLockoutCountdown(t, remainingMs)}</ThemedText>
+        </>
+      )}
       <View style={styles.hr} />
-      <ThemedText variant={'bold'}>{`Cannot remember your PIN?`}</ThemedText>
-      <ThemedText>{`We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us.`}</ThemedText>
-      <ThemedText>{`If you've forgotten your PIN you'll need to set up this app again.`}</ThemedText>
+      <ThemedText variant={'bold'}>{t('BCSC.Lockout.ForgotPINTitle')}</ThemedText>
+      <ThemedText>{t('BCSC.Lockout.ForgotPINDescription')}</ThemedText>
+      <ThemedText>{t('BCSC.Lockout.SetUpAgain')}</ThemedText>
     </ScreenWrapper>
   )
 }

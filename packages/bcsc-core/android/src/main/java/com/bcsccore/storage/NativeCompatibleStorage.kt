@@ -543,11 +543,6 @@ class NativeCompatibleStorage(
                         issuer = accountJson.optString("issuer", ""),
                         clientId = accountJson.optString("clientId", accountJson.optString("clientID", "")),
                         createdAt = accountJson.optLong("createdAt", System.currentTimeMillis()),
-                        penalty =
-                            NativePenalty(
-                                penaltyAttempts =
-                                    accountJson.optJSONObject("penalty")?.optInt("penaltyAttempts", 0) ?: 0,
-                            ),
                         accountSecurityType =
                             parseSecurityType(
                                 accountJson.optString(
