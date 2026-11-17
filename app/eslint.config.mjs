@@ -135,8 +135,6 @@ export default [
       ],
     },
   },
-  // Large OS font sizes (#4401): a raw react-native Text scales without limit (3.57x on iOS). Bifold's
-  // ThemedText applies the theme's cap, so BCSC screens use it exclusively.
   {
     files: ['src/bcsc-theme/**'],
     ignores: ['**/*.test.{ts,tsx}'],
@@ -145,10 +143,20 @@ export default [
         'error',
         {
           paths: [
+            // Large OS font sizes (#4401): a raw react-native Text scales without limit (3.57x on iOS).
+            // Bifold's ThemedText applies the theme's cap, so BCSC screens use it exclusively.
             {
               name: 'react-native',
               importNames: ['Text'],
               message: "Use ThemedText from '@bifold/core' so the theme's font-scale cap applies.",
+            },
+            // PIN lockout (#4423): wrong PINs are counted in TypeScript, so a PIN checked anywhere but
+            // the lockout service is a guess that never counts towards a lock.
+            {
+              name: 'react-native-bcsc-core',
+              importNames: ['verifyPIN'],
+              message:
+                'Check PINs with verifyPinWithLockout (features/auth/services/pin-lockout-service) so the attempt is counted.',
             },
           ],
         },

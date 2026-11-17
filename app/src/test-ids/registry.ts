@@ -241,7 +241,9 @@ export const TestIds = {
       continue: 'Continue',
       getHelp: 'GetHelp',
     },
-    /** Timed lockout screen after 5 consecutive wrong PINs (native counter, persisted across relaunches). */
+    /** Timed lockout screen after 5 consecutive wrong PINs (the count is persisted across relaunches).
+     *  `removeAccount` removes nothing itself: it opens the remove-account confirmation
+     *  (`main.removeAccount.confirm`), whose header Back returns here. */
     lockout: {
       removeAccount: 'RemoveAccount',
     },

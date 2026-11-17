@@ -1,17 +1,22 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { PinVerificationType, verifyPinWithLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { setPIN, verifyPIN } from 'react-native-bcsc-core'
+import { setPIN } from 'react-native-bcsc-core'
 import { BasicAppContext } from '../../../../../__mocks__/helpers/app'
 import { ChangePINForm } from './ChangePINForm'
 
 jest.mock('react-native-bcsc-core', () => ({
   setPIN: jest.fn(),
-  verifyPIN: jest.fn(),
+}))
+
+jest.mock('@/bcsc-theme/features/auth/services/pin-lockout-service', () => ({
+  ...jest.requireActual('@/bcsc-theme/features/auth/services/pin-lockout-service'),
+  verifyPinWithLockout: jest.fn(),
 }))
 
 const mockSetPIN = jest.mocked(setPIN)
-const mockVerifyPIN = jest.mocked(verifyPIN)
+const mockVerifyPinWithLockout = jest.mocked(verifyPinWithLockout)
 
 describe('ChangePINForm', () => {
   const mockOnSuccess = jest.fn()
@@ -62,12 +67,7 @@ describe('ChangePINForm', () => {
   })
 
   it('validates current PIN is verified before changing', async () => {
-    mockVerifyPIN.mockResolvedValue({
-      success: false,
-      locked: false,
-      remainingTime: 0,
-      message: 'Incorrect PIN',
-    })
+    mockVerifyPinWithLockout.mockResolvedValue({ type: PinVerificationType.Incorrect, isLastAttempt: false })
 
     const tree = render(
       <BasicAppContext>
@@ -95,20 +95,41 @@ describe('ChangePINForm', () => {
     fireEvent.press(button)
 
     await waitFor(() => {
-      expect(mockVerifyPIN).toHaveBeenCalledWith('123456')
+      expect(mockVerifyPinWithLockout).toHaveBeenCalledWith('123456', expect.anything())
+      expect(tree.getByText('BCSC.ChangePIN.IncorrectPIN')).toBeTruthy()
     })
 
     // Should NOT call setPIN if verification fails
     expect(mockSetPIN).not.toHaveBeenCalled()
   })
 
-  it('calls onSuccess when PIN change is successful', async () => {
-    mockVerifyPIN.mockResolvedValue({
-      success: true,
-      locked: false,
-      remainingTime: 0,
-      walletKey: 'test-wallet-key',
+  it('shows the same incorrect PIN message when one more wrong PIN would lock', async () => {
+    mockVerifyPinWithLockout.mockResolvedValue({ type: PinVerificationType.Incorrect, isLastAttempt: true })
+
+    const tree = render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <ChangePINForm onSuccess={mockOnSuccess} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
+    fireEvent.changeText(inputs[0], '123456')
+    fireEvent.changeText(inputs[1], '654321')
+    fireEvent.changeText(inputs[2], '654321')
+    fireEvent.press(tree.getByTestId('com.ariesbifold:id/IUnderstand'))
+    fireEvent.press(tree.getByTestId('com.ariesbifold:id/ChangePIN'))
+
+    await waitFor(() => {
+      expect(tree.getByText('BCSC.ChangePIN.IncorrectPIN')).toBeTruthy()
     })
+
+    expect(mockSetPIN).not.toHaveBeenCalled()
+  })
+
+  it('calls onSuccess when PIN change is successful', async () => {
+    mockVerifyPinWithLockout.mockResolvedValue({ type: PinVerificationType.Success, walletKey: 'test-wallet-key' })
     mockSetPIN.mockResolvedValue({
       success: true,
       walletKey: 'new-wallet-key',
@@ -135,7 +156,7 @@ describe('ChangePINForm', () => {
     fireEvent.press(button)
 
     await waitFor(() => {
-      expect(mockVerifyPIN).toHaveBeenCalledWith('123456')
+      expect(mockVerifyPinWithLockout).toHaveBeenCalledWith('123456', expect.anything())
       expect(mockSetPIN).toHaveBeenCalledWith('654321')
       expect(mockOnSuccess).toHaveBeenCalled()
     })
@@ -165,15 +186,13 @@ describe('ChangePINForm', () => {
       expect(tree.getByText('BCSC.ChangePIN.PINsDoNotMatch')).toBeTruthy()
     })
 
-    expect(mockVerifyPIN).not.toHaveBeenCalled()
+    expect(mockVerifyPinWithLockout).not.toHaveBeenCalled()
   })
 
-  it('shows account locked message when verify returns locked', async () => {
-    mockVerifyPIN.mockResolvedValue({
-      success: false,
-      locked: true,
-      remainingTime: 300,
-      message: 'Account is locked for 5 minutes',
+  it('shows the locked message, without checking further, when PIN entry is locked', async () => {
+    mockVerifyPinWithLockout.mockResolvedValue({
+      type: PinVerificationType.Locked,
+      until: new Date('2026-11-16T12:05:00.000Z'),
     })
 
     const tree = render(
@@ -196,52 +215,15 @@ describe('ChangePINForm', () => {
     fireEvent.press(button)
 
     await waitFor(() => {
-      expect(mockVerifyPIN).toHaveBeenCalledWith('123456')
-      expect(tree.getByText('Account is locked for 5 minutes')).toBeTruthy()
+      expect(mockVerifyPinWithLockout).toHaveBeenCalledWith('123456', expect.anything())
+      expect(tree.getByText('BCSC.ChangePIN.AccountLocked')).toBeTruthy()
     })
 
     expect(mockSetPIN).not.toHaveBeenCalled()
   })
 
-  it('shows default locked message when verify returns locked without message', async () => {
-    mockVerifyPIN.mockResolvedValue({
-      success: false,
-      locked: true,
-      remainingTime: 300,
-      message: '',
-    })
-
-    const tree = render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <ChangePINForm onSuccess={mockOnSuccess} />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
-
-    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
-    fireEvent.changeText(inputs[0], '123456')
-    fireEvent.changeText(inputs[1], '654321')
-    fireEvent.changeText(inputs[2], '654321')
-
-    const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
-    fireEvent.press(checkbox)
-
-    const button = tree.getByTestId('com.ariesbifold:id/ChangePIN')
-    fireEvent.press(button)
-
-    await waitFor(() => {
-      expect(tree.getByText('BCSC.ChangePIN.AccountLocked')).toBeTruthy()
-    })
-  })
-
   it('shows error when setPIN fails', async () => {
-    mockVerifyPIN.mockResolvedValue({
-      success: true,
-      locked: false,
-      remainingTime: 0,
-      walletKey: 'test-wallet-key',
-    })
+    mockVerifyPinWithLockout.mockResolvedValue({ type: PinVerificationType.Success, walletKey: 'test-wallet-key' })
     mockSetPIN.mockResolvedValue({
       success: false,
       walletKey: '',
@@ -275,7 +257,7 @@ describe('ChangePINForm', () => {
   })
 
   it('shows error when exception is thrown', async () => {
-    mockVerifyPIN.mockRejectedValue(new Error('Network error'))
+    mockVerifyPinWithLockout.mockRejectedValue(new Error('Network error'))
 
     const tree = render(
       <BasicAppContext>
@@ -326,6 +308,6 @@ describe('ChangePINForm', () => {
       expect(tree.getByText('BCSC.ChangePIN.MustCheckBox')).toBeTruthy()
     })
 
-    expect(mockVerifyPIN).not.toHaveBeenCalled()
+    expect(mockVerifyPinWithLockout).not.toHaveBeenCalled()
   })
 })
