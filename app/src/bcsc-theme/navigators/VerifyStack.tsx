@@ -44,6 +44,7 @@ import PhotoInstructionsScreen from '../features/verify/PhotoInstructionsScreen'
 import PhotoReviewScreen from '../features/verify/PhotoReviewScreen'
 import { ResidentialAddressScreen } from '../features/verify/ResidentialAddressScreen'
 import ScanSerialScreen from '../features/verify/ScanSerialScreen'
+import ScannedDriversLicence from '../features/verify/ScannedDriversLicence'
 import SerialInstructionsScreen from '../features/verify/SerialInstructionsScreen'
 import TakePhotoScreen from '../features/verify/TakePhotoScreen'
 import VerificationCardErrorScreen from '../features/verify/VerificationCardErrorScreen'
@@ -234,6 +235,11 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       <Stack.Screen
         name={BCSCScreens.CardScanningError}
         component={CardScanningError}
+        options={{ header: createProgressHeader(1, 40) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ScannedDriversLicence}
+        component={ScannedDriversLicence}
         options={{ header: createProgressHeader(1, 40) }}
       />
       <Stack.Screen

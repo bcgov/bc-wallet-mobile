@@ -1159,6 +1159,14 @@ const translation = {
       "Description4": "If problems scanning the card continues:",
       "TryAnotherCard": "Try another card",
     },
+    "ScannedDriversLicence": {
+      "Heading": "You scanned a driver's licence",
+      "SerialNumber": "Serial number: {{serial}}",
+      "Description1": "Did you mean to scan a BC Services Card? Using a BC Services Card is a faster way to verify your account.",
+      "Description2": "Or you can continue with a driver's licence",
+      "ContinueWithLicence": "Continue with a driver's licence",
+      "ScanBCSC": "Scan your BC Services Card",
+    },
     "VerificationCardError": {
       "CardExpired": {
         "Heading": "Sorry, you can't add this card",

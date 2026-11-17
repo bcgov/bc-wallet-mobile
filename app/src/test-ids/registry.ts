@@ -318,6 +318,12 @@ export const TestIds = {
     birthdateLockout: {
       close: 'Close',
     },
+    /** `ScannedDriversLicence` — the scanned barcode was a BC driver's licence, not a BC Services Card.
+     *  `scanBcsc` retries with a BCSC; `continueWithLicence` proceeds with the licence. */
+    scannedDriversLicence: {
+      continueWithLicence: 'ContinueWithDriversLicence',
+      scanBcsc: 'ScanBCSC',
+    },
     /** `VerificationCardError` — the authorize-failure screen at the EnterBirthdate submit. The
      *  `MismatchedSerial` variant (CSN/birthdate mismatch or card-not-found — the unhandled-error path)
      *  shows `tryAnother` → IdentitySelection; the `CardExpired` variant shows `getBcsc` (opens a browser). */
