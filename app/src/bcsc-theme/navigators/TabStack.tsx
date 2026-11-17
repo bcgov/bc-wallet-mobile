@@ -1,4 +1,5 @@
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
+import { TAB_SCENE_CONTAINER_STYLE } from '@/constants'
 import { useNotifications } from '@/hooks/notifications'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { TestIds } from '@/test-ids/registry'
@@ -256,10 +257,12 @@ const BCSCTabStack: React.FC = () => {
         })}
         initialRouteName={BCSCScreens.Home}
         tabBar={tabBar}
+        sceneContainerStyle={TAB_SCENE_CONTAINER_STYLE}
         screenOptions={{
           ...defaultStackOptions,
           // Show the header's own (native) shadow. TabHeader draws no drop-shadow caster,
           // so this native shadow — tuned via HEADER_SHADOW — is the single header shadow.
+          // On Android it needs the `sceneContainerStyle` above.
           headerShadowVisible: true,
           unmountOnBlur: false,
           lazy: true,

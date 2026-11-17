@@ -256,6 +256,19 @@ it again on every mount and skip what it already handled. Module-level state sur
 **Why:** `exitApp` finished the Activity for a browser-launched task but left the process alive. The next link
 or notification tap created a new Activity, which fires no `onNewIntent`, so logins after the first were lost.
 
+## Android: a tab header's shadow needs the scene container as its parent
+
+A tab navigator that renders its header with `createTabHeader` passes `TAB_SCENE_CONTAINER_STYLE` as
+`sceneContainerStyle`. It makes the scene container a stacking context, so the header stays mounted inside
+it. The same goes for any elevated view whose shadow must fall outside its own parent: it needs a React
+Native view above that parent, large enough to hold the shadow.
+
+**Why:** Android draws an elevation shadow through the view's parent and cuts it at that parent's bounds
+when the parent sits in a native container that clips its children, as react-native-screens' `Screen` does.
+The scene container has only a background colour, so React Native flattened it and mounted the header's
+background straight under that `Screen`. The main tabs and the QR scanner had no header shadow on Android
+while iOS showed one.
+
 ## Verification flow exits: first-time vs deferred verifiers
 
 The onboarding "Verify your account" prompt decides who may leave the verify flow, through the persisted

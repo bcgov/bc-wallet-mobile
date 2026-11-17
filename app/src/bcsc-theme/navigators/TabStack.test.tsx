@@ -1,3 +1,4 @@
+import { TAB_SCENE_CONTAINER_STYLE } from '@/constants'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { act, render } from '@testing-library/react-native'
@@ -119,6 +120,12 @@ describe('BCSCTabStack', () => {
   it('renders without crashing', () => {
     render(<BCSCTabStack />)
     expect(capturedNavigatorProps).toBeDefined()
+  })
+
+  // Android clips the tab header's shadow without it (see TAB_SCENE_CONTAINER_STYLE).
+  it('passes the scene container style that lets Android draw the header shadow', () => {
+    render(<BCSCTabStack />)
+    expect(capturedNavigatorProps.sceneContainerStyle).toBe(TAB_SCENE_CONTAINER_STYLE)
   })
 
   describe('unverified Services gating', () => {
