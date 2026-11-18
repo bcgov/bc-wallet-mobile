@@ -1,5 +1,4 @@
 import { ErrorRegistry } from '@/errors'
-import { VerificationStatus } from '@/store'
 import * as environment from '@/utils/environment'
 import { IASEnvironment } from '@/utils/environment'
 import * as Bifold from '@bifold/core'
@@ -158,7 +157,7 @@ describe('useRootStackViewModel', () => {
         {
           bcsc: { hasAccount: true },
           authentication: { didAuthenticate: true },
-          bcscSecure: { verified: false, verifiedStatus: VerificationStatus.IN_PROGRESS },
+          bcscSecure: { verified: false, inVerifyFlow: true },
         },
         'verify',
       ],
@@ -288,15 +287,18 @@ describe('useRootStackViewModel', () => {
     // Skipped the prompt, then started from Home (the card, a gated tab's prompt, a renewal)
     const SKIPPED_THEN_STARTED: VerificationFlags = { verificationSkipped: true, verificationStarted: true }
 
-    const authedUnverified = (flags: VerificationFlags, verifiedStatus = VerificationStatus.UNVERIFIED) =>
+    const authedUnverified = (
+      flags: VerificationFlags,
+      facts: { inVerifyFlow?: boolean; credentialDeactivated?: boolean } = {}
+    ) =>
       mockStore({
         bcsc: { hasAccount: true, ...flags },
         authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false, verifiedStatus },
+        bcscSecure: { verified: false, ...facts },
       })
 
-    const resumeDispatch = { type: 'bcsc/updateSecureVerifiedStatus', payload: [VerificationStatus.IN_PROGRESS] }
-    const anyResumeDispatch = expect.objectContaining({ type: 'bcsc/updateSecureVerifiedStatus' })
+    const resumeDispatch = { type: 'bcsc/updateSecureInVerifyFlow', payload: [true] }
+    const anyResumeDispatch = expect.objectContaining({ type: 'bcsc/updateSecureInVerifyFlow' })
 
     it('shows the verify prompt when it has not been answered', () => {
       const dispatch = jest.fn()
@@ -326,11 +328,11 @@ describe('useRootStackViewModel', () => {
 
       const { result, rerender } = renderViewModel()
 
-      // The one-shot effect restores IN_PROGRESS so the verify stack takes over.
+      // The one-shot effect puts the user back in the verify flow so the verify stack takes over.
       expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
 
       // Simulate that dispatch landing in the store.
-      useStoreWith(authedUnverified(CHOSE_TO_VERIFY, VerificationStatus.IN_PROGRESS), dispatch)
+      useStoreWith(authedUnverified(CHOSE_TO_VERIFY, { inVerifyFlow: true }), dispatch)
       rerender({})
 
       expect(result.current.phase).toBe('verify')
@@ -348,7 +350,7 @@ describe('useRootStackViewModel', () => {
 
     it('leaves a deactivated card on Home even when verification was started', () => {
       const dispatch = jest.fn()
-      useStoreWith(authedUnverified(CHOSE_TO_VERIFY, VerificationStatus.DEACTIVATED), dispatch)
+      useStoreWith(authedUnverified(CHOSE_TO_VERIFY, { credentialDeactivated: true }), dispatch)
 
       const { result } = renderViewModel()
 
@@ -364,7 +366,7 @@ describe('useRootStackViewModel', () => {
       const { rerender } = renderViewModel()
       expect(dispatch).toHaveBeenCalledTimes(1)
 
-      // useLeaveVerification has moved status back out of IN_PROGRESS to show Home for the rest of
+      // useLeaveVerification has taken the user out of the verify flow to show Home for the rest of
       // the session; re-rendering in that state must not pull the user back into the verify stack.
       rerender({})
       expect(dispatch).toHaveBeenCalledTimes(1)
@@ -398,15 +400,15 @@ describe('useRootStackViewModel', () => {
     describe('after the startup resume', () => {
       /**
        * Cold-start harness whose dispatch lands in the mocked store. The render the resume effect
-       * triggers then sees IN_PROGRESS together with the evaluated flag, as React batches the two in
-       * the app. `apply` plays a store change made elsewhere, e.g. useLeaveVerification's UNVERIFIED;
+       * triggers then sees the verify flow together with the evaluated flag, as React batches the two in
+       * the app. `apply` plays a store change made elsewhere, e.g. useLeaveVerification leaving the flow;
        * `answerPrompt` answers the prompt the way VerifyPromptScreen does.
        */
       const renderColdStart = (initial: Record<string, any>) => {
         let state = initial
         const dispatch = jest.fn((action: { type: string; payload?: any[] }) => {
-          if (action.type === 'bcsc/updateSecureVerifiedStatus') {
-            state = { ...state, bcscSecure: { ...state.bcscSecure, verifiedStatus: action.payload?.[0] } }
+          if (action.type === 'bcsc/updateSecureInVerifyFlow') {
+            state = { ...state, bcscSecure: { ...state.bcscSecure, inVerifyFlow: action.payload?.[0] } }
           }
         })
         jest.mocked(Bifold.useStore).mockImplementation(() => [state, dispatch] as any)
@@ -419,9 +421,9 @@ describe('useRootStackViewModel', () => {
         return { ...utils, dispatch, apply, answerPrompt }
       }
 
-      const withStatus = (verifiedStatus: VerificationStatus) => (current: Record<string, any>) => ({
+      const withInVerifyFlow = (inVerifyFlow: boolean) => (current: Record<string, any>) => ({
         ...current,
-        bcscSecure: { ...current.bcscSecure, verifiedStatus },
+        bcscSecure: { ...current.bcscSecure, inVerifyFlow },
       })
 
       it('registers the verify stack once on a cold-start resume, never showing Home in between', () => {
@@ -436,8 +438,8 @@ describe('useRootStackViewModel', () => {
         const { result, dispatch, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         expect(result.current.phase).toBe('verify')
 
-        // Back arrow / "Back to home": useLeaveVerification moves status back out of IN_PROGRESS.
-        apply(withStatus(VerificationStatus.UNVERIFIED))
+        // Back arrow / "Back to home": useLeaveVerification leaves the flow.
+        apply(withInVerifyFlow(false))
 
         expect(result.current.phase).toBe('main')
         // Leaving must not read as a resume still pending, or the user is pulled straight back.
@@ -448,11 +450,11 @@ describe('useRootStackViewModel', () => {
         const { result, dispatch, apply, answerPrompt, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         expect(result.current.phase).toBe('verify')
 
-        // Back from the first step replaced onto the prompt (still IN_PROGRESS). Its Skip answers the
+        // Back from the first step replaced onto the prompt (still in the verify flow). Its Skip answers the
         // prompt, records the skip and leaves the flow (useLeaveVerification) in one press.
         answerPrompt()
         apply((current) => ({
-          ...withStatus(VerificationStatus.UNVERIFIED)(current),
+          ...withInVerifyFlow(false)(current),
           bcsc: { ...current.bcsc, verificationSkipped: true },
         }))
 
@@ -463,14 +465,14 @@ describe('useRootStackViewModel', () => {
         expect(dispatch).toHaveBeenCalledTimes(1)
       })
 
-      it('registers the verify stack afresh when a restart resets the status and re-enters verification', () => {
+      it('registers the verify stack afresh when a restart resets the flow and re-enters verification', () => {
         const { result, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         expect(registeredRoutes()).toEqual([VERIFY_ROUTE])
 
-        // useVerificationReset clears to UNVERIFIED, then continueVerificationProcess sets IN_PROGRESS.
-        apply(withStatus(VerificationStatus.UNVERIFIED))
+        // useVerificationReset clears the flow, then continueVerificationProcess re-enters it.
+        apply(withInVerifyFlow(false))
         expect(result.current.phase).toBe('main')
-        apply(withStatus(VerificationStatus.IN_PROGRESS))
+        apply(withInVerifyFlow(true))
 
         expect(result.current.phase).toBe('verify')
         // A fresh registration mounts the stack again, which re-runs the resume-step routing: the first step
@@ -482,14 +484,14 @@ describe('useRootStackViewModel', () => {
         expect(result.current.phase).toBe('main')
         expect(dispatch).not.toHaveBeenCalled()
 
-        // "Start verification" on the Home card: verificationStarted=true and IN_PROGRESS together.
+        // "Start verification" on the Home card: verificationStarted=true and the verify flow together.
         apply((current) => ({
-          ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+          ...withInVerifyFlow(true)(current),
           bcsc: { ...current.bcsc, verificationStarted: true },
         }))
         expect(result.current.phase).toBe('verify')
 
-        apply(withStatus(VerificationStatus.UNVERIFIED))
+        apply(withInVerifyFlow(false))
 
         // In session, leaving lands on Home; only the next cold start or unlock resumes them.
         expect(result.current.phase).toBe('main')
@@ -532,7 +534,7 @@ describe('useRootStackViewModel', () => {
 
       it('keeps a user who left on Home when an outage begins later in the session', () => {
         const { result, apply, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        apply(withStatus(VerificationStatus.UNVERIFIED))
+        apply(withInVerifyFlow(false))
         expect(result.current.phase).toBe('main')
 
         // The outage fallback prompt is a cold-start affordance; mid-session the banner covers it.
@@ -555,7 +557,7 @@ describe('useRootStackViewModel', () => {
         apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
         expect(result.current.phase).toBe('main')
         apply((current) => ({
-          ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+          ...withInVerifyFlow(true)(current),
           bcsc: { ...current.bcsc, verificationStarted: true },
         }))
         expect(result.current.phase).toBe('verify')
@@ -575,12 +577,12 @@ describe('useRootStackViewModel', () => {
 
       /**
        * The inactivity timeout's logout(): CLEAR_SECURE_STATE puts the secure state back to its initial
-       * values (the memory-only IN_PROGRESS with it), then DID_AUTHENTICATE false. The unlock hydrates the
-       * status from the credential (UNVERIFIED for an unverified user) before SUCCESSFUL_AUTH.
+       * values (the memory-only verify flow with it), then DID_AUTHENTICATE false. The unlock hydrates the
+       * facts from the credential (neither set for an unverified user) before SUCCESSFUL_AUTH.
        */
       const lock = (current: Record<string, any>) => ({
         ...current,
-        bcscSecure: { verified: false, verifiedStatus: VerificationStatus.UNVERIFIED },
+        bcscSecure: { verified: false },
         authentication: { didAuthenticate: false },
       })
       const unlock = (current: Record<string, any>) => ({
@@ -590,13 +592,13 @@ describe('useRootStackViewModel', () => {
       })
       /**
        * Continue on the prompt (VerifyPromptScreen.handleVerifyNow): the answer, verificationSkipped=false,
-       * started and IN_PROGRESS are one event handler, so they land in one render.
+       * started and the verify flow are one event handler, so they land in one render.
        */
       const continueOnPrompt = ({ result, apply }: ReturnType<typeof renderColdStart>) =>
         act(() => {
           result.current.onVerifyPromptAnswered()
           apply((current) => ({
-            ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+            ...withInVerifyFlow(true)(current),
             bcsc: { ...current.bcsc, verificationSkipped: false, verificationStarted: true },
           }))
         })
@@ -610,7 +612,7 @@ describe('useRootStackViewModel', () => {
         expect(result.current.phase).toBe('auth')
         apply(unlock)
 
-        // The lock took IN_PROGRESS with the secure state, so the unlock resumes like a relaunch does
+        // The lock took the verify flow with the secure state, so the unlock resumes like a relaunch does
         expect(dispatch).toHaveBeenCalledTimes(2)
         expect(dispatch).toHaveBeenLastCalledWith(resumeDispatch)
         expect(result.current.phase).toBe('verify')
@@ -664,7 +666,7 @@ describe('useRootStackViewModel', () => {
 
       it('resumes a deferred verifier who left for Home on the next unlock, who can leave again', () => {
         const { result, dispatch, apply } = renderColdStart(authedUnverified(SKIPPED_THEN_STARTED))
-        apply(withStatus(VerificationStatus.UNVERIFIED))
+        apply(withInVerifyFlow(false))
         expect(result.current.phase).toBe('main')
 
         apply(lock)
@@ -674,7 +676,7 @@ describe('useRootStackViewModel', () => {
         expect(dispatch).toHaveBeenCalledTimes(2)
         expect(result.current.phase).toBe('verify')
 
-        apply(withStatus(VerificationStatus.UNVERIFIED))
+        apply(withInVerifyFlow(false))
         expect(result.current.phase).toBe('main')
         expect(dispatch).toHaveBeenCalledTimes(2)
       })
@@ -717,11 +719,11 @@ describe('useRootStackViewModel', () => {
 
           // "Start verification" on the Home card, then the back arrow / "Back to home"
           apply((current) => ({
-            ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+            ...withInVerifyFlow(true)(current),
             bcsc: { ...current.bcsc, verificationStarted: true },
           }))
           expect(result.current.phase).toBe('verify')
-          apply(withStatus(VerificationStatus.UNVERIFIED))
+          apply(withInVerifyFlow(false))
           expect(result.current.phase).toBe('main')
 
           expect(swapTransitions()).toEqual([PUSH, POP])
@@ -733,7 +735,7 @@ describe('useRootStackViewModel', () => {
 
           answerPrompt()
           apply((current) => ({
-            ...withStatus(VerificationStatus.UNVERIFIED)(current),
+            ...withInVerifyFlow(false)(current),
             bcsc: { ...current.bcsc, verificationSkipped: true },
           }))
 
@@ -768,17 +770,17 @@ describe('useRootStackViewModel', () => {
             mockStore({
               bcsc: { hasAccount: true, verificationSkipped: true },
               authentication: { didAuthenticate: true },
-              bcscSecure: { verified: true, verifiedStatus: VerificationStatus.VERIFIED },
+              bcscSecure: { verified: true },
             })
           )
           expect(result.current.phase).toBe('main')
 
           apply(lock)
           expect(result.current.phase).toBe('auth')
-          // The unlock hydrates the verified status before SUCCESSFUL_AUTH
+          // The unlock hydrates the verified flag before SUCCESSFUL_AUTH
           apply((current) => ({
             ...unlock(current),
-            bcscSecure: { verified: true, verifiedStatus: VerificationStatus.VERIFIED, isHydrated: true },
+            bcscSecure: { verified: true, isHydrated: true },
           }))
           expect(result.current.phase).toBe('main')
 
@@ -833,11 +835,11 @@ describe('useRootStackViewModel', () => {
 
           // "Start verification" on the Home card, then the back arrow / "Back to home"
           apply((current) => ({
-            ...withStatus(VerificationStatus.IN_PROGRESS)(current),
+            ...withInVerifyFlow(true)(current),
             bcsc: { ...current.bcsc, verificationStarted: true },
           }))
           expect(result.current.phase).toBe('verify')
-          apply(withStatus(VerificationStatus.UNVERIFIED))
+          apply(withInVerifyFlow(false))
           expect(result.current.phase).toBe('main')
 
           expect(recordedRenders.every(({ inSession }) => inSession)).toBe(true)

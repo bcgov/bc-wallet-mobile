@@ -7,8 +7,8 @@ import { selectVerificationState } from '@/bcsc-theme/state/verification/selecto
 import { KeyRotationResult, rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
+import { useAlerts } from '@/hooks/useAlerts'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
-import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
 import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
@@ -29,7 +29,7 @@ import { BifoldLogger, TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getAccount, getMaxDevicesBannerLastDisplayedDate, getToken, TokenType } from 'react-native-bcsc-core'
+import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 import { getBuildNumber, getBundleId, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
@@ -102,7 +102,11 @@ type UseGetSystemChecksReturn = Record<
      * Callback to get system checks for the scope
      * @return Array of system check strategies
      */
-    getSystemChecks: () => Promise<SystemCheckStrategy[]>
+    getSystemChecks: () => Promise<SystemCheckStrategy[]> | SystemCheckStrategy[]
+    /**
+     * Callback to get the checks to run again each time the app returns to the foreground
+     */
+    getForegroundSystemChecks?: () => Promise<SystemCheckStrategy[]>
     /**
      * Indicates if the system checks for the scope are ready to be run
      */
@@ -148,6 +152,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { isNavigationReady } = useNavigationContainer()
   const accountContext = useContext(BCSCAccountContext)
   const { emitAlert } = useErrorAlert()
+  const { clockSkewAlert } = useAlerts()
   const { serverStatus: cachedServerStatus, refresh: refreshServerStatus } = useServerStatus()
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
@@ -184,10 +189,12 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       ),
     ]
 
-    // Clock-skew and update checks both need the server payload; skip them (rather than aborting
-    // the whole batch) if the status fetch failed.
+    // Clock-skew and update checks both need the status fetch (it records the server's time on the
+    // client); skip them (rather than aborting the whole batch) if it failed.
     if (serverStatus) {
-      systemChecks.push(new ServerClockSkewSystemCheck(serverStatus.serverTimestamp, new Date(), emitAlert, utils))
+      if (client) {
+        systemChecks.push(new ServerClockSkewSystemCheck(client, clockSkewAlert, utils))
+      }
 
       // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
       if (isBCServicesCardBundle) {
@@ -199,8 +206,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   }, [
     cachedServerStatus,
     refreshServerStatus,
+    client,
+    clockSkewAlert,
     dispatch,
-    emitAlert,
     isBCServicesCardBundle,
     logger,
     navigation,
@@ -211,18 +219,25 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   ])
 
   /**
+   * Get system checks to run again each time the app returns to the foreground
+   *
+   * @returns Array of system check strategies
+   */
+  const getForegroundSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+    // The user may have changed the clock while away. Joins the status fetch ServerStatusProvider
+    // starts on foreground, which records a fresh server time on the client.
+    await refreshServerStatus({ force: true })
+
+    return client ? [new ServerClockSkewSystemCheck(client, clockSkewAlert, utils)] : []
+  }, [client, clockSkewAlert, refreshServerStatus, utils])
+
+  /**
    * Get system checks to run on main stack
    *
    * @returns Array of system check strategies
    */
-  const getMainSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+  const getMainSystemChecks = useCallback((): SystemCheckStrategy[] => {
     // Guard the native call so a failure here cannot throw away the whole batch
-    let dismissedAt: number | undefined
-    try {
-      dismissedAt = await getMaxDevicesBannerLastDisplayedDate()
-    } catch {
-      dismissedAt = undefined
-    }
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
 
     const systemChecks: SystemCheckStrategy[] = []
@@ -245,7 +260,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     if (shouldRunIdTokenChecks) {
       systemChecks.push(
-        new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
         new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
       )
     }
@@ -390,6 +404,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return {
       [SystemCheckScope.STARTUP]: {
         getSystemChecks: getStartupSystemChecks,
+        getForegroundSystemChecks,
         isReady: Boolean(defaultReadiness && store.stateLoaded),
         isApplicable: true,
       },
@@ -413,6 +428,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     defaultReadiness,
     getMainSystemChecks,
     getStartupSystemChecks,
+    getForegroundSystemChecks,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
     getVerifySystemChecks,

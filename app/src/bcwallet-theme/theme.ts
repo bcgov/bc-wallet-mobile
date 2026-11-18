@@ -80,6 +80,10 @@ export const BannerColors: Record<BannerType, { background: string; foreground: 
   success: { background: '#42814A', foreground: '#FFFFFF' },
 }
 
+// BCSC Style Guide skeleton-loading fill: the placeholder blocks drawn on a white card. Design-fixed
+// like the banner colours, since the cards a skeleton stands in for are not themed either.
+export const SKELETON_FILL_COLOR = '#E6EAEE'
+
 export const BrandColors: IBrandColors = {
   primary: '#003366',
   primaryDisabled: `#757575`,

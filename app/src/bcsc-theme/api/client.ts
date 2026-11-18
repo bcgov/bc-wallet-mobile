@@ -1,9 +1,10 @@
 import { JWK } from '@/bcsc-theme/types/jwk'
 import type { UploadLogContext } from '@/bcsc-theme/utils/media-format'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
-import { BCSC_API_TIMEOUT_MS, JWK_CACHE_TTL_MS } from '@/constants'
+import { BCSC_API_TIMEOUT_MS, FIVE_MINUTES_IN_SECONDS, JWK_CACHE_TTL_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { getUserAgentString } from '@utils/user-agent'
@@ -43,6 +44,9 @@ const JWK_FETCH_TIMEOUT_MS = 15 * 1000
 // across dashboards. A deterministic 4xx is a single, non-retried attempt and is left to log/track
 // normally, since it may indicate a real configuration problem worth surfacing distinctly.
 const JWK_FETCH_RETRYABLE_STATUS_CODES = [0, ...Array.from({ length: 100 }, (_, index) => 500 + index)]
+
+// IAS rejects a client assertion stamped five minutes or more off its own clock
+const MAX_CLOCK_SKEW_MS = FIVE_MINUTES_IN_SECONDS * 1000
 
 type JWKResponseData = {
   keys: JWK[]
@@ -156,6 +160,8 @@ class BCSCApiClient {
   private cachedJwkFetchedAt: number | null = null // epoch ms, compared against JWK_CACHE_TTL_MS
   private jwkFetchPromise: Promise<JwkFetchResult> | null = null // single-flight in-progress JWK fetch
   private jwkFetchPromiseBaseUrl: string | null = null // baseURL the in-flight fetch was started for
+  private clockSkewMs: number | null = null // server minus device time from the last status check, null when unknown
+  private clockCheck?: () => Promise<unknown> // the status fetch that takes a new reading
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -190,6 +196,29 @@ class BCSCApiClient {
   clearTokens() {
     this.tokens = undefined
     this.tokensPromise = null
+  }
+
+  /**
+   * Records the server's time from a status check against the device clock. Undefined forgets the
+   * reading (a failed check, or the app left the foreground).
+   */
+  recordServerTime(serverTime?: Date) {
+    this.clockSkewMs = serverTime ? serverTime.getTime() - Date.now() : null
+  }
+
+  /** Registers the status fetch that takes a reading; a token request runs it first when there is none. */
+  setClockCheck(clockCheck?: () => Promise<unknown>) {
+    this.clockCheck = clockCheck
+  }
+
+  /** Server minus device time in seconds from the last status check; null when unknown. */
+  get clockSkewSeconds(): number | null {
+    return this.clockSkewMs === null ? null : Math.round(this.clockSkewMs / 1000)
+  }
+
+  /** Whether the last status check found the device clock too far off for IAS to accept its assertions. */
+  get isClockSkewed(): boolean {
+    return this.clockSkewMs !== null && Math.abs(this.clockSkewMs) >= MAX_CLOCK_SKEW_MS
   }
 
   async fetchEndpointsAndConfig() {
@@ -378,6 +407,11 @@ class BCSCApiClient {
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
     this.logger.info(`[${config.method?.toUpperCase()}] ${String(config.url)}`)
 
+    // Every token request carries an assertion stamped by the device clock, which IAS rejects while it is off
+    if (config.url === this.endpoints.token) {
+      await this.refuseWhileClockSkewed(config)
+    }
+
     // skip bearer auth if skipBearerAuth is set in the config
     if (!config.skipBearerAuth) {
       const tokens = await this.ensureValidTokens()
@@ -388,6 +422,27 @@ class BCSCApiClient {
     config._requestStartedAt = Date.now()
 
     return config
+  }
+
+  /** Throws for a token request while the device clock is off, taking a reading first when there is none. */
+  private async refuseWhileClockSkewed(config: InternalAxiosRequestConfig): Promise<void> {
+    // Startup, or back from the background: the request waits for the check; a failed check lets it go
+    if (this.clockSkewMs === null) {
+      await this.clockCheck?.().catch(() => undefined)
+    }
+
+    if (!this.isClockSkewed) {
+      return
+    }
+
+    const skewSeconds = this.clockSkewSeconds ?? 0
+    const direction = skewSeconds > 0 ? 'behind' : 'ahead of'
+    // Goes through the response interceptor like any failed request; no body, as it holds the refresh token
+    throw new AxiosError(
+      `Token request not sent: device clock is ${Math.abs(skewSeconds)}s ${direction} the server`,
+      AppEventCode.CLOCK_SKEW_ERROR,
+      { ...config, data: undefined }
+    )
   }
 
   private fetchTokens(refreshToken: string): Promise<TokenResponse> {

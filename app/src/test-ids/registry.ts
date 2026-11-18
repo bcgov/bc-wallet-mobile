@@ -660,7 +660,8 @@ export const TestIds = {
     verifyPrompt: {
       continue: 'Continue',
     },
-    /** Wallet tab (Bifold credential stack behind the agent gates). The BCSC empty state. */
+    /** Wallet tab (Bifold credential stack behind `CredentialsReadyGate`, whose skeleton and
+     *  agent-failure view both carry `loading`). The BCSC empty state. */
     wallet: {
       loading: 'Wallet.Loading',
       empty: 'Wallet.Empty',

@@ -86,6 +86,32 @@ existing cancellation destination: verification-method selection (#4585).
 Startup and post-call verification checks have no Cancel control. Post-call checks
 show the existing verification message without a progress bar.
 
+## Skeleton loading: the frame of the real content, pulsing only its fills
+
+Where a short first load is replaced by content whose layout is known, show a skeleton of that layout
+rather than a spinner. The Wallet tab shows `CredentialListSkeleton` until the agent has started and the
+stored credentials have loaded (#4741), following the
+[style guide](https://www.figma.com/design/Npt3lfaWT9oU4N4KBwhB1p/BCSC-Style-Guide?node-id=0-4032).
+
+- The frame (list margins, stripe, logo tile, padding, minimum height) uses the same screen-relative
+  sizes as the live credential card, so a card does not move when it replaces its placeholder. Bifold
+  does not export those sizes; `getCredentialCardFrame` mirrors them, so check it when Bifold is
+  upgraded. The bars inside the card and the shadows follow the style guide instead.
+- Only the grey fills pulse (opacity 1 to 0.4 and back over 2 seconds). The card and logo tile stay
+  solid: an elevated view that fades shows its own shadow through itself on Android.
+- The pulse is one looped native timing with an interpolated opacity, as in `BCAnimatedLoadingIcon`.
+  A looped `Animated.sequence` restarts from JavaScript every cycle and stalls while start-up work
+  holds that thread, which is exactly when a skeleton is on screen.
+- Waits that follow each other share one skeleton. A single gate decides failed, loading or ready
+  (`CredentialsReadyGate`) so the pulse never restarts between them.
+- Like any loading view it stops animating while hidden: pass `active`, from `useIsFocused` in a tab.
+- A skeleton is one screen-reader element ("Loading...", busy) with its blocks hidden from assistive
+  technology.
+- The fill colour is design-fixed (`SKELETON_FILL_COLOR`), like the banner colours.
+
+**Why:** the Wallet tab showed two identical spinners one after the other, which said nothing about
+what was loading and made the swap to the cards abrupt.
+
 ## Submits: one run per request, however many screens mount
 
 A screen that submits on mount (the send-video `UploadingScreen`) keeps its in-flight run in a
@@ -267,6 +293,19 @@ it again on every mount and skip what it already handled. Module-level state sur
 **Why:** `exitApp` finished the Activity for a browser-launched task but left the process alive. The next link
 or notification tap created a new Activity, which fires no `onNewIntent`, so logins after the first were lost.
 
+## Android: a tab header's shadow needs the scene container as its parent
+
+A tab navigator that renders its header with `createTabHeader` passes `TAB_SCENE_CONTAINER_STYLE` as
+`sceneContainerStyle`. It makes the scene container a stacking context, so the header stays mounted inside
+it. The same goes for any elevated view whose shadow must fall outside its own parent: it needs a React
+Native view above that parent, large enough to hold the shadow.
+
+**Why:** Android draws an elevation shadow through the view's parent and cuts it at that parent's bounds
+when the parent sits in a native container that clips its children, as react-native-screens' `Screen` does.
+The scene container has only a background colour, so React Native flattened it and mounted the header's
+background straight under that `Screen`. The main tabs and the QR scanner had no header shadow on Android
+while iOS showed one.
+
 ## Verification flow exits: first-time vs deferred verifiers
 
 The onboarding "Verify your account" prompt decides who may leave the verify flow, through the persisted
@@ -351,7 +390,7 @@ flag that something has to remember to set and clear. The three live together in
   only maps its result to a component.
 - `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
   IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
-  or `selectVerificationState`, never from `bcscSecure.verified`, `verifiedStatus` or the tokens directly.
+  or `selectVerificationState`, never from `bcscSecure.verified`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
@@ -380,6 +419,24 @@ rejection takes the caller's, so the FCM, user-info and ID-token paths all surfa
 before every signature check; any failure of that round trip returned `false`, which the app reported as
 error 2509 "signature does not match payload" with nothing to investigate. Verifying a signature needs no
 keychain, and the rejection codes let the next problem report explain itself.
+
+## Device clock: no token request while it is off
+
+The `Date` header of the status call is the clock check. `ServerStatusProvider` records it on the API client
+at startup and on every return to the foreground. A failed check drops the reading; going to the background
+drops it too, along with any status fetch still in flight. A token request with no reading runs the check
+first, and goes ahead only if the check fails. While the device clock is five minutes or more off, the client
+refuses token requests before sending them, since each carries an assertion stamped by that clock. An IAS 401
+rejecting an assertion for its time stamp (`Assertion Token was issued in the future` or `… is expired`) maps
+to `CLOCK_SKEW_ERROR` as well. Both show the clock alert through the global alert policy, and unlock never runs
+key recovery for them.
+
+`… is expired` alone does not prove a slow clock: an assertion sent long after it was signed expires too. When
+that 401's own `Date` header puts the device within five minutes of the server, the error keeps IAS's code and
+unlock recovers as for any other 401. With no usable `Date` header the clock is blamed.
+
+**Why:** with the clock an hour ahead, every token refresh failed with a generic 2111, and unlock took it for
+a key problem and ran key recovery. Fixing the clock is the only fix.
 
 ## PIN lockout: one schedule, counted before the PIN is checked
 

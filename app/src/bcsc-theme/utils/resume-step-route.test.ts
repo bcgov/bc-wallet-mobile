@@ -1,5 +1,5 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { AccountSetupType, initialState, VerificationStatus } from '@/store'
+import { AccountSetupType, initialState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { getResumeStepRoute } from './resume-step-route'
 
@@ -38,7 +38,7 @@ describe('getResumeStepRoute', () => {
   it('does not treat tokens as verified once the credential is deactivated', () => {
     const store = structuredClone(initialState)
     store.bcscSecure.refreshToken = 'token'
-    store.bcscSecure.verifiedStatus = VerificationStatus.DEACTIVATED
+    store.bcscSecure.credentialDeactivated = true
     expect(getResumeStepRoute(store).name).not.toBe(BCSCScreens.VerificationSuccess)
   })
 

@@ -1,7 +1,7 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { BCSCSecureState, initialBCSCSecureState, VerificationStatus } from '@/store'
+import { BCSCSecureState, initialBCSCSecureState } from '@/store'
 import { BasicAppContext } from '@mocks/helpers/app'
 import NetInfo, { NetInfoChangeHandler } from '@react-native-community/netinfo'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
@@ -57,7 +57,6 @@ const unverified: BCSCSecureState = { ...initialBCSCSecureState }
 const verified: BCSCSecureState = {
   ...initialBCSCSecureState,
   verified: true,
-  verifiedStatus: VerificationStatus.VERIFIED,
   refreshToken: 'stored-refresh',
 }
 
@@ -65,13 +64,12 @@ const verified: BCSCSecureState = {
 const transferred: BCSCSecureState = {
   ...initialBCSCSecureState,
   refreshToken: 'stored-refresh',
-  verifiedStatus: VerificationStatus.UNVERIFIED,
 }
 
 const deactivatedTransfer: BCSCSecureState = {
   ...initialBCSCSecureState,
   refreshToken: 'stored-refresh',
-  verifiedStatus: VerificationStatus.DEACTIVATED,
+  credentialDeactivated: true,
 }
 
 const renderAccount = (bcscSecure: BCSCSecureState) => {
@@ -294,10 +292,26 @@ describe('BCSCAccountContext', () => {
         appState: 'active',
         connectivity: { isConnected: true, isInternetReachable: null },
         verified: true,
-        verifiedStatus: VerificationStatus.VERIFIED,
+        credentialDeactivated: false,
         hasRefreshToken: true,
       })
       expect(JSON.stringify(tokenNullError.toJSON())).not.toContain('stored-refresh')
+    })
+
+    // Verified and deactivated together is the expired finished account: it still loads through the credential
+    it('records credentialDeactivated for an expired finished account whose load fails', async () => {
+      const tokenNullError = AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
+      mockGetUserMetadata.mockRejectedValueOnce(tokenNullError)
+
+      renderAccount({ ...verified, credentialDeactivated: true })
+
+      await waitFor(() => expect(tokenNullError.context.accountLoad).toBeDefined())
+
+      expect(tokenNullError.context.accountLoad).toMatchObject({
+        verified: true,
+        credentialDeactivated: true,
+        hasRefreshToken: true,
+      })
     })
 
     it('refreshAccount() reloads with trigger "manual"', async () => {
@@ -347,7 +361,7 @@ describe('BCSCAccountContext', () => {
       expect(tokenNullError.context.accountLoad).toMatchObject({
         trigger: 'initial',
         verified: false,
-        verifiedStatus: VerificationStatus.UNVERIFIED,
+        credentialDeactivated: false,
         hasRefreshToken: true,
       })
     })

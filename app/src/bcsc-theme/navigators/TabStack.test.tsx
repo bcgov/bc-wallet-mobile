@@ -1,3 +1,4 @@
+import { TAB_SCENE_CONTAINER_STYLE } from '@/constants'
 import { TestIds } from '@/test-ids/registry'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -40,7 +41,6 @@ jest.mock('@react-navigation/bottom-tabs', () => {
 jest.mock('../features/home/Home', () => 'Home')
 jest.mock('../features/services/Services', () => 'Services')
 jest.mock('../features/agent', () => ({
-  AgentReadyGate: 'AgentReadyGate',
   CredentialsReadyGate: 'CredentialsReadyGate',
 }))
 jest.mock('../features/scan', () => ({
@@ -122,6 +122,12 @@ describe('BCSCTabStack', () => {
   it('renders without crashing', () => {
     render(<BCSCTabStack />)
     expect(capturedNavigatorProps).toBeDefined()
+  })
+
+  // Android clips the tab header's shadow without it (see TAB_SCENE_CONTAINER_STYLE).
+  it('passes the scene container style that lets Android draw the header shadow', () => {
+    render(<BCSCTabStack />)
+    expect(capturedNavigatorProps.sceneContainerStyle).toBe(TAB_SCENE_CONTAINER_STYLE)
   })
 
   // A plain view sized from the hook, not a SafeAreaView: that one learns its inset after it mounts, which

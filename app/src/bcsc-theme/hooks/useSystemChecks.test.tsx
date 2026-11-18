@@ -1,243 +1,100 @@
-import { BasicAppContext } from '@mocks/helpers/app'
-import { act, render, renderHook, waitFor } from '@testing-library/react-native'
-import React from 'react'
-import { SystemCheckSessionProvider } from '../contexts/SystemCheckSessionContext'
+import { runSystemChecks } from '@/services/system-checks/system-checks'
+import { act, renderHook } from '@testing-library/react-native'
+import { AppState, AppStateStatus } from 'react-native'
+import { useCreateSystemChecks } from './useCreateSystemChecks'
 import { SystemCheckScope, useSystemChecks } from './useSystemChecks'
 
-jest.mock('@react-navigation/native')
-jest.mock('./useBCSCApiClient', () => ({
-  useBCSCApiClientState: () => ({ client: {}, isClientReady: true }),
+const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+
+jest.mock('@bifold/core', () => ({
+  useStore: () => [{ bcsc: {} }, jest.fn()],
+  useServices: () => [mockLogger],
+  TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },
 }))
-jest.mock('../services/hooks/useTokenService', () => ({
-  useTokenService: () => ({ getCachedIdTokenMetadata: jest.fn() }),
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () => ({}),
 }))
-jest.mock('@/services/system-checks/InternetStatusSystemCheck', () => ({
-  InternetStatusSystemCheck: class InternetStatusSystemCheck {},
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
 }))
 jest.mock('@/services/system-checks/EventReasonAlertsSystemCheck', () => ({
   EventReasonAlertsSystemCheck: class EventReasonAlertsSystemCheck {},
 }))
+jest.mock('@/contexts/ErrorAlertContext', () => ({ useErrorAlert: () => ({ emitAlert: jest.fn() }) }))
+jest.mock('./useBCSCApiClient', () => ({ useBCSCApiClientState: () => ({ client: null, isClientReady: false }) }))
+jest.mock('../services/hooks/useTokenService', () => ({ useTokenService: () => ({}) }))
+jest.mock('./useCreateSystemChecks', () => ({ useCreateSystemChecks: jest.fn() }))
+jest.mock('@/services/system-checks/system-checks', () => ({ runSystemChecks: jest.fn().mockResolvedValue([]) }))
 
-const mockRunSystemChecks = jest.fn()
-jest.mock('@/services/system-checks/system-checks', () => ({
-  runSystemChecks: (...args: unknown[]) => mockRunSystemChecks(...args),
-}))
+const foregroundCheck = { runCheck: jest.fn(), onFail: jest.fn() }
+const mockGetForegroundSystemChecks = jest.fn()
 
-type ScopeDefinition = {
-  getSystemChecks: jest.Mock
-  isReady: boolean
-  isApplicable: boolean
-  sessionKey?: string
-  decidesHomeCard?: boolean
-}
-let mockScopes: Record<SystemCheckScope, ScopeDefinition>
-jest.mock('./useCreateSystemChecks', () => ({
-  useCreateSystemChecks: () => mockScopes,
-}))
-
-const scope = (overrides: Partial<ScopeDefinition> = {}): ScopeDefinition => ({
+// Scopes never ready, so only the listeners run
+const scopeChecks = (getForegroundSystemChecks?: () => Promise<unknown[]>) => ({
   getSystemChecks: jest.fn().mockResolvedValue([]),
-  isReady: true,
+  getForegroundSystemChecks,
+  isReady: false,
   isApplicable: true,
-  ...overrides,
 })
 
-/** A batch whose completion the test controls. */
-const deferred = () => {
-  let resolve: (results: boolean[]) => void = () => undefined
-  const promise = new Promise<boolean[]>((res) => {
-    resolve = res
-  })
+describe('useSystemChecks', () => {
+  let appStateListeners: Array<(state: AppStateStatus) => void>
+  let addEventListenerSpy: jest.SpyInstance
 
-  return { promise, resolve }
-}
-
-const flushPromises = () => new Promise<void>((resolve) => setImmediate(resolve))
-
-/** Stands in for a navigator calling the hook: records every rendered `hasSettled`. */
-const Probe = ({ scope: checked, onRender }: { scope: SystemCheckScope; onRender: (hasSettled: boolean) => void }) => {
-  const { hasSettled } = useSystemChecks(checked)
-  onRender(hasSettled)
-
-  return null
-}
-
-type HarnessProps = {
-  scope: SystemCheckScope
-  /** Whether the navigator is mounted; false between a verify → main → verify round trip's two Home mounts. */
-  mounted?: boolean
-  /** Whether a session is active, as RootStack tells the provider. */
-  enabled?: boolean
-  onRender: (hasSettled: boolean) => void
-}
-
-const Harness = ({ scope: checked, mounted = true, enabled = true, onRender }: HarnessProps) => (
-  <BasicAppContext>
-    <SystemCheckSessionProvider enabled={enabled}>
-      {mounted ? <Probe scope={checked} onRender={onRender} /> : null}
-    </SystemCheckSessionProvider>
-  </BasicAppContext>
-)
-
-const renderProbe = (props: Omit<HarnessProps, 'onRender'>) => {
-  const onRender = jest.fn()
-  let current = { ...props, onRender }
-  const utils = render(<Harness {...current} />)
-  /** Every `hasSettled` rendered so far, in order */
-  const rendered = (): boolean[] => onRender.mock.calls.map(([hasSettled]) => hasSettled)
-  const update = (next: Partial<Omit<HarnessProps, 'onRender'>>) => {
-    current = { ...current, ...next }
-    utils.rerender(<Harness {...current} />)
+  const setAppState = async (state: AppStateStatus) => {
+    await act(async () => {
+      appStateListeners.forEach((listener) => listener(state))
+    })
   }
 
-  return { ...utils, rendered, update }
-}
-
-describe('useSystemChecks', () => {
   beforeEach(() => {
-    mockRunSystemChecks.mockResolvedValue([])
-    mockScopes = {
-      [SystemCheckScope.STARTUP]: scope(),
-      [SystemCheckScope.MAIN_STACK]: scope({ sessionKey: 'MAIN_STACK:unverified' }),
-      [SystemCheckScope.VERIFY]: scope(),
-    }
+    appStateListeners = []
+    addEventListenerSpy = jest.spyOn(AppState, 'addEventListener').mockImplementation((_, listener) => {
+      appStateListeners.push(listener as (state: AppStateStatus) => void)
+      return { remove: jest.fn() } as any
+    })
+    mockGetForegroundSystemChecks.mockResolvedValue([foregroundCheck])
+    jest.mocked(useCreateSystemChecks).mockReturnValue({
+      [SystemCheckScope.STARTUP]: scopeChecks(mockGetForegroundSystemChecks),
+      [SystemCheckScope.MAIN_STACK]: scopeChecks(),
+      [SystemCheckScope.VERIFY]: scopeChecks(),
+    } as any)
   })
 
-  it('passes on whether the batch decides the Home card, false unless the scope says so', () => {
-    mockScopes = {
-      ...mockScopes,
-      [SystemCheckScope.MAIN_STACK]: scope({ sessionKey: 'MAIN_STACK:unverified', decidesHomeCard: true }),
-    }
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BasicAppContext>
-        <SystemCheckSessionProvider>{children}</SystemCheckSessionProvider>
-      </BasicAppContext>
-    )
-    const decidesHomeCard = (checked: SystemCheckScope) =>
-      renderHook(() => useSystemChecks(checked), { wrapper }).result.current.decidesHomeCard
-
-    expect(decidesHomeCard(SystemCheckScope.MAIN_STACK)).toBe(true)
-    expect(decidesHomeCard(SystemCheckScope.VERIFY)).toBe(false)
-  })
-  describe('a scope that runs once per mount (no session key)', () => {
-    it('runs the batch on mount and settles once it has finished', async () => {
-      const { rendered } = renderProbe({ scope: SystemCheckScope.VERIFY })
-
-      expect(rendered()[0]).toBe(false)
-      await waitFor(() => expect(rendered().at(-1)).toBe(true))
-      expect(mockScopes[SystemCheckScope.VERIFY].getSystemChecks).toHaveBeenCalledTimes(1)
-      expect(mockRunSystemChecks).toHaveBeenCalledTimes(1)
-    })
-
-    it('runs the batch again when the navigator mounts again', async () => {
-      const { rendered, update } = renderProbe({ scope: SystemCheckScope.VERIFY })
-      await waitFor(() => expect(rendered().at(-1)).toBe(true))
-
-      update({ mounted: false })
-      const remountedAt = rendered().length
-      update({ mounted: true })
-
-      expect(rendered()[remountedAt]).toBe(false)
-      await waitFor(() => expect(mockRunSystemChecks).toHaveBeenCalledTimes(2))
-    })
-
-    it('waits for the scope to be ready', () => {
-      mockScopes[SystemCheckScope.VERIFY] = scope({ isReady: false })
-
-      const { rendered } = renderProbe({ scope: SystemCheckScope.VERIFY })
-
-      expect(rendered().at(-1)).toBe(false)
-      expect(mockRunSystemChecks).not.toHaveBeenCalled()
-    })
-
-    it('counts a scope that will never run as settled', () => {
-      mockScopes[SystemCheckScope.VERIFY] = scope({ isReady: false, isApplicable: false })
-
-      const { rendered } = renderProbe({ scope: SystemCheckScope.VERIFY })
-
-      expect(rendered().at(-1)).toBe(true)
-    })
-
-    it('needs no session provider', async () => {
-      const wrapper = ({ children }: { children: React.ReactNode }) => <BasicAppContext>{children}</BasicAppContext>
-
-      const { result } = renderHook(() => useSystemChecks(SystemCheckScope.VERIFY), { wrapper })
-
-      await waitFor(() => expect(result.current.hasSettled).toBe(true))
-    })
+  afterEach(() => {
+    addEventListenerSpy.mockRestore()
   })
 
-  describe('a scope that runs once per session', () => {
-    it('needs a session provider', () => {
-      // React reports the render error as well as throwing it
-      jest.spyOn(console, 'error').mockImplementation(() => undefined)
-      const wrapper = ({ children }: { children: React.ReactNode }) => <BasicAppContext>{children}</BasicAppContext>
+  it('runs the foreground checks each time the app becomes active', async () => {
+    renderHook(() => useSystemChecks(SystemCheckScope.STARTUP))
 
-      expect(() => renderHook(() => useSystemChecks(SystemCheckScope.MAIN_STACK), { wrapper })).toThrow(
-        'SystemCheckSessionProvider'
-      )
-    })
+    await setAppState('background')
+    expect(mockGetForegroundSystemChecks).not.toHaveBeenCalled()
 
-    it('runs the batch once: a navigator that mounts again finds it settled on its first render', async () => {
-      const { rendered, update } = renderProbe({ scope: SystemCheckScope.MAIN_STACK })
-      expect(rendered()[0]).toBe(false)
-      await waitFor(() => expect(rendered().at(-1)).toBe(true))
+    await setAppState('active')
+    await setAppState('background')
+    await setAppState('active')
 
-      update({ mounted: false })
-      const remountedAt = rendered().length
-      update({ mounted: true })
+    expect(mockGetForegroundSystemChecks).toHaveBeenCalledTimes(2)
+    expect(runSystemChecks).toHaveBeenCalledWith([foregroundCheck], mockLogger)
+  })
 
-      expect(rendered()[remountedAt]).toBe(true)
-      expect(mockRunSystemChecks).toHaveBeenCalledTimes(1)
-    })
+  it('logs, rather than throws, when the foreground checks cannot be built', async () => {
+    const error = new Error('status fetch blew up')
+    mockGetForegroundSystemChecks.mockRejectedValue(error)
+    renderHook(() => useSystemChecks(SystemCheckScope.STARTUP))
 
-    it('runs a new batch when the key changes, as it does once the user verifies', async () => {
-      const { rendered, update } = renderProbe({ scope: SystemCheckScope.MAIN_STACK })
-      await waitFor(() => expect(rendered().at(-1)).toBe(true))
+    await setAppState('active')
 
-      mockScopes = { ...mockScopes, [SystemCheckScope.MAIN_STACK]: scope({ sessionKey: 'MAIN_STACK:verified' }) }
-      update({ mounted: false })
-      const remountedAt = rendered().length
-      update({ mounted: true })
+    expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('foreground system checks'), error)
+  })
 
-      expect(rendered()[remountedAt]).toBe(false)
-      await waitFor(() => expect(rendered().at(-1)).toBe(true))
-      expect(mockRunSystemChecks).toHaveBeenCalledTimes(2)
-    })
+  it('does not listen for a scope without foreground checks', async () => {
+    renderHook(() => useSystemChecks(SystemCheckScope.MAIN_STACK))
 
-    it('runs the batch again in the next session', async () => {
-      const { rendered, update } = renderProbe({ scope: SystemCheckScope.MAIN_STACK })
-      await waitFor(() => expect(rendered().at(-1)).toBe(true))
+    await setAppState('active')
 
-      // A lock unmounts the stack and ends the session; the unlock mounts it again
-      update({ mounted: false, enabled: false })
-      const remountedAt = rendered().length
-      update({ mounted: true, enabled: true })
-
-      expect(rendered()[remountedAt]).toBe(false)
-      await waitFor(() => expect(mockRunSystemChecks).toHaveBeenCalledTimes(2))
-      await waitFor(() => expect(rendered().at(-1)).toBe(true))
-    })
-
-    it('waits for a batch an earlier mount started, without starting it again', async () => {
-      const run = deferred()
-      mockRunSystemChecks.mockReturnValueOnce(run.promise)
-      const { rendered, update } = renderProbe({ scope: SystemCheckScope.MAIN_STACK })
-      await waitFor(() => expect(mockRunSystemChecks).toHaveBeenCalledTimes(1))
-
-      update({ mounted: false })
-      const remountedAt = rendered().length
-      update({ mounted: true })
-
-      expect(rendered()[remountedAt]).toBe(false)
-      expect(mockRunSystemChecks).toHaveBeenCalledTimes(1)
-
-      await act(async () => {
-        run.resolve([])
-        await flushPromises()
-      })
-
-      expect(rendered().at(-1)).toBe(true)
-    })
+    expect(mockGetForegroundSystemChecks).not.toHaveBeenCalled()
   })
 })

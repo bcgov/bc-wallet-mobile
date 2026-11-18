@@ -88,10 +88,6 @@ jest.mock('@/services/system-checks/UpdateAppSystemCheck', () => ({
   UpdateAppSystemCheck: class UpdateAppSystemCheck {},
 }))
 
-jest.mock('@/services/system-checks/DeviceCountSystemCheck', () => ({
-  DeviceCountSystemCheck: class DeviceCountSystemCheck {},
-}))
-
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
   UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {
     lastAppVersion: unknown
@@ -197,12 +193,6 @@ jest.mock('@/store', () => ({
     REMOVE_BANNER_MESSAGE: 'bcsc/removeBannerMessage',
     SET_INSTALL_ID: 'bcsc/setInstallId',
     RECORD_APP_LAUNCH_VERSION: 'bcsc/recordAppLaunchVersion',
-  },
-  VerificationStatus: {
-    VERIFIED: 'VERIFIED',
-    UNVERIFIED: 'UNVERIFIED',
-    DEACTIVATED: 'DEACTIVATED',
-    IN_PROGRESS: 'IN_PROGRESS',
   },
 }))
 
@@ -427,6 +417,48 @@ describe('useGetSystemChecks', () => {
         expect(refresh).not.toHaveBeenCalled()
       })
     })
+
+    describe('getForegroundSystemChecks', () => {
+      const renderWithClient = (client: unknown) => {
+        const refresh = jest.fn().mockResolvedValue({ serverStatus: { serverTimestamp: new Date() } })
+        mockUseServerStatus.mockReturnValue({ serverStatus: { serverTimestamp: new Date() }, refresh })
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client, isClientReady: Boolean(client) })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
+        mockUseConfigApi.mockReturnValue({ getServerStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        return { refresh, systemChecks: result.current }
+      }
+
+      it('re-checks the clock against a fresh server time', async () => {
+        const { refresh, systemChecks } = renderWithClient({})
+
+        const checks = await systemChecks[SystemCheckScope.STARTUP].getForegroundSystemChecks?.()
+
+        expect(refresh).toHaveBeenCalledWith({ force: true })
+        expect(checks?.map((c) => c.constructor.name)).toEqual(['ServerClockSkewSystemCheck'])
+      })
+
+      it('has nothing to check before the API client exists', async () => {
+        const { systemChecks } = renderWithClient(null)
+
+        await expect(systemChecks[SystemCheckScope.STARTUP].getForegroundSystemChecks?.()).resolves.toEqual([])
+      })
+
+      it('is only defined for the startup scope', () => {
+        const { systemChecks } = renderWithClient({})
+
+        expect(systemChecks[SystemCheckScope.MAIN_STACK].getForegroundSystemChecks).toBeUndefined()
+        expect(systemChecks[SystemCheckScope.VERIFY].getForegroundSystemChecks).toBeUndefined()
+      })
+    })
   })
 
   describe('MAIN_STACK scope', () => {
@@ -584,14 +616,13 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(6)
-        expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
-        expect(systemChecks[1].constructor.name).toBe('EventReasonAlertsSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('RefreshTokenExpiredSystemCheck')
-        expect(systemChecks[2].runCheck()).toBe(true)
-        expect(systemChecks[3].constructor.name).toBe('TermsOfUseSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
-        expect(systemChecks[5].constructor.name).toBe('KeyRotationSystemCheck')
+        expect(systemChecks).toHaveLength(5)
+        expect(systemChecks[0].constructor.name).toBe('EventReasonAlertsSystemCheck')
+        expect(systemChecks[1].constructor.name).toBe('RefreshTokenExpiredSystemCheck')
+        expect(systemChecks[1].runCheck()).toBe(true)
+        expect(systemChecks[2].constructor.name).toBe('TermsOfUseSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('KeyRotationSystemCheck')
       })
 
       it('skips the id-token-backed checks for a verified user whose refresh token has expired (#4654)', async () => {
@@ -637,7 +668,6 @@ describe('useGetSystemChecks', () => {
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
         const names = systemChecks.map((check) => check.constructor.name)
 
-        expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
         expect(names).toContain('RefreshTokenExpiredSystemCheck')
         expect(systemChecks[names.indexOf('RefreshTokenExpiredSystemCheck')].runCheck()).toBe(false)
@@ -683,7 +713,6 @@ describe('useGetSystemChecks', () => {
         // "token null" error for unverified users), so they are skipped — but the
         // account-independent Terms of Use check still runs.
         expect(names).toContain('TermsOfUseSystemCheck')
-        expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
         expect(names).not.toContain('RefreshTokenExpiredSystemCheck')
         expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')
@@ -766,7 +795,6 @@ describe('useGetSystemChecks', () => {
         })
 
         const verifiedUserChecksWithoutRegistrationUpdate = [
-          'DeviceCountSystemCheck',
           'EventReasonAlertsSystemCheck',
           'RefreshTokenExpiredSystemCheck',
           'TermsOfUseSystemCheck',
