@@ -49,6 +49,32 @@ existing cancellation destination: verification-method selection (#4585).
 Startup and post-call verification checks have no Cancel control. Post-call checks
 show the existing verification message without a progress bar.
 
+## Skeleton loading: the frame of the real content, pulsing only its fills
+
+Where a short first load is replaced by content whose layout is known, show a skeleton of that layout
+rather than a spinner. The Wallet tab shows `CredentialListSkeleton` until the agent has started and the
+stored credentials have loaded (#4741), following the
+[style guide](https://www.figma.com/design/Npt3lfaWT9oU4N4KBwhB1p/BCSC-Style-Guide?node-id=0-4032).
+
+- The frame (list margins, stripe, logo tile, padding, minimum height) uses the same screen-relative
+  sizes as the live credential card, so a card does not move when it replaces its placeholder. Bifold
+  does not export those sizes; `getCredentialCardFrame` mirrors them, so check it when Bifold is
+  upgraded. The bars inside the card and the shadows follow the style guide instead.
+- Only the grey fills pulse (opacity 1 to 0.4 and back over 2 seconds). The card and logo tile stay
+  solid: an elevated view that fades shows its own shadow through itself on Android.
+- The pulse is one looped native timing with an interpolated opacity, as in `BCAnimatedLoadingIcon`.
+  A looped `Animated.sequence` restarts from JavaScript every cycle and stalls while start-up work
+  holds that thread, which is exactly when a skeleton is on screen.
+- Waits that follow each other share one skeleton. A single gate decides failed, loading or ready
+  (`CredentialsReadyGate`) so the pulse never restarts between them.
+- Like any loading view it stops animating while hidden: pass `active`, from `useIsFocused` in a tab.
+- A skeleton is one screen-reader element ("Loading...", busy) with its blocks hidden from assistive
+  technology.
+- The fill colour is design-fixed (`SKELETON_FILL_COLOR`), like the banner colours.
+
+**Why:** the Wallet tab showed two identical spinners one after the other, which said nothing about
+what was loading and made the swap to the cards abrupt.
+
 ## Submits: one run per request, however many screens mount
 
 A screen that submits on mount (the send-video `UploadingScreen`) keeps its in-flight run in a
@@ -230,6 +256,19 @@ it again on every mount and skip what it already handled. Module-level state sur
 **Why:** `exitApp` finished the Activity for a browser-launched task but left the process alive. The next link
 or notification tap created a new Activity, which fires no `onNewIntent`, so logins after the first were lost.
 
+## Android: a tab header's shadow needs the scene container as its parent
+
+A tab navigator that renders its header with `createTabHeader` passes `TAB_SCENE_CONTAINER_STYLE` as
+`sceneContainerStyle`. It makes the scene container a stacking context, so the header stays mounted inside
+it. The same goes for any elevated view whose shadow must fall outside its own parent: it needs a React
+Native view above that parent, large enough to hold the shadow.
+
+**Why:** Android draws an elevation shadow through the view's parent and cuts it at that parent's bounds
+when the parent sits in a native container that clips its children, as react-native-screens' `Screen` does.
+The scene container has only a background colour, so React Native flattened it and mounted the header's
+background straight under that `Screen`. The main tabs and the QR scanner had no header shadow on Android
+while iOS showed one.
+
 ## Verification flow exits: first-time vs deferred verifiers
 
 The onboarding "Verify your account" prompt decides who may leave the verify flow, through the persisted
@@ -279,8 +318,23 @@ resulting error to the alert. For a single failure outside a flow, use `createFa
   or tokens in them.
 - Errors a policy already handled are labeled but never alerted again. Callers still check
   `isHandledAppError`.
+- To re-wrap a labeled error for its alert, set it as the `cause` and copy nothing. Reports and analytics
+  read `AppError.getChainedContext()` (as does `toJSON()`, for remote logs), which merges context down the cause chain (outer errors win).
 - To make a new context field a top-level Loki field, add it to `FLATTENED_APP_ERROR_CONTEXT_KEYS` in
-  `report-problem.ts`.
+  `report-problem.ts`. Native rejection fields are separate: see below.
+- New and changed native rejections use `rejectWithDiagnostics` (bcsc-core, iOS and Android): a fixed
+  message (never an error description, which can contain paths), a `site` of `method.stage` named the same
+  on both platforms, and status-code `userInfo`. Older methods still call `reject` directly and report only
+  a code; migrate a method when you change it. Reports promote the rejection's code and
+  `site`, `detail` and `osStatus` from anywhere in the cause chain to `native_*` fields (`nativeErrorFields.ts`);
+  other `userInfo` stays in `error_json`. Promote a new `userInfo` key there only when reports filter on it,
+  and only scalar status values.
+
+- When something that fails silently could explain a step's failure, pass its health as that step's
+  `context`, only on the steps it could explain. Use status codes only, never values: `getPushTokenStatus`
+  (placeholder push tokens) and `getAccountReadStatus` from bcsc-core (why `getAccount` resolved null). Call
+  `getAccountReadStatus` only after `getAccount` returns null, and never let a diagnostic call replace the
+  real failure. `withAccount` already does this: its `AccountNotFoundError` carries the status as `readContext`.
 
 ## Derived state: compute it from its inputs, don't store a flag
 
@@ -290,12 +344,16 @@ flag that something has to remember to set and clear. The three live together in
 (`bcsc-theme/state/account/`) is the example:
 
 - `getAccountPhase` (`account-phase.ts`) is the only definition of "expired" and "expiring soon".
-- `selectAccountPhase` (`selectors.ts`) reads its inputs: `bcscSecure.verified`, the ID token
-  `bcscReason`, `bcscSecure.refreshTokenExpired`, and the account's `account_expiration_date`.
+- `selectAccountPhase` (`selectors.ts`) reads its inputs: verification (through `selectVerificationState`), the ID
+  token `bcscReason`, the stored refresh token's expiry (`isRefreshTokenExpired`), and the account's
+  `account_expiration_date`.
 - `useAccountPhase` re-derives it when the store or the account changes. `useCardStatus` (feature locks) and
   `selectHomeNotice` (Home notices, `bcsc-theme/state/home/`) both read it, so they cannot disagree.
 - `getHomeNotice` (`home-notice.ts`) is the only definition of which notice Home shows. `useCustomNotifications`
   only maps its result to a component.
+- `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
+  IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
+  or `selectVerificationState`, never from `bcscSecure.verified`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next
@@ -324,3 +382,57 @@ rejection takes the caller's, so the FCM, user-info and ID-token paths all surfa
 before every signature check; any failure of that round trip returned `false`, which the app reported as
 error 2509 "signature does not match payload" with nothing to investigate. Verifying a signature needs no
 keychain, and the rejection codes let the next problem report explain itself.
+
+## Device clock: no token request while it is off
+
+The `Date` header of the status call is the clock check. `ServerStatusProvider` records it on the API client
+at startup and on every return to the foreground. A failed check drops the reading; going to the background
+drops it too, along with any status fetch still in flight. A token request with no reading runs the check
+first, and goes ahead only if the check fails. While the device clock is five minutes or more off, the client
+refuses token requests before sending them, since each carries an assertion stamped by that clock. An IAS 401
+rejecting an assertion for its time stamp (`Assertion Token was issued in the future` or `… is expired`) maps
+to `CLOCK_SKEW_ERROR` as well. Both show the clock alert through the global alert policy, and unlock never runs
+key recovery for them.
+
+`… is expired` alone does not prove a slow clock: an assertion sent long after it was signed expires too. When
+that 401's own `Date` header puts the device within five minutes of the server, the error keeps IAS's code and
+unlock recovers as for any other 401. With no usable `Date` header the clock is blamed.
+
+**Why:** with the clock an hour ahead, every token refresh failed with a generic 2111, and unlock took it for
+a key problem and ran key recovery. Fixing the clock is the only fix.
+
+## PIN lockout: one schedule, counted before the PIN is checked
+
+Wrong PINs are counted, and lockouts enforced, in TypeScript, the same on iOS and Android. Native `verifyPIN`
+only says whether a PIN is right.
+
+- `getPinLockout` (`bcsc-theme/state/pin-lockout/pin-lockout.ts`) is the only definition of the schedule: 5
+  wrong PINs in a row lock PIN entry for 1 minute, 10 for 10 minutes, 15 for 1 hour, then 20 and every 5th
+  after it for 1 day. The wrong PIN before each lock comes with a warning.
+- `pin-lockout-service.ts` (`bcsc-theme/features/auth/services/`) owns the attempt record, an AsyncStorage key
+  of its own (`BCLocalStorageKeys.PinAttempts`), and is the only caller of native `verifyPIN`; ESLint blocks
+  the import everywhere else. Check a PIN with `verifyPinWithLockout` and read the lock with `readPinLockout`,
+  which works before the app is unlocked.
+- The attempt is saved **before** the PIN is checked, so closing the app during a check cannot buy a guess
+  that was never counted. If the record cannot be read or saved the PIN is not checked and the unlock fails
+  with an error; a lock is never assumed away.
+- A correct PIN, a newly set PIN and removing the account clear the count. Waiting out a lock does not: the
+  count carries on to the next, longer lock.
+
+**Why:** each platform kept its own schedule and English messages in native code, so the same five wrong PINs
+locked iOS for a minute and Android for 30 seconds, and the lock screen copy could not be translated (#4423).
+
+## Removing an account: a usable account is confirmed first
+
+A control that removes an account the user could still use opens `RemoveAccountConfirmationScreen` (the shared
+`DestructiveConfirmationScreen`) and never calls `useFactoryReset` itself. The header Back is the cancel.
+Settings, the transfer-complete screen, the "Problem with account" error and the PIN lockout screen all go
+through it. Register the screen in the stack that offers the control, under that stack's own route name
+(`<Stack>RemoveAccountConfirmation`).
+
+A reset the app itself requires skips the confirmation, because the account is already unusable and there is
+nothing left to keep: device authentication turned off, a session that cannot be recovered, an invalidated
+device, an expired setup.
+
+**Why:** Remove account is the PIN lockout screen's only button and it removed the account on the first tap,
+although the same account would have been usable again as soon as the lock ended.

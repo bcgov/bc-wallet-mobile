@@ -33,6 +33,8 @@ RCT_EXTERN_METHOD(getIssuer : (RCTPromiseResolveBlock)resolve reject : (RCTPromi
 
 RCT_EXTERN_METHOD(getNativeFilesScan : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(getAccountReadStatus : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(setAccount : (NSDictionary *)account resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
@@ -115,8 +117,6 @@ RCT_EXTERN_METHOD(setAccountSecurityMethod : (NSString *)securityMethod resolve 
 
 RCT_EXTERN_METHOD(getAccountSecurityMethod : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(isAccountLocked : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
-
 // Device Security Methods
 RCT_EXTERN_METHOD(setupDeviceSecurity : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
@@ -174,9 +174,6 @@ RCT_EXTERN_METHOD(setSavedServices : (NSArray *)services resolve : (RCTPromiseRe
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(deleteSavedServices : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
-
-RCT_EXTERN_METHOD(showLocalNotification : (NSString *)title message : (NSString *)
-                      message resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(isThirdPartyKeyboardActive : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 

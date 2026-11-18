@@ -50,7 +50,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({
   })
 
   const handleToggleBookmark = () => {
-    updateSavedService(clientRefId, !isBookmarked, { clientName: title })
+    void updateSavedService(clientRefId, !isBookmarked, { clientName: title })
   }
 
   return (

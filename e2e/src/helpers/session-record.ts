@@ -23,7 +23,7 @@ export interface SessionRecord {
   /** Spec paths relative to e2e/. */
   specs: string[]
   sessionId?: string
-  /** The capabilities that identify the device and the Sauce job (`testobject_test_report_url`). */
+  /** The capabilities that identify the device, the Sauce job (`testobject_test_report_url`) and the booted app. */
   capabilities: Record<string, string>
   startedAt: string
   endedAt?: string
@@ -36,6 +36,8 @@ export interface SessionRecord {
 const E2E_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const SESSIONS_DIR = join(E2E_ROOT, 'reports', 'sessions')
 const RECORDED_CAPABILITIES = [
+  // The build the session booted (`storage:filename=BCSC-v4.1.3.ipa`): what the upgrade brief names per version.
+  'appium:app',
   'platformName',
   'platformVersion',
   'appium:platformVersion',

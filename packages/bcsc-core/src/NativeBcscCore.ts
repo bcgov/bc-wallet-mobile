@@ -127,16 +127,7 @@ export enum BiometricType {
 
 export type PINVerificationResult = {
   success: boolean;
-  locked: boolean;
-  remainingTime: number;
   walletKey?: string; // PBKDF2 hash of PIN, only present on success
-  title?: string;
-  message?: string;
-};
-
-export type AccountLockStatus = {
-  locked: boolean;
-  remainingTime: number;
 };
 
 export type PINSetupResult = {
@@ -158,6 +149,21 @@ export type NativeFilesScan = {
   bundleDirectoryExists: boolean;
   files: string[];
   fileCount: number;
+};
+
+/** Why `getAccount` resolved null. Never contains paths, IDs or file contents. */
+export type NativeAccountReadStatus = {
+  /** e.g. 'ok', 'account_list_missing', 'account_file_missing', 'account_decode_failed', 'account_decrypt_failed' */
+  status: string;
+  /** The issuer-scoped storage directory name, e.g. 'PROD' */
+  environment?: string;
+  /** iOS: NSError `domain:code`; Android: exception class name */
+  detail?: string;
+  /**
+   * Android only: outcome of the legacy flat-file fallback read: 'ok', 'absent', 'unreadable', 'empty',
+   * 'parse_failed', or 'skipped' when the native-compatible store already had accounts
+   */
+  legacyStatus?: string;
 };
 
 export type NativeAddress = {
@@ -230,10 +236,6 @@ export type NativeAccount = {
   displayName?: string;
   didPostNicknameToServer?: boolean;
   nickname?: string;
-  failedAttemptCount?: number;
-  // lastAttemptDate?: number; // Timestamp
-  // Penalties are not directly included as it's a computed property
-  // with complex structure
 };
 
 export type NativeAccountWithoutId = {
@@ -243,7 +245,6 @@ export type NativeAccountWithoutId = {
   displayName?: string;
   didPostNicknameToServer?: boolean;
   nickname?: string;
-  failedAttemptCount?: number;
 };
 
 export type NativeSavedService = {
@@ -316,6 +317,7 @@ export interface Spec extends TurboModule {
   getIssuer(): Promise<string | null>;
   getNativeFilesScan(): Promise<NativeFilesScan>;
   getAccount(): Promise<NativeAccount | null>;
+  getAccountReadStatus(): Promise<NativeAccountReadStatus>;
   setAccount(account: NativeAccountWithoutId): Promise<void>;
   getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;
   signPairingCode(
@@ -366,6 +368,9 @@ export interface Spec extends TurboModule {
 
   // PIN Authentication Methods
   setPIN(pin: string): Promise<PINSetupResult>;
+  /**
+   * Only checks the PIN. Wrong attempts are counted, and lockouts enforced, by the caller.
+   */
   verifyPIN(pin: string): Promise<PINVerificationResult>;
   deletePIN(): Promise<boolean>;
   hasPINSet(): Promise<boolean>;
@@ -379,7 +384,6 @@ export interface Spec extends TurboModule {
   // Account Security Methods
   setAccountSecurityMethod(securityMethod: AccountSecurityMethod): Promise<boolean>;
   getAccountSecurityMethod(): Promise<AccountSecurityMethod>;
-  isAccountLocked(): Promise<AccountLockStatus>;
 
   // Device Security Methods
   setupDeviceSecurity(): Promise<PINSetupResult>;
@@ -517,7 +521,6 @@ export interface Spec extends TurboModule {
    * @returns true if credential exists, false otherwise
    */
   hasCredential(): Promise<boolean>;
-  showLocalNotification(title: string, message: string): Promise<void>;
 
   // Saved Services / Client Metadata Storage Methods
   /**

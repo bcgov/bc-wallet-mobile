@@ -1,6 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-service'
+import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction } from '@/store'
@@ -28,6 +29,9 @@ jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
 // shutdown/delete path is delegated to agentCtx.teardownAgent (mocked separately).
 jest.mock('@/bcsc-theme/features/agent/services/agent-service', () => ({
   purgeWalletStore: jest.fn().mockResolvedValue(undefined),
+}))
+jest.mock('@/bcsc-theme/features/auth/services/pin-lockout-service', () => ({
+  clearPinAttempts: jest.fn(),
 }))
 jest.mock('react-native-config', () => ({ Config: { INDY_VDR_PROXY_URL: '' } }))
 
@@ -102,6 +106,23 @@ describe('useFactoryReset', () => {
     expect(clearSecureState).toHaveBeenCalledWith()
     expect(dispatch.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
     expect(dispatch.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
+  })
+
+  it('forgets the wrong PIN attempts once the account is removed, before the state is cleared', async () => {
+    const { bcscCore, logger, dispatch } = setupFactoryReset()
+
+    const hook = renderHook(() => useFactoryReset())
+
+    await act(async () => {
+      await hook.result.current()
+    })
+
+    const clearedAt = jest.mocked(clearPinAttempts).mock.invocationCallOrder[0]
+
+    expect(clearPinAttempts).toHaveBeenCalledTimes(1)
+    expect(clearPinAttempts).toHaveBeenCalledWith(logger)
+    expect(bcscCore.removeAccount.mock.invocationCallOrder[0]).toBeLessThan(clearedAt)
+    expect(clearedAt).toBeLessThan(dispatch.mock.invocationCallOrder[0])
   })
 
   it('should call getToken when registrationAccessToken is missing from store', async () => {
@@ -349,5 +370,7 @@ describe('useFactoryReset', () => {
     expect(bcscCore.getAccount).toHaveBeenCalled()
     expect(deleteRegistration).toHaveBeenCalledWith('token', 'test-client-id')
     expect(bcscCore.removeAccount).toHaveBeenCalled()
+    // The account and its PIN are still there, so a lock on that PIN must stay
+    expect(clearPinAttempts).not.toHaveBeenCalled()
   })
 })

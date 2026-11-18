@@ -2,6 +2,7 @@ import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
@@ -151,6 +152,9 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         const { success, walletKey } = await setNativePIN(pin1)
 
         if (success) {
+          // Wrong attempts at the PIN this one replaces say nothing about the new one
+          await clearPinAttempts(logger)
+
           // Call the success handler with the wallet key
           await onSuccess({ success, walletKey })
           logger.info('PIN set successfully')

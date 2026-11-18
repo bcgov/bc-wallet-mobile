@@ -239,7 +239,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
      * Next Step: Navigate to evidence ID collection (after all photos captured)
      */
     if (licenseRef.current) {
-      scanner.handleScanDriversLicense(licenseRef.current)
+      void scanner.handleScanDriversLicense(licenseRef.current)
     }
 
     // Wrap getPhotoMetadata with alert

@@ -1,5 +1,6 @@
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-service'
+import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
@@ -7,7 +8,7 @@ import { WALLET_ID } from '@/constants'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
-import * as BcscCore from 'react-native-bcsc-core'
+import { clearAllKeychainData, getAccount, getToken, removeAccount, TokenType } from 'react-native-bcsc-core'
 import { Config } from 'react-native-config'
 import useRegistrationApi from './useRegistrationApi'
 
@@ -56,7 +57,7 @@ export const useFactoryReset = () => {
 
         if (!registrationAccessToken) {
           // Note: This allows a factory reset before secure state has been hydrated
-          const nativeToken = await BcscCore.getToken(BcscCore.TokenType.Registration)
+          const nativeToken = await getToken(TokenType.Registration)
           registrationAccessToken = nativeToken?.token
         }
 
@@ -83,7 +84,7 @@ export const useFactoryReset = () => {
    * @returns A promise that resolves when all account dependencies have been purged.
    */
   const removeAccountArtifacts = useCallback(async () => {
-    const account = await BcscCore.getAccount()
+    const account = await getAccount()
 
     if (account) {
       // Delete IAS account registration
@@ -96,7 +97,7 @@ export const useFactoryReset = () => {
 
       // Remove local account file
       logger.info('FactoryReset: Removing local account file...')
-      await BcscCore.removeAccount()
+      await removeAccount()
     } else {
       logger.info('FactoryReset: No BCSC account found')
     }
@@ -104,7 +105,7 @@ export const useFactoryReset = () => {
     // Clear all remaining Keychain data
     try {
       logger.info('FactoryReset: Clearing all Keychain data...')
-      await BcscCore.clearAllKeychainData()
+      await clearAllKeychainData()
     } catch (error) {
       const err = error as { message?: string; code?: string; userInfo?: unknown } | undefined
       logger.warn('FactoryReset: Failed to clear Keychain data', {
@@ -167,9 +168,13 @@ export const useFactoryReset = () => {
 
         await removeAccountArtifacts()
 
+        // The PIN is gone with the account, so its wrong attempts must not follow the next one.
+        // Only once the account is removed: a reset that fails part-way keeps the lock.
+        await clearPinAttempts(logger)
+
         // Reset BCSC state to initial state. CLEAR_BCSC (which flips hasAccount to
         // false) must dispatch BEFORE clearSecureState (which resets bcscSecure,
-        // including verifiedStatus out of IN_PROGRESS) — RootStack short-circuits to
+        // including inVerifyFlow) — RootStack short-circuits to
         // OnboardingStack on `hasAccount === false` before it ever derives
         // showVerifyStack, so ordering it first prevents the transient MainStack
         // mount that let Bifold's provider tree fire storage reads against the

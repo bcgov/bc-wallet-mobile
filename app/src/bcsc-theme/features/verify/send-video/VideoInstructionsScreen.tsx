@@ -60,7 +60,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       // whatever scroll offset the user left it at. Snap back to the top so the fresh set reads from
       // the start rather than mid-list.
       scrollViewRef.current?.scrollTo({ y: 0, animated: false })
-      loadPrompts()
+      void loadPrompts()
     }, [loadPrompts])
   )
 

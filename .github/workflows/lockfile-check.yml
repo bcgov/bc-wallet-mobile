@@ -11,6 +11,8 @@ on:
       - '**/build.gradle'
       - '**/settings.gradle'
       - '**/gradle.lockfile'
+      - '**/Gemfile'
+      - '**/Gemfile.lock'
       - '**/Podfile'
       - '**/Podfile.lock'
   merge_group:
@@ -64,7 +66,7 @@ jobs:
       - name: Install JS dependencies
         run: yarn install --immutable
 
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: zulu
           java-version: 17
@@ -84,7 +86,10 @@ jobs:
 
       - name: Check gradle.lockfile is up to date
         run: |
-          if ! git diff --exit-code app/android/app/gradle.lockfile; then
+          lockfile=app/android/app/gradle.lockfile
+          if [ -n "$(git status --porcelain -- $lockfile)" ]; then
+            git status --porcelain -- $lockfile
+            git diff -- $lockfile
             echo "::error::gradle.lockfile is out of sync. Run 'yarn android:setup' from /app and commit the result."
             exit 1
           fi
@@ -123,6 +128,8 @@ jobs:
 
       - name: Bundle install
         working-directory: app
+        env:
+          BUNDLE_FROZEN: true
         run: bundle install
 
       - name: Cache CocoaPods

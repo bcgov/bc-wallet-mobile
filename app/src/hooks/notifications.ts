@@ -143,7 +143,7 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
       return
     }
 
-    Promise.all(
+    void Promise.all(
       [...proofsRequested, ...proofsDone].map(async (proof: DidCommProofExchangeRecord) => {
         const isAttestation = await isProofRequestingAttestation(proof, agent, AttestationRestrictions)
         return {
@@ -166,7 +166,7 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
         return
       }
       autoDecliningProofIds.add(proof.id)
-      declineProofRequest(agent, proof, t('ProofRequest.Declined'))
+      void declineProofRequest(agent, proof, t('ProofRequest.Declined'))
     })
   }, [agent, expiredProofs, t, store.preferences.developerModeEnabled])
 

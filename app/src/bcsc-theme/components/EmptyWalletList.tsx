@@ -65,7 +65,7 @@ const EmptyWalletList: React.FC = () => {
   }, [])
 
   const handleLearnMore = () => {
-    openLink(WALLET_LEARN_MORE_URL)
+    void openLink(WALLET_LEARN_MORE_URL)
   }
 
   return (

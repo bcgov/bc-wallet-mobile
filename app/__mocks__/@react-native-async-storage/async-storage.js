@@ -10,4 +10,10 @@ export default class AsyncStorage {
 
     return null
   }
+
+  static removeItem = (key) => {
+    delete store[key]
+
+    return null
+  }
 }

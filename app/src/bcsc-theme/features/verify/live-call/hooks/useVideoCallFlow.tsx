@@ -411,7 +411,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   cleanupRef.current = cleanup
   useEffect(() => {
     return () => {
-      cleanupRef.current()
+      void cleanupRef.current()
     }
   }, [])
 

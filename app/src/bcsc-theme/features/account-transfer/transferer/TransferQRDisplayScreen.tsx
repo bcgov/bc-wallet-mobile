@@ -173,7 +173,7 @@ const TransferQRDisplayScreen: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    refreshToken()
+    void refreshToken()
     return () => {
       stopAllPolling()
     }
@@ -187,12 +187,12 @@ const TransferQRDisplayScreen: React.FC = () => {
     // setInterval closure would mean a QR rotation (createToken mutating jtiRef.current) silently
     // switches all in-flight polls to the new JTI, abandoning the consumed one before the 200 is seen.
     const jtiSnapshot = jtiRef.current
-    checkAttestation(jtiSnapshot)
+    void checkAttestation(jtiSnapshot)
     if (attestationIntervalRef.current) {
       clearInterval(attestationIntervalRef.current)
     }
     attestationIntervalRef.current = setInterval(() => {
-      checkAttestation(jtiSnapshot)
+      void checkAttestation(jtiSnapshot)
     }, attestationPollInterval)
     return () => {
       if (attestationIntervalRef.current) {

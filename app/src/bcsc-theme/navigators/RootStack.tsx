@@ -1,7 +1,8 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
-import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
+import { isProductionBundle, isProductionEnvironment } from '@/utils/environment'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,11 +15,12 @@ import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useServerStatus } from '../contexts/ServerStatusContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
+import { InvalidEnvironment } from '../features/modal/InvalidEnvironment'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { useAccountPhase } from '../state/account/useAccountPhase'
+import { useVerificationState } from '../state/verification/useVerificationState'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
@@ -53,7 +55,7 @@ const FcmCardExpirySync: React.FC = () => {
  */
 const useVerificationRouting = (appReady: boolean) => {
   const [store, dispatch] = useStore<BCState>()
-  const { needsVerification, isVerified, isVerificationInProgress, isDeactivated } = useVerificationStatus()
+  const { needsVerification, isVerified, isVerificationInProgress, isDeactivated } = useVerificationState()
   const { isAvailable: isServerAvailable, hasChecked: serverStatusChecked } = useServerStatus()
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
   // Once per session: whether the auto-resume below has been decided. State, not a ref, so the
@@ -98,7 +100,7 @@ const useVerificationRouting = (appReady: boolean) => {
     setResumeEvaluated(true)
 
     if (wantsToResumeVerification) {
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS, payload: [VerificationStatus.IN_PROGRESS] })
+      dispatch({ type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW, payload: [true] })
     }
   }, [dispatch, resumeEvaluated, appReady, signedIn, serverStatusChecked, isServerAvailable, wantsToResumeVerification])
 
@@ -107,8 +109,8 @@ const useVerificationRouting = (appReady: boolean) => {
 
   // The auto-resume dispatch (effect above) hasn't landed yet. Keep VerifyStack mounted through this
   // window so Home doesn't flash first, and so the outage fallback has a stack for its prompt. Once
-  // evaluated only IN_PROGRESS keeps the stack up, so leaving (UNVERIFIED) swaps to MainStack and a
-  // restart's UNVERIFIED → IN_PROGRESS remounts it at the first step.
+  // evaluated only being in the verify flow keeps the stack up, so leaving it swaps to MainStack and a
+  // restart's leave → re-enter remounts it at the first step.
   const pendingVerificationResume = !resumeEvaluated && serverStatusChecked && wantsToResumeVerification
 
   // During an outage the resume is held off, so fall back to the prompt — its inline ServiceOutage +
@@ -153,7 +155,7 @@ const BCSCRootStack: React.FC = () => {
   const { emitErrorModal } = useErrorAlert()
   const { isNavigationReady } = useNavigationContainer()
   const { initializingAccount } = useInitializeAccountStatus()
-  const { isVerified } = useVerificationStatus()
+  const { isVerified } = useVerificationState()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
@@ -165,7 +167,7 @@ const BCSCRootStack: React.FC = () => {
   // Wait until the apiClient is ready and process any pending FCM Challenges
   useEffect(() => {
     if (isClientReady) {
-      fcmService.viewModel.processPendingChallenges()
+      void fcmService.viewModel.processPendingChallenges()
     }
   }, [isClientReady, fcmService.viewModel])
 
@@ -176,11 +178,17 @@ const BCSCRootStack: React.FC = () => {
     }
 
     try {
-      loadState(dispatch)
+      void loadState(dispatch)
     } catch (err) {
       emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
     }
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
+
+  // Recovery gate: blocks every stack, independent of account state, until the environment is valid again
+  // TODO (MD): Remove this gate after all users are on v4.2.0+
+  if (store.stateLoaded && isProductionBundle() && !isProductionEnvironment(store.developer.environment)) {
+    return <InvalidEnvironment />
+  }
 
   // Loading until the app is ready and, for a would-resume user, IAS status is known
   if (!appReady || awaitingStatusForResume) {

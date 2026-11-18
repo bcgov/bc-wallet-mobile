@@ -1,3 +1,4 @@
+import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCDispatchAction } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
@@ -18,6 +19,7 @@ export const mockUseBCSCApiClientState = jest.fn()
 export const mockUseTokenApi = jest.fn()
 export const mockUseConfigApi = jest.fn()
 export const mockUseRegistrationApi = jest.fn()
+export const mockUseRegistrationService = jest.fn()
 export const mockUseEvidenceService = jest.fn()
 export const mockUseNavigation = jest.fn()
 export const mockUseNavigationContainer = jest.fn()
@@ -53,6 +55,9 @@ jest.mock('@/bcsc-theme/utils/key-rotation', () => ({
 jest.mock('@/bcsc-theme/api/hooks/useTokens', () => () => mockUseTokenApi())
 jest.mock('../api/hooks/useConfigApi', () => () => mockUseConfigApi())
 jest.mock('../api/hooks/useRegistrationApi', () => () => mockUseRegistrationApi())
+jest.mock('../services/hooks/useRegistrationService', () => ({
+  useRegistrationService: () => mockUseRegistrationService(),
+}))
 jest.mock('../services/hooks/useEvidenceService', () => ({
   useEvidenceService: () => mockUseEvidenceService(),
 }))
@@ -83,12 +88,25 @@ jest.mock('@/services/system-checks/UpdateAppSystemCheck', () => ({
   UpdateAppSystemCheck: class UpdateAppSystemCheck {},
 }))
 
-jest.mock('@/services/system-checks/DeviceCountSystemCheck', () => ({
-  DeviceCountSystemCheck: class DeviceCountSystemCheck {},
-}))
-
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
-  UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {},
+  UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {
+    lastAppVersion: unknown
+    lastAppBuildNumber: unknown
+    updateRegistration: () => Promise<unknown>
+    utils: unknown
+
+    constructor(
+      lastAppVersion: unknown,
+      lastAppBuildNumber: unknown,
+      updateRegistration: () => Promise<unknown>,
+      utils: unknown
+    ) {
+      this.lastAppVersion = lastAppVersion
+      this.lastAppBuildNumber = lastAppBuildNumber
+      this.updateRegistration = updateRegistration
+      this.utils = utils
+    }
+  },
 }))
 
 jest.mock('@/services/system-checks/KeyRotationSystemCheck', () => ({
@@ -186,6 +204,9 @@ describe('useGetSystemChecks', () => {
       refresh: jest.fn().mockResolvedValue({ serverStatus: null }),
     })
     mockUseSecureActions.mockReturnValue({ updateTokens: jest.fn() })
+    mockUseRegistrationService.mockImplementation(
+      jest.requireActual('../services/hooks/useRegistrationService').useRegistrationService
+    )
   })
 
   describe('STARTUP scope', () => {
@@ -396,6 +417,48 @@ describe('useGetSystemChecks', () => {
         expect(refresh).not.toHaveBeenCalled()
       })
     })
+
+    describe('getForegroundSystemChecks', () => {
+      const renderWithClient = (client: unknown) => {
+        const refresh = jest.fn().mockResolvedValue({ serverStatus: { serverTimestamp: new Date() } })
+        mockUseServerStatus.mockReturnValue({ serverStatus: { serverTimestamp: new Date() }, refresh })
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client, isClientReady: Boolean(client) })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
+        mockUseConfigApi.mockReturnValue({ getServerStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        return { refresh, systemChecks: result.current }
+      }
+
+      it('re-checks the clock against a fresh server time', async () => {
+        const { refresh, systemChecks } = renderWithClient({})
+
+        const checks = await systemChecks[SystemCheckScope.STARTUP].getForegroundSystemChecks?.()
+
+        expect(refresh).toHaveBeenCalledWith({ force: true })
+        expect(checks?.map((c) => c.constructor.name)).toEqual(['ServerClockSkewSystemCheck'])
+      })
+
+      it('has nothing to check before the API client exists', async () => {
+        const { systemChecks } = renderWithClient(null)
+
+        await expect(systemChecks[SystemCheckScope.STARTUP].getForegroundSystemChecks?.()).resolves.toEqual([])
+      })
+
+      it('is only defined for the startup scope', () => {
+        const { systemChecks } = renderWithClient({})
+
+        expect(systemChecks[SystemCheckScope.MAIN_STACK].getForegroundSystemChecks).toBeUndefined()
+        expect(systemChecks[SystemCheckScope.VERIFY].getForegroundSystemChecks).toBeUndefined()
+      })
+    })
   })
 
   describe('MAIN_STACK scope', () => {
@@ -478,13 +541,13 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(6)
-        expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
-        expect(systemChecks[1].constructor.name).toBe('EventReasonAlertsSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('RefreshTokenExpiredSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('TermsOfUseSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
-        expect(systemChecks[5].constructor.name).toBe('KeyRotationSystemCheck')
+        expect(systemChecks).toHaveLength(5)
+        expect(systemChecks[0].constructor.name).toBe('EventReasonAlertsSystemCheck')
+        expect(systemChecks[1].constructor.name).toBe('RefreshTokenExpiredSystemCheck')
+        expect(systemChecks[1].runCheck()).toBe(true)
+        expect(systemChecks[2].constructor.name).toBe('TermsOfUseSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('KeyRotationSystemCheck')
       })
 
       it('skips the id-token-backed checks for a verified user whose refresh token has expired (#4654)', async () => {
@@ -504,7 +567,7 @@ describe('useGetSystemChecks', () => {
             bcscSecure: {
               isHydrated: true,
               verified: true,
-              refreshTokenExpired: true,
+              refreshToken: EXPIRED_JWT,
               registrationAccessToken: 'test-registration-token',
             },
           },
@@ -530,9 +593,9 @@ describe('useGetSystemChecks', () => {
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
         const names = systemChecks.map((check) => check.constructor.name)
 
-        expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
         expect(names).toContain('RefreshTokenExpiredSystemCheck')
+        expect(systemChecks[names.indexOf('RefreshTokenExpiredSystemCheck')].runCheck()).toBe(false)
       })
 
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
@@ -575,7 +638,6 @@ describe('useGetSystemChecks', () => {
         // "token null" error for unverified users), so they are skipped — but the
         // account-independent Terms of Use check still runs.
         expect(names).toContain('TermsOfUseSystemCheck')
-        expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
         expect(names).not.toContain('RefreshTokenExpiredSystemCheck')
         expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')
@@ -585,6 +647,120 @@ describe('useGetSystemChecks', () => {
         // Key rotation requires isVerified — an unverified user is still mid-setup and should
         // never have its keys touched automatically.
         expect(names).not.toContain('KeyRotationSystemCheck')
+      })
+
+      describe('order and wiring', () => {
+        // BCSC bundle, unverified, no registration yet; returns the updateRegistration spy the
+        // service hands to UpdateDeviceRegistrationSystemCheck.
+        const mockMainStackStore = ({
+          bcscSecure = {},
+          bcsc = {},
+          bundleId = 'ca.bc.gov.id.servicescard',
+        }: { bcscSecure?: Record<string, unknown>; bcsc?: Record<string, unknown>; bundleId?: string } = {}) => {
+          const updateRegistration = jest.fn()
+          jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue(bundleId)
+          mockGetBundleId.mockReturnValue(bundleId)
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: { analyticsOptIn: true, ...bcsc },
+              bcscSecure: { isHydrated: true, verified: false, ...bcscSecure },
+            },
+            jest.fn(),
+          ])
+          mockUseServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }])
+          mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+          mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+          jest.spyOn(React, 'useContext').mockReturnValue({ account: null })
+          mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
+          mockUseRegistrationApi.mockReturnValue({})
+          mockUseRegistrationService.mockReturnValue({ updateRegistration })
+          mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+          mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
+          return updateRegistration
+        }
+
+        const getCheckNames = async () => {
+          const { result } = renderHook(() => useCreateSystemChecks())
+          const checks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          return checks.map((check) => check.constructor.name)
+        }
+
+        // Initial onboarding: the registration token exists but no nickname has been chosen yet.
+        it('runs only the verification request check, then Terms of Use, for a user waiting on a submitted request', async () => {
+          mockMainStackStore({
+            bcscSecure: {
+              registrationAccessToken: 'test-registration-token',
+              verificationRequestId: 'request-id',
+              deviceCode: 'device-code',
+              userCode: 'user-code',
+            },
+          })
+
+          expect(await getCheckNames()).toEqual(['VerificationRequestStatusSystemCheck', 'TermsOfUseSystemCheck'])
+        })
+
+        it('runs only pending verification recovery, then Terms of Use, for a user with a device code and no submitted request', async () => {
+          mockMainStackStore({
+            bcscSecure: {
+              registrationAccessToken: 'test-registration-token',
+              deviceCode: 'device-code',
+              userCode: 'user-code',
+            },
+          })
+
+          expect(await getCheckNames()).toEqual(['PendingVerificationRecoverySystemCheck', 'TermsOfUseSystemCheck'])
+        })
+
+        it('runs only Terms of Use for a fresh user', async () => {
+          mockMainStackStore()
+
+          expect(await getCheckNames()).toEqual(['TermsOfUseSystemCheck'])
+        })
+
+        const verifiedUserChecksWithoutRegistrationUpdate = [
+          'EventReasonAlertsSystemCheck',
+          'RefreshTokenExpiredSystemCheck',
+          'TermsOfUseSystemCheck',
+        ]
+
+        it('skips the registration update and key rotation on a non-BCSC bundle, even with a nickname and token', async () => {
+          mockMainStackStore({
+            bundleId: 'ca.bc.gov.BCWallet',
+            bcscSecure: { verified: true, registrationAccessToken: 'test-registration-token' },
+            bcsc: { selectedNickname: 'Test Device' },
+          })
+
+          expect(await getCheckNames()).toEqual(verifiedUserChecksWithoutRegistrationUpdate)
+        })
+
+        it('skips the registration update and key rotation without a registration token, even with a nickname', async () => {
+          mockMainStackStore({
+            bcscSecure: { verified: true },
+            bcsc: { selectedNickname: 'Test Device' },
+          })
+
+          expect(await getCheckNames()).toEqual(verifiedUserChecksWithoutRegistrationUpdate)
+        })
+
+        it('passes the registration token and nickname to the registration service, suppressing transient alerts', async () => {
+          const updateRegistration = mockMainStackStore({
+            bcscSecure: { verified: true, registrationAccessToken: 'test-registration-token' },
+            bcsc: { selectedNickname: 'Test Device' },
+          })
+
+          const { result } = renderHook(() => useCreateSystemChecks())
+          const checks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          const check = checks.find((c) => c.constructor.name === 'UpdateDeviceRegistrationSystemCheck') as unknown as {
+            updateRegistration: () => Promise<unknown>
+          }
+          await check.updateRegistration()
+
+          expect(updateRegistration).toHaveBeenCalledWith('test-registration-token', 'Test Device', {
+            suppressTransientAlerts: true,
+          })
+        })
       })
     })
 

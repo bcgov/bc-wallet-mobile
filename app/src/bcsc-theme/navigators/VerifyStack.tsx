@@ -67,6 +67,7 @@ import PendingReviewScreen from '../features/verify/send-video/PendingReviewScre
 import SuccessfullySentScreen from '../features/verify/send-video/SuccessfullySentScreen'
 import TakeVideoScreen from '../features/verify/send-video/TakeVideoScreen'
 import UploadingScreen from '../features/verify/send-video/UploadingScreen'
+import VideoExpiredScreen from '../features/verify/send-video/VideoExpiredScreen'
 import VideoInstructionsScreen from '../features/verify/send-video/VideoInstructionsScreen'
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
@@ -330,6 +331,19 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
+        name={BCSCScreens.VideoExpired}
+        component={VideoExpiredScreen}
+        options={{
+          headerLeft: createVerifyHeaderBackButton(
+            (navigation) => {
+              navigation.navigate(BCSCScreens.VideoInstructions)
+            },
+            { hidden: true }
+          ),
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
         name={BCSCScreens.EvidenceUploading}
         component={UploadingScreen}
         options={{ headerShown: false, gestureEnabled: false }}
@@ -388,7 +402,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
               return navigation.goBack()
             }
 
-            clearAdditionalEvidence()
+            void clearAdditionalEvidence()
             navigation.replace(BCSCScreens.IdentitySelection)
           }),
         }}
@@ -413,7 +427,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
               return navigation.goBack()
             }
 
-            clearAdditionalEvidence()
+            void clearAdditionalEvidence()
             navigation.replace(BCSCScreens.IdentitySelection)
           }),
         }}

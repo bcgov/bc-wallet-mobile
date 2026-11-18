@@ -127,7 +127,7 @@ export async function skipPromptAndStartFromHome(): Promise<void> {
 }
 
 /**
- * Help menu → "Back to home", KEEPING progress (the app only moves the status out of IN_PROGRESS).
+ * Help menu → "Back to home", KEEPING progress (the app only leaves the verify flow).
  * Offered to a deferred verifier (`skipPromptAndStartFromHome`) and in developer mode, on every verify
  * screen except VerifyPrompt and the two transfer screens. A first-time verifier (`startVerification`)
  * never has the row — `expectNoBackToHome`.
@@ -403,7 +403,7 @@ export async function submitSendVideoVerification(user: TestUser): Promise<void>
   await SuccessfullySentScreen.expectVisible(Timeouts.VIDEO_UPLOAD)
   markSubmissionQueued() // from here until the scripted review claims it, a failure leaves an orphan behind
   // The screen's only way out. A first-time verifier is kept in the flow, on the pending review; a deferred
-  // verifier — and every build before the exit rules, which the upgrade lane drives through here — goes
+  // verifier — and every build before the exit rules, which the upgrade suites drive through here — goes
   // Home, where the pending card is the way back in. Either landing is fine for the decision wait.
   await SuccessfullySentScreen.tapToNavigate('primary')
 
@@ -740,6 +740,116 @@ export async function waitForSendVideoDecision(
   )
 
   assertExpectedDecision(status, expected)
+}
+
+/** Where a relaunch can land once the approval has already happened server-side. */
+type ApprovedLanding = 'success' | 'inPerson' | 'pendingReview' | 'method' | 'prompt' | 'card' | 'home'
+
+/**
+ * A {@link finishApprovedVerification} round on the pending review. The screen has no manual check (#4968):
+ * it re-checks the status as it mounts and moves on by itself once it hears the approval. Give that check its
+ * answer; still pending, leave by the back arrow so the next round re-enters through the Home card and that
+ * fresh mount checks again.
+ */
+async function waitOutPendingReviewCheck(): Promise<void> {
+  const decided = await probeAnyScreen(
+    { success: VerificationSuccessScreen, cancelled: CancelledReviewScreen },
+    FOCUS_CHECK_SETTLE_MS
+  )
+  if (decided === 'cancelled') {
+    throw new Error('The pending review moved on to CancelledReview: the app does not read the request as approved')
+  }
+  if (!decided) await PendingReviewScreen.back.tap()
+}
+
+/**
+ * A {@link finishApprovedVerification} round on the code screen. Complete re-fetches the status, and the
+ * screen stays up, its button disabled, until the answer is in — only then does an approved request move on
+ * to VerificationSuccess. Give that check its answer as well: a round that looks while it is still in the air
+ * finds the code screen again and goes for a second Complete, on a button about to leave with its screen
+ * (the weekly's upgradeApproved from 4.1.2 on Android, both attempts; the lanes that passed had only just
+ * won the same race). Not approved, the screen stays and the next round taps Complete again.
+ */
+async function tapCompleteAndWaitOutCheck(): Promise<void> {
+  await VerifyInPersonScreen.tapWhenEnabled('primary')
+  // The room `approveInPersonAndComplete` gives the same tap. Whatever it left up is the next round's to read.
+  await VerificationSuccessScreen.isPresent(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * Finish a verification whose approval landed while the app was CLOSED — the "approved, not finished
+ * in-app" state an update can catch a user in: the code was shown at the counter (or the video
+ * uploaded), the agent approved it, and the app was updated before it was ever reopened.
+ *
+ * The relaunch may resume anywhere: straight onto VerificationSuccess, onto the step the user left (the
+ * code screen, the pending review), onto method selection, the verify prompt, or Home with its card.
+ * Each landing is driven one step on — Complete re-fetches the status the server already holds, and the
+ * pending review re-checks it whenever it mounts (still pending, it is left by its back arrow and re-entered
+ * through the Home card), each check given its answer before the next round looks — until VerificationSuccess
+ * is passed and Home is up, or Home shows no card at all (the app already reads the account as verified). The
+ * caller then asserts verified Settings.
+ *
+ * A fresh request minted on resume that orphans the approval, or a `method` landing after a send-video
+ * submission (the submitted flag was lost), fails here: a product finding, not flake.
+ */
+export async function finishApprovedVerification(method: 'in-person' | 'send-video'): Promise<void> {
+  const deadline = Date.now() + REVIEW_DECISION_TIMEOUT_MS
+  for (;;) {
+    let landed = await probeAnyScreen<ApprovedLanding>(
+      {
+        // Probed by its Skip button, and before `success`: the prompt's Continue id is the generic one many
+        // verify screens share, VerificationSuccess's marker included.
+        prompt: () => VerifyPromptScreen.isVisible('skipVerification'),
+        success: VerificationSuccessScreen,
+        inPerson: VerifyInPersonScreen,
+        pendingReview: PendingReviewScreen,
+        method: VerificationMethodSelectionScreen,
+        card: HomeNotificationCard, // before `home`: a Home with its card is the way back in
+        home: HomeScreen,
+      },
+      RESUME_PROBE_ROUND_MS
+    )
+    // The probes never scroll, and method selection's marker sits below the fold (see resumeVerification),
+    // so a round that found nothing gets one scrolling look for it.
+    if (!landed && (await isVisibleAfterScrolling(VerificationMethodSelectionScreen))) landed = 'method'
+    switch (landed) {
+      case 'success':
+        await VerificationSuccessScreen.tap('primary') // Continue → exits the verify stack to Home
+        await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+        return
+      case 'home':
+        console.log('[verify] Home without a verification card — the app already reads the account as verified')
+        return
+      case 'inPerson':
+        await tapCompleteAndWaitOutCheck() // Complete: re-fetches the status
+        break
+      case 'pendingReview':
+        await waitOutPendingReviewCheck()
+        break
+      case 'method':
+        if (method === 'send-video') {
+          throw new Error('Resumed onto method selection: the submitted send-video request did not survive the upgrade')
+        }
+        console.log('[verify] Resumed onto method selection — re-entering in person to complete the approved request')
+        await VerificationMethodSelectionScreen.link('inPerson')
+        break
+      case 'prompt':
+        console.log('[verify] The verify prompt is up — skipping it to resume through the Home card')
+        await VerifyPromptScreen.tapToReach('secondary', HomeNotificationCard)
+        break
+      case 'card':
+        await HomeNotificationCard.tapToNavigate('primary')
+        break
+      default:
+        break
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `The approved ${method} verification did not finish within ${REVIEW_DECISION_TIMEOUT_MS}ms of relaunching. ` +
+          `On screen: ${await describeCurrentScreen()}`
+      )
+    }
+  }
 }
 
 /**

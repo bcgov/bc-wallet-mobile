@@ -9,6 +9,7 @@ import { useRemoteConfig } from '@/remote-config/RemoteConfig'
 import { AutoCredentialMonitor } from '@/services/auto-credential'
 import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
+import { isProductionBundle } from '@/utils/environment'
 import {
   CredentialProvisioningEventTypes,
   DispatchAction,
@@ -223,6 +224,8 @@ const Developer: React.FC = () => {
   }, [logger])
 
   const BCSCMode = store.mode === Mode.BCSC
+  // In BCSC mode the environment switch is the only IAS option, and it is hidden on the production bundle
+  const showIASSection = !BCSCMode || !isProductionBundle()
 
   const styles = StyleSheet.create({
     container: {
@@ -458,20 +461,25 @@ const Developer: React.FC = () => {
       >
         <RemoteLogWarning onBackPressed={onRemoteLoggingBackPressed} onEnablePressed={onEnableRemoteLoggingPressed} />
       </SafeAreaModal>
-      <SafeAreaModal
-        visible={environmentModalVisible}
-        transparent={false}
-        animationType={'slide'}
-        onRequestClose={() => {
-          return
-        }}
-      >
-        {BCSCMode ? (
-          <IASEnvironment shouldDismissModal={shouldDismissModal} />
-        ) : (
-          <WalletEnvironment shouldDismissModal={shouldDismissModal} />
-        )}
-      </SafeAreaModal>
+      {
+        // safeguard: only render the environment modal in non-production builds
+        isProductionBundle() ? null : (
+          <SafeAreaModal
+            visible={environmentModalVisible}
+            transparent={false}
+            animationType={'slide'}
+            onRequestClose={() => {
+              return
+            }}
+          >
+            {BCSCMode ? (
+              <IASEnvironment shouldDismissModal={shouldDismissModal} />
+            ) : (
+              <WalletEnvironment shouldDismissModal={shouldDismissModal} />
+            )}
+          </SafeAreaModal>
+        )
+      }
       <SafeAreaModal
         visible={errorAlertTestModalVisible}
         transparent={false}
@@ -496,109 +504,116 @@ const Developer: React.FC = () => {
         </ListButtonGroup>
       </View>
 
-      <SectionHeader icon={'apartment'} title={'IAS'} />
-      <View style={styles.sectionContainer}>
-        <ListButtonGroup>
-          {[
-            <ListButton
-              key="environment"
-              onPress={() => setEnvironmentModalVisible(true)}
-              accessibilityLabel={t('Developer.Environment')}
-              testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
-            >
-              <Row
-                title={t('Developer.Environment')}
-                endAdornment={
-                  <ThemedText variant="bold" style={{ color: ColorPalette.brand.primary }}>
-                    {store.developer.environment.name.toUpperCase()}
-                  </ThemedText>
-                }
-              />
-            </ListButton>,
-            BCSCMode ? null : (
-              <ToggleRow
-                key="shareableLink"
-                title={t('PasteUrl.UseShareableLink')}
-                value={enableShareableLink}
-                onToggle={toggleShareableLinkSwitch}
-                disabled={!store.authentication.didAuthenticate}
-                accessibilityLabel={t('PasteUrl.UseShareableLink')}
-                testID={testIdWithKey(TestIds.developer.toggleUseShareableLink)}
-              />
-            ),
-            BCSCMode ? null : (
-              <ToggleRow
-                key="verifierCapability"
-                title={t('Verifier.UseVerifierCapability')}
-                value={useVerifierCapability}
-                onToggle={toggleVerifierCapabilitySwitch}
-                accessibilityLabel={t('Verifier.Toggle')}
-                testID={testIdWithKey(TestIds.developer.toggleVerifierCapability)}
-              />
-            ),
-            BCSCMode ? null : (
-              <ToggleRow
-                key="acceptDevCredentials"
-                title={t('Verifier.AcceptDevCredentials')}
-                value={acceptDevCredentials}
-                onToggle={toggleAcceptDevCredentialsSwitch}
-                accessibilityLabel={t('Verifier.Toggle')}
-                testID={testIdWithKey(TestIds.developer.toggleAcceptDevCredentials)}
-              />
-            ),
-            BCSCMode ? null : (
-              <ToggleRow
-                key="connectionInviter"
-                title={t('Connection.UseConnectionInviterCapability')}
-                value={useConnectionInviterCapability}
-                onToggle={toggleConnectionInviterCapabilitySwitch}
-                accessibilityLabel={t('Connection.Toggle')}
-                testID={testIdWithKey(TestIds.developer.toggleConnectionInviterCapability)}
-              />
-            ),
-            BCSCMode ? null : (
-              <ToggleRow
-                key="devVerifierTemplates"
-                title={t('Verifier.UseDevVerifierTemplates')}
-                value={useDevVerifierTemplates}
-                onToggle={toggleDevVerifierTemplatesSwitch}
-                accessibilityLabel={t('Verifier.ToggleDevTemplates')}
-                testID={testIdWithKey(TestIds.developer.toggleDevVerifierTemplates)}
-              />
-            ),
-            !BCSCMode && !store.onboarding.didCreatePIN ? (
-              <ToggleRow
-                key="walletNaming"
-                title={t('NameWallet.EnableWalletNaming')}
-                value={enableWalletNaming}
-                onToggle={toggleWalletNamingSwitch}
-                accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
-                testID={testIdWithKey(TestIds.developer.toggleWalletNaming)}
-              />
-            ) : null,
-            BCSCMode ? null : (
-              <ToggleRow
-                key="preventAutoLock"
-                title={t('Settings.PreventAutoLock')}
-                value={preventAutoLock}
-                onToggle={togglePreventAutoLockSwitch}
-                accessibilityLabel={t('Settings.TogglePreventAutoLock')}
-                testID={testIdWithKey(TestIds.developer.togglePreventAutoLock)}
-              />
-            ),
-            BCSCMode ? null : (
-              <ToggleRow
-                key="appToAppPersonFlow"
-                title={t('Developer.EnableAppToAppPersonFlow')}
-                value={enableAppToAppPersonFlow}
-                onToggle={toggleEnableAppToAppPersonFlowSwitch}
-                accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
-                testID={testIdWithKey(TestIds.developer.toggleEnableAppToAppPersonFlow)}
-              />
-            ),
-          ]}
-        </ListButtonGroup>
-      </View>
+      {showIASSection ? (
+        <>
+          <SectionHeader icon={'apartment'} title={'IAS'} />
+          <View style={styles.sectionContainer}>
+            <ListButtonGroup>
+              {[
+                // safeguard: only render the environment switch in non-production builds
+                isProductionBundle() ? null : (
+                  <ListButton
+                    key="environment"
+                    onPress={() => setEnvironmentModalVisible(true)}
+                    accessibilityLabel={t('Developer.Environment')}
+                    testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
+                  >
+                    <Row
+                      title={t('Developer.Environment')}
+                      endAdornment={
+                        <ThemedText variant="bold" style={{ color: ColorPalette.brand.primary }}>
+                          {store.developer.environment.name.toUpperCase()}
+                        </ThemedText>
+                      }
+                    />
+                  </ListButton>
+                ),
+                BCSCMode ? null : (
+                  <ToggleRow
+                    key="shareableLink"
+                    title={t('PasteUrl.UseShareableLink')}
+                    value={enableShareableLink}
+                    onToggle={toggleShareableLinkSwitch}
+                    disabled={!store.authentication.didAuthenticate}
+                    accessibilityLabel={t('PasteUrl.UseShareableLink')}
+                    testID={testIdWithKey(TestIds.developer.toggleUseShareableLink)}
+                  />
+                ),
+                BCSCMode ? null : (
+                  <ToggleRow
+                    key="verifierCapability"
+                    title={t('Verifier.UseVerifierCapability')}
+                    value={useVerifierCapability}
+                    onToggle={toggleVerifierCapabilitySwitch}
+                    accessibilityLabel={t('Verifier.Toggle')}
+                    testID={testIdWithKey(TestIds.developer.toggleVerifierCapability)}
+                  />
+                ),
+                BCSCMode ? null : (
+                  <ToggleRow
+                    key="acceptDevCredentials"
+                    title={t('Verifier.AcceptDevCredentials')}
+                    value={acceptDevCredentials}
+                    onToggle={toggleAcceptDevCredentialsSwitch}
+                    accessibilityLabel={t('Verifier.Toggle')}
+                    testID={testIdWithKey(TestIds.developer.toggleAcceptDevCredentials)}
+                  />
+                ),
+                BCSCMode ? null : (
+                  <ToggleRow
+                    key="connectionInviter"
+                    title={t('Connection.UseConnectionInviterCapability')}
+                    value={useConnectionInviterCapability}
+                    onToggle={toggleConnectionInviterCapabilitySwitch}
+                    accessibilityLabel={t('Connection.Toggle')}
+                    testID={testIdWithKey(TestIds.developer.toggleConnectionInviterCapability)}
+                  />
+                ),
+                BCSCMode ? null : (
+                  <ToggleRow
+                    key="devVerifierTemplates"
+                    title={t('Verifier.UseDevVerifierTemplates')}
+                    value={useDevVerifierTemplates}
+                    onToggle={toggleDevVerifierTemplatesSwitch}
+                    accessibilityLabel={t('Verifier.ToggleDevTemplates')}
+                    testID={testIdWithKey(TestIds.developer.toggleDevVerifierTemplates)}
+                  />
+                ),
+                !BCSCMode && !store.onboarding.didCreatePIN ? (
+                  <ToggleRow
+                    key="walletNaming"
+                    title={t('NameWallet.EnableWalletNaming')}
+                    value={enableWalletNaming}
+                    onToggle={toggleWalletNamingSwitch}
+                    accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
+                    testID={testIdWithKey(TestIds.developer.toggleWalletNaming)}
+                  />
+                ) : null,
+                BCSCMode ? null : (
+                  <ToggleRow
+                    key="preventAutoLock"
+                    title={t('Settings.PreventAutoLock')}
+                    value={preventAutoLock}
+                    onToggle={togglePreventAutoLockSwitch}
+                    accessibilityLabel={t('Settings.TogglePreventAutoLock')}
+                    testID={testIdWithKey(TestIds.developer.togglePreventAutoLock)}
+                  />
+                ),
+                BCSCMode ? null : (
+                  <ToggleRow
+                    key="appToAppPersonFlow"
+                    title={t('Developer.EnableAppToAppPersonFlow')}
+                    value={enableAppToAppPersonFlow}
+                    onToggle={toggleEnableAppToAppPersonFlowSwitch}
+                    accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
+                    testID={testIdWithKey(TestIds.developer.toggleEnableAppToAppPersonFlow)}
+                  />
+                ),
+              ]}
+            </ListButtonGroup>
+          </View>
+        </>
+      ) : null}
 
       <SectionHeader icon={'tune'} title={t('Developer.AppSection')} />
       <View style={styles.sectionContainer}>

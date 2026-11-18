@@ -18,7 +18,7 @@ const startHydration = () => {
     return
   }
   hydrationStarted = true
-  PersistentStorage.fetchValueForKey<string[]>(PINNED_CONTACTS_KEY).then((ids) => {
+  void PersistentStorage.fetchValueForKey<string[]>(PINNED_CONTACTS_KEY).then((ids) => {
     pinnedIds = new Set(ids ?? [])
     notify()
   })
@@ -42,7 +42,7 @@ const togglePinId = (contactId: string) => {
     next.add(contactId)
   }
   pinnedIds = next
-  PersistentStorage.storeValueForKey<string[]>(PINNED_CONTACTS_KEY, Array.from(next))
+  void PersistentStorage.storeValueForKey<string[]>(PINNED_CONTACTS_KEY, Array.from(next))
   notify()
 }
 

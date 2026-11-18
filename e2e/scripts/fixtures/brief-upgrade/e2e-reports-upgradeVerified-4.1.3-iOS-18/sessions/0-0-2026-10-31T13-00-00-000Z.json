@@ -1,0 +1,70 @@
+{
+  "cid": "0-0",
+  "specs": [
+    "test/bcsc/upgrade/upgrade-verified.spec.ts"
+  ],
+  "sessionId": "bbbb0002-0000-4000-8000-000000000000",
+  "capabilities": {
+    "appium:app": "storage:filename=BCSC-v4.1.3.ipa",
+    "platformName": "iOS",
+    "appium:deviceName": "iPhone 15",
+    "appium:platformVersion": "18",
+    "testobject_device_name": "iPhone_15_18_real_us",
+    "testobject_test_report_url": "https://app.saucelabs.com/tests/bbbb0002bbbb0002bbbb0002bbbb0002"
+  },
+  "startedAt": "2026-10-31T13:00:00.000Z",
+  "endedAt": "2026-10-31T13:12:40.000Z",
+  "failures": 0,
+  "tests": [
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "onboards on the previous build",
+      "status": "pass"
+    },
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "verifies in person on the previous build",
+      "status": "pass"
+    },
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "installs the current build over the previous build",
+      "status": "pass"
+    },
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "relaunches as the current build",
+      "status": "pass"
+    },
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "unlocks with the pre-upgrade PIN and reaches Home",
+      "status": "pass"
+    },
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "keeps the account verified: the Settings Profile row is present",
+      "status": "pass"
+    },
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "keeps developer mode off across the upgrade: the Developer options row is absent",
+      "status": "pass"
+    },
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "reads back Account Details",
+      "status": "pass"
+    },
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "opens the Services catalogue instead of the verify prompt",
+      "status": "pass"
+    },
+    {
+      "suite": "Upgrade with a verified account",
+      "title": "logs in with a pairing code — the device credential still works server-side",
+      "status": "pass"
+    }
+  ]
+}

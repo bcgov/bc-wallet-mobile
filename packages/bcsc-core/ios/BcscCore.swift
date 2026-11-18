@@ -3,7 +3,6 @@ import CryptoKit
 import Foundation
 import LocalAuthentication
 import React
-import UserNotifications
 
 enum DeviceInfoKeys {
   static let systemName = "system_name"
@@ -128,47 +127,42 @@ class BcscCore: NSObject {
 
     let payload = builder.build()
 
-    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+    guard let serializedJWT = signJWT(payload: payload, method: "createClientAssertionJWT", reject: reject) else {
       return nil // Error already handled by signJWT
     }
 
     return serializedJWT
   }
 
-  /// Diagnostics list the newest N keys; keyCount still reports the true total.
-  private static let keychainDiagnosticsMaxKeys = 5
-
   /**
    * Builds an NSError whose userInfo carries keychain diagnostics across the RN bridge.
    * React Native serializes the NSError's userInfo onto the rejected JS error, so problem
    * reports can show which lookup failed and what the keychain contained at the time.
    *
-   * userInfo values must stay bridge-serializable (strings, numbers, arrays thereof),
-   * and the per-key arrays are capped so the payload size stays predictable.
    */
   private func keychainDiagnosticsError(
     site: String, underlying: Error, keys: [PrivateKeyInfo]
   ) -> NSError {
-    let iso8601 = ISO8601DateFormatter()
-    let newestFirst = keys.sorted(by: { $0.created > $1.created })
-      .prefix(BcscCore.keychainDiagnosticsMaxKeys)
-    return NSError(
-      domain: "BcscCore",
-      code: 0,
-      userInfo: [
-        "site": site,
-        "underlying": underlying.localizedDescription,
-        "keyCount": keys.count,
-        "keyTags": newestFirst.map(\.tag),
-        "keyCreated": newestFirst.map { iso8601.string(from: $0.created) },
-      ]
-    )
+    var userInfo = SigningDiagnostics.errorDiagnostics(underlying)
+    userInfo["site"] = site
+    // domain:code only: localizedDescription can contain paths. This reaches remote logs and problem reports
+    userInfo["detail"] = "\((underlying as NSError).domain):\((underlying as NSError).code)"
+    userInfo["keyCount"] = keys.count
+    userInfo["keyCreated"] = SigningDiagnostics.keyCreatedDates(keys)
+    return NSError(domain: "BcscCore", code: 0, userInfo: userInfo)
+  }
+
+  /// Rejects with diagnostics in userInfo, which JS sees as `error.userInfo` and adds to problem reports.
+  /// Use the same `site` as Android and a fixed `message`; see `DiagnosticRejection` for what is safe to send.
+  private func rejectWithDiagnostics(_ reject: RCTPromiseRejectBlock, _ rejection: DiagnosticRejection) {
+    logger.error("\(rejection.site): \(rejection.code) \(rejection.message)")
+    reject(rejection.code, rejection.message, rejection.nsError)
   }
 
   /**
-   * Compact key inventory for reject MESSAGE strings. The problem-report view
-   * surfaces only the message text (via AppError.technicalMessage), not the
-   * structured userInfo, so the essentials must ride in the message itself.
+   * Compact key inventory for reject MESSAGE strings. Problem reports now also carry a rejection's
+   * structured userInfo (AppError.summarizeCause), so new diagnostics belong in `rejectWithDiagnostics`
+   * instead. Note this summary includes the newest key's tag, which is an identifier.
    */
   private func keyInventorySummary(_ keys: [PrivateKeyInfo]) -> String {
     guard let newest = keys.sorted(by: { $0.created > $1.created }).first else {
@@ -221,8 +215,8 @@ class BcscCore: NSObject {
     )
   }
 
-  /// Compact decrypt diagnostics for reject MESSAGE strings (the problem-report view
-  /// surfaces only the message text, not the structured userInfo). Carries the key
+  /// Compact decrypt diagnostics for reject MESSAGE strings (problem reports now also carry
+  /// userInfo, via AppError.summarizeCause; see `rejectWithDiagnostics`). Carries the key
   /// inventory plus the incoming JWE header and whether its kid matches any local key —
   /// the essentials for telling "no key" / "wrong key" / "unsupported alg" / "corrupt"
   /// apart from a field report alone.
@@ -239,47 +233,24 @@ class BcscCore: NSObject {
     return "[keys=\(keys.count), newest=\(newest), jweParts=\(header.parts), jweAlg=\(header.alg), jweEnc=\(header.enc), jweKid=\(jweKid), kidMatchesLocal=\(kidMatchesLocal)]"
   }
 
-  private func signJWT(payload: JWTClaimsSet, reject: @escaping RCTPromiseRejectBlock) -> String? {
-    let keyPairManager = KeyPairManager()
-    let keys: [PrivateKeyInfo]
+  /// Signs `payload` with the newest key. `method` names the JS-facing caller so reports can tell quick login,
+  /// pairing and the other signers apart: rejections use the site `method.stage` (list_keys, select_key,
+  /// get_key, sign). The stages live in `JWTSigning` so they can be unit tested.
+  private func signJWT(
+    payload: JWTClaimsSet, method: String, reject: @escaping RCTPromiseRejectBlock
+  ) -> String? {
     do {
-      keys = try keyPairManager.findAllPrivateKeys()
+      return try JWTSigning(keyPairManager: KeyPairManager()).sign(payload: payload, method: method)
+    } catch let rejection as DiagnosticRejection {
+      rejectWithDiagnostics(reject, rejection)
     } catch {
-      reject("E_KEYSTORE_ERROR", "Failed to enumerate signing keys: \(error.localizedDescription)", error)
-      return nil
+      // JWTSigning only throws DiagnosticRejection; kept so a future change still rejects.
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_JWT_SIGN_FAILED", message: "Failed to sign or serialize the JWT.",
+        site: "\(method).sign", error: error, diagnostics: SigningDiagnostics.errorDiagnostics(error)
+      ))
     }
-    let signer: RSASigner
-
-    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
-      reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
-      return nil
-    }
-
-    do {
-      let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
-      signer = RSASigner(privateKey: keyPair.private)
-    } catch {
-      reject(
-        "E_KEYPAIR_RETRIEVAL_FAILED",
-        "Failed to retrieve key pair: \(error.localizedDescription) \(keyInventorySummary(keys))",
-        keychainDiagnosticsError(site: "sign_jwt", underlying: error, keys: keys)
-      )
-      return nil
-    }
-
-    let header = JWSHeader(alg: .RS512, kid: latestKeyInfo.tag)
-    var jwt = JWS(header: header, payload: payload)
-
-    do {
-      try jwt.sign(signer: signer)
-      return try jwt.serialize()
-    } catch {
-      reject(
-        "E_JWT_SIGN_FAILED",
-        "Failed to sign or serialize JWT: \(error.localizedDescription)", error
-      )
-      return nil
-    }
+    return nil
   }
 
   /// Deletes every Keychain item belonging to this app (all Sec item classes). Used by the
@@ -818,13 +789,8 @@ class BcscCore: NSObject {
       .claim(name: "client_id", value: clientID)
 
     let payload = builder.build()
-    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
-      reject(
-        "E_INVALID_ACCOUNT_DATA",
-        "Account must have an 'issuer', 'clientID' and 'securityMethod' fields",
-        nil
-      ) // Error already handled by signJWT
-      return
+    guard let serializedJWT = signJWT(payload: payload, method: "createPreVerificationJWT", reject: reject) else {
+      return // Error already handled by signJWT; a second reject is an illegal callback invocation
     }
     resolve(serializedJWT)
   }
@@ -850,7 +816,7 @@ class BcscCore: NSObject {
 
     let payload = builder.build()
 
-    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+    guard let serializedJWT = signJWT(payload: payload, method: "createSignedJWT", reject: reject) else {
       return // Error already handled by signJWT
     }
 
@@ -967,9 +933,6 @@ class BcscCore: NSObject {
       if let nickname = account["nickname"] as? String {
         accountToSave.nickname = nickname
       }
-      if let failedAttemptCount = account["failedAttemptCount"] as? Int {
-        accountToSave.failedAttemptCount = failedAttemptCount
-      }
     } else {
       // Create new account with new ID
       logger.log("setAccount - Creating new account")
@@ -988,10 +951,6 @@ class BcscCore: NSObject {
 
       if let nickname = account["nickname"] as? String {
         accountToSave.nickname = nickname
-      }
-
-      if let failedAttemptCount = account["failedAttemptCount"] as? Int {
-        accountToSave.failedAttemptCount = failedAttemptCount
       }
 
       // Ensure account structure exists before writing
@@ -1050,15 +1009,18 @@ class BcscCore: NSObject {
         "displayName": acc.displayName,
         "didPostNicknameToServer": acc.didPostNicknameToServer,
         "nickname": acc.nickname,
-        "failedAttemptCount": acc.failedAttemptCount,
-        // "lastAttemptDate": acc.lastAttemptDate?.timeIntervalSince1970, // Convert Date to timestamp or nil
-        // penalties is a computed property and might not be directly encodable or needed.
-        // If it's needed, it requires specific handling to convert to a plist-compatible format.
       ]
       resolve(result)
     } else {
       resolve(nil)
     }
+  }
+
+  /// Explains why `getAccount` resolves nil. Never rejects.
+  func getAccountReadStatus(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    resolve(StorageService().accountReadStatus())
   }
 
   /// Remove the current account and all related files.
@@ -1191,7 +1153,7 @@ class BcscCore: NSObject {
 
     let payload = builder.build()
 
-    if let signedJWT = signJWT(payload: payload, reject: reject) {
+    if let signedJWT = signJWT(payload: payload, method: "signPairingCode", reject: reject) {
       resolve(signedJWT)
     }
   }
@@ -1741,20 +1703,25 @@ class BcscCore: NSObject {
     key: NSDictionary, fcmDeviceToken: String, deviceToken: String?,
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
+    // Sites are `createQuickLoginJWT.<stage>`, matching Android, so reports show which stage failed
+    let method = "createQuickLoginJWT"
+
     guard !accessToken.isEmpty, !clientId.isEmpty, !issuer.isEmpty, !clientRefId.isEmpty,
           !fcmDeviceToken.isEmpty
     else {
-      reject(
-        "E_INVALID_PARAMETERS",
-        "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) cannot be empty.",
-        nil
-      )
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_INVALID_PARAMETERS",
+        message: "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) cannot be empty.",
+        site: "\(method).validate"
+      ))
       return
     }
 
     // Convert the JWK dictionary to JWK object
     guard let jwk = JWK(json: key) else {
-      reject("E_INVALID_JWK", "Invalid JWK format provided", nil)
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_INVALID_JWK", message: "Invalid JWK format provided.", site: "\(method).parse_jwk"
+      ))
       return
     }
 
@@ -1763,7 +1730,10 @@ class BcscCore: NSObject {
     do {
       publicKey = try JWK.jwkToSecKey(jwk: jwk)
     } catch {
-      reject("E_INVALID_JWK", "Unusable JWK for quick login encryption: \(errorMessage(error))", error)
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_INVALID_JWK", message: "Unusable JWK for quick login encryption.",
+        site: "\(method).parse_jwk", error: error, diagnostics: SigningDiagnostics.errorDiagnostics(error)
+      ))
       return
     }
 
@@ -1775,13 +1745,12 @@ class BcscCore: NSObject {
       clientRefId: clientRefId,
       fcmDeviceToken: fcmDeviceToken,
       deviceToken: deviceToken,
+      method: method,
       reject: reject
     )
     else {
-      return // Error already handled in makeSignedJWT
+      return // Error already handled in makeSignedJWTForAccountLogin
     }
-
-    logger.log("signedJWT: \(signedJWT)")
 
     // Encrypt the signed JWT with the provided public key
     do {
@@ -1790,20 +1759,23 @@ class BcscCore: NSObject {
       )
 
       guard let finalJWT = encryptedJWT else {
-        reject("E_JWT_ENCRYPTION_FAILED", "Failed to encrypt JWT", nil)
+        rejectWithDiagnostics(reject, DiagnosticRejection(
+          code: "E_JWT_ENCRYPTION_FAILED", message: "Failed to encrypt JWT.", site: "\(method).encrypt"
+        ))
         return
       }
 
       resolve(finalJWT)
     } catch {
-      reject(
-        "E_JWT_ENCRYPTION_ERROR",
-        "Failed to encrypt JWT: \(error.localizedDescription)", error
-      )
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_JWT_ENCRYPTION_ERROR", message: "Failed to encrypt JWT.",
+        site: "\(method).encrypt", error: error, diagnostics: SigningDiagnostics.errorDiagnostics(error)
+      ))
     }
   }
 
-  /// Creates a signed JWT following the ias-ios QuickLoginProtocol pattern
+  /// Creates a signed JWT following the ias-ios QuickLoginProtocol pattern. Rejects on failure, with sites under
+  /// `method` (build_claims here; signJWT adds list_keys, select_key, get_key and sign).
   private func makeSignedJWTForAccountLogin(
     accessToken: String,
     clientId: String,
@@ -1811,30 +1783,26 @@ class BcscCore: NSObject {
     clientRefId: String,
     fcmDeviceToken: String,
     deviceToken: String?,
+    method: String,
     reject: @escaping RCTPromiseRejectBlock
   ) -> String? {
-    do {
-      guard let payload = makeJWTPayloadForAccountLogin(
-        accessToken: accessToken,
-        clientId: clientId,
-        issuer: issuer,
-        clientRefId: clientRefId,
-        fcmDeviceToken: fcmDeviceToken,
-        deviceToken: deviceToken
-      )
-      else {
-        reject("E_JWT_PAYLOAD_CREATION_FAILED", "Failed to create JWT payload", nil)
-        return nil
-      }
-
-      return signJWT(payload: payload, reject: reject)
-    } catch {
-      reject(
-        "E_JWT_CREATION_FAILED",
-        "Failed to create account login JWT: \(error.localizedDescription)", error
-      )
+    guard let payload = makeJWTPayloadForAccountLogin(
+      accessToken: accessToken,
+      clientId: clientId,
+      issuer: issuer,
+      clientRefId: clientRefId,
+      fcmDeviceToken: fcmDeviceToken,
+      deviceToken: deviceToken
+    )
+    else {
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_JWT_PAYLOAD_CREATION_FAILED", message: "Failed to create JWT payload.",
+        site: "\(method).build_claims"
+      ))
       return nil
     }
+
+    return signJWT(payload: payload, method: method, reject: reject)
   }
 
   /// Creates JWT payload following the ias-ios QuickLoginProtocol pattern
@@ -2072,11 +2040,11 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Verifies a PIN for the specified account
+  /// Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
+  /// lockouts enforced, in TypeScript.
   /// - Parameters:
-  ///   - accountID: The account identifier
   ///   - pin: The PIN to verify
-  ///   - resolve: Returns verification result object with walletKey on success
+  ///   - resolve: Returns `success`, with `walletKey` when the PIN is correct
   ///   - reject: Returns error on failure
   func verifyPIN(
     _ pin: String, resolve: @escaping RCTPromiseResolveBlock,
@@ -2097,49 +2065,15 @@ class BcscCore: NSObject {
       return
     }
 
-    let pinService = PINService()
-    let walletKey = pinService.verifyPINAndGetHash(
+    guard let walletKey = PINService().verifyPINAndGetHash(
       issuer: account.issuer, accountID: account.id, pin: pin
     )
-    let isSuccess = walletKey != nil
-
-    // Use account's verifyPIN for penalty tracking
-    let result = account.verifyPIN(pin)
-
-    // Save updated account (with updated penalty state)
-    let success = storage.writeData(
-      data: account,
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-
-    if !success {
-      logger.warning("Failed to save account state after PIN verification")
+    else {
+      resolve(["success": false])
+      return
     }
 
-    switch result {
-    case .success:
-      resolve([
-        "success": true,
-        "locked": false,
-        "remainingTime": 0,
-        "walletKey": walletKey ?? "",
-      ])
-    case let .failedWithAlert(title, message):
-      resolve([
-        "success": false,
-        "locked": false,
-        "remainingTime": 0,
-        "title": title,
-        "message": message,
-      ])
-    case let .failedWithPenalty(remainingTime):
-      resolve([
-        "success": false,
-        "locked": true,
-        "remainingTime": max(0, remainingTime),
-      ])
-    }
+    resolve(["success": true, "walletKey": walletKey])
   }
 
   /// Deletes the PIN for the specified account
@@ -2325,31 +2259,6 @@ class BcscCore: NSObject {
 
     let securityMethod = account.securityMethod.rawValue
     resolve(securityMethod)
-  }
-
-  /// Checks if the account is currently locked due to failed PIN attempts
-  /// - Parameters:
-  ///   - accountID: The account identifier
-  ///   - resolve: Returns lock status object with locked boolean and remaining time
-  ///   - reject: Returns error on failure
-  func isAccountLocked(
-    _ resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock
-  ) {
-    let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
-      return
-    }
-
-    let remainingTime = account.isServingPenalty()
-    let isLocked = remainingTime > 0
-
-    resolve(["locked": isLocked, "remainingTime": max(0, remainingTime)])
   }
 
   // MARK: - Device Security Methods
@@ -3870,43 +3779,6 @@ class BcscCore: NSObject {
       resolve(true)
     } catch {
       reject("E_DELETE_FAILED", "Failed to delete client metadata: \(error.localizedDescription)", error)
-    }
-  }
-
-  /// Displays a local notification with the given title and message.
-  /// Used to show foreground push notifications since they are not auto-displayed.
-  /// - Parameters:
-  ///   - title: The notification title
-  ///   - message: The notification body message
-  ///   - resolve: Resolves when the notification is scheduled
-  ///   - reject: Rejects if there's an error scheduling the notification
-  func showLocalNotification(
-    _ title: String, message: String,
-    resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock
-  ) {
-    let content = UNMutableNotificationContent()
-    content.title = title
-    content.body = message
-    content.sound = .default
-
-    // Create a trigger to show immediately
-    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
-    let request = UNNotificationRequest(
-      identifier: UUID().uuidString,
-      content: content,
-      trigger: trigger
-    )
-
-    UNUserNotificationCenter.current().add(request) { error in
-      if let error = error {
-        reject(
-          "E_NOTIFICATION_ERROR", "Failed to show notification: \(error.localizedDescription)",
-          error
-        )
-      } else {
-        resolve(nil)
-      }
     }
   }
 

@@ -45,7 +45,7 @@ export const useAutoRequestPermission = (
         setIsLoading(false)
       }
     }
-    request()
+    void request()
   }, [hasPermission, requestPermission, enabled])
 
   return { isLoading }

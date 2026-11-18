@@ -57,7 +57,7 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
 
   const handleAcceptPressed = async () => {
     logger.info('User accepted analytics opt-in')
-    nextScreen()
+    void nextScreen()
     try {
       await Analytics.initializeTracker(store.developer.environment.analyticsAppId)
       dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
@@ -75,7 +75,7 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
   const handleDeniedPressed = () => {
     logger.info('User denied analytics opt-in')
     dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [false] })
-    nextScreen()
+    void nextScreen()
   }
 
   const controls = (

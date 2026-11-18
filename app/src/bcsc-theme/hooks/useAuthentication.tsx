@@ -1,3 +1,5 @@
+import { readPinLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
+import { PinLockoutType } from '@/bcsc-theme/state/pin-lockout/pin-lockout'
 import { mapNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
@@ -10,7 +12,6 @@ import {
   canPerformDeviceAuthentication,
   getAccountSecurityMethod,
   getHideDeviceAuthPrepFlag,
-  isAccountLocked,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
 import { useLoadingScreen } from '../contexts/BCSCLoadingContext'
@@ -138,8 +139,9 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
       // Only attempt device authentication if that is the configured method
       if (accountSecurityMethod !== AccountSecurityMethod.DeviceAuth) {
-        const { locked } = await isAccountLocked()
-        logger.info(`[Authentication:UnlockApp] PIN unlock, account locked: ${locked}`)
+        // Fails rather than assume there is no lock when the attempt record cannot be read
+        const locked = (await readPinLockout(logger)).type === PinLockoutType.Locked
+        logger.info(`[Authentication:UnlockApp] PIN unlock, PIN entry locked: ${locked}`)
 
         if (!locked) {
           // If not locked, navigate to PIN entry screen

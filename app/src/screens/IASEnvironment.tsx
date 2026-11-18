@@ -1,10 +1,6 @@
-import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { useSwitchEnvironment } from '@/bcsc-theme/hooks/useSwitchEnvironment'
 import { IASEnvironment } from '@utils/environment'
 import React, { useCallback } from 'react'
-import { setIssuer } from 'react-native-bcsc-core'
-import { BCDispatchAction, BCState } from '../store'
 import EnvironmentSelector from './EnvironmentSelector'
 
 interface IASEnvironmentProps {
@@ -16,9 +12,7 @@ interface IASEnvironmentProps {
  * Handles environment switching with factory reset for BCSC-specific context.
  */
 const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModal }) => {
-  const [, dispatch] = useStore<BCState>()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const factoryReset = useFactoryReset()
+  const switchEnvironment = useSwitchEnvironment()
 
   /**
    * Handles the change of the IAS environment by performing a factory reset and updating the store.
@@ -31,31 +25,10 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
    */
   const handleEnvironmentChange = useCallback(
     async (environment: IASEnvironment) => {
-      try {
-        // hard factory reset, no state saved
-        await factoryReset()
-
-        const success = await setIssuer(environment.iasApiBaseUrl)
-
-        // Update the analytics tracker with the new app ID for the selected environment
-        Analytics.setAppId(environment.analyticsAppId)
-
-        logger.info('[BCSCCore] persisting issuer:', {
-          issuer: environment.iasApiBaseUrl,
-          success: success,
-        })
-
-        dispatch({
-          type: BCDispatchAction.UPDATE_ENVIRONMENT,
-          payload: [environment],
-        })
-      } catch (error) {
-        logger.error('Error during factory reset for environment change:', error as Error)
-      }
-
+      await switchEnvironment(environment)
       shouldDismissModal()
     },
-    [shouldDismissModal, factoryReset, dispatch, logger]
+    [switchEnvironment, shouldDismissModal]
   )
 
   return <EnvironmentSelector onEnvironmentChange={handleEnvironmentChange} onCancel={shouldDismissModal} />

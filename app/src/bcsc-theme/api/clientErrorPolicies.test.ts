@@ -244,6 +244,24 @@ describe('clientErrorPolicies', () => {
         expect(globalAlertErrorPolicy.matches(error, {} as any)).toBeTruthy()
       })
 
+      it('should match clock_skew_error', () => {
+        const error = newError(AppEventCode.CLOCK_SKEW_ERROR)
+        expect(globalAlertErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it.each([0, 401])(
+        'should be the policy for a clock_skew_error on the token endpoint (status %s)',
+        (statusCode) => {
+          const error = newError(AppEventCode.CLOCK_SKEW_ERROR)
+          const token = 'https://example.com/device/token'
+          const context = { endpoint: token, statusCode, apiEndpoints: { token } as any }
+
+          const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+
+          expect(matchedPolicy).toBe(globalAlertErrorPolicy)
+        }
+      )
+
       it('should NOT match no_internet (handled by custom modal)', () => {
         const error = newError('no_internet')
         expect(globalAlertErrorPolicy.matches(error, {} as any)).toBeFalsy()
@@ -301,6 +319,14 @@ describe('clientErrorPolicies', () => {
         const error = newError('too_many_attempts')
         const mockAlert = jest.fn()
         const context = { alerts: { tooManyAttemptsAlert: mockAlert } }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should show the clock alert', () => {
+        const error = newError(AppEventCode.CLOCK_SKEW_ERROR)
+        const mockAlert = jest.fn()
+        const context = { alerts: { clockSkewAlert: mockAlert } }
         globalAlertErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
       })

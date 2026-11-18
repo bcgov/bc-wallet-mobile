@@ -2,7 +2,8 @@ import { reportProblem } from '@/utils/logger'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { Text } from 'react-native'
-import { ErrorBoundaryWrapper } from './ErrorBoundary'
+import { AppError } from '../appError'
+import { ErrorBoundary, ErrorBoundaryWrapper, trimComponentStack } from './ErrorBoundary'
 
 jest.mock('@/utils/logger', () => {
   const actual = jest.requireActual('@/utils/logger')
@@ -57,18 +58,17 @@ const ThrowingComponent = () => {
 }
 
 describe('ErrorBoundaryWrapper', () => {
-  let consoleErrorSpy: jest.SpyInstance
   let mockLogger: ReturnType<typeof createMockLogger>
 
   beforeEach(() => {
     jest.clearAllMocks()
     shouldThrow = false
     mockLogger = createMockLogger()
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    jest.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
-    consoleErrorSpy.mockRestore()
+    jest.restoreAllMocks()
   })
 
   describe('normal rendering', () => {
@@ -153,7 +153,86 @@ describe('ErrorBoundaryWrapper', () => {
         </ErrorBoundaryWrapper>
       )
 
-      expect(mockLogger.error).toHaveBeenCalledWith('ErrorBoundary caught an error:', expect.any(Error))
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'ErrorBoundary caught an error:',
+        { component_stack: expect.stringContaining('ThrowingComponent') },
+        expect.any(Error)
+      )
+    })
+  })
+
+  describe('component stack', () => {
+    const renderThrowing = (child: React.ReactNode = <ThrowingComponent />) => {
+      shouldThrow = true
+      return render(<ErrorBoundaryWrapper logger={mockLogger as any}>{child}</ErrorBoundaryWrapper>)
+    }
+
+    it('attaches the component stack to the reported error', () => {
+      const addContextSpy = jest.spyOn(AppError.prototype, 'addContext')
+
+      const { getByTestId } = renderThrowing()
+      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
+
+      const reported = (reportProblem as jest.Mock).mock.calls[0][0].error as AppError
+      expect(reported.context.component_stack).toEqual(expect.stringContaining('ThrowingComponent'))
+      expect(reported.toJSON().context.component_stack).toBe(reported.context.component_stack)
+      expect(addContextSpy.mock.contexts[0]).toBe(reported)
+    })
+
+    it('keeps only the innermost frames of a deep tree', () => {
+      const Nest = ({ depth }: { depth: number }) => (depth > 0 ? <Nest depth={depth - 1} /> : <ThrowingComponent />)
+
+      const { getByTestId } = renderThrowing(<Nest depth={80} />)
+      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
+
+      const reported = (reportProblem as jest.Mock).mock.calls[0][0].error as AppError
+      const frames = (reported.context.component_stack as string).split('\n')
+      expect(frames).toHaveLength(50)
+      expect(frames[0]).toContain('ThrowingComponent')
+    })
+
+    it.each([[''], ['  \n  '], [null], [undefined]])(
+      'skips addContext but still logs and tracks when React gives %j',
+      (stack) => {
+        const addContextSpy = jest.spyOn(AppError.prototype, 'addContext')
+        const trackSpy = jest.spyOn(AppError.prototype, 'track')
+        const boundary = new ErrorBoundary({ children: null, t: (key: string) => key, logger: mockLogger as any })
+        boundary.state = {
+          hasError: true,
+          error: ErrorBoundary.getDerivedStateFromError(new Error('boom')).error ?? null,
+        }
+
+        boundary.componentDidCatch(new Error('boom'), { componentStack: stack } as any)
+
+        expect(addContextSpy).not.toHaveBeenCalled()
+        expect(trackSpy).toHaveBeenCalledTimes(1)
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'ErrorBoundary caught an error:',
+          { component_stack: undefined },
+          expect.any(Error)
+        )
+      }
+    )
+  })
+
+  describe('trimComponentStack', () => {
+    it.each([
+      ['empty string', ''],
+      ['blank lines', '  \n  '],
+      ['null', null],
+      ['undefined', undefined],
+    ])('returns undefined for %s', (_label, input) => {
+      expect(trimComponentStack(input)).toBeUndefined()
+    })
+
+    it('trims indentation and joins frames with newlines', () => {
+      expect(trimComponentStack('\n    at A (a.js:1)\n    at B (b.js:2)\n')).toBe('at A (a.js:1)\nat B (b.js:2)')
+    })
+
+    it('keeps the innermost 50 of 150 short frames', () => {
+      const frames = Array.from({ length: 150 }, (_, i) => `at Frame${i}`)
+
+      expect(trimComponentStack(frames.join('\n'))).toBe(frames.slice(0, 50).join('\n'))
     })
   })
 

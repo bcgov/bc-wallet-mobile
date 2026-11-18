@@ -497,6 +497,24 @@ describe('BCSC Client', () => {
       })
     })
 
+    it('should not call onError when skipOnErrorHandler is set, but still log the error', async () => {
+      const mockLogger = createMockLogger()
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+      client.client.defaults.adapter = rejectWithStatus(500, 'Internal Server Error')
+
+      await expect(client.get('/endpoint', { skipBearerAuth: true, skipOnErrorHandler: true })).rejects.toBeInstanceOf(
+        AppError
+      )
+
+      expect(onError).not.toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('[BCSCApiClient]'),
+        expect.objectContaining({ code: expect.any(String) })
+      )
+    })
+
     describe('network errors (no response)', () => {
       const TLS_NATIVE_TEXT =
         'Hostname id.example.com not verified:\n    certificate: sha256/abc=\n    subjectAltNames: [other.example.com]'
@@ -626,6 +644,54 @@ describe('BCSC Client', () => {
       expect(forceRefreshSpy).toHaveBeenCalledTimes(1)
       expect(callCount).toBe(2) // original + one retry, then surfaced
     })
+
+    it('should propagate a failed token refresh as-is, without retrying or running the error pipeline', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupBearerClient(mockLogger)
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+
+      const refreshError = new Error('refresh failed')
+      jest.spyOn(BCSCApiClient.prototype as any, 'forceRefreshTokens').mockRejectedValue(refreshError)
+
+      let callCount = 0
+      client.client.defaults.adapter = (config: any) => {
+        callCount += 1
+        return reject401(config)
+      }
+
+      await expect(client.get('/protected')).rejects.toBe(refreshError)
+
+      expect(callCount).toBe(1) // no retry was sent
+      expect(onError).not.toHaveBeenCalled()
+      expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('[BCSCApiClient]'), expect.anything())
+    })
+
+    it('should handle a failed refresh request once, in its own interceptor pass, and rethrow it from the 401 pass', async () => {
+      const mockLogger = createMockLogger()
+      const client = setupBearerClient(mockLogger)
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+      ;(getRefreshTokenRequestBody as jest.Mock).mockResolvedValueOnce('grant_type=refresh_token')
+
+      let protectedCalls = 0
+      client.client.defaults.adapter = (config: any) => {
+        if (config.url === client.endpoints.token) {
+          return rejectWithStatus(400, 'Bad Request')(config)
+        }
+        protectedCalls += 1
+        return reject401(config)
+      }
+
+      await expect(client.get('/protected')).rejects.toBeInstanceOf(AppError)
+
+      expect(protectedCalls).toBe(1) // no retry was sent
+      expect(onError).toHaveBeenCalledTimes(1)
+      expect(onError).toHaveBeenCalledWith(
+        expect.any(AppError),
+        expect.objectContaining({ endpoint: client.endpoints.token, statusCode: 400 })
+      )
+    })
   })
 
   describe('fetchEndpointsAndConfig', () => {
@@ -670,6 +736,35 @@ describe('BCSC Client', () => {
       expect(client.endpoints.attestation).toBe('https://example.com/attestation-new')
       expect(client.endpoints.token).toBe('https://example.com/token-new')
       expect(client.endpoints.video).toBe('https://example.com/video-new')
+    })
+
+    it('should not share fallback config or endpoints between client instances', async () => {
+      const clientA = new BCSCApiClient('https://example.com', createMockLogger() as any)
+
+      jest.spyOn(clientA, 'get').mockResolvedValue({
+        data: {
+          maximum_accounts_per_device: 5,
+          allowed_identification_processes: ['process1'],
+          token_endpoint: 'https://example.com/token-new',
+        },
+      } as any)
+      await clientA.fetchEndpointsAndConfig()
+
+      const clientB = new BCSCApiClient('https://example.com', createMockLogger() as any)
+
+      expect(clientA.config.allowedIdentificationProcesses).toEqual([
+        'process1',
+        expect.any(String),
+        expect.any(String),
+      ])
+      expect(clientB.config.maximumAccountsPerDevice).toBe(0)
+      expect(clientB.config.allowedIdentificationProcesses).toEqual([
+        'IDIM L3 Remote BCSC Photo Identity Verification',
+        'IDIM L3 Remote BCSC Non-Photo Identity Verification',
+        'IDIM L3 Remote Non-BCSC Identity Verification',
+      ])
+      expect(clientB.config.allowedIdentificationProcesses).not.toBe(clientA.config.allowedIdentificationProcesses)
+      expect(clientB.endpoints.token).toBe('https://example.com/device/token')
     })
   })
 
@@ -1507,6 +1602,226 @@ describe('BCSC Client', () => {
       // access token rather than sending the stale one it saw at call time.
       expect(authorizationByUrl['/endpointB']).toBe('Bearer newAccessToken')
       expect(authorizationByUrl['/endpointC']).toBe('Bearer newAccessToken')
+    })
+  })
+
+  describe('device clock', () => {
+    const DEVICE_NOW = Date.parse('2026-11-04T20:41:16Z')
+    const MINUTE_MS = 60 * 1000
+
+    // A device clock an hour ahead, as in the field report
+    const createSkewedClient = (mockLogger = createMockLogger()) => {
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      client.recordServerTime(new Date(DEVICE_NOW - 60 * MINUTE_MS))
+      return client
+    }
+
+    const resolveOk = (config: any) =>
+      Promise.resolve({ status: 200, data: { ok: true }, statusText: 'OK', headers: {} as any, config })
+
+    beforeEach(() => {
+      jest.spyOn(Date, 'now').mockReturnValue(DEVICE_NOW)
+    })
+
+    it('has no reading until a status check records one', () => {
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+
+      expect(client.clockSkewSeconds).toBeNull()
+      expect(client.isClockSkewed).toBe(false)
+    })
+
+    it.each([
+      ['an hour ahead', -60 * MINUTE_MS, true],
+      ['five minutes ahead', -5 * MINUTE_MS, true],
+      ['under five minutes ahead', -5 * MINUTE_MS + 1000, false],
+      ['in sync', 0, false],
+      ['under five minutes behind', 5 * MINUTE_MS - 1000, false],
+      ['five minutes behind', 5 * MINUTE_MS, true],
+    ])('reads a device clock %s as skewed: %s', (_label, serverMinusDeviceMs, skewed) => {
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+
+      client.recordServerTime(new Date(DEVICE_NOW + serverMinusDeviceMs))
+
+      expect(client.isClockSkewed).toBe(skewed)
+      expect(client.clockSkewSeconds).toBe(serverMinusDeviceMs / 1000)
+    })
+
+    it('forgets the reading when recorded without a time', () => {
+      const client = createSkewedClient()
+
+      client.recordServerTime()
+
+      expect(client.clockSkewSeconds).toBeNull()
+      expect(client.isClockSkewed).toBe(false)
+    })
+
+    it('refuses a token request without sending it, and hands the error to the error policies', async () => {
+      const client = createSkewedClient()
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+      const adapter = jest.fn(resolveOk)
+      client.client.defaults.adapter = adapter
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+      ).rejects.toMatchObject({
+        appEvent: AppEventCode.CLOCK_SKEW_ERROR,
+        technicalMessage: expect.stringContaining('device clock is 3600s ahead of the server'),
+      })
+
+      expect(adapter).not.toHaveBeenCalled()
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({ appEvent: AppEventCode.CLOCK_SKEW_ERROR }),
+        expect.objectContaining({ endpoint: client.endpoints.token, statusCode: 0 })
+      )
+    })
+
+    it('keeps the refused request body, which holds the refresh token, out of the logs', async () => {
+      const mockLogger = createMockLogger()
+      const client = createSkewedClient(mockLogger)
+      client.client.defaults.adapter = jest.fn(resolveOk)
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token&refresh_token=secret-refresh-token', {
+          skipBearerAuth: true,
+        })
+      ).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR })
+
+      expect(mockLogger.error).toHaveBeenCalled()
+      expect(JSON.stringify(mockLogger.error.mock.calls)).not.toContain('secret-refresh-token')
+    })
+
+    it('refuses the token refresh a bearer request needs, so neither request is sent', async () => {
+      const client = createSkewedClient()
+      client.tokens = { access_token: 'expired-access', refresh_token: 'valid-refresh' } as any
+      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      ;(getRefreshTokenRequestBody as jest.Mock).mockResolvedValue('grant_type=refresh_token')
+      ;(jwtDecode as jest.Mock).mockImplementation((token: string) => ({
+        exp: token === 'expired-access' ? 0 : Math.floor(DEVICE_NOW / 1000) + 3600,
+      }))
+      const adapter = jest.fn(resolveOk)
+      client.client.defaults.adapter = adapter
+
+      await expect(client.get('/protected')).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR })
+
+      expect(adapter).not.toHaveBeenCalled()
+    })
+
+    it('sends requests that carry no device assertion while the clock is off', async () => {
+      const client = createSkewedClient()
+      client.client.defaults.adapter = resolveOk
+
+      await expect(client.get('/cardtap/v3/status/ios/mobile_card', { skipBearerAuth: true })).resolves.toMatchObject({
+        status: 200,
+      })
+    })
+
+    it('sends token requests once the reading is forgotten and there is no clock check to run', async () => {
+      const client = createSkewedClient()
+      const adapter = jest.fn(resolveOk)
+      client.client.defaults.adapter = adapter
+
+      client.recordServerTime()
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+      ).resolves.toMatchObject({ status: 200 })
+      expect(adapter).toHaveBeenCalledTimes(1)
+    })
+
+    describe('with no reading', () => {
+      const postToken = (client: BCSCApiClient) =>
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+
+      it('runs the clock check before the token request, and refuses it when the clock is off', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        const adapter = jest.fn(resolveOk)
+        client.client.defaults.adapter = adapter
+        const clockCheck = jest.fn(async () => client.recordServerTime(new Date(DEVICE_NOW - 60 * MINUTE_MS)))
+        client.setClockCheck(clockCheck)
+
+        await expect(postToken(client)).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR })
+
+        expect(clockCheck).toHaveBeenCalledTimes(1)
+        expect(adapter).not.toHaveBeenCalled()
+      })
+
+      it('sends the token request when the check finds the clock in sync', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        const adapter = jest.fn(resolveOk)
+        client.client.defaults.adapter = adapter
+        client.setClockCheck(async () => client.recordServerTime(new Date(DEVICE_NOW)))
+
+        await expect(postToken(client)).resolves.toMatchObject({ status: 200 })
+        expect(adapter).toHaveBeenCalledTimes(1)
+      })
+
+      it('sends the token request when the check fails', async () => {
+        const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+        const adapter = jest.fn(resolveOk)
+        client.client.defaults.adapter = adapter
+        client.setClockCheck(() => Promise.reject(new Error('status fetch failed')))
+
+        await expect(postToken(client)).resolves.toMatchObject({ status: 200 })
+        expect(adapter).toHaveBeenCalledTimes(1)
+      })
+
+      it('does not run the check when there is a reading', async () => {
+        const client = createSkewedClient()
+        client.client.defaults.adapter = jest.fn(resolveOk)
+        const clockCheck = jest.fn(async () => undefined)
+        client.setClockCheck(clockCheck)
+
+        await expect(postToken(client)).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR })
+        expect(clockCheck).not.toHaveBeenCalled()
+      })
+    })
+
+    it.each([
+      'Assertion Token was issued in the future: Wed Nov 04 12:41:16 PST 2026',
+      'Assertion Token is expired: Wed Nov 04 12:41:16 PST 2026',
+    ])('reports an IAS 401 "%s" as CLOCK_SKEW_ERROR when there was no reading', async (errorDescription) => {
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+      const onError = jest.fn()
+      client.setErrorHandler(onError)
+      client.client.defaults.adapter = (config: any) =>
+        Promise.reject(
+          new AxiosError('Request failed', 'ERR_BAD_REQUEST', config, null, {
+            status: 401,
+            data: { error: 'unauthorized', error_description: errorDescription },
+            statusText: 'Unauthorized',
+            headers: {} as any,
+            config,
+          })
+        )
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+      ).rejects.toMatchObject({ appEvent: AppEventCode.CLOCK_SKEW_ERROR, technicalMessage: errorDescription })
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({ appEvent: AppEventCode.CLOCK_SKEW_ERROR }),
+        expect.objectContaining({ statusCode: 401 })
+      )
+    })
+
+    it('keeps the IAS code for an expired assertion when the 401 shows the device clock in sync', async () => {
+      // Sent long after it was signed: the clock is not the cause, so unlock still gets to recover
+      const errorDescription = 'Assertion Token is expired: Wed Nov 04 12:41:16 PST 2026'
+      const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
+      client.client.defaults.adapter = (config: any) =>
+        Promise.reject(
+          new AxiosError('Request failed', 'ERR_BAD_REQUEST', config, null, {
+            status: 401,
+            data: { error: 'unauthorized', error_description: errorDescription },
+            statusText: 'Unauthorized',
+            headers: { date: new Date(DEVICE_NOW).toUTCString() } as any,
+            config,
+          })
+        )
+
+      await expect(
+        client.post(client.endpoints.token, 'grant_type=refresh_token', { skipBearerAuth: true })
+      ).rejects.toMatchObject({ appEvent: AppEventCode.UNKNOWN_SERVER_ERROR, technicalMessage: errorDescription })
     })
   })
 })

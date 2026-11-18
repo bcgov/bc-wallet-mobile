@@ -131,7 +131,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       const liveAgent = agentRef.current
       if (liveAgent) {
         agentRef.current = null
-        stopAgent(liveAgent)
+        void stopAgent(liveAgent)
       }
     }
   }, [stopAgent])
@@ -139,7 +139,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   useEffect(() => {
     if (!didAuthenticate) {
       if (agentRef.current) {
-        stopAgent(agentRef.current)
+        void stopAgent(agentRef.current)
         agentRef.current = null
         setAgent(null)
       }

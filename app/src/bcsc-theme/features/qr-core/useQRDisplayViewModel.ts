@@ -79,7 +79,7 @@ const useQRDisplayViewModel = ({
     // doesn't forward a `label`. Credo embeds this label in the OOB
     // invitation, and the scanner reads it as `theirLabel` on the new
     // connection record (which is what the chat header displays).
-    ;(async () => {
+    void (async () => {
       try {
         const record = await agent.modules.didcomm.oob.createInvitation({ label })
         if (cancelled) {

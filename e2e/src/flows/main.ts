@@ -35,7 +35,7 @@ export async function openScanner(): Promise<void> {
 /**
  * Assert the account reads as verified from Settings — the Profile row (→ AccountDetails) is
  * `isVerified`-gated, so its presence is the account-flipped-to-verified marker the verify journeys
- * use. Opens Settings, checks the row, returns to Home. Shared by the upgrade + migration lanes.
+ * use. Opens Settings, checks the row, returns to Home. Shared by the upgrade scenarios.
  */
 export async function expectVerifiedInSettings(): Promise<void> {
   await openSettings()
@@ -50,7 +50,7 @@ export async function expectVerifiedInSettings(): Promise<void> {
 
 /**
  * Assert developer mode is off, from Home: open Settings, scroll to the footer, the Developer options
- * row must be absent, back to Home. Shared by the upgrade + migration lanes.
+ * row must be absent, back to Home. Shared by the upgrade scenarios.
  */
 export async function expectDeveloperModeOffInSettings(): Promise<void> {
   await openSettings()

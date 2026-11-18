@@ -1,13 +1,14 @@
 import { JWK } from '@/bcsc-theme/types/jwk'
 import type { UploadLogContext } from '@/bcsc-theme/utils/media-format'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
-import { BCSC_API_TIMEOUT_MS, JWK_CACHE_TTL_MS } from '@/constants'
+import { BCSC_API_TIMEOUT_MS, FIVE_MINUTES_IN_SECONDS, JWK_CACHE_TTL_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { getUserAgentString } from '@utils/user-agent'
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import merge from 'lodash.merge'
 import { AppState, DeviceEventEmitter } from 'react-native'
 import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
@@ -43,6 +44,9 @@ const JWK_FETCH_TIMEOUT_MS = 15 * 1000
 // across dashboards. A deterministic 4xx is a single, non-retried attempt and is left to log/track
 // normally, since it may indicate a real configuration problem worth surfacing distinctly.
 const JWK_FETCH_RETRYABLE_STATUS_CODES = [0, ...Array.from({ length: 100 }, (_, index) => 500 + index)]
+
+// IAS rejects a client assertion stamped five minutes or more off its own clock
+const MAX_CLOCK_SKEW_MS = FIVE_MINUTES_IN_SECONDS * 1000
 
 type JWKResponseData = {
   keys: JWK[]
@@ -102,6 +106,46 @@ export interface BCSCEndpoints {
  */
 export type JwkFetchResult = { jwk: JWK; error?: undefined } | { jwk: null; error: unknown }
 
+const createFallbackConfig = (): BCSCConfig => ({
+  pairDeviceWithQRCodeSupported: true,
+  maximumAccountsPerDevice: 0,
+  allowedIdentificationProcesses: [
+    'IDIM L3 Remote BCSC Photo Identity Verification',
+    'IDIM L3 Remote BCSC Non-Photo Identity Verification',
+    'IDIM L3 Remote Non-BCSC Identity Verification',
+  ],
+  credentialFlowsSupported: 'default_web_flow, bcwallet_initiated, bcsc_initiated',
+  multipleAccountsSupported: false,
+  attestationTimeToLive: 60,
+})
+
+const createFallbackEndpoints = (baseURL: string): BCSCEndpoints => ({
+  attestation: `${baseURL}/device/attestations`,
+  issuer: `${baseURL}/device/`,
+  authorization: `${baseURL}/device/authorize`,
+  userInfo: `${baseURL}/device/userinfo`,
+  deviceAuthorization: `${baseURL}/device/devicecode`,
+  jwksURI: `${baseURL}/device/jwk`,
+  registration: `${baseURL}/device/register`,
+  clientMetadata: `${baseURL}/device/clients/metadata`,
+  savedServices: `${baseURL}/device/services`,
+  token: `${baseURL}/device/token`,
+  credential: `${baseURL}/credentials/v1/person`,
+  evidence: `${baseURL}/evidence`,
+  video: `${baseURL}/video`,
+  cardTap: `${baseURL}/cardtap`,
+  barcodes: `${baseURL}/device/barcodes`,
+  accountDevices: `${baseURL}/account/embedded/devices`,
+  account: `${baseURL}/account`,
+})
+
+// Only bearer requests (skipBearerAuth is excluded so the refresh call itself can't loop) and only once.
+const isRetryable401 = (
+  status: number | undefined,
+  config: InternalAxiosRequestConfig | undefined
+): config is InternalAxiosRequestConfig =>
+  status === 401 && config !== undefined && !config.skipBearerAuth && !config._retriedAfter401
+
 class BCSCApiClient {
   readonly client: AxiosInstance
   readonly logger: RemoteLogger
@@ -116,6 +160,8 @@ class BCSCApiClient {
   private cachedJwkFetchedAt: number | null = null // epoch ms, compared against JWK_CACHE_TTL_MS
   private jwkFetchPromise: Promise<JwkFetchResult> | null = null // single-flight in-progress JWK fetch
   private jwkFetchPromiseBaseUrl: string | null = null // baseURL the in-flight fetch was started for
+  private clockSkewMs: number | null = null // server minus device time from the last status check, null when unknown
+  private clockCheck?: () => Promise<unknown> // the status fetch that takes a new reading
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -136,109 +182,11 @@ class BCSCApiClient {
 
     this.tokensPromise = null
 
-    // fallback config
-    this.config = {
-      pairDeviceWithQRCodeSupported: true,
-      maximumAccountsPerDevice: 0,
-      allowedIdentificationProcesses: [
-        'IDIM L3 Remote BCSC Photo Identity Verification',
-        'IDIM L3 Remote BCSC Non-Photo Identity Verification',
-        'IDIM L3 Remote Non-BCSC Identity Verification',
-      ],
-      credentialFlowsSupported: 'default_web_flow, bcwallet_initiated, bcsc_initiated',
-      multipleAccountsSupported: false,
-      attestationTimeToLive: 60,
-    }
+    this.config = createFallbackConfig()
+    this.endpoints = createFallbackEndpoints(baseURL)
 
-    // fallback endpoints
-    this.endpoints = {
-      attestation: `${this.baseURL}/device/attestations`,
-      issuer: `${this.baseURL}/device/`,
-      authorization: `${this.baseURL}/device/authorize`,
-      userInfo: `${this.baseURL}/device/userinfo`,
-      deviceAuthorization: `${this.baseURL}/device/devicecode`,
-      jwksURI: `${this.baseURL}/device/jwk`,
-      registration: `${this.baseURL}/device/register`,
-      clientMetadata: `${this.baseURL}/device/clients/metadata`,
-      savedServices: `${this.baseURL}/device/services`,
-      token: `${this.baseURL}/device/token`,
-      credential: `${this.baseURL}/credentials/v1/person`,
-      evidence: `${this.baseURL}/evidence`,
-      video: `${this.baseURL}/video`,
-      cardTap: `${this.baseURL}/cardtap`,
-      barcodes: `${this.baseURL}/device/barcodes`,
-      accountDevices: `${this.baseURL}/account/embedded/devices`,
-      account: `${this.baseURL}/account`,
-    }
-
-    // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, async (_error: unknown) => {
-      // Pass through errors that are already AppErrors (e.g. from request interceptor)
-      if (_error instanceof AppError) {
-        throw _error
-      }
-
-      // Only handle AxiosErrors here; pass through all other error types unchanged
-      if (!axios.isAxiosError(_error)) {
-        throw _error
-      }
-
-      // 401 recovery: a bearer-authed request can fail with 401 when its access token is rejected
-      // server-side despite still looking valid locally (revoked token, or device clock skew). Refresh
-      // the tokens once and retry the request a single time before surfacing the error. Guards: only
-      // bearer requests (skipBearerAuth is excluded so the refresh call itself can't loop) and only once.
-      const originalConfig = _error.config
-      if (
-        _error.response?.status === 401 &&
-        originalConfig &&
-        !originalConfig.skipBearerAuth &&
-        !originalConfig._retriedAfter401
-      ) {
-        originalConfig._retriedAfter401 = true
-        this.logger.info('[BCSCApiClient] Access token rejected (401); refreshing tokens and retrying once')
-        // On refresh failure the error is already handled by its own interceptor pass and propagates;
-        // on success the retry's own interceptor pass handles any further failure (no double-handling).
-        await this.forceRefreshTokens()
-        return this.client.request(originalConfig)
-      }
-
-      // 1. Format the error: reclassify Android client timeouts first (so they never reach the TLS
-      // classification), then the IAS error body when there is a response, or the native reason the
-      // request died with when there is none
-      const error = formatNetworkAxiosError(formatIasAxiosResponseError(normalizeAxiosTimeoutError(_error)))
-
-      // 2. Convert the axios error into an AppError
-      const appError = getAppErrorFromAxiosError(error)
-
-      const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
-      const statusCode = error.response?.status ?? 0
-
-      // 3. Log if the status code is not in the suppress list
-      if (!suppressStatusCodeLogs.includes(statusCode)) {
-        const simpleAppError = appError.toJSON()
-        const { message, ...details } = simpleAppError
-        this.logger.error(`[BCSCApiClient] ${message}`, {
-          ...details,
-          cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
-        })
-      }
-
-      // 4. Invoke onError callback if provided which marks as handled
-      if (error.config?.skipOnErrorHandler !== true) {
-        try {
-          this.onError?.(appError as AxiosAppError, {
-            endpoint: String(error.config?.url),
-            statusCode: error.response?.status ?? 0,
-            apiEndpoints: this.endpoints,
-          })
-        } catch (handlerError) {
-          this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
-        }
-      }
-
-      throw appError
-    })
+    this.client.interceptors.response.use(undefined, this.handleResponseError.bind(this))
   }
 
   setErrorHandler(callback: BCSCClientOnErrorCallback) {
@@ -248,6 +196,29 @@ class BCSCApiClient {
   clearTokens() {
     this.tokens = undefined
     this.tokensPromise = null
+  }
+
+  /**
+   * Records the server's time from a status check against the device clock. Undefined forgets the
+   * reading (a failed check, or the app left the foreground).
+   */
+  recordServerTime(serverTime?: Date) {
+    this.clockSkewMs = serverTime ? serverTime.getTime() - Date.now() : null
+  }
+
+  /** Registers the status fetch that takes a reading; a token request runs it first when there is none. */
+  setClockCheck(clockCheck?: () => Promise<unknown>) {
+    this.clockCheck = clockCheck
+  }
+
+  /** Server minus device time in seconds from the last status check; null when unknown. */
+  get clockSkewSeconds(): number | null {
+    return this.clockSkewMs === null ? null : Math.round(this.clockSkewMs / 1000)
+  }
+
+  /** Whether the last status check found the device clock too far off for IAS to accept its assertions. */
+  get isClockSkewed(): boolean {
+    return this.clockSkewMs !== null && Math.abs(this.clockSkewMs) >= MAX_CLOCK_SKEW_MS
   }
 
   async fetchEndpointsAndConfig() {
@@ -362,8 +333,84 @@ class BCSCApiClient {
     return tokens.access_token
   }
 
+  private async handleResponseError(_error: unknown): Promise<AxiosResponse> {
+    // Pass through errors that are already AppErrors (e.g. from request interceptor)
+    if (_error instanceof AppError) {
+      throw _error
+    }
+
+    // Only handle AxiosErrors here; pass through all other error types unchanged
+    if (!axios.isAxiosError(_error)) {
+      throw _error
+    }
+
+    // 401 recovery: the server can reject a token that still looks valid locally (revoked, or device
+    // clock skew), so refresh the tokens and retry the request once before surfacing the error.
+    const originalConfig = _error.config
+    if (isRetryable401(_error.response?.status, originalConfig)) {
+      originalConfig._retriedAfter401 = true
+      this.logger.info('[BCSCApiClient] Access token rejected (401); refreshing tokens and retrying once')
+      // On refresh failure the error is already handled by its own interceptor pass and propagates;
+      // on success the retry's own interceptor pass handles any further failure (no double-handling).
+      await this.forceRefreshTokens()
+      return this.client.request(originalConfig)
+    }
+
+    // 1. Format the error: reclassify Android client timeouts first (so they never reach TLS classification),
+    // then add the IAS error body, or the native reason the request died with when there is no response
+    const error = formatNetworkAxiosError(formatIasAxiosResponseError(normalizeAxiosTimeoutError(_error)))
+
+    // 2. Convert the axios error into an AppError
+    const appError = getAppErrorFromAxiosError(error)
+
+    // 3. Log if the status code is not in the suppress list
+    this.logResponseError(error, appError)
+
+    // 4. Invoke onError callback if provided which marks as handled
+    this.notifyOnError(error, appError)
+
+    throw appError
+  }
+
+  private logResponseError(error: AxiosError, appError: AppError) {
+    const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
+    const statusCode = error.response?.status ?? 0
+
+    if (suppressStatusCodeLogs.includes(statusCode)) {
+      return
+    }
+
+    const simpleAppError = appError.toJSON()
+    const { message, ...details } = simpleAppError
+    this.logger.error(`[BCSCApiClient] ${message}`, {
+      ...details,
+      cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
+    })
+  }
+
+  private notifyOnError(error: AxiosError, appError: AppError) {
+    if (error.config?.skipOnErrorHandler === true) {
+      return
+    }
+
+    try {
+      this.onError?.(appError as AxiosAppError, {
+        endpoint: String(error.config?.url),
+        statusCode: error.response?.status ?? 0,
+        apiEndpoints: this.endpoints,
+      })
+    } catch (handlerError) {
+      this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
+    }
+  }
+
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
     this.logger.info(`[${config.method?.toUpperCase()}] ${String(config.url)}`)
+
+    // Every token request carries an assertion stamped by the device clock, which IAS rejects while it is off
+    if (config.url === this.endpoints.token) {
+      await this.refuseWhileClockSkewed(config)
+    }
 
     // skip bearer auth if skipBearerAuth is set in the config
     if (!config.skipBearerAuth) {
@@ -375,6 +422,27 @@ class BCSCApiClient {
     config._requestStartedAt = Date.now()
 
     return config
+  }
+
+  /** Throws for a token request while the device clock is off, taking a reading first when there is none. */
+  private async refuseWhileClockSkewed(config: InternalAxiosRequestConfig): Promise<void> {
+    // Startup, or back from the background: the request waits for the check; a failed check lets it go
+    if (this.clockSkewMs === null) {
+      await this.clockCheck?.().catch(() => undefined)
+    }
+
+    if (!this.isClockSkewed) {
+      return
+    }
+
+    const skewSeconds = this.clockSkewSeconds ?? 0
+    const direction = skewSeconds > 0 ? 'behind' : 'ahead of'
+    // Goes through the response interceptor like any failed request; no body, as it holds the refresh token
+    throw new AxiosError(
+      `Token request not sent: device clock is ${Math.abs(skewSeconds)}s ${direction} the server`,
+      AppEventCode.CLOCK_SKEW_ERROR,
+      { ...config, data: undefined }
+    )
   }
 
   private fetchTokens(refreshToken: string): Promise<TokenResponse> {

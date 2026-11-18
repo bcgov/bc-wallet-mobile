@@ -24,7 +24,7 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onBackPressed, onEn
   }
 
   const onPressPrivacyPolicyLink = () => {
-    Linking.openURL('https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy')
+    void Linking.openURL('https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy')
   }
 
   const style = StyleSheet.create({

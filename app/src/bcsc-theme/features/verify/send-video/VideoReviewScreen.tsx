@@ -2,6 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
+import { SELFIE_VIDEO_EXPIRY_CHECK_INTERVAL_MS, SELFIE_VIDEO_EXPIRY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { BCDispatchAction, BCState } from '@/store'
@@ -22,7 +23,7 @@ import {
 } from '@bifold/core'
 import { CommonActions, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -54,6 +55,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   // Mirrors `isSubmitting` for the window before the disabled state has rendered, when a second tap can still land.
   const isSubmittingRef = useRef(false)
   const isFocused = useIsFocused()
+  // The moment this recording became reviewable
+  const capturedAtRef = useRef(Date.now())
+  const hasExpiredRef = useRef(false)
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
   const { failedToReadFromLocalStorageAlert, videoPromptsMissingAlert } = useAlerts(navigation)
@@ -94,6 +98,32 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   })
 
   /**
+   * Retires the recording and sends the user to the expired screen
+   */
+  const onExpired = useCallback(() => {
+    if (hasExpiredRef.current) {
+      return
+    }
+    hasExpiredRef.current = true
+
+    logger.info('[VideoReview] Recording expired before it was submitted, discarding it')
+    VerificationVideoCache.clearCache()
+    dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
+    dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [''] })
+    navigation.replace(BCSCScreens.VideoExpired)
+  }, [dispatch, logger, navigation])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Date.now() - capturedAtRef.current >= SELFIE_VIDEO_EXPIRY_MS) {
+        onExpired()
+      }
+    }, SELFIE_VIDEO_EXPIRY_CHECK_INTERVAL_MS)
+
+    return () => clearInterval(interval)
+  }, [onExpired])
+
+  /**
    * Hands the recording to UploadingScreen, once. The reset carries key-less routes, so dispatching it twice
    * mounts a second UploadingScreen that submits the same verification request again — IAS rejects the duplicate
    * with a 500 after the first already went through (#4928). Bifold's Button only swallows presses while the
@@ -101,6 +131,11 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * on success, so the flag never needs clearing.
    */
   const onPressUse = () => {
+    if (Date.now() - capturedAtRef.current >= SELFIE_VIDEO_EXPIRY_MS) {
+      onExpired()
+      return
+    }
+
     if (!videoLoaded) {
       logger.error('[VideoReview] Attempted to use video before it was loaded')
       return

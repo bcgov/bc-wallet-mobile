@@ -155,7 +155,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     }
     this.log?.info('[AutoCredentialMonitor] triggerTestWorkflow: manually starting workflow')
     const stubProof = { id: 'test-workflow-proof' } as DidCommProofExchangeRecord
-    this.runWorkflow(rule, stubProof)
+    void this.runWorkflow(rule, stubProof)
     return true
   }
 
@@ -529,7 +529,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
           // Fire and forget — inside runWorkflow drives its own subscriptions
           // and error handling. Return so we don't try further rules against the
           // same proof.
-          this.runWorkflow(rule, proof)
+          void this.runWorkflow(rule, proof)
           return
         }
       } catch (err) {

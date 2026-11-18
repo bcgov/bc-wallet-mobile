@@ -159,8 +159,6 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun getAccountSecurityMethod(promise: Promise)
 
-    abstract fun isAccountLocked(promise: Promise)
-
     // Device Security Methods (for biometric/device authentication)
     abstract fun setupDeviceSecurity(promise: Promise)
 
@@ -227,12 +225,6 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun hasCredential(promise: Promise)
 
-    abstract fun showLocalNotification(
-        title: String,
-        message: String,
-        promise: Promise,
-    )
-
     abstract fun decodeLoginChallenge(
         jwt: String,
         key: com.facebook.react.bridge.ReadableMap?,
@@ -262,6 +254,8 @@ abstract class BcscCoreSpec internal constructor(
     abstract fun createNewKeyPair(promise: Promise)
 
     abstract fun getNativeFilesScan(promise: Promise)
+
+    abstract fun getAccountReadStatus(promise: Promise)
 
     // Saved Services (Client Metadata) Storage Methods
     abstract fun getSavedServices(promise: Promise)

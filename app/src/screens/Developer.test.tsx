@@ -1,6 +1,7 @@
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Mode } from '@/constants'
+import * as environment from '@/utils/environment'
 import { AuthProvider, testIdWithKey, TOKENS, useServices } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { useNavigation, useRoute } from '@react-navigation/native'
@@ -65,6 +66,36 @@ describe('Developer Screen', () => {
     )
 
     expect(tree).toMatchSnapshot()
+  })
+
+  test('shows the IAS section with the environment switch in BCSC mode on a non-production bundle', () => {
+    jest.spyOn(environment, 'isProductionBundle').mockReturnValue(false)
+
+    const { getByText, getByTestId } = render(
+      <BasicAppContext initialStateOverride={{ mode: Mode.BCSC }}>
+        <AuthProvider>
+          <Developer />
+        </AuthProvider>
+      </BasicAppContext>
+    )
+
+    expect(getByText('IAS')).toBeTruthy()
+    expect(getByTestId(testIdWithKey('developer.environment'))).toBeTruthy()
+  })
+
+  test('hides the IAS section in BCSC mode on the production bundle, since it has no options', () => {
+    jest.spyOn(environment, 'isProductionBundle').mockReturnValue(true)
+
+    const { queryByText, queryByTestId } = render(
+      <BasicAppContext initialStateOverride={{ mode: Mode.BCSC }}>
+        <AuthProvider>
+          <Developer />
+        </AuthProvider>
+      </BasicAppContext>
+    )
+
+    expect(queryByText('IAS')).toBeNull()
+    expect(queryByTestId(testIdWithKey('developer.environment'))).toBeNull()
   })
 
   test('deleteTokens deletes all token types, clears the api client, and updates state on success', async () => {

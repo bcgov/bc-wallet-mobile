@@ -103,6 +103,9 @@ export const EnterBirthdateScreen = defineScreen({
 export const VerificationCardErrorScreen = defineScreen({
   self: bcsc(v.verificationCardError.tryAnother),
   primary: bcsc(v.verificationCardError.tryAnother),
+  elements: {
+    birthdate: bcsc(v.verificationCardError.birthdate),
+  },
 })
 
 /**
@@ -305,8 +308,9 @@ export const PendingReviewScreen = defineScreen({
  * buttons, NOT the shared SystemModal, so `self` anchors on the first of them.
  *
  * The agent's reason is body copy with no testID — assert it with `expectCancelledReviewReason`.
- * `primary` ('Try again') retries with a new video; `secondary` ('Restart from beginning') resets the
- * device registration and re-enters verification from the top.
+ * `primary` ('Verify a different way') returns to verification method selection, keeping the ID,
+ * address and email steps; `secondary` ('Restart from beginning') resets the device registration and
+ * re-enters verification from the top.
  */
 export const CancelledReviewScreen = defineScreen({
   self: bcsc(v.cancelledReview.retryWithNewVideo),

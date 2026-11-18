@@ -1,13 +1,5 @@
-import { isTokenExpired, TOKEN_EXPIRY_BUFFER_MS } from './token-expiry'
-
-const base64url = (input: string): string =>
-  Buffer.from(input).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-
-const makeJwt = (payload: Record<string, unknown>): string => {
-  const header = base64url(JSON.stringify({ alg: 'none', typ: 'JWT' }))
-  const body = base64url(JSON.stringify(payload))
-  return `${header}.${body}.signature`
-}
+import { makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
+import { isTokenExpired, TOKEN_EXPIRY_BUFFER_MS } from '@/bcsc-theme/utils/token-expiry'
 
 const NOW = 1_700_000_000_000
 

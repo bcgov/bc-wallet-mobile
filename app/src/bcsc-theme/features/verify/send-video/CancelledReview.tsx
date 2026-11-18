@@ -38,7 +38,7 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
   usePreventGestureBack()
 
   useEffect(() => {
-    cleanUpVerificationData()
+    void cleanUpVerificationData()
   }, [cleanUpVerificationData])
 
   const styles = StyleSheet.create({

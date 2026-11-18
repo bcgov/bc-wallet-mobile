@@ -29,6 +29,19 @@ describe('getResumeStepRoute', () => {
     expect(getResumeStepRoute(store).name).toBe(BCSCScreens.VerificationSuccess)
   })
 
+  it('routes a device that holds tokens but has not finished setup to the success screen', () => {
+    const store = structuredClone(initialState)
+    store.bcscSecure.refreshToken = 'token'
+    expect(getResumeStepRoute(store).name).toBe(BCSCScreens.VerificationSuccess)
+  })
+
+  it('does not treat tokens as verified once the credential is deactivated', () => {
+    const store = structuredClone(initialState)
+    store.bcscSecure.refreshToken = 'token'
+    store.bcscSecure.credentialDeactivated = true
+    expect(getResumeStepRoute(store).name).not.toBe(BCSCScreens.VerificationSuccess)
+  })
+
   it('resumes a user with verification progress but no recorded setup type instead of bouncing to the setup question', () => {
     const store = structuredClone(initialState)
     // ID already registered (photo card + serial) but accountSetupType was never recorded — e.g.

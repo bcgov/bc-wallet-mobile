@@ -511,7 +511,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         appStateStatus,
       })
       exitWhenActiveRef.current = true
-      abandonRecording()
+      void abandonRecording()
       return
     }
 
@@ -575,7 +575,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   useFocusEffect(
     useCallback(() => {
       if (isActive && hasCameraPermission && hasMicrophonePermission) {
-        startRecording()
+        void startRecording()
       }
     }, [startRecording, isActive, hasCameraPermission, hasMicrophonePermission])
   )

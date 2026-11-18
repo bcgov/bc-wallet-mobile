@@ -1,5 +1,5 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCState, initialState, VerificationStatus } from '@/store'
+import { BCState, initialState } from '@/store'
 import { useStore } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render } from '@testing-library/react-native'
@@ -7,17 +7,17 @@ import React from 'react'
 import { Text } from 'react-native'
 import SuccessfullySentScreen from './SuccessfullySentScreen'
 
-/** Exposes the current verified status in the tree so tests can observe useLeaveVerification. */
-const VerifiedStatusProbe = () => {
+/** Exposes whether the user is in the verify flow so tests can observe useLeaveVerification. */
+const InVerifyFlowProbe = () => {
   const [store] = useStore<BCState>()
-  return <Text testID="VerifiedStatusProbe">{store.bcscSecure.verifiedStatus}</Text>
+  return <Text testID="InVerifyFlowProbe">{String(store.bcscSecure.inVerifyFlow)}</Text>
 }
 
 const NEXT_BUTTON = 'com.ariesbifold:id/GoToHome'
 
 const inProgress = (verificationSkipped: boolean): Partial<BCState> => ({
   bcsc: { ...initialState.bcsc, verificationSkipped },
-  bcscSecure: { ...initialState.bcscSecure, verifiedStatus: VerificationStatus.IN_PROGRESS },
+  bcscSecure: { ...initialState.bcscSecure, inVerifyFlow: true },
 })
 
 describe('SuccessfullySent', () => {
@@ -37,7 +37,7 @@ describe('SuccessfullySent', () => {
     render(
       <BasicAppContext initialStateOverride={state}>
         <SuccessfullySentScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
-        <VerifiedStatusProbe />
+        <InVerifyFlowProbe />
       </BasicAppContext>
     )
 
@@ -63,7 +63,7 @@ describe('SuccessfullySent', () => {
       fireEvent.press(tree.getByTestId(NEXT_BUTTON))
     })
 
-    expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.UNVERIFIED)
+    expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('false')
     expect(mockNavigation.replace).not.toHaveBeenCalled()
   })
 
@@ -76,6 +76,6 @@ describe('SuccessfullySent', () => {
     })
 
     expect(mockNavigation.replace).toHaveBeenCalledWith(BCSCScreens.PendingReview)
-    expect(tree.getByTestId('VerifiedStatusProbe').props.children).toBe(VerificationStatus.IN_PROGRESS)
+    expect(tree.getByTestId('InVerifyFlowProbe').props.children).toBe('true')
   })
 })

@@ -38,6 +38,7 @@ jest.mock('../hooks/useCardStatus', () => ({
 jest.mock('@/constants', () => ({
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: { flexShrink: 1, maxWidth: '68%' },
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
+  TAB_SCENE_CONTAINER_STYLE: { isolation: 'isolate' },
 }))
 jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
   createFloatingHelpMenuButton: jest.fn(() => () => null),
@@ -261,6 +262,13 @@ describe('QRCoreStack', () => {
           header: createTabHeader,
         })
       )
+    })
+
+    // Android clips the tab header's shadow without it (see TAB_SCENE_CONTAINER_STYLE).
+    it('passes the scene container style that lets Android draw the header shadow', () => {
+      render(<QRCoreStack />)
+
+      expect(capturedNavigatorProps.sceneContainerStyle).toEqual({ isolation: 'isolate' })
     })
   })
 

@@ -2,11 +2,13 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
+import { isRefreshTokenExpired } from '@/bcsc-theme/state/account/refresh-token'
+import { selectVerificationState } from '@/bcsc-theme/state/verification/selectors'
+import { KeyRotationResult, rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
+import { useAlerts } from '@/hooks/useAlerts'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
-import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
 import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
@@ -23,11 +25,11 @@ import {
 } from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { BifoldLogger, TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getAccount, getMaxDevicesBannerLastDisplayedDate, getToken, TokenType } from 'react-native-bcsc-core'
+import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 import { getBuildNumber, getBundleId, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
@@ -41,6 +43,58 @@ import { SystemCheckScope } from './useSystemChecks'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
 
+const updateRegistration = ({
+  registrationService,
+  registrationAccessToken,
+  selectedNickname,
+}: {
+  registrationService: ReturnType<typeof useRegistrationService>
+  registrationAccessToken?: string
+  selectedNickname?: string
+}) =>
+  registrationService.updateRegistration(registrationAccessToken, selectedNickname, {
+    // Automatic check: a transient keychain-unavailable failure retries on the
+    // next launch (UPDATE_APP_VERSION only dispatches on success) — no modal.
+    suppressTransientAlerts: true,
+  })
+
+const rotateKey = async ({
+  client,
+  logger,
+  updateTokens,
+  fallbackRegistrationAccessToken,
+}: {
+  client: BCSCApiClient
+  logger: BifoldLogger
+  updateTokens: ReturnType<typeof useSecureActions>['updateTokens']
+  fallbackRegistrationAccessToken?: string
+}): Promise<KeyRotationResult> => {
+  // Read fresh, not the store fallback: UpdateDeviceRegistrationSystemCheck's onFail may have rotated it this pass.
+  // Both native reads reject (not resolve null) on failure, so degrade to null or the fallback is unreachable.
+  const [tokenInfo, account] = await Promise.all([
+    getToken(TokenType.Registration).catch(() => null),
+    getAccount().catch(() => null),
+  ])
+  const registrationAccessToken = tokenInfo?.token ?? fallbackRegistrationAccessToken
+  const clientId = account?.clientID
+
+  if (!registrationAccessToken || !clientId) {
+    // Recorded as a failed attempt (not a skip) — this path returns status='failed' below.
+    logger.warn(
+      'KeyRotationSystemCheck: missing registrationAccessToken or clientID; recording a failed rotation attempt'
+    )
+    return { status: 'failed' as const, confirmed: false }
+  }
+
+  const result = await rotateSigningKey(client, clientId, registrationAccessToken, logger)
+  if (result.newRegistrationAccessToken) {
+    // Syncs the rotated token into the in-memory store; the repeated native write is
+    // idempotent and covers the case where rotateSigningKey's own setToken failed.
+    await updateTokens({ registrationAccessToken: result.newRegistrationAccessToken })
+  }
+  return result
+}
+
 type UseGetSystemChecksReturn = Record<
   SystemCheckScope,
   {
@@ -48,7 +102,11 @@ type UseGetSystemChecksReturn = Record<
      * Callback to get system checks for the scope
      * @return Array of system check strategies
      */
-    getSystemChecks: () => Promise<SystemCheckStrategy[]>
+    getSystemChecks: () => Promise<SystemCheckStrategy[]> | SystemCheckStrategy[]
+    /**
+     * Callback to get the checks to run again each time the app returns to the foreground
+     */
+    getForegroundSystemChecks?: () => Promise<SystemCheckStrategy[]>
     /**
      * Indicates if the system checks for the scope are ready to be run
      */
@@ -83,6 +141,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { isNavigationReady } = useNavigationContainer()
   const accountContext = useContext(BCSCAccountContext)
   const { emitAlert } = useErrorAlert()
+  const { clockSkewAlert } = useAlerts()
   const { serverStatus: cachedServerStatus, refresh: refreshServerStatus } = useServerStatus()
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
@@ -92,7 +151,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const launchVersionRecordedRef = useRef(false)
 
   const defaultReadiness = isNavigationReady && client && isClientReady
-  const isVerified = Boolean(store.bcscSecure.verified)
+  const { isVerified } = selectVerificationState(store)
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
   const verificationRequestId = store.bcscSecure.verificationRequestId
 
@@ -119,10 +178,12 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       ),
     ]
 
-    // Clock-skew and update checks both need the server payload; skip them (rather than aborting
-    // the whole batch) if the status fetch failed.
+    // Clock-skew and update checks both need the status fetch (it records the server's time on the
+    // client); skip them (rather than aborting the whole batch) if it failed.
     if (serverStatus) {
-      systemChecks.push(new ServerClockSkewSystemCheck(serverStatus.serverTimestamp, new Date(), emitAlert, utils))
+      if (client) {
+        systemChecks.push(new ServerClockSkewSystemCheck(client, clockSkewAlert, utils))
+      }
 
       // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
       if (isBCServicesCardBundle) {
@@ -134,8 +195,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   }, [
     cachedServerStatus,
     refreshServerStatus,
+    client,
+    clockSkewAlert,
     dispatch,
-    emitAlert,
     isBCServicesCardBundle,
     logger,
     navigation,
@@ -146,61 +208,47 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   ])
 
   /**
+   * Get system checks to run again each time the app returns to the foreground
+   *
+   * @returns Array of system check strategies
+   */
+  const getForegroundSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+    // The user may have changed the clock while away. Joins the status fetch ServerStatusProvider
+    // starts on foreground, which records a fresh server time on the client.
+    await refreshServerStatus({ force: true })
+
+    return client ? [new ServerClockSkewSystemCheck(client, clockSkewAlert, utils)] : []
+  }, [client, clockSkewAlert, refreshServerStatus, utils])
+
+  /**
    * Get system checks to run on main stack
    *
    * @returns Array of system check strategies
    */
-  const getMainSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+  const getMainSystemChecks = useCallback((): SystemCheckStrategy[] => {
     // Guard the native call so a failure here cannot throw away the whole batch
-    let dismissedAt: number | undefined
-    try {
-      dismissedAt = await getMaxDevicesBannerLastDisplayedDate()
-    } catch {
-      dismissedAt = undefined
-    }
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
-    const updateRegistration = () =>
-      registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, {
-        // Automatic check: a transient keychain-unavailable failure retries on the
-        // next launch (UPDATE_APP_VERSION only dispatches on success) — no modal.
-        suppressTransientAlerts: true,
-      })
-    const rotateKey = async () => {
-      // Read fresh, not from the store closure: UpdateDeviceRegistrationSystemCheck's onFail may
-      // have already rotated this token earlier in the same (sequential) onFail pass. Both native
-      // reads reject (not resolve null) on failure, so degrade to null or the fallback is unreachable.
-      const [tokenInfo, account] = await Promise.all([
-        getToken(TokenType.Registration).catch(() => null),
-        getAccount().catch(() => null),
-      ])
-      const registrationAccessToken = tokenInfo?.token ?? store.bcscSecure.registrationAccessToken
-      const clientId = account?.clientID
-
-      if (!registrationAccessToken || !clientId) {
-        // Recorded as a failed attempt (not a skip) — this path returns status='failed' below.
-        logger.warn(
-          'KeyRotationSystemCheck: missing registrationAccessToken or clientID; recording a failed rotation attempt'
-        )
-        return { status: 'failed' as const, confirmed: false }
-      }
-
-      const result = await rotateSigningKey(client as BCSCApiClient, clientId, registrationAccessToken, logger)
-      if (result.newRegistrationAccessToken) {
-        // Syncs the rotated token into the in-memory store; the repeated native write is
-        // idempotent and covers the case where rotateSigningKey's own setToken failed.
-        await updateTokens({ registrationAccessToken: result.newRegistrationAccessToken })
-      }
-      return result
-    }
 
     const systemChecks: SystemCheckStrategy[] = []
-    const refreshTokenExpired = Boolean(store.bcscSecure.refreshTokenExpired)
+    const refreshTokenExpired = isRefreshTokenExpired(store.bcscSecure.refreshToken, new Date())
+    const { deviceCode, userCode } = store.bcscSecure
 
     // DeviceCount and EventReasonAlerts need a verified user's cached id token; hydration never
     // fetches one when the stored refresh token is expired, so they'd misfire on that path (#4654).
-    if (isVerified && !refreshTokenExpired) {
+    const shouldRunIdTokenChecks = isVerified && !refreshTokenExpired
+    // `!!` (not `Boolean()`) keeps TS narrowing in the branches; the `else if` below keeps the two exclusive.
+    const shouldCheckVerificationRequest = !isVerified && !!verificationRequestId
+    const shouldRecoverPendingVerification = !isVerified && !!deviceCode && !!userCode
+    // Needs the user's chosen nickname: without one (e.g. during initial onboarding) the check fails with
+    // "No client name found for registration update" on every launch until setup completes.
+    const shouldUpdateRegistration =
+      isBCServicesCardBundle && !!store.bcscSecure.registrationAccessToken && !!store.bcsc.selectedNickname
+    // Key rotation (#3876): gated like the registration update but deliberately skips selectedNickname
+    // (rotation doesn't need one).
+    const shouldRotateKey = isBCServicesCardBundle && !!store.bcscSecure.registrationAccessToken && isVerified
+
+    if (shouldRunIdTokenChecks) {
       systemChecks.push(
-        new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
         new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
       )
     }
@@ -209,8 +257,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       systemChecks.push(new RefreshTokenExpiredSystemCheck(refreshTokenExpired, navigation, utils))
     }
 
-    if (!isVerified && verificationRequestId) {
-      const { deviceCode, userCode } = store.bcscSecure
+    if (shouldCheckVerificationRequest) {
       systemChecks.push(
         new VerificationRequestStatusSystemCheck(
           () => evidenceService.getVerificationRequestStatus(verificationRequestId),
@@ -227,8 +274,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
           utils
         )
       )
-    } else if (!isVerified && store.bcscSecure.deviceCode && store.bcscSecure.userCode) {
-      const { deviceCode, userCode } = store.bcscSecure
+    } else if (shouldRecoverPendingVerification) {
       systemChecks.push(
         new PendingVerificationRecoverySystemCheck(() => {
           // Token exists, nothing to check
@@ -250,34 +296,40 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       )
     )
 
-    // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard).
-    // updateRegistration needs both the registration access token and the user's chosen nickname; a fresh or
-    // not-yet-verified device has no nickname (and nothing to re-register), so gate on both. Otherwise the
-    // check fails with "No client name found for registration update" on every launch until setup completes.
-    if (isBCServicesCardBundle && store.bcscSecure.registrationAccessToken && store.bcsc.selectedNickname) {
+    if (shouldUpdateRegistration) {
       systemChecks.push(
         new UpdateDeviceRegistrationSystemCheck(
           store.bcsc.appVersion,
           store.bcsc.appBuildNumber,
-          updateRegistration,
+          () =>
+            updateRegistration({
+              registrationService,
+              registrationAccessToken: store.bcscSecure.registrationAccessToken,
+              selectedNickname: store.bcsc.selectedNickname,
+            }),
           utils
         )
       )
     }
 
-    // Key rotation (#3876): gated like the update check above but deliberately skips
-    // selectedNickname (rotation doesn't need one). Must stay appended AFTER
-    // UpdateDeviceRegistrationSystemCheck so their onFail PUTs never race (sequential order).
+    // KeyRotationSystemCheck must stay appended AFTER UpdateDeviceRegistrationSystemCheck so their
+    // onFail PUTs never race (sequential order).
     appVersionChangedSinceLastLaunchRef.current ??=
       store.bcsc.lastSeenAppVersion !== appVersion || store.bcsc.lastSeenAppBuildNumber !== appBuildNumber
     const appVersionChangedSinceLastLaunch = appVersionChangedSinceLastLaunchRef.current
 
-    if (isBCServicesCardBundle && store.bcscSecure.registrationAccessToken && isVerified) {
+    if (shouldRotateKey) {
       systemChecks.push(
         new KeyRotationSystemCheck(
           appVersionChangedSinceLastLaunch,
           store.bcsc.lastKeyRotationAttemptAt,
-          rotateKey,
+          () =>
+            rotateKey({
+              client: client as BCSCApiClient,
+              logger,
+              updateTokens,
+              fallbackRegistrationAccessToken: store.bcscSecure.registrationAccessToken,
+            }),
           utils
         )
       )
@@ -339,6 +391,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return {
       [SystemCheckScope.STARTUP]: {
         getSystemChecks: getStartupSystemChecks,
+        getForegroundSystemChecks,
         isReady: Boolean(defaultReadiness && store.stateLoaded),
         isApplicable: true,
       },
@@ -357,6 +410,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     defaultReadiness,
     getMainSystemChecks,
     getStartupSystemChecks,
+    getForegroundSystemChecks,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
     getVerifySystemChecks,
