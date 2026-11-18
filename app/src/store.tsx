@@ -424,10 +424,9 @@ type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 
  * - Onboarded installs that predate `verificationStarted`: launches resumed whoever had stored
  *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
  *   count as started.
- * - Stored banners whose id is not a current `BCSCBanner` (e.g. 4.0.x `CardExpiringSoonBanner`) are dropped,
- *   including ids from a newer build; a dropped banner returns only when its producer adds it again.
+ *  - `bannerMessages` is removed from the persisted blob (previously used to store a list of banners)
  */
-export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
+export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string; bannerMessages?: unknown[] }>(
   persisted: T
 ): { bcsc: Omit<T, 'reportUUID'> & MigratedBCSCFields; migrated: boolean } => {
   const { reportUUID, ...rest } = persisted
@@ -446,6 +445,11 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
 
   if (bcsc.hasAccount === true && bcsc.verificationStarted === undefined) {
     bcsc = { ...bcsc, verificationStarted: bcsc.verificationSkipped === false }
+    migrated = true
+  }
+
+  if (persisted.bannerMessages) {
+    delete bcsc.bannerMessages
     migrated = true
   }
 

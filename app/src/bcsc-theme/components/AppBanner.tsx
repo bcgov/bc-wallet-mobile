@@ -16,15 +16,11 @@ export interface BCSCBannerMessage {
   title: string | undefined
   description?: string
   type: BannerType
-  dismissible?: boolean // TODO (MD): Remove this once every banner is derived by useBanners
-  metadata?: Record<string, unknown>
-  onPress?: (id: string) => void // TODO (MD): Deprecate id param after all banners onPress are migrated
+  dismissible?: boolean
+  onPress?: () => void
 }
 
-export interface AppBannerSectionProps extends BCSCBannerMessage {
-  onPress?: (id: string) => void
-  description?: string
-}
+export type AppBannerSectionProps = BCSCBannerMessage
 
 interface AppBannerProps {
   messages: AppBannerSectionProps[]
@@ -61,7 +57,6 @@ export const AppBanner: React.FC<AppBannerProps> = ({ messages }: AppBannerProps
 }
 
 export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
-  id,
   title,
   type,
   onPress,
@@ -119,7 +114,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
         if (dismissible) {
           setShowBanner(false)
         }
-        onPress?.(id)
+        onPress?.()
       }}
     >
       <Icon

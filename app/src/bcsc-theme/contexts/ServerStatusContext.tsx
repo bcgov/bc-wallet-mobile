@@ -64,7 +64,7 @@ const toResult = (serverStatus: ServerStatusState): ServerStatusRefreshResult =>
   return { isAvailable: true, serverStatus: null }
 }
 
-// Fetches IAS server status and keeps outage banner in sync.
+// Fetches IAS server status
 // `isAvailable` is used in other screens to gate access (verification flow, service login)
 export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
