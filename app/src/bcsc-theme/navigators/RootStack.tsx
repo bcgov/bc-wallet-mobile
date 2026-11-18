@@ -55,7 +55,7 @@ const FcmCardExpirySync: React.FC = () => {
  */
 const useVerificationRouting = (appReady: boolean) => {
   const [store, dispatch] = useStore<BCState>()
-  const { needsVerification, isVerified, isVerificationInProgress, isDeactivated } = useVerificationState()
+  const { needsVerification, isVerified, isVerificationInProgress, isCardInactive } = useVerificationState()
   const { isAvailable: isServerAvailable, hasChecked: serverStatusChecked } = useServerStatus()
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
   // Once per session: whether the auto-resume below has been decided. State, not a ref, so the
@@ -82,7 +82,7 @@ const useVerificationRouting = (appReady: boolean) => {
   // Started verification (prompt, Home card, renewal or v3 upgrade), whether or not they skipped the
   // prompt, and has neither finished nor re-entered the flow yet. A deactivated card is renewed from
   // Home, not resumed
-  const wantsToResumeVerification = store.bcsc.verificationStarted === true && needsVerification && !isDeactivated
+  const wantsToResumeVerification = store.bcsc.verificationStarted === true && needsVerification && !isCardInactive
 
   // A user who has started verification and is not verified is routed back to the step they left off on
   // Runs exactly once per session so the user isn't stuck in verification

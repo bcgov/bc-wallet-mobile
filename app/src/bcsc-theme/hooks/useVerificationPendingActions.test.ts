@@ -39,7 +39,7 @@ describe('useVerificationPendingActions', () => {
     getVerificationRequestStatusMock.mockResolvedValue({ status: VerificationRequestStatus.PENDING })
     checkDeviceCodeStatusMock.mockResolvedValue(undefined)
 
-    jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: pendingRequest } as any, dispatchMock])
+    jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: pendingRequest } as any, dispatchMock])
     jest.mocked(Bifold).useServices.mockReturnValue([loggerMock] as any)
     jest.mocked(useApi).mockReturnValue({ token: { checkDeviceCodeStatus: checkDeviceCodeStatusMock } } as any)
     jest.mocked(useSecureActions).mockReturnValue({
@@ -68,7 +68,10 @@ describe('useVerificationPendingActions', () => {
     it('goes straight to the success screen when the user is already verified', async () => {
       jest
         .mocked(Bifold)
-        .useStore.mockReturnValue([{ bcscSecure: { ...pendingRequest, verified: true } } as any, dispatchMock])
+        .useStore.mockReturnValue([
+          { bcsc: {}, bcscSecure: { ...pendingRequest, verified: true } } as any,
+          dispatchMock,
+        ])
       const { result } = renderHook(() => useVerificationPendingActions(navigation))
 
       await act(async () => {
@@ -82,7 +85,10 @@ describe('useVerificationPendingActions', () => {
     it('goes to the success screen without a fetch when IAS already issued tokens, before setup finished', async () => {
       jest
         .mocked(Bifold)
-        .useStore.mockReturnValue([{ bcscSecure: { ...pendingRequest, refreshToken: 'token' } } as any, dispatchMock])
+        .useStore.mockReturnValue([
+          { bcsc: {}, bcscSecure: { ...pendingRequest, refreshToken: 'token' } } as any,
+          dispatchMock,
+        ])
       const { result } = renderHook(() => useVerificationPendingActions(navigation))
 
       await act(async () => {
@@ -185,7 +191,7 @@ describe('useVerificationPendingActions', () => {
         jest
           .mocked(Bifold)
           .useStore.mockReturnValue([
-            { bcscSecure: { verificationRequestId: 'request-id', userCode: 'user-code' } } as any,
+            { bcsc: {}, bcscSecure: { verificationRequestId: 'request-id', userCode: 'user-code' } } as any,
             dispatchMock,
           ])
 
@@ -231,7 +237,7 @@ describe('useVerificationPendingActions', () => {
         await result.current.handleCancelVerification()
       })
       // The cancel clears the request from the store, which re-runs the focused screen's check
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: {} } as any, dispatchMock])
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, dispatchMock])
       rerender({})
       await act(async () => {
         await result.current.handleCheckStatus()
@@ -381,7 +387,7 @@ describe('useVerificationPendingActions', () => {
     })
 
     it('still clears verification state and navigates back when there is no pending request id', async () => {
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: {} } as any, dispatchMock])
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, dispatchMock])
 
       const { result } = renderHook(() => useVerificationPendingActions(navigation))
 

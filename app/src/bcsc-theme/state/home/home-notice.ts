@@ -4,6 +4,8 @@ import { AccountPhase, AccountPhaseType } from '../account/account-phase'
 export interface HomeNoticeFacts {
   isVerified: boolean
   needsVerification: boolean
+  /** Cancelled or expired: an inactive card is never offered finish setup */
+  cardInactive: boolean
   /** IAS has issued this device tokens (a transfer, or a finish step whose credential write failed) */
   deviceVerifiedByIas: boolean
   refreshTokenExpired: boolean
@@ -38,6 +40,7 @@ export const getHomeNotice = (facts: HomeNoticeFacts): HomeNotice => {
   const {
     isVerified,
     needsVerification,
+    cardInactive,
     deviceVerifiedByIas,
     refreshTokenExpired,
     requestStatus,
@@ -50,6 +53,7 @@ export const getHomeNotice = (facts: HomeNoticeFacts): HomeNotice => {
   // refresh token can't finish setup, which needs a token refresh
   if (
     !isVerified &&
+    !cardInactive &&
     (requestStatus === VerificationRequestStatus.VERIFIED || (deviceVerifiedByIas && !refreshTokenExpired))
   ) {
     return { type: HomeNoticeType.BCSCVerified }

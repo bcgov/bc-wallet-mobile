@@ -10,7 +10,7 @@ jest.mock('@/bcsc-theme/state/account/useAccountPhase', () => ({ useAccountPhase
 const expiresAt = new Date('2027-10-19T00:00:00.000Z')
 
 const setup = (verified: boolean, phase: AccountPhase) => {
-  jest.mocked(Bifold.useStore).mockReturnValue([{ bcscSecure: { verified } } as any, jest.fn()])
+  jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: {}, bcscSecure: { verified } } as any, jest.fn()])
   jest.mocked(useAccountPhase).mockReturnValue(phase)
 
   return renderHook(() => useCardStatus())

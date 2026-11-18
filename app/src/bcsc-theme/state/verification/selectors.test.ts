@@ -1,8 +1,10 @@
+import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState, initialState } from '@/store'
 import { selectVerificationState } from './selectors'
 
-const buildState = (secure: Partial<BCState['bcscSecure']> = {}): BCState => ({
+const buildState = (secure: Partial<BCState['bcscSecure']> = {}, bcscReason?: BCSCReason): BCState => ({
   ...initialState,
+  bcsc: { ...initialState.bcsc, credentialMetadata: bcscReason ? { bcscReason } : undefined } as BCState['bcsc'],
   bcscSecure: { ...initialState.bcscSecure, ...secure },
 })
 
@@ -25,9 +27,30 @@ describe('selectVerificationState', () => {
     })
   })
 
-  it('reads the credentialDeactivated fact as a deactivated credential', () => {
+  it('reads the credentialDeactivated fact as an inactive card', () => {
     expect(selectVerificationState(buildState({ credentialDeactivated: true }))).toMatchObject({
-      isDeactivated: true,
+      isCardInactive: true,
+    })
+  })
+
+  it('reads the saved Expired by System reason alone as an inactive card', () => {
+    expect(selectVerificationState(buildState({}, BCSCReason.ExpiredBySystem))).toMatchObject({
+      isCardInactive: true,
+    })
+  })
+
+  it.each([BCSCReason.ApprovedByAgent, BCSCReason.Cancel, BCSCReason.CanceledByAgent])(
+    'does not read the saved %s reason as an inactive card',
+    (reason) => {
+      expect(selectVerificationState(buildState({}, reason))).toMatchObject({ isCardInactive: false })
+    }
+  )
+
+  it('keeps a credential record verified when the saved reason says the card expired', () => {
+    expect(selectVerificationState(buildState({ verified: true }, BCSCReason.ExpiredBySystem))).toMatchObject({
+      isVerified: true,
+      isDeviceVerifiedByIas: true,
+      isCardInactive: true,
     })
   })
 
@@ -38,8 +61,11 @@ describe('selectVerificationState', () => {
     })
   })
 
-  it('does not treat a refresh token as device verified once the credential is deactivated', () => {
-    expect(selectVerificationState(buildState({ refreshToken: 'token', credentialDeactivated: true }))).toMatchObject({
+  it.each([
+    ['the record says deactivated', { credentialDeactivated: true }, undefined],
+    ['the saved reason says expired', {}, BCSCReason.ExpiredBySystem],
+  ])('does not treat a refresh token as device verified when %s', (_name, secure, reason) => {
+    expect(selectVerificationState(buildState({ refreshToken: 'token', ...secure }, reason))).toMatchObject({
       isDeviceVerifiedByIas: false,
     })
   })

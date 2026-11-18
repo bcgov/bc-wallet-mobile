@@ -293,6 +293,7 @@ describe('BCSCAccountContext', () => {
         connectivity: { isConnected: true, isInternetReachable: null },
         verified: true,
         credentialDeactivated: false,
+        cardInactive: false,
         hasRefreshToken: true,
       })
       expect(JSON.stringify(tokenNullError.toJSON())).not.toContain('stored-refresh')
@@ -310,6 +311,7 @@ describe('BCSCAccountContext', () => {
       expect(tokenNullError.context.accountLoad).toMatchObject({
         verified: true,
         credentialDeactivated: true,
+        cardInactive: true,
         hasRefreshToken: true,
       })
     })

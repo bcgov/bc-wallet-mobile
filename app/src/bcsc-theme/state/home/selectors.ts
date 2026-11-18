@@ -9,11 +9,12 @@ import { getHomeNotice, HomeNotice } from './home-notice'
 /** Reads the Home notice rule's inputs from the store and the in-memory account. */
 export const selectHomeNotice = (state: BCState, account: BCSCAccount | null, now: Date): HomeNotice => {
   const { bcscSecure } = state
-  const { isVerified, needsVerification, isDeviceVerifiedByIas } = selectVerificationState(state)
+  const { isVerified, needsVerification, isDeviceVerifiedByIas, isCardInactive } = selectVerificationState(state)
 
   return getHomeNotice({
     isVerified,
     needsVerification,
+    cardInactive: isCardInactive,
     deviceVerifiedByIas: isDeviceVerifiedByIas,
     refreshTokenExpired: isRefreshTokenExpired(bcscSecure.refreshToken, now),
     requestStatus: bcscSecure.verificationRequestStatus,
