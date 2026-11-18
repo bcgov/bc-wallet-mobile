@@ -50,8 +50,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [verificationReset, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode, loadingScreen])
 
   const onPressScan = useCallback(async () => {
-    // TODO: temporary for testing CardScanningError — revert to BCSCScreens.ScanSerial
-    navigation.navigate(BCSCScreens.CardScanningError)
+    navigation.navigate(BCSCScreens.ScanSerial)
     if (store.bcscSecure.birthdate || store.bcscSecure.serial) {
       await deleteCardInfo()
     }

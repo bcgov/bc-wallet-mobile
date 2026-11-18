@@ -1,13 +1,18 @@
 import { ListButton } from '@/bcsc-theme/components/ListButton'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { popToThenNavigate } from '@/bcsc-theme/utils/pop-to-then-navigate'
 import { HelpCentreUrl, ICON_SIZE } from '@/constants'
+import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import HighlightSerialBarcodeImage from '@assets/img/highlight_serial_barcode.png'
-import { Link, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { Link, ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const SCAN_CARD_EXAMPLE_IMAGE = Image.resolveAssetSource(HighlightSerialBarcodeImage).uri
@@ -20,6 +25,9 @@ const CardScanningErrorScreen = ({ navigation }: CardScanningErrorScreenProps) =
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const { width } = useWindowDimensions()
+  const [store] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { updateCardProcess, deleteScannedCardData } = useSecureActions()
 
   const styles = StyleSheet.create({
     description: {},
@@ -56,6 +64,24 @@ const CardScanningErrorScreen = ({ navigation }: CardScanningErrorScreenProps) =
     })
   }
 
+  // Sets the user down the non BCSC card flow
+  const tryAnotherCard = useCallback(async () => {
+    logger.info('[CardScanningError] User chose to try another card, entering the non-BCSC flow')
+    await updateCardProcess(BCSCCardProcess.NonBCSC)
+    if (store.bcscSecure.birthdate || store.bcscSecure.serial) {
+      await deleteScannedCardData()
+    }
+    // Back from the non-BCSC flow returns to IdentitySelection, not the scanner.
+    popToThenNavigate(navigation, BCSCScreens.IdentitySelection, BCSCScreens.DualIdentificationRequired)
+  }, [
+    logger,
+    navigation,
+    updateCardProcess,
+    deleteScannedCardData,
+    store.bcscSecure.birthdate,
+    store.bcscSecure.serial,
+  ])
+
   return (
     <ScreenWrapper scrollViewContainerStyle={styles.pageHeaderContainer}>
       <ThemedText variant="headingThree">{t('BCSC.CardScanningError.Heading')}</ThemedText>
@@ -74,9 +100,10 @@ const CardScanningErrorScreen = ({ navigation }: CardScanningErrorScreenProps) =
       <ListButton
         position="only"
         onPress={() => {
-          console.log('Enter manually')
+          navigation.replace(BCSCScreens.ManualSerial)
         }}
         accessibilityLabel={a11yLabel(t('BCSC.CardScanningError.EnterManually'))}
+        testID={testIdWithKey(TestIds.verify.cardScanningError.enterManually)}
       >
         <View style={styles.listButtonContainer}>
           <ThemedText style={styles.listButtonTitle}>{t('BCSC.CardScanningError.EnterManually')}</ThemedText>
@@ -86,9 +113,10 @@ const CardScanningErrorScreen = ({ navigation }: CardScanningErrorScreenProps) =
       <ListButton
         position="only"
         onPress={() => {
-          console.log('Scan again')
+          navigation.goBack()
         }}
         accessibilityLabel={a11yLabel(t('BCSC.CardScanningError.ScanAgain'))}
+        testID={testIdWithKey(TestIds.verify.cardScanningError.scanAgain)}
       >
         <View style={styles.listButtonContainer}>
           <ThemedText style={styles.listButtonTitle}>{t('BCSC.CardScanningError.ScanAgain')}</ThemedText>
@@ -98,10 +126,9 @@ const CardScanningErrorScreen = ({ navigation }: CardScanningErrorScreenProps) =
       <ThemedText style={{ marginTop: Spacing.lg }}>{t('BCSC.CardScanningError.Description4')}</ThemedText>
       <ListButton
         position="only"
-        onPress={() => {
-          console.log('Try another card')
-        }}
+        onPress={tryAnotherCard}
         accessibilityLabel={a11yLabel(t('BCSC.CardScanningError.TryAnotherCard'))}
+        testID={testIdWithKey(TestIds.verify.cardScanningError.tryAnotherCard)}
       >
         <View style={styles.listButtonContainer}>
           <ThemedText style={styles.listButtonTitle}>{t('BCSC.CardScanningError.TryAnotherCard')}</ThemedText>
