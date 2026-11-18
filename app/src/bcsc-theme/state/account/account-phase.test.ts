@@ -24,7 +24,7 @@ describe('getAccountPhase', () => {
     })
   })
 
-  it('is expired when the card is inactive that is also inside the renewal window', () => {
+  it('is expired when an inactive card is also inside the renewal window', () => {
     const phase = getAccountPhase(
       facts({ cardInactive: true, cardExpiresAt: new Date('2026-10-27T00:00:00.000Z') }),
       NOW

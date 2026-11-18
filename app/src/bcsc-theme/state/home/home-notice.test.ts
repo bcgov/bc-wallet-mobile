@@ -152,7 +152,7 @@ describe('getHomeNotice', () => {
   })
 
   // An inactive, unfinished device never gets Finish; the rows fall through to the usual order.
-  // The last row cannot keep today's notice (it is the Finish this removes); the flow is not known to produce it.
+  // "An approved request, ID step incomplete" loses its Finish and shows nothing; the flow is not known to produce it.
   describe('an unverified device with an inactive card', () => {
     const inactive = (overrides: Partial<HomeNoticeFacts> = {}) =>
       unverified({ cardInactive: true, deviceVerifiedByIas: false, ...overrides })
