@@ -1,7 +1,7 @@
 import { BCState } from '@/store'
 import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
 import { useStore } from '@bifold/core'
-import { useNavigation } from '@react-navigation/core'
+import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,8 +25,18 @@ export enum BannersScope {
 }
 
 const BANNERS_BY_SCOPE: Record<BannersScope, Set<BCSCBanner>> = {
-  [BannersScope.Home]: new Set([BCSCBanner.APP_UPDATE_AVAILABLE, BCSCBanner.DEVICE_LIMIT_EXCEEDED]),
-  [BannersScope.Auth]: new Set([BCSCBanner.APP_UPDATE_AVAILABLE]),
+  [BannersScope.Home]: new Set([
+    BCSCBanner.APP_UPDATE_AVAILABLE,
+    BCSCBanner.DEVICE_LIMIT_EXCEEDED,
+    BCSCBanner.IAS_SERVER_UNAVAILABLE,
+    BCSCBanner.IAS_SERVER_NOTIFICATION,
+  ]),
+  [BannersScope.Auth]: new Set([
+    BCSCBanner.APP_UPDATE_AVAILABLE,
+    // NOTE: No device limit banner on auth
+    BCSCBanner.IAS_SERVER_UNAVAILABLE,
+    BCSCBanner.IAS_SERVER_NOTIFICATION,
+  ]),
 }
 
 type BannersOptions =
@@ -59,7 +69,7 @@ export const useBanners = (options: BannersOptions) => {
     if (server.isAvailable === false) {
       banners.push({
         id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-        title: undefined,
+        title: undefined, // The title is intentionally left undefined to allow the banner to display only the description.
         description: server.statusMessage ?? t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'),
         type: 'info',
         dismissible: false,

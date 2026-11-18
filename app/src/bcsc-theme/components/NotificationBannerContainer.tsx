@@ -5,7 +5,7 @@ import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { BannersScope, useBanners } from '../hooks/useBanners'
 import { useBannersWriter } from '../state/banners/useBannersWriter'
 import { DeviceLimit } from '../state/devices/device-limit'
-import { AppBanner, BCSCBanner } from './AppBanner'
+import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 
 const DEFAULT_MAX_DEVICES = 5
 
@@ -13,10 +13,12 @@ type NotificationBannerContainerProps =
   | {
       scope: BannersScope.Home
       onManageDevices: () => void
+      bannerMessages?: BCSCBannerMessage[] // TODO (MD): Deprecate this property
     }
   | {
       scope: BannersScope.Auth
       onManageDevices?: never
+      bannerMessages?: BCSCBannerMessage[]
     }
 
 /**
