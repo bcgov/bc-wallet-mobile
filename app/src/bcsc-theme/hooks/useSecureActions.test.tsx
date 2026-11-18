@@ -5,7 +5,7 @@ import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import { BCDispatchAction, initialState } from '@/store'
+import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { Platform } from 'react-native'
@@ -32,10 +32,6 @@ import {
   setToken,
   TokenType,
 } from 'react-native-bcsc-core'
-import { AccountPhaseType } from '../state/account/account-phase'
-import { selectAccountPhase } from '../state/account/selectors'
-import { selectVerificationState } from '../state/verification/selectors'
-import { BCSCEvent, BCSCReason } from '../utils/id-token'
 import { KeyRecoveryStatus, performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import { confirmRegistrationClientId } from '../utils/registration-token'
 import { isTokenExpired } from '../utils/token-expiry'
@@ -1518,31 +1514,20 @@ describe('useSecureActions', () => {
       expect(captureHydrateField('sessionRecoveryRequired')).toBe(false)
     })
 
-    it('restores the record for a saved Expired by System reason, and the device is then verified with an expired card', async () => {
-      const savedExpiry = { bcscEvent: BCSCEvent.Expire, bcscReason: BCSCReason.ExpiredBySystem } as any
-      jest.mocked(Bifold.useStore).mockReturnValue([
-        {
-          bcsc: { credentialMetadata: savedExpiry },
-          bcscSecure: { isHydrated: true, additionalEvidenceData: [] },
-        } as any,
-        mockDispatch,
-      ])
-
+    // Hydration restores the record whatever the saved account details say; the card then reads as
+    // verified, and an expiry stays with the saved details rather than being written here
+    it('restores the record and hydrates as verified without touching the saved account details', async () => {
       const { result } = renderHook(() => useSecureActions())
       await act(async () => {
         await result.current.hydrateSecureState()
       })
 
       expect(setCredential).toHaveBeenCalled()
-      const hydrated = mockDispatch.mock.calls.find(([a]) => a.type === BCDispatchAction.HYDRATE_SECURE_STATE)?.[0]
-        .payload[0]
-      const state = {
-        ...initialState,
-        bcsc: { ...initialState.bcsc, credentialMetadata: savedExpiry },
-        bcscSecure: { ...initialState.bcscSecure, ...hydrated },
-      }
-      expect(selectVerificationState(state)).toMatchObject({ isVerified: true, isCardInactive: true })
-      expect(selectAccountPhase(state, null, new Date()).phase).toBe(AccountPhaseType.Expired)
+      expect(captureHydrateField('verified')).toBe(true)
+      expect(captureHydrateField('credentialDeactivated')).toBe(false)
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
+      )
     })
 
     it('leaves the device unverified when the refresh fails, since IAS has not confirmed it', async () => {

@@ -33,9 +33,18 @@ describe('selectVerificationState', () => {
     })
   })
 
-  it('reads the saved Expired by System reason alone as an inactive card', () => {
-    expect(selectVerificationState(buildState({}, BCSCReason.ExpiredBySystem))).toMatchObject({
+  it('reads the saved Expired by System reason as an inactive card while a token or record remains', () => {
+    expect(selectVerificationState(buildState({ refreshToken: 'token' }, BCSCReason.ExpiredBySystem))).toMatchObject({
       isCardInactive: true,
+    })
+    expect(selectVerificationState(buildState({ verified: true }, BCSCReason.ExpiredBySystem))).toMatchObject({
+      isCardInactive: true,
+    })
+  })
+
+  it('ignores a saved Expired by System reason when no record or token remains (a reset registration)', () => {
+    expect(selectVerificationState(buildState({}, BCSCReason.ExpiredBySystem))).toMatchObject({
+      isCardInactive: false,
     })
   })
 

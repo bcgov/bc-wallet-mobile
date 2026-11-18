@@ -38,13 +38,13 @@ const apply = (state: BCState, ...actions: { type: BCDispatchAction; payload?: u
 // Only the dispatches below follow the store's shape; the expected observations are what users see
 // and must survive a store reshape.
 const unlock =
-  (record: CredentialInfo | null): Step =>
+  (record: CredentialInfo | null, { withToken = true } = {}): Step =>
   (state) => {
     return apply(state, {
       type: BCDispatchAction.HYDRATE_SECURE_STATE,
       payload: [
         {
-          refreshToken: UNEXPIRED_JWT,
+          refreshToken: withToken ? UNEXPIRED_JWT : undefined,
           verified: Boolean(record),
           credentialDeactivated: isCredentialDeactivated(record),
           inVerifyFlow: false,
@@ -151,6 +151,13 @@ const scenarios: { name: string; start: Step; unlockAgain: Step; steps?: [string
     steps: restartTransitions,
   },
   {
+    // An older version's reset never cleared the saved details, and its record and tokens are gone
+    name: 'details left by an older reset, with no record and no token',
+    start: (state) => expire(unlock(null, { withToken: false })(state)),
+    unlockAgain: unlock(null, { withToken: false }),
+    steps: restartTransitions,
+  },
+  {
     name: 'finished account, expires, then a restart with no reset',
     start: (state) => expire(unlock(credential(BCSCEvent.Authorization))(state)),
     unlockAgain: unlock(credential(BCSCEvent.Authorization)),
@@ -168,6 +175,13 @@ const row = (
 // One row per step: the start, each transition in order, then unlocking again. A change here is a
 // change in what users see.
 const expected: Record<string, Observation[]> = {
+  'details left by an older reset, with no record and no token': [
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+  ],
   'unlocked with a deactivated record': [
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, true, HomeNoticeType.AccountExpired, null),

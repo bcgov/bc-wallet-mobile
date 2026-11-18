@@ -8,6 +8,7 @@ export const selectVerificationState = (state: BCState): VerificationState => {
   const cardInactive = isCardInactive({
     recordDeactivated: credentialDeactivated,
     savedReason: state.bcsc.credentialMetadata?.bcscReason,
+    hasRegistration: Boolean(verified) || Boolean(refreshToken),
   })
 
   return getVerificationState({

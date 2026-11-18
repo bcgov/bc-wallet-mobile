@@ -1,4 +1,5 @@
 import { BCSCAccountProvider } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
@@ -19,6 +20,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native'
 import moment from 'moment'
 import React from 'react'
 import { AppState } from 'react-native'
+import { getAccount, setCredential } from 'react-native-bcsc-core'
 import { HomeNoticeType } from '../home/home-notice'
 import { useHomeNotice } from '../home/useHomeNotice'
 import { useVerificationState } from './useVerificationState'
@@ -32,6 +34,11 @@ jest.mock('@/bcsc-theme/services/hooks/useUserService', () => ({
   useUserService: jest.fn(() => ({
     getUserMetadata: mockGetUserMetadata,
   })),
+}))
+
+jest.mock('@/services/notifications/verificationReminders', () => ({
+  scheduleVerificationReminders: jest.fn(),
+  cancelVerificationReminders: jest.fn(),
 }))
 
 jest.mock('@/contexts/NavigationContainerContext', () => ({
@@ -83,7 +90,13 @@ const renderDevice = async (secure: Partial<BCSCSecureState>, bcsc: Partial<BCSC
   const { result } = renderHook(
     () => {
       const [store, dispatch] = useStore<BCState>()
-      return { store, dispatch, notice: useHomeNotice(), verification: useVerificationState() }
+      return {
+        store,
+        dispatch,
+        notice: useHomeNotice(),
+        verification: useVerificationState(),
+        secure: useSecureActions(),
+      }
     },
     { wrapper }
   )
@@ -160,18 +173,20 @@ describe('"card not active", from the real check through the store to Home', () 
       expect(restarted.current.verification.isCardInactive).toBe(false)
     })
 
-    it('is a verified, active card once the finish dispatches land, with no reset in between', async () => {
+    it('is a verified, active card once the real finish step runs, with no reset in between', async () => {
+      jest.mocked(getAccount).mockResolvedValue({ issuer: 'https://issuer.example.com', clientID: 'client-1' } as never)
       const device = await renderDevice(tokenOnly, started)
       await runAccountChangeCheck(device, EXPIRE_TOKEN)
       expect(device.current.verification.isCardInactive).toBe(true)
 
-      // What updateVerified(true) dispatches once the credential record is written
-      await dispatchOn(device, BCDispatchAction.UPDATE_SECURE_VERIFIED, [true])
-      await dispatchOn(device, BCDispatchAction.UPDATE_CREDENTIAL_METADATA, [undefined])
+      await act(async () => {
+        await device.current.secure.updateVerified(true)
+      })
 
-      await waitFor(() => expect(mockGetUserMetadata).toHaveBeenCalled())
+      expect(setCredential).toHaveBeenCalledTimes(1)
+      expect(device.current.store.bcsc.credentialMetadata).toBeUndefined()
       expect(device.current.verification).toMatchObject({ isVerified: true, isCardInactive: false })
-      expect(device.current.notice.type).not.toBe(HomeNoticeType.AccountExpired)
+      await waitFor(() => expect(device.current.notice.type).toBe(HomeNoticeType.None))
     })
   })
 

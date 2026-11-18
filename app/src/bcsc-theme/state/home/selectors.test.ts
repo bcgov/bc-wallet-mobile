@@ -78,9 +78,18 @@ describe('selectHomeNotice', () => {
     expect(select(state).type).toBe(HomeNoticeType.BCSCStartVerification)
   })
 
-  it('does not show Finish for an approved request once the saved details say the card expired', () => {
+  it('shows Finish for an approved renewal request whose saved details predate the reset (no record, no token)', () => {
     const state = buildState(
       { verificationRequestStatus: VerificationRequestStatus.VERIFIED },
+      BCSCReason.ExpiredBySystem
+    )
+
+    expect(select(state).type).toBe(HomeNoticeType.BCSCVerified)
+  })
+
+  it('does not show Finish for an approved request once the saved details say the card expired', () => {
+    const state = buildState(
+      { verificationRequestStatus: VerificationRequestStatus.VERIFIED, refreshToken: UNEXPIRED_JWT },
       BCSCReason.ExpiredBySystem
     )
 

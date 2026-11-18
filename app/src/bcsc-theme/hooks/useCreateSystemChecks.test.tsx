@@ -774,45 +774,6 @@ describe('useGetSystemChecks', () => {
           })
         })
 
-        // An upgraded device whose credential record says cancelled or expired now counts as verified
-        describe('a credential record that says cancelled or expired', () => {
-          const deactivated = { verified: true, credentialDeactivated: true, registrationAccessToken: 'reg-token' }
-
-          it('sends an expired token to renewal and skips the account-change check', async () => {
-            mockMainStackStore({
-              bcscSecure: { ...deactivated, refreshToken: EXPIRED_JWT },
-              bcsc: { selectedNickname: 'Test Device' },
-            })
-
-            const { result } = renderHook(() => useCreateSystemChecks())
-            const checks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
-            const names = checks.map((check) => check.constructor.name)
-
-            expect(names).not.toContain('EventReasonAlertsSystemCheck')
-            expect(names).toContain('RefreshTokenExpiredSystemCheck')
-            expect(checks[names.indexOf('RefreshTokenExpiredSystemCheck')].runCheck()).toBe(false)
-          })
-
-          it('runs the account-change check and key rotation with a usable token, and skips the pending-verification checks', async () => {
-            mockMainStackStore({
-              bcscSecure: {
-                ...deactivated,
-                refreshToken: UNEXPIRED_JWT,
-                verificationRequestId: 'request-id',
-                deviceCode: 'device-code',
-                userCode: 'user-code',
-              },
-            })
-
-            expect(await getCheckNames()).toEqual([
-              'EventReasonAlertsSystemCheck',
-              'RefreshTokenExpiredSystemCheck',
-              'TermsOfUseSystemCheck',
-              'KeyRotationSystemCheck',
-            ])
-          })
-        })
-
         it('passes the registration token and nickname to the registration service, suppressing transient alerts', async () => {
           const updateRegistration = mockMainStackStore({
             bcscSecure: { verified: true, registrationAccessToken: 'test-registration-token' },

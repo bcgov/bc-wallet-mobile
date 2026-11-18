@@ -319,7 +319,7 @@ describe('BCSCRootStack', () => {
 
     const authedUnverified = (
       flags: VerificationFlags,
-      facts: { inVerifyFlow?: boolean; credentialDeactivated?: boolean } = {}
+      facts: { inVerifyFlow?: boolean; credentialDeactivated?: boolean; refreshToken?: string } = {}
     ) =>
       mockStore({
         bcsc: { hasAccount: true, ...flags },
@@ -395,10 +395,12 @@ describe('BCSCRootStack', () => {
       expect(mockDispatch).not.toHaveBeenCalled()
     })
 
-    it('leaves a card the saved details say expired on MainStack even when verification was started', () => {
+    it('leaves a token-only device the saved details say expired on MainStack even when verification was started', () => {
       const mockDispatch = jest.fn()
       const expired = { ...CHOSE_TO_VERIFY, credentialMetadata: { bcscReason: 'Expired by System' } }
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(expired), mockDispatch] as any)
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue([authedUnverified(expired, { refreshToken: 'token' }), mockDispatch] as any)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -406,10 +408,11 @@ describe('BCSCRootStack', () => {
       expect(mockDispatch).not.toHaveBeenCalled()
     })
 
-    it('resumes a renewal interrupted by a restart, once the reset has cleared the saved details', () => {
+    // Details saved before a reset (older versions never cleared them) describe a registration that is gone
+    it('resumes a started verification with no record and no token, whatever the saved details say', () => {
       const mockDispatch = jest.fn()
-      const cleared = { ...CHOSE_TO_VERIFY, credentialMetadata: undefined }
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(cleared), mockDispatch] as any)
+      const leftover = { ...CHOSE_TO_VERIFY, credentialMetadata: { bcscReason: 'Expired by System' } }
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(leftover), mockDispatch] as any)
 
       render(<BCSCRootStack />)
 
