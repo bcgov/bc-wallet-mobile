@@ -585,6 +585,12 @@ describe('migrateBCSCState', () => {
     expect(result.bcsc).not.toHaveProperty('reportUUID')
   })
 
+  it('removes a legacy bannerMessages field', () => {
+    const result = migrateBCSCState({ bannerMessages: ['x'] })
+
+    expect(result).toEqual({ bcsc: {}, migrated: true })
+  })
+
   it('prefers an existing installId over a legacy reportUUID, and still strips the legacy field', () => {
     const result = migrateBCSCState({ installId: 'y', reportUUID: 'x' })
 

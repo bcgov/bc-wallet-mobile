@@ -428,9 +428,9 @@ type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string; bannerMessages?: unknown[] }>(
   persisted: T
-): { bcsc: Omit<T, 'reportUUID'> & MigratedBCSCFields; migrated: boolean } => {
-  const { reportUUID, ...rest } = persisted
-  let bcsc: Omit<T, 'reportUUID'> & MigratedBCSCFields = rest
+): { bcsc: Omit<T, 'reportUUID' | 'bannerMessages'> & MigratedBCSCFields; migrated: boolean } => {
+  const { reportUUID, bannerMessages, ...rest } = persisted
+  let bcsc: Omit<T, 'reportUUID' | 'bannerMessages'> & MigratedBCSCFields = rest
   let migrated = false
 
   if (reportUUID !== undefined) {
@@ -448,8 +448,8 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
     migrated = true
   }
 
-  if (persisted.bannerMessages) {
-    delete bcsc.bannerMessages
+  if (bannerMessages !== undefined) {
+    // The persisted blob had a `bannerMessages` array, which is no longer used
     migrated = true
   }
 
