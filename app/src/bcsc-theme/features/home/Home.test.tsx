@@ -154,13 +154,6 @@ describe('Home (default export, v4.1)', () => {
   const overLimitIdToken = { bcsc_devices_count: 4, bcsc_max_devices: 3 }
   const deviceLimitTitle = 'BCSC.SystemChecks.Devices.DeviceLimitReachedBannerTitle'
 
-  const serverNotificationBanner: BCSCBannerMessage = {
-    id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-    title: 'Server notification',
-    type: 'info',
-    dismissible: true,
-  }
-
   const renderHome = (bannerMessages: BCSCBannerMessage[], idTokenOverride?: Partial<IdToken>) =>
     render(
       <BasicAppContext
@@ -203,10 +196,19 @@ describe('Home (default export, v4.1)', () => {
     expect(tree.queryByText('Stale update banner')).toBeNull()
   })
 
-  it('renders a server notification banner on Home', () => {
-    const tree = renderHome([serverNotificationBanner])
+  it('renders a service notice banner on Home from the server status', () => {
+    jest.spyOn(ServerStatusContext, 'useServerStatus').mockReturnValue({
+      isAvailable: true,
+      statusMessage: 'Scheduled maintenance',
+      serverStatus: null,
+      isChecking: false,
+      hasChecked: true,
+      refresh: jest.fn(),
+    })
 
-    expect(tree.getByText('Server notification')).toBeTruthy()
+    const tree = renderHome([])
+
+    expect(tree.getByText('BCSC.SystemChecks.ServerStatus.NoticeBannerTitle')).toBeTruthy()
   })
 
   it('renders no banners and still shows the empty-notifications copy when bannerMessages is empty', () => {
