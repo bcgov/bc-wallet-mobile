@@ -175,9 +175,9 @@ export interface BCSCSecureState {
   /** Whether secure state has been loaded from native storage */
   isHydrated: boolean
 
-  /** A valid (not deactivated) credential record exists */
+  /** A credential record exists, active or not */
   verified?: boolean
-  /** The credential was cancelled or expired */
+  /** The record read at unlock says cancelled or expired; later expiry is saved with the account details */
   credentialDeactivated: boolean
   /** The user is in the verify flow this session */
   inVerifyFlow: boolean
@@ -343,7 +343,6 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
   UPDATE_SECURE_IN_VERIFY_FLOW = 'bcsc/updateSecureInVerifyFlow', // controls whether the VerifyStack or the MainStack are displayed
-  UPDATE_SECURE_CREDENTIAL_DEACTIVATED = 'bcsc/updateSecureCredentialDeactivated',
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
   UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
@@ -851,16 +850,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       }
       return { ...state, bcscSecure }
     }
-    // The two facts below used to share one saved status, so each write replaced the other; that is
-    // kept until deactivation is allowed to outlive the verify flow (#5008)
     case BCSCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW: {
       const inVerifyFlow = (action?.payload || []).pop() ?? false
-      const bcscSecure = { ...state.bcscSecure, inVerifyFlow, credentialDeactivated: false }
-      return { ...state, bcscSecure }
-    }
-    case BCSCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED: {
-      const credentialDeactivated = (action?.payload || []).pop() ?? false
-      const bcscSecure = { ...state.bcscSecure, credentialDeactivated, inVerifyFlow: false }
+      const bcscSecure = { ...state.bcscSecure, inVerifyFlow }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {

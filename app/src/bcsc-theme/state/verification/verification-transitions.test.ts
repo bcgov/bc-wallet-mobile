@@ -40,14 +40,13 @@ const apply = (state: BCState, ...actions: { type: BCDispatchAction; payload?: u
 const unlock =
   (record: CredentialInfo | null): Step =>
   (state) => {
-    const credentialDeactivated = isCredentialDeactivated(record)
     return apply(state, {
       type: BCDispatchAction.HYDRATE_SECURE_STATE,
       payload: [
         {
           refreshToken: UNEXPIRED_JWT,
-          verified: Boolean(record) && !credentialDeactivated,
-          credentialDeactivated,
+          verified: Boolean(record),
+          credentialDeactivated: isCredentialDeactivated(record),
           inVerifyFlow: false,
         },
       ],
@@ -55,14 +54,10 @@ const unlock =
   }
 
 const expire: Step = (state) =>
-  apply(
-    state,
-    {
-      type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-      payload: [{ bcscEvent: BCSCEvent.Expire, bcscReason: BCSCReason.ExpiredBySystem }],
-    },
-    { type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED, payload: [true] }
-  )
+  apply(state, {
+    type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+    payload: [{ bcscEvent: BCSCEvent.Expire, bcscReason: BCSCReason.ExpiredBySystem }],
+  })
 
 const enterFlow: Step = (state) =>
   apply(
@@ -74,21 +69,26 @@ const enterFlow: Step = (state) =>
 const leaveFlow: Step = (state) =>
   apply(state, { type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW, payload: [false] })
 
-// Verification reset clears memory (tokens included); the native records are read back at the next unlock
+// Verification reset clears memory (tokens included), then the saved account details once the native
+// deletes succeed; the native records are read back at the next unlock
 const reset =
   (stayInFlow: boolean): Step =>
   (state) =>
-    apply(state, {
-      type: BCDispatchAction.CLEAR_SECURE_STATE,
-      payload: [
-        {
-          isHydrated: true,
-          registrationAccessToken: state.bcscSecure.registrationAccessToken,
-          verified: false,
-          inVerifyFlow: stayInFlow,
-        },
-      ],
-    })
+    apply(
+      state,
+      {
+        type: BCDispatchAction.CLEAR_SECURE_STATE,
+        payload: [
+          {
+            isHydrated: true,
+            registrationAccessToken: state.bcscSecure.registrationAccessToken,
+            verified: false,
+            inVerifyFlow: stayInFlow,
+          },
+        ],
+      },
+      { type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [undefined] }
+    )
 
 interface Observation {
   verifyStackShown: boolean
@@ -117,7 +117,13 @@ const transitions: [string, Step][] = [
   ['reset, staying in the flow', reset(true)],
 ]
 
-const scenarios: { name: string; start: Step; unlockAgain: Step }[] = [
+const restartTransitions: [string, Step][] = [
+  ['enter the flow', enterFlow],
+  ['leave the flow', leaveFlow],
+  ['enter the flow again', enterFlow],
+]
+
+const scenarios: { name: string; start: Step; unlockAgain: Step; steps?: [string, Step][] }[] = [
   {
     name: 'unlocked with a deactivated record',
     start: unlock(credential(BCSCEvent.Cancel)),
@@ -138,6 +144,18 @@ const scenarios: { name: string; start: Step; unlockAgain: Step }[] = [
     start: (state) => expire(unlock(credential(BCSCEvent.Authorization))(state)),
     unlockAgain: unlock(credential(BCSCEvent.Authorization)),
   },
+  {
+    name: 'token-only account, expires, then a restart with no reset',
+    start: (state) => expire(unlock(null)(state)),
+    unlockAgain: unlock(null),
+    steps: restartTransitions,
+  },
+  {
+    name: 'finished account, expires, then a restart with no reset',
+    start: (state) => expire(unlock(credential(BCSCEvent.Authorization))(state)),
+    unlockAgain: unlock(credential(BCSCEvent.Authorization)),
+    steps: restartTransitions,
+  },
 ]
 
 const row = (
@@ -151,28 +169,28 @@ const row = (
 // change in what users see.
 const expected: Record<string, Observation[]> = {
   'unlocked with a deactivated record': [
-    row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
-    row(false, true, HomeNoticeType.BCSCVerified, null),
-    row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
     row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
-    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
   ],
   'token-only account, then the credential expires': [
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
-    row(false, true, HomeNoticeType.BCSCVerified, null),
-    row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
+    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
     row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
     row(false, true, HomeNoticeType.BCSCVerified, null),
   ],
   'in the verify flow when the credential expires': [
+    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
-    row(false, true, HomeNoticeType.BCSCVerified, null),
-    row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
+    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
     row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
     row(false, true, HomeNoticeType.BCSCVerified, null),
@@ -184,15 +202,29 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
     row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(false, true, HomeNoticeType.None, null),
+  ],
+  'token-only account, expires, then a restart with no reset': [
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+  ],
+  'finished account, expires, then a restart with no reset': [
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, true, HomeNoticeType.AccountExpired, null),
   ],
 }
 
 describe('verification transitions', () => {
-  it.each(scenarios)('$name', ({ name, start, unlockAgain }) => {
+  it.each(scenarios)('$name', ({ name, start, unlockAgain, steps = transitions }) => {
     let state = start(initialState)
     const observed: Observation[] = [observe(state)]
-    for (const [, step] of transitions) {
+    for (const [, step] of steps) {
       state = step(state)
       observed.push(observe(state))
     }
