@@ -590,10 +590,15 @@ describe('FcmViewModel', () => {
           android: expect.objectContaining({
             channelId: 'bcsc_foreground_notifications',
             smallIcon: 'ic_notification',
+            importance: AndroidImportance.HIGH,
             showTimestamp: true,
             pressAction: { id: 'default' },
           }),
         })
+      )
+      // A notification posted to a channel that doesn't exist yet is dropped on Android 8+.
+      expect((notifee.createChannel as jest.Mock).mock.invocationCallOrder[0]).toBeLessThan(
+        (notifee.displayNotification as jest.Mock).mock.invocationCallOrder[0]
       )
     })
 
