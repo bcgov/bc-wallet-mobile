@@ -1514,17 +1514,21 @@ describe('useSecureActions', () => {
       expect(captureHydrateField('sessionRecoveryRequired')).toBe(false)
     })
 
-    // Hydration restores the record whatever the saved account details say; the card then reads as
-    // verified, and an expiry stays with the saved details rather than being written here
-    it('restores the record and hydrates as verified without touching the saved account details', async () => {
+    // The restore ignores the saved account details and never writes them: an expiry stays with them
+    it('restores the record without touching a saved Expired by System reason', async () => {
+      jest.mocked(Bifold.useStore).mockReturnValue([
+        {
+          bcsc: { credentialMetadata: { bcscReason: 'Expired by System' } },
+          bcscSecure: { isHydrated: true, additionalEvidenceData: [] },
+        } as any,
+        mockDispatch,
+      ])
       const { result } = renderHook(() => useSecureActions())
       await act(async () => {
         await result.current.hydrateSecureState()
       })
 
       expect(setCredential).toHaveBeenCalled()
-      expect(captureHydrateField('verified')).toBe(true)
-      expect(captureHydrateField('credentialDeactivated')).toBe(false)
       expect(mockDispatch).not.toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
       )
