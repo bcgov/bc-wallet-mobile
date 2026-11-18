@@ -383,6 +383,24 @@ before every signature check; any failure of that round trip returned `false`, w
 error 2509 "signature does not match payload" with nothing to investigate. Verifying a signature needs no
 keychain, and the rejection codes let the next problem report explain itself.
 
+## Device clock: no token request while it is off
+
+The `Date` header of the status call is the clock check. `ServerStatusProvider` records it on the API client
+at startup and on every return to the foreground. A failed check drops the reading; going to the background
+drops it too, along with any status fetch still in flight. A token request with no reading runs the check
+first, and goes ahead only if the check fails. While the device clock is five minutes or more off, the client
+refuses token requests before sending them, since each carries an assertion stamped by that clock. An IAS 401
+rejecting an assertion for its time stamp (`Assertion Token was issued in the future` or `… is expired`) maps
+to `CLOCK_SKEW_ERROR` as well. Both show the clock alert through the global alert policy, and unlock never runs
+key recovery for them.
+
+`… is expired` alone does not prove a slow clock: an assertion sent long after it was signed expires too. When
+that 401's own `Date` header puts the device within five minutes of the server, the error keeps IAS's code and
+unlock recovers as for any other 401. With no usable `Date` header the clock is blamed.
+
+**Why:** with the clock an hour ahead, every token refresh failed with a generic 2111, and unlock took it for
+a key problem and ran key recovery. Fixing the clock is the only fix.
+
 ## PIN lockout: one schedule, counted before the PIN is checked
 
 Wrong PINs are counted, and lockouts enforced, in TypeScript, the same on iOS and Android. Native `verifyPIN`
