@@ -160,7 +160,7 @@ describe('"card not active", from the real check through the store to Home', () 
       expect(restarted.current.verification.isCardInactive).toBe(false)
     })
 
-    it('is a verified, active card once the finish step's dispatches land, with no reset in between', async () => {
+    it('is a verified, active card once the finish dispatches land, with no reset in between', async () => {
       const device = await renderDevice(tokenOnly, started)
       await runAccountChangeCheck(device, EXPIRE_TOKEN)
       expect(device.current.verification.isCardInactive).toBe(true)
