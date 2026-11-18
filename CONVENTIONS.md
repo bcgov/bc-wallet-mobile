@@ -49,6 +49,32 @@ existing cancellation destination: verification-method selection (#4585).
 Startup and post-call verification checks have no Cancel control. Post-call checks
 show the existing verification message without a progress bar.
 
+## Skeleton loading: the frame of the real content, pulsing only its fills
+
+Where a short first load is replaced by content whose layout is known, show a skeleton of that layout
+rather than a spinner. The Wallet tab shows `CredentialListSkeleton` until the agent has started and the
+stored credentials have loaded (#4741), following the
+[style guide](https://www.figma.com/design/Npt3lfaWT9oU4N4KBwhB1p/BCSC-Style-Guide?node-id=0-4032).
+
+- The frame (list margins, stripe, logo tile, padding, minimum height) uses the same screen-relative
+  sizes as the live credential card, so a card does not move when it replaces its placeholder. Bifold
+  does not export those sizes; `getCredentialCardFrame` mirrors them, so check it when Bifold is
+  upgraded. The bars inside the card and the shadows follow the style guide instead.
+- Only the grey fills pulse (opacity 1 to 0.4 and back over 2 seconds). The card and logo tile stay
+  solid: an elevated view that fades shows its own shadow through itself on Android.
+- The pulse is one looped native timing with an interpolated opacity, as in `BCAnimatedLoadingIcon`.
+  A looped `Animated.sequence` restarts from JavaScript every cycle and stalls while start-up work
+  holds that thread, which is exactly when a skeleton is on screen.
+- Waits that follow each other share one skeleton. A single gate decides failed, loading or ready
+  (`CredentialsReadyGate`) so the pulse never restarts between them.
+- Like any loading view it stops animating while hidden: pass `active`, from `useIsFocused` in a tab.
+- A skeleton is one screen-reader element ("Loading...", busy) with its blocks hidden from assistive
+  technology.
+- The fill colour is design-fixed (`SKELETON_FILL_COLOR`), like the banner colours.
+
+**Why:** the Wallet tab showed two identical spinners one after the other, which said nothing about
+what was loading and made the swap to the cards abrupt.
+
 ## Submits: one run per request, however many screens mount
 
 A screen that submits on mount (the send-video `UploadingScreen`) keeps its in-flight run in a
@@ -229,6 +255,19 @@ it again on every mount and skip what it already handled. Module-level state sur
 
 **Why:** `exitApp` finished the Activity for a browser-launched task but left the process alive. The next link
 or notification tap created a new Activity, which fires no `onNewIntent`, so logins after the first were lost.
+
+## Android: a tab header's shadow needs the scene container as its parent
+
+A tab navigator that renders its header with `createTabHeader` passes `TAB_SCENE_CONTAINER_STYLE` as
+`sceneContainerStyle`. It makes the scene container a stacking context, so the header stays mounted inside
+it. The same goes for any elevated view whose shadow must fall outside its own parent: it needs a React
+Native view above that parent, large enough to hold the shadow.
+
+**Why:** Android draws an elevation shadow through the view's parent and cuts it at that parent's bounds
+when the parent sits in a native container that clips its children, as react-native-screens' `Screen` does.
+The scene container has only a background colour, so React Native flattened it and mounted the header's
+background straight under that `Screen`. The main tabs and the QR scanner had no header shadow on Android
+while iOS showed one.
 
 ## Verification flow exits: first-time vs deferred verifiers
 

@@ -114,7 +114,6 @@ export interface BCSCState {
   accountSetupType?: AccountSetupType
   hasDismissedThirdPartyKeyboardAlert?: boolean
   hasDismissedDeviceAuthInfo?: boolean
-  deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
   hasSeenOnboardingIntro?: boolean
   acceptedTermsOfUseVersion?: string
@@ -350,7 +349,6 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
-  DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
   SET_INSTALL_ID = 'bcsc/setInstallId',
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
@@ -957,13 +955,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // this should use the date as a key, so this variable is always up to date...
       const hasDismissed = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, hasDismissedThirdPartyKeyboardAlert: hasDismissed }
-      const newState = { ...state, bcsc }
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCSCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER: {
-      const dismissedAt = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, deviceLimitBannerDismissedAt: dismissedAt }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

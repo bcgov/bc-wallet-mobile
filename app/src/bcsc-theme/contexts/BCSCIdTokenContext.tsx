@@ -171,3 +171,26 @@ export const useIdToken = () => {
 
   return { idToken: context.data, isLoading: context.isLoading, refreshIdToken: context.refreshData }
 }
+
+/**
+ * Hook to access the BCSC ID token context, returning null if the context is not available.
+ *
+ * @returns The token data and loading state, or null if the context is not available.
+ */
+export const useOptionalIdToken = () => {
+  const context = useContext(BCSCIdTokenContext)
+
+  if (!context) {
+    return {
+      idToken: null,
+      isLoading: false,
+      refreshIdToken: () => {},
+    }
+  }
+
+  return {
+    idToken: context.data,
+    isLoading: context.isLoading,
+    refreshIdToken: context.refreshData,
+  }
+}

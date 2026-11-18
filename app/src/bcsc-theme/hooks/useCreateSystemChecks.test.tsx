@@ -88,10 +88,6 @@ jest.mock('@/services/system-checks/UpdateAppSystemCheck', () => ({
   UpdateAppSystemCheck: class UpdateAppSystemCheck {},
 }))
 
-jest.mock('@/services/system-checks/DeviceCountSystemCheck', () => ({
-  DeviceCountSystemCheck: class DeviceCountSystemCheck {},
-}))
-
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
   UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {
     lastAppVersion: unknown
@@ -503,14 +499,13 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(6)
-        expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
-        expect(systemChecks[1].constructor.name).toBe('EventReasonAlertsSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('RefreshTokenExpiredSystemCheck')
-        expect(systemChecks[2].runCheck()).toBe(true)
-        expect(systemChecks[3].constructor.name).toBe('TermsOfUseSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
-        expect(systemChecks[5].constructor.name).toBe('KeyRotationSystemCheck')
+        expect(systemChecks).toHaveLength(5)
+        expect(systemChecks[0].constructor.name).toBe('EventReasonAlertsSystemCheck')
+        expect(systemChecks[1].constructor.name).toBe('RefreshTokenExpiredSystemCheck')
+        expect(systemChecks[1].runCheck()).toBe(true)
+        expect(systemChecks[2].constructor.name).toBe('TermsOfUseSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('KeyRotationSystemCheck')
       })
 
       it('skips the id-token-backed checks for a verified user whose refresh token has expired (#4654)', async () => {
@@ -556,7 +551,6 @@ describe('useGetSystemChecks', () => {
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
         const names = systemChecks.map((check) => check.constructor.name)
 
-        expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
         expect(names).toContain('RefreshTokenExpiredSystemCheck')
         expect(systemChecks[names.indexOf('RefreshTokenExpiredSystemCheck')].runCheck()).toBe(false)
@@ -602,7 +596,6 @@ describe('useGetSystemChecks', () => {
         // "token null" error for unverified users), so they are skipped — but the
         // account-independent Terms of Use check still runs.
         expect(names).toContain('TermsOfUseSystemCheck')
-        expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
         expect(names).not.toContain('RefreshTokenExpiredSystemCheck')
         expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')
@@ -685,7 +678,6 @@ describe('useGetSystemChecks', () => {
         })
 
         const verifiedUserChecksWithoutRegistrationUpdate = [
-          'DeviceCountSystemCheck',
           'EventReasonAlertsSystemCheck',
           'RefreshTokenExpiredSystemCheck',
           'TermsOfUseSystemCheck',

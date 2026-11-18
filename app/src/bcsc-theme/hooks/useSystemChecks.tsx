@@ -126,7 +126,7 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
         const results = await runSystemChecks(systemCheckStrategies, logger)
 
         const systemCheckResults = systemCheckStrategies.reduce<Record<string, boolean>>((acc, check, index) => {
-          // Collect results for logging ie: { DeviceCountSystemCheck: true, KeyRotationSystemCheck: false }
+          // Collect results for logging ie: { KeyRotationSystemCheck: false }
           acc[check.constructor.name] = results[index]
           return acc
         }, {})
