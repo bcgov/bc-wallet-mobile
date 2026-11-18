@@ -110,6 +110,13 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
       setIsChecking(false)
       setHasChecked(true)
       inFlightRef.current = null
+
+      // A failed check during an outage keeps the last known outage
+      const previous = serverStatusStateRef.current
+      if (newState.kind === 'error' && previous.kind === 'loaded' && previous.data.status !== 'ok') {
+        newState = previous
+      }
+
       setServerStatusState(newState)
       return toResult(newState)
     })()
