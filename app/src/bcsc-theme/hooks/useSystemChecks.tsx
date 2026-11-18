@@ -87,6 +87,28 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
     }
   }, [scope, logger, navigation])
 
+  // Re-run the scope's foreground checks (the clock check) each time the app becomes active
+  const getForegroundSystemChecks = scopeSystemCheck.getForegroundSystemChecks
+  useEffect(() => {
+    if (!getForegroundSystemChecks) {
+      return
+    }
+
+    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      if (nextAppState !== 'active') {
+        return
+      }
+
+      try {
+        await runSystemChecks(await getForegroundSystemChecks(), logger)
+      } catch (error) {
+        logger.error(`[useSystemChecks]: Error running foreground system checks for scope: ${scope}:`, error as Error)
+      }
+    })
+
+    return () => subscription.remove()
+  }, [getForegroundSystemChecks, logger, scope])
+
   // Listen for token refresh events (e.g., from FCM status notifications) and run device invalidation check
   useEffect(() => {
     if (scope !== SystemCheckScope.MAIN_STACK || !isClientReady || !client) {
