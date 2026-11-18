@@ -1,4 +1,4 @@
-import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
+import { EXPIRED_JWT, UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCDispatchAction } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
@@ -517,6 +517,7 @@ describe('useGetSystemChecks', () => {
             bcscSecure: {
               isHydrated: true,
               verified: true,
+              refreshToken: UNEXPIRED_JWT,
               registrationAccessToken: 'test-registration-token',
             },
           },
@@ -728,7 +729,11 @@ describe('useGetSystemChecks', () => {
         it('skips the registration update and key rotation on a non-BCSC bundle, even with a nickname and token', async () => {
           mockMainStackStore({
             bundleId: 'ca.bc.gov.BCWallet',
-            bcscSecure: { verified: true, registrationAccessToken: 'test-registration-token' },
+            bcscSecure: {
+              verified: true,
+              refreshToken: UNEXPIRED_JWT,
+              registrationAccessToken: 'test-registration-token',
+            },
             bcsc: { selectedNickname: 'Test Device' },
           })
 
@@ -737,11 +742,74 @@ describe('useGetSystemChecks', () => {
 
         it('skips the registration update and key rotation without a registration token, even with a nickname', async () => {
           mockMainStackStore({
-            bcscSecure: { verified: true },
+            bcscSecure: { verified: true, refreshToken: UNEXPIRED_JWT },
             bcsc: { selectedNickname: 'Test Device' },
           })
 
           expect(await getCheckNames()).toEqual(verifiedUserChecksWithoutRegistrationUpdate)
+        })
+
+        // The account-change check needs a usable sign-in token, not a finished setup
+        describe('the account-change check (EventReasonAlertsSystemCheck)', () => {
+          it('runs for an unfinished device with a usable token, with no other verified-only check', async () => {
+            mockMainStackStore({ bcscSecure: { refreshToken: UNEXPIRED_JWT, registrationAccessToken: 'reg-token' } })
+
+            expect(await getCheckNames()).toEqual(['EventReasonAlertsSystemCheck', 'TermsOfUseSystemCheck'])
+          })
+
+          it('does not run for an unfinished device with no token', async () => {
+            mockMainStackStore()
+
+            expect(await getCheckNames()).not.toContain('EventReasonAlertsSystemCheck')
+          })
+
+          it.each([
+            ['an unfinished device', { verified: false }],
+            ['a finished account', { verified: true }],
+          ])('does not run for %s whose token has expired', async (_name, secure) => {
+            mockMainStackStore({ bcscSecure: { ...secure, refreshToken: EXPIRED_JWT } })
+
+            expect(await getCheckNames()).not.toContain('EventReasonAlertsSystemCheck')
+          })
+        })
+
+        // An upgraded device whose credential record says cancelled or expired now counts as verified
+        describe('a credential record that says cancelled or expired', () => {
+          const deactivated = { verified: true, credentialDeactivated: true, registrationAccessToken: 'reg-token' }
+
+          it('sends an expired token to renewal and skips the account-change check', async () => {
+            mockMainStackStore({
+              bcscSecure: { ...deactivated, refreshToken: EXPIRED_JWT },
+              bcsc: { selectedNickname: 'Test Device' },
+            })
+
+            const { result } = renderHook(() => useCreateSystemChecks())
+            const checks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+            const names = checks.map((check) => check.constructor.name)
+
+            expect(names).not.toContain('EventReasonAlertsSystemCheck')
+            expect(names).toContain('RefreshTokenExpiredSystemCheck')
+            expect(checks[names.indexOf('RefreshTokenExpiredSystemCheck')].runCheck()).toBe(false)
+          })
+
+          it('runs the account-change check and key rotation with a usable token, and skips the pending-verification checks', async () => {
+            mockMainStackStore({
+              bcscSecure: {
+                ...deactivated,
+                refreshToken: UNEXPIRED_JWT,
+                verificationRequestId: 'request-id',
+                deviceCode: 'device-code',
+                userCode: 'user-code',
+              },
+            })
+
+            expect(await getCheckNames()).toEqual([
+              'EventReasonAlertsSystemCheck',
+              'RefreshTokenExpiredSystemCheck',
+              'TermsOfUseSystemCheck',
+              'KeyRotationSystemCheck',
+            ])
+          })
         })
 
         it('passes the registration token and nickname to the registration service, suppressing transient alerts', async () => {

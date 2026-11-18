@@ -305,7 +305,11 @@ describe('BCSCRootStack', () => {
   })
 
   describe('verification resume routing', () => {
-    type VerificationFlags = { verificationSkipped?: boolean; verificationStarted?: boolean }
+    type VerificationFlags = {
+      verificationSkipped?: boolean
+      verificationStarted?: boolean
+      credentialMetadata?: { bcscReason: string }
+    }
     // The prompt hasn't been answered yet (just onboarded)
     const UNANSWERED: VerificationFlags = {}
     const SKIPPED: VerificationFlags = { verificationSkipped: true, verificationStarted: false }
@@ -389,6 +393,27 @@ describe('BCSCRootStack', () => {
       // An expired or cancelled card is renewed from Home, not resumed
       expect(toJSON()).toBe('MainStack')
       expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('leaves a card the saved details say expired on MainStack even when verification was started', () => {
+      const mockDispatch = jest.fn()
+      const expired = { ...CHOSE_TO_VERIFY, credentialMetadata: { bcscReason: 'Expired by System' } }
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(expired), mockDispatch] as any)
+
+      const { toJSON } = render(<BCSCRootStack />)
+
+      expect(toJSON()).toBe('MainStack')
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('resumes a renewal interrupted by a restart, once the reset has cleared the saved details', () => {
+      const mockDispatch = jest.fn()
+      const cleared = { ...CHOSE_TO_VERIFY, credentialMetadata: undefined }
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(cleared), mockDispatch] as any)
+
+      render(<BCSCRootStack />)
+
+      expect(mockDispatch).toHaveBeenCalledWith({ type: 'bcsc/updateSecureInVerifyFlow', payload: [true] })
     })
 
     it('only re-enters verification once per session (a later re-render does not re-dispatch)', () => {
