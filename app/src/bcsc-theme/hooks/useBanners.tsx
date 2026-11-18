@@ -77,7 +77,7 @@ export const useBanners = (options: BannersOptions) => {
           if (server.contactLink) {
             void openLink(server.contactLink)
           }
-          void server.refresh()
+          void server.refresh({ force: true })
           // Note: This banner is non-dismissible (wait for server to come back online)
         },
       })
