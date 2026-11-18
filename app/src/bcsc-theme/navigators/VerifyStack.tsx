@@ -35,7 +35,7 @@ import { ProofRequestExpirationScreen } from '../features/settings/ProofRequestE
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
-import CardScanningError from '../features/verify/CardScanningError'
+import CardScanningErrorScreen from '../features/verify/CardScanningErrorScreen'
 import DeviceAuthorizationErrorScreen from '../features/verify/DeviceAuthorizationErrorScreen'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
@@ -234,7 +234,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       />
       <Stack.Screen
         name={BCSCScreens.CardScanningError}
-        component={CardScanningError}
+        component={CardScanningErrorScreen}
         options={{ header: createProgressHeader(1, 40) }}
       />
       <Stack.Screen

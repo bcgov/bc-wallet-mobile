@@ -12,11 +12,11 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const SCAN_CARD_EXAMPLE_IMAGE = Image.resolveAssetSource(HighlightSerialBarcodeImage).uri
 
-type CardScanningErrorProps = {
+type CardScanningErrorScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.CardScanningError>
 }
 
-const CardScanningError = ({ navigation }: CardScanningErrorProps) => {
+const CardScanningErrorScreen = ({ navigation }: CardScanningErrorScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const { width } = useWindowDimensions()
@@ -112,4 +112,4 @@ const CardScanningError = ({ navigation }: CardScanningErrorProps) => {
   )
 }
 
-export default CardScanningError
+export default CardScanningErrorScreen
