@@ -225,12 +225,6 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun hasCredential(promise: Promise)
 
-    abstract fun showLocalNotification(
-        title: String,
-        message: String,
-        promise: Promise,
-    )
-
     abstract fun decodeLoginChallenge(
         jwt: String,
         key: com.facebook.react.bridge.ReadableMap?,
