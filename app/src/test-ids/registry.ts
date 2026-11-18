@@ -326,6 +326,13 @@ export const TestIds = {
       continueWithLicence: 'ContinueWithDriversLicence',
       scanBcsc: 'ScanBCSC',
     },
+    /** `CardScanningError` — the scanner failed to decode a card several times in a row.
+     *  `tryAnotherCard` enters the non-BCSC (dual ID) flow. */
+    cardScanningError: {
+      enterManually: 'EnterManually',
+      scanAgain: 'ScanAgain',
+      tryAnotherCard: 'TryAnotherCard',
+    },
     /** `VerificationCardError` — the authorize-failure screen at the EnterBirthdate submit. The
      *  `MismatchedSerial` variant (CSN/birthdate mismatch or card-not-found — the unhandled-error path)
      *  shows `tryAnother` → IdentitySelection; the `CardExpired` variant shows `getBcsc` (opens a browser). */

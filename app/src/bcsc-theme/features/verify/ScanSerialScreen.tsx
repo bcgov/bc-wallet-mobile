@@ -33,6 +33,13 @@ import { BCSC_SN_SCAN_ZONES, ScanState } from '../../components/utils/camera'
  * the steady-hold help text + manual-entry button.
  */
 const SCAN_HELP_TIMEOUT_MS = 0
+/**
+ * DECODE_FAILURE_STREAK_MS and DECODE_FAILURE_STREAK_GAP_MS control how long a user can continue attempting to scan a card before being sent to the card scan error screen
+ * The scanner will need to be attempting and failing to scan a card for DECODE_FAILURE_STREAK_MS before being navigated away
+ * If the user stops scanning for any longer than DECODE_FAILURE_STREAK_GAP_MS, the streak is reset
+ */
+const DECODE_FAILURE_STREAK_MS = 5000
+const DECODE_FAILURE_STREAK_GAP_MS = 1500
 
 type ScanSerialScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
@@ -218,6 +225,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   // Whether the screen has already had focus once — see the focus effect below.
   const hasFocusedRef = useRef(false)
   const cardScanRef = useRef<CardScan>(EMPTY_CARD_SCAN)
+  const decodeFailureStreak = useRef<{ startedAt: number; lastAt: number } | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
@@ -245,6 +253,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     // Reset the caches so we can scan again.
     isProcessingScan.current = false
     cardScanRef.current = EMPTY_CARD_SCAN
+    decodeFailureStreak.current = null
   }, [])
 
   // Reset the scanner on re-entry (e.g. backing out of the next step) so a previous scan's
@@ -267,6 +276,8 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       return true
     }
 
+    let hasDecodeFailure = false
+
     for (const code of barcodes) {
       if (code.type === 'unknown') {
         logger.debug('[DecodeBarcodes] Skipping unknown barcode')
@@ -277,14 +288,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
       if (decoded.source === 'failure') {
         logger.debug('[DecodeBarcodes] Failed to decode barcode', { type: code.type, reason: decoded.reason })
-
-        if (!cardScanRef.current.serial && !cardScanRef.current.card) {
-          // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
-          isProcessingScan.current = true
-          setScanState('locked')
-          await scanner.handleScanNonBcsc()
-          return true
-        }
+        hasDecodeFailure = true
         continue
       }
 
@@ -300,6 +304,22 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       setScanState('locked')
       await scanner.handleScanComboCard(serial, { birthDate: toDriversLicenseMetadata(card).birthDate })
       return true
+    }
+
+    // Judged after the whole batch, so a readable code later in the batch still counts. Once
+    // anything has decoded, an unreadable code is just noise and the scan carries on.
+    if (hasDecodeFailure && !serial && !card) {
+      const now = Date.now()
+      const streak = decodeFailureStreak.current
+      const isContinuing = streak && now - streak.lastAt <= DECODE_FAILURE_STREAK_GAP_MS
+      decodeFailureStreak.current = { startedAt: isContinuing ? streak.startedAt : now, lastAt: now }
+
+      if (now - decodeFailureStreak.current.startedAt >= DECODE_FAILURE_STREAK_MS) {
+        isProcessingScan.current = true
+        setScanState('locked')
+        navigation.navigate(BCSCScreens.CardScanningError)
+        return true
+      }
     }
 
     // Still missing the serial or the birthdate — tell CodeScanningCamera to
