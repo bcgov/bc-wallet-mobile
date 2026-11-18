@@ -10,7 +10,7 @@ import {
   BCSCQRCoreTabParams,
   BCSCScreens,
 } from '@/bcsc-theme/types/navigators'
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl, TAB_SCENE_CONTAINER_STYLE } from '@/constants'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -153,6 +153,7 @@ const QRCoreStack: React.FC = () => {
             }
           },
         })}
+        sceneContainerStyle={TAB_SCENE_CONTAINER_STYLE}
         screenOptions={{
           // Bifold's defaults supply the header title: capped at the theme font ceiling and shrunk to fit
           // on one line. Without them the tab header falls back to React Navigation's own title, which
@@ -165,6 +166,7 @@ const QRCoreStack: React.FC = () => {
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
           // Show the header's own (native) shadow. TabHeader draws no drop-shadow caster,
           // so this native shadow — tuned via HEADER_SHADOW — is the single header shadow.
+          // On Android it needs the `sceneContainerStyle` above.
           headerShadowVisible: true,
           header: createTabHeader,
           headerTitleAlign: 'center',

@@ -2,7 +2,6 @@ import { BCSCBanner } from '@/bcsc-theme/types/banners'
 import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
-const TEMP_NOT_DISMISSIBLE = 0 // TEMP: Used while refactoring banners (prevents permanent dismissal)
 const NON_DISMISSIBLE = 0
 const DEVICE_LIMIT_BANNER_COOLDOWN_MS = __DEV__
   ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV // 30 mins
@@ -19,7 +18,7 @@ export const BANNER_DISMISS_DURATION_MS: Record<BCSCBanner, number> = {
   [BCSCBanner.IAS_SERVER_UNAVAILABLE]: NON_DISMISSIBLE,
   [BCSCBanner.IAS_SERVER_NOTIFICATION]: NON_DISMISSIBLE,
   [BCSCBanner.DEVICE_LIMIT_EXCEEDED]: DEVICE_LIMIT_BANNER_COOLDOWN_MS,
-  [BCSCBanner.LIVE_CALL_STATUS]: TEMP_NOT_DISMISSIBLE,
+  [BCSCBanner.LIVE_CALL_STATUS]: NON_DISMISSIBLE,
 }
 
 export enum BannerDismissal {

@@ -1,9 +1,8 @@
-import { TestIds } from '@/test-ids/registry'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { useTheme } from '@bifold/core'
 import React, { ComponentType, PropsWithChildren } from 'react'
-import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, View } from 'react-native'
 
+import AgentInitFailed from './AgentInitFailed'
 import { useBCSCAgent } from './BCSCAgentProvider'
 
 type Props = PropsWithChildren<{ testID?: string }>
@@ -20,28 +19,11 @@ type Props = PropsWithChildren<{ testID?: string }>
  */
 const AgentReadyGate: React.FC<Props> = ({ children, testID }) => {
   const { agent, error, retry } = useBCSCAgent()
-  const { ColorPalette, Spacing } = useTheme()
-  const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
 
   if (!agent) {
     if (error) {
-      return (
-        <View
-          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.lg, gap: Spacing.lg }}
-          testID={testID}
-        >
-          <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
-            {t('Init.Failed')}
-          </ThemedText>
-          <Button
-            title={t('Init.Retry')}
-            buttonType={ButtonType.Primary}
-            onPress={retry}
-            accessibilityLabel={t('Init.Retry')}
-            testID={testIdWithKey(TestIds.common.agentRetry)}
-          />
-        </View>
-      )
+      return <AgentInitFailed testID={testID} onRetry={retry} />
     }
 
     return (
