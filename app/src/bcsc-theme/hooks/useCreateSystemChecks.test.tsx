@@ -190,7 +190,6 @@ jest.mock('@/bcsc-theme/components/AppBanner', () => ({
 
 jest.mock('@/store', () => ({
   BCDispatchAction: {
-    REMOVE_BANNER_MESSAGE: 'bcsc/removeBannerMessage',
     SET_INSTALL_ID: 'bcsc/setInstallId',
     RECORD_APP_LAUNCH_VERSION: 'bcsc/recordAppLaunchVersion',
   },
