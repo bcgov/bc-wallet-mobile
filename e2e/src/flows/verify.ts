@@ -127,7 +127,7 @@ export async function skipPromptAndStartFromHome(): Promise<void> {
 }
 
 /**
- * Help menu → "Back to home", KEEPING progress (the app only moves the status out of IN_PROGRESS).
+ * Help menu → "Back to home", KEEPING progress (the app only leaves the verify flow).
  * Offered to a deferred verifier (`skipPromptAndStartFromHome`) and in developer mode, on every verify
  * screen except VerifyPrompt and the two transfer screens. A first-time verifier (`startVerification`)
  * never has the row — `expectNoBackToHome`.

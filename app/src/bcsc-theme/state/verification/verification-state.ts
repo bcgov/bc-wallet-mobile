@@ -36,7 +36,7 @@ export type VerificationState =
 export const getVerificationState = (facts: VerificationFacts): VerificationState => {
   const { hasCredential, credentialDeactivated, inVerifyFlow, hasRefreshToken } = facts
 
-  // The store can hold a credential and an in-progress status together; finishing setup ends the flow
+  // The store can hold a credential while in the verify flow; finishing setup ends the flow
   if (hasCredential) {
     return {
       isVerified: true,

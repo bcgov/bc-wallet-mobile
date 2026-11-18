@@ -2,7 +2,7 @@ import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { EXPIRED_JWT, UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { VerificationRequestStatus } from '@/constants'
-import { BCSCSecureState, BCState, initialBCSCSecureState, initialState, VerificationStatus } from '@/store'
+import { BCSCSecureState, BCState, initialBCSCSecureState, initialState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { HomeNotice, HomeNoticeType } from './home-notice'
 import { selectHomeNotice } from './selectors'
@@ -16,7 +16,7 @@ const buildState = (secure: Partial<BCSCSecureState> = {}, bcscReason?: BCSCReas
   bcscSecure: { ...initialBCSCSecureState, ...secure },
 })
 
-const verifiedSecure: Partial<BCSCSecureState> = { verified: true, verifiedStatus: VerificationStatus.VERIFIED }
+const verifiedSecure: Partial<BCSCSecureState> = { verified: true }
 
 const buildAccount = (date: Date) => ({ account_expiration_date: date }) as unknown as BCSCAccount
 
@@ -41,7 +41,7 @@ describe('selectHomeNotice', () => {
   })
 
   it('shows nothing while the verification is in progress', () => {
-    expect(select(buildState({ verifiedStatus: VerificationStatus.IN_PROGRESS })).type).toBe(HomeNoticeType.None)
+    expect(select(buildState({ inVerifyFlow: true })).type).toBe(HomeNoticeType.None)
   })
 
   it('shows Finish for a device with a refresh token, until that token expires', () => {
@@ -55,10 +55,10 @@ describe('selectHomeNotice', () => {
     expect(select(state).type).toBe(HomeNoticeType.BCSCContinueVerification)
   })
 
-  it('does not show Finish for a verified account whose status was deactivated', () => {
+  it('does not show Finish for a verified account whose credential was deactivated', () => {
     const state = buildState({
       verified: true,
-      verifiedStatus: VerificationStatus.DEACTIVATED,
+      credentialDeactivated: true,
       refreshToken: 'token',
     })
 

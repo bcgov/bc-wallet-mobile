@@ -1,6 +1,6 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
-import { BCState, initialState, VerificationStatus } from '@/store'
+import { BCState, initialState } from '@/store'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, render } from '@testing-library/react-native'
 import React from 'react'
@@ -60,7 +60,7 @@ describe('IdentitySelection', () => {
     })
 
     // The pop goes ahead to the setup question, so the reset must not drop the user to Home
-    expect(mockVerificationReset).toHaveBeenCalledWith({ verifiedStatus: VerificationStatus.IN_PROGRESS })
+    expect(mockVerificationReset).toHaveBeenCalledWith({ inVerifyFlow: true })
   })
 
   it('does not reset on a replace (a resumed initial route walking back keeps its progress)', async () => {

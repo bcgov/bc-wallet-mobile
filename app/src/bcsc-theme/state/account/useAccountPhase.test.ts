@@ -11,15 +11,6 @@ jest.mock('@bifold/core', () => ({
   useStore: () => mockUseStore(),
 }))
 jest.mock('@/bcsc-theme/contexts/BCSCAccountContext', () => ({ useAccount: jest.fn() }))
-// The verification selector reads the enum at runtime, and the real store cannot load with bifold mocked
-jest.mock('@/store', () => ({
-  VerificationStatus: {
-    VERIFIED: 'VERIFIED',
-    UNVERIFIED: 'UNVERIFIED',
-    DEACTIVATED: 'DEACTIVATED',
-    IN_PROGRESS: 'IN_PROGRESS',
-  },
-}))
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
