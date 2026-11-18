@@ -49,7 +49,6 @@ const useManageDevicesNavigation = (navigation: HomeProps['navigation']) => {
 const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const [store] = useStore<BCState>()
   const { account } = useAccount()
   const { isActivelyVerified } = useCardStatus()
   const handleManageDevices = useManageDevicesNavigation(navigation)
@@ -63,11 +62,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
     <TabScreenWrapper>
       {/* Banners scroll with the page: pinned above the ScrollView, a couple of them fill the screen at
           large OS font sizes and leave no room for the content. */}
-      <NotificationBannerContainer
-        scope={BannersScope.Home}
-        onManageDevices={handleManageDevices}
-        bannerMessages={store.bcsc.bannerMessages}
-      />
+      <NotificationBannerContainer scope={BannersScope.Home} onManageDevices={handleManageDevices} />
       {/* The Scan button floats over the bottom of the page (see TabStack): keep its footprint free
           below the last card so the card can scroll out from under it. */}
       <View style={{ padding: Spacing.lg, paddingBottom: Spacing.lg + scanButtonClearance, gap: Spacing.lg }}>
@@ -119,11 +114,7 @@ export const HomeV4_0_x: React.FC<HomeProps> = ({ navigation }) => {
 
   return (
     <>
-      <NotificationBannerContainer
-        scope={BannersScope.Home}
-        onManageDevices={handleManageDevices}
-        bannerMessages={store.bcsc.bannerMessages}
-      />
+      <NotificationBannerContainer scope={BannersScope.Home} onManageDevices={handleManageDevices} />
       <TabScreenWrapper>
         <HomeHeader name={account.fullname_formatted} cardSize={GENERIC_CARD_SIZE_SMALL} />
         <View style={styles.buttonsContainer}>
