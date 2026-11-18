@@ -356,8 +356,8 @@ flag that something has to remember to set and clear. The three live together in
   or `selectVerificationState`, never from `bcscSecure.verified`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
 - `isCardInactive` (`bcsc-theme/state/verification/card-inactive.ts`) is the only definition of "card not active": the
   credential record read at unlock says cancelled or expired, or the saved account details say "Expired by System".
-  Card expiry and the verification rule both take it from `selectVerificationState`. A cancelled card is not part of
-  it; it goes to the device-invalidated screen.
+  Card expiry and the verification rule both take it from `selectVerificationState`. A saved cancel reason is not part
+  of it: the account-change check sends that card to the device-invalidated screen.
 
 The `unknown` phase (verified, but no usable date and no server signal) shows nothing; a notice is never built
 from data that did not load. Expiry is not refreshed at midnight or on foreground; it re-derives on the next

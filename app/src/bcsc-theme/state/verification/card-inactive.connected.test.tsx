@@ -136,7 +136,7 @@ describe('"card not active", from the real check through the store to Home', () 
     const tokenOnly = { refreshToken: UNEXPIRED_JWT }
     const started = { verificationStarted: true }
 
-    it('records an expiry at launch, keeps it through the verify flow and a restart, until a reset clears the details', async () => {
+    it('records an expiry at launch, keeps it through the verify flow and a restart, and no longer applies once the saved details are cleared', async () => {
       const device = await renderDevice(tokenOnly, started)
       expect(device.current.notice.type).toBe(HomeNoticeType.BCSCVerified)
 
@@ -160,7 +160,7 @@ describe('"card not active", from the real check through the store to Home', () 
       expect(restarted.current.verification.isCardInactive).toBe(false)
     })
 
-    it('is a verified, active card again once verification finishes, with no reset in between', async () => {
+    it('is a verified, active card once the finish step's dispatches land, with no reset in between', async () => {
       const device = await renderDevice(tokenOnly, started)
       await runAccountChangeCheck(device, EXPIRE_TOKEN)
       expect(device.current.verification.isCardInactive).toBe(true)

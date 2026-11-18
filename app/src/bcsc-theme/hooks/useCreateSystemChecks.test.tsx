@@ -749,7 +749,8 @@ describe('useGetSystemChecks', () => {
           expect(await getCheckNames()).toEqual(verifiedUserChecksWithoutRegistrationUpdate)
         })
 
-        // The account-change check needs a usable sign-in token, not a finished setup
+        // The account-change check needs a usable sign-in token, not a finished setup. Token-only devices are
+        // unfinished here because the mocked store holds no credential record (verified is false).
         describe('the account-change check (EventReasonAlertsSystemCheck)', () => {
           it('runs for an unfinished device with a usable token, with no other verified-only check', async () => {
             mockMainStackStore({ bcscSecure: { refreshToken: UNEXPIRED_JWT, registrationAccessToken: 'reg-token' } })

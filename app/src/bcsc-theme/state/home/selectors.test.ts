@@ -65,6 +65,7 @@ describe('selectHomeNotice', () => {
     expect(select(state, buildAccount(IN_8_DAYS)).type).toBe(HomeNoticeType.AccountExpired)
   })
 
+  // Token-only fixtures below stay unfinished because the store has no credential record and no unlock refresh ran
   it('does not show Finish for an unfinished device whose saved details say the card expired', () => {
     const state = buildState({ refreshToken: UNEXPIRED_JWT }, BCSCReason.ExpiredBySystem)
 
