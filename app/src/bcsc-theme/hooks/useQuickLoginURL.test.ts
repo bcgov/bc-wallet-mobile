@@ -34,12 +34,18 @@ const failure = (step: string, technicalMessage: string, appEvent = AppEventCode
     }),
   })
 
+// The login hint is signed as the device's client, so the account needs its client ID
+const registeredAccount = { clientID: 'client-id', issuer: 'issuer' } as any
+
 describe('useQuickLoginURL', () => {
   beforeEach(() => {
     jest.resetAllMocks()
     jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
-    // resetAllMocks clears the shared mock's default; the real wrapper always returns a promise
+    // resetAllMocks clears the shared mock's defaults; the real wrapper always returns a promise
     jest.mocked(BcscCore).getAccountReadStatus = jest.fn().mockResolvedValue({ status: 'ok' })
+    jest
+      .mocked(BcscCore.isAccountRegistered)
+      .mockImplementation(((account?: { clientID?: string } | null) => Boolean(account?.clientID)) as any)
   })
 
   it('should return error when no initiate login uri', async () => {
@@ -173,6 +179,29 @@ describe('useQuickLoginURL', () => {
     expect(fetchJwkMock).toHaveBeenCalledTimes(1)
   })
 
+  it('should return error, without signing anything, when the account has no registration', async () => {
+    const useClientMock = jest.mocked(useBCSCApiClient)
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const tokensMock = jest.mocked(tokens)
+
+    // An account that exists but has not registered yet: it has no client ID
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue({ issuer: 'issuer' })
+    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
+
+    useClientMock.useBCSCApiClient.mockReturnValue({
+      tokens: { access_token: true },
+      fetchJwkResult: jest.fn().mockResolvedValue({ jwk: true }),
+    } as any)
+    bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+    const hook = renderHook(() => useQuickLoginURL())
+    const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
+
+    expect(result).toEqual({ success: false, error: failure('account', 'no registration') })
+    expect(bcscCoreMock.createQuickLoginJWT).not.toHaveBeenCalled()
+  })
+
   it('should return error and show alert when no jwk available', async () => {
     const useClientMock = jest.mocked(useBCSCApiClient)
     const bifoldMock = jest.mocked(Bifold)
@@ -181,7 +210,7 @@ describe('useQuickLoginURL', () => {
 
     // fetchJwkResult resolves jwk null on exhaustion/empty-keys — see BCSCApiClient.fetchJwk's fail-closed path
     const fetchJwkMock = jest.fn().mockResolvedValue({ jwk: null, error: new Error('JWKS endpoint returned no keys') })
-    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(registeredAccount)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
     const mockAlerts = { missingJwkAlert: jest.fn() }
 
@@ -211,7 +240,7 @@ describe('useQuickLoginURL', () => {
 
     const mockError = mockAppError(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)
     const fetchJwkMock = jest.fn().mockRejectedValue(mockError)
-    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(registeredAccount)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
     const mockAlerts = { missingJwkAlert: jest.fn() }
 
@@ -240,7 +269,7 @@ describe('useQuickLoginURL', () => {
     const tokensMock = jest.mocked(tokens)
 
     const fetchJwkMock = jest.fn().mockResolvedValue({ jwk: true })
-    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(registeredAccount)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
     const jwtError = new Error('failed jwt')
     bcscCoreMock.createQuickLoginJWT = jest.fn().mockRejectedValue(jwtError)
@@ -269,7 +298,7 @@ describe('useQuickLoginURL', () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const tokensMock = jest.mocked(tokens)
 
-    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(registeredAccount)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
     const jwkError = new Error('timeout of 15000ms exceeded')
     const mockAlerts = { missingJwkAlert: jest.fn() }
@@ -296,7 +325,7 @@ describe('useQuickLoginURL', () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const tokensMock = jest.mocked(tokens)
 
-    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(true)
+    bcscCoreMock.getAccount = jest.fn().mockResolvedValue(registeredAccount)
     tokensMock.getNotificationTokens = jest.fn().mockResolvedValue(true)
     bcscCoreMock.createQuickLoginJWT = jest
       .fn()
