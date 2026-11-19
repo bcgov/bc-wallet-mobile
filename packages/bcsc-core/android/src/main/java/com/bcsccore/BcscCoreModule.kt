@@ -3564,13 +3564,6 @@ class BcscCoreModule internal constructor(
                 )
             }
 
-            if (globalPrefs.contains("max_devices_banner_last_time_displayed")) {
-                result.putDouble(
-                    "maxDevicesBannerLastTimeDisplayed",
-                    globalPrefs.getLong("max_devices_banner_last_time_displayed", 0L).toDouble(),
-                )
-            }
-
             Log.d(NAME, "getAndroidGlobalFlags: Successfully read global flags")
             promise.resolve(result)
         } catch (e: Exception) {
@@ -3602,13 +3595,6 @@ class BcscCoreModule internal constructor(
                 editor.putBoolean(
                     "device_auth_never_show_again",
                     flags.getBoolean("notShowDeviceAuthenticationPrepAgain"),
-                )
-            }
-
-            if (flags.hasKey("maxDevicesBannerLastTimeDisplayed")) {
-                editor.putLong(
-                    "max_devices_banner_last_time_displayed",
-                    flags.getDouble("maxDevicesBannerLastTimeDisplayed").toLong(),
                 )
             }
 

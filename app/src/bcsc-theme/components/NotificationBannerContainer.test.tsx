@@ -6,7 +6,6 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { useNavigation } from '@react-navigation/native'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { BCSCBanner } from './AppBanner'
 import { NotificationBannerContainer } from './NotificationBannerContainer'
 
 jest.mock('@/utils/links', () => ({
@@ -207,11 +206,7 @@ describe('NotificationBannerContainer', () => {
     try {
       const tree = render(
         <BasicAppContext>
-          <NotificationBannerContainer
-            scope={BannersScope.Home}
-            onManageDevices={onManageDevices}
-            bannerMessages={[]}
-          />
+          <NotificationBannerContainer scope={BannersScope.Home} onManageDevices={onManageDevices} />
         </BasicAppContext>
       )
 
@@ -229,11 +224,7 @@ describe('NotificationBannerContainer', () => {
   it('ignores a stored update banner because useBanners owns it', () => {
     const tree = render(
       <BasicAppContext>
-        <NotificationBannerContainer
-          scope={BannersScope.Home}
-          onManageDevices={onManageDevices}
-          bannerMessages={[{ id: BCSCBanner.APP_UPDATE_AVAILABLE, title: 'Stored update', type: 'info' }]}
-        />
+        <NotificationBannerContainer scope={BannersScope.Home} onManageDevices={onManageDevices} />
       </BasicAppContext>
     )
 

@@ -2,7 +2,6 @@ import { DispatchAction, LocalStorageKeys, PersistentStorage, TOKENS } from '@bi
 import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
 import { Config } from 'react-native-config'
 import { AppContainer } from './container-imp'
-import { BCSCBanner } from './src/bcsc-theme/types/banners'
 import { BCLocalStorageKeys } from './src/store'
 
 // LOAD_STATE-level regression test for the reportUUID -> installId migration (issue #4325):
@@ -123,120 +122,6 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     const state = dispatch.mock.calls[0][0].payload[0]
     expect(state.bcsc.installId).toBe('already-migrated')
     expect(storeValueForKeySpy).not.toHaveBeenCalled()
-  })
-
-  it('drops a persisted update-available banner on load but keeps other banners', async () => {
-    const serviceNotice = {
-      id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-      title: 'Notice',
-      type: 'warning',
-      dismissible: false,
-    }
-    mockStoredValues[BCLocalStorageKeys.BCSC] = {
-      appVersion: '1.0.0',
-      installId: 'already-migrated',
-      bannerMessages: [
-        { id: BCSCBanner.APP_UPDATE_AVAILABLE, title: 'Update available', type: 'info', dismissible: true },
-        serviceNotice,
-      ],
-    }
-
-    const { registrations } = buildContainer()
-    const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
-    const dispatch = jest.fn()
-
-    await loadState(dispatch)
-
-    const state = dispatch.mock.calls[0][0].payload[0]
-    expect(state.bcsc.bannerMessages).toEqual([serviceNotice])
-    expect(storeValueForKeySpy).not.toHaveBeenCalled()
-  })
-
-  describe('retired 4.0.x expiry banner', () => {
-    const serviceNotice = {
-      id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-      title: 'Notice',
-      type: 'warning',
-      dismissible: false,
-    }
-    const retiredBanner = {
-      id: 'CardExpiringSoonBanner',
-      title: 'Expires in 9 days',
-      description: 'Renew your account before it expires',
-      type: 'warning',
-      dismissible: false,
-    }
-
-    const load = async () => {
-      const { registrations, logger } = buildContainer()
-      const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
-      const dispatch = jest.fn()
-      await loadState(dispatch)
-      return { dispatch, logger }
-    }
-
-    it('drops it on load, persists the cleaned blob once, and stays gone after a restart', async () => {
-      mockStoredValues[BCLocalStorageKeys.BCSC] = {
-        appVersion: '1.0.0',
-        installId: 'already-migrated',
-        bannerMessages: [retiredBanner, serviceNotice],
-      }
-
-      const { dispatch: firstDispatch } = await load()
-
-      expect(firstDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
-      expect(storeCalls).toHaveLength(1)
-      const [{ key, value }] = storeCalls as [{ key: string; value: { bannerMessages: unknown[] } }]
-      expect(key).toBe(BCLocalStorageKeys.BCSC)
-      expect(value.bannerMessages).toEqual([serviceNotice])
-
-      // Restart: a fresh container reads whatever the first load persisted
-      storeCalls = []
-      storeValueForKeySpy.mockClear()
-
-      const { dispatch: secondDispatch } = await load()
-
-      expect(secondDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
-      expect(storeValueForKeySpy).not.toHaveBeenCalled()
-    })
-
-    it('still loads cleaned state when the write-back fails, logs it, and retries the cleanup next launch', async () => {
-      mockStoredValues[BCLocalStorageKeys.BCSC] = {
-        appVersion: '1.0.0',
-        installId: 'already-migrated',
-        bannerMessages: [retiredBanner, serviceNotice],
-      }
-      storeValueForKeySpy.mockRejectedValue(new Error('disk full'))
-
-      const { dispatch: firstDispatch, logger: firstLogger } = await load()
-      // The write-back is not awaited by LOAD_STATE; let its rejection settle before asserting
-      await new Promise(setImmediate)
-
-      expect(firstDispatch).toHaveBeenCalledTimes(1)
-      expect(firstDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
-      expect(storeValueForKeySpy).toHaveBeenCalledTimes(1)
-      expect(firstLogger.error).toHaveBeenCalledWith('Failed to write back migrated BCSC state', expect.any(Error))
-
-      // Nothing was persisted, so the next launch reads the same legacy blob, cleans it and tries to write again
-      const { dispatch: secondDispatch } = await load()
-      await new Promise(setImmediate)
-
-      expect(secondDispatch.mock.calls[0][0].payload[0].bcsc.bannerMessages).toEqual([serviceNotice])
-      expect(storeValueForKeySpy).toHaveBeenCalledTimes(2)
-    })
-  })
-
-  it('keeps the empty bannerMessages default when the persisted state has none', async () => {
-    mockStoredValues[BCLocalStorageKeys.BCSC] = { appVersion: '1.0.0', installId: 'already-migrated' }
-
-    const { registrations } = buildContainer()
-    const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
-    const dispatch = jest.fn()
-
-    await loadState(dispatch)
-
-    const state = dispatch.mock.calls[0][0].payload[0]
-    expect(state.bcsc.bannerMessages).toEqual([])
   })
 })
 
