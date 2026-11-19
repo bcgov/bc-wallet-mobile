@@ -73,52 +73,63 @@ const BCSCRootStack: React.FC = () => {
     return <InvalidEnvironment />
   }
 
+  // Called rather than rendered as a component: a navigator's children must be Screen, Group or Fragment elements
+  const renderPhaseRoute = (): React.ReactElement => {
+    switch (phase) {
+      case 'loading':
+        return <Root.Screen name={BCSCScreens.RootLoading} component={AppStartupLoadingScreen} />
+      case 'onboarding':
+        return <Root.Screen name={BCSCStacks.Onboarding} component={OnboardingStack} />
+      case 'auth':
+        return <Root.Screen name={BCSCStacks.Auth} component={AuthStack} />
+      case 'recovery':
+        return (
+          <Root.Screen name={BCSCStacks.Verify}>
+            {() => (
+              <BCSCActivityProvider>
+                <VerifyStack />
+              </BCSCActivityProvider>
+            )}
+          </Root.Screen>
+        )
+      case 'verify':
+        // A key change drops the route and registers it afresh, so VerifyStack re-evaluates its first step
+        return (
+          <Root.Screen name={BCSCStacks.Verify} navigationKey={verifyStackKey}>
+            {() => (
+              <BCSCActivityProvider>
+                <VerifyStack showVerifyPrompt={showVerifyPrompt} onVerifyPromptAnswered={onVerifyPromptAnswered} />
+              </BCSCActivityProvider>
+            )}
+          </Root.Screen>
+        )
+      case 'main':
+        return (
+          <Root.Screen name={BCSCStacks.Main}>
+            {() => (
+              <BCSCActivityProvider>
+                <FcmCardExpirySync />
+                {isVerified ? (
+                  <BCSCIdTokenProvider>
+                    <BCSCMainStack enteredByCut={enteredByCut} />
+                  </BCSCIdTokenProvider>
+                ) : (
+                  <BCSCMainStack enteredByCut={enteredByCut} />
+                )}
+              </BCSCActivityProvider>
+            )}
+          </Root.Screen>
+        )
+    }
+  }
+
   return (
     <BCSCAgentProvider enabled={inSession}>
       <BCSCAccountProvider enabled={inSession}>
         <SystemCheckSessionProvider enabled={inSession}>
           {/* gestureEnabled stays explicit: its default follows animationEnabled */}
           <Root.Navigator screenOptions={{ headerShown: false, gestureEnabled: false, ...transition }}>
-            {phase === 'loading' ? (
-              <Root.Screen name={BCSCScreens.RootLoading} component={AppStartupLoadingScreen} />
-            ) : null}
-            {phase === 'onboarding' ? <Root.Screen name={BCSCStacks.Onboarding} component={OnboardingStack} /> : null}
-            {phase === 'auth' ? <Root.Screen name={BCSCStacks.Auth} component={AuthStack} /> : null}
-            {phase === 'recovery' ? (
-              <Root.Screen name={BCSCStacks.Verify}>
-                {() => (
-                  <BCSCActivityProvider>
-                    <VerifyStack />
-                  </BCSCActivityProvider>
-                )}
-              </Root.Screen>
-            ) : null}
-            {phase === 'verify' ? (
-              // A key change drops the route and registers it afresh, so VerifyStack re-evaluates its first step
-              <Root.Screen name={BCSCStacks.Verify} navigationKey={verifyStackKey}>
-                {() => (
-                  <BCSCActivityProvider>
-                    <VerifyStack showVerifyPrompt={showVerifyPrompt} onVerifyPromptAnswered={onVerifyPromptAnswered} />
-                  </BCSCActivityProvider>
-                )}
-              </Root.Screen>
-            ) : null}
-            {phase === 'main' ? (
-              <Root.Screen name={BCSCStacks.Main}>
-                {() => (
-                  <BCSCActivityProvider>
-                    <FcmCardExpirySync />
-                    {isVerified ? (
-                      <BCSCIdTokenProvider>
-                        <BCSCMainStack enteredByCut={enteredByCut} />
-                      </BCSCIdTokenProvider>
-                    ) : (
-                      <BCSCMainStack enteredByCut={enteredByCut} />
-                    )}
-                  </BCSCActivityProvider>
-                )}
-              </Root.Screen>
-            ) : null}
+            {renderPhaseRoute()}
           </Root.Navigator>
         </SystemCheckSessionProvider>
       </BCSCAccountProvider>
