@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers } from '../../../src/constants.js'
+import type { TestUser } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   captureFirstNonBcscDocument,
@@ -12,6 +12,7 @@ import {
 } from '../../../src/flows/verify.js'
 import { canInjectCardBarcodes } from '../../../src/helpers/camera.js'
 import { getNonBcscTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 import { FIRST_DOC_MATCH, expectRerouteToMethodSelection } from './reroute-context.js'
 
 /** The second slot's ID. The licence used for the first is filtered out of this list. */
@@ -33,11 +34,15 @@ const SECOND_DOC_MATCH = 'Canadian Passport'
  * ANDROID + SAUCE ONLY, one-way per session — see the photo-card journey for why.
  */
 describe('Scan journey: non-BCSC reroutes on the second ID', () => {
-  before(function () {
+  /** Whose card is photographed as the second ID. */
+  let cardHolder: TestUser
+
+  before(async function () {
     if (!canInjectCardBarcodes()) {
       return this.skip()
     }
-    setTestUser(TestUsers.na)
+    setTestUser(await arrangeTestUser('na'))
+    cardHolder = await arrangeTestUser('nonPhoto')
   })
 
   it('captures and banks a genuine first document', async () => {
@@ -64,7 +69,7 @@ describe('Scan journey: non-BCSC reroutes on the second ID', () => {
 
   it('reroutes to the method choice when the second ID is a real BC Services Card', async () => {
     await selectEvidenceType(SECOND_DOC_MATCH)
-    await presentBcscCardAsEvidence(TestUsers.nonPhoto.cardScanTarget)
+    await presentBcscCardAsEvidence(cardHolder)
     // The banked licence satisfies the non-photo card's photo-ID requirement, so unlike the first-ID
     // journey this closes the ID step outright.
     await expectRerouteToMethodSelection()
