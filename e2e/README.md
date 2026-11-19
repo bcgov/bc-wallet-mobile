@@ -10,7 +10,7 @@ The suite is built on a typed **screen-object DSL** and **per-area journey files
 - **Screen descriptors** (`src/screens/<stack>.ts`) map semantic roles (`self`/`primary`/`secondary`/`back`/`help`/`menu` + named `links`/`inputs`/`elements`) to testIDs via `defineScreen`. Journeys call `tap('primary')`, `fill('pin', …)` — never raw selectors. `src/screens/main.ts` is the reference style.
 - **Arrange flows** (`src/flows/`) are how journeys earn preconditions — there is no app-side seeding: `completeOnboarding()`, `skipToHome()`, `unlockWithPin()`, `completeVerification()`. The VerifyPrompt is answered **only in the session that completed onboarding**; never relaunch between onboarding and verify entry. The answer decides the exits for the rest of the account's life: `startVerification()` (Continue) makes a **first-time verifier** with no "Back to home" and a back arrow that returns to the prompt, `skipPromptAndStartFromHome()` (Skip, then the Home card) a **deferred verifier** who keeps every exit — pick the entry a journey's later checkpoints need.
 - **Journeys** (`test/bcsc/<area>/*.journey.ts`): one file = one app session = one ordered journey of checkpoints, so a failure isolates to its file and reports per scenario. wdio `bail: 0` keeps files independent; `mochaOpts.bail: true` aborts the rest of a file on its first failure. See **[Writing Tests → Journeys](#journeys)** to add one.
-- **Test context** (`src/support/context.ts`) carries the active `TestUser` across a journey's checkpoints (`setTestUser` / `getTestUser`).
+- **Test context** (`src/support/context.ts`) carries the active `TestUser` across a journey's checkpoints (`setTestUser` / `getTestUser`). `arrangeTestUser(kind)` (`src/support/identity.ts`) decides who that is: a fixed SIT persona, or a card minted for the session — see **[Card holders](#card-holders)**.
 - Failure screenshots + JUnit/Allure output land in `e2e/reports/` (gitignored).
 
 ## _Prerequisites_
@@ -333,13 +333,14 @@ _Scope_ `e2e` _is the default everywhere (journeys, nightly, the workflow's inpu
 
 ### IAS E2E Test API (in `.env.e2e`)
 
-IAS's non-production test API (`https://<host>/test/idv/v1`) mints BC Services Card test identities and records the agent's side of a verification, keyed by the usercode the app shows. `src/api/ias-test.ts` is the runner's client for it. IAS issued one OAuth 2.0 client per environment, kept in 1Password (`bcsc-mobile-app-cd`: `ias-test-api-dev` and `ias-test-api-sit`); CI loads the SIT one in `e2e.yml`.
+IAS's non-production test API (`https://<host>/test/idv/v1`) mints BC Services Card test identities and records the agent's side of a verification, keyed by the usercode the app shows. `src/api/ias-test.ts` is the runner's client for it. IAS issued one OAuth 2.0 client per environment, kept in 1Password (`bcsc-mobile-app-cd`: `ias-test-api-dev` and `ias-test-api-sit`); CI loads the SIT one in `e2e.yml`. Nothing in CI uses the API yet: the journeys move onto it locally first, behind the setting below, and the workflows follow once that runs clean.
 
 | Variable | Description |
 | --- | --- |
 | `IAS_TEST_API_HOST` | The environment's host: `idsit.gov.bc.ca` (SIT) or `iddev.gov.bc.ca` (DEV). A URL works too; only its origin is used (the item's `hostname`) |
 | `IAS_TEST_API_CLIENT_ID` | The environment's client id (the item's `username`, which 1Password shows as "key name") |
 | `IAS_TEST_API_CLIENT_SECRET` | The client secret (the item's `credential`) |
+| `E2E_IDENTITY_SOURCE` | `api` mints a card for each session; `personas` (the default) takes the fixed SIT personas. See **[Card holders](#card-holders)** |
 
 ```bash
 yarn test-api:check              # mint a token, check both scopes, probe the decision route with a usercode that does not exist
@@ -355,7 +356,7 @@ The hosts do not always run the same build, and the client names what a host ans
 | `400` with an empty body, on a route keyed by a usercode | `unknown-usercode` | The usercode is unknown, or not in a state the call can act on |
 | `400` with a body | `unexpected` | The host rejected the request itself (a field it cannot read) |
 
-`yarn test-api:check` exits non-zero unless the decision route is live. `e2e.yml` runs it before any Sauce session when it is dispatched with `approval_source: api`. Errors name the route with its usercode or serial masked and never carry the secret, the token or a response body.
+`yarn test-api:check` exits non-zero unless the decision route is live. Errors name the route with its usercode or serial masked and never carry the secret, the token or a response body.
 
 ## _Config Hierarchy_
 
@@ -433,20 +434,23 @@ _Element lookup is cross-platform with no branching:_
 
 Tests are organized as **journeys**, not composable specs. Each `*.journey.ts` file is **one app session running one ordered sequence of checkpoints** (`it` blocks). Area suites glob them (`--suite verify` → `verify/*.journey.ts`). Runner-level `bail: 0` keeps files independent — a failed journey reports and the rest still run — while `mochaOpts.bail: true` stops the rest of a *single* file after its first failure, because later checkpoints depend on the state earlier ones left behind.
 
-A journey earns its preconditions through the UI via **arrange flows** (`src/flows/`) — there is no state seeding — then chains dependent checkpoints so an expensive setup (a verification is ~5–8 min) is paid once and amortized. The active `TestUser` is set once and read via `src/support/context.ts`:
+A journey earns its preconditions through the UI via **arrange flows** (`src/flows/`), then chains dependent checkpoints so an expensive setup (a verification is ~5–8 min) is paid once and amortized. The one thing arranged outside the UI is who the journey is: its root `before()` asks `arrangeTestUser` for a card holder (see **[Card holders](#card-holders)**), sets it once, and every checkpoint reads it via `src/support/context.ts`:
 
 ```typescript
 // test/bcsc/verify/verified-photo.journey.ts (abridged)
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount, completeVerification, enterBirthdate, enterSerialManually, startVerification,
 } from '../../../src/flows/verify.js'
 import { HomeScreen } from '../../../src/screens/main.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 describe('Verified journey: photo card', () => {
-  before(() => setTestUser(TestUsers.photo)) // the active TestUser for every checkpoint below
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo')) // the card holder for every checkpoint below
+  })
 
   it('onboards to the verify prompt', async () => {
     await completeOnboarding()
@@ -470,7 +474,7 @@ describe('Verified journey: photo card', () => {
 
 - **A new checkpoint on an existing journey** — add an `it` that drives screen objects **by role**, placed so the preceding checkpoints leave the app in the state it needs. Assert arrival with `expectVisible()` before acting, and leave the app in a clean state for the next checkpoint.
 - **A new screen** — add a descriptor to `src/screens/<stack>.ts` and any missing testID keys to the app-owned registry `app/src/test-ids/registry.ts`. The keys must match what the app passes to `testIdWithKey` — **verify against the app source**, don't guess. Anchor `self` on a stable, always-present element. For a screen with **no** usable testID (e.g. an inline `<Link>` iOS flattens into its paragraph), assert arrival by heading copy with `engine.findByText('…')` and return via the header `back` — but note not every stack sets `headerBackTestID` (AuthStack doesn't), so confirm the back button is addressable before relying on it.
-- **A new journey** — add a `*.journey.ts` under the matching `test/bcsc/<area>/` directory; the area suite globs it automatically. `setTestUser()` in a `before` hook, arrange preconditions via `src/flows/`, then chain the checkpoints.
+- **A new journey** — add a `*.journey.ts` under the matching `test/bcsc/<area>/` directory; the area suite globs it automatically. `setTestUser(await arrangeTestUser(kind))` in a `before` hook, arrange preconditions via `src/flows/`, then chain the checkpoints.
 - **A new arrange flow** — if several journeys need the same UI-driven precondition, add it to `src/flows/<area>.ts` (used by ≥1 journey, reused by the rest) rather than duplicating steps.
 
 Run just the file you are iterating on:
@@ -478,6 +482,38 @@ Run just the file you are iterating on:
 ```bash
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/verify/verified-photo.journey.ts
 ```
+
+<a id="card-holders"></a>
+
+### Card holders
+
+A journey drives one card holder, a `TestUser`: the serial, birthdate, names and document numbers it types, and the photos it captures. Its root `before()` asks for one by kind:
+
+| Kind | Card | Verify path | Also carries |
+| --- | --- | --- | --- |
+| `photo` | standalone photo card | serial + birthdate | |
+| `combined` | combined card | serial + birthdate | |
+| `nonPhoto` | non-photo card | serial + birthdate + one photo ID | a passport number |
+| `na` | no card | two IDs + address + email | a licence number and a passport number |
+| `u12` | standalone photo card, holder under 12 | serial + birthdate | |
+
+`E2E_IDENTITY_SOURCE` decides where the holder comes from:
+
+- **`personas`** (the default, and what CI runs): the five hand-minted SIT personas (`TestUsers` in `src/constants.ts`, listed in `assets/USERS.md`). Both platforms and every lane share them, and SIT keeps one active device per card, so two lanes verifying the same persona invalidate each other.
+- **`api`**: a holder of the session's own. `arrangeTestUser` mints the card through the IAS test API (`mintIdentity` in `src/api/ias-test.ts`) and shapes it as a `TestUser`. A retry is a new session and mints again.
+
+What a mint sends and gets back:
+
+- The API echoes only the serial and the birthdate and generates whatever is left out, so the given name, gender and birthdate are always sent, under a surname no other session has (`AUTOTEST` + eight letters). The minor's birthdate is six years before today; left alone the API picks an age of 16 to 80.
+- Each identity carries the grouping label `e2e-<workflow run id, or local-<user>>-<platform>`.
+- The API issues no card to a holder without one: it refuses card type `NA` (an empty 400 on both hosts). The `na` holder is generated instead: a surname of its own and a licence and a passport number that fit the masks the evidence metadata serves. Nor does the API decide such a registration: on DEV a counter approval for it answers an empty 400, so the cardless journeys still need the portal.
+- The card is minted on the environment `IAS_TEST_API_HOST` names, which has to be the one the app is on (`DEFAULT_ENVIRONMENT` in `app/.env` for a local build; SIT for the Sauce builds).
+- A card minted on SIT comes with a verified email, as the personas' do. One minted on DEV does not: there the app shows the email step after the birthdate, and `reachVerificationMethod` skips it.
+- A minted holder's values are registered with the redaction (`src/helpers/redact.ts`) and read `<minted>` in failure text. Each mint logs one `[identity]` line and is counted in the session record, which the brief totals in its Sessions line.
+
+The approval is unchanged and still goes through the ID Check portal, which finds a card by its serial and birthdate whichever source it came from.
+
+Three groups stay on the personas whatever the source: the send-video journeys (the portal review checks which persona a claimed request belongs to), the scan suite (its committed card backs carry the personas' serials) and the upgrade suites.
 
 ### Runner-side API clients
 
@@ -684,7 +720,7 @@ Every red nightly of Oct 7–14 2026 was reviewed down to the checkpoint (`tmp/e
 
 | Cause | Rule / guard |
 | --- | --- |
-| **Shared personas, one device per card.** Both platforms verify the same five SIT personas (`TestUsers`), and SIT keeps one active device per card: whichever lane verifies a persona later invalidates the other's device at its next cold start ("Device invalidated" on the combined journey's cold deep link and the upgrade's post-install unlock). A retry re-verifies the same persona, so retries of verified journeys are not hermetic. | Lanes that verify the same persona on both platforms run them one at a time (`send-video`, and the weekly `upgradeSubmitted` / `upgradeApproved` / `upgradeVerified`: `max_parallel: 1`). The real fix is a persona set per platform — ask IAS for a second set of SIT cards and key `TestUsers` by platform. |
+| **Shared personas, one device per card.** Both platforms verify the same five SIT personas (`TestUsers`), and SIT keeps one active device per card: whichever lane verifies a persona later invalidates the other's device at its next cold start ("Device invalidated" on the combined journey's cold deep link and the upgrade's post-install unlock). A retry re-verifies the same persona, so retries of verified journeys are not hermetic. | Lanes that verify the same persona on both platforms run them one at a time (`send-video`, and the weekly `upgradeSubmitted` / `upgradeApproved` / `upgradeVerified`: `max_parallel: 1`). The real fix is a card per session, which `E2E_IDENTITY_SOURCE=api` mints (see **[Card holders](#card-holders)**); CI stays on the personas until that path runs clean locally. |
 | **One Entra account, two lanes signing in at once.** The platform jobs run the same specs in step, so their cold IDCheck sign-ins mint the same TOTP code in the same 30 s window; the code page then sat for the whole deadline. | `IDCHECK_TOTP_WINDOW_PARITY` (iOS even windows, Android odd — `e2e.yml`), and `scripts/idcheck-session.mjs` resubmits a code that brings no verdict within 12 s, retypes a password Entra's re-render wiped ("Please enter your password"), and gives the IDCheck landing 30 s. |
 | **An app change the journey never adapted to.** #4792 surfaces an injected biometric failure as the error modal; the device-auth journey waited for a prompt under it. | `recoverFromFailedDeviceAuth` closes the modal (logging its error code) and asserts it on Android. Adapt journeys in the PR that changes the UX. |
 | **A heuristic that depends on the light.** Android `text-contrast` sampled the live camera frame on ScanSerial. | Camera screens skip it; NEW findings are advisory in the nightly (above). |
@@ -797,7 +833,8 @@ e2e/
 │   │   └── prev-build/                      # PrevBuild: the arrange half of an upgrade per lineage (current / v403 / v3); sources.ts reads upgrade-sources.json, index.ts picks the driver from PREV_VERSION
 │   │
 │   ├── support/
-│   │   └── context.ts                       # per-journey TestUser context (setTestUser / getTestUser)
+│   │   ├── context.ts                       # per-journey TestUser context (setTestUser / getTestUser)
+│   │   └── identity.ts                      # arrangeTestUser: a fixed persona, or a card minted for the session
 │   │
 │   ├── helpers/
 │   │   ├── a11y-audit.ts                    # auditScreen(): iOS XCTest audit engine + report/roll-up (non-blocking)
@@ -886,7 +923,7 @@ e2e/
 │
 ├── assets/                                  # test images for camera injection
 │   ├── README.md
-│   ├── USERS.md                             # test account reference (Scooby-Doo themed)
+│   ├── USERS.md                             # the fixed SIT personas (Scooby-Doo themed; legacy)
 │   └── images/                              # ID, driver's licence, and passport photos
 │
 ├── logs/                                    # Appium logs (gitignored)

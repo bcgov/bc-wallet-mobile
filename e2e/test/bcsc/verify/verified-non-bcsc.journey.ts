@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   captureFirstNonBcscDocument,
@@ -27,6 +27,7 @@ import {
   VerificationMethodSelectionScreen,
 } from '../../../src/screens/verify.js'
 import { getNonBcscTestUser, getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /** The two documents, in slot order. Case-insensitive substrings of the server-keyed row testIDs. */
 const FIRST_DOC_MATCH = 'BC Drivers Licence'
@@ -63,8 +64,8 @@ const EMAIL_ALERT_OK = 'OK'
  * method selection → in-person → verified Home
  */
 describe('Verified journey: non-bcsc card', () => {
-  before(() => {
-    setTestUser(TestUsers.na)
+  before(async () => {
+    setTestUser(await arrangeTestUser('na'))
   })
 
   it('onboards to the verify prompt', async () => {
@@ -104,7 +105,7 @@ describe('Verified journey: non-bcsc card', () => {
 
   it('captures the second ID and reaches the address step', async () => {
     await captureSecondNonBcscDocument(getTestUser(), SECOND_DOC_MATCH)
-    await submitEvidenceIdCollection(getTestUser().documentNumber)
+    await submitEvidenceIdCollection(getNonBcscTestUser().documentNumber)
     await ResidentialAddressScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

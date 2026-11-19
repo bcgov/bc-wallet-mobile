@@ -1,4 +1,4 @@
-import type { TestUser } from '../constants.js'
+import type { NonBcscUser, NonPhotoCardUser, TestUser } from '../constants.js'
 
 /**
  * Per-journey test context. Replaces the old `verify/card-type` `verifyContext` singleton:
@@ -16,22 +16,28 @@ export function setTestUser(user: TestUser): void {
 /** The journey's TestUser. Throws when no journey has called {@link setTestUser} yet. */
 export function getTestUser(): TestUser {
   if (!currentUser) {
-    throw new Error('No TestUser set — call setTestUser(TestUsers.<user>) in the journey root before()')
+    throw new Error("No TestUser set — call setTestUser(await arrangeTestUser('<kind>')) in the journey root before()")
   }
   return currentUser
 }
 
-/**
- * The journey's TestUser, narrowed to the non-BCSC persona — the only flow that collects two documents,
- * so the only one carrying `primaryDocumentNumber` / `primaryDocumentTypeId`. `getTestUser()` returns
- * the union, on which those fields do not exist.
- */
-export function getNonBcscTestUser(): Extract<TestUser, { flow: 'non-bcsc' }> {
+/** The journey's TestUser narrowed to one flow, for the fields only that flow carries. */
+function getTestUserOf<F extends TestUser['flow']>(flow: F): Extract<TestUser, { flow: F }> {
   const user = getTestUser()
-  if (user.flow !== 'non-bcsc') {
-    throw new Error(`This journey drives a '${user.flow}' user; it needs the non-bcsc persona`)
+  if (user.flow !== flow) {
+    throw new Error(`This journey drives a '${user.flow}' user; it needs a ${flow} one`)
   }
-  return user
+  return user as Extract<TestUser, { flow: F }>
+}
+
+/** The journey's TestUser as a non-photo card holder: the flow that adds one photo ID and types its number. */
+export function getNonPhotoTestUser(): NonPhotoCardUser {
+  return getTestUserOf('non-photo')
+}
+
+/** The journey's TestUser as a holder without a card: the flow that collects two documents. */
+export function getNonBcscTestUser(): NonBcscUser {
+  return getTestUserOf('non-bcsc')
 }
 
 /** Clear the context — defensive reset for suites that run multiple journeys in one worker. */

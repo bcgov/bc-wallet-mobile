@@ -18,7 +18,7 @@ import {
 import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import { VerificationSuccessScreen } from '../../../src/screens/verify.js'
-import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { getNonPhotoTestUser, getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /** The additional photo ID this card type must add, as a substring of the server-keyed row testID. */
 const ADDITIONAL_ID_MATCH = 'Passport'
@@ -69,7 +69,7 @@ describe('Verified journey: non-photo card, send video', () => {
   it('adds the required photo ID', async () => {
     await reachAdditionalPhotoIdList()
     await captureAdditionalPhotoId(getTestUser(), ADDITIONAL_ID_MATCH)
-    await submitEvidenceIdCollection(getTestUser().documentNumber)
+    await submitEvidenceIdCollection(getNonPhotoTestUser().documentNumber)
     await reachVerificationMethod()
   })
 
