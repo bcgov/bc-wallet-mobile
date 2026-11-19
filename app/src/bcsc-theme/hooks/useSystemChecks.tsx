@@ -7,7 +7,7 @@ import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, DeviceEventEmitter } from 'react-native'
 import { RunRegistry, useRunRegistry, useSystemCheckSession } from '../contexts/SystemCheckSessionContext'
@@ -30,7 +30,8 @@ export enum SystemCheckScope {
  *   - VERIFY: Checks that run within the verification flow (VerifyStack) for an unverified, authenticated user ie: expired verification session
  *
  * A scope runs its batch once per mount of the calling navigator, or, when it has a `sessionKey`, once per
- * signed-in session however often that navigator mounts (the record lives in SystemCheckSessionProvider).
+ * key per signed-in session however often that navigator mounts (the record lives in
+ * SystemCheckSessionProvider). Either way a mount starts at most one batch.
  *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
  * @returns Whether the scope has settled, i.e. its checks have finished running (or will never run), and
@@ -68,7 +69,11 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean;
   }
 
   const runs: RunRegistry = sessionKey && session ? session : instanceRuns
-  const runKey = sessionKey ?? scope
+  // A mount runs the batch its scope names once ready. A session key that changes while the navigator stays
+  // mounted (a transfer QR scanned from Home, a cancelled request cleared there) names the next mount's
+  // batch: started here, it would run under a flow mid-step and raise the stack's wait over the open screen
+  const [mountedRunKey, setMountedRunKey] = useState<string>()
+  const runKey = mountedRunKey ?? sessionKey ?? scope
   const { startRun } = runs
 
   // Internet connectivity and foreground listener
@@ -153,6 +158,8 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean;
       if (!scopeSystemCheck.isReady) {
         return
       }
+
+      setMountedRunKey((current) => current ?? runKey)
 
       // Claimed once: a later claim, by this hook re-running or by a later mount in the same session, is refused
       const finishRun = startRun(runKey)

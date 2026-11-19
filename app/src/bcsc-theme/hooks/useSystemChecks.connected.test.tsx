@@ -206,6 +206,51 @@ describe('useSystemChecks', () => {
       expect(mockRunSystemChecks).toHaveBeenCalledTimes(2)
     })
 
+    it('leaves a key that changes under a mounted navigator to the next mount', async () => {
+      const { rendered, update } = renderProbe({ scope: SystemCheckScope.MAIN_STACK })
+      await waitFor(() => expect(rendered().at(-1)).toBe(true))
+
+      // A cancelled request cleared from Home, or a transfer QR scanned there: Home stays mounted
+      mockScopes = {
+        ...mockScopes,
+        [SystemCheckScope.MAIN_STACK]: scope({ sessionKey: 'MAIN_STACK:unverified:RequestStatus:req-2' }),
+      }
+      const changedAt = rendered().length
+      update({})
+      await act(flushPromises)
+
+      // No batch starts under the user, and the navigator's wait does not come back up
+      expect(rendered().slice(changedAt)).not.toContain(false)
+      expect(mockRunSystemChecks).toHaveBeenCalledTimes(1)
+
+      update({ mounted: false })
+      const remountedAt = rendered().length
+      update({ mounted: true })
+
+      expect(rendered()[remountedAt]).toBe(false)
+      await waitFor(() => expect(rendered().at(-1)).toBe(true))
+      expect(mockRunSystemChecks).toHaveBeenCalledTimes(2)
+    })
+
+    it('runs the batch its scope names once the scope is ready, not the one named at mount', async () => {
+      mockScopes[SystemCheckScope.MAIN_STACK] = scope({ isReady: false, sessionKey: 'MAIN_STACK:unverified' })
+      const { rendered, update } = renderProbe({ scope: SystemCheckScope.MAIN_STACK })
+
+      // The secure state lands after the mount, and the request comes with it
+      const requestKey = 'MAIN_STACK:unverified:RequestStatus:req-1'
+      mockScopes = { ...mockScopes, [SystemCheckScope.MAIN_STACK]: scope({ sessionKey: requestKey }) }
+      update({})
+      await waitFor(() => expect(rendered().at(-1)).toBe(true))
+
+      // Recorded under the request's key: the next mount with that key finds it settled
+      update({ mounted: false })
+      const remountedAt = rendered().length
+      update({ mounted: true })
+
+      expect(rendered()[remountedAt]).toBe(true)
+      expect(mockRunSystemChecks).toHaveBeenCalledTimes(1)
+    })
+
     it('runs the batch again in the next session', async () => {
       const { rendered, update } = renderProbe({ scope: SystemCheckScope.MAIN_STACK })
       await waitFor(() => expect(rendered().at(-1)).toBe(true))

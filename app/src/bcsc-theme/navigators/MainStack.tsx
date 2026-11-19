@@ -122,8 +122,9 @@ const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKe
  * "Verified"). The caller passes settled at once for a batch with no such check (`decidesHomeCard`), such
  * as the Terms of Use fetch after a fresh skip: a slide into this stack then carries Home rather than a
  * blank card. Capped by {@link SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS} so a hung request can't strand the
- * app. The checks run once per session (see SystemCheckSessionProvider), so this holds on the session's
- * first mount of the stack only; a later mount finds them settled and shows Home at once.
+ * app. The checks run once per session and once more for each verification request made during it (see
+ * SystemCheckSessionProvider), so this holds on the session's first mount of the stack and on the first
+ * mount after such a request; any other mount finds them settled and shows Home at once.
  *
  * @param hasSettled - Whether the checks that decide the Home card have finished running.
  * @returns Whether the loading screen should still be shown.

@@ -54,9 +54,14 @@ raises the global overlay in a card the root slides in, which blanked the whole 
 frames of every slide into Home.
 Both waits belong to the session, not the stack: `BCSCAccountProvider` and `SystemCheckSessionProvider`
 are mounted above the root's route, so a stack that mounts again in the same session (verify → main and
-back) finds the account loaded and its checks settled, and its first frame is the screen itself. Only the
-session's first entry into Home waits, and only on the account load and on a check batch that can change
-the Home card: an unverified user's request-status checks (`decidesHomeCard` in `useCreateSystemChecks`).
+back) finds the account loaded and its checks settled, and its first frame is the screen itself. Home
+waits on the session's first entry, and only on the account load and on a check batch that can change
+the Home card: an unverified user's request checks (`decidesHomeCard` in `useCreateSystemChecks`). Which
+request check applies is decided once, by `getVerificationRequestCheck` (`state/verification/`), and its
+batch is recorded per request (the request ID, or the device authorization's expiry, never the codes), so
+the first Home after a request made during the session waits once more, for that request's outcome.
+A batch starts only as the stack mounts: a key that changes under a mounted Home (a cancelled request
+cleared there, a transfer QR scanned) is left to the next mount, so no check runs under a flow mid-step.
 Any other batch, such as the Terms of Use fetch after a fresh skip or the id-token-backed checks after
 verifying mid-session, resolves after Home has painted, so a slide into Home carries Home rather than a
 blank card.
@@ -477,9 +482,10 @@ although the same account would have been usable again as soon as the lock ended
 ## Root phase transitions: a declarative switch that slides
 
 `BCSCRootStack` registers exactly one route, the current phase's (`loading | onboarding | auth | recovery |
-verify | main`), decided from the store by `getRootPhase` in `useRootStackViewModel`
-(`navigators/useRootStackViewModel.ts`). The ViewModel owns the startup effects, the once-per-session verification
-routing, the phase and the transition decided for each change; the navigator holds the route table and the session
+verify | main`), decided by `getRootPhase` (`state/root/root-phase.ts`) from the store and the routing
+facts the root's ViewModel holds. `useRootStackViewModel` (`navigators/useRootStackViewModel.ts`) reads it
+through `useRootPhase` and owns the startup effects, the once-per-session verification routing and the
+transition decided for each change; the navigator holds the route table and the session
 providers only, the way a screen holds its JSX. A phase change is a store dispatch; nothing
 `navigate`s or `reset`s between phases. React Navigation treats the swapped route as a `replace` and animates
 it like one, with the direction decided per change by `getRootTransition` (`navigators/root-transition.ts`)
