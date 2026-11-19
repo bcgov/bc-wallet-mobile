@@ -302,8 +302,17 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       // We have both the serial and the birthdate — lock the camera and handle the card.
       isProcessingScan.current = true
       setScanState('locked')
-      await scanner.handleScanComboCard(serial, { birthDate: toDriversLicenseMetadata(card).birthDate })
-      return true
+      try {
+        await scanner.handleScanComboCard(serial, { birthDate: toDriversLicenseMetadata(card).birthDate })
+        return true
+      } catch (error) {
+        // Release the lock so the scanner recovers; otherwise every later batch returns early above.
+        logger.error('[DecodeBarcodes] Failed to handle the scanned card', error as Error)
+        isProcessingScan.current = false
+        cardScanRef.current = EMPTY_CARD_SCAN
+        setScanState('scanning')
+        return false
+      }
     }
 
     // Judged after the whole batch, so a readable code later in the batch still counts. Once
