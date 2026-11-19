@@ -19,7 +19,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
@@ -238,6 +238,15 @@ const BCSCTabStack: React.FC = () => {
       bottom: safeAreaBottom + TAB_BAR_HEIGHT,
       right: Spacing.lg,
     },
+    // The strip under the tab bar, in the home-indicator area. Sized from the hook rather than a
+    // SafeAreaView: a native SafeAreaView learns its inset after it mounts, as a state update applied at
+    // least a frame later, so it would start at zero height and leave the tab bar in the indicator area
+    // for those frames, in view when this stack mounts beneath a pop (verify → main). The hook's inset is
+    // right in the first render
+    bottomInset: {
+      height: safeAreaBottom,
+      backgroundColor: TabTheme.tabBarSecondaryBackgroundColor,
+    },
   })
 
   return (
@@ -316,7 +325,7 @@ const BCSCTabStack: React.FC = () => {
           }}
         />
       </Tab.Navigator>
-      <SafeAreaView edges={['bottom']} style={{ backgroundColor: TabTheme.tabBarSecondaryBackgroundColor }} />
+      <View style={styles.bottomInset} testID={testIdWithKey(TestIds.main.tabBar.bottomInset)} />
       <View style={styles.fabContainer} pointerEvents="box-none">
         <FloatingScanButton activeTabName={activeTab} onPress={handleScanPress} />
       </View>

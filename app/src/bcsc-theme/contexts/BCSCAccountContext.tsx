@@ -45,13 +45,24 @@ interface AccountLoadDiagnostics {
 
 export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(null)
 
+interface BCSCAccountProviderProps extends PropsWithChildren {
+  /**
+   * False outside a signed-in session (locked, no account, recovering a session): nothing is loaded, and a
+   * loaded account is dropped so the next session loads afresh and never shows a removed account's data.
+   * Defaults to true.
+   */
+  enabled?: boolean
+}
+
 /**
- * Provides the BCSCAccountContext to child components, managing the loading of user account data.
+ * Provides the BCSCAccountContext to child components, managing the loading of user account data. Mounted
+ * above the root's route, so the account loads once per session whichever stacks mount beneath it: a stack
+ * that mounts again mid-session finds it loaded.
  *
- * @param {PropsWithChildren} props - The props containing child components.
- * @returns {*} {React.ReactElement} The BCSCAccountProvider component wrapping its children.
+ * @param props - The children, and whether a session is active (see {@link BCSCAccountProviderProps}).
+ * @returns The BCSCAccountProvider component wrapping its children.
  */
-export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
+export const BCSCAccountProvider = ({ enabled = true, children }: BCSCAccountProviderProps) => {
   const userService = useUserService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
@@ -63,7 +74,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   })
   const lastLoadRef = useRef<AccountLoadDiagnostics | null>(null)
 
-  const { data, load, isLoading, isReady, error, refresh } = useDataLoader(
+  const { data, load, isLoading, isReady, error, refresh, reset } = useDataLoader(
     () => {
       const { trigger, connectivity } = pendingLoadRef.current
       const diagnostics: AccountLoadDiagnostics = {
@@ -91,12 +102,12 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
     }
   )
 
-  const canLoadAccount = selectVerificationState(store).isDeviceVerifiedByIas
+  const canLoadAccount = enabled && selectVerificationState(store).isDeviceVerifiedByIas
 
   const startAccountLoad = useCallback(
     (trigger: AccountLoadTrigger, connectivity?: ReconnectEvent) => {
       if (!canLoadAccount) {
-        logger.info('BCSCAccountProvider: Skipping account load for unverified user', { trigger })
+        logger.info('BCSCAccountProvider: Skipping account load outside a verified session', { trigger, enabled })
         return
       }
 
@@ -108,12 +119,20 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
         refresh()
       }
     },
-    [canLoadAccount, load, logger, refresh]
+    [canLoadAccount, enabled, load, logger, refresh]
   )
 
   useEffect(() => {
     startAccountLoad('initial')
   }, [startAccountLoad])
+
+  // The session ended (lock, removed account, session recovery): its account goes with it, so the next
+  // session loads afresh and onboarding after a removal never sees the removed account's data
+  useEffect(() => {
+    if (!enabled) {
+      reset()
+    }
+  }, [enabled, reset])
 
   // Listen for token refresh events (e.g., from FCM status notifications) and refresh account data
   useEffect(() => {
