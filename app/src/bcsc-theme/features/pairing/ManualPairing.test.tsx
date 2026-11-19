@@ -51,14 +51,15 @@ describe('ManualPairing', () => {
     alertSpy?.mockRestore()
   })
 
-  const renderScreen = () =>
-    render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <ManualPairing />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
+  const screenTree = () => (
+    <BasicAppContext>
+      <BCSCLoadingProvider>
+        <ManualPairing />
+      </BCSCLoadingProvider>
+    </BasicAppContext>
+  )
+
+  const renderScreen = () => render(screenTree())
 
   describe('Rendering', () => {
     test('renders correctly', () => {
@@ -271,6 +272,112 @@ describe('ManualPairing', () => {
       })
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
       isFocused.mockRestore()
+    })
+  })
+
+  // The scanner tab stays live while the spinner shows, so a scan can land on a code still being checked
+  describe('A scan while a code is checked', () => {
+    type ServiceClient = { client_ref_id: string; client_name: string }
+
+    /** Queues a check whose answer the test lands by hand. */
+    const pendingCheck = () => {
+      let resolve: (client: ServiceClient) => void = () => {}
+      let reject: (error: Error) => void = () => {}
+      mockLoginByPairingCode.mockReturnValueOnce(
+        new Promise<ServiceClient>((res, rej) => {
+          resolve = res
+          reject = rej
+        })
+      )
+      return { resolve, reject }
+    }
+
+    /** Hands the screen a scanned code as the scanner tab does, with the navigator clearing the param. */
+    const scan = (pairingCode: string) => {
+      jest.mocked(useRoute).mockReturnValue({ params: { pairingCode } } as ReturnType<typeof useRoute>)
+      mockNavigation.setParams.mockImplementationOnce((params: object) => {
+        jest.mocked(useRoute).mockReturnValue({ params } as ReturnType<typeof useRoute>)
+      })
+      screen.rerender(screenTree())
+    }
+
+    test('acts on the scanned code alone when it replaces the one being checked', async () => {
+      const typed = pendingCheck()
+      const scanned = pendingCheck()
+      renderScreen()
+
+      fireEvent.changeText(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')), 'ABCDEF')
+      scan('SKGAZZ')
+
+      expect(mockLoginByPairingCode).toHaveBeenLastCalledWith('SKGAZZ', ChallengeSource.RemotePairingQrCode)
+
+      // The typed code's answer lands with the field already showing the scanned one
+      await act(async () => {
+        typed.resolve({ client_ref_id: 'ref-typed', client_name: 'Typed Service' })
+      })
+
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      expect(screen.getByTestId(testIdWithKey('ManualPairingVerifying'))).toBeTruthy()
+      expect(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')).props.editable).toBe(false)
+
+      await act(async () => {
+        scanned.resolve({ client_ref_id: 'ref-scanned', client_name: 'Scanned Service' })
+      })
+
+      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
+        serviceId: 'ref-scanned',
+        serviceName: 'Scanned Service',
+      })
+      expect(screen.queryByTestId(testIdWithKey('ManualPairingVerifying'))).toBeNull()
+    })
+
+    test('does not report the failure of a code a scan replaced', async () => {
+      alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+      const typed = pendingCheck()
+      const scanned = pendingCheck()
+      renderScreen()
+
+      fireEvent.changeText(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')), 'ABCDEF')
+      scan('SKGAZZ')
+
+      await act(async () => {
+        typed.reject(mockAssertion404('<html>Not Found</html>').appError)
+      })
+
+      expect(alertSpy).not.toHaveBeenCalled()
+      expect(screen.queryByText('BCSC.ManualPairing.CodeDoesNotMatchMessage')).toBeNull()
+      expect(screen.getByTestId(testIdWithKey('ManualPairingVerifying'))).toBeTruthy()
+
+      await act(async () => {
+        scanned.resolve({ client_ref_id: 'ref-scanned', client_name: 'Scanned Service' })
+      })
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
+        serviceId: 'ref-scanned',
+        serviceName: 'Scanned Service',
+      })
+    })
+
+    test('does not send a code again when its own QR is scanned while it is checked', async () => {
+      const typed = pendingCheck()
+      renderScreen()
+
+      fireEvent.changeText(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')), 'ABCDEF')
+      scan('ABCDEF')
+
+      expect(mockNavigation.setParams).toHaveBeenCalledWith({ pairingCode: undefined })
+      expect(mockLoginByPairingCode).toHaveBeenCalledTimes(1)
+
+      await act(async () => {
+        typed.resolve({ client_ref_id: 'ref-123', client_name: 'Test Service' })
+      })
+
+      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
+        serviceId: 'ref-123',
+        serviceName: 'Test Service',
+      })
     })
   })
 
