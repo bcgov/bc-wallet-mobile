@@ -3,6 +3,7 @@ import { AppError, ErrorRegistry } from '@/errors'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { CommonActions } from '@react-navigation/native'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert, ScrollView, TextInput } from 'react-native'
@@ -473,10 +474,10 @@ describe('EnterEmailScreen', () => {
 
       // Cancel button should not have an onPress handler (or it should not navigate)
       expect(cancelButton.onPress).toBeUndefined()
-      expect(mockNavigation.goBack).not.toHaveBeenCalled()
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
     })
 
-    it('should navigate back when skip is confirmed', async () => {
+    it('should move on to the verification method when skip is confirmed', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <ErrorAlertProvider>
@@ -502,8 +503,15 @@ describe('EnterEmailScreen', () => {
       })
 
       await waitFor(() => {
-        expect(mockNavigation.goBack).toHaveBeenCalled()
+        expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSkippedEmailVerification: true })
+        expect(mockNavigation.dispatch).toHaveBeenCalled()
+        expect(CommonActions.reset).toHaveBeenCalledWith({
+          index: 0,
+          routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+        })
       })
+      // After a resume this screen is the only route: a back action would leave the user where they are
+      expect(mockNavigation.goBack).not.toHaveBeenCalled()
     })
   })
 

@@ -1,0 +1,484 @@
+openapi: 3.0.3
+info:
+  title: BCSC Mobile E2E Test API
+  version: "1.0"
+  description: >
+    Non-production API for BCSC mobile app e2e tests to provision bare test
+    identities and drive IDV/account-state transitions without automating
+    the ID Check UI.
+servers:
+  - url: /test/idv/v1
+
+components:
+  securitySchemes:
+    iasOAuth2:
+      type: oauth2
+      description: >
+        Client-credentials JWT from the environment's IAS oauth2-server.
+        Request only the scopes your client needs.
+      flows:
+        clientCredentials:
+          tokenUrl: /oauth2/token
+          scopes:
+            test-idv-accounts: Create test card identities and change card, mobile app, and address state.
+            test-idv-verify: Approve or decline identity verifications as a simulated agent.
+
+  schemas:
+    CardType:
+      type: string
+      enum: [COMBO, STANDALONE, NONPHOTO, NA]
+
+    Decision:
+      type: string
+      enum: [APPROVE, DECLINE]
+
+    VerificationChannel:
+      type: string
+      enum: [COUNTER, LIVE_VIDEO, SEND_VIDEO]
+
+    CreateCardIdentityRequest:
+      type: object
+      description: >
+        Mimics ICBC issuing a new BC Services Card to a new individual/
+        identity (registerIdentityAndServicesCard), as distinct from a
+        renewal or replacement of an existing card. Any identity attribute
+        left unspecified is randomly generated, same as today's
+        /account/create behaviour. Attribute names match CardRenewalRequest
+        so the same values can be reused/asserted across both calls.
+      required: [cardType]
+      properties:
+        cardType:
+          $ref: '#/components/schemas/CardType'
+        birthDate:
+          type: string
+          format: date
+          description: >
+            Optional. If omitted, a birth date is randomly generated for an
+            individual aged 16 to 80 inclusive (or within ageFrom/ageTo if
+            provided).
+        ageFrom:
+          type: integer
+          description: Optional. Lower bound used when generating birthDate, if birthDate is omitted. Defaults to 16.
+        ageTo:
+          type: integer
+          description: Optional. Upper bound used when generating birthDate, if birthDate is omitted. Defaults to 80.
+        surname:
+          type: string
+        givenName1:
+          type: string
+        givenName2:
+          type: string
+        givenName3:
+          type: string
+        gender:
+          type: string
+          description: ICBC gender code as carried on the card (e.g. M/F/X). Randomly generated if omitted.
+        cardAddressLine1:
+          type: string
+        cardAddressLine2:
+          type: string
+        cardAddressLine3:
+          type: string
+        cardAddressLine4:
+          type: string
+        postalCode:
+          type: string
+        groupingLabel:
+          type: string
+          description: Optional label for later lookup/cleanup, same convention as /account/create.
+
+    CreateCardIdentityResponse:
+      type: object
+      properties:
+        csn:
+          type: string
+          description: Card serial number, used by the mobile app to "scan" the card.
+        birthDate:
+          type: string
+          format: date
+        transactionId:
+          type: string
+
+    VerificationDecisionRequest:
+      type: object
+      required: [channel, decision]
+      properties:
+        channel:
+          $ref: '#/components/schemas/VerificationChannel'
+        decision:
+          $ref: '#/components/schemas/Decision'
+        userMessage:
+          type: string
+          maxLength: 500
+          description: >
+            Plain-text message shown to the user. Required for DECLINE;
+            may contain line breaks encoded as \n. Stored in
+            IIS.IDENTITY_ACTIVITY_LOG.ID_ACTIVITY_LOG_COMMENT, which is
+            VARCHAR2(500).
+        internalComment:
+          type: string
+          maxLength: 500
+          description: >
+            Internal staff comment recorded in the IIS activity log. Required
+            for DECLINE; not shown to the user. Same 500-character column as
+            userMessage.
+      oneOf:
+        - properties:
+            decision:
+              type: string
+              enum: [APPROVE]
+        - required: [userMessage, internalComment]
+          properties:
+            decision:
+              type: string
+              enum: [DECLINE]
+
+    CompleteRegistrationEmailVerificationRequest:
+      type: object
+      required: [expectedEmailAddress]
+      properties:
+        expectedEmailAddress:
+          type: string
+          format: email
+          description: >
+            Expected address entered in the mobile app. Must match the pending
+            email associated with this device registration. Used only as a
+            match guard; it does not change the verified identity email.
+
+    VerifyResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [VERIFIED, DECLINED]
+
+    CardEventType:
+      type: string
+      enum: [ACTIVATE, SUSPEND, UNSUSPEND, CANCEL]
+
+    ChangeCardStatusRequest:
+      type: object
+      required: [cardEventType, reason]
+      properties:
+        cardEventType:
+          $ref: '#/components/schemas/CardEventType'
+        reason:
+          type: string
+
+    MobileAppStatus:
+      type: string
+      enum: [ACTIVATED, SUSPENDED, DEACTIVATED]
+
+    ChangeMobileAppStatusRequest:
+      type: object
+      required: [status, reason]
+      properties:
+        status:
+          $ref: '#/components/schemas/MobileAppStatus'
+        reason:
+          type: string
+
+    SetMobileAppExpiryRequest:
+      type: object
+      required: [expiryDate]
+      properties:
+        expiryDate:
+          type: string
+          format: date-time
+          description: >
+            Explicit expiry to set, unlike the support tool's fixed
+            "extend by N days" behaviour. Accepts a date-time in the past,
+            at the present instant, or in the future. A value strictly
+            before the current time also sets the mobile app status to
+            Expired. A present or future value leaves the app Activated.
+            Future dates are used to trigger the mobile app's
+            expiry-reminder notifications ahead of time.
+
+    SetMobileAppExpiryResponse:
+      type: object
+      required: [expiryDate]
+      properties:
+        expiryDate:
+          type: string
+          format: date-time
+          description: The expiry date that was stored.
+
+    CardRenewalRequest:
+      type: object
+      description: >
+        Simulates a renewed or replacement physical/mobile BCSC being issued
+        with changed identity data, via the same card-issuance feed used for
+        production files. Whether this is treated as a RENEW or a REPLACE is
+        determined by cardExpiryDate: matching the existing card's current
+        expiry date means REPLACE (e.g. lost/damaged card, same validity
+        period); a later expiry date means RENEW.
+      required: [cardExpiryDate]
+      properties:
+        cardExpiryDate:
+          type: string
+          format: date
+          description: >
+            Same as the existing card's current expiry date to simulate a
+            REPLACE; a later date to simulate a RENEW.
+        surname:
+          type: string
+        givenName1:
+          type: string
+        givenName2:
+          type: string
+        givenName3:
+          type: string
+        gender:
+          type: string
+          description: ICBC gender code as carried on the card (e.g. M/F/X).
+        cardAddressLine1:
+          type: string
+        cardAddressLine2:
+          type: string
+        cardAddressLine3:
+          type: string
+        cardAddressLine4:
+          type: string
+        postalCode:
+          type: string
+
+    CardRenewalResponse:
+      type: object
+      properties:
+        csn:
+          type: string
+          description: CSN of the newly issued renewed/replacement card.
+        registrationProcessType:
+          type: string
+          enum: [RENEW_SERVICES_CARD, REPLACE_SERVICES_CARD]
+
+    AddressUpdateRequest:
+      type: object
+      description: >
+        Simulates an address-only update feed entry (no new card issued),
+        distinct from a card renewal/replacement.
+      required: [cardAddressLine1, city, province, postalCode]
+      properties:
+        cardAddressLine1:
+          type: string
+        cardAddressLine2:
+          type: string
+        cardAddressLine3:
+          type: string
+        cardAddressLine4:
+          type: string
+        city:
+          type: string
+        province:
+          type: string
+        postalCode:
+          type: string
+        cardAddressEffectiveDate:
+          type: string
+          format: date
+          description: Optional. Defaults to today if omitted.
+
+    AddressUpdateResponse:
+      type: object
+      properties:
+        csn:
+          type: string
+        incomingAddressUpdateId:
+          type: integer
+          format: int64
+        status:
+          type: string
+
+paths:
+  /accounts:
+    post:
+      summary: Issue a new BC Services Card to a new, bare/unverified identity
+      security:
+        - iasOAuth2: [test-idv-accounts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCardIdentityRequest' }
+      responses:
+        '200':
+          description: Card identity created successfully.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreateCardIdentityResponse' }
+
+  /verifications/{usercode}/decision:
+    post:
+      summary: Record an identity verification decision for a mobile app registration
+      security:
+        - iasOAuth2: [test-idv-verify]
+      parameters:
+        - name: usercode
+          in: path
+          required: true
+          schema: { type: string }
+          description: Usercode displayed by the mobile app during its registration flow.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VerificationDecisionRequest' }
+      responses:
+        '200':
+          description: Verification decision recorded.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VerifyResponse' }
+
+  /registrations/{usercode}/email-verification/complete:
+    post:
+      summary: Complete pending email verification for a device registration
+      description: >
+        Completes verification of the email associated with this device
+        registration only. It does not modify the email associated with the
+        verified identity. The supplied address is a match guard and must
+        equal the pending registration email; it is not logged or returned.
+      security:
+        - iasOAuth2: [test-idv-verify]
+      parameters:
+        - name: usercode
+          in: path
+          required: true
+          schema: { type: string }
+          description: Usercode displayed by the mobile app during registration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CompleteRegistrationEmailVerificationRequest' }
+      responses:
+        '204':
+          description: Pending registration email verification completed.
+        '404':
+          description: Registration or pending email verification not found.
+        '409':
+          description: Expected email does not match the pending registration email.
+
+  /accounts/{csn}/card-status:
+    post:
+      summary: Change the physical BCSC card status (activate/suspend/unsuspend/cancel)
+      security:
+        - iasOAuth2: [test-idv-accounts]
+      parameters:
+        - name: csn
+          in: path
+          required: true
+          schema: { type: string }
+          description: Card serial number of the card whose status is changed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangeCardStatusRequest' }
+      responses:
+        '200': { description: Card status changed. }
+
+  /accounts/mobile-app/{client_id}/status:
+    post:
+      summary: Change a paired mobile app instance's (device credential) status
+      security:
+        - iasOAuth2: [test-idv-accounts]
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          schema: { type: string }
+          description: OAuth client ID the mobile app instance registered with device-server.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangeMobileAppStatusRequest' }
+      responses:
+        '200': { description: Mobile app status changed. }
+
+  /accounts/mobile-app/{usercode}/expiry:
+    post:
+      summary: Set a paired mobile app instance's expiry date (past, present, or future)
+      description: >
+        The usercode is the confirmation number the mobile app showed during
+        registration, the same value sent to POST /verifications/{usercode}/decision.
+        The device credential must be Activated. A past expiryDate also sets
+        the credential status to Expired. A present or future expiryDate changes
+        the date only.
+      security:
+        - iasOAuth2: [test-idv-accounts]
+      parameters:
+        - name: usercode
+          in: path
+          required: true
+          schema: { type: string }
+          description: Usercode displayed by the mobile app during its registration flow.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetMobileAppExpiryRequest' }
+      responses:
+        '200':
+          description: >
+            Expiry date stored. When expiryDate is strictly before the current
+            time, the mobile app status is Expired. A present or future date
+            leaves the app Activated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SetMobileAppExpiryResponse' }
+        '400':
+          description: >
+            The user code is blank, expiryDate is missing or not a date-time,
+            or the user code is not an Activated mobile app.
+        '401':
+          description: Missing, expired, or invalid bearer token.
+        '403':
+          description: The token does not have scope test-idv-accounts.
+
+  /accounts/{csn}/card-renewal:
+    post:
+      summary: Simulate a card renewal/replacement carrying a name, gender, and/or address change
+      security:
+        - iasOAuth2: [test-idv-accounts]
+      parameters:
+        - name: csn
+          in: path
+          required: true
+          schema: { type: string }
+          description: Card serial number of the existing card, as carried on the real feed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CardRenewalRequest' }
+      responses:
+        '200':
+          description: Renewal or replacement card issued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CardRenewalResponse' }
+
+  /accounts/{csn}/address-update:
+    post:
+      summary: Simulate an address-only update feed entry (no new card issued)
+      security:
+        - iasOAuth2: [test-idv-accounts]
+      parameters:
+        - name: csn
+          in: path
+          required: true
+          schema: { type: string }
+          description: Card serial number of the existing card, as carried on the real feed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddressUpdateRequest' }
+      responses:
+        '200':
+          description: Address update accepted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AddressUpdateResponse' }

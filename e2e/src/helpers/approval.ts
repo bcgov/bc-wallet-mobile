@@ -1,5 +1,6 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { normalizeUsercode } from '../api/ias-test.js'
 import { TestUsers } from '../constants.js'
 import { clearQueuedSubmission } from '../support/send-video-queue.js'
 import { withDriverKeepalive } from './driver-keepalive.js'
@@ -187,10 +188,7 @@ export async function approveInPersonRequest(
   input: ApproveInPersonInput,
   timeoutMs = 120_000
 ): Promise<void> {
-  const code = formattedCode.replaceAll(/[\s-]/g, '')
-  if (!/^[A-Za-z0-9]{8}$/.test(code)) {
-    throw new Error('Invalid confirmation code: expected 8 alphanumeric characters (optionally formatted as XXXX-XXXX)')
-  }
+  const code = normalizeUsercode(formattedCode)
   // The code stays out of this log and the error below: it approves the request, and Sauce/CI logs are remote.
   console.log(`[approval] Approving in-person request (flow=${input.flow})`)
 

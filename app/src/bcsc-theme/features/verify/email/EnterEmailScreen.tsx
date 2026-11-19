@@ -23,6 +23,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -110,7 +111,13 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             isEmailVerified: true,
           })
           await updateAccountFlags({ userSkippedEmailVerification: true })
-          navigation.goBack()
+          // Move on as a verified email does: on a resume this screen is the only route, with nothing to go back to
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+            })
+          )
         },
       },
     ])
