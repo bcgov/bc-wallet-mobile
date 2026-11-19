@@ -17,6 +17,8 @@ interface PINInputProps {
   accessibilityLabel?: string
   /** Test ID key for e2e (e.g. 'PINInput1'). Used for input and VisibilityButton (key + 'VisibilityButton'). */
   testIDKey?: string
+  /** False locks the field while the form it belongs to is busy. */
+  editable?: boolean
   ref?: React.Ref<TextInput>
 }
 
@@ -26,6 +28,7 @@ export const PINInput = ({
   errorMessage,
   autoFocus = false,
   testIDKey,
+  editable,
   ref,
   accessibilityLabel,
 }: PINInputProps) => {
@@ -93,6 +96,7 @@ export const PINInput = ({
           secureTextEntry={!isVisible}
           maxLength={PIN_LENGTH}
           autoFocus={autoFocus}
+          editable={editable}
           maxFontSizeMultiplier={1}
           cursorColor={ColorPalette.grayscale.darkGrey}
           textContentType={'password'}

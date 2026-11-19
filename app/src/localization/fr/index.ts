@@ -414,8 +414,6 @@ const translation = {
       "MustCheckBox": "You must check this box to continue. (FR)",
       "PINTooShort": "PIN must be 6 digits (FR)",
       "PINsDoNotMatch": "PINs do not match (FR)",
-      "SettingUpPIN": "Setting up your PIN... (FR)",
-      "SettingUpAccount": "Setting up your account... (FR)",
       "FailedToSetPIN": "Failed to set PIN (FR)",
       "ErrorSettingPIN": "An error occurred while setting the PIN (FR)"
     },
@@ -454,7 +452,6 @@ const translation = {
       "IUnderstand": "I understand if I forget my PIN that I have to set up this app again. (FR)",
       "MustCheckBox": "You must check this box to continue. (FR)",
       "ButtonTitle": "Change PIN (FR)",
-      "ChangingPIN": "Changing your PIN... (FR)",
       "PINTooShort": "Your PIN must be 6 digits (FR)",
       "PINsDoNotMatch": "PIN does not match (FR)",
       "IncorrectPIN": "Incorrect PIN (FR)",

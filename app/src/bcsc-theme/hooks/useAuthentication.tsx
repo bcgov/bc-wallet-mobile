@@ -59,9 +59,9 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
     let stopStartupLoading
 
     try {
-      stopLoading = startLoading()
-
-      // Check if they have changed their device auth settings
+      // Check if they have changed their device auth settings. A quick native read, so it runs before the
+      // overlay goes up: released as the push to DeviceAuthAppReset started, the overlay left that slide
+      // beginning from the screen it had just hidden.
       const deviceAuthAvailable = await canPerformDeviceAuthentication()
 
       if (!deviceAuthAvailable) {
@@ -69,6 +69,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
         navigation.navigate(BCSCScreens.DeviceAuthAppReset)
         return
       }
+
+      // The overlay goes up for the prompt on purpose: the app behind the OS dialog is the waiting screen
+      // rather than an unlock form, and the unlock that follows swaps the root, which is cut beneath it.
+      stopLoading = startLoading()
 
       // Unlocks the app using device authentication (biometric or passcode)
       logger.info('[Authentication:runDeviceAuth] Requesting device authentication')
