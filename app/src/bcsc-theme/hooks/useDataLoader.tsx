@@ -64,7 +64,7 @@ export type DataLoader<ResponseType> = {
   clear: () => void
   /**
    * Forgets the loaded data and any error, and lets `load` run again. A fetch still in flight is discarded
-   * when it lands, so nothing from before the reset ever shows up after it
+   * when it lands and is not retried, so nothing from before the reset ever shows up after it
    */
   reset: () => void
   /**
@@ -114,8 +114,9 @@ export default function useDataLoader<ResponseType>(
     setIsReady(true)
   }, [])
 
-  // Calls fetchData, retrying with backoff until the timeout when a retry config is set
-  const fetchWithRetry = useCallback(async (): Promise<ResponseType> => {
+  // Calls fetchData, retrying with backoff until the timeout when a retry config is set. A load that a reset
+  // discarded makes no further attempt: whatever this then returns or throws, loadData drops it as stale
+  const fetchWithRetry = useCallback(async (isStale: () => boolean): Promise<ResponseType> => {
     const { interval, timeout } = retryConfigRef.current ?? {}
 
     if (timeout && interval) {
@@ -123,8 +124,8 @@ export default function useDataLoader<ResponseType>(
       let retryCount = 0
       const startTime = Date.now()
 
-      // Keep retrying until timeout is reached
-      while (Date.now() - startTime < timeout) {
+      // Keep retrying until timeout is reached or the load is discarded
+      while (!isStale() && Date.now() - startTime < timeout) {
         try {
           return await fetchDataRef.current()
         } catch (err) {
@@ -167,7 +168,7 @@ export default function useDataLoader<ResponseType>(
       isLoadingRef.current = true
       setIsLoading(true)
 
-      const response = await fetchWithRetry()
+      const response = await fetchWithRetry(isStale)
       if (isStale()) {
         return
       }

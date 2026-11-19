@@ -80,4 +80,43 @@ describe('useDataLoader retry', () => {
     expect(onError).toHaveBeenCalledWith(new Error('Operation timed out after 2500msError: slow'))
     expect(result.current.isLoading).toBe(false)
   })
+
+  it('stops retrying a load that a reset discarded while it waited', async () => {
+    const fetchData = jest.fn().mockRejectedValue(new Error('offline'))
+    const onError = jest.fn()
+    const { result } = renderHook(() =>
+      useDataLoader(fetchData, { onError, retryConfig: { interval: 1000, timeout: 10000 } })
+    )
+
+    act(() => result.current.load())
+    await advance(500)
+    expect(fetchData).toHaveBeenCalledTimes(1)
+
+    act(() => result.current.reset())
+    await advance(10000)
+
+    expect(fetchData).toHaveBeenCalledTimes(1)
+    expect(onError).not.toHaveBeenCalled()
+    expect(result.current.error).toBeUndefined()
+    expect(result.current.isLoading).toBe(false)
+  })
+
+  it('leaves the fetching to the load started after the reset', async () => {
+    const fetchData = jest.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue('fresh')
+    const { result } = renderHook(() =>
+      useDataLoader(fetchData, { onError: jest.fn(), retryConfig: { interval: 1000, timeout: 10000 } })
+    )
+
+    act(() => result.current.load())
+    await advance(500)
+    act(() => result.current.reset())
+    act(() => result.current.load())
+
+    // Long enough for the discarded load's next attempt, had it kept going
+    await advance(10000)
+
+    expect(fetchData).toHaveBeenCalledTimes(2)
+    expect(result.current.data).toBe('fresh')
+    expect(result.current.isLoading).toBe(false)
+  })
 })

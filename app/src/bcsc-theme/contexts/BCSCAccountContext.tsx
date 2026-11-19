@@ -155,6 +155,12 @@ export const BCSCAccountProvider = ({ enabled = true, children }: BCSCAccountPro
   const isInitialLoadPending = canLoadAccount && !isReady && error === undefined
 
   const accountContextValue = useMemo(() => {
+    // The reset above runs in an effect, so the ended session's account and loading flag are still in state
+    // on the render that ends it. Nothing rendering then may read them
+    if (!enabled) {
+      return { account: null, isLoadingAccount: false, refreshAccount }
+    }
+
     if (!data) {
       return {
         account: null,
@@ -178,7 +184,7 @@ export const BCSCAccountProvider = ({ enabled = true, children }: BCSCAccountPro
       isLoadingAccount: false,
       refreshAccount,
     }
-  }, [data, isLoading, isInitialLoadPending, refreshAccount])
+  }, [data, enabled, isLoading, isInitialLoadPending, refreshAccount])
 
   return <BCSCAccountContext.Provider value={accountContextValue}>{children}</BCSCAccountContext.Provider>
 }

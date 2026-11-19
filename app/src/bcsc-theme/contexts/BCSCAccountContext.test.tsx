@@ -28,7 +28,7 @@ jest.mock('@/contexts/NavigationContainerContext', () => ({
 }))
 
 // Import after mocks are set up
-import { BCSCAccountProvider, useAccount } from './BCSCAccountContext'
+import { BCSCAccountContextType, BCSCAccountProvider, useAccount } from './BCSCAccountContext'
 
 const mockUserData = (overrides: Record<string, any> = {}) => ({
   user: {
@@ -368,21 +368,32 @@ describe('BCSCAccountContext', () => {
   })
 
   describe('session boundary (enabled)', () => {
-    /** Renders under a provider whose `enabled` the test flips, as RootStack does across lock and unlock. */
+    /**
+     * Renders under a provider whose `enabled` the test flips, as RootStack does across lock and unlock.
+     * `rendered` holds every value a consumer rendered with, where `result.current` keeps only the last.
+     */
     const renderSession = (bcscSecure: BCSCSecureState, initialEnabled = true) => {
       let enabled = initialEnabled
+      const rendered: BCSCAccountContextType[] = []
       const wrapper = ({ children }: { children: React.ReactNode }) => (
         <BasicAppContext initialStateOverride={{ bcscSecure }}>
           <BCSCAccountProvider enabled={enabled}>{children}</BCSCAccountProvider>
         </BasicAppContext>
       )
-      const utils = renderHook(() => useAccount(), { wrapper })
+      const utils = renderHook(
+        () => {
+          const context = useAccount()
+          rendered.push(context)
+          return context
+        },
+        { wrapper }
+      )
       const setEnabled = (next: boolean) => {
         enabled = next
         utils.rerender(undefined)
       }
 
-      return { ...utils, setEnabled }
+      return { ...utils, setEnabled, rendered }
     }
 
     it('loads nothing while disabled, and reports no loading', () => {
@@ -432,6 +443,37 @@ describe('BCSCAccountContext', () => {
 
       expect(result.current.account).toBeNull()
       expect(result.current.isLoadingAccount).toBe(false)
+    })
+
+    // The account is dropped in an effect, one render after the session ends. These check every rendered
+    // value, since what the ended session left behind is only observable on that one render.
+    it('hides a loaded account from the very render that ends the session', async () => {
+      mockGetUserMetadata.mockResolvedValue(mockUserData())
+      const { result, setEnabled, rendered } = renderSession(verified)
+      await waitFor(() => expect(result.current.account).not.toBeNull())
+      const rendersInSession = rendered.length
+
+      setEnabled(false)
+
+      expect(rendered.length).toBeGreaterThan(rendersInSession)
+      for (const context of rendered.slice(rendersInSession)) {
+        expect(context.account).toBeNull()
+      }
+    })
+
+    it('reports no loading from the very render that ends the session mid-load', async () => {
+      mockGetUserMetadata.mockImplementationOnce(() => new Promise(() => undefined))
+      const { result, setEnabled, rendered } = renderSession(verified)
+      await waitFor(() => expect(mockGetUserMetadata).toHaveBeenCalledTimes(1))
+      expect(result.current.isLoadingAccount).toBe(true)
+      const rendersInSession = rendered.length
+
+      setEnabled(false)
+
+      expect(rendered.length).toBeGreaterThan(rendersInSession)
+      for (const context of rendered.slice(rendersInSession)) {
+        expect(context.isLoadingAccount).toBe(false)
+      }
     })
   })
 })
