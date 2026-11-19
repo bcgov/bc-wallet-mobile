@@ -12,6 +12,8 @@ import { useServerStatus } from '../contexts/ServerStatusContext'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { RootPhase } from '../state/root/root-phase'
+import { useRootPhase } from '../state/root/useRootPhase'
 import { useVerificationState } from '../state/verification/useVerificationState'
 import { toAppError } from '../utils/native-error-map'
 import {
@@ -19,7 +21,6 @@ import {
   getRootTransition,
   IDLE_ROOT_TRANSITION,
   isSessionPhase,
-  RootPhase,
   RootRoute,
   RootTransition,
   RootTransitionContext,
@@ -125,41 +126,6 @@ const useVerificationRouting = (appReady: boolean) => {
 }
 
 /**
- * The phase the store puts the app in, in order of precedence; see {@link RootPhase} for how the root registers it.
- *
- * @param store - The app state.
- * @param appReady - Whether state, API client and account are all ready.
- * @param awaitingStatusForResume - Whether a would-resume user is still waiting on the IAS status.
- * @param showVerifyStack - Whether the verify journey is due (prompt, pending resume or in progress).
- * @returns The phase whose route the root registers.
- */
-export const getRootPhase = (
-  store: BCState,
-  appReady: boolean,
-  awaitingStatusForResume: boolean,
-  showVerifyStack: boolean
-): RootPhase => {
-  // Loading until the app is ready and, for a would-resume user, IAS status is known
-  if (!appReady || awaitingStatusForResume) {
-    return 'loading'
-  }
-
-  if (store.bcsc.hasAccount === false) {
-    return 'onboarding'
-  }
-
-  if (store.authentication.didAuthenticate === false) {
-    return 'auth'
-  }
-
-  if (store.bcscSecure.sessionRecoveryRequired === true) {
-    return 'recovery'
-  }
-
-  return showVerifyStack ? 'verify' : 'main'
-}
-
-/**
  * The screen options of the root's one registered route. A route change is decided once, in the render
  * that registers the new route, from the route it replaces. The options then settle on
  * {@link IDLE_ROOT_TRANSITION} once the route has entered, so a later change can pop it with an animation.
@@ -215,9 +181,9 @@ export interface RootStackViewModel {
 
 /**
  * The root navigator's ViewModel. Loads the persisted state on startup, runs the startup system checks,
- * processes pending FCM challenges once the API client is ready, and decides the phase whose route the
- * root registers and how the change into it animates. `BCSCRootStack` renders that route and the session
- * providers above it.
+ * processes pending FCM challenges once the API client is ready, routes the verify journey, and decides
+ * how each phase change animates. The phase whose route the root registers comes from `useRootPhase`.
+ * `BCSCRootStack` renders that route and the session providers above it.
  *
  * @returns The registered phase, its transition and the session flags; see {@link RootStackViewModel}.
  */
@@ -264,9 +230,9 @@ export const useRootStackViewModel = (): RootStackViewModel => {
   const showInvalidEnvironment =
     store.stateLoaded && isProductionBundle() && !isProductionEnvironment(store.developer.environment)
 
-  const phase = getRootPhase(store, appReady, awaitingStatusForResume, showVerifyStack)
+  const phase = useRootPhase({ appReady, awaitingStatusForResume, showVerifyStack })
   const transition = useRootTransition(
-    { phase, verifyStackKey: phase === 'verify' ? verifyStackKey : undefined },
+    { phase, verifyStackKey: phase === RootPhase.Verify ? verifyStackKey : undefined },
     {
       globalLoading,
       // Started and unfinished: a verify → main change is the user leaving the flow, so Home comes back

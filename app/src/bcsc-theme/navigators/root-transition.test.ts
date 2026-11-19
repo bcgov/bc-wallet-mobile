@@ -1,8 +1,8 @@
+import { RootPhase } from '../state/root/root-phase'
 import {
   getRootRouteKey,
   getRootTransition,
   IDLE_ROOT_TRANSITION,
-  RootPhase,
   RootRoute,
   RootTransitionContext,
 } from './root-transition'
@@ -20,9 +20,9 @@ const settled: RootTransitionContext = {
 
 describe('getRootRouteKey', () => {
   it('tells the verify stack registrations apart by their navigation key', () => {
-    expect(getRootRouteKey(route('main'))).toBe('main')
-    expect(getRootRouteKey(route('verify', 'verify'))).toBe('verify:verify')
-    expect(getRootRouteKey(route('verify', 'verify-outage-fallback'))).toBe('verify:verify-outage-fallback')
+    expect(getRootRouteKey(route(RootPhase.Main))).toBe('main')
+    expect(getRootRouteKey(route(RootPhase.Verify, 'verify'))).toBe('verify:verify')
+    expect(getRootRouteKey(route(RootPhase.Verify, 'verify-outage-fallback'))).toBe('verify:verify-outage-fallback')
   })
 })
 
@@ -32,10 +32,10 @@ describe('getRootTransition', () => {
   })
 
   it.each<[string, RootRoute | undefined, RootRoute]>([
-    ['the first render', undefined, route('main')],
-    ['the startup loading route to Home', route('loading'), route('main')],
-    ['the startup loading route to the verify flow', route('loading'), route('verify', 'verify')],
-    ['the startup loading route to the lock screen', route('loading'), route('auth')],
+    ['the first render', undefined, route(RootPhase.Main)],
+    ['the startup loading route to Home', route(RootPhase.Loading), route(RootPhase.Main)],
+    ['the startup loading route to the verify flow', route(RootPhase.Loading), route(RootPhase.Verify, 'verify')],
+    ['the startup loading route to the lock screen', route(RootPhase.Loading), route(RootPhase.Auth)],
   ])('does not animate %s', (_name, previous, next) => {
     expect(getRootTransition(previous, next, settled)).toEqual(NO_ANIMATION)
   })
@@ -43,11 +43,11 @@ describe('getRootTransition', () => {
   // The agent provider is disabled and the store cleared in the same commit, so the outgoing stack must
   // unmount at once rather than linger for a slide
   it.each<[string, RootRoute, RootRoute]>([
-    ['a lock from Home', route('main'), route('auth')],
-    ['a lock from the verify flow', route('verify', 'verify'), route('auth')],
-    ['removing the account from Home', route('main'), route('onboarding')],
-    ['a factory reset from the verify flow', route('verify', 'verify'), route('onboarding')],
-    ['a return to the loading route', route('main'), route('loading')],
+    ['a lock from Home', route(RootPhase.Main), route(RootPhase.Auth)],
+    ['a lock from the verify flow', route(RootPhase.Verify, 'verify'), route(RootPhase.Auth)],
+    ['removing the account from Home', route(RootPhase.Main), route(RootPhase.Onboarding)],
+    ['a factory reset from the verify flow', route(RootPhase.Verify, 'verify'), route(RootPhase.Onboarding)],
+    ['a return to the loading route', route(RootPhase.Main), route(RootPhase.Loading)],
   ])('cuts to the auth, onboarding or loading phase on %s, whatever else is going on', (_name, previous, next) => {
     expect(getRootTransition(previous, next, settled)).toEqual(NO_ANIMATION)
     expect(
@@ -61,10 +61,13 @@ describe('getRootTransition', () => {
 
   it('does not animate a swap hidden by the global loading overlay', () => {
     expect(
-      getRootTransition(route('onboarding'), route('verify', 'verify'), { ...settled, globalLoading: true })
+      getRootTransition(route(RootPhase.Onboarding), route(RootPhase.Verify, 'verify'), {
+        ...settled,
+        globalLoading: true,
+      })
     ).toEqual(NO_ANIMATION)
     expect(
-      getRootTransition(route('verify', 'verify'), route('main'), {
+      getRootTransition(route(RootPhase.Verify, 'verify'), route(RootPhase.Main), {
         ...settled,
         globalLoading: true,
         leavingStartedVerification: true,
@@ -74,48 +77,55 @@ describe('getRootTransition', () => {
 
   // The session starts with the change, and Home waits for the account: a slide would carry in a blank card
   it.each<[string, RootRoute]>([
-    ['an unlock', route('auth')],
-    ['session recovery', route('recovery')],
+    ['an unlock', route(RootPhase.Auth)],
+    ['session recovery', route(RootPhase.Recovery)],
   ])("cuts into a verified session's first Home after %s", (_name, previous) => {
-    expect(getRootTransition(previous, route('main'), { ...settled, sessionLoadsAccount: true })).toEqual(NO_ANIMATION)
+    expect(getRootTransition(previous, route(RootPhase.Main), { ...settled, sessionLoadsAccount: true })).toEqual(
+      NO_ANIMATION
+    )
   })
 
   it('still slides a verified user between phases that do not start the session or wait for the account', () => {
     const verified = { ...settled, sessionLoadsAccount: true }
 
     // Within the session the account is already loaded
-    expect(getRootTransition(route('verify', 'verify'), route('main'), verified)).toEqual(PUSH)
-    expect(getRootTransition(route('main'), route('verify', 'verify'), verified)).toEqual(PUSH)
+    expect(getRootTransition(route(RootPhase.Verify, 'verify'), route(RootPhase.Main), verified)).toEqual(PUSH)
+    expect(getRootTransition(route(RootPhase.Main), route(RootPhase.Verify, 'verify'), verified)).toEqual(PUSH)
     // The verify flow does not wait for the account
-    expect(getRootTransition(route('auth'), route('verify', 'verify'), verified)).toEqual(PUSH)
+    expect(getRootTransition(route(RootPhase.Auth), route(RootPhase.Verify, 'verify'), verified)).toEqual(PUSH)
   })
 
   it('does not animate the verify stack re-registering under a new navigation key', () => {
-    expect(getRootTransition(route('verify', 'verify-outage-fallback'), route('verify', 'verify'), settled)).toEqual(
-      NO_ANIMATION
-    )
+    expect(
+      getRootTransition(route(RootPhase.Verify, 'verify-outage-fallback'), route(RootPhase.Verify, 'verify'), settled)
+    ).toEqual(NO_ANIMATION)
   })
 
   it('pops back to Home when leaving a started, unfinished verification', () => {
     expect(
-      getRootTransition(route('verify', 'verify'), route('main'), { ...settled, leavingStartedVerification: true })
+      getRootTransition(route(RootPhase.Verify, 'verify'), route(RootPhase.Main), {
+        ...settled,
+        leavingStartedVerification: true,
+      })
     ).toEqual(POP)
   })
 
   it('pushes Home when skipping the fresh prompt or finishing verification', () => {
-    expect(getRootTransition(route('verify', 'verify'), route('main'), settled)).toEqual(PUSH)
-    expect(getRootTransition(route('verify', 'verify-outage-fallback'), route('main'), settled)).toEqual(PUSH)
+    expect(getRootTransition(route(RootPhase.Verify, 'verify'), route(RootPhase.Main), settled)).toEqual(PUSH)
+    expect(
+      getRootTransition(route(RootPhase.Verify, 'verify-outage-fallback'), route(RootPhase.Main), settled)
+    ).toEqual(PUSH)
   })
 
   it.each<[string, RootRoute, RootRoute]>([
-    ['onboarding completes into the verify prompt', route('onboarding'), route('verify', 'verify')],
-    ['onboarding completes into Home', route('onboarding'), route('main')],
-    ['an unlock reaches Home', route('auth'), route('main')],
-    ['an unlock resumes verification', route('auth'), route('verify', 'verify')],
-    ['an unlock needs session recovery', route('auth'), route('recovery')],
-    ['verification starts from Home', route('main'), route('verify', 'verify')],
-    ['recovery continues into verification', route('recovery'), route('verify', 'verify')],
-    ['recovery continues into Home', route('recovery'), route('main')],
+    ['onboarding completes into the verify prompt', route(RootPhase.Onboarding), route(RootPhase.Verify, 'verify')],
+    ['onboarding completes into Home', route(RootPhase.Onboarding), route(RootPhase.Main)],
+    ['an unlock reaches Home', route(RootPhase.Auth), route(RootPhase.Main)],
+    ['an unlock resumes verification', route(RootPhase.Auth), route(RootPhase.Verify, 'verify')],
+    ['an unlock needs session recovery', route(RootPhase.Auth), route(RootPhase.Recovery)],
+    ['verification starts from Home', route(RootPhase.Main), route(RootPhase.Verify, 'verify')],
+    ['recovery continues into verification', route(RootPhase.Recovery), route(RootPhase.Verify, 'verify')],
+    ['recovery continues into Home', route(RootPhase.Recovery), route(RootPhase.Main)],
   ])('pushes when %s', (_name, previous, next) => {
     expect(getRootTransition(previous, next, settled)).toEqual(PUSH)
     // Leaving verification is a verify → main thing only

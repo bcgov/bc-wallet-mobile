@@ -1,12 +1,5 @@
 import { StackNavigationOptions } from '@react-navigation/stack'
-
-/**
- * The phases of the app, in order of precedence. The root navigator registers the current phase's
- * route only, so a phase change swaps the registered route: React Navigation drops the previous
- * phase's screens and mounts the new ones, animating the swap like a `replace`. No imperative
- * navigation is involved; {@link getRootTransition} decides how each swap animates.
- */
-export type RootPhase = 'loading' | 'onboarding' | 'auth' | 'recovery' | 'verify' | 'main'
+import { RootPhase } from '../state/root/root-phase'
 
 /** Identity of the one route the root registers: the phase, and for the verify phase its navigation key. */
 export type RootRoute = { phase: RootPhase; verifyStackKey?: string }
@@ -34,7 +27,11 @@ const NO_ANIMATION: RootTransition = { animationEnabled: false }
 // These phases are entered by a lock, a factory reset or a removed account. The agent provider is
 // disabled in the same commit and the store is cleared under the outgoing stack, so a lingering stack
 // could call into a context that is gone (useBCSCAgent throws into the error boundary). It unmounts at once.
-const PHASES_ENTERED_WITHOUT_ANIMATION: ReadonlySet<RootPhase> = new Set(['loading', 'auth', 'onboarding'])
+const PHASES_ENTERED_WITHOUT_ANIMATION: ReadonlySet<RootPhase> = new Set([
+  RootPhase.Loading,
+  RootPhase.Auth,
+  RootPhase.Onboarding,
+])
 
 /**
  * Whether `phase` belongs to a signed-in session. The agent, the account and the record of which system
@@ -43,7 +40,7 @@ const PHASES_ENTERED_WITHOUT_ANIMATION: ReadonlySet<RootPhase> = new Set(['loadi
  * @param phase - The phase.
  * @returns True for the verify and main phases.
  */
-export const isSessionPhase = (phase: RootPhase): boolean => phase === 'verify' || phase === 'main'
+export const isSessionPhase = (phase: RootPhase): boolean => phase === RootPhase.Verify || phase === RootPhase.Main
 
 /**
  * A string identity for the root's registered route, for telling one registration from the next.
@@ -71,7 +68,7 @@ export const getRootTransition = (
   { globalLoading, leavingStartedVerification, sessionLoadsAccount }: RootTransitionContext
 ): RootTransition => {
   // Startup: the loading route is the overlay, there is nothing to slide from
-  if (previous === undefined || previous.phase === 'loading') {
+  if (previous === undefined || previous.phase === RootPhase.Loading) {
     return NO_ANIMATION
   }
 
@@ -90,11 +87,11 @@ export const getRootTransition = (
 
   // The session starts with this change, and a verified session's first Home waits for the account to
   // load: a slide would carry in a blank card, so it is cut and the main stack shows the waiting screen
-  if (next.phase === 'main' && !isSessionPhase(previous.phase) && sessionLoadsAccount) {
+  if (next.phase === RootPhase.Main && !isSessionPhase(previous.phase) && sessionLoadsAccount) {
     return NO_ANIMATION
   }
 
-  if (previous.phase === 'verify' && next.phase === 'main') {
+  if (previous.phase === RootPhase.Verify && next.phase === RootPhase.Main) {
     // Leaving mid-flow (back arrow, "Back to home", Skip after walking back to the prompt) goes back to
     // Home; Skip on the fresh prompt and Setup Complete move forward into it
     return { animationEnabled: true, animationTypeForReplace: leavingStartedVerification ? 'pop' : 'push' }

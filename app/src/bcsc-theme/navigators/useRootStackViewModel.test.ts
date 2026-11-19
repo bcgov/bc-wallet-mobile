@@ -6,8 +6,9 @@ import { act, renderHook } from '@testing-library/react-native'
 import { useEffect } from 'react'
 import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
 import { useFcmService } from '../features/fcm'
+import { RootPhase } from '../state/root/root-phase'
 import { toAppError } from '../utils/native-error-map'
-import { getRootRouteKey, IDLE_ROOT_TRANSITION, RootPhase, RootTransition } from './root-transition'
+import { getRootRouteKey, IDLE_ROOT_TRANSITION, RootTransition } from './root-transition'
 import { RootStackViewModel, useRootStackViewModel } from './useRootStackViewModel'
 
 const mockIsClientReady = jest.fn()
@@ -67,7 +68,7 @@ const useRecordedViewModel = () => {
       phase,
       inSession,
       transition,
-      routeKey: getRootRouteKey({ phase, verifyStackKey: phase === 'verify' ? verifyStackKey : undefined }),
+      routeKey: getRootRouteKey({ phase, verifyStackKey: phase === RootPhase.Verify ? verifyStackKey : undefined }),
     })
   })
 
@@ -89,8 +90,8 @@ const swapTransitions = () =>
 /** The transition once the registered route has entered */
 const settledTransition = () => recordedRenders[recordedRenders.length - 1].transition
 
-const VERIFY_ROUTE = getRootRouteKey({ phase: 'verify', verifyStackKey: 'verify' })
-const OUTAGE_FALLBACK_ROUTE = getRootRouteKey({ phase: 'verify', verifyStackKey: 'verify-outage-fallback' })
+const VERIFY_ROUTE = getRootRouteKey({ phase: RootPhase.Verify, verifyStackKey: 'verify' })
+const OUTAGE_FALLBACK_ROUTE = getRootRouteKey({ phase: RootPhase.Verify, verifyStackKey: 'verify-outage-fallback' })
 
 const NO_ANIMATION: RootTransition = { animationEnabled: false }
 const PUSH: RootTransition = { animationEnabled: true, animationTypeForReplace: 'push' }
@@ -122,7 +123,7 @@ describe('useRootStackViewModel', () => {
 
       const { result } = renderViewModel()
 
-      expect(result.current.phase).toBe('loading')
+      expect(result.current.phase).toBe(RootPhase.Loading)
     })
 
     it('is loading while the account is initializing', () => {
@@ -133,7 +134,7 @@ describe('useRootStackViewModel', () => {
 
       const { result } = renderViewModel()
 
-      expect(result.current.phase).toBe('loading')
+      expect(result.current.phase).toBe(RootPhase.Loading)
     })
 
     it('is loading until the API client is ready', () => {
@@ -142,15 +143,15 @@ describe('useRootStackViewModel', () => {
 
       const { result } = renderViewModel()
 
-      expect(result.current.phase).toBe('loading')
+      expect(result.current.phase).toBe(RootPhase.Loading)
     })
 
     it.each<[string, Record<string, any>, RootPhase]>([
-      ['onboarding when there is no account', { bcsc: { hasAccount: false } }, 'onboarding'],
+      ['onboarding when there is no account', { bcsc: { hasAccount: false } }, RootPhase.Onboarding],
       [
         'auth when there is an account and the app is locked',
         { bcsc: { hasAccount: true }, authentication: { didAuthenticate: false } },
-        'auth',
+        RootPhase.Auth,
       ],
       [
         'verify when unlocked and verification is in progress',
@@ -159,12 +160,12 @@ describe('useRootStackViewModel', () => {
           authentication: { didAuthenticate: true },
           bcscSecure: { verified: false, inVerifyFlow: true },
         },
-        'verify',
+        RootPhase.Verify,
       ],
       [
         'main when unlocked and verified',
         { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true }, bcscSecure: { verified: true } },
-        'main',
+        RootPhase.Main,
       ],
       [
         'recovery when session recovery is required, overriding the verified → Home routing',
@@ -175,7 +176,7 @@ describe('useRootStackViewModel', () => {
           // (VerifyStack starts on the SessionRecovery screen when sessionRecoveryRequired is set.)
           bcscSecure: { verified: true, sessionRecoveryRequired: true },
         },
-        'recovery',
+        RootPhase.Recovery,
       ],
       [
         'main when an existing unverified account unlocks',
@@ -187,7 +188,7 @@ describe('useRootStackViewModel', () => {
           authentication: { didAuthenticate: true },
           bcscSecure: { verified: false },
         },
-        'main',
+        RootPhase.Main,
       ],
     ])('is %s', (_name, overrides, expectedPhase) => {
       useStoreWith(mockStore(overrides))
@@ -230,21 +231,21 @@ describe('useRootStackViewModel', () => {
       const { result } = renderOn({ developer: { environment: IASEnvironment.PROD } }, true)
 
       expect(result.current.showInvalidEnvironment).toBe(false)
-      expect(result.current.phase).toBe('onboarding')
+      expect(result.current.phase).toBe(RootPhase.Onboarding)
     })
 
     it('is down on a non-production bundle', () => {
       const { result } = renderOn({ developer: { environment: IASEnvironment.SIT } }, false)
 
       expect(result.current.showInvalidEnvironment).toBe(false)
-      expect(result.current.phase).toBe('onboarding')
+      expect(result.current.phase).toBe(RootPhase.Onboarding)
     })
 
     it('is down before the state has loaded', () => {
       const { result } = renderOn({ stateLoaded: false, developer: { environment: IASEnvironment.SIT } }, true)
 
       expect(result.current.showInvalidEnvironment).toBe(false)
-      expect(result.current.phase).toBe('loading')
+      expect(result.current.phase).toBe(RootPhase.Loading)
     })
   })
 
@@ -260,7 +261,7 @@ describe('useRootStackViewModel', () => {
     )
 
     const { result, rerender } = renderViewModel()
-    expect(result.current.phase).toBe('onboarding')
+    expect(result.current.phase).toBe(RootPhase.Onboarding)
 
     // Creating the PIN completes onboarding: SUCCESSFUL_AUTH sets both flags at once.
     useStoreWith(
@@ -273,7 +274,7 @@ describe('useRootStackViewModel', () => {
     )
     rerender({})
 
-    expect(result.current.phase).toBe('verify')
+    expect(result.current.phase).toBe(RootPhase.Verify)
     expect(result.current.showVerifyPrompt).toBe(true)
     expect(swapTransitions()).toEqual([PUSH])
   })
@@ -306,7 +307,7 @@ describe('useRootStackViewModel', () => {
 
       const { result } = renderViewModel()
 
-      expect(result.current.phase).toBe('verify')
+      expect(result.current.phase).toBe(RootPhase.Verify)
       expect(result.current.showVerifyPrompt).toBe(true)
       // "not answered yet" — the prompt records the choice; no resume dispatch here.
       expect(dispatch).not.toHaveBeenCalledWith(anyResumeDispatch)
@@ -318,7 +319,7 @@ describe('useRootStackViewModel', () => {
 
       const { result } = renderViewModel()
 
-      expect(result.current.phase).toBe('main')
+      expect(result.current.phase).toBe(RootPhase.Main)
       expect(dispatch).not.toHaveBeenCalledWith(anyResumeDispatch)
     })
 
@@ -335,7 +336,7 @@ describe('useRootStackViewModel', () => {
       useStoreWith(authedUnverified(CHOSE_TO_VERIFY, { inVerifyFlow: true }), dispatch)
       rerender({})
 
-      expect(result.current.phase).toBe('verify')
+      expect(result.current.phase).toBe(RootPhase.Verify)
     })
 
     it('re-enters verification for a user who skipped the prompt but started verification later', () => {
@@ -355,7 +356,7 @@ describe('useRootStackViewModel', () => {
       const { result } = renderViewModel()
 
       // An expired or cancelled card is renewed from Home, not resumed
-      expect(result.current.phase).toBe('main')
+      expect(result.current.phase).toBe(RootPhase.Main)
       expect(dispatch).not.toHaveBeenCalled()
     })
 
@@ -379,7 +380,7 @@ describe('useRootStackViewModel', () => {
 
       const { result } = renderViewModel()
 
-      expect(result.current.phase).toBe('loading')
+      expect(result.current.phase).toBe(RootPhase.Loading)
       expect(dispatch).not.toHaveBeenCalledWith(anyResumeDispatch)
     })
 
@@ -390,7 +391,7 @@ describe('useRootStackViewModel', () => {
 
       const { result } = renderViewModel()
 
-      expect(result.current.phase).toBe('verify')
+      expect(result.current.phase).toBe(RootPhase.Verify)
       expect(result.current.showVerifyPrompt).toBe(true)
       // Registered under its own key, so the verify stack is dropped and registered afresh once IAS is back
       expect(result.current.verifyStackKey).toBe('verify-outage-fallback')
@@ -430,25 +431,25 @@ describe('useRootStackViewModel', () => {
         const { result, dispatch } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
 
         expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         expect(registeredRoutes()).toEqual([VERIFY_ROUTE])
       })
 
       it('returns a resumed user to Home when they leave verification', () => {
         const { result, dispatch, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
 
         // Back arrow / "Back to home": useLeaveVerification leaves the flow.
         apply(withInVerifyFlow(false))
 
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         // Leaving must not read as a resume still pending, or the user is pulled straight back.
         expect(dispatch).toHaveBeenCalledTimes(1)
       })
 
       it('returns a first-time verifier who walked back to the prompt and skips to Home', () => {
         const { result, dispatch, apply, answerPrompt, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
 
         // Back from the first step replaced onto the prompt (still in the verify flow). Its Skip answers the
         // prompt, records the skip and leaves the flow (useLeaveVerification) in one press.
@@ -458,10 +459,10 @@ describe('useRootStackViewModel', () => {
           bcsc: { ...current.bcsc, verificationSkipped: true },
         }))
 
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         // Started stays set, but the resume was already evaluated: nothing pulls them back in this session.
         rerender({})
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         expect(dispatch).toHaveBeenCalledTimes(1)
       })
 
@@ -471,17 +472,17 @@ describe('useRootStackViewModel', () => {
 
         // useVerificationReset clears the flow, then continueVerificationProcess re-enters it.
         apply(withInVerifyFlow(false))
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         apply(withInVerifyFlow(true))
 
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         // A fresh registration mounts the stack again, which re-runs the resume-step routing: the first step
         expect(registeredRoutes()).toEqual([VERIFY_ROUTE, 'main', VERIFY_ROUTE])
       })
 
       it('lets a user who skipped earlier start from the Home card and leave again', () => {
         const { result, dispatch, apply } = renderColdStart(authedUnverified(SKIPPED))
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         expect(dispatch).not.toHaveBeenCalled()
 
         // "Start verification" on the Home card: verificationStarted=true and the verify flow together.
@@ -489,19 +490,19 @@ describe('useRootStackViewModel', () => {
           ...withInVerifyFlow(true)(current),
           bcsc: { ...current.bcsc, verificationStarted: true },
         }))
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
 
         apply(withInVerifyFlow(false))
 
         // In session, leaving lands on Home; only the next cold start or unlock resumes them.
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         expect(dispatch).not.toHaveBeenCalled()
       })
 
       it('lets a started user who skips on the outage fallback reach Home and stay there once IAS recovers', () => {
         mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
         const { result, dispatch, apply, answerPrompt, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         expect(result.current.showVerifyPrompt).toBe(true)
 
         // The outage screen's Skip: VerifyPromptScreen answers the prompt, then records the skip. Started
@@ -509,19 +510,19 @@ describe('useRootStackViewModel', () => {
         answerPrompt()
         apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
 
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
 
         mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
         rerender({})
 
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         expect(dispatch).not.toHaveBeenCalled()
       })
 
       it('resumes once an outage that blocked the cold-start resume clears', () => {
         mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
         const { result, dispatch, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         expect(dispatch).not.toHaveBeenCalled()
 
         mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
@@ -529,48 +530,48 @@ describe('useRootStackViewModel', () => {
 
         expect(dispatch).toHaveBeenCalledTimes(1)
         expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
       })
 
       it('keeps a user who left on Home when an outage begins later in the session', () => {
         const { result, apply, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         apply(withInVerifyFlow(false))
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
 
         // The outage fallback prompt is a cold-start affordance; mid-session the banner covers it.
         mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
         rerender({})
 
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
       })
 
       it('offers the prompt again when the account is removed and onboarding is redone in the same session', () => {
         // Fresh install: onboarding, then the prompt once the PIN is created (SUCCESSFUL_AUTH)
         const { result, dispatch, apply, answerPrompt } = renderColdStart(mockStore())
-        expect(result.current.phase).toBe('onboarding')
+        expect(result.current.phase).toBe(RootPhase.Onboarding)
         apply((current) => ({ ...current, bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }))
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         expect(result.current.showVerifyPrompt).toBe(true)
 
         // Skip, then start verification from the Home card
         answerPrompt()
         apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         apply((current) => ({
           ...withInVerifyFlow(true)(current),
           bcsc: { ...current.bcsc, verificationStarted: true },
         }))
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         expect(result.current.showVerifyPrompt).toBe(false)
 
         // Remove account (useFactoryReset): CLEAR_BCSC, CLEAR_SECURE_STATE and DID_AUTHENTICATE false, with
         // the root still mounted
         apply(() => mockStore())
-        expect(result.current.phase).toBe('onboarding')
+        expect(result.current.phase).toBe(RootPhase.Onboarding)
 
         // Onboarding again: the prompt is due like on a fresh install, and no resume is pending
         apply((current) => ({ ...current, bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }))
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         expect(result.current.showVerifyPrompt).toBe(true)
         expect(dispatch).not.toHaveBeenCalled()
       })
@@ -606,16 +607,16 @@ describe('useRootStackViewModel', () => {
       it('resumes a started verification after an unlock, never showing Home in between', () => {
         const coldStart = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
         const { result, dispatch, apply } = coldStart
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
 
         apply(lock)
-        expect(result.current.phase).toBe('auth')
+        expect(result.current.phase).toBe(RootPhase.Auth)
         apply(unlock)
 
         // The lock took the verify flow with the secure state, so the unlock resumes like a relaunch does
         expect(dispatch).toHaveBeenCalledTimes(2)
         expect(dispatch).toHaveBeenLastCalledWith(resumeDispatch)
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         // A fresh registration re-runs the resume-step routing against the hydrated state
         expect(registeredRoutes()).toEqual([VERIFY_ROUTE, 'auth', VERIFY_ROUTE])
       })
@@ -626,7 +627,7 @@ describe('useRootStackViewModel', () => {
         expect(result.current.showVerifyPrompt).toBe(true)
 
         continueOnPrompt(coldStart)
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         expect(dispatch).not.toHaveBeenCalled()
 
         apply(lock)
@@ -634,7 +635,7 @@ describe('useRootStackViewModel', () => {
 
         expect(dispatch).toHaveBeenCalledTimes(1)
         expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         expect(result.current.showVerifyPrompt).toBe(false)
         expect(registeredRoutes()).not.toContain('main')
       })
@@ -650,34 +651,34 @@ describe('useRootStackViewModel', () => {
         apply(unlock)
 
         // The resume is held off, and the prompt's Skip is the way to Home again, as on a cold start
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
         expect(result.current.showVerifyPrompt).toBe(true)
         expect(dispatch).not.toHaveBeenCalled()
 
         answerPrompt()
         apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
 
         mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
         rerender({})
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         expect(dispatch).not.toHaveBeenCalled()
       })
 
       it('resumes a deferred verifier who left for Home on the next unlock, who can leave again', () => {
         const { result, dispatch, apply } = renderColdStart(authedUnverified(SKIPPED_THEN_STARTED))
         apply(withInVerifyFlow(false))
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
 
         apply(lock)
         apply(unlock)
 
         // Started is what an unlock resumes, as a relaunch does; every exit is still theirs
         expect(dispatch).toHaveBeenCalledTimes(2)
-        expect(result.current.phase).toBe('verify')
+        expect(result.current.phase).toBe(RootPhase.Verify)
 
         apply(withInVerifyFlow(false))
-        expect(result.current.phase).toBe('main')
+        expect(result.current.phase).toBe(RootPhase.Main)
         expect(dispatch).toHaveBeenCalledTimes(2)
       })
 
@@ -693,24 +694,24 @@ describe('useRootStackViewModel', () => {
         it('cuts from the startup loading route to the first stack', () => {
           mockIsClientReady.mockReturnValue(false)
           const { result, rerender } = renderColdStart(authedUnverified(SKIPPED))
-          expect(result.current.phase).toBe('loading')
+          expect(result.current.phase).toBe(RootPhase.Loading)
 
           mockIsClientReady.mockReturnValue(true)
           rerender({})
 
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
           expect(swapTransitions()).toEqual([NO_ANIMATION])
           expect(settledTransition()).toEqual(IDLE_ROOT_TRANSITION)
         })
 
         it('pushes Home in over the prompt when a first-time user skips it', () => {
           const { result, apply, answerPrompt } = renderColdStart(authedUnverified(UNANSWERED))
-          expect(result.current.phase).toBe('verify')
+          expect(result.current.phase).toBe(RootPhase.Verify)
 
           answerPrompt()
           apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
 
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
           expect(swapTransitions()).toEqual([PUSH])
         })
 
@@ -722,16 +723,16 @@ describe('useRootStackViewModel', () => {
             ...withInVerifyFlow(true)(current),
             bcsc: { ...current.bcsc, verificationStarted: true },
           }))
-          expect(result.current.phase).toBe('verify')
+          expect(result.current.phase).toBe(RootPhase.Verify)
           apply(withInVerifyFlow(false))
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
 
           expect(swapTransitions()).toEqual([PUSH, POP])
         })
 
         it('pops back to Home when a first-time verifier walks back to the prompt and skips', () => {
           const { result, apply, answerPrompt } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-          expect(result.current.phase).toBe('verify')
+          expect(result.current.phase).toBe(RootPhase.Verify)
 
           answerPrompt()
           apply((current) => ({
@@ -739,18 +740,18 @@ describe('useRootStackViewModel', () => {
             bcsc: { ...current.bcsc, verificationSkipped: true },
           }))
 
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
           expect(swapTransitions()).toEqual([POP])
         })
 
         it('pushes Home in when verification finishes', () => {
           const { result, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-          expect(result.current.phase).toBe('verify')
+          expect(result.current.phase).toBe(RootPhase.Verify)
 
           // Continue on the success screen sets `verified`
           apply((current) => ({ ...current, bcscSecure: { ...current.bcscSecure, verified: true } }))
 
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
           expect(swapTransitions()).toEqual([PUSH])
         })
 
@@ -758,9 +759,9 @@ describe('useRootStackViewModel', () => {
           const { result, apply } = renderColdStart(authedUnverified(SKIPPED))
 
           apply(lock)
-          expect(result.current.phase).toBe('auth')
+          expect(result.current.phase).toBe(RootPhase.Auth)
           apply(unlock)
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
 
           expect(swapTransitions()).toEqual([NO_ANIMATION, PUSH])
         })
@@ -773,16 +774,16 @@ describe('useRootStackViewModel', () => {
               bcscSecure: { verified: true },
             })
           )
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
 
           apply(lock)
-          expect(result.current.phase).toBe('auth')
+          expect(result.current.phase).toBe(RootPhase.Auth)
           // The unlock hydrates the verified flag before SUCCESSFUL_AUTH
           apply((current) => ({
             ...unlock(current),
             bcscSecure: { verified: true, isHydrated: true },
           }))
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
 
           expect(swapTransitions()).toEqual([NO_ANIMATION, NO_ANIMATION])
           // A later change can still pop the route with an animation
@@ -794,7 +795,7 @@ describe('useRootStackViewModel', () => {
 
           apply(() => mockStore())
 
-          expect(result.current.phase).toBe('onboarding')
+          expect(result.current.phase).toBe(RootPhase.Onboarding)
           expect(swapTransitions()).toEqual([NO_ANIMATION])
         })
 
@@ -805,7 +806,7 @@ describe('useRootStackViewModel', () => {
           answerPrompt()
           apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
 
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
           expect(swapTransitions()).toEqual([NO_ANIMATION])
 
           // The route still settles on animated options for the next change
@@ -817,12 +818,12 @@ describe('useRootStackViewModel', () => {
         it('does not animate the verify stack re-registering when the outage blocking a resume clears', () => {
           mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
           const { result, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-          expect(result.current.phase).toBe('verify')
+          expect(result.current.phase).toBe(RootPhase.Verify)
 
           mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
           rerender({})
 
-          expect(result.current.phase).toBe('verify')
+          expect(result.current.phase).toBe(RootPhase.Verify)
           expect(registeredRoutes()).toEqual([OUTAGE_FALLBACK_ROUTE, VERIFY_ROUTE])
           expect(swapTransitions()).toEqual([NO_ANIMATION])
         })
@@ -831,16 +832,16 @@ describe('useRootStackViewModel', () => {
       describe('the session', () => {
         it('runs on across verify ↔ main changes', () => {
           const { result, apply } = renderColdStart(authedUnverified(SKIPPED))
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
 
           // "Start verification" on the Home card, then the back arrow / "Back to home"
           apply((current) => ({
             ...withInVerifyFlow(true)(current),
             bcsc: { ...current.bcsc, verificationStarted: true },
           }))
-          expect(result.current.phase).toBe('verify')
+          expect(result.current.phase).toBe(RootPhase.Verify)
           apply(withInVerifyFlow(false))
-          expect(result.current.phase).toBe('main')
+          expect(result.current.phase).toBe(RootPhase.Main)
 
           expect(recordedRenders.every(({ inSession }) => inSession)).toBe(true)
         })
@@ -861,7 +862,7 @@ describe('useRootStackViewModel', () => {
 
           apply(() => mockStore())
 
-          expect(result.current.phase).toBe('onboarding')
+          expect(result.current.phase).toBe(RootPhase.Onboarding)
           expect(result.current.inSession).toBe(false)
         })
 

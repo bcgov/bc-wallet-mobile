@@ -24,7 +24,7 @@ NavigationContainer              contexts/NavigationContainerContext.tsx
 
 | Piece                                       | Job                                                                                                   | Must not                                        |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `getRootPhase` (`useRootStackViewModel.ts`) | Decide the phase from the store. The only place that does.                                            | Be restated in a screen or a stack.             |
+| `getRootPhase` (`state/root/root-phase.ts`) | Decide the phase from its facts. The only place that does.                                            | Be restated in a screen or a stack.             |
 | `getRootTransition` (`root-transition.ts`)  | Decide how a phase change animates: push, pop or cut.                                                 | Be bypassed by animation options on a route.    |
 | `BCSCRootStack` (`RootStack.tsx`)           | Map the phase to its route, and mount the session providers.                                          | Decide the phase or its animation, or navigate. |
 | Phase stack (`<Phase>Stack.tsx`)            | Register its screens and modals, pick its first screen from state at mount, claim `BCSCStackContext`. | Navigate to another phase.                      |
@@ -33,7 +33,7 @@ NavigationContainer              contexts/NavigationContainerContext.tsx
 ## Rules
 
 1. **A phase change is a store dispatch.** Change the fact `getRootPhase` reads, and the root swaps its route. React Navigation animates the swap like a `replace`. `useLeaveVerification` is the model: one `UPDATE_SECURE_IN_VERIFY_FLOW` dispatch, no navigation. Never `navigate`, `reset` or `replace` to another phase's stack or screens. They are not registered while another phase shows.
-2. **One place decides each thing.** Which stack shows: `getRootPhase`, with `useVerificationRouting` for the verify journey. How the change animates: `getRootTransition`. Add a condition or a direction there, with a test row, never in a screen or as route options.
+2. **One place decides each thing.** Which stack shows: `getRootPhase`, which `useRootStackViewModel` reads through `useRootPhase`, with `useVerificationRouting` for the verify journey. How the change animates: `getRootTransition`. Add a condition or a direction there, with a test row, never in a screen or as route options.
 3. **Inside a phase, navigate normally.** `navigate`, `push`, `replace` and `goBack` reach the current phase stack and the navigators nested in it. Type `navigation` with the stack's params list (`StackNavigationProp<BCSCMainStackParams>`), so `tsc` rejects a route the stack doesn't register. A screen registered in more than one stack may only navigate to routes that all of them register.
 4. **A phase stack starts fresh each time.** It mounts when its phase is entered, and its first screen comes from state (`initialRouteName`: Verify resumes at `getResumeStepRoute`, Auth checks the intro flag). Keep anything that must outlive a phase change in the store or a session provider, never in a stack's state or route params. To restart a stack without a phase change, give its route a new `navigationKey` from the ViewModel, as the verify outage fallback does.
 5. **Put a provider at the lowest level that covers its consumers.** One screen or stack: inside it. One phase: inside that phase's `Root.Screen` (`BCSCIdTokenProvider` wraps main only). The session: beside `BCSCAgentProvider`, `BCSCAccountProvider` and `SystemCheckSessionProvider`, with an `enabled` prop that clears its state when it turns false. RootStack never remounts, so a lock or an account removal resets nothing by itself. The whole BCSC app: `app/src/Root.tsx`.
@@ -60,11 +60,11 @@ NavigationContainer              contexts/NavigationContainerContext.tsx
 ## Adding a navigator or a phase
 
 - A navigator inside a phase (like `BCSCTabStack` or `QRCore`) is one screen of its phase stack, with `NavigatorScreenParams<…>` params. It does not claim `BCSCStackContext`.
-- A new phase changes the app's flow, so ask first. It touches `RootPhase`, `getRootPhase` (where it sits in the order), `getRootTransition` (and `isSessionPhase` if the user is signed in), `BCSCStacks` and `BCSCRootStackParams`, a `case` in `RootStack.tsx` (`tsc` fails until there is one), `useBCSCStack` in the new stack, the system-check modals, and the "Root phase transitions" list in `CONVENTIONS.md`.
+- A new phase changes the app's flow, so ask first. It touches `RootPhase` and `getRootPhase` in `state/root/root-phase.ts` (where it sits in the order), `getRootTransition` (and `isSessionPhase` if the user is signed in), `BCSCStacks` and `BCSCRootStackParams`, a `case` in `RootStack.tsx` (`tsc` fails until there is one), `useBCSCStack` in the new stack, the system-check modals, and the "Root phase transitions" list in `CONVENTIONS.md`.
 
 ## Testing
 
-- Phase rules: `useRootStackViewModel.test.ts`. Transitions: a row in `root-transition.test.ts`. Route table and session providers: `RootStack.test.tsx`, which mocks the ViewModel.
+- Phase rule: a row in `state/root/root-phase.test.ts`. Verify routing: `useRootStackViewModel.test.ts`. Transitions: a row in `root-transition.test.ts`. Route table and session providers: `RootStack.test.tsx`, which mocks the ViewModel.
 - A stack's own test covers its first-screen choice and any conditional registration (`AuthStack.test.tsx`, `MainStack.test.tsx`). Screens follow [`mvvm.md`](mvvm.md).
 - Jest can't show a slide or a first frame. For a change to phases, transitions or waits, add iOS and Android device steps to the PR's "How to test".
 

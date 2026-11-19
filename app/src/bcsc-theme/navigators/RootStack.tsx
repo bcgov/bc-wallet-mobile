@@ -12,6 +12,7 @@ import { useFcmService } from '../features/fcm'
 import { InvalidEnvironment } from '../features/modal/InvalidEnvironment'
 import { useCardStatus } from '../hooks/useCardStatus'
 import { useAccountPhase } from '../state/account/useAccountPhase'
+import { RootPhase } from '../state/root/root-phase'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
@@ -76,13 +77,13 @@ const BCSCRootStack: React.FC = () => {
   // Called rather than rendered as a component: a navigator's children must be Screen, Group or Fragment elements
   const renderPhaseRoute = (): React.ReactElement => {
     switch (phase) {
-      case 'loading':
+      case RootPhase.Loading:
         return <Root.Screen name={BCSCScreens.RootLoading} component={AppStartupLoadingScreen} />
-      case 'onboarding':
+      case RootPhase.Onboarding:
         return <Root.Screen name={BCSCStacks.Onboarding} component={OnboardingStack} />
-      case 'auth':
+      case RootPhase.Auth:
         return <Root.Screen name={BCSCStacks.Auth} component={AuthStack} />
-      case 'recovery':
+      case RootPhase.Recovery:
         return (
           <Root.Screen name={BCSCStacks.Verify}>
             {() => (
@@ -92,7 +93,7 @@ const BCSCRootStack: React.FC = () => {
             )}
           </Root.Screen>
         )
-      case 'verify':
+      case RootPhase.Verify:
         // A key change drops the route and registers it afresh, so VerifyStack re-evaluates its first step
         return (
           <Root.Screen name={BCSCStacks.Verify} navigationKey={verifyStackKey}>
@@ -103,7 +104,7 @@ const BCSCRootStack: React.FC = () => {
             )}
           </Root.Screen>
         )
-      case 'main':
+      case RootPhase.Main:
         return (
           <Root.Screen name={BCSCStacks.Main}>
             {() => (

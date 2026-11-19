@@ -3,6 +3,7 @@ import * as Bifold from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import { useFcmService } from '../features/fcm'
+import { RootPhase } from '../state/root/root-phase'
 import { BCSCScreens, BCSCStacks } from '../types/navigators'
 import { IDLE_ROOT_TRANSITION } from './root-transition'
 import BCSCRootStack from './RootStack'
@@ -127,7 +128,7 @@ jest.mock('../contexts/BCSCIdTokenContext', () => ({
 
 const viewModel = (overrides: Partial<RootStackViewModel> = {}): RootStackViewModel => ({
   showInvalidEnvironment: false,
-  phase: 'main',
+  phase: RootPhase.Main,
   transition: IDLE_ROOT_TRANSITION,
   inSession: true,
   isVerified: true,
@@ -176,18 +177,18 @@ describe('BCSCRootStack', () => {
 
   describe('the registered route', () => {
     it('is the startup loading screen in the loading phase', () => {
-      const { toJSON } = renderWith({ phase: 'loading', inSession: false })
+      const { toJSON } = renderWith({ phase: RootPhase.Loading, inSession: false })
 
       expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
       expect(lastNavigatorRender().screen).toEqual({ name: BCSCScreens.RootLoading, navigationKey: undefined })
     })
 
     it.each<[RootStackViewModel['phase'], string, string]>([
-      ['onboarding', BCSCStacks.Onboarding, 'OnboardingStack'],
-      ['auth', BCSCStacks.Auth, 'AuthStack'],
-      ['recovery', BCSCStacks.Verify, 'VerifyStack'],
-      ['verify', BCSCStacks.Verify, 'VerifyStack'],
-      ['main', BCSCStacks.Main, 'MainStack'],
+      [RootPhase.Onboarding, BCSCStacks.Onboarding, 'OnboardingStack'],
+      [RootPhase.Auth, BCSCStacks.Auth, 'AuthStack'],
+      [RootPhase.Recovery, BCSCStacks.Verify, 'VerifyStack'],
+      [RootPhase.Verify, BCSCStacks.Verify, 'VerifyStack'],
+      [RootPhase.Main, BCSCStacks.Main, 'MainStack'],
     ])('is the %s phase stack', (phase, name, rendered) => {
       const { toJSON } = renderWith({ phase })
 
@@ -198,26 +199,26 @@ describe('BCSCRootStack', () => {
     it('opens the verify stack on the prompt when the ViewModel says so, with the answer handed down', () => {
       const onVerifyPromptAnswered = jest.fn()
 
-      renderWith({ phase: 'verify', showVerifyPrompt: true, onVerifyPromptAnswered })
+      renderWith({ phase: RootPhase.Verify, showVerifyPrompt: true, onVerifyPromptAnswered })
 
       expect(mockVerifyStackProps).toHaveBeenLastCalledWith({ showVerifyPrompt: true, onVerifyPromptAnswered })
     })
 
     it('opens the verify stack without the prompt in the recovery phase', () => {
-      renderWith({ phase: 'recovery', showVerifyPrompt: true })
+      renderWith({ phase: RootPhase.Recovery, showVerifyPrompt: true })
 
       expect(mockVerifyStackProps).toHaveBeenLastCalledWith({})
     })
 
     it('registers the verify stack under its navigation key, and afresh when the key changes', () => {
-      const { rerender } = renderWith({ phase: 'verify', verifyStackKey: 'verify-outage-fallback' })
+      const { rerender } = renderWith({ phase: RootPhase.Verify, verifyStackKey: 'verify-outage-fallback' })
       expect(lastNavigatorRender().screen).toEqual({
         name: BCSCStacks.Verify,
         navigationKey: 'verify-outage-fallback',
       })
       expect(mockVerifyStackMount).toHaveBeenCalledTimes(1)
 
-      rerenderWith(rerender, { phase: 'verify', verifyStackKey: 'verify' })
+      rerenderWith(rerender, { phase: RootPhase.Verify, verifyStackKey: 'verify' })
 
       expect(lastNavigatorRender().screen).toEqual({ name: BCSCStacks.Verify, navigationKey: 'verify' })
       // A fresh mount is what re-runs VerifyStack's resume-step routing
@@ -225,27 +226,27 @@ describe('BCSCRootStack', () => {
     })
 
     it('mounts the main stack under the id-token provider once verified, and bare before', () => {
-      const { rerender, toJSON } = renderWith({ phase: 'main', isVerified: false })
+      const { rerender, toJSON } = renderWith({ phase: RootPhase.Main, isVerified: false })
       expect(toJSON()).toBe('MainStack')
       expect(mockIdTokenProviderRender).not.toHaveBeenCalled()
 
-      rerenderWith(rerender, { phase: 'main', isVerified: true })
+      rerenderWith(rerender, { phase: RootPhase.Main, isVerified: true })
 
       expect(toJSON()).toBe('MainStack')
       expect(mockIdTokenProviderRender).toHaveBeenCalled()
     })
 
     it('tells the main stack whether the root cut to it, so a wait at mount shows at once', () => {
-      const { rerender } = renderWith({ phase: 'main', transition: { animationEnabled: false } })
+      const { rerender } = renderWith({ phase: RootPhase.Main, transition: { animationEnabled: false } })
       expect(mockMainStackProps).toHaveBeenLastCalledWith({ enteredByCut: true })
 
-      rerenderWith(rerender, { phase: 'main', transition: IDLE_ROOT_TRANSITION })
+      rerenderWith(rerender, { phase: RootPhase.Main, transition: IDLE_ROOT_TRANSITION })
 
       expect(mockMainStackProps).toHaveBeenLastCalledWith({ enteredByCut: false })
     })
 
     it('animates the route the way the ViewModel decided, with the header hidden and the gesture off', () => {
-      renderWith({ phase: 'main', transition: { animationEnabled: true, animationTypeForReplace: 'pop' } })
+      renderWith({ phase: RootPhase.Main, transition: { animationEnabled: true, animationTypeForReplace: 'pop' } })
 
       expect(lastNavigatorRender().options).toEqual({
         headerShown: false,
@@ -263,20 +264,20 @@ describe('BCSCRootStack', () => {
       )
 
     it('are enabled for a session and disabled outside one', () => {
-      const { rerender } = renderWith({ phase: 'main', inSession: true })
+      const { rerender } = renderWith({ phase: RootPhase.Main, inSession: true })
       expect(lastEnabled()).toEqual([true, true, true])
 
-      rerenderWith(rerender, { phase: 'auth', inSession: false })
+      rerenderWith(rerender, { phase: RootPhase.Auth, inSession: false })
 
       expect(lastEnabled()).toEqual([false, false, false])
     })
 
     it('stay mounted across phase changes, so a session never restarts them', () => {
-      const { rerender } = renderWith({ phase: 'main' })
+      const { rerender } = renderWith({ phase: RootPhase.Main })
 
-      rerenderWith(rerender, { phase: 'verify' })
-      rerenderWith(rerender, { phase: 'main' })
-      rerenderWith(rerender, { phase: 'auth', inSession: false })
+      rerenderWith(rerender, { phase: RootPhase.Verify })
+      rerenderWith(rerender, { phase: RootPhase.Main })
+      rerenderWith(rerender, { phase: RootPhase.Auth, inSession: false })
 
       expect(mockAgentProviderMount).toHaveBeenCalledTimes(1)
       expect(mockAccountProviderMount).toHaveBeenCalledTimes(1)
@@ -286,7 +287,7 @@ describe('BCSCRootStack', () => {
 
   describe('the invalid environment recovery gate', () => {
     it('stands in for the navigator and the session providers, whatever the phase', () => {
-      const { toJSON } = renderWith({ showInvalidEnvironment: true, phase: 'main' })
+      const { toJSON } = renderWith({ showInvalidEnvironment: true, phase: RootPhase.Main })
 
       expect(toJSON()).toBe('InvalidEnvironment')
       expect(mockNavigatorRender).not.toHaveBeenCalled()
@@ -296,9 +297,13 @@ describe('BCSCRootStack', () => {
     })
 
     it('gives way to the phase route once the environment is valid again', () => {
-      const { rerender, toJSON } = renderWith({ showInvalidEnvironment: true, phase: 'onboarding', inSession: false })
+      const { rerender, toJSON } = renderWith({
+        showInvalidEnvironment: true,
+        phase: RootPhase.Onboarding,
+        inSession: false,
+      })
 
-      rerenderWith(rerender, { phase: 'onboarding', inSession: false })
+      rerenderWith(rerender, { phase: RootPhase.Onboarding, inSession: false })
 
       expect(toJSON()).toBe('OnboardingStack')
       expect(lastNavigatorRender().screen.name).toBe(BCSCStacks.Onboarding)
