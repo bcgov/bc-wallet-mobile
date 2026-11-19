@@ -114,12 +114,51 @@ export default function useDataLoader<ResponseType>(
     setIsReady(true)
   }, [])
 
+  // Calls fetchData, retrying with backoff until the timeout when a retry config is set
+  const fetchWithRetry = useCallback(async (): Promise<ResponseType> => {
+    const { interval, timeout } = retryConfigRef.current ?? {}
+
+    if (timeout && interval) {
+      let lastError: unknown
+      let retryCount = 0
+      const startTime = Date.now()
+
+      // Keep retrying until timeout is reached
+      while (Date.now() - startTime < timeout) {
+        try {
+          return await fetchDataRef.current()
+        } catch (err) {
+          lastError = err
+
+          retryCount++
+          const backoffMs = Math.min(
+            interval * Math.pow(2, retryCount - 1),
+            // don't wait longer than remaining timeout
+            timeout - (Date.now() - startTime)
+          )
+
+          // if no time left for retries, break
+          if (backoffMs <= 0) {
+            break
+          }
+          await new Promise((resolve) => setTimeout(resolve, backoffMs))
+        }
+      }
+
+      throw new Error(
+        lastError ? `Operation timed out after ${timeout}ms${lastError}` : `Operation timed out after ${timeout}ms`
+      )
+    }
+
+    // If retry config not provided, just fetch the data once
+    return fetchDataRef.current()
+  }, [])
+
   const loadData = useCallback(async () => {
     if (isOneTimeLoadRef.current) {
       return
     }
 
-    const { interval, timeout } = retryConfigRef.current ?? {}
     const generation = generationRef.current
     const isStale = () => generationRef.current !== generation
 
@@ -128,45 +167,7 @@ export default function useDataLoader<ResponseType>(
       isLoadingRef.current = true
       setIsLoading(true)
 
-      if (timeout && interval) {
-        let lastError: unknown
-        let retryCount = 0
-        const startTime = Date.now()
-
-        // Keep retrying until timeout is reached
-        while (Date.now() - startTime < timeout) {
-          try {
-            const response = await fetchDataRef.current()
-            if (isStale()) {
-              return
-            }
-            setDataWithReady(response)
-            return
-          } catch (err) {
-            lastError = err
-
-            retryCount++
-            const backoffMs = Math.min(
-              interval * Math.pow(2, retryCount - 1),
-              // don't wait longer than remaining timeout
-              timeout - (Date.now() - startTime)
-            )
-
-            // if no time left for retries, break
-            if (backoffMs <= 0) {
-              break
-            }
-            await new Promise((resolve) => setTimeout(resolve, backoffMs))
-          }
-        }
-
-        throw new Error(
-          lastError ? `Operation timed out after ${timeout}ms${lastError}` : `Operation timed out after ${timeout}ms`
-        )
-      }
-
-      // If retry config not provided, just fetch the data once
-      const response = await fetchDataRef.current()
+      const response = await fetchWithRetry()
       if (isStale()) {
         return
       }
@@ -184,7 +185,7 @@ export default function useDataLoader<ResponseType>(
         setIsLoading(false)
       }
     }
-  }, [setDataWithReady])
+  }, [fetchWithRetry, setDataWithReady])
 
   // Executes fetchData once; no-ops on subsequent calls
   const load = useCallback(() => {

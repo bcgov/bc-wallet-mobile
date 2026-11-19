@@ -60,7 +60,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    */
   private isModalVisible(state: NavigationState | undefined) {
     const path = getFocusedPath(state)
-    const leaf = path[path.length - 1]
+    const leaf = path.at(-1)
 
     return leaf?.routes[leaf.index ?? 0]?.name === BCSCModals.InternetDisconnected
   }
