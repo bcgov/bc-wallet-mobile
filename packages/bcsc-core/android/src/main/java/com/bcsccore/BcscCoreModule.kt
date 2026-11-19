@@ -1040,108 +1040,320 @@ class BcscCoreModule internal constructor(
         }
     }
 
+    /**
+     * Creates the account, or updates its issuer, security method and nickname.
+     *
+     * Never changes the client ID: a new account has none and an existing account keeps the one it has.
+     * Only [setRegistration] and [clearRegistration] change it.
+     */
     @ReactMethod
     override fun setAccount(
         account: ReadableMap,
         promise: Promise,
     ) {
+        // Sites are `setAccount.<stage>`, matching iOS, so reports show which stage failed
+        val method = "setAccount"
         try {
-            // Validate required fields
-            if (!account.hasKey("issuer") || !account.hasKey("clientID") || !account.hasKey("securityMethod")) {
-                promise.reject("E_INVALID_PARAMETERS", "Account must have issuer, clientID, and securityMethod fields")
-                return
-            }
+            val issuer = account.takeIf { it.hasKey("issuer") }?.getString("issuer")
+            val securityMethod = account.takeIf { it.hasKey("securityMethod") }?.getString("securityMethod")
+            val accountSecurityType = nativeSecurityTypeOf(securityMethod)
 
-            val issuer = account.getString("issuer")
-            val clientID = account.getString("clientID")
-            val securityMethod = account.getString("securityMethod")
-
-            // clientID may be an empty placeholder for accounts created before registration
-            // completes (see TEMPORARY_ACCOUNT_CLIENT_ID); only issuer and securityMethod are
-            // required to be non-empty. Matches iOS, which never rejects on an empty clientID.
-            if (issuer.isNullOrEmpty() || clientID == null || securityMethod.isNullOrEmpty()) {
-                promise.reject("E_INVALID_PARAMETERS", "Account issuer and securityMethod cannot be empty")
+            if (issuer.isNullOrEmpty() || accountSecurityType == null) {
+                rejectWithDiagnostics(
+                    promise,
+                    "E_INVALID_PARAMETERS",
+                    "Account must have an issuer and a valid securityMethod.",
+                    "$method.validate",
+                )
                 return
             }
 
             try {
                 // Get issuer name for native-compatible storage path
                 val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
-                Log.d(NAME, "setAccount - Using issuer name: $issuerName")
+                val existingAccount = nativeStorage.readAccounts(issuerName)?.firstOrNull()
 
-                // Try to load existing account
-                val existingAccounts = nativeStorage.readAccounts(issuerName)
-                val existingAccount = existingAccounts?.firstOrNull()
-
-                val accountId: String
-                val createdAt: Long
-
-                if (existingAccount != null) {
-                    // Update existing account - preserve ID and creation timestamp
-                    Log.d(NAME, "setAccount - Updating existing account with id: ${existingAccount.uuid}")
-                    accountId = existingAccount.uuid
-                    createdAt = existingAccount.createdAt
-                } else {
-                    // Create new account
-                    accountId = UUID.randomUUID().toString()
-                    createdAt = System.currentTimeMillis()
-                    Log.d(NAME, "setAccount - Creating new account with generated id: $accountId")
-                }
-
-                // Map securityMethod to native AccountSecurityType
-                val accountSecurityType =
-                    when (securityMethod) {
-                        "device_authentication" -> NativeAccountSecurityType.DeviceSecurity
-                        "app_pin_no_device_authn" -> NativeAccountSecurityType.PinNoDeviceAuth
-                        "app_pin_has_device_authn" -> NativeAccountSecurityType.PinWithDeviceAuth
-                        else -> NativeAccountSecurityType.DeviceSecurity
-                    }
-
-                // Get optional nickname
+                // A nickname that is not passed is kept, as on iOS
                 val nickname =
                     when {
                         account.hasKey("displayName") -> account.getString("displayName")
                         account.hasKey("nickname") -> account.getString("nickname")
-                        else -> null
+                        else -> existingAccount?.nickName
                     }
 
-                // Create native-compatible account object
                 val nativeAccount =
-                    NativeAccount(
-                        uuid = accountId,
-                        nickName = nickname,
-                        issuer = issuer,
-                        clientId = clientID,
-                        createdAt = createdAt,
-                        accountSecurityType = accountSecurityType,
-                    )
+                    if (existingAccount != null) {
+                        // Update existing account - keeps its ID, creation time and client ID
+                        Log.d(NAME, "$method - Updating existing account")
+                        existingAccount.copy(
+                            nickName = nickname,
+                            issuer = issuer,
+                            accountSecurityType = accountSecurityType,
+                        )
+                    } else {
+                        // A new account has no registration yet, so no client ID
+                        Log.d(NAME, "$method - Creating new account")
+                        NativeAccount(
+                            uuid = UUID.randomUUID().toString(),
+                            nickName = nickname,
+                            issuer = issuer,
+                            clientId = "",
+                            accountSecurityType = accountSecurityType,
+                        )
+                    }
 
-                // Save using native-compatible encrypted storage
                 // Native app stores accounts as a list (for multi-account support)
-                val accounts = listOf(nativeAccount)
-
-                if (!nativeStorage.saveAccounts(accounts, issuerName)) {
-                    Log.e(NAME, "setAccount - Failed to save account to native-compatible storage")
-                    promise.reject("E_STORAGE_ERROR", "Failed to save account to native-compatible storage")
+                if (!nativeStorage.saveAccounts(listOf(nativeAccount), issuerName)) {
+                    rejectWithDiagnostics(
+                        promise,
+                        "E_STORAGE_ERROR",
+                        "Failed to save account to native-compatible storage.",
+                        "$method.save_account",
+                    )
                     return
                 }
 
                 if (!nativeStorage.saveIssuerToFile(issuer)) {
-                    Log.e(NAME, "setAccount - Failed to save issuer to file")
-                    promise.reject("E_STORAGE_ERROR", "Failed to save issuer to file")
+                    rejectWithDiagnostics(
+                        promise,
+                        "E_STORAGE_ERROR",
+                        "Failed to save issuer to file.",
+                        "$method.save_issuer",
+                    )
                     return
                 }
 
-                Log.d(NAME, "setAccount - Successfully saved account to native-compatible storage")
+                Log.d(NAME, "$method - Successfully saved account to native-compatible storage")
                 promise.resolve(null)
             } catch (e: Exception) {
-                Log.e(NAME, "setAccount - Exception occurred while saving account: ${e.message}", e)
-                promise.reject("E_FILE_ACCESS_ERROR", "Failed to save account: ${e.message}")
+                rejectWithDiagnostics(
+                    promise,
+                    "E_FILE_ACCESS_ERROR",
+                    "Failed to save account.",
+                    "$method.save_account",
+                    e,
+                )
             }
         } catch (e: Exception) {
-            Log.e(NAME, "setAccount - Unexpected error: ${e.message}", e)
-            promise.reject("E_UNEXPECTED_ERROR", "Unexpected error while setting account: ${e.message}")
+            rejectWithDiagnostics(
+                promise,
+                "E_UNEXPECTED_ERROR",
+                "Unexpected error while setting account.",
+                "$method.validate",
+                e,
+            )
         }
+    }
+
+    /** The stored security type for a JS security method, or null when the method is not one the app knows. */
+    private fun nativeSecurityTypeOf(securityMethod: String?): NativeAccountSecurityType? =
+        when (securityMethod) {
+            "device_authentication" -> NativeAccountSecurityType.DeviceSecurity
+            "app_pin_no_device_authn" -> NativeAccountSecurityType.PinNoDeviceAuth
+            "app_pin_has_device_authn" -> NativeAccountSecurityType.PinWithDeviceAuth
+            else -> null
+        }
+
+    /**
+     * Saves the device registration in one call: the client ID and issuer on the account record, and the
+     * registration access token in the tokens file. Nothing else writes the client ID.
+     *
+     * The token is written first. It names its own client ID (`aud`), so a save that stops before the
+     * account is written can be completed from the token, and the newest token is never the one lost. If
+     * the account cannot be saved the tokens file is put back, so a failed save leaves the previous
+     * registration in place.
+     *
+     * Matches TypeScript: setRegistration(clientID, issuer, registrationAccessToken | null): Promise<void>
+     */
+    @ReactMethod
+    override fun setRegistration(
+        clientID: String,
+        issuer: String,
+        registrationAccessToken: String?,
+        promise: Promise,
+    ) {
+        // Sites are `setRegistration.<stage>`, matching iOS, so reports show which stage failed
+        val method = "setRegistration"
+
+        if (clientID.isEmpty() || issuer.isEmpty() || registrationAccessToken?.isEmpty() == true) {
+            rejectWithDiagnostics(
+                promise,
+                "E_INVALID_PARAMETERS",
+                "clientID and issuer are required, and a registration access token cannot be empty.",
+                "$method.validate",
+            )
+            return
+        }
+
+        try {
+            val resolution = resolveAccountsWithStatus()
+            val account = resolution.accounts?.firstOrNull()
+            if (account == null) {
+                rejectWithDiagnostics(promise, "E_ACCOUNT_NOT_FOUND", "Account not found.", "$method.read_account")
+                return
+            }
+
+            // Where getAccount and getToken read, so what is saved here is what they read back
+            val issuerName = nativeStorage.getDefaultIssuerName()
+            val previousTokens = nativeStorage.readTokens(issuerName, account.uuid)
+
+            if (registrationAccessToken != null) {
+                // The registration token is kept in idToken.rawToken, as setToken stores it
+                val idToken = NativeIdToken(rawToken = registrationAccessToken)
+                val tokens =
+                    previousTokens?.copy(idToken = idToken) ?: NativeTokens(issuer = issuer, idToken = idToken)
+
+                if (!nativeStorage.saveTokens(tokens, issuerName, account.uuid)) {
+                    rejectWithDiagnostics(
+                        promise,
+                        "E_TOKEN_SAVE_FAILED",
+                        "Failed to save the registration access token.",
+                        "$method.save_token",
+                    )
+                    return
+                }
+            }
+
+            // Skipped when nothing on the account changes, so a rotated token is a single file write. An
+            // account that is only in the legacy file is always written, which copies it to native storage.
+            val registered = account.copy(clientId = clientID, issuer = issuer)
+            val accountChanged = registered != account || resolution.legacy is LegacyAccountsRead.Found
+
+            if (accountChanged && !nativeStorage.saveAccounts(listOf(registered), issuerName)) {
+                val tokenRolledBack =
+                    registrationAccessToken == null || restoreTokens(previousTokens, issuerName, account.uuid)
+                rejectWithDiagnostics(
+                    promise,
+                    "E_SAVE_ACCOUNT_FAILED",
+                    "Failed to save the account with its registration.",
+                    "$method.save_account",
+                    diagnostics = mapOf("tokenRolledBack" to tokenRolledBack),
+                )
+                return
+            }
+
+            Log.d(NAME, "$method: registration saved")
+            promise.resolve(null)
+        } catch (e: Exception) {
+            rejectWithDiagnostics(
+                promise,
+                "E_SAVE_ACCOUNT_FAILED",
+                "Failed to save the registration.",
+                "$method.save_account",
+                e,
+            )
+        }
+    }
+
+    /**
+     * Removes the client ID and the registration access token. The account keeps its issuer, security
+     * method and nickname. Succeeds when there is no account or no registration to clear.
+     *
+     * The client ID goes first. The token names its own client ID, so a clear that stops before the token
+     * is removed leaves a registration that can be put back together, never a client ID without its token.
+     *
+     * Matches TypeScript: clearRegistration(): Promise<void>
+     */
+    @ReactMethod
+    override fun clearRegistration(promise: Promise) {
+        // Sites are `clearRegistration.<stage>`, matching iOS, so reports show which stage failed
+        val method = "clearRegistration"
+
+        try {
+            val account = resolveFirstAccount()
+            if (account == null) {
+                Log.d(NAME, "$method: no account, nothing to clear")
+                promise.resolve(null)
+                return
+            }
+
+            val issuerName = nativeStorage.getDefaultIssuerName()
+            val hadClientId = hasClientId(account)
+
+            if (hadClientId && !nativeStorage.saveAccounts(listOf(account.copy(clientId = "")), issuerName)) {
+                rejectWithDiagnostics(
+                    promise,
+                    "E_SAVE_ACCOUNT_FAILED",
+                    "Failed to save the account without its registration.",
+                    "$method.save_account",
+                )
+                return
+            }
+
+            val failedStage = deleteRegistrationToken(issuerName, account.uuid)
+            if (failedStage != null) {
+                // Put the client ID back so the registration is whole again
+                val accountRolledBack = !hadClientId || nativeStorage.saveAccounts(listOf(account), issuerName)
+                rejectWithDiagnostics(
+                    promise,
+                    "E_TOKEN_DELETE_ERROR",
+                    "Failed to delete the registration access token.",
+                    "$method.$failedStage",
+                    diagnostics = mapOf("accountRolledBack" to accountRolledBack),
+                )
+                return
+            }
+
+            Log.d(NAME, "$method: registration cleared")
+            promise.resolve(null)
+        } catch (e: Exception) {
+            rejectWithDiagnostics(
+                promise,
+                "E_SAVE_ACCOUNT_FAILED",
+                "Failed to clear the registration.",
+                "$method.save_account",
+                e,
+            )
+        }
+    }
+
+    /** Gson leaves a field that is missing from the file as null, whatever the Kotlin type says. */
+    private fun hasClientId(account: NativeAccount): Boolean = !(account.clientId as String?).isNullOrEmpty()
+
+    /** Puts the tokens file back to what it held before a save: the previous tokens, or no file. */
+    private fun restoreTokens(
+        previousTokens: NativeTokens?,
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        if (previousTokens != null) {
+            return nativeStorage.saveTokens(previousTokens, issuerName, accountUuid)
+        }
+        nativeStorage.deleteTokens(issuerName, accountUuid)
+        return !nativeStorage.tokensExist(issuerName, accountUuid)
+    }
+
+    /**
+     * Removes the registration access token from the tokens file and retires its v3 copy.
+     *
+     * @return null when no registration token is left, otherwise the stage that failed
+     */
+    private fun deleteRegistrationToken(
+        issuerName: String,
+        accountUuid: String,
+    ): String? {
+        // Retired first, as deleteToken does: a tokens file with no registration token reopens the v3 fallback
+        if (!nativeStorage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.REGISTRATION_TOKEN)) {
+            return "retire_v3_token"
+        }
+
+        val tokens = nativeStorage.readTokens(issuerName, accountUuid)
+        // Only rawToken is a registration token. An idToken without one is a v3 identity token, which
+        // getToken never returns, so there is nothing to remove.
+        if (tokens?.idToken?.rawToken == null) {
+            return null
+        }
+
+        val remaining = tokens.copy(idToken = null)
+        val removed =
+            if (remaining.accessToken == null && remaining.refreshToken == null) {
+                nativeStorage.deleteTokens(issuerName, accountUuid)
+                !nativeStorage.tokensExist(issuerName, accountUuid)
+            } else {
+                nativeStorage.saveTokens(remaining, issuerName, accountUuid)
+            }
+
+        return if (removed) null else "delete_token"
     }
 
     @ReactMethod
@@ -1183,7 +1395,11 @@ class BcscCoreModule internal constructor(
 
         account.putString("id", nativeAccount.uuid)
         account.putString("issuer", nativeAccount.issuer)
-        account.putString("clientID", nativeAccount.clientId)
+        // An account with no registration has no client ID. It is stored as an empty string and left
+        // out here, so JS never sees a blank one.
+        if (hasClientId(nativeAccount)) {
+            account.putString("clientID", nativeAccount.clientId)
+        }
 
         // Map AccountSecurityType to securityMethod
         val securityMethod =

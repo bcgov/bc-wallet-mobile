@@ -883,25 +883,32 @@ class BcscCore: NSObject {
     resolve(issuer)
   }
 
+  /// Creates the account, or updates its issuer, security method and nickname.
+  ///
+  /// Never changes the client ID: a new account has none and an existing account keeps the one it has.
+  /// Only `setRegistration` and `clearRegistration` change it.
   func setAccount(
     _ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    logger.log("setAccount called with account: \(account)")
+    // Sites are `setAccount.<stage>`, matching Android, so reports show which stage failed
+    let method = "setAccount"
+    logger.log("\(method) called")
     let storage = StorageService()
 
     // Extract required fields from the dictionary
     // `as? String ?? ""` rather than `as!` — a force-cast inside the guard's own condition traps
     // the process when JS omits securityMethod, instead of rejecting as this guard intends.
-    guard let issuer = account["issuer"] as? String, let clientID = account["clientID"] as? String,
+    guard let issuer = account["issuer"] as? String, !issuer.isEmpty,
           let securityMethod = AccountSecurityMethod(
             rawValue: account["securityMethod"] as? String ?? ""
           )
     else {
-      reject(
-        "E_INVALID_ACCOUNT_DATA",
-        "Account must have an 'issuer', 'clientID' and 'securityMethod' fields", nil
-      )
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_INVALID_ACCOUNT_DATA",
+        message: "Account must have an 'issuer' and a valid 'securityMethod'.",
+        site: "\(method).validate"
+      ))
       return
     }
 
@@ -912,71 +919,58 @@ class BcscCore: NSObject {
     )
 
     let accountToSave: Account
-    let accountID: String
 
     if let existing = existingAccount {
-      // Update existing account - preserve the ID and update fields
-      logger.log("setAccount - Updating existing account with ID: \(existing.id)")
-      accountID = existing.id
+      // Update existing account - preserve the ID and the client ID, update the rest
+      logger.log("\(method) - Updating existing account")
       accountToSave = existing
 
-      // Update fields
-      accountToSave.clientID = clientID
       accountToSave.issuer = issuer
       accountToSave.securityMethod = securityMethod
-      if let displayName = account["displayName"] as? String {
-        accountToSave.displayName = displayName
-      }
-      if let didPostNicknameToServer = account["didPostNicknameToServer"] as? Bool {
-        accountToSave.didPostNicknameToServer = didPostNicknameToServer
-      }
-
-      if let nickname = account["nickname"] as? String {
-        accountToSave.nickname = nickname
-      }
     } else {
-      // Create new account with new ID
-      logger.log("setAccount - Creating new account")
-      accountID = UUID().uuidString
+      // Create new account with new ID. It has no registration yet, so no client ID.
+      logger.log("\(method) - Creating new account")
+      let accountID = UUID().uuidString
       accountToSave = Account(
-        id: accountID, clientID: clientID, issuer: issuer, securityMethod: securityMethod
+        id: accountID, clientID: "", issuer: issuer, securityMethod: securityMethod
       )
-
-      if let displayName = account["displayName"] as? String {
-        accountToSave.displayName = displayName
-      }
-
-      if let didPostNicknameToServer = account["didPostNicknameToServer"] as? Bool {
-        accountToSave.didPostNicknameToServer = didPostNicknameToServer
-      }
-
-      if let nickname = account["nickname"] as? String {
-        accountToSave.nickname = nickname
-      }
 
       // Ensure account structure exists before writing
       do {
         try storage.updateAccountListEntry(accountID: accountID)
-        logger.log("setAccount - Account list entry updated for ID: \(accountID)")
       } catch {
-        reject(
-          "E_UPDATE_ACCOUNT_LIST_ENTRY_FAILED",
-          "Failed to update account list entry: \(error.localizedDescription)", error
-        )
+        rejectWithDiagnostics(reject, DiagnosticRejection(
+          code: "E_UPDATE_ACCOUNT_LIST_ENTRY_FAILED",
+          message: "Failed to update account list entry.",
+          site: "\(method).save_account_list",
+          error: error
+        ))
         return
       }
+    }
+
+    if let displayName = account["displayName"] as? String {
+      accountToSave.displayName = displayName
+    }
+    if let didPostNicknameToServer = account["didPostNicknameToServer"] as? Bool {
+      accountToSave.didPostNicknameToServer = didPostNicknameToServer
+    }
+    if let nickname = account["nickname"] as? String {
+      accountToSave.nickname = nickname
     }
 
     // Create a fresh storage instance to ensure currentAccountID is read from the updated file
     let writeStorage = StorageService()
 
     // Verify currentAccountID is now set (for new accounts) or still valid (for updates)
-    guard let verifiedAccountID = writeStorage.currentAccountID else {
-      reject("E_ACCOUNT_ID_NOT_SET", "Failed to set current account ID in storage", nil)
+    guard writeStorage.currentAccountID != nil else {
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_ACCOUNT_ID_NOT_SET",
+        message: "Failed to set current account ID in storage.",
+        site: "\(method).read_account_list"
+      ))
       return
     }
-
-    logger.log("setAccount - Verified current account ID: \(verifiedAccountID)")
 
     let success = writeStorage.writeData(
       data: accountToSave,
@@ -985,10 +979,56 @@ class BcscCore: NSObject {
     )
 
     if success {
-      logger.log("setAccount - Account successfully stored with ID: \(accountID)")
+      logger.log("\(method) - Account successfully stored")
       resolve(nil)
     } else {
-      reject("E_ACCOUNT_STORAGE_FAILED", "Failed to store account data", nil)
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_ACCOUNT_STORAGE_FAILED", message: "Failed to store account data.", site: "\(method).save_account"
+      ))
+    }
+  }
+
+  /// Saves the device registration in one call: the client ID and issuer on the account record, and the
+  /// registration access token in the keychain. See `RegistrationStore` for the write order and rollback.
+  ///
+  /// - Parameters:
+  ///   - clientID: The client ID the server issued. Never empty.
+  ///   - issuer: The issuer the device is registered with. Never empty.
+  ///   - registrationAccessToken: The token that manages the registration; nil leaves the stored token as it is.
+  func setRegistration(
+    _ clientID: String, issuer: String, registrationAccessToken: String?,
+    resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+  ) {
+    do {
+      try RegistrationStore(accountStorage: StorageService(), tokenStorage: KeychainTokenStorageService())
+        .save(clientID: clientID, issuer: issuer, registrationAccessToken: registrationAccessToken)
+      resolve(nil)
+    } catch let rejection as DiagnosticRejection {
+      rejectWithDiagnostics(reject, rejection)
+    } catch {
+      // RegistrationStore only throws DiagnosticRejection; kept so a future change still rejects.
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_SAVE_ACCOUNT_FAILED", message: "Failed to save the registration.",
+        site: "setRegistration.save_account", error: error
+      ))
+    }
+  }
+
+  /// Removes the client ID and the registration access token. See `RegistrationStore`.
+  func clearRegistration(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+  ) {
+    do {
+      try RegistrationStore(accountStorage: StorageService(), tokenStorage: KeychainTokenStorageService()).clear()
+      resolve(nil)
+    } catch let rejection as DiagnosticRejection {
+      rejectWithDiagnostics(reject, rejection)
+    } catch {
+      // RegistrationStore only throws DiagnosticRejection; kept so a future change still rejects.
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_SAVE_ACCOUNT_FAILED", message: "Failed to clear the registration.",
+        site: "clearRegistration.save_account", error: error
+      ))
     }
   }
 
@@ -1002,15 +1042,19 @@ class BcscCore: NSObject {
     )
 
     if let acc = account {
-      let result: [String: Any?] = [
+      var result: [String: Any?] = [
         "id": acc.id,
         "issuer": acc.issuer,
-        "clientID": acc.clientID,
         "securityMethod": acc.securityMethod.rawValue,
         "displayName": acc.displayName,
         "didPostNicknameToServer": acc.didPostNicknameToServer,
         "nickname": acc.nickname,
       ]
+      // An account with no registration has no client ID. It is stored as an empty string (see
+      // RegistrationStore.clear) and left out here, so JS never sees a blank one.
+      if !acc.clientID.isEmpty {
+        result["clientID"] = acc.clientID
+      }
       resolve(result)
     } else {
       resolve(nil)

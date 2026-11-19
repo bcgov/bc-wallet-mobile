@@ -22,7 +22,7 @@ import { jwtDecode } from 'jwt-decode'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
-import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import { createDeviceSignedJWT, getAccount, isAccountRegistered } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 
 const qrCodeRefreshInterval = 50000 // 50 seconds
@@ -77,8 +77,13 @@ const TransferQRDisplayScreen: React.FC = () => {
       logger.info('[TransferQRDisplayScreen] Skipping QR token creation: transfer completed or screen unmounted')
       return false
     }
-    if (!account) {
-      logger.error('[TransferQRDisplayScreen] Account not found in native storage')
+    // The token is signed as the device's client, so an account with no registration cannot make one
+    if (!isAccountRegistered(account)) {
+      logger.error(
+        account
+          ? '[TransferQRDisplayScreen] Account has no registration'
+          : '[TransferQRDisplayScreen] Account not found in native storage'
+      )
       accountNotFoundAlert()
       setIsLoading(false)
       return false

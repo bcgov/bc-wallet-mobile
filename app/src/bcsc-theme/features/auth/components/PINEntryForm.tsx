@@ -5,7 +5,6 @@ import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
-import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -140,9 +139,8 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             ? AccountSecurityMethod.PinWithDeviceAuth
             : AccountSecurityMethod.PinNoDeviceAuth
 
-          // Note: account must exist before setting the PIN
+          // Note: account must exist before setting the PIN. It has no client ID until the device registers.
           await setAccount({
-            clientID: TEMPORARY_ACCOUNT_CLIENT_ID,
             issuer: client.endpoints.issuer,
             securityMethod: deviceSecurityMethod,
           })

@@ -38,6 +38,12 @@ RCT_EXTERN_METHOD(getAccountReadStatus : (RCTPromiseResolveBlock)resolve reject 
 RCT_EXTERN_METHOD(setAccount : (NSDictionary *)account resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(
+    setRegistration : (NSString *)clientID issuer : (NSString *)issuer registrationAccessToken : (NSString *_Nullable)
+        registrationAccessToken resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(clearRegistration : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(getAccount : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getDeviceId : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
