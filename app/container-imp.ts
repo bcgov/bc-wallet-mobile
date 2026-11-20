@@ -414,7 +414,11 @@ export class AppContainer implements Container {
       const bcscMigration = migrateBCSCState(bcsc)
       bcsc = bcscMigration.bcsc
 
-      bcsc.appBuildHistory = addNewBuildToHistory(getVersion(), getBuildNumber(), bcsc.appBuildHistory)
+      const previousHistory = bcsc.appBuildHistory ?? []
+      const newHistory = addNewBuildToHistory(getVersion(), getBuildNumber(), previousHistory)
+
+      bcsc.appBuildHistory = newHistory
+      bcsc.isNewBuild = newHistory.length !== previousHistory.length
 
       // Reset paths and prompts on load as they should not be persisted
       bcsc.photoPath = undefined

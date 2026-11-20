@@ -11,7 +11,6 @@ import {
 import { getInitialEnvironment, IASEnvironment, isProductionBundle } from '@utils/environment'
 import { AccountSecurityMethod, BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
-import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationPrompt, VerificationStatusResponseData } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBanner } from './bcsc-theme/types/banners'
@@ -102,8 +101,7 @@ export interface ResidentialAddressDraft {
 
 export interface BCSCState {
   appBuildHistory: AppBuild[]
-  appVersion: string
-  appBuildNumber: string
+  isNewBuild: boolean
   hasAccount: boolean
   selectedNickname?: string
   prompts?: VerificationPrompt[]
@@ -126,16 +124,6 @@ export interface BCSCState {
   /** ISO timestamp of the last automatic key-rotation attempt (success or failure), used to
    * throttle retries — see KeyRotationSystemCheck. Not PII. */
   lastKeyRotationAttemptAt?: string
-  /**
-   * App version/build seen the last time the main-stack system checks ran, stamped whenever it
-   * differs from the running app (see getMainSystemChecks) — deliberately distinct from
-   * `appVersion`/`appBuildNumber` above, which only advance on a SUCCESSFUL device-registration
-   * PUT. KeyRotationSystemCheck uses this pair (never `appVersion`/`appBuildNumber`) to detect
-   * "did the app version change since last launch", so a persistently failing registration PUT
-   * can never latch key rotation off forever. See the #3876 review.
-   */
-  lastSeenAppVersion?: string
-  lastSeenAppBuildNumber?: string
   /**
    * The user's answer to the post-onboarding "verify your account now?" prompt, persisted so the
    * choice survives an app restart:
@@ -301,7 +289,6 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
-  UPDATE_APP_VERSION = 'bcsc/updateAppVersion',
   UPDATE_NICKNAME = 'bcsc/updateNickname',
   UPDATE_VIDEO_PROMPTS = 'bcsc/updateVideoPrompts',
   SAVE_PHOTO = 'bcsc/savePhoto',
@@ -355,7 +342,6 @@ enum BCSCDispatchAction {
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
   SET_INSTALL_ID = 'bcsc/setInstallId',
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
-  RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
   SET_VERIFICATION_SKIPPED = 'bcsc/setVerificationSkipped',
   SET_VERIFICATION_STARTED = 'bcsc/setVerificationStarted',
 }
@@ -411,8 +397,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 
 export const initialBCSCState: BCSCState = {
   appBuildHistory: [],
-  appVersion: '',
-  appBuildNumber: '',
+  isNewBuild: false,
   hasAccount: false,
   selectedNickname: undefined,
   analyticsOptIn: false,
@@ -664,12 +649,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCDispatchAction.SET_HAS_ACCOUNT: {
       const hasAccount = (action?.payload || []).pop() ?? false
       const bcsc = { ...state.bcsc, hasAccount }
-      const newState = { ...state, bcsc }
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCSCDispatchAction.UPDATE_APP_VERSION: {
-      const bcsc = { ...state.bcsc, appVersion: getVersion(), appBuildNumber: getBuildNumber() }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
@@ -990,14 +969,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.KEY_ROTATION_ATTEMPTED: {
       const lastKeyRotationAttemptAt = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, lastKeyRotationAttemptAt }
-      const newState = { ...state, bcsc }
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.RECORD_APP_LAUNCH_VERSION: {
-      const { version: lastSeenAppVersion, buildNumber: lastSeenAppBuildNumber } = (action?.payload || []).pop() ?? {}
-      const bcsc = { ...state.bcsc, lastSeenAppVersion, lastSeenAppBuildNumber }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
