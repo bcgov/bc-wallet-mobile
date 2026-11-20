@@ -11,6 +11,7 @@ import {
 import { getInitialEnvironment, IASEnvironment, isProductionBundle } from '@utils/environment'
 import { AccountSecurityMethod, BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationPrompt, VerificationStatusResponseData } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBanner } from './bcsc-theme/types/banners'
@@ -21,7 +22,7 @@ import {
   UNKNOWN_VERIFICATION_STATUS,
 } from './bcsc-theme/utils/verification-status'
 import { appLogger } from './utils/logger'
-import { toAppBuild } from './utils/version'
+import { isAppBuildEqual, toAppBuild } from './utils/version'
 
 export interface AppBuild {
   version: string
@@ -101,7 +102,8 @@ export interface ResidentialAddressDraft {
 
 export interface BCSCState {
   appBuildHistory: AppBuild[]
-  isNewBuild: boolean
+  // The build last registered with IAS, set after a successful registration PUT
+  registeredBuild?: AppBuild
   hasAccount: boolean
   selectedNickname?: string
   prompts?: VerificationPrompt[]
@@ -289,6 +291,7 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
+  SET_REGISTERED_BUILD = 'bcsc/setRegisteredBuild',
   UPDATE_NICKNAME = 'bcsc/updateNickname',
   UPDATE_VIDEO_PROMPTS = 'bcsc/updateVideoPrompts',
   SAVE_PHOTO = 'bcsc/savePhoto',
@@ -397,7 +400,6 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 
 export const initialBCSCState: BCSCState = {
   appBuildHistory: [],
-  isNewBuild: false,
   hasAccount: false,
   selectedNickname: undefined,
   analyticsOptIn: false,
@@ -405,7 +407,8 @@ export const initialBCSCState: BCSCState = {
 
 // The fields migrateBCSCState may add, kept in its return type even when T is inferred from a narrow
 // literal that never mentions them (e.g. `{ reportUUID: 'x' }` in tests)
-type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'>
+type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'> &
+  Partial<Pick<BCSCState, 'appBuildHistory' | 'registeredBuild'>>
 
 interface BCSCDeprecatedFields {
   reportUUID?: string
@@ -427,8 +430,10 @@ interface BCSCDeprecatedFields {
  *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
  *   count as started.
  *  - `bannerMessages` is removed from the persisted blob (previously used to store a list of banners)
+ *  - `registeredBuild` is seeded from the deprecated `appVersion`/`appBuildNumber` pair, and `appBuildHistory` from the
+ *   deprecated `lastSeenApp*` pair (else the registered pair). The deprecated fields are dropped from the blob.
  */
-export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string; bannerMessages?: unknown[] }>(
+export const migrateBCSCState = <T extends Partial<BCSCState> & BCSCDeprecatedFields>(
   persisted: T
 ): { bcsc: Omit<T, keyof BCSCDeprecatedFields> & MigratedBCSCFields; migrated: boolean } => {
   const {
@@ -463,13 +468,20 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
     migrated = true
   }
 
+  // The registered pair is the build the server knows about, the last seen pair is the build last launched
+  const oldRegisteredBuild = toAppBuild(appVersion, appBuildNumber)
+
+  if (!bcsc.registeredBuild && oldRegisteredBuild) {
+    bcsc = { ...bcsc, registeredBuild: oldRegisteredBuild }
+    migrated = true
+  }
+
   if (!bcsc.appBuildHistory?.length) {
-    const oldAppBuild = toAppBuild(lastSeenAppVersion, lastSeenAppBuildNumber) ?? toAppBuild(appVersion, appBuildNumber)
-    bcsc = {
-      ...bcsc,
-      // Generate the app build history from the deprecated blob properties
-      appBuildHistory: oldAppBuild ? [oldAppBuild] : [],
-      migrated: true,
+    const seedBuild = toAppBuild(lastSeenAppVersion, lastSeenAppBuildNumber) ?? oldRegisteredBuild
+
+    if (seedBuild) {
+      bcsc = { ...bcsc, appBuildHistory: [seedBuild] }
+      migrated = true
     }
   }
 
@@ -649,6 +661,18 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCDispatchAction.SET_HAS_ACCOUNT: {
       const hasAccount = (action?.payload || []).pop() ?? false
       const bcsc = { ...state.bcsc, hasAccount }
+      const newState = { ...state, bcsc }
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.SET_REGISTERED_BUILD: {
+      const registeredBuild = state.bcsc.registeredBuild
+      const currentBuild = { version: getVersion(), build: getBuildNumber() }
+      if (isAppBuildEqual(registeredBuild, currentBuild)) {
+        return state
+      }
+
+      const bcsc = { ...state.bcsc, registeredBuild: currentBuild }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

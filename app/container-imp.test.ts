@@ -1,6 +1,7 @@
 import { DispatchAction, LocalStorageKeys, PersistentStorage, TOKENS } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
 import { Config } from 'react-native-config'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { AppContainer } from './container-imp'
 import { BCLocalStorageKeys } from './src/store'
 
@@ -22,6 +23,9 @@ jest.mock('react-native-keychain', () => ({
 }))
 
 let mockStoredValues: Record<string, unknown>
+
+// A persisted blob that already records the running build, so loading it writes nothing back
+const runningBuildBlob = () => ({ appBuildHistory: [{ version: getVersion(), build: getBuildNumber() }] })
 
 const buildContainer = () => {
   const registrations = new Map<unknown, unknown>()
@@ -98,7 +102,7 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     expect(writtenBlob).not.toHaveProperty('photoPath')
   })
 
-  it('leaves installId undefined for a fresh install with nothing persisted', async () => {
+  it('leaves installId undefined for a fresh install with nothing persisted, recording the running build', async () => {
     const { registrations } = buildContainer()
     const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
     const dispatch = jest.fn()
@@ -107,11 +111,28 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
 
     const state = dispatch.mock.calls[0][0].payload[0]
     expect(state.bcsc.installId).toBeUndefined()
-    expect(storeValueForKeySpy).not.toHaveBeenCalled()
+    expect(state.bcsc.appBuildHistory).toEqual([{ version: getVersion(), build: getBuildNumber() }])
+    expect(storeCalls).toHaveLength(1)
+    expect(storeCalls[0].key).toBe(BCLocalStorageKeys.BCSC)
+  })
+
+  it('records an updated build ahead of the previous one', async () => {
+    const previousBuild = { version: '3.9.0', build: '1' }
+    mockStoredValues[BCLocalStorageKeys.BCSC] = { installId: 'id', appBuildHistory: [previousBuild] }
+
+    const { registrations } = buildContainer()
+    const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
+    const dispatch = jest.fn()
+
+    await loadState(dispatch)
+
+    const state = dispatch.mock.calls[0][0].payload[0]
+    expect(state.bcsc.appBuildHistory).toEqual([{ version: getVersion(), build: getBuildNumber() }, previousBuild])
+    expect(storeCalls).toHaveLength(1)
   })
 
   it('does not re-write storage when installId is already migrated (idempotent)', async () => {
-    mockStoredValues[BCLocalStorageKeys.BCSC] = { appVersion: '1.0.0', installId: 'already-migrated' }
+    mockStoredValues[BCLocalStorageKeys.BCSC] = { ...runningBuildBlob(), installId: 'already-migrated' }
 
     const { registrations } = buildContainer()
     const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
@@ -146,7 +167,7 @@ describe('AppContainer TOKENS.LOAD_STATE (mediator preferences vs MEDIATOR_URL)'
   }
 
   beforeEach(() => {
-    mockStoredValues = {}
+    mockStoredValues = { [BCLocalStorageKeys.BCSC]: runningBuildBlob() }
     storeCalls = []
     Config.MEDIATOR_URL = current
     jest

@@ -417,8 +417,8 @@ export class AppContainer implements Container {
       const previousHistory = bcsc.appBuildHistory ?? []
       const newHistory = addNewBuildToHistory(getVersion(), getBuildNumber(), previousHistory)
 
-      bcsc.appBuildHistory = newHistory
-      bcsc.isNewBuild = newHistory.length !== previousHistory.length
+      const buildRecorded = newHistory.length !== previousHistory.length
+      bcsc = { ...bcsc, appBuildHistory: newHistory }
 
       // Reset paths and prompts on load as they should not be persisted
       bcsc.photoPath = undefined
@@ -427,7 +427,7 @@ export class AppContainer implements Container {
       bcsc.prompts = undefined
       bcsc.photoMetadata = undefined
       bcsc.videoDuration = undefined
-      if (bcscMigration.migrated) {
+      if (bcscMigration.migrated || buildRecorded) {
         // Written after the scrub above so the saved blob omits the transient fields it nulled.
         // Failure is non-fatal: the migrations re-run next launch.
         PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc).catch((error) => {

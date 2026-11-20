@@ -1,4 +1,4 @@
-import { AppBuild } from '@/store'
+import type { AppBuild } from '@/store'
 import { getVersion } from 'react-native-device-info'
 
 // Enumeration of app versions for comparison purposes.
@@ -84,7 +84,7 @@ export const addNewBuildToHistory = (version: string, build: string, history: Ap
   const newHistory = history ? [...history] : []
   const lastBuild = newHistory[0]
 
-  if (lastBuild && lastBuild.version === version && lastBuild.build === build) {
+  if (isAppBuildEqual(lastBuild, { version, build })) {
     // no change
     return newHistory
   }
@@ -97,4 +97,8 @@ export const addNewBuildToHistory = (version: string, build: string, history: Ap
 
 export const toAppBuild = (version?: string, build?: string): AppBuild | null => {
   return version && build ? { version, build } : null
+}
+
+export const isAppBuildEqual = (a: AppBuild | undefined, b: AppBuild): boolean => {
+  return Boolean(a && a.version === b.version && a.build === b.build)
 }

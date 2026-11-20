@@ -20,21 +20,19 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
  * newest local key's age is confirmed at or beyond the threshold. See issue #3876.
  */
 export class KeyRotationSystemCheck implements SystemCheckStrategy {
-  private readonly deferForPendingRegistrationUpdate: boolean
+  private readonly deferForPendingRegistrationUpdate: () => boolean
   private readonly lastRotationAttemptAt: string | undefined
   private readonly rotate: RotateFunction
   private readonly utils: SystemCheckUtils
 
   /**
-   * @param deferForPendingRegistrationUpdate Whether the app version/build changed since the
-   *   PREVIOUS launch, so `UpdateDeviceRegistrationSystemCheck` will PUT the current key this
-   *   same launch. Must be derived from a marker stamped unconditionally every launch
-   *   (`lastSeenAppVersion`/`lastSeenAppBuildNumber`), never from `appVersion`/`appBuildNumber` —
-   *   those only advance after a successful registration PUT, so a persistently failing PUT
-   *   would latch rotation off forever (see the #3876 review that caught this).
+   * @param deferForPendingRegistrationUpdate Whether `UpdateDeviceRegistrationSystemCheck` already PUT the
+   *   current key during this launch. Read when the check runs, so it must be answered by this launch's
+   *   outcome, never from the persisted `registeredBuild` — that stays unset while the PUT keeps
+   *   failing, which would latch rotation off forever (see the #3876 review that caught this).
    */
   constructor(
-    deferForPendingRegistrationUpdate: boolean,
+    deferForPendingRegistrationUpdate: () => boolean,
     lastRotationAttemptAt: string | undefined,
     rotate: RotateFunction,
     utils: SystemCheckUtils
@@ -46,9 +44,9 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
   }
 
   async runCheck(): Promise<boolean> {
-    if (this.deferForPendingRegistrationUpdate) {
+    if (this.deferForPendingRegistrationUpdate()) {
       this.utils.logger.info(
-        'KeyRotationSystemCheck: skipping — app version/build changed since the last launch; UpdateDeviceRegistrationSystemCheck will PUT the current key this launch'
+        'KeyRotationSystemCheck: skipping — UpdateDeviceRegistrationSystemCheck already PUT the current key this launch'
       )
       return true
     }

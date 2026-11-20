@@ -23,14 +23,14 @@ import {
   getPendingDeviceCodeExpiry,
   VerificationSessionExpiredSystemCheck,
 } from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { BifoldLogger, TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
-import { getBuildNumber, getBundleId, getVersion } from 'react-native-device-info'
+import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
@@ -54,7 +54,7 @@ const updateRegistration = ({
 }) =>
   registrationService.updateRegistration(registrationAccessToken, selectedNickname, {
     // Automatic check: a transient keychain-unavailable failure retries on the
-    // next launch (UPDATE_APP_VERSION only dispatches on success) — no modal.
+    // next launch (SET_REGISTERED_BUILD only dispatches on success) — no modal.
     suppressTransientAlerts: true,
   })
 
@@ -145,10 +145,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { serverStatus: cachedServerStatus, refresh: refreshServerStatus } = useServerStatus()
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
-  const appVersion = getVersion()
-  const appBuildNumber = getBuildNumber()
-  const appVersionChangedSinceLastLaunchRef = useRef<boolean | null>(null)
-  const launchVersionRecordedRef = useRef(false)
+  const registeredThisLaunchRef = useRef(false)
 
   const defaultReadiness = isNavigationReady && client && isClientReady
   const { isVerified } = selectVerificationState(store)
@@ -299,29 +296,28 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     if (shouldUpdateRegistration) {
       systemChecks.push(
         new UpdateDeviceRegistrationSystemCheck(
-          store.bcsc.appVersion,
-          store.bcsc.appBuildNumber,
-          () =>
-            updateRegistration({
+          store.bcsc.registeredBuild,
+          async () => {
+            const response = await updateRegistration({
               registrationService,
               registrationAccessToken: store.bcscSecure.registrationAccessToken,
               selectedNickname: store.bcsc.selectedNickname,
-            }),
+            })
+            registeredThisLaunchRef.current = true
+            return response
+          },
           utils
         )
       )
     }
 
     // KeyRotationSystemCheck must stay appended AFTER UpdateDeviceRegistrationSystemCheck so their
-    // onFail PUTs never race (sequential order).
-    appVersionChangedSinceLastLaunchRef.current ??=
-      store.bcsc.lastSeenAppVersion !== appVersion || store.bcsc.lastSeenAppBuildNumber !== appBuildNumber
-    const appVersionChangedSinceLastLaunch = appVersionChangedSinceLastLaunchRef.current
+    // onFail PUTs never race (sequential order), and so the ref below is settled when it runs.
 
     if (shouldRotateKey) {
       systemChecks.push(
         new KeyRotationSystemCheck(
-          appVersionChangedSinceLastLaunch,
+          () => registeredThisLaunchRef.current,
           store.bcsc.lastKeyRotationAttemptAt,
           () =>
             rotateKey({
@@ -335,16 +331,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       )
     }
 
-    // Defensive only: useSystemChecks calls getSystemChecks once per mount, but the ref keeps the
-    // deferral from flipping off if a future caller invokes it again after this dispatch lands.
-    if (appVersionChangedSinceLastLaunch && !launchVersionRecordedRef.current) {
-      launchVersionRecordedRef.current = true
-      dispatch({
-        type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
-        payload: [{ version: appVersion, buildNumber: appBuildNumber }],
-      })
-    }
-
     return systemChecks
   }, [
     isVerified,
@@ -352,13 +338,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcscSecure,
     store.bcsc.acceptedTermsOfUseVersion,
     store.bcsc.selectedNickname,
-    store.bcsc.appVersion,
-    store.bcsc.appBuildNumber,
+    store.bcsc.registeredBuild,
     store.bcsc.lastKeyRotationAttemptAt,
-    store.bcsc.lastSeenAppVersion,
-    store.bcsc.lastSeenAppBuildNumber,
-    appVersion,
-    appBuildNumber,
     navigation,
     utils,
     isBCServicesCardBundle,
@@ -371,7 +352,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     client,
     logger,
     updateTokens,
-    dispatch,
   ])
 
   /**
