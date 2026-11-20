@@ -24,7 +24,7 @@ const ManualPairing: React.FC = () => {
   const [code, setCode] = useState(route.params?.pairingCode ?? '')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  // The code being checked: only its answer is acted on, and it is not sent twice
+  // The code being checked: it is not sent twice, and it alone reports a failure or ends the wait
   const pendingCodeRef = useRef<string | null>(null)
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -58,12 +58,10 @@ const ManualPairing: React.FC = () => {
 
         logger.info('Pairing code submitted successfully.')
 
-        // The tab bar and Back stay live during an in-card wait: a user who left is not pushed onward,
-        // nor is the answer to a replaced code
-        if (isReplaced() || !navigation.isFocused()) {
-          return
-        }
-
+        // The server approved the login when it accepted the code, and this confirmation is the only place
+        // the app says so. The tab bar and Back stay live during an in-card wait, so it is shown even to a
+        // user who left or scanned another code: otherwise the login completes unannounced, and the code,
+        // now used, only fails when tried again.
         navigation.navigate(BCSCScreens.PairingConfirmation, {
           serviceId: serviceClient.client_ref_id,
           serviceName: serviceClient.client_name,

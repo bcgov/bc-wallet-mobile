@@ -258,8 +258,9 @@ describe('ManualPairing', () => {
       })
     })
 
-    test('does not navigate when the screen lost focus while the code was checked', async () => {
-      // The tab bar and Back stay live while the spinner shows, so the user can leave before the answer lands
+    test('confirms the login even when the screen lost focus while the code was checked', async () => {
+      // The tab bar and Back stay live while the spinner shows, so the user can leave before the answer
+      // lands. The login is approved by then, and the confirmation is the only place the app says so.
       const isFocused = jest.spyOn(mockNavigation, 'isFocused').mockReturnValue(false)
       mockLoginByPairingCode.mockResolvedValue({ client_ref_id: 'ref-123', client_name: 'Test Service' })
       renderScreen()
@@ -267,10 +268,12 @@ describe('ManualPairing', () => {
       fireEvent.changeText(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')), 'ABCDEF')
 
       await waitFor(() => {
-        expect(mockLoginByPairingCode).toHaveBeenCalled()
-        expect(screen.queryByTestId(testIdWithKey('ManualPairingVerifying'))).toBeNull()
+        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
+          serviceId: 'ref-123',
+          serviceName: 'Test Service',
+        })
       })
-      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      expect(screen.queryByTestId(testIdWithKey('ManualPairingVerifying'))).toBeNull()
       isFocused.mockRestore()
     })
   })
@@ -301,7 +304,7 @@ describe('ManualPairing', () => {
       screen.rerender(screenTree())
     }
 
-    test('acts on the scanned code alone when it replaces the one being checked', async () => {
+    test('confirms a login the replaced code completed, and keeps waiting on the scanned one', async () => {
       const typed = pendingCheck()
       const scanned = pendingCheck()
       renderScreen()
@@ -311,12 +314,17 @@ describe('ManualPairing', () => {
 
       expect(mockLoginByPairingCode).toHaveBeenLastCalledWith('SKGAZZ', ChallengeSource.RemotePairingQrCode)
 
-      // The typed code's answer lands with the field already showing the scanned one
+      // The typed code's answer lands with the field already showing the scanned one. Its login is approved
+      // all the same, so it is confirmed, but the wait still belongs to the scanned code.
       await act(async () => {
         typed.resolve({ client_ref_id: 'ref-typed', client_name: 'Typed Service' })
       })
 
-      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.navigate).toHaveBeenLastCalledWith(BCSCScreens.PairingConfirmation, {
+        serviceId: 'ref-typed',
+        serviceName: 'Typed Service',
+      })
       expect(screen.getByTestId(testIdWithKey('ManualPairingVerifying'))).toBeTruthy()
       expect(screen.getByTestId(testIdWithKey('ManualPairingCodeInput')).props.editable).toBe(false)
 
@@ -324,8 +332,8 @@ describe('ManualPairing', () => {
         scanned.resolve({ client_ref_id: 'ref-scanned', client_name: 'Scanned Service' })
       })
 
-      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
+      expect(mockNavigation.navigate).toHaveBeenCalledTimes(2)
+      expect(mockNavigation.navigate).toHaveBeenLastCalledWith(BCSCScreens.PairingConfirmation, {
         serviceId: 'ref-scanned',
         serviceName: 'Scanned Service',
       })
