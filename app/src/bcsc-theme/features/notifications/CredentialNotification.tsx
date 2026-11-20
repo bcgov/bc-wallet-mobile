@@ -1,4 +1,5 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { formatExpiryBadge, formatTimestamp, getProofRequestExpiry } from '@/bcsc-theme/utils/datetime-utils'
 import { NOTIFICATION_EXPIRY_WARNING_WINDOW_MS } from '@/constants'
@@ -13,9 +14,7 @@ import {
   CredentialMetadata,
   getConnectionName,
   parsedSchema,
-  ProofRequestExpirationTime,
   Screens,
-  useStore,
 } from '@bifold/core'
 import { useBasicMessages, useConnectionById } from '@bifold/react-hooks'
 import { markProofAsViewed, ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
@@ -100,11 +99,11 @@ function getTimeSensitiveStatus(read: boolean, expiresTime?: Date): Notification
 const BasicMessageNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
-  const [store] = useStore()
+  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const basicMessage = notification as DidCommBasicMessageRecord
   const connection = useConnectionById(basicMessage.connectionId)
-  const label = getConnectionName(connection, store.preferences.alternateContactNames)
+  const label = getConnectionName(connection, alternateContactNames)
   const { records: basicMessages } = useBasicMessages()
 
   // Messages for this contact the user hasn't dismissed — the list shows one
@@ -188,12 +187,12 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
 const CredentialOfferNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
-  const [store] = useStore()
+  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const credential = notification as DidCommCredentialExchangeRecord
   const connection = useConnectionById(credential.connectionId ?? '')
   const { name, version } = parsedSchema(credential)
-  const label = getConnectionName(connection, store.preferences.alternateContactNames)
+  const label = getConnectionName(connection, alternateContactNames)
   const [expiresTime, setExpiresTime] = useState<Date>()
 
   const offerMeta = credential.metadata.get(CredentialMetadata.customMetadata) as NotificationCredentialMetadata | null
@@ -258,11 +257,11 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
 const ProofRequestNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
-  const [store] = useStore()
+  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const proof = notification as DidCommProofExchangeRecord
   const connection = useConnectionById(proof.connectionId ?? '')
-  const label = getConnectionName(connection, store.preferences.alternateContactNames)
+  const label = getConnectionName(connection, alternateContactNames)
   const [expiresTime, setExpiresTime] = useState<Date>()
 
   useEffect(() => {
@@ -292,8 +291,7 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   // Done proofs only stay in the list until their outcome has been viewed, so treat them as unread
   const isRead = !isDone && Boolean(proofMeta?.request_seen)
 
-  const proofRequestExpirationMs =
-    store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
+  const proofRequestExpirationMs = useBCSCStore((s) => s.preferences.proofRequestExpirationMs)
   const effectiveExpiry = isDone
     ? undefined
     : getProofRequestExpiry(proof.createdAt, proofRequestExpirationMs, expiresTime)

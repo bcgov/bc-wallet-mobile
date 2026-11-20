@@ -2,12 +2,12 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useVerification } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { firstErrorKey, serialSchema } from '@/bcsc-theme/utils/validation'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,9 +25,9 @@ type ManualSerialScreenProps = {
 const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: ManualSerialScreenProps) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const [store] = useStore<BCState>()
+  const storedSerial = useVerification((s) => s.request?.csn)
   const { updateUserInfo } = useSecureActions()
-  const [serial, setSerial] = useState(store.bcscSecure.serial ?? '')
+  const [serial, setSerial] = useState(storedSerial ?? '')
   const [error, setError] = useState<string | null>(null)
   const { scrollViewRef, inputRefs, onFieldLayout, focusFirstInvalidField } = useFocusFirstInvalidField(FIELD_ORDER)
 

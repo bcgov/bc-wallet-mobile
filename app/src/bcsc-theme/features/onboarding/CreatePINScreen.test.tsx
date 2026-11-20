@@ -110,7 +110,13 @@ describe('CreatePINScreen', () => {
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/CreatePIN'))
     })
 
-    await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-wallet-key'))
+    // Onboarding has no account yet, so the form creates the profile and hands it on
+    await waitFor(() =>
+      expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith(
+        'test-wallet-key',
+        expect.objectContaining({ issuer: 'https://mock-issuer' })
+      )
+    )
     // No waiting screen between this screen and the verify prompt
     expect(overlayShown()).toBe(false)
     expect(tree.getByTestId('com.ariesbifold:id/ButtonLoading')).toBeTruthy()

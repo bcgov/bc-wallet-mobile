@@ -158,6 +158,18 @@ export default [
               message:
                 'Check PINs with verifyPinWithLockout (features/auth/services/pin-lockout-service) so the attempt is counted.',
             },
+            // BCSC state lives in its own store; Bifold's isn't mounted in BCSC (BifoldStoreView), so its
+            // dispatches do nothing. Caches go through the caches slice, not PersistentStorage.
+            {
+              name: '@bifold/core',
+              importNames: ['useStore', 'DispatchAction', 'StoreProvider', 'PersistentStorage'],
+              message: "BCSC state lives in '@/bcsc-theme/storage' (slice hooks in ./hooks).",
+            },
+            {
+              name: '@/store',
+              importNames: ['BCDispatchAction'],
+              message: "BCSC state lives in '@/bcsc-theme/storage' (slice hooks in ./hooks).",
+            },
           ],
         },
       ],

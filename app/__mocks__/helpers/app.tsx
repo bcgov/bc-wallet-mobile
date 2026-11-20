@@ -1,5 +1,11 @@
 import { BCSCIdTokenContext } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { BCSCStackProvider } from '@/bcsc-theme/contexts/BCSCStackContext'
+import {
+  resetBCSCStore,
+  seedBCSCStore,
+  seedBCSCStoreFromBCState,
+  type BCSCStoreSeed,
+} from '@/bcsc-theme/storage/testing'
 import { IdToken } from '@/bcsc-theme/utils/id-token'
 import { BCThemeNames } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
@@ -15,14 +21,27 @@ import { container } from 'tsyringe'
 
 interface BasicAppContextProps extends PropsWithChildren {
   initialStateOverride?: Partial<BCState>
+  // Fields for the BCSC store; it's reset to its initial state first, so tests don't leak into each other
+  bcscState?: BCSCStoreSeed
   idTokenOverride?: Partial<IdToken> | null // Defaults to no id token (device limit unknown)
 }
 
 export const BasicAppContext: React.FC<BasicAppContextProps> = ({
   children,
   initialStateOverride,
+  bcscState,
   idTokenOverride = null,
 }) => {
+  useMemo(() => {
+    resetBCSCStore()
+    // Fields that already live in the BCSC store also take their values from initialStateOverride, so tests
+    // written against Bifold's state keep working while callers move over
+    seedBCSCStoreFromBCState((initialStateOverride ?? {}) as never, { reset: false })
+    if (bcscState) {
+      seedBCSCStore(bcscState)
+    }
+  }, [bcscState, initialStateOverride])
+
   const context = useMemo(() => {
     const childContainer = container.createChildContainer()
     childContainer.registerInstance(TOKENS.UTIL_LOGGER, new MockLogger())

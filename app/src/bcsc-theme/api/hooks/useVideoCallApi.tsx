@@ -1,6 +1,5 @@
+import { useVerification } from '@/bcsc-theme/storage/hooks'
 import { isAxiosAppError } from '@/errors/appError'
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { createPreVerificationJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -73,15 +72,15 @@ export interface ServiceHours {
 }
 
 const useVideoCallApi = (apiClient: BCSCApiClient) => {
-  const [store] = useStore<BCState>()
+  const storedDeviceCode = useVerification((s) => s.request?.deviceCode)
 
   const _getDeviceCode = useCallback(() => {
-    const code = store.bcscSecure.deviceCode
+    const code = storedDeviceCode
     if (!code) {
       throw new Error('Device code is missing. Re install the app and try again.')
     }
     return code
-  }, [store.bcscSecure.deviceCode])
+  }, [storedDeviceCode])
 
   const createVideoSession = useCallback(async (): Promise<VideoSession> => {
     return withAccount(async (account) => {

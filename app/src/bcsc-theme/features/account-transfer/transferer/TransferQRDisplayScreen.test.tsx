@@ -1,9 +1,10 @@
+import { BCSCStoreSeed } from '@/bcsc-theme/storage/testing'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, render, waitFor } from '@testing-library/react-native'
 import { jwtDecode } from 'jwt-decode'
 import React from 'react'
-import { AccountSecurityMethod, createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import { BCSCScreens } from '../../../types/navigators'
 import TransferQRDisplayScreen from './TransferQRDisplayScreen'
 
@@ -36,20 +37,20 @@ const mockAccount = {
   securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
 }
 
-// Resolves manually so a test can hold a getAccount() call "in flight" and control exactly
-// when (and with what value) it settles relative to unmount/completion.
-type GetAccountResult = Awaited<ReturnType<typeof getAccount>>
-
-const createDeferredGetAccount = () => {
-  let resolve!: (value: GetAccountResult) => void
-  const promise = new Promise<GetAccountResult>((res) => {
-    resolve = res
-  })
-  return { promise, resolve }
+// The account as the store's profile. BasicAppContext resets the store, so it's seeded through it.
+const withAccount: BCSCStoreSeed = {
+  account: {
+    profile: {
+      accountId: mockAccount.id,
+      issuer: mockAccount.issuer,
+      clientId: mockAccount.clientID,
+      securityMethod: mockAccount.securityMethod,
+    },
+  },
 }
 
-// Same pattern as createDeferredGetAccount, for holding the createDeviceSignedJWT() await
-// "in flight" so a test can control exactly when the signed JWT comes back.
+// Holds the createDeviceSignedJWT() await "in flight" so a test can control exactly when the
+// signed JWT comes back, relative to unmount/completion.
 const createDeferredJwt = () => {
   let resolve!: (value: string) => void
   const promise = new Promise<string>((res) => {
@@ -74,8 +75,9 @@ describe('TransferQRDisplayScreen', () => {
   })
 
   it('renders correctly', async () => {
+    // Loading while the JWT is signed
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={withAccount}>
         <TransferQRDisplayScreen />
       </BasicAppContext>
     )
@@ -86,9 +88,7 @@ describe('TransferQRDisplayScreen', () => {
     await act(async () => {})
   })
 
-  it('shows account not found alert when getAccount returns null', async () => {
-    jest.mocked(getAccount).mockResolvedValueOnce(null)
-
+  it('shows account not found alert when there is no account', async () => {
     render(
       <BasicAppContext>
         <TransferQRDisplayScreen />
@@ -102,10 +102,8 @@ describe('TransferQRDisplayScreen', () => {
 
   describe('createToken', () => {
     it('creates a signed JWT and displays a QR code when account is found', async () => {
-      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
-
       render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -122,10 +120,8 @@ describe('TransferQRDisplayScreen', () => {
     })
 
     it('decodes the signed JWT to extract the actual jti', async () => {
-      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
-
       render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -136,10 +132,8 @@ describe('TransferQRDisplayScreen', () => {
     })
 
     it('starts polling for attestation status after QR code is created', async () => {
-      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
-
       render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -150,11 +144,10 @@ describe('TransferQRDisplayScreen', () => {
     })
 
     it('navigates to success when attestation status returns true', async () => {
-      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
       mockCheckAttestationStatus.mockResolvedValueOnce(true)
 
       render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -165,10 +158,8 @@ describe('TransferQRDisplayScreen', () => {
     })
 
     it('refreshes the QR code after the refresh interval', async () => {
-      jest.mocked(getAccount).mockResolvedValue(mockAccount)
-
       render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -188,12 +179,11 @@ describe('TransferQRDisplayScreen', () => {
     })
 
     it('stops polling for attestation status after a successful attestation', async () => {
-      jest.mocked(getAccount).mockResolvedValue(mockAccount)
       // First call resolves true (success); any subsequent call would resolve false.
       mockCheckAttestationStatus.mockResolvedValueOnce(true).mockResolvedValue(false)
 
       render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -214,11 +204,10 @@ describe('TransferQRDisplayScreen', () => {
     })
 
     it('stops refreshing the QR code after a successful attestation', async () => {
-      jest.mocked(getAccount).mockResolvedValue(mockAccount)
       mockCheckAttestationStatus.mockResolvedValueOnce(true).mockResolvedValue(false)
 
       render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -239,13 +228,12 @@ describe('TransferQRDisplayScreen', () => {
     })
 
     it('only navigates once even if multiple polls resolve as successful', async () => {
-      jest.mocked(getAccount).mockResolvedValue(mockAccount)
       // Every call returns success — without a completion latch the screen would
       // re-navigate on every resolved poll, snapping the user back from later screens.
       mockCheckAttestationStatus.mockResolvedValue(true)
 
       render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -262,10 +250,8 @@ describe('TransferQRDisplayScreen', () => {
     })
 
     it('clears polling intervals on unmount', async () => {
-      jest.mocked(getAccount).mockResolvedValue(mockAccount)
-
       const { unmount } = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -288,11 +274,10 @@ describe('TransferQRDisplayScreen', () => {
     })
 
     it('falls back to the locally generated jti when jwtDecode returns no jti', async () => {
-      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
-      ;(jwtDecode as jest.Mock).mockReturnValue({}) // no jti in decoded token
+      jest.mocked(jwtDecode).mockReturnValue({}) // no jti in decoded token
 
       render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
@@ -316,16 +301,16 @@ describe('TransferQRDisplayScreen', () => {
   // alert from a screen that no longer legitimately owns the check.
   describe('unmount and completion races (issue #4273)', () => {
     it('does not leave an orphaned QR-refresh interval running when unmounted while createToken is in flight', async () => {
-      const deferred = createDeferredGetAccount()
-      jest.mocked(getAccount).mockReturnValueOnce(deferred.promise)
+      const deferredJwt = createDeferredJwt()
+      jest.mocked(createDeviceSignedJWT).mockReturnValueOnce(deferredJwt.promise)
 
       const { unmount } = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )
 
-      expect(getAccount).toHaveBeenCalledTimes(1)
+      expect(createDeviceSignedJWT).toHaveBeenCalledTimes(1)
 
       unmount()
 
@@ -333,87 +318,23 @@ describe('TransferQRDisplayScreen', () => {
       // late. Without the isMountedRef guard, refreshToken would still call startInterval()
       // here, installing a new 50s interval that nothing would ever clear.
       await act(async () => {
-        deferred.resolve(mockAccount)
+        deferredJwt.resolve('late-signed-jwt')
       })
 
       await act(async () => {
         jest.advanceTimersByTime(150000)
       })
 
-      // No orphaned interval means no further getAccount()/alert activity, ever.
-      expect(getAccount).toHaveBeenCalledTimes(1)
+      // No orphaned interval means no further createToken()/alert activity, ever.
+      expect(createDeviceSignedJWT).toHaveBeenCalledTimes(1)
       expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
-    })
-
-    it('does not show the account not found alert when an in-flight createToken resolves null after unmount', async () => {
-      const deferred = createDeferredGetAccount()
-      jest.mocked(getAccount).mockReturnValueOnce(deferred.promise)
-
-      const { unmount } = render(
-        <BasicAppContext>
-          <TransferQRDisplayScreen />
-        </BasicAppContext>
-      )
-
-      unmount()
-
-      await act(async () => {
-        deferred.resolve(null)
-      })
-
-      expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
-    })
-
-    it('does not show the account not found alert when an in-flight createToken resolves null after the transfer has completed', async () => {
-      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
-      mockCheckAttestationStatus.mockResolvedValue(false)
-
-      render(
-        <BasicAppContext>
-          <TransferQRDisplayScreen />
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(createDeviceSignedJWT).toHaveBeenCalledTimes(1)
-      })
-
-      const deferred = createDeferredGetAccount()
-      jest.mocked(getAccount).mockReturnValueOnce(deferred.promise)
-
-      // The QR-refresh interval ticks, kicking off a second createToken() call that suspends
-      // on the still-pending getAccount().
-      await act(async () => {
-        jest.advanceTimersByTime(50000)
-      })
-
-      expect(getAccount).toHaveBeenCalledTimes(2)
-
-      // The transfer completes: the next attestation poll resolves true, latching
-      // completedRef and navigating away while the second createToken() call is still pending.
-      mockCheckAttestationStatus.mockResolvedValue(true)
-      await act(async () => {
-        jest.advanceTimersByTime(3000)
-      })
-
-      await waitFor(() => {
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountSuccess)
-      })
-
-      // The stale createToken() call finally resolves with null, well after completion latched.
-      await act(async () => {
-        deferred.resolve(null)
-      })
-
-      expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
-      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
     })
   })
 
   // Copilot-flagged follow-up for issue #4273: createToken() can *throw* (rather than
-  // resolve null) when the native module is asked about an account mid-removal. Both call
-  // sites (refreshToken's await, and the QR-refresh interval's fire-and-forget call) must
-  // contain that rejection instead of leaking it as an unhandled promise rejection.
+  // resolve) when the native signer fails mid-removal. Both call sites (refreshToken's await,
+  // and the QR-refresh interval's fire-and-forget call) must contain that rejection instead
+  // of leaking it as an unhandled promise rejection.
   describe('createToken rejection handling (issue #4273 follow-up)', () => {
     it('contains a createToken rejection during refresh: no unhandled rejection and the QR-refresh interval is not started', async () => {
       const unhandledRejections: unknown[] = []
@@ -424,16 +345,16 @@ describe('TransferQRDisplayScreen', () => {
 
       try {
         const rejectionError = new Error('native storage error')
-        jest.mocked(getAccount).mockRejectedValueOnce(rejectionError)
+        jest.mocked(createDeviceSignedJWT).mockRejectedValueOnce(rejectionError)
 
         render(
-          <BasicAppContext>
+          <BasicAppContext bcscState={withAccount}>
             <TransferQRDisplayScreen />
           </BasicAppContext>
         )
 
         await waitFor(() => {
-          expect(getAccount).toHaveBeenCalledTimes(1)
+          expect(createDeviceSignedJWT).toHaveBeenCalledTimes(1)
         })
 
         // Give the rejection's microtask chain a chance to surface as an unhandled rejection,
@@ -447,12 +368,12 @@ describe('TransferQRDisplayScreen', () => {
         expect(unhandledRejections).toHaveLength(0)
 
         // A failed refresh must not start the QR-refresh interval — advancing well past the
-        // 50s mark should produce no further getAccount() calls.
+        // 50s mark should produce no further createToken() calls.
         await act(async () => {
           jest.advanceTimersByTime(150000)
         })
 
-        expect(getAccount).toHaveBeenCalledTimes(1)
+        expect(createDeviceSignedJWT).toHaveBeenCalledTimes(1)
         expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
       } finally {
         process.off('unhandledRejection', onUnhandledRejection)
@@ -460,19 +381,17 @@ describe('TransferQRDisplayScreen', () => {
     })
   })
 
-  // Copilot-flagged follow-up for issue #4273: createToken() guarded after `await
-  // getAccount()` but not after the subsequent `await createDeviceSignedJWT(...)`. Add the
+  // Copilot-flagged follow-up for issue #4273: createToken() guarded after reading the
+  // account but not after the subsequent `await createDeviceSignedJWT(...)`. Add the
   // symmetric guard so a screen unmounted (or a transfer completed) while the JWT signing
   // await was in flight doesn't apply a stale QR update on the way back out.
   describe('post-JWT-signing guard (issue #4273 follow-up)', () => {
     it('does not apply a pending QR update after unmount when createDeviceSignedJWT resolves late', async () => {
-      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
-
       const deferredJwt = createDeferredJwt()
       jest.mocked(createDeviceSignedJWT).mockReturnValueOnce(deferredJwt.promise)
 
       const { unmount } = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={withAccount}>
           <TransferQRDisplayScreen />
         </BasicAppContext>
       )

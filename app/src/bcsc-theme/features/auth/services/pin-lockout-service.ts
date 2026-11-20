@@ -1,17 +1,12 @@
 import { getPinLockout, PinAttemptFacts, PinLockout, PinLockoutType } from '@/bcsc-theme/state/pin-lockout/pin-lockout'
-import { PIN_ATTEMPTS_STORAGE_TIMEOUT_MS } from '@/constants'
+import { getBCSCState, requirePINAccount } from '@/bcsc-theme/storage/hooks'
 import { AppError } from '@/errors/appError'
 import { ErrorDefinition, ErrorRegistry } from '@/errors/errorRegistry'
-import { BCLocalStorageKeys } from '@/store'
 import type { BifoldLogger } from '@bifold/core'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 // eslint-disable-next-line no-restricted-imports -- the one caller: every PIN check goes through verifyPinWithLockout
 import { verifyPIN } from 'react-native-bcsc-core'
 
 const LOG_TAG = '[PinLockout]'
-
-// Saved with the record so its shape can change later; a record with any other version reads as empty
-const RECORD_VERSION = 1
 
 export enum PinVerificationType {
   Success = 'success',
@@ -25,101 +20,46 @@ export type PinVerification =
   | { type: PinVerificationType.Incorrect; isLastAttempt: boolean }
   | { type: PinVerificationType.Locked; until: Date }
 
-/**
- * Bounds a storage call. AsyncStorage never settles when its native callback is dropped, and an
- * unsettled call would hold the queue below, and with it every unlock, for the rest of the session.
- */
-const withStorageTimeout = async <T>(operation: () => Promise<T>, failure: ErrorDefinition): Promise<T> => {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined
-
+// Storage failures surface as these errors, as the AsyncStorage record's did
+const mapFailure = async <T>(operation: () => Promise<T>, failure: ErrorDefinition): Promise<T> => {
   try {
-    return await Promise.race([
-      operation(),
-      new Promise<never>((_resolve, reject) => {
-        timeoutId = setTimeout(
-          () => reject(new Error(`PIN attempt storage did not respond within ${PIN_ATTEMPTS_STORAGE_TIMEOUT_MS} ms`)),
-          PIN_ATTEMPTS_STORAGE_TIMEOUT_MS
-        )
-      }),
-    ])
+    return await operation()
   } catch (error) {
     throw AppError.fromErrorDefinition(failure, { cause: error })
-  } finally {
-    clearTimeout(timeoutId)
   }
 }
 
-const toFacts = (raw: string): PinAttemptFacts | undefined => {
-  let record: unknown
-
-  try {
-    record = JSON.parse(raw)
-  } catch {
-    return undefined
-  }
-
-  if (typeof record !== 'object' || record === null) {
-    return undefined
-  }
-
-  const { version, failedCount, lastAttemptAt } = record as Record<string, unknown>
-
-  if (version !== RECORD_VERSION) {
-    return undefined
-  }
-
-  if (typeof failedCount !== 'number' || !Number.isSafeInteger(failedCount) || failedCount < 1) {
-    return undefined
-  }
-
-  if (typeof lastAttemptAt !== 'number') {
-    return undefined
-  }
-
-  const lastAttemptDate = new Date(lastAttemptAt)
-
-  if (Number.isNaN(lastAttemptDate.getTime())) {
-    return undefined
-  }
-
-  return { failedCount, lastAttemptAt: lastAttemptDate }
-}
-
+// The record lives in account/pinAttempts (m0001 copied the AsyncStorage one there)
 const readFacts = async (logger: BifoldLogger): Promise<PinAttemptFacts | undefined> => {
-  const raw = await withStorageTimeout(
-    () => AsyncStorage.getItem(BCLocalStorageKeys.PinAttempts),
-    ErrorRegistry.STORAGE_READ_ERROR
-  )
+  const record = await mapFailure(async () => getBCSCState().account.pinAttempts, ErrorRegistry.STORAGE_READ_ERROR)
 
-  if (!raw) {
+  if (!record || record.failedCount < 1) {
     return undefined
   }
 
-  const facts = toFacts(raw)
+  const lastAttemptAt = new Date(record.lastAttemptAt)
 
-  if (!facts) {
+  if (Number.isNaN(lastAttemptAt.getTime())) {
     // A record this build cannot read must not lock the user out for good, so it counts as no attempts
     logger.error(`${LOG_TAG} The stored PIN attempt record is not readable, treating it as empty`)
+    return undefined
   }
 
-  return facts
+  return { failedCount: record.failedCount, lastAttemptAt }
 }
 
-const writeFacts = (facts: PinAttemptFacts): Promise<void> => {
-  const record = JSON.stringify({
-    version: RECORD_VERSION,
-    failedCount: facts.failedCount,
-    lastAttemptAt: facts.lastAttemptAt.getTime(),
-  })
-
-  return withStorageTimeout(
-    () => AsyncStorage.setItem(BCLocalStorageKeys.PinAttempts, record),
+const writeFacts = (facts: PinAttemptFacts): Promise<void> =>
+  mapFailure(
+    () =>
+      getBCSCState().account.setPinAttempts({
+        failedCount: facts.failedCount,
+        lastAttemptAt: facts.lastAttemptAt.getTime(),
+      }),
     ErrorRegistry.STORAGE_WRITE_ERROR
   )
-}
 
 const removeFacts = (): Promise<void> =>
-  withStorageTimeout(() => AsyncStorage.removeItem(BCLocalStorageKeys.PinAttempts), ErrorRegistry.STORAGE_WRITE_ERROR)
+  mapFailure(() => getBCSCState().account.setPinAttempts(undefined), ErrorRegistry.STORAGE_WRITE_ERROR)
 
 let queue: Promise<unknown> = Promise.resolve()
 
@@ -200,7 +140,7 @@ export const verifyPinWithLockout = (pin: string, logger: BifoldLogger): Promise
     let result: Awaited<ReturnType<typeof verifyPIN>>
 
     try {
-      result = await verifyPIN(pin)
+      result = await verifyPIN(requirePINAccount(), pin)
     } catch (error) {
       // The PIN was never judged, so the attempt does not count
       await restoreFacts(previous, logger)

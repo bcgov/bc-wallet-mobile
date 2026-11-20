@@ -138,6 +138,11 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
    - Returns: the token instance if found, nil otherwise
    */
   func get(id: String, diagnostic: inout String?) -> Token? {
+    getWithStatus(id: id, diagnostic: &diagnostic).token
+  }
+
+  /// `get`, plus the final `OSStatus`, so a caller can tell a missing token from a locked or unreadable one.
+  func getWithStatus(id: String, diagnostic: inout String?) -> TokenReadOutcome {
     // Migrate before fetching
     migrateLegacyItem(id)
 
@@ -180,10 +185,10 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
         diagnostic = "SecItemCopyMatching succeeded but returned no usable data"
         logger.error("get: SecItemCopyMatching succeeded but returned no usable data")
       }
-      return nil
+      return TokenReadOutcome(token: nil, status: status)
     }
 
-    return token
+    return TokenReadOutcome(token: token, status: status)
   }
 
   /**

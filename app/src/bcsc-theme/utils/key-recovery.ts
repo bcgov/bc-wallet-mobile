@@ -1,13 +1,13 @@
 import { BifoldLogger } from '@bifold/core'
 import {
   deleteKey,
-  getAccount,
   getAllKeys,
   getAllKeysWithPublicInfo,
   getDynamicClientRegistrationBody,
   setActiveKeyAlias,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
+import { getBCSCState } from '../storage/hooks'
 import { normalizeModulus } from './jwk-modulus'
 import { getNotificationTokens } from './push-notification-tokens'
 
@@ -291,8 +291,9 @@ export async function reRegisterNewestKey(
   try {
     // account (local read) and notification tokens (Firebase round trip) are independent —
     // fetch concurrently rather than serializing an unrelated native/network wait.
-    const [account, { fcmDeviceToken, deviceToken }] = await Promise.all([getAccount(), getNotificationTokens(logger)])
-    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, null, account?.nickname)
+    const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
+    const nickname = getBCSCState().account.profile?.nickname
+    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, null, nickname)
 
     if (!body) {
       logger.error('[reRegisterNewestKey] event=failed native DCR body was null')

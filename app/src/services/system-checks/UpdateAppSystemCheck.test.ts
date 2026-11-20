@@ -8,7 +8,6 @@ const createUtils = () => {
   const info = jest.spyOn(logger, 'info')
 
   return {
-    dispatch: jest.fn(),
     translation: jest.fn().mockReturnValue('Update available') as any,
     logger,
     info,
@@ -29,7 +28,6 @@ describe('UpdateAppSystemCheck', () => {
       }
       const mockNavigation = {} as any
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -51,7 +49,6 @@ describe('UpdateAppSystemCheck', () => {
       }
       const mockNavigation = {} as any
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -73,7 +70,6 @@ describe('UpdateAppSystemCheck', () => {
       }
       const mockNavigation = {} as any
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -126,7 +122,6 @@ describe('UpdateAppSystemCheck', () => {
       ).onFail()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.MandatoryUpdate)
-      expect(mockUtils.dispatch).not.toHaveBeenCalled()
     })
 
     it('logs the mandatory update result', () => {
@@ -157,7 +152,6 @@ describe('UpdateAppSystemCheck', () => {
       ).onFail()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.MandatoryUpdate)
-      expect(mockUtils.dispatch).not.toHaveBeenCalled()
     })
   })
 })

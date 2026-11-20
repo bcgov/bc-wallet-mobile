@@ -1,7 +1,7 @@
 import { useVerificationPendingActions } from '@/bcsc-theme/hooks/useVerificationPendingActions'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { VerificationRequestStatus } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { BCState } from '@/store'
 import { useFocusEffect } from '@mocks/@react-navigation/native'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -18,17 +18,14 @@ jest.mock('@/bcsc-theme/hooks/useVerificationPendingActions', () => ({
 }))
 
 /** Writes a review status the way useVerificationResponseListener does when the review push lands. */
-const ReviewPush = ({ status }: { status: VerificationRequestStatus }) => {
-  const [, dispatch] = useStore<BCState>()
-  return (
-    <Pressable
-      testID="ReviewPush"
-      accessibilityRole="button"
-      accessibilityLabel="Review push"
-      onPress={() => dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [status] })}
-    />
-  )
-}
+const ReviewPush = ({ status }: { status: VerificationRequestStatus }) => (
+  <Pressable
+    testID="ReviewPush"
+    accessibilityRole="button"
+    accessibilityLabel="Review push"
+    onPress={() => getBCSCState().session.update({ verificationRequestStatus: status })}
+  />
+)
 
 describe('PendingReview', () => {
   let mockNavigation: any

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { resetBCSCStore, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import React from 'react'
@@ -10,9 +11,6 @@ const mockIsPinned = jest.fn()
 const mockTogglePin = jest.fn()
 const mockFormatTime = jest.fn()
 const mockNavigate = jest.fn()
-
-// Mutable store so individual tests can flip developer mode.
-const mockStore = { preferences: { alternateContactNames: {} as Record<string, string>, developerModeEnabled: false } }
 
 jest.mock('@bifold/react-hooks', () => ({
   useConnectionById: (id: string) => mockUseConnectionById(id),
@@ -31,7 +29,6 @@ jest.mock('@bifold/core', () => {
     testIdWithKey: (k: string) => `id/${k}`,
     formatTime: (...args: any[]) => mockFormatTime(...args),
     getConnectionName: (record: any) => record?.theirLabel ?? record?.alias ?? '',
-    useStore: () => [mockStore],
     useTheme: () => ({
       ColorPalette: {
         brand: { primary: '#000' },
@@ -64,11 +61,12 @@ const renderScreen = () => render(<ContactDetailsScreen navigation={navigation} 
 
 describe('ContactDetailsScreen', () => {
   beforeEach(() => {
+    resetBCSCStore()
     mockNavigate.mockReset()
     mockIsPinned.mockReset().mockReturnValue(false)
     mockTogglePin.mockReset()
     mockFormatTime.mockReset().mockReturnValue('date-stub')
-    mockStore.preferences.developerModeEnabled = false
+    seedBCSCStore({ preferences: { developerModeEnabled: false } })
     mockUseConnectionById.mockReset().mockReturnValue({
       id: 'conn-1',
       theirLabel: 'Acme Corp',
@@ -130,13 +128,13 @@ describe('ContactDetailsScreen', () => {
   })
 
   it('hides the View JSON action when developer mode is disabled', () => {
-    mockStore.preferences.developerModeEnabled = false
+    seedBCSCStore({ preferences: { developerModeEnabled: false } })
     renderScreen()
     expect(screen.queryByTestId('id/ViewJSON')).toBeNull()
   })
 
   it('shows View JSON in developer mode and navigates with the serialized connection', () => {
-    mockStore.preferences.developerModeEnabled = true
+    seedBCSCStore({ preferences: { developerModeEnabled: true } })
     renderScreen()
     fireEvent.press(screen.getByTestId('id/ViewJSON'))
     expect(mockNavigate).toHaveBeenCalledWith(
@@ -146,7 +144,7 @@ describe('ContactDetailsScreen', () => {
   })
 
   it('falls back to the raw connection object when toJSON is unavailable', () => {
-    mockStore.preferences.developerModeEnabled = true
+    seedBCSCStore({ preferences: { developerModeEnabled: true } })
     mockUseConnectionById.mockReturnValue({ id: 'conn-2', theirLabel: 'Beta Inc' })
     renderScreen()
     fireEvent.press(screen.getByTestId('id/ViewJSON'))
@@ -157,7 +155,7 @@ describe('ContactDetailsScreen', () => {
   })
 
   it('renders without crashing when the connection is missing', () => {
-    mockStore.preferences.developerModeEnabled = true
+    seedBCSCStore({ preferences: { developerModeEnabled: true } })
     mockUseConnectionById.mockReturnValue(undefined)
     renderScreen()
     // Empty-object fallback for the JSON blob.

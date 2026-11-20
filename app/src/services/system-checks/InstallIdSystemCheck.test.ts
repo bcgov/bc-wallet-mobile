@@ -1,14 +1,9 @@
 import { InstallIdSystemCheck } from './InstallIdSystemCheck'
 
 jest.mock('react-native-uuid', () => ({ v4: jest.fn().mockReturnValue('test-uuid-1234') }))
-jest.mock('@/store', () => ({
-  BCDispatchAction: { SET_INSTALL_ID: 'bcsc/setInstallId' },
-}))
-
-const SET_INSTALL_ID = 'bcsc/setInstallId'
 
 describe('InstallIdSystemCheck', () => {
-  const mockDispatch = jest.fn()
+  const mockSaveInstallId = jest.fn().mockResolvedValue(undefined)
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -16,29 +11,26 @@ describe('InstallIdSystemCheck', () => {
 
   describe('runCheck', () => {
     it('should return true when installId is defined', () => {
-      const check = new InstallIdSystemCheck('existing-uuid', mockDispatch)
+      const check = new InstallIdSystemCheck('existing-uuid', mockSaveInstallId)
       expect(check.runCheck()).toBe(true)
     })
 
     it('should return false when installId is undefined', () => {
-      const check = new InstallIdSystemCheck(undefined, mockDispatch)
+      const check = new InstallIdSystemCheck(undefined, mockSaveInstallId)
       expect(check.runCheck()).toBe(false)
     })
 
     it('should return false when installId is an empty string', () => {
-      const check = new InstallIdSystemCheck('', mockDispatch)
+      const check = new InstallIdSystemCheck('', mockSaveInstallId)
       expect(check.runCheck()).toBe(false)
     })
   })
 
   describe('onFail', () => {
-    it('should dispatch SET_INSTALL_ID with the generated uuid', () => {
-      const check = new InstallIdSystemCheck(undefined, mockDispatch)
+    it('should save the generated uuid as the install ID', () => {
+      const check = new InstallIdSystemCheck(undefined, mockSaveInstallId)
       check.onFail()
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: SET_INSTALL_ID,
-        payload: ['test-uuid-1234'],
-      })
+      expect(mockSaveInstallId).toHaveBeenCalledWith('test-uuid-1234')
     })
   })
 })

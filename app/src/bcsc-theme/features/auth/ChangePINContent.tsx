@@ -1,11 +1,11 @@
 import { ChangePINForm } from '@/bcsc-theme/features/auth/components/ChangePINForm'
 import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { TOKENS, useServices } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
-import { AccountSecurityMethod, canPerformDeviceAuthentication, setAccountSecurityMethod } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, canPerformDeviceAuthentication } from 'react-native-bcsc-core'
 
 export interface ChangePINContentProps {
   isChangingExistingPIN: boolean
@@ -33,7 +33,6 @@ export const ChangePINContent = ({
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const walletService = useWalletService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [, dispatch] = useStore<BCState>()
 
   // Handler for when user is changing their existing PIN
   const handleChangePINSuccess = useCallback(
@@ -56,8 +55,7 @@ export const ChangePINContent = ({
       const method = isDeviceAuthAvailable
         ? AccountSecurityMethod.PinWithDeviceAuth
         : AccountSecurityMethod.PinNoDeviceAuth
-      await setAccountSecurityMethod(method)
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD, payload: [method] })
+      await getBCSCState().account.updateProfile({ securityMethod: method })
 
       logger.info('Switched to PIN security method')
 
@@ -67,7 +65,7 @@ export const ChangePINContent = ({
         onCreatePINSuccess()
       }
     },
-    [logger, navigation, walletService, onCreatePINSuccess, dispatch]
+    [logger, navigation, walletService, onCreatePINSuccess]
   )
 
   // Render ChangePINForm when changing existing PIN, PINEntryForm when switching from Device Auth

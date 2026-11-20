@@ -1,20 +1,13 @@
 import { ProofRequestExpirationScreen } from '@/bcsc-theme/features/settings/ProofRequestExpirationScreen'
-import { initialState } from '@/store'
 import { ProofRequestExpirationTime } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-
-const withExpiration = (proofRequestExpirationMs?: number) => ({
-  preferences: { ...initialState.preferences, proofRequestExpirationMs },
-})
 
 const renderScreen = (proofRequestExpirationMs?: number) =>
   render(
     <BasicAppContext
-      initialStateOverride={
-        proofRequestExpirationMs === undefined ? undefined : withExpiration(proofRequestExpirationMs)
-      }
+      bcscState={proofRequestExpirationMs === undefined ? undefined : { preferences: { proofRequestExpirationMs } }}
     >
       <ProofRequestExpirationScreen />
     </BasicAppContext>
@@ -70,21 +63,21 @@ describe('ProofRequestExpirationScreen', () => {
     expect(checkbox(utils, ProofRequestExpirationTime.FortyEightHours).props.isChecked).toBe(false)
   })
 
-  it('moves the selection when a different expiration is chosen', () => {
+  it('moves the selection when a different expiration is chosen', async () => {
     const utils = renderScreen(ProofRequestExpirationTime.FortyEightHours)
 
     fireEvent.press(checkbox(utils, ProofRequestExpirationTime.SevenDays))
 
-    expect(checkbox(utils, ProofRequestExpirationTime.SevenDays).props.isChecked).toBe(true)
+    await waitFor(() => expect(checkbox(utils, ProofRequestExpirationTime.SevenDays).props.isChecked).toBe(true))
     expect(checkbox(utils, ProofRequestExpirationTime.FortyEightHours).props.isChecked).toBe(false)
   })
 
-  it('can select "Never" to disable expiration', () => {
+  it('can select "Never" to disable expiration', async () => {
     const utils = renderScreen(ProofRequestExpirationTime.FortyEightHours)
 
     fireEvent.press(checkbox(utils, ProofRequestExpirationTime.Never))
 
-    expect(checkbox(utils, ProofRequestExpirationTime.Never).props.isChecked).toBe(true)
+    await waitFor(() => expect(checkbox(utils, ProofRequestExpirationTime.Never).props.isChecked).toBe(true))
     expect(checkbox(utils, ProofRequestExpirationTime.FortyEightHours).props.isChecked).toBe(false)
   })
 })

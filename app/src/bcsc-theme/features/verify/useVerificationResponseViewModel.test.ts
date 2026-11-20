@@ -1,6 +1,8 @@
 import useVerificationResponseViewModel from '@/bcsc-theme/features/verify/useVerificationResponseViewModel'
 import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRegistrationService'
 import * as useTokenServiceModule from '@/bcsc-theme/services/hooks/useTokenService'
+import { storage } from '@/bcsc-theme/storage'
+import { seedBCSCStore, withBCSCStore } from '@/bcsc-theme/storage/testing'
 import { BCDispatchAction, BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -37,6 +39,13 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   })),
 }))
 
+const PROFILE = {
+  accountId: 'test-account-id',
+  clientId: 'test-client-id',
+  issuer: 'https://idsit.gov.bc.ca/device/',
+  securityMethod: 'app_pin_no_device_authn' as never,
+}
+
 describe('useVerificationResponseViewModel', () => {
   const mockDispatch = jest.fn()
   const mockLogger = {
@@ -72,8 +81,10 @@ describe('useVerificationResponseViewModel', () => {
     mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
     const bifoldMock = jest.mocked(Bifold)
-    bifoldMock.useStore.mockReturnValue([mockStore as BCState, mockDispatch])
+    bifoldMock.useStore.mockReturnValue(withBCSCStore([mockStore as BCState, mockDispatch]))
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
+    // The nickname is saved on the account's profile
+    seedBCSCStore({ account: { profile: { ...PROFILE } } })
 
     jest.spyOn(useRegistrationServiceModule, 'useRegistrationService').mockReturnValue(mockRegistrationService as any)
     jest.spyOn(useTokenServiceModule, 'useTokenService').mockReturnValue({
@@ -102,16 +113,10 @@ describe('useVerificationResponseViewModel', () => {
 
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['TestNickname'],
-      })
+      expect(storage.store.getState().account.profile?.nickname).toBe('TestNickname')
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
-        payload: [undefined],
-      })
+      expect(storage.store.getState().session.verificationVideoSubmittedAt).toBeUndefined()
     })
 
     it('should set isSettingUpAccount to true during setup', async () => {
@@ -343,7 +348,7 @@ describe('useVerificationResponseViewModel', () => {
       }
 
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithoutDeviceCode as BCState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithoutDeviceCode as BCState, mockDispatch]))
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -369,10 +374,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
 
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['RC0000080'],
-      })
+      expect(storage.store.getState().account.profile?.nickname).toBe('RC0000080')
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'RC0000080')
     })
 
@@ -386,10 +388,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
 
-      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['Jamie'],
-      })
+      expect(storage.store.getState().account.profile?.nickname).toBe('Jamie')
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'Jamie')
     })
   })

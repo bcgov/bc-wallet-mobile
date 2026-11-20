@@ -107,8 +107,6 @@ export const formStringLengths = {
   maximumLength: 30,
 } as const
 export const PIN_LENGTH = 6
-// How long a read or write of the PIN attempt record may take before a PIN check or unlock gives up on it
-export const PIN_ATTEMPTS_STORAGE_TIMEOUT_MS = 5000
 export const DEFAULT_AUTO_LOCK_TIME_MIN = 5
 export const PAIRING_CODE_LENGTH = 6
 export const RECONNECTION_GRACE_PERIOD_MS = 3000

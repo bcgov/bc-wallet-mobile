@@ -1,3 +1,4 @@
+import { useVerification } from '@/bcsc-theme/storage/hooks'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
@@ -9,9 +10,8 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
 import { CROP_DELAY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey, ThemedText, TOKENS, usePreventDoublePress, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, usePreventDoublePress, useServices, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
@@ -47,7 +47,8 @@ const getCallVolume = (result: VolumeResult & { call?: number }) =>
 
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
-  const [store] = useStore<BCState>()
+  const deviceCode = useVerification((v) => v.request?.deviceCode)
+  const userCode = useVerification((v) => v.request?.userCode)
   const fcmService = useFcmService()
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
@@ -73,14 +74,14 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
    */
   const leaveCall = useCallback(async () => {
     try {
-      if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
+      if (!deviceCode || !userCode) {
         throw new Error(t('BCSC.VideoCall.DeviceCodeError'))
       }
 
       // checkVerificationStatus already calls updateTokens internally, no need to call it again
       const isVerified = await tokenService.checkVerificationStatus(
-        store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode
+        deviceCode,
+        userCode
       )
 
       if (!isVerified) {
@@ -103,7 +104,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     } catch (error) {
       unknownErrorModal(error)
     }
-  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, tokenService, logger, navigation, t, unknownErrorModal])
+  }, [deviceCode, userCode, tokenService, logger, navigation, t, unknownErrorModal])
 
   // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {

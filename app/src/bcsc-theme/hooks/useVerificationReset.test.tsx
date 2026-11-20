@@ -1,8 +1,9 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { nativeAccount, seedAccount, withBCSCStore } from '@/bcsc-theme/storage/testing'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
 import { act, renderHook } from '@testing-library/react-native'
-import { deleteToken, getAccount, TokenType } from 'react-native-bcsc-core'
 import * as useRegistrationServiceModule from '../services/hooks/useRegistrationService'
 import * as useSecureActionsModule from './useSecureActions'
 import { useVerificationReset } from './useVerificationReset'
@@ -15,14 +16,7 @@ jest.mock('@/hooks/useAlerts', () => ({
   useAlerts: jest.fn(),
 }))
 jest.mock('react-native-bcsc-core', () => ({
-  deleteToken: jest.fn(),
-  getAccount: jest.fn(),
-  isAccountRegistered: jest.fn().mockReturnValue(true),
-  TokenType: {
-    Refresh: 'Refresh',
-    Access: 'Access',
-    Registration: 'Registration',
-  },
+  isAccountRegistered: (account: { clientID?: string } | null) => Boolean(account?.clientID),
 }))
 jest.mock('../services/hooks/useRegistrationService', () => ({
   useRegistrationService: jest.fn(),
@@ -51,17 +45,19 @@ describe('useVerificationReset', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      {
-        bcscSecure: {
-          walletKey: 'wallet-key',
-          securityMethod: 'device_authentication',
-          registrationAccessToken: 'registration-token',
-          savedServices: ['service-a', 'service-b'],
-        },
-      } as any,
-      jest.fn(),
-    ])
+    jest.mocked(Bifold.useStore).mockReturnValue(
+      withBCSCStore([
+        {
+          bcscSecure: {
+            walletKey: 'wallet-key',
+            securityMethod: 'device_authentication',
+            registrationAccessToken: 'registration-token',
+            savedServices: ['service-a', 'service-b'],
+          },
+        } as any,
+        jest.fn(),
+      ])
+    )
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
     jest.mocked(useNavigation).mockReturnValue(mockNavigation as any)
     jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
@@ -75,8 +71,7 @@ describe('useVerificationReset', () => {
       deleteRegistration: mockDeleteRegistration,
       createRegistration: mockCreateRegistration,
     } as any)
-    jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-id', securityMethod: 'device_authentication' } as any)
-    jest.mocked(deleteToken).mockResolvedValue(true)
+    seedAccount(nativeAccount({ clientID: 'client-id', securityMethod: 'device_authentication' as never }))
   })
 
   it('account is renewed successfully', async () => {
@@ -94,13 +89,9 @@ describe('useVerificationReset', () => {
       verified: false,
       inVerifyFlow: false,
     })
-    expect(getAccount).toHaveBeenCalledTimes(1)
     expect(mockDeleteRegistration).toHaveBeenCalledWith('registration-token', 'client-id')
     expect(mockDeleteVerificationData).toHaveBeenCalledTimes(1)
-    expect(deleteToken).toHaveBeenCalledTimes(3)
-    expect(deleteToken).toHaveBeenNthCalledWith(1, TokenType.Access)
-    expect(deleteToken).toHaveBeenNthCalledWith(2, TokenType.Refresh)
-    expect(deleteToken).toHaveBeenNthCalledWith(3, TokenType.Registration)
+    expect(getBCSCState().account.tokens).toBeUndefined()
     expect(mockCreateRegistration).toHaveBeenCalledWith('device_authentication')
     expect(mockFactoryResetAlert).not.toHaveBeenCalled()
     expect(mockLogger.error).not.toHaveBeenCalled()
@@ -135,7 +126,7 @@ describe('useVerificationReset', () => {
   })
 
   it('shows the factory reset alert when no account exists', async () => {
-    jest.mocked(getAccount).mockResolvedValue(null)
+    seedAccount(null)
 
     const { result } = renderHook(() => useVerificationReset())
 

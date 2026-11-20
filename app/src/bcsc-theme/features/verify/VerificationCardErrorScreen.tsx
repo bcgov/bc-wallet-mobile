@@ -1,9 +1,9 @@
+import { useBirthdate, useVerification } from '@/bcsc-theme/storage/hooks'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { formatCalendarDate } from '@/bcsc-theme/utils/datetime-utils'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -23,13 +23,13 @@ interface VerificationCardErrorScreenProps {
 
 const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreenProps) => {
   const { Spacing } = useTheme()
-  const [store] = useStore<BCState>()
+  const serial = useVerification((v) => v.request?.csn)
   const { t } = useTranslation()
   const { width } = useWindowDimensions()
   const { params } = useRoute<RouteProp<BCSCVerifyStackParams, BCSCScreens.VerificationCardError>>()
 
   const errorType = params.errorType
-  const birthdate = store.bcscSecure.birthdate
+  const birthdate = useBirthdate()
 
   const styles = StyleSheet.create({
     image: {
@@ -88,7 +88,7 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
       <ThemedText>{t('BCSC.MismatchedSerial.Description1')}</ThemedText>
       <View>
         <ThemedText variant={'bold'}>
-          {t('BCSC.MismatchedSerial.SerialNumber', { serial: store.bcscSecure.serial })}
+          {t('BCSC.MismatchedSerial.SerialNumber', { serial })}
         </ThemedText>
         <ThemedText variant={'bold'} testID={testIdWithKey(TestIds.verify.verificationCardError.birthdate)}>
           {t('BCSC.MismatchedSerial.Birthdate', {

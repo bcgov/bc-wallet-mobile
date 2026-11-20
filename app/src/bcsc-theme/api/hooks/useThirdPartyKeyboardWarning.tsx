@@ -1,7 +1,6 @@
+import { useApp } from '@/bcsc-theme/storage/hooks'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, Platform } from 'react-native'
 import { isThirdPartyKeyboardActive, openAndroidKeyboardSelector } from 'react-native-bcsc-core'
@@ -19,7 +18,7 @@ export const showThirdPartyKeyboardWarning = async (
   hasShownWarning: boolean,
   t: (key: string) => string,
   emitAlert: (title: string, description: string, options: any) => void,
-  dispatch: (action: any) => void
+  recordShown: () => void
 ) => {
   // The user should only see this warning once
   if (hasShownWarning) {
@@ -42,7 +41,7 @@ export const showThirdPartyKeyboardWarning = async (
           },
         ],
       })
-      dispatch({ type: BCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT, payload: [true] })
+      recordShown()
     }
   }
 }
@@ -54,18 +53,20 @@ export const showThirdPartyKeyboardWarning = async (
 const useThirdPartyKeyboardWarning = () => {
   const { t } = useTranslation()
   const { emitAlert } = useErrorAlert()
-  const [store, dispatch] = useStore<BCState>()
+  const app = useApp()
 
-  const hasShownWarning = Boolean(store.bcsc.hasDismissedThirdPartyKeyboardAlert)
+  const hasShownWarning = Boolean(app.hasDismissedThirdPartyKeyboardAlert)
+  const { update } = app
+  const recordShown = useCallback(() => void update({ hasDismissedThirdPartyKeyboardAlert: true }), [update])
 
   useEffect(() => {
     const didShowListener = Keyboard.addListener('keyboardDidShow', () =>
-      showThirdPartyKeyboardWarning(hasShownWarning, t, emitAlert, dispatch)
+      showThirdPartyKeyboardWarning(hasShownWarning, t, emitAlert, recordShown)
     )
     return () => {
       didShowListener.remove()
     }
-  }, [hasShownWarning, t, emitAlert, dispatch])
+  }, [hasShownWarning, t, emitAlert, recordShown])
 }
 
 export default useThirdPartyKeyboardWarning

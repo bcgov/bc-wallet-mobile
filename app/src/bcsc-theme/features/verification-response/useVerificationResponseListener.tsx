@@ -4,12 +4,12 @@ import {
   VerificationResponseNavigationEvent,
 } from '@/bcsc-theme/features/verification-response'
 import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
+import { getBCSCState, selectVerificationRequestId } from '@/bcsc-theme/storage/hooks'
 import { interpretVerificationStatus } from '@/bcsc-theme/utils/verification-status'
 import { isVerifiedByTokenExchange } from '@/bcsc-theme/utils/verification-token-exchange'
 import { VerificationRequestStatus } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
-import { useCallback, useEffect, useRef } from 'react'
+import { TOKENS, useServices } from '@bifold/core'
+import { useCallback, useEffect } from 'react'
 
 /**
  * Hook that listens for verification response push notifications and records the reviewed status in the
@@ -33,13 +33,9 @@ import { useCallback, useEffect, useRef } from 'react'
  */
 export const useVerificationResponseListener = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store, dispatch] = useStore<BCState>()
   const { token } = useApi()
   const evidenceService = useEvidenceService()
   const verificationResponseService = useVerificationResponseService()
-  // The handler outlives the render it was built in; this is how it sees a cancel that lands mid-fetch
-  const latestStoreRef = useRef(store)
-  latestStoreRef.current = store
 
   /**
    * Handle request reviewed (send-video verification or live call).
@@ -50,7 +46,10 @@ export const useVerificationResponseListener = () => {
     logger.info('[useVerificationResponseListener] Request reviewed event received (send-video/live call)')
 
     try {
-      const { verificationRequestId, deviceCode, userCode } = store.bcscSecure
+      // Read from the store, not the render: the handler outlives the render it was built in
+      const { request } = getBCSCState().verification
+      const verificationRequestId = request?.backCheckVerificationId
+      const { deviceCode, userCode } = request ?? {}
 
       // Validate we have the device codes needed for token fetch
       if (!deviceCode || !userCode || !verificationRequestId) {
@@ -69,7 +68,7 @@ export const useVerificationResponseListener = () => {
 
       // "Choose another way" deleted this request while the fetch was in flight; recording its status now
       // would show a notice for a request that no longer exists
-      if (latestStoreRef.current.bcscSecure.verificationRequestId !== verificationRequestId) {
+      if (selectVerificationRequestId(getBCSCState()) !== verificationRequestId) {
         logger.info('[useVerificationResponseListener] Verification request was cancelled mid-check, dropping status')
         return
       }
@@ -77,27 +76,21 @@ export const useVerificationResponseListener = () => {
       if (status === VerificationRequestStatus.VERIFIED) {
         // Status is verified - fetch and update tokens
         await token.checkDeviceCodeStatus(deviceCode, userCode)
-        dispatch({
-          type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-          payload: [{ status: VerificationRequestStatus.VERIFIED }],
-        })
+        getBCSCState().session.verificationStatusReceived({ status: VerificationRequestStatus.VERIFIED })
         return
       }
 
       if (status === VerificationRequestStatus.CANCELLED) {
-        dispatch({
-          type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-          payload: [{ status: VerificationRequestStatus.CANCELLED, status_message }],
+        getBCSCState().session.verificationStatusReceived({
+          status: VerificationRequestStatus.CANCELLED,
+          status_message,
         })
         logger.info('[useVerificationResponseListener] Verification request cancelled, recorded status')
         return
       }
 
       if (status === VerificationRequestStatus.PENDING) {
-        dispatch({
-          type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-          payload: [{ status: VerificationRequestStatus.PENDING }],
-        })
+        getBCSCState().session.verificationStatusReceived({ status: VerificationRequestStatus.PENDING })
         // Status is pending - user should check manually via the UI
         logger.info(`[useVerificationResponseListener] Verification status is '${status}', not navigating`)
         return
@@ -107,17 +100,14 @@ export const useVerificationResponseListener = () => {
         `[useVerificationResponseListener] Unrecognised verification status '${rawStatus}'; asking the token endpoint`
       )
       const exchanged = await isVerifiedByTokenExchange(() => token.checkDeviceCodeStatus(deviceCode, userCode))
-      if (exchanged && latestStoreRef.current.bcscSecure.verificationRequestId === verificationRequestId) {
-        dispatch({
-          type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-          payload: [{ status: VerificationRequestStatus.VERIFIED }],
-        })
+      if (exchanged && selectVerificationRequestId(getBCSCState()) === verificationRequestId) {
+        getBCSCState().session.verificationStatusReceived({ status: VerificationRequestStatus.VERIFIED })
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[useVerificationResponseListener] Failed to handle request reviewed: ${message}`)
     }
-  }, [logger, store.bcscSecure, evidenceService, token, dispatch])
+  }, [logger, evidenceService, token])
 
   /**
    * Route the event to the appropriate handler based on event type.

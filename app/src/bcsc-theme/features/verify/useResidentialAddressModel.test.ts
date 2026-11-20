@@ -1,6 +1,7 @@
 import useResidentialAddressModel from '@/bcsc-theme/features/verify/useResidentialAddressModel'
 import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
+import { withBCSCStore } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
@@ -119,7 +120,7 @@ describe('useResidentialAddressModel', () => {
     jest.mocked(useAuthorizationService).mockReturnValue(mockAuthorizationApi as any)
 
     const bifoldMock = jest.mocked(Bifold)
-    bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
+    bifoldMock.useStore.mockReturnValue(withBCSCStore([mockStore, mockDispatch]))
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
     bifoldMock.useTheme.mockReturnValue(mockTheme as any)
   })
@@ -154,7 +155,7 @@ describe('useResidentialAddressModel', () => {
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithAddress2, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithAddress2, mockDispatch]))
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -168,7 +169,7 @@ describe('useResidentialAddressModel', () => {
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithoutAddress, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithoutAddress, mockDispatch]))
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
       expect(result.current.formState).toEqual({
@@ -193,10 +194,12 @@ describe('useResidentialAddressModel', () => {
 
     it('seeds the form from the session draft rather than the submitted address', () => {
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([
-        { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, residentialAddressDraft: draft } },
-        mockDispatch,
-      ])
+      bifoldMock.useStore.mockReturnValue(
+        withBCSCStore([
+          { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, residentialAddressDraft: draft } },
+          mockDispatch,
+        ])
+      )
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -248,7 +251,7 @@ describe('useResidentialAddressModel', () => {
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithEmptyAddress, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithEmptyAddress, mockDispatch]))
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -309,7 +312,7 @@ describe('useResidentialAddressModel', () => {
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithEmptyAddress, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithEmptyAddress, mockDispatch]))
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -371,7 +374,7 @@ describe('useResidentialAddressModel', () => {
         },
       }
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithDeviceCode, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithDeviceCode, mockDispatch]))
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -421,7 +424,7 @@ describe('useResidentialAddressModel', () => {
         },
       }
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithExpiredDeviceCode, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithExpiredDeviceCode, mockDispatch]))
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -451,10 +454,9 @@ describe('useResidentialAddressModel', () => {
       mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
 
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([
-        { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, ...idStepComplete } },
-        mockDispatch,
-      ])
+      bifoldMock.useStore.mockReturnValue(
+        withBCSCStore([{ ...mockStore, bcscSecure: { ...mockStore.bcscSecure, ...idStepComplete } }, mockDispatch])
+      )
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -579,7 +581,7 @@ describe('useResidentialAddressModel', () => {
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithAddress2, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithAddress2, mockDispatch]))
 
       const mockDeviceAuth = {
         device_code: 'new-device-code',
@@ -745,10 +747,9 @@ describe('useResidentialAddressModel', () => {
           })
         jest
           .mocked(Bifold)
-          .useStore.mockReturnValue([
-            { ...mockStore, bcscSecure: { ...mockStore.bcscSecure, ...idStepComplete } },
-            mockDispatch,
-          ])
+          .useStore.mockReturnValue(
+            withBCSCStore([{ ...mockStore, bcscSecure: { ...mockStore.bcscSecure, ...idStepComplete } }, mockDispatch])
+          )
 
         const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -805,7 +806,7 @@ describe('useResidentialAddressModel', () => {
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithoutBirthdate, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithoutBirthdate, mockDispatch]))
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -827,7 +828,7 @@ describe('useResidentialAddressModel', () => {
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithoutName, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithoutName, mockDispatch]))
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
@@ -859,7 +860,7 @@ describe('useResidentialAddressModel', () => {
         },
       }
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithDeviceCode as BCState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([storeWithDeviceCode as BCState, mockDispatch]))
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 

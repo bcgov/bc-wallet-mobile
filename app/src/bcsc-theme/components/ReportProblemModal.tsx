@@ -1,10 +1,11 @@
+import { getBCSCState, useApp, useDeveloper } from '@/bcsc-theme/storage/hooks'
+import { selectJourney } from '@/bcsc-theme/state/verification/journey'
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { reportProblem } from '@/utils/logger'
-import { Button, ButtonType, Link, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, Link, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -33,7 +34,8 @@ export interface ReportProblemModalProps {
  */
 export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps) => {
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const app = useApp()
+  const developer = useDeveloper()
   const { Spacing, ColorPalette, TextTheme, maxFontSizeMultiplier } = useTheme()
   // Inset works inside this RN Modal because the app's root SafeAreaProvider context crosses the
   // modal boundary; applied as scroll padding so the action button clears the home indicator.
@@ -85,12 +87,13 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     const appError = AppError.fromErrorDefinition(ErrorRegistry.REPORT_PROBLEM)
 
     // Add context to the error for debugging purposes
+    const { verified, credentialDeactivated, inVerifyFlow, cardProcess } = selectJourney(getBCSCState())
     appError.addContext({
-      state_ias_environment: store.developer.environment.name,
-      state_verified: store.bcscSecure.verified,
-      state_credential_deactivated: store.bcscSecure.credentialDeactivated,
-      state_in_verify_flow: store.bcscSecure.inVerifyFlow,
-      state_card_process: store.bcscSecure.cardProcess,
+      state_ias_environment: developer.environment.name,
+      state_verified: verified,
+      state_credential_deactivated: credentialDeactivated,
+      state_in_verify_flow: inVerifyFlow,
+      state_card_process: cardProcess,
       // ...
     })
 
@@ -101,20 +104,16 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       description: description.trim(),
       code: appError.statusCode,
       error: appError,
-      installId: store.bcsc.installId, // App install ID
-      sessionId: store.developer.remoteDebugging.sessionId, // Remote logging session ID
+      installId: app.installId, // App install ID
+      sessionId: developer.remoteDebugging.sessionId, // Remote logging session ID
     })
 
     setReportId(reportId)
   }, [
     description,
-    store.developer.environment.name,
-    store.developer.remoteDebugging.sessionId,
-    store.bcscSecure.verified,
-    store.bcscSecure.credentialDeactivated,
-    store.bcscSecure.inVerifyFlow,
-    store.bcscSecure.cardProcess,
-    store.bcsc.installId,
+    developer.environment.name,
+    developer.remoteDebugging.sessionId,
+    app.installId,
     t,
   ])
 

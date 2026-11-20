@@ -1,5 +1,5 @@
+import type { BCSCStore } from '@/bcsc-theme/storage'
 import { BCSCBanner } from '@/bcsc-theme/types/banners'
-import { BCState } from '@/store'
 import { BannerDismissal, getBannerDismissal } from './banner-dismissal'
 
 /**
@@ -11,8 +11,12 @@ import { BannerDismissal, getBannerDismissal } from './banner-dismissal'
  * @param now - The current time in milliseconds since the epoch, used to determine whether the dismissal has ended.
  * @returns - Whether the dismissal applies, see `getBannerDismissal`. Only `Dismissed` hides the banner.
  */
-export const selectBannerDismissal = (state: BCState, bannerId: BCSCBanner, now: number): BannerDismissal => {
-  const dismissals = state.bcsc.dismissedBanners || {}
+export const selectBannerDismissal = (
+  state: Pick<BCSCStore, 'app'>,
+  bannerId: BCSCBanner,
+  now: number
+): BannerDismissal => {
+  const dismissals = state.app.dismissedBanners || {}
   const dismissedBanner = dismissals[bannerId]
 
   return getBannerDismissal({

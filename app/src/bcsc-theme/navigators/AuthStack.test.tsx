@@ -1,3 +1,4 @@
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import * as Bifold from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
@@ -75,6 +76,7 @@ jest.mock('../features/webview/WebViewScreen', () => ({
 
 const renderStack = (storeOverrides: Record<string, unknown> = {}) => {
   jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: { ...storeOverrides } }, jest.fn()] as any)
+  seedBCSCStoreFromBCState({ bcsc: { ...storeOverrides } } as never)
   render(<AuthStack />)
   return capturedNavigatorProps
 }

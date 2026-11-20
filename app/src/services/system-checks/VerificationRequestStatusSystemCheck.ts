@@ -1,8 +1,8 @@
 import { VerificationStatusResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from '@/bcsc-theme/utils/verification-status'
 import { isVerifiedByTokenExchange } from '@/bcsc-theme/utils/verification-token-exchange'
 import { VerificationRequestStatus } from '@/constants'
-import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -62,17 +62,11 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
       return
     }
 
-    this.utils.dispatch({
-      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-      payload: [{ status: this.status, status_message: this.statusMessage }],
-    })
+    getBCSCState().session.verificationStatusReceived({ status: this.status, status_message: this.statusMessage })
   }
 
   onSuccess() {
     // Setting status to 'verified' surfaces the VerifiedNotification banner on Home screen
-    this.utils.dispatch({
-      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-      payload: [{ status: VerificationRequestStatus.VERIFIED }],
-    })
+    getBCSCState().session.verificationStatusReceived({ status: VerificationRequestStatus.VERIFIED })
   }
 }

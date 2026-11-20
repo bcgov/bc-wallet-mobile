@@ -5,6 +5,8 @@ import {
 } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
+import { selectJourney, VerificationJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState, useBirthdate, useDeviceCodeExpiresAt, useSession, useVerification } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { formatBirthdateForApi } from '@/bcsc-theme/utils/birthdate'
@@ -20,12 +22,13 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { isHandledAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCState, NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
+import { TOKENS, useServices } from '@bifold/core'
 import { StackActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useShallow } from 'zustand/react/shallow'
 
 /** The form's values, kept as the session draft in the same shape (see ResidentialAddressDraft). */
 export type ResidentialAddressFormState = ResidentialAddressDraft
@@ -51,7 +54,12 @@ type useResidentialAddressModelProps = {
  */
 const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResidentialAddressModelProps) => {
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const { userMetadata, residentialAddressDraft } = useSession(
+    useShallow((s) => ({ userMetadata: s.userMetadata, residentialAddressDraft: s.residentialAddressDraft }))
+  )
+  const deviceCode = useVerification((v) => v.request?.deviceCode)
+  const deviceCodeExpiresAt = useDeviceCodeExpiresAt()
+  const birthdate = useBirthdate()
   const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorModal } = useErrorAlert()
@@ -70,11 +78,11 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
     // screen, so what the user typed this session (the draft) wins over what they last submitted. A
     // lock drops the draft with the rest of the secure state, so after an unlock only a submitted
     // address comes back.
-    if (store.bcscSecure.residentialAddressDraft) {
-      return store.bcscSecure.residentialAddressDraft
+    if (residentialAddressDraft) {
+      return residentialAddressDraft
     }
 
-    const address = store.bcscSecure.userMetadata?.address
+    const address = userMetadata?.address
     return {
       streetAddress: address?.streetAddress ?? '',
       streetAddress2: address?.streetAddress2 ?? '',
@@ -94,8 +102,8 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
   // popping back, a stack reset, and leaving for Home ("Back to home" in the help menu, or back at the
   // beginning of the stack, unmounts the whole stack with no blur). Not per keystroke: every store
   // consumer would re-render while typing. A lock or a verification reset also unmounts the stack, right
-  // after clearing the secure state; that write lands on the cleared state and the reducer drops it
-  // (see UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT), so after an unlock only a submitted address comes back.
+  // after clearing the session; that write lands on the cleared session and is dropped
+  // (see session.setResidentialAddressDraft), so after an unlock only a submitted address comes back.
   useEffect(() => {
     return () => {
       updateResidentialAddressDraft(formStateRef.current)
@@ -180,7 +188,7 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
     }
 
     const updatedUserMetadata: NonBCSCUserMetadata = {
-      ...store.bcscSecure.userMetadata,
+      ...userMetadata,
       address,
     }
     await updateUserMetadata(updatedUserMetadata)
@@ -189,29 +197,22 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
     // A present-but-expired code must fall through to re-authorize (mint a fresh code) rather than
     // proceed with a dead one, which would 401 on the evidence calls. See issue #4050.
     const deviceCodeStillValid = Boolean(
-      store.bcscSecure.deviceCode &&
-        store.bcscSecure.deviceCodeExpiresAt &&
-        store.bcscSecure.deviceCodeExpiresAt.getTime() > Date.now()
+      deviceCode && deviceCodeExpiresAt && deviceCodeExpiresAt.getTime() > Date.now()
     )
     if (deviceCodeStillValid) {
-      // Resume at whatever step the user is now on (v4.1 routing), using the just-updated metadata.
-      const predictedStore: BCState = {
-        ...store,
-        bcscSecure: { ...store.bcscSecure, userMetadata: updatedUserMetadata },
-      }
-      // Advance to the next step while keeping the history so the user can step back through the
+      // Resume at whatever step the user is now on (v4.1 routing). Advance to the next step while keeping the history so the user can step back through the
       // flow (this address screen, then the ID forms). push preserves the back stack.
-      const nextStep = getResumeStepRoute(predictedStore)
+      const nextStep = getResumeStepRoute(selectJourney(getBCSCState()))
       navigation.dispatch(StackActions.push(nextStep.name, nextStep.params))
       return
     }
 
     // missing required user attributes
     // making the assumption that the user metadata has been previously saved ie: Step 1
-    if (!store.bcscSecure.birthdate || !store.bcscSecure.userMetadata?.name) {
+    if (!birthdate || !userMetadata?.name) {
       logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected', {
-        hasBirthdate: Boolean(store.bcscSecure.birthdate),
-        hasName: Boolean(store.bcscSecure.userMetadata?.name),
+        hasBirthdate: Boolean(birthdate),
+        hasName: Boolean(userMetadata?.name),
       })
 
       throw new Error(t('BCSC.Address.MissingPrerequisiteAttributes'))
@@ -225,10 +226,10 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
         : address.streetAddress
 
       const deviceAuthConfig = {
-        firstName: store.bcscSecure.userMetadata.name.first,
-        lastName: store.bcscSecure.userMetadata.name.last,
-        birthdate: formatBirthdateForApi(store.bcscSecure.birthdate),
-        middleNames: store.bcscSecure.userMetadata.name.middle,
+        firstName: userMetadata.name.first,
+        lastName: userMetadata.name.last,
+        birthdate: formatBirthdateForApi(birthdate),
+        middleNames: userMetadata.name.middle,
         address: {
           streetAddress: mergedStreetAddress,
           city: address.city,
@@ -258,20 +259,15 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
       await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
       await updateCardProcess(deviceAuth.process)
 
-      const predictedStore: BCState = {
-        ...store,
-        bcscSecure: {
-          ...store.bcscSecure,
-          userMetadata: updatedUserMetadata,
-          deviceCode: deviceAuth.device_code,
-          userCode: deviceAuth.user_code,
-          deviceCodeExpiresAt: expiresAt,
-          cardProcess: deviceAuth.process,
-        },
+      // The writes above are in the store already; the prediction pins the values the route depends on
+      const predictedJourney: VerificationJourney = {
+        ...selectJourney(getBCSCState()),
+        deviceCode: deviceAuth.device_code,
+        cardProcess: deviceAuth.process,
       }
       // Advance to the next step while keeping the history so the user can step back through the
       // flow (this address screen, then the ID forms). push preserves the back stack.
-      const nextStep = getResumeStepRoute(predictedStore)
+      const nextStep = getResumeStepRoute(predictedJourney)
       navigation.dispatch(StackActions.push(nextStep.name, nextStep.params))
     } catch (error) {
       if (isHandledAppError(error)) {
@@ -290,7 +286,10 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
   }, [
     validateForm,
     formState,
-    store,
+    userMetadata,
+    deviceCode,
+    deviceCodeExpiresAt,
+    birthdate,
     updateUserMetadata,
     navigation,
     logger,

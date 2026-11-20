@@ -1,4 +1,5 @@
-import { BCDispatchAction } from '@/store'
+import { storage } from '@/bcsc-theme/storage'
+import { reportSessionWritesAs } from '@/bcsc-theme/storage/testing'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { useLeaveVerification } from './useLeaveVerification'
@@ -9,6 +10,7 @@ const mockDispatch = jest.fn()
 
 describe('useLeaveVerification', () => {
   beforeEach(() => {
+    reportSessionWritesAs(mockDispatch)
     jest.clearAllMocks()
     jest.mocked(Bifold.useStore).mockReturnValue([{} as any, mockDispatch])
   })
@@ -20,10 +22,7 @@ describe('useLeaveVerification', () => {
       result.current()
     })
 
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW,
-      payload: [false],
-    })
+    expect(storage.store.getState().session.inVerifyFlow).toEqual(false)
   })
 
   it('preserves progress — it does not dispatch any verification-data reset', () => {

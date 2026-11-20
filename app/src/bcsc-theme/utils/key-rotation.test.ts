@@ -2,8 +2,6 @@ jest.mock('react-native-bcsc-core', () => ({
   createNewKeyPair: jest.fn(),
   deleteKey: jest.fn(),
   getAllKeysWithPublicInfo: jest.fn(),
-  setToken: jest.fn(),
-  TokenType: { Access: 0, Refresh: 1, Registration: 2 },
 }))
 
 jest.mock('./key-recovery', () => ({
@@ -11,15 +9,10 @@ jest.mock('./key-recovery', () => ({
   reRegisterNewestKey: jest.fn(),
 }))
 
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { Platform } from 'react-native'
-import {
-  createNewKeyPair,
-  deleteKey,
-  getAllKeysWithPublicInfo,
-  KeyPublicInfo,
-  setToken,
-  TokenType,
-} from 'react-native-bcsc-core'
+import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo, KeyPublicInfo } from 'react-native-bcsc-core'
 import { reRegisterNewestKey } from './key-recovery'
 import {
   KEY_ROTATION_MAX_AGE_DAYS,
@@ -32,8 +25,15 @@ import {
 const mockedCreateNewKeyPair = createNewKeyPair as jest.MockedFunction<typeof createNewKeyPair>
 const mockedDeleteKey = deleteKey as jest.MockedFunction<typeof deleteKey>
 const mockedGetAllKeysWithPublicInfo = getAllKeysWithPublicInfo as jest.MockedFunction<typeof getAllKeysWithPublicInfo>
-const mockedSetToken = setToken as jest.MockedFunction<typeof setToken>
 const mockedReRegisterNewestKey = reRegisterNewestKey as jest.MockedFunction<typeof reRegisterNewestKey>
+
+// The store's setTokens, still saving, so a test can check when it ran
+const spyOnSetTokens = () => {
+  const real = getBCSCState().account.setTokens
+  const spy = jest.fn(real)
+  seedBCSCStore({ account: { setTokens: spy } })
+  return spy
+}
 
 const makeLogger = () =>
   ({
@@ -358,33 +358,34 @@ describe('rotateSigningKey', () => {
     })
   })
 
-  it('persists a rotated registration_access_token via native setToken BEFORE confirm/rollback', async () => {
+  it('persists a rotated registration_access_token to the store BEFORE confirm/rollback', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({
       success: true,
       newRegistrationAccessToken: 'rotated-token',
       serverKeyNs: [n(2)],
     })
+    const setTokens = spyOnSetTokens()
     const logger = makeLogger()
 
     const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result.newRegistrationAccessToken).toBe('rotated-token')
-    expect(mockedSetToken).toHaveBeenCalledWith(TokenType.Registration, 'rotated-token')
-    // setToken must have been invoked before the confirmed-branch prune enumerates.
-    expect(mockedSetToken.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(getBCSCState().account.tokens?.registrationAccessToken).toBe('rotated-token')
+    // setTokens must have been invoked before the confirmed-branch prune enumerates.
+    expect(setTokens.mock.invocationCallOrder[0]).toBeLessThan(
       mockedGetAllKeysWithPublicInfo.mock.invocationCallOrder[0]
     )
   })
 
-  it('setToken throws while persisting the rotated registration_access_token -> logs failure but still returns the token and continues rotation', async () => {
+  it('setTokens throws while persisting the rotated registration_access_token -> logs failure but still returns the token and continues rotation', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({
       success: true,
       newRegistrationAccessToken: 'rotated-token',
       serverKeyNs: [n(2)],
     })
-    mockedSetToken.mockRejectedValue(new Error('keystore unavailable'))
+    seedBCSCStore({ account: { setTokens: jest.fn().mockRejectedValue(new Error('keystore unavailable')) } })
     const logger = makeLogger()
 
     const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
@@ -398,15 +399,16 @@ describe('rotateSigningKey', () => {
   it('persists a rotated registration_access_token even when the PUT itself failed (rollback)', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({ success: false, newRegistrationAccessToken: 'rotated-token' })
+    const setTokens = spyOnSetTokens()
     const logger = makeLogger()
 
     const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result).toEqual({ status: 'rolled_back', confirmed: false, newRegistrationAccessToken: 'rotated-token' })
-    expect(mockedSetToken).toHaveBeenCalledWith(TokenType.Registration, 'rotated-token')
+    expect(getBCSCState().account.tokens?.registrationAccessToken).toBe('rotated-token')
     expect(mockedDeleteKey).toHaveBeenCalledWith('rsa2')
-    // setToken persists the rotated reg token before rollback deletes the unregistered new key.
-    expect(mockedSetToken.mock.invocationCallOrder[0]).toBeLessThan(mockedDeleteKey.mock.invocationCallOrder[0])
+    // setTokens persists the rotated reg token before rollback deletes the unregistered new key.
+    expect(setTokens.mock.invocationCallOrder[0]).toBeLessThan(mockedDeleteKey.mock.invocationCallOrder[0])
   })
 
   it('echo entirely undecodable garbage -> same as empty: rotated without pruning the new key, unconfirmed', async () => {

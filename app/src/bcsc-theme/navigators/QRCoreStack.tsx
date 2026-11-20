@@ -3,6 +3,7 @@ import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScannerScreen from '@/bcsc-theme/features/qr-core/QRScannerScreen'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import {
   BCSCMainStackParams,
   BCSCModals,
@@ -11,17 +12,8 @@ import {
   BCSCScreens,
 } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl, TAB_SCENE_CONTAINER_STYLE } from '@/constants'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import {
-  testIdWithKey,
-  ThemedText,
-  TOKENS,
-  useDefaultStackOptions,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useDefaultStackOptions, useServices, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -103,7 +95,7 @@ const QRCoreStack: React.FC = () => {
   const { isActivelyVerified, isExpired } = useCardStatus()
   const { isAvailable: isServerAvailable } = useServerStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
+  const developerModeEnabled = useBCSCStore((s) => s.preferences.developerModeEnabled)
   const defaultStackOptions = useDefaultStackOptions(theme)
 
   const styles = StyleSheet.create({
@@ -190,7 +182,7 @@ const QRCoreStack: React.FC = () => {
             }),
           }}
         />
-        {store.preferences.developerModeEnabled ? (
+        {developerModeEnabled ? (
           <Tab.Screen
             name={BCSCQRCoreScreens.Display}
             component={QRDisplay}

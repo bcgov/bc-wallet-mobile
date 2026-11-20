@@ -1,36 +1,15 @@
 import { PinLockoutType } from '@/bcsc-theme/state/pin-lockout/pin-lockout'
-import { PIN_ATTEMPTS_STORAGE_TIMEOUT_MS } from '@/constants'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import type { BCSCStore } from '@/bcsc-theme/storage/slices'
+import { nativeAccount, seedAccount, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import type { BifoldLogger } from '@bifold/core'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { verifyPIN } from 'react-native-bcsc-core'
 import { clearPinAttempts, PinVerificationType, readPinLockout, verifyPinWithLockout } from './pin-lockout-service'
 
-const STORAGE_KEY = 'PinAttempts'
+type SetPinAttempts = BCSCStore['account']['setPinAttempts']
 
-jest.mock('@/store', () => ({
-  BCLocalStorageKeys: { PinAttempts: 'PinAttempts' },
-}))
-
-const mockRecords = new Map<string, string>()
-
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  __esModule: true,
-  default: {
-    getItem: jest.fn(async (key: string) => mockRecords.get(key) ?? null),
-    setItem: jest.fn(async (key: string, value: string) => {
-      mockRecords.set(key, value)
-    }),
-    removeItem: jest.fn(async (key: string) => {
-      mockRecords.delete(key)
-    }),
-  },
-}))
-
-const mockGetItem = AsyncStorage.getItem as jest.Mock
-const mockSetItem = AsyncStorage.setItem as jest.Mock
-const mockRemoveItem = AsyncStorage.removeItem as jest.Mock
 const mockVerifyPIN = verifyPIN as jest.Mock
 
 const MINUTE = 60_000
@@ -39,12 +18,31 @@ const NOW = new Date('2026-11-16T12:00:00.000Z')
 const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() } as unknown as BifoldLogger
 
 const storeRecord = (failedCount: number, lastAttemptAt: Date = NOW) => {
-  mockRecords.set(STORAGE_KEY, JSON.stringify({ version: 1, failedCount, lastAttemptAt: lastAttemptAt.getTime() }))
+  seedBCSCStore({ account: { pinAttempts: { failedCount, lastAttemptAt: lastAttemptAt.getTime() } } })
 }
 
-const storedRecord = (): unknown => {
-  const raw = mockRecords.get(STORAGE_KEY)
-  return raw === undefined ? undefined : JSON.parse(raw)
+const storedRecord = () => getBCSCState().account.pinAttempts
+
+// Swaps in the given action, by default the real one wrapped so its calls can be asserted
+const replaceSetPinAttempts = (
+  implementation: SetPinAttempts = getBCSCState().account.setPinAttempts
+): jest.Mock<ReturnType<SetPinAttempts>, Parameters<SetPinAttempts>> => {
+  const setPinAttempts = jest.fn(implementation)
+  seedBCSCStore({ account: { setPinAttempts } })
+  return setPinAttempts
+}
+
+// The real action, except that the next `times` clears fail
+const failClears = (times: number) => {
+  const real = getBCSCState().account.setPinAttempts
+  let failures = times
+  return replaceSetPinAttempts(async (attempts) => {
+    if (!attempts && failures > 0) {
+      failures--
+      throw new Error('remove failed')
+    }
+    return real(attempts)
+  })
 }
 
 const wrongPin = () => mockVerifyPIN.mockResolvedValueOnce({ success: false })
@@ -72,7 +70,7 @@ describe('pin-lockout-service', () => {
   beforeEach(() => {
     jest.useFakeTimers()
     jest.setSystemTime(NOW)
-    mockRecords.clear()
+    seedAccount(nativeAccount())
   })
 
   afterEach(() => {
@@ -81,6 +79,7 @@ describe('pin-lockout-service', () => {
 
   describe('verifyPinWithLockout', () => {
     it('saves the attempt before the PIN is checked', async () => {
+      const setPinAttempts = replaceSetPinAttempts()
       let recordWhenChecked: unknown
       mockVerifyPIN.mockImplementationOnce(async () => {
         recordWhenChecked = storedRecord()
@@ -89,8 +88,8 @@ describe('pin-lockout-service', () => {
 
       await verifyPinWithLockout('123456', logger)
 
-      expect(recordWhenChecked).toEqual({ version: 1, failedCount: 1, lastAttemptAt: NOW.getTime() })
-      expect(mockSetItem.mock.invocationCallOrder[0]).toBeLessThan(mockVerifyPIN.mock.invocationCallOrder[0])
+      expect(recordWhenChecked).toEqual({ failedCount: 1, lastAttemptAt: NOW.getTime() })
+      expect(setPinAttempts.mock.invocationCallOrder[0]).toBeLessThan(mockVerifyPIN.mock.invocationCallOrder[0])
     })
 
     it('passes the PIN to the native check and returns the wallet key for a correct PIN', async () => {
@@ -98,7 +97,10 @@ describe('pin-lockout-service', () => {
 
       const result = await verifyPinWithLockout('123456', logger)
 
-      expect(mockVerifyPIN).toHaveBeenCalledWith('123456')
+      expect(mockVerifyPIN).toHaveBeenCalledWith(
+        { accountId: 'test-account-id', issuer: 'https://idsit.gov.bc.ca/device/' },
+        '123456'
+      )
       expect(result).toEqual({ type: PinVerificationType.Success, walletKey: 'wallet-key' })
     })
 
@@ -119,7 +121,7 @@ describe('pin-lockout-service', () => {
 
       await verifyPinWithLockout('000000', logger)
 
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 1, lastAttemptAt: NOW.getTime() })
+      expect(storedRecord()).toEqual({ failedCount: 1, lastAttemptAt: NOW.getTime() })
     })
 
     it('counts each wrong PIN and warns when the next one would lock', async () => {
@@ -136,7 +138,7 @@ describe('pin-lockout-service', () => {
         { type: PinVerificationType.Incorrect, isLastAttempt: false },
         { type: PinVerificationType.Incorrect, isLastAttempt: true },
       ])
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 4, lastAttemptAt: NOW.getTime() })
+      expect(storedRecord()).toEqual({ failedCount: 4, lastAttemptAt: NOW.getTime() })
     })
 
     it('locks on the wrong PIN that reaches the schedule', async () => {
@@ -146,19 +148,20 @@ describe('pin-lockout-service', () => {
       const result = await verifyPinWithLockout('000000', logger)
 
       expect(result).toEqual({ type: PinVerificationType.Locked, until: new Date(NOW.getTime() + MINUTE) })
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 5, lastAttemptAt: NOW.getTime() })
+      expect(storedRecord()).toEqual({ failedCount: 5, lastAttemptAt: NOW.getTime() })
     })
 
     it('refuses a PIN while locked without checking it or counting it', async () => {
       storeRecord(5)
+      const setPinAttempts = replaceSetPinAttempts()
       jest.setSystemTime(NOW.getTime() + MINUTE - 1)
 
       const result = await verifyPinWithLockout('123456', logger)
 
       expect(result).toEqual({ type: PinVerificationType.Locked, until: new Date(NOW.getTime() + MINUTE) })
       expect(mockVerifyPIN).not.toHaveBeenCalled()
-      expect(mockSetItem).not.toHaveBeenCalled()
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 5, lastAttemptAt: NOW.getTime() })
+      expect(setPinAttempts).not.toHaveBeenCalled()
+      expect(storedRecord()).toEqual({ failedCount: 5, lastAttemptAt: NOW.getTime() })
     })
 
     it('checks the PIN again once the lock has passed, and carries the count on', async () => {
@@ -170,32 +173,23 @@ describe('pin-lockout-service', () => {
       const result = await verifyPinWithLockout('000000', logger)
 
       expect(result).toEqual({ type: PinVerificationType.Incorrect, isLastAttempt: false })
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 6, lastAttemptAt: afterLock })
+      expect(storedRecord()).toEqual({ failedCount: 6, lastAttemptAt: afterLock })
     })
 
     it('does not check the PIN when the attempt cannot be saved', async () => {
-      mockSetItem.mockRejectedValueOnce(new Error('disk full'))
+      replaceSetPinAttempts(jest.fn().mockRejectedValue(new Error('disk full')))
 
       await expectStorageError(verifyPinWithLockout('123456', logger), ErrorRegistry.STORAGE_WRITE_ERROR)
 
       expect(mockVerifyPIN).not.toHaveBeenCalled()
     })
 
-    it('does not check the PIN when the count cannot be read', async () => {
-      mockGetItem.mockRejectedValueOnce(new Error('read failed'))
-
-      await expectStorageError(verifyPinWithLockout('123456', logger), ErrorRegistry.STORAGE_READ_ERROR)
-
-      expect(mockVerifyPIN).not.toHaveBeenCalled()
-      expect(mockSetItem).not.toHaveBeenCalled()
-    })
-
     it('does not check the PIN when storage throws instead of rejecting', async () => {
-      mockGetItem.mockImplementationOnce(() => {
+      replaceSetPinAttempts(() => {
         throw new Error('native module missing')
       })
 
-      await expectStorageError(verifyPinWithLockout('123456', logger), ErrorRegistry.STORAGE_READ_ERROR)
+      await expectStorageError(verifyPinWithLockout('123456', logger), ErrorRegistry.STORAGE_WRITE_ERROR)
 
       expect(mockVerifyPIN).not.toHaveBeenCalled()
     })
@@ -208,7 +202,7 @@ describe('pin-lockout-service', () => {
 
       await expect(verifyPinWithLockout('123456', logger)).rejects.toBe(nativeError)
 
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 2, lastAttemptAt: earlier.getTime() })
+      expect(storedRecord()).toEqual({ failedCount: 2, lastAttemptAt: earlier.getTime() })
     })
 
     it('takes the attempt back when the native check fails and there was no earlier count', async () => {
@@ -222,7 +216,7 @@ describe('pin-lockout-service', () => {
     it('still reports the native failure when the attempt cannot be taken back', async () => {
       const nativeError = new Error('keystore unavailable')
       mockVerifyPIN.mockRejectedValueOnce(nativeError)
-      mockRemoveItem.mockRejectedValueOnce(new Error('remove failed'))
+      failClears(1)
 
       await expect(verifyPinWithLockout('123456', logger)).rejects.toBe(nativeError)
 
@@ -232,12 +226,15 @@ describe('pin-lockout-service', () => {
     it('retries the clear once after a correct PIN', async () => {
       storeRecord(3)
       correctPin()
-      mockRemoveItem.mockRejectedValueOnce(new Error('remove failed'))
+      const setPinAttempts = failClears(1)
 
       const result = await verifyPinWithLockout('123456', logger)
 
       expect(result).toEqual({ type: PinVerificationType.Success, walletKey: 'wallet-key' })
-      expect(mockRemoveItem).toHaveBeenCalledTimes(2)
+      // The attempt, then the clear and its retry
+      expect(setPinAttempts).toHaveBeenCalledTimes(3)
+      expect(setPinAttempts).toHaveBeenNthCalledWith(2, undefined)
+      expect(setPinAttempts).toHaveBeenNthCalledWith(3, undefined)
       expect(storedRecord()).toBeUndefined()
       expect(logger.error).not.toHaveBeenCalled()
     })
@@ -245,7 +242,7 @@ describe('pin-lockout-service', () => {
     it('lets a correct PIN through even when the count cannot be cleared', async () => {
       storeRecord(3)
       correctPin()
-      mockRemoveItem.mockRejectedValueOnce(new Error('remove failed')).mockRejectedValueOnce(new Error('remove failed'))
+      failClears(2)
 
       const result = await verifyPinWithLockout('123456', logger)
 
@@ -264,40 +261,19 @@ describe('pin-lockout-service', () => {
 
       // The second attempt waits for the first to finish before it reads the count
       expect(mockVerifyPIN).toHaveBeenCalledTimes(1)
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 1, lastAttemptAt: NOW.getTime() })
+      expect(storedRecord()).toEqual({ failedCount: 1, lastAttemptAt: NOW.getTime() })
 
       firstCheck.resolve({ success: false })
       await Promise.all([first, second])
 
       expect(mockVerifyPIN).toHaveBeenCalledTimes(2)
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 2, lastAttemptAt: NOW.getTime() })
-    })
-
-    it('gives up when storage does not answer, and does not check the PIN', async () => {
-      mockGetItem.mockReturnValueOnce(new Promise(() => {}))
-
-      const result = expectStorageError(verifyPinWithLockout('123456', logger), ErrorRegistry.STORAGE_READ_ERROR)
-      await jest.advanceTimersByTimeAsync(PIN_ATTEMPTS_STORAGE_TIMEOUT_MS)
-      await result
-
-      expect(mockVerifyPIN).not.toHaveBeenCalled()
-    })
-
-    it('gives up when the attempt is not saved in time, and does not check the PIN', async () => {
-      mockSetItem.mockReturnValueOnce(new Promise(() => {}))
-
-      const result = expectStorageError(verifyPinWithLockout('123456', logger), ErrorRegistry.STORAGE_WRITE_ERROR)
-      await jest.advanceTimersByTimeAsync(PIN_ATTEMPTS_STORAGE_TIMEOUT_MS)
-      await result
-
-      expect(mockVerifyPIN).not.toHaveBeenCalled()
+      expect(storedRecord()).toEqual({ failedCount: 2, lastAttemptAt: NOW.getTime() })
     })
 
     it('keeps working after a storage failure', async () => {
-      mockGetItem.mockReturnValueOnce(new Promise(() => {}))
-      const failed = verifyPinWithLockout('123456', logger).catch(() => undefined)
-      await jest.advanceTimersByTimeAsync(PIN_ATTEMPTS_STORAGE_TIMEOUT_MS)
-      await failed
+      const real = getBCSCState().account.setPinAttempts
+      replaceSetPinAttempts(jest.fn(real).mockRejectedValueOnce(new Error('disk full')))
+      await verifyPinWithLockout('123456', logger).catch(() => undefined)
       correctPin()
 
       const result = await verifyPinWithLockout('123456', logger)
@@ -305,26 +281,14 @@ describe('pin-lockout-service', () => {
       expect(result).toEqual({ type: PinVerificationType.Success, walletKey: 'wallet-key' })
     })
 
-    it.each([
-      ['is not JSON', 'not json'],
-      ['is not an object', '5'],
-      ['is null', 'null'],
-      ['has another version', JSON.stringify({ version: 2, failedCount: 5, lastAttemptAt: NOW.getTime() })],
-      ['has no version', JSON.stringify({ failedCount: 5, lastAttemptAt: NOW.getTime() })],
-      ['has a count that is not a number', JSON.stringify({ version: 1, failedCount: '5', lastAttemptAt: 1 })],
-      ['has a fractional count', JSON.stringify({ version: 1, failedCount: 4.5, lastAttemptAt: NOW.getTime() })],
-      ['has a count below one', JSON.stringify({ version: 1, failedCount: 0, lastAttemptAt: NOW.getTime() })],
-      ['has no attempt time', JSON.stringify({ version: 1, failedCount: 5 })],
-      ['has an attempt time that is not a number', JSON.stringify({ version: 1, failedCount: 5, lastAttemptAt: 'x' })],
-      ['has an attempt time out of range', JSON.stringify({ version: 1, failedCount: 5, lastAttemptAt: 9e15 })],
-    ])('starts a fresh count when the stored record %s', async (_description, raw) => {
-      mockRecords.set(STORAGE_KEY, raw)
+    it('starts a fresh count when the stored attempt time is out of range', async () => {
+      seedBCSCStore({ account: { pinAttempts: { failedCount: 5, lastAttemptAt: 9e15 } } })
       wrongPin()
 
       const result = await verifyPinWithLockout('000000', logger)
 
       expect(result).toEqual({ type: PinVerificationType.Incorrect, isLastAttempt: false })
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 1, lastAttemptAt: NOW.getTime() })
+      expect(storedRecord()).toEqual({ failedCount: 1, lastAttemptAt: NOW.getTime() })
       expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('not readable'))
     })
   })
@@ -353,26 +317,12 @@ describe('pin-lockout-service', () => {
 
     it('does not change the record', async () => {
       storeRecord(5)
+      const setPinAttempts = replaceSetPinAttempts()
 
       await readPinLockout(logger)
 
-      expect(mockSetItem).not.toHaveBeenCalled()
-      expect(mockRemoveItem).not.toHaveBeenCalled()
-    })
-
-    it('fails instead of reporting open when the record cannot be read', async () => {
-      mockGetItem.mockRejectedValueOnce(new Error('read failed'))
-
-      await expectStorageError(readPinLockout(logger), ErrorRegistry.STORAGE_READ_ERROR)
-    })
-
-    it('fails when storage does not answer in time', async () => {
-      mockGetItem.mockReturnValueOnce(new Promise(() => {}))
-
-      const result = expectStorageError(readPinLockout(logger), ErrorRegistry.STORAGE_READ_ERROR)
-      await jest.advanceTimersByTimeAsync(PIN_ATTEMPTS_STORAGE_TIMEOUT_MS)
-
-      await result
+      expect(setPinAttempts).not.toHaveBeenCalled()
+      expect(storedRecord()).toEqual({ failedCount: 5, lastAttemptAt: NOW.getTime() })
     })
 
     it('waits for a PIN check in progress, so it sees that attempt', async () => {
@@ -401,12 +351,12 @@ describe('pin-lockout-service', () => {
 
     it('logs and resolves when the record cannot be removed', async () => {
       storeRecord(5)
-      mockRemoveItem.mockRejectedValueOnce(new Error('remove failed'))
+      failClears(1)
 
       await expect(clearPinAttempts(logger)).resolves.toBeUndefined()
 
       expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to clear'), expect.any(AppError))
-      expect(storedRecord()).toEqual({ version: 1, failedCount: 5, lastAttemptAt: NOW.getTime() })
+      expect(storedRecord()).toEqual({ failedCount: 5, lastAttemptAt: NOW.getTime() })
     })
   })
 })

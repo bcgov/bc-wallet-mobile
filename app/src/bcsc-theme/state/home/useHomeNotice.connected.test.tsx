@@ -1,7 +1,8 @@
 import { BCSCAccountProvider } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { VerificationRequestStatus } from '@/constants'
-import { BCDispatchAction, BCState, initialBCSCSecureState } from '@/store'
-import { useStore } from '@bifold/core'
+import { initialBCSCSecureState } from '@/store'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import moment from 'moment'
@@ -45,13 +46,7 @@ const renderHome = () => {
     </BasicAppContext>
   )
 
-  return renderHook(
-    () => {
-      const [, dispatch] = useStore<BCState>()
-      return { dispatch, notice: useHomeNotice() }
-    },
-    { wrapper }
-  )
+  return renderHook(() => ({ notice: useHomeNotice() }), { wrapper })
 }
 
 describe('the Home notice, from the store and account provider', () => {
@@ -69,24 +64,28 @@ describe('the Home notice, from the store and account provider', () => {
       })
     )
     const { result } = renderHome()
-    const dispatch = (type: BCDispatchAction, payload: unknown[]) =>
+    const seed = (bcscSecure: Record<string, unknown>) =>
       act(() => {
-        result.current.dispatch({ type, payload } as Parameters<typeof result.current.dispatch>[0])
+        seedBCSCStoreFromBCState({ bcscSecure }, { reset: false })
+      })
+    const setStatus = (verificationRequestStatus: VerificationRequestStatus) =>
+      act(() => {
+        getBCSCState().session.update({ verificationRequestStatus })
       })
 
     expect(result.current.notice.type).toBe(HomeNoticeType.BCSCStartVerification)
 
-    dispatch(BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID, ['request-1'])
-    dispatch(BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, [VerificationRequestStatus.PENDING])
+    seed({ verificationRequestId: 'request-1' })
+    setStatus(VerificationRequestStatus.PENDING)
     expect(result.current.notice.type).toBe(HomeNoticeType.BCSCPendingReview)
 
-    dispatch(BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, [VerificationRequestStatus.CANCELLED])
+    setStatus(VerificationRequestStatus.CANCELLED)
     expect(result.current.notice.type).toBe(HomeNoticeType.BCSCCancelledReview)
 
-    dispatch(BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, [VerificationRequestStatus.VERIFIED])
+    setStatus(VerificationRequestStatus.VERIFIED)
     expect(result.current.notice.type).toBe(HomeNoticeType.BCSCVerified)
 
-    dispatch(BCDispatchAction.UPDATE_SECURE_VERIFIED, [true])
+    seed({ verified: true })
     await waitFor(() => expect(mockGetUserMetadata).toHaveBeenCalled())
     expect(result.current.notice.type).toBe(HomeNoticeType.None)
 

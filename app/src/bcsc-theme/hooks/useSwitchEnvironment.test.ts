@@ -1,5 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { BCDispatchAction } from '@/store'
+import { storage } from '@/bcsc-theme/storage'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { IASEnvironment } from '@/utils/environment'
 import { useServices, useStore } from '@bifold/core'
@@ -31,12 +31,12 @@ describe('useSwitchEnvironment', () => {
   }
 
   it('switches the environment when the factory reset succeeds', async () => {
-    const { switchEnvironment, dispatch } = setup({ success: true })
+    const { switchEnvironment } = setup({ success: true })
 
     await switchEnvironment(IASEnvironment.SIT)
 
     expect(setIssuer).toHaveBeenCalledWith(IASEnvironment.SIT.iasApiBaseUrl)
-    expect(dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.UPDATE_ENVIRONMENT, payload: [IASEnvironment.SIT] })
+    expect(storage.store.getState().developer.environment).toEqual(IASEnvironment.SIT)
   })
 
   it('does not switch the environment when the factory reset fails', async () => {

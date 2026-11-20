@@ -1,6 +1,6 @@
+import { useSession } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState, initialState } from '@/store'
-import { useStore } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
@@ -9,8 +9,8 @@ import SuccessfullySentScreen from './SuccessfullySentScreen'
 
 /** Exposes whether the user is in the verify flow so tests can observe useLeaveVerification. */
 const InVerifyFlowProbe = () => {
-  const [store] = useStore<BCState>()
-  return <Text testID="InVerifyFlowProbe">{String(store.bcscSecure.inVerifyFlow)}</Text>
+  const inVerifyFlow = useSession((s) => s.inVerifyFlow)
+  return <Text testID="InVerifyFlowProbe">{String(inVerifyFlow)}</Text>
 }
 
 const NEXT_BUTTON = 'com.ariesbifold:id/GoToHome'

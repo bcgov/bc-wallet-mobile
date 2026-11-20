@@ -6,6 +6,7 @@ import android.content.Context
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
+import android.os.UserManager
 import android.provider.Settings
 import android.security.keystore.KeyProperties
 import android.util.Log
@@ -111,7 +112,11 @@ import com.bcsccore.storage.NativeAddress
 import com.bcsccore.storage.NativeRequestStatus
 import com.bcsccore.storage.NativeAuthorizationMethod
 import com.bcsccore.storage.NativeClientMetadata
+import com.bcsccore.storage.RecordRead
 import com.bcsccore.storage.V3ProviderRecord
+import com.bcsccore.storage.then
+import com.bcsccore.storage.toFailure
+import com.bcsccore.storage.toRecordRead
 
 // TODO: (al) - refactor to use readFirstAccountEncryptedFile function
 // TODO: (al) - refactor to remove file names and use AccountFileName enum
@@ -162,6 +167,30 @@ class BcscCoreModule internal constructor(
 
         // Exclusive upper bound passed to SecureRandom.nextInt() to produce a single decimal digit (0-9)
         private const val DECIMAL_DIGIT_BOUND = 10
+
+        // Reason-code prefixes for RecordRead.Unreadable
+        private const val CREDENTIAL_RECORD = "credential"
+        private const val EVIDENCE_RECORD = "evidence"
+
+        // readLegacyRecord names, and the reason-code prefix each uses
+        private val LEGACY_RECORD_LABELS =
+            mapOf(
+                "account" to "account",
+                "tokens" to NativeCompatibleStorage.TOKENS_RECORD,
+                "credential" to CREDENTIAL_RECORD,
+                "authorizationRequest" to NativeCompatibleStorage.AUTHORIZATION_REQUEST_RECORD,
+                "accountFlags" to "account_flags",
+                "evidence" to EVIDENCE_RECORD,
+                "savedServices" to NativeCompatibleStorage.SAVED_SERVICES_RECORD,
+            )
+
+        // readLegacyRecord's tokens value keys
+        private val LEGACY_TOKEN_KEYS =
+            listOf(
+                TOKEN_TYPE_ACCESS to "access",
+                TOKEN_TYPE_REFRESH to "refresh",
+                TOKEN_TYPE_REGISTRATION to "registration",
+            )
     }
 
     override fun getName(): String = NAME
@@ -503,19 +532,35 @@ class BcscCoreModule internal constructor(
         Log.d(NAME, "getToken called with tokenType: $tokenType")
 
         // First, get the account to obtain the account ID
-        val account = getAccountSync()
-        if (account == null) {
-            promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
-            return
+        val account =
+            when (val read = readAccountRecord()) {
+                is RecordRead.Ok -> {
+                    read.value
+                }
+
+                is RecordRead.Failure -> {
+                    promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
+                    return
+                }
+            }
+
+        when (missingAccountField(account, requireIssuer = true)) {
+            AccountField.ID -> {
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account ID is null or empty")
+                return
+            }
+
+            AccountField.ISSUER -> {
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account issuer is null or empty")
+                return
+            }
+
+            null -> {
+                Unit
+            }
         }
 
-        val accountId = account.getString("id")
-        if (accountId == null || accountId.isEmpty()) {
-            promise.reject("E_ACCOUNT_NOT_FOUND", "Account ID is null or empty")
-            return
-        }
-
-        Log.d(NAME, "getToken - Using account ID: $accountId")
+        Log.d(NAME, "getToken - Using account ID: ${account.uuid}")
 
         // Attempt to read and decrypt the token file using bcsc-file-port
         try {
@@ -534,140 +579,25 @@ class BcscCoreModule internal constructor(
                 )}",
             )
 
-            val issuer = account.getString("issuer")
-            if (issuer.isNullOrEmpty()) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "Account issuer is null or empty")
-                return
-            }
+            val storedTokens =
+                when (val read = readStoredTokens(account)) {
+                    is RecordRead.Ok -> {
+                        read.value
+                    }
 
-            // Use DecryptedFileReader to read and decrypt the token file
-            val decryptedFileReader = DecryptedFileReader(reactApplicationContext)
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val relativePath = "$issuerName/$accountId/tokens"
-            val tokenFilePath = "${baseDir.absolutePath}/$relativePath"
+                    is RecordRead.Failure -> {
+                        Log.w(NAME, "getToken: no tokens (${read.statusCode}) — returning null for type $tokenType")
+                        promise.resolve(null)
+                        return
+                    }
+                }
 
             try {
-                val decryptedFileData: DecryptedFileData? = decryptedFileReader.readDecryptedFile(relativePath)
-
-                if (decryptedFileData != null) {
-                    Log.d(
-                        NAME,
-                        "Successfully read and decrypted token file using bcsc-file-port from path: $tokenFilePath",
-                    )
-                    Log.d(NAME, "Decrypted content size: ${decryptedFileData.decryptedSize} bytes")
-                    Log.d(NAME, "Content appears to be JSON: ${decryptedFileData.isJson()}")
-
-                    if (decryptedFileData.isJson()) {
-                        try {
-                            val jsonObject = JSONObject(decryptedFileData.decryptedContent)
-                            when (tokenType) {
-                                TOKEN_TYPE_ACCESS -> { // Access Token
-                                    if (jsonObject.has("accessToken")) {
-                                        val accessTokenObj = jsonObject.getJSONObject("accessToken")
-                                        val token = createTokenFromJson(accessTokenObj, tokenType)
-                                        Log.d(NAME, "Returning access token with id: ${accessTokenObj.optString("id")}")
-                                        promise.resolve(token)
-                                        return
-                                    }
-                                }
-
-                                TOKEN_TYPE_REFRESH -> { // Refresh Token
-                                    if (jsonObject.has("refreshToken")) {
-                                        val refreshTokenObj = jsonObject.getJSONObject("refreshToken")
-                                        val token = createTokenFromJson(refreshTokenObj, tokenType)
-                                        Log.d(
-                                            NAME,
-                                            "Returning refresh token with id: ${refreshTokenObj.optString("id")}",
-                                        )
-                                        promise.resolve(token)
-                                        return
-                                    }
-                                }
-
-                                TOKEN_TYPE_REGISTRATION -> { // Registration Token (idToken)
-                                    if (jsonObject.has("idToken")) {
-                                        val idTokenObj = jsonObject.getJSONObject("idToken")
-                                        val idTokenKeys = idTokenObj.keys().asSequence().toList()
-                                        Log.d(NAME, "getToken: Found idToken in tokens file, keys: $idTokenKeys")
-                                        if (idTokenObj.has("rawToken")) {
-                                            // V4 format: registration_access_token stored as rawToken
-                                            val token = createRegistrationTokenFromJson(idTokenObj, tokenType)
-                                            Log.d(
-                                                NAME,
-                                                "getToken: Returning V4 registration token, id=${token.getString(
-                                                    "id",
-                                                )}",
-                                            )
-                                            promise.resolve(token)
-                                            return
-                                        }
-                                        Log.d(
-                                            NAME,
-                                            "getToken: idToken has no rawToken (V3 identity token), falling back to providers file",
-                                        )
-                                    }
-
-                                    Log.d(NAME, "getToken : trying V3 providers fallback")
-                                    val v3RegistrationToken =
-                                        nativeStorage.readRegistrationTokenFromV3Provider(
-                                            issuerName,
-                                            accountId,
-                                        )
-                                    if (v3RegistrationToken != null) {
-                                        Log.d(
-                                            NAME,
-                                            "getToken : V3 registration token found, migrating to V4 tokens file",
-                                        )
-                                        val existingTokensForMigration = nativeStorage.readTokens(issuerName, accountId)
-                                        val migratedIdToken = NativeIdToken(rawToken = v3RegistrationToken)
-                                        val migratedTokens =
-                                            existingTokensForMigration?.copy(idToken = migratedIdToken)
-                                                ?: NativeTokens(issuer = issuer, idToken = migratedIdToken)
-                                        nativeStorage.saveTokens(migratedTokens, issuerName, accountId)
-                                        Log.d(NAME, "getToken : V3 token migrated and saved to V4 tokens file")
-                                        val token: WritableMap = Arguments.createMap()
-                                        token.putString("id", "registration-token")
-                                        token.putInt("type", tokenType)
-                                        token.putString("token", v3RegistrationToken)
-                                        promise.resolve(token)
-                                        return
-                                    }
-                                    Log.w(
-                                        NAME,
-                                        "getToken : No registration token found in V4 tokens file or V3 providers file",
-                                    )
-                                }
-                            }
-
-                            promise.resolve(null)
-                        } catch (e: Exception) {
-                            Log.e(
-                                NAME,
-                                "Failed to parse/migrate decrypted token content for type $tokenType — returning null",
-                                e,
-                            )
-                            promise.resolve(null)
-                        }
-                    } else {
-                        Log.w(
-                            NAME,
-                            "Decrypted token content is empty or not valid JSON at $tokenFilePath — " +
-                                "returning null for type $tokenType",
-                        )
-                        promise.resolve(null)
-                    }
-                } else {
-                    Log.w(
-                        NAME,
-                        "getToken: token file not found or empty at $tokenFilePath — returning null for type $tokenType",
-                    )
-                    promise.resolve(null)
-                }
-            } catch (e: DecryptionException) {
+                promise.resolve((readTokenOfType(storedTokens, tokenType) as? RecordRead.Ok)?.value)
+            } catch (e: Exception) {
                 Log.e(
                     NAME,
-                    "Failed to decrypt token file from path: $tokenFilePath - ${e.message} — " +
-                        "returning null for type $tokenType",
+                    "Failed to parse/migrate decrypted token content for type $tokenType — returning null",
                     e,
                 )
                 promise.resolve(null)
@@ -677,6 +607,183 @@ class BcscCoreModule internal constructor(
             promise.reject("E_STORAGE_ERROR", "Failed to read token file: ${e.message}", e)
         }
     }
+
+    /** The decrypted tokens file and where it lives, so the v3 fallback can migrate into it. */
+    private class StoredTokens(
+        val json: JSONObject,
+        val issuerName: String,
+        val accountId: String,
+        val issuer: String,
+    )
+
+    /**
+     * Reads the tokens file the way getToken always has: bcsc-file-port, under the default issuer name.
+     * Exceptions other than decrypt failures propagate, so getToken can keep rejecting on them.
+     */
+    private fun readStoredTokens(account: NativeAccount): RecordRead<StoredTokens> {
+        val accountId = account.uuid
+        val issuerName = nativeStorage.getDefaultIssuerName()
+        val relativePath = "$issuerName/$accountId/tokens"
+        val tokenFilePath = "${reactApplicationContext.filesDir.absolutePath}/$relativePath"
+
+        // SimpleFileReader returns null for both "missing" and "IOException", so check existence first.
+        if (!File(reactApplicationContext.filesDir, relativePath).isFile) {
+            Log.w(NAME, "getToken: token file not found")
+            return RecordRead.Absent
+        }
+
+        val decryptedFileData: DecryptedFileData? =
+            try {
+                DecryptedFileReader(reactApplicationContext).readDecryptedFile(relativePath)
+            } catch (e: DecryptionException) {
+                Log.e(NAME, "Failed to decrypt token file from path: $tokenFilePath - ${e.message}", e)
+                return RecordRead.decryptFailed(NativeCompatibleStorage.TOKENS_RECORD, e)
+            }
+        if (decryptedFileData == null) {
+            Log.w(NAME, "getToken: token file unreadable")
+            return RecordRead.Unreadable("${NativeCompatibleStorage.TOKENS_RECORD}_file_unreadable")
+        }
+
+        Log.d(NAME, "Successfully read and decrypted token file using bcsc-file-port from path: $tokenFilePath")
+        Log.d(NAME, "Decrypted content size: ${decryptedFileData.decryptedSize} bytes")
+        Log.d(NAME, "Content appears to be JSON: ${decryptedFileData.isJson()}")
+
+        if (decryptedFileData.isEmpty()) {
+            Log.w(NAME, "Decrypted token content is empty")
+            return RecordRead.Absent
+        }
+        if (!decryptedFileData.isJson()) {
+            Log.w(NAME, "Decrypted token content is not valid JSON")
+            return RecordRead.Unreadable("${NativeCompatibleStorage.TOKENS_RECORD}_parse_failed")
+        }
+
+        return try {
+            RecordRead.Ok(
+                StoredTokens(JSONObject(decryptedFileData.decryptedContent), issuerName, accountId, account.issuer),
+            )
+        } catch (e: JSONException) {
+            Log.e(NAME, "Failed to parse decrypted token content", e)
+            RecordRead.Unreadable(RecordRead.reason("${NativeCompatibleStorage.TOKENS_RECORD}_parse_failed", e))
+        }
+    }
+
+    /**
+     * The getToken map for [tokenType]. A missing registration token falls back to (and migrates from) the v3
+     * providers file, whose failure is returned so readLegacyRecord can report it.
+     */
+    private fun readTokenOfType(
+        storedTokens: StoredTokens,
+        tokenType: Int,
+    ): RecordRead<WritableMap> {
+        val jsonObject = storedTokens.json
+        when (tokenType) {
+            TOKEN_TYPE_ACCESS -> { // Access Token
+                if (jsonObject.has("accessToken")) {
+                    val accessTokenObj = jsonObject.getJSONObject("accessToken")
+                    val token = createTokenFromJson(accessTokenObj, tokenType)
+                    Log.d(NAME, "Returning access token with id: ${accessTokenObj.optString("id")}")
+                    return RecordRead.Ok(token)
+                }
+            }
+
+            TOKEN_TYPE_REFRESH -> { // Refresh Token
+                if (jsonObject.has("refreshToken")) {
+                    val refreshTokenObj = jsonObject.getJSONObject("refreshToken")
+                    val token = createTokenFromJson(refreshTokenObj, tokenType)
+                    Log.d(
+                        NAME,
+                        "Returning refresh token with id: ${refreshTokenObj.optString("id")}",
+                    )
+                    return RecordRead.Ok(token)
+                }
+            }
+
+            TOKEN_TYPE_REGISTRATION -> { // Registration Token (idToken)
+                if (jsonObject.has("idToken")) {
+                    val idTokenObj = jsonObject.getJSONObject("idToken")
+                    val idTokenKeys = idTokenObj.keys().asSequence().toList()
+                    Log.d(NAME, "getToken: Found idToken in tokens file, keys: $idTokenKeys")
+                    if (idTokenObj.has("rawToken")) {
+                        // V4 format: registration_access_token stored as rawToken
+                        val token = createRegistrationTokenFromJson(idTokenObj, tokenType)
+                        Log.d(
+                            NAME,
+                            "getToken: Returning V4 registration token, id=${token.getString(
+                                "id",
+                            )}",
+                        )
+                        return RecordRead.Ok(token)
+                    }
+                    Log.d(
+                        NAME,
+                        "getToken: idToken has no rawToken (V3 identity token), falling back to providers file",
+                    )
+                }
+
+                Log.d(NAME, "getToken : trying V3 providers fallback")
+                val v3Read =
+                    nativeStorage.readRegistrationTokenFromV3ProviderResult(
+                        storedTokens.issuerName,
+                        storedTokens.accountId,
+                    )
+                val v3RegistrationToken =
+                    when (v3Read) {
+                        is RecordRead.Ok -> {
+                            v3Read.value
+                        }
+
+                        is RecordRead.Failure -> {
+                            Log.w(
+                                NAME,
+                                "getToken : No registration token found in V4 tokens file or V3 providers file",
+                            )
+                            return v3Read
+                        }
+                    }
+                Log.d(
+                    NAME,
+                    "getToken : V3 registration token found, migrating to V4 tokens file",
+                )
+                val existingTokensForMigration =
+                    nativeStorage.readTokens(storedTokens.issuerName, storedTokens.accountId)
+                val migratedIdToken = NativeIdToken(rawToken = v3RegistrationToken)
+                val migratedTokens =
+                    existingTokensForMigration?.copy(idToken = migratedIdToken)
+                        ?: NativeTokens(issuer = storedTokens.issuer, idToken = migratedIdToken)
+                nativeStorage.saveTokens(migratedTokens, storedTokens.issuerName, storedTokens.accountId)
+                Log.d(NAME, "getToken : V3 token migrated and saved to V4 tokens file")
+                val token: WritableMap = Arguments.createMap()
+                token.putString("id", "registration-token")
+                token.putInt("type", tokenType)
+                token.putString("token", v3RegistrationToken)
+                return RecordRead.Ok(token)
+            }
+        }
+
+        return RecordRead.Absent
+    }
+
+    /**
+     * readLegacyRecord's tokens: the token strings of each type, through the same reads as getToken.
+     * With no token of any type, a failed v3 fallback is reported instead of absent.
+     */
+    private fun readTokensRecord(): RecordRead<WritableMap> =
+        readAccountForRecords().then { readStoredTokens(it) }.then { storedTokens ->
+            val value = Arguments.createMap()
+            var fallbackFailure: RecordRead.Failure? = null
+            for ((tokenType, key) in LEGACY_TOKEN_KEYS) {
+                val read = readTokenOfType(storedTokens, tokenType)
+                if (read is RecordRead.Ok) {
+                    read.value
+                        .getString("token")
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { value.putString(key, it) }
+                } else if (read != RecordRead.Absent) {
+                    fallbackFailure = read as? RecordRead.Failure
+                }
+            }
+            if (value.keySetIterator().hasNextKey()) RecordRead.Ok(value) else fallbackFailure ?: RecordRead.Absent
+        }
 
     // MARK: - Token creation helper methods
 
@@ -1137,16 +1244,58 @@ class BcscCoreModule internal constructor(
     override fun getAccount(promise: Promise) {
         Log.d(NAME, "getAccount called")
 
-        val account = resolveFirstAccount()
-        if (account != null) {
-            Log.d(NAME, "getAccount - Found account: ${account.uuid}")
-            promise.resolve(convertNativeAccountToWritableMap(account))
+        val read = readAccountRecord()
+        if (read is RecordRead.Ok) {
+            Log.d(NAME, "getAccount - Found account: ${read.value.uuid}")
+            promise.resolve(convertNativeAccountToWritableMap(read.value))
             return
         }
 
         Log.d(NAME, "getAccount - No account found in any storage")
         promise.resolve(null)
     }
+
+    /**
+     * The first account, as [getAccount] resolves it, or why there is none. Native storage failures outrank
+     * legacy ones: they are what would be lost if the account were recreated.
+     */
+    private fun readAccountRecord(): RecordRead<NativeAccount> {
+        val resolution = resolveAccountsWithStatus()
+        resolution.accounts?.firstOrNull()?.let { return RecordRead.Ok(it) }
+
+        resolution.native.toFailure()?.let { return it }
+        return when (resolution.legacy) {
+            LegacyAccountsRead.Unreadable -> RecordRead.Unreadable("legacy_account_file_unreadable")
+            LegacyAccountsRead.ParseFailed -> RecordRead.Unreadable("legacy_account_parse_failed")
+            else -> RecordRead.Absent
+        }
+    }
+
+    private enum class AccountField { ID, ISSUER }
+
+    /** The field the getters need to locate records under [account] that is missing, if any. */
+    private fun missingAccountField(
+        account: NativeAccount,
+        requireIssuer: Boolean,
+    ): AccountField? {
+        // Gson can leave these null despite the non-null types
+        val uuid: String? = account.uuid
+        val issuer: String? = account.issuer
+        return when {
+            uuid.isNullOrEmpty() -> AccountField.ID
+            requireIssuer && issuer.isNullOrEmpty() -> AccountField.ISSUER
+            else -> null
+        }
+    }
+
+    /**
+     * The account that records are stored under. One the getters can't locate records for (no id, or no issuer when
+     * [requireIssuer]) is absent, as the getters return nothing for it.
+     */
+    private fun readAccountForRecords(requireIssuer: Boolean = true): RecordRead<NativeAccount> =
+        readAccountRecord().then { account ->
+            if (missingAccountField(account, requireIssuer) == null) RecordRead.Ok(account) else RecordRead.Absent
+        }
 
     /**
      * Returns why getAccount resolves null by running the same resolution for the native-compatible store.
@@ -1162,6 +1311,103 @@ class BcscCoreModule internal constructor(
         resolution.native.detail?.let { result.putString("detail", it) }
         result.putString("legacyStatus", resolution.legacy.statusCode)
         promise.resolve(result)
+    }
+
+    /**
+     * Reads one stored record through its getter's read path and says why it has no value. Never rejects.
+     * `value` is what the getter resolves, except tokens: `{access?, refresh?, registration?}` token strings.
+     */
+    @ReactMethod
+    override fun readLegacyRecord(
+        name: String,
+        promise: Promise,
+    ) {
+        val label = LEGACY_RECORD_LABELS[name]
+        val read: RecordRead<Any> =
+            when {
+                label == null -> {
+                    RecordRead.Unreadable(RecordRead.UNKNOWN_RECORD)
+                }
+
+                // Direct boot: credential-encrypted storage, where every record lives, isn't mounted yet
+                !isUserUnlocked() -> {
+                    RecordRead.Locked
+                }
+
+                else -> {
+                    try {
+                        readLegacyRecordValue(name)
+                    } catch (e: Exception) {
+                        RecordRead.fromException(label, e)
+                    }
+                }
+            }
+
+        val result = Arguments.createMap()
+        result.putString("status", read.statusCode)
+        when (read) {
+            is RecordRead.Ok -> {
+                when (val value = read.value) {
+                    is WritableMap -> result.putMap("value", value)
+                    is WritableArray -> result.putArray("value", value)
+                }
+            }
+
+            is RecordRead.Unreadable -> {
+                result.putString("reason", read.reason)
+            }
+
+            RecordRead.Absent, RecordRead.Locked -> {
+                Unit
+            }
+        }
+        if (read is RecordRead.Unreadable || read == RecordRead.Locked) {
+            Log.w(
+                NAME,
+                "readLegacyRecord: ${label ?: "unknown"} ${read.statusCode} ${(read as? RecordRead.Unreadable)?.reason.orEmpty()}",
+            )
+        }
+        promise.resolve(result)
+    }
+
+    private fun readLegacyRecordValue(name: String): RecordRead<Any> =
+        when (name) {
+            "account" -> {
+                readAccountRecord().then { RecordRead.Ok(convertNativeAccountToWritableMap(it)) }
+            }
+
+            "tokens" -> {
+                readTokensRecord()
+            }
+
+            "credential" -> {
+                readCredentialRecord().then { RecordRead.Ok(convertCredentialToWritableMap(it)) }
+            }
+
+            "authorizationRequest" -> {
+                readAuthorizationRequestRecord().then { RecordRead.Ok(convertAuthorizationRequestToWritableMap(it)) }
+            }
+
+            "accountFlags" -> {
+                readAccountFlagsRecord()
+            }
+
+            "evidence" -> {
+                readEvidenceRecord()
+            }
+
+            "savedServices" -> {
+                readSavedServicesRecord()
+            }
+
+            else -> {
+                RecordRead.Unreadable(RecordRead.UNKNOWN_RECORD)
+            }
+        }
+
+    private fun isUserUnlocked(): Boolean {
+        val userManager = reactApplicationContext.getSystemService(Context.USER_SERVICE) as? UserManager ?: return true
+        return userManager.isUserUnlocked
     }
 
     /**
@@ -1281,7 +1527,7 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    private fun resolveFirstAccount(): NativeAccount? = resolveAccounts()?.firstOrNull()
+    private fun resolveFirstAccount(): NativeAccount? = (readAccountRecord() as? RecordRead.Ok)?.value
 
     /** Builds a [NativeAccount] from a legacy flat-file account JSON object. */
     private fun nativeAccountFromLegacyJson(accountObj: JSONObject): NativeAccount {
@@ -2649,32 +2895,30 @@ class BcscCoreModule internal constructor(
     // MARK: - Authentication Methods
 
     /**
-     * Sets a PIN for the current account.
-     * Matches TypeScript: setPIN(pin: string): Promise<PINSetupResult>
+     * Sets a PIN for the given account. Doesn't read or write the account record.
+     * Matches TypeScript: setPIN(accountId: string, issuer: string, pin: string): Promise<PINSetupResult>
      */
     @ReactMethod
     override fun setPIN(
+        accountId: String,
+        issuer: String,
         pin: String,
         promise: Promise,
     ) {
         try {
-            val account = resolveFirstAccount()
-            if (account == null) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
+            if (accountId.isBlank() || issuer.isBlank()) {
+                promise.reject("E_INVALID_PARAMETERS", "accountId and issuer are required")
                 return
             }
-
-            val accountID = account.uuid
-
             // Set PIN and get the hash back (user-created PIN, not auto-generated)
-            val hash = pinService.setPINReturningHash(accountID, pin, isAutoGenerated = false)
+            val hash = pinService.setPINReturningHash(accountId, issuer, pin, isAutoGenerated = false)
 
             val result = Arguments.createMap()
             result.putBoolean("success", true)
             result.putString("walletKey", hash)
             result.putBoolean("isAutoGenerated", false)
 
-            Log.d(NAME, "setPIN: Successfully set PIN for account $accountID")
+            Log.d(NAME, "setPIN: Successfully set PIN for account $accountId")
             promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "setPIN error: ${e.message}", e)
@@ -2683,35 +2927,27 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
+     * Verifies a PIN for the given account. Only checks the PIN: wrong attempts are counted, and
      * lockouts enforced, in TypeScript.
-     * Matches TypeScript: verifyPIN(pin: string): Promise<PINVerificationResult>
+     * Doesn't read or write the account record.
+     * Matches TypeScript: verifyPIN(accountId: string, issuer: string, pin: string): Promise<PINVerificationResult>
      * Returns: { success: boolean, walletKey?: string }
      */
     @ReactMethod
     override fun verifyPIN(
+        accountId: String,
+        issuer: String,
         pin: String,
         promise: Promise,
     ) {
         try {
-            val resolution = resolveAccountsWithStatus()
-            val account = resolution.accounts?.firstOrNull()
-            if (account == null) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
-                return
-            }
-
-            // PinService finds the PIN through the account in native storage, so an account that is
-            // only in the legacy file is copied there first. Without the copy its PIN never verifies.
-            if (resolution.legacy is LegacyAccountsRead.Found &&
-                !nativeStorage.saveAccounts(listOf(account), nativeStorage.getDefaultIssuerName())
-            ) {
-                promise.reject("E_STORAGE_ERROR", "Failed to copy the legacy account to native storage")
+            if (accountId.isBlank() || issuer.isBlank()) {
+                promise.reject("E_INVALID_PARAMETERS", "accountId and issuer are required")
                 return
             }
 
             // Validate PIN and get hash if successful
-            val validationResult = pinService.validatePINReturningHash(account.uuid, pin)
+            val validationResult = pinService.validatePINReturningHash(accountId, issuer, pin)
 
             val result = Arguments.createMap()
             result.putBoolean("success", validationResult.first)
@@ -2730,22 +2966,22 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Deletes the PIN for the current account.
-     * Matches TypeScript: deletePIN(): Promise<boolean>
+     * Deletes the PIN for the given account.
+     * Matches TypeScript: deletePIN(accountId: string, issuer: string): Promise<boolean>
      */
     @ReactMethod
-    override fun deletePIN(promise: Promise) {
+    override fun deletePIN(
+        accountId: String,
+        issuer: String,
+        promise: Promise,
+    ) {
         try {
-            val account = resolveFirstAccount()
-            if (account == null) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
+            if (accountId.isBlank() || issuer.isBlank()) {
+                promise.reject("E_INVALID_PARAMETERS", "accountId and issuer are required")
                 return
             }
-
-            val accountID = account.uuid
-
-            pinService.removePIN(accountID)
-            Log.d(NAME, "deletePIN: Successfully deleted PIN for account $accountID")
+            pinService.removePIN(accountId, issuer)
+            Log.d(NAME, "deletePIN: Successfully deleted PIN for account $accountId")
             promise.resolve(true)
         } catch (e: Exception) {
             Log.e(NAME, "deletePIN error: ${e.message}", e)
@@ -2754,22 +2990,22 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Checks if a PIN is set for the current account.
-     * Matches TypeScript: hasPINSet(): Promise<boolean>
+     * Checks if a PIN is set for the given account.
+     * Matches TypeScript: hasPINSet(accountId: string, issuer: string): Promise<boolean>
      */
     @ReactMethod
-    override fun hasPINSet(promise: Promise) {
+    override fun hasPINSet(
+        accountId: String,
+        issuer: String,
+        promise: Promise,
+    ) {
         try {
-            val account = resolveFirstAccount()
-            if (account == null) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
+            if (accountId.isBlank() || issuer.isBlank()) {
+                promise.reject("E_INVALID_PARAMETERS", "accountId and issuer are required")
                 return
             }
-
-            val accountID = account.uuid
-
-            val hasPin = pinService.hasPIN(accountID)
-            Log.d(NAME, "hasPINSet for account $accountID: $hasPin")
+            val hasPin = pinService.hasPIN(accountId, issuer)
+            Log.d(NAME, "hasPINSet for account $accountId: $hasPin")
             promise.resolve(hasPin)
         } catch (e: Exception) {
             Log.e(NAME, "hasPINSet error: ${e.message}", e)
@@ -3014,19 +3250,19 @@ class BcscCoreModule internal constructor(
      * Sets up device security by generating a random PIN internally,
      * storing its hash behind biometric auth, and returning the wallet key.
      * Call this during onboarding when user chooses device security.
-     * Matches TypeScript: setupDeviceSecurity(): Promise<PINSetupResult>
+     * Matches TypeScript: setupDeviceSecurity(accountId: string, issuer: string): Promise<PINSetupResult>
      */
     @ReactMethod
-    override fun setupDeviceSecurity(promise: Promise) {
+    override fun setupDeviceSecurity(
+        accountId: String,
+        issuer: String,
+        promise: Promise,
+    ) {
         try {
-            val account = resolveFirstAccount()
-            if (account == null) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
+            if (accountId.isBlank() || issuer.isBlank()) {
+                promise.reject("E_INVALID_PARAMETERS", "accountId and issuer are required")
                 return
             }
-
-            val accountID = account.uuid
-
             // Generate a cryptographically secure random PIN
             val secureRandom = java.security.SecureRandom()
             val pinDigits = StringBuilder()
@@ -3037,14 +3273,14 @@ class BcscCoreModule internal constructor(
             val pin = pinDigits.toString()
 
             // Set PIN with isAutoGenerated flag set to true, and get the hash back
-            val hash = pinService.setupDeviceSecurityPIN(accountID, pin)
+            val hash = pinService.setupDeviceSecurityPIN(accountId, issuer, pin)
 
             val result = Arguments.createMap()
             result.putBoolean("success", true)
             result.putString("walletKey", hash)
             result.putBoolean("isAutoGenerated", true)
 
-            Log.d(NAME, "setupDeviceSecurity: Successfully set up device security for account $accountID")
+            Log.d(NAME, "setupDeviceSecurity: Successfully set up device security for account $accountId")
             promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "setupDeviceSecurity error: ${e.message}", e)
@@ -3055,10 +3291,12 @@ class BcscCoreModule internal constructor(
     /**
      * Unlocks using device security (biometric/passcode) and returns the wallet key.
      * Call this on app unlock when account uses device security method.
-     * Matches TypeScript: unlockWithDeviceSecurity(reason?: string): Promise<DeviceSecurityUnlockResult>
+     * Matches TypeScript: unlockWithDeviceSecurity(accountId: string, issuer: string, reason?: string): Promise<DeviceSecurityUnlockResult>
      */
     @ReactMethod
     override fun unlockWithDeviceSecurity(
+        accountId: String,
+        issuer: String,
         reason: String?,
         promise: Promise,
     ) {
@@ -3067,13 +3305,10 @@ class BcscCoreModule internal constructor(
         val guarded = GuardedPromise(promise)
 
         try {
-            val account = resolveFirstAccount()
-            if (account == null) {
-                guarded.reject("E_ACCOUNT_NOT_FOUND", "No account found")
+            if (accountId.isBlank() || issuer.isBlank()) {
+                guarded.reject("E_INVALID_PARAMETERS", "accountId and issuer are required")
                 return
             }
-
-            val accountID = account.uuid
 
             val activity = reactApplicationContext.currentActivity
             if (activity == null || activity !is FragmentActivity) {
@@ -3095,7 +3330,7 @@ class BcscCoreModule internal constructor(
                         try {
                             backgroundExecutor.execute {
                                 try {
-                                    val hashResult = pinService.getPINHash(accountID)
+                                    val hashResult = pinService.getPINHash(accountId, issuer)
 
                                     if (hashResult != null) {
                                         val result = Arguments.createMap()
@@ -3112,7 +3347,14 @@ class BcscCoreModule internal constructor(
                                         }
                                         val pin = pinDigits.toString()
 
-                                        val hash = pinService.setupDeviceSecurityPIN(accountID, pin)
+                                        // Keeps an empty-issuer PIN whose move just failed: it holds the old key
+                                        val hash =
+                                            pinService.setupDeviceSecurityPIN(
+                                                accountId,
+                                                issuer,
+                                                pin,
+                                                removeEmptyIssuerPin = false,
+                                            )
 
                                         val result = Arguments.createMap()
                                         result.putBoolean("success", true)
@@ -3173,26 +3415,21 @@ class BcscCoreModule internal constructor(
 
     /**
      * Checks if the stored PIN was auto-generated (for device security) or user-created.
-     * Matches TypeScript: isPINAutoGenerated(): Promise<boolean>
+     * Matches TypeScript: isPINAutoGenerated(accountId: string, issuer: string): Promise<boolean>
      */
     @ReactMethod
-    override fun isPINAutoGenerated(promise: Promise) {
+    override fun isPINAutoGenerated(
+        accountId: String,
+        issuer: String,
+        promise: Promise,
+    ) {
         try {
-            // Get the account to obtain the account ID
-            val account = getAccountSync()
-            if (account == null) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
+            if (accountId.isBlank() || issuer.isBlank()) {
+                promise.reject("E_INVALID_PARAMETERS", "accountId and issuer are required")
                 return
             }
-
-            val accountID = account.getString("id")
-            if (accountID.isNullOrEmpty()) {
-                promise.reject("E_INVALID_ACCOUNT", "Account ID is null or empty")
-                return
-            }
-
-            val isAutoGenerated = pinService.isPINAutoGenerated(accountID)
-            Log.d(NAME, "isPINAutoGenerated for account $accountID: $isAutoGenerated")
+            val isAutoGenerated = pinService.isPINAutoGenerated(accountId, issuer)
+            Log.d(NAME, "isPINAutoGenerated for account $accountId: $isAutoGenerated")
             promise.resolve(isAutoGenerated)
         } catch (e: Exception) {
             Log.e(NAME, "isPINAutoGenerated error: ${e.message}", e)
@@ -3210,23 +3447,38 @@ class BcscCoreModule internal constructor(
     @ReactMethod
     override fun getAuthorizationRequest(promise: Promise) {
         try {
-            // Get the account to obtain issuer and account ID
-            val account = getAccountSync()
-            if (account == null) {
-                // No account yet - return null (not an error)
-                Log.d(NAME, "getAuthorizationRequest: No account")
-                promise.resolve(null)
-                return
-            }
+            val authRequest =
+                when (val read = readAuthorizationRequestRecord()) {
+                    is RecordRead.Ok -> {
+                        read.value
+                    }
 
-            val accountId = account.getString("id")
-            val issuer = account.getString("issuer")
+                    is RecordRead.Failure -> {
+                        Log.d(NAME, "getAuthorizationRequest: No authorization request found (${read.statusCode})")
+                        promise.resolve(null)
+                        return
+                    }
+                }
 
-            if (accountId.isNullOrEmpty()) {
-                Log.d(NAME, "getAuthorizationRequest: No account id")
-                promise.resolve(null)
-                return
-            }
+            // Convert to WritableMap for React Native
+            val result = convertAuthorizationRequestToWritableMap(authRequest)
+
+            Log.d(NAME, "getAuthorizationRequest: Successfully read authorization request")
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "getAuthorizationRequest error: ${e.message}", e)
+            promise.reject("E_GET_AUTH_REQUEST_ERROR", "Error getting authorization request: ${e.message}", e)
+        }
+    }
+
+    /**
+     * The v4 authorization request, else the v3 providers record (migrated to v4 when found), as getAuthorizationRequest
+     * sees them. With neither, a v4 failure outranks the v3 outcome.
+     */
+    private fun readAuthorizationRequestRecord(): RecordRead<NativeAuthorizationRequest> =
+        readAccountForRecords(requireIssuer = false).then { account ->
+            val accountId = account.uuid
+            val issuer: String? = account.issuer
 
             // If the account's issuer is missing (e.g. incomplete v3 migration), fall back
             // to the default issuer name derived from the issuer file / account directories.
@@ -3244,91 +3496,81 @@ class BcscCoreModule internal constructor(
                 }
 
             // First try to read from our v4 storage location
-            var authRequest: NativeAuthorizationRequest? = nativeStorage.readAuthorizationRequest(issuerName, accountId)
+            val v4Read = nativeStorage.readAuthorizationRequestResult(issuerName, accountId)
+            if (v4Read is RecordRead.Ok) {
+                return@then v4Read
+            }
 
             // If not found, try to read from v3 Provider file for migration
-            if (authRequest == null) {
-                Log.d(NAME, "getAuthorizationRequest: Trying v3 provider migration")
-                authRequest = nativeStorage.readAuthorizationRequestFromV3Provider(issuerName, accountId)
+            Log.d(NAME, "getAuthorizationRequest: Trying v3 provider migration")
+            val v3Read = nativeStorage.readAuthorizationRequestFromV3ProviderResult(issuerName, accountId)
 
-                // If found in v3, migrate to v4 storage
-                if (authRequest != null) {
-                    Log.d(NAME, "getAuthorizationRequest: Migrating v3 authorization request to v4 storage")
-                    nativeStorage.saveAuthorizationRequest(authRequest, issuerName, accountId)
-                }
+            // If found in v3, migrate to v4 storage
+            if (v3Read is RecordRead.Ok) {
+                Log.d(NAME, "getAuthorizationRequest: Migrating v3 authorization request to v4 storage")
+                nativeStorage.saveAuthorizationRequest(v3Read.value, issuerName, accountId)
+                return@then v3Read
             }
 
-            if (authRequest == null) {
-                Log.d(NAME, "getAuthorizationRequest: No authorization request found")
-                promise.resolve(null)
-                return
-            }
-
-            // Convert to WritableMap for React Native
-            val result =
-                Arguments.createMap().apply {
-                    authRequest.deviceCode?.let { putString("deviceCode", it) }
-                    authRequest.userCode?.let { putString("userCode", it) }
-                    authRequest.csn?.let { putString("csn", it) }
-                    authRequest.verifiedEmail?.let { putString("verifiedEmail", it) }
-                    authRequest.firstName?.let { putString("firstName", it) }
-                    authRequest.lastName?.let { putString("lastName", it) }
-                    authRequest.middleNames?.let { putString("middleNames", it) }
-                    authRequest.issuer?.let {
-                        putString("issuer", it)
-                        putString("audience", it)
-                    }
-                    authRequest.clientID?.let { putString("clientID", it) }
-                    authRequest.verificationOptions?.let { putString("verificationOptions", it) }
-                    authRequest.verificationUriVideo?.let { putString("verificationURIVideo", it) }
-                    authRequest.backCheckVerificationId?.let { putString("backCheckVerificationId", it) }
-                    authRequest.evidenceUploadUri?.let { putString("evidenceUploadURI", it) }
-                    putInt("status", authRequest.requestStatus.value)
-                    putInt("method", authRequest.authorizationMethod.value)
-
-                    // Convert birthDate string to timestamp if present
-                    authRequest.birthDate?.let {
-                        try {
-                            // ISO date format
-                            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-                            val date = sdf.parse(it)
-                            if (date != null) {
-                                putDouble("birthdate", date.time / 1000.0)
-                            }
-                        } catch (e: Exception) {
-                            // If parsing fails, skip
-                        }
-                    }
-
-                    // Convert dates to timestamps
-                    authRequest.expiry?.let { putDouble("expiry", it.time / 1000.0) }
-                    authRequest.authorizationExpiry?.let { putDouble("authorizationExpiry", it.time / 1000.0) }
-                    authRequest.backCheckSubmittedDate?.let { putDouble("backCheckSubmittedDate", it.time / 1000.0) }
-
-                    // Convert address
-                    authRequest.address?.let { addr ->
-                        val addressMap =
-                            Arguments.createMap().apply {
-                                addr.streetAddress?.let { putString("streetAddress", it) }
-                                addr.locality?.let { putString("locality", it) }
-                                addr.postalCode?.let { putString("postalCode", it) }
-                                addr.country?.let { putString("country", it) }
-                                addr.region?.let { putString("region", it) }
-                            }
-                        putMap("address", addressMap)
-                    }
-
-                    // Card process
-                    authRequest.cardProcess?.let { putString("cardProcess", it) }
-                }
-
-            Log.d(NAME, "getAuthorizationRequest: Successfully read authorization request")
-            promise.resolve(result)
-        } catch (e: Exception) {
-            Log.e(NAME, "getAuthorizationRequest error: ${e.message}", e)
-            promise.reject("E_GET_AUTH_REQUEST_ERROR", "Error getting authorization request: ${e.message}", e)
+            if (v4Read == RecordRead.Absent) v3Read else v4Read
         }
-    }
+
+    private fun convertAuthorizationRequestToWritableMap(authRequest: NativeAuthorizationRequest): WritableMap =
+        Arguments.createMap().apply {
+            authRequest.deviceCode?.let { putString("deviceCode", it) }
+            authRequest.userCode?.let { putString("userCode", it) }
+            authRequest.csn?.let { putString("csn", it) }
+            authRequest.verifiedEmail?.let { putString("verifiedEmail", it) }
+            authRequest.firstName?.let { putString("firstName", it) }
+            authRequest.lastName?.let { putString("lastName", it) }
+            authRequest.middleNames?.let { putString("middleNames", it) }
+            authRequest.issuer?.let {
+                putString("issuer", it)
+                putString("audience", it)
+            }
+            authRequest.clientID?.let { putString("clientID", it) }
+            authRequest.verificationOptions?.let { putString("verificationOptions", it) }
+            authRequest.verificationUriVideo?.let { putString("verificationURIVideo", it) }
+            authRequest.backCheckVerificationId?.let { putString("backCheckVerificationId", it) }
+            authRequest.evidenceUploadUri?.let { putString("evidenceUploadURI", it) }
+            putInt("status", authRequest.requestStatus.value)
+            putInt("method", authRequest.authorizationMethod.value)
+
+            // Convert birthDate string to timestamp if present
+            authRequest.birthDate?.let {
+                try {
+                    // ISO date format
+                    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                    val date = sdf.parse(it)
+                    if (date != null) {
+                        putDouble("birthdate", date.time / 1000.0)
+                    }
+                } catch (e: Exception) {
+                    // If parsing fails, skip
+                }
+            }
+
+            // Convert dates to timestamps
+            authRequest.expiry?.let { putDouble("expiry", it.time / 1000.0) }
+            authRequest.authorizationExpiry?.let { putDouble("authorizationExpiry", it.time / 1000.0) }
+            authRequest.backCheckSubmittedDate?.let { putDouble("backCheckSubmittedDate", it.time / 1000.0) }
+
+            // Convert address
+            authRequest.address?.let { addr ->
+                val addressMap =
+                    Arguments.createMap().apply {
+                        addr.streetAddress?.let { putString("streetAddress", it) }
+                        addr.locality?.let { putString("locality", it) }
+                        addr.postalCode?.let { putString("postalCode", it) }
+                        addr.country?.let { putString("country", it) }
+                        addr.region?.let { putString("region", it) }
+                    }
+                putMap("address", addressMap)
+            }
+
+            // Card process
+            authRequest.cardProcess?.let { putString("cardProcess", it) }
+        }
 
     /**
      * Saves authorization request data to encrypted storage.
@@ -3618,18 +3860,27 @@ class BcscCoreModule internal constructor(
     @ReactMethod
     override fun getAccountFlags(promise: Promise) {
         try {
-            val account = getAccountSync()
-            if (account == null) {
-                // No account yet - return empty map
-                promise.resolve(Arguments.createMap())
-                return
-            }
+            when (val read = readAccountFlagsRecord()) {
+                is RecordRead.Ok -> {
+                    Log.d(NAME, "getAccountFlags: Successfully read account flags")
+                    promise.resolve(read.value)
+                }
 
-            val accountId = account.getString("id")
-            if (accountId.isNullOrEmpty()) {
-                promise.resolve(Arguments.createMap())
-                return
+                // No account yet, or no flags - return empty map
+                is RecordRead.Failure -> {
+                    promise.resolve(Arguments.createMap())
+                }
             }
+        } catch (e: Exception) {
+            Log.e(NAME, "getAccountFlags error: ${e.message}", e)
+            promise.reject("E_GET_ACCOUNT_FLAGS_ERROR", "Error getting account flags: ${e.message}", e)
+        }
+    }
+
+    /** The account's flags from SharedPreferences; none set is absent. */
+    private fun readAccountFlagsRecord(): RecordRead<WritableMap> =
+        readAccountForRecords(requireIssuer = false).then { account ->
+            val accountId = account.uuid
 
             // Read from SharedPreferences
             // v3 hardcoded "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY" as the prefs name prefix,
@@ -3670,13 +3921,8 @@ class BcscCoreModule internal constructor(
                 )
             }
 
-            Log.d(NAME, "getAccountFlags: Successfully read account flags")
-            promise.resolve(result)
-        } catch (e: Exception) {
-            Log.e(NAME, "getAccountFlags error: ${e.message}", e)
-            promise.reject("E_GET_ACCOUNT_FLAGS_ERROR", "Error getting account flags: ${e.message}", e)
+            if (result.keySetIterator().hasNextKey()) RecordRead.Ok(result) else RecordRead.Absent
         }
-    }
 
     /**
      * Sets account flags in SharedPreferences.
@@ -3789,25 +4035,28 @@ class BcscCoreModule internal constructor(
     @ReactMethod
     override fun getEvidence(promise: Promise) {
         try {
-            val account = getAccountSync()
-            if (account == null) {
-                promise.resolve(Arguments.createArray())
-                return
+            when (val read = readEvidenceRecord()) {
+                is RecordRead.Ok -> {
+                    Log.d(NAME, "getEvidence: Successfully read evidence metadata")
+                    promise.resolve(read.value)
+                }
+
+                is RecordRead.Failure -> {
+                    Log.d(NAME, "getEvidence: No evidence found (${read.statusCode})")
+                    promise.resolve(Arguments.createArray())
+                }
             }
+        } catch (e: Exception) {
+            Log.e(NAME, "getEvidence error: ${e.message}", e)
+            promise.reject("E_GET_EVIDENCE_ERROR", "Error getting evidence: ${e.message}", e)
+        }
+    }
 
-            val accountId = account.getString("id")
-            if (accountId.isNullOrEmpty()) {
-                promise.resolve(Arguments.createArray())
-                return
-            }
-
-            // Read from encrypted evidence_upload file
-            val evidenceJson = readFirstAccountEncryptedFile(AccountFileName.EVIDENCE_UPLOAD)
-
-            if (evidenceJson.isNullOrBlank()) {
-                Log.d(NAME, "getEvidence: No evidence found")
-                promise.resolve(Arguments.createArray())
-                return
+    /** Evidence metadata from the encrypted evidence_upload file; an empty list is absent. Parse errors throw. */
+    private fun readEvidenceRecord(): RecordRead<WritableArray> =
+        readFirstAccountEncryptedFileResult(AccountFileName.EVIDENCE_UPLOAD, EVIDENCE_RECORD).then { evidenceJson ->
+            if (evidenceJson.isBlank()) {
+                return@then RecordRead.Absent
             }
 
             val result = Arguments.createArray()
@@ -3819,13 +4068,8 @@ class BcscCoreModule internal constructor(
                 addEvidenceMetadataFromObjectJson(trimmedEvidenceJson, result)
             }
 
-            Log.d(NAME, "getEvidence: Successfully read evidence metadata")
-            promise.resolve(result)
-        } catch (e: Exception) {
-            Log.e(NAME, "getEvidence error: ${e.message}", e)
-            promise.reject("E_GET_EVIDENCE_ERROR", "Error getting evidence: ${e.message}", e)
+            if (result.size() > 0) RecordRead.Ok(result) else RecordRead.Absent
         }
-    }
 
     private fun addEvidenceMetadataFromArrayJson(
         trimmedEvidenceJson: String,
@@ -4126,55 +4370,19 @@ class BcscCoreModule internal constructor(
     @ReactMethod
     override fun getCredential(promise: Promise) {
         try {
-            val prefsName = reactApplicationContext.packageName
-            val sharedPreferences =
-                reactApplicationContext.getSharedPreferences(
-                    prefsName,
-                    Context.MODE_PRIVATE,
-                )
+            val credentialJson =
+                when (val read = readCredentialRecord()) {
+                    is RecordRead.Ok -> {
+                        read.value
+                    }
 
-            var providerJson = sharedPreferences.getString("provider", null)
-            if (providerJson == null) {
-                Log.d(NAME, "getCredential: No provider data found in SharedPreferences, checking file fallback")
-                providerJson = searchAccountsForProviders()
-
-                if (providerJson == null) {
-                    Log.d(NAME, "getCredential: No provider data found in SharedPreferences or fallback files")
-                    promise.resolve(null)
-                    return
+                    is RecordRead.Failure -> {
+                        promise.resolve(null)
+                        return
+                    }
                 }
-            }
 
-            val providerData = JSONObject(providerJson)
-            if (!providerData.has("clientRegistration")) {
-                Log.d(NAME, "getCredential: No clientRegistration found in provider")
-                promise.resolve(null)
-                return
-            }
-
-            val clientRegistration = providerData.getJSONObject("clientRegistration")
-            if (!clientRegistration.has("credential")) {
-                Log.d(NAME, "getCredential: No credential found in clientRegistration")
-                promise.resolve(null)
-                return
-            }
-
-            val credentialJson = clientRegistration.getJSONObject("credential")
-
-            // Convert JSON to WritableMap for React Native
-            val credentialMap = Arguments.createMap()
-            credentialJson.keys().forEach { key ->
-                val value = credentialJson.get(key)
-                when (value) {
-                    is String -> credentialMap.putString(key, value)
-                    is Int -> credentialMap.putInt(key, value)
-                    is Double -> credentialMap.putDouble(key, value)
-                    is Boolean -> credentialMap.putBoolean(key, value)
-                    is Long -> credentialMap.putDouble(key, value.toDouble())
-                    JSONObject.NULL -> credentialMap.putNull(key)
-                    else -> credentialMap.putString(key, value.toString())
-                }
-            }
+            val credentialMap = convertCredentialToWritableMap(credentialJson)
 
             Log.d(NAME, "getCredential: Successfully retrieved credential")
             promise.resolve(credentialMap)
@@ -4184,16 +4392,77 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    private fun searchAccountsForProviders(): String? {
-        val account = getAccountSync()
-        val accountId = account?.getString("id")
-        val issuer = account?.getString("issuer")
+    /**
+     * The credential from the SharedPreferences provider, else the account's providers file. No registration, or a
+     * registration without a credential, is absent. Malformed provider JSON throws, so getCredential keeps rejecting.
+     */
+    private fun readCredentialRecord(): RecordRead<JSONObject> {
+        val prefsName = reactApplicationContext.packageName
+        val sharedPreferences =
+            reactApplicationContext.getSharedPreferences(
+                prefsName,
+                Context.MODE_PRIVATE,
+            )
 
-        if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
-            return null
+        var providerJson = sharedPreferences.getString("provider", null)
+        if (providerJson == null) {
+            Log.d(NAME, "getCredential: No provider data found in SharedPreferences, checking file fallback")
+            providerJson =
+                when (val read = readAccountProvidersFile()) {
+                    is RecordRead.Ok -> {
+                        read.value
+                    }
+
+                    is RecordRead.Failure -> {
+                        Log.d(NAME, "getCredential: No provider data found in SharedPreferences or fallback files")
+                        return read
+                    }
+                }
         }
 
-        val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+        val providerData = JSONObject(providerJson)
+        if (!providerData.has("clientRegistration")) {
+            Log.d(NAME, "getCredential: No clientRegistration found in provider")
+            return RecordRead.Absent
+        }
+
+        val clientRegistration = providerData.getJSONObject("clientRegistration")
+        if (!clientRegistration.has("credential")) {
+            Log.d(NAME, "getCredential: No credential found in clientRegistration")
+            return RecordRead.Absent
+        }
+
+        return RecordRead.Ok(clientRegistration.getJSONObject("credential"))
+    }
+
+    private fun convertCredentialToWritableMap(credentialJson: JSONObject): WritableMap {
+        // Convert JSON to WritableMap for React Native
+        val credentialMap = Arguments.createMap()
+        credentialJson.keys().forEach { key ->
+            val value = credentialJson.get(key)
+            when (value) {
+                is String -> credentialMap.putString(key, value)
+                is Int -> credentialMap.putInt(key, value)
+                is Double -> credentialMap.putDouble(key, value)
+                is Boolean -> credentialMap.putBoolean(key, value)
+                is Long -> credentialMap.putDouble(key, value.toDouble())
+                JSONObject.NULL -> credentialMap.putNull(key)
+                else -> credentialMap.putString(key, value.toString())
+            }
+        }
+        return credentialMap
+    }
+
+    /** The account's v3 `providers` file, the credential fallback. A blank file is absent, as getCredential sees it. */
+    private fun readAccountProvidersFile(): RecordRead<String> {
+        val account =
+            when (val read = readAccountForRecords()) {
+                is RecordRead.Ok -> read.value
+                is RecordRead.Failure -> return read
+            }
+        val accountId = account.uuid
+
+        val issuerName = nativeStorage.getIssuerNameFromIssuer(account.issuer)
         val providersFile =
             File(
                 reactApplicationContext.filesDir,
@@ -4205,12 +4474,12 @@ class BcscCoreModule internal constructor(
                 NAME,
                 "getCredential: No fallback providers file found under ${reactApplicationContext.filesDir.absolutePath}${File.separator}$issuerName${File.separator}$accountId",
             )
-            return null
+            return RecordRead.Absent
         }
 
-        val providersFileContents = nativeStorage.readEncryptedFile(providersFile)
-
-        return providersFileContents?.takeIf { it.isNotBlank() }
+        return nativeStorage.readEncryptedFileResult(providersFile).toRecordRead(CREDENTIAL_RECORD).then {
+            if (it.isBlank()) RecordRead.Absent else RecordRead.Ok(it)
+        }
     }
 
     /**
@@ -4386,7 +4655,7 @@ class BcscCoreModule internal constructor(
     }
 
     private val pinService: PinService by lazy {
-        PinService(reactApplicationContext, nativeStorage)
+        PinService(reactApplicationContext)
     }
 
     // Serialized off-main thread for keystore/PIN work reached from biometric callbacks.
@@ -4545,58 +4814,57 @@ class BcscCoreModule internal constructor(
     @ReactMethod
     override fun getSavedServices(promise: Promise) {
         try {
-            val account = getAccountSync()
-            if (account == null) {
-                Log.d(NAME, "getSavedServices: No account found")
-                promise.resolve(Arguments.createArray())
-                return
+            when (val read = readSavedServicesRecord()) {
+                is RecordRead.Ok -> {
+                    promise.resolve(read.value)
+                }
+
+                is RecordRead.Failure -> {
+                    Log.d(NAME, "getSavedServices: No client metadata found (${read.statusCode})")
+                    promise.resolve(Arguments.createArray())
+                }
             }
-
-            val accountId = account.getString("id")
-            val issuer = account.getString("issuer")
-            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
-                Log.d(NAME, "getSavedServices: No account ID or issuer")
-                promise.resolve(Arguments.createArray())
-                return
-            }
-
-            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
-            val clientMetadata = nativeStorage.readClientMetadata(issuerName, accountId)
-
-            if (clientMetadata == null) {
-                Log.d(NAME, "getSavedServices: No client metadata found")
-                promise.resolve(Arguments.createArray())
-                return
-            }
-
-            val result = Arguments.createArray()
-            for (metadata in clientMetadata) {
-                val serviceMap =
-                    Arguments.createMap().apply {
-                        putString("clientRefId", metadata.clientRefId ?: "")
-                        putBoolean("bookmarked", metadata.isBookmarked)
-                        metadata.clientName?.let { putString("clientName", it) }
-                        if (metadata.dateAdded > 0) putDouble("dateAdded", metadata.dateAdded / 1000.0)
-                        if (metadata.lastUsed > 0) putDouble("lastUsed", metadata.lastUsed / 1000.0)
-                        metadata.clientUri?.let { putString("clientUri", it) }
-                        metadata.initiateLoginUri?.let { putString("initiateLoginUri", it) }
-                        metadata.clientDescription?.let { putString("clientDescription", it) }
-                        metadata.policyUri?.let { putString("policyUri", it) }
-                        metadata.serviceListingSortOrder?.let { putInt("serviceListingSortOrder", it) }
-                        metadata.claimsDescription?.let { putString("claimsDescription", it) }
-                        putBoolean("suppressConfirmationInfo", metadata.suppressConfirmationInfo)
-                        putBoolean("suppressBookmarkPrompt", metadata.suppressBookmarkPrompt)
-                    }
-                result.pushMap(serviceMap)
-            }
-
-            Log.d(NAME, "getSavedServices: Read ${clientMetadata.size} services")
-            promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "getSavedServices: Error", e)
             promise.resolve(Arguments.createArray())
         }
     }
+
+    /** Saved services from the account's encrypted client metadata; an empty list is absent. */
+    private fun readSavedServicesRecord(): RecordRead<WritableArray> =
+        readAccountForRecords()
+            .then { account ->
+                val issuerName = nativeStorage.getIssuerNameFromIssuer(account.issuer)
+                nativeStorage.readClientMetadataResult(issuerName, account.uuid)
+            }.then { clientMetadata ->
+                if (clientMetadata.isEmpty()) {
+                    return@then RecordRead.Absent
+                }
+
+                val result = Arguments.createArray()
+                for (metadata in clientMetadata) {
+                    val serviceMap =
+                        Arguments.createMap().apply {
+                            putString("clientRefId", metadata.clientRefId ?: "")
+                            putBoolean("bookmarked", metadata.isBookmarked)
+                            metadata.clientName?.let { putString("clientName", it) }
+                            if (metadata.dateAdded > 0) putDouble("dateAdded", metadata.dateAdded / 1000.0)
+                            if (metadata.lastUsed > 0) putDouble("lastUsed", metadata.lastUsed / 1000.0)
+                            metadata.clientUri?.let { putString("clientUri", it) }
+                            metadata.initiateLoginUri?.let { putString("initiateLoginUri", it) }
+                            metadata.clientDescription?.let { putString("clientDescription", it) }
+                            metadata.policyUri?.let { putString("policyUri", it) }
+                            metadata.serviceListingSortOrder?.let { putInt("serviceListingSortOrder", it) }
+                            metadata.claimsDescription?.let { putString("claimsDescription", it) }
+                            putBoolean("suppressConfirmationInfo", metadata.suppressConfirmationInfo)
+                            putBoolean("suppressBookmarkPrompt", metadata.suppressBookmarkPrompt)
+                        }
+                    result.pushMap(serviceMap)
+                }
+
+                Log.d(NAME, "getSavedServices: Read ${clientMetadata.size} services")
+                RecordRead.Ok(result)
+            }
 
     /**
      * Saves services (client metadata) to native encrypted storage.
@@ -4783,17 +5051,28 @@ class BcscCoreModule internal constructor(
     /**
      * A helper function to read user account files for migration
      */
-    private fun readFirstAccountEncryptedFile(accountFileName: AccountFileName): String? {
-        val account = getAccountSync()
-        val accountId = account?.getString("id")
-        val issuer = account?.getString("issuer")
+    private fun readFirstAccountEncryptedFile(accountFileName: AccountFileName): String? =
+        (readFirstAccountEncryptedFileResult(accountFileName) as? RecordRead.Ok)?.value
 
-        if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
-            Log.d(NAME, "readFirstAccountEncryptedFile: no account/issuer found")
-            return null
-        }
+    /** [readFirstAccountEncryptedFile], but says why there is no content; [record] prefixes the reason code. */
+    private fun readFirstAccountEncryptedFileResult(
+        accountFileName: AccountFileName,
+        record: String = accountFileName.value,
+    ): RecordRead<String> {
+        val account =
+            when (val read = readAccountForRecords()) {
+                is RecordRead.Ok -> {
+                    read.value
+                }
 
-        val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+                is RecordRead.Failure -> {
+                    Log.d(NAME, "readFirstAccountEncryptedFile: no account/issuer found")
+                    return read
+                }
+            }
+        val accountId = account.uuid
+
+        val issuerName = nativeStorage.getIssuerNameFromIssuer(account.issuer)
         val targetFile =
             File(
                 reactApplicationContext.filesDir,
@@ -4802,10 +5081,10 @@ class BcscCoreModule internal constructor(
 
         if (!targetFile.exists() || !targetFile.isFile) {
             Log.d(NAME, "readFirstAccountEncryptedFile: file not found at ${targetFile.absolutePath}")
-            return null
+            return RecordRead.Absent
         }
 
-        return nativeStorage.readEncryptedFile(targetFile)
+        return nativeStorage.readEncryptedFileResult(targetFile).toRecordRead(record)
     }
 
     @ReactMethod

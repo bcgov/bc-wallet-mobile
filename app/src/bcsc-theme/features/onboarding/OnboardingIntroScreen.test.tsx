@@ -1,5 +1,4 @@
-import { BCLocalStorageKeys } from '@/store'
-import { PersistentStorage } from '@bifold/core'
+import { storage } from '@/bcsc-theme/storage'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -9,7 +8,6 @@ describe('OnboardingIntro', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
-    jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
   })
 
   afterEach(() => {
@@ -38,10 +36,7 @@ describe('OnboardingIntro', () => {
 
     // SEEN_ONBOARDING_INTRO persists the flag on the bcsc slice so the intro is not shown again.
     await waitFor(() => {
-      expect(PersistentStorage.storeValueForKey).toHaveBeenCalledWith(
-        BCLocalStorageKeys.BCSC,
-        expect.objectContaining({ hasSeenOnboardingIntro: true })
-      )
+      expect(storage.store.getState().app).toMatchObject({ hasSeenOnboardingIntro: true })
     })
     expect(onContinue).toHaveBeenCalledTimes(1)
   })

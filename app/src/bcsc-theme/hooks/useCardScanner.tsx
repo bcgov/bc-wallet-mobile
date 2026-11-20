@@ -1,8 +1,9 @@
+import { selectJourney, VerificationJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState, useVerification } from '@/bcsc-theme/storage/hooks'
 import { getProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
@@ -55,7 +56,7 @@ const CARD_CODE_TYPES = [
 export const useCardScanner = () => {
   const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
+  const cardProcess = useVerification((v) => v.cardProcess)
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   // useCardScanner is shared between ScanSerialScreen and EvidenceCaptureScreen, so the
   // originating screen for recovery purposes is whichever one currently renders this hook.
@@ -79,14 +80,14 @@ export const useCardScanner = () => {
    *
    * @param deviceAuth - The device authorization response from the backend.
    * @param scanned - The serial and birthdate read off the card.
-   * @param additionalEvidenceData - The IDs on file once the caller has settled them. The resume route
-   *   reads them, so they must already be what the store holds.
+   * @param additionalEvidenceData - The IDs on file once the caller has settled them, when that differs from what
+   *   the store holds. The resume route reads them.
    */
   const applyDeviceAuthorization = useCallback(
     async (
       deviceAuth: DeviceAuthorizationResponse,
       scanned: { serial: string; birthdate?: Date },
-      additionalEvidenceData: EvidenceMetadata[] = store.bcscSecure.additionalEvidenceData
+      additionalEvidenceData?: EvidenceMetadata[]
     ) => {
       await updateUserInfo({
         email: deviceAuth.verified_email,
@@ -102,27 +103,20 @@ export const useCardScanner = () => {
       await updateCardProcess(deviceAuth.process)
       await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
 
-      // Build a predicted store snapshot reflecting the dispatches above so the
-      // resume route honours the freshly-set deviceCode / cardProcess / email
-      // and the IDs left on file.
-      const predictedStore: BCState = {
-        ...store,
-        bcscSecure: {
-          ...store.bcscSecure,
-          serial: scanned.serial,
-          birthdate: scanned.birthdate,
-          emailAddress: deviceAuth.verified_email,
-          isEmailVerified: !!deviceAuth.verified_email,
-          deviceCode: deviceAuth.device_code,
-          userCode: deviceAuth.user_code,
-          deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
-          cardProcess: deviceAuth.process,
-          additionalEvidenceData,
-        },
+      // The writes above are in the store already; the prediction pins the values the route depends on
+      const journey = selectJourney(getBCSCState())
+      const predictedJourney: VerificationJourney = {
+        ...journey,
+        serial: scanned.serial,
+        emailAddress: deviceAuth.verified_email,
+        isEmailVerified: !!deviceAuth.verified_email,
+        deviceCode: deviceAuth.device_code,
+        cardProcess: deviceAuth.process,
+        additionalEvidenceData: additionalEvidenceData ?? journey.additionalEvidenceData,
       }
-      navigation.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] })
+      navigation.reset({ index: 0, routes: [getResumeStepRoute(predictedJourney)] })
     },
-    [updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions, navigation, store]
+    [updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions, navigation]
   )
 
   /**
@@ -141,7 +135,7 @@ export const useCardScanner = () => {
 
       await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
 
-      const isNonBcscFlow = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
+      const isNonBcscFlow = cardProcess === BCSCCardProcess.NonBCSC
 
       try {
         // Skip error handling, any false authorization returned push the user into a Non BCSC flow
@@ -176,7 +170,7 @@ export const useCardScanner = () => {
       updateUserInfo,
       applyDeviceAuthorization,
       logger,
-      store.bcscSecure.cardProcess,
+      cardProcess,
     ]
   )
 

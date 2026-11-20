@@ -1,5 +1,5 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
-import { getAuthorizationRequest } from 'react-native-bcsc-core'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -100,10 +100,10 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
  *
  * @returns {*} {Promise<Date | null>} The pending device_code expiry, or null when none is pending.
  */
-export async function getPendingDeviceCodeExpiry(): Promise<Date | null> {
-  const authRequest = await getAuthorizationRequest()
+export function getPendingDeviceCodeExpiry(): Promise<Date | null> {
+  const authRequest = getBCSCState().verification.request
   if (!authRequest?.deviceCode || !authRequest.expiry) {
-    return null
+    return Promise.resolve(null)
   }
-  return new Date(authRequest.expiry * 1000)
+  return Promise.resolve(new Date(authRequest.expiry * 1000))
 }

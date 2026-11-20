@@ -1,5 +1,6 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { getConnectionName, useStore } from '@bifold/core'
+import { useBCSCStore } from '@/bcsc-theme/storage'
+import { getConnectionName } from '@bifold/core'
 import {
   useBasicMessagesByConnectionId,
   useConnectionById,
@@ -23,15 +24,15 @@ import {
 export const useContactChat = (connectionId: string, navigation: ChatNavigation) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
-  const [store] = useStore()
+  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
   const connection = useConnectionById(connectionId)
   const basicMessages: DidCommBasicMessageRecord[] = useBasicMessagesByConnectionId(connectionId)
   const credentials = useCredentialsByConnectionId(connectionId)
   const proofs = useProofsByConnectionId(connectionId)
 
   const theirLabel = useMemo(
-    () => getConnectionName(connection, store.preferences.alternateContactNames),
-    [connection, store.preferences.alternateContactNames]
+    () => getConnectionName(connection, alternateContactNames),
+    [connection, alternateContactNames]
   )
 
   const items: ChatItem[] = useMemo(() => {

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { resetBCSCStore, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import React from 'react'
 
@@ -7,9 +8,6 @@ import ContactChatScreen from './ContactChatScreen'
 const mockUseContactChat = jest.fn()
 const mockOnSend = jest.fn()
 const mockSetOptions = jest.fn()
-
-// Mutable store so individual tests can flip developer mode.
-const mockStore = { preferences: { developerModeEnabled: false } }
 
 jest.mock('./services/useContactChat', () => ({
   useContactChat: (connectionId: string, navigation: any) => mockUseContactChat(connectionId, navigation),
@@ -22,7 +20,6 @@ jest.mock('@bifold/core', () => {
     ThemedText: ({ children, style }: any) => ReactInFactory.createElement('Text', { style }, children),
     testIdWithKey: (k: string) => `id/${k}`,
     formatTime: () => 'time-stub',
-    useStore: () => [mockStore],
     useTheme: () => ({
       ColorPalette: {
         brand: {
@@ -98,7 +95,8 @@ const renderScreen = () => render(<ContactChatScreen navigation={navigation} rou
 
 describe('ContactChatScreen', () => {
   beforeEach(() => {
-    mockStore.preferences.developerModeEnabled = false
+    resetBCSCStore()
+    seedBCSCStore({ preferences: { developerModeEnabled: false } })
     mockUseContactChat.mockReset().mockReturnValue({
       items: [textItem, textItemThem, connectedItem, eventItem, eventItemNoView],
       theirLabel: 'Acme Corp',
@@ -151,7 +149,7 @@ describe('ContactChatScreen', () => {
   })
 
   it('shows chat actions in developer mode', () => {
-    mockStore.preferences.developerModeEnabled = true
+    seedBCSCStore({ preferences: { developerModeEnabled: true } })
     renderScreen()
     expect(screen.getByTestId('chat-actions')).toBeTruthy()
   })

@@ -3,6 +3,7 @@ import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuth
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
+import { seedBCSCStore, withBCSCStore } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BC_DL_BARCODE_NO_DCN_A, BC_DL_BARCODE_S } from '@/bcsc-theme/utils/__fixtures__/barcodes'
 import { ScanableCode } from '@/bcsc-theme/utils/card-barcode-decoder'
@@ -11,7 +12,7 @@ import { AppEventCode } from '@/events/appEventCode'
 import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
-import { renderHook } from '@testing-library/react-native'
+import { act, renderHook } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
@@ -62,7 +63,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
@@ -101,7 +102,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
@@ -147,7 +148,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
@@ -196,7 +197,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
@@ -249,7 +250,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
@@ -283,7 +284,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      jest.mocked(Bifold).useStore.mockReturnValue([mockState, mockDispatch])
+      jest.mocked(Bifold).useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       jest.mocked(Bifold).useServices.mockReturnValue([{ debug } as any])
 
       return { scanCard: renderHook(() => useCardScanner()).result.current.scanCard, debug }
@@ -396,7 +397,7 @@ describe('useCardScanner', () => {
         updateCardProcess: mockUpdateCardProcess,
         updateVerificationOptions: mockUpdateVerificationOptions,
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       navigationMock.useNavigation = jest.fn().mockReturnValue({
         reset: mockNavigationReset,
       })
@@ -456,7 +457,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
@@ -495,7 +496,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
@@ -534,7 +535,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       navigationMock.useNavigation = jest.fn().mockReturnValue({
         navigate: mockNavigationNavigate,
         reset: mockNavigationReset,
@@ -576,13 +577,15 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      jest.mocked(Bifold).useStore.mockReturnValue([
-        {
-          bcsc: { accountSetupType: AccountSetupType.AddAccount },
-          bcscSecure: { additionalEvidenceData: [] },
-        } as any,
-        mockDispatch,
-      ])
+      jest.mocked(Bifold).useStore.mockReturnValue(
+        withBCSCStore([
+          {
+            bcsc: { accountSetupType: AccountSetupType.AddAccount },
+            bcscSecure: { additionalEvidenceData: [] },
+          } as any,
+          mockDispatch,
+        ])
+      )
       jest.mocked(navigation).useNavigation = jest.fn().mockReturnValue({ reset: mockNavigationReset })
       const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() }
       jest.mocked(Bifold).useServices.mockReturnValue([logger as any])
@@ -670,7 +673,7 @@ describe('useCardScanner', () => {
         updateCardProcess: jest.fn(),
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       navigationMock.useNavigation = jest.fn().mockReturnValue({
         reset: mockNavigationReset,
       })
@@ -713,7 +716,7 @@ describe('useCardScanner', () => {
         updateCardProcess: mockUpdateCardProcess,
         updateVerificationOptions: jest.fn(),
       } as any)
-      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useStore.mockReturnValue(withBCSCStore([mockState, mockDispatch]))
       navigationMock.useNavigation = jest.fn().mockReturnValue({ navigate: mockNavigationNavigate })
       bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
@@ -776,13 +779,15 @@ describe('useCardScanner', () => {
         removeEvidenceByType: mockRemoveEvidenceByType,
         clearAdditionalEvidence: mockClearAdditionalEvidence,
       } as any)
-      jest.mocked(Bifold).useStore.mockReturnValue([
-        {
-          bcsc: { accountSetupType: AccountSetupType.AddAccount },
-          bcscSecure: { cardProcess: BCSCCardProcess.NonBCSC, additionalEvidenceData },
-        } as any,
-        mockDispatch,
-      ])
+      jest.mocked(Bifold).useStore.mockReturnValue(
+        withBCSCStore([
+          {
+            bcsc: { accountSetupType: AccountSetupType.AddAccount },
+            bcscSecure: { cardProcess: BCSCCardProcess.NonBCSC, additionalEvidenceData },
+          } as any,
+          mockDispatch,
+        ])
+      )
       navigationMock.useNavigation = jest.fn().mockReturnValue({ reset: mockNavigationReset })
       jest.mocked(Bifold).useServices.mockReturnValue([{ debug: jest.fn(), info: jest.fn() } as any])
 
@@ -888,7 +893,7 @@ describe('useCardScanner', () => {
       const updateUserMetadata = jest.fn()
       jest.mocked(useAuthorizationService).mockReturnValue({} as any)
       jest.mocked(useSecureActions).mockReturnValue({ updateUserMetadata, updateUserInfo: jest.fn() } as any)
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, mockDispatch])
+      jest.mocked(Bifold).useStore.mockReturnValue(withBCSCStore([{ bcsc: {}, bcscSecure: {} } as any, mockDispatch]))
       jest.mocked(Bifold).useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
@@ -919,13 +924,14 @@ describe('useCardScanner', () => {
       jest.mocked(useAuthorizationService).mockReturnValue({} as any)
       jest.mocked(useSecureActions).mockReturnValue({} as any)
       jest.mocked(Bifold).useServices.mockReturnValue([{ debug: jest.fn() } as any])
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, mockDispatch])
+      jest.mocked(Bifold).useStore.mockReturnValue(withBCSCStore([{ bcsc: {}, bcscSecure: {} } as any, mockDispatch]))
 
       const hook = renderHook(() => useCardScanner())
       const first = hook.result.current
 
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, mockDispatch])
-      hook.rerender({})
+      act(() => {
+        seedBCSCStore({ verification: { cardProcess: BCSCCardProcess.NonBCSC } })
+      })
 
       expect(hook.result.current).not.toBe(first)
       expect(hook.result.current.codeTypes).toBe(first.codeTypes)

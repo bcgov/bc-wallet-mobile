@@ -1,10 +1,10 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { mediatorHost, mediatorLabel, switchMediator } from '@/bcsc-theme/features/agent/services/mediator-service'
+import { usePreferences } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCDispatchAction, BCState } from '@/store'
 import { activate, deactivate } from '@/utils/PushNotificationsHelper'
-import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -30,14 +30,21 @@ export interface MediatorOption {
  */
 export const useConfigureMediatorViewModel = (scannedMediatorUri?: string) => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
   const { waitForAgent } = useBCSCAgent()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams, BCSCScreens.ConfigureMediator>>()
   const { failedToSwitchMediatorAlert } = useAlerts(navigation)
   const [switchingTo, setSwitchingTo] = useState<string | null>(null)
 
-  const { availableMediators, selectedMediator, usePushNotifications, walletName } = store.preferences
+  const {
+    availableMediators,
+    selectedMediator,
+    usePushNotifications,
+    walletName,
+    addMediator,
+    selectMediator: saveSelectedMediator,
+    removeMediator: forgetMediator,
+  } = usePreferences()
   // The mediator sees this wallet under the label the agent is built with (see useAgentSetupViewModel)
   const walletLabel = walletName || 'BC Wallet'
 
@@ -46,11 +53,11 @@ export const useConfigureMediatorViewModel = (scannedMediatorUri?: string) => {
       return
     }
     if (!availableMediators.includes(scannedMediatorUri)) {
-      dispatch({ type: DispatchAction.ADD_AVAILABLE_MEDIATOR, payload: [scannedMediatorUri] })
+      void addMediator(scannedMediatorUri)
     }
     // Consumed: the route keeps its params, and a mediator removed later must not come back from them
     navigation.setParams({ scannedMediatorUri: undefined })
-  }, [scannedMediatorUri, availableMediators, dispatch, navigation])
+  }, [scannedMediatorUri, availableMediators, addMediator, navigation])
 
   const mediators = useMemo<MediatorOption[]>(
     () =>
@@ -79,7 +86,7 @@ export const useConfigureMediatorViewModel = (scannedMediatorUri?: string) => {
       }
       try {
         await switchMediator(agent, { mediatorUrl: url, label: walletLabel }, logger)
-        dispatch({ type: DispatchAction.SET_SELECTED_MEDIATOR, payload: [url] })
+        await saveSelectedMediator(url)
       } finally {
         if (usePushNotifications) {
           await activate(agent).catch((error) =>
@@ -88,7 +95,7 @@ export const useConfigureMediatorViewModel = (scannedMediatorUri?: string) => {
         }
       }
     },
-    [usePushNotifications, walletLabel, logger, dispatch]
+    [usePushNotifications, walletLabel, logger, saveSelectedMediator]
   )
 
   const selectMediator = useCallback(
@@ -118,9 +125,9 @@ export const useConfigureMediatorViewModel = (scannedMediatorUri?: string) => {
       if (switchingTo || !mediators.some((mediator) => mediator.url === url && mediator.removable)) {
         return
       }
-      dispatch({ type: BCDispatchAction.REMOVE_AVAILABLE_MEDIATOR, payload: [url] })
+      void forgetMediator(url)
     },
-    [switchingTo, mediators, dispatch]
+    [switchingTo, mediators, forgetMediator]
   )
 
   const scanMediator = useCallback(() => {

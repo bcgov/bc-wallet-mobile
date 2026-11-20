@@ -1,10 +1,10 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { VerificationResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { getBCSCState, useVerificationRequestId } from '@/bcsc-theme/storage/hooks'
 import { AppError, isAppError, isAxiosAppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
@@ -65,12 +65,11 @@ const describePrompts = (prompts: unknown): string => {
 }
 
 const useVideoPrompts = () => {
-  const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { evidence } = useApi()
   const { updateVerificationRequest } = useSecureActions()
   const [isRefreshingPrompts, setIsRefreshingPrompts] = useState(false)
-  const { verificationRequestId } = store.bcscSecure
+  const verificationRequestId = useVerificationRequestId()
 
   // Read through a ref so `refreshPrompts` keeps a stable identity: callers drive it from focus effects,
   // and an identity that changed when the id landed would re-arm the effect and fetch a second time.
@@ -101,10 +100,10 @@ const useVideoPrompts = () => {
         return { ready: false, error: promptsMissingError(cause, request) }
       }
 
-      dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
+      getBCSCState().session.update({ prompts: prompts })
       return { ready: true }
     },
-    [dispatch, logger, updateVerificationRequest]
+    [logger, updateVerificationRequest]
   )
 
   const _refresh = useCallback(async (): Promise<PromptsResult> => {

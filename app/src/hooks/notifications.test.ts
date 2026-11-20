@@ -19,6 +19,8 @@ const PROOF_EXPIRATION_TIMES = {
 }
 
 jest.mock('@/constants', () => ({
+  // The BCSC store's developer defaults read Mode and the environments
+  ...jest.requireActual('@/constants'),
   AttestationRestrictions: {},
   NOTIFICATION_REFRESH_INTERVAL_MS: 60_000,
 }))

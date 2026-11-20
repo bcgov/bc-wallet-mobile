@@ -1,13 +1,16 @@
 import { isRefreshTokenExpired } from '@/bcsc-theme/state/account/refresh-token'
+import { selectJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState, selectAccountRecord, useApp } from '@/bcsc-theme/storage/hooks'
+import type { Profile } from '@/bcsc-theme/storage/slices/account'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
+import { BCSCSecureState, NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
 import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
-import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
+import { BifoldLogger, TOKENS, useServices } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Platform } from 'react-native'
@@ -16,38 +19,17 @@ import {
   BarcodePayload,
   BCSCCardProcess,
   CredentialInfo,
-  deleteAccountFlags,
-  deleteAuthorizationRequest,
-  deleteCredential,
-  deleteEvidence,
-  deleteSavedServices,
-  deleteToken,
   EvidenceMetadata,
   EvidenceType,
-  getAccount,
-  getAccountFlags,
-  getAuthorizationRequest,
-  getCredential,
-  getEvidence,
-  getSavedServices,
-  getToken,
   NativeAuthorizationRequest,
-  NativeSavedService,
   PhotoMetadata,
-  setAccount,
-  setAccountFlags,
-  setAuthorizationRequest,
-  setCredential,
-  setEvidence,
-  setSavedServices,
-  setToken,
-  TokenType,
 } from 'react-native-bcsc-core'
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createVerifiedCredential, isCredentialDeactivated } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
+import { removeFileSafely } from '../utils/file-info'
 import { KeyRecoveryStatus, performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import {
   confirmRegistrationClientId,
@@ -89,8 +71,17 @@ import { useBCSCApiClientState } from './useBCSCApiClient'
  * await deleteSecureData()
  * ```
  */
+// Read when an action runs, not from the render: two updates in a row must each see the other's write
+const currentEvidence = () => selectJourney(getBCSCState()).additionalEvidenceData
+
+// The ID photos saved for the evidence (saveEvidencePhoto), deleted with it. Never throws.
+const deleteEvidencePhotos = (logger: BifoldLogger) =>
+  Promise.all(
+    currentEvidence().flatMap((evidence) => evidence.metadata.map((photo) => removeFileSafely(photo.file_path, logger)))
+  )
+
 export const useSecureActions = () => {
-  const [store, dispatch] = useStore<BCState>()
+  const app = useApp()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const { client: apiClient, isClientReady } = useBCSCApiClientState()
@@ -100,44 +91,6 @@ export const useSecureActions = () => {
   // ============================================================================
 
   /**
-   * Persists tokens to native secure storage.
-   *
-   * @param refreshToken OAuth refresh token
-   * @param registrationAccessToken DCR registration access token
-   * @param accessToken OAuth access token (not used much from storage in v3, for
-   * most use cases access token doesn't live long enough to need persistence)
-   */
-  const persistTokens = useCallback(
-    async (refreshToken?: string, registrationAccessToken?: string, accessToken?: string) => {
-      try {
-        const promises: Promise<boolean | TokenResponse>[] = []
-
-        if (refreshToken) {
-          logger.info(`Persisting refresh token`)
-          promises.push(setToken(TokenType.Refresh, refreshToken))
-        }
-
-        if (registrationAccessToken) {
-          logger.info(`Persisting registration access token`)
-          promises.push(setToken(TokenType.Registration, registrationAccessToken))
-        }
-
-        if (accessToken) {
-          logger.info(`Persisting access token`)
-          promises.push(setToken(TokenType.Access, accessToken))
-        }
-
-        await Promise.all(promises)
-        logger.info(`Tokens persisted to native storage successfully`)
-      } catch (error) {
-        logger.error('Failed to persist tokens:', error as Error)
-        throwNativeBcscError(error)
-      }
-    },
-    [logger]
-  )
-
-  /**
    * Persists authorization request data to native secure storage.
    * This includes PII like birthdate, serial, email, and device codes.
    * Merges with existing data to avoid overwriting previously saved fields.
@@ -145,9 +98,8 @@ export const useSecureActions = () => {
   const persistAuthorizationRequest = useCallback(
     async (data: Partial<NativeAuthorizationRequest>) => {
       try {
-        const existingData = await getAuthorizationRequest()
-        const mergedData = { ...existingData, ...data }
-        await setAuthorizationRequest(mergedData as NativeAuthorizationRequest)
+        // Merged over the slice's copy, which is the native record as last read or written
+        await getBCSCState().verification.updateRequest(data)
         logger.info('Authorization request persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist authorization request:', error as Error)
@@ -165,9 +117,7 @@ export const useSecureActions = () => {
   const persistAccountFlags = useCallback(
     async (flags: AccountFlags) => {
       try {
-        const existingFlags = await getAccountFlags()
-        const mergedFlags = { ...existingFlags, ...flags }
-        await setAccountFlags(mergedFlags)
+        await getBCSCState().verification.updateFlags(flags)
         logger.info('Account flags persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist account flags:', error as Error)
@@ -184,7 +134,7 @@ export const useSecureActions = () => {
   const persistEvidenceData = useCallback(
     async (evidenceData: EvidenceMetadata[]) => {
       try {
-        await setEvidence(evidenceData)
+        await getBCSCState().verification.setEvidence(evidenceData)
         logger.info('Evidence persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist evidence metadata:', error as Error)
@@ -203,30 +153,23 @@ export const useSecureActions = () => {
    */
   const updateTokens = useCallback(
     async (tokens: { refreshToken?: string; registrationAccessToken?: string; accessToken?: string }) => {
-      if (tokens.refreshToken !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN,
-          payload: [tokens.refreshToken],
-        })
+      // Only the tokens given change; the account slice saves them natively before the store changes
+      const given = Object.fromEntries(Object.entries(tokens).filter(([, token]) => token !== undefined))
+      if (Object.keys(given).length === 0) {
+        return
       }
-
-      if (tokens.registrationAccessToken !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN,
-          payload: [tokens.registrationAccessToken],
-        })
+      try {
+        await getBCSCState().account.setTokens(given)
+        logger.info('Tokens persisted to native storage successfully')
+      } catch (error) {
+        logger.error('Failed to persist tokens:', error as Error)
+        // The server may already have rotated (and revoked) the old ones, so the session carries on with
+        // these, as it did when memory was updated before the save (#4645)
+        getBCSCState().account.keepTokensInMemory(given)
+        throwNativeBcscError(error)
       }
-
-      if (tokens.accessToken !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_ACCESS_TOKEN,
-          payload: [tokens.accessToken],
-        })
-      }
-
-      await persistTokens(tokens.refreshToken, tokens.registrationAccessToken, tokens.accessToken)
     },
-    [dispatch, persistTokens]
+    [logger]
   )
 
   /**
@@ -234,34 +177,6 @@ export const useSecureActions = () => {
    */
   const updateUserInfo = useCallback(
     async (userInfo: { birthdate?: Date; serial?: string; email?: string; isEmailVerified?: boolean }) => {
-      if (userInfo.birthdate !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_BIRTHDATE,
-          payload: [userInfo.birthdate],
-        })
-      }
-
-      if (userInfo.serial !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_SERIAL,
-          payload: [userInfo.serial],
-        })
-      }
-
-      if (userInfo.email !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_EMAIL_ADDRESS,
-          payload: [userInfo.email],
-        })
-      }
-
-      if (userInfo.isEmailVerified !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_IS_EMAIL_VERIFIED,
-          payload: [userInfo.isEmailVerified],
-        })
-      }
-
       const authRequestData: Partial<NativeAuthorizationRequest> = {}
 
       if (userInfo.birthdate) {
@@ -292,7 +207,7 @@ export const useSecureActions = () => {
         await persistAccountFlags(accountFlagsData)
       }
     },
-    [dispatch, persistAuthorizationRequest, persistAccountFlags]
+    [persistAuthorizationRequest, persistAccountFlags]
   )
 
   /**
@@ -300,27 +215,6 @@ export const useSecureActions = () => {
    */
   const updateDeviceCodes = useCallback(
     async (codes: { deviceCode?: string; userCode?: string; deviceCodeExpiresAt?: Date }) => {
-      if (codes.deviceCode !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_DEVICE_CODE,
-          payload: [codes.deviceCode],
-        })
-      }
-
-      if (codes.userCode !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_USER_CODE,
-          payload: [codes.userCode],
-        })
-      }
-
-      if (codes.deviceCodeExpiresAt !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_DEVICE_CODE_EXPIRES_AT,
-          payload: [codes.deviceCodeExpiresAt],
-        })
-      }
-
       const authRequestData: Partial<NativeAuthorizationRequest> = {}
 
       if (codes.deviceCode) {
@@ -359,7 +253,7 @@ export const useSecureActions = () => {
         )
       }
     },
-    [dispatch, persistAuthorizationRequest, t, logger]
+    [persistAuthorizationRequest, t, logger]
   )
 
   /**
@@ -370,34 +264,27 @@ export const useSecureActions = () => {
    * with no identity attached. Clearing codes that don't exist succeeds.
    */
   const clearDeviceCodes = useCallback(async () => {
-    dispatch({ type: BCDispatchAction.UPDATE_SECURE_DEVICE_CODE, payload: [] })
-    dispatch({ type: BCDispatchAction.UPDATE_SECURE_USER_CODE, payload: [] })
-    dispatch({ type: BCDispatchAction.UPDATE_SECURE_DEVICE_CODE_EXPIRES_AT, payload: [] })
-
     try {
-      const existingData = await getAuthorizationRequest()
-      if (!existingData) {
+      const { verification } = getBCSCState()
+      if (!verification.request) {
         return
       }
 
-      const remainingData = { ...existingData }
-      delete remainingData.deviceCode
-      delete remainingData.userCode
-      delete remainingData.expiry
-      await setAuthorizationRequest(remainingData)
+      await verification.updateRequest({ deviceCode: undefined, userCode: undefined, expiry: undefined })
       logger.info('Device authorization codes cleared from native storage')
     } catch (error) {
       logger.error('Failed to clear device authorization codes:', error as Error)
       throwNativeBcscError(error)
     }
-  }, [dispatch, logger])
+  }, [logger])
 
   /**
    * Clear the authorization request record from native storage entirely.
    */
   const clearAuthorizationRequest = useCallback(async () => {
     try {
-      await deleteAuthorizationRequest()
+      await getBCSCState().verification.clearRequest()
+      await getBCSCState().verification.setCardProcess(undefined)
       logger.info('Authorization request cleared from native storage')
     } catch (error) {
       logger.error('Failed to clear authorization request:', error as Error)
@@ -411,16 +298,14 @@ export const useSecureActions = () => {
    */
   const updateCardProcess = useCallback(
     async (cardProcess: BCSCCardProcess | undefined | null) => {
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_CARD_PROCESS,
-        payload: [cardProcess],
-      })
+      await getBCSCState().verification.setCardProcess(cardProcess ?? undefined)
 
+      // Also kept in the native authorization request, which hydrate still derives it from until m0002
       if (cardProcess !== undefined) {
         await persistAuthorizationRequest({ cardProcess: cardProcess ?? undefined })
       }
     },
-    [dispatch, persistAuthorizationRequest]
+    [persistAuthorizationRequest]
   )
 
   /**
@@ -429,10 +314,7 @@ export const useSecureActions = () => {
    */
   const updateUserMetadata = useCallback(
     async (userMetadata: NonBCSCUserMetadata | null) => {
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_USER_METADATA,
-        payload: [userMetadata],
-      })
+      getBCSCState().session.setUserMetadata(userMetadata ?? undefined)
 
       // Persist address to authorizationRequest to match IAS apps
       // This ensures data survives app restarts during verification
@@ -462,7 +344,7 @@ export const useSecureActions = () => {
         await persistAuthorizationRequest(authRequestData)
       }
     },
-    [dispatch, persistAuthorizationRequest]
+    [persistAuthorizationRequest]
   )
 
   /**
@@ -471,15 +353,9 @@ export const useSecureActions = () => {
    * is dropped with the rest of the secure state on lock, logout or a verification reset, so only a
    * submitted address (see updateUserMetadata) survives. Pass undefined to discard it.
    */
-  const updateResidentialAddressDraft = useCallback(
-    (draft: ResidentialAddressDraft | undefined) => {
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_RESIDENTIAL_ADDRESS_DRAFT,
-        payload: [draft],
-      })
-    },
-    [dispatch]
-  )
+  const updateResidentialAddressDraft = useCallback((draft: ResidentialAddressDraft | undefined) => {
+    getBCSCState().session.setResidentialAddressDraft(draft)
+  }, [])
 
   /**
    * Update verification status: persists the credential record (the marker hydration reads on every
@@ -492,36 +368,29 @@ export const useSecureActions = () => {
   const updateVerified = useCallback(
     async (verified: boolean) => {
       if (verified) {
-        const account = await getAccount()
+        const account = selectAccountRecord(getBCSCState())
         if (!account) {
           throw new Error('Cannot mark as verified: no account found')
         }
 
-        await setCredential(createVerifiedCredential(account.issuer, account.clientID, store.bcscSecure.cardProcess))
+        // The credential record is what makes the account verified (selectVerified)
+        await getBCSCState().account.setCredential(
+          createVerifiedCredential(account.issuer, account.clientID, getBCSCState().verification.cardProcess)
+        )
       } else {
-        await deleteCredential()
+        await getBCSCState().account.setCredential(undefined)
       }
 
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
-        payload: [verified],
-      })
+      getBCSCState().session.update({ inVerifyFlow: false, credentialDeactivated: false })
       if (verified) {
         // Verification is finished: nothing is left to resume on launch, and the user is no longer a
         // first-time verifier (a later re-verification, e.g. a renewal, starts from Home)
-        dispatch({
-          type: BCDispatchAction.SET_VERIFICATION_STARTED,
-          payload: [false],
-        })
-        dispatch({
-          type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
-          payload: [true],
-        })
+        void getBCSCState().app.update({ verificationStarted: false, verificationSkipped: true })
         // Clean up scheduled verification reminders, the user is verified
         await cancelVerificationReminders(logger)
       }
     },
-    [dispatch, logger, store.bcscSecure.cardProcess]
+    [logger]
   )
 
   /**
@@ -529,96 +398,32 @@ export const useSecureActions = () => {
    * the verify flow, and marking it started makes every later launch resume it until the user is verified.
    */
   const continueVerificationProcess = useCallback(() => {
-    dispatch({
-      type: BCDispatchAction.SET_VERIFICATION_STARTED,
-      payload: [true],
-    })
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW,
-      payload: [true],
-    })
-  }, [dispatch])
+    void getBCSCState().app.update({ verificationStarted: true })
+    getBCSCState().session.setInVerifyFlow(true)
+  }, [])
 
   /**
    * Update wallet key in state
    * This is the PBKDF2 hash of the PIN used for Askar wallet encryption
    */
-  const updateWalletKey = useCallback(
-    (walletKey?: string) => {
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_WALLET_KEY,
-        payload: [walletKey],
-      })
-    },
-    [dispatch]
-  )
+  const updateWalletKey = useCallback((walletKey?: string) => {
+    getBCSCState().session.setWalletKey(walletKey)
+  }, [])
 
   /**
    * Update account flags in state and persist to native storage
    */
   const updateAccountFlags = useCallback(
     async (flags: AccountFlags) => {
-      if (flags.isEmailVerified !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_IS_EMAIL_VERIFIED,
-          payload: [flags.isEmailVerified],
-        })
-      }
-      if (flags.userSkippedEmailVerification !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_USER_SKIPPED_EMAIL_VERIFICATION,
-          payload: [flags.userSkippedEmailVerification],
-        })
-      }
-      if (flags.emailAddress !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_EMAIL_ADDRESS,
-          payload: [flags.emailAddress],
-        })
-      }
-      if (flags.temporaryEmailId !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_TEMPORARY_EMAIL_ID,
-          payload: [flags.temporaryEmailId],
-        })
-      }
-      if (flags.userSubmittedVerificationVideo !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO,
-          payload: [flags.userSubmittedVerificationVideo],
-        })
-      }
-
       await persistAccountFlags(flags)
     },
-    [dispatch, persistAccountFlags]
+    [persistAccountFlags]
   )
 
   /**
-   * Clear account flags from state and native storage
+   * Clear account flags from native storage, and so from state
    */
-  const clearAccountFlags = useCallback(() => {
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_IS_EMAIL_VERIFIED,
-      payload: [undefined],
-    })
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_USER_SKIPPED_EMAIL_VERIFICATION,
-      payload: [undefined],
-    })
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_EMAIL_ADDRESS,
-      payload: [undefined],
-    })
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_TEMPORARY_EMAIL_ID,
-      payload: [undefined],
-    })
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO,
-      payload: [undefined],
-    })
-  }, [dispatch])
+  const clearAccountFlags = useCallback(() => getBCSCState().verification.clearFlags(), [])
 
   /**
    * Update verification request data in secure state and persist to native storage.
@@ -627,15 +432,13 @@ export const useSecureActions = () => {
    */
   const updateVerificationRequest = useCallback(
     async (verificationRequestId: string | undefined, verificationRequestSha: string | null) => {
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
-        payload: [verificationRequestId],
-      })
+      // A status belongs to one request, so it must not outlive a change of request ID
+      // Read from the store, not a render, so the callback keeps one identity (useVideoPrompts relies on it)
+      if (verificationRequestId !== getBCSCState().verification.request?.backCheckVerificationId) {
+        getBCSCState().session.clearVerificationStatus()
+      }
 
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
-        payload: [verificationRequestSha],
-      })
+      getBCSCState().session.update({ verificationRequestSha: verificationRequestSha ?? undefined })
 
       try {
         // Persist ID to authorization request (SHA is not persisted in v3)
@@ -648,7 +451,7 @@ export const useSecureActions = () => {
         )
       }
     },
-    [dispatch, persistAuthorizationRequest, logger]
+    [persistAuthorizationRequest, logger]
   )
 
   /**
@@ -656,16 +459,11 @@ export const useSecureActions = () => {
    */
   const updateVerificationOptions = useCallback(
     async (verificationOptions: DeviceVerificationOption[]) => {
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_OPTIONS,
-        payload: [verificationOptions],
-      })
-
       // Persist as space-separated string to match v3 format
       const verificationOptionsString = verificationOptions.join(' ')
       await persistAuthorizationRequest({ verificationOptions: verificationOptionsString })
     },
-    [dispatch, persistAuthorizationRequest]
+    [persistAuthorizationRequest]
   )
 
   /**
@@ -673,17 +471,12 @@ export const useSecureActions = () => {
    */
   const addEvidenceType = useCallback(
     async (evidenceType: EvidenceType) => {
-      const updatedEvidence = [...store.bcscSecure.additionalEvidenceData, { evidenceType, metadata: [] }]
-
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-        payload: [updatedEvidence],
-      })
+      const updatedEvidence = [...currentEvidence(), { evidenceType, metadata: [] }]
 
       // Persist the updated evidence data
       await persistEvidenceData(updatedEvidence)
     },
-    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
+    [persistEvidenceData]
   )
 
   /**
@@ -691,20 +484,15 @@ export const useSecureActions = () => {
    */
   const updateEvidenceMetadata = useCallback(
     async (evidenceType: EvidenceType, metadata: PhotoMetadata[], barcodes?: BarcodePayload[]) => {
-      const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
+      const updatedEvidence = currentEvidence().map((evidence) =>
         evidence.evidenceType?.evidence_type === evidenceType.evidence_type
           ? { ...evidence, metadata, barcodes }
           : evidence
       )
 
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-        payload: [updatedEvidence],
-      })
-
       await persistEvidenceData(updatedEvidence)
     },
-    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
+    [persistEvidenceData]
   )
 
   /**
@@ -712,18 +500,13 @@ export const useSecureActions = () => {
    */
   const updateEvidenceDocumentNumber = useCallback(
     async (evidenceType: EvidenceType, documentNumber: string) => {
-      const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
+      const updatedEvidence = currentEvidence().map((evidence) =>
         evidence.evidenceType?.evidence_type === evidenceType.evidence_type ? { ...evidence, documentNumber } : evidence
       )
 
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-        payload: [updatedEvidence],
-      })
-
       await persistEvidenceData(updatedEvidence)
     },
-    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
+    [persistEvidenceData]
   )
 
   /**
@@ -734,20 +517,15 @@ export const useSecureActions = () => {
    */
   const removeEvidenceByType = useCallback(
     async (evidenceType: EvidenceType) => {
-      const updatedEvidence = store.bcscSecure.additionalEvidenceData.filter(
+      const updatedEvidence = currentEvidence().filter(
         (evidence) => evidence.evidenceType?.evidence_type !== evidenceType.evidence_type
       )
-
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-        payload: [updatedEvidence],
-      })
 
       await persistEvidenceData(updatedEvidence)
 
       return updatedEvidence
     },
-    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
+    [persistEvidenceData]
   )
 
   /**
@@ -770,16 +548,11 @@ export const useSecureActions = () => {
         return evidence
       }
 
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-        payload: [updatedEvidence],
-      })
-
       await persistEvidenceData(updatedEvidence)
 
       return updatedEvidence
     },
-    [dispatch, persistEvidenceData]
+    [persistEvidenceData]
   )
 
   /**
@@ -798,15 +571,11 @@ export const useSecureActions = () => {
       }
 
       const kept = evidence.slice(0, count)
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-        payload: [kept],
-      })
       await persistEvidenceData(kept)
 
       return kept
     },
-    [dispatch, persistEvidenceData]
+    [persistEvidenceData]
   )
 
   /**
@@ -837,16 +606,11 @@ export const useSecureActions = () => {
         return evidence
       }
 
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-        payload: [updatedEvidence],
-      })
-
       await persistEvidenceData(updatedEvidence)
 
       return updatedEvidence
     },
-    [dispatch, persistEvidenceData]
+    [persistEvidenceData]
   )
 
   /**
@@ -854,67 +618,26 @@ export const useSecureActions = () => {
    */
   const clearAdditionalEvidence = useCallback(async () => {
     // Clear evidence by persisting an empty array
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-      payload: [[]],
-    })
 
     await persistEvidenceData([])
-  }, [dispatch, persistEvidenceData])
+  }, [persistEvidenceData])
 
   /**
-   * Update a saved service bookmark status and persist to native storage.
-   * Updates the in-memory store immediately, then writes through to native storage
-   * to maintain v3 compatibility.
+   * Update a saved service bookmark status. Only the bookmarked IDs are kept (D6).
    *
    * @param clientRefId The service client_ref_id
    * @param bookmarked Whether to bookmark (true) or unbookmark (false)
-   * @param metadata Optional additional metadata about the service (clientName, etc.)
    */
   const updateSavedService = useCallback(
-    async (clientRefId: string, bookmarked: boolean, metadata?: Partial<NativeSavedService>) => {
-      // Update in-memory store immediately
-      if (bookmarked) {
-        dispatch({ type: BCDispatchAction.ADD_SAVED_SERVICE, payload: [clientRefId] })
-      } else {
-        dispatch({ type: BCDispatchAction.REMOVE_SAVED_SERVICE, payload: [clientRefId] })
-      }
-
-      // Write through to native storage for v3 compatibility
+    async (clientRefId: string, bookmarked: boolean) => {
       try {
-        const existingServices = await getSavedServices()
-        const existingIndex = existingServices.findIndex((s: NativeSavedService) => s.clientRefId === clientRefId)
-
-        let updatedServices: NativeSavedService[]
-        if (existingIndex >= 0) {
-          // Update existing entry
-          updatedServices = existingServices.map((s: NativeSavedService) =>
-            s.clientRefId === clientRefId ? { ...s, ...metadata, bookmarked, lastUsed: Date.now() / 1000 } : s
-          )
-        } else if (bookmarked) {
-          // Add new entry
-          updatedServices = [
-            ...existingServices,
-            {
-              clientRefId,
-              bookmarked: true,
-              dateAdded: Date.now() / 1000,
-              lastUsed: Date.now() / 1000,
-              ...metadata,
-            },
-          ]
-        } else {
-          // Removing a service that doesn't exist in native storage — no-op
-          updatedServices = existingServices
-        }
-
-        await setSavedServices(updatedServices)
+        await getBCSCState().savedServices.setBookmarked(clientRefId, bookmarked)
         logger.info(`Saved service ${clientRefId} ${bookmarked ? 'bookmarked' : 'unbookmarked'}`)
       } catch (error) {
         logger.error('Failed to persist saved service update:', error as Error)
       }
     },
-    [dispatch, logger]
+    [logger]
   )
 
   // ============================================================================
@@ -929,32 +652,14 @@ export const useSecureActions = () => {
     try {
       logger.info('Hydrating secure state from native storage...')
 
-      // Load all data from native storage in parallel
-      const [
-        account,
-        authRequest,
-        refreshTokenObj,
-        registrationAccessTokenObj,
-        accessTokenObj,
-        accountFlags,
-        evidenceData,
-        credential,
-        nativeSavedServices,
-      ] = await Promise.all([
-        getAccount(),
-        getAuthorizationRequest(),
-        getToken(TokenType.Refresh),
-        getToken(TokenType.Registration),
-        getToken(TokenType.Access),
-        getAccountFlags(),
-        getEvidence(),
-        getCredential(),
-        getSavedServices(),
-      ])
-
-      const refreshToken = refreshTokenObj?.token
-      let registrationAccessToken = registrationAccessTokenObj?.token
-      const accessToken = accessTokenObj?.token
+      // The store has these since open(); nothing else writes them
+      const state = getBCSCState()
+      const account = selectAccountRecord(state)
+      const authRequest = (state.verification.request ?? null) as NativeAuthorizationRequest | null
+      const { refreshToken, accessToken } = state.account.tokens ?? {}
+      let registrationAccessToken = state.account.tokens?.registrationAccessToken
+      const evidenceData = state.verification.evidence ?? []
+      const credential = state.account.credential
 
       let issuer = account?.issuer
       let clientID = account?.clientID
@@ -973,12 +678,10 @@ export const useSecureActions = () => {
           clientID = clientID || (registrationAccessToken ? tokenClientID : authRequest?.clientID)
 
           if (issuer && clientID) {
-            // The account record already carries its security method, so only the recovered fields change.
-            const updatedAccount = { ...account, issuer, clientID }
             logger.info(
               `[hydrateSecureState] Recovered issuer/clientID (clientID source: ${clientIDSource}); updating account`
             )
-            await setAccount(updatedAccount)
+            await getBCSCState().account.updateProfile({ issuer, clientId: clientID })
           } else {
             logger.warn(
               `[hydrateSecureState] Could not recover account fields: issuer=${issuer ? 'OK' : 'MISSING'}, clientID=${clientID ? 'OK' : 'MISSING'}`
@@ -1036,19 +739,9 @@ export const useSecureActions = () => {
         }
 
         try {
-          await setAccount({ ...account, issuer, clientID: tokenClientID })
+          await getBCSCState().account.updateProfile({ issuer, clientId: tokenClientID })
           clientID = tokenClientID
         } catch {
-          // Android can save the account and then fail on the issuer file, so trust what is stored.
-          try {
-            clientID = (await getAccount())?.clientID ?? clientID
-          } catch {
-            logger.error('[hydrateSecureState] event=client_id_drift_rejected reason=persist_failed')
-            return false
-          }
-        }
-
-        if (clientID !== tokenClientID) {
           logger.error('[hydrateSecureState] event=client_id_drift_rejected reason=persist_failed')
           return false
         }
@@ -1149,7 +842,7 @@ export const useSecureActions = () => {
       }
 
       // Computed once and used for both the keychain write-back and the store, so the
-      // HYDRATE_SECURE_STATE dispatch below can't clobber a refreshed or rotated token.
+      // store can't end up with a token older than the one just refreshed or rotated.
       const effectiveTokens = {
         refreshToken: freshTokens?.refresh_token ?? refreshToken,
         registrationAccessToken: recoveredRegistrationAccessToken ?? registrationAccessToken,
@@ -1162,6 +855,7 @@ export const useSecureActions = () => {
       try {
         await updateTokens(effectiveTokens)
       } catch (error) {
+        // updateTokens kept them in memory
         logger.error('[hydrateSecureState] Failed to persist tokens; continuing with in-memory tokens', error as Error)
       }
 
@@ -1208,6 +902,10 @@ export const useSecureActions = () => {
       }
 
       const cardProcess = hydrateCardProcess(authRequest, cleanedEvidence)
+      // Derived again on every unlock, so a failed save shouldn't fail the unlock
+      await getBCSCState()
+        .verification.setCardProcess(cardProcess)
+        .catch((error) => logger.error('[hydrateSecureState] Failed to save card process', error as Error))
 
       // The credential record is the persisted "verified" marker, written when the user finishes setup
       // (see updateVerified). A device can hold a refresh token IAS still accepts without that record:
@@ -1217,10 +915,10 @@ export const useSecureActions = () => {
       // on the finish step, which also sets the nickname and clears the authorization request.
       let restoredCredential: CredentialInfo | null = null
       if (!credential && refreshToken) {
-        if (freshTokens && issuer && clientID && store.bcsc.verificationStarted !== true) {
+        if (freshTokens && issuer && clientID && app.verificationStarted !== true) {
           try {
             restoredCredential = createVerifiedCredential(issuer, clientID, cardProcess)
-            await setCredential(restoredCredential)
+            await getBCSCState().account.setCredential(restoredCredential)
             logger.info(
               '[hydrateSecureState] event=verified_credential_restored no credential record, but IAS accepted the stored refresh token; record restored'
             )
@@ -1238,58 +936,9 @@ export const useSecureActions = () => {
 
       const record = credential ?? restoredCredential
       const credentialDeactivated = isCredentialDeactivated(record)
-      const verified = Boolean(record) && !credentialDeactivated
-
-      // A verified account with no refresh token is unrecoverable
-      const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
-
-      // Extract bookmarked service IDs from native client metadata
-      const savedServices = (nativeSavedServices ?? [])
-        .filter((s: NativeSavedService) => s.bookmarked)
-        .map((s: NativeSavedService) => s.clientRefId)
-
-      const secureData: BCSCSecureState = {
-        isHydrated: true,
-
-        birthdate: authRequest?.birthdate ? new Date(authRequest.birthdate * 1000) : undefined,
-        serial: authRequest?.csn,
-        isEmailVerified: accountFlags.isEmailVerified || !!authRequest?.verifiedEmail,
-        deviceCode: authRequest?.deviceCode,
-        userCode: authRequest?.userCode,
-        deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
-        cardProcess,
-        securityMethod: account?.securityMethod,
-
-        ...effectiveTokens,
-
-        verified,
-        credentialDeactivated,
-        inVerifyFlow: false,
-
-        userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
-        emailAddress: accountFlags.emailAddress ?? authRequest?.verifiedEmail,
-        temporaryEmailId: accountFlags.temporaryEmailId,
-        userSubmittedVerificationVideo: accountFlags.userSubmittedVerificationVideo,
-
-        // Parse verificationOptions from space-separated string to array
-        verificationOptions: authRequest?.verificationOptions
-          ? (authRequest.verificationOptions.split(' ') as DeviceVerificationOption[])
-          : undefined,
-
-        verificationRequestId: authRequest?.backCheckVerificationId,
-        additionalEvidenceData: cleanedEvidence,
-        userMetadata,
-        savedServices,
-
-        sessionRecoveryRequired,
-      }
-
-      logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)
-
-      dispatch({
-        type: BCDispatchAction.HYDRATE_SECURE_STATE,
-        payload: [secureData],
-      })
+      // Everything else hydrate used to hand to Bifold's store is in the slices now: the reloads above, the
+      // token write and the credential restore put it there
+      getBCSCState().session.update({ inVerifyFlow: false, credentialDeactivated, userMetadata, isHydrated: true })
 
       logger.info('Secure state hydrated successfully')
     } catch (error) {
@@ -1298,15 +947,7 @@ export const useSecureActions = () => {
       // mapped downstream (e.g. token persistence) passes through the mapper unchanged.
       throwNativeBcscError(error)
     }
-  }, [
-    logger,
-    apiClient,
-    isClientReady,
-    updateTokens,
-    removeAbandonedEvidence,
-    dispatch,
-    store.bcsc.verificationStarted,
-  ])
+  }, [logger, apiClient, isClientReady, updateTokens, removeAbandonedEvidence, app.verificationStarted])
 
   /**
    * Clears secure state from store (does not delete from native storage).
@@ -1315,12 +956,19 @@ export const useSecureActions = () => {
   const clearSecureState = useCallback(
     (secureState?: Partial<BCSCSecureState>) => {
       logger.info('Clearing secure state from memory')
-      dispatch({
-        type: BCDispatchAction.CLEAR_SECURE_STATE,
-        payload: [secureState],
-      })
+      const { session } = getBCSCState()
+      session.clearSignedIn()
+      // Fields the caller keeps across the clear (a verification reset keeps the wallet key, for one)
+      const { walletKey, inVerifyFlow, credentialDeactivated, isHydrated } = secureState ?? {}
+      session.update(
+        Object.fromEntries(
+          Object.entries({ walletKey, inVerifyFlow, credentialDeactivated, isHydrated }).filter(
+            ([, value]) => value !== undefined
+          )
+        )
+      )
     },
-    [logger, dispatch]
+    [logger]
   )
 
   /**
@@ -1330,32 +978,28 @@ export const useSecureActions = () => {
   const logout = useCallback(() => {
     logger.info('Logging out user - clearing secure state and marking as not authenticated')
     clearSecureState()
-    dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
-    dispatch({
-      type: DispatchAction.DID_AUTHENTICATE,
-      payload: [false],
-    })
-  }, [logger, clearSecureState, dispatch])
+    getBCSCState().session.setDidAuthenticate(false)
+  }, [logger, clearSecureState])
 
   /**
-   * Completely removes sensitive data from native storage.
-   * Call this on account removal.
+   * Completely removes the account's sensitive data. Call this on account removal, once the profile is gone
+   * (hasAccount false), so nothing mid-reset reroutes on a half-cleared store.
    */
   const deleteSecureData = useCallback(async () => {
     try {
+      const { verification, account, savedServices } = getBCSCState()
+      await deleteEvidencePhotos(logger)
       await Promise.all([
-        deleteAuthorizationRequest(),
-        deleteAccountFlags(),
-        deleteEvidence(),
-        deleteSavedServices(),
-        deleteCredential(),
-        deleteToken(TokenType.Refresh),
-        deleteToken(TokenType.Registration),
-        deleteToken(TokenType.Access),
+        verification.clearRequest(),
+        verification.clearFlags(),
+        verification.clearEvidence(),
+        savedServices.clear(),
+        account.setCredential(undefined),
+        account.clearTokens(),
       ])
       // doesn't throw
       await cancelVerificationReminders(logger)
-      logger.info('Secure data deleted from native storage')
+      logger.info('Secure data deleted')
     } catch (error) {
       logger.error('Failed to delete secure data:', error as Error)
       throwNativeBcscError(error)
@@ -1368,7 +1012,14 @@ export const useSecureActions = () => {
    */
   const deleteVerificationData = useCallback(async () => {
     try {
-      await Promise.all([deleteAuthorizationRequest(), deleteAccountFlags(), deleteEvidence(), deleteCredential()])
+      await deleteEvidencePhotos(logger)
+      await Promise.all([
+        getBCSCState().verification.clearRequest(),
+        getBCSCState().verification.clearFlags(),
+        getBCSCState().verification.clearEvidence(),
+        getBCSCState().account.setCredential(undefined),
+      ])
+      await getBCSCState().verification.setCardProcess(undefined)
       // doesn't throw
       await cancelVerificationReminders(logger)
       logger.info('Verification data deleted from native storage')
@@ -1379,25 +1030,33 @@ export const useSecureActions = () => {
   }, [logger])
 
   /**
-   * Deletes card info (birthdate and serial) from secure state. Does not delete from native storage.
+   * Deletes card info (birthdate and serial) from the stored authorization request.
    */
   const deleteCardInfo = useCallback(async () => {
-    dispatch({ type: BCDispatchAction.UPDATE_SECURE_BIRTHDATE, payload: [undefined] })
-    dispatch({ type: BCDispatchAction.UPDATE_SECURE_SERIAL, payload: [undefined] })
-  }, [dispatch])
+    const { verification } = getBCSCState()
+    if (verification.request) {
+      await verification.updateRequest({ birthdate: undefined, csn: undefined })
+    }
+  }, [])
 
   /**
    * Handles successful authentication by updating wallet key, hydrating state, and dispatching auth success.
    * Call this after setPIN, setupDeviceSecurity, unlockWithDeviceSecurity, or verifyPIN succeeds.
    * @param walletKey wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
+   * @param newProfile a new account's profile, from onboarding, saved once authenticated
    */
   const handleSuccessfulAuth = useCallback(
-    async (walletKey?: string) => {
+    async (walletKey?: string, newProfile?: Profile) => {
       await hydrateSecureState()
       updateWalletKey(walletKey)
-      dispatch({ type: BCDispatchAction.SUCCESSFUL_AUTH })
+      getBCSCState().session.setDidAuthenticate(true)
+      // A new account's profile is saved only now: hasAccount turning true before didAuthenticate would have
+      // RootStack show the unlock screen to someone finishing onboarding
+      if (newProfile) {
+        await getBCSCState().account.setProfile(newProfile)
+      }
     },
-    [hydrateSecureState, updateWalletKey, dispatch]
+    [hydrateSecureState, updateWalletKey]
   )
 
   return {

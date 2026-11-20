@@ -1,5 +1,6 @@
 import { HomeNoticeType } from '@/bcsc-theme/state/home/home-notice'
 import { selectHomeNotice } from '@/bcsc-theme/state/home/selectors'
+import { storeFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { isCredentialDeactivated } from '@/bcsc-theme/utils/bcsc-credential'
@@ -7,6 +8,7 @@ import { BCSCEvent, BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { getResumeStepRoute, ResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { BCDispatchAction, BCState, initialState, reducer } from '@/store'
 import { CredentialInfo } from 'react-native-bcsc-core'
+import { selectJourney } from './journey'
 import { selectVerificationState } from './selectors'
 
 jest.mock('@bifold/core', () => ({
@@ -98,14 +100,15 @@ interface Observation {
 }
 
 const observe = (state: BCState): Observation => {
-  const { isVerified, isVerificationInProgress, isDeviceVerifiedByIas } = selectVerificationState(state)
+  const store = storeFromBCState(state)
+  const { isVerified, isVerificationInProgress, isDeviceVerifiedByIas } = selectVerificationState(store)
   const verifyStackShown = !isVerified && isVerificationInProgress
 
   return {
     verifyStackShown,
     accountLoadingAllowed: isDeviceVerifiedByIas,
-    homeNotice: selectHomeNotice(state, null, NOW).type,
-    resumeRoute: verifyStackShown ? getResumeStepRoute(state).name : null,
+    homeNotice: selectHomeNotice(store, null, NOW).type,
+    resumeRoute: verifyStackShown ? getResumeStepRoute(selectJourney(store)).name : null,
   }
 }
 

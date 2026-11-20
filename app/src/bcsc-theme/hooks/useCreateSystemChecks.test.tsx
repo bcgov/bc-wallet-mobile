@@ -1,8 +1,15 @@
+import {
+  nativeAccount,
+  seedAccount,
+  seedBCSCStore,
+  seedBCSCStoreFromBCState,
+  seedTokens,
+  withBCSCStore,
+} from '@/bcsc-theme/storage/testing'
 import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCDispatchAction } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
-import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 import * as DeviceInfo from 'react-native-device-info'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
 import { SystemCheckScope } from './useSystemChecks'
@@ -212,23 +219,25 @@ describe('useGetSystemChecks', () => {
     describe('isReady', () => {
       it('should be ready when all flags ready', () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -257,23 +266,25 @@ describe('useGetSystemChecks', () => {
 
       it('should return the correct system checks for STARTUP scope', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -302,23 +313,25 @@ describe('useGetSystemChecks', () => {
 
       it('should not include UpdateAppSystemCheck for non-BCSC builds', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.bad')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -350,10 +363,12 @@ describe('useGetSystemChecks', () => {
           refresh: jest.fn().mockResolvedValue({ serverStatus: null }),
         })
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -374,10 +389,12 @@ describe('useGetSystemChecks', () => {
         const refresh = jest.fn().mockResolvedValue({ serverStatus: { serverTimestamp: new Date() } })
         mockUseServerStatus.mockReturnValue({ serverStatus: null, refresh })
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -400,10 +417,12 @@ describe('useGetSystemChecks', () => {
         const refresh = jest.fn()
         mockUseServerStatus.mockReturnValue({ serverStatus: { serverTimestamp: new Date() }, refresh })
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -422,10 +441,12 @@ describe('useGetSystemChecks', () => {
         const refresh = jest.fn().mockResolvedValue({ serverStatus: { serverTimestamp: new Date() } })
         mockUseServerStatus.mockReturnValue({ serverStatus: { serverTimestamp: new Date() }, refresh })
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client, isClientReady: Boolean(client) })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -464,23 +485,25 @@ describe('useGetSystemChecks', () => {
     describe('isReady', () => {
       it('should be ready when all flags ready ', () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -501,26 +524,28 @@ describe('useGetSystemChecks', () => {
     describe('getSystemChecks', () => {
       it('should return the correct system checks for MAIN_STACK scope', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+                selectedNickname: 'Test Device',
+              },
+              bcscSecure: {
+                isHydrated: true,
+                verified: true,
+                registrationAccessToken: 'test-registration-token',
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-              selectedNickname: 'Test Device',
-            },
-            bcscSecure: {
-              isHydrated: true,
-              verified: true,
-              registrationAccessToken: 'test-registration-token',
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -551,27 +576,29 @@ describe('useGetSystemChecks', () => {
 
       it('skips the id-token-backed checks for a verified user whose refresh token has expired (#4654)', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+                selectedNickname: 'Test Device',
+              },
+              bcscSecure: {
+                isHydrated: true,
+                verified: true,
+                refreshToken: EXPIRED_JWT,
+                registrationAccessToken: 'test-registration-token',
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-              selectedNickname: 'Test Device',
-            },
-            bcscSecure: {
-              isHydrated: true,
-              verified: true,
-              refreshToken: EXPIRED_JWT,
-              registrationAccessToken: 'test-registration-token',
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -599,24 +626,26 @@ describe('useGetSystemChecks', () => {
 
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
+                verified: false,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-              verified: false,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
@@ -659,15 +688,17 @@ describe('useGetSystemChecks', () => {
           const updateRegistration = jest.fn()
           jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue(bundleId)
           mockGetBundleId.mockReturnValue(bundleId)
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: { analyticsOptIn: true, ...bcsc },
-              bcscSecure: { isHydrated: true, verified: false, ...bcscSecure },
-            },
-            jest.fn(),
-          ])
+          mockUseStore.mockReturnValue(
+            withBCSCStore([
+              {
+                stateLoaded: true,
+                developer: { environment: { analyticsAppId: 'test-app-id' } },
+                bcsc: { analyticsOptIn: true, ...bcsc },
+                bcscSecure: { isHydrated: true, verified: false, ...bcscSecure },
+              },
+              jest.fn(),
+            ])
+          )
           mockUseServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }])
           mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
           mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -779,20 +810,33 @@ describe('useGetSystemChecks', () => {
       } = {}) => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue(bundleId)
         mockGetBundleId.mockReturnValue(bundleId)
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: { analyticsOptIn: true, selectedNickname: 'Test Device', ...bcsc },
-            bcscSecure: {
-              isHydrated: true,
-              verified: true,
-              registrationAccessToken: 'test-registration-token',
-              ...bcscSecure,
-            },
+        const state = {
+          stateLoaded: true,
+          developer: { environment: { analyticsAppId: 'test-app-id' } },
+          bcsc: { analyticsOptIn: true, selectedNickname: 'Test Device', ...bcsc },
+          bcscSecure: {
+            isHydrated: true,
+            verified: true,
+            registrationAccessToken: 'test-registration-token',
+            ...bcscSecure,
           },
-          dispatch,
-        ])
+        }
+        mockUseStore.mockReturnValue(withBCSCStore([state, dispatch]))
+        // The launch marker is saved to the app slice of the BCSC store; reported to `dispatch` in the old
+        // action's shape so these tests keep asserting on one spy
+        seedBCSCStoreFromBCState(state as never)
+        seedBCSCStore({
+          app: {
+            update: jest.fn(async (patch: Record<string, unknown>) => {
+              if ('lastSeenAppVersion' in patch) {
+                dispatch({
+                  type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
+                  payload: [{ version: patch.lastSeenAppVersion, buildNumber: patch.lastSeenAppBuildNumber }],
+                })
+              }
+            }),
+          },
+        })
         mockUseServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -988,34 +1032,30 @@ describe('useGetSystemChecks', () => {
           mockRotateSigningKey.mockResolvedValue({ status: 'rotated', confirmed: true })
         })
 
-        it('prefers a freshly-read native registration token over the render-time store value', async () => {
+        // The closure reads the store when it runs, not at render: UpdateDeviceRegistrationSystemCheck's onFail
+        // may have rotated the token in between
+        it('prefers a freshly-read registration token over the render-time value', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue({
-            id: 'tok-1',
-            type: TokenType.Registration,
-            token: 'native-registration-token',
-            created: 0,
-          })
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
 
           const check = await findKeyRotationCheck()
+          seedAccount(nativeAccount({ clientID: 'client-abc' }))
+          seedTokens({ registrationAccessToken: 'fresh-registration-token' })
           await check.rotate()
 
-          expect(getToken).toHaveBeenCalledWith(TokenType.Registration)
           expect(mockRotateSigningKey).toHaveBeenCalledWith(
             expect.anything(),
             'client-abc',
-            'native-registration-token',
+            'fresh-registration-token',
             expect.anything()
           )
         })
 
-        it('falls back to the store registration token when the native read comes back empty', async () => {
+        it('falls back to the render-time registration token when the store no longer has one', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue(null)
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
 
           const check = await findKeyRotationCheck()
+          seedAccount(nativeAccount({ clientID: 'client-abc' }))
+          seedTokens({ registrationAccessToken: undefined })
           await check.rotate()
 
           expect(mockRotateSigningKey).toHaveBeenCalledWith(
@@ -1024,44 +1064,13 @@ describe('useGetSystemChecks', () => {
             'store-registration-token',
             expect.anything()
           )
-        })
-
-        // Both native reads reject (not resolve null) on a missing account or an unavailable
-        // keychain; the closure must degrade to the store fallback instead of throwing.
-        it('falls back to the store registration token when the native token read rejects', async () => {
-          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockRejectedValue(new Error('E_ACCOUNT_NOT_FOUND'))
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
-
-          const check = await findKeyRotationCheck()
-          await check.rotate()
-
-          expect(mockRotateSigningKey).toHaveBeenCalledWith(
-            expect.anything(),
-            'client-abc',
-            'store-registration-token',
-            expect.anything()
-          )
-        })
-
-        it('returns a failed, unconfirmed result instead of throwing when the native account read rejects', async () => {
-          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue(null)
-          jest.mocked(getAccount).mockRejectedValue(new Error('E_ACCOUNT_NOT_FOUND'))
-
-          const check = await findKeyRotationCheck()
-          const result = await check.rotate()
-
-          expect(result).toEqual({ status: 'failed', confirmed: false })
-          expect(mockRotateSigningKey).not.toHaveBeenCalled()
         })
 
         it('skips rotateSigningKey and returns a failed, unconfirmed result when the client ID is missing', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue(null)
-          jest.mocked(getAccount).mockResolvedValue(null)
 
           const check = await findKeyRotationCheck()
+          seedAccount(null)
           const result = await check.rotate()
 
           expect(result).toEqual({ status: 'failed', confirmed: false })
@@ -1070,13 +1079,6 @@ describe('useGetSystemChecks', () => {
 
         it('syncs the rotated registration token into the store when rotateSigningKey returns one', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue({
-            id: 'tok-1',
-            type: TokenType.Registration,
-            token: 'native-registration-token',
-            created: 0,
-          })
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
           mockRotateSigningKey.mockResolvedValue({
             status: 'rotated',
             confirmed: true,
@@ -1084,6 +1086,8 @@ describe('useGetSystemChecks', () => {
           })
 
           const check = await findKeyRotationCheck()
+          seedAccount(nativeAccount({ clientID: 'client-abc' }))
+          seedTokens({ registrationAccessToken: 'fresh-registration-token' })
           await check.rotate()
 
           expect(mockUpdateTokens).toHaveBeenCalledWith({ registrationAccessToken: 'rotated-registration-token' })
@@ -1091,16 +1095,11 @@ describe('useGetSystemChecks', () => {
 
         it('does not touch the store when rotateSigningKey returns no rotated token', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue({
-            id: 'tok-1',
-            type: TokenType.Registration,
-            token: 'native-registration-token',
-            created: 0,
-          })
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
           mockRotateSigningKey.mockResolvedValue({ status: 'rotated', confirmed: true })
 
           const check = await findKeyRotationCheck()
+          seedAccount(nativeAccount({ clientID: 'client-abc' }))
+          seedTokens({ registrationAccessToken: 'fresh-registration-token' })
           await check.rotate()
 
           expect(mockUpdateTokens).not.toHaveBeenCalled()
@@ -1111,15 +1110,17 @@ describe('useGetSystemChecks', () => {
     describe('VerificationRequestStatusSystemCheck', () => {
       const mockStoreWith = (bcscSecureOverrides: Record<string, unknown>) => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.bad')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: { analyticsOptIn: true },
-            bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
-          },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: { analyticsOptIn: true },
+              bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
+            },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -1231,15 +1232,17 @@ describe('useGetSystemChecks', () => {
     describe('PendingVerificationRecoverySystemCheck', () => {
       const mockStoreWith = (bcscSecureOverrides: Record<string, unknown>) => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.bad')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: { analyticsOptIn: true },
-            bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
-          },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: { analyticsOptIn: true },
+              bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
+            },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -1323,15 +1326,17 @@ describe('useGetSystemChecks', () => {
 
   describe('VERIFY scope', () => {
     const mockHydratedStore = () => {
-      mockUseStore.mockReturnValue([
-        {
-          stateLoaded: true,
-          developer: { environment: { analyticsAppId: 'test-app-id' } },
-          bcsc: { analyticsOptIn: true },
-          bcscSecure: { isHydrated: true },
-        },
-        jest.fn(),
-      ])
+      mockUseStore.mockReturnValue(
+        withBCSCStore([
+          {
+            stateLoaded: true,
+            developer: { environment: { analyticsAppId: 'test-app-id' } },
+            bcsc: { analyticsOptIn: true },
+            bcscSecure: { isHydrated: true },
+          },
+          jest.fn(),
+        ])
+      )
       mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
       mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
       mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
