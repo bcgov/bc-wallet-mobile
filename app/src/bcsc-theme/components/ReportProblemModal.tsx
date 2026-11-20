@@ -3,6 +3,7 @@ import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
+import { formatBuildHistory } from '@/utils/app-build'
 import { reportProblem } from '@/utils/logger'
 import { Button, ButtonType, Link, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
@@ -86,6 +87,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
 
     // Add context to the error for debugging purposes
     appError.addContext({
+      build_history: formatBuildHistory(store.bcsc.appBuildHistory),
       state_ias_environment: store.developer.environment.name,
       state_verified: store.bcscSecure.verified,
       state_credential_deactivated: store.bcscSecure.credentialDeactivated,
@@ -110,11 +112,12 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     description,
     store.developer.environment.name,
     store.developer.remoteDebugging.sessionId,
+    store.bcsc.appBuildHistory,
+    store.bcsc.installId,
     store.bcscSecure.verified,
     store.bcscSecure.credentialDeactivated,
     store.bcscSecure.inVerifyFlow,
     store.bcscSecure.cardProcess,
-    store.bcsc.installId,
     t,
   ])
 

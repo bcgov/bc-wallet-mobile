@@ -23,6 +23,7 @@ const LOKI_REPORT_PROBLEM_LOG_LEVEL = 'error'
 // List of error context keys that should be flattened into the top-level of the Loki payload.
 const FLATTENED_APP_ERROR_CONTEXT_KEYS = new Set([
   'screen',
+  'build_history',
   'navigation',
   'http_route',
   'http_method',

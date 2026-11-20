@@ -1,4 +1,4 @@
-import { addNewBuildToHistory, isAppBuildEqual, toAppBuild } from '@/utils/app-build'
+import { addNewBuildToHistory, isAppBuildEqual, MAX_APP_BUILD_HISTORY, toAppBuild } from '@/utils/app-build'
 
 describe('app-build', () => {
   describe('addNewBuildToHistory', () => {
@@ -25,6 +25,28 @@ describe('app-build', () => {
       const history = [{ version: '4.1.0', build: '1000' }]
 
       expect(addNewBuildToHistory('4.1.0', '1000', history)).toEqual(history)
+    })
+
+    it('keeps at most the cap, dropping the oldest builds', () => {
+      const history = Array.from({ length: MAX_APP_BUILD_HISTORY }, (_, i) => ({
+        version: '4.0.0',
+        build: String(MAX_APP_BUILD_HISTORY - i),
+      }))
+
+      const result = addNewBuildToHistory('4.0.0', '999', history)
+
+      expect(result).toHaveLength(MAX_APP_BUILD_HISTORY)
+      expect(result[0]).toEqual({ version: '4.0.0', build: '999' })
+      expect(result).not.toContainEqual({ version: '4.0.0', build: '1' })
+    })
+
+    it('does not trim a history that is already at the cap when the build is unchanged', () => {
+      const history = Array.from({ length: MAX_APP_BUILD_HISTORY }, (_, i) => ({
+        version: '4.0.0',
+        build: String(MAX_APP_BUILD_HISTORY - i),
+      }))
+
+      expect(addNewBuildToHistory('4.0.0', String(MAX_APP_BUILD_HISTORY), history)).toEqual(history)
     })
 
     it('does not change the history it was given', () => {
