@@ -19,7 +19,10 @@ const renderSections = (sections: Array<[string, Row[]]>): string => {
   return sections
     .filter(([, rows]) => rows.length > 0)
     .map(([title, rows]) => {
-      const lines = rows.map(([name, text]) => `  ${`${name}:`.padEnd(width + 2)}${text}`)
+      const lines = rows.map(([name, text]) => {
+        const label = `${name}:`
+        return `  ${label.padEnd(width + 2)}${text}`
+      })
       return `${title}\n${lines.join('\n')}\n`
     })
     .join('\n')
@@ -27,13 +30,17 @@ const renderSections = (sections: Array<[string, Row[]]>): string => {
 
 const flagLabel = (flag: FlagSpec): string => {
   const short = flag.short ? `-${flag.short}, ` : '    '
-  return `${short}--${flag.name}${flag.value ? ` ${flag.value}` : ''}`
+  const value = flag.value ? ` ${flag.value}` : ''
+  return `${short}--${flag.name}${value}`
 }
 
 const renderFlags = (flags: FlagSpec[]): string => {
   const width = Math.max(...flags.map((flag) => flagLabel(flag).length))
   return flags.map((flag) => `  ${flagLabel(flag).padEnd(width + 3)}${flag.description}`).join('\n')
 }
+
+const withStubNotice = (implemented: boolean, description: string): string =>
+  implemented ? description : `${NOT_IMPLEMENTED}\n\n${description}`
 
 const INHERITED_FLAGS = 'INHERITED FLAGS\n  --help   Show help for command\n'
 
@@ -61,7 +68,7 @@ export const renderRootHelp = (groups: GroupSpec[], topics: HelpTopic[]): string
 
 export const renderGroupHelp = (group: GroupSpec): string =>
   [
-    `${groupImplemented(group) ? group.description : `${NOT_IMPLEMENTED}\n\n${group.description}`}\n`,
+    `${withStubNotice(groupImplemented(group), group.description)}\n`,
     `USAGE\n  ${BIN} ${group.name} <command> [flags]\n`,
     renderSections([
       ['AVAILABLE COMMANDS', group.commands.map((command): Row => [command.name, commandSummary(command)])],
@@ -77,12 +84,15 @@ export const commandUsage = (group: GroupSpec, command: CommandSpec): string => 
 
 export const renderCommandHelp = (group: GroupSpec, command: CommandSpec): string => {
   const sections = [
-    `${isImplemented(command) ? command.description : `${NOT_IMPLEMENTED}\n\n${command.description}`}\n`,
+    `${withStubNotice(isImplemented(command), command.description)}\n`,
     `USAGE\n  ${commandUsage(group, command)}\n`,
   ]
   if (command.args.length > 0) {
     const width = Math.max(...command.args.map((arg) => arg.name.length + 2))
-    const rows = command.args.map((arg) => `  ${`<${arg.name}>`.padEnd(width + 3)}${arg.description}`)
+    const rows = command.args.map((arg) => {
+      const label = `<${arg.name}>`
+      return `  ${label.padEnd(width + 3)}${arg.description}`
+    })
     sections.push(`ARGUMENTS\n${rows.join('\n')}\n`)
   }
   if (command.flags.length > 0) {
@@ -91,10 +101,8 @@ export const renderCommandHelp = (group: GroupSpec, command: CommandSpec): strin
   if (command.jsonFields?.length) {
     sections.push(`JSON FIELDS\n  ${command.jsonFields.join(', ')}\n`)
   }
-  sections.push(INHERITED_FLAGS)
   const examples = command.examples.map((example) => `  # ${example.comment}\n  $ ${example.command}`)
-  sections.push(`EXAMPLES\n${examples.join('\n\n')}\n`)
-  sections.push(learnMore())
+  sections.push(INHERITED_FLAGS, `EXAMPLES\n${examples.join('\n\n')}\n`, learnMore())
   return sections.join('\n')
 }
 

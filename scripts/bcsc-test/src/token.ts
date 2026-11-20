@@ -18,6 +18,8 @@ const REQUEST_TIMEOUT_MS = 30_000
 // Refresh slightly early so a token does not expire between being read and being used.
 const REFRESH_MARGIN_SECONDS = 60
 const MAX_DIAGNOSTIC_LENGTH = 200
+const basicCredential = (clientId: string, secret: string): string =>
+  Buffer.from(`${clientId}:${secret}`).toString('base64')
 
 /** The one place the token endpoint is derived from a host. */
 export const tokenUrl = (host: string): string => `https://${host}/oauth2/token`
@@ -86,7 +88,10 @@ const asRecord = (text: string): Record<string, unknown> | undefined => {
   }
 }
 
-const clip = (value: unknown): string => String(value ?? '').slice(0, MAX_DIAGNOSTIC_LENGTH)
+const clip = (value: unknown): string => {
+  const text = typeof value === 'string' ? value : (JSON.stringify(value) ?? '')
+  return text.slice(0, MAX_DIAGNOSTIC_LENGTH)
+}
 
 /** Where a secret lives, for display: keychain, the op reference, or the env variable name. */
 export const describeLocation = (location: SecretLocation): string => {
@@ -120,8 +125,10 @@ const STATUS_FAILURES: Record<number, (host: string) => string> = {
 
 type AttemptResult = { token: IssuedToken } | { invalidScope: true }
 
-const refusalMessage = (error: string, description: unknown): string =>
-  `IAS refused the token request (${clip(error)}${description ? `: ${clip(description)}` : ''}).`
+const refusalMessage = (error: string, description: unknown): string => {
+  const detail = description ? `: ${clip(description)}` : ''
+  return `IAS refused the token request (${clip(error)}${detail}).`
+}
 
 const failureFor = (attempt: TokenAttempt, status: number, body: Record<string, unknown> | undefined): CliError => {
   const error = body?.error
@@ -143,7 +150,7 @@ const postToken = async ({ host, clientId, secret }: TokenAttempt, scopes: strin
     return await fetch(tokenUrl(host), {
       method: 'POST',
       headers: {
-        Authorization: `Basic ${Buffer.from(`${clientId}:${secret}`).toString('base64')}`,
+        Authorization: `Basic ${basicCredential(clientId, secret)}`,
         'Content-Type': 'application/x-www-form-urlencoded',
         Accept: 'application/json',
       },

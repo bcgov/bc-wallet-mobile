@@ -46,7 +46,7 @@ const otherClient = (entry: ClientEntry, host: string): string => {
   throw new CliError(`${reason} to ${host}; pass --user <client-id>. Saved clients:\n${listClients(entry)}`)
 }
 
-export const switchClient = async (ctx: HandlerContext): Promise<number> => {
+export const switchClient = (ctx: HandlerContext): number => {
   const host = contextHost(ctx)
   const config = readHosts(ctx.env)
   const entry = requireEntry(config, host)
@@ -66,7 +66,7 @@ const onlyClient = (entry: ClientEntry, host: string): string => {
   )
 }
 
-export const logout = async (ctx: HandlerContext): Promise<number> => {
+export const logout = (ctx: HandlerContext): number => {
   const host = contextHost(ctx)
   const config = readHosts(ctx.env)
   const entry = requireEntry(config, host)

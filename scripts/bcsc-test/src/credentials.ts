@@ -95,8 +95,9 @@ const readOp = (ref: string, env: NodeJS.ProcessEnv): string => {
   }
   if (result.error) throw secretError(`Could not run op: ${result.error.message}.`)
   if (result.status !== 0) {
+    const reason = firstLine(result.stderr) || `exit ${result.status}`
     throw secretError(
-      `op could not read the secret (${firstLine(result.stderr) || `exit ${result.status}`}). Unlock 1Password and check the reference; set OP_ACCOUNT if the item is in another account.`
+      `op could not read the secret (${reason}). Unlock 1Password and check the reference; set OP_ACCOUNT if the item is in another account.`
     )
   }
   return result.stdout

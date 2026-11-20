@@ -84,9 +84,8 @@ const renderClient = (status: ClientStatus): string => {
   if (status.state === 'error') {
     return status.client ? `  X Could not get a token for ${who}: ${status.error}` : `  X ${status.error}`
   }
-  const heading = status.client
-    ? `  ✓ Logged in as ${who}${status.active ? ' (active)' : ''}`
-    : `  ✓ Using the token in ${who}`
+  const active = status.active ? ' (active)' : ''
+  const heading = status.client ? `  ✓ Logged in as ${who}${active}` : `  ✓ Using the token in ${who}`
   return [heading, ...renderDetails(status)].join('\n')
 }
 
