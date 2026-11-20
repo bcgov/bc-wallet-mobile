@@ -1,16 +1,13 @@
-import { BCDispatchAction } from '@/store'
-import { ReducerAction } from '@bifold/core'
-import { Dispatch } from 'react'
 import uuid from 'react-native-uuid'
 import { SystemCheckStrategy } from './system-checks'
 
 export class InstallIdSystemCheck implements SystemCheckStrategy {
   private readonly installId: string | undefined
-  private readonly dispatch: Dispatch<ReducerAction<any>>
+  private readonly saveInstallId: (installId: string) => Promise<void>
 
-  constructor(installId: string | undefined, dispatch: Dispatch<ReducerAction<any>>) {
+  constructor(installId: string | undefined, saveInstallId: (installId: string) => Promise<void>) {
     this.installId = installId
-    this.dispatch = dispatch
+    this.saveInstallId = saveInstallId
   }
 
   runCheck(): boolean {
@@ -18,9 +15,6 @@ export class InstallIdSystemCheck implements SystemCheckStrategy {
   }
 
   onFail(): void {
-    this.dispatch({
-      type: BCDispatchAction.SET_INSTALL_ID,
-      payload: [uuid.v4().toString()],
-    })
+    void this.saveInstallId(uuid.v4().toString())
   }
 }

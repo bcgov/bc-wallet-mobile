@@ -5,12 +5,24 @@ import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, render } from '@testing-library/react-native'
 import { Animated } from 'react-native'
-import { canPerformDeviceAuthentication, unlockWithDeviceSecurity } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, canPerformDeviceAuthentication, unlockWithDeviceSecurity } from 'react-native-bcsc-core'
 import { useAuthentication } from './useAuthentication'
 import useSecureActions from './useSecureActions'
 
 jest.mock('./useSecureActions')
 jest.mock('@/hooks/useAlerts')
+
+// BasicAppContext resets the store, so the account goes in through it
+const accountSeed = {
+  account: {
+    profile: {
+      accountId: 'test-account-id',
+      clientId: 'test-client-id',
+      issuer: 'https://idsit.gov.bc.ca/device/',
+      securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
+    },
+  },
+}
 
 describe('authentication loading handoff', () => {
   const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
@@ -28,7 +40,7 @@ describe('authentication loading handoff', () => {
     mainLoading?: boolean
     genericLoading?: boolean
   }) => (
-    <BasicAppContext>
+    <BasicAppContext bcscState={accountSeed}>
       <BCSCLoadingProvider>
         {mainLoading ? <LoadingScreen message="BCSC.Loading.AppStartup" /> : <Authentication />}
         {genericLoading && <LoadingScreen message="Other work" />}

@@ -3,7 +3,6 @@ import { RefreshTokenExpiredSystemCheck } from '@/services/system-checks/Refresh
 import { MockLogger } from '@bifold/core'
 
 const makeUtils = () => ({
-  dispatch: jest.fn(),
   translation: jest.fn() as any,
   logger: new MockLogger(),
 })
@@ -32,7 +31,6 @@ describe('RefreshTokenExpiredSystemCheck', () => {
       check.onFail()
 
       expect(navigate).toHaveBeenCalledWith(BCSCScreens.ReverifyAccount, { isExpired: true })
-      expect(utils.dispatch).not.toHaveBeenCalled()
     })
   })
 })

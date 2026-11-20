@@ -1,3 +1,5 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { IS_BCSC } from '@/utils/environment'
 import { useStore } from '@bifold/core'
 import { IASEnvironment } from '@utils/environment'
 import React, { useCallback } from 'react'
@@ -29,6 +31,9 @@ const WalletEnvironmentScreen: React.FC<WalletEnvironmentProps> = ({ shouldDismi
         type: BCDispatchAction.UPDATE_ENVIRONMENT,
         payload: [environment],
       })
+      if (IS_BCSC) {
+        await getBCSCState().developer.update({ environment })
+      }
       shouldDismissModal()
     },
     [dispatch, shouldDismissModal]

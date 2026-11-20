@@ -1,5 +1,7 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { EXPIRED_JWT, UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
+import type { BCSCStore } from '@/bcsc-theme/storage'
+import { storeFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { VerificationRequestStatus } from '@/constants'
 import { BCSCSecureState, BCState, initialBCSCSecureState, initialState } from '@/store'
@@ -10,17 +12,19 @@ import { selectHomeNotice } from './selectors'
 const NOW = new Date('2026-10-19T12:00:00.000Z')
 const IN_8_DAYS = new Date('2026-10-27T00:00:00.000Z')
 
-const buildState = (secure: Partial<BCSCSecureState> = {}, bcscReason?: BCSCReason): BCState => ({
-  ...initialState,
-  bcsc: { ...initialState.bcsc, credentialMetadata: bcscReason ? { bcscReason } : undefined } as BCState['bcsc'],
-  bcscSecure: { ...initialBCSCSecureState, ...secure },
-})
+const buildState = (secure: Partial<BCSCSecureState> = {}, bcscReason?: BCSCReason) =>
+  storeFromBCState({
+    ...initialState,
+    bcsc: { ...initialState.bcsc, credentialMetadata: bcscReason ? { bcscReason } : undefined } as BCState['bcsc'],
+    bcscSecure: { ...initialBCSCSecureState, ...secure },
+  })
 
 const verifiedSecure: Partial<BCSCSecureState> = { verified: true }
 
 const buildAccount = (date: Date) => ({ account_expiration_date: date }) as unknown as BCSCAccount
 
-const select = (state: BCState, account: BCSCAccount | null = null): HomeNotice => selectHomeNotice(state, account, NOW)
+const select = (state: BCSCStore, account: BCSCAccount | null = null): HomeNotice =>
+  selectHomeNotice(state, account, NOW)
 
 // An evidence item without `metadata` makes the ID step computation throw
 const malformedEvidence = [{ documentNumber: '1' }] as unknown as BCSCSecureState['additionalEvidenceData']

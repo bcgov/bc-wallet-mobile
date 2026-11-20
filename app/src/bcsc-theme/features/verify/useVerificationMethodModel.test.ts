@@ -2,12 +2,13 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationVideoCache } from '@/bcsc-theme/features/verify/send-video/VideoReviewScreen'
 import useVerificationMethodModel from '@/bcsc-theme/features/verify/useVerificationMethodModel'
+import { storage } from '@/bcsc-theme/storage'
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { checkFileSystemFreeStorage, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { IASEnvironment } from '@utils/environment'
@@ -98,6 +99,7 @@ describe('useVerificationMethodModel', () => {
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
+    seedBCSCStoreFromBCState(mockStore as never)
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
 
     jest.mocked(useAlerts).mockReturnValue({ videoPromptsMissingAlert: mockVideoPromptsMissingAlert } as any)
@@ -148,19 +150,14 @@ describe('useVerificationMethodModel', () => {
       expect(removeFileSafelyMock).toHaveBeenCalledWith(mockStore.bcsc.videoThumbnailPath, mockLogger)
       expect(clearCacheMock).toHaveBeenCalledTimes(1)
 
-      expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
-        payload: ['test-id'],
+      expect(storage.store.getState().session).toMatchObject({
+        photoPath: undefined,
+        videoPath: undefined,
+        videoThumbnailPath: undefined,
       })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
-        payload: ['test-sha256'],
-      })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
-        payload: [mockVerificationRequest.prompts],
-      })
+      expect(storage.store.getState().verification.request?.backCheckVerificationId).toEqual('test-id')
+      expect(storage.store.getState().session.verificationRequestSha).toEqual('test-sha256')
+      expect(storage.store.getState().session.prompts).toEqual(mockVerificationRequest.prompts)
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PhotoInstructions, { forLiveCall: false })
       expect(result.current.sendVideoLoading).toBe(false)
@@ -256,9 +253,9 @@ describe('useVerificationMethodModel', () => {
         await result.current.handlePressSendVideo()
       })
 
-      // Should still proceed with dispatch and navigation even if file cleanup fails
+      // Should still record the request and navigate even if file cleanup fails
       // (Promise.allSettled is used so rejections don't stop the flow)
-      expect(mockDispatch).toHaveBeenCalled()
+      expect(storage.store.getState().verification.request?.backCheckVerificationId).toBe(mockVerificationRequest.id)
       expect(mockNavigation.navigate).toHaveBeenCalled()
     })
 
@@ -275,6 +272,7 @@ describe('useVerificationMethodModel', () => {
         },
       }
       jest.mocked(Bifold).useStore.mockReturnValue([fullyHydrated, mockDispatch])
+      seedBCSCStoreFromBCState(fullyHydrated as never)
       jest.mocked(removeFileSafely).mockResolvedValue(undefined)
       jest
         .mocked(checkFileSystemFreeStorage)

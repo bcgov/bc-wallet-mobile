@@ -1,3 +1,4 @@
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import * as Bifold from '@bifold/core'
 import { renderHook } from '@testing-library/react-native'
 import { useVerificationExitPolicy } from './useVerificationExitPolicy'
@@ -14,6 +15,7 @@ describe('useVerificationExitPolicy', () => {
 
   it('makes a user who chose to verify at the prompt a first-time verifier with no Back to home', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([storeWith(false), jest.fn()])
+    seedBCSCStoreFromBCState(storeWith(false) as never)
 
     const { result } = renderHook(() => useVerificationExitPolicy())
 
@@ -22,6 +24,7 @@ describe('useVerificationExitPolicy', () => {
 
   it('offers Back to home to a user who skipped the prompt', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([storeWith(true), jest.fn()])
+    seedBCSCStoreFromBCState(storeWith(true) as never)
 
     const { result } = renderHook(() => useVerificationExitPolicy())
 
@@ -30,6 +33,7 @@ describe('useVerificationExitPolicy', () => {
 
   it('treats an unanswered prompt as deferred (its own buttons are the exits)', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([storeWith(undefined), jest.fn()])
+    seedBCSCStoreFromBCState(storeWith(undefined) as never)
 
     const { result } = renderHook(() => useVerificationExitPolicy())
 
@@ -38,6 +42,7 @@ describe('useVerificationExitPolicy', () => {
 
   it('shows Back to home to a first-time verifier in developer mode without changing their kind', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([storeWith(false, true), jest.fn()])
+    seedBCSCStoreFromBCState(storeWith(false, true) as never)
 
     const { result } = renderHook(() => useVerificationExitPolicy())
 

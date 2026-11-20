@@ -1,6 +1,5 @@
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { BCSCBanner } from '@/bcsc-theme/types/banners'
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 
 /**
@@ -9,22 +8,19 @@ import { useCallback, useMemo } from 'react'
  * @returns An object containing the banners writer functions
  */
 export const useBannersWriter = () => {
-  const [, dispatch] = useStore<BCState>()
+  const dismissBanner = useBCSCStore((s) => s.app.dismissBanner)
 
   /**
-   * Dismisses a banner message by dispatching an action to the store.
+   * Dismisses a banner message, recording when it was dismissed.
    *
    * @param bannerId - The ID of the banner message to dismiss.
    * @returns void
    */
   const recordBannerDismissal = useCallback(
     (bannerId: BCSCBanner) => {
-      dispatch({
-        type: BCDispatchAction.DISMISS_BANNER,
-        payload: [{ bannerId: bannerId }],
-      })
+      void dismissBanner(bannerId)
     },
-    [dispatch]
+    [dismissBanner]
   )
 
   return useMemo(

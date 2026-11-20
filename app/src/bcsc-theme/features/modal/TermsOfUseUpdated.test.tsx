@@ -1,7 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { storage } from '@/bcsc-theme/storage'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { BCLocalStorageKeys } from '@/store'
-import { PersistentStorage } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -59,7 +58,6 @@ describe('TermsOfUseUpdated', () => {
   }
 
   it('persists the accepted terms version and goes back when accept is pressed', async () => {
-    const storageSpy = jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
     mockNavigation.canGoBack.mockReturnValue(true)
 
     await renderAndAccept()
@@ -68,10 +66,7 @@ describe('TermsOfUseUpdated', () => {
       expect(mockNavigation.goBack).toHaveBeenCalled()
     })
 
-    expect(storageSpy).toHaveBeenCalledWith(
-      BCLocalStorageKeys.BCSC,
-      expect.objectContaining({ acceptedTermsOfUseVersion: '9' })
-    )
+    expect(storage.store.getState().app).toMatchObject({ acceptedTermsOfUseVersion: '9' })
   })
 
   it('falls back to the tab stack when there is no screen to go back to', async () => {

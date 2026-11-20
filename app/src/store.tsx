@@ -419,7 +419,7 @@ interface BCSCDeprecatedFields {
  *   have launched on >= v4.1.
  * - Onboarded installs that predate `verificationSkipped`: a missing value is stamped "skipped" (`true`)
  *   so an upgrading install lands on Home rather than on the post-onboarding verify prompt. v3 upgrades
- *   have no persisted blob yet and are handled in useInitializeAccountStatus.
+ *   have no persisted blob yet and are handled in m0001 (verifyPromptState).
  * - Onboarded installs that predate `verificationStarted`: launches resumed whoever had stored
  *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
  *   count as started.

@@ -1,3 +1,4 @@
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { AppError } from '@/errors'
 import { BCSCErrorModal, ErrorModalAction, ErrorModalPayload } from '@/errors/components/ErrorModal'
 import { AppEventCode } from '@/events/appEventCode'
@@ -5,6 +6,7 @@ import { BCState } from '@/store'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { formatBuildHistory } from '@/utils/app-build'
+import { IS_BCSC } from '@/utils/environment'
 import { appLogger } from '@/utils/logger'
 import { useStore } from '@bifold/core'
 
@@ -68,6 +70,13 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
   const [errorKey, setErrorKey] = useState(0)
   const [errorModalOptions, setErrorModalOptions] = useState<ErrorModalOptions | null>(null)
   const [store] = useStore<BCState>() // Ensure store is initialized for error handling
+  // BCSC keeps its install ID in its own store
+  const bcscInstallId = useBCSCStore((s) => s.app.installId)
+  const installId = IS_BCSC ? bcscInstallId : store.bcsc.installId
+  const bcscBuildHistory = useBCSCStore((s) => s.app.appBuildHistory)
+  const buildHistory = IS_BCSC ? bcscBuildHistory : store.bcsc.appBuildHistory
+  const bcscRemoteSessionId = useBCSCStore((s) => s.developer.remoteDebugging.sessionId)
+  const remoteSessionId = IS_BCSC ? bcscRemoteSessionId : store.developer.remoteDebugging.sessionId
 
   const reportEnabled = errorModalOptions?.enableReport !== false && enableReport !== false
 
@@ -97,13 +106,13 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
         title,
         description,
         error,
-        installId: store.bcsc.installId,
-        buildHistory: formatBuildHistory(store.bcsc.appBuildHistory),
-        sessionId: store.developer.remoteDebugging.sessionId,
+        installId,
+        buildHistory: formatBuildHistory(buildHistory),
+        sessionId: remoteSessionId,
       })
       setErrorKey((prev) => prev + 1)
     },
-    [store.bcsc.appBuildHistory, store.bcsc.installId, store.developer.remoteDebugging.sessionId]
+    [buildHistory, installId, remoteSessionId]
   )
 
   /**

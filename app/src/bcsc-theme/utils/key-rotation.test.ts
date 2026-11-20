@@ -4,19 +4,15 @@ jest.mock('react-native-bcsc-core', () => ({
   getAllKeysWithPublicInfo: jest.fn(),
 }))
 
-// The registration's owner is the only way a rotated token is saved
-jest.mock('../services/device-registration', () => ({
-  saveDeviceRegistration: jest.fn(),
-}))
-
 jest.mock('./key-recovery', () => ({
   ...jest.requireActual('./key-recovery'),
   reRegisterNewestKey: jest.fn(),
 }))
 
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { Platform } from 'react-native'
 import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo, KeyPublicInfo } from 'react-native-bcsc-core'
-import { saveDeviceRegistration } from '../services/device-registration'
 import { reRegisterNewestKey } from './key-recovery'
 import {
   KEY_ROTATION_MAX_AGE_DAYS,
@@ -29,8 +25,15 @@ import {
 const mockedCreateNewKeyPair = createNewKeyPair as jest.MockedFunction<typeof createNewKeyPair>
 const mockedDeleteKey = deleteKey as jest.MockedFunction<typeof deleteKey>
 const mockedGetAllKeysWithPublicInfo = getAllKeysWithPublicInfo as jest.MockedFunction<typeof getAllKeysWithPublicInfo>
-const mockedSaveDeviceRegistration = saveDeviceRegistration as jest.MockedFunction<typeof saveDeviceRegistration>
 const mockedReRegisterNewestKey = reRegisterNewestKey as jest.MockedFunction<typeof reRegisterNewestKey>
+
+// The store's setTokens, still saving, so a test can check when it ran
+const spyOnSetTokens = () => {
+  const real = getBCSCState().account.setTokens
+  const spy = jest.fn(real)
+  seedBCSCStore({ account: { setTokens: spy } })
+  return spy
+}
 
 const makeLogger = () =>
   ({
@@ -42,8 +45,6 @@ const makeLogger = () =>
 
 const CLIENT_ID = 'client-abc'
 const REG_TOKEN = 'rat-xyz'
-const ISSUER = 'https://example.test/device/'
-const REGISTRATION = { clientId: CLIENT_ID, issuer: ISSUER, registrationAccessToken: REG_TOKEN }
 
 /** Distinct, decodable "modulus" values for test fixtures. */
 const n = (seed: number) => Buffer.from([0xaa, seed]).toString('base64')
@@ -142,7 +143,6 @@ describe('rotateSigningKey', () => {
     // that branch without its own fixture doesn't inherit a stale one from `clearMocks`.
     mockedGetAllKeysWithPublicInfo.mockResolvedValue([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
     mockedDeleteKey.mockResolvedValue(undefined)
-    mockedSaveDeviceRegistration.mockResolvedValue(undefined)
   })
 
   it('redacts client_id to a short suffix in the triggered-event log line', async () => {
@@ -150,7 +150,7 @@ describe('rotateSigningKey', () => {
     const logger = makeLogger()
     const longClientId = 'client-abcdefgh12345678'
 
-    await rotateSigningKey(makeApiClient(), { ...REGISTRATION, clientId: longClientId }, logger)
+    await rotateSigningKey(makeApiClient(), longClientId, REG_TOKEN, logger)
 
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringMatching(/^\[rotateSigningKey] event=triggered client_id=…\w{8}$/)
@@ -168,7 +168,7 @@ describe('rotateSigningKey', () => {
     mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1), n(2)] })
     const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result).toEqual({ status: 'rotated', confirmed: true, newRegistrationAccessToken: undefined })
     expect(result.confirmed).toBe(true)
@@ -189,7 +189,7 @@ describe('rotateSigningKey', () => {
       const keystore = makeFakeKeystore(twoKeyFixture())
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rotated')
       expect(result.confirmed).toBe(true)
@@ -206,7 +206,7 @@ describe('rotateSigningKey', () => {
       const keystore = makeFakeKeystore(twoKeyFixture(), [], ['rsa2'])
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rotated')
       expect(result.confirmed).toBe(true)
@@ -222,7 +222,7 @@ describe('rotateSigningKey', () => {
       mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [n(3)] })
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rotated')
       expect(result.confirmed).toBe(true)
@@ -239,7 +239,7 @@ describe('rotateSigningKey', () => {
       mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [n(2)] })
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rotated')
       expect(result.confirmed).toBe(true)
@@ -253,7 +253,7 @@ describe('rotateSigningKey', () => {
       const keystore = makeFakeKeystore([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rotated')
       expect(result.confirmed).toBe(true)
@@ -266,7 +266,7 @@ describe('rotateSigningKey', () => {
       const logger = makeLogger()
 
       for (let i = 0; i < 3; i++) {
-        const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+        const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
         expect(result.status).toBe('rotated')
         expect(result.confirmed).toBe(true)
         expect(keystore.ids().length).toBeLessThanOrEqual(2)
@@ -282,7 +282,7 @@ describe('rotateSigningKey', () => {
       const keystore = makeFakeKeystore(twoKeyFixture(), ['rsa1'])
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rotated')
       expect(result.confirmed).toBe(true)
@@ -298,14 +298,14 @@ describe('rotateSigningKey', () => {
       mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [] })
       const logger = makeLogger()
 
-      const result1 = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result1 = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result1.status).toBe('rotated')
       expect(result1.confirmed).toBe(false)
       expect(keystore.ids()).toEqual(['rsa1', 'rsa2'])
       expect(mockedDeleteKey).not.toHaveBeenCalled()
 
-      const result2 = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result2 = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result2.status).toBe('rotated')
       expect(result2.confirmed).toBe(true)
@@ -321,7 +321,7 @@ describe('rotateSigningKey', () => {
         mockedCreateNewKeyPair.mockRejectedValue(new Error('keychain unavailable'))
         const logger = makeLogger()
 
-        const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+        const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
         expect(result).toEqual({ status: 'failed', confirmed: false })
         expect(mockedReRegisterNewestKey).not.toHaveBeenCalled()
@@ -336,7 +336,7 @@ describe('rotateSigningKey', () => {
         mockedReRegisterNewestKey.mockResolvedValueOnce(putResult)
         const logger = makeLogger()
 
-        const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+        const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
         expect(result.status).toBe('rolled_back')
         expect(result.confirmed).toBe(false)
@@ -348,7 +348,7 @@ describe('rotateSigningKey', () => {
         mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [] })
         const logger = makeLogger()
 
-        const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+        const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
         expect(result).toEqual({ status: 'rotated', confirmed: false, newRegistrationAccessToken: undefined })
         expect(keystore.ids()).toEqual(['rsa1', 'rsa2', 'rsa3'])
@@ -358,40 +358,37 @@ describe('rotateSigningKey', () => {
     })
   })
 
-  it('saves a rotated registration_access_token with its client ID BEFORE confirm/rollback', async () => {
+  it('persists a rotated registration_access_token to the store BEFORE confirm/rollback', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({
       success: true,
       newRegistrationAccessToken: 'rotated-token',
       serverKeyNs: [n(2)],
     })
+    const setTokens = spyOnSetTokens()
     const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result.newRegistrationAccessToken).toBe('rotated-token')
-    // Saved through the registration's owner: the same client ID and issuer, with the rotated token
-    expect(mockedSaveDeviceRegistration).toHaveBeenCalledWith(
-      { clientId: CLIENT_ID, issuer: ISSUER, registrationAccessToken: 'rotated-token' },
-      logger
-    )
-    // The save must have been made before the confirmed-branch prune enumerates.
-    expect(mockedSaveDeviceRegistration.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(getBCSCState().account.tokens?.registrationAccessToken).toBe('rotated-token')
+    // setTokens must have been invoked before the confirmed-branch prune enumerates.
+    expect(setTokens.mock.invocationCallOrder[0]).toBeLessThan(
       mockedGetAllKeysWithPublicInfo.mock.invocationCallOrder[0]
     )
   })
 
-  it('the save throws while persisting the rotated registration_access_token -> logs failure but still returns the token and continues rotation', async () => {
+  it('setTokens throws while persisting the rotated registration_access_token -> logs failure but still returns the token and continues rotation', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({
       success: true,
       newRegistrationAccessToken: 'rotated-token',
       serverKeyNs: [n(2)],
     })
-    mockedSaveDeviceRegistration.mockRejectedValue(new Error('keystore unavailable'))
+    seedBCSCStore({ account: { setTokens: jest.fn().mockRejectedValue(new Error('keystore unavailable')) } })
     const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     // The best-effort native persist failed, but the caller-side fallback still carries the token,
     // and the failure doesn't abort confirm/prune — rotation completes normally.
@@ -402,20 +399,16 @@ describe('rotateSigningKey', () => {
   it('persists a rotated registration_access_token even when the PUT itself failed (rollback)', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({ success: false, newRegistrationAccessToken: 'rotated-token' })
+    const setTokens = spyOnSetTokens()
     const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result).toEqual({ status: 'rolled_back', confirmed: false, newRegistrationAccessToken: 'rotated-token' })
-    expect(mockedSaveDeviceRegistration).toHaveBeenCalledWith(
-      { clientId: CLIENT_ID, issuer: ISSUER, registrationAccessToken: 'rotated-token' },
-      logger
-    )
+    expect(getBCSCState().account.tokens?.registrationAccessToken).toBe('rotated-token')
     expect(mockedDeleteKey).toHaveBeenCalledWith('rsa2')
-    // The rotated reg token is saved before rollback deletes the unregistered new key.
-    expect(mockedSaveDeviceRegistration.mock.invocationCallOrder[0]).toBeLessThan(
-      mockedDeleteKey.mock.invocationCallOrder[0]
-    )
+    // setTokens persists the rotated reg token before rollback deletes the unregistered new key.
+    expect(setTokens.mock.invocationCallOrder[0]).toBeLessThan(mockedDeleteKey.mock.invocationCallOrder[0])
   })
 
   it('echo entirely undecodable garbage -> same as empty: rotated without pruning the new key, unconfirmed', async () => {
@@ -423,7 +416,7 @@ describe('rotateSigningKey', () => {
     mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: ['not-valid-base64!!!'] })
     const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result.status).toBe('rotated')
     expect(result.confirmed).toBe(false)
@@ -438,7 +431,7 @@ describe('rotateSigningKey', () => {
     mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1)] })
     const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result).toEqual({ status: 'rotated', confirmed: false, newRegistrationAccessToken: undefined })
     expect(mockedDeleteKey).not.toHaveBeenCalled()
@@ -452,7 +445,7 @@ describe('rotateSigningKey', () => {
     mockedDeleteKey.mockRejectedValue(new Error('E_KEYSTORE_ERROR'))
     const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result).toEqual({ status: 'failed', confirmed: false, newRegistrationAccessToken: undefined })
     expect(result.confirmed).toBe(false)
@@ -472,7 +465,7 @@ describe('rotateSigningKey', () => {
     mockedDeleteKey.mockRejectedValue(new Error('E_KEYSTORE_ERROR'))
     const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result.status).toBe('rotated')
     expect(result.confirmed).toBe(true)
@@ -489,7 +482,7 @@ describe('rotateSigningKey', () => {
     mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(2)] })
     const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result.status).toBe('rotated')
     expect(result.confirmed).toBe(true)
@@ -506,7 +499,7 @@ describe('rotateSigningKey', () => {
       mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(2)] })
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rotated')
       expect(mockedClearTokens).toHaveBeenCalledTimes(1)
@@ -517,7 +510,7 @@ describe('rotateSigningKey', () => {
       mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [] })
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rotated')
       expect(mockedClearTokens).toHaveBeenCalledTimes(1)
@@ -528,7 +521,7 @@ describe('rotateSigningKey', () => {
       mockedReRegisterNewestKey.mockResolvedValue({ success: false })
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rolled_back')
       expect(mockedClearTokens).not.toHaveBeenCalled()
@@ -539,7 +532,7 @@ describe('rotateSigningKey', () => {
       mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1)] })
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('rolled_back')
       expect(mockedClearTokens).not.toHaveBeenCalled()
@@ -549,7 +542,7 @@ describe('rotateSigningKey', () => {
       mockedCreateNewKeyPair.mockRejectedValue(new Error('keychain unavailable'))
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('failed')
       expect(mockedClearTokens).not.toHaveBeenCalled()
@@ -561,7 +554,7 @@ describe('rotateSigningKey', () => {
       mockedDeleteKey.mockRejectedValue(new Error('E_KEYSTORE_ERROR'))
       const logger = makeLogger()
 
-      const result = await rotateSigningKey(makeApiClient(), REGISTRATION, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('failed')
       expect(mockedClearTokens).toHaveBeenCalledTimes(1)

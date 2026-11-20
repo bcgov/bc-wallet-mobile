@@ -18,6 +18,8 @@ jest.mock('@/errors/components/ErrorModal', () => ({
   BCSCErrorModal: (props: any) => mockBCSCErrorModal(props),
 }))
 
+// react-native is mocked wholesale here, so react-native-config can't reach its native module
+jest.mock('react-native-config', () => ({ __esModule: true, default: {}, Config: {} }))
 jest.mock('react-native', () => ({
   Alert: {
     alert: jest.fn(),
@@ -106,6 +108,8 @@ jest.mock('../utils/logger', () => ({
 jest.mock('react-native-device-info', () => ({
   getVersion: () => '1.0.0',
   getBuildNumber: () => '42',
+  // The BCSC store's developer defaults pick the environment from the bundle
+  getBundleId: () => 'ca.bc.gov.id.servicescard.dev',
 }))
 
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')

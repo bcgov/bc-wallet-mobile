@@ -1,13 +1,13 @@
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { MinimumFreeStorageMb, useEnsureFreeStorage } from '@/bcsc-theme/hooks/useEnsureFreeStorage'
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
+import { useSession } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import BrownHandHoldingPhone from '@assets/img/brown-hand-holding-phone.svg'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Fragment, useCallback, useRef, useState } from 'react'
@@ -24,7 +24,7 @@ type PromptsStatus = 'loading' | 'ready' | 'failed'
 
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {
   const { Spacing, TextTheme, ColorPalette } = useTheme()
-  const [store] = useStore<BCState>()
+  const session = useSession()
   const { t } = useTranslation()
   const { refreshPrompts } = useVideoPrompts()
   const { videoPromptsMissingAlert } = useAlerts(navigation)
@@ -111,7 +111,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       </ThemedText>
       {/* Held back until the refresh lands so the user is never shown a set from an earlier attempt. */}
       {promptsStatus === 'ready' &&
-        store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
+        session.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
           <Fragment key={id}>
             <ThemedText variant={'headingFour'} style={{ textAlign: 'center', color: ColorPalette.grayscale.black }}>
               {index + 1}

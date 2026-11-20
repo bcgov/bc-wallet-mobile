@@ -1,15 +1,8 @@
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
-import {
-  DispatchAction,
-  LimitedTextInput,
-  ThemedText,
-  getConnectionName,
-  testIdWithKey,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { LimitedTextInput, ThemedText, getConnectionName, testIdWithKey, useTheme } from '@bifold/core'
 import { useConnectionById } from '@bifold/react-hooks'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -32,9 +25,10 @@ const EditContactNameScreen = ({ navigation, route }: EditContactNameScreenProps
   const { connectionId } = route.params
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const [store, dispatch] = useStore()
+  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
+  const setAlternateName = useBCSCStore((s) => s.contacts.setAlternateName)
   const connection = useConnectionById(connectionId)
-  const [name, setName] = useState(getConnectionName(connection, store.preferences.alternateContactNames))
+  const [name, setName] = useState(getConnectionName(connection, alternateContactNames))
 
   const onSave = useCallback(() => {
     const trimmed = name.trim()
@@ -46,12 +40,9 @@ const EditContactNameScreen = ({ navigation, route }: EditContactNameScreenProps
       Alert.alert(t('BCSC.Contacts.EditName.TooLongTitle'), t('BCSC.Contacts.EditName.TooLongDescription'))
       return
     }
-    dispatch({
-      type: DispatchAction.UPDATE_ALTERNATE_CONTACT_NAMES,
-      payload: [{ [connectionId]: trimmed }],
-    })
+    void setAlternateName(connectionId, trimmed)
     navigation.goBack()
-  }, [connectionId, dispatch, name, navigation, t])
+  }, [connectionId, setAlternateName, name, navigation, t])
 
   return (
     <ActionScreenLayout

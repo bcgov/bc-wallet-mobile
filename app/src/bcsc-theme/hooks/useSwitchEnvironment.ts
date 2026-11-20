@@ -1,8 +1,8 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { BCDispatchAction, BCState } from '@/store'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { IASEnvironment } from '@/utils/environment'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { setIssuer } from 'react-native-bcsc-core'
 
@@ -11,7 +11,6 @@ import { setIssuer } from 'react-native-bcsc-core'
  * @returns A function to switch the environment, which performs a factory reset and updates the store.
  */
 export const useSwitchEnvironment = () => {
-  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const factoryReset = useFactoryReset()
 
@@ -41,10 +40,7 @@ export const useSwitchEnvironment = () => {
           success,
         })
 
-        dispatch({
-          type: BCDispatchAction.UPDATE_ENVIRONMENT,
-          payload: [environment],
-        })
+        await getBCSCState().developer.update({ environment })
 
         return true
       } catch (error) {
@@ -52,7 +48,7 @@ export const useSwitchEnvironment = () => {
         return false
       }
     },
-    [dispatch, factoryReset, logger]
+    [factoryReset, logger]
   )
 
   return useMemo(() => switchEnvironment, [switchEnvironment])

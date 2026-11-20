@@ -1,10 +1,10 @@
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCDispatchAction, BCState } from '@/store'
 import { withAlert } from '@/utils/alert'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { getPhotoMetadata } from '@bcsc-theme/utils/file-info'
-import { ScreenWrapper, TOKENS, useServices, useStore } from '@bifold/core'
+import { ScreenWrapper, TOKENS, useServices } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -15,7 +15,6 @@ type PhotoReviewScreenProps = {
 }
 
 const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
-  const [, dispatch] = useStore<BCState>()
   const { photoPath, forLiveCall } = route.params
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
@@ -31,7 +30,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       const getPhotoMetadataWithAlert = withAlert(getPhotoMetadata, failedToReadFromLocalStorageAlert)
       const photoMetadata = await getPhotoMetadataWithAlert(photoPath, logger)
 
-      dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
+      getBCSCState().session.update({ photoPath, photoMetadata })
 
       if (forLiveCall) {
         navigation.dispatch(

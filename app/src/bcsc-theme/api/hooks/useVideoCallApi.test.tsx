@@ -1,3 +1,4 @@
+import { seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { getAppErrorFromAxiosError } from '@/bcsc-theme/utils/axios-error-utils'
 import { renderHook } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
@@ -30,6 +31,11 @@ const buildAppError = (status: number, data: string) => {
 }
 
 describe('useVideoCallApi', () => {
+  beforeEach(() => {
+    // The device code the hook sends comes from the stored authorization request
+    seedBCSCStore({ verification: { request: { deviceCode: 'mock-device-code' } } })
+  })
+
   describe('endVideoSession', () => {
     it('deletes the session with the pre-verification token and quiet error handling', async () => {
       const mockApiClient = {

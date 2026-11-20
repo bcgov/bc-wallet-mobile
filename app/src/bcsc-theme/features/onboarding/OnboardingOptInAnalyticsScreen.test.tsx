@@ -1,5 +1,4 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { PersistentStorage } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -24,7 +23,6 @@ describe('OnboardingOptInAnalytics', () => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
     jest.useFakeTimers()
-    jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
   })
 
   afterEach(() => {

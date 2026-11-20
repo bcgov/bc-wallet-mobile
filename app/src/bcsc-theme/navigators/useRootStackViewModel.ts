@@ -1,11 +1,13 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { ErrorRegistry } from '@/errors'
-import { BCDispatchAction, BCState } from '@/store'
+import {
+  getBCSCState,
+  useApp,
+  useDeveloper,
+  useHasAccount,
+  useSession,
+  useSessionRecoveryRequired,
+} from '@/bcsc-theme/storage/hooks'
 import { isProductionBundle, isProductionEnvironment } from '@/utils/environment'
-import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountStatus'
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { useLoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useServerStatus } from '../contexts/ServerStatusContext'
@@ -15,7 +17,6 @@ import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { RootPhase } from '../state/root/root-phase'
 import { useRootPhase } from '../state/root/useRootPhase'
 import { useVerificationState } from '../state/verification/useVerificationState'
-import { toAppError } from '../utils/native-error-map'
 import {
   getRootRouteKey,
   getRootTransition,
@@ -33,7 +34,10 @@ import {
  * client and account are all ready.
  */
 const useVerificationRouting = (appReady: boolean) => {
-  const [store, dispatch] = useStore<BCState>()
+  const hasAccount = useHasAccount()
+  const didAuthenticate = useSession((s) => s.didAuthenticate)
+  const sessionRecoveryRequired = useSessionRecoveryRequired()
+  const { verificationStarted, verificationSkipped } = useApp()
   const { needsVerification, isVerified, isVerificationInProgress, isCardInactive } = useVerificationState()
   const { isAvailable: isServerAvailable, hasChecked: serverStatusChecked } = useServerStatus()
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
@@ -46,22 +50,19 @@ const useVerificationRouting = (appReady: boolean) => {
   // are reset by hand: onboarding again after a removal is due the prompt like a fresh install, and an
   // unlock resumes a started verification like a relaunch does (the lock cleared the in-progress status)
   useEffect(() => {
-    if (store.bcsc.hasAccount === false || store.authentication.didAuthenticate === false) {
+    if (!hasAccount || didAuthenticate === false) {
       setVerifyPromptAnswered(false)
       setResumeEvaluated(false)
     }
-  }, [store.bcsc.hasAccount, store.authentication.didAuthenticate])
+  }, [hasAccount, didAuthenticate])
 
   // Has an account, is unlocked and needs no session recovery: Home or Verify is the next screen
-  const signedIn =
-    store.bcsc.hasAccount &&
-    store.authentication.didAuthenticate !== false &&
-    store.bcscSecure.sessionRecoveryRequired !== true
+  const signedIn = hasAccount && didAuthenticate !== false && !sessionRecoveryRequired
 
   // Started verification (prompt, Home card, renewal or v3 upgrade), whether or not they skipped the
   // prompt, and has neither finished nor re-entered the flow yet. A deactivated card is renewed from
   // Home, not resumed
-  const wantsToResumeVerification = store.bcsc.verificationStarted === true && needsVerification && !isCardInactive
+  const wantsToResumeVerification = verificationStarted === true && needsVerification && !isCardInactive
 
   // A user who has started verification and is not verified is routed back to the step they left off on
   // Runs exactly once per session so the user isn't stuck in verification
@@ -79,9 +80,9 @@ const useVerificationRouting = (appReady: boolean) => {
     setResumeEvaluated(true)
 
     if (wantsToResumeVerification) {
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW, payload: [true] })
+      getBCSCState().session.setInVerifyFlow(true)
     }
-  }, [dispatch, resumeEvaluated, appReady, signedIn, serverStatusChecked, isServerAvailable, wantsToResumeVerification])
+  }, [resumeEvaluated, appReady, signedIn, serverStatusChecked, isServerAvailable, wantsToResumeVerification])
 
   // Wait for server status before rendering app, if the server is down, the user will see the outage screen
   const awaitingStatusForResume = !serverStatusChecked && signedIn && wantsToResumeVerification && !verifyPromptAnswered
@@ -101,7 +102,7 @@ const useVerificationRouting = (appReady: boolean) => {
   // the value is only set when the user interacts with the prompt and is reset on a factory reset
   const showVerifyPrompt =
     !verifyPromptAnswered &&
-    ((store.bcsc.verificationSkipped === undefined && needsVerification) || resumeBlockedByOutage)
+    ((verificationSkipped === undefined && needsVerification) || resumeBlockedByOutage)
 
   // Render the verify journey when the prompt is due, OR whenever verification is actively in
   // progress. Combining both into a single VerifyStack render keeps it mounted across the prompt →
@@ -180,7 +181,7 @@ export interface RootStackViewModel {
 }
 
 /**
- * The root navigator's ViewModel. Loads the persisted state on startup, runs the startup system checks,
+ * The root navigator's ViewModel. Runs the startup system checks once StorageGate has opened storage,
  * processes pending FCM challenges once the API client is ready, routes the verify journey, and decides
  * how each phase change animates. The phase whose route the root registers comes from `useRootPhase`.
  * `BCSCRootStack` renders that route and the session providers above it.
@@ -188,20 +189,18 @@ export interface RootStackViewModel {
  * @returns The registered phase, its transition and the session flags; see {@link RootStackViewModel}.
  */
 export const useRootStackViewModel = (): RootStackViewModel => {
-  const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
-  const [loadState] = useServices([TOKENS.LOAD_STATE])
+  const stateLoaded = useSession((s) => s.stateLoaded)
+  const developer = useDeveloper()
+  const verificationStarted = useApp().verificationStarted
   const { isClientReady } = useBCSCApiClientState()
   const fcmService = useFcmService()
-  const { emitErrorModal } = useErrorAlert()
-  const { initializingAccount } = useInitializeAccountStatus()
   const { isVerified, isDeviceVerifiedByIas } = useVerificationState()
   const { isLoading: globalLoading } = useLoadingScreen()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
-  // State, API client and account are all ready
-  const appReady = store.stateLoaded && isClientReady && !initializingAccount
+  // State and API client are ready. StorageGate opened the store, so the account is known.
+  const appReady = stateLoaded && isClientReady
   const { awaitingStatusForResume, showVerifyStack, showVerifyPrompt, verifyStackKey, onVerifyPromptAnswered } =
     useVerificationRouting(appReady)
 
@@ -212,23 +211,10 @@ export const useRootStackViewModel = (): RootStackViewModel => {
     }
   }, [isClientReady, fcmService.viewModel])
 
-  useEffect(() => {
-    // Load state only if it hasn't been loaded yet
-    if (store.stateLoaded) {
-      return
-    }
-
-    try {
-      void loadState(dispatch)
-    } catch (err) {
-      emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
-    }
-  }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
-
   // Recovery gate: blocks every stack, independent of account state, until the environment is valid again
   // TODO (MD): Remove this gate after all users are on v4.2.0+
   const showInvalidEnvironment =
-    store.stateLoaded && isProductionBundle() && !isProductionEnvironment(store.developer.environment)
+    stateLoaded && isProductionBundle() && !isProductionEnvironment(developer.environment)
 
   const phase = useRootPhase({ appReady, awaitingStatusForResume, showVerifyStack })
   const transition = useRootTransition(
@@ -237,7 +223,7 @@ export const useRootStackViewModel = (): RootStackViewModel => {
       globalLoading,
       // Started and unfinished: a verify → main change is the user leaving the flow, so Home comes back
       // from beneath rather than sliding in over it
-      leavingStartedVerification: store.bcsc.verificationStarted === true && !isVerified,
+      leavingStartedVerification: verificationStarted === true && !isVerified,
       // The users BCSCAccountProvider loads an account for
       sessionLoadsAccount: isDeviceVerifiedByIas,
     }

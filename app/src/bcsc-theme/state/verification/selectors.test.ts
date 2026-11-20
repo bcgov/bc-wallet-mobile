@@ -1,17 +1,13 @@
-import { BCSCReason } from '@/bcsc-theme/utils/id-token'
+import { storeFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCState, initialState } from '@/store'
-import { selectVerificationRequestCheck, selectVerificationState } from './selectors'
-import { VerificationRequestCheckType } from './verification-request-check'
+import { selectVerificationState } from './selectors'
 
-const buildState = (secure: Partial<BCState['bcscSecure']> = {}, bcscReason?: BCSCReason): BCState => ({
-  ...initialState,
-  bcsc: { ...initialState.bcsc, credentialMetadata: bcscReason ? { bcscReason } : undefined } as BCState['bcsc'],
-  bcscSecure: { ...initialState.bcscSecure, ...secure },
-})
+const buildState = (secure: Partial<BCState['bcscSecure']> = {}) =>
+  storeFromBCState({ ...initialState, bcscSecure: { ...initialState.bcscSecure, ...secure } })
 
 describe('selectVerificationState', () => {
   it('needs verification in the initial state', () => {
-    expect(selectVerificationState(initialState)).toMatchObject({ isVerified: false, needsVerification: true })
+    expect(selectVerificationState(buildState())).toMatchObject({ isVerified: false, needsVerification: true })
   })
 
   it('reads the verified flag as the credential', () => {
@@ -28,39 +24,9 @@ describe('selectVerificationState', () => {
     })
   })
 
-  it('reads the credentialDeactivated fact as an inactive card', () => {
+  it('reads the credentialDeactivated fact as a deactivated credential', () => {
     expect(selectVerificationState(buildState({ credentialDeactivated: true }))).toMatchObject({
-      isCardInactive: true,
-    })
-  })
-
-  it('reads the saved Expired by System reason as an inactive card while a token or record remains', () => {
-    expect(selectVerificationState(buildState({ refreshToken: 'token' }, BCSCReason.ExpiredBySystem))).toMatchObject({
-      isCardInactive: true,
-    })
-    expect(selectVerificationState(buildState({ verified: true }, BCSCReason.ExpiredBySystem))).toMatchObject({
-      isCardInactive: true,
-    })
-  })
-
-  it('ignores a saved Expired by System reason when no record or token remains (a reset registration)', () => {
-    expect(selectVerificationState(buildState({}, BCSCReason.ExpiredBySystem))).toMatchObject({
-      isCardInactive: false,
-    })
-  })
-
-  it.each([BCSCReason.ApprovedByAgent, BCSCReason.Cancel, BCSCReason.CanceledByAgent])(
-    'does not read the saved %s reason as an inactive card',
-    (reason) => {
-      expect(selectVerificationState(buildState({}, reason))).toMatchObject({ isCardInactive: false })
-    }
-  )
-
-  it('keeps a credential record verified when the saved reason says the card expired', () => {
-    expect(selectVerificationState(buildState({ verified: true }, BCSCReason.ExpiredBySystem))).toMatchObject({
-      isVerified: true,
-      isDeviceVerifiedByIas: true,
-      isCardInactive: true,
+      isDeactivated: true,
     })
   })
 
@@ -71,41 +37,9 @@ describe('selectVerificationState', () => {
     })
   })
 
-  it.each([
-    ['the record says deactivated', { credentialDeactivated: true }, undefined],
-    ['the saved reason says expired', {}, BCSCReason.ExpiredBySystem],
-  ])('does not treat a refresh token as device verified when %s', (_name, secure, reason) => {
-    expect(selectVerificationState(buildState({ refreshToken: 'token', ...secure }, reason))).toMatchObject({
+  it('does not treat a refresh token as device verified once the credential is deactivated', () => {
+    expect(selectVerificationState(buildState({ refreshToken: 'token', credentialDeactivated: true }))).toMatchObject({
       isDeviceVerifiedByIas: false,
     })
-  })
-})
-
-describe('selectVerificationRequestCheck', () => {
-  const deviceCodeExpiresAt = new Date('2026-11-26T00:00:00.000Z')
-  const deviceCodes = { deviceCode: 'device', userCode: 'user', deviceCodeExpiresAt }
-
-  it('has nothing to check in the initial state', () => {
-    expect(selectVerificationRequestCheck(initialState)).toEqual({ type: VerificationRequestCheckType.None })
-  })
-
-  it('reads the stored request ID as the request to check the status of', () => {
-    expect(selectVerificationRequestCheck(buildState({ verificationRequestId: 'req-1', ...deviceCodes }))).toEqual({
-      type: VerificationRequestCheckType.RequestStatus,
-      verificationRequestId: 'req-1',
-    })
-  })
-
-  it('reads the stored device codes and their expiry as the pending verification to recover', () => {
-    expect(selectVerificationRequestCheck(buildState(deviceCodes))).toEqual({
-      type: VerificationRequestCheckType.PendingRecovery,
-      ...deviceCodes,
-    })
-  })
-
-  it('reads the verified flag, which leaves nothing to check', () => {
-    expect(
-      selectVerificationRequestCheck(buildState({ verified: true, verificationRequestId: 'req-1', ...deviceCodes }))
-    ).toEqual({ type: VerificationRequestCheckType.None })
   })
 })

@@ -1,5 +1,5 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { VerificationRequestStatus } from '@/constants'
-import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -33,9 +33,6 @@ export class PendingVerificationRecoverySystemCheck implements SystemCheckStrate
 
   onSuccess() {
     // Set request status to verified to display a CTA to "complete" the verification process
-    this.utils.dispatch({
-      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-      payload: [{ status: VerificationRequestStatus.VERIFIED }],
-    })
+    getBCSCState().session.verificationStatusReceived({ status: VerificationRequestStatus.VERIFIED })
   }
 }

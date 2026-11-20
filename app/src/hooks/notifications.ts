@@ -1,6 +1,8 @@
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { AttestationRestrictions, NOTIFICATION_REFRESH_INTERVAL_MS } from '@/constants'
 import { declineProofRequest } from '@/hooks/useDeclineProofRequest'
 import { BCState } from '@/store'
+import { IS_BCSC } from '@/utils/environment'
 import {
   BasicMessageMetadata,
   CredentialMetadata,
@@ -47,6 +49,9 @@ const isProofRequestExpired = (
 export const useNotifications = (): Array<CredentialNotificationRecord> => {
   const { agent } = useOptionalAgent<BCAgent>()
   const [store] = useStore<BCState>()
+  // BCSC keeps these preferences in its own store
+  const bcscPreferences = useBCSCStore((s) => s.preferences)
+  const preferences = IS_BCSC ? bcscPreferences : store.preferences
   const offers = useCredentialByState(DidCommCredentialState.OfferReceived)
   const proofsRequested = useProofByState(DidCommProofState.RequestReceived)
   const [nonAttestationProofs, setNonAttestationProofs] = useState<DidCommProofExchangeRecord[]>([])
@@ -61,8 +66,7 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
   const proofsDone = useProofByState(doneStates)
   const [now, setNow] = useState(() => Date.now())
   const { t } = useTranslation()
-  const proofRequestExpirationMs =
-    store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
+  const proofRequestExpirationMs = preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
 
   // Single source of truth for which pending proof requests have aged out. Refetched on each tick
   // consumed both to hide them from the list and to decline them in dev mode.
@@ -157,7 +161,7 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
   // Once a proof "expires" hide it from the notification list
   // If developer mode is active, auto decline the proof
   useEffect(() => {
-    if (!store.preferences.developerModeEnabled || !agent) {
+    if (!preferences.developerModeEnabled || !agent) {
       return
     }
 
@@ -168,7 +172,7 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
       autoDecliningProofIds.add(proof.id)
       void declineProofRequest(agent, proof, t('ProofRequest.Declined'))
     })
-  }, [agent, expiredProofs, t, store.preferences.developerModeEnabled])
+  }, [agent, expiredProofs, t, preferences.developerModeEnabled])
 
   return notifications
 }

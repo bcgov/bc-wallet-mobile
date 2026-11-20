@@ -1,9 +1,10 @@
 import { compareCredentialMetadata, tokenToCredentialMetadata } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
 import { AlertOptions } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCDispatchAction, CredentialMetadata } from '@/store'
+import { CredentialMetadata } from '@/store'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -71,8 +72,11 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
       return
     }
 
-    // update the credential metadata
-    this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
+    getBCSCState()
+      .account.setCredentialMetadata(this.tokenMetadata)
+      .catch((error) =>
+        this.utils.logger.error('[EventReasonAlertsSystemCheck] Failed to save credential metadata', error)
+      )
 
     switch (this.event) {
       case BCSCEvent.Cancel:

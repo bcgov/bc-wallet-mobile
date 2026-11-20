@@ -1,6 +1,6 @@
-import { BCState } from '@/store'
+import { useNickname } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
-import { ButtonLocation, IconButton, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { ButtonLocation, IconButton, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
@@ -11,7 +11,7 @@ import { BCSCAuthStackParams, BCSCScreens } from '../../types/navigators'
 type AuthNavigation = StackNavigationProp<BCSCAuthStackParams>
 
 const WalletNameDisplay: React.FC = () => {
-  const [store] = useStore<BCState>()
+  const nickname = useNickname()
   const { TextTheme } = useTheme()
   const { t } = useTranslation()
   const navigation = useNavigation<AuthNavigation>()
@@ -36,7 +36,7 @@ const WalletNameDisplay: React.FC = () => {
   return (
     <View style={styles.container}>
       <ThemedText variant="headingTwo" testID={testIdWithKey(TestIds.main.qrDisplay.walletName)} style={styles.name}>
-        {store.bcsc.selectedNickname || 'My Wallet'}
+        {nickname || 'My Wallet'}
       </ThemedText>
       <IconButton
         buttonLocation={ButtonLocation.Right}

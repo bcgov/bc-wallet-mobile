@@ -1,12 +1,19 @@
+import { reportSessionWritesAs } from '@/bcsc-theme/storage/testing'
 import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
 import { SystemCheckUtils } from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
 
-const makeUtils = (): SystemCheckUtils => ({
-  dispatch: jest.fn(),
-  translation: jest.fn() as any,
-  logger: { error: jest.fn() } as any,
-})
+// The checks write to the store now; `dispatch` is only where those writes are reported, in the old action shape
+const makeUtils = (): SystemCheckUtils & { dispatch: jest.Mock } => {
+  const dispatch = jest.fn()
+  // Status writes go to the session slice; reported here in the old action's shape
+  reportSessionWritesAs(dispatch)
+  return {
+    dispatch,
+    translation: jest.fn() as any,
+    logger: { error: jest.fn() } as any,
+  } as SystemCheckUtils & { dispatch: jest.Mock }
+}
 
 describe('PendingVerificationRecoverySystemCheck', () => {
   describe('runCheck', () => {

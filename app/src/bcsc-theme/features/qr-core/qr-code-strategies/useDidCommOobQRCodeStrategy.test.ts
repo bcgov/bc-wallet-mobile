@@ -1,4 +1,5 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { resetBCSCStore, seedBCSCStore, withBCSCStore } from '@/bcsc-theme/storage/testing'
 import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as Bifold from '@bifold/core'
@@ -57,13 +58,11 @@ describe('useDidCommOobQRCodeStrategy', () => {
 
   const useAgent = (agent: unknown) => mockWaitForAgent.mockResolvedValue(agent)
 
-  const setStore = (selectedNickname?: string, developerModeEnabled = false) =>
-    jest
-      .mocked(Bifold)
-      .useStore.mockReturnValue([
-        { bcsc: { selectedNickname }, preferences: { developerModeEnabled } } as any,
-        jest.fn(),
-      ])
+  const setStore = (selectedNickname?: string, developerModeEnabled = false) => {
+    resetBCSCStore()
+    jest.mocked(Bifold).useStore.mockReturnValue(withBCSCStore([{ bcsc: { selectedNickname } } as any, jest.fn()]))
+    seedBCSCStore({ preferences: { developerModeEnabled } })
+  }
   const setNickname = (selectedNickname?: string) => setStore(selectedNickname)
 
   beforeEach(() => {

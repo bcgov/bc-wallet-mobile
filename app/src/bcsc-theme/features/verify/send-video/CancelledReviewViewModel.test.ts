@@ -1,7 +1,8 @@
 import useCancelledReviewViewModel from '@/bcsc-theme/features/verify/send-video/CancelledReviewViewModel'
 import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
+import { storage } from '@/bcsc-theme/storage'
+import { reportSessionWritesAs, seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { CommonActions, useNavigation } from '@mocks/@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
@@ -34,8 +35,10 @@ describe('useCancelledReviewViewModel', () => {
   const mockDispatch = jest.fn()
 
   beforeEach(() => {
+    reportSessionWritesAs(mockDispatch)
     jest.clearAllMocks()
     jest.mocked(Bifold).useStore.mockReturnValue([{} as any, mockDispatch])
+    seedBCSCStoreFromBCState({} as any as never)
     jest.mocked(useVerificationState).mockReturnValue({
       isVerified: false,
       isDeviceVerifiedByIas: false,
@@ -59,10 +62,12 @@ describe('useCancelledReviewViewModel', () => {
 
       await result.current.cleanUpVerificationData()
 
-      expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
-        payload: [undefined],
+      // Captured media and prompts live in the session slice of the BCSC store
+      expect(storage.store.getState().session).toMatchObject({
+        photoPath: undefined,
+        videoPath: undefined,
+        videoThumbnailPath: undefined,
+        prompts: undefined,
       })
     })
 
@@ -71,14 +76,8 @@ describe('useCancelledReviewViewModel', () => {
 
       await result.current.cleanUpVerificationData()
 
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-        payload: [undefined],
-      })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-        payload: [undefined],
-      })
+      expect(storage.store.getState().session.verificationRequestStatus).toBeUndefined()
+      expect(storage.store.getState().session.verificationRequestStatusMessage).toBeUndefined()
     })
 
     it('clears the secure verification video submitted at timestamp', async () => {
@@ -86,10 +85,7 @@ describe('useCancelledReviewViewModel', () => {
 
       await result.current.cleanUpVerificationData()
 
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
-        payload: [undefined],
-      })
+      expect(storage.store.getState().session.verificationVideoSubmittedAt).toBeUndefined()
     })
 
     it('resets the userSubmittedVerificationVideo account flag', async () => {
@@ -100,12 +96,12 @@ describe('useCancelledReviewViewModel', () => {
       expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: false })
     })
 
-    it('dispatches exactly the expected five actions', async () => {
+    it('dispatches exactly the expected three actions', async () => {
       const { result } = renderHook(() => useCancelledReviewViewModel())
 
       await result.current.cleanUpVerificationData()
 
-      expect(mockDispatch).toHaveBeenCalledTimes(5)
+      expect(mockDispatch).toHaveBeenCalledTimes(3)
     })
   })
 

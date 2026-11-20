@@ -10,14 +10,8 @@ import { BifoldLogger, TOKENS, useServices } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
-import {
-  getAccount,
-  getDeviceId,
-  getDynamicClientRegistrationBody,
-  isAccountRegistered,
-  NativeAccount,
-  setAccount,
-} from 'react-native-bcsc-core'
+import { getBCSCState, selectAccountRecord } from '@/bcsc-theme/storage/hooks'
+import { getDeviceId, getDynamicClientRegistrationBody, isAccountRegistered } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
@@ -189,9 +183,9 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       throw new Error('BCSC client not ready for registration')
     }
 
-    // The registration is saved on the account record. Checked before the request, so a device with
-    // no account never leaves a registration on the server that it cannot keep.
-    if (!(await getAccount())) {
+    // The registration belongs to the account. Checked before the request, so a device with no account
+    // never leaves a registration on the server that it cannot keep.
+    if (!getBCSCState().account.profile) {
       throw AppError.fromErrorDefinition(ErrorRegistry.ACCOUNT_NOT_FOUND)
     }
 
@@ -236,9 +230,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @returns Promise resolving to registration response data or void if account exists
    */
   const register = useCallback(async () => {
-    const account = await getAccount()
     // An account that has a client ID is registered already
-    if (isAccountRegistered(account)) {
+    if (isAccountRegistered(selectAccountRecord(getBCSCState()))) {
       logger.info('[RegistrationService] Account already exists, skipping registration')
       return
     }
@@ -255,7 +248,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @param issuer - Issuer both saves are made for
    * @param registration - Registration the update request was made with
    * @param updatedRegistrationData - Registration the server returned for the update
-   * @param account - Account the nickname is saved on
    * @param selectedNickname - Nickname to save
    * @throws AppError (e.g. `TOKEN_SAVE_FAILED`, `NATIVE_STORAGE_WRITE_FAILED`) if the registration cannot be saved
    */
@@ -264,7 +256,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       issuer: string,
       registration: DeviceRegistration,
       updatedRegistrationData: RegistrationResponseData,
-      account: NativeAccount,
       selectedNickname: string
     ) => {
       // A failed registration save, thrown once the nickname save below has run
@@ -286,12 +277,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       }
 
       try {
-        await setAccount({
-          issuer,
-          securityMethod: account.securityMethod,
-          nickname: selectedNickname,
-          didPostNicknameToServer: true,
-        })
+        await getBCSCState().account.updateProfile({ nickname: selectedNickname, didPostNicknameToServer: true })
       } catch (error) {
         const errMessage = error instanceof Error ? error.message : String(error)
         logger.error(`Failed to store updated account nickname: ${errMessage}`)
@@ -333,12 +319,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    */
   const updateRegistration = useCallback(
     async (selectedNickname: string | undefined) => {
-      return withAccount(async (account) => {
+      return withAccount(async () => {
         if (!isClientReady || !apiClient) {
           throw new Error('BCSC client not ready for registration update')
         }
 
-        const registration = await readDeviceRegistration(account)
+        const registration = readDeviceRegistration()
 
         if (!registration) {
           throw new Error('No registration access token found for registration update')
@@ -403,7 +389,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           apiClient.endpoints.issuer,
           registration,
           updatedRegistrationData,
-          account,
           selectedNickname
         )
 

@@ -1,3 +1,4 @@
+import { getBCSCState, selectAccountRecord } from '@/bcsc-theme/storage/hooks'
 import { AppError, ErrorRegistry } from '@/errors'
 import { isAppError, isHandledAppError } from '@/errors/appError'
 import { trackFailureSteps } from '@/errors/failureContext'
@@ -6,9 +7,8 @@ import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
-import { createQuickLoginJWT, getAccount, isAccountRegistered } from 'react-native-bcsc-core'
+import { createQuickLoginJWT, isAccountRegistered } from 'react-native-bcsc-core'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
-import { getAccountReadContext } from '../utils/account-read-status'
 import { getNotificationTokens } from '../utils/push-notification-tokens'
 import { useBCSCApiClient } from './useBCSCApiClient'
 
@@ -76,7 +76,7 @@ export const useQuickLoginURL = () => {
         // fetchJwkResult never rejects: a failure resolves with jwk null and the reason in error
         const [tokens, account, jwkResult] = await Promise.all([
           steps.run('notification_tokens', () => getNotificationTokens(logger)),
-          steps.run('account', () => getAccount()),
+          steps.run('account', async () => selectAccountRecord(getBCSCState())),
           client.fetchJwkResult(),
         ])
 
@@ -85,8 +85,7 @@ export const useQuickLoginURL = () => {
         }
 
         if (!account) {
-          const context = await getAccountReadContext()
-          throw steps.fail('account', new Error('No account data received'), { context })
+          throw steps.fail('account', new Error('No account data received'))
         }
 
         // The login hint is signed as the device's client, so the account needs its registration

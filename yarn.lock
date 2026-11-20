@@ -7680,6 +7680,7 @@ __metadata:
     react-native-keychain: "npm:~10.0.0"
     react-native-localize: "npm:~2.2.6"
     react-native-logs: "npm:~5.1.0"
+    react-native-mmkv: "npm:^4.3.2"
     react-native-nitro-image: "npm:^0.15.2"
     react-native-nitro-modules: "npm:^0.37.0"
     react-native-orientation-locker: "patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch"
@@ -15920,6 +15921,17 @@ __metadata:
   version: 5.1.0
   resolution: "react-native-logs@npm:5.1.0"
   checksum: 10c0/1a47f25ae8c37fc7cb746ac0608d3e1a95abcf488ed5b7c587ce7c1a2d4ce6cf458657da93bad716eda17e8841dc24b4d0cf53d373133a2fd33632739c93807f
+  languageName: node
+  linkType: hard
+
+"react-native-mmkv@npm:^4.3.2":
+  version: 4.3.2
+  resolution: "react-native-mmkv@npm:4.3.2"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-nitro-modules: "*"
+  checksum: 10c0/47c86114ee0ddbc8245dda174f419df9390a8ce0a6bcee0ded5eabd0b257e2b49257ddaf3b39eb5ab95ad7eed0ffa6d6b1e7c6bf8a3e56e6508408e49b98ed07
   languageName: node
   linkType: hard
 

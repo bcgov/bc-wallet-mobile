@@ -1,10 +1,10 @@
 import { BulletedInstructionsScreen } from '@/bcsc-theme/components/BulletedInstructionsScreen'
+import { useVerification } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ACCOUNT_SERVICES_URL } from '@/constants'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { openLink } from '@/utils/links'
-import { testIdWithKey, useStore } from '@bifold/core'
+import { testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -17,7 +17,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
   navigation,
 }: AdditionalIdentificationRequiredScreenProps) => {
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const storedCardProcess = useVerification((s) => s.cardProcess)
 
   return (
     <BulletedInstructionsScreen
@@ -49,7 +49,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
           navigation.push(BCSCScreens.EvidenceTypeList, {
             // The cardProcess should have been defined prior to reaching this screen.
             // @see EnterBirthdateViewModel.authorizeDevice()
-            cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.None,
+            cardProcess: storedCardProcess ?? BCSCCardProcess.None,
             // Non-photo BCSC users see photo IDs first, with an "Other Options" escape hatch
             photoFilter: 'photo',
           })

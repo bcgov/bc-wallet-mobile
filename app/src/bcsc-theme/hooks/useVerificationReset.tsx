@@ -1,10 +1,9 @@
+import { getBCSCState, selectSecurityMethod } from '@/bcsc-theme/storage/hooks'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
 import { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { useCallback } from 'react'
-import { deleteToken, TokenType } from 'react-native-bcsc-core'
 import { withAccount } from '../api/hooks/withAccountGuard'
 import { DeviceRegistration, readDeviceRegistration } from '../services/device-registration'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
@@ -19,7 +18,7 @@ import { useSecureActions } from './useSecureActions'
  *   1. Clears the in-memory secure store, marking the device as unverified. This happens before the
  *      native deletes, so if one fails the surviving record is read back at the next unlock
  *   2. Deletes the existing IAS registration
- *   3. Deletes all verification data and the access and refresh tokens from native storage
+ *   3. Deletes all verification data and the access and refresh tokens
  *   4. Clears the old registration from the device (client ID and registration access token together)
  *   5. Clears the saved account details, which describe the registration just deleted
  *   6. Creates a new IAS registration, saving its client ID and token together
@@ -42,7 +41,6 @@ export type VerificationResetOptions = {
 }
 
 export const useVerificationReset = () => {
-  const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, clearRegistration, deleteVerificationData } = useSecureActions()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
@@ -76,9 +74,9 @@ export const useVerificationReset = () => {
   const verificationReset = useCallback(
     async ({ inVerifyFlow = false }: VerificationResetOptions = {}): Promise<boolean> => {
       try {
-        await withAccount(async (account) => {
+        await withAccount(async () => {
           // Read from storage, so the client ID and the token are the pair the device holds now
-          const registration = await readDeviceRegistration(account)
+          const registration = readDeviceRegistration()
 
           if (!registration) {
             throw new Error('No registration access token found on the device. Cannot proceed with verification reset.')
@@ -86,11 +84,12 @@ export const useVerificationReset = () => {
 
           logger.info('[useVerificationReset] Starting renewal reset')
           // Clear/reset store values
+          const state = getBCSCState()
           clearSecureState({
             isHydrated: true, // this is set to true on app load and shouldn't change during the reset
-            walletKey: store.bcscSecure.walletKey,
+            walletKey: state.session.walletKey,
             // the account keeps its security method through the reset, so the store's copy is kept too
-            securityMethod: store.bcscSecure.securityMethod,
+            securityMethod: selectSecurityMethod(state),
             // the registration is still on the device until it is cleared below, which also drops this token
             registrationAccessToken: registration.registrationAccessToken,
             verified: false, // device is no longer verified
@@ -104,14 +103,13 @@ export const useVerificationReset = () => {
 
           // Delete verification data from native storage (credential, auth request, account flags, additional evidence, tokens)
           await deleteVerificationData()
-          await Promise.all([deleteToken(TokenType.Access), deleteToken(TokenType.Refresh)])
-          // After the other tokens: iOS stores them under the client ID this clears
+          await getBCSCState().account.setTokens({ accessToken: undefined, refreshToken: undefined })
           await clearRegistration()
-          logger.info('[useVerificationReset] Verification data, tokens and registration deleted from native storage')
+          logger.info('[useVerificationReset] Verification data, tokens and registration deleted')
 
           // After the deletes succeed: if one fails, the record or token read back at the next unlock
           // still carries its expiry reason. Not in CLEAR_SECURE_STATE, which lock and logout share.
-          dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [undefined] })
+          await getBCSCState().account.setCredentialMetadata(undefined)
 
           // Register the device again. The account keeps its security method and nickname.
           logger.info('[useVerificationReset] Creating new IAS registration...')
@@ -127,9 +125,6 @@ export const useVerificationReset = () => {
       }
     },
     [
-      store.bcscSecure.walletKey,
-      store.bcscSecure.securityMethod,
-      dispatch,
       logger,
       clearSecureState,
       clearRegistration,

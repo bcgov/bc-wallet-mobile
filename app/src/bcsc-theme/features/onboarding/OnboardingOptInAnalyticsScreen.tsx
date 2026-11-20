@@ -1,7 +1,7 @@
 import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { getBCSCState, useDeveloper } from '@/bcsc-theme/storage/hooks'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import AnalyticsIcon from '@assets/img/analytics-icon.svg'
@@ -13,7 +13,6 @@ import {
   ThemedText,
   TOKENS,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -35,7 +34,7 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
 }: OnboardingOptInAnalyticsScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const developer = useDeveloper()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
@@ -59,8 +58,8 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
     logger.info('User accepted analytics opt-in')
     void nextScreen()
     try {
-      await Analytics.initializeTracker(store.developer.environment.analyticsAppId)
-      dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
+      await Analytics.initializeTracker(developer.environment.analyticsAppId)
+      void getBCSCState().app.update({ analyticsOptIn: true })
     } catch (error) {
       logger.error(
         'Failed to initialize analytics tracker on opt-in',
@@ -74,7 +73,7 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
 
   const handleDeniedPressed = () => {
     logger.info('User denied analytics opt-in')
-    dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [false] })
+    void getBCSCState().app.update({ analyticsOptIn: false })
     void nextScreen()
   }
 

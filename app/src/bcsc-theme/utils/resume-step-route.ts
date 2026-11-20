@@ -1,7 +1,6 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-import { selectVerificationState } from '../state/verification/selectors'
+import { journeyVerificationState, VerificationJourney } from '../state/verification/journey'
 import { isEvidenceAwaitingDocumentNumber, isEvidenceCaptureIncomplete } from './card-utils'
 import { computeSetupStepCompletion, StepCompletionResult } from './setup-step-completion'
 
@@ -15,12 +14,12 @@ export type ResumeStepRoute = {
  * is resumed before falling back to the start of the ID flow. Extracted from
  * {@link getResumeStepRoute} to keep each function within cognitive-complexity limits.
  */
-const getIdStepRoute = (store: BCState, idCompletion: StepCompletionResult['id']): ResumeStepRoute => {
+const getIdStepRoute = (journey: VerificationJourney, idCompletion: StepCompletionResult['id']): ResumeStepRoute => {
   // A half-finished evidence — all required photos captured but no document number
   // entered yet — means the user left while on EvidenceIDCollection. Resume them
   // straight back there so their photos aren't discarded by EvidenceTypeList's
   // incomplete-evidence cleanup (which would otherwise send them to the flow's start).
-  const evidenceAwaitingDocumentNumber = store.bcscSecure.additionalEvidenceData.find(isEvidenceAwaitingDocumentNumber)
+  const evidenceAwaitingDocumentNumber = journey.additionalEvidenceData.find(isEvidenceAwaitingDocumentNumber)
   if (evidenceAwaitingDocumentNumber?.evidenceType) {
     return {
       name: BCSCScreens.EvidenceIDCollection,
@@ -32,7 +31,7 @@ const getIdStepRoute = (store: BCState, idCompletion: StepCompletionResult['id']
   // committed, so they've been discarded; resume the user to IDPhotoInformation to restart
   // capture for that ID from the first side rather than dropping them on the document-number
   // screen or bouncing them to the start of the ID flow.
-  const evidenceCaptureIncomplete = store.bcscSecure.additionalEvidenceData.find(isEvidenceCaptureIncomplete)
+  const evidenceCaptureIncomplete = journey.additionalEvidenceData.find(isEvidenceCaptureIncomplete)
   if (evidenceCaptureIncomplete?.evidenceType) {
     return {
       name: BCSCScreens.IDPhotoInformation,
@@ -51,7 +50,7 @@ const getIdStepRoute = (store: BCState, idCompletion: StepCompletionResult['id']
   // cardProcess or deviceCode means the card is already authorized, or the user is in the
   // Non-BCSC evidence flow — both handled above — so this only catches the pre-authorization
   // serial state.
-  if (store.bcscSecure.serial && !store.bcscSecure.deviceCode && !store.bcscSecure.cardProcess) {
+  if (journey.serial && !journey.deviceCode && !journey.cardProcess) {
     return { name: BCSCScreens.EnterBirthdate }
   }
   return { name: BCSCScreens.IdentitySelection }
@@ -59,30 +58,30 @@ const getIdStepRoute = (store: BCState, idCompletion: StepCompletionResult['id']
 
 /**
  * Returns the verify-stack route the user should land on when resuming the
- * verification journey for the given store state.
+ * verification journey (`selectJourney`).
  *
  * Single source of truth for "which screen should the user be on?" — used by
  * VerifyStack's initialRouteName, recovery error policies, and step-completion
- * navigations. Step-completion callers pass a "predicted" post-update store
- * snapshot so the result reflects the just-persisted state (the React closure's
- * `store` would still be stale at navigation time).
+ * navigations. Step-completion callers pass a "predicted" post-update journey
+ * so the result reflects the just-persisted state (the React closure's values
+ * would still be stale at navigation time).
  */
-export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
+export const getResumeStepRoute = (journey: VerificationJourney): ResumeStepRoute => {
   // Corrupted/unreadable token file: the user must re-establish their session
   // before any other resume logic can be trusted.
-  if (store.bcscSecure.sessionRecoveryRequired) {
+  if (journey.sessionRecoveryRequired) {
     return { name: BCSCScreens.SessionRecovery }
   }
 
-  if (selectVerificationState(store).isDeviceVerifiedByIas) {
+  if (journeyVerificationState(journey).isDeviceVerifiedByIas) {
     return { name: BCSCScreens.VerificationSuccess }
   }
 
-  if (store.bcscSecure.userSubmittedVerificationVideo) {
+  if (journey.userSubmittedVerificationVideo) {
     return { name: BCSCScreens.PendingReview }
   }
 
-  const completion = computeSetupStepCompletion(store)
+  const completion = computeSetupStepCompletion(journey)
 
   // The user hasn't chosen how to set up this device yet (verify a new account vs. connect
   // an already-verified device via QR). Ask first — this is the entry of the verify journey,
@@ -90,17 +89,17 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
   // verification progress to resume (id step still focused); a user who already has progress but
   // no recorded setup type (e.g. migrated from a build predating accountSetupType) must resume
   // their step rather than be sent back to the question and lose it.
-  if (!store.bcsc.accountSetupType && completion.id.focused) {
+  if (!journey.accountSetupType && completion.id.focused) {
     return { name: BCSCScreens.AccountSetup }
   }
 
   switch (completion.currentStep) {
     case 'id':
-      return getIdStepRoute(store, completion.id)
+      return getIdStepRoute(journey, completion.id)
     case 'address':
       return { name: BCSCScreens.ResidentialAddress }
     case 'email':
-      return { name: BCSCScreens.EnterEmail, params: { cardProcess: store.bcscSecure.cardProcess as BCSCCardProcess } }
+      return { name: BCSCScreens.EnterEmail, params: { cardProcess: journey.cardProcess as BCSCCardProcess } }
     case 'verify':
       return { name: BCSCScreens.VerificationMethodSelection }
     case 'transfer':

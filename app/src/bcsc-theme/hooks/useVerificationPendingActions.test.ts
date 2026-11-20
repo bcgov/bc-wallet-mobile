@@ -1,4 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { storage } from '@/bcsc-theme/storage'
+import { reportSessionWritesAs, seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { VerificationRequestStatus } from '@/constants'
 import { AppEventCode } from '@/events/appEventCode'
@@ -31,6 +33,7 @@ describe('useVerificationPendingActions', () => {
   const pendingRequest = { verificationRequestId: 'request-id', deviceCode: 'device-code', userCode: 'user-code' }
 
   beforeEach(() => {
+    reportSessionWritesAs(dispatchMock)
     jest.resetAllMocks()
 
     updateVerificationRequestMock.mockResolvedValue(undefined)
@@ -39,7 +42,8 @@ describe('useVerificationPendingActions', () => {
     getVerificationRequestStatusMock.mockResolvedValue({ status: VerificationRequestStatus.PENDING })
     checkDeviceCodeStatusMock.mockResolvedValue(undefined)
 
-    jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: pendingRequest } as any, dispatchMock])
+    jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: pendingRequest } as any, dispatchMock])
+    seedBCSCStoreFromBCState({ bcscSecure: pendingRequest } as any as never)
     jest.mocked(Bifold).useServices.mockReturnValue([loggerMock] as any)
     jest.mocked(useApi).mockReturnValue({ token: { checkDeviceCodeStatus: checkDeviceCodeStatusMock } } as any)
     jest.mocked(useSecureActions).mockReturnValue({
@@ -68,10 +72,8 @@ describe('useVerificationPendingActions', () => {
     it('goes straight to the success screen when the user is already verified', async () => {
       jest
         .mocked(Bifold)
-        .useStore.mockReturnValue([
-          { bcsc: {}, bcscSecure: { ...pendingRequest, verified: true } } as any,
-          dispatchMock,
-        ])
+        .useStore.mockReturnValue([{ bcscSecure: { ...pendingRequest, verified: true } } as any, dispatchMock])
+      seedBCSCStoreFromBCState({ bcscSecure: { ...pendingRequest, verified: true } } as any as never)
       const { result } = renderHook(() => useVerificationPendingActions(navigation))
 
       await act(async () => {
@@ -85,10 +87,8 @@ describe('useVerificationPendingActions', () => {
     it('goes to the success screen without a fetch when IAS already issued tokens, before setup finished', async () => {
       jest
         .mocked(Bifold)
-        .useStore.mockReturnValue([
-          { bcsc: {}, bcscSecure: { ...pendingRequest, refreshToken: 'token' } } as any,
-          dispatchMock,
-        ])
+        .useStore.mockReturnValue([{ bcscSecure: { ...pendingRequest, refreshToken: 'token' } } as any, dispatchMock])
+      seedBCSCStoreFromBCState({ bcscSecure: { ...pendingRequest, refreshToken: 'token' } } as any as never)
       const { result } = renderHook(() => useVerificationPendingActions(navigation))
 
       await act(async () => {
@@ -191,9 +191,12 @@ describe('useVerificationPendingActions', () => {
         jest
           .mocked(Bifold)
           .useStore.mockReturnValue([
-            { bcsc: {}, bcscSecure: { verificationRequestId: 'request-id', userCode: 'user-code' } } as any,
+            { bcscSecure: { verificationRequestId: 'request-id', userCode: 'user-code' } } as any,
             dispatchMock,
           ])
+        seedBCSCStoreFromBCState({
+          bcscSecure: { verificationRequestId: 'request-id', userCode: 'user-code' },
+        } as any as never)
 
         await checkStatus()
 
@@ -237,7 +240,8 @@ describe('useVerificationPendingActions', () => {
         await result.current.handleCancelVerification()
       })
       // The cancel clears the request from the store, which re-runs the focused screen's check
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, dispatchMock])
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: {} } as any, dispatchMock])
+      seedBCSCStoreFromBCState({ bcscSecure: {} } as any as never)
       rerender({})
       await act(async () => {
         await result.current.handleCheckStatus()
@@ -362,23 +366,15 @@ describe('useVerificationPendingActions', () => {
 
       expect(cancelVerificationRequestMock).toHaveBeenCalledWith('request-id')
       expect(updateVerificationRequestMock).toHaveBeenCalledWith(undefined, null)
-      expect(dispatchMock).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
-        payload: [undefined],
+      expect(storage.store.getState().session).toMatchObject({
+        photoPath: undefined,
+        videoPath: undefined,
+        videoThumbnailPath: undefined,
       })
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
-        payload: [undefined],
-      })
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
-        payload: [undefined],
-      })
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
-        payload: [undefined],
-      })
+      expect(storage.store.getState().session.prompts).toEqual(undefined)
+      expect(storage.store.getState().session.verificationVideoSubmittedAt).toBeUndefined()
+      expect(storage.store.getState().session.verificationRequestStatus).toBeUndefined()
+      expect(storage.store.getState().session.verificationRequestStatusMessage).toBeUndefined()
       expect(updateAccountFlagsMock).toHaveBeenCalledWith({ userSubmittedVerificationVideo: false })
       expect(navigation.reset).toHaveBeenCalledWith({
         index: 0,
@@ -387,7 +383,8 @@ describe('useVerificationPendingActions', () => {
     })
 
     it('still clears verification state and navigates back when there is no pending request id', async () => {
-      jest.mocked(Bifold).useStore.mockReturnValue([{ bcsc: {}, bcscSecure: {} } as any, dispatchMock])
+      jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure: {} } as any, dispatchMock])
+      seedBCSCStoreFromBCState({ bcscSecure: {} } as any as never)
 
       const { result } = renderHook(() => useVerificationPendingActions(navigation))
 
@@ -415,7 +412,11 @@ describe('useVerificationPendingActions', () => {
 
       expect(loggerMock.error).toHaveBeenCalledWith(expect.stringContaining('Error cancelling verification request'))
       expect(updateVerificationRequestMock).toHaveBeenCalledWith(undefined, null)
-      expect(dispatchMock).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
+      expect(storage.store.getState().session).toMatchObject({
+        photoPath: undefined,
+        videoPath: undefined,
+        videoThumbnailPath: undefined,
+      })
       expect(updateAccountFlagsMock).toHaveBeenCalledWith({ userSubmittedVerificationVideo: false })
       expect(navigation.reset).toHaveBeenCalledWith({
         index: 0,

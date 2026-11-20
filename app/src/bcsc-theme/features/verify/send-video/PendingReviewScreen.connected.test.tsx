@@ -1,9 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { VerificationRequestStatus } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { useFocusEffect } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, render } from '@testing-library/react-native'
@@ -30,22 +30,12 @@ const pendingRequest = { verificationRequestId: 'request-id', deviceCode: 'devic
 
 describe('PendingReviewScreen with the real status check', () => {
   const getVerificationRequestStatus = jest.fn()
-  let dispatch: (action: { type: BCDispatchAction; payload?: unknown[] }) => void
-  let currentStore: BCState
   let focused: boolean
   let navigation: any
-
-  const CaptureDispatch = () => {
-    const [store, storeDispatch] = useStore<BCState>()
-    currentStore = store
-    dispatch = storeDispatch as typeof dispatch
-    return null
-  }
 
   const renderScreen = () =>
     render(
       <BasicAppContext initialStateOverride={{ bcscSecure: pendingRequest as any }}>
-        <CaptureDispatch />
         <PendingReviewScreen navigation={navigation} />
       </BasicAppContext>
     )
@@ -77,7 +67,7 @@ describe('PendingReviewScreen with the real status check', () => {
       token: {
         // The real exchange stores the issued tokens, which flips the user to "device verified"
         checkDeviceCodeStatus: jest.fn(async () => {
-          dispatch({ type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN, payload: ['refresh-token'] })
+          seedBCSCStore({ account: { tokens: { refreshToken: 'refresh-token' } } })
         }),
       },
     } as any)
@@ -137,9 +127,9 @@ describe('PendingReviewScreen with the real status check', () => {
     expect(getVerificationRequestStatus).toHaveBeenCalledTimes(1)
 
     await act(async () => {
-      dispatch({
-        type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-        payload: [{ status: VerificationRequestStatus.CANCELLED, status_message: 'Video too dark' }],
+      getBCSCState().session.verificationStatusReceived({
+        status: VerificationRequestStatus.CANCELLED,
+        status_message: 'Video too dark',
       })
     })
     await act(async () => {
@@ -165,9 +155,9 @@ describe('PendingReviewScreen with the real status check', () => {
     await flush()
 
     await act(async () => {
-      dispatch({
-        type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
-        payload: [{ status: VerificationRequestStatus.CANCELLED, status_message: 'Video too dark' }],
+      getBCSCState().session.verificationStatusReceived({
+        status: VerificationRequestStatus.CANCELLED,
+        status_message: 'Video too dark',
       })
     })
     await act(async () => {
@@ -176,7 +166,7 @@ describe('PendingReviewScreen with the real status check', () => {
     await flush()
 
     expect(getVerificationRequestStatus).toHaveBeenCalledTimes(2)
-    expect(currentStore.bcscSecure.verificationRequestStatus).toBe(VerificationRequestStatus.CANCELLED)
-    expect(currentStore.bcscSecure.verificationRequestStatusMessage).toBe('Video too dark')
+    expect(getBCSCState().session.verificationRequestStatus).toBe(VerificationRequestStatus.CANCELLED)
+    expect(getBCSCState().session.verificationRequestStatusMessage).toBe('Video too dark')
   })
 })

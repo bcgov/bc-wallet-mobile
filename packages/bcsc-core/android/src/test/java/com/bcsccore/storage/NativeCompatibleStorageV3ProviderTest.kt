@@ -46,7 +46,7 @@ class NativeCompatibleStorageV3ProviderTest {
 
     /**
      * Create the v3 provider file on disk so File.exists() returns true,
-     * and stub readEncryptedFile to return our test JSON without invoking
+     * and stub readEncryptedFileResult to return our test JSON without invoking
      * the Android keystore.
      */
     private fun stageProvider(json: String) {
@@ -55,7 +55,7 @@ class NativeCompatibleStorageV3ProviderTest {
         val providerFile = File(accountDir, "providers")
         providerFile.writeText("encrypted-placeholder")
 
-        every { storage.readEncryptedFile(providerFile) } returns json
+        every { storage.readEncryptedFileResult(providerFile) } returns EncryptedFileRead.Content(json)
     }
 
     @Test
@@ -245,7 +245,7 @@ class NativeCompatibleStorageV3ProviderTest {
         storage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.REGISTRATION_TOKEN)
 
         val restarted = spyk(NativeCompatibleStorage(context), recordPrivateCalls = true)
-        every { restarted.readEncryptedFile(any()) } returns providerJson
+        every { restarted.readEncryptedFileResult(any()) } returns EncryptedFileRead.Content(providerJson)
 
         assertNull(restarted.readAuthorizationRequestFromV3Provider(issuerName, accountUuid))
         assertNull(restarted.readRegistrationTokenFromV3Provider(issuerName, accountUuid))

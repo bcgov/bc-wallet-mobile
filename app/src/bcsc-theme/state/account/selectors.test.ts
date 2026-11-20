@@ -1,5 +1,6 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { EXPIRED_JWT, makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
+import { storeFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState } from '@/store'
 import { AccountPhaseType } from './account-phase'
@@ -8,17 +9,11 @@ import { selectAccountPhase } from './selectors'
 const NOW = new Date('2026-10-19T12:00:00.000Z')
 const FUTURE = new Date('2027-10-19T00:00:00.000Z')
 
-const buildState = (
-  opts: { verified?: boolean; bcscReason?: BCSCReason; refreshToken?: string; credentialDeactivated?: boolean } = {}
-) =>
-  ({
-    bcscSecure: {
-      verified: opts.verified ?? true,
-      refreshToken: opts.refreshToken,
-      credentialDeactivated: opts.credentialDeactivated ?? false,
-    },
+const buildState = (opts: { verified?: boolean; bcscReason?: BCSCReason; refreshToken?: string } = {}) =>
+  storeFromBCState({
+    bcscSecure: { verified: opts.verified ?? true, refreshToken: opts.refreshToken },
     bcsc: { credentialMetadata: { bcscReason: opts.bcscReason ?? BCSCReason.ApprovedByAgent } },
-  }) as unknown as BCState
+  } as unknown as BCState)
 
 const buildAccount = (date: Date) => ({ account_expiration_date: date }) as unknown as BCSCAccount
 
@@ -36,18 +31,6 @@ describe('selectAccountPhase', () => {
     const state = buildState({ bcscReason: BCSCReason.ExpiredBySystem })
 
     expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.Expired)
-  })
-
-  it('reads the credential record flag alone as expired when verified', () => {
-    const state = buildState({ credentialDeactivated: true })
-
-    expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.Expired)
-  })
-
-  it('has no card to judge for an unfinished device, even with an inactive card', () => {
-    const state = buildState({ verified: false, bcscReason: BCSCReason.ExpiredBySystem })
-
-    expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.None)
   })
 
   it('derives the credential expiry from the stored refresh token', () => {
@@ -72,7 +55,7 @@ describe('selectAccountPhase', () => {
   })
 
   it('tolerates missing credential metadata', () => {
-    const state = { bcscSecure: { verified: true }, bcsc: {} } as unknown as BCState
+    const state = storeFromBCState({ bcscSecure: { verified: true }, bcsc: {} } as unknown as BCState)
 
     expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.Active)
   })

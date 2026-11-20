@@ -1,10 +1,11 @@
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { HomeNoticeType } from '@/bcsc-theme/state/home/home-notice'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
-import { BCDispatchAction, BCState, initialBCSCSecureState } from '@/store'
+import { BCState, initialBCSCSecureState } from '@/store'
 import { useStore } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
@@ -58,6 +59,9 @@ const verified = {
   verified: true,
   refreshToken: 'stored-refresh',
 }
+
+// Any credential metadata the schema accepts; only the reason matters here
+const METADATA = { fullName: '', bcscReason: '', deviceCount: 1, deviceLimit: 5, cardType: '', lastUpdated: 0 }
 
 const renderHome = (refreshToken = verified.refreshToken) => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -137,11 +141,8 @@ describe('card expiry notices, from the account provider to Home', () => {
     await waitFor(() => expect(result.current.cardStatus.isActivelyVerified).toBe(true))
     expect(result.current.notifications).toHaveLength(0)
 
-    act(() => {
-      result.current.dispatch({
-        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-        payload: [{ bcscReason: BCSCReason.ExpiredBySystem }],
-      })
+    await act(async () => {
+      await getBCSCState().account.setCredentialMetadata({ ...METADATA, bcscReason: BCSCReason.ExpiredBySystem })
     })
 
     expect(result.current.cardStatus.isExpired).toBe(true)
@@ -166,18 +167,15 @@ describe('card expiry notices, from the account provider to Home', () => {
 
       const later = new Date(START.getTime() + 2 * HOUR_MS)
       jest.setSystemTime(later)
-      act(() => {
-        result.current.dispatch({ type: BCDispatchAction.UPDATE_SECURE_ACCESS_TOKEN, payload: ['unrelated'] })
+      await act(async () => {
+        await getBCSCState().account.setTokens({ accessToken: 'unrelated' })
       })
 
       expect(result.current.cardStatus.isExpired).toBe(true)
       expect(notificationKeys(result.current.notifications)).toEqual([HomeNoticeType.AccountExpired])
 
-      act(() => {
-        result.current.dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN,
-          payload: [expiringIn(HOUR_MS, later)],
-        })
+      await act(async () => {
+        await getBCSCState().account.setTokens({ refreshToken: expiringIn(HOUR_MS, later) })
       })
 
       expect(result.current.cardStatus.isExpired).toBe(false)

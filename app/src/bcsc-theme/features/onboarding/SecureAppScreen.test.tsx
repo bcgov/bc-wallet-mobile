@@ -1,7 +1,8 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { BCState } from '@/store'
+import { getBCSCState, useAccount } from '@/bcsc-theme/storage/hooks'
+import type { BCSCStoreSeed } from '@/bcsc-theme/storage/testing'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey, useStore } from '@bifold/core'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -11,11 +12,8 @@ import {
   AccountSecurityMethod,
   BiometricType,
   canPerformDeviceAuthentication,
-  getAccount,
   getAvailableBiometricType,
   performDeviceAuthentication,
-  setAccount,
-  setAccountSecurityMethod,
   setupDeviceSecurity,
 } from 'react-native-bcsc-core'
 import { SecureAppScreen } from './SecureAppScreen'
@@ -25,9 +23,6 @@ jest.mock('react-native-bcsc-core', () => ({
   getAvailableBiometricType: jest.fn(),
   performDeviceAuthentication: jest.fn(),
   setupDeviceSecurity: jest.fn(),
-  getAccount: jest.fn(),
-  setAccount: jest.fn(),
-  setAccountSecurityMethod: jest.fn(),
   isBcscNativeError: jest.fn().mockReturnValue(false),
   BcscNativeErrorCodes: {
     KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
@@ -75,14 +70,11 @@ const mockCanPerformDeviceAuthentication = jest.mocked(canPerformDeviceAuthentic
 const mockGetAvailableBiometricType = jest.mocked(getAvailableBiometricType)
 const mockPerformDeviceAuthentication = jest.mocked(performDeviceAuthentication)
 const mockSetupDeviceSecurity = jest.mocked(setupDeviceSecurity)
-const mockGetAccount = jest.mocked(getAccount)
-const mockSetAccount = jest.mocked(setAccount)
-const mockSetAccountSecurityMethod = jest.mocked(setAccountSecurityMethod)
 
 /** Shows the method held in secure state, so a test can watch the store follow the switch. */
 const SecureStateProbe = () => {
-  const [store] = useStore<BCState>()
-  return <Text>{store.bcscSecure.securityMethod ?? 'unknown'}</Text>
+  const securityMethod = useAccount((s) => s.profile?.securityMethod)
+  return <Text>{securityMethod ?? 'unknown'}</Text>
 }
 
 describe('SecureApp', () => {
@@ -137,19 +129,22 @@ describe('SecureApp', () => {
   })
 
   describe('choosing device authentication', () => {
-    const existingAccount = {
-      clientID: 'existing-client-id',
+    const existingProfile = {
+      accountId: 'existing-account-id',
+      clientId: 'existing-client-id',
       issuer: 'https://existing-issuer',
       securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
     }
+    // BasicAppContext resets the store, so the account goes in through it
+    const existingAccount: BCSCStoreSeed = { account: { profile: existingProfile } }
 
-    const pressDeviceAuth = async () => {
+    const pressDeviceAuth = async (bcscState?: BCSCStoreSeed) => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
       mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
       mockPerformDeviceAuthentication.mockResolvedValue(true)
 
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={bcscState}>
           <BCSCLoadingProvider>
             <SecureAppScreen navigation={mockNavigation as never} />
             <SecureStateProbe />
@@ -162,48 +157,54 @@ describe('SecureApp', () => {
       return tree
     }
 
-    it('creates the account when none exists, with no client ID, before setting up device security', async () => {
-      mockGetAccount.mockResolvedValue(null)
+    it('creates the placeholder account when none exists and hands it on to be saved', async () => {
       mockSetupDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'wallet-key' } as never)
 
       await pressDeviceAuth()
 
-      await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('wallet-key'))
-      // Exactly these fields: the account has no client ID until the device registers, not a blank one
-      expect(mockSetAccount).toHaveBeenCalledWith({
-        issuer: 'https://mock-issuer',
-        securityMethod: AccountSecurityMethod.DeviceAuth,
-      })
-      expect(mockSetAccount.mock.invocationCallOrder[0]).toBeLessThan(
-        mockSetupDeviceSecurity.mock.invocationCallOrder[0]
+      await waitFor(() =>
+        expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('wallet-key', {
+          accountId: expect.any(String),
+          clientId: '',
+          issuer: 'https://mock-issuer',
+          securityMethod: AccountSecurityMethod.DeviceAuth,
+        })
       )
-      expect(mockSetAccountSecurityMethod).not.toHaveBeenCalled()
+      const created = mockHandleSuccessfulAuth.mock.calls[0][1]
+      expect(mockSetupDeviceSecurity).toHaveBeenCalledWith({ accountId: created.accountId, issuer: 'https://mock-issuer' })
+      // handleSuccessfulAuth saves it, mocked here
+      expect(getBCSCState().account.profile).toBeUndefined()
     })
 
     it('keeps an existing account and sets the security method after device security succeeds', async () => {
-      mockGetAccount.mockResolvedValue(existingAccount as never)
-      mockSetupDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'wallet-key' } as never)
+      let methodDuringSetup: AccountSecurityMethod | undefined
+      mockSetupDeviceSecurity.mockImplementation(async () => {
+        methodDuringSetup = getBCSCState().account.profile?.securityMethod
+        return { success: true, walletKey: 'wallet-key' } as never
+      })
 
-      const tree = await pressDeviceAuth()
+      const tree = await pressDeviceAuth(existingAccount)
 
-      await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('wallet-key'))
-      expect(mockSetAccount).not.toHaveBeenCalled()
-      expect(mockSetAccountSecurityMethod).toHaveBeenCalledWith(AccountSecurityMethod.DeviceAuth)
+      await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('wallet-key', undefined))
+      expect(mockSetupDeviceSecurity).toHaveBeenCalledWith({
+        accountId: existingProfile.accountId,
+        issuer: existingProfile.issuer,
+      })
+      expect(methodDuringSetup).toBe(AccountSecurityMethod.PinNoDeviceAuth)
+      expect(getBCSCState().account.profile).toEqual({
+        ...existingProfile,
+        securityMethod: AccountSecurityMethod.DeviceAuth,
+      })
       expect(tree.getByText(AccountSecurityMethod.DeviceAuth)).toBeTruthy()
-      expect(mockSetupDeviceSecurity.mock.invocationCallOrder[0]).toBeLessThan(
-        mockSetAccountSecurityMethod.mock.invocationCallOrder[0]
-      )
     })
 
     it('leaves an existing account untouched when device security setup fails', async () => {
-      mockGetAccount.mockResolvedValue(existingAccount as never)
       mockSetupDeviceSecurity.mockResolvedValue({ success: false, walletKey: '' } as never)
 
-      await pressDeviceAuth()
+      await pressDeviceAuth(existingAccount)
 
       await waitFor(() => expect(mockSetupDeviceSecurity).toHaveBeenCalled())
-      expect(mockSetAccount).not.toHaveBeenCalled()
-      expect(mockSetAccountSecurityMethod).not.toHaveBeenCalled()
+      expect(getBCSCState().account.profile).toEqual(existingProfile)
       expect(mockHandleSuccessfulAuth).not.toHaveBeenCalled()
     })
   })

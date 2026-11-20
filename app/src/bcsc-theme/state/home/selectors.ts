@@ -1,24 +1,24 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { isRefreshTokenExpired } from '@/bcsc-theme/state/account/refresh-token'
+import type { BCSCStore } from '@/bcsc-theme/storage'
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
-import { BCState } from '@/store'
 import { selectAccountPhase } from '../account/selectors'
-import { selectVerificationState } from '../verification/selectors'
+import { journeyVerificationState, selectJourney } from '../verification/journey'
 import { getHomeNotice, HomeNotice } from './home-notice'
 
 /** Reads the Home notice rule's inputs from the store and the in-memory account. */
-export const selectHomeNotice = (state: BCState, account: BCSCAccount | null, now: Date): HomeNotice => {
-  const { bcscSecure } = state
-  const { isVerified, isDeviceVerifiedByIas, isCardInactive } = selectVerificationState(state)
+export const selectHomeNotice = (state: BCSCStore, account: BCSCAccount | null, now: Date): HomeNotice => {
+  const journey = selectJourney(state)
+  const { isVerified, isDeviceVerifiedByIas, isCardInactive } = journeyVerificationState(journey)
 
   return getHomeNotice({
     isVerified,
     cardInactive: isCardInactive,
     deviceVerifiedByIas: isDeviceVerifiedByIas,
-    refreshTokenExpired: isRefreshTokenExpired(bcscSecure.refreshToken, now),
-    requestStatus: bcscSecure.verificationRequestStatus,
-    hasVerificationRequest: Boolean(bcscSecure.verificationRequestId),
-    isIdStepCompleted: () => computeSetupStepCompletion(state).id.completed,
+    refreshTokenExpired: isRefreshTokenExpired(journey.refreshToken, now),
+    requestStatus: state.session.verificationRequestStatus,
+    hasVerificationRequest: Boolean(state.verification.request?.backCheckVerificationId),
+    isIdStepCompleted: () => computeSetupStepCompletion(journey).id.completed,
     accountPhase: selectAccountPhase(state, account, now),
   })
 }

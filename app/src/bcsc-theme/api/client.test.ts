@@ -1,5 +1,6 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { loadPersistedJwk, persistJwk } from '@/bcsc-theme/api/jwk-cache'
+import { nativeAccount, seedAccount, seedTokens } from '@/bcsc-theme/storage/testing'
 import { BCSC_API_TIMEOUT_MS, JWK_CACHE_TTL_MS } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
@@ -11,7 +12,7 @@ import { initLanguages } from '@bifold/core'
 import { AxiosError } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { DeviceEventEmitter, Platform } from 'react-native'
-import { getAccount, getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
+import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 
 jest.mock('jwt-decode', () => ({
   jwtDecode: jest.fn(),
@@ -252,21 +253,20 @@ describe('BCSC Client', () => {
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const tokens = { access_token: 'a', refresh_token: 'r' }
       client.tokens = tokens as any
-      ;(getTokenWithDiagnostics as jest.Mock).mockClear()
+      seedTokens({ refreshToken: 'stored-refresh' })
+      const fetchTokens = jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens')
 
       const result = await client.recoverTokens()
 
       expect(result).toBe(tokens)
-      expect(getTokenWithDiagnostics).not.toHaveBeenCalled()
+      expect(fetchTokens).not.toHaveBeenCalled()
     })
 
     it('should rebuild the cache from the stored refresh token when empty', async () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
-        token: { token: 'stored-refresh', type: TokenType.Refresh },
-      })
+      seedTokens({ refreshToken: 'stored-refresh' })
 
       const recoveredTokens = { access_token: 'recovered-access', refresh_token: 'recovered-refresh' }
       const privateFetchTokens = jest
@@ -275,7 +275,6 @@ describe('BCSC Client', () => {
 
       const result = await client.recoverTokens()
 
-      expect(getTokenWithDiagnostics).toHaveBeenCalledWith(TokenType.Refresh)
       expect(privateFetchTokens).toHaveBeenCalledWith('stored-refresh')
       expect(result).toEqual(recoveredTokens)
       expect(client.tokens).toEqual(recoveredTokens)
@@ -285,9 +284,7 @@ describe('BCSC Client', () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
-        token: { token: 'stored-refresh', type: TokenType.Refresh },
-      })
+      seedTokens({ refreshToken: 'stored-refresh' })
 
       const recoveredTokens = { access_token: 'recovered-access', refresh_token: 'recovered-refresh' }
       jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens').mockResolvedValue(recoveredTokens)
@@ -313,9 +310,7 @@ describe('BCSC Client', () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
-        token: { token: 'stored-refresh', type: TokenType.Refresh },
-      })
+      seedTokens({ refreshToken: 'stored-refresh' })
 
       jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens').mockRejectedValue(new Error('Network Error'))
       const emitSpy = jest.spyOn(DeviceEventEmitter, 'emit').mockClear()
@@ -329,25 +324,18 @@ describe('BCSC Client', () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
-        token: null,
-        diagnostic: '-25300 (The specified item could not be found in the keychain.)',
-      })
 
       await expect(client.recoverTokens()).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL,
       })
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('no refresh token in secure storage'))
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('nativeDiagnostic=-25300'))
     })
 
     it('throws without a network call when the stored refresh token is expired (#4654)', async () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
-        token: { token: 'expired-refresh', type: TokenType.Refresh },
-      })
+      seedTokens({ refreshToken: 'expired-refresh' })
       ;(jwtDecode as jest.Mock).mockReturnValue({ exp: 0 })
 
       const fetchTokensSpy = jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens')
@@ -367,22 +355,11 @@ describe('BCSC Client', () => {
     it('maps a native getRefreshTokenRequestBody rejection during fetchTokens', async () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
-      ;(getAccount as jest.Mock).mockResolvedValueOnce({ clientID: 'c', issuer: 'https://issuer' })
+      seedAccount(nativeAccount({ clientID: 'c', issuer: 'https://issuer' }))
       ;(getRefreshTokenRequestBody as jest.Mock).mockRejectedValueOnce(nativeError('E_NO_KEYS_FOUND'))
 
       await expect(client.getTokensForRefreshToken('refresh-token')).rejects.toMatchObject({
         appEvent: AppEventCode.NO_SIGNING_KEYS,
-      })
-    })
-
-    it('maps a native getToken rejection during recoverTokens', async () => {
-      const mockLogger = createMockLogger()
-      const client = new BCSCApiClient('https://example.com', mockLogger as any)
-      client.tokens = undefined
-      ;(getTokenWithDiagnostics as jest.Mock).mockRejectedValueOnce(nativeError('E_KEYSTORE_UNAVAILABLE'))
-
-      await expect(client.recoverTokens()).rejects.toMatchObject({
-        appEvent: AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR,
       })
     })
   })
@@ -569,7 +546,7 @@ describe('BCSC Client', () => {
     const setupBearerClient = (mockLogger: any) => {
       const client = new BCSCApiClient('https://example.com', mockLogger)
       client.tokens = { access_token: 'access-1', refresh_token: 'refresh-1' } as any
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
       ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 })
       return client
     }
@@ -774,7 +751,7 @@ describe('BCSC Client', () => {
     it('returns the cached access token without refreshing when it is still valid', async () => {
       const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
       client.tokens = { access_token: 'cached-access', refresh_token: 'r' } as any
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
       ;(jwtDecode as jest.Mock).mockReturnValue(valid)
       const fetchTokens = jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens')
 
@@ -785,7 +762,7 @@ describe('BCSC Client', () => {
     it('refreshes first when the cached access token is expired', async () => {
       const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
       client.tokens = { access_token: 'stale-access', refresh_token: 'valid-refresh' } as any
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
       ;(jwtDecode as jest.Mock)
         .mockReturnValueOnce(valid) // refresh token
         .mockReturnValueOnce({ exp: 0 }) // access token
@@ -800,7 +777,7 @@ describe('BCSC Client', () => {
     it('refreshes even when the cached access token looks valid with forceRefresh', async () => {
       const client = new BCSCApiClient('https://example.com', createMockLogger() as any)
       client.tokens = { access_token: 'rejected-access', refresh_token: 'valid-refresh' } as any
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
       ;(jwtDecode as jest.Mock).mockReturnValue(valid)
       const fetchTokens = jest
         .spyOn(BCSCApiClient.prototype as any, 'fetchTokens')
@@ -818,7 +795,7 @@ describe('BCSC Client', () => {
 
       const mockTokens = { access_token: 'a', refresh_token: 'r' }
       client.tokensPromise = Promise.resolve(mockTokens as any)
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
 
       const result = await (client as any).ensureValidTokens()
 
@@ -829,8 +806,7 @@ describe('BCSC Client', () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
-      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({ token: null })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
 
       await expect((client as any).ensureValidTokens()).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL,
@@ -841,19 +817,17 @@ describe('BCSC Client', () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
-      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
-        token: { token: 'stored-refresh', type: TokenType.Refresh },
-      })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
+      seedTokens({ refreshToken: 'stored-refresh' })
 
       const recoveredTokens = { access_token: 'recovered-access', refresh_token: 'recovered-refresh' }
-      jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens').mockResolvedValue(recoveredTokens)
+      const fetchTokens = jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens').mockResolvedValue(recoveredTokens)
       // Recovered tokens are freshly fetched, so neither is expired
       ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 })
 
       const result = await (client as any).ensureValidTokens()
 
-      expect(getTokenWithDiagnostics).toHaveBeenCalledWith(TokenType.Refresh)
+      expect(fetchTokens).toHaveBeenCalledWith('stored-refresh')
       expect(result).toEqual(recoveredTokens)
       expect(client.tokens).toEqual(recoveredTokens)
     })
@@ -862,7 +836,7 @@ describe('BCSC Client', () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = { access_token: 'a', refresh_token: 'r' } as any
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
 
       // Both tokens expired
       ;(jwtDecode as jest.Mock).mockReturnValue({ exp: 0 })
@@ -875,7 +849,7 @@ describe('BCSC Client', () => {
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const mockTokens = { access_token: 'a', refresh_token: 'r' }
       client.tokens = mockTokens as any
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
 
       // Both tokens valid (far future)
       ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 })
@@ -891,7 +865,7 @@ describe('BCSC Client', () => {
       const oldTokens = { access_token: 'old-access', refresh_token: 'valid-refresh' }
       const newTokens = { access_token: 'new-access', refresh_token: 'new-refresh' }
       client.tokens = oldTokens as any
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
 
       // First call (refresh_token) -> valid, second call (access_token) -> expired
       ;(jwtDecode as jest.Mock)
@@ -930,7 +904,7 @@ describe('BCSC Client', () => {
       const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = { access_token: 'my-token', refresh_token: 'r' } as any
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
 
       // Token is valid
       ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 })
@@ -1011,7 +985,7 @@ describe('BCSC Client', () => {
     beforeEach(() => {
       // Default: nothing persisted, persistence always "succeeds" — individual tests override.
       jest.mocked(persistJwk).mockReset().mockResolvedValue(undefined)
-      jest.mocked(loadPersistedJwk).mockReset().mockResolvedValue(null)
+      jest.mocked(loadPersistedJwk).mockReset().mockReturnValue(null)
     })
 
     it('should return the first JWK from the JWKS endpoint', async () => {
@@ -1140,7 +1114,7 @@ describe('BCSC Client', () => {
           return Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config))
         }
         const axiosGetSpy = jest.spyOn(client.client, 'get')
-        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+        jest.mocked(loadPersistedJwk).mockReturnValueOnce(mockJwk as any)
 
         const resultPromise = client.fetchJwk()
         // Two backoff delays between three attempts: 500ms, then 1000ms
@@ -1207,7 +1181,7 @@ describe('BCSC Client', () => {
             })
           )
         const axiosGetSpy = jest.spyOn(client.client, 'get')
-        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+        jest.mocked(loadPersistedJwk).mockReturnValueOnce(mockJwk as any)
 
         const resultPromise = client.fetchJwk()
         await jest.advanceTimersByTimeAsync(500)
@@ -1311,7 +1285,7 @@ describe('BCSC Client', () => {
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const clientError = { cause: { response: { status: 400 } } } as any
         const getSpy = jest.spyOn(client, 'get').mockRejectedValue(clientError)
-        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+        jest.mocked(loadPersistedJwk).mockReturnValueOnce(mockJwk as any)
 
         const result = await client.fetchJwk()
 
@@ -1323,7 +1297,7 @@ describe('BCSC Client', () => {
         const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [] } } as any)
-        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+        jest.mocked(loadPersistedJwk).mockReturnValueOnce(mockJwk as any)
 
         const result = await client.fetchJwk()
 
@@ -1371,7 +1345,7 @@ describe('BCSC Client', () => {
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const clientError = { cause: { response: { status: 400 } } } as any
         const getSpy = jest.spyOn(client, 'get').mockRejectedValue(clientError)
-        jest.mocked(loadPersistedJwk).mockResolvedValue(mockJwk as any)
+        jest.mocked(loadPersistedJwk).mockReturnValue(mockJwk as any)
 
         const first = await client.fetchJwk()
         const second = await client.fetchJwk()
@@ -1449,7 +1423,7 @@ describe('BCSC Client', () => {
           .spyOn(client, 'get')
           .mockResolvedValueOnce({ data: { keys: [mockJwk] } } as any)
           .mockRejectedValueOnce(clientError)
-        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+        jest.mocked(loadPersistedJwk).mockReturnValueOnce(mockJwk as any)
 
         await client.fetchJwk()
         nowSpy.mockReturnValue(startTime + JWK_CACHE_TTL_MS)
@@ -1490,7 +1464,7 @@ describe('BCSC Client', () => {
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const networkError = new AxiosError('Network Error', 'ERR_NETWORK')
         const getSpy = jest.spyOn(client, 'get').mockRejectedValue(networkError)
-        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+        jest.mocked(loadPersistedJwk).mockReturnValueOnce(mockJwk as any)
 
         const firstPromise = client.fetchJwk()
         const secondPromise = client.fetchJwk()
@@ -1540,7 +1514,7 @@ describe('BCSC Client', () => {
         authorizationByUrl[String(config.url)] = config.headers?.get?.('Authorization')
         return Promise.resolve({ status: 200, data: 'response', statusText: 'OK', headers: {} as any, config })
       }
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
       // Neither token is near expiry, so ensureValidTokens never starts a refresh of its own —
       // the only refresh is the explicit getTokensForRefreshToken call below.
       ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 })
@@ -1694,7 +1668,7 @@ describe('BCSC Client', () => {
     it('refuses the token refresh a bearer request needs, so neither request is sent', async () => {
       const client = createSkewedClient()
       client.tokens = { access_token: 'expired-access', refresh_token: 'valid-refresh' } as any
-      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      seedAccount(nativeAccount({ issuer: 'iss', clientID: 'cid' }))
       ;(getRefreshTokenRequestBody as jest.Mock).mockResolvedValue('grant_type=refresh_token')
       ;(jwtDecode as jest.Mock).mockImplementation((token: string) => ({
         exp: token === 'expired-access' ? 0 : Math.floor(DEVICE_NOW / 1000) + 3600,

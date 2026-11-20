@@ -1,19 +1,15 @@
 import { RadioListScreen } from '@/bcsc-theme/components/RadioListScreen'
-import { BCState } from '@/store'
-import { DispatchAction, ProofRequestExpirationTime, useStore } from '@bifold/core'
+import { usePreferences } from '@/bcsc-theme/storage/hooks'
+import { ProofRequestExpirationTime } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 export const ProofRequestExpirationScreen: React.FC = () => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
-  const currentExpirationMs = store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
+  const { proofRequestExpirationMs: currentExpirationMs, setProofRequestExpiration } = usePreferences()
 
   const handleExpirationChange = (valueMs: number) => {
-    dispatch({
-      type: DispatchAction.PROOF_REQUEST_EXPIRATION_TIME,
-      payload: [valueMs],
-    })
+    void setProofRequestExpiration(valueMs)
   }
 
   return (

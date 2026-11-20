@@ -1,4 +1,5 @@
 import useAuthorizationApi from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { nativeAccount, seedAccount } from '@/bcsc-theme/storage/testing'
 import { act, renderHook } from '@testing-library/react-native'
 import moment from 'moment'
 import * as BcscCore from 'react-native-bcsc-core'
@@ -18,7 +19,7 @@ const renderAuthApi = (apiClient: ReturnType<typeof buildMockApiClient>) =>
 describe('useAuthorizationApi', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.mocked(BcscCore.getAccount).mockResolvedValue({ clientID: FAKE_CLIENT_ID } as any)
+    seedAccount(nativeAccount({ clientID: FAKE_CLIENT_ID }))
   })
 
   describe('authorizeDevice', () => {

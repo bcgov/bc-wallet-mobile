@@ -2,16 +2,14 @@ import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { readDeviceRegistration } from '@/bcsc-theme/services/device-registration'
+import { getBCSCState, useAccount } from '@/bcsc-theme/storage/hooks'
 import { AppError, isAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts, useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
-import { getAccount } from 'react-native-bcsc-core'
 
 /**
  * Maps AppEventCodes that can be thrown during registration to their
@@ -49,14 +47,13 @@ export const useRegistrationService = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const registrationApi = useRegistrationApi(client, isClientReady)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const [store] = useStore<BCState>()
   const { clearRegistration } = useSecureActions()
   const alerts = useAlerts(navigation)
   /**
-   * Whether app state holds the registration access token, so `ensureRegistered` has nothing to wait for.
+   * Whether the device holds a registration access token, so `ensureRegistered` has nothing to wait for.
    * A hint for screens only: `ensureRegistered` itself asks the stored account.
    */
-  const isRegistered = Boolean(store.bcscSecure.registrationAccessToken)
+  const isRegistered = useAccount((a) => Boolean(a.tokens?.registrationAccessToken))
 
   /** @returns whether a mapped registration alert was shown */
   const emitRegistrationAlert = useCallback(
@@ -152,16 +149,15 @@ export const useRegistrationService = () => {
    * deleted) and `ensureRegistered` registers it again.
    *
    * @returns Promise<void>
-   * @throws AppError `ACCOUNT_NOT_FOUND` when there is no native account to hold the registration
+   * @throws AppError `ACCOUNT_NOT_FOUND` when there is no account to hold the registration
    */
   const cycleRegistration = useCallback(async () => {
-    const account = await getAccount()
-    if (!account) {
-      // The registration is saved on the account record, so there is nothing to cycle without it.
+    if (!getBCSCState().account.profile) {
+      // The registration belongs to the account, so there is nothing to cycle without it.
       throw AppError.fromErrorDefinition(ErrorRegistry.ACCOUNT_NOT_FOUND)
     }
 
-    const registration = await readDeviceRegistration(account)
+    const registration = readDeviceRegistration()
     if (registration) {
       await registrationApi.deleteRegistration(registration.registrationAccessToken, registration.clientId)
     }

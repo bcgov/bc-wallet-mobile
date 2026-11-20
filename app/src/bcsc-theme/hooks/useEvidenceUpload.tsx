@@ -1,10 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataPayload, UploadEvidenceResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { selectJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { clampEvidenceImagesToSides, normalizeEvidenceImageLabel } from '@/bcsc-theme/utils/card-utils'
-import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback } from 'react'
 
 export interface EvidenceUploadItem {
@@ -14,7 +15,6 @@ export interface EvidenceUploadItem {
 
 const useEvidenceUpload = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
   const { evidence } = useApi()
 
   /**
@@ -22,7 +22,7 @@ const useEvidenceUpload = () => {
    * pre-verification photo step. No-ops if no photo is available in the store.
    */
   const uploadSelfiePhoto = useCallback(async () => {
-    const { photoPath, photoMetadata } = store.bcsc
+    const { photoPath, photoMetadata } = getBCSCState().session
     if (!photoPath || !photoMetadata) {
       logger.debug('No selfie photo to upload')
       return
@@ -36,7 +36,7 @@ const useEvidenceUpload = () => {
     const photoBytes = await readFileInChunks(photoPath, logger)
     await evidence.uploadPhotoEvidenceBinary(metadataResponse.upload_uri, photoBytes, 'image')
     logger.info(`Selfie photo uploaded: ${photoBytes.length} bytes`)
-  }, [evidence, logger, store.bcsc])
+  }, [evidence, logger])
 
   /**
    * Processes additional evidence documents (secondary ID for NonPhoto BCSC).
@@ -47,7 +47,7 @@ const useEvidenceUpload = () => {
    * flow (batches with photo + video in a single Promise.all).
    */
   const processAdditionalEvidence = useCallback(async (): Promise<EvidenceUploadItem[]> => {
-    const additionalEvidence = store.bcscSecure.additionalEvidenceData
+    const additionalEvidence = selectJourney(getBCSCState()).additionalEvidenceData
     const evidenceUploads: EvidenceUploadItem[] = []
 
     if (!additionalEvidence || additionalEvidence.length === 0) {
@@ -114,7 +114,7 @@ const useEvidenceUpload = () => {
     }
 
     return evidenceUploads
-  }, [evidence, logger, store.bcscSecure.additionalEvidenceData])
+  }, [evidence, logger])
 
   /**
    * Uploads binary data for a list of evidence items that were previously

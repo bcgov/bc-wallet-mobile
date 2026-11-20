@@ -1,0 +1,670 @@
+{
+  "app": {
+    "backend": "plain",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "installId": {
+          "type": "string"
+        },
+        "appVersion": {
+          "type": "string"
+        },
+        "appBuildNumber": {
+          "type": "string"
+        },
+        "lastSeenAppVersion": {
+          "type": "string"
+        },
+        "lastSeenAppBuildNumber": {
+          "type": "string"
+        },
+        "lastKeyRotationAttemptAt": {
+          "type": "string"
+        },
+        "analyticsOptIn": {
+          "type": "boolean"
+        },
+        "acceptedTermsOfUseVersion": {
+          "type": "string"
+        },
+        "hasSeenOnboardingIntro": {
+          "type": "boolean"
+        },
+        "accountSetupType": {
+          "type": "string",
+          "enum": [
+            "AddAccount",
+            "TransferAccount"
+          ]
+        },
+        "hasDismissedThirdPartyKeyboardAlert": {
+          "type": "boolean"
+        },
+        "hasDismissedDeviceAuthInfo": {
+          "type": "boolean"
+        },
+        "verificationSkipped": {
+          "type": "boolean"
+        },
+        "verificationStarted": {
+          "type": "boolean"
+        },
+        "dismissedBanners": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "dismissedAt": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "dismissedAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "deviceToken": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "appVersion",
+        "appBuildNumber",
+        "analyticsOptIn"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "preferences": {
+    "backend": "plain",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "autoLockTime": {
+          "type": "number"
+        },
+        "developerModeEnabled": {
+          "type": "boolean"
+        },
+        "usePushNotifications": {
+          "type": "boolean"
+        },
+        "userDeniedPushNotifications": {
+          "type": "boolean"
+        },
+        "selectedMediator": {
+          "type": "string"
+        },
+        "availableMediators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reconciledMediatorUrl": {
+          "type": "string"
+        },
+        "proofRequestExpirationMs": {
+          "type": "number"
+        },
+        "walletName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "autoLockTime",
+        "developerModeEnabled",
+        "usePushNotifications",
+        "selectedMediator",
+        "availableMediators",
+        "proofRequestExpirationMs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "developer": {
+    "backend": "plain",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "environment": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "iasAgentInviteUrl": {
+              "type": "string"
+            },
+            "iasPortalUrl": {
+              "type": "string"
+            },
+            "appToAppUrl": {
+              "type": "string"
+            },
+            "iasApiBaseUrl": {
+              "type": "string"
+            },
+            "analyticsAppId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "iasAgentInviteUrl",
+            "iasPortalUrl",
+            "appToAppUrl",
+            "iasApiBaseUrl",
+            "analyticsAppId"
+          ],
+          "additionalProperties": false
+        },
+        "remoteDebugging": {
+          "type": "object",
+          "properties": {
+            "enabledAt": {
+              "type": "string"
+            },
+            "sessionId": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        "enableProxy": {
+          "type": "boolean"
+        },
+        "enableAppToAppPersonFlow": {
+          "type": "boolean"
+        },
+        "enableAttestation": {
+          "type": "boolean"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "contacts": {
+    "backend": "encrypted",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "pinned": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "alternateNames": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "pinned",
+        "alternateNames"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "caches/jwk": {
+    "backend": "plain",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "caches/genesis": {
+    "backend": "plain",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "caches/remoteConfig": {
+    "backend": "plain",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "account/profile": {
+    "backend": "encrypted",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "clientId": {
+          "type": "string"
+        },
+        "issuer": {
+          "type": "string"
+        },
+        "securityMethod": {
+          "type": "string",
+          "enum": [
+            "app_pin_no_device_authn",
+            "app_pin_has_device_authn",
+            "device_authentication"
+          ]
+        },
+        "nickname": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "didPostNicknameToServer": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "accountId",
+        "clientId",
+        "issuer",
+        "securityMethod"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "account/tokens": {
+    "backend": "keychain",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "refreshToken": {
+          "type": "string"
+        },
+        "registrationAccessToken": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "account/credential": {
+    "backend": "encrypted",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "issuer": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "created": {
+          "type": "number"
+        },
+        "bcscEvent": {
+          "type": "string"
+        },
+        "bcscReason": {
+          "type": "string"
+        },
+        "bcscStatusDate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bcscEventDate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "devicesCount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maxDevices": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cardType": {
+          "type": "string"
+        },
+        "accountType": {
+          "type": "string"
+        },
+        "cardExpiry": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "issuer",
+        "subject",
+        "label",
+        "created",
+        "bcscEvent",
+        "bcscReason"
+      ],
+      "additionalProperties": {}
+    }
+  },
+  "account/credentialMetadata": {
+    "backend": "encrypted",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string"
+        },
+        "bcscReason": {
+          "type": "string"
+        },
+        "deviceCount": {
+          "type": "number"
+        },
+        "deviceLimit": {
+          "type": "number"
+        },
+        "cardType": {
+          "type": "string"
+        },
+        "lastUpdated": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "fullName",
+        "bcscReason",
+        "deviceCount",
+        "deviceLimit",
+        "cardType",
+        "lastUpdated"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "account/pinAttempts": {
+    "backend": "plain",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "failedCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "lastAttemptAt": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "failedCount",
+        "lastAttemptAt"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "verification/request": {
+    "backend": "encrypted",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "issuer": {
+          "type": "string"
+        },
+        "clientID": {
+          "type": "string"
+        },
+        "deviceCode": {
+          "type": "string"
+        },
+        "userCode": {
+          "type": "string"
+        },
+        "birthdate": {
+          "type": "number"
+        },
+        "csn": {
+          "type": "string"
+        },
+        "verifiedEmail": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "middleNames": {
+          "type": "string"
+        },
+        "address": {
+          "type": "object",
+          "properties": {
+            "streetAddress": {
+              "type": "string"
+            },
+            "locality": {
+              "type": "string"
+            },
+            "postalCode": {
+              "type": "string"
+            },
+            "country": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "status": {
+          "type": "number"
+        },
+        "method": {
+          "type": "number"
+        },
+        "audience": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "redirectURI": {
+          "type": "string"
+        },
+        "requestedAt": {
+          "type": "number"
+        },
+        "expiry": {
+          "type": "number"
+        },
+        "authorizationExpiry": {
+          "type": "number"
+        },
+        "verificationOptions": {
+          "type": "string"
+        },
+        "verificationURIVideo": {
+          "type": "string"
+        },
+        "backCheckSubmittedDate": {
+          "type": "number"
+        },
+        "backCheckVerificationId": {
+          "type": "string"
+        },
+        "evidenceUploadURI": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    }
+  },
+  "verification/flags": {
+    "backend": "encrypted",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "isEmailVerified": {
+          "type": "boolean"
+        },
+        "userSkippedEmailVerification": {
+          "type": "boolean"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "temporaryEmailId": {
+          "type": "string"
+        },
+        "userSubmittedVerificationVideo": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "verification/evidence": {
+    "backend": "encrypted",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidenceType": {
+            "type": "object",
+            "properties": {
+              "evidence_type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence_type"
+            ],
+            "additionalProperties": {}
+          },
+          "metadata": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": {}
+            }
+          },
+          "documentNumber": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "metadata"
+        ],
+        "additionalProperties": {}
+      }
+    }
+  },
+  "verification/cardProcess": {
+    "backend": "encrypted",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "string",
+      "enum": [
+        "IDIM L3 Remote BCSC Photo Identity Verification",
+        "IDIM L3 Remote BCSC Non-Photo Identity Verification",
+        "IDIM L3 Remote Non-BCSC Identity Verification",
+        "N/A"
+      ]
+    }
+  },
+  "savedServices": {
+    "backend": "encrypted",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "ids"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,7 +1,15 @@
-import { EXPIRED_JWT, UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
+import {
+  nativeAccount,
+  seedAccount,
+  seedBCSCStore,
+  seedBCSCStoreFromBCState,
+  seedTokens,
+  withBCSCStore,
+} from '@/bcsc-theme/storage/testing'
+import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
+import { BCDispatchAction } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
-import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 import * as DeviceInfo from 'react-native-device-info'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
 import { SystemCheckScope } from './useSystemChecks'
@@ -89,12 +97,19 @@ jest.mock('@/services/system-checks/UpdateAppSystemCheck', () => ({
 
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
   UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {
-    runningBuild: unknown
+    lastAppVersion: unknown
+    lastAppBuildNumber: unknown
     updateRegistration: () => Promise<unknown>
     utils: unknown
 
-    constructor(runningBuild: unknown, updateRegistration: () => Promise<unknown>, utils: unknown) {
-      this.runningBuild = runningBuild
+    constructor(
+      lastAppVersion: unknown,
+      lastAppBuildNumber: unknown,
+      updateRegistration: () => Promise<unknown>,
+      utils: unknown
+    ) {
+      this.lastAppVersion = lastAppVersion
+      this.lastAppBuildNumber = lastAppBuildNumber
       this.updateRegistration = updateRegistration
       this.utils = utils
     }
@@ -103,13 +118,13 @@ jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => 
 
 jest.mock('@/services/system-checks/KeyRotationSystemCheck', () => ({
   KeyRotationSystemCheck: class KeyRotationSystemCheck {
-    deferForPendingRegistrationUpdate: () => boolean
+    deferForPendingRegistrationUpdate: boolean
     lastRotationAttemptAt: unknown
     rotate: unknown
     utils: unknown
 
     constructor(
-      deferForPendingRegistrationUpdate: () => boolean,
+      deferForPendingRegistrationUpdate: boolean,
       lastRotationAttemptAt: unknown,
       rotate: unknown,
       utils: unknown
@@ -183,6 +198,7 @@ jest.mock('@/bcsc-theme/components/AppBanner', () => ({
 jest.mock('@/store', () => ({
   BCDispatchAction: {
     SET_INSTALL_ID: 'bcsc/setInstallId',
+    RECORD_APP_LAUNCH_VERSION: 'bcsc/recordAppLaunchVersion',
   },
 }))
 
@@ -193,7 +209,7 @@ describe('useGetSystemChecks', () => {
       serverStatus: null,
       refresh: jest.fn().mockResolvedValue({ serverStatus: null }),
     })
-    mockUseSecureActions.mockReturnValue({ saveRegistration: jest.fn() })
+    mockUseSecureActions.mockReturnValue({ updateTokens: jest.fn() })
     mockUseRegistrationService.mockImplementation(
       jest.requireActual('../services/hooks/useRegistrationService').useRegistrationService
     )
@@ -203,23 +219,25 @@ describe('useGetSystemChecks', () => {
     describe('isReady', () => {
       it('should be ready when all flags ready', () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -248,23 +266,25 @@ describe('useGetSystemChecks', () => {
 
       it('should return the correct system checks for STARTUP scope', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -293,23 +313,25 @@ describe('useGetSystemChecks', () => {
 
       it('should not include UpdateAppSystemCheck for non-BCSC builds', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.bad')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -341,10 +363,12 @@ describe('useGetSystemChecks', () => {
           refresh: jest.fn().mockResolvedValue({ serverStatus: null }),
         })
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -365,10 +389,12 @@ describe('useGetSystemChecks', () => {
         const refresh = jest.fn().mockResolvedValue({ serverStatus: { serverTimestamp: new Date() } })
         mockUseServerStatus.mockReturnValue({ serverStatus: null, refresh })
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -391,10 +417,12 @@ describe('useGetSystemChecks', () => {
         const refresh = jest.fn()
         mockUseServerStatus.mockReturnValue({ serverStatus: { serverTimestamp: new Date() }, refresh })
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -413,10 +441,12 @@ describe('useGetSystemChecks', () => {
         const refresh = jest.fn().mockResolvedValue({ serverStatus: { serverTimestamp: new Date() } })
         mockUseServerStatus.mockReturnValue({ serverStatus: { serverTimestamp: new Date() }, refresh })
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            { stateLoaded: true, developer: { environment: {} }, bcsc: {}, bcscSecure: { isHydrated: true } },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client, isClientReady: Boolean(client) })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -455,23 +485,25 @@ describe('useGetSystemChecks', () => {
     describe('isReady', () => {
       it('should be ready when all flags ready ', () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -489,147 +521,31 @@ describe('useGetSystemChecks', () => {
       })
     })
 
-    describe('sessionKey', () => {
-      const renderWithSecure = (bcscSecure: object) => {
-        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: { analyticsOptIn: true },
-            bcscSecure: { isHydrated: true, ...bcscSecure },
-          },
-          jest.fn(),
-        ])
-        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
-        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
-        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
-        // The hook reads the account and error-alert contexts; neither decides the key
-        jest.spyOn(React, 'useContext').mockReturnValue({})
-
-        return renderHook(() => useCreateSystemChecks())
-      }
-
-      const mainStackKey = (bcscSecure: object) =>
-        renderWithSecure(bcscSecure).result.current[SystemCheckScope.MAIN_STACK].sessionKey
-
-      const expiresAt = new Date('2026-11-26T00:00:00.000Z')
-      const laterExpiresAt = new Date('2026-11-27T00:00:00.000Z')
-      const deviceCodes = { deviceCode: 'device-code', userCode: 'user-code', deviceCodeExpiresAt: expiresAt }
-
-      it('runs the main stack batch once per session, and once more when the user verifies', () => {
-        expect(mainStackKey({ verified: false })).toBe('MAIN_STACK:unverified')
-        expect(mainStackKey({ verified: true })).toBe('MAIN_STACK:verified')
-      })
-
-      it('gives each submitted verification request a batch of its own', () => {
-        const first = mainStackKey({ verified: false, verificationRequestId: 'req-1', ...deviceCodes })
-        // "Verify a different way": a second request under the same device authorization
-        const second = mainStackKey({ verified: false, verificationRequestId: 'req-2', ...deviceCodes })
-
-        expect(first).toBe('MAIN_STACK:unverified:RequestStatus:req-1')
-        expect(second).toBe('MAIN_STACK:unverified:RequestStatus:req-2')
-      })
-
-      it('gives each device authorization awaiting recovery a batch of its own, named by its expiry', () => {
-        const first = mainStackKey({ verified: false, ...deviceCodes })
-        const second = mainStackKey({ verified: false, ...deviceCodes, deviceCodeExpiresAt: laterExpiresAt })
-
-        expect(first).toBe(`MAIN_STACK:unverified:PendingRecovery:${expiresAt.getTime()}`)
-        expect(second).toBe(`MAIN_STACK:unverified:PendingRecovery:${laterExpiresAt.getTime()}`)
-      })
-
-      it('never puts the device or user code in the key', () => {
-        const keys = [
-          mainStackKey({ verified: false, ...deviceCodes }),
-          mainStackKey({ verified: false, verificationRequestId: 'req-1', ...deviceCodes }),
-        ]
-
-        expect(keys.join()).not.toContain('device-code')
-        expect(keys.join()).not.toContain('user-code')
-      })
-
-      it('still keys a device authorization whose expiry was never recorded apart from having nothing to check', () => {
-        expect(mainStackKey({ verified: false, deviceCode: 'device-code', userCode: 'user-code' })).toBe(
-          'MAIN_STACK:unverified:PendingRecovery:'
-        )
-      })
-
-      it('keeps the one verified key whatever request data is still held', () => {
-        expect(mainStackKey({ verified: true, verificationRequestId: 'req-1', ...deviceCodes })).toBe(
-          'MAIN_STACK:verified'
-        )
-      })
-
-      it('leaves the startup and verify scopes to run once per mount', () => {
-        const { result } = renderWithSecure({ verified: false })
-
-        expect(result.current[SystemCheckScope.STARTUP].sessionKey).toBeUndefined()
-        expect(result.current[SystemCheckScope.VERIFY].sessionKey).toBeUndefined()
-      })
-    })
-
-    describe('decidesHomeCard', () => {
-      const renderWithSecure = (bcscSecure: object) => {
-        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: { analyticsOptIn: true },
-            bcscSecure: { isHydrated: true, ...bcscSecure },
-          },
-          jest.fn(),
-        ])
-        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
-        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
-        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
-        jest.spyOn(React, 'useContext').mockReturnValue({})
-
-        return renderHook(() => useCreateSystemChecks()).result.current[SystemCheckScope.MAIN_STACK].decidesHomeCard
-      }
-
-      it('is false for an unverified user with nothing submitted, whose batch is the Terms of Use fetch', () => {
-        expect(renderWithSecure({ verified: false })).toBe(false)
-      })
-
-      it('is true while a verification request can resolve', () => {
-        expect(renderWithSecure({ verified: false, verificationRequestId: 'req-1' })).toBe(true)
-      })
-
-      it('is true while a pending verification can be recovered from its device codes', () => {
-        expect(renderWithSecure({ verified: false, deviceCode: 'device', userCode: 'user' })).toBe(true)
-      })
-
-      it('is false for a verified user, who has no request left to check', () => {
-        expect(renderWithSecure({ verified: true, verificationRequestId: 'req-1' })).toBe(false)
-      })
-    })
-
     describe('getSystemChecks', () => {
       it('should return the correct system checks for MAIN_STACK scope', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+                selectedNickname: 'Test Device',
+              },
+              bcscSecure: {
+                isHydrated: true,
+                verified: true,
+                registrationAccessToken: 'test-registration-token',
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-              selectedNickname: 'Test Device',
-            },
-            bcscSecure: {
-              isHydrated: true,
-              verified: true,
-              refreshToken: UNEXPIRED_JWT,
-              registrationAccessToken: 'test-registration-token',
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -660,27 +576,29 @@ describe('useGetSystemChecks', () => {
 
       it('skips the id-token-backed checks for a verified user whose refresh token has expired (#4654)', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+                selectedNickname: 'Test Device',
+              },
+              bcscSecure: {
+                isHydrated: true,
+                verified: true,
+                refreshToken: EXPIRED_JWT,
+                registrationAccessToken: 'test-registration-token',
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-              selectedNickname: 'Test Device',
-            },
-            bcscSecure: {
-              isHydrated: true,
-              verified: true,
-              refreshToken: EXPIRED_JWT,
-              registrationAccessToken: 'test-registration-token',
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
 
@@ -708,24 +626,26 @@ describe('useGetSystemChecks', () => {
 
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: {
-              environment: {
-                analyticsAppId: 'test-app-id',
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: {
+                environment: {
+                  analyticsAppId: 'test-app-id',
+                },
+              },
+              bcsc: {
+                analyticsOptIn: true,
+              },
+              bcscSecure: {
+                isHydrated: true,
+                verified: false,
               },
             },
-            bcsc: {
-              analyticsOptIn: true,
-            },
-            bcscSecure: {
-              isHydrated: true,
-              verified: false,
-            },
-          },
-          jest.fn(),
-        ])
+            jest.fn(),
+          ])
+        )
 
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
@@ -768,15 +688,17 @@ describe('useGetSystemChecks', () => {
           const updateRegistration = jest.fn()
           jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue(bundleId)
           mockGetBundleId.mockReturnValue(bundleId)
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: { analyticsOptIn: true, ...bcsc },
-              bcscSecure: { isHydrated: true, verified: false, ...bcscSecure },
-            },
-            jest.fn(),
-          ])
+          mockUseStore.mockReturnValue(
+            withBCSCStore([
+              {
+                stateLoaded: true,
+                developer: { environment: { analyticsAppId: 'test-app-id' } },
+                bcsc: { analyticsOptIn: true, ...bcsc },
+                bcscSecure: { isHydrated: true, verified: false, ...bcscSecure },
+              },
+              jest.fn(),
+            ])
+          )
           mockUseServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }])
           mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
           mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -836,11 +758,7 @@ describe('useGetSystemChecks', () => {
         it('skips the registration update and key rotation on a non-BCSC bundle, even with a nickname and token', async () => {
           mockMainStackStore({
             bundleId: 'ca.bc.gov.BCWallet',
-            bcscSecure: {
-              verified: true,
-              refreshToken: UNEXPIRED_JWT,
-              registrationAccessToken: 'test-registration-token',
-            },
+            bcscSecure: { verified: true, registrationAccessToken: 'test-registration-token' },
             bcsc: { selectedNickname: 'Test Device' },
           })
 
@@ -849,39 +767,14 @@ describe('useGetSystemChecks', () => {
 
         it('skips the registration update and key rotation without a registration token, even with a nickname', async () => {
           mockMainStackStore({
-            bcscSecure: { verified: true, refreshToken: UNEXPIRED_JWT },
+            bcscSecure: { verified: true },
             bcsc: { selectedNickname: 'Test Device' },
           })
 
           expect(await getCheckNames()).toEqual(verifiedUserChecksWithoutRegistrationUpdate)
         })
 
-        // The account-change check needs a usable sign-in token, not a finished setup. Token-only devices are
-        // unfinished here because the mocked store holds no credential record (verified is false).
-        describe('the account-change check (EventReasonAlertsSystemCheck)', () => {
-          it('runs for an unfinished device with a usable token, with no other verified-only check', async () => {
-            mockMainStackStore({ bcscSecure: { refreshToken: UNEXPIRED_JWT, registrationAccessToken: 'reg-token' } })
-
-            expect(await getCheckNames()).toEqual(['EventReasonAlertsSystemCheck', 'TermsOfUseSystemCheck'])
-          })
-
-          it('does not run for an unfinished device with no token', async () => {
-            mockMainStackStore()
-
-            expect(await getCheckNames()).not.toContain('EventReasonAlertsSystemCheck')
-          })
-
-          it.each([
-            ['an unfinished device', { verified: false }],
-            ['a finished account', { verified: true }],
-          ])('does not run for %s whose token has expired', async (_name, secure) => {
-            mockMainStackStore({ bcscSecure: { ...secure, refreshToken: EXPIRED_JWT } })
-
-            expect(await getCheckNames()).not.toContain('EventReasonAlertsSystemCheck')
-          })
-        })
-
-        it('passes the nickname to the registration service, suppressing transient alerts', async () => {
+        it('passes the registration token and nickname to the registration service, suppressing transient alerts', async () => {
           const updateRegistration = mockMainStackStore({
             bcscSecure: { verified: true, registrationAccessToken: 'test-registration-token' },
             bcsc: { selectedNickname: 'Test Device' },
@@ -894,8 +787,7 @@ describe('useGetSystemChecks', () => {
           }
           await check.updateRegistration()
 
-          // No token is passed: the service reads the client ID and its token together, from storage
-          expect(updateRegistration).toHaveBeenCalledWith('Test Device', {
+          expect(updateRegistration).toHaveBeenCalledWith('test-registration-token', 'Test Device', {
             suppressTransientAlerts: true,
           })
         })
@@ -918,24 +810,33 @@ describe('useGetSystemChecks', () => {
       } = {}) => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue(bundleId)
         mockGetBundleId.mockReturnValue(bundleId)
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: {
-              analyticsOptIn: true,
-              selectedNickname: 'Test Device',
-              ...bcsc,
-            },
-            bcscSecure: {
-              isHydrated: true,
-              verified: true,
-              registrationAccessToken: 'test-registration-token',
-              ...bcscSecure,
-            },
+        const state = {
+          stateLoaded: true,
+          developer: { environment: { analyticsAppId: 'test-app-id' } },
+          bcsc: { analyticsOptIn: true, selectedNickname: 'Test Device', ...bcsc },
+          bcscSecure: {
+            isHydrated: true,
+            verified: true,
+            registrationAccessToken: 'test-registration-token',
+            ...bcscSecure,
           },
-          dispatch,
-        ])
+        }
+        mockUseStore.mockReturnValue(withBCSCStore([state, dispatch]))
+        // The launch marker is saved to the app slice of the BCSC store; reported to `dispatch` in the old
+        // action's shape so these tests keep asserting on one spy
+        seedBCSCStoreFromBCState(state as never)
+        seedBCSCStore({
+          app: {
+            update: jest.fn(async (patch: Record<string, unknown>) => {
+              if ('lastSeenAppVersion' in patch) {
+                dispatch({
+                  type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
+                  payload: [{ version: patch.lastSeenAppVersion, buildNumber: patch.lastSeenAppBuildNumber }],
+                })
+              }
+            }),
+          },
+        })
         mockUseServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -985,71 +886,130 @@ describe('useGetSystemChecks', () => {
         return systemChecks.find((check) => check.constructor.name === 'KeyRotationSystemCheck') as any
       }
 
-      describe('deferForPendingRegistrationUpdate (registered during this launch)', () => {
-        const getChecks = async () => {
-          const { result } = renderHook(() => useCreateSystemChecks())
-          const checks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
-          return {
-            registration: checks.find((c) => c.constructor.name === 'UpdateDeviceRegistrationSystemCheck') as any,
-            rotation: checks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any,
-          }
+      describe('deferForPendingRegistrationUpdate (the app-version-changed signal)', () => {
+        const currentLaunch = { lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1000' }
+        const previousLaunch = { lastSeenAppVersion: '4.0.0', lastSeenAppBuildNumber: '999' }
+        const recordLaunchAction = {
+          type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
+          payload: [{ version: '4.1.0', buildNumber: '1000' }],
         }
+        const anyRecordLaunchAction = expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
 
-        it('does not defer when the registration update has not run this launch', async () => {
-          mockStoreWith()
-          mockUseRegistrationService.mockReturnValue({ updateRegistration: jest.fn() })
-
-          const { rotation } = await getChecks()
-
-          expect(rotation.deferForPendingRegistrationUpdate()).toBe(false)
+        beforeEach(() => {
+          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
+          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
         })
 
-        it('defers once the registration update has succeeded this launch', async () => {
-          mockStoreWith()
-          mockUseRegistrationService.mockReturnValue({ updateRegistration: jest.fn().mockResolvedValue({}) })
+        // RECORD_APP_LAUNCH_VERSION is the only thing keeping lastSeenApp* current; losing it
+        // would latch rotation off forever. Every test here asserts the dispatch too, not just
+        // the boolean passed to the constructor.
+        it('does NOT dispatch RECORD_APP_LAUNCH_VERSION, and does not defer, when lastSeen already matches this launch', async () => {
+          const dispatch = mockStoreWith({ bcsc: currentLaunch })
 
-          const { registration, rotation } = await getChecks()
-          await registration.updateRegistration()
+          const check = await findKeyRotationCheck()
 
-          expect(rotation.deferForPendingRegistrationUpdate()).toBe(true)
+          expect(check.deferForPendingRegistrationUpdate).toBe(false)
+          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
         })
 
-        // A persistently failing PUT must never turn rotation off
-        it('does not defer when the registration update failed this launch', async () => {
-          mockStoreWith()
-          mockUseRegistrationService.mockReturnValue({
-            updateRegistration: jest.fn().mockRejectedValue(new Error('PUT failed')),
-          })
+        it('DISPATCHES RECORD_APP_LAUNCH_VERSION with the current version/build, and defers, on the first launch of a new version', async () => {
+          const dispatch = mockStoreWith({ bcsc: previousLaunch })
 
-          const { registration, rotation } = await getChecks()
-          await expect(registration.updateRegistration()).rejects.toThrow('PUT failed')
+          const check = await findKeyRotationCheck()
 
-          expect(rotation.deferForPendingRegistrationUpdate()).toBe(false)
+          expect(check.deferForPendingRegistrationUpdate).toBe(true)
+          expect(dispatch).toHaveBeenCalledWith(recordLaunchAction)
         })
 
-        // No selectedNickname means UpdateDeviceRegistrationSystemCheck is never constructed, so nothing
-        // can ever set the ref and rotation must not be deferred.
-        it('does not defer for a verified user with no selectedNickname', async () => {
-          mockStoreWith({ bcsc: { selectedNickname: undefined } })
+        // Population 1: no selectedNickname means UpdateDeviceRegistrationSystemCheck is never
+        // constructed, so reading its signal directly (the old, buggy approach) would defer
+        // rotation forever. The per-launch marker must not be fooled by this.
+        it('does not defer, and needs no RECORD_APP_LAUNCH_VERSION dispatch, for a verified user with no selectedNickname (population 1)', async () => {
+          const dispatch = mockStoreWith({ bcsc: { ...currentLaunch, selectedNickname: undefined } })
 
-          const { registration, rotation } = await getChecks()
+          const { result } = renderHook(() => useCreateSystemChecks())
+          const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          const names = systemChecks.map((check) => check.constructor.name)
+          const check = systemChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
 
-          expect(registration).toBeUndefined()
-          expect(rotation.deferForPendingRegistrationUpdate()).toBe(false)
+          expect(names).not.toContain('UpdateDeviceRegistrationSystemCheck')
+          expect(names).toContain('KeyRotationSystemCheck')
+          expect(check.deferForPendingRegistrationUpdate).toBe(false)
+          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
         })
 
-        // The answer is read when the check runs, so a registration that finishes after the checks were
-        // built still defers rotation.
-        it('reads the registration outcome when the check runs, not when it is built', async () => {
-          mockStoreWith()
-          mockUseRegistrationService.mockReturnValue({ updateRegistration: jest.fn().mockResolvedValue({}) })
+        // Population 2: appVersion is stuck (its owning PUT keeps failing), but lastSeenApp* is
+        // stamped independent of that success, so rotation must still not defer here.
+        it('does not defer, and needs no RECORD_APP_LAUNCH_VERSION dispatch, even though appVersion is permanently stale from a persistently-failing PUT (population 2)', async () => {
+          // appVersion is stuck on the OLD version (the registration PUT that would advance it via
+          // UPDATE_APP_VERSION keeps failing) but the per-launch marker IS current.
+          const dispatch = mockStoreWith({ bcsc: { ...currentLaunch, appVersion: '3.9.0', appBuildNumber: '1' } })
 
-          const { registration, rotation } = await getChecks()
-          expect(rotation.deferForPendingRegistrationUpdate()).toBe(false)
+          const check = await findKeyRotationCheck()
 
-          await registration.updateRegistration()
+          expect(check.deferForPendingRegistrationUpdate).toBe(false)
+          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
+        })
 
-          expect(rotation.deferForPendingRegistrationUpdate()).toBe(true)
+        // Same population 2 setup, but lastSeen itself is stale — the dispatch must still fire.
+        it('DISPATCHES RECORD_APP_LAUNCH_VERSION even with a stale appVersion from a persistently-failing PUT, when lastSeen itself is stale', async () => {
+          const dispatch = mockStoreWith({ bcsc: { ...previousLaunch, appVersion: '3.9.0', appBuildNumber: '1' } })
+
+          const check = await findKeyRotationCheck()
+
+          expect(check.deferForPendingRegistrationUpdate).toBe(true)
+          expect(dispatch).toHaveBeenCalledWith(recordLaunchAction)
+        })
+
+        // findKeyRotationCheck does its own renderHook per call, which would mask the regression
+        // this guards against — a single hook instance must be kept alive across the store update.
+        it('keeps deferring after a later store rebuild reflects the just-dispatched marker (regression guard)', async () => {
+          const dispatch = mockStoreWith({ bcsc: previousLaunch })
+
+          const { result, rerender } = renderHook(() => useCreateSystemChecks())
+          const firstChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          const firstCheck = firstChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
+
+          expect(firstCheck.deferForPendingRegistrationUpdate).toBe(true)
+          expect(dispatch).toHaveBeenCalledWith(recordLaunchAction)
+
+          // Simulate the reducer having applied the dispatched marker: lastSeen now matches.
+          mockStoreWith({ bcsc: currentLaunch, dispatch })
+          rerender(undefined)
+
+          const secondChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          const secondCheck = secondChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
+
+          expect(secondCheck.deferForPendingRegistrationUpdate).toBe(true)
+        })
+
+        it('dispatches RECORD_APP_LAUNCH_VERSION at most once per mount, even across repeated and post-update batch builds', async () => {
+          const dispatch = mockStoreWith({ bcsc: previousLaunch })
+
+          const { result, rerender } = renderHook(() => useCreateSystemChecks())
+          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+
+          mockStoreWith({ bcsc: currentLaunch, dispatch })
+          rerender(undefined)
+          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+
+          const recordCalls = dispatch.mock.calls.filter(
+            ([action]) => action.type === BCDispatchAction.RECORD_APP_LAUNCH_VERSION
+          )
+          expect(recordCalls).toEqual([[recordLaunchAction]])
+        })
+
+        it('does not dispatch RECORD_APP_LAUNCH_VERSION merely from mounting the hook, only once getSystemChecks is awaited', async () => {
+          const dispatch = mockStoreWith({ bcsc: previousLaunch })
+
+          const { result } = renderHook(() => useCreateSystemChecks())
+
+          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
+
+          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+
+          expect(dispatch).toHaveBeenCalledWith(anyRecordLaunchAction)
         })
       })
 
@@ -1065,98 +1025,52 @@ describe('useGetSystemChecks', () => {
       // above to just record its constructor args) — this drives the captured `rotate` closure
       // directly, the way the real class's onFail would.
       describe('rotate (the closure passed to KeyRotationSystemCheck)', () => {
-        const mockSaveRegistration = jest.fn()
-        const issuer = 'https://idsit.gov.bc.ca/device/'
-        const storedAccount = { clientID: 'client-abc', issuer } as any
+        const mockUpdateTokens = jest.fn()
 
         beforeEach(() => {
-          mockUseSecureActions.mockReturnValue({ saveRegistration: mockSaveRegistration })
+          mockUseSecureActions.mockReturnValue({ updateTokens: mockUpdateTokens })
           mockRotateSigningKey.mockResolvedValue({ status: 'rotated', confirmed: true })
         })
 
-        it('prefers a freshly-read native registration token over the render-time store value', async () => {
+        // The closure reads the store when it runs, not at render: UpdateDeviceRegistrationSystemCheck's onFail
+        // may have rotated the token in between
+        it('prefers a freshly-read registration token over the render-time value', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue({
-            id: 'tok-1',
-            type: TokenType.Registration,
-            token: 'native-registration-token',
-            created: 0,
-          })
-          jest.mocked(getAccount).mockResolvedValue(storedAccount)
 
           const check = await findKeyRotationCheck()
-          await check.rotate()
-
-          expect(getToken).toHaveBeenCalledWith(TokenType.Registration)
-          expect(mockRotateSigningKey).toHaveBeenCalledWith(
-            expect.anything(),
-            { clientId: 'client-abc', issuer, registrationAccessToken: 'native-registration-token' },
-            expect.anything()
-          )
-        })
-
-        it('falls back to the store registration token when the native read comes back empty', async () => {
-          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue(null)
-          jest.mocked(getAccount).mockResolvedValue(storedAccount)
-
-          const check = await findKeyRotationCheck()
+          seedAccount(nativeAccount({ clientID: 'client-abc' }))
+          seedTokens({ registrationAccessToken: 'fresh-registration-token' })
           await check.rotate()
 
           expect(mockRotateSigningKey).toHaveBeenCalledWith(
             expect.anything(),
-            { clientId: 'client-abc', issuer, registrationAccessToken: 'store-registration-token' },
+            'client-abc',
+            'fresh-registration-token',
             expect.anything()
           )
         })
 
-        // Both native reads reject (not resolve null) on a missing account or an unavailable
-        // keychain; the closure must degrade to the store fallback instead of throwing.
-        it('falls back to the store registration token when the native token read rejects', async () => {
+        it('falls back to the render-time registration token when the store no longer has one', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockRejectedValue(new Error('E_ACCOUNT_NOT_FOUND'))
-          jest.mocked(getAccount).mockResolvedValue(storedAccount)
 
           const check = await findKeyRotationCheck()
+          seedAccount(nativeAccount({ clientID: 'client-abc' }))
+          seedTokens({ registrationAccessToken: undefined })
           await check.rotate()
 
           expect(mockRotateSigningKey).toHaveBeenCalledWith(
             expect.anything(),
-            { clientId: 'client-abc', issuer, registrationAccessToken: 'store-registration-token' },
+            'client-abc',
+            'store-registration-token',
             expect.anything()
           )
-        })
-
-        it('returns a failed, unconfirmed result instead of throwing when the native account read rejects', async () => {
-          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue(null)
-          jest.mocked(getAccount).mockRejectedValue(new Error('E_ACCOUNT_NOT_FOUND'))
-
-          const check = await findKeyRotationCheck()
-          const result = await check.rotate()
-
-          expect(result).toEqual({ status: 'failed', confirmed: false })
-          expect(mockRotateSigningKey).not.toHaveBeenCalled()
         })
 
         it('skips rotateSigningKey and returns a failed, unconfirmed result when the client ID is missing', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue(null)
-          jest.mocked(getAccount).mockResolvedValue(null)
 
           const check = await findKeyRotationCheck()
-          const result = await check.rotate()
-
-          expect(result).toEqual({ status: 'failed', confirmed: false })
-          expect(mockRotateSigningKey).not.toHaveBeenCalled()
-        })
-
-        it('does the same for an account that has no registration, whatever token app state holds', async () => {
-          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue(null)
-          jest.mocked(getAccount).mockResolvedValue({ issuer } as any)
-
-          const check = await findKeyRotationCheck()
+          seedAccount(null)
           const result = await check.rotate()
 
           expect(result).toEqual({ status: 'failed', confirmed: false })
@@ -1165,13 +1079,6 @@ describe('useGetSystemChecks', () => {
 
         it('syncs the rotated registration token into the store when rotateSigningKey returns one', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue({
-            id: 'tok-1',
-            type: TokenType.Registration,
-            token: 'native-registration-token',
-            created: 0,
-          })
-          jest.mocked(getAccount).mockResolvedValue(storedAccount)
           mockRotateSigningKey.mockResolvedValue({
             status: 'rotated',
             confirmed: true,
@@ -1179,31 +1086,23 @@ describe('useGetSystemChecks', () => {
           })
 
           const check = await findKeyRotationCheck()
+          seedAccount(nativeAccount({ clientID: 'client-abc' }))
+          seedTokens({ registrationAccessToken: 'fresh-registration-token' })
           await check.rotate()
 
-          // Saved with the client ID and issuer it belongs to, never as a token on its own
-          expect(mockSaveRegistration).toHaveBeenCalledWith({
-            clientId: 'client-abc',
-            issuer,
-            registrationAccessToken: 'rotated-registration-token',
-          })
+          expect(mockUpdateTokens).toHaveBeenCalledWith({ registrationAccessToken: 'rotated-registration-token' })
         })
 
         it('does not touch the store when rotateSigningKey returns no rotated token', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
-          jest.mocked(getToken).mockResolvedValue({
-            id: 'tok-1',
-            type: TokenType.Registration,
-            token: 'native-registration-token',
-            created: 0,
-          })
-          jest.mocked(getAccount).mockResolvedValue(storedAccount)
           mockRotateSigningKey.mockResolvedValue({ status: 'rotated', confirmed: true })
 
           const check = await findKeyRotationCheck()
+          seedAccount(nativeAccount({ clientID: 'client-abc' }))
+          seedTokens({ registrationAccessToken: 'fresh-registration-token' })
           await check.rotate()
 
-          expect(mockSaveRegistration).not.toHaveBeenCalled()
+          expect(mockUpdateTokens).not.toHaveBeenCalled()
         })
       })
     })
@@ -1211,15 +1110,17 @@ describe('useGetSystemChecks', () => {
     describe('VerificationRequestStatusSystemCheck', () => {
       const mockStoreWith = (bcscSecureOverrides: Record<string, unknown>) => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.bad')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: { analyticsOptIn: true },
-            bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
-          },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: { analyticsOptIn: true },
+              bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
+            },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -1331,15 +1232,17 @@ describe('useGetSystemChecks', () => {
     describe('PendingVerificationRecoverySystemCheck', () => {
       const mockStoreWith = (bcscSecureOverrides: Record<string, unknown>) => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.bad')
-        mockUseStore.mockReturnValue([
-          {
-            stateLoaded: true,
-            developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: { analyticsOptIn: true },
-            bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
-          },
-          jest.fn(),
-        ])
+        mockUseStore.mockReturnValue(
+          withBCSCStore([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: { analyticsOptIn: true },
+              bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
+            },
+            jest.fn(),
+          ])
+        )
         mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
         mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
@@ -1423,15 +1326,17 @@ describe('useGetSystemChecks', () => {
 
   describe('VERIFY scope', () => {
     const mockHydratedStore = () => {
-      mockUseStore.mockReturnValue([
-        {
-          stateLoaded: true,
-          developer: { environment: { analyticsAppId: 'test-app-id' } },
-          bcsc: { analyticsOptIn: true },
-          bcscSecure: { isHydrated: true },
-        },
-        jest.fn(),
-      ])
+      mockUseStore.mockReturnValue(
+        withBCSCStore([
+          {
+            stateLoaded: true,
+            developer: { environment: { analyticsAppId: 'test-app-id' } },
+            bcsc: { analyticsOptIn: true },
+            bcscSecure: { isHydrated: true },
+          },
+          jest.fn(),
+        ])
+      )
       mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
       mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
       mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })

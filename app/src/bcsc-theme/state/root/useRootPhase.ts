@@ -1,6 +1,4 @@
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
-import { useMemo } from 'react'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { RootPhase } from './root-phase'
 import { RootPhaseRoutingFacts, selectRootPhase } from './selectors'
 
@@ -14,11 +12,5 @@ export const useRootPhase = ({
   appReady,
   awaitingStatusForResume,
   showVerifyStack,
-}: RootPhaseRoutingFacts): RootPhase => {
-  const [store] = useStore<BCState>()
-
-  return useMemo(
-    () => selectRootPhase(store, { appReady, awaitingStatusForResume, showVerifyStack }),
-    [store, appReady, awaitingStatusForResume, showVerifyStack]
-  )
-}
+}: RootPhaseRoutingFacts): RootPhase =>
+  useBCSCStore((state) => selectRootPhase(state, { appReady, awaitingStatusForResume, showVerifyStack }))

@@ -1,8 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCMainStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
-import { BCSCState, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useCallback } from 'react'
@@ -20,7 +19,6 @@ type DeviceInvalidatedProps = StackScreenProps<BCSCMainStackParams, BCSCModals.D
 
 export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.ReactElement => {
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
   const invalidationReason = route.params?.invalidationReason
   const factoryReset = useFactoryReset()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -36,27 +34,15 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
   /**
    * Handles the factory reset operation.
    */
+  // Every reason resets to a new install. A cancelled card used to keep the nickname, but it lived on the
+  // account profile the reset removes; the next verification names the account again.
   const handleFactoryReset = useCallback(async () => {
-    const factoryResetParams: Partial<Record<BCSCReason, Partial<BCSCState>>> = {
-      // Can add more cases here for different BCSCReason types in the future
-      [BCSCReason.Cancel]: {
-        selectedNickname: store.bcsc.selectedNickname,
-      },
-      [BCSCReason.CanceledByAgent]: {
-        selectedNickname: store.bcsc.selectedNickname,
-      },
-      [BCSCReason.CanceledByUser]: {}, // Empty for a 'new install state'
-      [BCSCReason.CanceledByAdditionalCard]: {},
-      [BCSCReason.CanceledByCardTypeChange]: {},
-      [BCSCReason.CanceledDueToInactivity]: {},
-    }
-
-    const result = await factoryReset(factoryResetParams[invalidationReason])
+    const result = await factoryReset()
 
     if (!result.success) {
       logger.error('Factory reset failed', result.error)
     }
-  }, [factoryReset, logger, store.bcsc.selectedNickname, invalidationReason])
+  }, [factoryReset, logger])
 
   const contentTextMap: Partial<Record<BCSCReason, string>> = {
     // Can add more cases here for different BCSCReason types in the future

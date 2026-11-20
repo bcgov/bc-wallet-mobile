@@ -1,13 +1,13 @@
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { useAccount } from '@/bcsc-theme/storage/hooks'
+import { TOKENS, useServices } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import NicknameForm from './components/NicknameForm'
 
 const EditNicknameScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const [, dispatch] = useStore<BCState>()
+  const updateProfile = useAccount((s) => s.updateProfile)
   const registration = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -20,15 +20,12 @@ const EditNicknameScreen: React.FC = () => {
         throw apiError
       }
 
-      // only dispatch if the API is successful
-      dispatch({
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: [trimmedNickname],
-      })
+      // Only once the server has it
+      await updateProfile({ nickname: trimmedNickname })
 
       navigation.goBack()
     },
-    [dispatch, navigation, registration, logger]
+    [updateProfile, navigation, registration, logger]
   )
 
   return <NicknameForm onSubmit={handleSubmit} isRenaming />

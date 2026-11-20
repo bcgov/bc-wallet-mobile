@@ -1,5 +1,5 @@
-import { BCState } from '@/store'
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { useDeveloper } from '@/bcsc-theme/storage/hooks'
+import { ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
@@ -8,9 +8,9 @@ const DIAGONAL = 1.414 // sqrt(2)
 const HALF_DIAGONAL = DIAGONAL / 2
 
 const NonProdOverlay: React.FC = () => {
-  const [store] = useStore<BCState>()
+  const developer = useDeveloper()
   const { Spacing } = useTheme()
-  const envName = store.developer.environment.name.split(' ')[0].toUpperCase()
+  const envName = developer.environment.name.split(' ')[0].toUpperCase()
 
   const isProd = envName.includes('PROD') && !envName.includes('PREPROD')
 

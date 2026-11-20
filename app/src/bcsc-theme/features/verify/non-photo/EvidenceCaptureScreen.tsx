@@ -5,6 +5,7 @@ import { useEvidencePhotoOutput } from '@/bcsc-theme/components/utils/camera-out
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useJourney } from '@/bcsc-theme/state/verification/journey'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { buildBarcodePayload } from '@/bcsc-theme/utils/barcode'
 import { DriversLicenseMetadata } from '@/bcsc-theme/utils/card-barcode-decoder'
@@ -14,10 +15,9 @@ import { isAxiosAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { withAlert } from '@/utils/alert'
-import { ScreenWrapper, testIdWithKey, TOKENS, useServices, useStore } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { ComponentProps, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -65,9 +65,9 @@ enum CaptureState {
 
 const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
-  const [store] = useStore<BCState>()
-  const isNonBCSCFlow = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
-  const isNonPhotoBcscFlow = store.bcscSecure.cardProcess === BCSCCardProcess.BCSCNonPhoto
+  const { cardProcess, additionalEvidenceData, serial } = useJourney()
+  const isNonBCSCFlow = cardProcess === BCSCCardProcess.NonBCSC
+  const isNonPhotoBcscFlow = cardProcess === BCSCCardProcess.BCSCNonPhoto
   const { updateEvidenceMetadata, truncateEvidence, removeEvidenceByType } = useSecureActions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
@@ -175,10 +175,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
         if (isAxiosAppError(error, 400) && error.cause.message === AppEventCode.CARD_EXPIRED) {
           // User scanned an expired BC Services Card.
           // Remove the last evidence entry and navigate back to the EvidenceTypeList screen
-          await truncateEvidence(
-            store.bcscSecure.additionalEvidenceData,
-            store.bcscSecure.additionalEvidenceData.length - 1
-          )
+          await truncateEvidence(additionalEvidenceData, additionalEvidenceData.length - 1)
           navigation.navigate(BCSCScreens.EvidenceTypeList, { cardProcess: BCSCCardProcess.NonBCSC })
           documentExpiredAlert()
           return true
@@ -196,7 +193,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
      * PDF-417's DCN — gives it away, so the entry is dropped before anything is stored and the
      * user is sent back to the list to choose another ID.
      */
-    if (isNonPhotoBcscFlow && isSameCardSerial(bcscSerialRef.current, store.bcscSecure.serial)) {
+    if (isNonPhotoBcscFlow && isSameCardSerial(bcscSerialRef.current, serial)) {
       try {
         // By type rather than by position: the store is updated before it is persisted, so a retry
         // after a failed persist must not drop an earlier, valid ID.

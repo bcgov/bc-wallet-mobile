@@ -1,15 +1,11 @@
 import { BCSCAccount, useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
+import { UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
-import { BCState } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 import { AccountPhaseType } from './account-phase'
 import { useAccountPhase } from './useAccountPhase'
 
-const mockUseStore = jest.fn()
-
-jest.mock('@bifold/core', () => ({
-  useStore: () => mockUseStore(),
-}))
 jest.mock('@/bcsc-theme/contexts/BCSCAccountContext', () => ({ useAccount: jest.fn() }))
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -20,11 +16,11 @@ const daysFromNow = (days: number) => {
   return new Date(date.getTime() + days * DAY_MS + 12 * 60 * 60 * 1000)
 }
 
-const buildStore = (bcscReason = BCSCReason.ApprovedByAgent) =>
-  ({
-    bcscSecure: { verified: true },
+const seedStore = (bcscReason = BCSCReason.ApprovedByAgent) =>
+  seedBCSCStoreFromBCState({
+    bcscSecure: { verified: true, refreshToken: UNEXPIRED_JWT },
     bcsc: { credentialMetadata: { bcscReason } },
-  }) as unknown as BCState
+  })
 
 const buildAccount = (date: Date) => ({ account_expiration_date: date }) as unknown as BCSCAccount
 
@@ -35,7 +31,7 @@ const setAccount = (account: BCSCAccount | null) => {
 describe('useAccountPhase', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockUseStore.mockReturnValue([buildStore(), jest.fn()])
+    seedStore()
   })
 
   it('drops the renewal phase when the account reloads with a renewed expiry date', () => {
@@ -58,7 +54,7 @@ describe('useAccountPhase', () => {
   })
 
   it('is expired when the server expired the card, whatever the date', () => {
-    mockUseStore.mockReturnValue([buildStore(BCSCReason.ExpiredBySystem), jest.fn()])
+    seedStore(BCSCReason.ExpiredBySystem)
     setAccount(buildAccount(daysFromNow(365)))
 
     const { result } = renderHook(() => useAccountPhase())

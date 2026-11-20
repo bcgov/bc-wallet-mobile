@@ -1,9 +1,9 @@
 import { ListButton, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { hitSlop } from '@/constants'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { a11yLabel } from '@utils/accessibility'
 import React from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
@@ -28,10 +28,10 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({
   position,
 }) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store] = useStore<BCState>()
+  const savedServiceIds = useBCSCStore((s) => s.savedServices.ids)
   const { updateSavedService } = useSecureActions()
 
-  const isBookmarked = store.bcscSecure.savedServices.includes(clientRefId)
+  const isBookmarked = savedServiceIds.includes(clientRefId)
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -50,7 +50,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({
   })
 
   const handleToggleBookmark = () => {
-    void updateSavedService(clientRefId, !isBookmarked, { clientName: title })
+    void updateSavedService(clientRefId, !isBookmarked)
   }
 
   return (

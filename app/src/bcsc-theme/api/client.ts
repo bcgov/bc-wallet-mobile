@@ -11,7 +11,8 @@ import { getUserAgentString } from '@utils/user-agent'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import merge from 'lodash.merge'
 import { AppState, DeviceEventEmitter } from 'react-native'
-import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
+import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import { getBCSCState } from '../storage/hooks'
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
@@ -499,18 +500,13 @@ class BCSCApiClient {
       return this.tokens
     }
 
-    const { token: refreshToken, diagnostic } = await getTokenWithDiagnostics(TokenType.Refresh).catch((error) =>
-      throwNativeBcscError(error)
-    )
-    const storedRefreshToken = refreshToken?.token
+    const storedRefreshToken = getBCSCState().account.tokens?.refreshToken
     if (!storedRefreshToken) {
       this.logger.error(
-        `[BCSCApiClient] Token cache empty and no refresh token in secure storage (appState=${AppState.currentState} nativeDiagnostic=${diagnostic ?? 'none'})`
+        `[BCSCApiClient] Token cache empty and no refresh token in secure storage (appState=${AppState.currentState})`
       )
       throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
-        cause: new Error(
-          `Token cache empty and no stored refresh token to recover from (nativeDiagnostic=${diagnostic ?? 'none'})`
-        ),
+        cause: new Error('Token cache empty and no stored refresh token to recover from'),
       })
     }
 
@@ -697,7 +693,7 @@ class BCSCApiClient {
       this.logger.warn('[BCSCApiClient] JWKS endpoint returned no keys')
     }
 
-    const persistedJwk = await loadPersistedJwk(baseURL, this.logger)
+    const persistedJwk = loadPersistedJwk(baseURL, this.logger)
     if (persistedJwk) {
       this.logger.warn('[BCSCApiClient] Live JWKS fetch failed; using persisted last-known-good JWK')
       return { jwk: persistedJwk }

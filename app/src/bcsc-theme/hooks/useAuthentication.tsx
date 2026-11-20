@@ -1,5 +1,6 @@
 import { readPinLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { PinLockoutType } from '@/bcsc-theme/state/pin-lockout/pin-lockout'
+import { getBCSCState, requirePINAccount, selectSecurityMethod } from '@/bcsc-theme/storage/hooks'
 import { mapNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
@@ -10,7 +11,6 @@ import { useTranslation } from 'react-i18next'
 import {
   AccountSecurityMethod,
   canPerformDeviceAuthentication,
-  getAccountSecurityMethod,
   getHideDeviceAuthPrepFlag,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
@@ -76,7 +76,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
       // Unlocks the app using device authentication (biometric or passcode)
       logger.info('[Authentication:runDeviceAuth] Requesting device authentication')
-      const { success, walletKey, reason } = await unlockWithDeviceSecurity(t('BCSC.Security.UnlockPrompt'))
+      const { success, walletKey, reason } = await unlockWithDeviceSecurity(
+        requirePINAccount(),
+        t('BCSC.Security.UnlockPrompt')
+      )
 
       // Native resolves { success: false } only for a deliberate user cancel
       if (!success) {
@@ -138,7 +141,9 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
    */
   const runUnlockApp = useCallback(async () => {
     try {
-      const accountSecurityMethod = await getAccountSecurityMethod()
+      // Throws without an account, as bcsc-core's getAccountSecurityMethod did
+      requirePINAccount()
+      const accountSecurityMethod = selectSecurityMethod(getBCSCState())
       logger.info(`[Authentication:UnlockApp] Unlock requested, security method: ${accountSecurityMethod}`)
 
       // Only attempt device authentication if that is the configured method

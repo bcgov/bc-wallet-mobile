@@ -1,3 +1,4 @@
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as Bifold from '@bifold/core'
 import * as Navigation from '@react-navigation/native'
@@ -28,7 +29,7 @@ const mockReset = Navigation.CommonActions.reset as jest.Mock
 const mockLogger = { error: jest.fn(), debug: jest.fn(), info: jest.fn(), warn: jest.fn() }
 
 const setStore = (bcscSecure: Record<string, unknown>) => {
-  jest.mocked(Bifold).useStore.mockReturnValue([{ bcscSecure }, jest.fn()] as any)
+  seedBCSCStoreFromBCState({ bcscSecure })
 }
 
 describe('useAlreadyVerifiedRecovery', () => {

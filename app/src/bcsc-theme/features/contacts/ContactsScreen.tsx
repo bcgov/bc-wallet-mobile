@@ -1,8 +1,9 @@
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import ContactsIllustration from '@assets/img/contacts.svg'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useConnections } from '@bifold/react-hooks'
 import { DidCommConnectionRecord, DidCommConnectionType, DidCommDidExchangeState } from '@credo-ts/didcomm'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -39,7 +40,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, maxFontSizeMultiplier } = useTheme()
   const { records: connectionRecords } = useConnections()
-  const [store] = useStore()
+  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
   const [query, setQuery] = useState('')
   const { isPinned, togglePin } = usePinnedContacts()
 
@@ -65,12 +66,12 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
     if (!q) {
       return visibleContacts
     }
-    const aliases = store.preferences.alternateContactNames
+    const aliases = alternateContactNames
     return visibleContacts.filter((c) => {
       const name = (aliases?.[c.id] || c.theirLabel || c.alias || '').toLowerCase()
       return name.includes(q)
     })
-  }, [visibleContacts, query, store.preferences.alternateContactNames])
+  }, [visibleContacts, query, alternateContactNames])
 
   const onPressContact = useCallback(
     (connectionId: string) => {

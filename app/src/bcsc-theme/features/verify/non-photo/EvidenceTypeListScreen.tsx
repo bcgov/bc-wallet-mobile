@@ -3,12 +3,13 @@ import { EvidenceMetadataResponseData } from '@/bcsc-theme/api/hooks/useEvidence
 import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { selectJourney, useJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isCardEvidenceComplete } from '@/bcsc-theme/utils/card-utils'
 import { ICON_SIZE } from '@/constants'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel, a11yShortLabel } from '@utils/accessibility'
@@ -58,7 +59,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { evidence } = useApi()
-  const [store] = useStore<BCState>()
+  const { additionalEvidenceData } = useJourney()
   const { addEvidenceType, removeIncompleteEvidence, truncateEvidence } = useSecureActions()
   const [evidenceSections, setEvidenceSections] = useState<SectionData[]>([])
   const { data, load, isLoading } = useDataLoader<EvidenceMetadataResponseData>(() => evidence.getEvidenceMetadata(), {
@@ -87,10 +88,6 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     },
   })
 
-  // Latest store for the focus effect, read through a ref so the callback stays stable and runs once
-  // per focus (rather than re-running every time the evidence list changes).
-  const storeRef = useRef(store)
-  storeRef.current = store
   // How many IDs were already collected when THIS list instance was first shown. Each instance in the
   // stack (the first-ID list and the second-ID list) keeps its own baseline, so backing to one only
   // releases the ID chosen from it.
@@ -100,7 +97,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   useFocusEffect(
     useCallback(() => {
       isNavigatingRef.current = false
-      const evidence = storeRef.current.bcscSecure.additionalEvidenceData
+      // Read when focused, so the callback stays stable and runs once per focus
+      const evidence = selectJourney(getBCSCState()).additionalEvidenceData
       if (baselineCountRef.current === null) {
         // First (forward) visit: the baseline is how many IDs are already fully collected before this
         // list. Count only complete entries — the incomplete/abandoned ones (a card picked but never
@@ -126,7 +124,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
 
   const shouldAddEvidence = useCallback(
     (card: EvidenceType): boolean => {
-      const allEvidence = store.bcscSecure.additionalEvidenceData
+      const allEvidence = additionalEvidenceData
 
       const order = card.collection_order
       // Hide cards that have already been added to evidence — completed or not —
@@ -151,10 +149,10 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
 
       return order === 'SECOND'
     },
-    [store.bcscSecure.additionalEvidenceData]
+    [additionalEvidenceData]
   )
 
-  const firstEvidence = store.bcscSecure.additionalEvidenceData[0]
+  const firstEvidence = additionalEvidenceData[0]
   const nonBcscSecondIdRequiresPhoto =
     cardProcess === BCSCCardProcess.NonBCSC &&
     isCardEvidenceComplete(firstEvidence) &&
@@ -220,7 +218,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
    * @returns {[string, string]} An array containing the heading and description text.
    */
   const getEvidenceHeadingAndDescription = useCallback((): [string, string] => {
-    const isFirstEvidenceComplete = isCardEvidenceComplete(store.bcscSecure.additionalEvidenceData[0])
+    const isFirstEvidenceComplete = isCardEvidenceComplete(additionalEvidenceData[0])
     const isNonBCSCCard = cardProcess === BCSCCardProcess.NonBCSC
 
     if (isFirstEvidenceComplete && isNonBCSCCard) {
@@ -245,7 +243,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
 
     // Choose your first ID
     return [t('BCSC.EvidenceTypeList.FirstID'), '']
-  }, [cardProcess, photoFilter, store.bcscSecure.additionalEvidenceData, t])
+  }, [cardProcess, photoFilter, additionalEvidenceData, t])
 
   /**
    * Whether the "Other Options" escape hatch should be shown.
@@ -255,7 +253,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
    * This matches v3 behavior: non-photo BCSC users who don't have a photo ID
    * can choose a non-photo ID instead (but will still need a photo ID afterward).
    */
-  const showOtherOptions = photoFilter === 'photo' && store.bcscSecure.additionalEvidenceData.length === 0
+  const showOtherOptions = photoFilter === 'photo' && additionalEvidenceData.length === 0
 
   const handleSelectEvidenceType = useCallback(
     (item: EvidenceType) => {

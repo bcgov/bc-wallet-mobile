@@ -20,8 +20,9 @@ describe('WalletNameDisplay', () => {
         initialStateOverride={{
           bcsc: {
             selectedNickname: nickname,
-            appBuildHistory: [],
-            hasAccount: false,
+            appVersion: '',
+            appBuildNumber: '',
+            hasAccount: true,
             analyticsOptIn: false,
           },
         }}

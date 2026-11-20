@@ -1,18 +1,13 @@
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
 import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
+import { getBCSCState, requirePINAccount, useSecurityMethod } from '@/bcsc-theme/storage/hooks'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
-import { useCallback, useEffect, useState } from 'react'
+import { TOKENS, useServices } from '@bifold/core'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  AccountSecurityMethod,
-  getAccountSecurityMethod,
-  setAccountSecurityMethod,
-  setupDeviceSecurity,
-} from 'react-native-bcsc-core'
+import { AccountSecurityMethod, setupDeviceSecurity } from 'react-native-bcsc-core'
 
 export interface ChangeSecurityContentProps {
   onDeviceAuthSuccess: () => void
@@ -28,48 +23,21 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert } = useErrorAlert()
-  const [store, dispatch] = useStore<BCState>()
-  // Secure state already knows the method, so the current-method marker shows on the first render.
-  const [currentMethod, setCurrentMethod] = useState<AccountSecurityMethod | null>(
-    store.bcscSecure.securityMethod ?? null
-  )
+  const securityMethod = useSecurityMethod()
+  const currentMethod = securityMethod ?? null
   const walletService = useWalletService()
-
-  // The PIN screen can finish a switch after the user came back here, so the marker follows secure state
-  useEffect(() => {
-    if (store.bcscSecure.securityMethod) {
-      setCurrentMethod(store.bcscSecure.securityMethod)
-    }
-  }, [store.bcscSecure.securityMethod])
-
-  useEffect(() => {
-    const loadCurrentMethod = async () => {
-      try {
-        const method = await getAccountSecurityMethod()
-        setCurrentMethod(method)
-      } catch (err) {
-        const appError = toAppError(err, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
-        logger.error(`Error loading security method: ${appError.technicalMessage ?? appError.message}`)
-        emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
-      }
-    }
-
-    void loadCurrentMethod()
-  }, [logger, t, emitAlert])
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
       // In settings context, account already exists, so setupDeviceSecurity should work
-      const { success, walletKey } = await setupDeviceSecurity()
+      const { success, walletKey } = await setupDeviceSecurity(requirePINAccount())
       if (!success) {
         logger.error('Device security setup failed')
         emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
         return
       }
 
-      await setAccountSecurityMethod(AccountSecurityMethod.DeviceAuth)
-      setCurrentMethod(AccountSecurityMethod.DeviceAuth)
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD, payload: [AccountSecurityMethod.DeviceAuth] })
+      await getBCSCState().account.updateProfile({ securityMethod: AccountSecurityMethod.DeviceAuth })
       logger.info('Successfully switched to device authentication')
 
       await walletService.rotateWalletKey(walletKey)
@@ -80,7 +48,7 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
       logger.error(`Error setting account security method: ${appError.technicalMessage ?? appError.message}`)
       emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
     }
-  }, [logger, walletService, onDeviceAuthSuccess, emitAlert, t, dispatch])
+  }, [logger, walletService, onDeviceAuthSuccess, emitAlert, t])
 
   return (
     <SecurityMethodSelector

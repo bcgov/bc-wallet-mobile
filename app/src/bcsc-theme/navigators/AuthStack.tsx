@@ -1,6 +1,6 @@
-import { BCState } from '@/store'
+import { useApp } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -50,10 +50,10 @@ const AuthStack = (): React.ReactElement => {
   const theme = useTheme()
   const Stack = createStackNavigator<BCSCAuthStackParams>()
   const defaultStackOptions = useDefaultStackOptions(theme)
-  const [store] = useStore<BCState>()
+  const app = useApp()
   // Returning users see the one-time welcome/intro before unlocking; once seen, AuthStack opens
   // straight on the unlock (account landing) screen.
-  const showIntro = !store.bcsc.hasSeenOnboardingIntro
+  const showIntro = !app.hasSeenOnboardingIntro
   useBCSCStack(BCSCStacks.Auth)
 
   return (
