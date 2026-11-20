@@ -50,7 +50,6 @@ describe('useVerificationMethodModel', () => {
       cardType: BCSCCardType.ComboCard,
       selectedNickname: 'Bob',
       bookmarks: [],
-      bannerMessages: [],
       analyticsOptIn: false,
       videoPath: '/path/to/video.mp4',
       photoPath: '/path/to/photo.jpg',

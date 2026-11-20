@@ -158,7 +158,7 @@ describe('MainStack', () => {
     mockOverlayUp.mockReturnValue(false)
     jest.mocked(Bifold.useTour).mockReturnValue({ currentStep: undefined } as any)
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
-    jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: { bannerMessages: [] } }, jest.fn()] as any)
+    jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: {} }, jest.fn()] as any)
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
     jest.mocked(PairingModule.usePairingService).mockReturnValue(makePairingService() as any)
     jest.mocked(PairingModule.pairingPayloadToServiceLoginParams).mockReturnValue({ pairingCode: 'code' } as any)

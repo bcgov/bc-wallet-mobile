@@ -153,9 +153,8 @@ export const TestIds = {
       viewportSuffix: 'Viewport',
       statusSuffix: 'Status',
     },
-    /** Title-derived row ids. `SectionButton` strips whitespace from the title; `CardButton` does not. */
+    /** Title-derived row ids; `CardButton` does not strip whitespace from the title. */
     cardButtonPrefix: 'CardButton-',
-    sectionButtonPrefix: 'SectionButton-',
   },
 
   /**
@@ -594,14 +593,9 @@ export const TestIds = {
       /** The strip under the bar in the home-indicator area, sized from the inset by `TabStack`. */
       bottomInset: 'TabBarBottomInset',
     },
-    /** Home tab. `logInFromComputer` renders TWICE (a card and a SectionButton, different branches)
-     *  and is the pairing entry point, so its key lives under `main.pairing`. Saved-service rows are
-     *  NAME-DERIVED from the service title minus whitespace, same shape as the services catalogue. */
+    /** Home tab. `logInFromComputer` is the pairing entry point, so its key lives under `main.pairing`. */
     home: {
-      whereToUse: 'WhereToUse',
       pairingCodeCard: 'PairingCodeCard',
-      savedServiceOpenPrefix: 'OpenService-',
-      savedServiceRemovePrefix: 'RemoveService-',
     },
     /** Service-notice detail, opened by the "Service notice" banner shown while IAS reports a status
      *  message. That banner is a `warning` `AppBanner`, sharing its ids with the device-limit banner, so

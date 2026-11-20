@@ -4,11 +4,11 @@ import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { toDecodeAppError } from '@bcsc-theme/utils/native-error-map'
 import { AbstractBifoldLogger } from '@bifold/core'
-import notifee from '@notifee/react-native'
+import notifee, { AndroidImportance } from '@notifee/react-native'
 import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
 import { DeviceEventEmitter, Platform } from 'react-native'
-import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
+import { decodeLoginChallenge, JWK } from 'react-native-bcsc-core'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { isVerificationRequestReviewed } from '../../utils/id-token'
 import { PairingService } from '../pairing'
@@ -21,6 +21,11 @@ import {
   FcmService,
   StatusNotification,
 } from './services/fcm-service'
+
+// Notification channel settings can't change after creation. Keep this id so existing installs keep
+// the channel (and any changes the user made to it).
+const FOREGROUND_CHANNEL_ID = 'bcsc_foreground_notifications'
+const FOREGROUND_CHANNEL_NAME = 'BCSC Notifications'
 
 /**
  * ViewModel for handling Firebase Cloud Messaging events.
@@ -270,22 +275,35 @@ export class FcmViewModel {
    * does either since `messaging_ios_foreground_presentation_options` is empty (that config is
    * all-or-nothing, so leaving it on would also surface mediator notifications).
    *
-   * iOS goes through notifee because it carries its own per-notification presentation options and so
-   * is unaffected by the empty messaging config; a plain UNNotificationRequest would be suppressed
-   * by it.
+   * Both platforms use notifee: on iOS its presentation options bypass the empty messaging config, and
+   * on Android its channels are silent by default, so the channel sets the sound explicitly.
    */
   private async showForegroundNotification(title: string, body: string): Promise<void> {
     this.logger.info(`[FcmViewModel] Showing local notification: title="${title}", body="${body}"`)
     try {
-      if (Platform.OS === 'ios') {
-        await notifee.displayNotification({
-          title,
-          body,
-          ios: { sound: 'default', foregroundPresentationOptions: { banner: true, list: true, sound: true } },
+      if (Platform.OS === 'android') {
+        await notifee.createChannel({
+          id: FOREGROUND_CHANNEL_ID,
+          name: FOREGROUND_CHANNEL_NAME,
+          description: 'Notifications displayed while app is in foreground',
+          importance: AndroidImportance.HIGH,
+          sound: 'default',
+          vibration: false,
+          lights: false,
         })
-      } else {
-        await showLocalNotification(title, body)
       }
+      await notifee.displayNotification({
+        title,
+        body,
+        ios: { sound: 'default', foregroundPresentationOptions: { banner: true, list: true, sound: true } },
+        android: {
+          channelId: FOREGROUND_CHANNEL_ID,
+          smallIcon: 'ic_notification',
+          importance: AndroidImportance.HIGH,
+          showTimestamp: true,
+          pressAction: { id: 'default' },
+        },
+      })
       this.logger.info(`[FcmViewModel] Local notification shown successfully`)
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)

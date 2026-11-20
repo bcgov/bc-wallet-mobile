@@ -51,6 +51,9 @@ const mockAgent = () =>
 const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), trace: jest.fn() }
 const attestationMonitor = { start: jest.fn(), stop: jest.fn() }
 const ocaBundleResolver = { checkForUpdates: jest.fn().mockResolvedValue(undefined) }
+// shutdownAgent's third argument: the warm-up drain, handed over only while a warm-up is tracked
+const warmCacheDrain = expect.any(Function)
+const noWarmCacheDrain = undefined
 
 describe('useAgentSetupViewModel', () => {
   beforeEach(() => {
@@ -206,7 +209,7 @@ describe('useAgentSetupViewModel', () => {
     })
 
     await waitFor(() => expect(result.current.status).toBe('ready'))
-    expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+    expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
     expect(agentService.buildAgent).toHaveBeenCalledTimes(2)
   })
 
@@ -229,7 +232,7 @@ describe('useAgentSetupViewModel', () => {
     })
 
     await waitFor(() => expect(result.current.status).toBe('error'))
-    expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+    expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
   })
 
   it('shuts down partially-built agent when init step throws', async () => {
@@ -240,7 +243,7 @@ describe('useAgentSetupViewModel', () => {
     const { result } = renderHook(() => useAgentSetupViewModel())
 
     await waitFor(() => expect(result.current.status).toBe('error'))
-    expect(agentService.shutdownAgent).toHaveBeenCalledWith(newAgent, logger)
+    expect(agentService.shutdownAgent).toHaveBeenCalledWith(newAgent, logger, noWarmCacheDrain)
   })
 
   it('shuts down agent built mid-init when didAuthenticate flips false', async () => {
@@ -268,7 +271,7 @@ describe('useAgentSetupViewModel', () => {
     rerender({})
 
     resolveInit()
-    await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(newAgent, logger))
+    await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(newAgent, logger, noWarmCacheDrain))
   })
 
   it('does not double-launch init when setStatus(initializing) re-renders mid-flight', async () => {
@@ -319,7 +322,7 @@ describe('useAgentSetupViewModel', () => {
       })
 
       expect(attestationMonitor.stop).toHaveBeenCalled()
-      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
       expect(agentService.deleteWalletStore).toHaveBeenCalledWith(agent1)
       await waitFor(() => expect(result.current.status).toBe('ready'))
     })
@@ -361,7 +364,7 @@ describe('useAgentSetupViewModel', () => {
       })
 
       expect(deactivate).toHaveBeenCalledWith(agent1)
-      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
     })
 
     it('purges the wallet store with the current secret when no live agent is available', async () => {
@@ -414,7 +417,7 @@ describe('useAgentSetupViewModel', () => {
         await result.current.resetWallet().catch(() => undefined)
       })
 
-      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
       // finally block clears state and retryCount triggers re-init
       await waitFor(() => expect(result.current.status).toBe('ready'))
     })
@@ -432,7 +435,7 @@ describe('useAgentSetupViewModel', () => {
         await result.current.teardownAgent()
       })
 
-      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
       expect(agentService.deleteWalletStore).toHaveBeenCalledWith(agent1)
       expect(result.current.agent).toBeNull()
       expect(result.current.status).toBe('idle')
@@ -496,7 +499,7 @@ describe('useAgentSetupViewModel', () => {
 
       expect(attestationMonitor.stop).toHaveBeenCalledTimes(2)
       expect(credentialProvisioningMonitor.stop).toHaveBeenCalledTimes(2)
-      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
 
       const stopOrder = lastCallOrder(attestationMonitor.stop)
       const provisioningStopOrder = lastCallOrder(credentialProvisioningMonitor.stop)
@@ -576,8 +579,8 @@ describe('useAgentSetupViewModel', () => {
 
     unmount()
 
-    // stopAgent drains the cache warm-up before shutting down, so the call lands a tick later
-    await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger))
+    // The close is queued synchronously on unmount, so the next sign-in's open lands behind it
+    expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger, warmCacheDrain)
   })
 
   it('does not call shutdown on unmount when no agent was ever built', async () => {
@@ -593,6 +596,8 @@ describe('useAgentSetupViewModel', () => {
 
   describe('warmCache cancellation', () => {
     const signalPassedToWarmCache = () => jest.mocked(agentService.warmCache).mock.calls[0][5] as AbortSignal
+    const drainPassedToShutdown = () =>
+      jest.mocked(agentService.shutdownAgent).mock.calls[0][2] as () => Promise<unknown>
 
     it('passes a live abort signal to warmCache and leaves it alone once the agent is ready', async () => {
       const { result } = renderHook(() => useAgentSetupViewModel())
@@ -629,7 +634,7 @@ describe('useAgentSetupViewModel', () => {
       expect(agentService.shutdownAgent).toHaveBeenCalled()
     })
 
-    it('waits for the in-flight warm-up to settle before shutting the agent down', async () => {
+    it('queues the close straight away and hands it a drain that waits for the in-flight warm-up', async () => {
       let settleWarmCache!: () => void
       jest.mocked(agentService.warmCache).mockReturnValue(
         new Promise<void>((resolve) => {
@@ -642,21 +647,30 @@ describe('useAgentSetupViewModel', () => {
       const { result, unmount } = renderHook(() => useAgentSetupViewModel())
       await waitFor(() => expect(result.current.status).toBe('ready'))
 
-      unmount()
-      await act(async () => {})
+      // Fake timers keep the drain's 5s cap from outliving the test
+      jest.useFakeTimers()
+      try {
+        unmount()
 
-      // The signal is aborted, but the wallet stays open while the lookup is still in flight
-      expect(signalPassedToWarmCache().aborted).toBe(true)
-      expect(agentService.shutdownAgent).not.toHaveBeenCalled()
+        // The signal is aborted and the close is already in line, with nothing awaited
+        expect(signalPassedToWarmCache().aborted).toBe(true)
+        expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger, warmCacheDrain)
 
-      await act(async () => {
+        // The drain it carries keeps the wallet open while the lookup is still in flight
+        const drained = jest.fn()
+        const drain = drainPassedToShutdown()().then(drained)
+        await jest.advanceTimersByTimeAsync(4999)
+        expect(drained).not.toHaveBeenCalled()
+
         settleWarmCache()
-      })
-
-      await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger))
+        await drain
+        expect(drained).toHaveBeenCalled()
+      } finally {
+        jest.useRealTimers()
+      }
     })
 
-    it('shuts the agent down anyway when the warm-up never settles', async () => {
+    it('lets the close go ahead after 5s when the warm-up never settles', async () => {
       jest.mocked(agentService.warmCache).mockReturnValue(new Promise<void>(() => {}))
       const builtAgent = mockAgent()
       jest.mocked(agentService.buildAgent).mockReturnValue(builtAgent)
@@ -667,14 +681,44 @@ describe('useAgentSetupViewModel', () => {
       jest.useFakeTimers()
       try {
         unmount()
-        await act(async () => {
-          await jest.advanceTimersByTimeAsync(5000)
-        })
+        const drained = jest.fn()
+        void drainPassedToShutdown()().then(drained)
 
-        expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger)
+        await jest.advanceTimersByTimeAsync(4999)
+        expect(drained).not.toHaveBeenCalled()
+
+        await jest.advanceTimersByTimeAsync(1)
+        expect(drained).toHaveBeenCalled()
       } finally {
         jest.useRealTimers()
       }
+    })
+
+    it('queues the old close before a rebuild opens the wallet when re-enabled mid-drain', async () => {
+      // Regression test: the close used to be queued only once the warm-up had drained
+      // (up to 5s), so a quick disable → enable let the rebuilt agent's open into the
+      // wallet queue first and two handles ended up open on the same Askar wallet.
+      jest.mocked(agentService.warmCache).mockReturnValue(new Promise<void>(() => {}))
+      const agent1 = mockAgent()
+      const agent2 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValueOnce(agent1).mockReturnValueOnce(agent2)
+
+      const { result, rerender } = renderHook(
+        ({ enabled }: { enabled: boolean }) => useAgentSetupViewModel({ enabled }),
+        {
+          initialProps: { enabled: true },
+        }
+      )
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      rerender({ enabled: false })
+      rerender({ enabled: true })
+      await waitFor(() => expect(agentService.initializeAgent).toHaveBeenCalledWith(agent2))
+
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
+      const closeQueued = jest.mocked(agentService.shutdownAgent).mock.invocationCallOrder[0]
+      const reopenQueued = jest.mocked(agentService.initializeAgent).mock.invocationCallOrder[1]
+      expect(closeQueued).toBeLessThan(reopenQueued)
     })
 
     it('aborts the warm-up when the agent is cancelled before it is ready', async () => {
@@ -694,7 +738,7 @@ describe('useAgentSetupViewModel', () => {
       unmount()
       finishPickup()
 
-      await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger))
+      await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger, noWarmCacheDrain))
       expect(agentService.warmCache).not.toHaveBeenCalled()
     })
 
@@ -716,7 +760,7 @@ describe('useAgentSetupViewModel', () => {
       unmount()
       finishLinkSecret()
 
-      await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger))
+      await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger, warmCacheDrain))
       expect(signalPassedToWarmCache().aborted).toBe(true)
     })
 
