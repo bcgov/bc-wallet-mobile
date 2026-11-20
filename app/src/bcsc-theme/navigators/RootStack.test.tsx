@@ -305,7 +305,11 @@ describe('BCSCRootStack', () => {
   })
 
   describe('verification resume routing', () => {
-    type VerificationFlags = { verificationSkipped?: boolean; verificationStarted?: boolean }
+    type VerificationFlags = {
+      verificationSkipped?: boolean
+      verificationStarted?: boolean
+      credentialMetadata?: { bcscReason: string }
+    }
     // The prompt hasn't been answered yet (just onboarded)
     const UNANSWERED: VerificationFlags = {}
     const SKIPPED: VerificationFlags = { verificationSkipped: true, verificationStarted: false }
@@ -315,7 +319,7 @@ describe('BCSCRootStack', () => {
 
     const authedUnverified = (
       flags: VerificationFlags,
-      facts: { inVerifyFlow?: boolean; credentialDeactivated?: boolean } = {}
+      facts: { inVerifyFlow?: boolean; credentialDeactivated?: boolean; refreshToken?: string } = {}
     ) =>
       mockStore({
         bcsc: { hasAccount: true, ...flags },
@@ -389,6 +393,30 @@ describe('BCSCRootStack', () => {
       // An expired or cancelled card is renewed from Home, not resumed
       expect(toJSON()).toBe('MainStack')
       expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('leaves a token-only device the saved details say expired on MainStack even when verification was started', () => {
+      const mockDispatch = jest.fn()
+      const expired = { ...CHOSE_TO_VERIFY, credentialMetadata: { bcscReason: 'Expired by System' } }
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue([authedUnverified(expired, { refreshToken: 'token' }), mockDispatch] as any)
+
+      const { toJSON } = render(<BCSCRootStack />)
+
+      expect(toJSON()).toBe('MainStack')
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    // Details saved before a reset (older versions never cleared them) describe a registration that is gone
+    it('resumes a started verification with no record and no token, whatever the saved details say', () => {
+      const mockDispatch = jest.fn()
+      const leftover = { ...CHOSE_TO_VERIFY, credentialMetadata: { bcscReason: 'Expired by System' } }
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(leftover), mockDispatch] as any)
+
+      render(<BCSCRootStack />)
+
+      expect(mockDispatch).toHaveBeenCalledWith({ type: 'bcsc/updateSecureInVerifyFlow', payload: [true] })
     })
 
     it('only re-enters verification once per session (a later re-render does not re-dispatch)', () => {

@@ -7,6 +7,7 @@ const EXPIRES_AT = new Date('2026-10-22T00:00:00.000Z')
 const facts = (overrides: Partial<HomeNoticeFacts> = {}): HomeNoticeFacts => ({
   isVerified: true,
   needsVerification: false,
+  cardInactive: false,
   deviceVerifiedByIas: false,
   refreshTokenExpired: false,
   requestStatus: undefined,
@@ -146,6 +147,59 @@ describe('getHomeNotice', () => {
         HomeNoticeType.BCSCCancelledReview,
       ],
     ])('%s', (_name, input, expected) => {
+      expect(getHomeNotice(input).type).toBe(expected)
+    })
+  })
+
+  // An inactive, unfinished device never gets Finish; the rows fall through to the usual order.
+  // "An approved request, ID step incomplete" loses its Finish and shows nothing; the flow is not known to produce it.
+  describe('an unverified device with an inactive card', () => {
+    const inactive = (overrides: Partial<HomeNoticeFacts> = {}) =>
+      unverified({ cardInactive: true, deviceVerifiedByIas: false, ...overrides })
+
+    it.each<[string, HomeNoticeFacts, HomeNoticeType]>([
+      [
+        'a cancelled review',
+        inactive({ requestStatus: VerificationRequestStatus.CANCELLED }),
+        HomeNoticeType.BCSCCancelledReview,
+      ],
+      [
+        'a pending review',
+        inactive({ requestStatus: VerificationRequestStatus.PENDING }),
+        HomeNoticeType.BCSCPendingReview,
+      ],
+      [
+        'no request, ID step complete',
+        inactive({ isIdStepCompleted: () => true }),
+        HomeNoticeType.BCSCContinueVerification,
+      ],
+      ['no request, ID step incomplete', inactive(), HomeNoticeType.BCSCStartVerification],
+      [
+        'a request ID and the ID step complete',
+        inactive({ hasVerificationRequest: true, isIdStepCompleted: () => true }),
+        HomeNoticeType.BCSCContinueVerification,
+      ],
+      ['a request ID and the ID step incomplete', inactive({ hasVerificationRequest: true }), HomeNoticeType.None],
+      [
+        'an approved request, ID step complete',
+        inactive({
+          requestStatus: VerificationRequestStatus.VERIFIED,
+          hasVerificationRequest: true,
+          isIdStepCompleted: () => true,
+        }),
+        HomeNoticeType.BCSCContinueVerification,
+      ],
+      [
+        'an approved request, ID step incomplete',
+        inactive({ requestStatus: VerificationRequestStatus.VERIFIED, hasVerificationRequest: true }),
+        HomeNoticeType.None,
+      ],
+      [
+        'tokens IAS issued',
+        inactive({ deviceVerifiedByIas: true, hasVerificationRequest: false }),
+        HomeNoticeType.BCSCStartVerification,
+      ],
+    ])('with %s', (_name, input, expected) => {
       expect(getHomeNotice(input).type).toBe(expected)
     })
   })

@@ -233,9 +233,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const refreshTokenExpired = isRefreshTokenExpired(store.bcscSecure.refreshToken, new Date())
     const { deviceCode, userCode } = store.bcscSecure
 
-    // DeviceCount and EventReasonAlerts need a verified user's cached id token; hydration never
-    // fetches one when the stored refresh token is expired, so they'd misfire on that path (#4654).
-    const shouldRunIdTokenChecks = isVerified && !refreshTokenExpired
+    // EventReasonAlerts needs the cached id token of any device with a usable refresh token, verified or
+    // not; hydration never fetches one when the stored refresh token is expired, so it'd misfire (#4654).
+    const shouldRunIdTokenChecks = !!store.bcscSecure.refreshToken && !refreshTokenExpired
     // `!!` (not `Boolean()`) keeps TS narrowing in the branches; the `else if` below keeps the two exclusive.
     const shouldCheckVerificationRequest = !isVerified && !!verificationRequestId
     const shouldRecoverPendingVerification = !isVerified && !!deviceCode && !!userCode

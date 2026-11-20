@@ -190,21 +190,11 @@ describe('reducer', () => {
       expect(initialState.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
     })
 
-    it.each([true, false])('UPDATE_SECURE_IN_VERIFY_FLOW writes %s and clears deactivation', (inVerifyFlow) => {
+    it.each([true, false])('UPDATE_SECURE_IN_VERIFY_FLOW writes %s and leaves deactivation alone', (inVerifyFlow) => {
       const state = withFacts({ credentialDeactivated: true, inVerifyFlow: !inVerifyFlow })
       const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW, payload: [inVerifyFlow] })
 
-      expect(result.bcscSecure).toMatchObject({ inVerifyFlow, credentialDeactivated: false })
-    })
-
-    it.each([true, false])('UPDATE_SECURE_CREDENTIAL_DEACTIVATED writes %s and leaves the flow', (deactivated) => {
-      const state = withFacts({ credentialDeactivated: !deactivated, inVerifyFlow: true })
-      const result = reducer(state, {
-        type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED,
-        payload: [deactivated],
-      })
-
-      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: deactivated, inVerifyFlow: false })
+      expect(result.bcscSecure).toMatchObject({ inVerifyFlow, credentialDeactivated: true })
     })
 
     it('UPDATE_SECURE_VERIFIED clears both', () => {

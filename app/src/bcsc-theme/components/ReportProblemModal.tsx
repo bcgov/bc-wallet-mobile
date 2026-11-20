@@ -1,3 +1,4 @@
+import { selectVerificationState } from '@/bcsc-theme/state/verification/selectors'
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
@@ -34,6 +35,7 @@ export interface ReportProblemModalProps {
 export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
+  const { isCardInactive } = selectVerificationState(store)
   const { Spacing, ColorPalette, TextTheme, maxFontSizeMultiplier } = useTheme()
   // Inset works inside this RN Modal because the app's root SafeAreaProvider context crosses the
   // modal boundary; applied as scroll padding so the action button clears the home indicator.
@@ -89,6 +91,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       state_ias_environment: store.developer.environment.name,
       state_verified: store.bcscSecure.verified,
       state_credential_deactivated: store.bcscSecure.credentialDeactivated,
+      state_card_inactive: isCardInactive,
       state_in_verify_flow: store.bcscSecure.inVerifyFlow,
       state_card_process: store.bcscSecure.cardProcess,
       // ...
@@ -112,6 +115,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     store.developer.remoteDebugging.sessionId,
     store.bcscSecure.verified,
     store.bcscSecure.credentialDeactivated,
+    isCardInactive,
     store.bcscSecure.inVerifyFlow,
     store.bcscSecure.cardProcess,
     store.bcsc.installId,
