@@ -13,7 +13,15 @@ const invoke = async (argv: string[], groupsOverride?: GroupSpec[]) => {
 }
 
 // Pinned by hand so un-wiring a command fails the suite instead of silently flipping the expectations below.
-const SHIPPED = new Set(['auth login', 'auth status', 'auth token', 'auth switch', 'auth logout'])
+const SHIPPED = new Set([
+  'auth login',
+  'auth status',
+  'auth token',
+  'auth switch',
+  'auth logout',
+  'verification approve',
+  'verification decline',
+])
 const isShipped = (group: GroupSpec, command: CommandSpec): boolean => SHIPPED.has(`${group.name} ${command.name}`)
 
 describe('shipped commands', () => {
