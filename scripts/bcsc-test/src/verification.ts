@@ -1,4 +1,4 @@
-import { contextHost } from './environment.ts'
+import { contextHost } from './config.ts'
 import { CliError, ExitCode } from './exit-codes.ts'
 import { OUTCOME_UNKNOWN, readJson, sendApiRequest } from './request.ts'
 import type { HandlerContext } from './spec.ts'

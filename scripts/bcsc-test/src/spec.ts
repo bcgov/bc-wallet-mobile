@@ -1,7 +1,10 @@
 export interface Io {
   stdout: (text: string) => void
   stderr: (text: string) => void
+  /** Standard input is a terminal, so prompts can be answered. */
   isTTY: boolean
+  /** Standard output is a terminal, so JSON is pretty-printed. */
+  stdoutIsTTY?: boolean
 }
 
 export type FlagValue = string | boolean | undefined

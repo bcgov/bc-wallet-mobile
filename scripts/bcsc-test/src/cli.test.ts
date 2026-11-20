@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import { run } from './cli.ts'
 import { groups } from './commands.ts'
-import type { GroupSpec, Io } from './spec.ts'
+import type { CommandSpec, GroupSpec, Io } from './spec.ts'
 
 const invoke = async (argv: string[], groupsOverride?: GroupSpec[]) => {
   let stdout = ''
@@ -11,6 +11,25 @@ const invoke = async (argv: string[], groupsOverride?: GroupSpec[]) => {
   const code = await run(argv, { io, env: {}, groups: groupsOverride })
   return { code, stdout, stderr }
 }
+
+// Pinned by hand so un-wiring a command fails the suite instead of silently flipping the expectations below.
+const SHIPPED = new Set([
+  'auth login',
+  'auth status',
+  'auth token',
+  'auth switch',
+  'auth logout',
+  'verification approve',
+  'verification decline',
+])
+const isShipped = (group: GroupSpec, command: CommandSpec): boolean => SHIPPED.has(`${group.name} ${command.name}`)
+
+describe('shipped commands', () => {
+  it('are exactly the commands with a handler', () => {
+    const withHandler = groups.flatMap((g) => g.commands.filter((c) => c.handler).map((c) => `${g.name} ${c.name}`))
+    assert.deepEqual(withHandler.sort(), [...SHIPPED].sort())
+  })
+})
 
 // Positionals that satisfy each command's declared args, so stubs are reached with valid input.
 const sampleArgs = (count: number) => Array.from({ length: count }, () => 'NCNF-ZNTB')
@@ -23,7 +42,7 @@ describe('root help', () => {
       assert.match(stdout, /^USAGE$/m)
       assert.match(stdout, /^CORE COMMANDS$/m)
       for (const group of groups) {
-        const shipped = group.commands.some((c) => c.handler)
+        const shipped = group.commands.some((c) => isShipped(group, c))
         assert.match(stdout, new RegExp(`^  ${group.name}:\\s+${shipped ? group.summary : 'not implemented'}$`, 'm'))
       }
     })
@@ -65,10 +84,14 @@ for (const group of groups) {
         const { code, stdout } = await invoke(argv)
         assert.equal(code, 0)
         assert.match(stdout, /^AVAILABLE COMMANDS$/m)
+        if (group.commands.some((c) => isShipped(group, c))) assert.doesNotMatch(stdout, /^not implemented$/m)
         for (const command of group.commands) {
           assert.match(
             stdout,
-            new RegExp(`^  ${command.name}:\\s+${command.handler ? command.summary : 'not implemented'}$`, 'm')
+            new RegExp(
+              `^  ${command.name}:\\s+${isShipped(group, command) ? command.summary : 'not implemented'}$`,
+              'm'
+            )
           )
         }
       }
@@ -78,14 +101,18 @@ for (const group of groups) {
       it(`${command.name} --help lists usage, flags and a runnable example`, async () => {
         const { code, stdout } = await invoke([group.name, command.name, '--help'])
         assert.equal(code, 0)
-        if (command.handler) assert.match(stdout, new RegExp(`^${command.description.split('\n')[0]}$`, 'm'))
-        else assert.match(stdout, /^not implemented$/m)
+        if (isShipped(group, command)) {
+          assert.match(stdout, new RegExp(`^${command.description.split('\n')[0]}$`, 'm'))
+          assert.doesNotMatch(stdout, /^not implemented$/m)
+        } else {
+          assert.match(stdout, /^not implemented$/m)
+        }
         assert.match(stdout, new RegExp(`^  bcsc-test ${group.name} ${command.name}`, 'm'))
         assert.match(stdout, new RegExp(`^  \\$ .*bcsc-test ${group.name} ${command.name}`, 'm'))
         for (const flag of command.flags) assert.match(stdout, new RegExp(`--${flag.name}\\b`))
       })
 
-      if (!command.handler) {
+      if (!isShipped(group, command)) {
         it(`${command.name} prints "not implemented" and exits 1`, async () => {
           const { code, stdout, stderr } = await invoke([group.name, command.name, ...sampleArgs(command.args.length)])
           assert.equal(code, 1)
