@@ -1,6 +1,6 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import * as walletServiceHooks from '@/bcsc-theme/services/hooks/useWalletService'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { testIdWithKey, useStore } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -63,6 +63,17 @@ const mockSetAccountSecurityMethod = jest.mocked(setAccountSecurityMethod)
 const SecureStateProbe = () => {
   const [store] = useStore<BCState>()
   return <Text>{store.bcscSecure.securityMethod ?? 'unknown'}</Text>
+}
+
+/** Records a switch to PIN in secure state, as the PIN screen does when it finishes. */
+const RecordPINSwitch = () => {
+  const [, dispatch] = useStore<BCState>()
+  const recordSwitch = () =>
+    dispatch({
+      type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD,
+      payload: [AccountSecurityMethod.PinWithDeviceAuth],
+    })
+  return <Text onPress={recordSwitch}>record PIN switch</Text>
 }
 
 describe('ChangeSecurityContent', () => {
@@ -187,6 +198,33 @@ describe('ChangeSecurityContent', () => {
       })
 
       expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentMethod')).toBeTruthy()
+    })
+
+    it('moves the marker to PIN when the switch is recorded with the screen already open', async () => {
+      // Backing out of the PIN screen mid-switch returns here before the switch is recorded
+      mockGetAccountSecurityMethod.mockReturnValue(new Promise<AccountSecurityMethod>(() => {}))
+
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{ bcscSecure: { securityMethod: AccountSecurityMethod.DeviceAuth } } as never}
+        >
+          <BCSCLoadingProvider>
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
+            <RecordPINSwitch />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Settings.AppSecurity.DeviceAuth')).toBeTruthy()
+      })
+
+      fireEvent.press(tree.getByText('record PIN switch'))
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Settings.AppSecurity.PIN')).toBeTruthy()
+      })
+      expect(tree.queryByText('BCSC.Settings.AppSecurity.DeviceAuth')).toBeNull()
     })
 
     it('navigates to ChangePIN screen when PIN option is pressed', async () => {
