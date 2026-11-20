@@ -268,6 +268,7 @@ export type BCSCVerifyStackParams = {
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.VerificationSessionExpired]: undefined
+  [BCSCModals.TermsOfUseUpdated]: undefined
   [BCSCModals.ServiceOutage]: ServiceOutageParams
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
