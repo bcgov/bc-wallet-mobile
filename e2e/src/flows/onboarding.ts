@@ -53,10 +53,8 @@ const PERMISSION_DIALOG_APPEAR_MS = 15_000
  * entirely (permission pre-granted — always so below Android 13, which has no notification runtime
  * permission). Naming the actual state beats a long hunt ending in "not visible".
  *
- * Resolve the dialog before asserting the destination: on Android the app's permission request
- * self-resolves after ~2s (an RN hang workaround in `PushNotificationsHelper`), so it can navigate on
- * while the dialog is still up. Only what the app *recorded* is affected — every branch keying off
- * the permission re-reads the live OS status.
+ * Resolve the dialog before asserting the destination: the app waits for the OS answer, so the
+ * Notifications screen only advances once the dialog is answered.
  */
 export async function answerNotificationPermission(decision: 'allow' | 'deny'): Promise<void> {
   const deadline = Date.now() + Timeouts.SCREEN_TRANSITION
