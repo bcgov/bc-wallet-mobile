@@ -2,9 +2,9 @@ import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import type { BifoldLogger } from '@bifold/core'
-import { getAccount, getToken, NativeAccount, TokenType } from 'react-native-bcsc-core'
+import type { NativeAccount } from 'react-native-bcsc-core'
 // eslint-disable-next-line no-restricted-imports -- the one caller: the registration is saved and cleared here only
-import { clearRegistration, setRegistration } from 'react-native-bcsc-core'
+import { clearRegistration, getAccount, getToken, setRegistration, TokenType } from 'react-native-bcsc-core'
 
 const LOG_TAG = '[DeviceRegistration]'
 
