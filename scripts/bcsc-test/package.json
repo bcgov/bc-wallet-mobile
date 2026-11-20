@@ -1,0 +1,16 @@
+{
+  "name": "bcsc-test",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CLI for the BCSC IAS mobile E2E test API",
+  "type": "module",
+  "bin": {
+    "bcsc-test": "./src/main.ts"
+  },
+  "scripts": {
+    "start": "node src/main.ts",
+    "test": "node --test 'src/**/*.test.ts'",
+    "typecheck": "../../node_modules/.bin/tsc -p .",
+    "install:local": "./install.sh"
+  }
+}
