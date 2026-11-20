@@ -1,6 +1,7 @@
 import { BCAnimatedLoadingIcon } from '@/bcsc-theme/components/BCAnimatedLoadingIcon'
 import { testIdWithKey } from '@bifold/core'
 import { act, render, renderHook } from '@testing-library/react-native'
+import { useState } from 'react'
 import { Animated } from 'react-native'
 import { BCSCLoadingProvider, LoadingScreen, useLoadingScreen } from './BCSCLoadingContext'
 
@@ -82,5 +83,60 @@ describe('BCSCLoadingContext', () => {
     act(() => stopFirst())
     expect(result.current.isLoading).toBe(true)
     expect(result.current.loadingMessage).toBe('Second')
+  })
+
+  it('keeps a shown loader up through the commit its release is batched with, then drops it before paint', () => {
+    // After `await handleSuccessfulAuth()` the release and the root route change land in one commit. The
+    // route change has to render beneath the overlay, so the root cuts instead of sliding from a hidden screen
+    const renders: { phase: string; isLoading: boolean }[] = []
+    let startLoading!: (message?: string) => () => void
+    let setPhase!: (phase: string) => void
+    const Probe = () => {
+      const context = useLoadingScreen()
+      const [phase, setPhaseState] = useState('auth')
+      startLoading = context.startLoading
+      setPhase = setPhaseState
+      renders.push({ phase, isLoading: context.isLoading })
+      return null
+    }
+    render(
+      <BCSCLoadingProvider>
+        <Probe />
+      </BCSCLoadingProvider>
+    )
+    let stop!: () => void
+    act(() => {
+      stop = startLoading()
+    })
+    expect(renders[renders.length - 1]).toEqual({ phase: 'auth', isLoading: true })
+
+    act(() => {
+      stop()
+      setPhase('main')
+    })
+
+    const mainRenders = renders.filter(({ phase }) => phase === 'main')
+    expect(mainRenders[0]).toEqual({ phase: 'main', isLoading: true })
+    expect(mainRenders[mainRenders.length - 1]).toEqual({ phase: 'main', isLoading: false })
+  })
+
+  it('drops a loader released before it was shown without ever showing it', () => {
+    const renders: boolean[] = []
+    let startLoading!: (message?: string) => () => void
+    const Probe = () => {
+      const context = useLoadingScreen()
+      startLoading = context.startLoading
+      renders.push(context.isLoading)
+      return null
+    }
+    render(
+      <BCSCLoadingProvider>
+        <Probe />
+      </BCSCLoadingProvider>
+    )
+
+    act(() => startLoading()())
+
+    expect(renders).not.toContain(true)
   })
 })

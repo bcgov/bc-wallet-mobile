@@ -1,43 +1,43 @@
 import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
-import { ErrorRegistry } from '@/errors'
-import * as environment from '@/utils/environment'
-import { IASEnvironment } from '@/utils/environment'
 import * as Bifold from '@bifold/core'
-import { act, render } from '@testing-library/react-native'
+import { render } from '@testing-library/react-native'
 import React from 'react'
-import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
 import { useFcmService } from '../features/fcm'
-import { toAppError } from '../utils/native-error-map'
+import { RootPhase } from '../state/root/root-phase'
+import { BCSCScreens, BCSCStacks } from '../types/navigators'
+import { IDLE_ROOT_TRANSITION } from './root-transition'
 import BCSCRootStack from './RootStack'
+import { RootStackViewModel } from './useRootStackViewModel'
 
 let mockAccount: { account_expiration_date: Date } | null = null
-const mockIsClientReady = jest.fn()
-const mockIsNavigationReady = jest.fn()
-const mockEmitErrorModal = jest.fn()
+const mockViewModel = jest.fn()
+// Each render's registered screen and screen options: what the real navigator reads to animate a route change
+const mockNavigatorRender = jest.fn()
+// Records every render's props, so a test can check what the main stack is handed
+const mockMainStackProps = jest.fn()
 
 jest.mock('@bifold/core')
-jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({ emitErrorModal: mockEmitErrorModal }),
+jest.mock('./useRootStackViewModel', () => ({
+  useRootStackViewModel: () => mockViewModel(),
 }))
-jest.mock('@/contexts/NavigationContainerContext', () => ({
-  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
-  useNavigationContainer: () => ({ isNavigationReady: mockIsNavigationReady() }),
-}))
-jest.mock('../api/hooks/useInitializeAccountStatus')
-jest.mock('../api/hooks/useThirdPartyKeyboardWarning', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}))
-jest.mock('../hooks/useBCSCApiClient', () => ({
-  useBCSCApiClientState: () => ({ isClientReady: mockIsClientReady() }),
-}))
+// Renders the one registered screen. A navigationKey change remounts it, as the real navigator would.
+jest.mock('@react-navigation/stack', () => {
+  const React = jest.requireActual('react')
+  const Screen = ({ name, navigationKey, component: Component, children }: any) => (
+    <React.Fragment key={`${name}:${navigationKey ?? ''}`}>{Component ? <Component /> : children()}</React.Fragment>
+  )
+  const Navigator = ({ children, screenOptions }: any) => {
+    const [screen] = React.Children.toArray(children)
+    mockNavigatorRender({
+      screen: { name: screen?.props.name, navigationKey: screen?.props.navigationKey },
+      options: screenOptions,
+    })
+    return children
+  }
+  return { createStackNavigator: () => ({ Navigator, Screen }) }
+})
 jest.mock('../features/fcm', () => ({
   useFcmService: jest.fn(),
-  FcmServiceProvider: ({ children }: any) => children,
-}))
-jest.mock('../hooks/useSystemChecks', () => ({
-  SystemCheckScope: { STARTUP: 'STARTUP' },
-  useSystemChecks: jest.fn(),
 }))
 jest.mock('../contexts/BCSCLoadingContext', () => ({
   LoadingScreen: 'LoadingScreen',
@@ -49,11 +49,10 @@ jest.mock('./AuthStack', () => ({
   __esModule: true,
   default: () => 'AuthStack',
 }))
-const mockMainStackRender = jest.fn()
 jest.mock('./MainStack', () => ({
   __esModule: true,
-  default: () => {
-    mockMainStackRender()
+  default: (props: any) => {
+    mockMainStackProps(props)
     return 'MainStack'
   },
 }))
@@ -63,7 +62,7 @@ jest.mock('./OnboardingStack', () => ({
 }))
 // Counts mounts, not renders: a remount is what re-runs VerifyStack's resume-step routing
 const mockVerifyStackMount = jest.fn()
-// Records every render's props, so a test can answer the prompt the way VerifyPromptScreen would
+// Records every render's props, so a test can check what the stack is handed
 const mockVerifyStackProps = jest.fn()
 jest.mock('./VerifyStack', () => {
   const { useEffect } = jest.requireActual('react')
@@ -79,711 +78,255 @@ jest.mock('./VerifyStack', () => {
 jest.mock('../contexts/BCSCActivityContext', () => ({
   BCSCActivityProvider: ({ children }: any) => children,
 }))
-jest.mock('../contexts/BCSCAccountContext', () => ({
-  BCSCAccountProvider: ({ children }: any) => children,
-  useAccount: () => ({ account: mockAccount }),
-}))
+// The session providers above the route: each render's `enabled`, and their mounts (a remount would restart them)
+const mockAgentProviderRender = jest.fn()
+const mockAgentProviderMount = jest.fn()
+jest.mock('../features/agent/BCSCAgentProvider', () => {
+  const { useEffect } = jest.requireActual('react')
+  const BCSCAgentProvider = ({ enabled, children }: any) => {
+    mockAgentProviderRender(enabled)
+    useEffect(() => {
+      mockAgentProviderMount()
+    }, [])
+    return children
+  }
+  return { __esModule: true, default: BCSCAgentProvider }
+})
+const mockAccountProviderRender = jest.fn()
+const mockAccountProviderMount = jest.fn()
+jest.mock('../contexts/BCSCAccountContext', () => {
+  const { useEffect } = jest.requireActual('react')
+  const BCSCAccountProvider = ({ enabled, children }: any) => {
+    mockAccountProviderRender(enabled)
+    useEffect(() => {
+      mockAccountProviderMount()
+    }, [])
+    return children
+  }
+  return { BCSCAccountProvider, useAccount: () => ({ account: mockAccount }) }
+})
+const mockSessionProviderRender = jest.fn()
+const mockSessionProviderMount = jest.fn()
+jest.mock('../contexts/SystemCheckSessionContext', () => {
+  const { useEffect } = jest.requireActual('react')
+  const SystemCheckSessionProvider = ({ enabled, children }: any) => {
+    mockSessionProviderRender(enabled)
+    useEffect(() => {
+      mockSessionProviderMount()
+    }, [])
+    return children
+  }
+  return { SystemCheckSessionProvider }
+})
+const mockIdTokenProviderRender = jest.fn()
 jest.mock('../contexts/BCSCIdTokenContext', () => ({
-  BCSCIdTokenProvider: ({ children }: any) => children,
-}))
-jest.mock('../features/agent/BCSCAgentProvider', () => ({
-  __esModule: true,
-  default: ({ children }: any) => children,
-}))
-
-const mockUseServerStatus = jest.fn()
-jest.mock('../contexts/ServerStatusContext', () => ({
-  useServerStatus: () => mockUseServerStatus(),
+  BCSCIdTokenProvider: ({ children }: any) => {
+    mockIdTokenProviderRender()
+    return children
+  },
 }))
 
-const mockStore = (overrides: Record<string, any> = {}) => ({
-  stateLoaded: true,
-  bcsc: { hasAccount: false },
-  bcscSecure: { verified: false },
-  authentication: { didAuthenticate: false },
+const viewModel = (overrides: Partial<RootStackViewModel> = {}): RootStackViewModel => ({
+  showInvalidEnvironment: false,
+  phase: RootPhase.Main,
+  transition: IDLE_ROOT_TRANSITION,
+  inSession: true,
+  isVerified: true,
+  verifyStackKey: 'verify',
+  showVerifyPrompt: false,
+  onVerifyPromptAnswered: jest.fn(),
   ...overrides,
 })
 
-const mockProcessPendingChallenges = jest.fn()
+// What FcmCardExpirySync reads: the card status and the account phase derive from the store and the account
+const mockStore = (secure: Record<string, any> = {}) => ({
+  stateLoaded: true,
+  bcsc: { hasAccount: true },
+  bcscSecure: { verified: true, ...secure },
+  authentication: { didAuthenticate: true },
+})
+
+const mockLogger = { info: jest.fn() }
 const mockSetCardExpired = jest.fn()
 
-// RootStack asks for the state loader; the real FcmCardExpirySync asks for the logger
-const mockLogger = { info: jest.fn() }
-const mockServices = (loadState: jest.Mock) =>
-  jest
-    .mocked(Bifold.useServices)
-    .mockImplementation(((tokens: string[]) =>
-      tokens.map((token) => (token === Bifold.TOKENS.UTIL_LOGGER ? mockLogger : loadState))) as any)
+type NavigatorRender = { screen: { name: string; navigationKey?: string }; options: Record<string, unknown> }
+const lastNavigatorRender = (): NavigatorRender => mockNavigatorRender.mock.lastCall?.[0]
 
 describe('BCSCRootStack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockAccount = null
-    mockIsClientReady.mockReturnValue(true)
-    mockIsNavigationReady.mockReturnValue(true)
-    mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
-
-    const mockLoadState = jest.fn()
-    mockServices(mockLoadState)
-    jest.mocked(useInitializeAccountStatusModule.useInitializeAccountStatus).mockReturnValue({
-      initializingAccount: false,
-    })
+    mockViewModel.mockReturnValue(viewModel())
+    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), jest.fn()] as any)
+    jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
     jest.mocked(useFcmService).mockReturnValue({
       service: {},
-      viewModel: { processPendingChallenges: mockProcessPendingChallenges, setCardExpired: mockSetCardExpired },
+      viewModel: { setCardExpired: mockSetCardExpired },
     } as any)
   })
 
-  it('renders LoadingScreen when stateLoaded is false', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
+  const renderWith = (overrides: Partial<RootStackViewModel>) => {
+    mockViewModel.mockReturnValue(viewModel(overrides))
+    return render(<BCSCRootStack />)
+  }
 
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
-  })
-
-  describe('invalid environment recovery gate', () => {
-    let isProductionBundleSpy: jest.SpyInstance
-
-    afterEach(() => {
-      isProductionBundleSpy.mockRestore()
-    })
-
-    const renderWith = (storeOverrides: Record<string, any>, isProduction: boolean) => {
-      isProductionBundleSpy = jest.spyOn(environment, 'isProductionBundle').mockReturnValue(isProduction)
-      jest.mocked(Bifold.useStore).mockReturnValue([mockStore(storeOverrides), jest.fn()] as any)
-
-      return render(<BCSCRootStack />)
-    }
-
-    it('renders InvalidEnvironment on a production bundle with a non-production environment and no account', () => {
-      const { toJSON } = renderWith({ developer: { environment: IASEnvironment.SIT } }, true)
-
-      expect(toJSON()).toBe('InvalidEnvironment')
-    })
-
-    it('renders InvalidEnvironment even when the API client is not ready', () => {
-      mockIsClientReady.mockReturnValue(false)
-
-      const { toJSON } = renderWith({ developer: { environment: IASEnvironment.SIT } }, true)
-
-      expect(toJSON()).toBe('InvalidEnvironment')
-    })
-
-    it('does not render InvalidEnvironment on a production bundle with the production environment', () => {
-      const { toJSON } = renderWith({ developer: { environment: IASEnvironment.PROD } }, true)
-
-      expect(toJSON()).toBe('OnboardingStack')
-    })
-
-    it('does not render InvalidEnvironment on a non-production bundle', () => {
-      const { toJSON } = renderWith({ developer: { environment: IASEnvironment.SIT } }, false)
-
-      expect(toJSON()).toBe('OnboardingStack')
-    })
-
-    it('does not render InvalidEnvironment before the state has loaded', () => {
-      const { toJSON } = renderWith({ stateLoaded: false, developer: { environment: IASEnvironment.SIT } }, true)
-
-      expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
-    })
-  })
-
-  it('renders LoadingScreen when initializingAccount is true', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
-    jest.mocked(useInitializeAccountStatusModule.useInitializeAccountStatus).mockReturnValue({
-      initializingAccount: true,
-    })
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
-  })
-
-  it('renders LoadingScreen when isClientReady is false', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
-
-    mockIsClientReady.mockReturnValue(false)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
-  })
-
-  it('renders LoadingScreen when isNavigationReady is false', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
-
-    mockIsNavigationReady.mockReturnValue(false)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
-  })
-
-  it.each<[string, Record<string, any>, string]>([
-    ['OnboardingStack when hasAccount is false', { bcsc: { hasAccount: false } }, 'OnboardingStack'],
-    [
-      'AuthStack when hasAccount is true and didAuthenticate is false',
-      { bcsc: { hasAccount: true }, authentication: { didAuthenticate: false } },
-      'AuthStack',
-    ],
-    [
-      'VerifyStack when authenticated and verification in progress',
-      {
-        bcsc: { hasAccount: true },
-        authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false, inVerifyFlow: true },
-      },
-      'VerifyStack',
-    ],
-    [
-      'MainStack when authenticated and verified',
-      { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true }, bcscSecure: { verified: true } },
-      'MainStack',
-    ],
-    [
-      'VerifyStack when sessionRecoveryRequired is set, overriding the verified→Home routing',
-      {
-        bcsc: { hasAccount: true },
-        authentication: { didAuthenticate: true },
-        // verified:true would normally route to MainStack — recovery must take precedence.
-        // (VerifyStack starts on the SessionRecovery screen when sessionRecoveryRequired is set.)
-        bcscSecure: { verified: true, sessionRecoveryRequired: true },
-      },
-      'VerifyStack',
-    ],
-    [
-      'MainStack when an existing unverified account unlocks',
-      {
-        // The user is returning: the load-time migration stamped verificationSkipped:true and
-        // verificationStarted:false on their already-onboarded state, so the prompt has passed them by.
-        // They start verification from the MainStack instead.
-        bcsc: { hasAccount: true, verificationSkipped: true, verificationStarted: false },
-        authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false },
-      },
-      'MainStack',
-    ],
-  ])('renders %s', (_name, overrides, expectedStack) => {
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(overrides), jest.fn()] as any)
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toBe(expectedStack)
-  })
-
-  it('renders VerifyStack (which opens on the verify prompt) when onboarding completes', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      mockStore({
-        bcsc: { hasAccount: false },
-        authentication: { didAuthenticate: false },
-        bcscSecure: { verified: false },
-      }),
-      mockDispatch,
-    ] as any)
-
-    const { toJSON, rerender } = render(<BCSCRootStack />)
-    expect(toJSON()).toBe('OnboardingStack')
-
-    // Creating the PIN completes onboarding: SUCCESSFUL_AUTH sets both flags at once.
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      mockStore({
-        bcsc: { hasAccount: true },
-        authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false },
-      }),
-      mockDispatch,
-    ] as any)
+  const rerenderWith = (rerender: (ui: React.ReactElement) => void, overrides: Partial<RootStackViewModel>) => {
+    mockViewModel.mockReturnValue(viewModel(overrides))
     rerender(<BCSCRootStack />)
+  }
 
-    expect(toJSON()).toBe('VerifyStack')
-  })
-
-  describe('verification resume routing', () => {
-    type VerificationFlags = { verificationSkipped?: boolean; verificationStarted?: boolean }
-    // The prompt hasn't been answered yet (just onboarded)
-    const UNANSWERED: VerificationFlags = {}
-    const SKIPPED: VerificationFlags = { verificationSkipped: true, verificationStarted: false }
-    const CHOSE_TO_VERIFY: VerificationFlags = { verificationSkipped: false, verificationStarted: true }
-    // Skipped the prompt, then started from Home (the card, a gated tab's prompt, a renewal)
-    const SKIPPED_THEN_STARTED: VerificationFlags = { verificationSkipped: true, verificationStarted: true }
-
-    const authedUnverified = (
-      flags: VerificationFlags,
-      facts: { inVerifyFlow?: boolean; credentialDeactivated?: boolean } = {}
-    ) =>
-      mockStore({
-        bcsc: { hasAccount: true, ...flags },
-        authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false, ...facts },
-      })
-
-    it('shows the verify prompt (VerifyStack) when verificationSkipped is undefined', () => {
-      const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(UNANSWERED), mockDispatch] as any)
-
-      const { toJSON } = render(<BCSCRootStack />)
-
-      expect(toJSON()).toBe('VerifyStack')
-      // "not answered yet" — the prompt records the choice; no resume dispatch here.
-      expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'bcsc/updateSecureInVerifyFlow' }))
-    })
-
-    it('routes a user who skipped and never started verification straight to MainStack', () => {
-      const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(SKIPPED), mockDispatch] as any)
-
-      const { toJSON } = render(<BCSCRootStack />)
-
-      expect(toJSON()).toBe('MainStack')
-      expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'bcsc/updateSecureInVerifyFlow' }))
-    })
-
-    it('re-enters verification on a cold start when it was started and is unfinished', () => {
-      const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
-
-      const { toJSON, rerender } = render(<BCSCRootStack />)
-
-      // The one-shot effect puts the user back in the verify flow so VerifyStack takes over.
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: 'bcsc/updateSecureInVerifyFlow',
-        payload: [true],
-      })
-
-      // Simulate that dispatch landing in the store.
-      jest
-        .mocked(Bifold.useStore)
-        .mockReturnValue([authedUnverified(CHOSE_TO_VERIFY, { inVerifyFlow: true }), mockDispatch] as any)
-      rerender(<BCSCRootStack />)
-
-      expect(toJSON()).toBe('VerifyStack')
-    })
-
-    it('re-enters verification for a user who skipped the prompt but started verification later', () => {
-      const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(SKIPPED_THEN_STARTED), mockDispatch] as any)
-
-      render(<BCSCRootStack />)
-
-      // Started is what counts, not the answer to the prompt (#4691)
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: 'bcsc/updateSecureInVerifyFlow',
-        payload: [true],
-      })
-    })
-
-    it('leaves a deactivated card on MainStack even when verification was started', () => {
-      const mockDispatch = jest.fn()
-      jest
-        .mocked(Bifold.useStore)
-        .mockReturnValue([authedUnverified(CHOSE_TO_VERIFY, { credentialDeactivated: true }), mockDispatch] as any)
-
-      const { toJSON } = render(<BCSCRootStack />)
-
-      // An expired or cancelled card is renewed from Home, not resumed
-      expect(toJSON()).toBe('MainStack')
-      expect(mockDispatch).not.toHaveBeenCalled()
-    })
-
-    it('only re-enters verification once per session (a later re-render does not re-dispatch)', () => {
-      const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
-
-      const { rerender } = render(<BCSCRootStack />)
-      expect(mockDispatch).toHaveBeenCalledTimes(1)
-
-      // useLeaveVerification has taken the user out of the verify flow to show Home for the rest of
-      // the session; re-rendering in that state must not pull the user back into VerifyStack.
-      rerender(<BCSCRootStack />)
-      expect(mockDispatch).toHaveBeenCalledTimes(1)
-    })
-
-    it('holds the loading screen until the IAS status is known for a would-resume user', () => {
-      const mockDispatch = jest.fn()
-      mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: false })
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
-
-      const { toJSON } = render(<BCSCRootStack />)
+  describe('the registered route', () => {
+    it('is the startup loading screen in the loading phase', () => {
+      const { toJSON } = renderWith({ phase: RootPhase.Loading, inSession: false })
 
       expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
-      expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'bcsc/updateSecureInVerifyFlow' }))
+      expect(lastNavigatorRender().screen).toEqual({ name: BCSCScreens.RootLoading, navigationKey: undefined })
     })
 
-    it('falls back to the verify prompt (not the resume step) and does not resume during an outage', () => {
-      const mockDispatch = jest.fn()
-      mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
+    it.each<[RootStackViewModel['phase'], string, string]>([
+      [RootPhase.Onboarding, BCSCStacks.Onboarding, 'OnboardingStack'],
+      [RootPhase.Auth, BCSCStacks.Auth, 'AuthStack'],
+      [RootPhase.Recovery, BCSCStacks.Verify, 'VerifyStack'],
+      [RootPhase.Verify, BCSCStacks.Verify, 'VerifyStack'],
+      [RootPhase.Main, BCSCStacks.Main, 'MainStack'],
+    ])('is the %s phase stack', (phase, name, rendered) => {
+      const { toJSON } = renderWith({ phase })
 
-      const { toJSON } = render(<BCSCRootStack />)
-
-      expect(toJSON()).toBe('VerifyStack')
-      expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'bcsc/updateSecureInVerifyFlow' }))
+      expect(toJSON()).toBe(rendered)
+      expect(lastNavigatorRender().screen.name).toBe(name)
     })
 
-    describe('after the startup resume', () => {
-      const resumeDispatch = { type: 'bcsc/updateSecureInVerifyFlow', payload: [true] }
+    it('opens the verify stack on the prompt when the ViewModel says so, with the answer handed down', () => {
+      const onVerifyPromptAnswered = jest.fn()
 
-      /**
-       * Cold-start harness whose dispatch lands in the mocked store. The render the resume effect
-       * triggers then sees the verify flow together with the evaluated flag, as React batches the two in
-       * the app. `apply` plays a store change made elsewhere, e.g. useLeaveVerification leaving the flow.
-       */
-      const renderColdStart = (initial: Record<string, any>) => {
-        let state = initial
-        const dispatch = jest.fn((action: { type: string; payload?: any[] }) => {
-          if (action.type === 'bcsc/updateSecureInVerifyFlow') {
-            state = { ...state, bcscSecure: { ...state.bcscSecure, inVerifyFlow: action.payload?.[0] } }
-          }
-        })
-        jest.mocked(Bifold.useStore).mockImplementation(() => [state, dispatch] as any)
-        const utils = render(<BCSCRootStack />)
-        const apply = (patch: (current: Record<string, any>) => Record<string, any>) => {
-          state = patch(state)
-          utils.rerender(<BCSCRootStack />)
-        }
-        return { ...utils, dispatch, apply }
-      }
+      renderWith({ phase: RootPhase.Verify, showVerifyPrompt: true, onVerifyPromptAnswered })
 
-      const withInVerifyFlow = (inVerifyFlow: boolean) => (current: Record<string, any>) => ({
-        ...current,
-        bcscSecure: { ...current.bcscSecure, inVerifyFlow },
+      expect(mockVerifyStackProps).toHaveBeenLastCalledWith({ showVerifyPrompt: true, onVerifyPromptAnswered })
+    })
+
+    it('opens the verify stack without the prompt in the recovery phase', () => {
+      renderWith({ phase: RootPhase.Recovery, showVerifyPrompt: true })
+
+      expect(mockVerifyStackProps).toHaveBeenLastCalledWith({})
+    })
+
+    it('registers the verify stack under its navigation key, and afresh when the key changes', () => {
+      const { rerender } = renderWith({ phase: RootPhase.Verify, verifyStackKey: 'verify-outage-fallback' })
+      expect(lastNavigatorRender().screen).toEqual({
+        name: BCSCStacks.Verify,
+        navigationKey: 'verify-outage-fallback',
       })
+      expect(mockVerifyStackMount).toHaveBeenCalledTimes(1)
 
-      it('mounts VerifyStack once on a cold-start resume, never showing Home in between', () => {
-        const { toJSON, dispatch } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
+      rerenderWith(rerender, { phase: RootPhase.Verify, verifyStackKey: 'verify' })
 
-        expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
-        expect(toJSON()).toBe('VerifyStack')
-        expect(mockVerifyStackMount).toHaveBeenCalledTimes(1)
-        expect(mockMainStackRender).not.toHaveBeenCalled()
-      })
+      expect(lastNavigatorRender().screen).toEqual({ name: BCSCStacks.Verify, navigationKey: 'verify' })
+      // A fresh mount is what re-runs VerifyStack's resume-step routing
+      expect(mockVerifyStackMount).toHaveBeenCalledTimes(2)
+    })
 
-      it('returns a resumed user to MainStack when they leave verification', () => {
-        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(toJSON()).toBe('VerifyStack')
+    it('mounts the main stack under the id-token provider once verified, and bare before', () => {
+      const { rerender, toJSON } = renderWith({ phase: RootPhase.Main, isVerified: false })
+      expect(toJSON()).toBe('MainStack')
+      expect(mockIdTokenProviderRender).not.toHaveBeenCalled()
 
-        // Back arrow / "Back to home": useLeaveVerification leaves the flow.
-        apply(withInVerifyFlow(false))
+      rerenderWith(rerender, { phase: RootPhase.Main, isVerified: true })
 
-        expect(toJSON()).toBe('MainStack')
-        // Leaving must not read as a resume still pending, or the user is pulled straight back.
-        expect(dispatch).toHaveBeenCalledTimes(1)
-      })
+      expect(toJSON()).toBe('MainStack')
+      expect(mockIdTokenProviderRender).toHaveBeenCalled()
+    })
 
-      it('returns a first-time verifier who walked back to the prompt and skips to MainStack', () => {
-        const { toJSON, dispatch, apply, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(toJSON()).toBe('VerifyStack')
+    it('tells the main stack whether the root cut to it, so a wait at mount shows at once', () => {
+      const { rerender } = renderWith({ phase: RootPhase.Main, transition: { animationEnabled: false } })
+      expect(mockMainStackProps).toHaveBeenLastCalledWith({ enteredByCut: true })
 
-        // Back from the first step replaced onto the prompt (still in the verify flow). Its Skip answers the
-        // prompt, records the skip and leaves the flow (useLeaveVerification) in one press.
-        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
-        apply((current) => ({
-          ...withInVerifyFlow(false)(current),
-          bcsc: { ...current.bcsc, verificationSkipped: true },
-        }))
+      rerenderWith(rerender, { phase: RootPhase.Main, transition: IDLE_ROOT_TRANSITION })
 
-        expect(toJSON()).toBe('MainStack')
-        // Started stays set, but the resume was already evaluated: nothing pulls them back in this session.
-        rerender(<BCSCRootStack />)
-        expect(toJSON()).toBe('MainStack')
-        expect(dispatch).toHaveBeenCalledTimes(1)
-      })
+      expect(mockMainStackProps).toHaveBeenLastCalledWith({ enteredByCut: false })
+    })
 
-      it('remounts VerifyStack when a restart resets the flow and re-enters verification', () => {
-        const { toJSON, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(mockVerifyStackMount).toHaveBeenCalledTimes(1)
+    it('animates the route the way the ViewModel decided, with the header hidden and the gesture off', () => {
+      renderWith({ phase: RootPhase.Main, transition: { animationEnabled: true, animationTypeForReplace: 'pop' } })
 
-        // useVerificationReset clears the flow, then continueVerificationProcess re-enters it.
-        apply(withInVerifyFlow(false))
-        expect(toJSON()).toBe('MainStack')
-        apply(withInVerifyFlow(true))
-
-        expect(toJSON()).toBe('VerifyStack')
-        // A fresh mount is what re-runs the resume-step routing, landing on the first step.
-        expect(mockVerifyStackMount).toHaveBeenCalledTimes(2)
-      })
-
-      it('lets a user who skipped earlier start from the Home card and leave again', () => {
-        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(SKIPPED))
-        expect(toJSON()).toBe('MainStack')
-        expect(dispatch).not.toHaveBeenCalled()
-
-        // "Start verification" on the Home card: verificationStarted=true and the verify flow together.
-        apply((current) => ({
-          ...withInVerifyFlow(true)(current),
-          bcsc: { ...current.bcsc, verificationStarted: true },
-        }))
-        expect(toJSON()).toBe('VerifyStack')
-
-        apply(withInVerifyFlow(false))
-
-        // In session, leaving lands on Home; only the next cold start or unlock resumes them.
-        expect(toJSON()).toBe('MainStack')
-        expect(dispatch).not.toHaveBeenCalled()
-      })
-
-      it('lets a started user who skips on the outage fallback reach Home and stay there once IAS recovers', () => {
-        mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
-        const { toJSON, dispatch, apply, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(toJSON()).toBe('VerifyStack')
-        expect(mockVerifyStackProps).toHaveBeenLastCalledWith(expect.objectContaining({ showVerifyPrompt: true }))
-
-        // The outage screen's Skip: VerifyPromptScreen answers the prompt, then records the skip. Started
-        // stays set, so the answer alone has to settle the pending resume.
-        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
-        apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
-
-        expect(toJSON()).toBe('MainStack')
-
-        mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
-        rerender(<BCSCRootStack />)
-
-        expect(toJSON()).toBe('MainStack')
-        expect(dispatch).not.toHaveBeenCalled()
-      })
-
-      it('resumes once an outage that blocked the cold-start resume clears', () => {
-        mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
-        const { toJSON, dispatch, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(toJSON()).toBe('VerifyStack')
-        expect(dispatch).not.toHaveBeenCalled()
-
-        mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
-        rerender(<BCSCRootStack />)
-
-        expect(dispatch).toHaveBeenCalledTimes(1)
-        expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
-        expect(toJSON()).toBe('VerifyStack')
-      })
-
-      it('keeps a user who left on MainStack when an outage begins later in the session', () => {
-        const { toJSON, apply, rerender } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        apply(withInVerifyFlow(false))
-        expect(toJSON()).toBe('MainStack')
-
-        // The outage fallback prompt is a cold-start affordance; mid-session the banner covers it.
-        mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
-        rerender(<BCSCRootStack />)
-
-        expect(toJSON()).toBe('MainStack')
-      })
-
-      it('offers the prompt again when the account is removed and onboarding is redone in the same session', () => {
-        // Fresh install: onboarding, then the prompt once the PIN is created (SUCCESSFUL_AUTH)
-        const { toJSON, dispatch, apply } = renderColdStart(mockStore())
-        expect(toJSON()).toBe('OnboardingStack')
-        apply((current) => ({ ...current, bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }))
-        expect(toJSON()).toBe('VerifyStack')
-        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
-
-        // Skip, then start verification from the Home card
-        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
-        apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
-        expect(toJSON()).toBe('MainStack')
-        apply((current) => ({
-          ...withInVerifyFlow(true)(current),
-          bcsc: { ...current.bcsc, verificationStarted: true },
-        }))
-        expect(toJSON()).toBe('VerifyStack')
-        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(false)
-
-        // Remove account (useFactoryReset): CLEAR_BCSC, CLEAR_SECURE_STATE and DID_AUTHENTICATE false, with
-        // RootStack still mounted
-        apply(() => mockStore())
-        expect(toJSON()).toBe('OnboardingStack')
-
-        // Onboarding again: the prompt is due like on a fresh install, and no resume is pending
-        apply((current) => ({ ...current, bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }))
-        expect(toJSON()).toBe('VerifyStack')
-        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
-        expect(dispatch).not.toHaveBeenCalled()
-      })
-
-      /**
-       * The inactivity timeout's logout(): CLEAR_SECURE_STATE puts the secure state back to its initial
-       * values (the memory-only verify flow with it), then DID_AUTHENTICATE false. The unlock hydrates the
-       * facts from the credential (neither set for an unverified user) before SUCCESSFUL_AUTH.
-       */
-      const lock = (current: Record<string, any>) => ({
-        ...current,
-        bcscSecure: { verified: false },
-        authentication: { didAuthenticate: false },
-      })
-      const unlock = (current: Record<string, any>) => ({
-        ...current,
-        bcscSecure: { ...current.bcscSecure, isHydrated: true },
-        authentication: { didAuthenticate: true },
-      })
-      /**
-       * Continue on the prompt (VerifyPromptScreen.handleVerifyNow): the answer, verificationSkipped=false,
-       * started and the verify flow are one event handler, so they land in one render.
-       */
-      const continueOnPrompt = (apply: ReturnType<typeof renderColdStart>['apply']) =>
-        act(() => {
-          mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered()
-          apply((current) => ({
-            ...withInVerifyFlow(true)(current),
-            bcsc: { ...current.bcsc, verificationSkipped: false, verificationStarted: true },
-          }))
-        })
-
-      it('resumes a started verification after an unlock, never showing Home in between', () => {
-        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
-        expect(toJSON()).toBe('VerifyStack')
-
-        apply(lock)
-        expect(toJSON()).toBe('AuthStack')
-        apply(unlock)
-
-        // The lock took the verify flow with the secure state, so the unlock resumes like a relaunch does
-        expect(dispatch).toHaveBeenCalledTimes(2)
-        expect(dispatch).toHaveBeenLastCalledWith(resumeDispatch)
-        expect(toJSON()).toBe('VerifyStack')
-        expect(mockMainStackRender).not.toHaveBeenCalled()
-        // A fresh mount re-runs the resume-step routing against the hydrated state
-        expect(mockVerifyStackMount).toHaveBeenCalledTimes(2)
-      })
-
-      it('resumes a first-time verifier who locked mid-flow at their step, not at the prompt or Home', () => {
-        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(UNANSWERED))
-        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
-
-        continueOnPrompt(apply)
-        expect(toJSON()).toBe('VerifyStack')
-        expect(dispatch).not.toHaveBeenCalled()
-
-        apply(lock)
-        apply(unlock)
-
-        expect(dispatch).toHaveBeenCalledTimes(1)
-        expect(dispatch).toHaveBeenCalledWith(resumeDispatch)
-        expect(toJSON()).toBe('VerifyStack')
-        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(false)
-        expect(mockMainStackRender).not.toHaveBeenCalled()
-      })
-
-      it('falls back to the verify prompt when the unlock happens during an outage, even once answered', () => {
-        const { toJSON, dispatch, apply, rerender } = renderColdStart(authedUnverified(UNANSWERED))
-        continueOnPrompt(apply)
-        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(false)
-
-        apply(lock)
-        mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
-        apply(unlock)
-
-        // The resume is held off, and the prompt's Skip is the way to Home again, as on a cold start
-        expect(toJSON()).toBe('VerifyStack')
-        expect(mockVerifyStackProps.mock.lastCall?.[0].showVerifyPrompt).toBe(true)
-        expect(dispatch).not.toHaveBeenCalled()
-
-        act(() => mockVerifyStackProps.mock.lastCall?.[0].onVerifyPromptAnswered())
-        apply((current) => ({ ...current, bcsc: { ...current.bcsc, verificationSkipped: true } }))
-        expect(toJSON()).toBe('MainStack')
-
-        mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: true })
-        rerender(<BCSCRootStack />)
-        expect(toJSON()).toBe('MainStack')
-        expect(dispatch).not.toHaveBeenCalled()
-      })
-
-      it('resumes a deferred verifier who left for Home on the next unlock, who can leave again', () => {
-        const { toJSON, dispatch, apply } = renderColdStart(authedUnverified(SKIPPED_THEN_STARTED))
-        apply(withInVerifyFlow(false))
-        expect(toJSON()).toBe('MainStack')
-
-        apply(lock)
-        apply(unlock)
-
-        // Started is what an unlock resumes, as a relaunch does; every exit is still theirs
-        expect(dispatch).toHaveBeenCalledTimes(2)
-        expect(toJSON()).toBe('VerifyStack')
-
-        apply(withInVerifyFlow(false))
-        expect(toJSON()).toBe('MainStack')
-        expect(dispatch).toHaveBeenCalledTimes(2)
+      expect(lastNavigatorRender().options).toEqual({
+        headerShown: false,
+        gestureEnabled: false,
+        animationEnabled: true,
+        animationTypeForReplace: 'pop',
       })
     })
   })
 
-  it('calls loadState when stateLoaded is false', () => {
-    const mockDispatch = jest.fn()
-    const mockLoadState = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
-    mockServices(mockLoadState)
+  describe('the session providers above the route', () => {
+    const lastEnabled = () =>
+      [mockAgentProviderRender, mockAccountProviderRender, mockSessionProviderRender].map(
+        (provider) => provider.mock.lastCall?.[0]
+      )
 
-    render(<BCSCRootStack />)
+    it('are enabled for a session and disabled outside one', () => {
+      const { rerender } = renderWith({ phase: RootPhase.Main, inSession: true })
+      expect(lastEnabled()).toEqual([true, true, true])
 
-    expect(mockLoadState).toHaveBeenCalledWith(mockDispatch)
-  })
+      rerenderWith(rerender, { phase: RootPhase.Auth, inSession: false })
 
-  it('does not call loadState when stateLoaded is true', () => {
-    const mockDispatch = jest.fn()
-    const mockLoadState = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: true }), mockDispatch] as any)
-    mockServices(mockLoadState)
-
-    render(<BCSCRootStack />)
-
-    expect(mockLoadState).not.toHaveBeenCalled()
-  })
-
-  it('calls emitErrorModal when loadState throws', () => {
-    const mockDispatch = jest.fn()
-    const mockError = new Error('load failed')
-    const mockLoadState = jest.fn().mockImplementation(() => {
-      throw mockError
+      expect(lastEnabled()).toEqual([false, false, false])
     })
 
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
-    mockServices(mockLoadState)
+    it('stay mounted across phase changes, so a session never restarts them', () => {
+      const { rerender } = renderWith({ phase: RootPhase.Main })
 
-    render(<BCSCRootStack />)
+      rerenderWith(rerender, { phase: RootPhase.Verify })
+      rerenderWith(rerender, { phase: RootPhase.Main })
+      rerenderWith(rerender, { phase: RootPhase.Auth, inSession: false })
 
-    expect(mockEmitErrorModal).toHaveBeenCalledWith(
-      'Error.Problem',
-      'Error.ProblemDescription',
-      toAppError(mockError, ErrorRegistry.STATE_LOAD_ERROR)
-    )
+      expect(mockAgentProviderMount).toHaveBeenCalledTimes(1)
+      expect(mockAccountProviderMount).toHaveBeenCalledTimes(1)
+      expect(mockSessionProviderMount).toHaveBeenCalledTimes(1)
+    })
   })
 
-  it('tells FCM the card is expired when the stored refresh token expires', () => {
-    const verified = { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }
-    jest
-      .mocked(Bifold.useStore)
-      .mockReturnValue([mockStore({ ...verified, bcscSecure: { verified: true } }), jest.fn()] as any)
+  describe('the invalid environment recovery gate', () => {
+    it('stands in for the navigator and the session providers, whatever the phase', () => {
+      const { toJSON } = renderWith({ showInvalidEnvironment: true, phase: RootPhase.Main })
 
-    const { rerender } = render(<BCSCRootStack />)
-    expect(mockSetCardExpired).toHaveBeenLastCalledWith(false)
+      expect(toJSON()).toBe('InvalidEnvironment')
+      expect(mockNavigatorRender).not.toHaveBeenCalled()
+      expect(mockAgentProviderRender).not.toHaveBeenCalled()
+      expect(mockAccountProviderRender).not.toHaveBeenCalled()
+      expect(mockSessionProviderRender).not.toHaveBeenCalled()
+    })
 
-    jest
-      .mocked(Bifold.useStore)
-      .mockReturnValue([
-        mockStore({ ...verified, bcscSecure: { verified: true, refreshToken: EXPIRED_JWT } }),
-        jest.fn(),
-      ] as any)
-    rerender(<BCSCRootStack />)
+    it('gives way to the phase route once the environment is valid again', () => {
+      const { rerender, toJSON } = renderWith({
+        showInvalidEnvironment: true,
+        phase: RootPhase.Onboarding,
+        inSession: false,
+      })
 
-    expect(mockSetCardExpired).toHaveBeenLastCalledWith(true)
+      rerenderWith(rerender, { phase: RootPhase.Onboarding, inSession: false })
+
+      expect(toJSON()).toBe('OnboardingStack')
+      expect(lastNavigatorRender().screen.name).toBe(BCSCStacks.Onboarding)
+    })
   })
 
-  describe('card expiry phase logging', () => {
-    const verified = { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }
-    const useVerifiedStore = (secure: object) =>
-      jest
-        .mocked(Bifold.useStore)
-        .mockReturnValue([mockStore({ ...verified, bcscSecure: { verified: true, ...secure } }), jest.fn()] as any)
+  describe('card expiry, synced to FCM from inside the main route', () => {
+    const useStoreWith = (secure: Record<string, any>) =>
+      jest.mocked(Bifold.useStore).mockReturnValue([mockStore(secure), jest.fn()] as any)
     const phaseLogs = () =>
       mockLogger.info.mock.calls.map(([message]) => message).filter((m) => String(m).includes('Card expiry phase'))
 
-    it('logs the phase once on first render', () => {
-      useVerifiedStore({})
+    it('tells FCM the card is expired when the stored refresh token expires', () => {
+      const { rerender } = render(<BCSCRootStack />)
+      expect(mockSetCardExpired).toHaveBeenLastCalledWith(false)
 
+      useStoreWith({ refreshToken: EXPIRED_JWT })
+      rerender(<BCSCRootStack />)
+
+      expect(mockSetCardExpired).toHaveBeenLastCalledWith(true)
+    })
+
+    it('logs the phase once on first render', () => {
       render(<BCSCRootStack />)
 
       expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: unknown'])
@@ -793,7 +336,6 @@ describe('BCSCRootStack', () => {
       const inEightDays = new Date()
       inEightDays.setDate(inEightDays.getDate() + 8)
       mockAccount = { account_expiration_date: inEightDays }
-      useVerifiedStore({})
 
       render(<BCSCRootStack />)
 
@@ -802,37 +344,16 @@ describe('BCSCRootStack', () => {
     })
 
     it('logs again when the phase changes, and not on a re-render with the same phase', () => {
-      useVerifiedStore({})
       const { rerender } = render(<BCSCRootStack />)
 
-      useVerifiedStore({})
+      useStoreWith({})
       rerender(<BCSCRootStack />)
       expect(phaseLogs()).toHaveLength(1)
 
-      useVerifiedStore({ refreshToken: EXPIRED_JWT })
+      useStoreWith({ refreshToken: EXPIRED_JWT })
       rerender(<BCSCRootStack />)
 
       expect(phaseLogs()).toEqual(['[RootStack] Card expiry phase: unknown', '[RootStack] Card expiry phase: expired'])
     })
-  })
-
-  it('processPendingChallenges is called when api client is ready', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
-
-    render(<BCSCRootStack />)
-
-    expect(mockProcessPendingChallenges).toHaveBeenCalledTimes(1)
-  })
-
-  it('processPendingChallenges is not called when api client is not ready', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
-
-    mockIsClientReady.mockReturnValue(false)
-
-    render(<BCSCRootStack />)
-
-    expect(mockProcessPendingChallenges).not.toHaveBeenCalled()
   })
 })

@@ -1,4 +1,9 @@
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl, SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
+import {
+  DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
+  HelpCentreUrl,
+  STACK_LOADING_REVEAL_DELAY_MS,
+  SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS,
+} from '@/constants'
 import { TestIds } from '@/test-ids/registry'
 import {
   CredentialDetails,
@@ -12,15 +17,16 @@ import {
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { ComponentProps, useEffect, useMemo, useState } from 'react'
+import { ComponentProps, PropsWithChildren, ReactNode, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createStackHeader } from '../components/NavigationHeaders'
+import { WaitingScreenContent } from '../components/WaitingScreenContent'
 import { useAccount } from '../contexts/BCSCAccountContext'
-import { LoadingScreen } from '../contexts/BCSCLoadingContext'
+import { LoadingScreen, useLoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import { useServerStatus } from '../contexts/ServerStatusContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
@@ -110,12 +116,17 @@ const ScopedEditContactName = withAgentReadyGate(
 const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKey(TestIds.main.contactRemove.loading))
 
 /**
- * Holds the startup loading screen until the system checks that decide the Home notification card
- * have settled in addition to the server status check. Home renders that card straight out of the store, so a check resolving after paint
- * swaps the card in front of the user (e.g. "Start verification" flipping to "Verified"). Capped by
- * {@link SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS} so a hung request can't strand the app.
+ * Holds the loading screen until the system checks that decide the Home notification card have settled,
+ * in addition to the server status check. Home renders that card straight out of the store, so a check
+ * resolving after paint swaps the card in front of the user (e.g. "Start verification" flipping to
+ * "Verified"). The caller passes settled at once for a batch with no such check (see `holdsForChecks`), such
+ * as the Terms of Use fetch after a fresh skip: a slide into this stack then carries Home rather than a
+ * blank card. Capped by {@link SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS} so a hung request can't strand the
+ * app. The checks run once per session and once more for each verification request made during it (see
+ * SystemCheckSessionProvider), so this holds on the session's first mount of the stack and on the first
+ * mount after such a request; any other mount finds them settled and shows Home at once.
  *
- * @param hasSettled - Whether every tracked system check scope has finished running.
+ * @param hasSettled - Whether the checks that decide the Home card have finished running.
  * @returns Whether the loading screen should still be shown.
  */
 const useSystemCheckLoadingGate = (hasSettled: boolean) => {
@@ -134,14 +145,66 @@ const useSystemCheckLoadingGate = (hasSettled: boolean) => {
   return !hasSettled && !waitedTooLong
 }
 
-const MainStack: React.FC = () => {
+/**
+ * This stack's loading state inside its own card, for a mount the root slides in: a plain backdrop that
+ * becomes the waiting screen once the wait outlasts the slide. Mounted late rather than hidden, as hidden
+ * loading views must not animate. It covers the navigator, so touches do not reach it.
+ */
+const StackLoadingScreen = ({ message }: { message: string }) => {
+  const { ColorPalette } = useTheme()
+  const [revealed, setRevealed] = useState(false)
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => setRevealed(true), STACK_LOADING_REVEAL_DELAY_MS)
+
+    return () => clearTimeout(timeoutId)
+  }, [])
+
+  return (
+    <View
+      style={[StyleSheet.absoluteFill, { backgroundColor: ColorPalette.brand.primaryBackground }]}
+      testID={testIdWithKey(TestIds.main.loadingGate)}
+      accessible
+      accessibilityViewIsModal
+    >
+      {revealed ? <WaitingScreenContent message={message} /> : null}
+    </View>
+  )
+}
+
+/**
+ * The stack's card: the navigator, with the stack's own loading view over it while one is up. The
+ * navigator is hidden from assistive technology while covered, as it is during the tour, and the
+ * loading view is its sibling, so it stays reachable.
+ */
+const StackCard = ({
+  navigatorHidden,
+  loadingView,
+  children,
+}: PropsWithChildren<{ navigatorHidden: boolean; loadingView: ReactNode }>) => (
+  <>
+    <View style={{ flex: 1 }} importantForAccessibility={navigatorHidden ? 'no-hide-descendants' : 'auto'}>
+      {children}
+    </View>
+    {loadingView}
+  </>
+)
+
+interface MainStackProps {
+  /**
+   * The root cut to this stack instead of sliding it in. Read at mount: with nothing sliding, a wait at
+   * mount shows the waiting screen at once (a verified session's first Home, loading the account).
+   */
+  enteredByCut?: boolean
+}
+
+const MainStack = ({ enteredByCut = false }: MainStackProps) => {
   const { currentStep } = useTour()
   const { isLoadingAccount } = useAccount()
   const { isVerified } = useVerificationState()
   const theme = useTheme()
   const { t } = useTranslation()
   const Stack = createStackNavigator<BCSCMainStackParams>()
-  const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -171,7 +234,22 @@ const MainStack: React.FC = () => {
 
   const mainStackChecks = useSystemChecks(SystemCheckScope.MAIN_STACK)
   const { hasChecked: serverStatusChecked } = useServerStatus()
-  const isAwaitingSystemChecks = useSystemCheckLoadingGate(mainStackChecks.hasSettled && serverStatusChecked)
+  const { isLoading: overlayUpNow } = useLoadingScreen()
+  // Decided at mount: a loading state here uses the global overlay when one is already up (the startup
+  // overlay on a cold start, a loader hiding the root's route change) or when the root cut to this stack,
+  // as nothing slides then. Otherwise it stays inside this card, so a root slide into this stack never
+  // blanks the whole app for its first frames
+  const [usesGlobalOverlay] = useState(() => overlayUpNow || enteredByCut)
+  const StackLoadingGate = usesGlobalOverlay ? LoadingScreen : StackLoadingScreen
+  // A batch that can't change the Home card resolves after paint. A verified batch can: its id-token checks
+  // deactivate a card IAS has expired since the last session. The session's first Home waits for it behind
+  // the waiting screen already up, while a slide in after verifying mid-session still shows Home at once
+  const holdsForChecks = mainStackChecks.decidesHomeCard || (isVerified && usesGlobalOverlay)
+  const isAwaitingSystemChecks = useSystemCheckLoadingGate(
+    (mainStackChecks.hasSettled || !holdsForChecks) && serverStatusChecked
+  )
+  // The tour and this stack's own loading view both hide the screens beneath them from assistive technology
+  const navigatorHidden = currentStep !== undefined || (isAwaitingSystemChecks && !usesGlobalOverlay)
   useBCSCStack(BCSCStacks.Main)
 
   // Accept connection-invitation deep links (e.g. from the showcase) once the
@@ -190,18 +268,20 @@ const MainStack: React.FC = () => {
 
   useVerificationResponseListener()
 
-  // Replaces rather than overlays the stack: unmounting the navigator while the account loads drops
-  // the navigation state it inherits from VerifyStack (routes registered in both, e.g.
-  // VerificationSuccess), so it remounts on initialRouteName instead of stranding the user there.
+  // Replaces rather than overlays the stack: unmounting the navigator while the account loads drops any
+  // navigation state it would inherit (its own, when it remounts under BCSCIdTokenProvider with
+  // VerificationSuccess focused), so it comes back on initialRouteName instead of stranding the user there.
+  // The account loads once per session, above the root's route, so this is the session's first mount only.
   if (isLoadingAccount) {
-    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
+    return <StackLoadingGate message={t('BCSC.Loading.AppStartup')} />
   }
 
+  // Overlays rather than replaces the stack: the checks themselves navigate to screens registered
+  // below (terms of use, service outage), so the navigator has to stay mounted
+  const loadingView = isAwaitingSystemChecks ? <StackLoadingGate message={t('BCSC.Loading.AppStartup')} /> : null
+
   return (
-    <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
-      {/* Overlays rather than replaces the stack: the checks themselves navigate to screens
-          registered below (terms of use, service outage), so the navigator has to stay mounted. */}
-      {isAwaitingSystemChecks ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
+    <StackCard navigatorHidden={navigatorHidden} loadingView={loadingView}>
       <BifoldScope>
         <Stack.Navigator
           initialRouteName={initialRouteName}
@@ -529,11 +609,11 @@ const MainStack: React.FC = () => {
             })}
           />
           {/* Registered only until the user is verified. Setting `verified` is this screen's whole job,
-              and on that flip this stack inherits the outgoing navigator's state — VerifyStack's, or its
-              own when it remounts under BCSCIdTokenProvider. With the route gone, React Navigation drops
-              it from that state (falling back to initialRouteName if nothing else is left) instead of
-              stranding the user on a Continue with nothing left to do (#4719). Keyed on `verified`, not
-              isDeviceVerifiedByIas: that turns true once tokens arrive, before the user can open this screen. */}
+              and on that flip this stack remounts under BCSCIdTokenProvider and inherits its own
+              navigation state, this screen focused. With the route gone, React Navigation drops it from
+              that state (falling back to initialRouteName if nothing else is left) instead of stranding
+              the user on a Continue with nothing left to do. Keyed on `verified`, not isDeviceVerifiedByIas:
+              that turns true once tokens arrive, before the user can open this screen. */}
           {isVerified ? null : (
             <Stack.Screen
               name={BCSCScreens.VerificationSuccess}
@@ -622,7 +702,7 @@ const MainStack: React.FC = () => {
           />
         </Stack.Navigator>
       </BifoldScope>
-    </View>
+    </StackCard>
   )
 }
 

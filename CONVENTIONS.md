@@ -40,6 +40,53 @@ Keep waiting-screen colors in the theme and follow the
 
 Hidden loading views must not run animations. Concurrent operations own separate
 loading tokens; the overlay stays visible until all tokens are released.
+Releasing a token the overlay has shown takes effect one commit late: the commit the release lands in
+still renders beneath the overlay, and the drop is flushed before that commit paints. A route change
+dispatched in the same continuation as the release (a `handleSuccessfulAuth` caller that waits under the
+overlay: the device-auth prompts) is therefore decided as a cut and the stack it mounts extends the overlay. With automatic batching the release would
+otherwise land in the same commit as the dispatch and reveal the screen the overlay had hidden as the
+first frame of a slide. A token released before it was shown is dropped at once.
+A phase stack's own loading state (MainStack's account load and system-check gate) extends an
+overlay that is already up when the stack mounts, raises it when the root cut to the stack (nothing
+slides then, so the waiting screen shows at once), and otherwise stays inside the stack's card: a
+plain backdrop that becomes the waiting screen only once the wait outlasts the root slide. It never
+raises the global overlay in a card the root slides in, which blanked the whole app for the first
+frames of every slide into Home.
+Both waits belong to the session, not the stack: `BCSCAccountProvider` and `SystemCheckSessionProvider`
+are mounted above the root's route, so a stack that mounts again in the same session (verify → main and
+back) finds the account loaded and its checks settled, and its first frame is the screen itself. Home
+waits on the session's first entry, and only on the account load and on a check batch that can change
+the Home card: an unverified user's request checks (`decidesHomeCard` in `useCreateSystemChecks`), and,
+when Home opens under the global overlay (a cold start, or the root's cut to a verified user's first
+Home), a verified user's id-token checks, which deactivate a card IAS has expired since the last session.
+That wait holds up no slide, as the waiting screen is already showing. Which
+request check applies is decided once, by `getVerificationRequestCheck` (`state/verification/`), and its
+batch is recorded per request (the request ID, or the device authorization's expiry, never the codes), so
+the first Home after a request made during the session waits once more, for that request's outcome.
+A batch starts only as the stack mounts: a key that changes under a mounted Home (a cancelled request
+cleared there, a transfer QR scanned) is left to the next mount, so no check runs under a flow mid-step.
+Any other batch, such as the Terms of Use fetch after a fresh skip or the id-token-backed checks after
+verifying mid-session, resolves after Home has painted, so a slide into Home carries Home rather than a
+blank card.
+The global overlay is raised only around work that will actually wait, such as a network round trip,
+never around a check that usually resolves at once: it hides the whole navigator, so an overlay that
+goes up and comes down within a frame or two flashes the loading screen. `AccountSetupScreen` checks
+the registration service's `isRegistered` before it waits on `ensureRegistered`, and `runDeviceAuth`
+checks device-auth availability before it raises the overlay for the OS prompt, for this reason.
+A wait that ends with a navigation inside a stack (a push, `goBack` or `pop`) stays inside the card
+instead: a spinner on the pressed button or beneath the input, with the inputs locked and the button
+disabled (`disabled={loading}`, so it greys out and ignores further taps), so the slide starts from the
+screen the user is looking at rather than from one the overlay had just hidden.
+Account Setup's device registration, Manual Pairing's code check and the Change PIN forms wait this
+way. Back and the tab bar stay live during an in-card wait, so the completion checks
+`navigation.isFocused()` before it navigates. The exception is a navigation that is the only report of
+what the wait already did: Manual Pairing's confirmation is shown even to a user who left, as the server
+approved the login when it accepted the code. A wait that ends in a root phase swap stays on the button
+the same way: Enter PIN's unlock, which for an unverified user is local work done within a few frames,
+and Create PIN. The root then slides from the PIN screen, and the button keeps spinning while it slides
+out; a verified user's first Home is cut instead, as it still waits for the account ("Root phase
+transitions"). The overlay remains the tool for the device-auth prompts, where it is the backdrop of the
+OS dialog and the swap after it is cut beneath it, and for a wait that navigates nowhere.
 Video-call setup and video submission use `CancellableWaitingScreen` to reveal Cancel
 after 10 seconds without fading or shifting content (#4513). It keeps Cancel hidden
 from accessibility until available, then disables it for good once pressed so repeated
@@ -436,3 +483,58 @@ device, an expired setup.
 
 **Why:** Remove account is the PIN lockout screen's only button and it removed the account on the first tap,
 although the same account would have been usable again as soon as the lock ended.
+
+## Root phase transitions: a declarative switch that slides
+
+`BCSCRootStack` registers exactly one route, the current phase's (`loading | onboarding | auth | recovery |
+verify | main`), decided by `getRootPhase` (`state/root/root-phase.ts`) from the store and the routing
+facts the root's ViewModel holds. `useRootStackViewModel` (`navigators/useRootStackViewModel.ts`) reads it
+through `useRootPhase` and owns the startup effects, the once-per-session verification routing and the
+transition decided for each change; the navigator holds the route table and the session
+providers only, the way a screen holds its JSX. A phase change is a store dispatch; nothing
+`navigate`s or `reset`s between phases. React Navigation treats the swapped route as a `replace` and animates
+it like one, with the direction decided per change by `getRootTransition` (`navigators/root-transition.ts`)
+from the route being left and the one being entered:
+
+- Into `loading`, `auth` or `onboarding` (a lock, a removed account, a factory reset): no animation. The agent
+  provider is disabled in the same commit and the store is cleared under the outgoing stack, so it must
+  unmount at once rather than linger for a slide.
+- A change hidden by the global loading overlay: no animation. The device-auth callers of
+  `handleSuccessfulAuth` release their overlay in the same continuation as the dispatch, and the overlay
+  provider applies that release one commit late (see "Waiting screens"), so the change is decided beneath
+  the overlay rather than in the commit that lifts it.
+- The same phase under a new navigation key (the outage fallback re-registering the verify stack): no animation.
+- Into `main` from outside the session (`auth`, `onboarding`, `recovery`) for a verified user: no animation.
+  The session starts with the change and its first Home waits for the account to load, so a slide would
+  carry in a blank card; the main stack shows the waiting screen at once instead.
+- `verify → main`: pop when leaving a started, unfinished verification (back arrow, "Back to home", Skip after
+  walking back to the prompt), so Home comes back from beneath; push otherwise (Skip on the fresh prompt,
+  Setup Complete).
+- Everything else pushes.
+
+Once a route has entered, its options settle on animated (`IDLE_ROOT_TRANSITION`): a popped card exits with
+its own options, so a route left at `animationEnabled: false` would later vanish instead of sliding out.
+A phase stack claims `BCSCStackContext` when it mounts and never re-claims it, as two stacks are mounted while
+the root slides between them and the incoming one mounts last.
+The agent, the account and the record of which system checks have run (`BCSCAgentProvider`,
+`BCSCAccountProvider`, `SystemCheckSessionProvider`) are mounted above the root's route and enabled for the
+`verify` and `main` phases only: a session. A phase change within the session never restarts them, so the
+incoming stack has nothing to wait for; entering any other phase ends the session and clears them.
+
+**Why:** the alternative, every stack always registered and each phase-changing dispatch site also issuing a
+navigation action, is two sources of truth that can disagree, across unlock, lock, factory reset, the
+`continueVerificationProcess` callers, `useLeaveVerification`, the once-per-session resume and the outage
+fallback. The declarative switch had the slide available all along; it only needed the animation turned
+back on and told which way each change goes.
+
+## Safe areas: chrome in view on its first frame reads the hook
+
+A native `SafeAreaView` learns its inset after it mounts: the view reports the inset to the renderer as a
+state update, applied at least a frame later, so it lays out without the padding first. That is invisible
+for a screen that enters from off-screen and visible for anything in view on its first frame. The strip under
+the tab bar was one: when the main stack mounts beneath a pop (`verify → main`), Home is mostly in view at
+once, and the tab bar sat in the home-indicator area for a frame or two before jumping up. Chrome in view on
+its first frame sizes itself from `useSafeAreaInsets()`, which the root provider has right from the first
+render (`initialWindowMetrics`); `SafeAreaView` remains fine for content that slides in from off-screen.
+Bifold's `ScreenWrapper` wraps every screen in the same native view, so a stack's first screen shows the
+jump on a root slide too; that change belongs in Bifold and is tracked there.
