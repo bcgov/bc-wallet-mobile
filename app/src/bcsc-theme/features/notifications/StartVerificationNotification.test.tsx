@@ -1,6 +1,7 @@
-import { BCLocalStorageKeys, initialBCSCState } from '@/store'
+import { storage } from '@/bcsc-theme/storage'
+import { initialBCSCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { PersistentStorage, testIdWithKey } from '@bifold/core'
+import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
@@ -12,16 +13,24 @@ jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
 }))
 
 describe('StartVerificationNotification', () => {
-  let storeSpy: jest.SpyInstance
-
   beforeEach(() => {
     jest.clearAllMocks()
     mockUseServerStatus.mockReturnValue({ isAvailable: true })
-    storeSpy = jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
   })
 
-  const bcscWrites = () =>
-    storeSpy.mock.calls.filter(([key]) => key === BCLocalStorageKeys.BCSC).map(([, value]) => value)
+  // Every app-slice value the BCSC store held during the test; the verify-prompt answer lives there
+  let appStates: unknown[] = []
+  let unsubscribe = () => {}
+  beforeEach(() => {
+    appStates = []
+    unsubscribe = storage.store.subscribe((state, previous) => {
+      if (state.app !== previous.app) {
+        appStates.push(state.app)
+      }
+    })
+  })
+  afterEach(() => unsubscribe())
+  const bcscWrites = () => appStates
 
   it('marks verification started for a user who skipped, keeping their answer to the prompt', async () => {
     const tree = render(

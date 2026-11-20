@@ -1,7 +1,7 @@
-import { getAccountReadContext } from '@/bcsc-theme/utils/account-read-status'
+import { getBCSCState, selectAccountRecord } from '@/bcsc-theme/storage/hooks'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { getAccount, isAccountRegistered } from 'react-native-bcsc-core'
+import { isAccountRegistered } from 'react-native-bcsc-core'
 
 /**
  * Thrown by `withAccount` when there is no device account. Still a plain `Error` with the same message, so
@@ -27,7 +27,7 @@ export class AccountNotFoundError extends Error {
  * @returns The executed function with the account passed as an argument.
  */
 export const withAccount = async <T>(fn: (account: any) => Promise<T>): Promise<T> => {
-  const account = await getAccount()
+  const account = selectAccountRecord(getBCSCState())
 
   if (!isAccountRegistered(account)) {
     if (account) {
@@ -37,8 +37,7 @@ export const withAccount = async <T>(fn: (account: any) => Promise<T>): Promise<
       })
     }
 
-    // Only here, after getAccount returned null, is the read status meaningful
-    throw new AccountNotFoundError(await getAccountReadContext())
+    throw new AccountNotFoundError()
   }
 
   return fn(account)

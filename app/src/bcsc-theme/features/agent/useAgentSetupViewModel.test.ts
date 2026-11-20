@@ -1,3 +1,5 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as Bifold from '@bifold/core'
@@ -32,6 +34,8 @@ const mockedStore = (overrides: Record<string, unknown> = {}) => {
     migration: { didMigrateToAskar: true },
     ...overrides,
   }
+  // Preferences and developer settings are read from the BCSC store
+  seedBCSCStoreFromBCState(base as never)
   return [base, jest.fn()]
 }
 
@@ -60,7 +64,7 @@ describe('useAgentSetupViewModel', () => {
       .mockReturnValue([logger, attestationMonitor, undefined, [], [], ocaBundleResolver] as never)
     jest.mocked(Bifold.useStore).mockReturnValue(mockedStore() as never)
     jest.mocked(Bifold.createLinkSecretIfRequired).mockResolvedValue(undefined as never)
-    jest.mocked(agentService.loadCachedLedgers).mockResolvedValue(undefined)
+    jest.mocked(agentService.loadCachedLedgers).mockReturnValue(undefined)
     jest.mocked(agentService.buildAgent).mockReturnValue(mockAgent())
     jest.mocked(agentService.initializeAgent).mockResolvedValue(undefined)
     jest.mocked(agentService.restartAgent).mockResolvedValue(undefined)
@@ -152,13 +156,14 @@ describe('useAgentSetupViewModel', () => {
       migration: { didMigrateToAskar: true },
     }
     jest.mocked(Bifold.useStore).mockImplementation(() => [store as never, jest.fn()])
+    seedBCSCStoreFromBCState(store as never)
 
     const { result, rerender } = renderHook(() => useAgentSetupViewModel())
 
     await waitFor(() => expect(result.current.status).toBe('initializing'))
 
     // Flip to unauthenticated while initialize() is still pending
-    ;(store.authentication as Record<string, unknown>).didAuthenticate = false
+    act(() => getBCSCState().session.setDidAuthenticate(false))
     rerender({})
 
     // Now allow the in-flight initialize to resolve
@@ -237,11 +242,12 @@ describe('useAgentSetupViewModel', () => {
       migration: { didMigrateToAskar: true },
     }
     jest.mocked(Bifold.useStore).mockImplementation(() => [store as never, jest.fn()])
+    seedBCSCStoreFromBCState(store as never)
 
     const { result, rerender } = renderHook(() => useAgentSetupViewModel())
 
     await waitFor(() => expect(result.current.status).toBe('initializing'))
-    ;(store.authentication as Record<string, unknown>).didAuthenticate = false
+    act(() => getBCSCState().session.setDidAuthenticate(false))
     rerender({})
 
     resolveInit()
@@ -526,12 +532,13 @@ describe('useAgentSetupViewModel', () => {
       migration: { didMigrateToAskar: true },
     }
     jest.mocked(Bifold.useStore).mockImplementation(() => [store as never, jest.fn()])
+    seedBCSCStoreFromBCState(store as never)
 
     const { result, rerender } = renderHook(() => useAgentSetupViewModel())
     await waitFor(() => expect(result.current.status).toBe('ready'))
 
     // Flip to unauthenticated
-    ;(store.authentication as Record<string, unknown>).didAuthenticate = false
+    act(() => getBCSCState().session.setDidAuthenticate(false))
     rerender({})
 
     await waitFor(() => expect(result.current.status).toBe('idle'))
@@ -596,10 +603,12 @@ describe('useAgentSetupViewModel', () => {
         migration: { didMigrateToAskar: true },
       }
       jest.mocked(Bifold.useStore).mockImplementation(() => [store as never, jest.fn()])
+      seedBCSCStoreFromBCState(store as never)
+      seedBCSCStoreFromBCState(store as never)
 
       const { result, rerender } = renderHook(() => useAgentSetupViewModel())
       await waitFor(() => expect(result.current.status).toBe('ready'))
-      ;(store.authentication as Record<string, unknown>).didAuthenticate = false
+      act(() => getBCSCState().session.setDidAuthenticate(false))
       rerender({})
 
       await waitFor(() => expect(signalPassedToWarmCache().aborted).toBe(true))

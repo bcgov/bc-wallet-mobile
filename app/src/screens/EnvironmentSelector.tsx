@@ -1,4 +1,6 @@
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { TestIds } from '@/test-ids/registry'
+import { IS_BCSC } from '@/utils/environment'
 import { Button, ButtonType, testIdWithKey, usePreventDoublePress, useStore, useTheme } from '@bifold/core'
 import { IASEnvironment } from '@utils/environment'
 import React from 'react'
@@ -22,6 +24,9 @@ const EnvironmentSelector: React.FC<EnvironmentSelectorProps> = ({ onEnvironment
   const { t } = useTranslation()
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
   const [store] = useStore<BCState>()
+  // BCSC keeps its environment in its own store
+  const bcscEnvironmentName = useBCSCStore((s) => s.developer.environment.name)
+  const currentName = IS_BCSC ? bcscEnvironmentName : store.developer.environment.name
   const { preventDoublePress } = usePreventDoublePress()
 
   const styles = StyleSheet.create({
@@ -69,7 +74,7 @@ const EnvironmentSelector: React.FC<EnvironmentSelectorProps> = ({ onEnvironment
                 innerIconStyle={{ borderColor: ColorPalette.brand.primary, borderWidth: 2 }}
                 ImageComponent={() => <Icon name="circle" size={18} color={ColorPalette.brand.primary}></Icon>}
                 onPress={preventDoublePress(() => handleEnvironmentPress(environment))}
-                isChecked={name === store.developer.environment.name}
+                isChecked={name === currentName}
                 disableBuiltInState
                 testID={testIdWithKey(name.toLocaleLowerCase())}
               />

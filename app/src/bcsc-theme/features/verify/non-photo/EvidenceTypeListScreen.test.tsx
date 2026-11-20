@@ -1,5 +1,6 @@
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { withBCSCStore } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { initialState } from '@/store'
 import { useServices, useStore } from '@bifold/core'
@@ -58,7 +59,7 @@ describe('EvidenceTypeList', () => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
 
-    mockUseStore.mockReturnValue([initialState, jest.fn()])
+    mockUseStore.mockReturnValue(withBCSCStore([initialState, jest.fn()]))
     mockUseServices.mockReturnValue([defaultLogger])
     mockUseSecureActions.mockReturnValue({
       removeIncompleteEvidence: jest.fn().mockResolvedValue([]),
@@ -74,7 +75,7 @@ describe('EvidenceTypeList', () => {
 
   it('renders correctly', () => {
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={mockUseStore()[0]}>
         <EvidenceTypeListScreen
           navigation={mockNavigation as never}
           route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}
@@ -87,7 +88,7 @@ describe('EvidenceTypeList', () => {
 
   it('renders "Other Options" footer when photoFilter is photo and no evidence selected', () => {
     const { getByText, getByTestId } = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={mockUseStore()[0]}>
         <EvidenceTypeListScreen
           navigation={mockNavigation as never}
           route={
@@ -103,7 +104,7 @@ describe('EvidenceTypeList', () => {
 
   it('navigates to nonPhoto filter when "Other Options" is pressed', () => {
     const { getByTestId } = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={mockUseStore()[0]}>
         <EvidenceTypeListScreen
           navigation={mockNavigation as never}
           route={
@@ -122,7 +123,7 @@ describe('EvidenceTypeList', () => {
 
   it('does not render "Other Options" footer when photoFilter is nonPhoto', () => {
     const { queryByText } = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={mockUseStore()[0]}>
         <EvidenceTypeListScreen
           navigation={mockNavigation as never}
           route={
@@ -149,7 +150,7 @@ describe('EvidenceTypeList', () => {
       })
 
       const { getByText, queryByText } = render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}
@@ -186,10 +187,12 @@ describe('EvidenceTypeList', () => {
         documentNumber: 'SO123',
       }
 
-      mockUseStore.mockReturnValue([
-        { ...initialState, bcscSecure: { ...initialState.bcscSecure, additionalEvidenceData: [existingEvidence] } },
-        jest.fn(),
-      ])
+      mockUseStore.mockReturnValue(
+        withBCSCStore([
+          { ...initialState, bcscSecure: { ...initialState.bcscSecure, additionalEvidenceData: [existingEvidence] } },
+          jest.fn(),
+        ])
+      )
       mockUseDataLoader.mockReturnValue({
         data: mockMetadata([firstCard, secondCard, bothCard], process),
         load: jest.fn(),
@@ -197,7 +200,7 @@ describe('EvidenceTypeList', () => {
       })
 
       const { getByText, queryByText } = render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}
@@ -232,10 +235,12 @@ describe('EvidenceTypeList', () => {
         documentNumber: 'DL123',
       }
 
-      mockUseStore.mockReturnValue([
-        { ...initialState, bcscSecure: { ...initialState.bcscSecure, additionalEvidenceData: [existingEvidence] } },
-        jest.fn(),
-      ])
+      mockUseStore.mockReturnValue(
+        withBCSCStore([
+          { ...initialState, bcscSecure: { ...initialState.bcscSecure, additionalEvidenceData: [existingEvidence] } },
+          jest.fn(),
+        ])
+      )
       mockUseDataLoader.mockReturnValue({
         data: mockMetadata([bothCard, secondCard], process),
         load: jest.fn(),
@@ -243,7 +248,7 @@ describe('EvidenceTypeList', () => {
       })
 
       const { getByText, queryByText } = render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}
@@ -277,10 +282,12 @@ describe('EvidenceTypeList', () => {
         metadata: [],
       }
 
-      mockUseStore.mockReturnValue([
-        { ...initialState, bcscSecure: { ...initialState.bcscSecure, additionalEvidenceData: [incompleteEvidence] } },
-        jest.fn(),
-      ])
+      mockUseStore.mockReturnValue(
+        withBCSCStore([
+          { ...initialState, bcscSecure: { ...initialState.bcscSecure, additionalEvidenceData: [incompleteEvidence] } },
+          jest.fn(),
+        ])
+      )
       mockUseDataLoader.mockReturnValue({
         data: mockMetadata([bothCard, secondCard], process),
         load: jest.fn(),
@@ -288,7 +295,7 @@ describe('EvidenceTypeList', () => {
       })
 
       const { queryByText } = render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } } as EvidenceTypeListRoute}
@@ -332,17 +339,19 @@ describe('EvidenceTypeList', () => {
         documentNumber: 'BC123',
       }
 
-      mockUseStore.mockReturnValue([
-        {
-          ...initialState,
-          bcscSecure: {
-            ...initialState.bcscSecure,
-            cardProcess: BCSCCardProcess.BCSCNonPhoto,
-            additionalEvidenceData: [completedBirthCertificate],
+      mockUseStore.mockReturnValue(
+        withBCSCStore([
+          {
+            ...initialState,
+            bcscSecure: {
+              ...initialState.bcscSecure,
+              cardProcess: BCSCCardProcess.BCSCNonPhoto,
+              additionalEvidenceData: [completedBirthCertificate],
+            },
           },
-        },
-        jest.fn(),
-      ])
+          jest.fn(),
+        ])
+      )
       mockUseDataLoader.mockReturnValue({
         data: mockMetadata([firstPhotoCard, secondPhotoCard, birthCertificate], process),
         load: jest.fn(),
@@ -350,7 +359,7 @@ describe('EvidenceTypeList', () => {
       })
 
       const { getByText, queryByText } = render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={
@@ -395,17 +404,19 @@ describe('EvidenceTypeList', () => {
         documentNumber: 'ID123',
       }
 
-      mockUseStore.mockReturnValue([
-        {
-          ...initialState,
-          bcscSecure: {
-            ...initialState.bcscSecure,
-            cardProcess: BCSCCardProcess.NonBCSC,
-            additionalEvidenceData: [completedFirstId],
+      mockUseStore.mockReturnValue(
+        withBCSCStore([
+          {
+            ...initialState,
+            bcscSecure: {
+              ...initialState.bcscSecure,
+              cardProcess: BCSCCardProcess.NonBCSC,
+              additionalEvidenceData: [completedFirstId],
+            },
           },
-        },
-        jest.fn(),
-      ])
+          jest.fn(),
+        ])
+      )
       mockUseDataLoader.mockReturnValue({
         data: mockMetadata([nonPhotoFirstId, photoSecondId, nonPhotoSecondId], BCSCCardProcess.NonBCSC as string),
         load: jest.fn(),
@@ -413,7 +424,7 @@ describe('EvidenceTypeList', () => {
       })
 
       return render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } } as EvidenceTypeListRoute}
@@ -459,7 +470,7 @@ describe('EvidenceTypeList', () => {
       })
 
       render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}
@@ -487,13 +498,15 @@ describe('EvidenceTypeList', () => {
         metadata: [],
       }
 
-      mockUseStore.mockReturnValue([
-        { ...initialState, bcscSecure: { ...initialState.bcscSecure, additionalEvidenceData: [existingEvidence] } },
-        jest.fn(),
-      ])
+      mockUseStore.mockReturnValue(
+        withBCSCStore([
+          { ...initialState, bcscSecure: { ...initialState.bcscSecure, additionalEvidenceData: [existingEvidence] } },
+          jest.fn(),
+        ])
+      )
 
       render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}
@@ -524,7 +537,7 @@ describe('EvidenceTypeList', () => {
       })
 
       return render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}
@@ -577,7 +590,7 @@ describe('EvidenceTypeList', () => {
       })
 
       const { getByTestId } = render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={
@@ -642,7 +655,7 @@ describe('EvidenceTypeList', () => {
       })
 
       const { getByTestId } = render(
-        <BasicAppContext>
+        <BasicAppContext initialStateOverride={mockUseStore()[0]}>
           <EvidenceTypeListScreen
             navigation={mockNavigation as never}
             route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}

@@ -4,9 +4,9 @@ import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-ser
 import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCDispatchAction } from '@/store'
+import { storage } from '@/bcsc-theme/storage'
+import { nativeAccount, seedAccount, seedBCSCStore, withBCSCStore } from '@/bcsc-theme/storage/testing'
 import * as Bifold from '@bifold/core'
-import { DispatchAction } from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 import useRegistrationApi from './useRegistrationApi'
@@ -65,12 +65,21 @@ const setupFactoryReset = (overrides: FactoryResetSetup = {}) => {
   jest.mocked(useBCSCApiClientState).mockReturnValue({ client, isClientReady: true } as any)
   jest.mocked(useRegistrationApi).mockReturnValue({ deleteRegistration, register: jest.fn() } as any)
   jest.mocked(useSecureActions).mockReturnValue({ clearSecureState, deleteSecureData } as any)
-  bcscCore.getAccount.mockResolvedValue(account)
-  bcscCore.removeAccount.mockResolvedValue(undefined)
-  bifold.useStore.mockReturnValue([store, dispatch])
+  seedAccount(account ? nativeAccount(account) : null)
+  bifold.useStore.mockReturnValue(withBCSCStore([store, dispatch]))
   bifold.useServices.mockReturnValue([logger] as any)
 
   return { bcscCore, logger, deleteRegistration, dispatch, clearSecureState, deleteSecureData }
+}
+
+// The PIN is found through these
+const pinAccount = { accountId: 'test-account-id', issuer: 'https://idsit.gov.bc.ca/device/' }
+
+// The store's removeProfile, still removing, so a test can check when it ran
+const spyOnRemoveProfile = () => {
+  const removeProfile = jest.fn(storage.store.getState().account.removeProfile)
+  seedBCSCStore({ account: { removeProfile } })
+  return removeProfile
 }
 
 const walletPurgeStore = {
@@ -86,7 +95,7 @@ describe('useFactoryReset', () => {
   })
 
   it('should factory reset the device when successful', async () => {
-    const { bcscCore, deleteRegistration, dispatch, clearSecureState, deleteSecureData } = setupFactoryReset()
+    const { bcscCore, deleteRegistration, clearSecureState, deleteSecureData } = setupFactoryReset()
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -98,18 +107,18 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(bcscCore.getAccount).toHaveBeenCalledWith()
     expect(deleteRegistration).toHaveBeenCalledWith('token', 'test-client-id')
+    expect(bcscCore.deletePIN).toHaveBeenCalledWith(pinAccount)
     expect(deleteSecureData).toHaveBeenCalledWith()
-    expect(bcscCore.removeAccount).toHaveBeenCalledWith()
+    expect(storage.store.getState().account.profile).toBeUndefined()
     expect(bcscCore.clearAllKeychainData).toHaveBeenCalledWith()
     expect(clearSecureState).toHaveBeenCalledWith()
-    expect(dispatch.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
-    expect(dispatch.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
+    expect(storage.store.getState().session.didAuthenticate).toBe(false)
   })
 
   it('forgets the wrong PIN attempts once the account is removed, before the state is cleared', async () => {
-    const { bcscCore, logger, dispatch } = setupFactoryReset()
+    const { logger, clearSecureState } = setupFactoryReset()
+    const removeProfile = spyOnRemoveProfile()
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -121,25 +130,8 @@ describe('useFactoryReset', () => {
 
     expect(clearPinAttempts).toHaveBeenCalledTimes(1)
     expect(clearPinAttempts).toHaveBeenCalledWith(logger)
-    expect(bcscCore.removeAccount.mock.invocationCallOrder[0]).toBeLessThan(clearedAt)
-    expect(clearedAt).toBeLessThan(dispatch.mock.invocationCallOrder[0])
-  })
-
-  it('should call getToken when registrationAccessToken is missing from store', async () => {
-    const { bcscCore, deleteRegistration } = setupFactoryReset({
-      store: { bcscSecure: { registrationAccessToken: undefined, additionalEvidenceData: [] } },
-    })
-    bcscCore.getToken.mockResolvedValue({ token: 'native-token' } as any)
-
-    const hook = renderHook(() => useFactoryReset())
-
-    await act(async () => {
-      const result = await hook.result.current()
-      expect(result.success).toBe(true)
-    })
-
-    expect(bcscCore.getToken).toHaveBeenCalledWith(BcscCore.TokenType.Registration)
-    expect(deleteRegistration).toHaveBeenCalledWith('native-token', 'test-client-id')
+    expect(removeProfile.mock.invocationCallOrder[0]).toBeLessThan(clearedAt)
+    expect(clearedAt).toBeLessThan(jest.mocked(clearSecureState).mock.invocationCallOrder[0])
   })
 
   it('awaits agentCtx.teardownAgent before clearing state when a live agent exists', async () => {
@@ -148,8 +140,8 @@ describe('useFactoryReset', () => {
     // Promise.resolve()`, or even a macrotask `await new Promise(setTimeout)`) are
     // unreliable here: whether or not the call site actually awaits
     // agentCtx.teardownAgent(), the rest of the reset's own await chain
-    // (removeAccountArtifacts -> getAccount/deleteRegistration/deleteSecureData/
-    // removeAccount) gives a fire-and-forget call's continuation plenty of scheduler
+    // (removeAccountArtifacts -> deleteRegistration/deletePIN/clearAllKeychainData, then
+    // removeProfile/deleteSecureData) gives a fire-and-forget call's continuation plenty of scheduler
     // turns to resolve before assertion time anyway — so a timing-only test can't
     // distinguish "awaited" from "dropped await". Holding teardownAgent open until we
     // explicitly resolve it, and asserting nothing past it has run in the meantime,
@@ -171,7 +163,7 @@ describe('useFactoryReset', () => {
       waitForAgent: jest.fn().mockResolvedValue(agent),
     })
 
-    const { bcscCore, clearSecureState } = setupFactoryReset()
+    const { deleteRegistration, clearSecureState } = setupFactoryReset()
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -182,7 +174,7 @@ describe('useFactoryReset', () => {
 
     // Flush several microtask turns without resolving teardownPromise. If the call site
     // dropped its `await`, execution falls through to removeAccountArtifacts (and on to
-    // clearSecureState) regardless of whether teardownAgent has settled — getAccount
+    // clearSecureState) regardless of whether teardownAgent has settled — deleteRegistration
     // would already have been called by now.
     await act(async () => {
       for (let i = 0; i < 5; i++) {
@@ -190,7 +182,7 @@ describe('useFactoryReset', () => {
       }
     })
 
-    expect(bcscCore.getAccount).not.toHaveBeenCalled()
+    expect(deleteRegistration).not.toHaveBeenCalled()
     expect(clearSecureState).not.toHaveBeenCalled()
 
     resolveTeardown()
@@ -199,25 +191,28 @@ describe('useFactoryReset', () => {
 
     expect(result.success).toBe(true)
     expect(teardownAgentMock).toHaveBeenCalledTimes(1)
-    expect(bcscCore.getAccount).toHaveBeenCalled()
+    expect(deleteRegistration).toHaveBeenCalled()
     expect(clearSecureState).toHaveBeenCalled()
   })
 
-  it('dispatches CLEAR_BCSC, then clearSecureState, then DID_AUTHENTICATE(false)', async () => {
+  it('clears the account before the session, then logs out', async () => {
+    seedBCSCStore({
+      account: {
+        profile: { accountId: 'a', clientId: 'c', issuer: 'i', securityMethod: 'app_pin_no_device_authn' as never },
+      },
+      session: { didAuthenticate: true },
+    })
     const callOrder: string[] = []
     const clearSecureState = jest.fn(() => {
-      callOrder.push('clearSecureState')
+      callOrder.push(storage.store.getState().account.profile ? 'clearSecureState, account kept' : 'clearSecureState')
     })
-    const dispatch = jest.fn((action: any) => {
-      if (action.type === BCDispatchAction.CLEAR_BCSC) {
-        callOrder.push('CLEAR_BCSC')
-      }
-      if (action.type === DispatchAction.DID_AUTHENTICATE) {
-        callOrder.push('DID_AUTHENTICATE')
+    const unsubscribe = storage.store.subscribe((state, previous) => {
+      if (previous.session.didAuthenticate && !state.session.didAuthenticate) {
+        callOrder.push('logged out')
       }
     })
 
-    setupFactoryReset({ clearSecureState, dispatch })
+    setupFactoryReset({ clearSecureState })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -225,11 +220,12 @@ describe('useFactoryReset', () => {
       const result = await hook.result.current()
       expect(result.success).toBe(true)
     })
+    unsubscribe()
 
-    // hasAccount (CLEAR_BCSC) must flip false before bcscSecure clears, so RootStack
-    // short-circuits to OnboardingStack before it ever derives showVerifyStack —
-    // this is what prevents the transient MainStack mount described in #4336.
-    expect(callOrder).toStrictEqual(['CLEAR_BCSC', 'clearSecureState', 'DID_AUTHENTICATE'])
+    // hasAccount (the profile) must go false before the session clears, so RootStack short-circuits to
+    // OnboardingStack before it ever derives showVerifyStack. This is what prevents the transient MainStack
+    // mount described in #4336.
+    expect(callOrder).toStrictEqual(['clearSecureState', 'logged out'])
   })
 
   it('purges an orphaned wallet store when no live agent is held but a wallet key exists', async () => {
@@ -238,7 +234,7 @@ describe('useFactoryReset', () => {
     // interrupted init may have written an on-disk store keyed with the wallet
     // key that account removal is about to make underivable. Factory reset must
     // delete it via the throwaway-agent path or it orphans the store forever.
-    const { bcscCore } = setupFactoryReset({ store: walletPurgeStore })
+    setupFactoryReset({ store: walletPurgeStore })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -253,7 +249,7 @@ describe('useFactoryReset', () => {
     expect(purgeWalletStore).toHaveBeenCalledWith(
       expect.objectContaining({ walletSecret: expect.objectContaining({ key: 'stale-wallet-key' }) })
     )
-    expect(bcscCore.removeAccount).toHaveBeenCalledWith()
+    expect(storage.store.getState().account.profile).toBeUndefined()
   })
 
   it('does not fail the reset if the orphaned-store purge throws', async () => {
@@ -289,10 +285,10 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(bcscCore.getAccount).toHaveBeenCalled()
     expect(logger.warn).not.toHaveBeenCalled()
     expect(logger.info).toHaveBeenCalledWith('FactoryReset: No BCSC account found')
     expect(deleteRegistration).not.toHaveBeenCalled()
+    expect(bcscCore.deletePIN).not.toHaveBeenCalled()
     // Keychain data can outlive an app reinstall even when no local account file
     // remains, so the wipe must still run in this branch.
     expect(bcscCore.clearAllKeychainData).toHaveBeenCalledWith()
@@ -316,7 +312,7 @@ describe('useFactoryReset', () => {
   })
 
   it('should log a warning if IAS account deletion fails', async () => {
-    const { bcscCore, logger } = setupFactoryReset({
+    const { logger, deleteRegistration } = setupFactoryReset({
       deleteRegistration: jest.fn().mockResolvedValue({ success: false }),
     })
 
@@ -327,7 +323,7 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(bcscCore.getAccount).toHaveBeenCalled()
+    expect(deleteRegistration).toHaveBeenCalledWith('token', 'test-client-id')
     expect(logger.warn).toHaveBeenCalledWith('FactoryReset: Failed to delete IAS account from server')
   })
 
@@ -354,7 +350,7 @@ describe('useFactoryReset', () => {
 
   it('should return an error if local account file deletion fails', async () => {
     const { bcscCore, deleteRegistration } = setupFactoryReset()
-    bcscCore.removeAccount.mockRejectedValue(new Error('Failed to remove account'))
+    seedBCSCStore({ account: { removeProfile: jest.fn().mockRejectedValue(new Error('Failed to remove account')) } })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -367,10 +363,29 @@ describe('useFactoryReset', () => {
       })
     })
 
-    expect(bcscCore.getAccount).toHaveBeenCalled()
     expect(deleteRegistration).toHaveBeenCalledWith('token', 'test-client-id')
-    expect(bcscCore.removeAccount).toHaveBeenCalled()
+    expect(bcscCore.deletePIN).toHaveBeenCalledWith(pinAccount)
+    expect(storage.store.getState().account.removeProfile).toHaveBeenCalled()
     // The account and its PIN are still there, so a lock on that PIN must stay
     expect(clearPinAttempts).not.toHaveBeenCalled()
+  })
+})
+
+describe('useFactoryReset when clearing stored state fails', () => {
+  it('still clears the session and logs out', async () => {
+    const { clearSecureState, logger } = setupFactoryReset()
+    seedBCSCStore({
+      session: { didAuthenticate: true },
+      app: { clear: jest.fn().mockRejectedValue(new Error('disk')) },
+    })
+
+    const hook = renderHook(() => useFactoryReset())
+    await act(async () => {
+      await hook.result.current()
+    })
+
+    expect(clearSecureState).toHaveBeenCalled()
+    expect(storage.store.getState().session.didAuthenticate).toBe(false)
+    expect(logger.error).toHaveBeenCalledWith('FactoryReset: Failed to clear stored state', expect.any(Error))
   })
 })

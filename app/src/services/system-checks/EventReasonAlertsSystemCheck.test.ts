@@ -1,13 +1,14 @@
 import { tokenToCredentialMetadata } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
+import { storage } from '@/bcsc-theme/storage'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
 import { AppEventCode } from '@/events/appEventCode'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { SystemCheckNavigation, SystemCheckUtils } from '@/services/system-checks/system-checks'
-import { BCDispatchAction } from '@/store'
+import { waitFor } from '@testing-library/react-native'
 
 describe('EventReasonAlertsSystemCheck', () => {
-  let mockUtils: SystemCheckUtils
+  let mockUtils: SystemCheckUtils & { dispatch: jest.Mock }
   let mockNavigation: SystemCheckNavigation
   let emitAlert: jest.Mock
 
@@ -180,10 +181,9 @@ describe('EventReasonAlertsSystemCheck', () => {
       await check.runCheck()
       check.onFail()
 
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-        payload: [expect.objectContaining({ bcscReason: BCSCReason.Cancel })],
-      })
+      await waitFor(() =>
+        expect(storage.store.getState().account.credentialMetadata).toMatchObject({ bcscReason: BCSCReason.Cancel })
+      )
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, {
         invalidationReason: BCSCReason.Cancel,
       })
@@ -234,15 +234,13 @@ describe('EventReasonAlertsSystemCheck', () => {
       check.onFail()
 
       // The reason is persisted so useCardStatus can gate login, pairing, and Services on it.
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-        payload: [expect.objectContaining({ bcscReason: BCSCReason.ExpiredBySystem })],
-      })
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED,
-        payload: [true],
-      })
-      expect(mockUtils.dispatch).toHaveBeenCalledTimes(2)
+      await waitFor(() =>
+        expect(storage.store.getState().account.credentialMetadata).toMatchObject({
+          bcscReason: BCSCReason.ExpiredBySystem,
+        })
+      )
+      expect(storage.store.getState().session.credentialDeactivated).toEqual(true)
+      expect(mockUtils.dispatch).not.toHaveBeenCalled()
       // ias-ios suppresses the expiry alert deliberately (IASP-12489); v4 matches it.
       expect(emitAlert).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()

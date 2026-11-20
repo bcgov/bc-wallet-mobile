@@ -1,11 +1,18 @@
+import { resetBCSCStore, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { AppEventCode } from '@/events/appEventCode'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
-import { BCDispatchAction } from '@/store'
 import { MockLogger } from '@bifold/core'
 import { mockAppError } from '@mocks/helpers/error'
 import deviceInfo from 'react-native-device-info'
 
 describe('UpdateDeviceRegistrationSystemCheck', () => {
+  // The registered app version is saved to the app slice of the BCSC store
+  const mockUpdateApp = jest.fn().mockResolvedValue(undefined)
+  beforeEach(() => {
+    resetBCSCStore()
+    seedBCSCStore({ app: { update: mockUpdateApp } })
+  })
+
   beforeEach(() => {
     jest.useFakeTimers()
   })
@@ -17,7 +24,6 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
   describe('runCheck', () => {
     it('should return true when app version and build number are the same', async () => {
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -35,7 +41,6 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
 
     it('should return false when app version is different', async () => {
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -53,7 +58,6 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
 
     it('should return false when build number is different', async () => {
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -71,7 +75,6 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
 
     it('should return false when stored version is blank (v3→v4 upgrade)', async () => {
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -89,7 +92,6 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
 
     it('should return false when stored build number is blank', async () => {
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -108,7 +110,6 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
   describe('onFail', () => {
     it('should update registration and dispatch the new app version', async () => {
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -118,12 +119,11 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
 
       await systemCheck.onFail()
 
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.UPDATE_APP_VERSION })
+      expect(mockUpdateApp).toHaveBeenCalledWith({ appVersion: expect.any(String), appBuildNumber: expect.any(String) })
       expect(updateRegistrationMock).toHaveBeenCalled()
     })
     it('should log an error if update registration fails', async () => {
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }
@@ -141,7 +141,6 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
     })
     it('should fold AppError fullMessage into the log message so it reaches problem reports', async () => {
       const mockUtils = {
-        dispatch: jest.fn(),
         translation: jest.fn() as any,
         logger: new MockLogger(),
       }

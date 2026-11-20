@@ -82,12 +82,13 @@ describe('useBanners', () => {
       expect(result.current.banners).toEqual([])
     })
 
-    it('opens the app store and hides the banner when pressed', () => {
+    it('opens the app store and hides the banner when pressed', async () => {
       mockServerStatus(optionalUpdate)
       const openLinkSpy = jest.spyOn(links, 'openLink').mockResolvedValue(undefined)
       const { result } = renderBanners({ scope: BannersScope.Auth })
 
-      act(() => {
+      // The dismissal is saved before the store changes
+      await act(async () => {
         result.current.banners[0].onPress?.()
       })
 

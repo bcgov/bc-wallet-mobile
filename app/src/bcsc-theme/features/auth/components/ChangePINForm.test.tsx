@@ -2,7 +2,7 @@ import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { PinVerificationType, verifyPinWithLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { setPIN } from 'react-native-bcsc-core'
+import { type AccountSecurityMethod, setPIN } from 'react-native-bcsc-core'
 import { BasicAppContext } from '../../../../../__mocks__/helpers/app'
 import { ChangePINForm } from './ChangePINForm'
 
@@ -18,6 +18,19 @@ jest.mock('@/bcsc-theme/features/auth/services/pin-lockout-service', () => ({
 const mockSetPIN = jest.mocked(setPIN)
 const mockVerifyPinWithLockout = jest.mocked(verifyPinWithLockout)
 
+const pinAccount = { accountId: 'test-account-id', issuer: 'https://idsit.gov.bc.ca/device/' }
+
+// BasicAppContext resets the store, so the account goes in through it
+const accountSeed = {
+  account: {
+    profile: {
+      ...pinAccount,
+      clientId: 'test-client-id',
+      securityMethod: 'app_pin_no_device_authn' as AccountSecurityMethod,
+    },
+  },
+}
+
 describe('ChangePINForm', () => {
   const mockOnSuccess = jest.fn()
 
@@ -27,7 +40,7 @@ describe('ChangePINForm', () => {
 
   it('renders correctly with all PIN fields', () => {
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -44,7 +57,7 @@ describe('ChangePINForm', () => {
 
   it('shows checkbox acknowledgment', () => {
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -56,7 +69,7 @@ describe('ChangePINForm', () => {
 
   it('shows Change PIN button', () => {
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -70,7 +83,7 @@ describe('ChangePINForm', () => {
     mockVerifyPinWithLockout.mockResolvedValue({ type: PinVerificationType.Incorrect, isLastAttempt: false })
 
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -107,7 +120,7 @@ describe('ChangePINForm', () => {
     mockVerifyPinWithLockout.mockResolvedValue({ type: PinVerificationType.Incorrect, isLastAttempt: true })
 
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -137,7 +150,7 @@ describe('ChangePINForm', () => {
     })
 
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -157,14 +170,14 @@ describe('ChangePINForm', () => {
 
     await waitFor(() => {
       expect(mockVerifyPinWithLockout).toHaveBeenCalledWith('123456', expect.anything())
-      expect(mockSetPIN).toHaveBeenCalledWith('654321')
+      expect(mockSetPIN).toHaveBeenCalledWith(pinAccount, '654321')
       expect(mockOnSuccess).toHaveBeenCalled()
     })
   })
 
   it('shows error when PINs do not match', async () => {
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -196,7 +209,7 @@ describe('ChangePINForm', () => {
     })
 
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -231,7 +244,7 @@ describe('ChangePINForm', () => {
     })
 
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -260,7 +273,7 @@ describe('ChangePINForm', () => {
     mockVerifyPinWithLockout.mockRejectedValue(new Error('Network error'))
 
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>
@@ -287,7 +300,7 @@ describe('ChangePINForm', () => {
 
   it('shows checkbox error when not checked', async () => {
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <BCSCLoadingProvider>
           <ChangePINForm onSuccess={mockOnSuccess} />
         </BCSCLoadingProvider>

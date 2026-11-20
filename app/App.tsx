@@ -10,6 +10,7 @@ import {
   VerificationResponseService,
   VerificationResponseServiceProvider,
 } from '@/bcsc-theme/features/verification-response'
+import { BifoldStoreView } from '@/bcsc-theme/storage/bifold-store-view'
 import { BCThemeNames, Mode, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
@@ -19,6 +20,7 @@ import { localization } from '@/localization'
 import { RemoteConfigProvider } from '@/remote-config/RemoteConfig'
 import { initialState, reducer } from '@/store'
 import { themes } from '@/theme'
+import { IS_BCSC } from '@/utils/environment'
 import { initIssuer } from '@/utils/issuer'
 import { removeLegacyTxnCache } from '@/utils/legacy-txn-cache'
 import { appLogger } from '@/utils/logger'
@@ -42,7 +44,7 @@ import {
 } from '@bifold/core'
 import WebDisplay from '@screens/WebDisplay'
 import i18next from 'i18next'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { PropsWithChildren, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, StatusBar } from 'react-native'
 import Config from 'react-native-config'
@@ -81,6 +83,18 @@ const ThemeAwareStatusBar = () => {
     StatusBar.setBarStyle(barStyle, true)
   }, [barStyle])
   return <StatusBar barStyle={barStyle} backgroundColor="transparent" translucent />
+}
+
+// BCSC keeps its state in its own store; Bifold's screens read a view of it instead of Bifold's store
+const BifoldState: React.FC<PropsWithChildren> = ({ children }) => {
+  if (IS_BCSC) {
+    return <BifoldStoreView>{children}</BifoldStoreView>
+  }
+  return (
+    <StoreProvider initialState={initialState} reducer={reducer}>
+      {children}
+    </StoreProvider>
+  )
 }
 
 const App = () => {
@@ -137,7 +151,7 @@ const App = () => {
     <ErrorBoundaryWrapper logger={logger}>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <ContainerProvider value={bcwContainer}>
-          <StoreProvider initialState={initialState} reducer={reducer}>
+          <BifoldState>
             <ThemeProvider
               themes={themes}
               defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.Light : BCThemeNames.BCWallet}
@@ -177,7 +191,7 @@ const App = () => {
                 </RemoteConfigProvider>
               </NavigationContainerProvider>
             </ThemeProvider>
-          </StoreProvider>
+          </BifoldState>
         </ContainerProvider>
       </SafeAreaProvider>
     </ErrorBoundaryWrapper>

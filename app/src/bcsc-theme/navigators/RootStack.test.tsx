@@ -1,13 +1,17 @@
-import { EXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
-import { ErrorRegistry } from '@/errors'
+import {
+  reportSessionWritesAs,
+  resetBCSCStore,
+  seedBCSCStore,
+  seedBCSCStoreFromBCState,
+  withBCSCStore,
+} from '@/bcsc-theme/storage/testing'
+import { EXPIRED_JWT, UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import * as environment from '@/utils/environment'
 import { IASEnvironment } from '@/utils/environment'
 import * as Bifold from '@bifold/core'
 import { act, render } from '@testing-library/react-native'
 import React from 'react'
-import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
 import { useFcmService } from '../features/fcm'
-import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
 
 let mockAccount: { account_expiration_date: Date } | null = null
@@ -23,7 +27,6 @@ jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
   useNavigationContainer: () => ({ isNavigationReady: mockIsNavigationReady() }),
 }))
-jest.mock('../api/hooks/useInitializeAccountStatus')
 jest.mock('../api/hooks/useThirdPartyKeyboardWarning', () => ({
   __esModule: true,
   default: jest.fn(),
@@ -125,9 +128,6 @@ describe('BCSCRootStack', () => {
 
     const mockLoadState = jest.fn()
     mockServices(mockLoadState)
-    jest.mocked(useInitializeAccountStatusModule.useInitializeAccountStatus).mockReturnValue({
-      initializingAccount: false,
-    })
     jest.mocked(useFcmService).mockReturnValue({
       service: {},
       viewModel: { processPendingChallenges: mockProcessPendingChallenges, setCardExpired: mockSetCardExpired },
@@ -136,7 +136,11 @@ describe('BCSCRootStack', () => {
 
   it('renders LoadingScreen when stateLoaded is false', () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
+    reportSessionWritesAs(mockDispatch)
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue(withBCSCStore([mockStore({ stateLoaded: false }), mockDispatch] as any))
+    seedBCSCStoreFromBCState(mockStore({ stateLoaded: false }) as never)
 
     const { toJSON } = render(<BCSCRootStack />)
 
@@ -153,6 +157,11 @@ describe('BCSCRootStack', () => {
     const renderWith = (storeOverrides: Record<string, any>, isProduction: boolean) => {
       isProductionBundleSpy = jest.spyOn(environment, 'isProductionBundle').mockReturnValue(isProduction)
       jest.mocked(Bifold.useStore).mockReturnValue([mockStore(storeOverrides), jest.fn()] as any)
+      resetBCSCStore()
+      seedBCSCStore({ session: { stateLoaded: storeOverrides.stateLoaded ?? true } })
+      if (storeOverrides.developer) {
+        seedBCSCStore({ developer: storeOverrides.developer })
+      }
 
       return render(<BCSCRootStack />)
     }
@@ -190,21 +199,11 @@ describe('BCSCRootStack', () => {
     })
   })
 
-  it('renders LoadingScreen when initializingAccount is true', () => {
-    const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
-    jest.mocked(useInitializeAccountStatusModule.useInitializeAccountStatus).mockReturnValue({
-      initializingAccount: true,
-    })
-
-    const { toJSON } = render(<BCSCRootStack />)
-
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { message: 'BCSC.Loading.AppStartup' } })
-  })
-
   it('renders LoadingScreen when isClientReady is false', () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
+    reportSessionWritesAs(mockDispatch)
+    jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([mockStore(), mockDispatch] as any))
+    seedBCSCStoreFromBCState(mockStore() as never)
 
     mockIsClientReady.mockReturnValue(false)
 
@@ -215,7 +214,9 @@ describe('BCSCRootStack', () => {
 
   it('renders LoadingScreen when isNavigationReady is false', () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
+    reportSessionWritesAs(mockDispatch)
+    jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([mockStore(), mockDispatch] as any))
+    seedBCSCStoreFromBCState(mockStore() as never)
 
     mockIsNavigationReady.mockReturnValue(false)
 
@@ -269,7 +270,8 @@ describe('BCSCRootStack', () => {
       'MainStack',
     ],
   ])('renders %s', (_name, overrides, expectedStack) => {
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(overrides), jest.fn()] as any)
+    jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([mockStore(overrides), jest.fn()] as any))
+    seedBCSCStoreFromBCState(mockStore(overrides) as never)
 
     const { toJSON } = render(<BCSCRootStack />)
 
@@ -278,27 +280,46 @@ describe('BCSCRootStack', () => {
 
   it('renders VerifyStack (which opens on the verify prompt) when onboarding completes', () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
+    reportSessionWritesAs(mockDispatch)
+    jest.mocked(Bifold.useStore).mockReturnValue(
+      withBCSCStore([
+        mockStore({
+          bcsc: { hasAccount: false },
+          authentication: { didAuthenticate: false },
+          bcscSecure: { verified: false },
+        }),
+        mockDispatch,
+      ] as any)
+    )
+    seedBCSCStoreFromBCState(
       mockStore({
         bcsc: { hasAccount: false },
         authentication: { didAuthenticate: false },
         bcscSecure: { verified: false },
-      }),
-      mockDispatch,
-    ] as any)
+      }) as never
+    )
 
     const { toJSON, rerender } = render(<BCSCRootStack />)
     expect(toJSON()).toBe('OnboardingStack')
 
     // Creating the PIN completes onboarding: SUCCESSFUL_AUTH sets both flags at once.
-    jest.mocked(Bifold.useStore).mockReturnValue([
+    jest.mocked(Bifold.useStore).mockReturnValue(
+      withBCSCStore([
+        mockStore({
+          bcsc: { hasAccount: true },
+          authentication: { didAuthenticate: true },
+          bcscSecure: { verified: false },
+        }),
+        mockDispatch,
+      ] as any)
+    )
+    seedBCSCStoreFromBCState(
       mockStore({
         bcsc: { hasAccount: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: false },
-      }),
-      mockDispatch,
-    ] as any)
+      }) as never
+    )
     rerender(<BCSCRootStack />)
 
     expect(toJSON()).toBe('VerifyStack')
@@ -325,7 +346,9 @@ describe('BCSCRootStack', () => {
 
     it('shows the verify prompt (VerifyStack) when verificationSkipped is undefined', () => {
       const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(UNANSWERED), mockDispatch] as any)
+      reportSessionWritesAs(mockDispatch)
+      jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([authedUnverified(UNANSWERED), mockDispatch] as any))
+      seedBCSCStoreFromBCState(authedUnverified(UNANSWERED) as never)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -336,7 +359,9 @@ describe('BCSCRootStack', () => {
 
     it('routes a user who skipped and never started verification straight to MainStack', () => {
       const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(SKIPPED), mockDispatch] as any)
+      reportSessionWritesAs(mockDispatch)
+      jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([authedUnverified(SKIPPED), mockDispatch] as any))
+      seedBCSCStoreFromBCState(authedUnverified(SKIPPED) as never)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -346,7 +371,11 @@ describe('BCSCRootStack', () => {
 
     it('re-enters verification on a cold start when it was started and is unfinished', () => {
       const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
+      reportSessionWritesAs(mockDispatch)
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue(withBCSCStore([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any))
+      seedBCSCStoreFromBCState(authedUnverified(CHOSE_TO_VERIFY) as never)
 
       const { toJSON, rerender } = render(<BCSCRootStack />)
 
@@ -359,7 +388,9 @@ describe('BCSCRootStack', () => {
       // Simulate that dispatch landing in the store.
       jest
         .mocked(Bifold.useStore)
-        .mockReturnValue([authedUnverified(CHOSE_TO_VERIFY, { inVerifyFlow: true }), mockDispatch] as any)
+        .mockReturnValue(
+          withBCSCStore([authedUnverified(CHOSE_TO_VERIFY, { inVerifyFlow: true }), mockDispatch] as any)
+        )
       rerender(<BCSCRootStack />)
 
       expect(toJSON()).toBe('VerifyStack')
@@ -367,7 +398,11 @@ describe('BCSCRootStack', () => {
 
     it('re-enters verification for a user who skipped the prompt but started verification later', () => {
       const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(SKIPPED_THEN_STARTED), mockDispatch] as any)
+      reportSessionWritesAs(mockDispatch)
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue(withBCSCStore([authedUnverified(SKIPPED_THEN_STARTED), mockDispatch] as any))
+      seedBCSCStoreFromBCState(authedUnverified(SKIPPED_THEN_STARTED) as never)
 
       render(<BCSCRootStack />)
 
@@ -380,9 +415,13 @@ describe('BCSCRootStack', () => {
 
     it('leaves a deactivated card on MainStack even when verification was started', () => {
       const mockDispatch = jest.fn()
+      reportSessionWritesAs(mockDispatch)
       jest
         .mocked(Bifold.useStore)
-        .mockReturnValue([authedUnverified(CHOSE_TO_VERIFY, { credentialDeactivated: true }), mockDispatch] as any)
+        .mockReturnValue(
+          withBCSCStore([authedUnverified(CHOSE_TO_VERIFY, { credentialDeactivated: true }), mockDispatch] as any)
+        )
+      seedBCSCStoreFromBCState(authedUnverified(CHOSE_TO_VERIFY, { credentialDeactivated: true }) as never)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -393,7 +432,11 @@ describe('BCSCRootStack', () => {
 
     it('only re-enters verification once per session (a later re-render does not re-dispatch)', () => {
       const mockDispatch = jest.fn()
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
+      reportSessionWritesAs(mockDispatch)
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue(withBCSCStore([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any))
+      seedBCSCStoreFromBCState(authedUnverified(CHOSE_TO_VERIFY) as never)
 
       const { rerender } = render(<BCSCRootStack />)
       expect(mockDispatch).toHaveBeenCalledTimes(1)
@@ -406,8 +449,12 @@ describe('BCSCRootStack', () => {
 
     it('holds the loading screen until the IAS status is known for a would-resume user', () => {
       const mockDispatch = jest.fn()
+      reportSessionWritesAs(mockDispatch)
       mockUseServerStatus.mockReturnValue({ isAvailable: true, hasChecked: false })
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue(withBCSCStore([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any))
+      seedBCSCStoreFromBCState(authedUnverified(CHOSE_TO_VERIFY) as never)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -417,8 +464,12 @@ describe('BCSCRootStack', () => {
 
     it('falls back to the verify prompt (not the resume step) and does not resume during an outage', () => {
       const mockDispatch = jest.fn()
+      reportSessionWritesAs(mockDispatch)
       mockUseServerStatus.mockReturnValue({ isAvailable: false, hasChecked: true })
-      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any)
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue(withBCSCStore([authedUnverified(CHOSE_TO_VERIFY), mockDispatch] as any))
+      seedBCSCStoreFromBCState(authedUnverified(CHOSE_TO_VERIFY) as never)
 
       const { toJSON } = render(<BCSCRootStack />)
 
@@ -442,9 +493,13 @@ describe('BCSCRootStack', () => {
           }
         })
         jest.mocked(Bifold.useStore).mockImplementation(() => [state, dispatch] as any)
+        reportSessionWritesAs(dispatch)
+        seedBCSCStoreFromBCState(state as never)
         const utils = render(<BCSCRootStack />)
         const apply = (patch: (current: Record<string, any>) => Record<string, any>) => {
           state = patch(state)
+          // The state object is the whole truth, so the BCSC store is rebuilt from it
+          act(() => seedBCSCStoreFromBCState(state as never))
           utils.rerender(<BCSCRootStack />)
         }
         return { ...utils, dispatch, apply }
@@ -711,62 +766,18 @@ describe('BCSCRootStack', () => {
     })
   })
 
-  it('calls loadState when stateLoaded is false', () => {
-    const mockDispatch = jest.fn()
-    const mockLoadState = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
-    mockServices(mockLoadState)
-
-    render(<BCSCRootStack />)
-
-    expect(mockLoadState).toHaveBeenCalledWith(mockDispatch)
-  })
-
-  it('does not call loadState when stateLoaded is true', () => {
-    const mockDispatch = jest.fn()
-    const mockLoadState = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: true }), mockDispatch] as any)
-    mockServices(mockLoadState)
-
-    render(<BCSCRootStack />)
-
-    expect(mockLoadState).not.toHaveBeenCalled()
-  })
-
-  it('calls emitErrorModal when loadState throws', () => {
-    const mockDispatch = jest.fn()
-    const mockError = new Error('load failed')
-    const mockLoadState = jest.fn().mockImplementation(() => {
-      throw mockError
-    })
-
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
-    mockServices(mockLoadState)
-
-    render(<BCSCRootStack />)
-
-    expect(mockEmitErrorModal).toHaveBeenCalledWith(
-      'Error.Problem',
-      'Error.ProblemDescription',
-      toAppError(mockError, ErrorRegistry.STATE_LOAD_ERROR)
-    )
-  })
+  // Loading storage is StorageGate's job now (StorageGate.test.tsx); RootStack only mounts once it's open
 
   it('tells FCM the card is expired when the stored refresh token expires', () => {
     const verified = { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }
-    jest
-      .mocked(Bifold.useStore)
-      .mockReturnValue([mockStore({ ...verified, bcscSecure: { verified: true } }), jest.fn()] as any)
+    seedBCSCStoreFromBCState(mockStore({ ...verified, bcscSecure: { verified: true, refreshToken: UNEXPIRED_JWT } }))
 
     const { rerender } = render(<BCSCRootStack />)
     expect(mockSetCardExpired).toHaveBeenLastCalledWith(false)
 
-    jest
-      .mocked(Bifold.useStore)
-      .mockReturnValue([
-        mockStore({ ...verified, bcscSecure: { verified: true, refreshToken: EXPIRED_JWT } }),
-        jest.fn(),
-      ] as any)
+    act(() => {
+      seedBCSCStoreFromBCState(mockStore({ ...verified, bcscSecure: { verified: true, refreshToken: EXPIRED_JWT } }))
+    })
     rerender(<BCSCRootStack />)
 
     expect(mockSetCardExpired).toHaveBeenLastCalledWith(true)
@@ -775,9 +786,11 @@ describe('BCSCRootStack', () => {
   describe('card expiry phase logging', () => {
     const verified = { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true } }
     const useVerifiedStore = (secure: object) =>
-      jest
-        .mocked(Bifold.useStore)
-        .mockReturnValue([mockStore({ ...verified, bcscSecure: { verified: true, ...secure } }), jest.fn()] as any)
+      act(() => {
+        seedBCSCStoreFromBCState(
+          mockStore({ ...verified, bcscSecure: { verified: true, refreshToken: UNEXPIRED_JWT, ...secure } })
+        )
+      })
     const phaseLogs = () =>
       mockLogger.info.mock.calls.map(([message]) => message).filter((m) => String(m).includes('Card expiry phase'))
 
@@ -818,7 +831,9 @@ describe('BCSCRootStack', () => {
 
   it('processPendingChallenges is called when api client is ready', () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
+    reportSessionWritesAs(mockDispatch)
+    jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([mockStore(), mockDispatch] as any))
+    seedBCSCStoreFromBCState(mockStore() as never)
 
     render(<BCSCRootStack />)
 
@@ -827,7 +842,9 @@ describe('BCSCRootStack', () => {
 
   it('processPendingChallenges is not called when api client is not ready', () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
+    reportSessionWritesAs(mockDispatch)
+    jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([mockStore(), mockDispatch] as any))
+    seedBCSCStoreFromBCState(mockStore() as never)
 
     mockIsClientReady.mockReturnValue(false)
 

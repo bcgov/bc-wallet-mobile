@@ -4,6 +4,8 @@ import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { getBCSCState, requirePINAccount } from '@/bcsc-theme/storage/hooks'
+import { newProfile, type Profile } from '@/bcsc-theme/storage/slices/account'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
@@ -24,18 +26,14 @@ import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
-import {
-  AccountSecurityMethod,
-  canPerformDeviceAuthentication,
-  getAccount,
-  setAccount,
-  setPIN as setNativePIN,
-} from 'react-native-bcsc-core'
+import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 export interface PINEntryResult {
   success: boolean
   walletKey: string
+  // The new account's profile, when this PIN came with one; handleSuccessfulAuth saves it
+  profile?: Profile
 }
 
 interface PINEntryFormProps {
@@ -131,32 +129,32 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         // All validations passed, show a full screen loading indicator
         stopLoading = startLoading(loadingMessage ?? tWithPrefix('SettingUpPIN'))
 
-        const account = await getAccount()
-
-        if (!account) {
+        let created: Profile | undefined
+        if (!getBCSCState().account.profile) {
           // Register with the appropriate security method
           const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
           const deviceSecurityMethod = isDeviceAuthAvailable
             ? AccountSecurityMethod.PinWithDeviceAuth
             : AccountSecurityMethod.PinNoDeviceAuth
 
-          // Note: account must exist before setting the PIN
-          await setAccount({
-            clientID: TEMPORARY_ACCOUNT_CLIENT_ID,
+          // The PIN is found through the account, so the account comes first
+          created = newProfile({
+            clientId: TEMPORARY_ACCOUNT_CLIENT_ID,
             issuer: client.endpoints.issuer,
             securityMethod: deviceSecurityMethod,
           })
         }
+        const pinAccount = created ? { accountId: created.accountId, issuer: created.issuer } : requirePINAccount()
 
         // Set the PIN using native module
-        const { success, walletKey } = await setNativePIN(pin1)
+        const { success, walletKey } = await setNativePIN(pinAccount, pin1)
 
         if (success) {
           // Wrong attempts at the PIN this one replaces say nothing about the new one
           await clearPinAttempts(logger)
 
           // Call the success handler with the wallet key
-          await onSuccess({ success, walletKey })
+          await onSuccess({ success, walletKey, profile: created })
           logger.info('PIN set successfully')
         } else {
           setErrorMessage1(tWithPrefix('FailedToSetPIN'))

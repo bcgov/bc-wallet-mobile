@@ -1,3 +1,4 @@
+import { getBCSCState, selectAccountRecord, useAccount } from '@/bcsc-theme/storage/hooks'
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { AppError, isAppError } from '@/errors/appError'
@@ -5,17 +6,9 @@ import { ensureAppError } from '@/errors/errorHandler'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts, useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
-import {
-  AccountSecurityMethod,
-  getAccount,
-  getAccountSecurityMethod,
-  getToken,
-  TokenType,
-} from 'react-native-bcsc-core'
+import { AccountSecurityMethod } from 'react-native-bcsc-core'
 
 /**
  * Maps AppEventCodes that can be thrown during registration to their
@@ -53,7 +46,7 @@ export const useRegistrationService = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const registrationApi = useRegistrationApi(client, isClientReady)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const [store] = useStore<BCState>()
+  const storedRegistrationAccessToken = useAccount((a) => a.tokens?.registrationAccessToken)
   const alerts = useAlerts(navigation)
 
   /** @returns whether a mapped registration alert was shown */
@@ -133,13 +126,16 @@ export const useRegistrationService = () => {
    * */
   const ensureRegistered = useCallback(async () => {
     // 1. Check if account is already registered
-    if (store.bcscSecure.registrationAccessToken) {
+    if (storedRegistrationAccessToken) {
       return
     }
 
     // 2. Register the account with the backend
     try {
-      const securityMethod = await getAccountSecurityMethod()
+      const securityMethod = getBCSCState().account.profile?.securityMethod
+      if (!securityMethod) {
+        throw AppError.fromErrorDefinition(ErrorRegistry.ACCOUNT_NOT_FOUND)
+      }
 
       // Note: Fetches registration access token and updates the account's `clientID`
       await registrationApi.register(securityMethod)
@@ -153,7 +149,7 @@ export const useRegistrationService = () => {
 
       throw appError
     }
-  }, [alerts, registrationApi, emitRegistrationAlert, store.bcscSecure.registrationAccessToken])
+  }, [alerts, registrationApi, emitRegistrationAlert, storedRegistrationAccessToken])
 
   /**
    * Deletes the current IAS client registration and creates a fresh one, keeping the same
@@ -163,24 +159,20 @@ export const useRegistrationService = () => {
    * @throws AppError `ACCOUNT_NOT_FOUND` when there is no native account to take the security method from
    */
   const cycleRegistration = useCallback(async () => {
-    const account = await getAccount()
+    const account = selectAccountRecord(getBCSCState())
     if (!account) {
       // The record carries the security method the new registration keeps, so there is nothing to cycle without it.
       throw AppError.fromErrorDefinition(ErrorRegistry.ACCOUNT_NOT_FOUND)
     }
 
-    let registrationAccessToken = store.bcscSecure.registrationAccessToken
-    if (!registrationAccessToken) {
-      const nativeToken = await getToken(TokenType.Registration)
-      registrationAccessToken = nativeToken?.token
-    }
+    const registrationAccessToken = storedRegistrationAccessToken
 
     if (registrationAccessToken && account.clientID) {
       await registrationApi.deleteRegistration(registrationAccessToken, account.clientID)
     }
 
     await registrationApi.createRegistration(account.securityMethod)
-  }, [registrationApi, store.bcscSecure.registrationAccessToken])
+  }, [registrationApi, storedRegistrationAccessToken])
 
   return useMemo(
     () => ({

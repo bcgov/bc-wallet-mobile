@@ -1,16 +1,9 @@
 import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
-import {
-  ScreenWrapper,
-  ThemedText,
-  formatTime,
-  getConnectionName,
-  testIdWithKey,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { ScreenWrapper, ThemedText, formatTime, getConnectionName, testIdWithKey, useTheme } from '@bifold/core'
 import { useConnectionById } from '@bifold/react-hooks'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -59,15 +52,13 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
   const { connectionId } = route.params
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [store] = useStore()
+  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
+  const developerModeEnabled = useBCSCStore((s) => s.preferences.developerModeEnabled)
   const connection = useConnectionById(connectionId)
   const { isPinned, togglePin } = usePinnedContacts()
   const pinned = isPinned(connectionId)
 
-  const name = useMemo(
-    () => getConnectionName(connection, store.preferences.alternateContactNames),
-    [connection, store.preferences.alternateContactNames]
-  )
+  const name = useMemo(() => getConnectionName(connection, alternateContactNames), [connection, alternateContactNames])
 
   const connectedAt = useMemo(() => {
     if (!connection?.createdAt) {
@@ -167,7 +158,7 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
               onPress={onEditName}
               testID={testIdWithKey(TestIds.main.contactDetails.editName)}
             />,
-            store.preferences.developerModeEnabled ? (
+            developerModeEnabled ? (
               <ActionButton
                 key="viewJson"
                 icon="code-braces"

@@ -1,12 +1,8 @@
-import { CACHED_LEDGER_READ_TIMEOUT_MS } from '@/constants'
+import { storage } from '@/bcsc-theme/storage'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
-import { PersistentStorage } from '@bifold/core'
 import moment from 'moment'
 
-jest.mock('@/store', () => ({
-  BCLocalStorageKeys: { GenesisTransactions: 'GenesisTransactions' },
-}))
 jest.mock('@credo-ts/react-native', () => ({ agentDependencies: {} }))
 jest.mock('@credo-ts/didcomm', () => ({
   DidCommMediatorPickupStrategy: {
@@ -40,12 +36,7 @@ jest.mock('@credo-ts/core', () => {
   )
 })
 
-jest.mock('@bifold/core', () => ({
-  PersistentStorage: {
-    fetchValueForKey: jest.fn(),
-    storeValueForKey: jest.fn(),
-  },
-}))
+jest.mock('@bifold/core', () => ({}))
 
 const mockGetCredentialDefinitionRequest = jest.fn()
 const mockGetSchemaRequest = jest.fn()
@@ -81,8 +72,6 @@ import {
   warmCache,
 } from './agent-service'
 
-const mockFetchValueForKey = PersistentStorage.fetchValueForKey as jest.Mock
-
 const logger = {
   info: jest.fn(),
   warn: jest.fn(),
@@ -99,83 +88,29 @@ beforeEach(() => {
 })
 
 describe('loadCachedLedgers', () => {
-  afterEach(() => {
-    jest.useRealTimers()
-  })
+  const seedGenesis = (value: unknown) => storage.store.getState().caches.setCache('genesis', value)
 
-  it('reads the cached genesis transactions key', async () => {
-    mockFetchValueForKey.mockResolvedValue(undefined)
-
-    await loadCachedLedgers()
-
-    expect(mockFetchValueForKey).toHaveBeenCalledWith('GenesisTransactions')
-  })
-
-  it('returns undefined when no cache exists', async () => {
-    mockFetchValueForKey.mockResolvedValue(undefined)
-
-    const result = await loadCachedLedgers()
-
-    expect(result).toBeUndefined()
+  it('returns undefined when no cache exists', () => {
+    expect(loadCachedLedgers()).toBeUndefined()
   })
 
   it('returns cached transactions when fresh (<1 day old)', async () => {
     const transactions = [{ id: 'ledger-1' }]
-    mockFetchValueForKey.mockResolvedValue({
-      timestamp: moment().subtract(6, 'hours').toISOString(),
-      transactions,
-    })
+    await seedGenesis({ timestamp: moment().subtract(6, 'hours').toISOString(), transactions })
 
-    const result = await loadCachedLedgers()
-
-    expect(result).toEqual(transactions)
+    expect(loadCachedLedgers()).toEqual(transactions)
   })
 
   it('returns undefined when cache is stale (>=1 day old)', async () => {
-    mockFetchValueForKey.mockResolvedValue({
-      timestamp: moment().subtract(2, 'days').toISOString(),
-      transactions: [{ id: 'ledger-1' }],
-    })
+    await seedGenesis({ timestamp: moment().subtract(2, 'days').toISOString(), transactions: [{ id: 'ledger-1' }] })
 
-    const result = await loadCachedLedgers()
-
-    expect(result).toBeUndefined()
+    expect(loadCachedLedgers()).toBeUndefined()
   })
 
-  it('returns undefined when the storage read never settles', async () => {
-    jest.useFakeTimers()
-    mockFetchValueForKey.mockReturnValue(new Promise(() => {}))
+  it('returns undefined when the cached value has the wrong shape', async () => {
+    await seedGenesis({ timestamp: moment().toISOString(), transactions: 'not-a-list' })
 
-    const resultPromise = loadCachedLedgers()
-    await jest.advanceTimersByTimeAsync(CACHED_LEDGER_READ_TIMEOUT_MS)
-
-    await expect(resultPromise).resolves.toBeUndefined()
-  })
-
-  it('does not time out a read that settles before the threshold', async () => {
-    jest.useFakeTimers()
-    const transactions = [{ id: 'ledger-1' }]
-    let resolveRead: (value: unknown) => void = () => {}
-    mockFetchValueForKey.mockReturnValue(
-      new Promise((resolve) => {
-        resolveRead = resolve
-      })
-    )
-
-    const resultPromise = loadCachedLedgers()
-    await jest.advanceTimersByTimeAsync(CACHED_LEDGER_READ_TIMEOUT_MS - 1)
-    resolveRead({ timestamp: moment().toISOString(), transactions })
-
-    await expect(resultPromise).resolves.toEqual(transactions)
-  })
-
-  it('clears the timeout once the read settles', async () => {
-    jest.useFakeTimers()
-    mockFetchValueForKey.mockResolvedValue(undefined)
-
-    await loadCachedLedgers()
-
-    expect(jest.getTimerCount()).toBe(0)
+    expect(loadCachedLedgers()).toBeUndefined()
   })
 })
 

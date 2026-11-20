@@ -1,16 +1,16 @@
+import { useNickname } from '@/bcsc-theme/storage/hooks'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { isDidCommInvitationCandidate } from '@/bcsc-theme/utils/didcomm-invitation'
 import { AppError, ErrorRegistry } from '@/errors'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCState } from '@/store'
 import {
   isDidCommInvitation,
   isOpenIdCredentialOffer,
   isOpenIdPresentationRequest,
   TOKENS,
   useServices,
-  useStore,
 } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -55,9 +55,10 @@ export const useDidCommOobQRCodeStrategy = (
   const { t } = useTranslation()
   const { waitForAgent } = useBCSCAgent()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
+  const nickname = useNickname()
+  const developerModeEnabled = useBCSCStore((s) => s.preferences.developerModeEnabled)
   // Sent to the inviter as our label; mirrors the name shown by `WalletNameDisplay`
-  const label = invitationLabel || store.bcsc.selectedNickname || 'My Wallet'
+  const label = invitationLabel || nickname || 'My Wallet'
 
   const matches = useCallback((uri: string): boolean => {
     return isDidCommInvitationCandidate(uri) || isOpenIdCredentialOffer(uri) || isOpenIdPresentationRequest(uri)
@@ -95,7 +96,7 @@ export const useDidCommOobQRCodeStrategy = (
       }
 
       if (invitation.goalCode === MEDIATOR_GOAL_CODE) {
-        if (store.preferences.developerModeEnabled && onMediatorInvitation) {
+        if (developerModeEnabled && onMediatorInvitation) {
           logger.info('[useDidCommOobQRCodeStrategy] mediator invitation handed to the developer-mode mediator picker')
           onMediatorInvitation(uri)
           return undefined
@@ -118,7 +119,7 @@ export const useDidCommOobQRCodeStrategy = (
 
       return outOfBandRecord.id
     },
-    [waitForAgent, logger, label, store.preferences.developerModeEnabled, onMediatorInvitation]
+    [waitForAgent, logger, label, developerModeEnabled, onMediatorInvitation]
   )
 
   const handle = useCallback(

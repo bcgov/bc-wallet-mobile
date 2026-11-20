@@ -1,20 +1,19 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCState } from '@/store'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type ServiceBookmarkButtonProps = {
-  serviceName: string
   serviceId: string
 }
 
-const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButtonProps) => {
+const ServiceBookmarkButton = ({ serviceId }: ServiceBookmarkButtonProps) => {
   const { ColorPalette, Spacing, TextTheme } = useTheme()
-  const [store] = useStore<BCState>()
+  const savedServiceIds = useBCSCStore((s) => s.savedServices.ids)
   const { t } = useTranslation()
   const { updateSavedService } = useSecureActions()
 
@@ -33,12 +32,12 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
   })
 
   const bookmarked = useMemo(() => {
-    return store.bcscSecure.savedServices.includes(serviceId)
-  }, [store.bcscSecure.savedServices, serviceId])
+    return savedServiceIds.includes(serviceId)
+  }, [savedServiceIds, serviceId])
 
   const handleBookmarkPress = useCallback(() => {
-    void updateSavedService(serviceId, !bookmarked, { clientName: serviceName })
-  }, [serviceId, bookmarked, serviceName, updateSavedService])
+    void updateSavedService(serviceId, !bookmarked)
+  }, [serviceId, bookmarked, updateSavedService])
 
   return (
     <TouchableOpacity

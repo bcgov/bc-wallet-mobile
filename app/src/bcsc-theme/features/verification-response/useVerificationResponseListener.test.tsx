@@ -1,4 +1,5 @@
 import { VerificationResponseService } from '@/bcsc-theme/features/verification-response'
+import { reportSessionWritesAs, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { AppEventCode } from '@/events/appEventCode'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { mockAppError } from '@mocks/helpers/error'
@@ -58,6 +59,17 @@ jest.mock('@bifold/core', () => ({
     mockStoreDispatch,
   ]),
 }))
+
+const seedRequest = (request: { deviceCode?: string; userCode?: string; verificationRequestId?: string }) =>
+  seedBCSCStore({
+    verification: {
+      request: {
+        deviceCode: request.deviceCode,
+        userCode: request.userCode,
+        backCheckVerificationId: request.verificationRequestId,
+      } as never,
+    },
+  })
 
 // Mock the API
 const mockGetVerificationRequestStatus = jest.fn().mockResolvedValue({
@@ -124,25 +136,22 @@ describe('useVerificationResponseListener', () => {
 
   // "Choose another way" clears the request id while a call is in flight, then the call settles
   const clearRequestThenSettle = async (rerender: (props: object) => void, settle: () => void) => {
-    // require returns the jest.mock'd module, so this test can override useStore mid-test
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { useStore } = require('@bifold/core')
-    const originalUseStore = useStore.getMockImplementation()
-    useStore.mockReturnValue([
-      { bcscSecure: { deviceCode: 'test-device-code', userCode: 'test-user-code' } },
-      mockStoreDispatch,
-    ])
-    try {
-      rerender({})
-      await act(async () => {
-        settle()
-      })
-    } finally {
-      useStore.mockImplementation(originalUseStore)
-    }
+    act(() => {
+      seedRequest({ deviceCode: 'test-device-code', userCode: 'test-user-code' })
+    })
+    rerender({})
+    await act(async () => {
+      settle()
+    })
   }
 
   beforeEach(() => {
+    reportSessionWritesAs(mockStoreDispatch)
+    seedRequest({
+      deviceCode: 'test-device-code',
+      userCode: 'test-user-code',
+      verificationRequestId: 'test-verification-request-id',
+    })
     // Reset API mocks
     mockGetVerificationRequestStatus.mockResolvedValue({ status: 'verified' })
     mockCheckDeviceCodeStatus.mockResolvedValue({ refresh_token: 'test-refresh-token' })
@@ -338,18 +347,11 @@ describe('useVerificationResponseListener', () => {
     })
 
     it('should not proceed if verificationRequestId is missing', async () => {
-      // Override the store mock for this test
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { useStore } = require('@bifold/core')
-      useStore.mockReturnValueOnce([
-        {
-          bcscSecure: {
-            deviceCode: 'test-device-code',
-            userCode: 'test-user-code',
-            verificationRequestId: undefined,
-          },
-        },
-      ])
+      seedRequest({
+        deviceCode: 'test-device-code',
+        userCode: 'test-user-code',
+        verificationRequestId: undefined,
+      })
 
       triggerReview()
 
@@ -362,18 +364,11 @@ describe('useVerificationResponseListener', () => {
     })
 
     it('should not proceed if deviceCode is missing', async () => {
-      // Override the store mock for this test
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { useStore } = require('@bifold/core')
-      useStore.mockReturnValueOnce([
-        {
-          bcscSecure: {
-            deviceCode: undefined,
-            userCode: 'test-user-code',
-            verificationRequestId: 'test-verification-request-id',
-          },
-        },
-      ])
+      seedRequest({
+        deviceCode: undefined,
+        userCode: 'test-user-code',
+        verificationRequestId: 'test-verification-request-id',
+      })
 
       triggerReview()
 

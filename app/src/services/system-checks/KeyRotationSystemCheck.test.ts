@@ -2,8 +2,8 @@ jest.mock('react-native-bcsc-core', () => ({
   getAllKeys: jest.fn(),
 }))
 
+import { resetBCSCStore, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
-import { BCDispatchAction } from '@/store'
 import { MockLogger } from '@bifold/core'
 import { Platform } from 'react-native'
 import { getAllKeys } from 'react-native-bcsc-core'
@@ -11,7 +11,6 @@ import { getAllKeys } from 'react-native-bcsc-core'
 const mockedGetAllKeys = getAllKeys as jest.MockedFunction<typeof getAllKeys>
 
 const makeUtils = () => ({
-  dispatch: jest.fn(),
   translation: jest.fn() as any,
   logger: new MockLogger(),
 })
@@ -229,10 +228,15 @@ describe('KeyRotationSystemCheck', () => {
   })
 
   describe('onFail', () => {
-    it('dispatches KEY_ROTATION_ATTEMPTED before calling rotate()', async () => {
+    beforeEach(() => resetBCSCStore())
+
+    it('saves the attempt time before calling rotate()', async () => {
       const utils = makeUtils()
       const callOrder: string[] = []
-      utils.dispatch.mockImplementation(() => callOrder.push('dispatch'))
+      const update = jest.fn(async () => {
+        callOrder.push('save')
+      })
+      seedBCSCStore({ app: { update } })
       const rotate = jest.fn().mockImplementation(async () => {
         callOrder.push('rotate')
         return { status: 'rotated', confirmed: true }
@@ -241,11 +245,8 @@ describe('KeyRotationSystemCheck', () => {
 
       await check.onFail()
 
-      expect(callOrder).toEqual(['dispatch', 'rotate'])
-      expect(utils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.KEY_ROTATION_ATTEMPTED,
-        payload: [new Date(NOW).toISOString()],
-      })
+      expect(callOrder).toEqual(['save', 'rotate'])
+      expect(update).toHaveBeenCalledWith({ lastKeyRotationAttemptAt: new Date(NOW).toISOString() })
       expect(rotate).toHaveBeenCalled()
     })
 

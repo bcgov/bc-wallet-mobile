@@ -2,17 +2,17 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { selectVerificationState } from '@/bcsc-theme/state/verification/selectors'
+import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
+import { getBCSCState, selectAccountRecord, useVerification } from '@/bcsc-theme/storage/hooks'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useRoute } from '@react-navigation/native'
 import { useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import { createDeviceSignedJWT } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 import { QRCodeStrategy, QRError } from '../useQRScanner'
 
@@ -40,12 +40,12 @@ export const useAccountTransferQRCodeStrategy = (
   const { deviceAttestation, authorization, token } = useApi()
   const apiClient = useBCSCApiClient()
   const { updateTokens, updateUserInfo, updateDeviceCodes } = useSecureActions()
-  const [store] = useStore<BCState>()
-  const { isVerified } = selectVerificationState(store)
+  const deviceCode = useVerification((v) => v.request?.deviceCode)
+  const { isVerified } = useVerificationState()
   // Shared by several scanner screens, so the origin screen for recovery is whichever one renders this hook
   const route = useRoute()
   const attemptWithRecovery = useDeviceAuthorizationRecovery()
-  const deviceCodeRef = useRef<string | undefined>(store.bcscSecure.deviceCode)
+  const deviceCodeRef = useRef<string | undefined>(deviceCode)
   const registeredDuringScan = useRef(false)
   const step = useRef('initAccountTransfer') // Tracks the current step of the account transfer process for error reporting
   const updateStep = (newStep: string) => (step.current = newStep)
@@ -56,8 +56,8 @@ export const useAccountTransferQRCodeStrategy = (
    */
   const registerDevice = useCallback(async () => {
     // we already have a device code, no need to authorize again
-    if (store.bcscSecure.deviceCode) {
-      deviceCodeRef.current = store.bcscSecure.deviceCode
+    if (deviceCode) {
+      deviceCodeRef.current = deviceCode
       return
     }
 
@@ -81,7 +81,7 @@ export const useAccountTransferQRCodeStrategy = (
     })
 
     deviceCodeRef.current = deviceAuth.device_code
-  }, [store.bcscSecure.deviceCode, attemptWithRecovery, authorization, route.name, updateDeviceCodes, updateUserInfo])
+  }, [deviceCode, attemptWithRecovery, authorization, route.name, updateDeviceCodes, updateUserInfo])
 
   /**
    * Transfers the account to the new device using the provided transfer token.
@@ -91,7 +91,7 @@ export const useAccountTransferQRCodeStrategy = (
   const transferAccount = useCallback(
     async (transferToken: string) => {
       updateStep('getAccount')
-      const account = await getAccount()
+      const account = selectAccountRecord(getBCSCState())
 
       if (!account) {
         throw new QRError('Local account not found')

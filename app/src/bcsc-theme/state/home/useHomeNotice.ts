@@ -1,6 +1,5 @@
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { useMemo } from 'react'
 import { HomeNotice } from './home-notice'
 import { selectHomeNotice } from './selectors'
@@ -10,7 +9,7 @@ import { selectHomeNotice } from './selectors'
  * Must be used inside BCSCAccountProvider.
  */
 export const useHomeNotice = (): HomeNotice => {
-  const [store] = useStore<BCState>()
+  const store = useBCSCStore((s) => s)
   const { account } = useAccount()
 
   return useMemo(() => selectHomeNotice(store, account, new Date()), [store, account])

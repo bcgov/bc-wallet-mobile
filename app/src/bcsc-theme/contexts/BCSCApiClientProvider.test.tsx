@@ -4,12 +4,13 @@ import {
   BCSCApiClientContext,
   BCSCApiClientProvider,
 } from '@/bcsc-theme/contexts/BCSCApiClientContext'
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import * as Bifold from '@bifold/core'
 import { MockLogger } from '@bifold/core'
-import { renderHook, waitFor } from '@testing-library/react-native'
+import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
 import { useContext } from 'react'
 import * as FactoryReset from '../api/hooks/useFactoryReset'
@@ -59,6 +60,7 @@ describe('BCSCApiClientProvider', () => {
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+    seedBCSCStoreFromBCState(mockStore)
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
 
@@ -110,6 +112,7 @@ describe('BCSCApiClientProvider', () => {
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+    seedBCSCStoreFromBCState(mockStore)
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockImplementation(async () => {
       callOrder.push('fetchEndpointsAndConfig')
@@ -156,6 +159,7 @@ describe('BCSCApiClientProvider', () => {
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([{}])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+    seedBCSCStoreFromBCState(mockStore)
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
 
@@ -194,6 +198,7 @@ describe('BCSCApiClientProvider', () => {
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([{}])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+    seedBCSCStoreFromBCState(mockStore)
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
 
@@ -233,6 +238,7 @@ describe('BCSCApiClientProvider', () => {
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+    seedBCSCStoreFromBCState(mockStore)
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
 
@@ -285,6 +291,7 @@ describe('BCSCApiClientProvider', () => {
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+    seedBCSCStoreFromBCState(mockStore)
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest
       .fn()
@@ -328,6 +335,7 @@ describe('BCSCApiClientProvider', () => {
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+    seedBCSCStoreFromBCState(mockStore)
 
     const mockError: any = new AxiosError()
     mockError.isNetworkError = true
@@ -385,6 +393,7 @@ describe('BCSCApiClientProvider', () => {
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+    seedBCSCStoreFromBCState(mockStore)
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockRejectedValue(mockError)
 
@@ -430,6 +439,7 @@ describe('BCSCApiClientProvider', () => {
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockImplementation(() => [store, dispatchMock])
+    seedBCSCStoreFromBCState(store)
 
     bcscApiClientMock.mockImplementation(
       () =>
@@ -466,6 +476,7 @@ describe('BCSCApiClientProvider', () => {
       },
       bcsc: {},
     }
+    act(() => seedBCSCStoreFromBCState(store))
 
     rerender({})
 

@@ -1,4 +1,5 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { getBCSCState, selectAccountRecord } from '@/bcsc-theme/storage/hooks'
 import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
 import { confirmModulusRegistered } from '@/bcsc-theme/utils/jwk-modulus'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
@@ -11,11 +12,9 @@ import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
-  getAccount,
   getDeviceId,
   getDynamicClientRegistrationBody,
   isAccountRegistered,
-  setAccount,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -208,11 +207,14 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       confirmRegisteredKey(body, data, logger)
 
-      await setAccount({
-        clientID: data.client_id,
-        issuer: apiClient.endpoints.issuer,
-        securityMethod,
-      })
+      // A registration again (a verification reset cycles it) keeps the account, so its PIN is still found
+      const { account } = getBCSCState()
+      const registered = { clientId: data.client_id, issuer: apiClient.endpoints.issuer, securityMethod }
+      if (account.profile) {
+        await account.updateProfile(registered)
+      } else {
+        await account.createProfile(registered)
+      }
 
       logger.info(`Account set with clientID: ${data.client_id}`)
 
@@ -238,7 +240,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    */
   const register = useCallback(
     async (securityMethod: AccountSecurityMethod) => {
-      const account = await getAccount()
+      const account = selectAccountRecord(getBCSCState())
       // If an account already exists, we don't need to register again
       if (isAccountRegistered(account)) {
         logger.info('[RegistrationService] Account already exists, skipping registration')
@@ -339,10 +341,9 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
         logger.info('Completed registration update request')
         try {
-          await setAccount({
-            clientID: updatedRegistrationData?.client_id,
+          await getBCSCState().account.updateProfile({
+            clientId: updatedRegistrationData?.client_id,
             issuer: apiClient.endpoints.issuer,
-            securityMethod: account.securityMethod,
             nickname: selectedNickname,
             didPostNicknameToServer: true,
           })

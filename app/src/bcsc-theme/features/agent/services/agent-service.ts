@@ -1,8 +1,8 @@
-import { CACHED_LEDGER_READ_TIMEOUT_MS, CACHED_LEDGERS_TTL_DAYS } from '@/constants'
+import { CACHED_LEDGERS_TTL_DAYS } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
-import { BCLocalStorageKeys } from '@/store'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
-import { BifoldLogger, PersistentStorage } from '@bifold/core'
+import { storage } from '@/bcsc-theme/storage'
+import { BifoldLogger } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr'
@@ -63,29 +63,17 @@ const enqueueWalletOp = <T>(op: () => Promise<T>): Promise<T> => {
 }
 
 /**
- * Loads previously cached pool genesis transactions from persistent storage.
+ * Loads previously cached pool genesis transactions from the caches slice.
  *
  * Used to skip live ledger discovery on subsequent agent inits. Returns `undefined`
- * if no cache exists, if the read times out, or if the cache is older than
- * `CACHED_LEDGERS_TTL_DAYS`, signalling that callers should fall back to the
- * configured ledgers and refresh the cache.
- *
- * The read is bounded because `AsyncStorage.getItem` never settles when the
- * native callback is dropped
+ * if no cache exists or if the cache is older than `CACHED_LEDGERS_TTL_DAYS`,
+ * signalling that callers should fall back to the configured ledgers and refresh the cache.
  *
  * @returns Cached ledger configs if fresh, otherwise `undefined`.
  */
-export const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined
-  const cached = await Promise.race([
-    PersistentStorage.fetchValueForKey<CachedGenesisTransactions>(BCLocalStorageKeys.GenesisTransactions),
-    new Promise<undefined>((resolve) => {
-      timeoutId = setTimeout(() => resolve(undefined), CACHED_LEDGER_READ_TIMEOUT_MS)
-    }),
-  ])
-  clearTimeout(timeoutId)
-
-  if (!cached) {
+export const loadCachedLedgers = (): IndyVdrPoolConfig[] | undefined => {
+  const cached = storage.store.getState().caches.genesis as CachedGenesisTransactions | null
+  if (!cached?.timestamp || !Array.isArray(cached.transactions)) {
     return undefined
   }
   const isFresh = moment().diff(moment(cached.timestamp), 'days') < CACHED_LEDGERS_TTL_DAYS
@@ -296,10 +284,8 @@ const refreshLedgerCache = async (poolService: IndyVdrPoolService, logger: Bifol
       }))
 
     if (transactions.length > 0) {
-      await PersistentStorage.storeValueForKey<CachedGenesisTransactions>(BCLocalStorageKeys.GenesisTransactions, {
-        timestamp: moment().toISOString(),
-        transactions,
-      })
+      const cache: CachedGenesisTransactions = { timestamp: moment().toISOString(), transactions }
+      await storage.store.getState().caches.setCache('genesis', cache)
     }
   } catch (error) {
     logger.warn(`Warm cache: refreshing ledger cache failed: ${error}`)

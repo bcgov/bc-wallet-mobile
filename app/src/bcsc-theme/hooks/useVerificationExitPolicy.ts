@@ -1,5 +1,4 @@
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { useMemo } from 'react'
 
 /**
@@ -26,9 +25,8 @@ export type VerificationExitPolicy = {
 }
 
 export const useVerificationExitPolicy = (): VerificationExitPolicy => {
-  const [store] = useStore<BCState>()
-  const { verificationSkipped } = store.bcsc
-  const { developerModeEnabled } = store.preferences
+  const verificationSkipped = useBCSCStore((s) => s.app.verificationSkipped)
+  const developerModeEnabled = useBCSCStore((s) => s.preferences.developerModeEnabled)
 
   return useMemo(() => {
     // `undefined` (prompt not answered yet) only occurs on the prompt itself, whose exits are its own buttons

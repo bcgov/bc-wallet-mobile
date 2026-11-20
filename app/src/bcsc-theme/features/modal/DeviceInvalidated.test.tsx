@@ -83,7 +83,7 @@ describe('DeviceInvalidated', () => {
     fireEvent.press(getByTestId(testIdWithKey('SystemModalButton')))
 
     await waitFor(() => {
-      expect(mockFactoryReset).toHaveBeenCalledWith({})
+      expect(mockFactoryReset).toHaveBeenCalledWith()
     })
   })
 
@@ -97,7 +97,7 @@ describe('DeviceInvalidated', () => {
     fireEvent.press(getByTestId(testIdWithKey('SystemModalButton')))
 
     await waitFor(() => {
-      expect(mockFactoryReset).toHaveBeenCalledWith({})
+      expect(mockFactoryReset).toHaveBeenCalledWith()
     })
   })
 })

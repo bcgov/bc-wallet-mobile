@@ -2,8 +2,7 @@ import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { isAppError } from '@/errors/appError'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import moment from 'moment'
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { AppState, AppStateStatus, DeviceEventEmitter } from 'react-native'
@@ -11,7 +10,7 @@ import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
 import { ReconnectEvent, useRetryOnReconnect } from '../hooks/useRetryOnReconnect'
 import { useUserService } from '../services/hooks/useUserService'
-import { selectVerificationState } from '../state/verification/selectors'
+import { journeyVerificationState, useJourney } from '../state/verification/journey'
 import { formatAccountName } from '../utils/account-utils'
 
 export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
@@ -54,7 +53,7 @@ export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(n
 export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   const userService = useUserService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
+  const journey = useJourney()
 
   // Set synchronously just before each load starts, so the diagnostics snapshot reflects
   // state at load time even though useDataLoader's setIsLoading(true) hasn't re-rendered yet.
@@ -72,9 +71,9 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
         navigationReady: navigationRef.isReady(),
         appState: AppState.currentState,
         ...(connectivity ? { connectivity } : {}),
-        verified: Boolean(store.bcscSecure.verified),
-        credentialDeactivated: store.bcscSecure.credentialDeactivated,
-        hasRefreshToken: Boolean(store.bcscSecure.refreshToken),
+        verified: journey.verified,
+        credentialDeactivated: journey.credentialDeactivated,
+        hasRefreshToken: Boolean(journey.refreshToken),
       }
       lastLoadRef.current = diagnostics
       logger.info('BCSCAccountProvider: Loading account', { ...diagnostics })
@@ -91,7 +90,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
     }
   )
 
-  const canLoadAccount = selectVerificationState(store).isDeviceVerifiedByIas
+  const canLoadAccount = journeyVerificationState(journey).isDeviceVerifiedByIas
 
   const startAccountLoad = useCallback(
     (trigger: AccountLoadTrigger, connectivity?: ReconnectEvent) => {

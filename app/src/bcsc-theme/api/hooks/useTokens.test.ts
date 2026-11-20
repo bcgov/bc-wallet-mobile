@@ -1,10 +1,11 @@
 import { VerifyAttestationPayload } from '@/bcsc-theme/api/hooks/useDeviceAttestationApi'
+import { seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { act, renderHook } from '@testing-library/react-native'
 import { BasicAppContext } from '__mocks__/helpers/app'
-import { getDeviceCodeRequestBody, setToken } from 'react-native-bcsc-core'
+import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import useTokenApi, { TokenResponse } from './useTokens'
 import { withAccount } from './withAccountGuard'
@@ -189,13 +190,18 @@ describe('useTokenApi', () => {
       ;(withAccount as jest.Mock).mockImplementation(async (callback) => callback(mockAccount))
       ;(getDeviceCodeRequestBody as jest.Mock).mockResolvedValue('mock-body')
       mockApiClient.post.mockResolvedValue(mockAxiosResponse)
-      // Native token write fails → real updateTokens maps it to TOKEN_SAVE_FAILED, which
-      // checkDeviceCodeStatus must re-throw unchanged (not re-wrap under a storage catch-all).
-      ;(setToken as jest.Mock).mockRejectedValue(
-        Object.assign(new Error('native failure'), { code: 'E_TOKEN_SAVE_ERROR' })
-      )
 
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
+      // Token write fails → real updateTokens maps it to TOKEN_SAVE_FAILED, which
+      // checkDeviceCodeStatus must re-throw unchanged (not re-wrap under a storage catch-all).
+      // Seeded after render: BasicAppContext resets the store.
+      seedBCSCStore({
+        account: {
+          setTokens: jest
+            .fn()
+            .mockRejectedValue(Object.assign(new Error('native failure'), { code: 'E_TOKEN_SAVE_ERROR' })),
+        },
+      })
 
       await act(async () => {
         await expect(

@@ -15,6 +15,7 @@ import {
   useRecoverableCameraError,
 } from '@/bcsc-theme/hooks/useCameraRecovery'
 import { useVisionCamera } from '@/bcsc-theme/hooks/useVisionCamera'
+import { useSession } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isBackgroundedAppState } from '@/bcsc-theme/utils/app-state'
 import { removeFileSafely, toMp4VideoPath } from '@/bcsc-theme/utils/file-info'
@@ -30,7 +31,6 @@ import { ensureAppError } from '@/errors/errorHandler'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
   Button,
@@ -40,7 +40,6 @@ import {
   ThemedText,
   TOKENS,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect, useIsFocused } from '@react-navigation/native'
@@ -80,7 +79,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   )
   const { t } = useTranslation()
   const { ColorPalette, Spacing, TextTheme, maxFontSizeMultiplier } = useTheme()
-  const [store] = useStore<BCState>()
+  const session = useSession()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
@@ -114,7 +113,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const exitWhenActiveRef = useRef(false)
   const snapshotPathRef = useRef<string | undefined>(undefined)
   const promptOpacity = useRef(new Animated.Value(1)).current
-  const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
+  const prompts = useMemo(() => session.prompts?.map(({ prompt }) => prompt) || [], [session.prompts])
   const safeAreaInsets = useSafeAreaInsets()
   const { emitErrorModal } = useErrorAlert()
   const isLastPrompt = useMemo(() => {

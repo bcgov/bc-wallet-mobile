@@ -1,9 +1,9 @@
 import useEvidenceApi from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { nativeAccount, seedAccount, withBCSCStore } from '@/bcsc-theme/storage/testing'
 import { EVIDENCE_UPLOAD_TIMEOUT_MS } from '@/constants'
 import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
-import { getAccount } from 'react-native-bcsc-core'
 
 jest.mock('react-native-bcsc-core')
 jest.mock('@/services/notifications/verificationReminders', () => ({
@@ -52,8 +52,8 @@ describe('useEvidenceApi - verification deadline reconciliation', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockUpdateDeviceCodes.mockResolvedValue(undefined)
-    ;(getAccount as jest.Mock).mockResolvedValue({ clientID: 'client-id', issuer: 'issuer' })
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore as Bifold.State, mockDispatch])
+    seedAccount(nativeAccount({ clientID: 'client-id', issuer: 'issuer' }))
+    jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([mockStore as Bifold.State, mockDispatch]))
   })
 
   it('cancels reminders when status is verified and does not touch the deadline', async () => {
@@ -135,13 +135,15 @@ describe('useEvidenceApi - verification deadline reconciliation', () => {
   it('does not move the deadline earlier when the extension would not push it later', async () => {
     // Existing expiry already near end-of-day; a tiny extension pins back to the same day's 23:59:59,
     // which is not later, so the only-ever-extend guard leaves it untouched.
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      {
-        ...mockStore,
-        bcscSecure: { deviceCode: 'test-device-code', deviceCodeExpiresAt: new Date('2026-06-08T23:59:59.500Z') },
-      } as Bifold.State,
-      mockDispatch,
-    ])
+    jest.mocked(Bifold.useStore).mockReturnValue(
+      withBCSCStore([
+        {
+          ...mockStore,
+          bcscSecure: { deviceCode: 'test-device-code', deviceCodeExpiresAt: new Date('2026-06-08T23:59:59.500Z') },
+        } as Bifold.State,
+        mockDispatch,
+      ])
+    )
     apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending', expiry_extended_by: 0.4 } })
     const result = renderApi()
 
@@ -153,13 +155,15 @@ describe('useEvidenceApi - verification deadline reconciliation', () => {
   })
 
   it('does nothing when there is no existing expiry to extend', async () => {
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      {
-        ...mockStore,
-        bcscSecure: { deviceCode: 'test-device-code', deviceCodeExpiresAt: undefined },
-      } as Bifold.State,
-      mockDispatch,
-    ])
+    jest.mocked(Bifold.useStore).mockReturnValue(
+      withBCSCStore([
+        {
+          ...mockStore,
+          bcscSecure: { deviceCode: 'test-device-code', deviceCodeExpiresAt: undefined },
+        } as Bifold.State,
+        mockDispatch,
+      ])
+    )
     apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending', expiry_extended_by: TWO_DAYS } })
     const result = renderApi()
 
@@ -233,8 +237,8 @@ describe('useEvidenceApi - upload log context', () => {
     jest.clearAllMocks()
     apiClient.put.mockResolvedValue({ data: undefined })
     apiClient.post.mockResolvedValue({ data: undefined })
-    ;(getAccount as jest.Mock).mockResolvedValue({ clientID: 'client-id', issuer: 'issuer' })
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore as Bifold.State, jest.fn()])
+    seedAccount(nativeAccount({ clientID: 'client-id', issuer: 'issuer' }))
+    jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([mockStore as Bifold.State, jest.fn()]))
   })
 
   it('attaches full binary context, sniffing the format from the buffer, for a document-kind photo binary upload', async () => {
@@ -388,8 +392,8 @@ describe('useEvidenceApi - error handling opt-out', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending' } })
-    ;(getAccount as jest.Mock).mockResolvedValue({ clientID: 'client-id', issuer: 'issuer' })
-    jest.mocked(Bifold.useStore).mockReturnValue([mockStore as Bifold.State, jest.fn()])
+    seedAccount(nativeAccount({ clientID: 'client-id', issuer: 'issuer' }))
+    jest.mocked(Bifold.useStore).mockReturnValue(withBCSCStore([mockStore as Bifold.State, jest.fn()]))
   })
 
   it('opts the submit PUT out of the global error handling; useEvidenceService owns its errors', async () => {

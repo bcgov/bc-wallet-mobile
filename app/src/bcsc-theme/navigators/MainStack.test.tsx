@@ -51,6 +51,8 @@ jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))
 jest.mock('@/constants', () => ({
+  // The BCSC store's developer defaults read Mode and the environments
+  ...jest.requireActual('@/constants'),
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: {},
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
   Mode: { BCWallet: 'bcwallet', BCSC: 'bcsc' },

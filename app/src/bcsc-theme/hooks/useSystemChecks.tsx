@@ -1,10 +1,10 @@
+import { useAccount } from '@/bcsc-theme/storage/hooks'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { runSystemChecks } from '@/services/system-checks/system-checks'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -34,7 +34,7 @@ export enum SystemCheckScope {
  */
 export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean } => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
+  const credentialMetadata = useAccount((s) => s.credentialMetadata)
   const { client, isClientReady } = useBCSCApiClientState()
   const tokenService = useTokenService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -43,15 +43,15 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
   const [hasRun, setHasRun] = useState(false)
   const systemChecks = useCreateSystemChecks()
   const appStateRef = useRef(AppState.currentState)
-  const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
+  const credentialMetadataRef = useRef(credentialMetadata)
   const { emitAlert } = useErrorAlert()
 
-  const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, t, logger])
+  const utils = useMemo(() => ({ translation: t, logger }), [t, logger])
 
   // Updated credential metadata ref
   useEffect(() => {
-    credentialMetadataRef.current = store.bcsc.credentialMetadata
-  }, [store.bcsc.credentialMetadata])
+    credentialMetadataRef.current = credentialMetadata
+  }, [credentialMetadata])
 
   // Get system checks for the specified scope (useGetSystemChecks)
   const scopeSystemCheck = systemChecks[scope]

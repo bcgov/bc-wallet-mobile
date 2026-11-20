@@ -1,13 +1,13 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ServiceHours, VideoDestinations } from '@/bcsc-theme/api/hooks/useVideoCallApi'
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
+import { getBCSCState, useDeveloper, useSession, useVerificationOptions } from '@/bcsc-theme/storage/hooks'
 import { checkFileSystemFreeStorage, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
 import { AppError, ErrorRegistry } from '@/errors'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { getLiveCallVideoQueue } from './live-call/utils/videoDestinations'
@@ -20,7 +20,9 @@ type useVerificationMethodModelProps = {
 }
 
 const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelProps) => {
-  const [store, dispatch] = useStore<BCState>()
+  const verificationOptions = useVerificationOptions()
+  const session = useSession()
+  const developer = useDeveloper()
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
   const [liveCallLoading, setLiveCallLoading] = useState(false)
   const [hoursLoading, setHoursLoading] = useState(true)
@@ -60,14 +62,20 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       }
 
       await Promise.allSettled([
-        removeFileSafely(store.bcsc.videoPath, logger),
-        removeFileSafely(store.bcsc.photoPath, logger),
-        removeFileSafely(store.bcsc.videoThumbnailPath, logger),
+        removeFileSafely(session.videoPath, logger),
+        removeFileSafely(session.photoPath, logger),
+        removeFileSafely(session.videoThumbnailPath, logger),
       ])
 
       VerificationVideoCache.clearCache()
 
-      dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+      getBCSCState().session.update({
+        photoPath: undefined,
+        photoMetadata: undefined,
+        videoPath: undefined,
+        videoDuration: undefined,
+        videoThumbnailPath: undefined,
+      })
 
       const storage = await checkFileSystemFreeStorage(MINIMUM_FREE_STORAGE_MB, logger)
 
@@ -87,11 +95,10 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     }
   }, [
     ensureVerificationRequest,
-    store.bcsc.videoPath,
-    store.bcsc.photoPath,
-    store.bcsc.videoThumbnailPath,
+    session.videoPath,
+    session.photoPath,
+    session.videoThumbnailPath,
     logger,
-    dispatch,
     navigation,
     videoPromptsMissingAlert,
     deviceStorageFullAlert,
@@ -107,7 +114,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
           : await Promise.all([videoCallApi.getVideoDestinations(), videoCallApi.getServiceHours()])
 
       const formattedHours = formatServiceAndUnavailableHours(resolvedServiceHours)
-      const liveCallVideoQueue = getLiveCallVideoQueue(store.developer.environment, resolvedDestinations)
+      const liveCallVideoQueue = getLiveCallVideoQueue(developer.environment, resolvedDestinations)
 
       if (!liveCallVideoQueue) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
@@ -135,7 +142,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     } finally {
       setLiveCallLoading(false)
     }
-  }, [store.developer.environment, navigation, logger, destinations, serviceHours, videoCallApi])
+  }, [developer.environment, navigation, logger, destinations, serviceHours, videoCallApi])
 
   return {
     handlePressSendVideo,
@@ -143,7 +150,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     sendVideoLoading,
     liveCallLoading,
     hoursLoading,
-    verificationOptions: store.bcscSecure.verificationOptions ?? [],
+    verificationOptions: verificationOptions ?? [],
     formattedHours: serviceHours ? formatServiceAndUnavailableHours(serviceHours) : undefined,
   }
 }

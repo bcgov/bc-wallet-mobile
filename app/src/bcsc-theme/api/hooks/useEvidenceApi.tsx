@@ -1,10 +1,9 @@
+import { useDeviceCodeExpiresAt, useVerification } from '@/bcsc-theme/storage/hooks'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import type { MediaFormat, MediaKind } from '@/bcsc-theme/utils/media-format'
 import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { EVIDENCE_UPLOAD_TIMEOUT_MS, VerificationRequestStatus, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import type { BarcodePayload } from 'react-native-bcsc-core'
 import { createPreVerificationJWT, EvidenceType } from 'react-native-bcsc-core'
@@ -80,7 +79,8 @@ export interface EvidenceMetadataPayload {
 }
 
 const useEvidenceApi = (apiClient: BCSCApiClient) => {
-  const [store] = useStore<BCState>()
+  const deviceCode = useVerification((v) => v.request?.deviceCode)
+  const deviceCodeExpiresAt = useDeviceCodeExpiresAt()
   const { updateDeviceCodes } = useSecureActions()
 
   /**
@@ -120,7 +120,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
       if (seconds === undefined || !Number.isFinite(seconds) || seconds <= 0) {
         return
       }
-      const currentExpiry = store.bcscSecure.deviceCodeExpiresAt
+      const currentExpiry = deviceCodeExpiresAt
       if (!currentExpiry) {
         return
       }
@@ -139,11 +139,11 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
         })
       }
     },
-    [apiClient?.logger, store.bcscSecure.deviceCodeExpiresAt, updateDeviceCodes]
+    [apiClient?.logger, deviceCodeExpiresAt, updateDeviceCodes]
   )
 
   const _getDeviceCode = useCallback(() => {
-    const code = store.bcscSecure.deviceCode
+    const code = deviceCode
     if (!code) {
       throw new Error('Device code is missing. Re install the app and setup try again.')
     }
@@ -153,7 +153,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
     // 401 so the centralized verificationSessionExpiredErrorPolicy routes to the restart modal; the
     // startup system check covers the relaunch case. See issue #4050.
     return code
-  }, [store.bcscSecure.deviceCode])
+  }, [deviceCode])
 
   const getEvidenceMetadata = useCallback(async (): Promise<EvidenceMetadataResponseData> => {
     const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`, {

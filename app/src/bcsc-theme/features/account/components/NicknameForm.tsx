@@ -3,8 +3,8 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
+import { useNickname } from '@/bcsc-theme/storage/hooks'
 import { formStringLengths } from '@/constants'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
   Button,
@@ -13,7 +13,6 @@ import {
   testIdWithKey,
   ThemedText,
   useAnimatedComponents,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { a11yLabel } from '@utils/accessibility'
@@ -33,8 +32,8 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
-  const [store] = useStore<BCState>()
-  const [accountNickname, setAccountNickname] = useState(store.bcsc.selectedNickname ?? '')
+  const nickname = useNickname()
+  const [accountNickname, setAccountNickname] = useState(nickname ?? '')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const { scrollViewRef, inputRefs, onFieldLayout, focusFirstInvalidField } = useFocusFirstInvalidField(FIELD_ORDER)
@@ -58,7 +57,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
 
   const handleButtonPress = useCallback(async () => {
     const trimmedAccountNickname = accountNickname.trim()
-    const validationErrorKey = getNicknameValidationErrorKey(store, trimmedAccountNickname)
+    const validationErrorKey = getNicknameValidationErrorKey(trimmedAccountNickname)
 
     if (validationErrorKey) {
       const message = t(validationErrorKey)
@@ -75,7 +74,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
     } finally {
       setLoading(false)
     }
-  }, [accountNickname, onSubmit, store, t, focusFirstInvalidField])
+  }, [accountNickname, onSubmit, t, focusFirstInvalidField])
 
   const controls = (
     <ControlContainer>

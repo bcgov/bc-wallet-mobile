@@ -209,6 +209,7 @@ PODS:
     - GTMSessionFetcher/Core (< 4.0, >= 3.3.2)
     - MLImage (= 1.0.0-beta8)
     - MLKitCommon (~> 14.0)
+  - MMKVCore (2.4.0)
   - Mute (0.6.1)
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
@@ -217,6 +218,31 @@ PODS:
   - nanopb/encode (3.30910.0)
   - NitroImage (0.15.2):
     - hermes-engine
+    - NitroModules
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - NitroMmkv (4.3.2):
+    - hermes-engine
+    - MMKVCore (= 2.4.0)
     - NitroModules
     - RCTRequired
     - RCTTypeSafety
@@ -2930,6 +2956,7 @@ DEPENDENCIES:
   - "indy-vdr (from `../node_modules/@hyperledger/indy-vdr-react-native`)"
   - nanopb
   - NitroImage (from `../node_modules/react-native-nitro-image`)
+  - NitroMmkv (from `../node_modules/react-native-mmkv`)
   - NitroModules (from `../node_modules/react-native-nitro-modules`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
@@ -3067,6 +3094,7 @@ SPEC REPOS:
     - MLKitBarcodeScanning
     - MLKitCommon
     - MLKitVision
+    - MMKVCore
     - Mute
     - nanopb
     - PromisesObjC
@@ -3089,6 +3117,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@hyperledger/indy-vdr-react-native"
   NitroImage:
     :path: "../node_modules/react-native-nitro-image"
+  NitroMmkv:
+    :path: "../node_modules/react-native-mmkv"
   NitroModules:
     :path: "../node_modules/react-native-nitro-modules"
   RCTDeprecation:
@@ -3340,9 +3370,11 @@ SPEC CHECKSUMS:
   MLKitBarcodeScanning: 39de223e7b1b8a8fbf10816a536dd292d8a39343
   MLKitCommon: 47d47b50a031d00db62f1b0efe5a1d8b09a3b2e6
   MLKitVision: 39a5a812db83c4a0794445088e567f3631c11961
+  MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa
   Mute: 20135a96076f140cc82bfc8b810e2d6150d8ec7e
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   NitroImage: 5daf897d2f37ed419186278d6b0fcdd8aab313b0
+  NitroMmkv: 85a251e15c39d7c95fe58cf40786fa126b8d143c
   NitroModules: 38f8754287858ff1294e43fd43f614a664e54050
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851

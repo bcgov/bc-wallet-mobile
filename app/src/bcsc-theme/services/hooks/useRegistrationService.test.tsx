@@ -1,4 +1,5 @@
 import * as useRegistrationApiModule from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { BCSCStoreSeed } from '@/bcsc-theme/storage/testing'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
@@ -7,10 +8,29 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { mockAppError } from '@mocks/helpers/error'
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
-import { getAccountSecurityMethod } from 'react-native-bcsc-core'
 import { useRegistrationService } from './useRegistrationService'
 
 jest.mock('react-native-bcsc-core')
+
+// BasicAppContext resets the store, so the account is seeded through it
+const withBCSCState = (bcscState: BCSCStoreSeed) => {
+  const Wrapper = ({ children }: React.PropsWithChildren) => (
+    <BasicAppContext bcscState={bcscState}>{children}</BasicAppContext>
+  )
+  return Wrapper
+}
+
+const accountWith = (profile: { clientId?: string; securityMethod: string }, registrationAccessToken?: string) => ({
+  account: {
+    profile: {
+      accountId: 'test-account-id',
+      clientId: profile.clientId ?? 'test-client-id',
+      issuer: 'https://idsit.gov.bc.ca/device/',
+      securityMethod: profile.securityMethod as never,
+    },
+    ...(registrationAccessToken ? { tokens: { registrationAccessToken } } : {}),
+  },
+})
 
 describe('useRegistrationService', () => {
   beforeEach(() => {
@@ -754,13 +774,11 @@ describe('useRegistrationService', () => {
 
       await result.current.ensureRegistered()
 
-      expect(getAccountSecurityMethod).not.toHaveBeenCalled()
       expect(registrationApi.register).not.toHaveBeenCalled()
     })
 
     it('should register with the current security method when no token exists', async () => {
       const mockSecurityMethod = 'app_pin_no_device_authn'
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(mockSecurityMethod as any)
 
       const registrationApi = {
         register: jest.fn().mockResolvedValue({ client_id: 'new-client-id' }),
@@ -769,17 +787,17 @@ describe('useRegistrationService', () => {
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
 
-      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+      const { result } = renderHook(() => useRegistrationService(), {
+        wrapper: withBCSCState(accountWith({ securityMethod: mockSecurityMethod })),
+      })
 
       await result.current.ensureRegistered()
 
-      expect(getAccountSecurityMethod).toHaveBeenCalled()
       expect(registrationApi.register).toHaveBeenCalledWith(mockSecurityMethod)
     })
 
     it('should propagate registration failures and emit the mapped alert', async () => {
       const mockError = mockAppError(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue('app_pin_no_device_authn' as any)
 
       const registrationApi = {
         register: jest.fn().mockRejectedValue(mockError),
@@ -789,7 +807,9 @@ describe('useRegistrationService', () => {
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({ clientRegistrationFailureAlert } as any)
 
-      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+      const { result } = renderHook(() => useRegistrationService(), {
+        wrapper: withBCSCState(accountWith({ securityMethod: 'app_pin_no_device_authn' })),
+      })
 
       // Rejection must propagate so callers (e.g. useDataLoader) can route it to onError
       await expect(result.current.ensureRegistered()).rejects.toThrow(mockError)
@@ -797,12 +817,15 @@ describe('useRegistrationService', () => {
     })
 
     describe('failure alerts', () => {
-      const setup = (register: jest.Mock, alerts: Record<string, jest.Mock>) => {
-        jest.mocked(getAccountSecurityMethod).mockResolvedValue('app_pin_no_device_authn' as any)
+      const setup = (
+        register: jest.Mock,
+        alerts: Record<string, jest.Mock>,
+        bcscState: BCSCStoreSeed = accountWith({ securityMethod: 'app_pin_no_device_authn' })
+      ) => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue({ register } as any)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(alerts as any)
 
-        return renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+        return renderHook(() => useRegistrationService(), { wrapper: withBCSCState(bcscState) })
       }
 
       it('wraps a plain Error, alerts once and rethrows it as handled', async () => {
@@ -816,11 +839,10 @@ describe('useRegistrationService', () => {
         expect(clientRegistrationFailureAlert).toHaveBeenCalledTimes(1)
       })
 
-      it('alerts once and does not register when reading the security method fails', async () => {
+      it('alerts once and does not register when there is no security method to register with', async () => {
         const clientRegistrationFailureAlert = jest.fn()
         const register = jest.fn()
-        const { result } = setup(register, { clientRegistrationFailureAlert })
-        jest.mocked(getAccountSecurityMethod).mockRejectedValue(new Error('no security method'))
+        const { result } = setup(register, { clientRegistrationFailureAlert }, {})
 
         await expect(result.current.ensureRegistered()).rejects.toBeInstanceOf(AppError)
 
@@ -879,17 +901,9 @@ describe('useRegistrationService', () => {
 
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
-      const bcscCore = jest.requireMock('react-native-bcsc-core')
-      bcscCore.getAccount.mockResolvedValue({ clientID: 'old-client-id', securityMethod: mockSecurityMethod })
 
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <BasicAppContext
-          initialStateOverride={{
-            bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
-          }}
-        >
-          {children}
-        </BasicAppContext>
+      const wrapper = withBCSCState(
+        accountWith({ clientId: 'old-client-id', securityMethod: mockSecurityMethod }, 'existing-token')
       )
       const { result } = renderHook(() => useRegistrationService(), { wrapper })
 
@@ -904,26 +918,6 @@ describe('useRegistrationService', () => {
       )
     })
 
-    it('falls back to the native registration token when the store has none', async () => {
-      const registrationApi = {
-        deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
-        createRegistration: jest.fn().mockResolvedValue({ client_id: 'new-client-id' }),
-      } as any
-
-      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
-      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
-      const bcscCore = jest.requireMock('react-native-bcsc-core')
-      bcscCore.getAccount.mockResolvedValue({ clientID: 'old-client-id', securityMethod: 'pin' })
-      bcscCore.getToken.mockResolvedValue({ token: 'native-token' })
-
-      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
-
-      await result.current.cycleRegistration()
-
-      expect(bcscCore.getToken).toHaveBeenCalledWith(bcscCore.TokenType.Registration)
-      expect(registrationApi.deleteRegistration).toHaveBeenCalledWith('native-token', 'old-client-id')
-    })
-
     it('skips deleteRegistration when no token/clientId is available, but still registers fresh', async () => {
       const registrationApi = {
         deleteRegistration: jest.fn(),
@@ -932,11 +926,10 @@ describe('useRegistrationService', () => {
 
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
-      const bcscCore = jest.requireMock('react-native-bcsc-core')
-      bcscCore.getAccount.mockResolvedValue({ clientID: undefined, securityMethod: 'pin' })
-      bcscCore.getToken.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+      const { result } = renderHook(() => useRegistrationService(), {
+        wrapper: withBCSCState(accountWith({ clientId: '', securityMethod: 'pin' })),
+      })
 
       await result.current.cycleRegistration()
 
@@ -952,8 +945,6 @@ describe('useRegistrationService', () => {
 
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
-      const bcscCore = jest.requireMock('react-native-bcsc-core')
-      bcscCore.getAccount.mockResolvedValue(null)
 
       const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 

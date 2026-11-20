@@ -2,8 +2,10 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
+import { selectJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
+import { AccountSetupType } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import AddDeviceHands from '@assets/img/add-device-hands.svg'
 import {
@@ -15,7 +17,6 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -29,7 +30,6 @@ interface AccountSetupScreenProps {
 }
 
 const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
-  const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
@@ -38,11 +38,9 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const [isAddingAccount, setIsAddingAccount] = useState(false)
   const registrationService = useRegistrationService()
   const loadingScreen = useLoadingScreen()
-  const storeRef = useRef(store)
   const registrationServiceRef = useRef(registrationService)
   const loadingScreenRef = useRef(loadingScreen)
 
-  storeRef.current = store
   registrationServiceRef.current = registrationService
   loadingScreenRef.current = loadingScreen
 
@@ -52,14 +50,15 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   // Cycle the registration so that conflict never has a chance to occur.
   useFocusEffect(
     useCallback(() => {
-      const { bcsc, bcscSecure } = storeRef.current
-      if (bcsc.accountSetupType !== AccountSetupType.TransferAccount) {
+      const state = getBCSCState()
+      if (state.app.accountSetupType !== AccountSetupType.TransferAccount) {
         return
       }
 
-      dispatch({ type: BCDispatchAction.ACCOUNT_SETUP_TYPE, payload: [] })
+      void getBCSCState().app.update({ accountSetupType: undefined })
 
-      if (bcscSecure.deviceCode && !bcscSecure.serial && !bcscSecure.additionalEvidenceData.length) {
+      const { deviceCode, serial, additionalEvidenceData } = selectJourney(state)
+      if (deviceCode && !serial && !additionalEvidenceData.length) {
         const stopLoading = loadingScreenRef.current.startLoading()
         const cleanUpAbandonedTransfer = async () => {
           try {
@@ -76,7 +75,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         }
         void cleanUpAbandonedTransfer().finally(stopLoading)
       }
-    }, [dispatch, clearDeviceCodes, logger])
+    }, [clearDeviceCodes, logger])
   )
 
   const styles = StyleSheet.create({
@@ -110,10 +109,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       await registrationService.ensureRegistered()
 
       // Saved only once registered: a saved choice makes resume skip this screen
-      dispatch({
-        type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
-        payload: [AccountSetupType.AddAccount],
-      })
+      await getBCSCState().app.update({ accountSetupType: AccountSetupType.AddAccount })
       navigation.navigate(BCSCScreens.IdentitySelection)
     } catch (error) {
       setIsAddingAccount(false)
@@ -121,7 +117,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     } finally {
       stopLoading()
     }
-  }, [dispatch, loadingScreen, logger, navigation, registrationService])
+  }, [loadingScreen, logger, navigation, registrationService])
 
   // "Yes, connect this device" — transfer an already-verified account by scanning the QR
   // shown on the other device, skipping the identity verification steps.
@@ -132,17 +128,14 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       await registrationService.ensureRegistered()
 
       // Saved only once registered: a saved choice makes resume skip this screen
-      dispatch({
-        type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
-        payload: [AccountSetupType.TransferAccount],
-      })
+      await getBCSCState().app.update({ accountSetupType: AccountSetupType.TransferAccount })
       navigation.navigate(BCSCScreens.TransferAccountInstructions)
     } catch (error) {
       logger.error('[AccountSetupScreen] Failed to ensure registration for transfer', error as Error)
     } finally {
       stopLoading()
     }
-  }, [dispatch, loadingScreen, logger, navigation, registrationService])
+  }, [loadingScreen, logger, navigation, registrationService])
 
   const controls = (
     <ControlContainer>

@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useEvidenceUpload, { EvidenceUploadItem } from '@/bcsc-theme/hooks/useEvidenceUpload'
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
@@ -69,6 +70,7 @@ describe('useEvidenceUpload', () => {
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([baseStore as BCState, jest.fn()])
+    seedBCSCStoreFromBCState(baseStore as BCState as never)
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
 
     const useApiMock = jest.mocked(useApi)
@@ -99,6 +101,19 @@ describe('useEvidenceUpload', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          additionalEvidenceData: [
+            {
+              evidenceType: { evidence_type: 'drivers_licence', image_sides: bcdlImageSides },
+              documentNumber: 'DL123',
+              metadata: [photo('FRONT_SIDE', 'front'), photo('BACK_SIDE', 'back1'), photo('BACK_SIDE', 'back2')],
+            },
+          ],
+        },
+      } as BCState as never)
 
       mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([
         { label: 'FRONT_SIDE', upload_uri: 'front-uri' },
@@ -148,6 +163,19 @@ describe('useEvidenceUpload', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          additionalEvidenceData: [
+            {
+              evidenceType: { evidence_type: 'drivers_licence', image_sides: bcdlImageSides },
+              documentNumber: 'DL123',
+              metadata: [photo('FRONT_SIDE', 'front'), photo('BACK_SIDE', 'back')],
+            },
+          ],
+        },
+      } as BCState as never)
 
       mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([
         { label: 'FRONT_SIDE', upload_uri: 'front-uri' },
@@ -192,6 +220,23 @@ describe('useEvidenceUpload', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          additionalEvidenceData: [
+            {
+              evidenceType: { evidence_type: 'drivers_licence', image_sides: bcdlImageSides },
+              documentNumber: 'DL123',
+              metadata: [
+                photo('FRONT_SIDE', 'front'),
+                // Corrupted to a near-1970 value, as the Android native round-trip bug produces.
+                photo('BACK_SIDE', 'back', 1_780_000),
+              ],
+            },
+          ],
+        },
+      } as BCState as never)
 
       mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([
         { label: 'FRONT_SIDE', upload_uri: 'front-uri' },
@@ -237,6 +282,19 @@ describe('useEvidenceUpload', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          additionalEvidenceData: [
+            {
+              evidenceType: { evidence_type: 'drivers_licence', image_sides: bcdlImageSides },
+              documentNumber: 'DL123',
+              metadata: [photo('FRONT_SIDE', 'front'), photo('BACK_SIDE', 'back')],
+            },
+          ],
+        },
+      } as BCState as never)
 
       mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([
         { label: 'FRONT_SIDE', upload_uri: 'front-uri' },
@@ -274,6 +332,12 @@ describe('useEvidenceUpload', () => {
         } as unknown as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        bcsc: {
+          photoPath: '/tmp/camera/selfie-temp.jpg',
+          photoMetadata: { ...photo('front', 'selfie', 1_780_000), file_path: '/permanent/selfie.jpg' },
+        },
+      } as never)
 
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'selfie-uri' })
 
@@ -307,6 +371,13 @@ describe('useEvidenceUpload', () => {
         } as unknown as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          photoPath: '/selfie.jpg',
+          photoMetadata: photo('front', 'selfie'),
+        },
+      } as unknown as BCState as never)
 
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'selfie-uri' })
 
@@ -335,6 +406,13 @@ describe('useEvidenceUpload', () => {
         } as unknown as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          photoPath: '/selfie.jpg',
+          photoMetadata: photo('front', 'selfie'),
+        },
+      } as unknown as BCState as never)
 
       const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0])
       jest.mocked(readFileInChunks).mockResolvedValue(jpegBytes)
@@ -361,6 +439,13 @@ describe('useEvidenceUpload', () => {
         } as unknown as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          photoPath: '/selfie.jpg',
+          photoMetadata: photo('front', 'selfie'),
+        },
+      } as unknown as BCState as never)
 
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockRejectedValue(new Error('Conflict'))
 

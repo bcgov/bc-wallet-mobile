@@ -1,16 +1,15 @@
 import { AccountPhase, AccountPhaseType } from '@/bcsc-theme/state/account/account-phase'
 import { useAccountPhase } from '@/bcsc-theme/state/account/useAccountPhase'
-import * as Bifold from '@bifold/core'
+import { seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { renderHook } from '@testing-library/react-native'
 import { useCardStatus } from './useCardStatus'
 
-jest.mock('@bifold/core')
 jest.mock('@/bcsc-theme/state/account/useAccountPhase', () => ({ useAccountPhase: jest.fn() }))
 
 const expiresAt = new Date('2027-10-19T00:00:00.000Z')
 
 const setup = (verified: boolean, phase: AccountPhase) => {
-  jest.mocked(Bifold.useStore).mockReturnValue([{ bcscSecure: { verified } } as any, jest.fn()])
+  seedBCSCStoreFromBCState({ bcscSecure: { verified } })
   jest.mocked(useAccountPhase).mockReturnValue(phase)
 
   return renderHook(() => useCardStatus())

@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { storage } from '@/bcsc-theme/storage'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCLocalStorageKeys } from '@/store'
-import { PersistentStorage, testIdWithKey } from '@bifold/core'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -58,7 +58,6 @@ describe('TermsOfUseScreen', () => {
   }
 
   it('persists the accepted terms version and navigates to the analytics opt-in screen', async () => {
-    const storageSpy = jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
 
     await renderAndAccept()
 
@@ -67,9 +66,6 @@ describe('TermsOfUseScreen', () => {
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingOptInAnalytics)
     })
 
-    expect(storageSpy).toHaveBeenCalledWith(
-      BCLocalStorageKeys.BCSC,
-      expect.objectContaining({ acceptedTermsOfUseVersion: '1.0' })
-    )
+    expect(storage.store.getState().app).toMatchObject({ acceptedTermsOfUseVersion: '1.0' })
   })
 })

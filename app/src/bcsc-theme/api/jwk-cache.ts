@@ -1,6 +1,5 @@
+import { storage } from '@/bcsc-theme/storage'
 import { JWK } from '@/bcsc-theme/types/jwk'
-import { BCLocalStorageKeys } from '@/store'
-import { PersistentStorage } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 
 /**
@@ -12,6 +11,11 @@ export interface PersistedJwkRecord {
   baseURL: string
   jwk: JWK
   fetchedAt: number // epoch ms, logging/diagnostics only — the persisted fallback has no time to live
+}
+
+const isJwkRecord = (value: unknown): value is PersistedJwkRecord => {
+  const record = value as Partial<PersistedJwkRecord> | null
+  return typeof record?.baseURL === 'string' && typeof record.jwk?.kid === 'string'
 }
 
 /**
@@ -29,7 +33,7 @@ export const persistJwk = async (baseURL: string, jwk: JWK, logger: RemoteLogger
   const record: PersistedJwkRecord = { baseURL, jwk, fetchedAt: Date.now() }
 
   try {
-    await PersistentStorage.storeValueForKey<PersistedJwkRecord>(BCLocalStorageKeys.CachedJWK, record, logger)
+    await storage.store.getState().caches.setCache('jwk', record)
     logger.info(`[jwk-cache] JWK persisted to disk (kid: ${jwk.kid}, baseURL: ${baseURL})`)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -40,35 +44,29 @@ export const persistJwk = async (baseURL: string, jwk: JWK, logger: RemoteLogger
 /**
  * Loads the last-known-good JWK for `baseURL`.
  *
- * Returns `null` when nothing has been persisted, the persisted record belongs to a different
- * environment (baseURL mismatch — e.g. a dev/test/prod switch, where a stale key must never be
- * used), or the read itself fails. Never throws.
+ * Returns `null` when nothing has been persisted, or the persisted record belongs to a different
+ * environment (baseURL mismatch — e.g. a dev/test/prod switch, where a stale key must never be used).
+ * Reads the caches slice, which StorageGate has loaded before the API client is configured.
  *
  * @param baseURL - The IAS environment base URL to match against the persisted record
- * @param logger - Logger used to record a failure to read
+ * @param logger - Logger used to record an environment mismatch
  */
-export const loadPersistedJwk = async (baseURL: string, logger: RemoteLogger): Promise<JWK | null> => {
-  try {
-    const record = await PersistentStorage.fetchValueForKey<PersistedJwkRecord>(BCLocalStorageKeys.CachedJWK, logger)
+export const loadPersistedJwk = (baseURL: string, logger: RemoteLogger): JWK | null => {
+  const record = storage.store.getState().caches.jwk
 
-    if (!record) {
-      return null
-    }
-
-    if (record.baseURL !== baseURL) {
-      // Distinct from "nothing stored" (above): a record exists, just not for this environment — worth
-      // calling out so an env switch (dev/test/prod) doesn't read as an unexplained cache miss.
-      logger.info(
-        `[jwk-cache] Persisted JWK ignored — different environment (persisted baseURL: ${record.baseURL}, current baseURL: ${baseURL})`
-      )
-      return null
-    }
-
-    logger.info(`[jwk-cache] JWK loaded from persisted disk cache (kid: ${record.jwk.kid}, baseURL: ${baseURL})`)
-    return record.jwk
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    logger.error(`[jwk-cache] Failed to load persisted JWK for ${baseURL}: ${message}`)
+  if (!isJwkRecord(record)) {
     return null
   }
+
+  if (record.baseURL !== baseURL) {
+    // Distinct from "nothing stored" (above): a record exists, just not for this environment — worth
+    // calling out so an env switch (dev/test/prod) doesn't read as an unexplained cache miss.
+    logger.info(
+      `[jwk-cache] Persisted JWK ignored — different environment (persisted baseURL: ${record.baseURL}, current baseURL: ${baseURL})`
+    )
+    return null
+  }
+
+  logger.info(`[jwk-cache] JWK loaded from persisted disk cache (kid: ${record.jwk.kid}, baseURL: ${baseURL})`)
+  return record.jwk
 }

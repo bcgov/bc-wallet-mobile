@@ -1,7 +1,6 @@
 import { loadPersistedJwk, persistJwk } from '@/bcsc-theme/api/jwk-cache'
+import { storage } from '@/bcsc-theme/storage'
 import { JWK } from '@/bcsc-theme/types/jwk'
-import { BCLocalStorageKeys } from '@/store'
-import { PersistentStorage } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 
 const baseURL = 'https://example.com'
@@ -24,58 +23,43 @@ describe('jwk-cache', () => {
       const logger = createMockLogger()
 
       await persistJwk(baseURL, jwk, logger)
-      const result = await loadPersistedJwk(baseURL, logger)
 
-      expect(result).toEqual(jwk)
+      expect(loadPersistedJwk(baseURL, logger)).toEqual(jwk)
     })
 
     it('returns null when the persisted record belongs to a different baseURL (environment switch)', async () => {
       const logger = createMockLogger()
 
       await persistJwk(baseURL, jwk, logger)
-      const result = await loadPersistedJwk(otherBaseURL, logger)
 
-      expect(result).toBeNull()
+      expect(loadPersistedJwk(otherBaseURL, logger)).toBeNull()
     })
 
-    it('returns null when nothing has been persisted', async () => {
-      const logger = createMockLogger()
-      jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValueOnce(undefined)
-
-      const result = await loadPersistedJwk(baseURL, logger)
-
-      expect(result).toBeNull()
+    it('returns null when nothing has been persisted', () => {
+      expect(loadPersistedJwk(baseURL, createMockLogger())).toBeNull()
     })
 
-    it('persists under the canonical CachedJWK storage key', async () => {
-      const logger = createMockLogger()
-      const storeSpy = jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
+    it('returns null when the cached value is not a JWK record', async () => {
+      await storage.store.getState().caches.setCache('jwk', { baseURL })
 
-      await persistJwk(baseURL, jwk, logger)
+      expect(loadPersistedJwk(baseURL, createMockLogger())).toBeNull()
+    })
 
-      expect(storeSpy).toHaveBeenCalledWith(
-        BCLocalStorageKeys.CachedJWK,
-        expect.objectContaining({ baseURL, jwk }),
-        logger
-      )
+    it('persists to the jwk cache', async () => {
+      await persistJwk(baseURL, jwk, createMockLogger())
+
+      expect(storage.store.getState().caches.jwk).toEqual(expect.objectContaining({ baseURL, jwk }))
     })
   })
 
   describe('storage failures are swallowed', () => {
-    it('persistJwk resolves even when storeValueForKey rejects', async () => {
+    it('persistJwk resolves even when the cache write rejects', async () => {
       const logger = createMockLogger()
-      jest.spyOn(PersistentStorage, 'storeValueForKey').mockRejectedValueOnce(new Error('disk full'))
+      const caches = storage.store.getState().caches
+      jest.spyOn(caches, 'setCache').mockRejectedValueOnce(new Error('disk full'))
 
       await expect(persistJwk(baseURL, jwk, logger)).resolves.toBeUndefined()
-    })
-
-    it('loadPersistedJwk returns null when fetchValueForKey rejects', async () => {
-      const logger = createMockLogger()
-      jest.spyOn(PersistentStorage, 'fetchValueForKey').mockRejectedValueOnce(new Error('read error'))
-
-      const result = await loadPersistedJwk(baseURL, logger)
-
-      expect(result).toBeNull()
+      expect(logger.error).toHaveBeenCalled()
     })
   })
 })

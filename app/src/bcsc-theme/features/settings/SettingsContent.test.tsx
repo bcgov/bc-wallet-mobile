@@ -1,12 +1,12 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import type { BCSCStoreSeed } from '@/bcsc-theme/storage/testing'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { useFocusEffect } from '@react-navigation/native'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Linking } from 'react-native'
-import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
+import { AccountSecurityMethod } from 'react-native-bcsc-core'
 import { SettingsContent } from './SettingsContent'
 
 const tid = (key: string) => testIdWithKey(key)
@@ -40,9 +40,9 @@ const baseProps = {
   onRemoveAccount: jest.fn(),
 }
 
-const renderWithState = (override: Record<string, unknown> = {}) =>
+const renderWithState = (override: Record<string, unknown> = {}, bcscState?: BCSCStoreSeed) =>
   render(
-    <BasicAppContext initialStateOverride={override as never}>
+    <BasicAppContext initialStateOverride={override as never} bcscState={bcscState}>
       <BCSCLoadingProvider>
         <SettingsContent {...baseProps} />
       </BCSCLoadingProvider>
@@ -82,27 +82,12 @@ describe('SettingsContent', () => {
   })
 
   describe('ChangePIN row', () => {
-    const focusEffectMock = useFocusEffect as jest.Mock
-
-    beforeEach(() => {
-      // Run the focus callback as an effect, emulating the screen gaining focus after render
-      focusEffectMock.mockImplementation((callback: () => void) => {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        useEffect(callback, [callback])
-      })
-    })
-
-    afterEach(() => {
-      focusEffectMock.mockReset()
-    })
-
-    it('shows ChangePIN on the first render for a PIN account, without a native read', async () => {
+    it('shows ChangePIN on the first render for a PIN account', async () => {
       renderWithState({
         authentication: { didAuthenticate: true },
         bcscSecure: { securityMethod: AccountSecurityMethod.PinWithDeviceAuth },
       })
       expect(screen.getByTestId(tid('ChangePIN'))).toBeTruthy()
-      expect(getAccountSecurityMethod).not.toHaveBeenCalled()
       await waitForNotificationStatus()
     })
 
@@ -112,22 +97,7 @@ describe('SettingsContent', () => {
         bcscSecure: { securityMethod: AccountSecurityMethod.DeviceAuth },
       })
       expect(screen.queryByTestId(tid('ChangePIN'))).toBeNull()
-      expect(getAccountSecurityMethod).not.toHaveBeenCalled()
       await waitForNotificationStatus()
-    })
-
-    it('hides ChangePIN until the method is read from the account record when secure state has none', async () => {
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
-      renderWithState({ authentication: { didAuthenticate: true } })
-      expect(screen.queryByTestId(tid('ChangePIN'))).toBeNull()
-
-      expect(await screen.findByTestId(tid('ChangePIN'))).toBeTruthy()
-      expect(getAccountSecurityMethod).toHaveBeenCalledTimes(1)
-    })
-
-    it('does not read the account record before authentication', () => {
-      renderWithState()
-      expect(getAccountSecurityMethod).not.toHaveBeenCalled()
     })
   })
 
@@ -188,10 +158,7 @@ describe('SettingsContent', () => {
   })
 
   it('shows DeveloperMode row when developer mode is enabled and authenticated', async () => {
-    renderWithState({
-      authentication: { didAuthenticate: true },
-      preferences: { developerModeEnabled: true } as never,
-    })
+    renderWithState({ authentication: { didAuthenticate: true } }, { preferences: { developerModeEnabled: true } })
     expect(await screen.findByTestId(tid('DeveloperMode'))).toBeTruthy()
   })
 
@@ -215,10 +182,7 @@ describe('SettingsContent', () => {
   })
 
   it('invokes onPressDeveloperMode when DeveloperMode row is pressed', async () => {
-    renderWithState({
-      authentication: { didAuthenticate: true },
-      preferences: { developerModeEnabled: true } as never,
-    })
+    renderWithState({ authentication: { didAuthenticate: true } }, { preferences: { developerModeEnabled: true } })
     fireEvent.press(await screen.findByTestId(tid('DeveloperMode')))
     expect(baseProps.onPressDeveloperMode).toHaveBeenCalled()
   })

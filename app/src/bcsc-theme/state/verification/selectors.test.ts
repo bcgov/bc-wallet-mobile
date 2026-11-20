@@ -1,14 +1,13 @@
+import { storeFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCState, initialState } from '@/store'
 import { selectVerificationState } from './selectors'
 
-const buildState = (secure: Partial<BCState['bcscSecure']> = {}): BCState => ({
-  ...initialState,
-  bcscSecure: { ...initialState.bcscSecure, ...secure },
-})
+const buildState = (secure: Partial<BCState['bcscSecure']> = {}) =>
+  storeFromBCState({ ...initialState, bcscSecure: { ...initialState.bcscSecure, ...secure } })
 
 describe('selectVerificationState', () => {
   it('needs verification in the initial state', () => {
-    expect(selectVerificationState(initialState)).toMatchObject({ isVerified: false, needsVerification: true })
+    expect(selectVerificationState(buildState())).toMatchObject({ isVerified: false, needsVerification: true })
   })
 
   it('reads the verified flag as the credential', () => {

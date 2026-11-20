@@ -1,4 +1,5 @@
 import useUserApi from '@/bcsc-theme/api/hooks/useUserApi'
+import { nativeAccount, seedAccount } from '@/bcsc-theme/storage/testing'
 import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { act, renderHook } from '@testing-library/react-native'
@@ -10,7 +11,6 @@ describe('useUserApi', () => {
   describe('getUserInfo', () => {
     it('should wrap native E_FAILED_TO_PARSE_JWS as DECRYPT_JWE_ERROR', async () => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
-      const getAccountMock = jest.mocked(BcscCore).getAccount
 
       const mockApiClient = {
         get: jest.fn(),
@@ -20,7 +20,7 @@ describe('useUserApi', () => {
         },
       }
 
-      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      seedAccount(nativeAccount({ clientID: 'test' }))
       mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
       const nativeError = Object.assign(new Error('Invalid JWS'), { code: 'E_FAILED_TO_PARSE_JWS' })
       decodePayloadMock.mockRejectedValue(nativeError)
@@ -36,7 +36,6 @@ describe('useUserApi', () => {
 
     it('should fetch user info successfully', async () => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
-      const getAccountMock = jest.mocked(BcscCore).getAccount
 
       const mockApiClient = {
         get: jest.fn(),
@@ -46,7 +45,7 @@ describe('useUserApi', () => {
         },
       }
 
-      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      seedAccount(nativeAccount({ clientID: 'test' }))
       mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
       decodePayloadMock.mockResolvedValue({ verified: true, claims: JSON.stringify({ given_name: 'steve brule' }) })
 
@@ -61,7 +60,6 @@ describe('useUserApi', () => {
 
     it('should throw ERR_111 when verification fails and no JWK is available', async () => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
-      const getAccountMock = jest.mocked(BcscCore).getAccount
 
       const mockApiClient = {
         get: jest.fn(),
@@ -71,7 +69,7 @@ describe('useUserApi', () => {
         },
       }
 
-      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      seedAccount(nativeAccount({ clientID: 'test' }))
       mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
       decodePayloadMock.mockResolvedValue({ verified: false, claims: '{}' })
 
@@ -88,7 +86,6 @@ describe('useUserApi', () => {
 
     it('should throw ERR_112 when verification fails and a JWK is available', async () => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
-      const getAccountMock = jest.mocked(BcscCore).getAccount
 
       const mockApiClient = {
         get: jest.fn(),
@@ -98,7 +95,7 @@ describe('useUserApi', () => {
         },
       }
 
-      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      seedAccount(nativeAccount({ clientID: 'test' }))
       mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
       decodePayloadMock.mockResolvedValue({ verified: false, claims: '{}' })
 
@@ -118,7 +115,6 @@ describe('useUserApi', () => {
       ['E_JWS_VERIFY_ERROR', AppEventCode.ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION],
     ])('should keep the verifier code %s instead of wrapping it as ERR_110', async (code, appEvent) => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
-      const getAccountMock = jest.mocked(BcscCore).getAccount
 
       const mockApiClient = {
         get: jest.fn(),
@@ -128,7 +124,7 @@ describe('useUserApi', () => {
         },
       }
 
-      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      seedAccount(nativeAccount({ clientID: 'test' }))
       mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
       const nativeError = Object.assign(new Error('verifier failure'), { code })
       decodePayloadMock.mockRejectedValue(nativeError)
@@ -144,7 +140,6 @@ describe('useUserApi', () => {
 
     it('should throw ERR_114 when decoded payload is null', async () => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
-      const getAccountMock = jest.mocked(BcscCore).getAccount
 
       const mockApiClient = {
         get: jest.fn(),
@@ -154,7 +149,7 @@ describe('useUserApi', () => {
         },
       }
 
-      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      seedAccount(nativeAccount({ clientID: 'test' }))
       mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
       decodePayloadMock.mockResolvedValue({ verified: true, claims: 'null' })
 
@@ -172,15 +167,13 @@ describe('useUserApi', () => {
 
   describe('getPicture', () => {
     it('should fetch and convert picture to base64 URI', async () => {
-      const getAccountMock = jest.mocked(BcscCore).getAccount
-
       const mockApiClient = {
         get: jest.fn(),
         endpoints: {
           userInfo: '/user/info',
         },
       }
-      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      seedAccount(nativeAccount({ clientID: 'test' }))
       const binaryData = new Uint8Array([72, 101, 108, 108, 111]) // "Hello" in ASCII
       mockApiClient.get.mockResolvedValue({ data: binaryData.buffer })
 

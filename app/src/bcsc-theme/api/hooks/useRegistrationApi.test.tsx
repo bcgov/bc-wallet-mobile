@@ -1,3 +1,5 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { nativeAccount, seedAccount, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
@@ -5,10 +7,8 @@ import {
   AccountSecurityMethod,
   BcscNativeError,
   BcscNativeErrorCodes,
-  getAccount,
   getDynamicClientRegistrationBody,
   isBcscNativeError,
-  setAccount,
 } from 'react-native-bcsc-core'
 import useRegistrationApi from './useRegistrationApi'
 
@@ -125,8 +125,6 @@ describe('useRegistrationApi', () => {
     mockApiClient.post.mockResolvedValue({ data: mockRegistrationResponse })
     mockApiClient.put.mockResolvedValue({ data: mockRegistrationResponse })
     mockUpdateTokens.mockResolvedValue(undefined)
-    jest.mocked(setAccount).mockResolvedValue(undefined)
-    jest.mocked(getAccount).mockResolvedValue(null)
   })
 
   // ---------------------------------------------------------------------------
@@ -146,8 +144,9 @@ describe('useRegistrationApi', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(mockApiClient.endpoints.registration, expect.any(String), {
         skipBearerAuth: true,
       })
-      expect(setAccount).toHaveBeenCalledWith({
-        clientID: 'test-client-id',
+      expect(getBCSCState().account.profile).toEqual({
+        accountId: expect.any(String),
+        clientId: 'test-client-id',
         issuer: mockApiClient.endpoints.issuer,
         securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
       })
@@ -155,6 +154,24 @@ describe('useRegistrationApi', () => {
         registrationAccessToken: 'new-reg-access-token',
       })
       expect(data).toEqual(mockRegistrationResponse)
+    })
+
+    // A verification reset registers again; the PIN is found through the account ID
+    it('keeps the existing account ID when registering again', async () => {
+      seedAccount(nativeAccount({ id: 'existing-account-id', clientID: 'old-client-id', nickname: 'Phone' }))
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+      expect(getBCSCState().account.profile).toEqual(
+        expect.objectContaining({
+          accountId: 'existing-account-id',
+          clientId: 'test-client-id',
+          issuer: mockApiClient.endpoints.issuer,
+          nickname: 'Phone',
+        })
+      )
     })
 
     it('should throw if client is not ready', async () => {
@@ -242,7 +259,7 @@ describe('useRegistrationApi', () => {
 
         const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
 
-        expect(setAccount).toHaveBeenCalled()
+        expect(getBCSCState().account.profile?.clientId).toBe('test-client-id')
         expect(mockUpdateTokens).toHaveBeenCalled()
         expect(data.jwks.keys).toHaveLength(2)
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -269,7 +286,7 @@ describe('useRegistrationApi', () => {
 
         await expectAppErrorRejection(promise, AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED)
 
-        expect(setAccount).not.toHaveBeenCalled()
+        expect(getBCSCState().account.profile).toBeUndefined()
         expect(mockUpdateTokens).not.toHaveBeenCalled()
       })
 
@@ -281,7 +298,7 @@ describe('useRegistrationApi', () => {
         const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
 
         expect(data).toEqual(mockRegistrationResponse)
-        expect(setAccount).toHaveBeenCalled()
+        expect(getBCSCState().account.profile?.clientId).toBe('test-client-id')
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining('Could not parse sent registration body to confirm signing key')
         )
@@ -294,7 +311,7 @@ describe('useRegistrationApi', () => {
         const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
 
         expect(data).toEqual(mockRegistrationResponse)
-        expect(setAccount).toHaveBeenCalled()
+        expect(getBCSCState().account.profile?.clientId).toBe('test-client-id')
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('unparseable/empty'))
       })
     })
@@ -305,7 +322,7 @@ describe('useRegistrationApi', () => {
   // ---------------------------------------------------------------------------
   describe('register', () => {
     it('should skip registration if an account already exists', async () => {
-      jest.mocked(getAccount).mockResolvedValue({ clientID: 'existing-client' } as any)
+      seedAccount(nativeAccount({ clientID: 'existing-client' }))
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
@@ -317,7 +334,7 @@ describe('useRegistrationApi', () => {
     })
 
     it('should call createRegistration when no account exists', async () => {
-      jest.mocked(getAccount).mockResolvedValue(null)
+      seedAccount(null)
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
@@ -340,7 +357,7 @@ describe('useRegistrationApi', () => {
     }
 
     beforeEach(() => {
-      jest.mocked(getAccount).mockResolvedValue(existingAccount as any)
+      seedAccount(nativeAccount(existingAccount))
     })
 
     it('should complete update registration successfully', async () => {
@@ -367,9 +384,9 @@ describe('useRegistrationApi', () => {
           }),
         })
       )
-      expect(setAccount).toHaveBeenCalledWith(
+      expect(getBCSCState().account.profile).toEqual(
         expect.objectContaining({
-          clientID: mockRegistrationResponse.client_id,
+          clientId: mockRegistrationResponse.client_id,
           securityMethod: AccountSecurityMethod.PinWithDeviceAuth,
           nickname: 'NewNickname',
           didPostNicknameToServer: true,
@@ -390,7 +407,7 @@ describe('useRegistrationApi', () => {
     })
 
     it('should throw if no account exists and client is not ready', async () => {
-      jest.mocked(getAccount).mockResolvedValue(null)
+      seedAccount(null)
 
       const { result } = renderHook(() => useRegistrationApi(null, false))
 
@@ -416,7 +433,7 @@ describe('useRegistrationApi', () => {
     })
 
     it('should throw if no account exists', async () => {
-      jest.mocked(getAccount).mockResolvedValue(null)
+      seedAccount(null)
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
@@ -474,7 +491,7 @@ describe('useRegistrationApi', () => {
     })
 
     it('should still return data even if post-update storage fails', async () => {
-      jest.mocked(setAccount).mockRejectedValue(new Error('storage write failure'))
+      seedBCSCStore({ account: { updateProfile: jest.fn().mockRejectedValue(new Error('storage write failure')) } })
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 

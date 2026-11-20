@@ -1,3 +1,4 @@
+import { resetBCSCStore, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
@@ -36,6 +37,8 @@ jest.mock('../hooks/useCardStatus', () => ({
   useCardStatus: jest.fn(),
 }))
 jest.mock('@/constants', () => ({
+  // The BCSC store's developer defaults read Mode and the environments
+  ...jest.requireActual('@/constants'),
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: { flexShrink: 1, maxWidth: '68%' },
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
   TAB_SCENE_CONTAINER_STYLE: { isolation: 'isolate' },
@@ -77,7 +80,7 @@ describe('QRCoreStack', () => {
       Spacing: { lg: 24 },
     } as any)
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
-    jest.mocked(Bifold.useStore).mockReturnValue([{ preferences: { developerModeEnabled: false } }, jest.fn()] as any)
+    resetBCSCStore()
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
 
     jest.mocked(useCardStatus).mockReturnValue({ isActivelyVerified: true, isExpired: false } as any)
@@ -324,7 +327,7 @@ describe('QRCoreStack', () => {
     })
 
     it('adds the QR display tab when developer mode is enabled', () => {
-      jest.mocked(Bifold.useStore).mockReturnValue([{ preferences: { developerModeEnabled: true } }, jest.fn()] as any)
+      seedBCSCStore({ preferences: { developerModeEnabled: true } })
       render(<QRCoreStack />)
       const screens = React.Children.toArray(capturedNavigatorProps.children) as any[]
       expect(screens.some((s) => s.props.name === BCSCQRCoreScreens.Display)).toBe(true)

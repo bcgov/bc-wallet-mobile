@@ -1,31 +1,20 @@
+import type { VerificationJourney } from '@/bcsc-theme/state/verification/journey'
+import { makeJourney } from '@/bcsc-theme/storage/testing'
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
-import { AccountSetupType, BCSCSecureState, BCState, initialState } from '@/store'
+import { AccountSetupType } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
-// structuredClone, not a spread: `{ ...initialState }` clones only the top level, so nested
-// bcsc/bcscSecure objects would stay shared references and leak between tests.
-const makeStore = (bcscSecure: Partial<BCSCSecureState> = {}): BCState => {
-  const store = structuredClone(initialState)
-  Object.assign(store.bcscSecure, bcscSecure)
-  return store
-}
+const makeStore = (journey: Partial<VerificationJourney> = {}): VerificationJourney => makeJourney(journey)
 
-/** A nickname is the precondition for every step past the very beginning of setup. */
-const makeNamedStore = (bcscSecure: Partial<BCSCSecureState> = {}): BCState => {
-  const store = makeStore(bcscSecure)
-  store.bcsc.selectedNickname = 'test'
-  return store
-}
-
-const ID_COMPLETE: Partial<BCSCSecureState> = {
+const ID_COMPLETE: Partial<VerificationJourney> = {
   cardProcess: BCSCCardProcess.BCSCPhoto,
   serial: '123456789',
   emailAddress: 'steveBrule@email.com',
 }
 
-const ADDRESS_COMPLETE: Partial<BCSCSecureState> = { ...ID_COMPLETE, deviceCode: 'ABCDEFGH' }
+const ADDRESS_COMPLETE: Partial<VerificationJourney> = { ...ID_COMPLETE, deviceCode: 'ABCDEFGH' }
 
-const EMAIL_COMPLETE: Partial<BCSCSecureState> = { ...ADDRESS_COMPLETE, isEmailVerified: true }
+const EMAIL_COMPLETE: Partial<VerificationJourney> = { ...ADDRESS_COMPLETE, isEmailVerified: true }
 
 describe('computeSetupStepCompletion', () => {
   describe('Init', () => {
@@ -47,14 +36,14 @@ describe('computeSetupStepCompletion', () => {
 
   describe('ID Step', () => {
     it('Combo Card: should be completed when serial and email provided', () => {
-      const store = makeNamedStore()
+      const store = makeStore()
 
       expect(computeSetupStepCompletion(store).id.completed).toBe(false)
       expect(computeSetupStepCompletion(store).id.focused).toBe(true)
 
-      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
-      store.bcscSecure.serial = '123456789'
-      store.bcscSecure.emailAddress = 'steveBrule@email.com'
+      store.cardProcess = BCSCCardProcess.BCSCPhoto
+      store.serial = '123456789'
+      store.emailAddress = 'steveBrule@email.com'
 
       const result = computeSetupStepCompletion(store)
       expect(result.id.completed).toBe(true)
@@ -63,7 +52,7 @@ describe('computeSetupStepCompletion', () => {
 
     it('NonPhoto Card: should not show needs additional card when only cardType is set (user backed out before serial)', () => {
       // Note: serial is NOT set - simulates user selecting card type but backing out
-      const store = makeNamedStore({ cardProcess: BCSCCardProcess.BCSCNonPhoto })
+      const store = makeStore({ cardProcess: BCSCCardProcess.BCSCNonPhoto })
 
       const result = computeSetupStepCompletion(store)
 
@@ -75,7 +64,7 @@ describe('computeSetupStepCompletion', () => {
 
     it('Other Card: should not show needs additional card when only cardType is set (user backed out before evidence)', () => {
       // Note: no evidence data - simulates user selecting card type but backing out
-      const store = makeNamedStore({ cardProcess: BCSCCardProcess.NonBCSC })
+      const store = makeStore({ cardProcess: BCSCCardProcess.NonBCSC })
 
       const result = computeSetupStepCompletion(store)
 
@@ -86,23 +75,23 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('Non-Photo Card: should be completed when serial, email, and photo ID provided', () => {
-      const store = makeNamedStore()
+      const store = makeStore()
 
       let result = computeSetupStepCompletion(store)
       expect(result.id.completed).toBe(false)
       expect(result.id.focused).toBe(true)
       expect(result.id.nonPhotoBcscNeedsAdditionalCard).toBe(false)
 
-      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCNonPhoto
-      store.bcscSecure.serial = '123456789'
-      store.bcscSecure.emailAddress = 'steveBrule@email.com'
+      store.cardProcess = BCSCCardProcess.BCSCNonPhoto
+      store.serial = '123456789'
+      store.emailAddress = 'steveBrule@email.com'
 
       result = computeSetupStepCompletion(store)
       expect(result.id.completed).toBe(false)
       expect(result.id.focused).toBe(true)
       expect(result.id.nonPhotoBcscNeedsAdditionalCard).toBe(true)
 
-      store.bcscSecure.additionalEvidenceData = [
+      store.additionalEvidenceData = [
         {
           evidenceType: {
             has_photo: true,
@@ -119,21 +108,21 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('Non-BCSC Card: should be completed when 2 IDs provided', () => {
-      const store = makeNamedStore()
+      const store = makeStore()
 
       let result = computeSetupStepCompletion(store)
       expect(result.id.completed).toBe(false)
       expect(result.id.focused).toBe(true)
       expect(result.id.nonBcscNeedsAdditionalCard).toBe(false)
 
-      store.bcscSecure.cardProcess = BCSCCardProcess.NonBCSC
+      store.cardProcess = BCSCCardProcess.NonBCSC
 
       result = computeSetupStepCompletion(store)
       expect(result.id.completed).toBe(false)
       expect(result.id.focused).toBe(true)
       expect(result.id.nonBcscNeedsAdditionalCard).toBe(false)
 
-      store.bcscSecure.additionalEvidenceData = [
+      store.additionalEvidenceData = [
         {
           evidenceType: {
             has_photo: false,
@@ -148,7 +137,7 @@ describe('computeSetupStepCompletion', () => {
       expect(result.id.focused).toBe(true)
       expect(result.id.nonBcscNeedsAdditionalCard).toBe(true)
 
-      store.bcscSecure.additionalEvidenceData = [
+      store.additionalEvidenceData = [
         {
           evidenceType: {
             has_photo: false,
@@ -174,7 +163,7 @@ describe('computeSetupStepCompletion', () => {
 
   describe('Residential Address Step', () => {
     it('should be focused when ID step completed but address not yet completed', () => {
-      const store = makeNamedStore(ID_COMPLETE)
+      const store = makeStore(ID_COMPLETE)
 
       const result = computeSetupStepCompletion(store)
 
@@ -183,7 +172,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be completed when device code is provided', () => {
-      const store = makeNamedStore(ADDRESS_COMPLETE)
+      const store = makeStore(ADDRESS_COMPLETE)
 
       const result = computeSetupStepCompletion(store)
 
@@ -194,7 +183,7 @@ describe('computeSetupStepCompletion', () => {
 
   describe('Email Step', () => {
     it('should be focused when ID step completed, address step completed, but email not yet completed', () => {
-      const store = makeNamedStore(ADDRESS_COMPLETE)
+      const store = makeStore(ADDRESS_COMPLETE)
 
       const result = computeSetupStepCompletion(store)
 
@@ -203,7 +192,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be focused when BCSC card (Photo/NonPhoto) has serial but no email after completing ID and address steps', () => {
-      const store = makeNamedStore({ ...ADDRESS_COMPLETE, emailAddress: undefined })
+      const store = makeStore({ ...ADDRESS_COMPLETE, emailAddress: undefined })
 
       const result = computeSetupStepCompletion(store)
 
@@ -221,7 +210,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be focused with NonPhoto card type when serial available but email is falsey', () => {
-      const store = makeNamedStore({
+      const store = makeStore({
         ...ADDRESS_COMPLETE,
         cardProcess: BCSCCardProcess.BCSCNonPhoto,
         emailAddress: '',
@@ -247,7 +236,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should not be completed when email is provided but emailConfirmed is false', () => {
-      const store = makeNamedStore({ ...ADDRESS_COMPLETE, isEmailVerified: false })
+      const store = makeStore({ ...ADDRESS_COMPLETE, isEmailVerified: false })
 
       const result = computeSetupStepCompletion(store)
 
@@ -256,7 +245,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should not be completed when emailConfirmed is true but email is missing', () => {
-      const store = makeNamedStore({ ...EMAIL_COMPLETE, emailAddress: undefined })
+      const store = makeStore({ ...EMAIL_COMPLETE, emailAddress: undefined })
 
       const result = computeSetupStepCompletion(store)
 
@@ -265,7 +254,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be completed when both email and emailConfirmed are true (email may be set to BCSC_EMAIL_NOT_PROVIDED)', () => {
-      const store = makeNamedStore(EMAIL_COMPLETE)
+      const store = makeStore(EMAIL_COMPLETE)
 
       const result = computeSetupStepCompletion(store)
 
@@ -274,7 +263,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be completed when user skipped email (userSkippedEmailVerification=true, no emailAddress — v3 migration case)', () => {
-      const store = makeNamedStore({
+      const store = makeStore({
         ...ADDRESS_COMPLETE,
         emailAddress: undefined,
         isEmailVerified: false,
@@ -288,7 +277,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should not be completed when email entered but not verified, even if userSkippedEmailVerification was previously set', () => {
-      const store = makeNamedStore({ ...ADDRESS_COMPLETE, isEmailVerified: false, userSkippedEmailVerification: false })
+      const store = makeStore({ ...ADDRESS_COMPLETE, isEmailVerified: false, userSkippedEmailVerification: false })
 
       const result = computeSetupStepCompletion(store)
 
@@ -299,7 +288,7 @@ describe('computeSetupStepCompletion', () => {
 
   describe('Verify Step', () => {
     it('should be focused when ID step completed, address step completed, email step completed, but verify not yet completed', () => {
-      const store = makeNamedStore({ ...EMAIL_COMPLETE, verified: false })
+      const store = makeStore({ ...EMAIL_COMPLETE, verified: false })
 
       const result = computeSetupStepCompletion(store)
 
@@ -308,7 +297,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be completed when verified is true', () => {
-      const store = makeNamedStore({ ...EMAIL_COMPLETE, verified: true, userSubmittedVerificationVideo: false })
+      const store = makeStore({ ...EMAIL_COMPLETE, verified: true, userSubmittedVerificationVideo: false })
 
       const result = computeSetupStepCompletion(store)
 
@@ -317,7 +306,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be completed when userSubmittedVerificationVideo is true', () => {
-      const store = makeNamedStore({ ...EMAIL_COMPLETE, verified: false, userSubmittedVerificationVideo: true })
+      const store = makeStore({ ...EMAIL_COMPLETE, verified: false, userSubmittedVerificationVideo: true })
 
       const result = computeSetupStepCompletion(store)
 
@@ -340,15 +329,14 @@ describe('computeSetupStepCompletion', () => {
       expect(result.verify.completed).toBe(false)
       expect(result.verify.focused).toBe(false)
 
-      store.bcsc.selectedNickname = 'test'
 
       result = computeSetupStepCompletion(store)
       expect(result.id.completed).toBe(false)
       expect(result.id.focused).toBe(true)
 
-      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
-      store.bcscSecure.serial = '123456789'
-      store.bcscSecure.emailAddress = 'steveBrule@email.com'
+      store.cardProcess = BCSCCardProcess.BCSCPhoto
+      store.serial = '123456789'
+      store.emailAddress = 'steveBrule@email.com'
 
       result = computeSetupStepCompletion(store)
       expect(result.id.completed).toBe(true)
@@ -356,7 +344,7 @@ describe('computeSetupStepCompletion', () => {
       expect(result.address.completed).toBe(false)
       expect(result.address.focused).toBe(true)
 
-      store.bcscSecure.deviceCode = 'ABCDEFGH'
+      store.deviceCode = 'ABCDEFGH'
 
       result = computeSetupStepCompletion(store)
       expect(result.address.completed).toBe(true)
@@ -364,7 +352,7 @@ describe('computeSetupStepCompletion', () => {
       expect(result.email.completed).toBe(false)
       expect(result.email.focused).toBe(true)
 
-      store.bcscSecure.isEmailVerified = true
+      store.isEmailVerified = true
 
       result = computeSetupStepCompletion(store)
       expect(result.email.completed).toBe(true)
@@ -372,8 +360,8 @@ describe('computeSetupStepCompletion', () => {
       expect(result.verify.completed).toBe(false)
       expect(result.verify.focused).toBe(true)
 
-      store.bcscSecure.verified = true
-      store.bcscSecure.userSubmittedVerificationVideo = false
+      store.verified = true
+      store.userSubmittedVerificationVideo = false
 
       result = computeSetupStepCompletion(store)
       expect(result.verify.completed).toBe(true)
@@ -383,17 +371,17 @@ describe('computeSetupStepCompletion', () => {
 
   describe('currentStep property', () => {
     it('should return id when id step is focused', () => {
-      const store = makeNamedStore()
+      const store = makeStore()
       expect(computeSetupStepCompletion(store).currentStep).toBe('id')
     })
 
     it('should return address when address step is focused', () => {
-      const store = makeNamedStore({ cardProcess: BCSCCardProcess.BCSCPhoto, serial: '123456789' })
+      const store = makeStore({ cardProcess: BCSCCardProcess.BCSCPhoto, serial: '123456789' })
       expect(computeSetupStepCompletion(store).currentStep).toBe('address')
     })
 
     it('should return email when email step is focused', () => {
-      const store = makeNamedStore({
+      const store = makeStore({
         cardProcess: BCSCCardProcess.BCSCPhoto,
         serial: '123456789',
         deviceCode: 'ABCDEFGH',
@@ -402,7 +390,7 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should return verify when verify step is focused', () => {
-      const store = makeNamedStore({
+      const store = makeStore({
         cardProcess: BCSCCardProcess.BCSCPhoto,
         serial: '123456789',
         deviceCode: 'ABCDEFGH',
@@ -414,7 +402,7 @@ describe('computeSetupStepCompletion', () => {
 
     it('should return transfer for a transfer account with no verification progress', () => {
       const store = makeStore()
-      store.bcsc.accountSetupType = AccountSetupType.TransferAccount
+      store.accountSetupType = AccountSetupType.TransferAccount
       // A fresh transfer device has none of the id/address/email/verify progress, so
       // transfer must take priority over the (otherwise-focused) id step.
       expect(computeSetupStepCompletion(store).currentStep).toBe('transfer')
@@ -428,12 +416,12 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be false when some steps are completed', () => {
-      const store = makeNamedStore({ cardProcess: BCSCCardProcess.BCSCPhoto, serial: '123456789' })
+      const store = makeStore({ cardProcess: BCSCCardProcess.BCSCPhoto, serial: '123456789' })
       expect(computeSetupStepCompletion(store).allCompleted).toBe(false)
     })
 
     it('should be true when all steps are completed', () => {
-      const store = makeNamedStore({
+      const store = makeStore({
         cardProcess: BCSCCardProcess.BCSCPhoto,
         serial: '123456789',
         deviceCode: 'ABCDEFGH',

@@ -1,17 +1,12 @@
 import { AutoLockScreen } from '@/bcsc-theme/features/settings/AutoLockScreen'
-import { initialState } from '@/store'
 import { AutoLockTime } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-
-const withAutoLockTime = (autoLockTime?: number) => ({
-  preferences: { ...initialState.preferences, autoLockTime },
-})
 
 const renderScreen = (autoLockTime?: number) =>
   render(
-    <BasicAppContext initialStateOverride={autoLockTime === undefined ? undefined : withAutoLockTime(autoLockTime)}>
+    <BasicAppContext bcscState={autoLockTime === undefined ? undefined : { preferences: { autoLockTime } }}>
       <AutoLockScreen />
     </BasicAppContext>
   )
@@ -66,12 +61,13 @@ describe('AutoLockScreen', () => {
     expect(checkbox(utils, AutoLockTime.FiveMinutes).props.isChecked).toBe(false)
   })
 
-  it('moves the selection when a different timeout is chosen', () => {
+  it('moves the selection when a different timeout is chosen', async () => {
     const utils = renderScreen(AutoLockTime.FiveMinutes)
 
     fireEvent.press(checkbox(utils, AutoLockTime.ThreeMinutes))
 
-    expect(checkbox(utils, AutoLockTime.ThreeMinutes).props.isChecked).toBe(true)
+    // The preference is saved before the store changes
+    await waitFor(() => expect(checkbox(utils, AutoLockTime.ThreeMinutes).props.isChecked).toBe(true))
     expect(checkbox(utils, AutoLockTime.FiveMinutes).props.isChecked).toBe(false)
   })
 
@@ -89,13 +85,13 @@ describe('AutoLockScreen', () => {
     expect(utils.queryByLabelText(String(AutoLockTime.Never))).toBeNull()
   })
 
-  it('can select the developer-only "Never" option', () => {
+  it('can select the developer-only "Never" option', async () => {
     setDev(true)
     const utils = renderScreen(AutoLockTime.FiveMinutes)
 
     fireEvent.press(checkbox(utils, AutoLockTime.Never))
 
-    expect(checkbox(utils, AutoLockTime.Never).props.isChecked).toBe(true)
+    await waitFor(() => expect(checkbox(utils, AutoLockTime.Never).props.isChecked).toBe(true))
     expect(checkbox(utils, AutoLockTime.FiveMinutes).props.isChecked).toBe(false)
   })
 })

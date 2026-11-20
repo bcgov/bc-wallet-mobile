@@ -2,14 +2,15 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
+import { useBirthdate, useVerification } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import ScanExampleImage from '@assets/img/scan_example.png'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useShallow } from 'zustand/react/shallow'
 import { Image } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
@@ -24,7 +25,10 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
 }: IdentitySelectionScreenProps) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const [store] = useStore<BCState>()
+  const { deviceCode, userCode, serial } = useVerification(
+    useShallow((v) => ({ deviceCode: v.request?.deviceCode, userCode: v.request?.userCode, serial: v.request?.csn }))
+  )
+  const birthdate = useBirthdate()
   const { updateCardProcess, deleteScannedCardData: deleteCardInfo } = useSecureActions()
   const verificationReset = useVerificationReset()
   const loadingScreen = useLoadingScreen()
@@ -34,8 +38,8 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     const unsubscribe = navigation.addListener('beforeRemove', (event) => {
       if (
         (event.data.action.type === 'GO_BACK' || event.data.action.type === 'POP') &&
-        store.bcscSecure.deviceCode &&
-        store.bcscSecure.userCode
+        deviceCode &&
+        userCode
       ) {
         // If the user has registered and backs out, reset the card registration process. The pop goes
         // ahead (the setup question is beneath), so the reset keeps the user in the verify flow rather than
@@ -47,23 +51,23 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     })
 
     return unsubscribe
-  }, [verificationReset, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode, loadingScreen])
+  }, [verificationReset, navigation, deviceCode, userCode, loadingScreen])
 
   const onPressScan = useCallback(async () => {
     navigation.navigate(BCSCScreens.ScanSerial)
-    if (store.bcscSecure.birthdate || store.bcscSecure.serial) {
+    if (birthdate || serial) {
       await deleteCardInfo()
     }
     await updateCardProcess(null)
-  }, [deleteCardInfo, navigation, store.bcscSecure.birthdate, store.bcscSecure.serial, updateCardProcess])
+  }, [deleteCardInfo, navigation, birthdate, serial, updateCardProcess])
 
   const onPressOtherID = useCallback(async () => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)
     await updateCardProcess(BCSCCardProcess.NonBCSC)
-    if (store.bcscSecure.birthdate || store.bcscSecure.serial) {
+    if (birthdate || serial) {
       await deleteCardInfo()
     }
-  }, [deleteCardInfo, navigation, store.bcscSecure.birthdate, store.bcscSecure.serial, updateCardProcess])
+  }, [deleteCardInfo, navigation, birthdate, serial, updateCardProcess])
 
   const controls = (
     <ControlContainer>

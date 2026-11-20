@@ -106,3 +106,6 @@ export const isProductionBundle = (): boolean => {
 export const isProductionEnvironment = (environment: IASEnvironment): boolean => {
   return environment.iasApiBaseUrl === IASEnvironment.PROD.iasApiBaseUrl
 }
+
+// Which app this build is. Fixed for the life of the process, so code may branch on it at module level.
+export const IS_BCSC = Config.BUILD_TARGET === Mode.BCSC

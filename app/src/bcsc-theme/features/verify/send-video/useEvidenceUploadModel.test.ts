@@ -3,11 +3,13 @@ import useEvidenceUploadModel, {
   resetInFlightSubmitForTests,
 } from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
 import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
+import { storage } from '@/bcsc-theme/storage'
+import { seedBCSCStore, seedBCSCStoreFromBCState } from '@/bcsc-theme/storage/testing'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
 import * as Navigation from '@react-navigation/native'
@@ -146,6 +148,7 @@ describe('useEvidenceUploadModel', () => {
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([baseStore as BCState, jest.fn()])
+    seedBCSCStoreFromBCState(baseStore as BCState as never)
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
 
     // useEvidenceUpload (additional evidence) still reads the raw API; the model's own calls go through the
@@ -177,6 +180,10 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: { ...baseStore.bcsc, photoPath: '/photo.jpg', videoPath: '/video.mp4' },
+      } as BCState as never)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -197,6 +204,15 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoThumbnailPath: '/thumb.jpg',
+        },
+      } as BCState as never)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -241,6 +257,29 @@ describe('useEvidenceUploadModel', () => {
           } as BCState,
           jest.fn(),
         ])
+        seedBCSCStoreFromBCState({
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: plausiblePhotoMetadata,
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            additionalEvidenceData: [
+              {
+                evidenceType: { evidence_type: 'drivers_licence' },
+                documentNumber: 'DL123',
+                metadata: [{ label: 'front', file_path: '/front.jpg', date: 1_782_000_000 }],
+              },
+            ],
+          },
+        } as BCState as never)
         jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
         jest.mocked(VerificationVideoCache.getCache).mockReturnValueOnce(video.promise)
         jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
@@ -340,6 +379,7 @@ describe('useEvidenceUploadModel', () => {
       'should emit fileUploadErrorAlert when photo or video data is missing (%s)',
       async (missing) => {
         jest.mocked(Bifold.useStore).mockReturnValue([submittableStore({ [missing]: undefined }), jest.fn()])
+        seedBCSCStoreFromBCState(submittableStore({ [missing]: undefined }) as never)
 
         const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -358,6 +398,7 @@ describe('useEvidenceUploadModel', () => {
       ['undefined', undefined],
     ])('should emit fileUploadErrorAlert when prompts are missing (%s)', async (_label, prompts) => {
       jest.mocked(Bifold.useStore).mockReturnValue([submittableStore({ prompts }), jest.fn()])
+      seedBCSCStoreFromBCState(submittableStore({ prompts }) as never)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -398,6 +439,23 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         mockDispatch,
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'persisted-id',
+          verificationRequestSha: undefined,
+          additionalEvidenceData: [],
+        },
+      } as BCState as never)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -414,12 +472,12 @@ describe('useEvidenceUploadModel', () => {
       // calls createVerificationRequest and gets a fresh, valid request to record
       // against. The orphaned server-side id is TTL'd by IAS.
       expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(undefined, null)
-      expect(mockDispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: expect.stringContaining('updateVideoPrompts') })
-      )
-      expect(mockDispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: expect.stringContaining('clearPhotoAndVideo') })
-      )
+      // Prompts, photo and video are cleared from the session slice of the BCSC store
+      expect(storage.store.getState().session).toMatchObject({
+        prompts: undefined,
+        photoPath: undefined,
+        videoPath: undefined,
+      })
       // Navigation reset to Verification Method Selection.
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       // Error alert pops on top of the destination screen.
@@ -446,6 +504,17 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         mockDispatch,
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+      } as BCState as never)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -483,6 +552,23 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         mockStoreDispatch,
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+          additionalEvidenceData: [],
+        },
+      } as BCState as never)
 
       const mockReadFile = jest.mocked(readFileInChunks)
       mockReadFile.mockResolvedValue(Buffer.from([1, 2, 3]))
@@ -521,10 +607,7 @@ describe('useEvidenceUploadModel', () => {
       })
       expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: true })
       expect(result.current.progressPercent).toBe(100)
-      expect(mockStoreDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
-        payload: [expect.any(Date)],
-      })
+      expect(storage.store.getState().session.verificationVideoSubmittedAt).toEqual(expect.any(Date) ?? undefined)
       // Navigates to the confirmation screen, forwarding the API turnaround message as a route param
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       const dispatchArg = mockNavigation.dispatch.mock.calls[0][0]
@@ -556,6 +639,23 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+          additionalEvidenceData: [],
+        },
+      } as BCState as never)
 
       // ftyp header written by VisionCamera v5 / Media3 on Android: major brand isom
       const isomVideo = Buffer.from([
@@ -619,6 +719,23 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+          additionalEvidenceData: [],
+        },
+      } as BCState as never)
 
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(undefined as any)
@@ -662,6 +779,29 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+          additionalEvidenceData: [
+            {
+              evidenceType: { evidence_type: 'drivers_licence' },
+              documentNumber: 'DL123',
+              metadata: [{ label: 'front', file_path: '/front.jpg', side: 'front' }],
+            },
+          ],
+        },
+      } as BCState as never)
 
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
@@ -701,6 +841,23 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+          additionalEvidenceData: [],
+        },
+      } as BCState as never)
 
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
@@ -754,6 +911,25 @@ describe('useEvidenceUploadModel', () => {
           } as BCState,
           jest.fn(),
         ])
+        seedBCSCStoreFromBCState({
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: plausiblePhotoMetadata,
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            deviceCode: 'device-code',
+            userCode: 'user-code',
+            additionalEvidenceData: [],
+          },
+        } as BCState as never)
 
         jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
         jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
@@ -833,6 +1009,23 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+          additionalEvidenceData: [],
+        },
+      } as BCState as never)
 
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
@@ -885,6 +1078,23 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+          additionalEvidenceData: [],
+        },
+      } as BCState as never)
 
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
@@ -929,6 +1139,23 @@ describe('useEvidenceUploadModel', () => {
           } as BCState,
           jest.fn(),
         ])
+        seedBCSCStoreFromBCState({
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: plausiblePhotoMetadata,
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            additionalEvidenceData: [],
+          },
+        } as BCState as never)
 
         jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
         jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
@@ -1062,6 +1289,23 @@ describe('useEvidenceUploadModel', () => {
           } as BCState,
           jest.fn(),
         ])
+        seedBCSCStoreFromBCState({
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: plausiblePhotoMetadata,
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            additionalEvidenceData: [],
+          },
+        } as BCState as never)
 
         jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
         jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
@@ -1086,6 +1330,16 @@ describe('useEvidenceUploadModel', () => {
         await waitFor(() => expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledTimes(1))
         expect(first.result.current.progressPercent).toBe(75)
 
+        // The new recording, captured after the cancel cleared the last one
+        seedBCSCStore({
+          session: {
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }] as never,
+            photoMetadata: plausiblePhotoMetadata,
+          },
+        })
         const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
         let secondSend!: Promise<void>
         await act(async () => {
@@ -1131,6 +1385,16 @@ describe('useEvidenceUploadModel', () => {
         })
         await waitFor(() => expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledTimes(1))
 
+        // The new recording, captured after the cancel cleared the last one
+        seedBCSCStore({
+          session: {
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }] as never,
+            photoMetadata: plausiblePhotoMetadata,
+          },
+        })
         const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
         let secondSend!: Promise<void>
         await act(async () => {
@@ -1160,6 +1424,16 @@ describe('useEvidenceUploadModel', () => {
         let firstSend!: Promise<void>
         await act(async () => {
           firstSend = first.result.current.handleSend()
+        })
+        // The new recording, captured after the cancel cleared the last one
+        seedBCSCStore({
+          session: {
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }] as never,
+            photoMetadata: plausiblePhotoMetadata,
+          },
         })
         const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
         let secondSend!: Promise<void>
@@ -1200,6 +1474,16 @@ describe('useEvidenceUploadModel', () => {
           await first.result.current.handleCancel()
         })
 
+        // The new recording, captured after the cancel cleared the last one
+        seedBCSCStore({
+          session: {
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }] as never,
+            photoMetadata: plausiblePhotoMetadata,
+          },
+        })
         const second = renderHook(() => useEvidenceUploadModel(secondNavigation))
         let secondSend!: Promise<void>
         await act(async () => {
@@ -1276,6 +1560,31 @@ describe('useEvidenceUploadModel', () => {
         } as BCState,
         jest.fn(),
       ])
+      seedBCSCStoreFromBCState({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata: plausiblePhotoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+          additionalEvidenceData: [
+            {
+              evidenceType: { evidence_type: 'drivers_licence' },
+              documentNumber: 'DL123',
+              // A plausible date so the #4338 capture-date guard is a no-op here — this test
+              // is about additional-evidence processing, not the date guard.
+              metadata: [{ label: 'front', file_path: '/front.jpg', side: 'front', date: 1_782_000_000 }],
+            },
+          ],
+        },
+      } as BCState as never)
 
       const mockReadFile = jest.mocked(readFileInChunks)
       mockReadFile.mockResolvedValue(Buffer.from([1, 2, 3]))
@@ -1358,6 +1667,7 @@ describe('useEvidenceUploadModel', () => {
           storeWithSha({ ...plausiblePhotoMetadata, date: 1_780_000 }) as BCState,
           jest.fn(),
         ])
+        seedBCSCStoreFromBCState(storeWithSha({ ...plausiblePhotoMetadata, date: 1_780_000 }) as BCState as never)
 
         const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -1378,6 +1688,7 @@ describe('useEvidenceUploadModel', () => {
 
         const bifoldMock = jest.mocked(Bifold)
         bifoldMock.useStore.mockReturnValue([storeWithSha(plausiblePhotoMetadata) as BCState, jest.fn()])
+        seedBCSCStoreFromBCState(storeWithSha(plausiblePhotoMetadata) as BCState as never)
 
         const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -1414,6 +1725,7 @@ describe('useEvidenceUploadModel', () => {
 
         const bifoldMock = jest.mocked(Bifold)
         bifoldMock.useStore.mockReturnValue([storeWithSha(plausiblePhotoMetadata) as BCState, jest.fn()])
+        seedBCSCStoreFromBCState(storeWithSha(plausiblePhotoMetadata) as BCState as never)
 
         const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -1444,6 +1756,7 @@ describe('useEvidenceUploadModel', () => {
     it('removes all media files', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([storeWithPaths as BCState, jest.fn()])
+      seedBCSCStoreFromBCState(storeWithPaths as BCState as never)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -1461,6 +1774,7 @@ describe('useEvidenceUploadModel', () => {
       const mockDispatch = jest.fn()
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([storeWithPaths as BCState, mockDispatch])
+      seedBCSCStoreFromBCState(storeWithPaths as BCState as never)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -1469,12 +1783,17 @@ describe('useEvidenceUploadModel', () => {
       })
 
       expect(VerificationVideoCache.clearCache).toHaveBeenCalled()
-      expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
+      expect(storage.store.getState().session).toMatchObject({
+        photoPath: undefined,
+        videoPath: undefined,
+        videoThumbnailPath: undefined,
+      })
     })
 
     it('navigates back', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([storeWithPaths as BCState, jest.fn()])
+      seedBCSCStoreFromBCState(storeWithPaths as BCState as never)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 

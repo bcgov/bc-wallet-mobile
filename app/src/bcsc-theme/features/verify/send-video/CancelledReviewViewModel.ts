@@ -1,28 +1,34 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 
 /** ViewModel for CancelledReview: clears verification artifacts and re-enters the verify flow. */
 const useCancelledReviewViewModel = () => {
-  const [, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const { isVerificationInProgress } = useVerificationState()
   const { updateAccountFlags, updateVerificationRequest, continueVerificationProcess } = useSecureActions()
   const cleanUpVerificationData = useCallback(async () => {
     await updateVerificationRequest(undefined, null)
-    dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-    dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
-    dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
-    dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
-    dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
+    getBCSCState().session.update({
+      photoPath: undefined,
+      photoMetadata: undefined,
+      videoPath: undefined,
+      videoDuration: undefined,
+      videoThumbnailPath: undefined,
+    })
+    getBCSCState().session.update({
+      prompts: undefined,
+      verificationRequestStatus: undefined,
+      verificationRequestStatusMessage: undefined,
+      verificationVideoSubmittedAt: undefined,
+    })
     // TODO (bm): should be awaited
     void updateAccountFlags({ userSubmittedVerificationVideo: false })
-  }, [dispatch, updateAccountFlags, updateVerificationRequest])
+  }, [updateAccountFlags, updateVerificationRequest])
   // Not named for a screen: VerifyStack picks the landing step via getResumeStepRoute
   // (IdentitySelection after a full reset).
   const resumeVerification = () => continueVerificationProcess()

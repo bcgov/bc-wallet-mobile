@@ -1,6 +1,5 @@
+import { useJourney } from '@/bcsc-theme/state/verification/journey'
 import { getResumeStepRoute, ResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { useMemo } from 'react'
 
 /**
@@ -8,6 +7,7 @@ import { useMemo } from 'react'
  * (re)entering the verification journey, derived from the current store state.
  */
 export const useResumeStepRoute = (): ResumeStepRoute => {
-  const [store] = useStore<BCState>()
-  return useMemo(() => getResumeStepRoute(store), [store])
+  // BCSC only (BCSCApiClientContext), so it reads the BCSC store
+  const journey = useJourney()
+  return useMemo(() => getResumeStepRoute(journey), [journey])
 }

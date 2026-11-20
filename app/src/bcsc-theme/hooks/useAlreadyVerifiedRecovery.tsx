@@ -1,7 +1,7 @@
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
 
@@ -12,7 +12,6 @@ import { useCallback } from 'react'
  */
 export const useAlreadyVerifiedRecovery = () => {
   const navigation = useNavigation()
-  const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const tokenService = useTokenService()
 
@@ -25,7 +24,7 @@ export const useAlreadyVerifiedRecovery = () => {
    * @returns True if the user was navigated to VerificationSuccess
    */
   const recoverFromAlreadyVerified = useCallback(async (): Promise<boolean> => {
-    const { deviceCode, userCode } = store.bcscSecure
+    const { deviceCode, userCode } = getBCSCState().verification.request ?? {}
 
     if (!deviceCode || !userCode) {
       logger.error('[useAlreadyVerifiedRecovery] Cannot complete verification: missing device code or user code')
@@ -52,7 +51,7 @@ export const useAlreadyVerifiedRecovery = () => {
       logger.error('[useAlreadyVerifiedRecovery] Failed to complete verification after 409', error as Error)
       return false
     }
-  }, [logger, navigation, store.bcscSecure, tokenService])
+  }, [logger, navigation, tokenService])
 
   return { recoverFromAlreadyVerified }
 }

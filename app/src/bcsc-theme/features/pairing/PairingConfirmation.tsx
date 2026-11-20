@@ -88,7 +88,7 @@ const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, r
 
       <ThemedText>{t('BCSC.ManualPairing.CompletionDescription', { serviceName })}</ThemedText>
 
-      <ServiceBookmarkButton serviceId={serviceId} serviceName={serviceName} />
+      <ServiceBookmarkButton serviceId={serviceId} />
     </ScreenWrapper>
   )
 }

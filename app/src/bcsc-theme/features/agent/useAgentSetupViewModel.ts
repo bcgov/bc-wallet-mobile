@@ -1,10 +1,11 @@
+import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useDeveloper, useSession } from '@/bcsc-theme/storage/hooks'
 import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { AttestationMonitor as BCAttestationMonitor } from '@/services/attestation'
-import { BCState } from '@/store'
 import { activate, deactivate } from '@/utils/PushNotificationsHelper'
-import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
+import { createLinkSecretIfRequired, TOKENS, useServices } from '@bifold/core'
 import { RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import { Agent } from '@credo-ts/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
@@ -38,7 +39,7 @@ export interface AgentSetupResult {
 }
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
-  const [store] = useStore<BCState>()
+  const developer = useDeveloper()
   const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas, ocaBundleResolver] = useServices(
     [
       TOKENS.UTIL_LOGGER,
@@ -64,13 +65,13 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const loggerRef = useRef(logger)
   loggerRef.current = logger
 
-  const didAuthenticate = store.authentication.didAuthenticate
-  const walletKey = store.bcscSecure.walletKey
-  const mediatorUrl = store.preferences.selectedMediator
-  const walletLabel = store.preferences.walletName || 'BC Wallet'
-  const enableProxy = store.developer.enableProxy
-  const enableAttestation = store.developer.enableAttestation
-  const usePushNotifications = store.preferences.usePushNotifications
+  const didAuthenticate = useSession((s) => s.didAuthenticate)
+  const walletKey = useSession((s) => s.walletKey)
+  const mediatorUrl = useBCSCStore((s) => s.preferences.selectedMediator)
+  const walletLabel = useBCSCStore((s) => s.preferences.walletName) || 'BC Wallet'
+  const enableProxy = developer.enableProxy
+  const enableAttestation = developer.enableAttestation
+  const usePushNotifications = useBCSCStore((s) => s.preferences.usePushNotifications)
 
   useEffect(() => {
     const monitor = attestationMonitor as BCAttestationMonitor | undefined
@@ -201,7 +202,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       // pool list always comes from the resolver, which serves remote/cached
       // genesis when auto-update is on and the bundled snapshot when it is off —
       // so LEDGER_AUTO_UPDATE=false means bundled-only, never a stale prior cache.
-      const cachedLedgers = await loadCachedLedgers()
+      const cachedLedgers = loadCachedLedgers()
       if (cancelled) {
         return
       }

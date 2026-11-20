@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Security
 
 let defaultSearchPathDirectory = FileManager.SearchPathDirectory.applicationSupportDirectory
 let testSearchPathDirectory = FileManager.SearchPathDirectory.cachesDirectory
@@ -676,5 +677,475 @@ class StorageService {
     }
 
     return "PROD"
+  }
+}
+
+// MARK: - Legacy record status
+
+/// The records `readLegacyRecord` reports on, named as in the JS contract.
+enum LegacyRecordName: String, CaseIterable {
+  case account
+  case tokens
+  case credential
+  case authorizationRequest
+  case accountFlags
+  case evidence
+  case savedServices
+}
+
+enum LegacyRecordStatus {
+  static let ok = "ok"
+  static let absent = "absent"
+  static let locked = "locked"
+  static let unreadable = "unreadable"
+
+  static let unknownRecordReport: [String: Any] = ["status": unreadable, "reason": "unknown_record"]
+
+  /// Empty flags, evidence and saved services are what the getters return when nothing is stored.
+  static func isEmptyValue(_ value: Any) -> Bool {
+    if let dictionary = value as? [AnyHashable: Any] {
+      return dictionary.isEmpty
+    }
+    if let array = value as? [Any] {
+      return array.isEmpty
+    }
+    return false
+  }
+}
+
+/// Why a stored record couldn't be read. Getters map it back to what they resolve or reject;
+/// `readLegacyRecord` maps it to a status and a reason code.
+enum LegacyRecordFailure: Error {
+  /// Reading the current account (its ID in account_list, or its metadata) failed.
+  case account(AccountReadFailure)
+  /// Reading the record's own file failed.
+  case storage(AccountReadFailure)
+  /// A decoder that doesn't surface its error returned nothing.
+  case undecodable
+  /// The archive decoded, but its root object wasn't the expected type.
+  case unexpectedFormat
+  /// A token read got errSecInteractionNotAllowed, even after `get`'s retry.
+  case keychainLocked
+  /// A token read failed; carries a code like `token_refresh_-25293`.
+  case keychainUnreadable(String)
+
+  /// The system error behind the failure, for getters that reject with it.
+  var underlyingError: Error? {
+    switch self {
+    case let .account(failure), let .storage(failure):
+      return failure.underlyingError
+    case .undecodable, .unexpectedFormat, .keychainLocked, .keychainUnreadable:
+      return nil
+    }
+  }
+
+  func status(isProtectedDataAvailable: Bool) -> String {
+    switch self {
+    case let .account(failure), let .storage(failure):
+      return failure.legacyRecordStatus(isProtectedDataAvailable: isProtectedDataAvailable)
+    case .keychainLocked:
+      return LegacyRecordStatus.locked
+    case .undecodable, .unexpectedFormat, .keychainUnreadable:
+      return LegacyRecordStatus.unreadable
+    }
+  }
+
+  /// A short code, with `domain:code` of the system error when there is one. Never a path, ID or message.
+  func reason(for record: LegacyRecordName) -> String {
+    switch self {
+    case let .account(failure):
+      return Self.code(failure.accountStatusCode, detail: failure.detail)
+    case let .storage(failure):
+      return Self.code(failure.legacyRecordCode(for: record), detail: failure.detail)
+    case .undecodable:
+      return "\(record.rawValue)_decode_failed"
+    case .unexpectedFormat:
+      return "\(record.rawValue)_unexpected_format"
+    case .keychainLocked:
+      return "keychain_locked"
+    case let .keychainUnreadable(code):
+      return code
+    }
+  }
+
+  private static func code(_ code: String, detail: String?) -> String {
+    guard let detail else { return code }
+    return "\(code):\(detail)"
+  }
+}
+
+extension AccountReadFailure {
+  var underlyingError: Error? {
+    switch self {
+    case let .storageRootUnavailable(error), let .accountListUnreadable(error),
+         let .fileUnreadable(error), let .decodeFailed(error):
+      return error
+    case .accountListMissing, .accountListEmpty, .fileMissing, .noObjectForProvider:
+      return nil
+    }
+  }
+
+  /// A file that exists but can't be opened is locked while protected data is unavailable.
+  func legacyRecordStatus(isProtectedDataAvailable: Bool) -> String {
+    switch self {
+    case .accountListMissing, .accountListEmpty, .fileMissing:
+      return LegacyRecordStatus.absent
+    case .storageRootUnavailable, .accountListUnreadable, .fileUnreadable:
+      return isProtectedDataAvailable ? LegacyRecordStatus.unreadable : LegacyRecordStatus.locked
+    case .decodeFailed, .noObjectForProvider:
+      return LegacyRecordStatus.unreadable
+    }
+  }
+
+  /// `accountStatusCode`, with file-level failures named after `record` instead of the account.
+  func legacyRecordCode(for record: LegacyRecordName) -> String {
+    switch self {
+    case .storageRootUnavailable, .accountListMissing, .accountListUnreadable, .accountListEmpty:
+      return accountStatusCode
+    case .fileMissing:
+      return "\(record.rawValue)_file_missing"
+    case .fileUnreadable:
+      return "\(record.rawValue)_file_unreadable"
+    case .decodeFailed:
+      return "\(record.rawValue)_decode_failed"
+    case .noObjectForProvider:
+      return "\(record.rawValue)_unexpected_format"
+    }
+  }
+
+  /// `readDataOrThrow` and `resolveCurrentAccountID` only throw `AccountReadFailure`; this keeps a future change
+  /// from losing the error.
+  static func from(_ error: Error) -> AccountReadFailure {
+    (error as? AccountReadFailure) ?? .decodeFailed(error)
+  }
+}
+
+/// One record read. Each getter and `readLegacyRecord` share it, so the status always matches what the getter returns.
+enum LegacyRecordRead<Value> {
+  case ok(Value)
+  case absent
+  case failed(LegacyRecordFailure)
+
+  func map<T>(_ transform: (Value) -> T) -> LegacyRecordRead<T> {
+    switch self {
+    case let .ok(value):
+      return .ok(transform(value))
+    case .absent:
+      return .absent
+    case let .failed(failure):
+      return .failed(failure)
+    }
+  }
+
+  /// The dictionary `readLegacyRecord` resolves: `status`, plus `value` when ok or `reason` when unreadable.
+  func report(for record: LegacyRecordName, isProtectedDataAvailable: Bool) -> [String: Any] {
+    switch self {
+    case let .ok(value):
+      if LegacyRecordStatus.isEmptyValue(value) {
+        return ["status": LegacyRecordStatus.absent]
+      }
+      return ["status": LegacyRecordStatus.ok, "value": value]
+    case .absent:
+      return ["status": LegacyRecordStatus.absent]
+    case let .failed(failure):
+      let status = failure.status(isProtectedDataAvailable: isProtectedDataAvailable)
+      guard status == LegacyRecordStatus.unreadable else {
+        return ["status": status]
+      }
+      return ["status": status, "reason": failure.reason(for: record)]
+    }
+  }
+}
+
+/// One keychain token read: the final `OSStatus`, after `get`'s retry, and the token if its data decoded.
+struct TokenReadOutcome {
+  let token: Token?
+  let status: OSStatus
+
+  /// The read succeeded but returned no data that decodes as a `Token`.
+  var isUndecodable: Bool {
+    token == nil && status == errSecSuccess
+  }
+}
+
+enum LegacyTokensRecord {
+  /// The token types the record holds, with their keys in its value.
+  static let types: [(type: TokenType, key: String)] = [
+    (.Access, "access"),
+    (.Refresh, "refresh"),
+    (.Registration, "registration"),
+  ]
+
+  /// Any locked read makes the record locked, then any other failure makes it unreadable (the first one is the
+  /// reason). It's absent only when every token is missing.
+  static func combine(_ outcomes: [(key: String, outcome: TokenReadOutcome)]) -> LegacyRecordRead<[String: String]> {
+    var tokens: [String: String] = [:]
+    var firstFailure: String?
+
+    for (key, outcome) in outcomes {
+      if let token = outcome.token {
+        tokens[key] = token.token
+        continue
+      }
+
+      switch outcome.status {
+      case errSecItemNotFound:
+        continue
+      case errSecInteractionNotAllowed:
+        return .failed(.keychainLocked)
+      case errSecSuccess:
+        firstFailure = firstFailure ?? "token_\(key)_decode_failed"
+      default:
+        firstFailure = firstFailure ?? "token_\(key)_\(outcome.status)"
+      }
+    }
+
+    if let firstFailure {
+      return .failed(.keychainUnreadable(firstFailure))
+    }
+    if tokens.isEmpty {
+      return .absent
+    }
+    return .ok(tokens)
+  }
+}
+
+// MARK: - Legacy record reads
+
+/// The reads behind the record getters. `logger` is the getter's, so its log lines don't change.
+extension StorageService {
+  func readAccountRecord() -> LegacyRecordRead<Account> {
+    do {
+      let account: Account = try readDataOrThrow(file: .accountMetadata, pathDirectory: defaultSearchPathDirectory)
+      return .ok(account)
+    } catch {
+      return .failed(.account(AccountReadFailure.from(error)))
+    }
+  }
+
+  /// account_flag, keeping only string keys.
+  func readAccountFlagsRecord(logger: AppLogger) -> LegacyRecordRead<NSDictionary> {
+    let flags: NSDictionary
+    do {
+      flags = try readDataOrThrow(file: .accountFlag, pathDirectory: defaultSearchPathDirectory)
+    } catch {
+      return .failed(.storage(AccountReadFailure.from(error)))
+    }
+
+    let result = NSMutableDictionary()
+    for (key, value) in flags {
+      if let stringKey = key as? String {
+        result[stringKey] = value
+      }
+    }
+
+    logger.log("getAccountFlags: Successfully read account flags")
+    return .ok(result)
+  }
+
+  /// The credential in client_registration. A registration without one is absent.
+  func readCredentialRecord(logger: AppLogger) -> LegacyRecordRead<Credential> {
+    let data: Data
+    switch readAccountFileData(.clientRegistration) {
+    case let .ok(fileData):
+      data = fileData
+    case .absent:
+      logger.log("getCredential: ClientRegistration file does not exist")
+      return .absent
+    case let .failed(failure):
+      if case .account = failure {
+        logger.log("getCredential: No current account ID found")
+      }
+      return .failed(failure)
+    }
+
+    logger.log("getCredential: Read \(data.count) bytes from client_registration file")
+
+    let rootObject: Any?
+    do {
+      let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+      unarchiver.requiresSecureCoding = false
+
+      registerV3ClassNames(for: ClientRegistration.self)
+      registerV3ClassNames(for: Credential.self)
+
+      rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+    } catch {
+      return .failed(.storage(.decodeFailed(error)))
+    }
+    logger.log("getCredential: Root object type: \(type(of: rootObject))")
+
+    // Read dictionary [String: ClientRegistration] keyed by issuer (v3 format maintained for compatibility)
+    guard let clientRegistrationsDict = rootObject as? [String: ClientRegistration] else {
+      logger.log("getCredential: Failed to cast root object to [String: ClientRegistration]")
+      return .failed(.unexpectedFormat)
+    }
+
+    logger
+      .log(
+        "getCredential: Successfully decoded dictionary with \(clientRegistrationsDict.count) entries, keys: \(clientRegistrationsDict.keys)"
+      )
+
+    guard let clientRegistration = clientRegistrationsDict.values.first else {
+      logger.log("getCredential: Dictionary is empty")
+      return .absent
+    }
+
+    logger
+      .log(
+        "getCredential: ClientRegistration decoded, credential property: \(String(describing: clientRegistration.credential))"
+      )
+
+    guard let credential = clientRegistration.credential else {
+      logger.log("getCredential: No credential found in ClientRegistration")
+      return .absent
+    }
+
+    logger.log(
+      "getCredential: Successfully decoded credential from ClientRegistration dictionary"
+    )
+    return .ok(credential)
+  }
+
+  /// The pending authorization request. The empty dictionary v3 writes after removing a request is absent.
+  func readAuthorizationRequestRecord(logger: AppLogger) -> LegacyRecordRead<AuthorizationRequest> {
+    let data: Data
+    switch readAccountFileData(.authorizationRequest) {
+    case let .ok(fileData):
+      data = fileData
+    case .absent:
+      logger.log("getAuthorizationRequest: File does not exist")
+      return .absent
+    case let .failed(failure):
+      if case .account = failure {
+        logger.log("getAuthorizationRequest: No current account ID found")
+      }
+      return .failed(failure)
+    }
+
+    logger.log("getAuthorizationRequest: Read \(data.count) bytes")
+
+    let rootObject: Any?
+    do {
+      let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+      unarchiver.requiresSecureCoding = false
+
+      registerV3ClassNames(for: AuthorizationRequest.self)
+      registerV3ClassNames(for: Address.self)
+      rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+    } catch {
+      return .failed(.storage(.decodeFailed(error)))
+    }
+
+    if let dict = rootObject as? [AnyHashable: Any], dict.isEmpty {
+      logger.log("getAuthorizationRequest: Empty dictionary - no authorization request")
+      return .absent
+    }
+
+    // Read dictionary [String: AuthorizationRequest] - just get the first value regardless of key
+    if let requestsDict = rootObject as? [String: AuthorizationRequest],
+       let authRequest = requestsDict.values.first
+    {
+      logger.log(
+        "getAuthorizationRequest: Successfully decoded dictionary with \(requestsDict.count) entries"
+      )
+      return .ok(authRequest)
+    }
+
+    // Fallback: try as single AuthorizationRequest
+    if let authRequest = rootObject as? AuthorizationRequest {
+      logger.log("getAuthorizationRequest: Successfully decoded as single AuthorizationRequest")
+      return .ok(authRequest)
+    }
+
+    logger.log("getAuthorizationRequest: Failed to decode")
+    return .failed(.unexpectedFormat)
+  }
+
+  /// The documents model for the current issuer, else the first one stored.
+  func readEvidenceRecord() -> LegacyRecordRead<DocumentsDataModel> {
+    let data: Data
+    switch readAccountFileData(.documents) {
+    case let .ok(fileData):
+      data = fileData
+    case .absent:
+      return .absent
+    case let .failed(failure):
+      return .failed(failure)
+    }
+
+    guard let documentsDict = DocumentsArchiver().decode(from: data) else {
+      return .failed(.undecodable)
+    }
+
+    // Try current issuer key, then try all keys
+    guard let model = documentsDict[issuer] ?? documentsDict.values.first else {
+      return .absent
+    }
+    return .ok(model)
+  }
+
+  /// client_metadata, as the dictionaries `getSavedServices` resolves.
+  func readSavedServicesRecord(logger: AppLogger) -> LegacyRecordRead<[[String: Any]]> {
+    let data: Data
+    switch readAccountFileData(.clientMetadata) {
+    case let .ok(fileData):
+      data = fileData
+    case .absent:
+      logger.log("getSavedServices: client_metadata file not found, returning empty array")
+      return .absent
+    case let .failed(failure):
+      if case .account = failure {
+        logger.log("getSavedServices: No account ID, returning empty array")
+      }
+      return .failed(failure)
+    }
+
+    guard let model = ClientMetadataArchiver().decode(from: data) else {
+      logger.log("getSavedServices: Failed to decode client_metadata, returning empty array")
+      return .failed(.undecodable)
+    }
+
+    let services = (model.clients ?? []).map { $0.toDictionary() }
+    logger.log("getSavedServices: Read \(services.count) services from client_metadata")
+    return .ok(services)
+  }
+
+  /// The bytes of one of the current account's files, for records that decode their own archives.
+  private func readAccountFileData(_ file: AccountFiles) -> LegacyRecordRead<Data> {
+    let accountID: String
+    do {
+      accountID = try resolveCurrentAccountID()
+    } catch {
+      return .failed(.account(AccountReadFailure.from(error)))
+    }
+
+    let rootDirectoryURL: URL
+    do {
+      rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+    } catch {
+      return .failed(.storage(.storageRootUnavailable(error)))
+    }
+
+    let fileUrl =
+      rootDirectoryURL
+        .appendingPathComponent(basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(file.rawValue)
+
+    guard FileManager.default.fileExists(atPath: fileUrl.path) else {
+      return .absent
+    }
+
+    do {
+      return try .ok(Data(contentsOf: fileUrl))
+    } catch {
+      return .failed(.storage(.fileUnreadable(error)))
+    }
   }
 }
