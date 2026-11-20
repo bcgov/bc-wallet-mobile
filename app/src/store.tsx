@@ -21,13 +21,8 @@ import {
   isDecidedVerificationStatus,
   UNKNOWN_VERIFICATION_STATUS,
 } from './bcsc-theme/utils/verification-status'
+import { AppBuild, isAppBuildEqual, toAppBuild } from './utils/app-build'
 import { appLogger } from './utils/logger'
-import { isAppBuildEqual, toAppBuild } from './utils/version'
-
-export interface AppBuild {
-  version: string
-  build: string
-}
 
 export type RemoteDebuggingState = {
   enabledAt?: Date

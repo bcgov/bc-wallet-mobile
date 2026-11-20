@@ -1,6 +1,7 @@
 import { RegistrationResponseData } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { isAppError } from '@/errors/appError'
-import { AppBuild, BCDispatchAction } from '@/store'
+import { BCDispatchAction } from '@/store'
+import { AppBuild } from '@/utils/app-build'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 

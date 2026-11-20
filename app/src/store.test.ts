@@ -44,46 +44,36 @@ describe('reducer', () => {
     reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID, payload: [id] })
 
   describe('SET_REGISTERED_BUILD', () => {
+    // The device-info mock reports version 4.0.0, build 100
     it('stores the running build as the registered build and persists it', () => {
       const state = {
         ...initialState,
-        bcsc: {
-          ...initialState.bcsc,
-          appBuildHistory: [
-            { version: '4.1.0', build: '1000' },
-            { version: '4.0.0', build: '999' },
-          ],
-          registeredBuild: { version: '4.0.0', build: '999' },
-        },
+        bcsc: { ...initialState.bcsc, registeredBuild: { version: '3.9.0', build: '90' } },
       }
       const result = reducer(state, { type: BCDispatchAction.SET_REGISTERED_BUILD })
 
-      expect(result.bcsc.registeredBuild).toEqual({ version: '4.1.0', build: '1000' })
+      expect(result.bcsc.registeredBuild).toEqual({ version: '4.0.0', build: '100' })
       expect(mockedStoreValueForKey).toHaveBeenCalledWith(
         BCLocalStorageKeys.BCSC,
-        expect.objectContaining({ registeredBuild: { version: '4.1.0', build: '1000' } })
+        expect.objectContaining({ registeredBuild: { version: '4.0.0', build: '100' } })
       )
+    })
+
+    it('registers a build when none was registered before', () => {
+      const result = reducer(initialState, { type: BCDispatchAction.SET_REGISTERED_BUILD })
+
+      expect(result.bcsc.registeredBuild).toEqual({ version: '4.0.0', build: '100' })
     })
 
     it('returns the same state without persisting when the running build is already registered', () => {
       const state = {
         ...initialState,
-        bcsc: {
-          ...initialState.bcsc,
-          appBuildHistory: [{ version: '4.1.0', build: '1000' }],
-          registeredBuild: { version: '4.1.0', build: '1000' },
-        },
+        bcsc: { ...initialState.bcsc, registeredBuild: { version: '4.0.0', build: '100' } },
       }
       const result = reducer(state, { type: BCDispatchAction.SET_REGISTERED_BUILD })
 
       expect(result).toBe(state)
       expect(mockedStoreValueForKey).not.toHaveBeenCalled()
-    })
-
-    it('returns the same state when there is no recorded build', () => {
-      const result = reducer(initialState, { type: BCDispatchAction.SET_REGISTERED_BUILD })
-
-      expect(result).toBe(initialState)
     })
   })
 

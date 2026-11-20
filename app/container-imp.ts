@@ -39,7 +39,7 @@ import { CredentialDetailsSubHeader } from '@/bcsc-theme/features/credentials/Cr
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
-import { addNewBuildToHistory } from '@/utils/version'
+import { addNewBuildToHistory } from '@/utils/app-build'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
 import { IASEnvironment } from '@utils/environment'
 import { expirationOverrideInMinutes } from '@utils/expiration'
