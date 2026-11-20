@@ -315,10 +315,24 @@ const refreshLedgerCache = async (poolService: IndyVdrPoolService, logger: Bifol
  *
  * @param agent - The agent to shut down.
  * @param logger - Logger used to record shutdown errors.
+ * @param beforeClose - Optional step to finish before the wallet closes, e.g. draining
+ *   background work that still reads it. It runs inside the queued close, so the close
+ *   takes its place in line straight away and a later open on the same wallet waits for
+ *   both. It must not queue a wallet operation itself, or it would wait on its own slot.
  */
-export const shutdownAgent = async (agent: Agent, logger: BifoldLogger): Promise<void> => {
+export const shutdownAgent = async (
+  agent: Agent,
+  logger: BifoldLogger,
+  beforeClose?: () => Promise<unknown>
+): Promise<void> => {
   try {
     await enqueueWalletOp(async () => {
+      try {
+        await beforeClose?.()
+      } catch (error) {
+        // The step is a courtesy to in-flight work; its failure must not leave the wallet open
+        logger.warn(`Agent pre-close step failed (closing anyway): ${error}`)
+      }
       // Idempotent shutdown. A reset path (wallet reset / factory reset) may have
       // already shut this agent down before the provider unmounts and calls here
       // again on the same instance. Re-check inside the serialized op so we observe

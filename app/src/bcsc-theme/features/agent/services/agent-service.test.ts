@@ -450,6 +450,18 @@ describe('shutdownAgent', () => {
     await expect(shutdownAgent(agent as any, logger)).resolves.toBeUndefined()
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('shutdown boom'))
   })
+
+  it('still closes the wallet when the pre-close step fails', async () => {
+    const agent = { isInitialized: true, shutdown: jest.fn().mockResolvedValue(undefined) }
+    const beforeClose = jest.fn().mockRejectedValue(new Error('drain boom'))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await shutdownAgent(agent as any, logger, beforeClose)
+
+    expect(agent.shutdown).toHaveBeenCalled()
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('drain boom'))
+    expect(logger.error).not.toHaveBeenCalled()
+  })
 })
 
 describe('initializeAgent', () => {
@@ -546,6 +558,41 @@ describe('wallet lifecycle serialization', () => {
 
     expect(newAgent.initialize).toHaveBeenCalled()
     expect(order).toEqual(['shutdown', 'initialize'])
+  })
+
+  it('holds a queued initialize until the pre-close step and the close have both finished', async () => {
+    // Models lock → quick unlock: the old agent's close is queued straight away but first
+    // waits for its background work to drain. The new agent's open must wait for both.
+    const order: string[] = []
+    let finishDrain: () => void = () => undefined
+    const drainGate = new Promise<void>((resolve) => {
+      finishDrain = resolve
+    })
+
+    const oldAgent = {
+      isInitialized: true,
+      shutdown: jest.fn(async () => void order.push('shutdown')),
+    }
+    const newAgent = {
+      initialize: jest.fn(async () => void order.push('initialize')),
+    }
+    const drain = () => drainGate.then(() => void order.push('drain'))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shutdownPromise = shutdownAgent(oldAgent as any, logger, drain)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const initPromise = initializeAgent(newAgent as any)
+
+    // Flush microtasks/timers: the drain is still in flight, so nothing has touched the wallet.
+    await new Promise((r) => setTimeout(r, 0))
+    expect(oldAgent.shutdown).not.toHaveBeenCalled()
+    expect(newAgent.initialize).not.toHaveBeenCalled()
+
+    finishDrain()
+    await shutdownPromise
+    await initPromise
+
+    expect(order).toEqual(['drain', 'shutdown', 'initialize'])
   })
 
   it('does not let a failed shutdown wedge the queue for the next open', async () => {
