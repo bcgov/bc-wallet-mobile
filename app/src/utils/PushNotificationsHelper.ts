@@ -24,8 +24,6 @@ import { Config } from 'react-native-config'
 import { checkNotifications, PermissionStatus, requestNotifications, RESULTS } from 'react-native-permissions'
 import { BCLocalStorageKeys } from '../store'
 
-const REQUEST_NOTIFICATIONS_TIMEOUT_MS = 2000
-
 export const enum NotificationPermissionStatus {
   DENIED = 'denied',
   GRANTED = 'granted',
@@ -36,38 +34,6 @@ export const enum NotificationPermissionStatus {
 /**
  * Permissions Section
  */
-
-/**
- * Requests device notification permissions
- *
- * TODO (MD): Workaround for a known React Native issue where `requestNotifications` may hang indefinitely
- * on Android if the user previously denied the permission prompt `twice`. Update to standard implementation
- * when using React Native version 0.81.x or later.
- *
- * @see
- * Issue: https://github.com/facebook/react-native/pull/53898
- * Fixed in: https://github.com/reactwg/react-native-releases/issues/1151 V0.81.x
- * Commit: https://github.com/facebook/react-native/commit/447a7a3527e3e38e4c3ceb330d12d77afe7bc0b4
- *
- * @example previously:
- * const { status } = await requestNotifications()
- * return status
- */
-const requestNotificationPermission = async (): Promise<PermissionStatus> => {
-  return new Promise((resolve) => {
-    const timeout = setTimeout(() => {
-      resolve(NotificationPermissionStatus.BLOCKED)
-    }, REQUEST_NOTIFICATIONS_TIMEOUT_MS)
-
-    void requestNotifications()
-      .then(({ status }) => {
-        resolve(status)
-      })
-      .finally(() => {
-        clearTimeout(timeout)
-      })
-  })
-}
 
 const formatPermissionIos = (permission: FirebaseMessagingTypes.AuthorizationStatus): NotificationPermissionStatus => {
   switch (permission) {
@@ -106,9 +72,9 @@ const requestPermission = async (): Promise<NotificationPermissionStatus> => {
   const { status } = await checkNotifications()
 
   if (status !== RESULTS.GRANTED) {
-    const result = await requestNotificationPermission()
+    const { status: requested } = await requestNotifications()
 
-    return formatPermissionAndroid(result)
+    return formatPermissionAndroid(requested)
   }
   return formatPermissionAndroid(status)
 }
