@@ -39,6 +39,8 @@ type MockLogger = { info: jest.Mock; warn: jest.Mock; error: jest.Mock }
 
 type FactoryResetSetup = {
   account?: any
+  /** The registration access token storage holds for the account; null for none */
+  storedRegistrationToken?: string | null
   store?: any
   client?: any
   deleteRegistration?: jest.Mock
@@ -50,8 +52,10 @@ type FactoryResetSetup = {
 const setupFactoryReset = (overrides: FactoryResetSetup = {}) => {
   const logger: MockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
   const {
-    account = { clientID: 'test-client-id' },
-    store = { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } },
+    account = { clientID: 'test-client-id', issuer: 'https://idsit.gov.bc.ca/device/' },
+    storedRegistrationToken = 'token',
+    // The token in app state is deliberately not the stored one: the reset must use what storage holds
+    store = { bcscSecure: { registrationAccessToken: 'state-token', additionalEvidenceData: [] } },
     client = { clearTokens: jest.fn() },
     deleteRegistration = jest.fn().mockResolvedValue({ success: true }),
     dispatch = jest.fn(),
@@ -66,6 +70,7 @@ const setupFactoryReset = (overrides: FactoryResetSetup = {}) => {
   jest.mocked(useRegistrationApi).mockReturnValue({ deleteRegistration, register: jest.fn() } as any)
   jest.mocked(useSecureActions).mockReturnValue({ clearSecureState, deleteSecureData } as any)
   bcscCore.getAccount.mockResolvedValue(account)
+  bcscCore.getToken.mockResolvedValue(storedRegistrationToken ? ({ token: storedRegistrationToken } as any) : null)
   bcscCore.removeAccount.mockResolvedValue(undefined)
   bifold.useStore.mockReturnValue([store, dispatch])
   bifold.useServices.mockReturnValue([logger] as any)
@@ -125,11 +130,11 @@ describe('useFactoryReset', () => {
     expect(clearedAt).toBeLessThan(dispatch.mock.invocationCallOrder[0])
   })
 
-  it('should call getToken when registrationAccessToken is missing from store', async () => {
+  it('reads the registration from storage, so it works before secure state has been hydrated', async () => {
     const { bcscCore, deleteRegistration } = setupFactoryReset({
+      storedRegistrationToken: 'native-token',
       store: { bcscSecure: { registrationAccessToken: undefined, additionalEvidenceData: [] } },
     })
-    bcscCore.getToken.mockResolvedValue({ token: 'native-token' } as any)
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -140,6 +145,31 @@ describe('useFactoryReset', () => {
 
     expect(bcscCore.getToken).toHaveBeenCalledWith(BcscCore.TokenType.Registration)
     expect(deleteRegistration).toHaveBeenCalledWith('native-token', 'test-client-id')
+  })
+
+  it.each([
+    ['no client ID', { issuer: 'https://idsit.gov.bc.ca/device/' }, 'token'],
+    ['no registration token', { clientID: 'test-client-id', issuer: 'https://idsit.gov.bc.ca/device/' }, null],
+  ])('skips the server delete but still removes the account when the device holds %s', async (...args) => {
+    const [, account, storedRegistrationToken] = args
+    const { bcscCore, logger, deleteRegistration, deleteSecureData } = setupFactoryReset({
+      account,
+      storedRegistrationToken,
+    })
+
+    const hook = renderHook(() => useFactoryReset())
+
+    await act(async () => {
+      const result = await hook.result.current()
+      expect(result.success).toBe(true)
+    })
+
+    expect(deleteRegistration).not.toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith(
+      'FactoryReset: No registration found on the device, skipping IAS account deletion'
+    )
+    expect(deleteSecureData).toHaveBeenCalledWith()
+    expect(bcscCore.removeAccount).toHaveBeenCalledWith()
   })
 
   it('awaits agentCtx.teardownAgent before clearing state when a live agent exists', async () => {

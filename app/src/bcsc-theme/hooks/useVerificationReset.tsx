@@ -4,8 +4,9 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
 import { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { useCallback } from 'react'
-import { deleteToken, getToken, TokenType } from 'react-native-bcsc-core'
+import { deleteToken, TokenType } from 'react-native-bcsc-core'
 import { withAccount } from '../api/hooks/withAccountGuard'
+import { DeviceRegistration, readDeviceRegistration } from '../services/device-registration'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useSecureActions } from './useSecureActions'
 
@@ -18,8 +19,12 @@ import { useSecureActions } from './useSecureActions'
  *   1. Clears the in-memory secure store, marking the device as unverified. This happens before the
  *      native deletes, so if one fails the surviving record is read back at the next unlock
  *   2. Deletes the existing IAS registration
- *   3. Deletes all verification data and tokens from native storage
- *   4. Creates a new IAS registration, writing the new account data
+ *   3. Deletes all verification data and the access and refresh tokens from native storage
+ *   4. Clears the old registration from the device (client ID and registration access token together)
+ *   5. Creates a new IAS registration, saving its client ID and token together
+ *
+ * If step 5 fails the account is left with no registration, not with a client ID IAS has deleted, so
+ * the next verification step registers it again.
  *
  * A factory reset alert is shown if any error occurs so the user isn't stuck with a broken app
  *
@@ -38,34 +43,24 @@ export type VerificationResetOptions = {
 export const useVerificationReset = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { clearSecureState, deleteVerificationData } = useSecureActions()
+  const { clearSecureState, clearRegistration, deleteVerificationData } = useSecureActions()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const { factoryResetAlert } = useAlerts(navigation)
   const registrationService = useRegistrationService()
 
   /**
-   * Deletes the IAS account associated with the given clientID from the server.
+   * Deletes the device's registration from the IAS server. A failed delete is logged, not thrown.
    *
-   * @param clientID - The clientID of the account to delete.
+   * @param registration - The registration to delete: its client ID and the token that manages it.
    * @returns A promise that resolves when the deletion attempt is complete.
    */
   const deleteRegistration = useCallback(
-    async (clientID: string) => {
+    async (registration: DeviceRegistration) => {
       try {
-        let registrationAccessToken = store.bcscSecure.registrationAccessToken
-
-        if (!registrationAccessToken) {
-          // Note: This allows a verification reset before secure state has been hydrated
-          const nativeToken = await getToken(TokenType.Registration)
-          registrationAccessToken = nativeToken?.token
-        }
-
-        if (!registrationAccessToken) {
-          logger.info('[useVerificationReset]: No registration access token found, skipping IAS account deletion')
-          return
-        }
-
-        const deleteIASAccount = await registrationService.deleteRegistration(registrationAccessToken, clientID)
+        const deleteIASAccount = await registrationService.deleteRegistration(
+          registration.registrationAccessToken,
+          registration.clientId
+        )
 
         if (!deleteIASAccount.success) {
           logger.warn('[useVerificationReset]: Failed to delete IAS account from server')
@@ -74,26 +69,29 @@ export const useVerificationReset = () => {
         logger.warn('[useVerificationReset]: Error occurred while deleting registration', { error })
       }
     },
-    [logger, registrationService, store.bcscSecure.registrationAccessToken]
+    [logger, registrationService]
   )
 
   const verificationReset = useCallback(
     async ({ inVerifyFlow = false }: VerificationResetOptions = {}): Promise<boolean> => {
       try {
         await withAccount(async (account) => {
-          if (!store.bcscSecure.registrationAccessToken) {
-            throw new Error('No registration access token found in store. Cannot proceed with verification reset.')
+          // Read from storage, so the client ID and the token are the pair the device holds now
+          const registration = await readDeviceRegistration(account)
+
+          if (!registration) {
+            throw new Error('No registration access token found on the device. Cannot proceed with verification reset.')
           }
 
-          logger.info(`[useVerificationReset] Starting renewal reset for account with clientID: ${account.clientID}`)
+          logger.info('[useVerificationReset] Starting renewal reset')
           // Clear/reset store values
           clearSecureState({
             isHydrated: true, // this is set to true on app load and shouldn't change during the reset
             walletKey: store.bcscSecure.walletKey,
-            // re-registration keeps the same method but only writes it natively, so the store's copy is kept too
+            // the account keeps its security method through the reset, so the store's copy is kept too
             securityMethod: store.bcscSecure.securityMethod,
-            // this token is used to clean up other verification data, a new one is saved once the device is registered again
-            registrationAccessToken: store.bcscSecure.registrationAccessToken,
+            // the registration is still on the device until it is cleared below, which also drops this token
+            registrationAccessToken: registration.registrationAccessToken,
             verified: false, // device is no longer verified
             inVerifyFlow, // whether the verify flow stays mounted is the caller's call
           })
@@ -101,22 +99,18 @@ export const useVerificationReset = () => {
           logger.info('[useVerificationReset] Secure state cleared. Deleting IAS registration...')
 
           // Delete old account registration in IAS
-          await deleteRegistration(account.clientID)
+          await deleteRegistration(registration)
 
           // Delete verification data from native storage (credential, auth request, account flags, additional evidence, tokens)
           await deleteVerificationData()
-          await Promise.all([
-            deleteToken(TokenType.Access),
-            deleteToken(TokenType.Refresh),
-            deleteToken(TokenType.Registration),
-          ])
-          logger.info('[useVerificationReset] Verification data and refresh token deleted from native storage')
+          await Promise.all([deleteToken(TokenType.Access), deleteToken(TokenType.Refresh)])
+          // After the other tokens: iOS stores them under the client ID this clears
+          await clearRegistration()
+          logger.info('[useVerificationReset] Verification data, tokens and registration deleted from native storage')
 
-          // Register device again with the original security method from the native account record
+          // Register the device again. The account keeps its security method and nickname.
           logger.info('[useVerificationReset] Creating new IAS registration...')
-          const temp = await registrationService.createRegistration(account.securityMethod)
-          temp.client_id &&
-            logger.info(`[useVerificationReset] New registration created with client_id: ${temp.client_id}`)
+          await registrationService.createRegistration()
           logger.info('[useVerificationReset] New IAS registration created. Renewal reset complete.')
         })
 
@@ -128,11 +122,11 @@ export const useVerificationReset = () => {
       }
     },
     [
-      store.bcscSecure.registrationAccessToken,
       store.bcscSecure.walletKey,
       store.bcscSecure.securityMethod,
       logger,
       clearSecureState,
+      clearRegistration,
       deleteRegistration,
       deleteVerificationData,
       registrationService,

@@ -231,16 +231,20 @@ export type NativeAuthorizationRequest = {
 export type NativeAccount = {
   readonly id: string;
   issuer: string;
-  clientID: string;
+  /**
+   * The client ID of the device registration. Absent while the account has no registration.
+   * Read-only here: only `setRegistration` and `clearRegistration` change it.
+   */
+  readonly clientID?: string;
   securityMethod: AccountSecurityMethod;
   displayName?: string;
   didPostNicknameToServer?: boolean;
   nickname?: string;
 };
 
+/** What `setAccount` saves. It has no client ID: saving the account never changes the registration. */
 export type NativeAccountWithoutId = {
   issuer: string;
-  clientID: string;
   securityMethod: AccountSecurityMethod;
   displayName?: string;
   didPostNicknameToServer?: boolean;
@@ -318,7 +322,17 @@ export interface Spec extends TurboModule {
   getNativeFilesScan(): Promise<NativeFilesScan>;
   getAccount(): Promise<NativeAccount | null>;
   getAccountReadStatus(): Promise<NativeAccountReadStatus>;
+  /** Creates the account, or updates its issuer, security method and nickname. Never changes the client ID. */
   setAccount(account: NativeAccountWithoutId): Promise<void>;
+
+  /**
+   * Saves the device registration in one call; see the {@link setRegistration} wrapper.
+   * @param registrationAccessToken null leaves the stored token as it is
+   */
+  setRegistration(clientID: string, issuer: string, registrationAccessToken: string | null): Promise<void>;
+
+  /** Removes the client ID and the registration access token; see the {@link clearRegistration} wrapper. */
+  clearRegistration(): Promise<void>;
   getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;
   signPairingCode(
     code: string,

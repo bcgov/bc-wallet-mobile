@@ -418,16 +418,13 @@ const Developer: React.FC = () => {
   }
 
   const deleteTokens = async () => {
-    // Deletes tokens from native keychain storage and clears the in-memory cache
+    // Deletes the refresh and access tokens from native keychain storage and clears the in-memory cache
     // Testing getTokenWithDiagnostics() will show correct error message
+    // The registration access token stays: it is only ever removed together with its client ID
     try {
-      await Promise.all([
-        deleteToken(TokenType.Refresh),
-        deleteToken(TokenType.Registration),
-        deleteToken(TokenType.Access),
-      ])
+      await Promise.all([deleteToken(TokenType.Refresh), deleteToken(TokenType.Access)])
       apiClient?.clearTokens()
-      logger.info('Developer: Deleted all tokens from native storage and cleared in-memory cache')
+      logger.info('Developer: Deleted the refresh and access tokens from native storage and cleared in-memory cache')
       setTokensDeleted(true)
     } catch (error) {
       logger.error('Developer: Failed to delete tokens', error as Error)

@@ -12,7 +12,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useRoute } from '@react-navigation/native'
 import { useCallback, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import { createDeviceSignedJWT, getAccount, isAccountRegistered } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 import { QRCodeStrategy, QRError } from '../useQRScanner'
 
@@ -95,6 +95,11 @@ export const useAccountTransferQRCodeStrategy = (
 
       if (!account) {
         throw new QRError('Local account not found')
+      }
+
+      // The transfer is requested as this device's client, so the account needs its registration
+      if (!isAccountRegistered(account)) {
+        throw new QRError('Local account is not registered')
       }
 
       // ias tokens expect times in seconds since epoch

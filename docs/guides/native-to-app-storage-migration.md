@@ -68,6 +68,8 @@ On both platforms, test native data that is missing, partial, corrupt or in v3 f
 
 Device keys, PBKDF2, biometrics, JWT signing, and the account and token records used by native PIN and unlock. The read-only import code also stays until a later cleanup release.
 
+The device registration (client ID, issuer and registration access token) stays native too, so it needs no import. It follows rule 6 instead: one TypeScript module owns it, and one native call saves the three values together (#4925, see "Device registration" in [`CONVENTIONS.md`](../../CONVENTIONS.md)).
+
 ## Checklist
 
 - [ ] One owner module, using the shared storage

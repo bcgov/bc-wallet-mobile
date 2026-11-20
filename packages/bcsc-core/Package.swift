@@ -42,10 +42,12 @@ let package = Package(
                 "PINService.swift",
                 "PINServiceProtocol.swift",
                 "Provider.swift",
+                "RegistrationStore.swift",
                 "RSAUtil.swift",
                 "SPMCompat.swift",
                 "StorageService.swift",
                 "Token.swift",
+                "TokenService.swift",
             ],
             swiftSettings: [.define("SPM_BUILD")]
         ),

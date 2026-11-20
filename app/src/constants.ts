@@ -249,9 +249,6 @@ export const HEADER_SHADOW: ViewStyle = {
 // context, which keeps it as the header's parent. It changes nothing else, on either platform.
 export const TAB_SCENE_CONTAINER_STYLE: ViewStyle = { isolation: 'isolate' }
 
-// Account constants
-export const TEMPORARY_ACCOUNT_CLIENT_ID = ''
-
 // Credential constants
 // TODO (MD): Pull these values from well-known urls or remote config (ie: Firebase Remote Config)
 export const DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS = [
