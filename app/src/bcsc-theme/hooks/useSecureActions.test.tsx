@@ -2583,6 +2583,71 @@ describe('useSecureActions', () => {
 
       expect(mockDispatch).not.toHaveBeenCalled()
     })
+
+    it('first removes the client ID an authorization request carried over from v3, keeping the rest of it', async () => {
+      // Unlock fills a missing client ID in from this copy, which would bring the cleared one back
+      jest
+        .mocked(getAuthorizationRequest)
+        .mockResolvedValueOnce({ clientID: 'v3-client', issuer: 'https://v3', deviceCode: 'device-code' } as any)
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.clearRegistration()
+      })
+
+      expect(setAuthorizationRequest).toHaveBeenCalledTimes(1)
+      expect(setAuthorizationRequest).toHaveBeenCalledWith({ issuer: 'https://v3', deviceCode: 'device-code' })
+      expect(jest.mocked(setAuthorizationRequest).mock.invocationCallOrder[0]).toBeLessThan(
+        jest.mocked(clearRegistration).mock.invocationCallOrder[0]
+      )
+      expect(clearRegistration).toHaveBeenCalledTimes(1)
+    })
+
+    it.each([
+      ['no authorization request', null],
+      ['an authorization request with no client ID', { issuer: 'https://v3', deviceCode: 'device-code' }],
+    ])('leaves the authorization request as it is when there is %s', async (_label, authorizationRequest) => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValueOnce(authorizationRequest as any)
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.clearRegistration()
+      })
+
+      expect(setAuthorizationRequest).not.toHaveBeenCalled()
+      expect(clearRegistration).toHaveBeenCalledTimes(1)
+    })
+
+    it.each([
+      [
+        'read',
+        AppEventCode.NATIVE_STORAGE_READ_FAILED,
+        () =>
+          jest
+            .mocked(getAuthorizationRequest)
+            .mockRejectedValueOnce(Object.assign(new Error('native'), { code: 'E_GET_AUTH_REQUEST_ERROR' })),
+      ],
+      [
+        'saved without the client ID',
+        AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+        () => {
+          jest
+            .mocked(getAuthorizationRequest)
+            .mockResolvedValueOnce({ clientID: 'v3-client', issuer: 'https://v3' } as any)
+          jest
+            .mocked(setAuthorizationRequest)
+            .mockRejectedValueOnce(Object.assign(new Error('native'), { code: 'E_SET_AUTH_REQUEST_ERROR' }))
+        },
+      ],
+    ])('keeps the registration when the authorization request cannot be %s', async (_label, appEvent, fail) => {
+      fail()
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.clearRegistration()).rejects.toMatchObject({ appEvent })
+
+      expect(clearRegistration).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
   })
 
   describe('updateTokens', () => {

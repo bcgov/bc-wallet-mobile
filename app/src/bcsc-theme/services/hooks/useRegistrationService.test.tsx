@@ -972,6 +972,29 @@ describe('useRegistrationService', () => {
       expect(bcscCore.clearRegistration).toHaveBeenCalledTimes(1)
     })
 
+    it('removes the old client ID an authorization request carried over from v3 before clearing', async () => {
+      const { registrationApi, bcscCore } = setup()
+      bcscCore.getAccount.mockResolvedValue({ clientID: 'old-client-id', issuer, securityMethod: 'pin' })
+      bcscCore.getToken.mockResolvedValue({ token: 'stored-token' })
+      bcscCore.getAuthorizationRequest.mockResolvedValueOnce({
+        clientID: 'old-client-id',
+        issuer,
+        deviceCode: 'device-code',
+      })
+      registrationApi.createRegistration.mockRejectedValue(new Error('offline'))
+
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+
+      await expect(result.current.cycleRegistration()).rejects.toThrow('offline')
+
+      // Unlock fills a missing client ID in from this copy: left in place, it would bring the deleted
+      // registration back and ensureRegistered would not register again
+      expect(bcscCore.setAuthorizationRequest).toHaveBeenCalledWith({ issuer, deviceCode: 'device-code' })
+      expect(bcscCore.setAuthorizationRequest.mock.invocationCallOrder[0]).toBeLessThan(
+        bcscCore.clearRegistration.mock.invocationCallOrder[0]
+      )
+    })
+
     it('does not create a new registration when the old one cannot be cleared', async () => {
       const { registrationApi, bcscCore } = setup()
       bcscCore.getAccount.mockResolvedValue({ clientID: 'old-client-id', issuer, securityMethod: 'pin' })

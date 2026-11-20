@@ -199,6 +199,27 @@ export const useSecureActions = () => {
     [logger]
   )
 
+  /**
+   * Removes the copy of the client ID that an authorization request carried over from v3 can hold (Android
+   * only: an iOS request has none). The rest of the request, such as a verification in progress, is kept.
+   */
+  const removeCarriedOverClientId = useCallback(async () => {
+    try {
+      const existingData = await getAuthorizationRequest()
+      if (!existingData?.clientID) {
+        return
+      }
+
+      const remainingData = { ...existingData }
+      delete remainingData.clientID
+      await setAuthorizationRequest(remainingData)
+      logger.info('Client ID carried over from v3 removed from the authorization request')
+    } catch (error) {
+      logger.error('Failed to remove the client ID carried over from v3:', error as Error)
+      throwNativeBcscError(error)
+    }
+  }, [logger])
+
   // ============================================================================
   // ACTIONS - High-level operations that update store and persist to storage
   // ============================================================================
@@ -250,14 +271,19 @@ export const useSecureActions = () => {
    * Clear the device registration (client ID and registration access token), then drop the token from
    * state. Delete the access and refresh tokens first (see clearDeviceRegistration).
    *
+   * A copy of the client ID that an authorization request carried over from v3 can hold is removed first.
+   * Unlock fills a missing client ID in from it (hydrateSecureState), so it would bring back a client ID the
+   * server may have deleted, and ensureRegistered would then not register again.
+   *
    * The clear goes first and its failure is thrown, so the state never says the device has no
    * registration while storage still holds one.
    */
   const clearRegistration = useCallback(async () => {
+    await removeCarriedOverClientId()
     await clearDeviceRegistration(logger)
 
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN, payload: [] })
-  }, [dispatch, logger])
+  }, [dispatch, logger, removeCarriedOverClientId])
 
   /**
    * Update user info in state and persist to native storage

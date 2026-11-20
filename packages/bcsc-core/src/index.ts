@@ -488,7 +488,7 @@ export const getNativeFilesScan = (): Promise<NativeFilesScan> => {
  * @param account The account fields to save (without id, which is generated for a new account).
  * @returns A promise that resolves when the account has been successfully set.
  */
-export const setAccount = async (account: NativeAccountWithoutId): Promise<void> => {
+export const setAccount = (account: NativeAccountWithoutId): Promise<void> => {
   return BcscCore.setAccount(account);
 };
 
@@ -505,7 +505,7 @@ export const setAccount = async (account: NativeAccountWithoutId): Promise<void>
  * @param issuer The issuer the device is registered with. Never empty.
  * @param registrationAccessToken The token that manages this registration; null leaves the stored token as it is.
  */
-export const setRegistration = async (
+export const setRegistration = (
   clientID: string,
   issuer: string,
   registrationAccessToken: string | null
@@ -522,7 +522,7 @@ export const setRegistration = async (
  *
  * The app calls this through its device registration owner only (`services/device-registration`).
  */
-export const clearRegistration = async (): Promise<void> => {
+export const clearRegistration = (): Promise<void> => {
   return BcscCore.clearRegistration();
 };
 

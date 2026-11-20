@@ -439,7 +439,9 @@ and the three are saved together and cleared together.
   TypeScript.
 - A flow that replaces the registration (verification reset, registration cycle) clears the old one before it
   creates the new one. If the new registration fails, the account has no registration and `ensureRegistered`
-  registers it again, instead of holding a client ID the server has deleted.
+  registers it again, instead of holding a client ID the server has deleted. The clear also removes the copy
+  of the client ID that an Android authorization request carried over from v3 can hold, because unlock fills
+  a missing client ID in from it.
 - Delete the access and refresh tokens before clearing the registration: iOS stores every token under the
   client ID.
 - The storage did not move. The client ID and issuer are on the native account record and the token is in the
