@@ -7,12 +7,14 @@ import {
   BcscNativeErrorCodes,
   getAccount,
   getDynamicClientRegistrationBody,
+  getToken,
   isBcscNativeError,
   setAccount,
+  TokenType,
 } from 'react-native-bcsc-core'
 import useRegistrationApi from './useRegistrationApi'
 
-const mockUpdateTokens = jest.fn()
+const mockSaveRegistration = jest.fn()
 const mockLogger = {
   info: jest.fn(),
   debug: jest.fn(),
@@ -38,7 +40,7 @@ jest.mock('@bifold/core', () => ({
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: () => ({
-    updateTokens: mockUpdateTokens,
+    saveRegistration: mockSaveRegistration,
   }),
 }))
 
@@ -117,6 +119,13 @@ const expectAppErrorRejection = async (promise: Promise<unknown>, appEvent: AppE
   expect((error as AppError).appEvent).toBe(appEvent)
 }
 
+// An account that exists but has not registered yet: it has no client ID
+const unregisteredAccount = {
+  id: 'account-1',
+  issuer: 'https://mock-issuer.example.com',
+  securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
+}
+
 describe('useRegistrationApi', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -124,9 +133,10 @@ describe('useRegistrationApi', () => {
     jest.mocked(isBcscNativeError).mockReturnValue(false)
     mockApiClient.post.mockResolvedValue({ data: mockRegistrationResponse })
     mockApiClient.put.mockResolvedValue({ data: mockRegistrationResponse })
-    mockUpdateTokens.mockResolvedValue(undefined)
+    mockSaveRegistration.mockResolvedValue(undefined)
     jest.mocked(setAccount).mockResolvedValue(undefined)
-    jest.mocked(getAccount).mockResolvedValue(null)
+    jest.mocked(getAccount).mockResolvedValue(unregisteredAccount as any)
+    jest.mocked(getToken).mockResolvedValue(null)
   })
 
   // ---------------------------------------------------------------------------
@@ -136,7 +146,7 @@ describe('useRegistrationApi', () => {
     it('should complete registration successfully', async () => {
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const data = await result.current.createRegistration()
 
       expect(getDynamicClientRegistrationBody).toHaveBeenCalledWith(
         'mock-fcm-token',
@@ -146,23 +156,44 @@ describe('useRegistrationApi', () => {
       expect(mockApiClient.post).toHaveBeenCalledWith(mockApiClient.endpoints.registration, expect.any(String), {
         skipBearerAuth: true,
       })
-      expect(setAccount).toHaveBeenCalledWith({
-        clientID: 'test-client-id',
+      // The client ID, issuer and registration access token are saved together, in one step
+      expect(mockSaveRegistration).toHaveBeenCalledTimes(1)
+      expect(mockSaveRegistration).toHaveBeenCalledWith({
+        clientId: 'test-client-id',
         issuer: mockApiClient.endpoints.issuer,
-        securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
-      })
-      expect(mockUpdateTokens).toHaveBeenCalledWith({
         registrationAccessToken: 'new-reg-access-token',
       })
+      // Registering never saves the account: its security method and nickname are not the registration's
+      expect(setAccount).not.toHaveBeenCalled()
       expect(data).toEqual(mockRegistrationResponse)
     })
 
     it('should throw if client is not ready', async () => {
       const { result } = renderHook(() => useRegistrationApi(null, false))
 
-      await expect(result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)).rejects.toThrow(
-        'BCSC client not ready for registration'
-      )
+      await expect(result.current.createRegistration()).rejects.toThrow('BCSC client not ready for registration')
+    })
+
+    it('rejects with ACCOUNT_NOT_FOUND before any request when there is no account to hold the registration', async () => {
+      jest.mocked(getAccount).mockResolvedValue(null)
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await expectAppErrorRejection(result.current.createRegistration(), AppEventCode.ACCOUNT_NOT_FOUND)
+
+      expect(getDynamicClientRegistrationBody).not.toHaveBeenCalled()
+      expect(mockApiClient.post).not.toHaveBeenCalled()
+      expect(mockSaveRegistration).not.toHaveBeenCalled()
+    })
+
+    it('rejects when the registration cannot be saved, so the caller never takes it for registered', async () => {
+      const saveError = new Error('keychain write failed')
+      mockSaveRegistration.mockRejectedValue(saveError)
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await expect(result.current.createRegistration()).rejects.toBe(saveError)
+      expect(setAccount).not.toHaveBeenCalled()
     })
 
     it('should throw CLIENT_REGISTRATION_NULL when DCR body is null', async () => {
@@ -170,7 +201,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const promise = result.current.createRegistration()
 
       await expectAppErrorRejection(promise, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
     })
@@ -190,7 +221,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const promise = result.current.createRegistration()
 
       await expectAppErrorRejection(promise, expectedAppEvent)
     })
@@ -202,7 +233,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const promise = result.current.createRegistration()
 
       await expectAppErrorRejection(promise, AppEventCode.UNMAPPED_NATIVE_ERROR)
     })
@@ -213,7 +244,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+      const promise = result.current.createRegistration()
 
       await expectAppErrorRejection(promise, AppEventCode.UNMAPPED_NATIVE_ERROR)
     })
@@ -240,10 +271,9 @@ describe('useRegistrationApi', () => {
 
         const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-        const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+        const data = await result.current.createRegistration()
 
-        expect(setAccount).toHaveBeenCalled()
-        expect(mockUpdateTokens).toHaveBeenCalled()
+        expect(mockSaveRegistration).toHaveBeenCalled()
         expect(data.jwks.keys).toHaveLength(2)
         expect(mockLogger.info).toHaveBeenCalledWith(
           expect.stringContaining('Confirmed sent signing key modulus is present in server jwks')
@@ -265,12 +295,11 @@ describe('useRegistrationApi', () => {
 
         const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-        const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+        const promise = result.current.createRegistration()
 
         await expectAppErrorRejection(promise, AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED)
 
-        expect(setAccount).not.toHaveBeenCalled()
-        expect(mockUpdateTokens).not.toHaveBeenCalled()
+        expect(mockSaveRegistration).not.toHaveBeenCalled()
       })
 
       it('proceeds (warns only) when the sent registration body cannot be parsed as JSON', async () => {
@@ -278,10 +307,10 @@ describe('useRegistrationApi', () => {
 
         const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-        const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+        const data = await result.current.createRegistration()
 
         expect(data).toEqual(mockRegistrationResponse)
-        expect(setAccount).toHaveBeenCalled()
+        expect(mockSaveRegistration).toHaveBeenCalled()
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining('Could not parse sent registration body to confirm signing key')
         )
@@ -291,10 +320,10 @@ describe('useRegistrationApi', () => {
         // Default mocks: DCR body has no jwks at all, and mockRegistrationResponse.jwks.keys is empty.
         const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-        const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+        const data = await result.current.createRegistration()
 
         expect(data).toEqual(mockRegistrationResponse)
-        expect(setAccount).toHaveBeenCalled()
+        expect(mockSaveRegistration).toHaveBeenCalled()
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('unparseable/empty'))
       })
     })
@@ -304,28 +333,38 @@ describe('useRegistrationApi', () => {
   // register (with account guard)
   // ---------------------------------------------------------------------------
   describe('register', () => {
-    it('should skip registration if an account already exists', async () => {
-      jest.mocked(getAccount).mockResolvedValue({ clientID: 'existing-client' } as any)
+    it('should skip registration if the account already has a client ID', async () => {
+      jest.mocked(getAccount).mockResolvedValue({ ...unregisteredAccount, clientID: 'existing-client' } as any)
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.register(AccountSecurityMethod.PinNoDeviceAuth)
+      const data = await result.current.register()
 
       expect(data).toBeUndefined()
       expect(getDynamicClientRegistrationBody).not.toHaveBeenCalled()
       expect(mockApiClient.post).not.toHaveBeenCalled()
     })
 
-    it('should call createRegistration when no account exists', async () => {
+    it('should register an account that has no client ID yet', async () => {
+      jest.mocked(getAccount).mockResolvedValue(unregisteredAccount as any)
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      const data = await result.current.register()
+
+      expect(getDynamicClientRegistrationBody).toHaveBeenCalled()
+      expect(mockApiClient.post).toHaveBeenCalled()
+      expect(mockSaveRegistration).toHaveBeenCalledWith(expect.objectContaining({ clientId: 'test-client-id' }))
+      expect(data).toEqual(mockRegistrationResponse)
+    })
+
+    it('rejects with ACCOUNT_NOT_FOUND, registering nothing, when no account exists', async () => {
       jest.mocked(getAccount).mockResolvedValue(null)
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.register(AccountSecurityMethod.PinNoDeviceAuth)
-
-      expect(getDynamicClientRegistrationBody).toHaveBeenCalled()
-      expect(mockApiClient.post).toHaveBeenCalled()
-      expect(data).toEqual(mockRegistrationResponse)
+      await expectAppErrorRejection(result.current.register(), AppEventCode.ACCOUNT_NOT_FOUND)
+      expect(mockApiClient.post).not.toHaveBeenCalled()
     })
   })
 
@@ -341,12 +380,16 @@ describe('useRegistrationApi', () => {
 
     beforeEach(() => {
       jest.mocked(getAccount).mockResolvedValue(existingAccount as any)
+      // The token the device holds for that client ID. It is read from storage, never passed in.
+      jest.mocked(getToken).mockResolvedValue({ token: 'reg-access-token' } as any)
     })
 
     it('should complete update registration successfully', async () => {
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.updateRegistration('reg-access-token', 'NewNickname')
+      const data = await result.current.updateRegistration('NewNickname')
+
+      expect(getToken).toHaveBeenCalledWith(TokenType.Registration)
 
       expect(getDynamicClientRegistrationBody).toHaveBeenCalledWith(
         'mock-fcm-token',
@@ -367,24 +410,60 @@ describe('useRegistrationApi', () => {
           }),
         })
       )
-      expect(setAccount).toHaveBeenCalledWith(
-        expect.objectContaining({
-          clientID: mockRegistrationResponse.client_id,
-          securityMethod: AccountSecurityMethod.PinWithDeviceAuth,
-          nickname: 'NewNickname',
-          didPostNicknameToServer: true,
-        })
-      )
-      expect(mockUpdateTokens).toHaveBeenCalledWith({
+      // The returned registration is saved in one step, and before the nickname
+      expect(mockSaveRegistration).toHaveBeenCalledWith({
+        clientId: mockRegistrationResponse.client_id,
+        issuer: mockApiClient.endpoints.issuer,
         registrationAccessToken: mockRegistrationResponse.registration_access_token,
       })
+      // Saving the account carries the nickname, and passes back the client ID that was just saved
+      expect(setAccount).toHaveBeenCalledWith({
+        clientID: mockRegistrationResponse.client_id,
+        issuer: mockApiClient.endpoints.issuer,
+        securityMethod: AccountSecurityMethod.PinWithDeviceAuth,
+        nickname: 'NewNickname',
+        didPostNicknameToServer: true,
+      })
+      expect(mockSaveRegistration.mock.invocationCallOrder[0]).toBeLessThan(
+        jest.mocked(setAccount).mock.invocationCallOrder[0]
+      )
       expect(data).toEqual(mockRegistrationResponse)
+    })
+
+    it('keeps the token the request was made with when the response carries none', async () => {
+      mockApiClient.put.mockResolvedValue({
+        data: { ...mockRegistrationResponse, registration_access_token: undefined },
+      })
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await result.current.updateRegistration('NewNickname')
+
+      expect(mockSaveRegistration).toHaveBeenCalledWith(
+        expect.objectContaining({ registrationAccessToken: 'reg-access-token' })
+      )
+    })
+
+    it('saves a rotated token with the client ID the request was made for when the response names none', async () => {
+      mockApiClient.put.mockResolvedValue({
+        data: { ...mockRegistrationResponse, client_id: undefined },
+      })
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await result.current.updateRegistration('NewNickname')
+
+      expect(mockSaveRegistration).toHaveBeenCalledWith({
+        clientId: existingAccount.clientID,
+        issuer: mockApiClient.endpoints.issuer,
+        registrationAccessToken: mockRegistrationResponse.registration_access_token,
+      })
     })
 
     it('should throw if client is not ready (with existing account)', async () => {
       const { result } = renderHook(() => useRegistrationApi(null, false))
 
-      await expect(result.current.updateRegistration('token', 'nickname')).rejects.toThrow(
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow(
         'BCSC client not ready for registration update'
       )
     })
@@ -394,25 +473,36 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(null, false))
 
-      await expect(result.current.updateRegistration('token', 'nickname')).rejects.toThrow(
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow(
         'No account found. Please register first.'
       )
     })
 
-    it('should throw if no registration access token is provided', async () => {
+    it('should throw if the device holds no registration access token', async () => {
+      jest.mocked(getToken).mockResolvedValue(null)
+
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      await expect(result.current.updateRegistration(undefined, 'nickname')).rejects.toThrow(
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow(
         'No registration access token found for registration update'
       )
+      expect(mockApiClient.put).not.toHaveBeenCalled()
     })
 
     it('should throw if no nickname is provided', async () => {
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      await expect(result.current.updateRegistration('token', undefined)).rejects.toThrow(
+      await expect(result.current.updateRegistration(undefined)).rejects.toThrow(
         'No client name found for registration update'
       )
+    })
+
+    it('should throw ACCOUNT_NOT_REGISTERED for an account that has no client ID', async () => {
+      jest.mocked(getAccount).mockResolvedValue(unregisteredAccount as any)
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await expectAppErrorRejection(result.current.updateRegistration('nickname'), AppEventCode.ACCOUNT_NOT_REGISTERED)
     })
 
     it('should throw if no account exists', async () => {
@@ -420,7 +510,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      await expect(result.current.updateRegistration('token', 'nickname')).rejects.toThrow(
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow(
         'No account found. Please register first.'
       )
     })
@@ -430,7 +520,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.updateRegistration('token', 'nickname')
+      const promise = result.current.updateRegistration('nickname')
 
       await expectAppErrorRejection(promise, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
     })
@@ -449,7 +539,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.updateRegistration('token', 'nickname')
+      const promise = result.current.updateRegistration('nickname')
 
       await expectAppErrorRejection(promise, expectedAppEvent)
     })
@@ -459,7 +549,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const promise = result.current.updateRegistration('token', 'nickname')
+      const promise = result.current.updateRegistration('nickname')
 
       await expectAppErrorRejection(promise, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)
     })
@@ -469,21 +559,37 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      await expect(result.current.updateRegistration('token', 'nickname')).rejects.toThrow('Server unavailable')
+      await expect(result.current.updateRegistration('nickname')).rejects.toThrow('Server unavailable')
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to update registration'))
     })
 
-    it('should still return data even if post-update storage fails', async () => {
-      jest.mocked(setAccount).mockRejectedValue(new Error('storage write failure'))
+    it('should still return data, and save the nickname, when the registration cannot be saved', async () => {
+      mockSaveRegistration.mockRejectedValue(new Error('storage write failure'))
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.updateRegistration('token', 'nickname')
+      const data = await result.current.updateRegistration('nickname')
 
       expect(data).toEqual(mockRegistrationResponse)
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to store updated registration data')
       )
+      // With the client ID the device still holds, not the one in the response that was not saved
+      expect(setAccount).toHaveBeenCalledWith(
+        expect.objectContaining({ clientID: existingAccount.clientID, nickname: 'nickname' })
+      )
+    })
+
+    it('should still return data, with the registration saved, when the nickname cannot be saved', async () => {
+      jest.mocked(setAccount).mockRejectedValue(new Error('storage write failure'))
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      const data = await result.current.updateRegistration('nickname')
+
+      expect(data).toEqual(mockRegistrationResponse)
+      expect(mockSaveRegistration).toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to store updated account nickname'))
     })
   })
 
