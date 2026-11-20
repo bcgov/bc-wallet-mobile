@@ -37,7 +37,7 @@ export interface CachedToken {
 }
 
 const CLIENT_ID_PATTERN = /^[A-Za-z0-9._~@-]+$/
-const ENV_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/
+const ENV_NAME_PATTERN = /^[A-Za-z_]\w*$/
 const FORBIDDEN_KEY = '__proto__'
 
 export const isValidClientId = (clientId: string): boolean =>
