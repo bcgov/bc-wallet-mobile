@@ -5,14 +5,25 @@ export const topics: HelpTopic[] = [
   {
     name: 'environment',
     summary: 'Environment variables that can be used with bcsc-test',
-    body: `BCSC_TEST_HOST: the IAS host to send requests to. Takes precedence over the active
-host saved by \`bcsc-test auth login\`. Defaults to ${DEFAULT_HOST} (dev), the only
-deployment of the test API today.
+    body: `BCSC_TEST_HOST: the IAS host to send requests to. Takes precedence over the host
+saved by \`bcsc-test auth login\` when exactly one host is saved. Defaults to
+${DEFAULT_HOST} (dev), the only deployment of the test API today.
 
 BCSC_TEST_TOKEN: a bearer token to use instead of the stored credential. Takes
 precedence over \`bcsc-test auth login\`. The token must carry the scope the command
 needs: test-idv-accounts for account, card, mobile-app and address commands, and
 test-idv-verify for verification commands. Request both scopes to cover everything.
+
+XDG_CONFIG_HOME: where bcsc-test keeps its files, in a bcsc-test directory.
+Defaults to ~/.config. hosts.json lists the saved hosts and where each secret
+lives, never the secret; tokens.json caches access tokens. Both are readable only
+by you.
+
+OP_ACCOUNT: the 1Password account \`op\` reads from, for a --secret-source op
+reference in an account other than the default.
+
+The variable named by --secret-env: for --secret-source env, holds the client
+secret, or CLIENT_ID:CLIENT_SECRET. It is read each time a token is needed.
 `,
   },
   {
@@ -40,6 +51,9 @@ lists the fields it supports under JSON FIELDS.
 
   --json fields      Output JSON with the specified fields
   --jq expression    Filter JSON output using a jq expression (requires --json)
+
+--jq runs the jq binary, which must be on your PATH, and prints strings without
+quotes (jq -r).
 
 EXAMPLES
   # Create an account and print only its CSN
