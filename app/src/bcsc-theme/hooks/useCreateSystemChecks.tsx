@@ -127,9 +127,9 @@ type UseGetSystemChecksReturn = Record<
      */
     sessionKey?: string
     /**
-     * True for a batch with a check that can change what the stack paints before the batch settles: for
-     * MAIN_STACK, the request-status checks that flip the Home card. The stack's loading gate holds for such
-     * a batch only; any other resolves after paint.
+     * For MAIN_STACK, true for a batch with a request-status check, which flips the Home card (Start/Continue
+     * → Verified) once it resolves. MainStack's loading gate holds for such a batch, and on the session's first
+     * Home for a verified one, whose id-token checks can deactivate the card; any other resolves after paint.
      */
     decidesHomeCard?: boolean
   }

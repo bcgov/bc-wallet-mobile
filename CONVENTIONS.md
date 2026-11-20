@@ -56,7 +56,10 @@ Both waits belong to the session, not the stack: `BCSCAccountProvider` and `Syst
 are mounted above the root's route, so a stack that mounts again in the same session (verify → main and
 back) finds the account loaded and its checks settled, and its first frame is the screen itself. Home
 waits on the session's first entry, and only on the account load and on a check batch that can change
-the Home card: an unverified user's request checks (`decidesHomeCard` in `useCreateSystemChecks`). Which
+the Home card: an unverified user's request checks (`decidesHomeCard` in `useCreateSystemChecks`), and,
+when Home opens under the global overlay (a cold start, or the root's cut to a verified user's first
+Home), a verified user's id-token checks, which deactivate a card IAS has expired since the last session.
+That wait holds up no slide, as the waiting screen is already showing. Which
 request check applies is decided once, by `getVerificationRequestCheck` (`state/verification/`), and its
 batch is recorded per request (the request ID, or the device authorization's expiry, never the codes), so
 the first Home after a request made during the session waits once more, for that request's outcome.

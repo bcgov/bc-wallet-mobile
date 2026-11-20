@@ -325,6 +325,17 @@ describe('MainStack', () => {
 
     it('paints the stack at once when the batch cannot change the Home card, and lets it settle after', () => {
       // A fresh skip: the unverified batch is the Terms of Use fetch, which navigates over Home if it fails
+      jest.mocked(useVerificationState).mockReturnValue({ isVerified: false } as any)
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: false })
+
+      const view = render(<MainStack />)
+
+      expect(queryNavigators(view)).toHaveLength(1)
+      expect(queryStackLoadingViews(view)).toHaveLength(0)
+    })
+
+    it('paints Home at once for a verified batch the root slides in, after verifying mid-session', () => {
+      // A fresh verification carries no card event for the id-token checks to act on
       jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: false })
 
       const view = render(<MainStack />)
@@ -416,12 +427,22 @@ describe('MainStack', () => {
     })
 
     it('does not hold the overlay for a batch that cannot change the Home card', () => {
+      jest.mocked(useVerificationState).mockReturnValue({ isVerified: false } as any)
       jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: false })
 
       const view = render(<MainStack />)
 
       expect(queryNavigators(view)).toHaveLength(1)
       expect(queryLoadingScreens(view)).toHaveLength(0)
+    })
+
+    it('holds the overlay for a verified batch, whose id-token checks can deactivate the card', () => {
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: false })
+
+      const view = render(<MainStack />)
+
+      expect(queryNavigators(view)).toHaveLength(1)
+      expect(queryLoadingScreens(view)).toHaveLength(1)
     })
 
     it('keeps extending the overlay once it drops, rather than switching views mid-wait', () => {
@@ -458,6 +479,16 @@ describe('MainStack', () => {
       // The root's options settle on animated once the route has entered
       view.rerender(<MainStack enteredByCut={false} />)
 
+      expect(queryLoadingScreens(view)).toHaveLength(1)
+      expect(queryStackLoadingViews(view)).toHaveLength(0)
+    })
+
+    it('waits for the verified batch, so an expiry IAS reported since the last session never shows an active card', () => {
+      jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false, decidesHomeCard: false })
+
+      const view = render(<MainStack enteredByCut />)
+
+      expect(queryNavigators(view)).toHaveLength(1)
       expect(queryLoadingScreens(view)).toHaveLength(1)
       expect(queryStackLoadingViews(view)).toHaveLength(0)
     })

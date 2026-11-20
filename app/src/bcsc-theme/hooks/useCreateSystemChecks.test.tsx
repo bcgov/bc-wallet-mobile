@@ -610,7 +610,7 @@ describe('useGetSystemChecks', () => {
         expect(renderWithSecure({ verified: false, deviceCode: 'device', userCode: 'user' })).toBe(true)
       })
 
-      it('is false for a verified user, whose batch leaves the card alone', () => {
+      it('is false for a verified user, who has no request left to check', () => {
         expect(renderWithSecure({ verified: true, verificationRequestId: 'req-1' })).toBe(false)
       })
     })
