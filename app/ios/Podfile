@@ -18,7 +18,8 @@ node_require('react-native/scripts/react_native_pods.rb')
 node_require('react-native-permissions/scripts/setup.rb')
 
 # Google ML Kit barcode scanning (react-native-vision-camera-barcode-scanner, also used by @bifold/core) needs iOS 15.5
-platform :ios, '15.5'
+MIN_IOS_VERSION = '15.5'
+platform :ios, MIN_IOS_VERSION
 prepare_react_native_project!
 
 # uncomment wanted permissions (also from RNP docs linked above)
@@ -75,6 +76,15 @@ target 'BCWallet' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+
+    # React Native only raises the pod targets, not their resource bundles, and the iOS 27 SDK rejects targets below 15.0
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |build_config|
+        if build_config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < MIN_IOS_VERSION.to_f
+          build_config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = MIN_IOS_VERSION
+        end
+      end
+    end
 
     # Enable ccache for all pod targets to speed up C/C++/ObjC compilation.
     # The wrapper scripts fall through to plain clang when ccache is not installed,
