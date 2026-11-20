@@ -19,7 +19,7 @@ import {
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { InteractionManager, View } from 'react-native'
 
@@ -31,6 +31,9 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
   const [loading, setLoading] = useState(false)
+  // One unlock at a time: completing the PIN and pressing Continue both start one, and the second can land
+  // before the re-render that disables the button
+  const isVerifyingRef = useRef(false)
   const [currentPIN, setCurrentPIN] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -40,6 +43,10 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
 
   const verifyPINAndContinue = useCallback(
     async (pin: string) => {
+      if (isVerifyingRef.current) {
+        return
+      }
+      isVerifyingRef.current = true
       // Once the unlock succeeds the button keeps spinning: the root slides this screen away
       let unlocked = false
       try {
@@ -84,6 +91,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         logger.error(`PIN verification error: ${error}`)
       } finally {
         if (!unlocked) {
+          isVerifyingRef.current = false
           setLoading(false)
         }
       }
@@ -150,6 +158,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
           testIDKey={TestIds.auth.enterPin.pin}
           onPINChange={handlePINChange}
           onPINComplete={handlePINComplete}
+          editable={!loading}
           errorMessage={errorMessage}
           accessibilityLabel={a11yLabel(t('BCSC.EnterPIN.Title'))}
         />

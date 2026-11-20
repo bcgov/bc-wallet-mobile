@@ -206,6 +206,38 @@ describe('EnterPINScreen', () => {
       await waitFor(() => expect(tree.getByText('BCSC.EnterPIN.VerifyError')).toBeTruthy())
       expect(tree.queryByTestId(testIdWithKey('ButtonLoading'))).toBeNull()
       expect(overlayShown(tree)).toBe(false)
+      expect(tree.getByA11yHint('Enter your 6-digit PIN').props.editable).toBe(true)
+    })
+
+    it('locks the PIN input while the unlock completes', async () => {
+      mockVerifyPinWithLockout.mockResolvedValueOnce({ type: PinVerificationType.Success, walletKey: 'test-key' })
+      mockHandleSuccessfulAuth.mockReturnValueOnce(new Promise<void>(() => {}))
+
+      const tree = submitPIN()
+
+      await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key'))
+      expect(tree.getByA11yHint('Enter your 6-digit PIN').props.editable).toBe(false)
+    })
+
+    it('starts one unlock when the PIN completes and Continue is pressed in the same commit', async () => {
+      mockVerifyPinWithLockout.mockResolvedValueOnce({ type: PinVerificationType.Success, walletKey: 'test-key' })
+      mockHandleSuccessfulAuth.mockReturnValueOnce(new Promise<void>(() => {}))
+
+      const tree = render(
+        <BasicAppContext>
+          <EnterPINScreen navigation={mockNavigation} />
+        </BasicAppContext>
+      )
+      // One act, so one commit: the press lands before the wait has disabled the button
+      act(() => {
+        fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), '123456')
+        fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
+      })
+
+      await waitFor(() => expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key'))
+      expect(mockVerifyPinWithLockout).toHaveBeenCalledTimes(1)
+      expect(tree.queryByText('BCSC.PIN.PINTooShort')).toBeNull()
+      expect(tree.getByTestId(testIdWithKey('ButtonLoading'))).toBeTruthy()
     })
   })
 
