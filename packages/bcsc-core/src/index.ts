@@ -487,6 +487,8 @@ export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<vo
  * The token is written first and the account second. If the account cannot be saved the token is put
  * back, so a failed save leaves the previous registration in place. Rejects with `E_ACCOUNT_NOT_FOUND`
  * when there is no account to register.
+ *
+ * The app calls this through its device registration owner only (`services/device-registration`).
  * @param clientID The client ID the server issued. Never empty.
  * @param issuer The issuer the device is registered with. Never empty.
  * @param registrationAccessToken The token that manages this registration; null leaves the stored token as it is.
@@ -506,6 +508,8 @@ export const setRegistration = (
  * cannot be read.
  *
  * On iOS every token is stored under the client ID, so delete the access and refresh tokens first.
+ *
+ * The app calls this through its device registration owner only (`services/device-registration`).
  */
 export const clearRegistration = (): Promise<void> => {
   return BcscCore.clearRegistration();

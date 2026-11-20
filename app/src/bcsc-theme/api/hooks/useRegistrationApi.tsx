@@ -1,4 +1,5 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { readDeviceRegistration } from '@/bcsc-theme/services/device-registration'
 import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
 import { confirmModulusRegistered } from '@/bcsc-theme/utils/jwk-modulus'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
@@ -10,7 +11,6 @@ import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-atte
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
-  AccountSecurityMethod,
   getAccount,
   getDeviceId,
   getDynamicClientRegistrationBody,
@@ -104,7 +104,7 @@ function confirmRegisteredKey(body: string, data: RegistrationResponseData, logg
 // so its params are adjusted to account for an api client that may not be ready yet
 const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { updateTokens } = useSecureActions()
+  const { saveRegistration } = useSecureActions()
   /**
    * Retrieves platform-specific attestation for device verification.
    *
@@ -162,9 +162,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @see {@link register} for a registration function that includes an account existence check.
    *
    * Generates attestation, fetches notification tokens, creates registration body,
-   * and submits to BCSC. Stores returned client credentials and updates local account storage.
+   * and submits to BCSC. The returned client ID, issuer and registration access token are saved together,
+   * in one step: if the save fails the device keeps the registration it had (or none), never a client ID
+   * without its token.
    *
    * @throws Error if BCSC client is not ready or registration fails
+   * @throws AppError with code `ACCOUNT_NOT_FOUND` if there is no account to hold the registration
    * @throws AppError with code `ERR_120_TOJSON_METHOD_FAILURE` if JSON serialization of registration body fails
    * @throws AppError with code `ERR_120_TOJSONSTRING_METHOD_FAILURE` if device info JWT serialization fails
    * @throws AppError with code `ERR_120_KEYCHAIN_KEY_EXISTS_ERROR` if keychain key already exists
@@ -176,56 +179,52 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    * @throws AppError with code `ERR_121_REGISTRATION_KEY_NOT_CONFIRMED` if the sent signing key's modulus is
    *   definitively absent from the server's echoed jwks (see {@link confirmRegisteredKey})
+   * @throws AppError (e.g. `TOKEN_SAVE_FAILED`, `NATIVE_STORAGE_WRITE_FAILED`) if the registration cannot be saved
    *
-   * @returns Promise resolving to registration response data or void if account exists
+   * @returns Promise resolving to registration response data
    */
-  const createRegistration = useCallback(
-    async (securityMethod: AccountSecurityMethod) => {
-      if (!isClientReady || !apiClient) {
-        throw new Error('BCSC client not ready for registration')
-      }
+  const createRegistration = useCallback(async () => {
+    if (!isClientReady || !apiClient) {
+      throw new Error('BCSC client not ready for registration')
+    }
 
-      const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
-        getAttestation(),
-        getNotificationTokens(logger),
-      ])
+    // The registration is saved on the account record. Checked before the request, so a device with
+    // no account never leaves a registration on the server that it cannot keep.
+    if (!(await getAccount())) {
+      throw AppError.fromErrorDefinition(ErrorRegistry.ACCOUNT_NOT_FOUND)
+    }
 
-      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation).catch((error) =>
-        throwNativeBcscError(error)
-      )
+    const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
+      getAttestation(),
+      getNotificationTokens(logger),
+    ])
 
-      if (!body) {
-        throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
-      }
+    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation).catch((error) =>
+      throwNativeBcscError(error)
+    )
 
-      logger.info('Generated dynamic client registration body')
+    if (!body) {
+      throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
+    }
 
-      const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
-        skipBearerAuth: true,
-      })
+    logger.info('Generated dynamic client registration body')
 
-      logger.info('Completed registration request')
+    const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
+      skipBearerAuth: true,
+    })
 
-      confirmRegisteredKey(body, data, logger)
+    logger.info('Completed registration request')
 
-      await setAccount({
-        clientID: data.client_id,
-        issuer: apiClient.endpoints.issuer,
-        securityMethod,
-      })
+    confirmRegisteredKey(body, data, logger)
 
-      logger.info(`Account set with clientID: ${data.client_id}`)
+    await saveRegistration({
+      clientId: data.client_id,
+      issuer: apiClient.endpoints.issuer,
+      registrationAccessToken: data.registration_access_token,
+    })
 
-      await updateTokens({
-        registrationAccessToken: data.registration_access_token,
-      })
-
-      logger.info('Registration access token saved to storage')
-
-      return data
-    },
-    [isClientReady, apiClient, logger, getAttestation, updateTokens]
-  )
+    return data
+  }, [isClientReady, apiClient, logger, getAttestation, saveRegistration])
 
   /**
    * Registers a new BCSC client if no existing account is found, otherwise skips registration.
@@ -233,29 +232,26 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * FIXME (MD): This might be better in `useRegistrationService` since it includes the account guard.
    * Putting this here to prevent breaking tests.
    *
-   * @param securityMethod - The account security method to use for registration
    * @returns Promise resolving to registration response data or void if account exists
    */
-  const register = useCallback(
-    async (securityMethod: AccountSecurityMethod) => {
-      const account = await getAccount()
-      // If an account already exists, we don't need to register again
-      if (isAccountRegistered(account)) {
-        logger.info('[RegistrationService] Account already exists, skipping registration')
-        return
-      }
+  const register = useCallback(async () => {
+    const account = await getAccount()
+    // An account that has a client ID is registered already
+    if (isAccountRegistered(account)) {
+      logger.info('[RegistrationService] Account already exists, skipping registration')
+      return
+    }
 
-      return createRegistration(securityMethod)
-    },
-    [createRegistration, logger]
-  )
+    return createRegistration()
+  }, [createRegistration, logger])
 
   /**
    * Updates an existing BCSC client registration with new nickname and attestation.
    *
-   * Requires valid registration access token and nickname. Generates fresh attestation
-   * and notification tokens, then submits PUT request to update client registration.
-   * Updates local account storage with new credentials.
+   * Requires a registered device and a nickname. The client ID and its registration access token are
+   * read together from storage, never passed in: a token held in app state can be one the server has
+   * since rotated. Generates fresh attestation and notification tokens, then submits PUT request to
+   * update client registration. Saves the returned registration, then the nickname on the account.
    *
    * @throws Error if client not ready, missing parameters, or update fails
    * @throws AppError with code `ERR_120_TOJSON_METHOD_FAILURE` if JSON serialization of registration body fails
@@ -269,18 +265,19 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if response body cannot be parsed as JSON
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    *
-   * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
    * @returns Promise resolving to updated registration response data
    */
   const updateRegistration = useCallback(
-    async (registrationAccessToken: string | undefined, selectedNickname: string | undefined) => {
+    async (selectedNickname: string | undefined) => {
       return withAccount(async (account) => {
         if (!isClientReady || !apiClient) {
           throw new Error('BCSC client not ready for registration update')
         }
 
-        if (!registrationAccessToken) {
+        const registration = await readDeviceRegistration(account)
+
+        if (!registration) {
           throw new Error('No registration access token found for registration update')
         }
 
@@ -311,7 +308,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           // Add required fields for PUT request: client_id and scope. Scope mirrors
           // useAuthorizationApi.tsx's IAS_SCOPE and key-recovery.ts's reRegisterNewestKey —
           // keep all three in sync if it ever changes.
-          updatePayload.client_id = account.clientID
+          updatePayload.client_id = registration.clientId
           updatePayload.scope = 'openid profile email address offline_access'
         } catch (error) {
           throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
@@ -320,12 +317,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         let updatedRegistrationData: RegistrationResponseData | null = null
         try {
           const { data } = await apiClient.put<RegistrationResponseData>(
-            `${apiClient.endpoints.registration}/${account.clientID}`,
+            `${apiClient.endpoints.registration}/${registration.clientId}`,
             updatePayload,
             {
               skipBearerAuth: true,
               headers: {
-                Authorization: `Bearer ${registrationAccessToken}`,
+                Authorization: `Bearer ${registration.registrationAccessToken}`,
               },
             }
           )
@@ -338,27 +335,47 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         }
 
         logger.info('Completed registration update request')
-        try {
-          await setAccount({
-            clientID: updatedRegistrationData?.client_id,
-            issuer: apiClient.endpoints.issuer,
-            securityMethod: account.securityMethod,
-            nickname: selectedNickname,
-            didPostNicknameToServer: true,
-          })
 
-          await updateTokens({
-            registrationAccessToken: updatedRegistrationData.registration_access_token,
+        // The client ID the account holds once the registration save below has run: the new one, or the
+        // previous one if that save failed
+        let storedClientId = registration.clientId
+
+        // The server has accepted the update, so a failed save is logged and the response still returned.
+        // Each save stands on its own: one failing does not hold back the other.
+        try {
+          // The registration first. If the server rotated the token it has revoked the old one. A
+          // response that leaves out the client ID or the token keeps the one the request was made with.
+          const clientId = updatedRegistrationData.client_id ?? registration.clientId
+          await saveRegistration({
+            clientId,
+            issuer: apiClient.endpoints.issuer,
+            registrationAccessToken:
+              updatedRegistrationData.registration_access_token ?? registration.registrationAccessToken,
           })
+          storedClientId = clientId
         } catch (error) {
           const errMessage = error instanceof Error ? error.message : String(error)
           logger.error(`Failed to store updated registration data: ${errMessage}`)
         }
 
+        try {
+          // setAccount writes the client ID it is given, so it is passed back as stored, never changed here
+          await setAccount({
+            clientID: storedClientId,
+            issuer: apiClient.endpoints.issuer,
+            securityMethod: account.securityMethod,
+            nickname: selectedNickname,
+            didPostNicknameToServer: true,
+          })
+        } catch (error) {
+          const errMessage = error instanceof Error ? error.message : String(error)
+          logger.error(`Failed to store updated account nickname: ${errMessage}`)
+        }
+
         return updatedRegistrationData
       })
     },
-    [isClientReady, apiClient, logger, getAttestation, updateTokens]
+    [isClientReady, apiClient, logger, getAttestation, saveRegistration]
   )
 
   /**
