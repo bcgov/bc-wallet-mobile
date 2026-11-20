@@ -39,7 +39,7 @@ NavigationContainer              contexts/NavigationContainerContext.tsx
 5. **Put a provider at the lowest level that covers its consumers.** One screen or stack: inside it. One phase: inside that phase's `Root.Screen` (`BCSCIdTokenProvider` wraps main only). The session: beside `BCSCAgentProvider`, `BCSCAccountProvider` and `SystemCheckSessionProvider`, with an `enabled` prop that clears its state when it turns false. RootStack never remounts, so a lock or an account removal resets nothing by itself. The whole BCSC app: `app/src/Root.tsx`.
 6. **Register a route wherever it can be raised.** A modal that a system check or an alert raises from any phase (`InternetDisconnected`, `MandatoryUpdate`, `ServiceOutage`) is registered under the same name in each phase stack where that can happen. Code that navigates from outside the phase stacks (the container ref, or the startup system checks run by the root's ViewModel) first checks that a navigator on the focused path registers the route, as `InternetStatusSystemCheck` does. The startup `Loading` route registers none.
 7. **Read navigation state along the focused path.** The root's state holds one route: the phase. To find the screen, walk to the focused leaf (`findFocusedRoute`, `navigationRef.getCurrentRoute()`, `getRouteNamesBelowFocus` in `stack-utils.ts`) instead of reading the top level.
-8. **A wait that ends in a navigation stays on the screen.** Spin the pressed button and lock the inputs (`disabled={loading}`), and check `navigation.isFocused()` before navigating once it finishes. Raise the global overlay (`useLoadingScreen().startLoading`) only for a wait that navigates nowhere, or behind an OS prompt. A phase change under the overlay cuts instead of sliding.
+8. **A wait that ends in a navigation stays on the screen.** Spin the pressed button and lock the inputs (`disabled={loading}`), and check `navigation.isFocused()` before navigating once it finishes, unless that navigation is the only report of what the wait already did (Manual Pairing's confirmation of a login the server has approved). Raise the global overlay (`useLoadingScreen().startLoading`) only for a wait that navigates nowhere, or behind an OS prompt. A phase change under the overlay cuts instead of sliding.
 
 ## Adding a screen
 
@@ -78,6 +78,6 @@ Check the diff against each of these before you finish:
 - [ ] `navigation` is typed against its stack, and `yarn typecheck` passes.
 - [ ] A modal raised from any phase is registered in every phase stack where it can be raised.
 - [ ] State that must survive a phase change is in the store or a session provider, and a new session provider clears itself when `enabled` turns false.
-- [ ] A wait that ends in a navigation spins its button, not the global overlay, and checks `isFocused()` first.
+- [ ] A wait that ends in a navigation spins its button, not the global overlay, and checks `isFocused()` first, unless the navigation reports what the wait already did.
 - [ ] Code that reads navigation state walks the focused path.
 - [ ] New rules have tests, and a phase, transition or waiting change has device steps in the PR.

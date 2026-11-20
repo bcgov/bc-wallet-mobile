@@ -76,7 +76,9 @@ disabled (`disabled={loading}`, so it greys out and ignores further taps), so th
 screen the user is looking at rather than from one the overlay had just hidden.
 Account Setup's device registration, Manual Pairing's code check and the Change PIN forms wait this
 way. Back and the tab bar stay live during an in-card wait, so the completion checks
-`navigation.isFocused()` before it navigates. A wait that ends in a root phase swap stays on the button
+`navigation.isFocused()` before it navigates. The exception is a navigation that is the only report of
+what the wait already did: Manual Pairing's confirmation is shown even to a user who left, as the server
+approved the login when it accepted the code. A wait that ends in a root phase swap stays on the button
 the same way: Enter PIN's unlock, which for an unverified user is local work done within a few frames,
 and Create PIN. The root then slides from the PIN screen, and the button keeps spinning while it slides
 out; a verified user's first Home is cut instead, as it still waits for the account ("Root phase
