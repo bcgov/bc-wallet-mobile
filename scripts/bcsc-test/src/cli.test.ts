@@ -22,7 +22,10 @@ describe('root help', () => {
       assert.equal(code, 0)
       assert.match(stdout, /^USAGE$/m)
       assert.match(stdout, /^CORE COMMANDS$/m)
-      for (const group of groups) assert.match(stdout, new RegExp(`^  ${group.name}:\\s+not implemented$`, 'm'))
+      for (const group of groups) {
+        const shipped = group.commands.some((c) => c.handler)
+        assert.match(stdout, new RegExp(`^  ${group.name}:\\s+${shipped ? group.summary : 'not implemented'}$`, 'm'))
+      }
     })
   }
 
@@ -63,7 +66,10 @@ for (const group of groups) {
         assert.equal(code, 0)
         assert.match(stdout, /^AVAILABLE COMMANDS$/m)
         for (const command of group.commands) {
-          assert.match(stdout, new RegExp(`^  ${command.name}:\\s+not implemented$`, 'm'))
+          assert.match(
+            stdout,
+            new RegExp(`^  ${command.name}:\\s+${command.handler ? command.summary : 'not implemented'}$`, 'm')
+          )
         }
       }
     })
@@ -72,18 +78,21 @@ for (const group of groups) {
       it(`${command.name} --help lists usage, flags and a runnable example`, async () => {
         const { code, stdout } = await invoke([group.name, command.name, '--help'])
         assert.equal(code, 0)
-        assert.match(stdout, /^not implemented$/m)
+        if (command.handler) assert.match(stdout, new RegExp(`^${command.description.split('\n')[0]}$`, 'm'))
+        else assert.match(stdout, /^not implemented$/m)
         assert.match(stdout, new RegExp(`^  bcsc-test ${group.name} ${command.name}`, 'm'))
         assert.match(stdout, new RegExp(`^  \\$ .*bcsc-test ${group.name} ${command.name}`, 'm'))
         for (const flag of command.flags) assert.match(stdout, new RegExp(`--${flag.name}\\b`))
       })
 
-      it(`${command.name} prints "not implemented" and exits 1`, async () => {
-        const { code, stdout, stderr } = await invoke([group.name, command.name, ...sampleArgs(command.args.length)])
-        assert.equal(code, 1)
-        assert.equal(stderr, 'not implemented\n')
-        assert.equal(stdout, '')
-      })
+      if (!command.handler) {
+        it(`${command.name} prints "not implemented" and exits 1`, async () => {
+          const { code, stdout, stderr } = await invoke([group.name, command.name, ...sampleArgs(command.args.length)])
+          assert.equal(code, 1)
+          assert.equal(stderr, 'not implemented\n')
+          assert.equal(stdout, '')
+        })
+      }
     }
   })
 }
