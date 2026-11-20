@@ -22,9 +22,8 @@ interface RunOptions {
 }
 
 const unknownCommand = (io: Io, name: string, parent: string, available: string[]): number => {
-  io.stderr(
-    `unknown command "${name}" for "${parent}"\n\nAvailable commands:\n${available.map((n) => `  ${n}`).join('\n')}\n`
-  )
+  const list = available.map((n) => `  ${n}`).join('\n')
+  io.stderr(`unknown command "${name}" for "${parent}"\n\nAvailable commands:\n${list}\n`)
   return ExitCode.failure
 }
 
