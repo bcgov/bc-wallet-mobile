@@ -991,6 +991,50 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Saves the device registration in one call: the client ID and issuer on the account record, and the
+  /// registration access token in the keychain. See `RegistrationStore` for the write order and rollback.
+  ///
+  /// - Parameters:
+  ///   - clientID: The client ID the server issued. Never empty.
+  ///   - issuer: The issuer the device is registered with. Never empty.
+  ///   - registrationAccessToken: The token that manages the registration; nil leaves the stored token as it is.
+  func setRegistration(
+    _ clientID: String, issuer: String, registrationAccessToken: String?,
+    resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+  ) {
+    do {
+      try RegistrationStore(accountStorage: StorageService(), tokenStorage: KeychainTokenStorageService())
+        .save(clientID: clientID, issuer: issuer, registrationAccessToken: registrationAccessToken)
+      resolve(nil)
+    } catch let rejection as DiagnosticRejection {
+      rejectWithDiagnostics(reject, rejection)
+    } catch {
+      // RegistrationStore only throws DiagnosticRejection; kept so a future change still rejects.
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_SAVE_ACCOUNT_FAILED", message: "Failed to save the registration.",
+        site: "setRegistration.save_account", error: error
+      ))
+    }
+  }
+
+  /// Removes the client ID and the registration access token. See `RegistrationStore`.
+  func clearRegistration(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+  ) {
+    do {
+      try RegistrationStore(accountStorage: StorageService(), tokenStorage: KeychainTokenStorageService()).clear()
+      resolve(nil)
+    } catch let rejection as DiagnosticRejection {
+      rejectWithDiagnostics(reject, rejection)
+    } catch {
+      // RegistrationStore only throws DiagnosticRejection; kept so a future change still rejects.
+      rejectWithDiagnostics(reject, DiagnosticRejection(
+        code: "E_SAVE_ACCOUNT_FAILED", message: "Failed to clear the registration.",
+        site: "clearRegistration.save_account", error: error
+      ))
+    }
+  }
+
   func getAccount(
     _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
   ) {

@@ -481,6 +481,36 @@ export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<vo
 };
 
 /**
+ * Saves the device registration: the client ID and issuer on the account record, and the registration
+ * access token in secure storage, in one native call.
+ *
+ * The token is written first and the account second. If the account cannot be saved the token is put
+ * back, so a failed save leaves the previous registration in place. Rejects with `E_ACCOUNT_NOT_FOUND`
+ * when there is no account to register.
+ * @param clientID The client ID the server issued. Never empty.
+ * @param issuer The issuer the device is registered with. Never empty.
+ * @param registrationAccessToken The token that manages this registration; null leaves the stored token as it is.
+ */
+export const setRegistration = (
+  clientID: string,
+  issuer: string,
+  registrationAccessToken: string | null
+): Promise<void> => {
+  return BcscCore.setRegistration(clientID, issuer, registrationAccessToken);
+};
+
+/**
+ * Removes the device registration: the account keeps its issuer, security method and nickname but has no
+ * client ID, and the registration access token is deleted. Clearing a registration that is already
+ * absent succeeds.
+ *
+ * On iOS every token is stored under the client ID, so delete the access and refresh tokens first.
+ */
+export const clearRegistration = (): Promise<void> => {
+  return BcscCore.clearRegistration();
+};
+
+/**
  * Retrieves the current account information, including its security method.
  * @returns A promise that resolves to an Account object if an account exists, otherwise null.
  */
