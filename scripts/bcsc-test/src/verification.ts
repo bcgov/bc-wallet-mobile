@@ -5,7 +5,7 @@ import type { HandlerContext } from './spec.ts'
 
 const MAX_TEXT_LENGTH = 500
 const CHANNELS = ['counter', 'live-video', 'send-video']
-const UNIMPLEMENTED_CHANNELS = ['live-video', 'send-video']
+const UNIMPLEMENTED_CHANNELS = new Set(['live-video', 'send-video'])
 
 const DECISION_ERRORS = {
   400: 'IAS rejected the decision. It accepts one only for a usercode whose registration is still waiting for a decision (registration Requested, credential Pending), has not expired, and has a CSN that resolves to an identity. An unknown or already-decided usercode gets the same answer.',
@@ -14,7 +14,7 @@ const DECISION_ERRORS = {
 
 const checkChannel = (flag: string | boolean | undefined): void => {
   const channel = typeof flag === 'string' ? flag : 'counter'
-  if (UNIMPLEMENTED_CHANNELS.includes(channel)) {
+  if (UNIMPLEMENTED_CHANNELS.has(channel)) {
     throw new CliError(
       `The ${channel} channel is not implemented on the IAS test API; only counter is. Nothing was sent. Drop --channel or use --channel counter.`
     )
