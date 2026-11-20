@@ -1,8 +1,6 @@
 package com.bcsccore
 
 // Android imports
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.media.AudioDeviceInfo
@@ -12,7 +10,6 @@ import android.provider.Settings
 import android.security.keystore.KeyProperties
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
-import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 
 // React Native imports
@@ -160,10 +157,6 @@ class BcscCoreModule internal constructor(
         // JWS compact serialization: header.payload.signature
         private const val JWS_COMPACT_SEGMENT_COUNT = 3
 
-        // Notification channel constants
-        private const val NOTIFICATION_CHANNEL_ID = "bcsc_foreground_notifications"
-        private const val NOTIFICATION_CHANNEL_NAME = "BCSC Notifications"
-
         // Auto-generated device-security PIN constants
         private const val AUTO_GENERATED_PIN_LENGTH = 6
 
@@ -172,10 +165,6 @@ class BcscCoreModule internal constructor(
     }
 
     override fun getName(): String = NAME
-
-    // Track if notification channel has been created (only needs to happen once)
-    @Volatile
-    private var notificationChannelCreated = false
 
     // Initialize the BC Services Card KeyPair functionality
     private val keyPairSource: BcscKeyPairSource by lazy {
@@ -3791,13 +3780,6 @@ class BcscCoreModule internal constructor(
                 )
             }
 
-            if (globalPrefs.contains("max_devices_banner_last_time_displayed")) {
-                result.putDouble(
-                    "maxDevicesBannerLastTimeDisplayed",
-                    globalPrefs.getLong("max_devices_banner_last_time_displayed", 0L).toDouble(),
-                )
-            }
-
             Log.d(NAME, "getAndroidGlobalFlags: Successfully read global flags")
             promise.resolve(result)
         } catch (e: Exception) {
@@ -3829,13 +3811,6 @@ class BcscCoreModule internal constructor(
                 editor.putBoolean(
                     "device_auth_never_show_again",
                     flags.getBoolean("notShowDeviceAuthenticationPrepAgain"),
-                )
-            }
-
-            if (flags.hasKey("maxDevicesBannerLastTimeDisplayed")) {
-                editor.putLong(
-                    "max_devices_banner_last_time_displayed",
-                    flags.getDouble("maxDevicesBannerLastTimeDisplayed").toLong(),
                 )
             }
 
@@ -5018,68 +4993,6 @@ class BcscCoreModule internal constructor(
             promise.resolve(success)
         } catch (e: Exception) {
             promise.reject("E_DELETE_SAVED_SERVICES_ERROR", "Error deleting services: ${e.message}", e)
-        }
-    }
-
-    /**
-     * Displays a local notification on the device.
-     * @param title The notification title
-     * @param message The notification body/message
-     */
-    @ReactMethod
-    override fun showLocalNotification(
-        title: String,
-        message: String,
-        promise: Promise,
-    ) {
-        Log.d(NAME, "showLocalNotification - title: $title, message: $message")
-
-        try {
-            val notificationManager = reactApplicationContext.getSystemService(NotificationManager::class.java)
-
-            // Create notification channel once on first use (Android O+)
-            if (!notificationChannelCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel =
-                    NotificationChannel(
-                        NOTIFICATION_CHANNEL_ID,
-                        NOTIFICATION_CHANNEL_NAME,
-                        NotificationManager.IMPORTANCE_HIGH,
-                    ).apply {
-                        description = "Notifications displayed while app is in foreground"
-                    }
-                notificationManager.createNotificationChannel(channel)
-                notificationChannelCreated = true
-                Log.d(NAME, "showLocalNotification - Notification channel created")
-            }
-
-            // Build and display the notification
-            // Look up icon from app resources (not library resources)
-            val iconResId =
-                reactApplicationContext.resources
-                    .getIdentifier(
-                        "ic_notification",
-                        "drawable",
-                        reactApplicationContext.packageName,
-                    ).takeIf { it != 0 } ?: android.R.drawable.ic_dialog_info
-
-            val notification =
-                NotificationCompat
-                    .Builder(reactApplicationContext, NOTIFICATION_CHANNEL_ID)
-                    .setSmallIcon(iconResId)
-                    .setContentTitle(title)
-                    .setContentText(message)
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setAutoCancel(true)
-                    .build()
-
-            val notificationId = System.currentTimeMillis().toInt()
-            notificationManager.notify(notificationId, notification)
-
-            Log.d(NAME, "showLocalNotification - Notification displayed with ID: $notificationId")
-            promise.resolve(null)
-        } catch (e: Exception) {
-            Log.e(NAME, "showLocalNotification - Error displaying notification: ${e.message}", e)
-            promise.reject("E_NOTIFICATION_ERROR", "Failed to display notification: ${e.message}", e)
         }
     }
 

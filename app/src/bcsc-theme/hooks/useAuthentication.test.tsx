@@ -45,12 +45,14 @@ const openLockout = { type: PinLockoutType.Open } as const
 const lockedLockout = { type: PinLockoutType.Locked, until: new Date('2026-11-16T12:01:00.000Z') } as const
 
 describe('useAuthentication', () => {
+  let mockStartLoading: jest.Mock
+
   beforeEach(() => {
     jest.clearAllMocks()
 
-    const mockStopLoading = jest.fn()
+    mockStartLoading = jest.fn().mockReturnValue(jest.fn())
     jest.mocked(BCSCLoadingContext.useLoadingScreen).mockReturnValue({
-      startLoading: jest.fn().mockReturnValue(mockStopLoading),
+      startLoading: mockStartLoading,
     } as any)
 
     jest.mocked(useSecureActionsModule.default).mockReturnValue({
@@ -396,7 +398,7 @@ describe('useAuthentication', () => {
       expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key')
     })
 
-    it('navigates to DeviceAuthAppReset when device auth is not available', async () => {
+    it('navigates to DeviceAuthAppReset when device auth is not available, without raising the overlay', async () => {
       jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(false)
 
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
@@ -407,6 +409,28 @@ describe('useAuthentication', () => {
       })
 
       expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.DeviceAuthAppReset)
+      // The push slides from this screen; an overlay released as it started would hide its first frame
+      expect(mockStartLoading).not.toHaveBeenCalled()
+    })
+
+    it('raises the overlay once the availability check passes, before the OS prompt', async () => {
+      jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
+      jest.mocked(unlockWithDeviceSecurity).mockResolvedValue({ success: true, walletKey: 'test-key' })
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.performDeviceAuth()
+      })
+
+      expect(mockStartLoading).toHaveBeenCalled()
+      expect(mockStartLoading.mock.invocationCallOrder[0]).toBeGreaterThan(
+        jest.mocked(canPerformDeviceAuthentication).mock.invocationCallOrder[0]
+      )
+      expect(mockStartLoading.mock.invocationCallOrder[0]).toBeLessThan(
+        jest.mocked(unlockWithDeviceSecurity).mock.invocationCallOrder[0]
+      )
     })
 
     it('shows an error modal, not the reset flow, when the prompt reports device auth unavailable', async () => {
@@ -723,9 +747,8 @@ describe('useAuthentication', () => {
       expect(mockStopLoading).toHaveBeenCalledTimes(2)
     })
 
-    it('stops loading even when an error occurs', async () => {
-      const mockStopLoading = jest.fn()
-      const mockStartLoading = jest.fn().mockReturnValue(mockStopLoading)
+    it('never raises the overlay when the availability check throws', async () => {
+      const mockStartLoading = jest.fn()
       jest.mocked(BCSCLoadingContext.useLoadingScreen).mockReturnValue({
         startLoading: mockStartLoading,
       } as any)
@@ -738,13 +761,12 @@ describe('useAuthentication', () => {
         await result.current.performDeviceAuth()
       })
 
-      expect(mockStartLoading).toHaveBeenCalled()
-      expect(mockStopLoading).toHaveBeenCalled()
+      // The check runs before the overlay, so there is nothing to release
+      expect(mockStartLoading).not.toHaveBeenCalled()
     })
 
-    it('stops loading when device auth is not available', async () => {
-      const mockStopLoading = jest.fn()
-      const mockStartLoading = jest.fn().mockReturnValue(mockStopLoading)
+    it('never raises the overlay when device auth is not available', async () => {
+      const mockStartLoading = jest.fn()
       jest.mocked(BCSCLoadingContext.useLoadingScreen).mockReturnValue({
         startLoading: mockStartLoading,
       } as any)
@@ -758,8 +780,9 @@ describe('useAuthentication', () => {
         await result.current.unlockApp()
       })
 
-      expect(mockStartLoading).toHaveBeenCalled()
-      expect(mockStopLoading).toHaveBeenCalled()
+      // The push to DeviceAuthAppReset slides from the unlock screen, which an overlay would have hidden
+      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.DeviceAuthAppReset)
+      expect(mockStartLoading).not.toHaveBeenCalled()
     })
 
     it('stops loading when device authentication is cancelled', async () => {

@@ -14,7 +14,6 @@ import Config from 'react-native-config'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationPrompt, VerificationStatusResponseData } from './bcsc-theme/api/hooks/useEvidenceApi'
-import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import {
@@ -109,7 +108,6 @@ export interface BCSCState {
   photoPath?: string
   videoPath?: string
   videoThumbnailPath?: string
-  bannerMessages: BCSCBannerMessage[]
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
   hasDismissedThirdPartyKeyboardAlert?: boolean
@@ -306,8 +304,6 @@ enum BCSCDispatchAction {
   REMOVE_SAVED_SERVICE = 'bcsc/removeSavedService',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   DISMISS_BANNER = 'bcsc/dismissBanner',
-  ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
-  REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
   UPDATE_CREDENTIAL_METADATA = 'bcsc/updateCredentialMetadata',
@@ -411,15 +407,12 @@ export const initialBCSCState: BCSCState = {
   appBuildNumber: '',
   hasAccount: false,
   selectedNickname: undefined,
-  bannerMessages: [],
   analyticsOptIn: false,
 }
 
 // The fields migrateBCSCState may add, kept in its return type even when T is inferred from a narrow
 // literal that never mentions them (e.g. `{ reportUUID: 'x' }` in tests)
 type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'>
-
-const currentBannerIds = new Set<string>(Object.values(BCSCBanner))
 
 /**
  * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
@@ -431,14 +424,13 @@ const currentBannerIds = new Set<string>(Object.values(BCSCBanner))
  * - Onboarded installs that predate `verificationStarted`: launches resumed whoever had stored
  *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
  *   count as started.
- * - Stored banners whose id is not a current `BCSCBanner` (e.g. 4.0.x `CardExpiringSoonBanner`) are dropped,
- *   including ids from a newer build; a dropped banner returns only when its producer adds it again.
+ *  - `bannerMessages` is removed from the persisted blob (previously used to store a list of banners)
  */
-export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
+export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string; bannerMessages?: unknown[] }>(
   persisted: T
-): { bcsc: Omit<T, 'reportUUID'> & MigratedBCSCFields; migrated: boolean } => {
-  const { reportUUID, ...rest } = persisted
-  let bcsc: Omit<T, 'reportUUID'> & MigratedBCSCFields = rest
+): { bcsc: Omit<T, 'reportUUID' | 'bannerMessages'> & MigratedBCSCFields; migrated: boolean } => {
+  const { reportUUID, bannerMessages, ...rest } = persisted
+  let bcsc: Omit<T, 'reportUUID' | 'bannerMessages'> & MigratedBCSCFields = rest
   let migrated = false
 
   if (reportUUID !== undefined) {
@@ -456,12 +448,9 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
     migrated = true
   }
 
-  if (Array.isArray(bcsc.bannerMessages)) {
-    const bannerMessages = bcsc.bannerMessages.filter((banner) => currentBannerIds.has(banner.id))
-    if (bannerMessages.length !== bcsc.bannerMessages.length) {
-      bcsc = { ...bcsc, bannerMessages }
-      migrated = true
-    }
+  if (bannerMessages !== undefined) {
+    // The persisted blob had a `bannerMessages` array, which is no longer used
+    migrated = true
   }
 
   return { bcsc, migrated }
@@ -902,33 +891,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       }
 
       const bcsc = { ...state.bcsc, dismissedBanners }
-      const newState = { ...state, bcsc }
-
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.ADD_BANNER_MESSAGE: {
-      const bannerMessage: BCSCBannerMessage = (action?.payload || []).pop()
-
-      // Remove any existing banner with the same id before adding the new one
-      // This allows us to update existing banners and prevents duplicates
-      const bannerMessages = state.bcsc.bannerMessages.filter((banner) => banner.id !== bannerMessage.id)
-      bannerMessages.push(bannerMessage)
-
-      const bcsc = { ...state.bcsc, bannerMessages }
-      const newState = { ...state, bcsc }
-
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCSCDispatchAction.REMOVE_BANNER_MESSAGE: {
-      const bannerId = (action?.payload || []).pop()
-
-      // Filter out the banner with the specified id
-      const bannerMessages = state.bcsc.bannerMessages.filter((banner) => banner.id !== bannerId)
-
-      const bcsc = { ...state.bcsc, bannerMessages }
       const newState = { ...state, bcsc }
 
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)

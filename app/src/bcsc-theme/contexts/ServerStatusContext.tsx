@@ -1,11 +1,8 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import useConfigApi, { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { AppState } from 'react-native'
 
 type ServerStatusState =
@@ -67,11 +64,9 @@ const toResult = (serverStatus: ServerStatusState): ServerStatusRefreshResult =>
   return { isAvailable: true, serverStatus: null }
 }
 
-// Fetches IAS server status and keeps outage banner in sync.
+// Fetches IAS server status
 // `isAvailable` is used in other screens to gate access (verification flow, service login)
 export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
-  const { t } = useTranslation()
-  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
@@ -115,6 +110,13 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
       setIsChecking(false)
       setHasChecked(true)
       inFlightRef.current = null
+
+      // A failed check during an outage keeps the last known outage
+      const previous = serverStatusStateRef.current
+      if (newState.kind === 'error' && previous.kind === 'loaded' && previous.data.status !== 'ok') {
+        newState = previous
+      }
+
       setServerStatusState(newState)
       return toResult(newState)
     })()
@@ -178,58 +180,6 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
     client.setClockCheck(fetchStatus)
     return () => client.setClockCheck(undefined)
   }, [isClientReady, client, fetchStatus])
-
-  // Keep the outage and banner in sync with the latest known status
-  // TODO (MD): These banner messages and all banner messages should be derived from `facts` in the store (on the fly) instead of being dispatched.
-  useEffect(() => {
-    if (serverStatusState.kind === 'unknown') {
-      return
-    }
-
-    if (serverStatusState.kind === 'error') {
-      return
-    }
-
-    const serverStatus = serverStatusState.data
-
-    if (serverStatus.status !== 'ok') {
-      dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
-      dispatch({
-        type: BCDispatchAction.ADD_BANNER_MESSAGE,
-        payload: [
-          {
-            id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-            title: undefined,
-            description: serverStatus.statusMessage ?? t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'),
-            type: 'info',
-            dismissible: false,
-            metadata: { contactLink: serverStatus.contactLink },
-          },
-        ],
-      })
-      return
-    }
-
-    dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
-
-    if (serverStatus.statusMessage) {
-      // A fixed one-line summary: the message itself can run long enough to fill the screen, so it
-      // is shown on the ServiceNotice screen the banner opens instead.
-      dispatch({
-        type: BCDispatchAction.ADD_BANNER_MESSAGE,
-        payload: [
-          {
-            id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-            title: t('BCSC.SystemChecks.ServerStatus.NoticeBannerTitle'),
-            type: 'warning',
-            dismissible: false,
-          },
-        ],
-      })
-    } else {
-      dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
-    }
-  }, [serverStatusState, dispatch, t])
 
   const value = useMemo<ServerStatusContextType>(
     () => ({ ...toResult(serverStatusState), isChecking, hasChecked, refresh }),

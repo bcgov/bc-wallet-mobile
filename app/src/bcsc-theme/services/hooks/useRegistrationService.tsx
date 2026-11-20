@@ -7,6 +7,8 @@ import { ensureAppError } from '@/errors/errorHandler'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts, useAlerts } from '@/hooks/useAlerts'
+import { BCState } from '@/store'
+import { useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
 import { getAccount } from 'react-native-bcsc-core'
@@ -47,8 +49,14 @@ export const useRegistrationService = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const registrationApi = useRegistrationApi(client, isClientReady)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const [store] = useStore<BCState>()
   const { clearRegistration } = useSecureActions()
   const alerts = useAlerts(navigation)
+  /**
+   * Whether app state holds the registration access token, so `ensureRegistered` has nothing to wait for.
+   * A hint for screens only: `ensureRegistered` itself asks the stored account.
+   */
+  const isRegistered = Boolean(store.bcscSecure.registrationAccessToken)
 
   /** @returns whether a mapped registration alert was shown */
   const emitRegistrationAlert = useCallback(
@@ -169,7 +177,8 @@ export const useRegistrationService = () => {
       register,
       ensureRegistered,
       cycleRegistration,
+      isRegistered,
     }),
-    [ensureRegistered, register, registrationApi, updateRegistration, cycleRegistration]
+    [ensureRegistered, register, registrationApi, updateRegistration, cycleRegistration, isRegistered]
   )
 }

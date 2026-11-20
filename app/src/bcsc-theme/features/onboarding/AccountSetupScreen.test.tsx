@@ -5,7 +5,7 @@ import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useStore } from '@bifold/core'
 import { useNavigation as getMockNavigation, useFocusEffect } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native'
 import React, { useEffect } from 'react'
 import { Text } from 'react-native'
 import { getAccount, getAuthorizationRequest, setAuthorizationRequest } from 'react-native-bcsc-core'
@@ -140,26 +140,39 @@ describe('AccountSetup', () => {
   })
 
   it('dispatches AddAccount and navigates to IdentitySelection when "Add Account" is pressed', async () => {
-    const { getByTestId } = renderScreen()
+    const { getByTestId } = renderScreen({
+      bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
+    })
+    const overlay = () => getByTestId(testIdWithKey(TestIds.common.loadingOverlay), hidden)
 
     fireEvent.press(getByTestId(testIdWithKey('AddAccount')))
+
+    // A registered device has nothing to wait for, so the overlay never goes up to flash over the slide
+    expect(overlay().props.accessible).toBe(false)
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.IdentitySelection)
     })
 
+    expect(overlay().props.accessible).toBe(false)
     expect(getByTestId('SetupTypeProbe').props.children).toBe(AccountSetupType.AddAccount)
   })
 
   it('dispatches TransferAccount and navigates to TransferAccountInstructions when "Transfer Account" is pressed', async () => {
-    const { getByTestId } = renderScreen()
+    const { getByTestId } = renderScreen({
+      bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
+    })
+    const overlay = () => getByTestId(testIdWithKey(TestIds.common.loadingOverlay), hidden)
 
     fireEvent.press(getByTestId(testIdWithKey('TransferAccount')))
+
+    expect(overlay().props.accessible).toBe(false)
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountInstructions)
     })
 
+    expect(overlay().props.accessible).toBe(false)
     expect(getByTestId('SetupTypeProbe').props.children).toBe(AccountSetupType.TransferAccount)
   })
 
@@ -205,7 +218,7 @@ describe('AccountSetup', () => {
       destination: BCSCScreens.TransferAccountInstructions,
     },
   ])('registration before saving the setup choice ($name)', ({ buttonId, setupType, destination }) => {
-    it('keeps the choice unsaved and the loading overlay up while registration is pending', async () => {
+    it('waits on the pressed button, overlay down, with nothing saved while registering', async () => {
       let settle: (account: any) => void = () => {}
       jest.mocked(getAccount).mockReturnValueOnce(
         new Promise((resolve) => {
@@ -217,9 +230,14 @@ describe('AccountSetup', () => {
       fireEvent.press(getByTestId(testIdWithKey(buttonId)))
 
       await waitFor(() => {
-        expect(getByTestId(testIdWithKey(TestIds.common.loadingOverlay), hidden).props.accessible).toBe(true)
+        expect(within(getByTestId(testIdWithKey(buttonId))).getByTestId(testIdWithKey('ButtonLoading'))).toBeTruthy()
       })
-      expect(getByTestId('SetupTypeProbe', hidden).props.children).toBe('undefined')
+      // The wait stays inside the card, so the slide to the next step starts from this screen rather
+      // than from behind the overlay; both choices are locked until it ends
+      expect(getByTestId(testIdWithKey(TestIds.common.loadingOverlay), hidden).props.accessible).toBe(false)
+      expect(getByTestId(testIdWithKey('AddAccount'))).toBeDisabled()
+      expect(getByTestId(testIdWithKey('TransferAccount'))).toBeDisabled()
+      expect(getByTestId('SetupTypeProbe').props.children).toBe('undefined')
       expect(mockNavigate).not.toHaveBeenCalled()
 
       await act(async () => {
@@ -227,19 +245,20 @@ describe('AccountSetup', () => {
       })
     })
 
-    it('stops loading and saves nothing when registration fails, then succeeds on retry', async () => {
+    it('unlocks the buttons and saves nothing when registration fails, then succeeds on retry', async () => {
       jest.mocked(getAccount).mockRejectedValueOnce(new Error('registration boom'))
-      const { getByTestId } = renderScreen()
+      const { getByTestId, queryByTestId } = renderScreen()
       const button = () => getByTestId(testIdWithKey(buttonId))
 
       fireEvent.press(button())
 
       await waitFor(() => {
-        expect(getByTestId(testIdWithKey(TestIds.common.loadingOverlay), hidden).props.accessible).toBe(false)
+        expect(getAccount).toHaveBeenCalled()
+        expect(button()).not.toBeDisabled()
       })
-      expect(getByTestId('SetupTypeProbe', hidden).props.children).toBe('undefined')
+      expect(queryByTestId(testIdWithKey('ButtonLoading'))).toBeNull()
+      expect(getByTestId('SetupTypeProbe').props.children).toBe('undefined')
       expect(mockNavigate).not.toHaveBeenCalled()
-      expect(button().props.accessibilityState?.disabled ?? false).toBe(false)
 
       // The retry reads the account again; this time the read succeeds
       fireEvent.press(button())
@@ -248,6 +267,25 @@ describe('AccountSetup', () => {
         expect(mockNavigate).toHaveBeenCalledWith(destination)
       })
       expect(getByTestId('SetupTypeProbe', hidden).props.children).toBe(setupType)
+    })
+
+    it('saves nothing and stays put when the screen lost focus during registration', async () => {
+      // Back stays live while the button waits, so a user can leave before registration lands
+      const isFocused = jest
+        .spyOn(mockNavigation as unknown as { isFocused: () => boolean }, 'isFocused')
+        .mockReturnValue(false)
+      const { getByTestId } = renderScreen()
+      const button = () => getByTestId(testIdWithKey(buttonId))
+
+      fireEvent.press(button())
+
+      await waitFor(() => {
+        expect(getAccount).toHaveBeenCalled()
+        expect(button()).not.toBeDisabled()
+      })
+      expect(getByTestId('SetupTypeProbe').props.children).toBe('undefined')
+      expect(mockNavigate).not.toHaveBeenCalled()
+      isFocused.mockRestore()
     })
   })
 })

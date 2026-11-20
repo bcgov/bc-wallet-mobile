@@ -1,6 +1,4 @@
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -210,36 +208,29 @@ describe('ServerStatusProvider', () => {
     expect(addEventListenerSpy).not.toHaveBeenCalled()
   })
 
-  it('dispatches the outage banner when the server is down', async () => {
-    mockGetServerStatus.mockResolvedValue({ status: 'unavailable', statusMessage: 'Down' })
-
-    const { result } = renderProvider()
-    await waitFor(() => expect(result.current.hasChecked).toBe(true))
-
-    expect(mockDispatch).toHaveBeenCalledWith(
-      expect.objectContaining({
-        payload: [expect.objectContaining({ id: BCSCBanner.IAS_SERVER_UNAVAILABLE })],
-      })
-    )
-  })
-
-  it('summarizes a service notice in a one-line warning banner, leaving the message to the notice screen', async () => {
+  it('exposes the notice message without dispatching any banner, since useBanners derives them', async () => {
     mockGetServerStatus.mockResolvedValue({ status: 'ok', statusMessage: 'Scheduled maintenance on Saturday' })
 
     const { result } = renderProvider()
     await waitFor(() => expect(result.current.hasChecked).toBe(true))
 
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: BCDispatchAction.ADD_BANNER_MESSAGE,
-      payload: [
-        {
-          id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-          title: 'BCSC.SystemChecks.ServerStatus.NoticeBannerTitle',
-          type: 'warning',
-          dismissible: false,
-        },
-      ],
-    })
+    expect(result.current.isAvailable).toBe(true)
     expect(result.current.statusMessage).toBe('Scheduled maintenance on Saturday')
+    expect(mockDispatch).not.toHaveBeenCalled()
+  })
+
+  it('exposes the outage contact link without dispatching any banner', async () => {
+    mockGetServerStatus.mockResolvedValue({
+      status: 'unavailable',
+      statusMessage: 'Down',
+      contactLink: 'https://example.com/contact-us.html',
+    })
+
+    const { result } = renderProvider()
+    await waitFor(() => expect(result.current.hasChecked).toBe(true))
+
+    expect(result.current.isAvailable).toBe(false)
+    expect(result.current.contactLink).toBe('https://example.com/contact-us.html')
+    expect(mockDispatch).not.toHaveBeenCalled()
   })
 })

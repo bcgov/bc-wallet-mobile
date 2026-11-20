@@ -35,6 +35,13 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
   )
   const walletService = useWalletService()
 
+  // The PIN screen can finish a switch after the user came back here, so the marker follows secure state
+  useEffect(() => {
+    if (store.bcscSecure.securityMethod) {
+      setCurrentMethod(store.bcscSecure.securityMethod)
+    }
+  }, [store.bcscSecure.securityMethod])
+
   useEffect(() => {
     const loadCurrentMethod = async () => {
       try {

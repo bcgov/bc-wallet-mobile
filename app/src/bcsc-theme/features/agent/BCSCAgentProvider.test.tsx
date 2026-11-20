@@ -3,7 +3,7 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import { Text } from 'react-native'
 
-import BCSCAgentProvider, { useBCSCAgent } from './BCSCAgentProvider'
+import BCSCAgentProvider, { useBCSCAgent, useBCSCAgentSafe } from './BCSCAgentProvider'
 import useAgentSetupViewModel from './useAgentSetupViewModel'
 
 jest.mock('./useAgentSetupViewModel', () => ({
@@ -17,6 +17,8 @@ const Probe: React.FC = () => {
   const { agent, loading, error } = useBCSCAgent()
   return <Text>{`loading=${loading} hasAgent=${agent !== null} hasError=${error !== null}`}</Text>
 }
+
+const SafeProbe: React.FC = () => <Text>{`present=${useBCSCAgentSafe() !== null}`}</Text>
 
 describe('BCSCAgentProvider', () => {
   beforeEach(() => {
@@ -110,5 +112,26 @@ describe('BCSCAgentProvider', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     expect(() => render(<Probe />)).toThrow('useBCSCAgent must be used within a BCSCAgentProvider')
     consoleSpy.mockRestore()
+  })
+
+  it('exposes no context while disabled, as if the provider were absent', () => {
+    mockViewModel.mockReturnValue({
+      agent: null,
+      status: 'idle',
+      error: null,
+      retry: jest.fn(),
+      resetWallet: jest.fn(),
+      teardownAgent: jest.fn(),
+      waitForAgent: jest.fn().mockResolvedValue(null),
+    })
+
+    const { getByText } = render(
+      <BCSCAgentProvider enabled={false}>
+        <SafeProbe />
+      </BCSCAgentProvider>
+    )
+
+    expect(getByText('present=false')).toBeTruthy()
+    expect(mockViewModel).toHaveBeenCalledWith({ enabled: false })
   })
 })

@@ -730,6 +730,36 @@ describe('useRegistrationService', () => {
     })
   })
 
+  describe('isRegistered', () => {
+    it('is true once the store holds a registration access token', () => {
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue({} as any)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+      const wrapper = ({ children }: React.PropsWithChildren) => (
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
+          }}
+        >
+          {children}
+        </BasicAppContext>
+      )
+
+      const { result } = renderHook(() => useRegistrationService(), { wrapper })
+
+      expect(result.current.isRegistered).toBe(true)
+    })
+
+    it('is false without a registration access token', () => {
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue({} as any)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+
+      expect(result.current.isRegistered).toBe(false)
+    })
+  })
+
   describe('ensureRegistered', () => {
     it('leaves it to the stored account to say whether the device is registered', async () => {
       // register() skips an account that has a client ID, and registers one that has none
