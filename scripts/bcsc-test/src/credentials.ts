@@ -5,6 +5,8 @@ import { CliError, ExitCode } from './exit-codes.ts'
 const KEYCHAIN_NOT_FOUND = 44
 // `security -i` reads one command per line; longer secrets were seen to fail, so refuse them up front.
 const MAX_KEYCHAIN_SECRET_BYTES = 1024
+// An absolute path, so a PATH entry cannot stand in for the tool that holds the secret.
+const SECURITY = '/usr/bin/security'
 const MAX_DIAGNOSTIC_LENGTH = 200
 
 const keychainService = (host: string): string => `bcsc-test:${host}`
@@ -28,7 +30,7 @@ export const splitCredential = (value: string): { clientId?: string; secret: str
 
 const readKeychain = (host: string, clientId: string, env: NodeJS.ProcessEnv): string => {
   requireKeychain()
-  const result = spawnSync('security', ['find-generic-password', '-s', keychainService(host), '-a', clientId, '-w'], {
+  const result = spawnSync(SECURITY, ['find-generic-password', '-s', keychainService(host), '-a', clientId, '-w'], {
     env,
     encoding: 'utf8',
   })
@@ -57,7 +59,7 @@ export const storeKeychainSecret = (host: string, clientId: string, secret: stri
   checkStorable(secret)
   const encoded = Buffer.from(secret).toString('base64')
   const command = `add-generic-password -U -s "${keychainService(host)}" -a "${clientId}" -w "${encoded}"\n`
-  const result = spawnSync('security', ['-i'], { input: command, env, encoding: 'utf8' })
+  const result = spawnSync(SECURITY, ['-i'], { input: command, env, encoding: 'utf8' })
   const failed = (reason: string) =>
     secretError(`Could not save the secret for ${clientId} on ${host} to the keychain (${reason}). Nothing was saved.`)
   if (result.error || result.status !== 0) throw failed(result.error?.message ?? `security exited ${result.status}`)
@@ -72,7 +74,7 @@ export const storeKeychainSecret = (host: string, clientId: string, secret: stri
 
 export const deleteKeychainSecret = (host: string, clientId: string, env: NodeJS.ProcessEnv): void => {
   if (process.platform !== 'darwin') return
-  const result = spawnSync('security', ['delete-generic-password', '-s', keychainService(host), '-a', clientId], {
+  const result = spawnSync(SECURITY, ['delete-generic-password', '-s', keychainService(host), '-a', clientId], {
     env,
     encoding: 'utf8',
   })
