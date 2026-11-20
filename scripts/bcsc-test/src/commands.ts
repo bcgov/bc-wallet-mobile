@@ -2,6 +2,7 @@ import { logout, switchClient, token } from './auth.ts'
 import { login } from './login.ts'
 import type { ArgSpec, FlagSpec, GroupSpec } from './spec.ts'
 import { status, STATUS_JSON_FIELDS } from './status.ts'
+import { approve, decline } from './verification.ts'
 
 const usercode: ArgSpec = {
   name: 'usercode',
@@ -181,14 +182,20 @@ waiting for a decision. Asks for confirmation before writing.`,
             value: 'string',
             description: 'The verification channel: {counter|live-video|send-video} (default "counter")',
           },
+          hostname,
           yes,
           dryRun,
         ],
+        handler: approve,
         examples: [
           { comment: 'Approve a device', command: 'bcsc-test verification approve NCNF-ZNTB' },
           {
-            comment: 'Approve without the confirmation prompt',
-            command: 'bcsc-test verification approve NCNF-ZNTB --yes',
+            comment: 'Approve without the confirmation prompt, using a token from the environment',
+            command: 'BCSC_TEST_TOKEN="$TOKEN" bcsc-test verification approve NCNF-ZNTB --yes',
+          },
+          {
+            comment: 'Show the request without sending it',
+            command: 'bcsc-test verification approve NCNF-ZNTB --dry-run',
           },
         ],
       },
@@ -202,15 +209,30 @@ Succeeds only when the usercode belongs to an unexpired registration that is
 waiting for a decision.`,
         args: [usercode],
         flags: [
-          { name: 'user-message', value: 'string', description: 'The message for the user (required)' },
-          { name: 'internal-comment', value: 'string', description: 'An internal comment on the decision (required)' },
+          {
+            name: 'user-message',
+            value: 'string',
+            description: 'The message for the user, up to 500 characters (required)',
+          },
+          {
+            name: 'internal-comment',
+            value: 'string',
+            description: 'An internal comment on the decision, up to 500 characters (required)',
+          },
+          hostname,
           dryRun,
         ],
+        handler: decline,
         examples: [
           {
             comment: 'Decline a device',
             command:
               'bcsc-test verification decline NCNF-ZNTB --user-message "Photo is blurry" --internal-comment "Test decline"',
+          },
+          {
+            comment: 'Show the request without sending it',
+            command:
+              'bcsc-test verification decline NCNF-ZNTB --user-message "Photo is blurry" --internal-comment "Test decline" --dry-run',
           },
         ],
       },
