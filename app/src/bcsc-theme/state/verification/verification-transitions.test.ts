@@ -148,7 +148,7 @@ const row = (
 ): Observation => ({ verifyStackShown, accountLoadingAllowed, homeNotice, resumeRoute })
 
 // One row per step: the start, each transition in order, then unlocking again. A change here is a
-// change in what users see.
+// change in what users see. With the verify stack up, the notice is the card Home slides out with.
 const expected: Record<string, Observation[]> = {
   'unlocked with a deactivated record': [
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
@@ -156,7 +156,7 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.BCSCVerified, null),
     row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
   ],
   'token-only account, then the credential expires': [
@@ -165,7 +165,7 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.BCSCVerified, null),
     row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, true, HomeNoticeType.BCSCVerified, null),
   ],
   'in the verify flow when the credential expires': [
@@ -174,7 +174,7 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.BCSCVerified, null),
     row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, true, HomeNoticeType.BCSCVerified, null),
   ],
   'finished account, then the credential expires': [
@@ -183,7 +183,7 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, true, HomeNoticeType.AccountExpired, null),
   ],
 }

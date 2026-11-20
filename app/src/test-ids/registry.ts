@@ -587,6 +587,8 @@ export const TestIds = {
       home: 'Home',
       services: 'Services',
       wallet: 'Wallet',
+      /** The strip under the bar in the home-indicator area, sized from the inset by `TabStack`. */
+      bottomInset: 'TabBarBottomInset',
     },
     /** Home tab. `logInFromComputer` is the pairing entry point, so its key lives under `main.pairing`. */
     home: {

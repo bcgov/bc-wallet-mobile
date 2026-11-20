@@ -32,10 +32,10 @@ export const useBCSCAgent = (): BCSCAgentContextValue => {
 
 /**
  * Non-throwing variant of {@link useBCSCAgent} for callers that may run outside
- * the provider tree (e.g. AuthStack, OnboardingStack) and must tolerate the
- * agent being absent.
+ * the provider tree or under a disabled provider (e.g. AuthStack, OnboardingStack)
+ * and must tolerate the agent being absent.
  *
- * @returns The agent context value when mounted under a provider, otherwise `null`.
+ * @returns The agent context value when mounted under an enabled provider, otherwise `null`.
  */
 export const useBCSCAgentSafe = (): BCSCAgentContextValue | null => useContext(BCSCAgentContext)
 
@@ -48,9 +48,17 @@ export const useBCSCAgentSafe = (): BCSCAgentContextValue | null => useContext(B
  * what to show. Init failures are logged by the ViewModel — no modal, no
  * fall-through to Bifold hooks. Screens that need the live agent reach for it
  * through `useBCSCAgent().agent` rather than Bifold's `useAgent()`.
+ *
+ * `enabled` false keeps the agent down and exposes no context value, exactly as if
+ * the provider were absent, so it can stay mounted above the root navigator while
+ * the user is onboarding, locked or recovering a session.
  */
-const BCSCAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  const { agent, status, error, retry, resetWallet, teardownAgent, waitForAgent } = useAgentSetupViewModel()
+export interface BCSCAgentProviderProps extends PropsWithChildren {
+  enabled?: boolean
+}
+
+const BCSCAgentProvider: React.FC<BCSCAgentProviderProps> = ({ enabled = true, children }) => {
+  const { agent, status, error, retry, resetWallet, teardownAgent, waitForAgent } = useAgentSetupViewModel({ enabled })
 
   const value = useMemo<BCSCAgentContextValue>(
     () => ({
@@ -65,7 +73,7 @@ const BCSCAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
     [agent, status, error, retry, resetWallet, teardownAgent, waitForAgent]
   )
 
-  return <BCSCAgentContext.Provider value={value}>{children}</BCSCAgentContext.Provider>
+  return <BCSCAgentContext.Provider value={enabled ? value : null}>{children}</BCSCAgentContext.Provider>
 }
 
 export default BCSCAgentProvider
