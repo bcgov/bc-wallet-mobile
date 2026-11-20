@@ -1,4 +1,7 @@
+import { logout, switchClient, token } from './auth.ts'
+import { login } from './login.ts'
 import type { ArgSpec, FlagSpec, GroupSpec } from './spec.ts'
+import { status, STATUS_JSON_FIELDS } from './status.ts'
 
 const usercode: ArgSpec = {
   name: 'usercode',
@@ -9,7 +12,7 @@ const hostname: FlagSpec = {
   name: 'hostname',
   short: 'h',
   value: 'string',
-  description: 'The IAS host to use (default: $BCSC_TEST_HOST, then the active host)',
+  description: 'The IAS host to use (default: $BCSC_TEST_HOST, the only saved host, then iddev.gov.bc.ca)',
 }
 
 const user: FlagSpec = { name: 'user', short: 'u', value: 'string', description: 'The client ID to act on' }
@@ -26,16 +29,28 @@ export const groups: GroupSpec[] = [
 
 A host is an IAS environment and an account is a client ID. Credentials are kept
 in the OS keychain, a 1Password reference or an environment variable; the config
-file never holds the secret.`,
+file never holds the secret.
+
+Tokens come from https://<host>/oauth2/token using a client credentials grant
+with HTTP Basic client authentication (client_secret_basic). IAS has not yet
+confirmed that client authentication method for the test clients. A token lasts
+about an hour; bcsc-test caches it and refreshes it when it is close to expiring.`,
     commands: [
       {
         name: 'login',
         summary: 'Log in to an IAS host with a client credential',
         description: `Log in to an IAS host with a client credential.
 
-Prompts for the client ID and secret, checks them by fetching a token, then saves
-the host. The secret stays where --secret-source says: the OS keychain (default),
-a 1Password reference read with \`op read\`, or an environment variable.`,
+The credential is CLIENT_ID:CLIENT_SECRET, as with curl -u. On a terminal you are
+prompted for the client ID and then the secret; otherwise pass the credential on
+standard input with --with-secret. It is checked by fetching a token, and only
+then is the host saved.
+
+The secret stays where --secret-source says: the OS keychain (default, macOS
+only), a 1Password reference read with \`op read\`, or an environment variable.
+For op and env, the value may be CLIENT_ID:CLIENT_SECRET; a bare secret asks for
+the client ID on a terminal. A value containing a colon is always read as
+CLIENT_ID:CLIENT_SECRET. Clients that use private_key_jwt are not supported yet.`,
         args: [],
         flags: [
           hostname,
@@ -46,18 +61,27 @@ a 1Password reference read with \`op read\`, or an environment variable.`,
           },
           { name: 'secret-ref', value: 'string', description: 'The 1Password reference, for --secret-source op' },
           { name: 'secret-env', value: 'string', description: 'The variable name, for --secret-source env' },
-          { name: 'key-file', value: 'string', description: 'A private key for clients that use private_key_jwt' },
-          { name: 'with-secret', description: 'Read the secret from standard input' },
+          {
+            name: 'key-file',
+            value: 'string',
+            description: 'A private key for private_key_jwt clients (not supported yet; exits with an explanation)',
+          },
+          { name: 'with-secret', description: 'Read CLIENT_ID:CLIENT_SECRET from standard input' },
         ],
+        handler: login,
         examples: [
           { comment: 'Log in interactively and keep the secret in the OS keychain', command: 'bcsc-test auth login' },
           {
-            comment: 'Read the secret from 1Password each time a token is needed',
+            comment: 'Read the credential from standard input',
+            command: 'echo "$CLIENT_ID:$CLIENT_SECRET" | bcsc-test auth login --with-secret',
+          },
+          {
+            comment: 'Read CLIENT_ID:CLIENT_SECRET from 1Password each time a token is needed',
             command: 'bcsc-test auth login --secret-source op --secret-ref "op://Private/BCSC test client/credential"',
           },
           {
-            comment: 'Read the secret from standard input',
-            command: 'bcsc-test auth login --with-secret < secret.txt',
+            comment: 'Read CLIENT_ID:CLIENT_SECRET from an environment variable',
+            command: 'bcsc-test auth login --secret-source env --secret-env BCSC_TEST_CLIENT',
           },
         ],
       },
@@ -66,14 +90,20 @@ a 1Password reference read with \`op read\`, or an environment variable.`,
         summary: 'Display the client, scopes and token expiry for each host',
         description: `Display the client, scopes and token expiry for each known host.
 
-Fetches a token and reports the granted scopes, any missing scopes, and when the
-token expires. Run this first when a command fails with an authentication error.`,
+Fetches a token for each host's active client and reports the granted scopes, any
+missing scopes, and when the token expires. Other clients are listed without a
+check. Run this first when a command fails with an authentication error.`,
         args: [],
         flags: [hostname, json, jq],
-        jsonFields: ['hosts'],
+        jsonFields: STATUS_JSON_FIELDS,
+        handler: status,
         examples: [
           { comment: 'Check every known host', command: 'bcsc-test auth status' },
           { comment: 'Check dev only', command: 'bcsc-test auth status --hostname iddev.gov.bc.ca' },
+          {
+            comment: 'List the missing scopes of every client',
+            command: "bcsc-test auth status --json hosts --jq '.hosts[][].missingScopes'",
+          },
         ],
       },
       {
@@ -81,9 +111,11 @@ token expires. Run this first when a command fails with an authentication error.
         summary: 'Print the bearer token bcsc-test uses for a host',
         description: `Print the bearer token bcsc-test uses for a host.
 
-Useful for raw curl calls. The token carries both test scopes and lasts about an hour.`,
+Useful for raw curl calls. The token carries the scopes the client was granted
+and lasts about an hour. BCSC_TEST_TOKEN, when set, is printed as is.`,
         args: [],
         flags: [hostname],
+        handler: token,
         examples: [
           {
             comment: 'Call the API with curl',
@@ -94,9 +126,13 @@ Useful for raw curl calls. The token carries both test scopes and lasts about an
       {
         name: 'switch',
         summary: 'Switch the active client for a host',
-        description: 'Switch the active client for a host.',
+        description: `Switch the active client for a host.
+
+With two clients saved, switches to the other one. Otherwise name the client
+with --user.`,
         args: [],
         flags: [hostname, user],
+        handler: switchClient,
         examples: [
           { comment: 'Switch to another client on dev', command: 'bcsc-test auth switch --user my.other.client' },
         ],
@@ -106,11 +142,16 @@ Useful for raw curl calls. The token carries both test scopes and lasts about an
         summary: 'Remove a client from a host',
         description: `Remove a client from a host.
 
-Deletes the saved client and its keychain entry. A 1Password item or environment
-variable is left alone.`,
+Deletes the saved client, its cached token and its keychain entry. A 1Password
+item or environment variable is left alone. Without --user, removes the only
+client; with several, name one.`,
         args: [],
         flags: [hostname, user],
-        examples: [{ comment: 'Log out of dev', command: 'bcsc-test auth logout --hostname iddev.gov.bc.ca' }],
+        handler: logout,
+        examples: [
+          { comment: 'Log out of dev', command: 'bcsc-test auth logout --hostname iddev.gov.bc.ca' },
+          { comment: 'Remove one of several clients', command: 'bcsc-test auth logout --user my.client' },
+        ],
       },
     ],
   },

@@ -1,7 +1,10 @@
 export interface Io {
   stdout: (text: string) => void
   stderr: (text: string) => void
+  /** Standard input is a terminal, so prompts can be answered. */
   isTTY: boolean
+  /** Standard output is a terminal, so JSON is pretty-printed. */
+  stdoutIsTTY?: boolean
 }
 
 export type FlagValue = string | boolean | undefined
@@ -41,7 +44,7 @@ export interface CommandSpec {
   /** Fields accepted by `--json`; listed under JSON FIELDS in help. */
   jsonFields?: string[]
   /** Absent until the command ships; help shows it as `not implemented` and running it exits 1. */
-  handler?: (ctx: HandlerContext) => Promise<number>
+  handler?: (ctx: HandlerContext) => Promise<number> | number
 }
 
 export interface GroupSpec {

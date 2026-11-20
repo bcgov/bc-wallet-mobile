@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util'
 import { groups as defaultGroups } from './commands.ts'
-import { ExitCode } from './exit-codes.ts'
+import { CliError, ExitCode } from './exit-codes.ts'
 import {
   BIN,
   commandUsage,
@@ -10,7 +10,7 @@ import {
   renderRootHelp,
   renderTopic,
 } from './help.ts'
-import type { CommandSpec, FlagValue, GroupSpec, Io } from './spec.ts'
+import type { CommandSpec, FlagValue, GroupSpec, HandlerContext, Io } from './spec.ts'
 import { topics } from './topics.ts'
 
 export const VERSION = '0.1.0'
@@ -95,7 +95,28 @@ const runCommand = async (
   }
   const args = Object.fromEntries(command.args.map((arg, i) => [arg.name, parsed.positionals[i]]))
   // No option sets `multiple`, so parseArgs never yields arrays.
-  return command.handler({ args, flags: parsed.values as Record<string, FlagValue>, env, io })
+  const flags = parsed.values as Record<string, FlagValue>
+  return runHandler(command.handler, { args, flags, env, io })
+}
+
+// readline rejects with ABORT_ERR when the user presses Ctrl-C or Ctrl-D at a prompt.
+const isPromptAbort = (error: unknown): boolean => (error as NodeJS.ErrnoException).code === 'ABORT_ERR'
+
+const asCliError = (error: unknown): CliError | undefined => {
+  if (error instanceof CliError) return error
+  return isPromptAbort(error) ? new CliError('Cancelled; nothing was sent.', ExitCode.cancelled) : undefined
+}
+
+/** Handlers throw CliError for failures the user can act on; it is reported here once. */
+const runHandler = async (handler: NonNullable<CommandSpec['handler']>, ctx: HandlerContext): Promise<number> => {
+  try {
+    return await handler(ctx)
+  } catch (error) {
+    const failure = asCliError(error)
+    if (!failure) throw error
+    ctx.io.stderr(`${failure.message}\n`)
+    return failure.exitCode
+  }
 }
 
 const runGroup = (group: GroupSpec, argv: string[], options: RunOptions): Promise<number> | number => {
