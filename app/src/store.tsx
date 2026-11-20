@@ -22,6 +22,12 @@ import {
   UNKNOWN_VERIFICATION_STATUS,
 } from './bcsc-theme/utils/verification-status'
 import { appLogger } from './utils/logger'
+import { toAppBuild } from './utils/version'
+
+export interface AppBuild {
+  version: string
+  build: string
+}
 
 export type RemoteDebuggingState = {
   enabledAt?: Date
@@ -95,6 +101,7 @@ export interface ResidentialAddressDraft {
 }
 
 export interface BCSCState {
+  appBuildHistory: AppBuild[]
   appVersion: string
   appBuildNumber: string
   hasAccount: boolean
@@ -403,6 +410,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 }
 
 export const initialBCSCState: BCSCState = {
+  appBuildHistory: [],
   appVersion: '',
   appBuildNumber: '',
   hasAccount: false,
@@ -413,6 +421,15 @@ export const initialBCSCState: BCSCState = {
 // The fields migrateBCSCState may add, kept in its return type even when T is inferred from a narrow
 // literal that never mentions them (e.g. `{ reportUUID: 'x' }` in tests)
 type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'>
+
+interface BCSCDeprecatedFields {
+  reportUUID?: string
+  bannerMessages?: unknown[]
+  appVersion?: string
+  appBuildNumber?: string
+  lastSeenAppVersion?: string
+  lastSeenAppBuildNumber?: string
+}
 
 /**
  * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
@@ -428,9 +445,17 @@ type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string; bannerMessages?: unknown[] }>(
   persisted: T
-): { bcsc: Omit<T, 'reportUUID' | 'bannerMessages'> & MigratedBCSCFields; migrated: boolean } => {
-  const { reportUUID, bannerMessages, ...rest } = persisted
-  let bcsc: Omit<T, 'reportUUID' | 'bannerMessages'> & MigratedBCSCFields = rest
+): { bcsc: Omit<T, keyof BCSCDeprecatedFields> & MigratedBCSCFields; migrated: boolean } => {
+  const {
+    reportUUID,
+    bannerMessages,
+    appVersion,
+    appBuildNumber,
+    lastSeenAppVersion,
+    lastSeenAppBuildNumber,
+    ...rest
+  } = persisted
+  let bcsc: Omit<T, keyof BCSCDeprecatedFields> & MigratedBCSCFields = rest
   let migrated = false
 
   if (reportUUID !== undefined) {
@@ -451,6 +476,16 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
   if (bannerMessages !== undefined) {
     // The persisted blob had a `bannerMessages` array, which is no longer used
     migrated = true
+  }
+
+  if (!bcsc.appBuildHistory?.length) {
+    const oldAppBuild = toAppBuild(lastSeenAppVersion, lastSeenAppBuildNumber) ?? toAppBuild(appVersion, appBuildNumber)
+    bcsc = {
+      ...bcsc,
+      // Generate the app build history from the deprecated blob properties
+      appBuildHistory: oldAppBuild ? [oldAppBuild] : [],
+      migrated: true,
+    }
   }
 
   return { bcsc, migrated }

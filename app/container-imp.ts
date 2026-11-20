@@ -39,12 +39,14 @@ import { CredentialDetailsSubHeader } from '@/bcsc-theme/features/credentials/Cr
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
+import { addNewBuildToHistory } from '@/utils/version'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
 import { IASEnvironment } from '@utils/environment'
 import { expirationOverrideInMinutes } from '@utils/expiration'
 import { createAppLogger } from '@utils/logger'
 import { reconcileMediatorPreferences } from '@utils/mediator-preferences'
 import { TFunction } from 'i18next'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { buildDigitalServicesCardCredentialRule } from './src/bcsc-theme/services/digitalServicesCardProvisioner'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
 import EmptyList from './src/bcwallet-theme/components/EmptyList'
@@ -411,6 +413,8 @@ export class AppContainer implements Container {
       // Idempotent load-time migrations of the persisted BCSC blob; see migrateBCSCState for the list.
       const bcscMigration = migrateBCSCState(bcsc)
       bcsc = bcscMigration.bcsc
+
+      bcsc.appBuildHistory = addNewBuildToHistory(getVersion(), getBuildNumber(), bcsc.appBuildHistory)
 
       // Reset paths and prompts on load as they should not be persisted
       bcsc.photoPath = undefined
