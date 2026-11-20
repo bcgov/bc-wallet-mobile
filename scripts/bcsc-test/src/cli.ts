@@ -99,11 +99,47 @@ const runCommand = async (
   return command.handler({ args, flags: parsed.values as Record<string, FlagValue>, env, io })
 }
 
+const runGroup = (group: GroupSpec, argv: string[], options: RunOptions): Promise<number> | number => {
+  const { io } = options
+  const [name, ...rest] = argv
+  if (name === undefined || name === '--help') {
+    io.stdout(renderGroupHelp(group))
+    return ExitCode.ok
+  }
+  const command = group.commands.find((c) => c.name === name)
+  if (!command) {
+    return unknownCommand(
+      io,
+      name,
+      `${BIN} ${group.name}`,
+      group.commands.map((c) => c.name)
+    )
+  }
+  if (rest.includes('--help')) {
+    io.stdout(renderCommandHelp(group, command))
+    return ExitCode.ok
+  }
+  return runCommand(group, command, rest, options)
+}
+
+const unknownTopLevel = (io: Io, name: string, groups: GroupSpec[]): number => {
+  if (name.startsWith('-')) {
+    io.stderr(`unknown flag: ${name}\n\nUsage:  ${BIN} <command> <subcommand> [flags]\n`)
+    return ExitCode.failure
+  }
+  return unknownCommand(
+    io,
+    name,
+    BIN,
+    groups.map((g) => g.name)
+  )
+}
+
 /** Runs one CLI invocation and returns its exit code; never calls process.exit. */
 export const run = async (argv: string[], options: RunOptions): Promise<number> => {
   const { io } = options
   const groups = options.groups ?? defaultGroups
-  const [first, second, ...rest] = argv
+  const [first, ...rest] = argv
 
   if (first === undefined || first === '--help') {
     io.stdout(renderRootHelp(groups, topics))
@@ -114,39 +150,8 @@ export const run = async (argv: string[], options: RunOptions): Promise<number> 
     return ExitCode.ok
   }
   if (first === 'help') {
-    return runHelpCommand(io, groups, argv.slice(1))
+    return runHelpCommand(io, groups, rest)
   }
-
   const group = groups.find((g) => g.name === first)
-  if (!group) {
-    if (first.startsWith('-')) {
-      io.stderr(`unknown flag: ${first}\n\nUsage:  ${BIN} <command> <subcommand> [flags]\n`)
-      return ExitCode.failure
-    }
-    return unknownCommand(
-      io,
-      first,
-      BIN,
-      groups.map((g) => g.name)
-    )
-  }
-  if (second === undefined || second === '--help') {
-    io.stdout(renderGroupHelp(group))
-    return ExitCode.ok
-  }
-
-  const command = group.commands.find((c) => c.name === second)
-  if (!command) {
-    return unknownCommand(
-      io,
-      second,
-      `${BIN} ${group.name}`,
-      group.commands.map((c) => c.name)
-    )
-  }
-  if (rest.includes('--help')) {
-    io.stdout(renderCommandHelp(group, command))
-    return ExitCode.ok
-  }
-  return runCommand(group, command, rest, options)
+  return group ? runGroup(group, rest, options) : unknownTopLevel(io, first, groups)
 }

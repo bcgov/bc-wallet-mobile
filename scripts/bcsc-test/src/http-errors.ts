@@ -12,58 +12,32 @@ export interface Explanation {
 
 type Overrides = Partial<Record<number, string>>
 
+const SCOPE_403 =
+  'The token lacks the scope this endpoint needs. Run `bcsc-test auth status` to see which scopes are missing, and ask for them to be granted to the client.'
+const PROXY_403 =
+  'The request was blocked in front of IAS (httpd/SiteMinder), not by a missing scope. Check the host and your network access.'
+
+const messages: Record<number, (failure: HttpFailure) => string> = {
+  400: () => "IAS rejected the request as invalid. Check the preconditions in this command's --help.",
+  401: () =>
+    'The token is missing, expired or invalid. Run `bcsc-test auth status`, then `bcsc-test auth login` if needed.',
+  // Spring adds this header; httpd/SiteMinder in front of Tomcat does not.
+  403: ({ wwwAuthenticate }) => (wwwAuthenticate?.includes('insufficient_scope') ? SCOPE_403 : PROXY_403),
+  404: () => 'IAS found no such usercode or CSN on this host.',
+  501: () => 'IAS does not implement this operation; retrying will not help.',
+}
+
+const fallbackMessage = (status: number): string =>
+  status >= 500
+    ? `IAS failed with status ${status}. Retry; if it persists, check the IAS server logs.`
+    : `IAS returned an unexpected status ${status}.`
+
 /**
  * Turns an IAS test API failure into a cause and a next action. Commands pass
  * overrides for statuses whose meaning is endpoint-specific (e.g. 400 preconditions).
  */
-export const explainHttpFailure = (
-  { status, wwwAuthenticate }: HttpFailure,
-  overrides: Overrides = {}
-): Explanation => {
-  const override = overrides[status]
-  if (override) {
-    return { message: override, exitCode: status === 401 ? ExitCode.authRequired : ExitCode.failure }
-  }
-  switch (status) {
-    case 400:
-      return {
-        message: "IAS rejected the request as invalid. Check the preconditions in this command's --help.",
-        exitCode: ExitCode.failure,
-      }
-    case 401:
-      return {
-        message:
-          'The token is missing, expired or invalid. Run `bcsc-test auth status`, then `bcsc-test auth login` if needed.',
-        exitCode: ExitCode.authRequired,
-      }
-    case 403:
-      // Spring adds this header; httpd/SiteMinder in front of Tomcat does not.
-      if (wwwAuthenticate?.includes('insufficient_scope')) {
-        return {
-          message:
-            'The token lacks the scope this endpoint needs. Run `bcsc-test auth status` to see which scopes are missing, and ask for them to be granted to the client.',
-          exitCode: ExitCode.failure,
-        }
-      }
-      return {
-        message:
-          'The request was blocked in front of IAS (httpd/SiteMinder), not by a missing scope. Check the host and your network access.',
-        exitCode: ExitCode.failure,
-      }
-    case 404:
-      return { message: 'IAS found no such usercode or CSN on this host.', exitCode: ExitCode.failure }
-    case 501:
-      return {
-        message: 'IAS does not implement this operation; retrying will not help.',
-        exitCode: ExitCode.failure,
-      }
-    default:
-      if (status >= 500) {
-        return {
-          message: `IAS failed with status ${status}. Retry; if it persists, check the IAS server logs.`,
-          exitCode: ExitCode.failure,
-        }
-      }
-      return { message: `IAS returned an unexpected status ${status}.`, exitCode: ExitCode.failure }
-  }
+export const explainHttpFailure = (failure: HttpFailure, overrides: Overrides = {}): Explanation => {
+  const { status } = failure
+  const message = overrides[status] ?? messages[status]?.(failure) ?? fallbackMessage(status)
+  return { message, exitCode: status === 401 ? ExitCode.authRequired : ExitCode.failure }
 }
