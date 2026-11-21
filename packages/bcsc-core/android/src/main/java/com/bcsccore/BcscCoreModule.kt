@@ -1177,6 +1177,18 @@ class BcscCoreModule internal constructor(
             val previousTokens = nativeStorage.readTokens(issuerName, account.uuid)
 
             if (registrationAccessToken != null) {
+                // A tokens file that is there but cannot be read may still hold the access and refresh tokens,
+                // which a new file would lose, so nothing is saved
+                if (previousTokens == null && nativeStorage.tokensExist(issuerName, account.uuid)) {
+                    rejectWithDiagnostics(
+                        promise,
+                        "E_TOKEN_SAVE_FAILED",
+                        "Failed to read the stored tokens, so the registration access token was not saved.",
+                        "$method.read_tokens",
+                    )
+                    return
+                }
+
                 // The registration token is kept in idToken.rawToken, as setToken stores it
                 val idToken = NativeIdToken(rawToken = registrationAccessToken)
                 val tokens =
@@ -1305,6 +1317,10 @@ class BcscCoreModule internal constructor(
     /**
      * Removes the registration access token from the tokens file and retires its v3 copy.
      *
+     * A tokens file that cannot be read is deleted whole. The token in it cannot be removed on its own, and
+     * getToken finds tokens by account, not client ID, so it would come back once the file reads again. The
+     * other tokens in it belong to the registration being cleared as well.
+     *
      * @return null when no registration token is left, otherwise the stage that failed
      */
     private fun deleteRegistrationToken(
@@ -1317,9 +1333,17 @@ class BcscCoreModule internal constructor(
         }
 
         val tokens = nativeStorage.readTokens(issuerName, accountUuid)
+        if (tokens == null) {
+            if (!nativeStorage.tokensExist(issuerName, accountUuid)) {
+                return null
+            }
+            nativeStorage.deleteTokens(issuerName, accountUuid)
+            return if (nativeStorage.tokensExist(issuerName, accountUuid)) "delete_unreadable_tokens" else null
+        }
+
         // Only rawToken is a registration token. An idToken without one is a v3 identity token, which
         // getToken never returns, so there is nothing to remove.
-        if (tokens?.idToken?.rawToken == null) {
+        if (tokens.idToken?.rawToken == null) {
             return null
         }
 

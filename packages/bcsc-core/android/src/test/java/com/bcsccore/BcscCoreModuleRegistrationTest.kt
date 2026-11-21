@@ -127,6 +127,12 @@ class BcscCoreModuleRegistrationTest {
         tokensFile().writeText("""{"issuer":"$issuer",$idToken$refreshToken"fetchedAt":1}""")
     }
 
+    /** A tokens file that is there but cannot be read: readTokens returns null, as for a failed decryption. */
+    private fun storeUnreadableTokens() {
+        File(tempFolder.root, "$issuerName/$accountUuid").mkdirs()
+        tokensFile().writeText("""{"issuer":"$issuer","idToken":""")
+    }
+
     private fun storedAccount(): NativeAccount? = storage.readAccounts(issuerName)?.firstOrNull()
 
     private fun storedTokens(): NativeTokens? = storage.readTokens(issuerName, accountUuid)
@@ -266,6 +272,20 @@ class BcscCoreModuleRegistrationTest {
     }
 
     @Test
+    fun `a tokens file that cannot be read is kept, and nothing is saved`() {
+        storeAccount()
+        storeUnreadableTokens()
+        val tokensBefore = tokensFile().readText()
+
+        module.setRegistration("client-new", issuer, "token-new", promise)
+
+        val userInfo = rejectionUserInfo("E_TOKEN_SAVE_FAILED")
+        assertEquals("setRegistration.read_tokens", userInfo.getString("site"))
+        assertEquals("client-old", storedAccount()?.clientId)
+        assertEquals(tokensBefore, tokensFile().readText())
+    }
+
+    @Test
     fun `a failed account save puts the previous token back`() {
         storeAccount()
         storeTokens()
@@ -390,6 +410,18 @@ class BcscCoreModuleRegistrationTest {
         assertEquals("clearRegistration.save_account", userInfo.getString("site"))
         assertEquals("client-a", storedAccount()?.clientId)
         assertEquals("token-old", storedTokens()?.idToken?.rawToken)
+    }
+
+    @Test
+    fun `clearRegistration deletes a tokens file it cannot read, so its token cannot come back`() {
+        storeAccount(clientId = "client-a")
+        storeUnreadableTokens()
+
+        module.clearRegistration(promise)
+
+        verify(exactly = 1) { promise.resolve(null) }
+        assertEquals("", storedAccount()?.clientId)
+        assertFalse(tokensFile().exists())
     }
 
     @Test
