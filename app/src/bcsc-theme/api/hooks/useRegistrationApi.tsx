@@ -338,9 +338,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
         logger.info('Completed registration update request')
 
-        // The client ID the account holds once the registration save below has run: the new one, or the
-        // previous one if that save failed
-        let storedClientId = registration.clientId
         // A failed registration save, thrown once the nickname save below has run
         let registrationSaveError: unknown
 
@@ -348,14 +345,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         try {
           // The registration first. If the server rotated the token it has revoked the old one. A
           // response that leaves out the client ID or the token keeps the one the request was made with.
-          const clientId = updatedRegistrationData.client_id ?? registration.clientId
           await saveRegistration({
-            clientId,
+            clientId: updatedRegistrationData.client_id ?? registration.clientId,
             issuer: apiClient.endpoints.issuer,
             registrationAccessToken:
               updatedRegistrationData.registration_access_token ?? registration.registrationAccessToken,
           })
-          storedClientId = clientId
         } catch (error) {
           registrationSaveError = error
           const errMessage = error instanceof Error ? error.message : String(error)
@@ -363,9 +358,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         }
 
         try {
-          // setAccount writes the client ID it is given, so it is passed back as stored, never changed here
           await setAccount({
-            clientID: storedClientId,
             issuer: apiClient.endpoints.issuer,
             securityMethod: account.securityMethod,
             nickname: selectedNickname,

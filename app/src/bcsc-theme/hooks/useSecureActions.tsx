@@ -31,6 +31,7 @@ import {
   getEvidence,
   getSavedServices,
   getToken,
+  isAccountRegistered,
   NativeAuthorizationRequest,
   NativeSavedService,
   PhotoMetadata,
@@ -550,6 +551,9 @@ export const useSecureActions = () => {
         const account = await getAccount()
         if (!account) {
           throw new Error('Cannot mark as verified: no account found')
+        }
+        if (!isAccountRegistered(account)) {
+          throw new Error('Cannot mark as verified: the account has no registration')
         }
 
         await setCredential(createVerifiedCredential(account.issuer, account.clientID, store.bcscSecure.cardProcess))

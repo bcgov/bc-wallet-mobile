@@ -434,6 +434,9 @@ and the three are saved together and cleared together.
 - A registration the server returns (create, update, or a rotated token) is saved with one native call. It
   writes the token first, then the client ID and issuer; if the second write fails the first is put back, so a
   failed save leaves the previous registration in place.
+- `setAccount` saves the issuer, security method and nickname. It cannot change the client ID. An account
+  that has not registered has no `clientID`; the native record keeps an empty string, which never reaches
+  TypeScript.
 - A flow that replaces the registration (verification reset, registration cycle) clears the old one before it
   creates the new one. If the new registration fails, the account has no registration and `ensureRegistered`
   registers it again, instead of holding a client ID the server has deleted. The clear also removes the copy
