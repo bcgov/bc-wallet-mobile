@@ -76,6 +76,7 @@ jest.mock('react-native-bcsc-core', () => ({
   setToken: jest.fn(),
   // Delegate to the central manual mock so the predicates can't drift from the real implementation.
   isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
+  isAccountRegistered: (account?: { clientID?: string } | null) => Boolean(account?.clientID),
   getAccount: jest.fn(),
   getAccountFlags: jest.fn(),
   getAuthorizationRequest: jest.fn(),
@@ -1889,6 +1890,18 @@ describe('useSecureActions', () => {
       const { result } = renderHook(() => useSecureActions())
 
       await expect(result.current.updateVerified(true)).rejects.toThrow('no account found')
+
+      expect(setCredential).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED })
+      )
+    })
+
+    it('throws and leaves the store alone when the account has no registration to verify', async () => {
+      jest.mocked(getAccount).mockResolvedValue({ id: 'account-1', issuer: 'https://idsit.gov.bc.ca' } as any)
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.updateVerified(true)).rejects.toThrow('the account has no registration')
 
       expect(setCredential).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalledWith(

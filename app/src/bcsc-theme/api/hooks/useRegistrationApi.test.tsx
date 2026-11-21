@@ -416,9 +416,8 @@ describe('useRegistrationApi', () => {
         issuer: mockApiClient.endpoints.issuer,
         registrationAccessToken: mockRegistrationResponse.registration_access_token,
       })
-      // Saving the account carries the nickname, and passes back the client ID that was just saved
+      // Saving the account carries the nickname only: it cannot change the client ID
       expect(setAccount).toHaveBeenCalledWith({
-        clientID: mockRegistrationResponse.client_id,
         issuer: mockApiClient.endpoints.issuer,
         securityMethod: AccountSecurityMethod.PinWithDeviceAuth,
         nickname: 'NewNickname',
@@ -574,10 +573,7 @@ describe('useRegistrationApi', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to store updated registration data')
       )
-      // With the client ID the device still holds, not the one in the response that was not saved
-      expect(setAccount).toHaveBeenCalledWith(
-        expect.objectContaining({ clientID: existingAccount.clientID, nickname: 'nickname' })
-      )
+      expect(setAccount).toHaveBeenCalledWith(expect.objectContaining({ nickname: 'nickname' }))
     })
 
     it('should still return data, with the registration saved, when the nickname cannot be saved', async () => {

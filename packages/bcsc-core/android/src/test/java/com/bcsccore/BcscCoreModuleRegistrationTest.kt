@@ -21,6 +21,7 @@ import io.mockk.verify
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -32,9 +33,9 @@ import org.robolectric.RobolectricTestRunner
 import java.io.File
 
 /**
- * The device registration is saved and cleared as one (#4925): setRegistration saves the client ID,
- * issuer and registration access token together, and clearRegistration removes the client ID and the
- * token.
+ * The device registration has one writer (#4925): setRegistration saves the client ID, issuer and
+ * registration access token together, clearRegistration removes the client ID and the token, and
+ * setAccount can no longer change the client ID.
  *
  * File encryption needs the Android keystore, so it is stood in for and writes the JSON as it is;
  * the storage reads plain JSON without the keystore.
@@ -151,6 +152,13 @@ class BcscCoreModuleRegistrationTest {
         verify(exactly = 1) { promise.reject(code, any<String>(), isNull<Throwable>(), capture(userInfo)) }
         verify(exactly = 0) { promise.resolve(any()) }
         return userInfo.captured
+    }
+
+    private fun resolvedAccount(): Map<String, Any?> {
+        val result = slot<Any>()
+        module.getAccount(promise)
+        verify(exactly = 1) { promise.resolve(capture(result)) }
+        return (result.captured as JavaOnlyMap).toHashMap()
     }
 
     // MARK: - setRegistration
@@ -484,5 +492,72 @@ class BcscCoreModuleRegistrationTest {
         assertTrue(userInfo.getBoolean("accountRolledBack"))
         assertEquals("client-a", storedAccount()?.clientId)
         assertEquals("token-old", storedTokens()?.idToken?.rawToken)
+    }
+
+    // MARK: - getAccount
+
+    @Test
+    fun `getAccount leaves the client ID out for an account with no registration`() {
+        storeAccount(clientId = "")
+
+        val account = resolvedAccount()
+
+        assertFalse(account.containsKey("clientID"))
+        assertEquals(accountUuid, account["id"])
+    }
+
+    @Test
+    fun `getAccount leaves the client ID out when the file has none at all`() {
+        storeAccount(clientId = null)
+
+        assertFalse(resolvedAccount().containsKey("clientID"))
+    }
+
+    @Test
+    fun `getAccount returns the client ID of a registered account`() {
+        storeAccount(clientId = "client-a")
+
+        assertEquals("client-a", resolvedAccount()["clientID"])
+    }
+
+    // MARK: - setAccount
+
+    @Test
+    fun `setAccount creates an account with no client ID`() {
+        // The issuer file names the environment once the account is saved
+        module.setAccount(JavaOnlyMap.of("issuer", issuer, "securityMethod", "app_pin_no_device_authn"), promise)
+
+        verify(exactly = 1) { promise.resolve(null) }
+        val account = storedAccount()
+        assertNotNull(account)
+        assertEquals("", account?.clientId)
+        assertEquals(NativeAccountSecurityType.PinNoDeviceAuth, account?.accountSecurityType)
+    }
+
+    @Test
+    fun `setAccount keeps the client ID of an existing account, even when one is passed`() {
+        storeAccount(clientId = "client-a")
+
+        module.setAccount(
+            JavaOnlyMap.of(
+                "issuer",
+                issuer,
+                "securityMethod",
+                "device_authentication",
+                "clientID",
+                "client-other",
+                "nickname",
+                "New name",
+            ),
+            promise,
+        )
+
+        verify(exactly = 1) { promise.resolve(null) }
+        val account = storedAccount()
+        assertEquals("client-a", account?.clientId)
+        assertEquals(accountUuid, account?.uuid)
+        assertEquals(1700000000000L, account?.createdAt)
+        assertEquals("New name", account?.nickName)
+        assertEquals(NativeAccountSecurityType.DeviceSecurity, account?.accountSecurityType)
     }
 }
