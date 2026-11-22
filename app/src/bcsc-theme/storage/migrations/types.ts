@@ -17,9 +17,10 @@ export interface Migration {
 }
 
 // Names the invariant, never the value: logs leave the device
+// Names only what failed (keys and invariants, never values), so the runner logs it
 export class VerifyError extends Error {
-  constructor(invariant: string) {
-    super(invariant)
+  constructor(failed: string[]) {
+    super(failed.join(','))
     this.name = 'VerifyError'
   }
 }
