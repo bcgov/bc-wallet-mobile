@@ -33,12 +33,8 @@ export const m0003: Migration = {
   },
 
   async verify({ legacy }) {
-    const failed: string[] = []
-    for (const key of OWNED_V0) {
-      if ((await legacy.async(key)).status !== 'absent') {
-        failed.push(`async.${key}`)
-      }
-    }
+    const reads = await Promise.all(OWNED_V0.map((key) => legacy.async(key)))
+    const failed = OWNED_V0.filter((_, i) => reads[i].status !== 'absent').map((key) => `async.${key}`)
     const snapshot = await legacy.native()
     for (const [name, record] of Object.entries(snapshot)) {
       if (record.status !== 'absent') {
