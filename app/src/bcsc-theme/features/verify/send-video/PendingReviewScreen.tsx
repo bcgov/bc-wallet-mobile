@@ -27,8 +27,7 @@ type PendingReviewScreenProps = {
 const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
-  const verificationVideoSubmittedAt = useSession((s) => s.verificationVideoSubmittedAt)
-  const verificationRequestStatus = useSession((s) => s.verificationRequestStatus)
+  const { verificationVideoSubmittedAt, verificationRequestStatus } = useSession()
   const { handleCheckStatus, handleCancelVerification } = useVerificationPendingActions(navigation)
 
   // Check status when the screen is visible

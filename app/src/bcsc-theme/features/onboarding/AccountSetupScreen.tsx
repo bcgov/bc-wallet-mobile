@@ -3,7 +3,7 @@ import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { selectJourney } from '@/bcsc-theme/state/verification/journey'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { getBCSCState, useApp } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType } from '@/store'
 import { TestIds } from '@/test-ids/registry'
@@ -39,6 +39,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const loadingScreen = useLoadingScreen()
   /** The setup choice whose device registration is in flight, if any. */
   const [registeringFor, setRegisteringFor] = useState<AccountSetupType | null>(null)
+  const { update: updateApp } = useApp()
   const registrationServiceRef = useRef(registrationService)
   const loadingScreenRef = useRef(loadingScreen)
 
@@ -56,7 +57,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         return
       }
 
-      void getBCSCState().app.update({ accountSetupType: undefined })
+      void state.app.update({ accountSetupType: undefined })
 
       const { deviceCode, serial, additionalEvidenceData } = selectJourney(state)
       if (deviceCode && !serial && !additionalEvidenceData.length) {
@@ -115,10 +116,10 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       }
 
       // Saved only once registered: a saved choice makes resume skip this screen
-      await getBCSCState().app.update({ accountSetupType: setupType })
+      await updateApp({ accountSetupType: setupType })
       goToNextStep()
     },
-    [logger, navigation, registrationService]
+    [logger, navigation, registrationService, updateApp]
   )
 
   // "No, continue setup" — verify a new account on this device via the identity steps.

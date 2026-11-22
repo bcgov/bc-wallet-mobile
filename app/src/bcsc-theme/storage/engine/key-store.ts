@@ -1,6 +1,6 @@
 // Hermes has no crypto.getRandomValues; this module needs it before anything else (Credo) loads the polyfill
-import 'react-native-get-random-values'
 import { Buffer } from 'buffer'
+import 'react-native-get-random-values'
 import * as Keychain from 'react-native-keychain'
 import type { ReadResult } from './backend'
 import { keychainBackend, type KeychainApi } from './keychain-backend'
@@ -8,6 +8,7 @@ import { keychainBackend, type KeychainApi } from './keychain-backend'
 export interface KeyStore {
   read(): Promise<ReadResult>
   create(): Promise<string> // stored readable after first unlock, so routing works before login
+  restore(key: string): Promise<void>
   remove(): Promise<void>
 }
 
@@ -29,6 +30,7 @@ export const keychainKeyStore = (
       await backend.write(KEY_NAME, key)
       return key
     },
+    restore: (key) => backend.write(KEY_NAME, key),
     remove: () => backend.remove(KEY_NAME),
   }
 }

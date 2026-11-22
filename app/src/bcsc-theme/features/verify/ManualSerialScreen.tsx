@@ -25,7 +25,8 @@ type ManualSerialScreenProps = {
 const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: ManualSerialScreenProps) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const storedSerial = useVerification((s) => s.request?.csn)
+  const { request } = useVerification()
+  const storedSerial = request?.csn
   const { updateUserInfo } = useSecureActions()
   const [serial, setSerial] = useState(storedSerial ?? '')
   const [error, setError] = useState<string | null>(null)

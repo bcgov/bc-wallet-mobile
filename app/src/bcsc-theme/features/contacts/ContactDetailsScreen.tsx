@@ -1,5 +1,5 @@
 import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useContacts, usePreferences } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
@@ -52,8 +52,8 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
   const { connectionId } = route.params
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
-  const developerModeEnabled = useBCSCStore((s) => s.preferences.developerModeEnabled)
+  const { alternateNames: alternateContactNames } = useContacts()
+  const { developerModeEnabled } = usePreferences()
   const connection = useConnectionById(connectionId)
   const { isPinned, togglePin } = usePinnedContacts()
   const pinned = isPinned(connectionId)

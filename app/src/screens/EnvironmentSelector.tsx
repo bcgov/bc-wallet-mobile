@@ -1,4 +1,4 @@
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useDeveloper } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
 import { IS_BCSC } from '@/utils/environment'
 import { Button, ButtonType, testIdWithKey, usePreventDoublePress, useStore, useTheme } from '@bifold/core'
@@ -25,7 +25,8 @@ const EnvironmentSelector: React.FC<EnvironmentSelectorProps> = ({ onEnvironment
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
   const [store] = useStore<BCState>()
   // BCSC keeps its environment in its own store
-  const bcscEnvironmentName = useBCSCStore((s) => s.developer.environment.name)
+  const { environment: bcscEnvironment } = useDeveloper()
+  const bcscEnvironmentName = bcscEnvironment.name
   const currentName = IS_BCSC ? bcscEnvironmentName : store.developer.environment.name
   const { preventDoublePress } = usePreventDoublePress()
 

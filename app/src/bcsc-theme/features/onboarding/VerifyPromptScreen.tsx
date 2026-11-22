@@ -4,7 +4,7 @@ import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import { useLeaveVerification } from '@/bcsc-theme/hooks/useLeaveVerification'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { useApp } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -45,6 +45,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const { Spacing, ColorPalette } = useTheme()
   const { continueVerificationProcess } = useSecureActions()
   const leaveVerification = useLeaveVerification()
+  const { update: updateApp } = useApp()
   // Startup seeds server status; the ServiceOutage screen's "Check again" force-refreshes it, so
   // no on-focus re-check is needed here.
   const { isAvailable, isChecking, serverStatus } = useServerStatus()
@@ -54,22 +55,22 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
     // Only a copy that offers Skip is answering the prompt. The main-app copy is entered from Home, so
     // it leaves the answer given after onboarding as it was
     if (showSkip) {
-      void getBCSCState().app.update({ verificationSkipped: false })
+      void updateApp({ verificationSkipped: false })
     }
     // Entering verification sets it in progress, which keeps VerifyStack mounted, so onContinue can
     // navigate within it for a normal slide transition.
     continueVerificationProcess()
     onContinue?.()
-  }, [continueVerificationProcess, onAnswered, onContinue, showSkip])
+  }, [continueVerificationProcess, onAnswered, onContinue, showSkip, updateApp])
 
   const handleLater = useCallback(() => {
     onAnswered?.()
-    void getBCSCState().app.update({ verificationSkipped: true })
+    void updateApp({ verificationSkipped: true })
     // A first-time verifier who walked back here from the first step is still in the verify flow, which alone
     // keeps VerifyStack mounted; skipping is their way to Home, so leave the flow as well (a no-op at the
     // fresh prompt, where nothing is in progress yet). Progress is kept for the Home card
     leaveVerification()
-  }, [leaveVerification, onAnswered])
+  }, [leaveVerification, onAnswered, updateApp])
 
   if (serverStatus === null && isChecking) {
     return <WaitingScreenContent message={t('BCSC.Loading.DefaultMessage')} />

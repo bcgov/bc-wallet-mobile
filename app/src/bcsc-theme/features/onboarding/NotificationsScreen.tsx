@@ -1,6 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { usePreferences } from '@/bcsc-theme/storage/hooks'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import PushNotificationImage from '@assets/img/push-notifications-image.svg'
@@ -31,7 +31,7 @@ interface NotificationsScreenProps {
  */
 export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): React.ReactElement => {
   const { t } = useTranslation()
-  const setUsePushNotifications = useBCSCStore((s) => s.preferences.setUsePushNotifications)
+  const { setUsePushNotifications } = usePreferences()
   const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [deniedPermission, setDeniedPermission] = useState(false)

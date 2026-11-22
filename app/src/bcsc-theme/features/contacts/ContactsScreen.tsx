@@ -1,4 +1,4 @@
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useContacts } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
@@ -40,7 +40,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, maxFontSizeMultiplier } = useTheme()
   const { records: connectionRecords } = useConnections()
-  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
+  const { alternateNames: alternateContactNames } = useContacts()
   const [query, setQuery] = useState('')
   const { isPinned, togglePin } = usePinnedContacts()
 

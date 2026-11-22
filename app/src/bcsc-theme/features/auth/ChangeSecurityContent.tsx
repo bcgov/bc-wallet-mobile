@@ -1,6 +1,6 @@
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
 import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
-import { getBCSCState, requirePINAccount, useSecurityMethod } from '@/bcsc-theme/storage/hooks'
+import { requirePINAccount, useAccount, useSecurityMethod } from '@/bcsc-theme/storage/hooks'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors/errorRegistry'
@@ -24,6 +24,7 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert } = useErrorAlert()
   const securityMethod = useSecurityMethod()
+  const { updateProfile } = useAccount()
   const currentMethod = securityMethod ?? null
   const walletService = useWalletService()
 
@@ -37,7 +38,7 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
         return
       }
 
-      await getBCSCState().account.updateProfile({ securityMethod: AccountSecurityMethod.DeviceAuth })
+      await updateProfile({ securityMethod: AccountSecurityMethod.DeviceAuth })
       logger.info('Successfully switched to device authentication')
 
       await walletService.rotateWalletKey(walletKey)
@@ -48,7 +49,7 @@ export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: Chang
       logger.error(`Error setting account security method: ${appError.technicalMessage ?? appError.message}`)
       emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
     }
-  }, [logger, walletService, onDeviceAuthSuccess, emitAlert, t])
+  }, [logger, walletService, updateProfile, onDeviceAuthSuccess, emitAlert, t])
 
   return (
     <SecurityMethodSelector

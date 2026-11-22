@@ -1,5 +1,5 @@
-import { useBirthdate, useVerification } from '@/bcsc-theme/storage/hooks'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useBirthdate, useVerification } from '@/bcsc-theme/storage/hooks'
 import { formatCalendarDate } from '@/bcsc-theme/utils/datetime-utils'
 import { TestIds } from '@/test-ids/registry'
 import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
@@ -23,7 +23,8 @@ interface VerificationCardErrorScreenProps {
 
 const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreenProps) => {
   const { Spacing } = useTheme()
-  const serial = useVerification((v) => v.request?.csn)
+  const { request } = useVerification()
+  const serial = request?.csn
   const { t } = useTranslation()
   const { width } = useWindowDimensions()
   const { params } = useRoute<RouteProp<BCSCVerifyStackParams, BCSCScreens.VerificationCardError>>()
@@ -87,9 +88,7 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
       <ThemedText variant={'headingThree'}>{t('BCSC.MismatchedSerial.Heading')}</ThemedText>
       <ThemedText>{t('BCSC.MismatchedSerial.Description1')}</ThemedText>
       <View>
-        <ThemedText variant={'bold'}>
-          {t('BCSC.MismatchedSerial.SerialNumber', { serial })}
-        </ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.MismatchedSerial.SerialNumber', { serial })}</ThemedText>
         <ThemedText variant={'bold'} testID={testIdWithKey(TestIds.verify.verificationCardError.birthdate)}>
           {t('BCSC.MismatchedSerial.Birthdate', {
             birthdate: birthdate && formatCalendarDate(birthdate, t('BCSC.LocaleStringFormat')),

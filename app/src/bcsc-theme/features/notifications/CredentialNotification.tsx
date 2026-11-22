@@ -1,5 +1,5 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useContacts, usePreferences } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { formatExpiryBadge, formatTimestamp, getProofRequestExpiry } from '@/bcsc-theme/utils/datetime-utils'
 import { NOTIFICATION_EXPIRY_WARNING_WINDOW_MS } from '@/constants'
@@ -99,7 +99,7 @@ function getTimeSensitiveStatus(read: boolean, expiresTime?: Date): Notification
 const BasicMessageNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
-  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
+  const { alternateNames: alternateContactNames } = useContacts()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const basicMessage = notification as DidCommBasicMessageRecord
   const connection = useConnectionById(basicMessage.connectionId)
@@ -187,7 +187,7 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
 const CredentialOfferNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
-  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
+  const { alternateNames: alternateContactNames } = useContacts()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const credential = notification as DidCommCredentialExchangeRecord
   const connection = useConnectionById(credential.connectionId ?? '')
@@ -257,7 +257,7 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
 const ProofRequestNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
-  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
+  const { alternateNames: alternateContactNames } = useContacts()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const proof = notification as DidCommProofExchangeRecord
   const connection = useConnectionById(proof.connectionId ?? '')
@@ -291,7 +291,7 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   // Done proofs only stay in the list until their outcome has been viewed, so treat them as unread
   const isRead = !isDone && Boolean(proofMeta?.request_seen)
 
-  const proofRequestExpirationMs = useBCSCStore((s) => s.preferences.proofRequestExpirationMs)
+  const { proofRequestExpirationMs } = usePreferences()
   const effectiveExpiry = isDone
     ? undefined
     : getProofRequestExpiry(proof.createdAt, proofRequestExpirationMs, expiresTime)

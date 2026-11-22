@@ -26,7 +26,14 @@ export const useVerification = sliceHook('verification')
 export const useSavedServices = sliceHook('savedServices')
 export const useSession = sliceHook('session')
 
-// Outside React: services, system checks and event handlers
+// Which to use:
+// - Components: the slice hooks, for what they render and the actions they call. Destructure by default; select in
+//   components high in the tree (RootStack, providers), where a whole-slice subscription re-renders everything below.
+// - Shared hooks that render nothing (useSecureActions, useFactoryReset, the API hooks): getBCSCState() in their
+//   callbacks, so the many components using them don't re-render for every write to the slices they touch.
+// - Anywhere, a value that must be current when a callback runs (after an await, on a timer, in a stable focus
+//   effect): getBCSCState(), since a value from render can be stale by then.
+// - Outside React: services and system checks: getBCSCState().
 export const getBCSCState = (): BCSCStore => storage.store.getState()
 
 // Worked out instead of stored

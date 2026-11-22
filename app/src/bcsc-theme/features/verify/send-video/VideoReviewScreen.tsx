@@ -1,6 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { useSession } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
 import { SELFIE_VIDEO_EXPIRY_CHECK_INTERVAL_MS, SELFIE_VIDEO_EXPIRY_MS } from '@/constants'
@@ -61,6 +61,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { failedToReadFromLocalStorageAlert, videoPromptsMissingAlert } = useAlerts(navigation)
   const { refreshPrompts, isRefreshingPrompts } = useVideoPrompts()
   const { ButtonLoading } = useAnimatedComponents()
+  const { update: updateSession } = useSession()
 
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
@@ -106,9 +107,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
 
     logger.info('[VideoReview] Recording expired before it was submitted, discarding it')
     VerificationVideoCache.clearCache()
-    getBCSCState().session.update({ videoPath: undefined, videoDuration: undefined, videoThumbnailPath: '' })
+    updateSession({ videoPath: undefined, videoDuration: undefined, videoThumbnailPath: '' })
     navigation.replace(BCSCScreens.VideoExpired)
-  }, [logger, navigation])
+  }, [logger, navigation, updateSession])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -144,7 +145,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     isSubmittingRef.current = true
     setIsSubmitting(true)
 
-    getBCSCState().session.update({ videoThumbnailPath: videoThumbnailPath })
+    updateSession({ videoThumbnailPath: videoThumbnailPath })
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
@@ -172,7 +173,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     }
 
     VerificationVideoCache.clearCache()
-    getBCSCState().session.update({ videoPath: undefined, videoDuration: undefined, videoThumbnailPath: '' })
+    updateSession({ videoPath: undefined, videoDuration: undefined, videoThumbnailPath: '' })
     navigation.goBack()
   }
 
@@ -216,7 +217,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     try {
       // Clear the previously cached video
       VerificationVideoCache.clearCache()
-      getBCSCState().session.update({ videoPath: undefined, videoDuration: undefined })
+      updateSession({ videoPath: undefined, videoDuration: undefined })
 
       // Wrap the file reader with alert
       const readFileInChunksWithAlert = withAlert(readFileInChunks, failedToReadFromLocalStorageAlert)
@@ -228,7 +229,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       logger.error('Error caching video file:', error as Error)
     } finally {
       // Optimistically save the video path and duration
-      getBCSCState().session.update({ videoPath: videoPath, videoDuration: Math.floor(data.duration) })
+      updateSession({ videoPath: videoPath, videoDuration: Math.floor(data.duration) })
       setVideoLoaded(true)
     }
   }

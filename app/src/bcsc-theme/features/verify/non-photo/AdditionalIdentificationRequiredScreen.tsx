@@ -17,7 +17,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
   navigation,
 }: AdditionalIdentificationRequiredScreenProps) => {
   const { t } = useTranslation()
-  const storedCardProcess = useVerification((s) => s.cardProcess)
+  const { cardProcess: storedCardProcess } = useVerification()
 
   return (
     <BulletedInstructionsScreen

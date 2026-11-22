@@ -1,8 +1,7 @@
 import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import { mediatorLabel } from '@/bcsc-theme/features/agent/services/mediator-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { useBCSCStore } from '@/bcsc-theme/storage'
-import { getBCSCState, useApp } from '@/bcsc-theme/storage/hooks'
+import { useAccount, useApp, useDeveloper, usePreferences } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Switch } from '@/components/Switch'
 import { BCThemeNames, Mode } from '@/constants'
@@ -139,7 +138,7 @@ const RowDetail: React.FC<{ label: string; value: string }> = ({ label, value })
 const ConfigureMediatorSection: React.FC<{ style: StyleProp<ViewStyle> }> = ({ style }) => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
-  const selectedMediator = useBCSCStore((s) => s.preferences.selectedMediator)
+  const { selectedMediator } = usePreferences()
   const navigation = useNavigation()
   const route = useRoute()
 
@@ -173,6 +172,9 @@ const Developer: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const app = useApp()
+  const developer = useDeveloper()
+  const { setDeveloperMode } = usePreferences()
+  const { setTokens } = useAccount()
   const { client: apiClient } = useBCSCApiClientState()
   const { ColorPalette, Spacing, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
@@ -192,7 +194,7 @@ const Developer: React.FC = () => {
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
   const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
   // BCSC keeps these in its own store; the Bifold dispatches below still serve BC Wallet
-  const developerSettings = IS_BCSC ? getBCSCState().developer : store.developer
+  const developerSettings = IS_BCSC ? developer : store.developer
   const [enableProxy, setEnableProxy] = useState(!!developerSettings.enableProxy)
   const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!developerSettings.enableAppToAppPersonFlow)
   const [enableAttestation, setEnableAttestation] = useState(!!developerSettings.enableAttestation)
@@ -252,7 +254,7 @@ const Developer: React.FC = () => {
       payload: [!devMode],
     })
     if (IS_BCSC) {
-      void getBCSCState().preferences.setDeveloperMode(!devMode)
+      void setDeveloperMode(!devMode)
     }
     setDevMode(!devMode)
   }
@@ -327,7 +329,7 @@ const Developer: React.FC = () => {
         payload: [{ enabled: remoteLoggingEnabled, expireAt: undefined }],
       })
       if (IS_BCSC) {
-        void getBCSCState().developer.update({ remoteDebugging: {} })
+        void developer.update({ remoteDebugging: {} })
       }
 
       return
@@ -345,7 +347,7 @@ const Developer: React.FC = () => {
       payload: [{ enabledAt, sessionId: logger.sessionId }],
     })
     if (IS_BCSC) {
-      void getBCSCState().developer.update({
+      void developer.update({
         remoteDebugging: { enabledAt: enabledAt.toISOString(), sessionId: logger.sessionId },
       })
     }
@@ -385,7 +387,7 @@ const Developer: React.FC = () => {
       payload: [!enableProxy],
     })
     if (IS_BCSC) {
-      void getBCSCState().developer.update({ enableProxy: !enableProxy })
+      void developer.update({ enableProxy: !enableProxy })
     }
     setEnableProxy((previousState) => !previousState)
   }
@@ -396,7 +398,7 @@ const Developer: React.FC = () => {
       payload: [!enableAppToAppPersonFlow],
     })
     if (IS_BCSC) {
-      void getBCSCState().developer.update({ enableAppToAppPersonFlow: !enableAppToAppPersonFlow })
+      void developer.update({ enableAppToAppPersonFlow: !enableAppToAppPersonFlow })
     }
     setEnableAppToAppPersonFlow((previousState) => !previousState)
   }
@@ -407,7 +409,7 @@ const Developer: React.FC = () => {
       payload: [!enableAttestation],
     })
     if (IS_BCSC) {
-      void getBCSCState().developer.update({ enableAttestation: !enableAttestation })
+      void developer.update({ enableAttestation: !enableAttestation })
     }
     setEnableAttestation((previousState) => !previousState)
   }
@@ -416,20 +418,20 @@ const Developer: React.FC = () => {
     const next = themeName === BCThemeNames.Dark ? BCThemeNames.Light : BCThemeNames.Dark
     setTheme(next)
     if (IS_BCSC) {
-      void getBCSCState().developer.setTheme(next)
+      void developer.setTheme(next)
     }
   }
 
   const staleTermsOfUseAcceptance = () => {
     // Set a version that will never match the server's, so the Terms of Use
     // re-acceptance modal is presented on the next unlock (MainStack mount)
-    void getBCSCState().app.update({ acceptedTermsOfUseVersion: '-1' })
+    void app.update({ acceptedTermsOfUseVersion: '-1' })
   }
 
   const resetOnboardingIntro = () => {
     // Clear the "seen" flag so the welcome/intro is shown again the next time AuthStack mounts
     // (i.e. the next app launch or unlock) — mirrors how the intro is gated for returning users.
-    void getBCSCState().app.update({ hasSeenOnboardingIntro: false })
+    void app.update({ hasSeenOnboardingIntro: false })
   }
 
   const deleteTokens = async () => {
@@ -438,7 +440,7 @@ const Developer: React.FC = () => {
     // The registration access token stays: it is only ever removed together with its client ID
     try {
       if (IS_BCSC) {
-        await getBCSCState().account.setTokens({ accessToken: undefined, refreshToken: undefined })
+        await setTokens({ accessToken: undefined, refreshToken: undefined })
       } else {
         await Promise.all([deleteToken(TokenType.Refresh), deleteToken(TokenType.Access)])
       }

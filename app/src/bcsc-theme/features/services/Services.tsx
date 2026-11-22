@@ -3,7 +3,7 @@ import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useSavedServices } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -33,7 +33,7 @@ const Services: React.FC = () => {
   const { reportActivity } = useBCSCActivity() ?? {}
   const token = useTokenService()
   const { t } = useTranslation()
-  const savedServiceIds = useBCSCStore((s) => s.savedServices.ids)
+  const { ids: savedServiceIds } = useSavedServices()
   const { ColorPalette, Spacing, TextTheme, Inputs, maxFontSizeMultiplier } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
   const [search, setSearch] = useState('')

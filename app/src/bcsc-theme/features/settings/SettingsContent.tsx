@@ -1,9 +1,7 @@
 import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
 import { useDeveloperMode } from '@/bcsc-theme/hooks/useDeveloperMode'
 import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
-import { useBCSCStore } from '@/bcsc-theme/storage'
 import {
-  getBCSCState,
   useApp,
   useDeveloper,
   useNickname,
@@ -543,9 +541,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const app = useApp()
   const developer = useDeveloper()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const developerModeEnabled = useBCSCStore((s) => s.preferences.developerModeEnabled)
+  const { developerModeEnabled } = usePreferences()
   const accountSecurityMethod = useSecurityMethod()
-  const isAuthenticated = useSession((s) => s.didAuthenticate)
+  const { didAuthenticate: isAuthenticated } = useSession()
 
   const styles = makeStyles(Spacing, ColorPalette)
 
@@ -554,7 +552,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     onPressDeveloperMode()
   }
   const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
-
 
   const onPressTermsOfUse = async () => {
     try {
@@ -583,13 +580,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const onPressOptInAnalytics = async () => {
     if (app.analyticsOptIn) {
       Analytics.stopTracking()
-      void getBCSCState().app.update({ analyticsOptIn: false })
+      void app.update({ analyticsOptIn: false })
       return
     }
 
     try {
       await Analytics.initializeTracker(developer.environment.analyticsAppId)
-      void getBCSCState().app.update({ analyticsOptIn: true })
+      void app.update({ analyticsOptIn: true })
     } catch (error) {
       logger.error(
         'Failed to initialize analytics tracker on opt-in',

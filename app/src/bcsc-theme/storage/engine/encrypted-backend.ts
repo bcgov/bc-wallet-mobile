@@ -26,6 +26,7 @@ export interface EncryptedBackend extends Backend {
   open(): Promise<EncryptedOpenResult>
   destroy(): Promise<void>
   isOpen(): boolean
+  keepKeyThrough(clear: () => Promise<void>): Promise<void>
 }
 
 export const createEncryptedBackend = (keys: KeyStore, mmkv: MmkvFactory, meta: Meta): EncryptedBackend => {
@@ -92,6 +93,19 @@ export const createEncryptedBackend = (keys: KeyStore, mmkv: MmkvFactory, meta: 
         return 'wrong-key'
       }
       return 'opened'
+    },
+    // The open file stays encrypted with this key, so it goes back however clear() ends. A key that can't be
+    // read now couldn't be put back, so nothing is cleared.
+    keepKeyThrough: async (clear) => {
+      const key = await keys.read()
+      if (key.status !== 'ok') {
+        throw new Error(`encryption key is ${key.status}; keychain not cleared`)
+      }
+      try {
+        await clear()
+      } finally {
+        await keys.restore(key.value)
+      }
     },
     destroy: async () => {
       instance = undefined

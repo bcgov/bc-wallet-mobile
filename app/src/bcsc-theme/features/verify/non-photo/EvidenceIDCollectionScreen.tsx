@@ -58,7 +58,7 @@ type EvidenceIDCollectionScreenProps = {
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
   const { additionalEvidenceData, cardProcess } = useJourney()
-  const userMetadata = useSession((s) => s.userMetadata)
+  const { userMetadata } = useSession()
   const birthdate = useBirthdate()
   const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])

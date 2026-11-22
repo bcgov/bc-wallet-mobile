@@ -6,7 +6,13 @@ import {
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { selectJourney, VerificationJourney } from '@/bcsc-theme/state/verification/journey'
-import { getBCSCState, useBirthdate, useDeviceCodeExpiresAt, useSession, useVerification } from '@/bcsc-theme/storage/hooks'
+import {
+  getBCSCState,
+  useBirthdate,
+  useDeviceCodeExpiresAt,
+  useSession,
+  useVerification,
+} from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { formatBirthdateForApi } from '@/bcsc-theme/utils/birthdate'
@@ -57,7 +63,8 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
   const { userMetadata, residentialAddressDraft } = useSession(
     useShallow((s) => ({ userMetadata: s.userMetadata, residentialAddressDraft: s.residentialAddressDraft }))
   )
-  const deviceCode = useVerification((v) => v.request?.deviceCode)
+  const { request } = useVerification()
+  const deviceCode = request?.deviceCode
   const deviceCodeExpiresAt = useDeviceCodeExpiresAt()
   const birthdate = useBirthdate()
   const authorizationService = useAuthorizationService()

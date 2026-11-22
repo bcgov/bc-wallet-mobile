@@ -1,5 +1,5 @@
-import { getBCSCState, useApp, useDeveloper } from '@/bcsc-theme/storage/hooks'
-import { journeyVerificationState, selectJourney } from '@/bcsc-theme/state/verification/journey'
+import { journeyVerificationState, useJourney } from '@/bcsc-theme/state/verification/journey'
+import { useApp, useDeveloper } from '@/bcsc-theme/storage/hooks'
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
@@ -37,6 +37,9 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
   const { t } = useTranslation()
   const app = useApp()
   const developer = useDeveloper()
+  const journey = useJourney()
+  const { verified, credentialDeactivated, inVerifyFlow, cardProcess } = journey
+  const { isCardInactive } = journeyVerificationState(journey)
   const { Spacing, ColorPalette, TextTheme, maxFontSizeMultiplier } = useTheme()
   // Inset works inside this RN Modal because the app's root SafeAreaProvider context crosses the
   // modal boundary; applied as scroll padding so the action button clears the home indicator.
@@ -88,13 +91,11 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     const appError = AppError.fromErrorDefinition(ErrorRegistry.REPORT_PROBLEM)
 
     // Add context to the error for debugging purposes
-    const journey = selectJourney(getBCSCState())
-    const { verified, inVerifyFlow, cardProcess } = journey
     appError.addContext({
       state_ias_environment: developer.environment.name,
       state_verified: verified,
-      state_credential_deactivated: journey.credentialDeactivated,
-      state_card_inactive: journeyVerificationState(journey).isCardInactive,
+      state_credential_deactivated: credentialDeactivated,
+      state_card_inactive: isCardInactive,
       state_in_verify_flow: inVerifyFlow,
       state_card_process: cardProcess,
       // ...
@@ -115,6 +116,11 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     setReportId(reportId)
   }, [
     description,
+    verified,
+    credentialDeactivated,
+    isCardInactive,
+    inVerifyFlow,
+    cardProcess,
     developer.environment.name,
     developer.remoteDebugging.sessionId,
     app.appBuildHistory,

@@ -149,6 +149,10 @@ export const createTestEnv = (input: TestInput = {}, options: TestOptions = {}) 
       device.keychain.set('meta/encryption-key', key)
       return key
     },
+    restore: async (key) => {
+      write()
+      device.keychain.set('meta/encryption-key', key)
+    },
     remove: async () => {
       write()
       device.keychain.delete('meta/encryption-key')
