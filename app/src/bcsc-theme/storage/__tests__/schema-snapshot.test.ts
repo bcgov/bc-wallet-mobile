@@ -14,6 +14,10 @@ it('stored shapes change only with a new storage version', () => {
     ])
   )
   if (process.env.STORAGE_SNAPSHOT === 'write') {
+    // A shipped version's shapes are fixed: changing them needs a new migration, which bumps LATEST
+    if (fs.existsSync(file)) {
+      throw new Error(`s${LATEST}.json already exists: add a migration to change a stored shape`)
+    }
     fs.writeFileSync(file, `${JSON.stringify(current, null, 2)}\n`)
   }
   expect(current).toEqual(JSON.parse(fs.readFileSync(file, 'utf8')))

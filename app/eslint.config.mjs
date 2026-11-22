@@ -7,6 +7,40 @@ import reactNativeA11y from 'eslint-plugin-react-native-a11y'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
+// Imports BCSC code must not use, shared by both no-restricted-imports blocks (a later block replaces the rule)
+const bcscRestrictedPaths = [
+  // Large OS font sizes (#4401): a raw react-native Text scales without limit (3.57x on iOS).
+  // Bifold's ThemedText applies the theme's cap, so BCSC screens use it exclusively.
+  {
+    name: 'react-native',
+    importNames: ['Text'],
+    message: "Use ThemedText from '@bifold/core' so the theme's font-scale cap applies.",
+  },
+  // PIN lockout (#4423): wrong PINs are counted in TypeScript, so a PIN checked anywhere but
+  // the lockout service is a guess that never counts towards a lock.
+  {
+    name: 'react-native-bcsc-core',
+    importNames: ['verifyPIN'],
+    message:
+      'Check PINs with verifyPinWithLockout (features/auth/services/pin-lockout-service) so the attempt is counted.',
+  },
+  // BCSC state lives in its own store; Bifold's isn't mounted in BCSC (BifoldStoreView), so its
+  // dispatches do nothing. Caches go through the caches slice, not PersistentStorage.
+  {
+    name: '@bifold/core',
+    importNames: ['useStore', 'DispatchAction', 'StoreProvider', 'PersistentStorage'],
+    message: "BCSC state lives in '@/bcsc-theme/storage' (slice hooks in ./hooks).",
+  },
+  {
+    name: '@/store',
+    importNames: ['BCDispatchAction'],
+    message: "BCSC state lives in '@/bcsc-theme/storage' (slice hooks in ./hooks).",
+  },
+]
+
+const MIGRATION_IMPORT =
+  'Migrations keep frozen copies of the schemas they need; never import the live slices or store.'
+
 export default [
   {
     settings: {
@@ -142,34 +176,26 @@ export default [
       'no-restricted-imports': [
         'error',
         {
+          paths: bcscRestrictedPaths,
+        },
+      ],
+    },
+  },
+  // A shipped migration must keep doing what it did, so it never reads the live slices: it keeps
+  // frozen copies of the schemas it needs
+  {
+    files: ['src/bcsc-theme/storage/migrations/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          // The storage root, matched exactly: as a pattern, '..' would cover every sibling folder
           paths: [
-            // Large OS font sizes (#4401): a raw react-native Text scales without limit (3.57x on iOS).
-            // Bifold's ThemedText applies the theme's cap, so BCSC screens use it exclusively.
-            {
-              name: 'react-native',
-              importNames: ['Text'],
-              message: "Use ThemedText from '@bifold/core' so the theme's font-scale cap applies.",
-            },
-            // PIN lockout (#4423): wrong PINs are counted in TypeScript, so a PIN checked anywhere but
-            // the lockout service is a guess that never counts towards a lock.
-            {
-              name: 'react-native-bcsc-core',
-              importNames: ['verifyPIN'],
-              message:
-                'Check PINs with verifyPinWithLockout (features/auth/services/pin-lockout-service) so the attempt is counted.',
-            },
-            // BCSC state lives in its own store; Bifold's isn't mounted in BCSC (BifoldStoreView), so its
-            // dispatches do nothing. Caches go through the caches slice, not PersistentStorage.
-            {
-              name: '@bifold/core',
-              importNames: ['useStore', 'DispatchAction', 'StoreProvider', 'PersistentStorage'],
-              message: "BCSC state lives in '@/bcsc-theme/storage' (slice hooks in ./hooks).",
-            },
-            {
-              name: '@/store',
-              importNames: ['BCDispatchAction'],
-              message: "BCSC state lives in '@/bcsc-theme/storage' (slice hooks in ./hooks).",
-            },
+            ...bcscRestrictedPaths,
+            ...['..', '../index', '@/bcsc-theme/storage'].map((name) => ({ name, message: MIGRATION_IMPORT })),
+          ],
+          patterns: [
+            { group: ['**/slices', '**/slices/*', '**/storage/hooks', '../hooks'], message: MIGRATION_IMPORT },
           ],
         },
       ],
