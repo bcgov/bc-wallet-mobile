@@ -1,11 +1,4 @@
-import {
-  getBCSCState,
-  useApp,
-  useDeveloper,
-  useHasAccount,
-  useSession,
-  useSessionRecoveryRequired,
-} from '@/bcsc-theme/storage/hooks'
+import { useApp, useDeveloper, useHasAccount, useSession, useSessionRecoveryRequired } from '@/bcsc-theme/storage/hooks'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { isProductionBundle, isProductionEnvironment } from '@/utils/environment'
 import { TOKENS, useServices } from '@bifold/core'
@@ -59,6 +52,7 @@ const FcmCardExpirySync: React.FC = () => {
 const useVerificationRouting = (appReady: boolean) => {
   const hasAccount = useHasAccount()
   const didAuthenticate = useSession((s) => s.didAuthenticate)
+  const setInVerifyFlow = useSession((s) => s.setInVerifyFlow)
   const sessionRecoveryRequired = useSessionRecoveryRequired()
   const app = useApp()
   const { needsVerification, isVerified, isVerificationInProgress, isDeactivated } = useVerificationState()
@@ -103,9 +97,17 @@ const useVerificationRouting = (appReady: boolean) => {
     setResumeEvaluated(true)
 
     if (wantsToResumeVerification) {
-      getBCSCState().session.setInVerifyFlow(true)
+      setInVerifyFlow(true)
     }
-  }, [resumeEvaluated, appReady, signedIn, serverStatusChecked, isServerAvailable, wantsToResumeVerification])
+  }, [
+    resumeEvaluated,
+    appReady,
+    signedIn,
+    serverStatusChecked,
+    isServerAvailable,
+    wantsToResumeVerification,
+    setInVerifyFlow,
+  ])
 
   // Wait for server status before rendering app, if the server is down, the user will see the outage screen
   const awaitingStatusForResume = !serverStatusChecked && signedIn && wantsToResumeVerification && !verifyPromptAnswered

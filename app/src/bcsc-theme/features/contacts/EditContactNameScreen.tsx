@@ -1,5 +1,5 @@
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useContacts } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { LimitedTextInput, ThemedText, getConnectionName, testIdWithKey, useTheme } from '@bifold/core'
@@ -25,8 +25,7 @@ const EditContactNameScreen = ({ navigation, route }: EditContactNameScreenProps
   const { connectionId } = route.params
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
-  const setAlternateName = useBCSCStore((s) => s.contacts.setAlternateName)
+  const { alternateNames: alternateContactNames, setAlternateName } = useContacts()
   const connection = useConnectionById(connectionId)
   const [name, setName] = useState(getConnectionName(connection, alternateContactNames))
 

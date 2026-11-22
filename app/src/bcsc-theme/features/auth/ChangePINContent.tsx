@@ -1,7 +1,7 @@
 import { ChangePINForm } from '@/bcsc-theme/features/auth/components/ChangePINForm'
 import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { useAccount } from '@/bcsc-theme/storage/hooks'
 import { TOKENS, useServices } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
@@ -32,6 +32,7 @@ export const ChangePINContent = ({
 }: ChangePINContentProps) => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const walletService = useWalletService()
+  const { updateProfile } = useAccount()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // Handler for when user is changing their existing PIN
@@ -55,7 +56,7 @@ export const ChangePINContent = ({
       const method = isDeviceAuthAvailable
         ? AccountSecurityMethod.PinWithDeviceAuth
         : AccountSecurityMethod.PinNoDeviceAuth
-      await getBCSCState().account.updateProfile({ securityMethod: method })
+      await updateProfile({ securityMethod: method })
 
       logger.info('Switched to PIN security method')
 
@@ -65,7 +66,7 @@ export const ChangePINContent = ({
         onCreatePINSuccess()
       }
     },
-    [logger, navigation, walletService, onCreatePINSuccess]
+    [logger, navigation, walletService, updateProfile, onCreatePINSuccess]
   )
 
   // Render ChangePINForm when changing existing PIN, PINEntryForm when switching from Device Auth

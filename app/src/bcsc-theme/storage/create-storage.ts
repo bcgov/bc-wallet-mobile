@@ -43,9 +43,13 @@ export const createStorage = (deps: StorageDeps) => {
     store.setState(initialState, true)
   }
 
+  // bcsc-core's clearAllKeychainData deletes every keychain item the app has: its device keys, and the store's
+  // encryption key and tokens. The key is put back, so the encrypted store still opens; the tokens stay deleted.
+  const clearKeychain = () => deps.encrypted.keepKeyThrough(deps.core.clearAllKeychainData)
+
   const wipe = createWipe(deps, reset)
   const open = createOpen({ ...deps, migrations: deps.migrations ?? MIGRATIONS }, persistence, wipe)
-  return { store, wipe, open, status: persistence.status, reset }
+  return { store, wipe, open, clearKeychain, status: persistence.status, reset }
 }
 
 export type Storage = ReturnType<typeof createStorage>

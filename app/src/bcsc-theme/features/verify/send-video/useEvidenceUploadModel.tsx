@@ -7,8 +7,8 @@ import useAlreadyVerifiedRecovery from '@/bcsc-theme/hooks/useAlreadyVerifiedRec
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
-import { getBCSCState, useSession, useVerification } from '@/bcsc-theme/storage/hooks'
 import { selectJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState, useSession, useVerificationRequestId } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
@@ -107,7 +107,7 @@ const useEvidenceUploadModel = (
 
   const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata, verificationRequestSha } =
     useSession()
-  const verificationRequestId = useVerification((v) => v.request?.backCheckVerificationId)
+  const verificationRequestId = useVerificationRequestId()
 
   // Derived from the stage alone so the text keeps matching the bar after an error or completion.
   const uploadMessage = useMemo(() => {

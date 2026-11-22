@@ -1,4 +1,4 @@
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useContacts } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
 import { formatTime, getConnectionName, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { DidCommConnectionRecord } from '@credo-ts/didcomm'
@@ -21,7 +21,7 @@ interface ContactRowProps {
  */
 const ContactRow: React.FC<ContactRowProps> = ({ contact, pinned, onPress, onLongPress }) => {
   const { ColorPalette, Spacing } = useTheme()
-  const alternateContactNames = useBCSCStore((s) => s.contacts.alternateNames)
+  const { alternateNames: alternateContactNames } = useContacts()
 
   const name = useMemo(() => getConnectionName(contact, alternateContactNames), [contact, alternateContactNames])
   const initial = useMemo(() => name.charAt(0).toUpperCase(), [name])

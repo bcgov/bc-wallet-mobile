@@ -1,6 +1,6 @@
 import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { useApp } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
 import WelcomeIllustration from '@assets/img/welcome_phone.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -30,10 +30,12 @@ export const OnboardingIntroScreen = ({ onContinue }: OnboardingIntroScreenProps
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
 
+  const { update: updateApp } = useApp()
+
   const handleContinue = useCallback(() => {
-    void getBCSCState().app.update({ hasSeenOnboardingIntro: true })
+    void updateApp({ hasSeenOnboardingIntro: true })
     onContinue?.()
-  }, [onContinue])
+  }, [onContinue, updateApp])
 
   const styles = StyleSheet.create({
     image: {

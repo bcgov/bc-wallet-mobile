@@ -1,7 +1,7 @@
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { useAccount } from '@/bcsc-theme/storage/hooks'
 import { newProfile } from '@/bcsc-theme/storage/slices/account'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
@@ -11,10 +11,7 @@ import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  AccountSecurityMethod,
-  setupDeviceSecurity,
-} from 'react-native-bcsc-core'
+import { AccountSecurityMethod, setupDeviceSecurity } from 'react-native-bcsc-core'
 
 interface SecureAppScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSecureApp>
@@ -30,12 +27,13 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
   const { handleSuccessfulAuth } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const client = useBCSCApiClient()
+  const { profile, updateProfile } = useAccount()
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
       // The PIN is found through the account, so a new one comes first. An existing account is kept as is,
       // because replacing it with the placeholder would lose its client ID.
-      const existing = getBCSCState().account.profile
+      const existing = profile
       const account =
         existing ??
         newProfile({
@@ -48,7 +46,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
       const { success, walletKey } = await setupDeviceSecurity({ accountId: account.accountId, issuer: account.issuer })
       if (success) {
         if (existing) {
-          await getBCSCState().account.updateProfile({ securityMethod: AccountSecurityMethod.DeviceAuth })
+          await updateProfile({ securityMethod: AccountSecurityMethod.DeviceAuth })
         }
 
         // Complete onboarding with the wallet key
@@ -61,7 +59,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
       const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
       logger.error(`Error completing device security setup: ${appError.technicalMessage ?? appError.message}`)
     }
-  }, [client.endpoints.issuer, handleSuccessfulAuth, logger])
+  }, [client.endpoints.issuer, handleSuccessfulAuth, logger, profile, updateProfile])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)

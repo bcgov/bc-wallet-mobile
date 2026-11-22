@@ -7,7 +7,8 @@ import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useState } from 'react'
 
 const useVerificationResponseViewModel = () => {
-  const registrationAccessToken = useAccount((a) => a.tokens?.registrationAccessToken)
+  const { tokens } = useAccount()
+  const registrationAccessToken = tokens?.registrationAccessToken
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const registration = useRegistrationService()
   const { getCachedIdTokenMetadata } = useTokenService()

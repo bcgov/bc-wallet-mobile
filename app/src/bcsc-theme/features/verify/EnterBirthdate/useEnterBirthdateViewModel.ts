@@ -17,7 +17,8 @@ import { useCallback } from 'react'
 export const useEnterBirthdateViewModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
 ) => {
-  const storedSerial = useVerification((v) => v.request?.csn)
+  const { request } = useVerification()
+  const storedSerial = request?.csn
   const initialDate = useBirthdate()
   const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])

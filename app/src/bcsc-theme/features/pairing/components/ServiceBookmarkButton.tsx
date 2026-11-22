@@ -1,5 +1,5 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useSavedServices } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
@@ -13,7 +13,7 @@ type ServiceBookmarkButtonProps = {
 
 const ServiceBookmarkButton = ({ serviceId }: ServiceBookmarkButtonProps) => {
   const { ColorPalette, Spacing, TextTheme } = useTheme()
-  const savedServiceIds = useBCSCStore((s) => s.savedServices.ids)
+  const { ids: savedServiceIds } = useSavedServices()
   const { t } = useTranslation()
   const { updateSavedService } = useSecureActions()
 

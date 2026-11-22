@@ -1,4 +1,4 @@
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { usePreferences } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { formatTime, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -39,7 +39,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   const headerHeight = useHeaderHeight()
 
   const { items, theirLabel, onSend, isAgentReady } = useContactChat(connectionId, navigation)
-  const developerModeEnabled = useBCSCStore((s) => s.preferences.developerModeEnabled)
+  const { developerModeEnabled } = usePreferences()
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: theirLabel })

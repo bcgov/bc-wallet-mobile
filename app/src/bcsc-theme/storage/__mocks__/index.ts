@@ -1,5 +1,6 @@
 // Jest stand-in for the storage module (applied in jestSetup.js): the real store over in-memory backends,
 // already open, so components and hooks can read it and call its actions. Seed and reset it with ./testing.
+import { clearAllKeychainData } from 'react-native-bcsc-core'
 import { useStore } from 'zustand'
 import { createStorage } from '../create-storage'
 import type { Backend } from '../engine/backend'
@@ -20,6 +21,7 @@ const encrypted: EncryptedBackend & { clearAll(): void } = {
   open: async () => 'opened',
   destroy: async () => undefined,
   isOpen: () => true,
+  keepKeyThrough: (clear) => clear(),
 }
 
 const keychain = memoryBackend()
@@ -37,7 +39,8 @@ const created = createStorage({
     removeNative: async () => undefined,
   },
   ownedAsyncKeys: [],
-  core: { clearAllKeychainData: async () => undefined, removeLegacyNativeData: async () => undefined },
+  // Through to bcsc-core's mock, as the real module is wired, so tests can see and fail the call
+  core: { clearAllKeychainData: () => clearAllKeychainData(), removeLegacyNativeData: async () => undefined },
   logger: { info: () => undefined, warn: () => undefined, error: () => undefined },
 })
 

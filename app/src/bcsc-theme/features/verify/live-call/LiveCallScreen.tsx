@@ -1,4 +1,3 @@
-import { useVerification } from '@/bcsc-theme/storage/hooks'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
@@ -6,6 +5,7 @@ import { useFcmService } from '@/bcsc-theme/features/fcm'
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
+import { useVerification } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
 import { CROP_DELAY_MS } from '@/constants'
@@ -47,8 +47,9 @@ const getCallVolume = (result: VolumeResult & { call?: number }) =>
 
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
-  const deviceCode = useVerification((v) => v.request?.deviceCode)
-  const userCode = useVerification((v) => v.request?.userCode)
+  const { request } = useVerification()
+  const deviceCode = request?.deviceCode
+  const userCode = request?.userCode
   const fcmService = useFcmService()
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
@@ -79,10 +80,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       }
 
       // checkVerificationStatus already calls updateTokens internally, no need to call it again
-      const isVerified = await tokenService.checkVerificationStatus(
-        deviceCode,
-        userCode
-      )
+      const isVerified = await tokenService.checkVerificationStatus(deviceCode, userCode)
 
       if (!isVerified) {
         logger.info('[LiveCallScreen.leaveCall] User not verified')

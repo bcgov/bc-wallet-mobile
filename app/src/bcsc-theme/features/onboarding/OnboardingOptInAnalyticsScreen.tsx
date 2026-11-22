@@ -1,6 +1,6 @@
 import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { getBCSCState, useDeveloper } from '@/bcsc-theme/storage/hooks'
+import { useApp, useDeveloper } from '@/bcsc-theme/storage/hooks'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
@@ -35,6 +35,7 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const developer = useDeveloper()
+  const { update: updateApp } = useApp()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
@@ -59,7 +60,7 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
     void nextScreen()
     try {
       await Analytics.initializeTracker(developer.environment.analyticsAppId)
-      void getBCSCState().app.update({ analyticsOptIn: true })
+      void updateApp({ analyticsOptIn: true })
     } catch (error) {
       logger.error(
         'Failed to initialize analytics tracker on opt-in',
@@ -73,7 +74,7 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
 
   const handleDeniedPressed = () => {
     logger.info('User denied analytics opt-in')
-    void getBCSCState().app.update({ analyticsOptIn: false })
+    void updateApp({ analyticsOptIn: false })
     void nextScreen()
   }
 

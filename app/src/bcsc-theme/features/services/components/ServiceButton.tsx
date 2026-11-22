@@ -1,6 +1,6 @@
 import { ListButton, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useSavedServices } from '@/bcsc-theme/storage/hooks'
 import { hitSlop } from '@/constants'
 import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -28,7 +28,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({
   position,
 }) => {
   const { ColorPalette, Spacing } = useTheme()
-  const savedServiceIds = useBCSCStore((s) => s.savedServices.ids)
+  const { ids: savedServiceIds } = useSavedServices()
   const { updateSavedService } = useSecureActions()
 
   const isBookmarked = savedServiceIds.includes(clientRefId)

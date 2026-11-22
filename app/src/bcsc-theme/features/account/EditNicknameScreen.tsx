@@ -7,8 +7,8 @@ import NicknameForm from './components/NicknameForm'
 
 const EditNicknameScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const registrationAccessToken = useAccount((s) => s.tokens?.registrationAccessToken)
-  const updateProfile = useAccount((s) => s.updateProfile)
+  const { tokens, updateProfile } = useAccount()
+  const registrationAccessToken = tokens?.registrationAccessToken
   const registration = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 

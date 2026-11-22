@@ -224,3 +224,37 @@ describe('storage.wipe', () => {
     expect(env.storage.store.getState().account.profile).toBeUndefined()
   })
 })
+
+describe('storage.clearKeychain', () => {
+  const openWithTokens = async () => {
+    const env = createTestEnv({ native: { account: { status: 'ok', value: nativeAccount } } })
+    await env.storage.open()
+    await env.storage.store.getState().account.setTokens({ refreshToken: 'refresh-1' })
+    return env
+  }
+
+  it('keeps the encrypted store readable after a relaunch, and the tokens deleted', async () => {
+    const env = await openWithTokens()
+    await env.storage.clearKeychain()
+    expect(env.device.keychain.has('account/tokens')).toBe(false)
+    env.restart()
+    expect(await env.storage.open()).toEqual({ status: 'ok' })
+    expect(env.storage.store.getState().account.profile?.accountId).toBe('account-1')
+  })
+
+  it('is needed: clearing the keychain alone leaves the store unreadable', async () => {
+    const env = await openWithTokens()
+    env.device.keychain.clear()
+    env.restart()
+    expect(await env.storage.open()).toEqual({ status: 'not-ready', reason: 'key-missing' })
+  })
+
+  it('clears nothing while the key cannot be read', async () => {
+    const env = await openWithTokens()
+    env.device.keychainLocked = true
+    await expect(env.storage.clearKeychain()).rejects.toThrow('encryption key is locked')
+    env.device.keychainLocked = false
+    expect(env.device.keychain.has('meta/encryption-key')).toBe(true)
+    expect(env.device.keychain.has('account/tokens')).toBe(true)
+  })
+})

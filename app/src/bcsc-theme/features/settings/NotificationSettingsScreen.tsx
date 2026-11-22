@@ -1,6 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { usePreferences } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
 import * as PushNotifications from '@/utils/PushNotificationsHelper'
 import PushNotificationImage from '@assets/img/push-notifications-image.svg'
@@ -48,7 +48,7 @@ const INSTRUCTION_STEPS = [
 export const NotificationSettingsScreen = (): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const setUsePushNotifications = useBCSCStore((s) => s.preferences.setUsePushNotifications)
+  const { setUsePushNotifications } = usePreferences()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const agent = useBCSCAgentSafe()?.agent ?? null
   const { status, refresh } = useNotificationPermissionStatus()

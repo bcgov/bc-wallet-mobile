@@ -1,5 +1,5 @@
 import { TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { useApp } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useCallback } from 'react'
@@ -18,10 +18,11 @@ type TermsOfUseUpdatedProps = StackScreenProps<BCSCMainStackParams, BCSCModals.T
  */
 export const TermsOfUseUpdated = ({ navigation }: TermsOfUseUpdatedProps): React.ReactElement => {
   const { t } = useTranslation()
+  const { update: updateApp } = useApp()
 
   const handleAccept = useCallback(
     (termsOfUse: TermsOfUseResponseData) => {
-      void getBCSCState().app.update({ acceptedTermsOfUseVersion: String(termsOfUse.version) })
+      void updateApp({ acceptedTermsOfUseVersion: String(termsOfUse.version) })
 
       // Dismiss deterministically: return to the previous route if there is one,
       // otherwise fall back to the tab stack so the user is never stranded.
@@ -32,7 +33,7 @@ export const TermsOfUseUpdated = ({ navigation }: TermsOfUseUpdatedProps): React
 
       navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
     },
-    [navigation]
+    [navigation, updateApp]
   )
 
   return <TermsOfUseContent onAccept={handleAccept} headerText={t('BCSC.Modals.TermsOfUseUpdated.Header')} />

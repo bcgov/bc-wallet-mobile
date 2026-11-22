@@ -3,12 +3,13 @@ import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-ser
 import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { storage } from '@/bcsc-theme/storage'
 import { getBCSCState, useDeveloper, usePreferences, useSession } from '@/bcsc-theme/storage/hooks'
 import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { WALLET_ID } from '@/constants'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback } from 'react'
-import { clearAllKeychainData, deletePIN } from 'react-native-bcsc-core'
+import { deletePIN } from 'react-native-bcsc-core'
 import { Config } from 'react-native-config'
 import useRegistrationApi from './useRegistrationApi'
 
@@ -97,7 +98,8 @@ export const useFactoryReset = () => {
     // Clear all remaining Keychain data
     try {
       logger.info('FactoryReset: Clearing all Keychain data...')
-      await clearAllKeychainData()
+      // Through the store, which keeps its encryption key; bcsc-core's clear alone would make it unreadable
+      await storage.clearKeychain()
     } catch (error) {
       const err = error as { message?: string; code?: string; userInfo?: unknown } | undefined
       logger.warn('FactoryReset: Failed to clear Keychain data', {

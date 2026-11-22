@@ -10,7 +10,7 @@ const CancelledReviewNotification = () => {
   const { ColorPalette } = useTheme()
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const agentReason = useSession((s) => s.verificationRequestStatusMessage)
+  const { verificationRequestStatusMessage: agentReason } = useSession()
 
   return (
     <NotificationActionCard

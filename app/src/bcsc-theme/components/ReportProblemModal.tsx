@@ -1,5 +1,5 @@
-import { getBCSCState, useApp, useDeveloper } from '@/bcsc-theme/storage/hooks'
-import { selectJourney } from '@/bcsc-theme/state/verification/journey'
+import { useJourney } from '@/bcsc-theme/state/verification/journey'
+import { useApp, useDeveloper } from '@/bcsc-theme/storage/hooks'
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
@@ -36,6 +36,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
   const { t } = useTranslation()
   const app = useApp()
   const developer = useDeveloper()
+  const { verified, credentialDeactivated, inVerifyFlow, cardProcess } = useJourney()
   const { Spacing, ColorPalette, TextTheme, maxFontSizeMultiplier } = useTheme()
   // Inset works inside this RN Modal because the app's root SafeAreaProvider context crosses the
   // modal boundary; applied as scroll padding so the action button clears the home indicator.
@@ -87,7 +88,6 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     const appError = AppError.fromErrorDefinition(ErrorRegistry.REPORT_PROBLEM)
 
     // Add context to the error for debugging purposes
-    const { verified, credentialDeactivated, inVerifyFlow, cardProcess } = selectJourney(getBCSCState())
     appError.addContext({
       state_ias_environment: developer.environment.name,
       state_verified: verified,
@@ -111,6 +111,10 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     setReportId(reportId)
   }, [
     description,
+    verified,
+    credentialDeactivated,
+    inVerifyFlow,
+    cardProcess,
     developer.environment.name,
     developer.remoteDebugging.sessionId,
     app.installId,

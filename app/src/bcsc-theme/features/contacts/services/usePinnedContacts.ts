@@ -1,4 +1,4 @@
-import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useContacts } from '@/bcsc-theme/storage/hooks'
 import { useCallback, useMemo } from 'react'
 
 /**
@@ -7,8 +7,7 @@ import { useCallback, useMemo } from 'react'
  * @return the pinned contact IDs, and functions to check and toggle one
  */
 export const usePinnedContacts = () => {
-  const pinned = useBCSCStore((s) => s.contacts.pinned)
-  const togglePinned = useBCSCStore((s) => s.contacts.togglePinned)
+  const { pinned, togglePinned } = useContacts()
   const pinnedIds = useMemo(() => new Set(pinned), [pinned])
   const isPinned = useCallback((contactId: string) => pinnedIds.has(contactId), [pinnedIds])
   const togglePin = useCallback((contactId: string) => void togglePinned(contactId), [togglePinned])

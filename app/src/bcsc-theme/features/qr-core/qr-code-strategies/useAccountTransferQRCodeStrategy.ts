@@ -40,7 +40,8 @@ export const useAccountTransferQRCodeStrategy = (
   const { deviceAttestation, authorization, token } = useApi()
   const apiClient = useBCSCApiClient()
   const { updateTokens, updateUserInfo, updateDeviceCodes } = useSecureActions()
-  const deviceCode = useVerification((v) => v.request?.deviceCode)
+  const { request } = useVerification()
+  const deviceCode = request?.deviceCode
   const { isVerified } = useVerificationState()
   // Shared by several scanner screens, so the origin screen for recovery is whichever one renders this hook
   const route = useRoute()

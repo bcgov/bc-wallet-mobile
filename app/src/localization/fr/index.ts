@@ -380,7 +380,7 @@ const translation = {
     },
     "Storage": {
       "ErrorTitle": "We can't open your app data (FR)",
-      "ErrorDescription": "Your information is still on this device. Try again, and contact support if this keeps happening. (FR)",
+      "ErrorDescription": "Your information is still on this device. Please try again. (FR)",
       "Retry": "Try again (FR)",
       "ReferenceCode": "Reference: {{code}} (FR)",
       "UpdateTitle": "Update the app (FR)",

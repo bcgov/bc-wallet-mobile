@@ -1,5 +1,5 @@
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { useSession } from '@/bcsc-theme/storage/hooks'
 import { useAlerts } from '@/hooks/useAlerts'
 import { withAlert } from '@/utils/alert'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -19,6 +19,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
+  const { update: updateSession } = useSession()
 
   if (!photoPath) {
     throw new Error(t('BCSC.PhotoReview.PathRequired'))
@@ -30,7 +31,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       const getPhotoMetadataWithAlert = withAlert(getPhotoMetadata, failedToReadFromLocalStorageAlert)
       const photoMetadata = await getPhotoMetadataWithAlert(photoPath, logger)
 
-      getBCSCState().session.update({ photoPath, photoMetadata })
+      updateSession({ photoPath, photoMetadata })
 
       if (forLiveCall) {
         navigation.dispatch(
