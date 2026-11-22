@@ -213,11 +213,9 @@ export const m0002: Migration = {
       ['verification/evidence', snapshot.evidence, EvidenceV2],
       ['savedServices', snapshot.savedServices, SavedServicesV2],
     ]
-    for (const [key, record, schema] of records) {
-      if (record.status === 'ok') {
-        await check('encrypted', key, schema)
-      }
-    }
+    await Promise.all(
+      records.filter(([, record]) => record.status === 'ok').map(([key, , schema]) => check('encrypted', key, schema))
+    )
     if (failed.length > 0) {
       throw new VerifyError(failed)
     }

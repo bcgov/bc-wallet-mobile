@@ -31,7 +31,10 @@ const mapFailure = async <T>(operation: () => Promise<T>, failure: ErrorDefiniti
 
 // The record lives in account/pinAttempts (m0001 copied the AsyncStorage one there)
 const readFacts = async (logger: BifoldLogger): Promise<PinAttemptFacts | undefined> => {
-  const record = await mapFailure(async () => getBCSCState().account.pinAttempts, ErrorRegistry.STORAGE_READ_ERROR)
+  const record = await mapFailure(
+    () => Promise.resolve(getBCSCState().account.pinAttempts),
+    ErrorRegistry.STORAGE_READ_ERROR
+  )
 
   if (!record || record.failedCount < 1) {
     return undefined

@@ -236,7 +236,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       return
     }
 
-    return createRegistration()
+    return await createRegistration()
   }, [createRegistration, logger])
 
   /**

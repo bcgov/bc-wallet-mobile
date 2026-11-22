@@ -76,7 +76,7 @@ export const useQuickLoginURL = () => {
         // fetchJwkResult never rejects: a failure resolves with jwk null and the reason in error
         const [tokens, account, jwkResult] = await Promise.all([
           steps.run('notification_tokens', () => getNotificationTokens(logger)),
-          steps.run('account', async () => selectAccountRecord(getBCSCState())),
+          steps.run('account', () => Promise.resolve(selectAccountRecord(getBCSCState()))),
           client.fetchJwkResult(),
         ])
 

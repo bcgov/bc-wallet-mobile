@@ -48,8 +48,26 @@ const otherMmkv = (deps: StorageDeps, backend: BackendName): Backend | undefined
 export const misplacedKeys = (deps: StorageDeps): string[] =>
   PERSISTED_KEYS.filter((def) => otherMmkv(deps, def.backend)?.contains?.(def.key)).map((def) => def.key)
 
+// No storage version yet: the version the steps start from, or why open stops here
+const firstOpen = async (deps: OpenDeps, latest: number, wipe: () => Promise<void>): Promise<number | OpenResult> => {
+  const legacy = await deps.legacy.detect()
+  if (legacy === 'locked') {
+    return { status: 'locked' }
+  }
+  if (legacy === 'unreadable') {
+    return { status: 'not-ready', reason: 'legacy-unreadable' }
+  }
+  if (legacy === 'none') {
+    // iOS keeps keychain items across a reinstall; a fresh install starts from nothing
+    await wipe()
+    deps.meta.setVersion(latest)
+    return latest
+  }
+  return 0
+}
+
 export const createOpen = (deps: OpenDeps, persistence: Persistence, wipe: () => Promise<void>) => {
-  const latest = deps.migrations[deps.migrations.length - 1]?.version ?? 0
+  const latest = deps.migrations.at(-1)?.version ?? 0
 
   return async (): Promise<OpenResult> => {
     if (deps.meta.wipeInProgress()) {
@@ -62,19 +80,11 @@ export const createOpen = (deps: OpenDeps, persistence: Persistence, wipe: () =>
     }
 
     if (from === undefined) {
-      const legacy = await deps.legacy.detect()
-      if (legacy === 'locked') {
-        return { status: 'locked' }
+      const start = await firstOpen(deps, latest, wipe)
+      if (typeof start !== 'number') {
+        return start
       }
-      if (legacy === 'unreadable') {
-        return { status: 'not-ready', reason: 'legacy-unreadable' }
-      }
-      if (legacy === 'none') {
-        // iOS keeps keychain items across a reinstall; a fresh install starts from nothing
-        await wipe()
-        deps.meta.setVersion(latest)
-      }
-      from = legacy === 'none' ? latest : 0
+      from = start
     }
 
     const encrypted = await deps.encrypted.open()
