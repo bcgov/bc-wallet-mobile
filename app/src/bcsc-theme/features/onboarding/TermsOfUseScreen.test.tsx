@@ -58,7 +58,6 @@ describe('TermsOfUseScreen', () => {
   }
 
   it('persists the accepted terms version and navigates to the analytics opt-in screen', async () => {
-
     await renderAndAccept()
 
     // The analytics screen is next; it owns the logic for skipping the notifications step.

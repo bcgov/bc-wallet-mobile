@@ -34,10 +34,7 @@
         },
         "accountSetupType": {
           "type": "string",
-          "enum": [
-            "AddAccount",
-            "TransferAccount"
-          ]
+          "enum": ["AddAccount", "TransferAccount"]
         },
         "hasDismissedThirdPartyKeyboardAlert": {
           "type": "boolean"
@@ -63,9 +60,7 @@
                 "type": "number"
               }
             },
-            "required": [
-              "dismissedAt"
-            ],
+            "required": ["dismissedAt"],
             "additionalProperties": false
           }
         },
@@ -73,11 +68,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "appVersion",
-        "appBuildNumber",
-        "analyticsOptIn"
-      ],
+      "required": ["appVersion", "appBuildNumber", "analyticsOptIn"],
       "additionalProperties": false
     }
   },
@@ -157,14 +148,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "name",
-            "iasAgentInviteUrl",
-            "iasPortalUrl",
-            "appToAppUrl",
-            "iasApiBaseUrl",
-            "analyticsAppId"
-          ],
+          "required": ["name", "iasAgentInviteUrl", "iasPortalUrl", "appToAppUrl", "iasApiBaseUrl", "analyticsAppId"],
           "additionalProperties": false
         },
         "remoteDebugging": {
@@ -217,10 +201,7 @@
           }
         }
       },
-      "required": [
-        "pinned",
-        "alternateNames"
-      ],
+      "required": ["pinned", "alternateNames"],
       "additionalProperties": false
     }
   },
@@ -277,11 +258,7 @@
         },
         "securityMethod": {
           "type": "string",
-          "enum": [
-            "app_pin_no_device_authn",
-            "app_pin_has_device_authn",
-            "device_authentication"
-          ]
+          "enum": ["app_pin_no_device_authn", "app_pin_has_device_authn", "device_authentication"]
         },
         "nickname": {
           "type": "string"
@@ -293,12 +270,7 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "accountId",
-        "clientId",
-        "issuer",
-        "securityMethod"
-      ],
+      "required": ["accountId", "clientId", "issuer", "securityMethod"],
       "additionalProperties": false
     }
   },
@@ -402,12 +374,7 @@
           ]
         }
       },
-      "required": [
-        "issuer",
-        "subject",
-        "label",
-        "created"
-      ],
+      "required": ["issuer", "subject", "label", "created"],
       "additionalProperties": {}
     }
   },
@@ -436,14 +403,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "fullName",
-        "bcscReason",
-        "deviceCount",
-        "deviceLimit",
-        "cardType",
-        "lastUpdated"
-      ],
+      "required": ["fullName", "bcscReason", "deviceCount", "deviceLimit", "cardType", "lastUpdated"],
       "additionalProperties": false
     }
   },
@@ -462,10 +422,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "failedCount",
-        "lastAttemptAt"
-      ],
+      "required": ["failedCount", "lastAttemptAt"],
       "additionalProperties": false
     }
   },
@@ -609,9 +566,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "evidence_type"
-            ],
+            "required": ["evidence_type"],
             "additionalProperties": {}
           },
           "metadata": {
@@ -626,9 +581,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "metadata"
-        ],
+        "required": ["metadata"],
         "additionalProperties": {}
       }
     }
@@ -659,9 +612,7 @@
           }
         }
       },
-      "required": [
-        "ids"
-      ],
+      "required": ["ids"],
       "additionalProperties": false
     }
   }

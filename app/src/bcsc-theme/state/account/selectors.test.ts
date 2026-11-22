@@ -1,6 +1,6 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import { EXPIRED_JWT, makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { storeFromBCState } from '@/bcsc-theme/storage/testing'
+import { EXPIRED_JWT, makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState } from '@/store'
 import { AccountPhaseType } from './account-phase'

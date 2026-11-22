@@ -10,9 +10,9 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme 
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useShallow } from 'zustand/react/shallow'
 import { Image } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { useShallow } from 'zustand/react/shallow'
 
 const SCAN_EXAMPLE = Image.resolveAssetSource(ScanExampleImage).uri
 
@@ -36,11 +36,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   // Reset the card registration process when the user navigates back
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (event) => {
-      if (
-        (event.data.action.type === 'GO_BACK' || event.data.action.type === 'POP') &&
-        deviceCode &&
-        userCode
-      ) {
+      if ((event.data.action.type === 'GO_BACK' || event.data.action.type === 'POP') && deviceCode && userCode) {
         // If the user has registered and backs out, reset the card registration process. The pop goes
         // ahead (the setup question is beneath), so the reset keeps the user in the verify flow rather than
         // unmounting the flow to Home, and the overlay stops the user racing the re-registration from

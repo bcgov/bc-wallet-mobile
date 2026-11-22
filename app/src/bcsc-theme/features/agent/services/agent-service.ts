@@ -1,7 +1,7 @@
+import { storage } from '@/bcsc-theme/storage'
 import { CACHED_LEDGERS_TTL_DAYS } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
-import { storage } from '@/bcsc-theme/storage'
 import { BifoldLogger } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'

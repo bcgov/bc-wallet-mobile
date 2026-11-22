@@ -42,8 +42,8 @@ import { BifoldLogger, TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useShallow } from 'zustand/react/shallow'
 import { getBundleId } from 'react-native-device-info'
+import { useShallow } from 'zustand/react/shallow'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
@@ -283,8 +283,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const shouldRunIdTokenChecks = !!tokens?.refreshToken && !refreshTokenExpired
     // Needs the user's chosen nickname: without one (e.g. during initial onboarding) the check fails with
     // "No client name found for registration update" on every launch until setup completes.
-    const shouldUpdateRegistration =
-      isBCServicesCardBundle && !!tokens?.registrationAccessToken && !!selectedNickname
+    const shouldUpdateRegistration = isBCServicesCardBundle && !!tokens?.registrationAccessToken && !!selectedNickname
     // Key rotation (#3876): gated like the registration update but deliberately skips selectedNickname
     // (rotation doesn't need one).
     const shouldRotateKey = isBCServicesCardBundle && !!tokens?.registrationAccessToken && isVerified

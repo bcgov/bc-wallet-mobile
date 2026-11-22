@@ -1,5 +1,5 @@
-import { useDeviceCodeExpiresAt, useVerification } from '@/bcsc-theme/storage/hooks'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useDeviceCodeExpiresAt, useVerification } from '@/bcsc-theme/storage/hooks'
 import type { MediaFormat, MediaKind } from '@/bcsc-theme/utils/media-format'
 import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { EVIDENCE_UPLOAD_TIMEOUT_MS, VerificationRequestStatus, VIDEO_MP4_MIME_TYPE } from '@/constants'

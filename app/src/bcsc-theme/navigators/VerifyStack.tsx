@@ -4,6 +4,7 @@ import { useVerificationResponseListener } from '@/bcsc-theme/features/verificat
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
+import { useResumeStepRoute } from '@/hooks/useResumeStepRoute'
 import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
@@ -74,7 +75,6 @@ import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import useSecureActions from '../hooks/useSecureActions'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { useResumeStepRoute } from '@/hooks/useResumeStepRoute'
 
 /**
  * Header left for method selection: the settings button, which replaces the back arrow by design, with

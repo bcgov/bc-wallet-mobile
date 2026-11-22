@@ -6,12 +6,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Text } from 'react-native'
-import {
-  AccountSecurityMethod,
-  canPerformDeviceAuthentication,
-  setPIN,
-  verifyPIN,
-} from 'react-native-bcsc-core'
+import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN, verifyPIN } from 'react-native-bcsc-core'
 import { ChangePINContent } from './ChangePINContent'
 
 jest.mock('react-native-bcsc-core', () => ({

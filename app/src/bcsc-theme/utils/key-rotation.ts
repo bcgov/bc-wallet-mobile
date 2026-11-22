@@ -1,3 +1,4 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BifoldLogger } from '@bifold/core'
 import { Platform } from 'react-native'
 import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo } from 'react-native-bcsc-core'

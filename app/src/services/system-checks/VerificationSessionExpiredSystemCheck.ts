@@ -1,5 +1,5 @@
-import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**

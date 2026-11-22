@@ -19,10 +19,10 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useShallow } from 'zustand/react/shallow'
 import { Linking, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useShallow } from 'zustand/react/shallow'
 
 type VerifyInPersonScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyInPerson>
