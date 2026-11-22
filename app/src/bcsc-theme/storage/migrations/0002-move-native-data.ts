@@ -62,8 +62,9 @@ const CredentialV2 = z.looseObject({
   subject: z.string(),
   label: z.string(),
   created: z.number(),
-  bcscEvent: z.string(),
-  bcscReason: z.string(),
+  // Null in v3 on a card with no event, so absent here
+  bcscEvent: z.string().optional(),
+  bcscReason: z.string().optional(),
 })
 const RequestV2 = z.looseObject({
   issuer: z.string().optional(),
@@ -183,24 +184,26 @@ export const m0002: Migration = {
 
   async verify({ legacy, read }) {
     const snapshot = withoutNullRecords(await legacy.native())
-    // Each written value must parse as the app will read it
-    const check = async (backend: 'encrypted' | 'keychain', key: string, schema: z.ZodType) => {
+    // Each written value must parse as the app will read it. Every failure is collected, so the log names them all.
+    const failed: string[] = []
+    const check = async <S extends z.ZodType>(backend: 'encrypted' | 'keychain', key: string, schema: S) => {
       const parsed = schema.safeParse(await read(backend, key))
       if (!parsed.success) {
-        throw new VerifyError(key)
+        failed.push(key)
+        return undefined
       }
-      return parsed.data
+      return parsed.data as z.infer<S>
     }
     if (snapshot.account.status === 'ok') {
-      const profile = (await check('encrypted', 'account/profile', ProfileV2)) as z.infer<typeof ProfileV2>
-      if (profile.accountId !== snapshot.account.value.id) {
-        throw new VerifyError('account.id')
+      const profile = await check('encrypted', 'account/profile', ProfileV2)
+      if (profile && profile.accountId !== snapshot.account.value.id) {
+        failed.push('account.id')
       }
     }
     if (snapshot.tokens.status === 'ok') {
-      const stored = (await check('keychain', 'account/tokens', TokensV2)) as z.infer<typeof TokensV2>
-      if (stored.refreshToken !== snapshot.tokens.value.refresh) {
-        throw new VerifyError('account.tokens')
+      const stored = await check('keychain', 'account/tokens', TokensV2)
+      if (stored && stored.refreshToken !== snapshot.tokens.value.refresh) {
+        failed.push('account.tokens')
       }
     }
     const records: [string, LegacyRecord<unknown>, z.ZodType][] = [
@@ -214,6 +217,9 @@ export const m0002: Migration = {
       if (record.status === 'ok') {
         await check('encrypted', key, schema)
       }
+    }
+    if (failed.length > 0) {
+      throw new VerifyError(failed)
     }
   },
 }

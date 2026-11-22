@@ -77,6 +77,37 @@ describe('m0002', () => {
     expect(verification.request).toEqual({ deviceCode: 'device-1', address: {} })
   })
 
+  it('imports a v3 credential with no event, which v3 leaves null until an event occurs', async () => {
+    // The shape a verified v3 account had on a test device
+    const credential = {
+      issuer: account.issuer,
+      subject: 'subject-1',
+      label: 'BC Services Card',
+      created: 1700000000,
+      acr: 3,
+      bcscEvent: null,
+      bcscReason: null,
+      bcscEventDate: null,
+      bcscStatusDate: 1700000000,
+      cardType: null,
+      accountType: null,
+      devicesCount: null,
+      maxDevices: null,
+    }
+    const env = createTestEnv({
+      native: {
+        account: { status: 'ok', value: account },
+        tokens: { status: 'ok', value: { refresh: 'refresh-1' } },
+        credential: { status: 'ok', value: credential as never },
+      },
+    })
+
+    expect(await env.storage.open()).toEqual({ status: 'ok' })
+    const stored = env.storage.store.getState().account.credential
+    expect(stored).toMatchObject({ subject: 'subject-1', created: 1700000000 })
+    expect(stored).not.toHaveProperty('bcscEvent')
+  })
+
   it('fails its verify, and keeps the native originals, when an imported value would not load', async () => {
     const env = createTestEnv({
       native: { account: { status: 'ok', value: { ...account, securityMethod: 'not_a_method' } as never } },
@@ -86,6 +117,23 @@ describe('m0002', () => {
     // m0003 never ran, so Retry (or a fixed build) can import again
     expect(env.dump().native.account).toEqual({ status: 'ok', value: { ...account, securityMethod: 'not_a_method' } })
     expect(env.dump().plain['meta/version']).toBe(1)
+  })
+
+  it('logs every key its verify rejects, and no values', async () => {
+    const env = createTestEnv({
+      native: {
+        account: { status: 'ok', value: { ...account, securityMethod: 'not_a_method' } as never },
+        accountFlags: { status: 'ok', value: { isEmailVerified: 'yes' } as never },
+      },
+    })
+
+    expect(await env.storage.open()).toEqual({ status: 'migration-failed', step: 'move-native-data', attempts: 1 })
+    expect(env.logger.info).toHaveBeenCalledWith('storage migration.failed', {
+      id: 'move-native-data',
+      attempts: 1,
+      error: 'VerifyError',
+      failed: 'account/profile,verification/flags',
+    })
   })
 
   it('stops on an unreadable record instead of importing it as empty', async () => {

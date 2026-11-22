@@ -56,6 +56,10 @@ describe('storage.open', () => {
       native: { account: { status: 'ok', value: nativeAccount }, tokens: { status: 'unreadable', reason: 'io' } },
     })
     expect(await env.storage.open()).toEqual({ status: 'migration-failed', step: 'move-native-data', attempts: 1 })
+    expect(env.logger.info).toHaveBeenCalledWith(
+      'storage migration.failed',
+      expect.objectContaining({ error: 'LegacyNotReadyError', failed: 'legacy unreadable: tokens' })
+    )
   })
 
   it('refuses to write a key that loaded unreadable', async () => {

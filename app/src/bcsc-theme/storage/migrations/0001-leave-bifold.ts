@@ -236,22 +236,33 @@ export const m0001: Migration = {
     }
   },
 
+  // Every failure is collected, so the log names them all
   async verify(ctx) {
+    const failed: string[] = []
     const bcsc = await readLoose(ctx, 'BCSC', LegacyBCSC)
-    const app = AppV1.parse(await ctx.read('plain', 'app'))
+    const app = AppV1.safeParse(await ctx.read('plain', 'app'))
     const installId = bcsc?.installId ?? bcsc?.reportUUID
-    if (installId && app.installId !== installId) {
-      throw new VerifyError('app.installId')
-    }
-    if (bcsc?.verificationSkipped !== undefined && app.verificationSkipped !== bcsc.verificationSkipped) {
-      throw new VerifyError('app.verificationSkipped')
+    if (!app.success) {
+      failed.push('app')
+    } else {
+      if (installId && app.data.installId !== installId) {
+        failed.push('app.installId')
+      }
+      if (bcsc?.verificationSkipped !== undefined && app.data.verificationSkipped !== bcsc.verificationSkipped) {
+        failed.push('app.verificationSkipped')
+      }
     }
     if (bcsc?.credentialMetadata && !(await ctx.read('encrypted', 'account/credentialMetadata'))) {
-      throw new VerifyError('account.credentialMetadata')
+      failed.push('account.credentialMetadata')
     }
-    ContactsV1.parse(await ctx.read('encrypted', 'contacts'))
+    if (!ContactsV1.safeParse(await ctx.read('encrypted', 'contacts')).success) {
+      failed.push('contacts')
+    }
     if (!(await ctx.read('plain', 'preferences'))) {
-      throw new VerifyError('preferences')
+      failed.push('preferences')
+    }
+    if (failed.length > 0) {
+      throw new VerifyError(failed)
     }
   },
 }

@@ -39,9 +39,9 @@ export const CredentialSchema = z.looseObject({
   label: z.string(),
   created: z.number(),
   // CredentialInfo's events, not checked: an event native wrote that isn't listed would make the record
-  // unreadable and stop the app opening
-  bcscEvent: z.string(),
-  bcscReason: z.string(),
+  // unreadable and stop the app opening. v3 leaves both null on a card with no event, which loads as absent.
+  bcscEvent: z.string().optional(),
+  bcscReason: z.string().optional(),
   bcscStatusDate: z.number().nullish(),
   bcscEventDate: z.number().nullish(),
   devicesCount: z.number().nullish(),

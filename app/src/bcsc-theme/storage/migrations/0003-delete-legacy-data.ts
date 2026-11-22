@@ -33,15 +33,20 @@ export const m0003: Migration = {
   },
 
   async verify({ legacy }) {
+    const failed: string[] = []
     for (const key of OWNED_V0) {
       if ((await legacy.async(key)).status !== 'absent') {
-        throw new VerifyError(`async.${key}`)
+        failed.push(`async.${key}`)
       }
     }
     const snapshot = await legacy.native()
-    const left = Object.entries(snapshot).filter(([, record]) => record.status !== 'absent')
-    if (left.length > 0) {
-      throw new VerifyError(`native.${left.map(([name]) => name).join(',')}`)
+    for (const [name, record] of Object.entries(snapshot)) {
+      if (record.status !== 'absent') {
+        failed.push(`native.${name}`)
+      }
+    }
+    if (failed.length > 0) {
+      throw new VerifyError(failed)
     }
   },
 }

@@ -1,9 +1,13 @@
-import { LegacyNotReadyError, type Migration, type MigrationContext } from '../migrations/types'
+import { LegacyNotReadyError, type Migration, type MigrationContext, VerifyError } from '../migrations/types'
 import type { Meta } from './meta'
 
 export type RunResult = { status: 'ok' } | { status: 'locked' } | { status: 'failed'; step: string; attempts: number }
 
 const errorName = (error: unknown) => (error instanceof Error ? error.name : 'unknown')
+
+// These two name keys and records only, never values. Other errors' messages could hold anything.
+const failedOf = (error: unknown): Record<string, string> =>
+  error instanceof VerifyError || error instanceof LegacyNotReadyError ? { failed: error.message } : {}
 
 export const runMigrations = async (
   migrations: readonly Migration[],
@@ -25,7 +29,7 @@ export const runMigrations = async (
         return { status: 'locked' }
       }
       const attempts = meta.recordFailure(migration.version)
-      ctx.log('migration.failed', { id: migration.id, attempts, error: errorName(error) })
+      ctx.log('migration.failed', { id: migration.id, attempts, error: errorName(error), ...failedOf(error) })
       return { status: 'failed', step: migration.id, attempts }
     }
     // Last write of the step: a crash before this re-runs the whole step
