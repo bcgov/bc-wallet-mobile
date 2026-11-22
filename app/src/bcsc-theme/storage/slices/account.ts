@@ -6,7 +6,10 @@ import type { BCSCSlice, SliceContext } from './context'
 
 // A new account's profile, not saved yet. Onboarding sets its PIN (found through accountId) first and saves the
 // profile once authenticated: hasAccount turning true before didAuthenticate would flash the unlock screen.
-export const newProfile = (profile: Omit<Profile, 'accountId'>): Profile => ({ ...profile, accountId: String(uuid.v4()) })
+export const newProfile = (profile: Omit<Profile, 'accountId'>): Profile => ({
+  ...profile,
+  accountId: String(uuid.v4()),
+})
 
 export const ProfileSchema = z.object({
   accountId: z.string(),

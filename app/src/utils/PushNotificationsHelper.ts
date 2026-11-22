@@ -1,3 +1,5 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { IS_BCSC } from '@/utils/environment'
 import { PersistentStorage } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import {
@@ -23,8 +25,6 @@ import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { checkNotifications, PermissionStatus, requestNotifications, RESULTS } from 'react-native-permissions'
 import { BCLocalStorageKeys } from '../store'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
-import { IS_BCSC } from '@/utils/environment'
 
 // BCSC keeps these two in its own store (m0001 moved them there); BC Wallet keeps them in AsyncStorage
 const readDeviceToken = (): Promise<string | undefined> =>

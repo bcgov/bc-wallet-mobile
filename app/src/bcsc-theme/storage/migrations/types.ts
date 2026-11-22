@@ -16,8 +16,7 @@ export interface Migration {
   verify(ctx: MigrationContext): Promise<void> // re-reads storage; throws VerifyError
 }
 
-// Names the invariant, never the value: logs leave the device
-// Names only what failed (keys and invariants, never values), so the runner logs it
+// Names only what failed (keys and invariants, never values): the runner logs it, and logs leave the device
 export class VerifyError extends Error {
   constructor(failed: string[]) {
     super(failed.join(','))

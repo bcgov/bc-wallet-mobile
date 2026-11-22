@@ -1,6 +1,6 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BifoldLogger } from '@bifold/core'
 import { Platform } from 'react-native'
-import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
 import { confirmModulusRegistered, modulusInSet } from './jwk-modulus'

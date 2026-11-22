@@ -1,6 +1,6 @@
-import { useNickname } from '@/bcsc-theme/storage/hooks'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { useBCSCStore } from '@/bcsc-theme/storage'
+import { useNickname } from '@/bcsc-theme/storage/hooks'
 import { isDidCommInvitationCandidate } from '@/bcsc-theme/utils/didcomm-invitation'
 import { AppError, ErrorRegistry } from '@/errors'
 import { ensureAppError } from '@/errors/errorHandler'

@@ -329,7 +329,6 @@ describe('computeSetupStepCompletion', () => {
       expect(result.verify.completed).toBe(false)
       expect(result.verify.focused).toBe(false)
 
-
       result = computeSetupStepCompletion(store)
       expect(result.id.completed).toBe(false)
       expect(result.id.focused).toBe(true)

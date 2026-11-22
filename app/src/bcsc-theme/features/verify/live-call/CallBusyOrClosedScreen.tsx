@@ -1,5 +1,5 @@
-import { useDeviceCodeExpiresAt } from '@/bcsc-theme/storage/hooks'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useDeviceCodeExpiresAt } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'

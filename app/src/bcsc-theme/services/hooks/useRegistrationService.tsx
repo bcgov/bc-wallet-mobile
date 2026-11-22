@@ -1,6 +1,6 @@
-import { getBCSCState, selectAccountRecord, useAccount } from '@/bcsc-theme/storage/hooks'
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { getBCSCState, selectAccountRecord, useAccount } from '@/bcsc-theme/storage/hooks'
 import { AppError, isAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { ErrorRegistry } from '@/errors/errorRegistry'

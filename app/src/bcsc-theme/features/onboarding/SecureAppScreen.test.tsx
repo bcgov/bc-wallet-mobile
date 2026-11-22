@@ -171,7 +171,10 @@ describe('SecureApp', () => {
         })
       )
       const created = mockHandleSuccessfulAuth.mock.calls[0][1]
-      expect(mockSetupDeviceSecurity).toHaveBeenCalledWith({ accountId: created.accountId, issuer: 'https://mock-issuer' })
+      expect(mockSetupDeviceSecurity).toHaveBeenCalledWith({
+        accountId: created.accountId,
+        issuer: 'https://mock-issuer',
+      })
       // handleSuccessfulAuth saves it, mocked here
       expect(getBCSCState().account.profile).toBeUndefined()
     })

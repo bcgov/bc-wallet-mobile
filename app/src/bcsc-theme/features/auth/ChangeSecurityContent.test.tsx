@@ -353,7 +353,10 @@ describe('ChangeSecurityContent', () => {
       mockSetupDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'key' } as any)
       const failingSeed = accountSeed(AccountSecurityMethod.PinWithDeviceAuth)
       seed = {
-        account: { ...failingSeed.account, updateProfile: jest.fn().mockRejectedValue(new Error('Failed to set method')) },
+        account: {
+          ...failingSeed.account,
+          updateProfile: jest.fn().mockRejectedValue(new Error('Failed to set method')),
+        },
       }
 
       const tree = render(

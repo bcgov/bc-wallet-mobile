@@ -1,7 +1,7 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import { EXPIRED_JWT, UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import type { BCSCStore } from '@/bcsc-theme/storage'
 import { storeFromBCState } from '@/bcsc-theme/storage/testing'
+import { EXPIRED_JWT, UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { VerificationRequestStatus } from '@/constants'
 import { BCSCSecureState, BCState, initialBCSCSecureState, initialState } from '@/store'

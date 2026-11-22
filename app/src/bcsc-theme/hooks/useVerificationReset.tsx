@@ -117,14 +117,7 @@ export const useVerificationReset = () => {
         return false
       }
     },
-    [
-      logger,
-      clearSecureState,
-      deleteRegistration,
-      deleteVerificationData,
-      registrationService,
-      factoryResetAlert,
-    ]
+    [logger, clearSecureState, deleteRegistration, deleteVerificationData, registrationService, factoryResetAlert]
   )
 
   return verificationReset
