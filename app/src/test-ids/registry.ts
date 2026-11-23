@@ -587,6 +587,8 @@ export const TestIds = {
       home: 'Home',
       services: 'Services',
       wallet: 'Wallet',
+      /** The strip under the bar in the home-indicator area, sized from the inset by `TabStack`. */
+      bottomInset: 'TabBarBottomInset',
     },
     /** Home tab. `logInFromComputer` is the pairing entry point, so its key lives under `main.pairing`. */
     home: {
@@ -789,6 +791,9 @@ export const TestIds = {
       // CodeInput renders its inline error as `<input testID>-subtext`. A rejected code (HTTP 404,
       // e.g. a made-up value) ALSO raises a native "Could not verify pairing code" alert.
       codeError: 'ManualPairingCodeInput-subtext',
+      // Shown beneath the locked input while the code is checked: the screen stays in place rather than
+      // going behind the global loading overlay, so the slide to PairingConfirmation starts from it.
+      verifying: 'ManualPairingVerifying',
       confirmationClose: 'Close',
       bookmark: 'BookmarkService',
     },

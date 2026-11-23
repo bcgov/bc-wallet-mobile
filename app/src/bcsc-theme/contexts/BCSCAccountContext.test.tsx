@@ -28,7 +28,7 @@ jest.mock('@/contexts/NavigationContainerContext', () => ({
 }))
 
 // Import after mocks are set up
-import { BCSCAccountProvider, useAccount } from './BCSCAccountContext'
+import { BCSCAccountContextType, BCSCAccountProvider, useAccount } from './BCSCAccountContext'
 
 const mockUserData = (overrides: Record<string, any> = {}) => ({
   user: {
@@ -364,6 +364,116 @@ describe('BCSCAccountContext', () => {
         credentialDeactivated: false,
         hasRefreshToken: true,
       })
+    })
+  })
+
+  describe('session boundary (enabled)', () => {
+    /**
+     * Renders under a provider whose `enabled` the test flips, as RootStack does across lock and unlock.
+     * `rendered` holds every value a consumer rendered with, where `result.current` keeps only the last.
+     */
+    const renderSession = (bcscSecure: BCSCSecureState, initialEnabled = true) => {
+      let enabled = initialEnabled
+      const rendered: BCSCAccountContextType[] = []
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <BasicAppContext initialStateOverride={{ bcscSecure }}>
+          <BCSCAccountProvider enabled={enabled}>{children}</BCSCAccountProvider>
+        </BasicAppContext>
+      )
+      const utils = renderHook(
+        () => {
+          const context = useAccount()
+          rendered.push(context)
+          return context
+        },
+        { wrapper }
+      )
+      const setEnabled = (next: boolean) => {
+        enabled = next
+        utils.rerender(undefined)
+      }
+
+      return { ...utils, setEnabled, rendered }
+    }
+
+    it('loads nothing while disabled, and reports no loading', () => {
+      mockGetUserMetadata.mockResolvedValue(mockUserData())
+
+      const { result } = renderSession(verified, false)
+
+      expect(mockGetUserMetadata).not.toHaveBeenCalled()
+      expect(result.current.account).toBeNull()
+      expect(result.current.isLoadingAccount).toBe(false)
+    })
+
+    it('drops the account when the session ends and loads it afresh when the next one starts', async () => {
+      mockGetUserMetadata.mockResolvedValue(mockUserData())
+      const { result, setEnabled } = renderSession(verified)
+      await waitFor(() => expect(result.current.account).not.toBeNull())
+
+      setEnabled(false)
+
+      expect(result.current.account).toBeNull()
+      expect(result.current.isLoadingAccount).toBe(false)
+
+      setEnabled(true)
+
+      // The new session loads before it shows anything, as the first one did
+      expect(result.current.isLoadingAccount).toBe(true)
+      await waitFor(() => expect(result.current.account).not.toBeNull())
+      expect(mockGetUserMetadata).toHaveBeenCalledTimes(2)
+    })
+
+    it('discards a load that lands after the session ended', async () => {
+      let resolveLoad: (data: ReturnType<typeof mockUserData>) => void = () => undefined
+      mockGetUserMetadata.mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveLoad = resolve
+          })
+      )
+      const { result, setEnabled } = renderSession(verified)
+      await waitFor(() => expect(mockGetUserMetadata).toHaveBeenCalledTimes(1))
+
+      setEnabled(false)
+      await act(async () => {
+        resolveLoad(mockUserData())
+        await new Promise<void>((resolve) => setImmediate(resolve))
+      })
+
+      expect(result.current.account).toBeNull()
+      expect(result.current.isLoadingAccount).toBe(false)
+    })
+
+    // The account is dropped in an effect, one render after the session ends. These check every rendered
+    // value, since what the ended session left behind is only observable on that one render.
+    it('hides a loaded account from the very render that ends the session', async () => {
+      mockGetUserMetadata.mockResolvedValue(mockUserData())
+      const { result, setEnabled, rendered } = renderSession(verified)
+      await waitFor(() => expect(result.current.account).not.toBeNull())
+      const rendersInSession = rendered.length
+
+      setEnabled(false)
+
+      expect(rendered.length).toBeGreaterThan(rendersInSession)
+      for (const context of rendered.slice(rendersInSession)) {
+        expect(context.account).toBeNull()
+      }
+    })
+
+    it('reports no loading from the very render that ends the session mid-load', async () => {
+      mockGetUserMetadata.mockImplementationOnce(() => new Promise(() => undefined))
+      const { result, setEnabled, rendered } = renderSession(verified)
+      await waitFor(() => expect(mockGetUserMetadata).toHaveBeenCalledTimes(1))
+      expect(result.current.isLoadingAccount).toBe(true)
+      const rendersInSession = rendered.length
+
+      setEnabled(false)
+
+      expect(rendered.length).toBeGreaterThan(rendersInSession)
+      for (const context of rendered.slice(rendersInSession)) {
+        expect(context.isLoadingAccount).toBe(false)
+      }
     })
   })
 })
