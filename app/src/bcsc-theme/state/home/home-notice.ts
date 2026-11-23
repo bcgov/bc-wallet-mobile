@@ -3,7 +3,6 @@ import { AccountPhase, AccountPhaseType } from '../account/account-phase'
 
 export interface HomeNoticeFacts {
   isVerified: boolean
-  needsVerification: boolean
   /** Cancelled or expired: an inactive card is never offered finish setup */
   cardInactive: boolean
   /** IAS has issued this device tokens (a transfer, or a finish step whose credential write failed) */
@@ -39,7 +38,6 @@ export type HomeNotice =
 export const getHomeNotice = (facts: HomeNoticeFacts): HomeNotice => {
   const {
     isVerified,
-    needsVerification,
     cardInactive,
     deviceVerifiedByIas,
     refreshTokenExpired,
@@ -67,11 +65,15 @@ export const getHomeNotice = (facts: HomeNoticeFacts): HomeNotice => {
     return { type: HomeNoticeType.BCSCPendingReview }
   }
 
-  if (needsVerification && isIdStepCompleted()) {
+  // Keyed on verified rather than on needing verification: pressing Start or Continue sets verification in
+  // progress in the commit that swaps the root to the verify stack, and Home slides out as the closing
+  // card. Keyed on needing verification, the card just pressed would vanish for those frames. In progress
+  // never shows Home otherwise
+  if (!isVerified && isIdStepCompleted()) {
     return { type: HomeNoticeType.BCSCContinueVerification }
   }
 
-  if (needsVerification && !hasVerificationRequest) {
+  if (!isVerified && !hasVerificationRequest) {
     return { type: HomeNoticeType.BCSCStartVerification }
   }
 

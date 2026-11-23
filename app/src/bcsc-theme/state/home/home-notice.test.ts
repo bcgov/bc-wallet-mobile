@@ -6,7 +6,6 @@ const EXPIRES_AT = new Date('2026-10-22T00:00:00.000Z')
 
 const facts = (overrides: Partial<HomeNoticeFacts> = {}): HomeNoticeFacts => ({
   isVerified: true,
-  needsVerification: false,
   cardInactive: false,
   deviceVerifiedByIas: false,
   refreshTokenExpired: false,
@@ -18,7 +17,7 @@ const facts = (overrides: Partial<HomeNoticeFacts> = {}): HomeNoticeFacts => ({
 })
 
 const unverified = (overrides: Partial<HomeNoticeFacts> = {}) =>
-  facts({ isVerified: false, needsVerification: true, accountPhase: { phase: AccountPhaseType.None }, ...overrides })
+  facts({ isVerified: false, accountPhase: { phase: AccountPhaseType.None }, ...overrides })
 
 describe('getHomeNotice', () => {
   it.each<[string, HomeNoticeFacts, HomeNoticeType]>([
@@ -124,17 +123,12 @@ describe('getHomeNotice', () => {
       ],
       ['a verification request hides Start', unverified({ hasVerificationRequest: true }), HomeNoticeType.None],
       [
-        'a verification in progress shows nothing',
-        facts({ isVerified: false, needsVerification: false, accountPhase: { phase: AccountPhaseType.None } }),
-        HomeNoticeType.None,
-      ],
-      [
         'Pending beats Continue',
         unverified({ requestStatus: VerificationRequestStatus.PENDING, isIdStepCompleted: () => true }),
         HomeNoticeType.BCSCPendingReview,
       ],
       [
-        'needing verification beats the renewal notice',
+        'Start beats the renewal notice for an unverified user',
         unverified({ accountPhase: expiringSoon }),
         HomeNoticeType.BCSCStartVerification,
       ],
@@ -209,7 +203,7 @@ describe('getHomeNotice', () => {
       ['Finish matches', { requestStatus: VerificationRequestStatus.VERIFIED }],
       ['Cancelled matches', { requestStatus: VerificationRequestStatus.CANCELLED }],
       ['Pending matches', { requestStatus: VerificationRequestStatus.PENDING }],
-      ['verification is not needed', { isVerified: true, needsVerification: false }],
+      ['the user is verified', { isVerified: true }],
     ])('is not read when %s', (_name, overrides) => {
       const isIdStepCompleted = jest.fn(() => true)
 

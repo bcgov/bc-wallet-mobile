@@ -3,8 +3,8 @@ import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/compone
 import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
 import { AccountSecurityMethod, canPerformDeviceAuthentication, setAccountSecurityMethod } from 'react-native-bcsc-core'
 
 export interface ChangePINContentProps {
@@ -20,13 +20,17 @@ export interface ChangePINContentProps {
  *    - Uses PINEntryForm (new PIN + confirm)
  * 2. Changing an existing PIN (isChangingExistingPIN = true)
  *    - Uses ChangePINForm (current PIN + new PIN + confirm)
+ *
+ * Either form waits on its button rather than under the global loading overlay, because the success
+ * callbacks navigate within the stack and the slide away must start from this screen. That leaves Back
+ * live during the wallet key rotation, so a user who already left is not navigated a second time.
  */
 export const ChangePINContent = ({
   isChangingExistingPIN,
   onChangePINSuccess,
   onCreatePINSuccess,
 }: ChangePINContentProps) => {
-  const { t } = useTranslation()
+  const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const walletService = useWalletService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [, dispatch] = useStore<BCState>()
@@ -37,9 +41,12 @@ export const ChangePINContent = ({
       logger.info('PIN changed successfully')
 
       await walletService.rotateWalletKey(result.walletKey)
-      onChangePINSuccess()
+
+      if (navigation.isFocused()) {
+        onChangePINSuccess()
+      }
     },
-    [logger, walletService, onChangePINSuccess]
+    [logger, navigation, walletService, onChangePINSuccess]
   )
 
   // Handler for when user is switching from Device Auth to PIN
@@ -55,21 +62,18 @@ export const ChangePINContent = ({
       logger.info('Switched to PIN security method')
 
       await walletService.rotateWalletKey(result.walletKey)
-      onCreatePINSuccess()
+
+      if (navigation.isFocused()) {
+        onCreatePINSuccess()
+      }
     },
-    [logger, walletService, onCreatePINSuccess, dispatch]
+    [logger, navigation, walletService, onCreatePINSuccess, dispatch]
   )
 
   // Render ChangePINForm when changing existing PIN, PINEntryForm when switching from Device Auth
   if (isChangingExistingPIN) {
-    return <ChangePINForm onSuccess={handleChangePINSuccess} loadingMessage={t('BCSC.ChangePIN.ChangingPIN')} />
+    return <ChangePINForm onSuccess={handleChangePINSuccess} />
   }
 
-  return (
-    <PINEntryForm
-      onSuccess={handleCreatePINSuccess}
-      loadingMessage={t('BCSC.PIN.SettingUpPIN')}
-      translationPrefix="BCSC.PIN"
-    />
-  )
+  return <PINEntryForm onSuccess={handleCreatePINSuccess} translationPrefix="BCSC.PIN" />
 }

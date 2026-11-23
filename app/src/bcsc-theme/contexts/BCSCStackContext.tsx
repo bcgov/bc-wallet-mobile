@@ -29,9 +29,9 @@ export const BCSCStackProvider = ({ children }: PropsWithChildren) => {
 }
 
 /**
- * Custom hook to access the BCSCStackContext and optionally update the current stack.
+ * Custom hook to access the BCSCStackContext and optionally claim the current stack.
  *
- * @param initialStack - An optional initial stack.
+ * @param initialStack - The stack the calling navigator is; it claims the context when it mounts.
  * @returns The current stack and the function to update it from the context.
  */
 export const useBCSCStack = (initialStack?: BCSCStacks) => {
@@ -41,15 +41,16 @@ export const useBCSCStack = (initialStack?: BCSCStacks) => {
     throw new Error('useBCSCStack must be used within a BCSCStackProvider')
   }
 
-  // If a stack is provided as an argument, update the context with the new stack value.
-  useEffect(() => {
-    if (!initialStack || context.stack === initialStack) {
-      // Skip if no stack provided or the stack has not changed
-      return
-    }
+  const { updateStack } = context
 
-    context.updateStack(initialStack)
-  }, [initialStack, context])
+  // Two stacks are mounted while the root slides from one to the other, and the one sliding in mounts
+  // last, so it wins. Deliberately not conditional on the current value: that re-ran this effect on every
+  // change, so the two stacks took turns claiming the context until one unmounted.
+  useEffect(() => {
+    if (initialStack) {
+      updateStack(initialStack)
+    }
+  }, [initialStack, updateStack])
 
   return context
 }

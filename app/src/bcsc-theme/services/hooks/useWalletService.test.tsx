@@ -92,6 +92,67 @@ describe('useWalletService', () => {
       expect(storeManager.openStore).toHaveBeenCalledWith(agent.context)
       expect(storeManager.rotateStoreKey).toHaveBeenCalledWith(agent.context, { newKey: 'new-wallet-key' })
     })
+
+    // Change PIN leaves Back live while it rotates, so App Security can ask for a second rotation
+    describe('while another rotation is in flight', () => {
+      /** Lets the queued work that is ready to run do so. */
+      const settle = () => new Promise((resolve) => setImmediate(resolve))
+
+      /** Mounts the hook once per screen, as Change PIN and App Security each do. */
+      const renderTwoScreens = (updateWalletKey = jest.fn()) => {
+        const mocks = createAgentMocks()
+        jest.spyOn(agentProviderModule, 'useBCSCAgentSafe').mockReturnValue({ agent: mocks.agent } as any)
+        jest.spyOn(useSecureActionsModule, 'default').mockReturnValue({ updateWalletKey } as any)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({ failedToRotateWalletKeyAlert: jest.fn() } as any)
+
+        const changePIN = renderHook(() => useWalletService(), { wrapper: BasicAppContext })
+        const appSecurity = renderHook(() => useWalletService(), { wrapper: BasicAppContext })
+
+        return { ...mocks, updateWalletKey, changePIN, appSecurity }
+      }
+
+      it('should start the second rotation only once the first has finished, ending on the key saved last', async () => {
+        const { agent, storeManager, askarModuleConfig, updateWalletKey, changePIN, appSecurity } = renderTwoScreens()
+        let finishFirst: () => void = () => {}
+        storeManager.rotateStoreKey.mockImplementationOnce(
+          () =>
+            new Promise<void>((resolve) => {
+              finishFirst = resolve
+            })
+        )
+
+        const first = changePIN.result.current.rotateWalletKey('pin-key')
+        const second = appSecurity.result.current.rotateWalletKey('device-auth-key')
+        await settle()
+
+        // Askar fails a rekey that overlaps another, so the second must not have reached the store yet
+        expect(storeManager.rotateStoreKey).toHaveBeenCalledTimes(1)
+        expect(storeManager.rotateStoreKey).toHaveBeenLastCalledWith(agent.context, { newKey: 'pin-key' })
+        expect(updateWalletKey).not.toHaveBeenCalled()
+
+        finishFirst()
+
+        await expect(first).resolves.toBe(true)
+        await expect(second).resolves.toBe(true)
+        expect(storeManager.rotateStoreKey).toHaveBeenCalledTimes(2)
+        expect(storeManager.rotateStoreKey).toHaveBeenLastCalledWith(agent.context, { newKey: 'device-auth-key' })
+        expect(askarModuleConfig.store.key).toBe('device-auth-key')
+        expect(updateWalletKey.mock.calls).toEqual([['pin-key'], ['device-auth-key']])
+      })
+
+      it('should still run the second rotation when the first fails', async () => {
+        const { storeManager, askarModuleConfig, updateWalletKey, changePIN, appSecurity } = renderTwoScreens()
+        storeManager.rotateStoreKey.mockRejectedValueOnce(new Error('rekey failed'))
+
+        const first = changePIN.result.current.rotateWalletKey('pin-key')
+        const second = appSecurity.result.current.rotateWalletKey('device-auth-key')
+
+        await expect(first).resolves.toBe(false)
+        await expect(second).resolves.toBe(true)
+        expect(askarModuleConfig.store.key).toBe('device-auth-key')
+        expect(updateWalletKey.mock.calls).toEqual([['device-auth-key']])
+      })
+    })
   })
 
   it('should return a memoized rotateWalletKey', () => {

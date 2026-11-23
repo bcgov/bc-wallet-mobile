@@ -1688,7 +1688,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-attestation (3.1.3):
+  - react-native-attestation (3.1.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3383,7 +3383,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 3c805ea54675b00ef1755f23b3c1fccf34962b93
   React-microtasksnativemodule: 97a771dbbb4315c71579995b53e4e3e351a99d89
   React-mutationobservernativemodule: 530bff1bba9511a5133e3cf8170e3b2c0df49e89
-  react-native-attestation: 6d6343748329c8d23b3d6ec1b0a7fad76cff54ae
+  react-native-attestation: b693d5fbac582a4a86db1341b9a9178f04c84678
   react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-drop-shadow: aeb76e4b46c09924b4a8ee3d454dd00fdb5c62d9
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
@@ -3457,6 +3457,6 @@ SPEC CHECKSUMS:
   VisionCameraBarcodeScanner: 20cca2d99425546548511a95980bb8b1117fb830
   Yoga: 18b74b3ade30bebc1904004dfaceae1dd02a330a
 
-PODFILE CHECKSUM: 475181d0fc730400f475cc78734301e2bbd5e7d0
+PODFILE CHECKSUM: 4061dd575bc497ddf48c93f52d82768a8fe8ec0b
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.16.2

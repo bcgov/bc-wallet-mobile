@@ -1,8 +1,10 @@
 import { TAB_SCENE_CONTAINER_STYLE } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { act, render } from '@testing-library/react-native'
 import React from 'react'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { FloatingScanButton } from '../features/scan'
 import { useCardStatus } from '../hooks/useCardStatus'
@@ -126,6 +128,23 @@ describe('BCSCTabStack', () => {
   it('passes the scene container style that lets Android draw the header shadow', () => {
     render(<BCSCTabStack />)
     expect(capturedNavigatorProps.sceneContainerStyle).toBe(TAB_SCENE_CONTAINER_STYLE)
+  })
+
+  // A plain view sized from the hook, not a SafeAreaView: that one learns its inset after it mounts, which
+  // left the tab bar in the home-indicator area for the first frames of a pop into Home
+  it('sizes the strip under the tab bar from the bottom inset', () => {
+    const { getByTestId } = render(
+      <SafeAreaProvider
+        initialMetrics={{
+          insets: { top: 0, right: 0, bottom: 34, left: 0 },
+          frame: { x: 0, y: 0, width: 320, height: 640 },
+        }}
+      >
+        <BCSCTabStack />
+      </SafeAreaProvider>
+    )
+
+    expect(getByTestId(TestIds.main.tabBar.bottomInset)).toHaveStyle({ height: 34 })
   })
 
   describe('unverified Services gating', () => {

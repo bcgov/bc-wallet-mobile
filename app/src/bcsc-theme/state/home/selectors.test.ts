@@ -40,8 +40,23 @@ describe('selectHomeNotice', () => {
     expect(select(buildState({ verificationRequestId: 'req-1' })).type).toBe(HomeNoticeType.None)
   })
 
-  it('shows nothing while the verification is in progress', () => {
-    expect(select(buildState({ inVerifyFlow: true })).type).toBe(HomeNoticeType.None)
+  describe('while the verification is in progress, as Home slides out beneath the verify stack', () => {
+    // Pressing the card enters the verify flow in the commit that swaps the root; Home is the closing card
+    it('keeps the Start card just pressed', () => {
+      const state = buildState({ inVerifyFlow: true })
+
+      expect(select(state).type).toBe(HomeNoticeType.BCSCStartVerification)
+    })
+
+    it('keeps the Continue card just pressed', () => {
+      const state = buildState({
+        inVerifyFlow: true,
+        cardProcess: BCSCCardProcess.BCSCPhoto,
+        serial: '123456',
+      })
+
+      expect(select(state).type).toBe(HomeNoticeType.BCSCContinueVerification)
+    })
   })
 
   it('shows Finish for a device with a refresh token, until that token expires', () => {

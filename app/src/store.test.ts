@@ -1,4 +1,3 @@
-import type { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 // Not imported via AppBanner: that would load the theme, which this suite's @bifold/core mock cannot support
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { InstallIdSystemCheck } from './services/system-checks/InstallIdSystemCheck'
@@ -398,17 +397,6 @@ describe('reducer', () => {
       expect(state.bcsc.dismissedBanners).toBe(dismissedBanners)
     })
 
-    it('leaves the rest of the BCSC state alone', () => {
-      const bannerMessages: BCSCBannerMessage[] = [
-        { id: BCSCBanner.IAS_SERVER_NOTIFICATION, title: 'Notice', type: 'info' },
-      ]
-      const state = { ...initialState, bcsc: { ...initialState.bcsc, bannerMessages } }
-
-      const result = dismiss(state, BCSCBanner.APP_UPDATE_AVAILABLE)
-
-      expect(result.bcsc.bannerMessages).toBe(bannerMessages)
-    })
-
     it('persists the BCSC state with the dismissal', () => {
       const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000)
 
@@ -587,6 +575,12 @@ describe('migrateBCSCState', () => {
     expect(result.bcsc).not.toHaveProperty('reportUUID')
   })
 
+  it('removes a legacy bannerMessages field', () => {
+    const result = migrateBCSCState({ bannerMessages: ['x'] })
+
+    expect(result).toEqual({ bcsc: {}, migrated: true })
+  })
+
   it('prefers an existing installId over a legacy reportUUID, and still strips the legacy field', () => {
     const result = migrateBCSCState({ installId: 'y', reportUUID: 'x' })
 
@@ -670,48 +664,5 @@ describe('migrateBCSCState', () => {
     const check = new InstallIdSystemCheck(bcsc.installId, jest.fn())
 
     expect(check.runCheck()).toBe(true)
-  })
-
-  describe('bannerMessages', () => {
-    const deviceLimit = { id: BCSCBanner.DEVICE_LIMIT_EXCEEDED, title: 'Limit', type: 'error' } as BCSCBannerMessage
-    const serviceNotice = {
-      id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-      title: 'Notice',
-      type: 'warning',
-    } as BCSCBannerMessage
-    const retired4xBanner = {
-      id: 'CardExpiringSoonBanner',
-      title: 'Expires in 9 days',
-      description: 'Renew your account before it expires',
-      type: 'warning',
-      dismissible: false,
-    } as unknown as BCSCBannerMessage
-    const futureBanner = { id: 'SomeFutureBanner', title: 'Future', type: 'info' } as unknown as BCSCBannerMessage
-
-    it('drops banners whose id is not a current BCSCBanner, keeping the rest in order', () => {
-      const result = migrateBCSCState({ bannerMessages: [deviceLimit, retired4xBanner, futureBanner, serviceNotice] })
-
-      expect(result).toEqual({ bcsc: { bannerMessages: [deviceLimit, serviceNotice] }, migrated: true })
-    })
-
-    it('is idempotent: running again on the cleaned result changes nothing', () => {
-      const first = migrateBCSCState({ bannerMessages: [deviceLimit, retired4xBanner, serviceNotice] })
-      const second = migrateBCSCState(first.bcsc)
-
-      expect(second).toEqual({ bcsc: { bannerMessages: [deviceLimit, serviceNotice] }, migrated: false })
-    })
-
-    it.each(Object.values(BCSCBanner))('keeps a current %s banner', (id) => {
-      const banner = { id, title: 'Title', type: 'info' } as BCSCBannerMessage
-
-      expect(migrateBCSCState({ bannerMessages: [banner] })).toEqual({
-        bcsc: { bannerMessages: [banner] },
-        migrated: false,
-      })
-    })
-
-    it.each([[{ bannerMessages: [] }], [{}]])('has nothing to clean in %j', (persisted) => {
-      expect(migrateBCSCState(persisted)).toEqual({ bcsc: persisted, migrated: false })
-    })
   })
 })

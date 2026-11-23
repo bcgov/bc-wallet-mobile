@@ -173,13 +173,13 @@ const row = (
 ): Observation => ({ verifyStackShown, accountLoadingAllowed, homeNotice, resumeRoute })
 
 // One row per step: the start, each transition in order, then unlocking again. A change here is a
-// change in what users see.
+// change in what users see. With the verify stack up, the notice is the card Home slides out with.
 const expected: Record<string, Observation[]> = {
   'details left by an older reset, with no record and no token': [
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
   ],
   'unlocked with a deactivated record': [
@@ -188,25 +188,25 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, true, HomeNoticeType.AccountExpired, null),
   ],
   'token-only account, then the credential expires': [
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, true, HomeNoticeType.BCSCVerified, null),
   ],
   'in the verify flow when the credential expires': [
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, true, HomeNoticeType.BCSCVerified, null),
   ],
   'finished account, then the credential expires': [
@@ -215,14 +215,14 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, true, HomeNoticeType.None, null),
   ],
   'token-only account, expires, then a restart with no reset': [
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
-    row(true, false, HomeNoticeType.None, BCSCScreens.AccountSetup),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
     row(false, false, HomeNoticeType.BCSCStartVerification, null),
   ],
   'finished account, expires, then a restart with no reset': [
