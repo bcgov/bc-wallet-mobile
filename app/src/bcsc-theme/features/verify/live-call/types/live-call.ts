@@ -46,6 +46,7 @@ export enum VideoCallFlowState {
   WAITING_FOR_AGENT = 'waiting_for_agent',
   IN_CALL = 'in_call',
   CALL_ENDED = 'call_ended',
+  CALL_END_FAILED = 'call_end_failed',
   ERROR = 'error',
 }
 

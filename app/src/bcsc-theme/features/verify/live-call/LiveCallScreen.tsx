@@ -71,6 +71,16 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
    *
    * @returns A promise that resolves when the navigation action is dispatched.
    */
+  const goToVerifyNotComplete = useCallback(() => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: BCSCScreens.VerificationMethodSelection }, { name: BCSCScreens.VerifyNotComplete }],
+      })
+    )
+  }, [navigation])
+
+  // Throws on failure: useVideoCallFlow's leaveCallSafely turns that into the CALL_END_FAILED state
   const leaveCall = useCallback(async () => {
     try {
       if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
@@ -85,12 +95,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
 
       if (!isVerified) {
         logger.info('[LiveCallScreen.leaveCall] User not verified')
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 1,
-            routes: [{ name: BCSCScreens.VerificationMethodSelection }, { name: BCSCScreens.VerifyNotComplete }],
-          })
-        )
+        goToVerifyNotComplete()
         return
       }
 
@@ -101,9 +106,22 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         })
       )
     } catch (error) {
+      // 1. Render the reportable error modal
       unknownErrorModal(error)
+
+      // 2. Throw the error so that useVideoCallFlow can transition to the CALL_END_FAILED state
+      throw error
     }
-  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, tokenService, logger, navigation, t, unknownErrorModal])
+  }, [
+    store.bcscSecure.deviceCode,
+    store.bcscSecure.userCode,
+    tokenService,
+    navigation,
+    t,
+    logger,
+    goToVerifyNotComplete,
+    unknownErrorModal,
+  ])
 
   // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {
@@ -117,6 +135,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     cleanup,
     retryConnection,
     setCallEnded,
+    leaveCallSafely,
   } = useVideoCallFlow(leaveCall)
 
   // the backend rejects new sessions when all agents are busy or the service is closed
@@ -333,11 +352,11 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       logger.info('User initiated call end')
       setCallEnded()
       await cleanup()
-      await leaveCall()
+      await leaveCallSafely()
     } catch (error) {
       logger.error('Error while leaving video call', error as Error)
     }
-  }, [setCallEnded, cleanup, leaveCall, logger])
+  }, [setCallEnded, cleanup, leaveCallSafely, logger])
 
   const handleHavingTrouble = useCallback(() => {
     liveCallHavingTroubleAlert(handleEndCall)
@@ -431,6 +450,17 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         message={stateMessage || t('BCSC.VideoCall.Errors.GenericError')}
         onGoBack={() => navigation.goBack()}
         onRetry={videoCallError?.retryable ? retryConnection : undefined}
+      />
+    )
+  }
+
+  if (flowState === VideoCallFlowState.CALL_END_FAILED) {
+    return (
+      <CallErrorView
+        title={t('BCSC.VideoCall.Errors.CallEndFailedTitle')}
+        message={t('BCSC.VideoCall.Errors.CallEndFailedMessage')}
+        onRetry={preventDoublePress(leaveCallSafely)}
+        onGoBack={goToVerifyNotComplete}
       />
     )
   }

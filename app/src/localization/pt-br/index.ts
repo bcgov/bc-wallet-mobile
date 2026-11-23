@@ -1299,6 +1299,8 @@ const translation = {
       "Errors": {
         "ConnectionError": "Connection Error (PT-BR)",
         "GenericError": "An error occurred (PT-BR)",
+        "CallEndFailedTitle": "Couldn't check verification (PT-BR)",
+        "CallEndFailedMessage": "Your call ended, but we couldn't check your verification status. Please try again. (PT-BR)",
         "TryAgain": "Try Again (PT-BR)",
         "GoBack": "Go Back (PT-BR)"
       },
