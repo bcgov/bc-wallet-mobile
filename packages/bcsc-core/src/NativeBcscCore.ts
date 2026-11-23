@@ -319,6 +319,15 @@ export interface Spec extends TurboModule {
   getAccount(): Promise<NativeAccount | null>;
   getAccountReadStatus(): Promise<NativeAccountReadStatus>;
   setAccount(account: NativeAccountWithoutId): Promise<void>;
+
+  /**
+   * Saves the device registration in one call; see the {@link setRegistration} wrapper.
+   * @param registrationAccessToken null leaves the stored token as it is
+   */
+  setRegistration(clientID: string, issuer: string, registrationAccessToken: string | null): Promise<void>;
+
+  /** Removes the client ID and the registration access token; see the {@link clearRegistration} wrapper. */
+  clearRegistration(): Promise<void>;
   getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;
   signPairingCode(
     code: string,

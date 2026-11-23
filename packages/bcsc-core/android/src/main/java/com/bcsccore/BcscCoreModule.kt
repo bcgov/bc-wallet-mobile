@@ -1133,6 +1133,249 @@ class BcscCoreModule internal constructor(
         }
     }
 
+    /**
+     * Saves the device registration in one call: the client ID and issuer on the account record, and the
+     * registration access token in the tokens file.
+     *
+     * The token is written first. It names its own client ID (`aud`), so a save that stops before the
+     * account is written can be completed from the token, and the newest token is never the one lost. If
+     * the account cannot be saved the tokens file is put back, so a failed save leaves the previous
+     * registration in place.
+     *
+     * Matches TypeScript: setRegistration(clientID, issuer, registrationAccessToken | null): Promise<void>
+     */
+    @ReactMethod
+    override fun setRegistration(
+        clientID: String,
+        issuer: String,
+        registrationAccessToken: String?,
+        promise: Promise,
+    ) {
+        // Sites are `setRegistration.<stage>`, matching iOS, so reports show which stage failed
+        val method = "setRegistration"
+
+        if (clientID.isEmpty() || issuer.isEmpty() || registrationAccessToken?.isEmpty() == true) {
+            rejectWithDiagnostics(
+                promise,
+                "E_INVALID_PARAMETERS",
+                "clientID and issuer are required, and a registration access token cannot be empty.",
+                "$method.validate",
+            )
+            return
+        }
+
+        try {
+            val resolution = resolveAccountsWithStatus()
+            val account = resolution.accounts?.firstOrNull()
+            if (account == null) {
+                rejectWithDiagnostics(promise, "E_ACCOUNT_NOT_FOUND", "Account not found.", "$method.read_account")
+                return
+            }
+
+            // Where getAccount and getToken read, so what is saved here is what they read back
+            val issuerName = nativeStorage.getDefaultIssuerName()
+            val previousTokens = nativeStorage.readTokens(issuerName, account.uuid)
+
+            if (registrationAccessToken != null) {
+                // A tokens file that is there but cannot be read may still hold the access and refresh tokens,
+                // which a new file would lose, so nothing is saved
+                if (previousTokens == null && nativeStorage.tokensExist(issuerName, account.uuid)) {
+                    rejectWithDiagnostics(
+                        promise,
+                        "E_TOKEN_SAVE_FAILED",
+                        "Failed to read the stored tokens, so the registration access token was not saved.",
+                        "$method.read_tokens",
+                    )
+                    return
+                }
+
+                // The registration token is kept in idToken.rawToken, as setToken stores it
+                val idToken = NativeIdToken(rawToken = registrationAccessToken)
+                val tokens =
+                    previousTokens?.copy(idToken = idToken) ?: NativeTokens(issuer = issuer, idToken = idToken)
+
+                if (!nativeStorage.saveTokens(tokens, issuerName, account.uuid)) {
+                    rejectWithDiagnostics(
+                        promise,
+                        "E_TOKEN_SAVE_FAILED",
+                        "Failed to save the registration access token.",
+                        "$method.save_token",
+                    )
+                    return
+                }
+            }
+
+            // Skipped when nothing on the account changes, so a rotated token is a single file write. An
+            // account that is only in the legacy file is always written, which copies it to native storage.
+            val registered = account.copy(clientId = clientID, issuer = issuer)
+            val accountChanged = registered != account || resolution.legacy is LegacyAccountsRead.Found
+
+            if (accountChanged && !nativeStorage.saveAccounts(listOf(registered), issuerName)) {
+                val tokenRolledBack =
+                    registrationAccessToken == null || restoreTokens(previousTokens, issuerName, account.uuid)
+                rejectWithDiagnostics(
+                    promise,
+                    "E_SAVE_ACCOUNT_FAILED",
+                    "Failed to save the account with its registration.",
+                    "$method.save_account",
+                    diagnostics = mapOf("tokenRolledBack" to tokenRolledBack),
+                )
+                return
+            }
+
+            Log.d(NAME, "$method: registration saved")
+            promise.resolve(null)
+        } catch (e: Exception) {
+            rejectWithDiagnostics(
+                promise,
+                "E_SAVE_ACCOUNT_FAILED",
+                "Failed to save the registration.",
+                "$method.save_account",
+                e,
+            )
+        }
+    }
+
+    /**
+     * Removes the client ID and the registration access token. The account keeps its issuer, security
+     * method and nickname. Succeeds when there is no account or no registration to clear. An account that
+     * is stored but cannot be read rejects instead, and nothing is changed.
+     *
+     * The client ID goes first. The token names its own client ID, so a clear that stops before the token
+     * is removed leaves a registration that can be put back together, never a client ID without its token.
+     *
+     * Matches TypeScript: clearRegistration(): Promise<void>
+     */
+    @ReactMethod
+    override fun clearRegistration(promise: Promise) {
+        // Sites are `clearRegistration.<stage>`, matching iOS, so reports show which stage failed
+        val method = "clearRegistration"
+
+        try {
+            val resolution = resolveAccountsWithStatus()
+            val account = resolution.accounts?.firstOrNull()
+            if (account == null && resolution.noAccountStored) {
+                Log.d(NAME, "$method: no account, nothing to clear")
+                promise.resolve(null)
+                return
+            }
+            if (account == null) {
+                // It may still hold a registration, so the clear is not reported as done
+                rejectWithDiagnostics(
+                    promise,
+                    "E_GET_ACCOUNT_ERROR",
+                    "Failed to read the account, so its registration was not cleared.",
+                    "$method.read_account",
+                    diagnostics =
+                        mapOf(
+                            "accountReadStatus" to resolution.native.statusCode,
+                            "legacyStatus" to resolution.legacy.statusCode,
+                        ),
+                )
+                return
+            }
+
+            val issuerName = nativeStorage.getDefaultIssuerName()
+            val hadClientId = hasClientId(account)
+
+            if (hadClientId && !nativeStorage.saveAccounts(listOf(account.copy(clientId = "")), issuerName)) {
+                rejectWithDiagnostics(
+                    promise,
+                    "E_SAVE_ACCOUNT_FAILED",
+                    "Failed to save the account without its registration.",
+                    "$method.save_account",
+                )
+                return
+            }
+
+            val failedStage = deleteRegistrationToken(issuerName, account.uuid)
+            if (failedStage != null) {
+                // Put the client ID back so the registration is whole again
+                val accountRolledBack = !hadClientId || nativeStorage.saveAccounts(listOf(account), issuerName)
+                rejectWithDiagnostics(
+                    promise,
+                    "E_TOKEN_DELETE_ERROR",
+                    "Failed to delete the registration access token.",
+                    "$method.$failedStage",
+                    diagnostics = mapOf("accountRolledBack" to accountRolledBack),
+                )
+                return
+            }
+
+            Log.d(NAME, "$method: registration cleared")
+            promise.resolve(null)
+        } catch (e: Exception) {
+            rejectWithDiagnostics(
+                promise,
+                "E_SAVE_ACCOUNT_FAILED",
+                "Failed to clear the registration.",
+                "$method.save_account",
+                e,
+            )
+        }
+    }
+
+    /** Gson leaves a field that is missing from the file as null, whatever the Kotlin type says. */
+    private fun hasClientId(account: NativeAccount): Boolean = !(account.clientId as String?).isNullOrEmpty()
+
+    /** Puts the tokens file back to what it held before a save: the previous tokens, or no file. */
+    private fun restoreTokens(
+        previousTokens: NativeTokens?,
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        if (previousTokens != null) {
+            return nativeStorage.saveTokens(previousTokens, issuerName, accountUuid)
+        }
+        nativeStorage.deleteTokens(issuerName, accountUuid)
+        return !nativeStorage.tokensExist(issuerName, accountUuid)
+    }
+
+    /**
+     * Removes the registration access token from the tokens file and retires its v3 copy.
+     *
+     * A tokens file that cannot be read is deleted whole. The token in it cannot be removed on its own, and
+     * getToken finds tokens by account, not client ID, so it would come back once the file reads again. The
+     * other tokens in it belong to the registration being cleared as well.
+     *
+     * @return null when no registration token is left, otherwise the stage that failed
+     */
+    private fun deleteRegistrationToken(
+        issuerName: String,
+        accountUuid: String,
+    ): String? {
+        // Retired first, as deleteToken does: a tokens file with no registration token reopens the v3 fallback
+        if (!nativeStorage.retireV3ProviderRecord(issuerName, accountUuid, V3ProviderRecord.REGISTRATION_TOKEN)) {
+            return "retire_v3_token"
+        }
+
+        val tokens = nativeStorage.readTokens(issuerName, accountUuid)
+        if (tokens == null) {
+            if (!nativeStorage.tokensExist(issuerName, accountUuid)) {
+                return null
+            }
+            nativeStorage.deleteTokens(issuerName, accountUuid)
+            return if (nativeStorage.tokensExist(issuerName, accountUuid)) "delete_unreadable_tokens" else null
+        }
+
+        // Only rawToken is a registration token. An idToken without one is a v3 identity token, which
+        // getToken never returns, so there is nothing to remove.
+        if (tokens.idToken?.rawToken == null) {
+            return null
+        }
+
+        val remaining = tokens.copy(idToken = null)
+        val removed =
+            if (remaining.accessToken == null && remaining.refreshToken == null) {
+                nativeStorage.deleteTokens(issuerName, accountUuid)
+                !nativeStorage.tokensExist(issuerName, accountUuid)
+            } else {
+                nativeStorage.saveTokens(remaining, issuerName, accountUuid)
+            }
+
+        return if (removed) null else "delete_token"
+    }
+
     @ReactMethod
     override fun getAccount(promise: Promise) {
         Log.d(NAME, "getAccount called")
@@ -1226,7 +1469,20 @@ class BcscCoreModule internal constructor(
         val native: AccountsRead,
         val legacy: LegacyAccountsRead,
         val accounts: List<NativeAccount>?,
-    )
+    ) {
+        /**
+         * Neither accounts file holds an account: each is missing or lists none. An account that is stored
+         * but cannot be read also leaves [accounts] null, and is not this.
+         */
+        val noAccountStored: Boolean
+            get() {
+                val nativeHoldsNone =
+                    native is AccountsRead.FileMissing ||
+                        (native is AccountsRead.Parsed && native.accounts.isNullOrEmpty())
+                val legacyHoldsNone = legacy is LegacyAccountsRead.Absent || legacy is LegacyAccountsRead.Empty
+                return nativeHoldsNone && legacyHoldsNone
+            }
+    }
 
     /**
      * Finds the accounts (native storage first, then the legacy file) and records what each step found.
