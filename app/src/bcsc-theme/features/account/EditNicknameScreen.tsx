@@ -7,14 +7,14 @@ import NicknameForm from './components/NicknameForm'
 
 const EditNicknameScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const registration = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const handleSubmit = useCallback(
     async (trimmedNickname: string) => {
       try {
-        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
+        await registration.updateRegistration(trimmedNickname)
       } catch (apiError) {
         logger.error('Failed to update registration', { error: apiError })
         throw apiError
@@ -28,7 +28,7 @@ const EditNicknameScreen: React.FC = () => {
 
       navigation.goBack()
     },
-    [dispatch, store.bcscSecure.registrationAccessToken, navigation, registration, logger]
+    [dispatch, navigation, registration, logger]
   )
 
   return <NicknameForm onSubmit={handleSubmit} isRenaming />

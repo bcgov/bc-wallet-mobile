@@ -7,7 +7,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useState } from 'react'
 
 const useVerificationResponseViewModel = () => {
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const registration = useRegistrationService()
   const { getCachedIdTokenMetadata } = useTokenService()
@@ -17,13 +17,13 @@ const useVerificationResponseViewModel = () => {
   const handleUpdateRegistration = useCallback(
     async (nickname: string) => {
       try {
-        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, nickname)
+        await registration.updateRegistration(nickname)
       } catch (error) {
         const errMessage = error instanceof Error ? error.message : String(error)
         logger.error(`[handleUpdateRegistration] Failed to update registration: ${errMessage}`)
       }
     },
-    [store.bcscSecure.registrationAccessToken, registration, logger]
+    [registration, logger]
   )
 
   const updateNicknameInLocalStorage = useCallback(
