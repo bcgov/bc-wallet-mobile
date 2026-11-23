@@ -2456,16 +2456,25 @@ describe('useSecureActions', () => {
       expect(lastTokenDelete).toBeLessThan(jest.mocked(clearRegistration).mock.invocationCallOrder[0])
     })
 
-    it('maps a failed registration clear and does not report the data as deleted', async () => {
+    it('logs a failed registration clear and carries on, since removing the account takes the registration', async () => {
       jest
         .mocked(clearRegistration)
         .mockRejectedValue(Object.assign(new Error('native'), { code: 'E_SAVE_ACCOUNT_FAILED' }))
       const { result } = renderHook(() => useSecureActions())
 
-      await expect(result.current.deleteSecureData()).rejects.toMatchObject({
-        appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+      // Factory reset is the way out of a broken device, so this must not stop it before removeAccount
+      await act(async () => {
+        await result.current.deleteSecureData()
       })
-      expect(mockLogger.info).not.toHaveBeenCalledWith('Secure data deleted from native storage')
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to clear the registration'),
+        expect.any(Error)
+      )
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Registration not cleared; continuing, as removing the account removes it'
+      )
+      expect(cancelVerificationReminders).toHaveBeenCalledWith(mockLogger)
     })
   })
 

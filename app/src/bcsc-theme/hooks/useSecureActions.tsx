@@ -1425,7 +1425,7 @@ export const useSecureActions = () => {
 
   /**
    * Completely removes sensitive data from native storage.
-   * Call this on account removal.
+   * Call this on account removal, before `removeAccount`, which also takes the registration with it.
    */
   const deleteSecureData = useCallback(async () => {
     try {
@@ -1438,8 +1438,14 @@ export const useSecureActions = () => {
         deleteToken(TokenType.Refresh),
         deleteToken(TokenType.Access),
       ])
-      // After the other tokens: iOS stores them under the client ID this clears
-      await clearDeviceRegistration(logger)
+      // After the other tokens: iOS stores them under the client ID this clears. Best effort, so a failed
+      // clear cannot stop a factory reset: removing the account next takes the registration with it.
+      try {
+        await clearDeviceRegistration(logger)
+      } catch {
+        // clearDeviceRegistration has logged the cause
+        logger.warn('Registration not cleared; continuing, as removing the account removes it')
+      }
       // doesn't throw
       await cancelVerificationReminders(logger)
       logger.info('Secure data deleted from native storage')
