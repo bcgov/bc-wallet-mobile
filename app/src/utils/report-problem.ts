@@ -23,7 +23,6 @@ const LOKI_REPORT_PROBLEM_LOG_LEVEL = 'error'
 // List of error context keys that should be flattened into the top-level of the Loki payload.
 const FLATTENED_APP_ERROR_CONTEXT_KEYS = new Set([
   'screen',
-  'build_history',
   'navigation',
   'http_route',
   'http_method',
@@ -89,6 +88,7 @@ export const createReportProblemLokiPayload = (reportId: string, problem: Report
     report_id: reportId, // this report problem - ie: "7K2P-9XQF"
     install_id: problem.installId, // this app installation - ie: "f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f"
     session_id: problem.sessionId, // this remote logging session - ie: 1234567890
+    build_history: problem.buildHistory, // builds this app install has run, newest first - ie: "4.3.0+2802 < 4.3.0+2801"
 
     message: problem.title, // ie: "Something went wrong"
     description: problem.description, // ie: "The app crashed when I tried to do X"

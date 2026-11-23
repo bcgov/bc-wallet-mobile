@@ -3,6 +3,7 @@ jest.mock('react-native-bcsc-core', () => ({
 }))
 
 import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
+import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
 import { MockLogger } from '@bifold/core'
 import { Platform } from 'react-native'
@@ -249,6 +250,20 @@ describe('KeyRotationSystemCheck', () => {
       expect(rotate).toHaveBeenCalled()
     })
 
+    it('skips rotation and the attempt stamp when the registration update ran after runCheck', async () => {
+      const utils = makeUtils()
+      const rotate = jest.fn()
+      let registeredThisLaunch = false
+      const check = new KeyRotationSystemCheck(() => registeredThisLaunch, undefined, rotate, utils)
+
+      // runSystemChecks evaluates runCheck() first, then the registration check's onFail flips the flag
+      registeredThisLaunch = true
+      await check.onFail()
+
+      expect(rotate).not.toHaveBeenCalled()
+      expect(utils.dispatch).not.toHaveBeenCalled()
+    })
+
     it('swallows a rejecting rotate() without throwing', async () => {
       const utils = makeUtils()
       const rotate = jest.fn().mockRejectedValue(new Error('rotation blew up'))
@@ -256,6 +271,42 @@ describe('KeyRotationSystemCheck', () => {
 
       await expect(check.onFail()).resolves.toBeUndefined()
       expect(utils.logger.error).toHaveBeenCalled()
+    })
+  })
+
+  describe('with runSystemChecks', () => {
+    it('does not rotate an overdue key after the preceding registration check updated it', async () => {
+      Object.defineProperty(Platform, 'OS', { get: () => 'ios' })
+      const createdSeconds = (NOW - 366 * 24 * 60 * 60 * 1000) / 1000
+      mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdSeconds } as any])
+      const utils = makeUtils()
+      const rotate = jest.fn()
+      let registeredThisLaunch = false
+      const registrationCheck: SystemCheckStrategy = {
+        runCheck: () => false,
+        onFail: async () => {
+          registeredThisLaunch = true
+        },
+      }
+      const rotationCheck = new KeyRotationSystemCheck(() => registeredThisLaunch, undefined, rotate, utils)
+
+      await runSystemChecks([registrationCheck, rotationCheck])
+
+      expect(rotate).not.toHaveBeenCalled()
+    })
+
+    it('rotates an overdue key when the registration check had nothing to update', async () => {
+      Object.defineProperty(Platform, 'OS', { get: () => 'ios' })
+      const createdSeconds = (NOW - 366 * 24 * 60 * 60 * 1000) / 1000
+      mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdSeconds } as any])
+      const utils = makeUtils()
+      const rotate = jest.fn().mockResolvedValue({ status: 'rotated', confirmed: true })
+      const registrationCheck: SystemCheckStrategy = { runCheck: () => true, onFail: jest.fn() }
+      const rotationCheck = new KeyRotationSystemCheck(() => false, undefined, rotate, utils)
+
+      await runSystemChecks([registrationCheck, rotationCheck])
+
+      expect(rotate).toHaveBeenCalledTimes(1)
     })
   })
 })

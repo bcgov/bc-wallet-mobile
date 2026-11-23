@@ -910,6 +910,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         ...initialBCSCState,
         ...partialBcscState,
         installId: state.bcsc.installId ?? partialBcscState.installId,
+        // Like installId, the build history belongs to the install, not the account; registeredBuild does not
+        appBuildHistory: state.bcsc.appBuildHistory,
       }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)

@@ -27,7 +27,7 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
 
   /**
    * @param deferForPendingRegistrationUpdate Whether `UpdateDeviceRegistrationSystemCheck` already PUT the
-   *   current key during this launch. Read when the check runs, so it must be answered by this launch's
+   *   current key during this launch. Read in both `runCheck` and `onFail` (the PUT happens between them), so it must be answered by this launch's
    *   outcome, never from the persisted `registeredBuild` — that stays unset while the PUT keeps
    *   failing, which would latch rotation off forever (see the #3876 review that caught this).
    */
@@ -120,6 +120,15 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
   }
 
   async onFail(): Promise<void> {
+    // runSystemChecks evaluates every runCheck() before any onFail(), so the registration PUT hasn't run
+    // when runCheck() reads the flag; read it again now that earlier checks' onFail handlers have settled.
+    if (this.deferForPendingRegistrationUpdate()) {
+      this.utils.logger.info(
+        'KeyRotationSystemCheck: skipping rotation — UpdateDeviceRegistrationSystemCheck already PUT the current key this launch'
+      )
+      return
+    }
+
     // Dispatched before rotate() so the attempt stamp is queued first — best-effort ordering, not
     // a durable write barrier.
     this.utils.dispatch({

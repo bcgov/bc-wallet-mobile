@@ -87,7 +87,6 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
 
     // Add context to the error for debugging purposes
     appError.addContext({
-      build_history: formatBuildHistory(store.bcsc.appBuildHistory),
       state_ias_environment: store.developer.environment.name,
       state_verified: store.bcscSecure.verified,
       state_credential_deactivated: store.bcscSecure.credentialDeactivated,
@@ -104,6 +103,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       code: appError.statusCode,
       error: appError,
       installId: store.bcsc.installId, // App install ID
+      buildHistory: formatBuildHistory(store.bcsc.appBuildHistory),
       sessionId: store.developer.remoteDebugging.sessionId, // Remote logging session ID
     })
 

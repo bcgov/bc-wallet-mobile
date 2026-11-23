@@ -112,6 +112,21 @@ describe('reducer', () => {
     expect(result.bcsc.selectedNickname).toBeUndefined()
   })
 
+  it('CLEAR_BCSC preserves appBuildHistory but clears registeredBuild', () => {
+    const history = [
+      { version: '4.0.0', build: '100' },
+      { version: '3.9.0', build: '90' },
+    ]
+    const state = {
+      ...initialState,
+      bcsc: { ...initialState.bcsc, appBuildHistory: history, registeredBuild: history[0] },
+    }
+    const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })
+
+    expect(result.bcsc.appBuildHistory).toEqual(history)
+    expect(result.bcsc.registeredBuild).toBeUndefined()
+  })
+
   it('CLEAR_BCSC keeps state.installId even when the payload carries a conflicting installId', () => {
     const state = {
       ...initialState,

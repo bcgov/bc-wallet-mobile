@@ -20,6 +20,7 @@ export interface ErrorModalPayload {
   description: string
   error: AppError
   installId?: string // Optional install ID for error reporting
+  buildHistory?: string // Optional formatted build history for error reporting
   sessionId?: number // Optional remote logging session ID
 }
 
@@ -66,6 +67,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
       code: payload.error.statusCode,
       error: payload.error,
       installId: payload.installId,
+      buildHistory: payload.buildHistory,
       sessionId: payload.sessionId,
     })
   }, [payload])
