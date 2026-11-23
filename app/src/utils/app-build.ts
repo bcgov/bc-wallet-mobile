@@ -7,30 +7,31 @@ export interface AppBuild {
 /** The most builds kept in the history; recording a build beyond this drops the oldest. */
 export const MAX_APP_BUILD_HISTORY = 20
 
+/** The outcome of {@link addNewBuildToHistory}. */
+export interface AddBuildResult {
+  /** The history after the build was considered, newest first and capped at {@link MAX_APP_BUILD_HISTORY}. */
+  history: AppBuild[]
+  /** True when the build was added to the front; false when it already matched the newest recorded build. */
+  added: boolean
+}
+
 /**
  * Records a build in the history when it differs from the newest recorded build.
  * The history is ordered with the most recent build at the front, holds at most {@link MAX_APP_BUILD_HISTORY}
  * builds, and the array passed in is never mutated.
  *
- * @param version - The version of the build to record.
- * @param build - The build number of the build to record.
+ * @param newBuild - The build to record.
  * @param history - The recorded builds, or undefined when nothing has been recorded yet.
- * @returns A copy of the history, with the build added at the front if it differs from the newest recorded build,
- *   and the oldest builds dropped beyond the cap.
+ * @returns The resulting history, and whether the build was added. The history is trimmed to the cap either way.
  */
-export const addNewBuildToHistory = (version: string, build: string, history: AppBuild[] | undefined): AppBuild[] => {
-  const newHistory = history ? [...history] : []
-  const lastBuild = newHistory[0]
+export const addNewBuildToHistory = (newBuild: AppBuild, history: AppBuild[] | undefined): AddBuildResult => {
+  const current = history ?? []
 
-  if (isAppBuildEqual(lastBuild, { version, build })) {
-    // no change
-    return newHistory
+  if (isAppBuildEqual(current[0], newBuild)) {
+    return { history: current.slice(0, MAX_APP_BUILD_HISTORY), added: false }
   }
 
-  // Add the new build to the front of the history array, dropping the oldest beyond the cap
-  newHistory.unshift({ version, build })
-
-  return newHistory.slice(0, MAX_APP_BUILD_HISTORY)
+  return { history: [newBuild, ...current].slice(0, MAX_APP_BUILD_HISTORY), added: true }
 }
 
 /**
@@ -58,7 +59,7 @@ export const isAppBuildEqual = (a: AppBuild | undefined, b: AppBuild): boolean =
 /**
  * Formats a build history into a string for display.
  *
- * @example formatBuildHistory([{ version: '4.0.0', build: '100' }, { version: '4.1.0', build: '200' }]) // returns "4.0.0+100 < 4.1.0+200"
+ * @example formatBuildHistory([{ version: '4.1.0', build: '2000' }, { version: '4.0.0', build: '1000' }]) // returns "4.1.0+2000 < 4.0.0+1000"
  * @param history - The build history to format.
  * @returns A string representation of the build history
  */
