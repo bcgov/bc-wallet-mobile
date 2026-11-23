@@ -106,7 +106,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         })
       )
     } catch (error) {
-      // 1. Render the reportable error modal
+      // 1. Render the modal so the specific error can be reported
       unknownErrorModal(error)
 
       // 2. Throw the error so that useVideoCallFlow can transition to the CALL_END_FAILED state
@@ -466,7 +466,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   }
 
   if (flowState === VideoCallFlowState.CALL_ENDED) {
-    return <CallProcessingView message={t('BCSC.VideoCall.CallStates.CallEnded')} />
+    return <CallProcessingView message={t('BCSC.VideoCall.CallStates.CallEnded')} onCancel={goToVerifyNotComplete} />
   }
 
   if (flowState !== VideoCallFlowState.IN_CALL) {
