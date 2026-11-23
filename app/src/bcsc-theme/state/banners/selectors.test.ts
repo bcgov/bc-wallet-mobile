@@ -1,5 +1,5 @@
+import type { BCSCStore } from '@/bcsc-theme/storage'
 import { BCSCBanner } from '@/bcsc-theme/types/banners'
-import { BCState } from '@/store'
 import { BANNER_DISMISS_DURATION_MS, BannerDismissal } from './banner-dismissal'
 import { selectBannerDismissal } from './selectors'
 
@@ -13,7 +13,7 @@ const setDuration = (duration: number) => {
 }
 
 const buildState = (dismissedBanners?: Record<string, { dismissedAt: number }>) =>
-  ({ bcsc: { dismissedBanners } }) as unknown as BCState
+  ({ app: { dismissedBanners } }) as unknown as Pick<BCSCStore, 'app'>
 
 describe('selectBannerDismissal', () => {
   afterEach(() => {

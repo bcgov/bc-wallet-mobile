@@ -2,10 +2,11 @@ import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizatio
 import { useDeviceAuthorizationRecovery } from '@/bcsc-theme/hooks/useDeviceAuthorizationRecovery'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
+import { selectJourney, VerificationJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState, useBirthdate, useVerification } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
@@ -16,7 +17,9 @@ import { useCallback } from 'react'
 export const useEnterBirthdateViewModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
 ) => {
-  const [store] = useStore<BCState>()
+  const { request } = useVerification()
+  const storedSerial = request?.csn
+  const initialDate = useBirthdate()
   const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions } = useSecureActions()
@@ -46,27 +49,20 @@ export const useEnterBirthdateViewModel = (
 
       logger.info(`Device authorized successfully, proceeding to verification steps: ${deviceAuth.process}`)
 
-      // The dispatched store updates above won't be reflected in our `store` closure
-      // until the next render, so build a predicted snapshot to compute the next route.
-      const predictedStore: BCState = {
-        ...store,
-        bcscSecure: {
-          ...store.bcscSecure,
-          serial,
-          birthdate: date,
-          emailAddress: deviceAuth.verified_email,
-          isEmailVerified: !!deviceAuth.verified_email,
-          deviceCode: deviceAuth.device_code,
-          userCode: deviceAuth.user_code,
-          deviceCodeExpiresAt: expiresAt,
-          cardProcess: deviceAuth.process,
-        },
+      // The writes above are in the store already; the prediction pins the values the route depends on
+      const predictedJourney: VerificationJourney = {
+        ...selectJourney(getBCSCState()),
+        serial,
+        emailAddress: deviceAuth.verified_email,
+        isEmailVerified: !!deviceAuth.verified_email,
+        deviceCode: deviceAuth.device_code,
+        cardProcess: deviceAuth.process,
       }
 
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [getResumeStepRoute(predictedStore)],
+          routes: [getResumeStepRoute(predictedJourney)],
         })
       )
     },
@@ -75,7 +71,6 @@ export const useEnterBirthdateViewModel = (
       attemptWithRecovery,
       navigation,
       logger,
-      store,
       updateUserInfo,
       updateDeviceCodes,
       updateCardProcess,
@@ -102,8 +97,8 @@ export const useEnterBirthdateViewModel = (
   }
 
   return {
-    serial: store.bcscSecure.serial,
-    initialDate: store.bcscSecure.birthdate,
+    serial: storedSerial,
+    initialDate,
     authorizeDevice,
     isDateValid,
   }

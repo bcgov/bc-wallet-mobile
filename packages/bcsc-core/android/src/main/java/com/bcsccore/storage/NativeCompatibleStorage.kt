@@ -104,6 +104,13 @@ class NativeCompatibleStorage(
         private const val ISSUER_FILENAME = "issuer"
         private const val AUTHORIZATION_REQUEST_FILENAME = "authorization_request"
         private const val CLIENT_METADATA_FILENAME = "clientmetadata"
+
+        // Reason-code prefixes for RecordRead.Unreadable
+        internal const val TOKENS_RECORD = "tokens"
+        internal const val AUTHORIZATION_REQUEST_RECORD = "authorization_request"
+        internal const val SAVED_SERVICES_RECORD = "saved_services"
+        internal const val V3_TOKENS_RECORD = "tokens_v3"
+        internal const val V3_AUTHORIZATION_REQUEST_RECORD = "authorization_request_v3"
         private val UUID_REGEX =
             Regex(
                 "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
@@ -604,17 +611,26 @@ class NativeCompatibleStorage(
     fun readAuthorizationRequest(
         issuerName: String,
         accountUuid: String,
-    ): NativeAuthorizationRequest? {
+    ): NativeAuthorizationRequest? = (readAuthorizationRequestResult(issuerName, accountUuid) as? RecordRead.Ok)?.value
+
+    /** [readAuthorizationRequest], but says why there is no request. Blank or `null` content is absent. */
+    internal fun readAuthorizationRequestResult(
+        issuerName: String,
+        accountUuid: String,
+    ): RecordRead<NativeAuthorizationRequest> {
         val file = getAuthorizationRequestFile(issuerName, accountUuid)
         Log.d(TAG, "Reading authorization request from: ${file.absolutePath}")
 
-        val jsonContent = readEncryptedFile(file) ?: return null
-
-        return try {
-            gson.fromJson(jsonContent, NativeAuthorizationRequest::class.java)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse authorization request JSON", e)
-            null
+        return readEncryptedFileResult(file).toRecordRead(AUTHORIZATION_REQUEST_RECORD).then { jsonContent ->
+            try {
+                gson
+                    .fromJson(jsonContent, NativeAuthorizationRequest::class.java)
+                    ?.let { RecordRead.Ok(it) }
+                    ?: RecordRead.Absent
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to parse authorization request JSON", e)
+                RecordRead.Unreadable(RecordRead.reason("${AUTHORIZATION_REQUEST_RECORD}_parse_failed", e))
+            }
         }
     }
 
@@ -678,10 +694,16 @@ class NativeCompatibleStorage(
     fun readRegistrationTokenFromV3Provider(
         issuerName: String,
         accountUuid: String,
-    ): String? {
+    ): String? = (readRegistrationTokenFromV3ProviderResult(issuerName, accountUuid) as? RecordRead.Ok)?.value
+
+    /** [readRegistrationTokenFromV3Provider], but says why there is no token. Retired reads as absent. */
+    internal fun readRegistrationTokenFromV3ProviderResult(
+        issuerName: String,
+        accountUuid: String,
+    ): RecordRead<String> {
         if (isV3ProviderRecordRetired(issuerName, accountUuid, V3ProviderRecord.REGISTRATION_TOKEN)) {
             Log.d(TAG, "readRegistrationTokenFromV3Provider: v3 registration token retired; skipping")
-            return null
+            return RecordRead.Absent
         }
 
         val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
@@ -693,26 +715,29 @@ class NativeCompatibleStorage(
                 TAG,
                 "readRegistrationTokenFromV3Provider: V3 provider file not found at: ${providerFile.absolutePath}",
             )
-            return null
+            return RecordRead.Absent
         }
 
         Log.d(TAG, "readRegistrationTokenFromV3Provider: Reading v3 provider file: ${providerFile.absolutePath}")
 
-        val jsonContent = readEncryptedFile(providerFile) ?: return null
-
-        return try {
-            val jsonObject = org.json.JSONObject(jsonContent)
-            val clientReg = jsonObject.optJSONObject("clientRegistration") ?: return null
-            val token = clientReg.optString("registration_access_token", null)
-            if (!token.isNullOrEmpty()) {
-                Log.d(TAG, "readRegistrationTokenFromV3Provider: Found registration access token")
-                token
-            } else {
-                null
+        return readEncryptedFileResult(providerFile).toRecordRead(V3_TOKENS_RECORD).then { jsonContent ->
+            if (jsonContent.isBlank()) {
+                return@then RecordRead.Absent
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "readRegistrationTokenFromV3Provider: Failed to parse v3 provider file", e)
-            null
+            try {
+                val jsonObject = org.json.JSONObject(jsonContent)
+                val clientReg = jsonObject.optJSONObject("clientRegistration") ?: return@then RecordRead.Absent
+                val token = clientReg.optString("registration_access_token", null)
+                if (!token.isNullOrEmpty()) {
+                    Log.d(TAG, "readRegistrationTokenFromV3Provider: Found registration access token")
+                    RecordRead.Ok(token)
+                } else {
+                    RecordRead.Absent
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "readRegistrationTokenFromV3Provider: Failed to parse v3 provider file", e)
+                RecordRead.Unreadable(RecordRead.reason("${V3_TOKENS_RECORD}_parse_failed", e))
+            }
         }
     }
 
@@ -727,10 +752,17 @@ class NativeCompatibleStorage(
     fun readAuthorizationRequestFromV3Provider(
         issuerName: String,
         accountUuid: String,
-    ): NativeAuthorizationRequest? {
+    ): NativeAuthorizationRequest? =
+        (readAuthorizationRequestFromV3ProviderResult(issuerName, accountUuid) as? RecordRead.Ok)?.value
+
+    /** [readAuthorizationRequestFromV3Provider], but says why there is no request. Retired reads as absent. */
+    internal fun readAuthorizationRequestFromV3ProviderResult(
+        issuerName: String,
+        accountUuid: String,
+    ): RecordRead<NativeAuthorizationRequest> {
         if (isV3ProviderRecordRetired(issuerName, accountUuid, V3ProviderRecord.AUTHORIZATION_REQUEST)) {
             Log.d(TAG, "readAuthorizationRequestFromV3Provider: v3 authorization request retired; skipping")
-            return null
+            return RecordRead.Absent
         }
 
         // V3 stores provider at: {filesDir}/{issuerName}/{accountUuid}/providers
@@ -742,7 +774,7 @@ class NativeCompatibleStorage(
                 TAG,
                 "readAuthorizationRequestFromV3Provider: V3 provider file not found at: ${providerFile.absolutePath}",
             )
-            return null
+            return RecordRead.Absent
         }
 
         Log.d(
@@ -750,7 +782,14 @@ class NativeCompatibleStorage(
             "readAuthorizationRequestFromV3Provider: Attempting to read v3 provider file: ${providerFile.absolutePath}",
         )
 
-        val jsonContent = readEncryptedFile(providerFile) ?: return null
+        val jsonContent =
+            when (val read = readEncryptedFileResult(providerFile).toRecordRead(V3_AUTHORIZATION_REQUEST_RECORD)) {
+                is RecordRead.Ok -> read.value
+                is RecordRead.Failure -> return read
+            }
+        if (jsonContent.isBlank()) {
+            return RecordRead.Absent
+        }
 
         return try {
             // Parse the nested structure: Provider -> ClientRegistration -> AuthorizationRequest
@@ -778,42 +817,46 @@ class NativeCompatibleStorage(
                         TAG,
                         "readAuthorizationRequestFromV3Provider: v3 provider lacks authorizationRequest and issuer/clientID",
                     )
-                    return null
+                    return RecordRead.Absent
                 }
                 Log.d(
                     TAG,
                     "readAuthorizationRequestFromV3Provider: v3 provider lacks authorizationRequest; returning minimal record with issuer/clientID for recovery",
                 )
-                return NativeAuthorizationRequest(
-                    clientID = v3ClientID,
-                    issuer = v3Issuer,
+                return RecordRead.Ok(
+                    NativeAuthorizationRequest(
+                        clientID = v3ClientID,
+                        issuer = v3Issuer,
+                    ),
                 )
             }
 
             // Convert to our model
-            NativeAuthorizationRequest(
-                clientID = v3ClientID,
-                deviceCode = authReqJson.optString("deviceCode", null),
-                userCode = authReqJson.optString("userCode", null),
-                birthDate = authReqJson.optString("birth_date", null),
-                csn = authReqJson.optString("csn", null),
-                verifiedEmail = authReqJson.optString("verified_email", null),
-                firstName = authReqJson.optString("firstName", null),
-                lastName = authReqJson.optString("lastName", null),
-                middleNames = authReqJson.optString("middleNames", null),
-                residentialAddress = authReqJson.optString("residentialAddress", null),
-                issuer = v3Issuer,
-                verificationOptions = authReqJson.optString("verification_options", null),
-                verificationUri = authReqJson.optString("verification_uri", null),
-                verificationUriVideo = authReqJson.optString("verification_uri_video", null),
-                backCheckVerificationId = authReqJson.optString("backCheckVerificationId", null),
-                evidenceUploadUri = authReqJson.optString("evidence_upload_uri", null),
-                cardProcess = authReqJson.optString("process", null),
-                // Note: Complex objects like Address and Date fields would need more parsing
-            )
+            val authRequest =
+                NativeAuthorizationRequest(
+                    clientID = v3ClientID,
+                    deviceCode = authReqJson.optString("deviceCode", null),
+                    userCode = authReqJson.optString("userCode", null),
+                    birthDate = authReqJson.optString("birth_date", null),
+                    csn = authReqJson.optString("csn", null),
+                    verifiedEmail = authReqJson.optString("verified_email", null),
+                    firstName = authReqJson.optString("firstName", null),
+                    lastName = authReqJson.optString("lastName", null),
+                    middleNames = authReqJson.optString("middleNames", null),
+                    residentialAddress = authReqJson.optString("residentialAddress", null),
+                    issuer = v3Issuer,
+                    verificationOptions = authReqJson.optString("verification_options", null),
+                    verificationUri = authReqJson.optString("verification_uri", null),
+                    verificationUriVideo = authReqJson.optString("verification_uri_video", null),
+                    backCheckVerificationId = authReqJson.optString("backCheckVerificationId", null),
+                    evidenceUploadUri = authReqJson.optString("evidence_upload_uri", null),
+                    cardProcess = authReqJson.optString("process", null),
+                    // Note: Complex objects like Address and Date fields would need more parsing
+                )
+            RecordRead.Ok(authRequest)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to extract authorization request from v3 provider", e)
-            null
+            RecordRead.Unreadable(RecordRead.reason("${V3_AUTHORIZATION_REQUEST_RECORD}_parse_failed", e))
         }
     }
 
@@ -835,17 +878,26 @@ class NativeCompatibleStorage(
     fun readClientMetadata(
         issuerName: String,
         accountUuid: String,
-    ): Array<NativeClientMetadata>? {
+    ): Array<NativeClientMetadata>? = (readClientMetadataResult(issuerName, accountUuid) as? RecordRead.Ok)?.value
+
+    /** [readClientMetadata], but says why there is none. Blank or `null` content is absent; `[]` is still [RecordRead.Ok]. */
+    internal fun readClientMetadataResult(
+        issuerName: String,
+        accountUuid: String,
+    ): RecordRead<Array<NativeClientMetadata>> {
         val file = getClientMetadataFile(issuerName, accountUuid)
         Log.d(TAG, "Reading client metadata from: ${file.absolutePath}")
 
-        val jsonContent = readEncryptedFile(file) ?: return null
-
-        return try {
-            gson.fromJson(jsonContent, Array<NativeClientMetadata>::class.java)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse client metadata JSON", e)
-            null
+        return readEncryptedFileResult(file).toRecordRead(SAVED_SERVICES_RECORD).then { jsonContent ->
+            try {
+                gson
+                    .fromJson(jsonContent, Array<NativeClientMetadata>::class.java)
+                    ?.let { RecordRead.Ok(it) }
+                    ?: RecordRead.Absent
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to parse client metadata JSON", e)
+                RecordRead.Unreadable(RecordRead.reason("${SAVED_SERVICES_RECORD}_parse_failed", e))
+            }
         }
     }
 

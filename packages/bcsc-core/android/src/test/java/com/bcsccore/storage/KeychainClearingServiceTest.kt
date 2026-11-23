@@ -6,17 +6,23 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.io.File
 import java.security.KeyStore
 import java.util.Collections
 
 /**
  * Covers KeychainClearingService, the Android counterpart to
  * KeychainClearingService.swift's clearAll() — deletes every AndroidKeyStore alias belonging to this app
+ * API 34: deleting PIN prefs files needs API 24, the module's minSdk.
  */
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class KeychainClearingServiceTest {
     private fun keyStoreWith(aliases: List<String>): KeyStore {
         val ks = mockk<KeyStore>(relaxed = true)
@@ -69,5 +75,28 @@ class KeychainClearingServiceTest {
         service.clearAll()
 
         verify(exactly = 1) { keyStore.deleteEntry("rsa2") }
+    }
+
+    @Test
+    fun `clearAll deletes PIN prefs files, including ones under an empty issuer, and keeps other prefs files`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val keysetKey = "__androidx_security_crypto_encrypted_prefs_key_keyset__"
+        val uuid = "123e4567-e89b-42d3-a456-426614174000"
+        val pinFiles = listOf("https:idsit.gov.bc.cadevice.$uuid", ".$uuid")
+        val otherFiles = listOf("some_library_secure_prefs", "com.bcsccore.test.PREFERENCE_FILE_KEY_$uuid")
+        (pinFiles + otherFiles).forEach {
+            context
+                .getSharedPreferences(it, Context.MODE_PRIVATE)
+                .edit()
+                .putString(keysetKey, "keyset")
+                .commit()
+        }
+
+        fun prefsFile(name: String) = File(context.dataDir, "shared_prefs/$name.xml")
+
+        KeychainClearingService(context, keyStoreSupplier = { keyStoreWith(emptyList()) }).clearAll()
+
+        pinFiles.forEach { assertFalse("$it deleted", prefsFile(it).exists()) }
+        otherFiles.forEach { assertTrue("$it kept", prefsFile(it).exists()) }
     }
 }

@@ -1,3 +1,5 @@
+import { useDeveloper } from '@/bcsc-theme/storage/hooks'
+import { IS_BCSC } from '@/utils/environment'
 import { useStore } from '@bifold/core'
 import { IASEnvironment } from '@utils/environment'
 import React, { useCallback } from 'react'
@@ -15,6 +17,7 @@ interface WalletEnvironmentProps {
  */
 const WalletEnvironmentScreen: React.FC<WalletEnvironmentProps> = ({ shouldDismissModal }) => {
   const [, dispatch] = useStore<BCState>()
+  const { update: updateDeveloper } = useDeveloper()
 
   /**
    * Handles the change of the IAS environment by updating the store.
@@ -29,9 +32,12 @@ const WalletEnvironmentScreen: React.FC<WalletEnvironmentProps> = ({ shouldDismi
         type: BCDispatchAction.UPDATE_ENVIRONMENT,
         payload: [environment],
       })
+      if (IS_BCSC) {
+        await updateDeveloper({ environment })
+      }
       shouldDismissModal()
     },
-    [dispatch, shouldDismissModal]
+    [dispatch, shouldDismissModal, updateDeveloper]
   )
 
   return <EnvironmentSelector onEnvironmentChange={handleEnvironmentChange} onCancel={shouldDismissModal} />

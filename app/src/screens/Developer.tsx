@@ -1,6 +1,7 @@
 import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import { mediatorLabel } from '@/bcsc-theme/features/agent/services/mediator-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useAccount, useApp, useDeveloper, usePreferences } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Switch } from '@/components/Switch'
 import { BCThemeNames, Mode } from '@/constants'
@@ -9,7 +10,7 @@ import { useRemoteConfig } from '@/remote-config/RemoteConfig'
 import { AutoCredentialMonitor } from '@/services/auto-credential'
 import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { isProductionBundle } from '@/utils/environment'
+import { IS_BCSC, isProductionBundle } from '@/utils/environment'
 import {
   CredentialProvisioningEventTypes,
   DispatchAction,
@@ -137,7 +138,7 @@ const RowDetail: React.FC<{ label: string; value: string }> = ({ label, value })
 const ConfigureMediatorSection: React.FC<{ style: StyleProp<ViewStyle> }> = ({ style }) => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
-  const [store] = useStore<BCState>()
+  const { selectedMediator } = usePreferences()
   const navigation = useNavigation()
   const route = useRoute()
 
@@ -158,12 +159,7 @@ const ConfigureMediatorSection: React.FC<{ style: StyleProp<ViewStyle> }> = ({ s
             <Row
               title={t('BCSC.ConfigureMediator.ScreenTitle')}
               endAdornment={<Icon name="chevron-right" size={24} color={ColorPalette.brand.primary} />}
-              subContent={
-                <RowDetail
-                  label={t('Developer.SelectedMediator')}
-                  value={mediatorLabel(store.preferences.selectedMediator)}
-                />
-              }
+              subContent={<RowDetail label={t('Developer.SelectedMediator')} value={mediatorLabel(selectedMediator)} />}
             />
           </ListButton>
         </ListButtonGroup>
@@ -175,6 +171,10 @@ const ConfigureMediatorSection: React.FC<{ style: StyleProp<ViewStyle> }> = ({ s
 const Developer: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
+  const app = useApp()
+  const developer = useDeveloper()
+  const { setDeveloperMode } = usePreferences()
+  const { clearTokens } = useAccount()
   const { client: apiClient } = useBCSCApiClientState()
   const { ColorPalette, Spacing, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
@@ -193,9 +193,11 @@ const Developer: React.FC = () => {
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
   const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
-  const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
-  const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!store.developer.enableAppToAppPersonFlow)
-  const [enableAttestation, setEnableAttestation] = useState(!!store.developer.enableAttestation)
+  // BCSC keeps these in its own store; the Bifold dispatches below still serve BC Wallet
+  const developerSettings = IS_BCSC ? developer : store.developer
+  const [enableProxy, setEnableProxy] = useState(!!developerSettings.enableProxy)
+  const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!developerSettings.enableAppToAppPersonFlow)
+  const [enableAttestation, setEnableAttestation] = useState(!!developerSettings.enableAttestation)
   const [tokensDeleted, setTokensDeleted] = useState<boolean>(false)
   const [personCredentialFetchStatus, setPersonCredentialFetchStatus] = useState<string>('idle')
   const remoteConfig = useRemoteConfig()
@@ -251,6 +253,9 @@ const Developer: React.FC = () => {
       type: DispatchAction.ENABLE_DEVELOPER_MODE,
       payload: [!devMode],
     })
+    if (IS_BCSC) {
+      void setDeveloperMode(!devMode)
+    }
     setDevMode(!devMode)
   }
 
@@ -323,6 +328,9 @@ const Developer: React.FC = () => {
         type: BCDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE,
         payload: [{ enabled: remoteLoggingEnabled, expireAt: undefined }],
       })
+      if (IS_BCSC) {
+        void developer.update({ remoteDebugging: {} })
+      }
 
       return
     }
@@ -333,10 +341,16 @@ const Developer: React.FC = () => {
   const onEnableRemoteLoggingPressed = () => {
     const remoteLoggingEnabled = true
     DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, remoteLoggingEnabled)
+    const enabledAt = new Date()
     dispatch({
       type: BCDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE,
-      payload: [{ enabledAt: new Date(), sessionId: logger.sessionId }],
+      payload: [{ enabledAt, sessionId: logger.sessionId }],
     })
+    if (IS_BCSC) {
+      void developer.update({
+        remoteDebugging: { enabledAt: enabledAt.toISOString(), sessionId: logger.sessionId },
+      })
+    }
     setRemoteLoggingEnabled(remoteLoggingEnabled)
 
     setRemoteLoggingWarningModalVisible(false)
@@ -372,6 +386,9 @@ const Developer: React.FC = () => {
       type: BCDispatchAction.TOGGLE_PROXY,
       payload: [!enableProxy],
     })
+    if (IS_BCSC) {
+      void developer.update({ enableProxy: !enableProxy })
+    }
     setEnableProxy((previousState) => !previousState)
   }
 
@@ -380,6 +397,9 @@ const Developer: React.FC = () => {
       type: BCDispatchAction.TOGGLE_APP_TO_APP_PERSON_FLOW,
       payload: [!enableAppToAppPersonFlow],
     })
+    if (IS_BCSC) {
+      void developer.update({ enableAppToAppPersonFlow: !enableAppToAppPersonFlow })
+    }
     setEnableAppToAppPersonFlow((previousState) => !previousState)
   }
 
@@ -388,44 +408,45 @@ const Developer: React.FC = () => {
       type: BCDispatchAction.TOGGLE_ATTESTATION,
       payload: [!enableAttestation],
     })
+    if (IS_BCSC) {
+      void developer.update({ enableAttestation: !enableAttestation })
+    }
     setEnableAttestation((previousState) => !previousState)
   }
 
   const toggleTheme = () => {
-    if (themeName === BCThemeNames.Dark) {
-      setTheme(BCThemeNames.Light)
-    } else {
-      setTheme(BCThemeNames.Dark)
+    const next = themeName === BCThemeNames.Dark ? BCThemeNames.Light : BCThemeNames.Dark
+    setTheme(next)
+    if (IS_BCSC) {
+      void developer.setTheme(next)
     }
   }
 
   const staleTermsOfUseAcceptance = () => {
     // Set a version that will never match the server's, so the Terms of Use
     // re-acceptance modal is presented on the next unlock (MainStack mount)
-    dispatch({
-      type: BCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION,
-      payload: ['-1'],
-    })
+    void app.update({ acceptedTermsOfUseVersion: '-1' })
   }
 
   const resetOnboardingIntro = () => {
     // Clear the "seen" flag so the welcome/intro is shown again the next time AuthStack mounts
     // (i.e. the next app launch or unlock) — mirrors how the intro is gated for returning users.
-    dispatch({
-      type: BCDispatchAction.SEEN_ONBOARDING_INTRO,
-      payload: [false],
-    })
+    void app.update({ hasSeenOnboardingIntro: false })
   }
 
   const deleteTokens = async () => {
     // Deletes tokens from native keychain storage and clears the in-memory cache
     // Testing getTokenWithDiagnostics() will show correct error message
     try {
-      await Promise.all([
-        deleteToken(TokenType.Refresh),
-        deleteToken(TokenType.Registration),
-        deleteToken(TokenType.Access),
-      ])
+      if (IS_BCSC) {
+        await clearTokens()
+      } else {
+        await Promise.all([
+          deleteToken(TokenType.Refresh),
+          deleteToken(TokenType.Registration),
+          deleteToken(TokenType.Access),
+        ])
+      }
       apiClient?.clearTokens()
       logger.info('Developer: Deleted all tokens from native storage and cleared in-memory cache')
       setTokensDeleted(true)
@@ -679,7 +700,7 @@ const Developer: React.FC = () => {
                   subContent={
                     <RowDetail
                       label={t('Developer.AcceptedTermsVersion')}
-                      value={store.bcsc.acceptedTermsOfUseVersion ?? '—'}
+                      value={app.acceptedTermsOfUseVersion ?? '—'}
                     />
                   }
                 />
@@ -695,7 +716,7 @@ const Developer: React.FC = () => {
                   subContent={
                     <RowDetail
                       label={t('Developer.OnboardingIntroSeen')}
-                      value={String(store.bcsc.hasSeenOnboardingIntro ?? false)}
+                      value={String(app.hasSeenOnboardingIntro ?? false)}
                     />
                   }
                 />

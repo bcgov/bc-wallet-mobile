@@ -3,12 +3,14 @@ import DateInput from '@/bcsc-theme/components/DateInput'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { selectJourney, useJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState, useBirthdate, useSession } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { formatBirthdateForApi, parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { normalizeForSubmission } from '@/bcsc-theme/utils/validation'
 import { MAXIMUM_VERIFICATION_AGE, MINIMUM_VERIFICATION_AGE } from '@/constants'
-import { BCState, NonBCSCUserMetadata } from '@/store'
+import { NonBCSCUserMetadata } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
   Button,
@@ -19,7 +21,6 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { RouteProp, StackActions } from '@react-navigation/native'
@@ -56,7 +57,9 @@ type EvidenceIDCollectionScreenProps = {
  * @returns {*} {React.ReactElement} The rendered EvidenceIDCollectionScreen component.
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
-  const [store] = useStore<BCState>()
+  const { additionalEvidenceData, cardProcess } = useJourney()
+  const { userMetadata } = useSession()
+  const birthdate = useBirthdate()
   const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
@@ -65,7 +68,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const { toCanonicalBirthDate, validateEvidence } = useEvidenceIDCollectionModel()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { cardType } = route.params
-  const evidenceIndex = store.bcscSecure.additionalEvidenceData.findIndex(
+  const evidenceIndex = additionalEvidenceData.findIndex(
     (e) => e.evidenceType?.evidence_type === cardType.evidence_type
   )
   const { scrollViewRef, inputRefs, onContainerLayout, onFieldLayout, focusFirstInvalidField } =
@@ -76,24 +79,24 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   // document number from there (ie: user is going back to edit). Otherwise,
   // default to empty string.
   const initialDocumentNumber =
-    route.params.documentNumber ?? store.bcscSecure.additionalEvidenceData[evidenceIndex]?.documentNumber ?? ''
+    route.params.documentNumber ?? additionalEvidenceData[evidenceIndex]?.documentNumber ?? ''
 
   // Personal info (name, DOB) is only collected on the first of two IDs in the NonBCSC flow.
   // The second ID only needs a document number since personal info was already captured.
-  const isFirstAdditionalID = store.bcscSecure.additionalEvidenceData.length === 1
-  const personalInfoRequired = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && isFirstAdditionalID
+  const isFirstAdditionalID = additionalEvidenceData.length === 1
+  const personalInfoRequired = cardProcess === BCSCCardProcess.NonBCSC && isFirstAdditionalID
   // The Non-BCSC flow collects two IDs. While completing the first, the next step is capturing the
   // second ID, so the primary action says so; the second ID (and every other flow) uses a plain
   // Continue. Kept separate from personalInfoRequired so the button copy doesn't silently change if
   // the personal-info rule ever does, even though they coincide today on the first Non-BCSC ID.
-  const isCollectingFirstOfTwoIds = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && isFirstAdditionalID
+  const isCollectingFirstOfTwoIds = cardProcess === BCSCCardProcess.NonBCSC && isFirstAdditionalID
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
     documentNumber: initialDocumentNumber,
-    firstName: store.bcscSecure.userMetadata?.name?.first ?? '',
-    middleNames: store.bcscSecure.userMetadata?.name?.middle ?? '',
-    lastName: store.bcscSecure.userMetadata?.name?.last ?? '',
-    birthDate: store.bcscSecure.birthdate ? formatBirthdateForApi(store.bcscSecure.birthdate) : '',
+    firstName: userMetadata?.name?.first ?? '',
+    middleNames: userMetadata?.name?.middle ?? '',
+    lastName: userMetadata?.name?.last ?? '',
+    birthDate: birthdate ? formatBirthdateForApi(birthdate) : '',
   })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
@@ -158,8 +161,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         }
 
         // Preserve address data if it has already been set (eg. from a barcode scan)
-        if (store.bcscSecure.userMetadata?.address) {
-          newUserMetadata.address = store.bcscSecure.userMetadata.address
+        if (userMetadata?.address) {
+          newUserMetadata.address = userMetadata.address
         }
 
         await updateUserMetadata(newUserMetadata)
@@ -173,18 +176,15 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       setIsSubmitting(false)
     }
 
-    // Build a predicted post-update store: the just-saved document number turns
+    // Predict the post-update journey: the just-saved document number turns
     // the matching evidence entry into a "completed" piece of evidence, which is
     // what drives step1 / step2 completion in getResumeStepRoute.
-    const predictedAdditionalEvidence = store.bcscSecure.additionalEvidenceData.map((item) =>
+    const journey = selectJourney(getBCSCState())
+    const predictedAdditionalEvidence = journey.additionalEvidenceData.map((item) =>
       item.evidenceType?.evidence_type === cardType.evidence_type ? { ...item, documentNumber } : item
     )
-    const predictedStore: BCState = {
-      ...store,
-      bcscSecure: { ...store.bcscSecure, additionalEvidenceData: predictedAdditionalEvidence },
-    }
 
-    const nextStep = getResumeStepRoute(predictedStore)
+    const nextStep = getResumeStepRoute({ ...journey, additionalEvidenceData: predictedAdditionalEvidence })
 
     // Advance to the next step while KEEPING the history so the user can step back through the flow
     // (this ID's form, the evidence list, the previous ID's form, ...). push (not navigate) mints a

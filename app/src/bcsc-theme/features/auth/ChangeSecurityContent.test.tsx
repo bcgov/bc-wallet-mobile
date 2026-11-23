@@ -1,7 +1,8 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import * as walletServiceHooks from '@/bcsc-theme/services/hooks/useWalletService'
-import { BCDispatchAction, BCState } from '@/store'
-import { testIdWithKey, useStore } from '@bifold/core'
+import { getBCSCState, useAccount } from '@/bcsc-theme/storage/hooks'
+import type { BCSCStoreSeed } from '@/bcsc-theme/storage/testing'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -11,10 +12,8 @@ import {
   AccountSecurityMethod,
   BiometricType,
   canPerformDeviceAuthentication,
-  getAccountSecurityMethod,
   getAvailableBiometricType,
   performDeviceAuthentication,
-  setAccountSecurityMethod,
   setupDeviceSecurity,
 } from 'react-native-bcsc-core'
 import { ChangeSecurityContent } from './ChangeSecurityContent'
@@ -24,8 +23,6 @@ jest.mock('react-native-bcsc-core', () => ({
   getAvailableBiometricType: jest.fn(),
   performDeviceAuthentication: jest.fn().mockResolvedValue(true),
   setupDeviceSecurity: jest.fn(),
-  getAccountSecurityMethod: jest.fn(),
-  setAccountSecurityMethod: jest.fn(),
   BiometricType: {
     None: 'none',
     FaceID: 'face id',
@@ -54,25 +51,26 @@ jest.mock('@/contexts/ErrorAlertContext', () => {
 
 const mockCanPerformDeviceAuthentication = jest.mocked(canPerformDeviceAuthentication)
 const mockGetAvailableBiometricType = jest.mocked(getAvailableBiometricType)
-const mockGetAccountSecurityMethod = jest.mocked(getAccountSecurityMethod)
 const mockPerformDeviceAuthentication = jest.mocked(performDeviceAuthentication)
 const mockSetupDeviceSecurity = jest.mocked(setupDeviceSecurity)
-const mockSetAccountSecurityMethod = jest.mocked(setAccountSecurityMethod)
+
+const pinAccount = { accountId: 'test-account-id', issuer: 'https://idsit.gov.bc.ca/device/' }
+
+// BasicAppContext resets the store, so the account goes in through it
+const accountSeed = (securityMethod: AccountSecurityMethod): BCSCStoreSeed => ({
+  account: { profile: { ...pinAccount, clientId: 'test-client-id', securityMethod } },
+})
 
 /** Shows the method held in secure state, so a test can watch the store follow the switch. */
 const SecureStateProbe = () => {
-  const [store] = useStore<BCState>()
-  return <Text>{store.bcscSecure.securityMethod ?? 'unknown'}</Text>
+  const securityMethod = useAccount((s) => s.profile?.securityMethod)
+  return <Text>{securityMethod ?? 'unknown'}</Text>
 }
 
 /** Records a switch to PIN in secure state, as the PIN screen does when it finishes. */
 const RecordPINSwitch = () => {
-  const [, dispatch] = useStore<BCState>()
-  const recordSwitch = () =>
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD,
-      payload: [AccountSecurityMethod.PinWithDeviceAuth],
-    })
+  const { updateProfile } = useAccount()
+  const recordSwitch = () => void updateProfile({ securityMethod: AccountSecurityMethod.PinWithDeviceAuth })
   return <Text onPress={recordSwitch}>record PIN switch</Text>
 }
 
@@ -80,8 +78,10 @@ describe('ChangeSecurityContent', () => {
   let mockNavigation = useNavigation()
   let onDeviceAuthSuccess = mockNavigation['goBack']
   let onPINPress = mockNavigation['navigate']
+  let seed = accountSeed(AccountSecurityMethod.PinWithDeviceAuth)
 
   beforeEach(() => {
+    seed = accountSeed(AccountSecurityMethod.PinWithDeviceAuth)
     mockNavigation = useNavigation()
     onDeviceAuthSuccess = mockNavigation.goBack
     onPINPress = mockNavigation.navigate
@@ -98,12 +98,12 @@ describe('ChangeSecurityContent', () => {
     beforeEach(() => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
       mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
-      mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.PinWithDeviceAuth)
+      seed = accountSeed(AccountSecurityMethod.PinWithDeviceAuth)
     })
 
     it('renders security options with current method indicator', async () => {
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
@@ -121,7 +121,7 @@ describe('ChangeSecurityContent', () => {
 
     it('shows both Device Auth and PIN options', async () => {
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
@@ -139,7 +139,7 @@ describe('ChangeSecurityContent', () => {
 
     it('marks PIN as the current method when current method is PIN', async () => {
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
@@ -160,12 +160,12 @@ describe('ChangeSecurityContent', () => {
     beforeEach(() => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
       mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
-      mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.DeviceAuth)
+      seed = accountSeed(AccountSecurityMethod.DeviceAuth)
     })
 
     it('shows Device Auth as current method', async () => {
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
@@ -180,34 +180,10 @@ describe('ChangeSecurityContent', () => {
       expect(tree).toMatchSnapshot()
     })
 
-    it('marks the current method from secure state before the native read resolves', async () => {
-      mockGetAccountSecurityMethod.mockReturnValue(new Promise<AccountSecurityMethod>(() => {}))
-
-      const tree = render(
-        <BasicAppContext
-          initialStateOverride={{ bcscSecure: { securityMethod: AccountSecurityMethod.DeviceAuth } } as never}
-        >
-          <BCSCLoadingProvider>
-            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
-      })
-
-      expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentMethod')).toBeTruthy()
-    })
-
     it('moves the marker to PIN when the switch is recorded with the screen already open', async () => {
       // Backing out of the PIN screen mid-switch returns here before the switch is recorded
-      mockGetAccountSecurityMethod.mockReturnValue(new Promise<AccountSecurityMethod>(() => {}))
-
       const tree = render(
-        <BasicAppContext
-          initialStateOverride={{ bcscSecure: { securityMethod: AccountSecurityMethod.DeviceAuth } } as never}
-        >
+        <BasicAppContext bcscState={accountSeed(AccountSecurityMethod.DeviceAuth)}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
             <RecordPINSwitch />
@@ -229,7 +205,7 @@ describe('ChangeSecurityContent', () => {
 
     it('navigates to ChangePIN screen when PIN option is pressed', async () => {
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
@@ -251,12 +227,12 @@ describe('ChangeSecurityContent', () => {
     beforeEach(() => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(false)
       mockGetAvailableBiometricType.mockResolvedValue(BiometricType.None)
-      mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+      seed = accountSeed(AccountSecurityMethod.PinNoDeviceAuth)
     })
 
     it('shows message that device auth is not available', async () => {
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
@@ -272,45 +248,21 @@ describe('ChangeSecurityContent', () => {
     })
   })
 
-  describe('error handling', () => {
-    it('shows error when loading security method fails', async () => {
-      mockGetAccountSecurityMethod.mockRejectedValue(new Error('Failed to load'))
-      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
-
-      render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith(
-          'BCSC.Settings.AppSecurity.ErrorTitle',
-          'BCSC.Settings.AppSecurity.SetupFailedMessage'
-        )
-      })
-    })
-  })
-
   describe('switching to Device Auth', () => {
     beforeEach(() => {
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
       mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
-      mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.PinWithDeviceAuth)
+      seed = accountSeed(AccountSecurityMethod.PinWithDeviceAuth)
       mockPerformDeviceAuthentication.mockResolvedValue(true)
     })
 
     it('successfully switches to device auth and rotates the wallet key', async () => {
       mockSetupDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'key', isAutoGenerated: true })
-      mockSetAccountSecurityMethod.mockResolvedValue(true)
       const mockRotateWalletKey = jest.fn().mockResolvedValue(true)
       jest.spyOn(walletServiceHooks, 'useWalletService').mockReturnValue({ rotateWalletKey: mockRotateWalletKey })
 
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
@@ -325,11 +277,11 @@ describe('ChangeSecurityContent', () => {
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
-        expect(mockSetupDeviceSecurity).toHaveBeenCalled()
+        expect(mockSetupDeviceSecurity).toHaveBeenCalledWith(pinAccount)
       })
 
       await waitFor(() => {
-        expect(mockSetAccountSecurityMethod).toHaveBeenCalledWith(AccountSecurityMethod.DeviceAuth)
+        expect(getBCSCState().account.profile?.securityMethod).toBe(AccountSecurityMethod.DeviceAuth)
       })
 
       await waitFor(() => {
@@ -343,15 +295,12 @@ describe('ChangeSecurityContent', () => {
 
     it('records the switch in secure state, so Settings drops Change PIN at once', async () => {
       mockSetupDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'key', isAutoGenerated: true })
-      mockSetAccountSecurityMethod.mockResolvedValue(true)
       jest
         .spyOn(walletServiceHooks, 'useWalletService')
         .mockReturnValue({ rotateWalletKey: jest.fn().mockResolvedValue(true) })
 
       const tree = render(
-        <BasicAppContext
-          initialStateOverride={{ bcscSecure: { securityMethod: AccountSecurityMethod.PinWithDeviceAuth } } as never}
-        >
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
             <SecureStateProbe />
@@ -375,7 +324,7 @@ describe('ChangeSecurityContent', () => {
       mockSetupDeviceSecurity.mockResolvedValue({ success: false, walletKey: '' } as any)
 
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
@@ -400,12 +349,18 @@ describe('ChangeSecurityContent', () => {
       expect(onDeviceAuthSuccess).not.toHaveBeenCalled()
     })
 
-    it('shows error when setAccountSecurityMethod throws', async () => {
+    it('shows error when saving the security method fails', async () => {
       mockSetupDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'key' } as any)
-      mockSetAccountSecurityMethod.mockRejectedValue(new Error('Failed to set method'))
+      const failingSeed = accountSeed(AccountSecurityMethod.PinWithDeviceAuth)
+      seed = {
+        account: {
+          ...failingSeed.account,
+          updateProfile: jest.fn().mockRejectedValue(new Error('Failed to set method')),
+        },
+      }
 
       const tree = render(
-        <BasicAppContext>
+        <BasicAppContext bcscState={seed}>
           <BCSCLoadingProvider>
             <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>

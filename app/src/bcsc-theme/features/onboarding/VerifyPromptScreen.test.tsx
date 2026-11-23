@@ -1,5 +1,6 @@
-import { BCLocalStorageKeys, BCState, initialState } from '@/store'
-import { PersistentStorage, useStore } from '@bifold/core'
+import { storage } from '@/bcsc-theme/storage'
+import { useSession } from '@/bcsc-theme/storage/hooks'
+import { initialState } from '@/store'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render } from '@testing-library/react-native'
@@ -14,17 +15,14 @@ jest.mock('@/bcsc-theme/contexts/ServerStatusContext', () => ({
 
 /** Exposes whether the user is in the verify flow so tests can observe useLeaveVerification. */
 const InVerifyFlowProbe = () => {
-  const [store] = useStore<BCState>()
-  return <Text testID="InVerifyFlowProbe">{String(store.bcscSecure.inVerifyFlow)}</Text>
+  const inVerifyFlow = useSession((s) => s.inVerifyFlow)
+  return <Text testID="InVerifyFlowProbe">{String(inVerifyFlow)}</Text>
 }
 
 describe('VerifyPromptScreen', () => {
-  let storeSpy: jest.SpyInstance
-
   beforeEach(() => {
     jest.clearAllMocks()
     mockUseServerStatus.mockReturnValue({ isAvailable: true, isChecking: false, serverStatus: {} })
-    storeSpy = jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
   })
 
   const renderScreen = (props: Partial<React.ComponentProps<typeof VerifyPromptScreen>> = {}) =>
@@ -34,8 +32,19 @@ describe('VerifyPromptScreen', () => {
       </BasicAppContext>
     )
 
-  const bcscWrites = () =>
-    storeSpy.mock.calls.filter(([key]) => key === BCLocalStorageKeys.BCSC).map(([, value]) => value)
+  // Every app-slice value the BCSC store held during the test; the verify-prompt answer lives there
+  let appStates: unknown[] = []
+  let unsubscribe = () => {}
+  beforeEach(() => {
+    appStates = []
+    unsubscribe = storage.store.subscribe((state, previous) => {
+      if (state.app !== previous.app) {
+        appStates.push(state.app)
+      }
+    })
+  })
+  afterEach(() => unsubscribe())
+  const bcscWrites = () => appStates
 
   it('persists verificationSkipped=false, marks verification started and advances when the user chooses to verify now', async () => {
     const onAnswered = jest.fn()

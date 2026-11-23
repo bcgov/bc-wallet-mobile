@@ -1,6 +1,5 @@
-import { BCState } from '@/store'
+import { useApp } from '@/bcsc-theme/storage/hooks'
 import { getBCSCAppStoreUrl, openLink } from '@/utils/links'
-import { useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useMemo } from 'react'
@@ -57,7 +56,7 @@ type BannersOptions =
 export const useBanners = (options: BannersOptions) => {
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<ServiceNoticeParamList>>()
-  const [store] = useStore<BCState>()
+  const app = useApp()
   const appUpdate = useAppUpdate()
   const deviceLimit = useDeviceLimit()
   const server = useServerStatus()
@@ -125,7 +124,7 @@ export const useBanners = (options: BannersOptions) => {
     return (
       banners
         // 1. Filter out banners that have been dismissed
-        .filter((banner) => selectBannerDismissal(store, banner.id, now) !== BannerDismissal.Dismissed)
+        .filter((banner) => selectBannerDismissal({ app }, banner.id, now) !== BannerDismissal.Dismissed)
         // 2. Filter out banners that are not allowed in the current scope
         .filter((banner) => allowedBanners.has(banner.id))
     )
@@ -138,7 +137,7 @@ export const useBanners = (options: BannersOptions) => {
     t,
     navigation,
     recordBannerDismissal,
-    store,
+    app,
   ])
 
   return useMemo(

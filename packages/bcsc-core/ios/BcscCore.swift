@@ -614,13 +614,8 @@ class BcscCore: NSObject {
   ) { // Changed parameter to NSNumber
     let tokenTypeAsInt = tokenTypeNumber.intValue
     let tokenStorageService = KeychainTokenStorageService()
-    let storage = StorageService()
-    let account: Account? = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
 
-    guard let currentAccount = account else {
+    guard case let .ok(currentAccount) = StorageService().readAccountRecord() else {
       reject("E_ACCOUNT_NOT_FOUND", "Account or clientID not found.", nil)
       return
     }
@@ -630,7 +625,7 @@ class BcscCore: NSObject {
       return
     }
 
-    let id = "\(currentAccount.clientID)/tokens/\(tokenType.rawValue)/1"
+    let id = tokenKeychainID(tokenType, account: currentAccount)
     logger.log("getToken: querying type=\(tokenType.rawValue) id=\(id)")
 
     var diagnostic: String?
@@ -1038,22 +1033,7 @@ class BcscCore: NSObject {
   func getAccount(
     _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService() // Changed from PersistentStorage
-    let account: Account? = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-
-    if let acc = account {
-      let result: [String: Any?] = [
-        "id": acc.id,
-        "issuer": acc.issuer,
-        "clientID": acc.clientID,
-        "securityMethod": acc.securityMethod.rawValue,
-        "displayName": acc.displayName,
-        "didPostNicknameToServer": acc.didPostNicknameToServer,
-        "nickname": acc.nickname,
-      ]
+    if case let .ok(result) = accountRecord(StorageService()) {
       resolve(result)
     } else {
       resolve(nil)
@@ -1065,6 +1045,94 @@ class BcscCore: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
   ) {
     resolve(StorageService().accountReadStatus())
+  }
+
+  /// Reads one stored record and reports it as ok, absent, locked or unreadable. Never rejects.
+  /// Each record goes through the same read as its getter, so the report matches what the getter returns.
+  func readLegacyRecord(
+    _ name: String, resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    guard let record = LegacyRecordName(rawValue: name) else {
+      logger.log("readLegacyRecord: unknown record")
+      resolve(LegacyRecordStatus.unknownRecordReport)
+      return
+    }
+
+    let storage = StorageService()
+    let report: [String: Any]
+    switch record {
+    case .account:
+      report = legacyRecordReport(accountRecord(storage), record)
+    case .tokens:
+      report = legacyRecordReport(tokensRecord(storage), record)
+    case .credential:
+      report = legacyRecordReport(credentialRecord(storage), record)
+    case .authorizationRequest:
+      report = legacyRecordReport(authorizationRequestRecord(storage), record)
+    case .accountFlags:
+      report = legacyRecordReport(storage.readAccountFlagsRecord(logger: logger), record)
+    case .evidence:
+      report = legacyRecordReport(evidenceRecord(storage), record)
+    case .savedServices:
+      report = legacyRecordReport(storage.readSavedServicesRecord(logger: logger), record)
+    }
+
+    logger.log(
+      "readLegacyRecord: \(record.rawValue) status=\(report["status"] as? String ?? "") reason=\(report["reason"] as? String ?? "none")"
+    )
+    resolve(report)
+  }
+
+  /// Checks protected data after the read, so a failure is classified against the state it happened in.
+  private func legacyRecordReport<Value>(_ read: LegacyRecordRead<Value>, _ record: LegacyRecordName) -> [String: Any] {
+    read.report(for: record, isProtectedDataAvailable: UIApplication.shared.isProtectedDataAvailable)
+  }
+
+  private func accountRecord(_ storage: StorageService) -> LegacyRecordRead<[String: Any?]> {
+    storage.readAccountRecord().map { acc in
+      [
+        "id": acc.id,
+        "issuer": acc.issuer,
+        "clientID": acc.clientID,
+        "securityMethod": acc.securityMethod.rawValue,
+        "displayName": acc.displayName,
+        "didPostNicknameToServer": acc.didPostNicknameToServer,
+        "nickname": acc.nickname,
+      ]
+    }
+  }
+
+  private func tokenKeychainID(_ tokenType: TokenType, account: Account) -> String {
+    "\(account.clientID)/tokens/\(tokenType.rawValue)/1"
+  }
+
+  /// Every token for the current account, each read the way `getToken` reads it.
+  private func tokensRecord(_ storage: StorageService) -> LegacyRecordRead<[String: String]> {
+    let account: Account
+    switch storage.readAccountRecord() {
+    case let .ok(value):
+      account = value
+    case .absent:
+      return .absent
+    case let .failed(failure):
+      return .failed(failure)
+    }
+
+    let tokenStorageService = KeychainTokenStorageService()
+    var outcomes: [(key: String, outcome: TokenReadOutcome)] = []
+    for (type, key) in LegacyTokensRecord.types {
+      var diagnostic: String?
+      let outcome = tokenStorageService.getWithStatus(
+        id: tokenKeychainID(type, account: account),
+        diagnostic: &diagnostic
+      )
+      outcomes.append((key: key, outcome: outcome))
+      // The record is locked either way, so skip the remaining reads' unlock waits.
+      if outcome.status == errSecInteractionNotAllowed {
+        break
+      }
+    }
+    return LegacyTokensRecord.combine(outcomes)
   }
 
   /// Remove the current account and all related files.
@@ -1084,22 +1152,7 @@ class BcscCore: NSObject {
       return
     }
 
-    // Try to delete PIN from keychain before removing account files
-    // We need the account data to get the issuer for the PIN secret ID
-    if let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    ) {
-      let pinService = PINService()
-      do {
-        try pinService.deletePIN(issuer: account.issuer, accountID: account.id)
-        logger.info("PIN deleted for account \(accountID)")
-      } catch {
-        // PIN might not exist, that's ok - continue with account removal
-        logger.warning("Could not delete PIN (may not exist): \(error.localizedDescription)")
-      }
-    }
-
+    // The PIN outlives the account record (JS keeps the account), so it's deleted only by deletePIN.
     let isDeleted = storage.removeAccountFiles(accountID: accountID)
 
     if !isDeleted {
@@ -2041,27 +2094,21 @@ class BcscCore: NSObject {
 
   // MARK: - PIN Authentication Methods
 
-  /// Sets a PIN for the current account
+  /// Sets a PIN for the given account
   /// - Parameters:
+  ///   - accountId: The account's `id`
+  ///   - issuer: The account's `issuer`
   ///   - pin: The PIN to set (should be validated on JS side)
   ///   - resolve: Returns PINSetupResult with success, walletKey, and isAutoGenerated
   ///   - reject: Returns error on failure
   func setPIN(
-    _ pin: String, resolve: @escaping RCTPromiseResolveBlock,
+    _ accountId: String, issuer: String, pin: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
+    guard hasPINOwner(accountId, issuer, reject: reject) else { return }
+
     guard !pin.isEmpty else {
       reject("E_INVALID_PARAMETERS", "PIN cannot be empty", nil)
-      return
-    }
-
-    let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
     }
 
@@ -2069,8 +2116,8 @@ class BcscCore: NSObject {
 
     do {
       let walletKey = try pinService.setPIN(
-        issuer: account.issuer,
-        accountID: account.id,
+        issuer: issuer,
+        accountID: accountId,
         pin: pin,
         isAutoGenerated: false
       )
@@ -2084,33 +2131,27 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
+  /// Verifies a PIN for the given account. Only checks the PIN: wrong attempts are counted, and
   /// lockouts enforced, in TypeScript.
   /// - Parameters:
+  ///   - accountId: The account's `id`
+  ///   - issuer: The account's `issuer`
   ///   - pin: The PIN to verify
   ///   - resolve: Returns `success`, with `walletKey` when the PIN is correct
   ///   - reject: Returns error on failure
   func verifyPIN(
-    _ pin: String, resolve: @escaping RCTPromiseResolveBlock,
+    _ accountId: String, issuer: String, pin: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
+    guard hasPINOwner(accountId, issuer, reject: reject) else { return }
+
     guard !pin.isEmpty else {
       reject("E_INVALID_PARAMETERS", "PIN cannot be empty", nil)
       return
     }
 
-    let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
-      return
-    }
-
     guard let walletKey = PINService().verifyPINAndGetHash(
-      issuer: account.issuer, accountID: account.id, pin: pin
+      issuer: issuer, accountID: accountId, pin: pin
     )
     else {
       resolve(["success": false])
@@ -2122,54 +2163,49 @@ class BcscCore: NSObject {
 
   /// Deletes the PIN for the specified account
   /// - Parameters:
-  ///   - accountID: The account identifier
+  ///   - accountId: The account's `id`
+  ///   - issuer: The account's `issuer`
   ///   - resolve: Returns true on success
   ///   - reject: Returns error on failure
   func deletePIN(
-    _ resolve: @escaping RCTPromiseResolveBlock,
+    _ accountId: String, issuer: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
-      return
-    }
+    guard hasPINOwner(accountId, issuer, reject: reject) else { return }
 
     let pinService = PINService()
 
     do {
-      try pinService.deletePIN(issuer: account.issuer, accountID: account.id)
+      try pinService.deletePIN(issuer: issuer, accountID: accountId)
       resolve(true)
     } catch {
       reject("E_DELETE_PIN_FAILED", "Failed to delete PIN: \(error.localizedDescription)", error)
     }
   }
 
-  /// Checks if a PIN is set for the specified account
+  /// Checks if a PIN secret is stored for the specified account. The security method is checked in JS.
   /// - Parameters:
-  ///   - accountID: The account identifier
+  ///   - accountId: The account's `id`
+  ///   - issuer: The account's `issuer`
   ///   - resolve: Returns true if PIN is set, false otherwise
   ///   - reject: Returns error on failure
   func hasPINSet(
-    _ resolve: @escaping RCTPromiseResolveBlock,
+    _ accountId: String, issuer: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
-      return
-    }
+    guard hasPINOwner(accountId, issuer, reject: reject) else { return }
 
-    let hasPIN = account.hasPINSetup()
-    resolve(hasPIN)
+    resolve(PINService().hasPIN(issuer: issuer, accountID: accountId))
+  }
+
+  /// PIN methods take the account's ID and issuer from JS, since the native account file may be missing or stale.
+  /// Rejects with E_INVALID_PARAMETERS when either is empty.
+  private func hasPINOwner(_ accountId: String, _ issuer: String, reject: RCTPromiseRejectBlock) -> Bool {
+    guard !accountId.isEmpty, !issuer.isEmpty else {
+      reject("E_INVALID_PARAMETERS", "accountId and issuer cannot be empty", nil)
+      return false
+    }
+    return true
   }
 
   // MARK: - Device Authentication Methods
@@ -2320,22 +2356,15 @@ class BcscCore: NSObject {
 
   /// Sets up device security by generating a random PIN internally and storing its hash
   /// - Parameters:
-  ///   - accountID: The account identifier
+  ///   - accountId: The account's `id`
+  ///   - issuer: The account's `issuer`
   ///   - resolve: Returns PINSetupResult with success, walletKey, and isAutoGenerated=true
   ///   - reject: Returns error on failure
   func setupDeviceSecurity(
-    _ resolve: @escaping RCTPromiseResolveBlock,
+    _ accountId: String, issuer: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
-      return
-    }
+    guard hasPINOwner(accountId, issuer, reject: reject) else { return }
 
     let pinService = PINService()
 
@@ -2345,8 +2374,8 @@ class BcscCore: NSObject {
 
       // Store with isAutoGenerated flag set to true
       let walletKey = try pinService.setPIN(
-        issuer: account.issuer,
-        accountID: account.id,
+        issuer: issuer,
+        accountID: accountId,
         pin: randomPIN,
         isAutoGenerated: true
       )
@@ -2366,23 +2395,16 @@ class BcscCore: NSObject {
 
   /// Unlocks using device security and returns the wallet key
   /// - Parameters:
-  ///   - accountID: The account identifier
+  ///   - accountId: The account's `id`
+  ///   - issuer: The account's `issuer`
   ///   - reason: Optional reason string for the biometric prompt
   ///   - resolve: Returns DeviceSecurityUnlockResult with success and walletKey
   ///   - reject: Returns error on failure
   func unlockWithDeviceSecurity(
-    _ reason: String?, resolve: @escaping RCTPromiseResolveBlock,
+    _ accountId: String, issuer: String, reason: String?, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
-      return
-    }
+    guard hasPINOwner(accountId, issuer, reject: reject) else { return }
 
     let authReason = reason ?? "Authenticate to unlock"
 
@@ -2427,7 +2449,7 @@ class BcscCore: NSObject {
       if authSuccess {
         // Get the stored wallet key hash
         let pinService = PINService()
-        if let hashResult = pinService.getPINHash(issuer: account.issuer, accountID: account.id) {
+        if let hashResult = pinService.getPINHash(issuer: issuer, accountID: accountId) {
           resolve([
             "success": true,
             "walletKey": hashResult.hash,
@@ -2445,8 +2467,8 @@ class BcscCore: NSObject {
 
             let pin = randomBytes.map { String($0 % 10) }.joined()
             let hash = try pinService.setPIN(
-              issuer: account.issuer,
-              accountID: account.id,
+              issuer: issuer,
+              accountID: accountId,
               pin: pin,
               isAutoGenerated: true
             )
@@ -2483,75 +2505,25 @@ class BcscCore: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    do {
-      let storage = StorageService()
-
-      guard let accountID = storage.currentAccountID else {
-        logger.log("getAuthorizationRequest: No current account ID found")
-        resolve(nil)
-        return
-      }
-
-      let rootDirectoryURL = try FileManager.default.url(
-        for: defaultSearchPathDirectory,
-        in: .userDomainMask,
-        appropriateFor: nil,
-        create: false
-      )
-      let fileUrl =
-        rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.authorizationRequest.rawValue)
-
-      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
-        logger.log("getAuthorizationRequest: File does not exist")
-        resolve(nil)
-        return
-      }
-
-      let data = try Data(contentsOf: fileUrl)
-      logger.log("getAuthorizationRequest: Read \(data.count) bytes")
-
-      let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
-      unarchiver.requiresSecureCoding = false
-
-      registerV3ClassNames(for: AuthorizationRequest.self)
-      registerV3ClassNames(for: Address.self)
-      let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
-
-      // Empty dictionary = no authorization request (v3 writes empty dict after removing a request)
-      // return nil, don't throw an error since this is an expected scenario
-      if let dict = rootObject as? [AnyHashable: Any], dict.isEmpty {
-        logger.log("getAuthorizationRequest: Empty dictionary - no authorization request")
-        resolve(nil)
-        return
-      }
-
-      // Read dictionary [String: AuthorizationRequest] - just get the first value regardless of key
-      if let requestsDict = rootObject as? [String: AuthorizationRequest],
-         let authRequest = requestsDict.values.first
-      {
-        logger.log(
-          "getAuthorizationRequest: Successfully decoded dictionary with \(requestsDict.count) entries"
-        )
-        resolve(authRequest.toDictionary())
-        return
-      }
-
-      // Fallback: try as single AuthorizationRequest
-      if let authRequest = rootObject as? AuthorizationRequest {
-        logger.log("getAuthorizationRequest: Successfully decoded as single AuthorizationRequest")
-        resolve(authRequest.toDictionary())
-        return
-      }
-
-      logger.log("getAuthorizationRequest: Failed to decode")
+    switch authorizationRequestRecord(StorageService()) {
+    case let .ok(request):
+      resolve(request)
+    case .absent, .failed(.account):
+      resolve(nil)
+    case .failed(.unexpectedFormat):
       reject("E_STORAGE_ERROR", "Failed to decode authorization request", nil)
-    } catch {
-      logger.log("getAuthorizationRequest: Exception - \(error.localizedDescription)")
-      reject("E_STORAGE_ERROR", "Failed to read authorization request: \(error.localizedDescription)", error as NSError)
+    case let .failed(failure):
+      let message = failure.underlyingError?.localizedDescription ?? ""
+      logger.log("getAuthorizationRequest: Exception - \(message)")
+      reject(
+        "E_STORAGE_ERROR", "Failed to read authorization request: \(message)",
+        failure.underlyingError.map { $0 as NSError }
+      )
     }
+  }
+
+  private func authorizationRequestRecord(_ storage: StorageService) -> LegacyRecordRead<[String: Any?]> {
+    storage.readAuthorizationRequestRecord(logger: logger).map { $0.toDictionary() }
   }
 
   /// Saves authorization request data to storage.
@@ -2682,25 +2654,19 @@ class BcscCore: NSObject {
 
   /// Checks if the stored PIN was auto-generated (for device security) or user-created
   /// - Parameters:
+  ///   - accountId: The account's `id`
+  ///   - issuer: The account's `issuer`
   ///   - resolve: Returns true if PIN was auto-generated, false if user-created
   ///   - reject: Returns error on failure
   func isPINAutoGenerated(
-    _ resolve: @escaping RCTPromiseResolveBlock,
+    _ accountId: String, issuer: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
-      return
-    }
+    guard hasPINOwner(accountId, issuer, reject: reject) else { return }
 
     let pinService = PINService()
     let isAutoGenerated = pinService.isPINAutoGenerated(
-      issuer: account.issuer, accountID: account.id
+      issuer: issuer, accountID: accountId
     )
     resolve(isAutoGenerated)
   }
@@ -2737,28 +2703,12 @@ class BcscCore: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
-
-    guard let flags: NSDictionary = storage.readData(
-      file: AccountFiles.accountFlag,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
+    if case let .ok(flags) = StorageService().readAccountFlagsRecord(logger: logger) {
+      resolve(flags)
+    } else {
       // No flags stored yet - return empty dictionary
       resolve([:])
-      return
     }
-
-    // Convert to a format React Native can handle
-    let result = NSMutableDictionary()
-    for (key, value) in flags {
-      if let stringKey = key as? String {
-        result[stringKey] = value
-      }
-    }
-
-    logger.log("getAccountFlags: Successfully read account flags")
-    resolve(result)
   }
 
   /// Sets account flags in storage.
@@ -2869,13 +2819,15 @@ class BcscCore: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
-
-    if let evidence = readDocumentsAsMetadataArray(storage: storage) {
+    let read = evidenceRecord(StorageService())
+    if case let .ok(evidence) = read {
       resolve(evidence)
       return
     }
 
+    if case let .failed(.storage(failure)) = read, let error = failure.underlyingError {
+      logger.error("readDocumentsAsMetadataArray: Error reading documents file: \(error)")
+    }
     logger.log("getEvidence: No evidence found, returning empty array")
     resolve([])
   }
@@ -3039,41 +2991,9 @@ class BcscCore: NSObject {
 
   // MARK: - Documents Conversion Helpers
 
-  /// Reads the `documents` file and returns an array of evidence metadata dictionaries.
-  private func readDocumentsAsMetadataArray(storage: StorageService) -> [[String: Any]]? {
-    guard let accountID = storage.currentAccountID else { return nil }
-
-    do {
-      let rootDirectoryURL = try FileManager.default.url(
-        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
-        in: .userDomainMask,
-        appropriateFor: nil,
-        create: false
-      )
-      let fileUrl =
-        rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.documents.rawValue)
-
-      guard FileManager.default.fileExists(atPath: fileUrl.path) else { return nil }
-
-      let data = try Data(contentsOf: fileUrl)
-      let archiver = DocumentsArchiver()
-
-      guard let documentsDict = archiver.decode(from: data) else { return nil }
-
-      // Try current issuer key, then try all keys
-      let issuer = storage.issuer
-      let documentsModel = documentsDict[issuer] ?? documentsDict.values.first
-
-      guard let model = documentsModel else { return nil }
-
-      return convertDocumentsModelToMetadata(model)
-    } catch {
-      logger.error("readDocumentsAsMetadataArray: Error reading documents file: \(error)")
-      return nil
-    }
+  /// Reads the `documents` file as an array of evidence metadata dictionaries.
+  private func evidenceRecord(_ storage: StorageService) -> LegacyRecordRead<[[String: Any]]> {
+    storage.readEvidenceRecord().map(convertDocumentsModelToMetadata)
   }
 
   /// Converts a DocumentsDataModel to an array of evidence metadata dictionaries.
@@ -3247,80 +3167,22 @@ class BcscCore: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    do {
-      guard let accountID = StorageService().currentAccountID else {
-        logger.log("getCredential: No current account ID found")
-        resolve(nil)
-        return
-      }
+    switch credentialRecord(StorageService()) {
+    case let .ok(credentialDict):
+      logger.log("getCredential: Successfully retrieved credential")
+      resolve(credentialDict)
+    case .absent, .failed(.account):
+      resolve(nil)
+    case .failed(.unexpectedFormat):
+      reject("E_READ_FAILED", "Failed to decode credential data: unexpected format", nil)
+    case let .failed(failure):
+      reject("E_READ_FAILED", "Failed to read credential: \\(error.localizedDescription)", failure.underlyingError)
+    }
+  }
 
-      let storage = StorageService()
-      let rootDirectoryURL = try FileManager.default.url(
-        for: defaultSearchPathDirectory,
-        in: .userDomainMask,
-        appropriateFor: nil,
-        create: false
-      )
-      let fileUrl =
-        rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
-
-      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
-        logger.log("getCredential: ClientRegistration file does not exist")
-        resolve(nil)
-        return
-      }
-
-      let data = try Data(contentsOf: fileUrl)
-      logger.log("getCredential: Read \(data.count) bytes from client_registration file")
-
-      let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
-      unarchiver.requiresSecureCoding = false
-
-      registerV3ClassNames(for: ClientRegistration.self)
-      registerV3ClassNames(for: Credential.self)
-
-      // Try to decode the root object first to see what type it is
-      let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
-      logger.log("getCredential: Root object type: \(type(of: rootObject))")
-
-      // Read dictionary [String: ClientRegistration] keyed by issuer (v3 format maintained for compatibility)
-      guard let clientRegistrationsDict = rootObject as? [String: ClientRegistration] else {
-        logger.log("getCredential: Failed to cast root object to [String: ClientRegistration]")
-        reject("E_READ_FAILED", "Failed to decode credential data: unexpected format", nil)
-        return
-      }
-
-      logger
-        .log(
-          "getCredential: Successfully decoded dictionary with \(clientRegistrationsDict.count) entries, keys: \(clientRegistrationsDict.keys)"
-        )
-
-      guard let clientRegistration = clientRegistrationsDict.values.first else {
-        logger.log("getCredential: Dictionary is empty")
-        resolve(nil)
-        return
-      }
-
-      logger
-        .log(
-          "getCredential: ClientRegistration decoded, credential property: \(String(describing: clientRegistration.credential))"
-        )
-
-      guard let credential = clientRegistration.credential else {
-        logger.log("getCredential: No credential found in ClientRegistration")
-        resolve(nil)
-        return
-      }
-
-      logger.log(
-        "getCredential: Successfully decoded credential from ClientRegistration dictionary"
-      )
-
-      // Convert credential to dictionary for React Native
-      let credentialDict: [String: Any] = [
+  private func credentialRecord(_ storage: StorageService) -> LegacyRecordRead<[String: Any]> {
+    storage.readCredentialRecord(logger: logger).map { credential in
+      [
         "issuer": credential.issuer,
         "subject": credential.subject,
         "label": credential.label,
@@ -3345,11 +3207,6 @@ class BcscCore: NSObject {
         "refreshTokenIDs": credential.refreshTokenIDs ?? NSNull(),
         "clientID": credential.clientID ?? NSNull(),
       ]
-
-      logger.log("getCredential: Successfully retrieved credential")
-      resolve(credentialDict)
-    } catch {
-      reject("E_READ_FAILED", "Failed to read credential: \\(error.localizedDescription)", error)
     }
   }
 
@@ -3695,48 +3552,16 @@ class BcscCore: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
-
-    guard let accountID = storage.currentAccountID else {
-      logger.log("getSavedServices: No account ID, returning empty array")
-      resolve([])
+    let read = StorageService().readSavedServicesRecord(logger: logger)
+    if case let .ok(services) = read {
+      resolve(services)
       return
     }
 
-    do {
-      let rootDirectoryURL = try FileManager.default.url(
-        for: defaultSearchPathDirectory,
-        in: .userDomainMask,
-        appropriateFor: nil,
-        create: false
-      )
-      let fileUrl = rootDirectoryURL
-        .appendingPathComponent(storage.basePath)
-        .appendingPathComponent(accountID)
-        .appendingPathComponent(AccountFiles.clientMetadata.rawValue)
-
-      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
-        logger.log("getSavedServices: client_metadata file not found, returning empty array")
-        resolve([])
-        return
-      }
-
-      let data = try Data(contentsOf: fileUrl)
-      let archiver = ClientMetadataArchiver()
-
-      guard let model = archiver.decode(from: data) else {
-        logger.log("getSavedServices: Failed to decode client_metadata, returning empty array")
-        resolve([])
-        return
-      }
-
-      let services = (model.clients ?? []).map { $0.toDictionary() }
-      logger.log("getSavedServices: Read \(services.count) services from client_metadata")
-      resolve(services)
-    } catch {
+    if case let .failed(.storage(failure)) = read, let error = failure.underlyingError {
       logger.error("getSavedServices: Error reading client_metadata: \(error)")
-      resolve([])
     }
+    resolve([])
   }
 
   /// Saves services (client metadata) to native storage using v3-compatible NSKeyedArchiver format.

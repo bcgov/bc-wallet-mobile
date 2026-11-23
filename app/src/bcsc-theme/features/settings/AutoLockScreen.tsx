@@ -1,18 +1,15 @@
 import { RadioListScreen } from '@/bcsc-theme/components/RadioListScreen'
-import { AutoLockTime, DispatchAction, useStore } from '@bifold/core'
+import { usePreferences } from '@/bcsc-theme/storage/hooks'
+import { AutoLockTime } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 export const AutoLockScreen: React.FC = () => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore()
-  const currentLockoutTime = store.preferences.autoLockTime ?? AutoLockTime.FiveMinutes
+  const { autoLockTime, setAutoLockTime } = usePreferences()
 
   const handleTimeoutChange = (time: number) => {
-    dispatch({
-      type: DispatchAction.AUTO_LOCK_TIME,
-      payload: [time],
-    })
+    void setAutoLockTime(time)
   }
 
   return (
@@ -43,7 +40,7 @@ export const AutoLockScreen: React.FC = () => {
             ]
           : []),
       ]}
-      currentValue={currentLockoutTime}
+      currentValue={autoLockTime}
       onSelect={handleTimeoutChange}
     />
   )

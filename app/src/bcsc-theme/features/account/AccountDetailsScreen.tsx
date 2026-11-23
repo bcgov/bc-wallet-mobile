@@ -4,6 +4,7 @@ import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
+import { useNickname } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ErrorRegistry } from '@/errors'
 import { createFailureError } from '@/errors/failureContext'
@@ -12,7 +13,6 @@ import { TestIds } from '@/test-ids/registry'
 
 import { InformationCard } from '@/bcsc-theme/components/InformationCard'
 import { isAccountExpired } from '@/bcsc-theme/utils/datetime-utils'
-import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
@@ -21,7 +21,6 @@ import {
   ThemedText,
   TOKENS,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -41,7 +40,7 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
   const { Spacing, ColorPalette, Buttons } = useTheme()
   const { fontScale } = useWindowDimensions()
   const { metadata } = useApi()
-  const [store] = useStore<BCState>()
+  const nickname = useNickname() ?? ''
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { account, refreshAccount } = useAccount()
   const alerts = useAlerts(navigation)
@@ -133,7 +132,6 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
     return <LoadingScreen />
   }
 
-  const nickname = store.bcsc.selectedNickname?.trim() ?? ''
   const expiryValue = isAccountExpired(account.account_expiration_date)
     ? t('BCSC.AccountExpired.StaticBannerTitle')
     : account.card_expiry

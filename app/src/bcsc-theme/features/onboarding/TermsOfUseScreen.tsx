@@ -1,7 +1,6 @@
 import { TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
+import { useApp } from '@/bcsc-theme/storage/hooks'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { TermsOfUseContent } from './TermsOfUseContent'
@@ -16,20 +15,16 @@ interface TermsOfUseScreenProps {
  * @returns {*} {React.ReactElement} The TermsOfUseScreen component.
  */
 export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.ReactElement => {
-  const [, dispatch] = useStore<BCState>()
-
+  const { update: updateApp } = useApp()
   const handleAccept = useCallback(
     (termsOfUse: TermsOfUseResponseData) => {
-      dispatch({
-        type: BCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION,
-        payload: [String(termsOfUse.version)],
-      })
+      void updateApp({ acceptedTermsOfUseVersion: String(termsOfUse.version) })
 
       // Analytics opt-in is next; that screen handles skipping the notifications step when
       // notification permission has already been granted.
       navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
     },
-    [dispatch, navigation]
+    [navigation, updateApp]
   )
 
   return <TermsOfUseContent onAccept={handleAccept} />

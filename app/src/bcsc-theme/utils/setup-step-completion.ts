@@ -1,6 +1,6 @@
-import { AccountSetupType, BCState } from '@/store'
+import { AccountSetupType } from '@/store'
 import { BCSCCardProcess, EvidenceMetadata } from 'react-native-bcsc-core'
-import { selectVerificationState } from '../state/verification/selectors'
+import { journeyVerificationState, VerificationJourney } from '../state/verification/journey'
 
 /**
  * Validates that an evidence item is fully completed.
@@ -20,8 +20,8 @@ interface IdStepStatus {
   nonBcscNeedsAdditionalCard: boolean
 }
 
-const computeIdStepStatus = (store: BCState): IdStepStatus => {
-  const { cardProcess, serial, additionalEvidenceData } = store.bcscSecure
+const computeIdStepStatus = (journey: VerificationJourney): IdStepStatus => {
+  const { cardProcess, serial, additionalEvidenceData } = journey
   const hasSerial = Boolean(serial)
   const isCombinedCard = cardProcess === BCSCCardProcess.BCSCPhoto
   const isPhotoCard = cardProcess === BCSCCardProcess.BCSCPhoto
@@ -92,22 +92,22 @@ export interface StepCompletionResult {
 }
 
 /**
- * Pure computation of which setup steps are complete / focused for the given store.
+ * Pure computation of which setup steps are complete / focused for the given journey (`selectJourney`).
  *
  * Single source of truth for "which verification step is the user on?" — drives
  * `getResumeStepRoute` (initial-route + post-step navigation) and the
  * Start/Continue verification notification copy.
  *
- * Pure & React-free so callers can pass a "predicted" post-update store snapshot
- * to compute the next step before React commits the dispatched updates.
+ * Pure & React-free so callers can pass a "predicted" post-update journey
+ * to compute the next step before React re-renders with the written values.
  */
-export const computeSetupStepCompletion = (store: BCState): StepCompletionResult => {
+export const computeSetupStepCompletion = (journey: VerificationJourney): StepCompletionResult => {
   const { emailAddress, isEmailVerified, userSkippedEmailVerification, deviceCode, userSubmittedVerificationVideo } =
-    store.bcscSecure
+    journey
 
-  const idStatus = computeIdStepStatus(store)
+  const idStatus = computeIdStepStatus(journey)
 
-  const step4Completed = Boolean(selectVerificationState(store).isVerified || userSubmittedVerificationVideo)
+  const step4Completed = Boolean(journeyVerificationState(journey).isVerified || userSubmittedVerificationVideo)
   const step1Completed = step4Completed || idStatus.registered
   const step2Completed = step4Completed || (step1Completed && Boolean(deviceCode))
   const emailStepSatisfied =
@@ -119,7 +119,7 @@ export const computeSetupStepCompletion = (store: BCState): StepCompletionResult
     step2: step1Completed && !step2Completed,
     step3: step1Completed && step2Completed && !step3Completed,
     step4: step1Completed && step2Completed && step3Completed,
-    step5: store.bcsc.accountSetupType === AccountSetupType.TransferAccount,
+    step5: journey.accountSetupType === AccountSetupType.TransferAccount,
   }
 
   return {

@@ -1,5 +1,4 @@
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { useCallback } from 'react'
 
 /**
@@ -18,15 +17,10 @@ import { useCallback } from 'react'
  * runs first (e.g. to close the menu the action was triggered from).
  */
 export const useLeaveVerification = () => {
-  const [, dispatch] = useStore<BCState>()
-
-  return useCallback(
-    (onLeave?: () => void) => {
-      onLeave?.()
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW, payload: [false] })
-    },
-    [dispatch]
-  )
+  return useCallback((onLeave?: () => void) => {
+    onLeave?.()
+    getBCSCState().session.setInVerifyFlow(false)
+  }, [])
 }
 
 export default useLeaveVerification

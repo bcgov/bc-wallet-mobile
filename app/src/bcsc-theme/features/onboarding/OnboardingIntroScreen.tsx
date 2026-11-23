@@ -1,9 +1,9 @@
 import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { BCDispatchAction, BCState } from '@/store'
+import { useApp } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
 import WelcomeIllustration from '@assets/img/welcome_phone.svg'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
@@ -29,12 +29,13 @@ interface OnboardingIntroScreenProps {
 export const OnboardingIntroScreen = ({ onContinue }: OnboardingIntroScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+
+  const { update: updateApp } = useApp()
 
   const handleContinue = useCallback(() => {
-    dispatch({ type: BCDispatchAction.SEEN_ONBOARDING_INTRO, payload: [true] })
+    void updateApp({ hasSeenOnboardingIntro: true })
     onContinue?.()
-  }, [dispatch, onContinue])
+  }, [onContinue, updateApp])
 
   const styles = StyleSheet.create({
     image: {

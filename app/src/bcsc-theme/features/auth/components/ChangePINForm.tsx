@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { PinVerificationType, verifyPinWithLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
+import { requirePINAccount } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import {
@@ -116,7 +117,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess }: Chang
         }
 
         // Current PIN verified, now set the new PIN
-        const { success, walletKey } = await setNativePIN(newPin)
+        const { success, walletKey } = await setNativePIN(requirePINAccount(), newPin)
 
         if (success) {
           logger.info('PIN changed successfully')

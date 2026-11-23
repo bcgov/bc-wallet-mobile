@@ -4,7 +4,6 @@ import { ClockReading, ServerClockSkewSystemCheck } from './ServerClockSkewSyste
 
 const createUtils = () => ({
   logger: new MockLogger(),
-  dispatch: jest.fn(),
   translation: jest.fn() as unknown as TFunction,
 })
 

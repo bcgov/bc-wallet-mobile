@@ -1,17 +1,16 @@
+import { useBCSCStore } from '@/bcsc-theme/storage'
 import { BCSCBanner } from '@/bcsc-theme/types/banners'
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, renderHook } from '@testing-library/react-native'
 import React from 'react'
 import { useBannersWriter } from './useBannersWriter'
 
-// Real store and reducer, so the tests check what ends up in state rather than the dispatched action
+// Real store, so the tests check what ends up in state rather than the action called
 const renderWriter = () =>
   renderHook(
     () => {
-      const [store] = useStore<BCState>()
-      return { writer: useBannersWriter(), dismissedBanners: store.bcsc.dismissedBanners }
+      const dismissedBanners = useBCSCStore((s) => s.app.dismissedBanners)
+      return { writer: useBannersWriter(), dismissedBanners }
     },
     { wrapper: ({ children }: React.PropsWithChildren) => <BasicAppContext>{children}</BasicAppContext> }
   )
@@ -21,17 +20,17 @@ describe('useBannersWriter', () => {
     jest.restoreAllMocks()
   })
 
-  it('starts with no dismissals', () => {
+  it('starts with no dismissals', async () => {
     const { result } = renderWriter()
 
     expect(result.current.dismissedBanners ?? {}).toEqual({})
   })
 
-  it('records when a banner was dismissed', () => {
+  it('records when a banner was dismissed', async () => {
     jest.spyOn(Date, 'now').mockReturnValue(1000)
     const { result } = renderWriter()
 
-    act(() => {
+    await act(async () => {
       result.current.writer.recordBannerDismissal(BCSCBanner.APP_UPDATE_AVAILABLE)
     })
 
@@ -40,15 +39,15 @@ describe('useBannersWriter', () => {
     })
   })
 
-  it('keeps the dismissals of other banners', () => {
+  it('keeps the dismissals of other banners', async () => {
     const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(1000)
     const { result } = renderWriter()
 
-    act(() => {
+    await act(async () => {
       result.current.writer.recordBannerDismissal(BCSCBanner.APP_UPDATE_AVAILABLE)
     })
     dateSpy.mockReturnValue(2000)
-    act(() => {
+    await act(async () => {
       result.current.writer.recordBannerDismissal(BCSCBanner.IAS_SERVER_NOTIFICATION)
     })
 
@@ -58,15 +57,15 @@ describe('useBannersWriter', () => {
     })
   })
 
-  it('moves the dismissal time forward when the same banner is dismissed again', () => {
+  it('moves the dismissal time forward when the same banner is dismissed again', async () => {
     const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(1000)
     const { result } = renderWriter()
 
-    act(() => {
+    await act(async () => {
       result.current.writer.recordBannerDismissal(BCSCBanner.APP_UPDATE_AVAILABLE)
     })
     dateSpy.mockReturnValue(5000)
-    act(() => {
+    await act(async () => {
       result.current.writer.recordBannerDismissal(BCSCBanner.APP_UPDATE_AVAILABLE)
     })
 
@@ -75,7 +74,7 @@ describe('useBannersWriter', () => {
     })
   })
 
-  it('keeps the same writer functions between renders', () => {
+  it('keeps the same writer functions between renders', async () => {
     const { result, rerender } = renderWriter()
     const first = result.current.writer
 

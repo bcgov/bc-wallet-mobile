@@ -83,6 +83,8 @@ console.warn = createFilteredConsole('warn', [...suppressedPatterns, ...expected
 // eslint-disable-next-line no-console
 console.error = createFilteredConsole('error', [...suppressedPatterns, ...expectedReactWarnings])
 
+// The BCSC store over in-memory backends; see src/bcsc-theme/storage/__mocks__/index.ts
+jest.mock('@/bcsc-theme/storage')
 jest.mock('react-native-safe-area-context', () => mockSafeAreaContext)
 jest.mock('@react-native-community/netinfo', () => mockRNCNetInfo)
 jest.mock('react-native-localize', () => mockRNLocalize)

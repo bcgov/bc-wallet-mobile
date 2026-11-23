@@ -20,7 +20,7 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
 
   const handlePINSuccess = useCallback(
     async (result: PINEntryResult) => {
-      await handleSuccessfulAuth(result.walletKey)
+      await handleSuccessfulAuth(result.walletKey, result.profile)
       logger.info('PIN set successfully and onboarding completed')
     },
     [handleSuccessfulAuth, logger]

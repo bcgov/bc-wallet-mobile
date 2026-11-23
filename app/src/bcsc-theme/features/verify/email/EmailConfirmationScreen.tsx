@@ -3,8 +3,8 @@ import CodeInput from '@/bcsc-theme/components/CodeInput'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useEmailAddress } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
   Button,
@@ -17,7 +17,6 @@ import {
   useAnimatedComponents,
   usePreventDoublePress,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -38,7 +37,7 @@ type EmailConfirmationScreenProps = {
 
 const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store] = useStore<BCState>()
+  const emailAddress = useEmailAddress()
   const { evidence } = useApi()
   const { updateUserInfo } = useSecureActions()
   const [code, setCode] = useState('')
@@ -64,7 +63,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       setLoading(true)
       await evidence.sendEmailVerificationCode(code, id)
       await updateUserInfo({
-        email: store.bcscSecure.emailAddress,
+        email: emailAddress,
         isEmailVerified: true,
       })
       navigation.dispatch(
@@ -97,12 +96,12 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     try {
       setResendLoading(true)
 
-      if (!store.bcscSecure.emailAddress) {
+      if (!emailAddress) {
         logger.error('No email address found in store')
         throw new Error('No email address found in store, cannot resend verification code')
       }
 
-      const { email_address_id } = await evidence.createEmailVerification(store.bcscSecure.emailAddress)
+      const { email_address_id } = await evidence.createEmailVerification(emailAddress)
       setId(email_address_id)
       Toast.show({
         type: ToastType.Success,
@@ -160,7 +159,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       </ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.EmailConfirmation.CodeSentTo')} </ThemedText>
       <ThemedText style={{ textAlign: 'center' }} variant={'bold'}>
-        {store.bcscSecure.emailAddress}
+        {emailAddress}
       </ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.EmailConfirmation.EnterCodeWithin')}</ThemedText>
       <CodeInput

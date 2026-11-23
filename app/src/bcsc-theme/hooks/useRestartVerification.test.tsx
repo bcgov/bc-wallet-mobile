@@ -1,5 +1,6 @@
 import useEvidenceApi from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import * as BCSCLoadingContextModule from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { resetBCSCStore, withBCSCStore } from '@/bcsc-theme/storage/testing'
 import * as ErrorAlertContextModule from '@/contexts/ErrorAlertContext'
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
@@ -83,7 +84,7 @@ describe('useRestartVerification', () => {
     mockCancelVerificationRequest.mockResolvedValue(undefined)
     jest
       .mocked(Bifold.useStore)
-      .mockReturnValue([{ bcscSecure: { verificationRequestId: 'request-id' } } as any, mockDispatch])
+      .mockReturnValue(withBCSCStore([{ bcscSecure: { verificationRequestId: 'request-id' } } as any, mockDispatch]))
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
     jest.mocked(useEvidenceApi).mockReturnValue({ cancelVerificationRequest: mockCancelVerificationRequest } as any)
   })
@@ -144,7 +145,7 @@ describe('useRestartVerification', () => {
   })
 
   it('does not call IAS when there is no verification request', async () => {
-    jest.mocked(Bifold.useStore).mockReturnValue([{ bcscSecure: {} } as any, mockDispatch])
+    resetBCSCStore()
 
     await confirmRestart()
 

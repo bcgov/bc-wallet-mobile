@@ -4,6 +4,7 @@ import { BCState } from '@/store'
 import BCSCRootStack from '@bcsc-theme/navigators/RootStack'
 import { RootStack as BCWalletRootStack, useStore } from '@bifold/core'
 import NonProdOverlay from './bcsc-theme/components/NonProdOverlay'
+import { StorageGate } from './bcsc-theme/components/StorageGate'
 import { BCSCApiClientProvider } from './bcsc-theme/contexts/BCSCApiClientContext'
 import { BCSCLoadingProvider } from './bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCStackProvider } from './bcsc-theme/contexts/BCSCStackContext'
@@ -18,7 +19,9 @@ const Root: React.FC = () => {
       <BCSCApiClientProvider>
         <ServerStatusProvider>
           <BCSCLoadingProvider>
-            <BCSCRootStack />
+            <StorageGate>
+              <BCSCRootStack />
+            </StorageGate>
           </BCSCLoadingProvider>
           <NonProdOverlay />
         </ServerStatusProvider>

@@ -1,13 +1,14 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
+import { getBCSCState, useAccount } from '@/bcsc-theme/storage/hooks'
 import { getShortDisplayName } from '@/bcsc-theme/utils/account-utils'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useState } from 'react'
 
 const useVerificationResponseViewModel = () => {
-  const [store, dispatch] = useStore<BCState>()
+  const { tokens } = useAccount()
+  const registrationAccessToken = tokens?.registrationAccessToken
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const registration = useRegistrationService()
   const { getCachedIdTokenMetadata } = useTokenService()
@@ -17,20 +18,25 @@ const useVerificationResponseViewModel = () => {
   const handleUpdateRegistration = useCallback(
     async (nickname: string) => {
       try {
-        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, nickname)
+        await registration.updateRegistration(registrationAccessToken, nickname)
       } catch (error) {
         const errMessage = error instanceof Error ? error.message : String(error)
         logger.error(`[handleUpdateRegistration] Failed to update registration: ${errMessage}`)
       }
     },
-    [store.bcscSecure.registrationAccessToken, registration, logger]
+    [registrationAccessToken, registration, logger]
   )
 
+  // Also when the server update failed: the account record keeps the nickname for the next attempt
   const updateNicknameInLocalStorage = useCallback(
-    (nickname: string) => {
-      dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [nickname] })
+    async (nickname: string) => {
+      try {
+        await getBCSCState().account.updateProfile({ nickname })
+      } catch (error) {
+        logger.error('[updateNicknameInLocalStorage] Failed to save nickname', error as Error)
+      }
     },
-    [dispatch]
+    [logger]
   )
 
   const handleAccountSetup = useCallback(async () => {
@@ -43,7 +49,7 @@ const useVerificationResponseViewModel = () => {
       // fallback to family_name to support mononyms
       const nickname = getShortDisplayName(token ?? {})
       // update local store with nickname
-      updateNicknameInLocalStorage(nickname)
+      await updateNicknameInLocalStorage(nickname)
       // this updates their registration status with their nickname and new access tokens
       await handleUpdateRegistration(nickname)
       // this marks their account as verified, so we know to navigate them to the correct stack
@@ -51,9 +57,11 @@ const useVerificationResponseViewModel = () => {
       // account setup is complete, clear the authorization request record
       await clearAuthorizationRequest()
 
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
-      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
+      getBCSCState().session.update({
+        verificationRequestStatus: undefined,
+        verificationRequestStatusMessage: undefined,
+        verificationVideoSubmittedAt: undefined,
+      })
       setIsSettingUpAccount(false)
       // No imperative navigate: the `verified` flip swaps VerifyStack for MainStack (#4368), and MainStack
       // stops registering this screen once verified, so neither host is left showing it (#4719)
@@ -70,7 +78,6 @@ const useVerificationResponseViewModel = () => {
     getCachedIdTokenMetadata,
     logger,
     updateNicknameInLocalStorage,
-    dispatch,
   ])
   return {
     isSettingUpAccount,

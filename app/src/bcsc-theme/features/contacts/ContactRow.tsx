@@ -1,5 +1,6 @@
+import { useContacts } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
-import { formatTime, getConnectionName, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { formatTime, getConnectionName, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { DidCommConnectionRecord } from '@credo-ts/didcomm'
 import React, { useMemo } from 'react'
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -20,12 +21,9 @@ interface ContactRowProps {
  */
 const ContactRow: React.FC<ContactRowProps> = ({ contact, pinned, onPress, onLongPress }) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store] = useStore()
+  const { alternateNames: alternateContactNames } = useContacts()
 
-  const name = useMemo(
-    () => getConnectionName(contact, store.preferences.alternateContactNames),
-    [contact, store.preferences.alternateContactNames]
-  )
+  const name = useMemo(() => getConnectionName(contact, alternateContactNames), [contact, alternateContactNames])
   const initial = useMemo(() => name.charAt(0).toUpperCase(), [name])
   const dateLabel = useMemo(
     () => formatTime(new Date(contact.updatedAt ?? contact.createdAt), { shortMonth: true, trim: true }),

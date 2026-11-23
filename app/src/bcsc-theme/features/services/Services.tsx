@@ -3,13 +3,12 @@ import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
+import { useSavedServices } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
-import { Mode } from '@/constants'
 import { useDebounce } from '@/hooks/useDebounce'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
@@ -34,7 +33,7 @@ const Services: React.FC = () => {
   const { reportActivity } = useBCSCActivity() ?? {}
   const token = useTokenService()
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const { ids: savedServiceIds } = useSavedServices()
   const { ColorPalette, Spacing, TextTheme, Inputs, maxFontSizeMultiplier } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
   const [search, setSearch] = useState('')
@@ -49,16 +48,15 @@ const Services: React.FC = () => {
       onError: (error) => logger.error('Error loading card type', error as Error),
     }
   )
-  const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
 
   // Track the latest bookmarks via a ref so toggling a bookmark does not
   // re-sort the list. Sort order is recomputed only when the underlying
   // service list changes (initial load or search filter change), or when
   // the screen regains focus (e.g. user navigates back to the Services tab).
-  const savedServicesRef = useRef(store.bcscSecure.savedServices)
+  const savedServicesRef = useRef(savedServiceIds)
   useEffect(() => {
-    savedServicesRef.current = store.bcscSecure.savedServices
-  }, [store.bcscSecure.savedServices])
+    savedServicesRef.current = savedServiceIds
+  }, [savedServiceIds])
 
   useFocusEffect(
     useCallback(() => {
@@ -145,7 +143,7 @@ const Services: React.FC = () => {
                 // set the native props directly to avoid useState delay
                 searchInputRef.current.setNativeProps({
                   style: {
-                    borderColor: isBCSCMode ? ColorPalette.brand.primary : ColorPalette.brand.primaryBackground,
+                    borderColor: ColorPalette.brand.primary,
                   },
                 })
               }
@@ -153,7 +151,7 @@ const Services: React.FC = () => {
             onBlur={() => {
               if (searchInputRef.current) {
                 searchInputRef.current.setNativeProps({
-                  style: { borderColor: isBCSCMode ? '#1E5189' : '#D8D8D8' },
+                  style: { borderColor: '#1E5189' },
                 })
               }
             }}

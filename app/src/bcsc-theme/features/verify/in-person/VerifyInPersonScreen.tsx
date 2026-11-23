@@ -1,8 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useDeviceCodeExpiresAt, useVerification } from '@/bcsc-theme/storage/hooks'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { BC_SERVICE_LOCATION_URL } from '@/constants'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
@@ -14,7 +14,6 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -23,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useShallow } from 'zustand/react/shallow'
 
 type VerifyInPersonScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyInPerson>
@@ -30,7 +30,15 @@ type VerifyInPersonScreenProps = {
 
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   const { Spacing, ColorPalette, Buttons } = useTheme()
-  const [store] = useStore<BCState>()
+  const { deviceCode, userCode, serial, cardProcess } = useVerification(
+    useShallow((v) => ({
+      deviceCode: v.request?.deviceCode,
+      userCode: v.request?.userCode,
+      serial: v.request?.csn,
+      cardProcess: v.cardProcess,
+    }))
+  )
+  const deviceCodeExpiresAt = useDeviceCodeExpiresAt()
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
   const { token } = useApi()
@@ -63,12 +71,12 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       setLoading(true)
       setError(false)
 
-      if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
+      if (!deviceCode || !userCode) {
         throw new Error(t('BCSC.VerifyIdentity.DeviceCodeError'))
       }
 
       // checkDeviceCodeStatus already calls updateTokens internally, no need to call it again
-      await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
+      await token.checkDeviceCodeStatus(deviceCode, userCode)
 
       navigation.navigate(BCSCScreens.VerificationSuccess)
     } catch (e) {
@@ -87,10 +95,10 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
             {t('BCSC.VerifyIdentity.YouHaveNotBeenVerified')}
           </ThemedText>
         )}
-        {store.bcscSecure.cardProcess !== BCSCCardProcess.NonBCSC ? (
+        {cardProcess !== BCSCCardProcess.NonBCSC ? (
           <ThemedText variant={'labelSubtitle'}>
             {t('BCSC.VerifyIdentity.CardSerialNumber', {
-              serial: store.bcscSecure.serial ?? 'N/A',
+              serial: serial ?? 'N/A',
             })}
           </ThemedText>
         ) : null}
@@ -141,7 +149,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         <BulletPointWithText translationKey={'BCSC.VerifyIdentity.ThisDevice'} />
         <BulletPointWithText
           translationKey={
-            store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
+            cardProcess === BCSCCardProcess.NonBCSC
               ? 'BCSC.VerifyIdentity.PiecesOfID'
               : 'BCSC.VerifyIdentity.YourBCServicesCard'
           }
@@ -160,7 +168,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
           adjustsFontSizeToFit
         >
           {/* User codes are 8 digits and are to be formatted as XXXX-XXXX in UI */}
-          {`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
+          {`${userCode?.slice(0, 4)}-${userCode?.slice(4, 8)}`}
         </ThemedText>
       </View>
       <View>
@@ -168,7 +176,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
           {t('BCSC.VerifyIdentity.YouMustCompleteThisBy')}
         </ThemedText>
         <ThemedText variant={'headingTwo'} style={styles.dataValue}>
-          {store.bcscSecure.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+          {deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
             month: 'long',
             day: 'numeric',
             year: 'numeric',

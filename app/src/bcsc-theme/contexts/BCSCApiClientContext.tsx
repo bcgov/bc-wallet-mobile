@@ -1,7 +1,7 @@
+import { useDeveloper, useSession } from '@/bcsc-theme/storage/hooks'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useResumeStepRoute } from '@/hooks/useResumeStepRoute'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -36,7 +36,8 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const stateLoaded = useSession((s) => s.stateLoaded)
+  const developer = useDeveloper()
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -101,7 +102,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     // Only attempt to configure the client if the store is loaded and the IAS API base URL is available
-    if (!store.stateLoaded || !store.developer.environment.iasApiBaseUrl) {
+    if (!stateLoaded || !developer.environment.iasApiBaseUrl) {
       return
     }
 
@@ -112,7 +113,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       let newClient = BCSC_API_CLIENT_SINGLETON
 
       try {
-        newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
+        newClient = new BCSCApiClient(developer.environment.iasApiBaseUrl, logger as RemoteLogger)
         await newClient.fetchEndpointsAndConfig()
 
         // Non-blocking warm-up: primes the in-memory/persisted JWK cache so the first inner-JWS
@@ -131,7 +132,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         if (isTransientRequestError(err)) {
           const failure = err as { code?: string; appEvent?: string; response?: { status?: number } }
           logger.warn('[BCSCApiClient] Config fetch failed, using fallback endpoints and config:', {
-            environment: store.developer.environment.name,
+            environment: developer.environment.name,
             errorCode: failure?.code,
             appEvent: failure?.appEvent,
             status: failure?.response?.status,
@@ -141,7 +142,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           return
         }
 
-        const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
+        const errorMessage = `Failed to configure BCSC client for ${developer.environment.name}: ${
           (err as Error)?.message
         }`
 
@@ -151,7 +152,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     void configureClient()
-  }, [logger, store.developer.environment.iasApiBaseUrl, store.developer.environment.name, store.stateLoaded])
+  }, [logger, developer.environment.iasApiBaseUrl, developer.environment.name, stateLoaded])
 
   useEffect(() => {
     // Update the client's error handler whenever it or the handler changes

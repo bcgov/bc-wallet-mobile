@@ -1,14 +1,21 @@
+import { reportSessionWritesAs } from '@/bcsc-theme/storage/testing'
 import { AppEventCode } from '@/events/appEventCode'
 import { VerificationRequestStatusSystemCheck } from '@/services/system-checks/VerificationRequestStatusSystemCheck'
 import { runSystemChecks, SystemCheckUtils } from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
 import { mockAppError } from '@mocks/helpers/error'
 
-const makeUtils = (): SystemCheckUtils => ({
-  dispatch: jest.fn(),
-  translation: jest.fn() as any,
-  logger: { warn: jest.fn(), error: jest.fn() } as any,
-})
+// The checks write to the store now; `dispatch` is only where those writes are reported, in the old action shape
+const makeUtils = (): SystemCheckUtils & { dispatch: jest.Mock } => {
+  const dispatch = jest.fn()
+  // Status writes go to the session slice; reported here in the old action's shape
+  reportSessionWritesAs(dispatch)
+  return {
+    dispatch,
+    translation: jest.fn() as any,
+    logger: { warn: jest.fn(), error: jest.fn() } as any,
+  } as SystemCheckUtils & { dispatch: jest.Mock }
+}
 
 const makeStatus = (status: string, status_message?: string) => jest.fn().mockResolvedValue({ status, status_message })
 const makeCheckDeviceCodeStatus = () => jest.fn().mockResolvedValue(undefined)

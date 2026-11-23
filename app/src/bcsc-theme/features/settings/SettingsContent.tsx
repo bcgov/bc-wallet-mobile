@@ -1,10 +1,16 @@
 import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
+import { useDeveloperMode } from '@/bcsc-theme/hooks/useDeveloperMode'
 import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
-import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import {
+  useApp,
+  useDeveloper,
+  useNickname,
+  usePreferences,
+  useSecurityMethod,
+  useSession,
+} from '@/bcsc-theme/storage/hooks'
 import { PressableOpacity } from '@/components/PressableOpacity'
-import { ACCESSIBILITY_URL, DEFAULT_AUTO_LOCK_TIME_MIN, FEEDBACK_URL, hitSlop, TERMS_OF_USE_URL } from '@/constants'
-import { ErrorRegistry } from '@/errors/errorRegistry'
-import { BCDispatchAction, BCState } from '@/store'
+import { ACCESSIBILITY_URL, FEEDBACK_URL, hitSlop, TERMS_OF_USE_URL } from '@/constants'
 import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
@@ -15,16 +21,13 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
-  useDeveloperMode,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
-import React, { PropsWithChildren, ReactNode, useCallback, useRef, useState } from 'react'
+import React, { PropsWithChildren, ReactNode, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
-import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
+import { AccountSecurityMethod } from 'react-native-bcsc-core'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Animated, {
   FadeIn,
@@ -273,7 +276,8 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   onPressRemoveAccount,
 }) => {
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const nickname = useNickname()
+  const app = useApp()
   // Device transfer marks the user verified via a refresh token without setting the `verified` flag, and such
   // users still need the device-management options (e.g. "Add another device"), so gate on IAS, not setup.
   const { isDeviceVerifiedByIas: isVerified } = useVerificationState()
@@ -285,19 +289,17 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
     accountSecurityMethod === AccountSecurityMethod.PinNoDeviceAuth ||
     accountSecurityMethod === AccountSecurityMethod.PinWithDeviceAuth
   const showChangePIN = isPinUser && Boolean(onChangePIN)
-  const { developerModeEnabled } = store.preferences
+  const { developerModeEnabled, autoLockTime, proofRequestExpirationMs } = usePreferences()
   const showFeaturesSection = Boolean(onContacts) || developerModeEnabled
-  const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
+  const analyticsOptInText = app.analyticsOptIn ? 'ON' : 'OFF'
   const notificationsOnText =
     notificationStatus === PushNotifications.NotificationPermissionStatus.GRANTED ? 'ON' : 'OFF'
-  const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
-  const proofRequestExpirationMs =
-    store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
+  const autoLockTimeText = `${autoLockTime} min`
   const proofRequestExpirationLabelKey =
     Object.entries(ProofRequestExpirationTime).find(([, value]) => value === proofRequestExpirationMs)?.[0] ??
     'FortyEightHours'
   const proofRequestExpirationText = t(`Developer.ProofRequestExpirationTimes.${proofRequestExpirationLabelKey}`)
-  const profileName = store.bcsc.selectedNickname?.trim() || t('BCSC.Title')
+  const profileName = nickname || t('BCSC.Title')
 
   return (
     <>
@@ -536,10 +538,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const app = useApp()
+  const developer = useDeveloper()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const accountSecurityMethod = store.bcscSecure.securityMethod
-  const isAuthenticated = store.authentication.didAuthenticate
+  const { developerModeEnabled } = usePreferences()
+  const accountSecurityMethod = useSecurityMethod()
+  const { didAuthenticate: isAuthenticated } = useSession()
 
   const styles = makeStyles(Spacing, ColorPalette)
 
@@ -548,26 +552,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     onPressDeveloperMode()
   }
   const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
-
-  useFocusEffect(
-    useCallback(() => {
-      // Hydration puts the method in secure state, so the rows are right on the first frame. Read the
-      // native account record only when it is missing, and never before authentication (no record yet).
-      if (!isAuthenticated || accountSecurityMethod) {
-        return
-      }
-      const fetchAccountSecurityMethod = async () => {
-        try {
-          const method = await getAccountSecurityMethod()
-          dispatch({ type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD, payload: [method] })
-        } catch (error) {
-          const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
-          logger.error(`Error fetching app security method [${appError.appEvent}]`, appError)
-        }
-      }
-      void fetchAccountSecurityMethod()
-    }, [logger, isAuthenticated, accountSecurityMethod, dispatch])
-  )
 
   const onPressTermsOfUse = async () => {
     try {
@@ -594,15 +578,15 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   }
 
   const onPressOptInAnalytics = async () => {
-    if (store.bcsc.analyticsOptIn) {
+    if (app.analyticsOptIn) {
       Analytics.stopTracking()
-      dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [false] })
+      void app.update({ analyticsOptIn: false })
       return
     }
 
     try {
-      await Analytics.initializeTracker(store.developer.environment.analyticsAppId)
-      dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
+      await Analytics.initializeTracker(developer.environment.analyticsAppId)
+      void app.update({ analyticsOptIn: true })
     } catch (error) {
       logger.error(
         'Failed to initialize analytics tracker on opt-in',
@@ -691,7 +675,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             <ListButton onPress={onPrivacy} testID={testIdWithKey(TestIds.main.settings.privacy)}>
               {t('BCSC.Settings.Privacy')}
             </ListButton>
-            {store.preferences.developerModeEnabled ? (
+            {developerModeEnabled ? (
               <ListButton
                 key="dev"
                 onPress={onPressDeveloperMode}
@@ -708,7 +692,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         {/* Hidden developer trigger, not a control: keep TalkBack off it (the text stays readable). */}
         <TouchableWithoutFeedback
           onPress={incrementDeveloperMenuCounter}
-          disabled={store.preferences.developerModeEnabled}
+          disabled={developerModeEnabled}
           accessible={false}
           importantForAccessibility="no"
         >

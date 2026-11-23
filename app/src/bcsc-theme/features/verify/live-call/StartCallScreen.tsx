@@ -1,12 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { useSession } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { deviceRequiresBluetoothPermission } from '@/bcsc-theme/utils/bluetooth'
 import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
   Button,
@@ -17,7 +17,6 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -39,7 +38,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { ButtonLoading } = useAnimatedComponents()
   const { Spacing, ColorPalette } = useTheme()
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const session = useSession()
   const { video: videoCallApi } = useApi()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
@@ -193,7 +192,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   return (
     <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <Image
-        source={{ uri: `file://${store.bcsc.photoPath}` }}
+        source={{ uri: `file://${session.photoPath}` }}
         resizeMode={'cover'}
         style={styles.image}
         onError={handleImageError}

@@ -1,8 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { getBCSCState, selectAccountRecord, useDeveloper } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
   Button,
@@ -13,7 +13,6 @@ import {
   ThemedText,
   TOKENS,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -22,7 +21,7 @@ import { jwtDecode } from 'jwt-decode'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
-import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import { createDeviceSignedJWT } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 
 const qrCodeRefreshInterval = 50000 // 50 seconds
@@ -34,7 +33,7 @@ const TransferQRDisplayScreen: React.FC = () => {
   const { deviceAttestation } = useApi()
   const { ColorPalette, Spacing } = useTheme()
   const [qrValue, setQRValue] = useState<string | null>(null)
-  const [store] = useStore<BCState>()
+  const developer = useDeveloper()
   const { t } = useTranslation()
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const attestationIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -72,7 +71,7 @@ const TransferQRDisplayScreen: React.FC = () => {
       return false
     }
     const timeInSeconds = Math.floor(Date.now() / 1000)
-    const account = await getAccount()
+    const account = selectAccountRecord(getBCSCState())
     if (completedRef.current || !isMountedRef.current) {
       logger.info('[TransferQRDisplayScreen] Skipping QR token creation: transfer completed or screen unmounted')
       return false
@@ -104,11 +103,11 @@ const TransferQRDisplayScreen: React.FC = () => {
     // uses a fallback JTI instead of our provided one or mutates it in-place
     const decoded = jwtDecode<{ jti?: string }>(jwt)
     jtiRef.current = decoded.jti ?? newJti
-    const url = `${store.developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
+    const url = `${developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
     return true
-  }, [store.developer.environment.iasApiBaseUrl, logger, accountNotFoundAlert])
+  }, [developer.environment.iasApiBaseUrl, logger, accountNotFoundAlert])
 
   const checkAttestation = useCallback(
     async (id: string) => {

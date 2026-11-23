@@ -4,12 +4,12 @@ import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useFocusFirstInvalidField from '@/bcsc-theme/hooks/useFocusFirstInvalidField'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useEmailAddress } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { EMAIL_MAX_LENGTH, emailSchema, parseField } from '@/bcsc-theme/utils/validation'
 import BulletPointList from '@/components/BulletPointList'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import {
   Button,
@@ -20,7 +20,6 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -44,8 +43,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { evidence } = useApi()
   const { updateUserInfo, updateAccountFlags } = useSecureActions()
-  const [store] = useStore<BCState>()
-  const [email, setEmail] = useState(store.bcscSecure.emailAddress || '')
+  const storedEmail = useEmailAddress()
+  const [email, setEmail] = useState(storedEmail || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { cardProcess } = route.params

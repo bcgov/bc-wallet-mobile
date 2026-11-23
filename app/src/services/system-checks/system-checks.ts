@@ -1,8 +1,7 @@
 import { BCSCModals, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BifoldLogger, ReducerAction } from '@bifold/core'
+import { BifoldLogger } from '@bifold/core'
 import { NavigationState } from '@react-navigation/native'
 import { TFunction } from 'i18next'
-import { Dispatch } from 'react'
 
 export type SystemCheckStrategy = {
   /**
@@ -27,12 +26,6 @@ export type SystemCheckStrategy = {
 
 // Common utilities used across system checks
 export interface SystemCheckUtils {
-  /**
-   * Dispatch function to send actions to the store.
-   *
-   * @type {Dispatch<ReducerAction<any>>}
-   */
-  dispatch: Dispatch<ReducerAction<any>>
   /**
    * Translation function for internationalization.
    *

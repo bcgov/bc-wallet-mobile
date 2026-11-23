@@ -4,9 +4,9 @@ import { useVerificationResponseListener } from '@/bcsc-theme/features/verificat
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { BCState } from '@/store'
+import { useResumeStepRoute } from '@/hooks/useResumeStepRoute'
 import { TestIds } from '@/test-ids/registry'
-import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
 import { StackActions } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
@@ -74,7 +74,6 @@ import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import useSecureActions from '../hooks/useSecureActions'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { getResumeStepRoute } from '../utils/resume-step-route'
 
 /**
  * Header left for method selection: the settings button, which replaces the back arrow by design, with
@@ -116,9 +115,8 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
-  const [store] = useStore<BCState>()
   const { clearAdditionalEvidence } = useSecureActions()
-  const resumeRoute = getResumeStepRoute(store)
+  const resumeRoute = useResumeStepRoute()
   // Opening on the prompt (rather than swapping stacks to reach it) lets prompt → setup question
   // animate as an in-stack slide. Everyone else resumes at the step they left off on.
   const initialRouteName = showVerifyPrompt ? BCSCScreens.VerifyPrompt : resumeRoute.name

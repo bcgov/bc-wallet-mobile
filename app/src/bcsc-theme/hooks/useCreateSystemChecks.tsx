@@ -1,9 +1,18 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
+import {
+  getBCSCState,
+  useAccount,
+  useApp,
+  useDeveloper,
+  useNickname,
+  useSession,
+  useVerification,
+} from '@/bcsc-theme/storage/hooks'
 
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { isRefreshTokenExpired } from '@/bcsc-theme/state/account/refresh-token'
-import { selectVerificationState } from '@/bcsc-theme/state/verification/selectors'
+import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
 import { KeyRotationResult, rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
@@ -23,14 +32,13 @@ import {
   getPendingDeviceCodeExpiry,
   VerificationSessionExpiredSystemCheck,
 } from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
-import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { BifoldLogger, TOKENS, useServices, useStore } from '@bifold/core'
+import { BifoldLogger, TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 import { getBuildNumber, getBundleId, getVersion } from 'react-native-device-info'
+import { useShallow } from 'zustand/react/shallow'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
@@ -69,14 +77,10 @@ const rotateKey = async ({
   updateTokens: ReturnType<typeof useSecureActions>['updateTokens']
   fallbackRegistrationAccessToken?: string
 }): Promise<KeyRotationResult> => {
-  // Read fresh, not the store fallback: UpdateDeviceRegistrationSystemCheck's onFail may have rotated it this pass.
-  // Both native reads reject (not resolve null) on failure, so degrade to null or the fallback is unreachable.
-  const [tokenInfo, account] = await Promise.all([
-    getToken(TokenType.Registration).catch(() => null),
-    getAccount().catch(() => null),
-  ])
-  const registrationAccessToken = tokenInfo?.token ?? fallbackRegistrationAccessToken
-  const clientId = account?.clientID
+  // Read fresh, not the render's fallback: UpdateDeviceRegistrationSystemCheck's onFail may have rotated it this pass
+  const { tokens, profile } = getBCSCState().account
+  const registrationAccessToken = tokens?.registrationAccessToken ?? fallbackRegistrationAccessToken
+  const clientId = profile?.clientId
 
   if (!registrationAccessToken || !clientId) {
     // Recorded as a failed attempt (not a skip) — this path returns status='failed' below.
@@ -88,8 +92,7 @@ const rotateKey = async ({
 
   const result = await rotateSigningKey(client, clientId, registrationAccessToken, logger)
   if (result.newRegistrationAccessToken) {
-    // Syncs the rotated token into the in-memory store; the repeated native write is
-    // idempotent and covers the case where rotateSigningKey's own setToken failed.
+    // Covers the case where rotateSigningKey's own save failed: updateTokens keeps it in memory at least
     await updateTokens({ registrationAccessToken: result.newRegistrationAccessToken })
   }
   return result
@@ -128,7 +131,21 @@ type UseGetSystemChecksReturn = Record<
  */
 export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
+  const app = useApp()
+  const credentialMetadata = useAccount((a) => a.credentialMetadata)
+  const tokens = useAccount((a) => a.tokens)
+  const selectedNickname = useNickname()
+  const { stateLoaded, isHydrated } = useSession(
+    useShallow((s) => ({ stateLoaded: s.stateLoaded, isHydrated: s.isHydrated }))
+  )
+  const { verificationRequestId, deviceCode, userCode } = useVerification(
+    useShallow((v) => ({
+      verificationRequestId: v.request?.backCheckVerificationId,
+      deviceCode: v.request?.deviceCode,
+      userCode: v.request?.userCode,
+    }))
+  )
+  const developer = useDeveloper()
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
   const evidenceService = useEvidenceService()
@@ -143,22 +160,21 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { emitAlert } = useErrorAlert()
   const { clockSkewAlert } = useAlerts()
   const { serverStatus: cachedServerStatus, refresh: refreshServerStatus } = useServerStatus()
-  const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
-  const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
+  const credentialMetadataRef = useRef(credentialMetadata)
+  const utils = useMemo(() => ({ translation: t, logger }), [logger, t])
   const appVersion = getVersion()
   const appBuildNumber = getBuildNumber()
   const appVersionChangedSinceLastLaunchRef = useRef<boolean | null>(null)
   const launchVersionRecordedRef = useRef(false)
 
   const defaultReadiness = isNavigationReady && client && isClientReady
-  const { isVerified } = selectVerificationState(store)
+  const { isVerified } = useVerificationState()
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
-  const verificationRequestId = store.bcscSecure.verificationRequestId
 
   // update credential metadata ref on store change
   useEffect(() => {
-    credentialMetadataRef.current = store.bcsc.credentialMetadata
-  }, [store.bcsc.credentialMetadata])
+    credentialMetadataRef.current = credentialMetadata
+  }, [credentialMetadata])
 
   /**
    * Get system checks to run at app startup
@@ -169,13 +185,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
     const systemChecks: SystemCheckStrategy[] = [
-      new InstallIdSystemCheck(store.bcsc.installId, dispatch),
-      new AnalyticsSystemCheck(
-        store.bcsc.analyticsOptIn,
-        store.developer.environment.analyticsAppId,
-        Analytics,
-        logger
-      ),
+      new InstallIdSystemCheck(app.installId, (installId) => app.update({ installId })),
+      new AnalyticsSystemCheck(app.analyticsOptIn, developer.environment.analyticsAppId, Analytics, logger),
     ]
 
     // Clock-skew and update checks both need the status fetch (it records the server's time on the
@@ -193,17 +204,15 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     return systemChecks
   }, [
+    app,
     cachedServerStatus,
     refreshServerStatus,
     client,
     clockSkewAlert,
-    dispatch,
     isBCServicesCardBundle,
     logger,
     navigation,
-    store.bcsc.analyticsOptIn,
-    store.bcsc.installId,
-    store.developer.environment.analyticsAppId,
+    developer.environment.analyticsAppId,
     utils,
   ])
 
@@ -230,8 +239,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
 
     const systemChecks: SystemCheckStrategy[] = []
-    const refreshTokenExpired = isRefreshTokenExpired(store.bcscSecure.refreshToken, new Date())
-    const { deviceCode, userCode } = store.bcscSecure
+    const refreshTokenExpired = isRefreshTokenExpired(tokens?.refreshToken, new Date())
 
     // DeviceCount and EventReasonAlerts need a verified user's cached id token; hydration never
     // fetches one when the stored refresh token is expired, so they'd misfire on that path (#4654).
@@ -241,11 +249,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const shouldRecoverPendingVerification = !isVerified && !!deviceCode && !!userCode
     // Needs the user's chosen nickname: without one (e.g. during initial onboarding) the check fails with
     // "No client name found for registration update" on every launch until setup completes.
-    const shouldUpdateRegistration =
-      isBCServicesCardBundle && !!store.bcscSecure.registrationAccessToken && !!store.bcsc.selectedNickname
+    const shouldUpdateRegistration = isBCServicesCardBundle && !!tokens?.registrationAccessToken && !!selectedNickname
     // Key rotation (#3876): gated like the registration update but deliberately skips selectedNickname
     // (rotation doesn't need one).
-    const shouldRotateKey = isBCServicesCardBundle && !!store.bcscSecure.registrationAccessToken && isVerified
+    const shouldRotateKey = isBCServicesCardBundle && !!tokens?.registrationAccessToken && isVerified
 
     if (shouldRunIdTokenChecks) {
       systemChecks.push(
@@ -266,7 +273,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
               return Promise.reject(new Error('Missing deviceCode or userCode for verification token exchange'))
             }
             // Token exists, nothing to check
-            if (store.bcscSecure.refreshToken) {
+            if (tokens?.refreshToken) {
               return Promise.resolve(undefined)
             }
             return tokenApi.checkDeviceCodeStatus(deviceCode, userCode)
@@ -278,7 +285,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       systemChecks.push(
         new PendingVerificationRecoverySystemCheck(() => {
           // Token exists, nothing to check
-          if (store.bcscSecure.refreshToken) {
+          if (tokens?.refreshToken) {
             return Promise.resolve(true)
           }
           return tokenService.checkVerificationStatus(deviceCode, userCode)
@@ -288,24 +295,19 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     // Terms of Use applies to every user (the endpoint is public, no token needed)
     systemChecks.push(
-      new TermsOfUseSystemCheck(
-        () => configApi.getTermsOfUse(),
-        store.bcsc.acceptedTermsOfUseVersion,
-        navigation,
-        utils
-      )
+      new TermsOfUseSystemCheck(() => configApi.getTermsOfUse(), app.acceptedTermsOfUseVersion, navigation, utils)
     )
 
     if (shouldUpdateRegistration) {
       systemChecks.push(
         new UpdateDeviceRegistrationSystemCheck(
-          store.bcsc.appVersion,
-          store.bcsc.appBuildNumber,
+          app.appVersion,
+          app.appBuildNumber,
           () =>
             updateRegistration({
               registrationService,
-              registrationAccessToken: store.bcscSecure.registrationAccessToken,
-              selectedNickname: store.bcsc.selectedNickname,
+              registrationAccessToken: tokens?.registrationAccessToken,
+              selectedNickname,
             }),
           utils
         )
@@ -315,20 +317,20 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // KeyRotationSystemCheck must stay appended AFTER UpdateDeviceRegistrationSystemCheck so their
     // onFail PUTs never race (sequential order).
     appVersionChangedSinceLastLaunchRef.current ??=
-      store.bcsc.lastSeenAppVersion !== appVersion || store.bcsc.lastSeenAppBuildNumber !== appBuildNumber
+      app.lastSeenAppVersion !== appVersion || app.lastSeenAppBuildNumber !== appBuildNumber
     const appVersionChangedSinceLastLaunch = appVersionChangedSinceLastLaunchRef.current
 
     if (shouldRotateKey) {
       systemChecks.push(
         new KeyRotationSystemCheck(
           appVersionChangedSinceLastLaunch,
-          store.bcsc.lastKeyRotationAttemptAt,
+          app.lastKeyRotationAttemptAt,
           () =>
             rotateKey({
               client: client as BCSCApiClient,
               logger,
               updateTokens,
-              fallbackRegistrationAccessToken: store.bcscSecure.registrationAccessToken,
+              fallbackRegistrationAccessToken: tokens?.registrationAccessToken,
             }),
           utils
         )
@@ -339,24 +341,23 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // deferral from flipping off if a future caller invokes it again after this dispatch lands.
     if (appVersionChangedSinceLastLaunch && !launchVersionRecordedRef.current) {
       launchVersionRecordedRef.current = true
-      dispatch({
-        type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
-        payload: [{ version: appVersion, buildNumber: appBuildNumber }],
-      })
+      void getBCSCState().app.update({ lastSeenAppVersion: appVersion, lastSeenAppBuildNumber: appBuildNumber })
     }
 
     return systemChecks
   }, [
     isVerified,
     verificationRequestId,
-    store.bcscSecure,
-    store.bcsc.acceptedTermsOfUseVersion,
-    store.bcsc.selectedNickname,
-    store.bcsc.appVersion,
-    store.bcsc.appBuildNumber,
-    store.bcsc.lastKeyRotationAttemptAt,
-    store.bcsc.lastSeenAppVersion,
-    store.bcsc.lastSeenAppBuildNumber,
+    deviceCode,
+    userCode,
+    tokens,
+    app.acceptedTermsOfUseVersion,
+    selectedNickname,
+    app.appVersion,
+    app.appBuildNumber,
+    app.lastKeyRotationAttemptAt,
+    app.lastSeenAppVersion,
+    app.lastSeenAppBuildNumber,
     appVersion,
     appBuildNumber,
     navigation,
@@ -371,7 +372,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     client,
     logger,
     updateTokens,
-    dispatch,
   ])
 
   /**
@@ -392,17 +392,17 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       [SystemCheckScope.STARTUP]: {
         getSystemChecks: getStartupSystemChecks,
         getForegroundSystemChecks,
-        isReady: Boolean(defaultReadiness && store.stateLoaded),
+        isReady: Boolean(defaultReadiness && stateLoaded),
         isApplicable: true,
       },
       [SystemCheckScope.MAIN_STACK]: {
         getSystemChecks: getMainSystemChecks,
-        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && !accountContext?.isLoadingAccount),
+        isReady: Boolean(defaultReadiness && isHydrated && !accountContext?.isLoadingAccount),
         isApplicable: true,
       },
       [SystemCheckScope.VERIFY]: {
         getSystemChecks: getVerifySystemChecks,
-        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+        isReady: Boolean(defaultReadiness && isHydrated),
         isApplicable: true,
       },
     }
@@ -411,8 +411,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     getMainSystemChecks,
     getStartupSystemChecks,
     getForegroundSystemChecks,
-    store.bcscSecure.isHydrated,
-    store.stateLoaded,
+    isHydrated,
+    stateLoaded,
     getVerifySystemChecks,
     accountContext?.isLoadingAccount,
   ])

@@ -1,17 +1,18 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { selectVerificationState } from '@/bcsc-theme/state/verification/selectors'
+import { useVerificationState } from '@/bcsc-theme/state/verification/useVerificationState'
+import { getBCSCState, useVerification } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { interpretVerificationStatus, UNKNOWN_VERIFICATION_STATUS } from '@/bcsc-theme/utils/verification-status'
 import { isVerifiedByTokenExchange } from '@/bcsc-theme/utils/verification-token-exchange'
 import { VerificationRequestStatus } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCDispatchAction, BCState } from '@/store'
-import { AbstractBifoldLogger, TOKENS, useServices, useStore } from '@bifold/core'
+import { AbstractBifoldLogger, TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { TFunction } from 'i18next'
 import { useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useShallow } from 'zustand/react/shallow'
 import { useEvidenceService } from '../services/hooks/useEvidenceService'
 
 type StatusDecision =
@@ -79,15 +80,12 @@ const fetchStatusDecision = async (ctx: StatusFetchContext): Promise<StatusDecis
   }
 }
 
-type StoreDispatch = ReturnType<typeof useStore<BCState>>[1]
-
 const recordAndNavigate = (
-  dispatch: StoreDispatch,
   navigation: StackNavigationProp<BCSCVerifyStackParams>,
   decision: StatusDecision
 ): 'decided' | 'pending' => {
   if (decision.status !== UNKNOWN_VERIFICATION_STATUS) {
-    dispatch({ type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED, payload: [decision] })
+    getBCSCState().session.verificationStatusReceived(decision)
   }
   switch (decision.status) {
     case VerificationRequestStatus.VERIFIED:
@@ -102,13 +100,12 @@ const recordAndNavigate = (
   }
 }
 
-const clearSubmittedRequest = (dispatch: StoreDispatch) => {
-  dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-  dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
-  dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
+const clearSubmittedRequest = () => {
+  const { session } = getBCSCState()
+  session.clearMedia()
   // The request no longer exists, so a recorded pending status must not outlive it on Home
-  dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
-  dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
+  session.update({ verificationVideoSubmittedAt: undefined })
+  session.clearVerificationStatus()
 }
 
 /**
@@ -119,7 +116,6 @@ const clearSubmittedRequest = (dispatch: StoreDispatch) => {
  */
 export const useVerificationPendingActions = (navigation: StackNavigationProp<BCSCVerifyStackParams>) => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
   const { updateVerificationRequest, updateAccountFlags } = useSecureActions()
   const { token } = useApi()
   const evidenceService = useEvidenceService()
@@ -135,8 +131,14 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
   const { cancelVerificationRequestAlert } = useAlerts(navigation)
   // Only these fields decide the check, so unrelated secure-state writes don't change its identity (the
   // pending screen re-checks whenever it does)
-  const { verificationRequestId, deviceCode, userCode } = store.bcscSecure
-  const verified = selectVerificationState(store).isDeviceVerifiedByIas
+  const { verificationRequestId, deviceCode, userCode } = useVerification(
+    useShallow((v) => ({
+      verificationRequestId: v.request?.backCheckVerificationId,
+      deviceCode: v.request?.deviceCode,
+      userCode: v.request?.userCode,
+    }))
+  )
+  const verified = useVerificationState().isDeviceVerifiedByIas
 
   /** One status check. Never throws: a failure is logged and left to the next trigger. */
   const runStatusCheck = useCallback(async (): Promise<'decided' | 'pending' | 'failed'> => {
@@ -165,13 +167,13 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
       if (decision === 'abandoned') {
         return 'decided'
       }
-      return recordAndNavigate(dispatch, navigation, decision)
+      return recordAndNavigate(navigation, decision)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[useVerificationPendingActions] Failed to check status: ${message}`)
       return 'failed'
     }
-  }, [verified, verificationRequestId, deviceCode, userCode, evidenceService, navigation, t, token, logger, dispatch])
+  }, [verified, verificationRequestId, deviceCode, userCode, evidenceService, navigation, t, token, logger])
 
   const handleCheckStatus = useCallback(async () => {
     if (checkInFlightRef.current) {
@@ -205,7 +207,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         logger.error(`Error cancelling verification request: ${error}`)
       } finally {
         await updateVerificationRequest(undefined, null)
-        clearSubmittedRequest(dispatch)
+        clearSubmittedRequest()
         await updateAccountFlags({
           userSubmittedVerificationVideo: false,
         }).catch((error) => {
@@ -224,7 +226,6 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
     evidenceService,
     logger,
     updateVerificationRequest,
-    dispatch,
     updateAccountFlags,
     navigation,
   ])

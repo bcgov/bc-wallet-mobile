@@ -1,10 +1,9 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { switchMediator } from '@/bcsc-theme/features/agent/services/mediator-service'
+import { resetBCSCStore, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction } from '@/store'
 import { activate, deactivate } from '@/utils/PushNotificationsHelper'
 import * as Bifold from '@bifold/core'
-import { DispatchAction } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { useConfigureMediatorViewModel } from './useConfigureMediatorViewModel'
@@ -21,7 +20,6 @@ jest.mock('@/hooks/useAlerts', () => ({
 }))
 jest.mock('@bifold/core', () => ({
   ...jest.requireActual('@bifold/core'),
-  useStore: jest.fn(),
   useServices: jest.fn(),
 }))
 // The build's mediator is the one the picker lists first; served as both the default and the named export
@@ -34,23 +32,33 @@ const current = 'https://mediator.example/invite?oob=current'
 const other = 'https://mediator-dev.example/invite?oob=other'
 const scanned = 'https://mediator-new.example/invite?oob=scanned'
 
-const mockDispatch = jest.fn()
+const mockAddMediator = jest.fn()
+const mockSelectMediator = jest.fn()
+const mockRemoveMediator = jest.fn()
 const mockWaitForAgent = jest.fn()
 const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
 const agent = { id: 'agent' }
 
-const setStore = (overrides: Record<string, unknown> = {}) =>
-  jest.mocked(Bifold.useStore).mockReturnValue([
-    {
-      preferences: {
-        availableMediators: [current, other],
-        selectedMediator: current,
-        usePushNotifications: true,
-        ...overrides,
-      },
-    } as never,
-    mockDispatch,
-  ])
+const setStore = (overrides: Record<string, unknown> = {}) => {
+  resetBCSCStore()
+  seedBCSCStore({
+    preferences: {
+      availableMediators: [current, other],
+      selectedMediator: current,
+      usePushNotifications: true,
+      addMediator: mockAddMediator,
+      selectMediator: mockSelectMediator,
+      removeMediator: mockRemoveMediator,
+      ...overrides,
+    },
+  })
+}
+
+const expectNoPreferenceWrites = () => {
+  expect(mockAddMediator).not.toHaveBeenCalled()
+  expect(mockSelectMediator).not.toHaveBeenCalled()
+  expect(mockRemoveMediator).not.toHaveBeenCalled()
+}
 
 const callOrder = (fn: unknown) => jest.mocked(fn as jest.Mock).mock.invocationCallOrder[0]
 
@@ -104,15 +112,15 @@ describe('useConfigureMediatorViewModel', () => {
   it('adds a scanned mediator invitation to the list once and consumes the scan', () => {
     renderHook(() => useConfigureMediatorViewModel(scanned))
 
-    expect(mockDispatch).toHaveBeenCalledTimes(1)
-    expect(mockDispatch).toHaveBeenCalledWith({ type: DispatchAction.ADD_AVAILABLE_MEDIATOR, payload: [scanned] })
+    expect(mockAddMediator).toHaveBeenCalledTimes(1)
+    expect(mockAddMediator).toHaveBeenCalledWith(scanned)
     expect(useNavigation().setParams).toHaveBeenCalledWith({ scannedMediatorUri: undefined })
   })
 
   it('does not re-add a scanned mediator already on the list', () => {
     renderHook(() => useConfigureMediatorViewModel(other))
 
-    expect(mockDispatch).not.toHaveBeenCalled()
+    expectNoPreferenceWrites()
     expect(useNavigation().setParams).toHaveBeenCalledWith({ scannedMediatorUri: undefined })
   })
 
@@ -120,15 +128,15 @@ describe('useConfigureMediatorViewModel', () => {
     const { rerender } = renderHook(({ uri }: { uri?: string }) => useConfigureMediatorViewModel(uri), {
       initialProps: { uri: scanned },
     })
-    expect(mockDispatch).toHaveBeenCalledWith({ type: DispatchAction.ADD_AVAILABLE_MEDIATOR, payload: [scanned] })
+    expect(mockAddMediator).toHaveBeenCalledWith(scanned)
 
     // The scan lands in the list with its params consumed, then the mediator is removed
-    setStore({ availableMediators: [current, other, scanned] })
+    act(() => setStore({ availableMediators: [current, other, scanned] }))
     rerender({ uri: undefined })
-    setStore({ availableMediators: [current, other] })
+    act(() => setStore({ availableMediators: [current, other] }))
     rerender({ uri: undefined })
 
-    expect(mockDispatch).toHaveBeenCalledTimes(1)
+    expect(mockAddMediator).toHaveBeenCalledTimes(1)
   })
 
   it('ignores a tap on the selected mediator', async () => {
@@ -137,7 +145,7 @@ describe('useConfigureMediatorViewModel', () => {
     await act(() => result.current.selectMediator(current))
 
     expect(switchMediator).not.toHaveBeenCalled()
-    expect(mockDispatch).not.toHaveBeenCalled()
+    expectNoPreferenceWrites()
   })
 
   it('switches the wallet under its label, persists the choice and moves the device token with it', async () => {
@@ -146,7 +154,7 @@ describe('useConfigureMediatorViewModel', () => {
     await act(() => result.current.selectMediator(other))
 
     expect(switchMediator).toHaveBeenCalledWith(agent, { mediatorUrl: other, label: 'BC Wallet' }, mockLogger)
-    expect(mockDispatch).toHaveBeenCalledWith({ type: DispatchAction.SET_SELECTED_MEDIATOR, payload: [other] })
+    expect(mockSelectMediator).toHaveBeenCalledWith(other)
     expect(deactivate).toHaveBeenCalledWith(agent)
     expect(activate).toHaveBeenCalledWith(agent)
     expect(callOrder(deactivate)).toBeLessThan(callOrder(switchMediator))
@@ -170,7 +178,7 @@ describe('useConfigureMediatorViewModel', () => {
 
     await act(() => result.current.selectMediator(other))
 
-    expect(mockDispatch).toHaveBeenCalledWith({ type: DispatchAction.SET_SELECTED_MEDIATOR, payload: [other] })
+    expect(mockSelectMediator).toHaveBeenCalledWith(other)
     expect(deactivate).not.toHaveBeenCalled()
     expect(activate).not.toHaveBeenCalled()
   })
@@ -182,7 +190,7 @@ describe('useConfigureMediatorViewModel', () => {
     await act(() => result.current.selectMediator(other))
 
     expect(switchMediator).toHaveBeenCalledWith(agent, { mediatorUrl: other, label: 'BC Wallet' }, mockLogger)
-    expect(mockDispatch).toHaveBeenCalledWith({ type: DispatchAction.SET_SELECTED_MEDIATOR, payload: [other] })
+    expect(mockSelectMediator).toHaveBeenCalledWith(other)
     expect(mockLogger.warn).toHaveBeenCalled()
   })
 
@@ -194,7 +202,7 @@ describe('useConfigureMediatorViewModel', () => {
     await act(() => result.current.selectMediator(other))
 
     expect(mockFailedToSwitchMediatorAlert).toHaveBeenCalledWith(failure)
-    expect(mockDispatch).not.toHaveBeenCalled()
+    expectNoPreferenceWrites()
     expect(activate).toHaveBeenCalledWith(agent)
     expect(result.current.switchingTo).toBeNull()
   })
@@ -221,7 +229,7 @@ describe('useConfigureMediatorViewModel', () => {
 
     await act(() => result.current.selectMediator(other))
 
-    expect(mockDispatch).toHaveBeenCalledWith({ type: DispatchAction.SET_SELECTED_MEDIATOR, payload: [other] })
+    expect(mockSelectMediator).toHaveBeenCalledWith(other)
     expect(mockLogger.warn).toHaveBeenCalled()
     expect(mockFailedToSwitchMediatorAlert).not.toHaveBeenCalled()
     expect(result.current.switchingTo).toBeNull()
@@ -244,8 +252,8 @@ describe('useConfigureMediatorViewModel', () => {
 
     act(() => result.current.removeMediator(other))
 
-    expect(mockDispatch).toHaveBeenCalledTimes(1)
-    expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.REMOVE_AVAILABLE_MEDIATOR, payload: [other] })
+    expect(mockRemoveMediator).toHaveBeenCalledTimes(1)
+    expect(mockRemoveMediator).toHaveBeenCalledWith(other)
   })
 
   it("keeps the selected mediator and the build's mediator", () => {
@@ -255,7 +263,7 @@ describe('useConfigureMediatorViewModel', () => {
     act(() => result.current.removeMediator(other))
     act(() => result.current.removeMediator(current))
 
-    expect(mockDispatch).not.toHaveBeenCalled()
+    expectNoPreferenceWrites()
   })
 
   it('does not remove a mediator while a switch is in progress', async () => {
@@ -270,9 +278,7 @@ describe('useConfigureMediatorViewModel', () => {
     await waitFor(() => expect(result.current.switchingTo).toBe(other))
     act(() => result.current.removeMediator(scanned))
 
-    expect(mockDispatch).not.toHaveBeenCalledWith(
-      expect.objectContaining({ type: BCDispatchAction.REMOVE_AVAILABLE_MEDIATOR })
-    )
+    expect(mockRemoveMediator).not.toHaveBeenCalled()
 
     await act(async () => registered())
   })

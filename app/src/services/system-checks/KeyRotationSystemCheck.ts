@@ -1,3 +1,4 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import {
   KEY_ROTATION_MAX_AGE_DAYS,
   KEY_ROTATION_RETRY_BACKOFF_DAYS,
@@ -5,7 +6,6 @@ import {
   keyCreatedAtMs,
   KeyRotationResult,
 } from '@/bcsc-theme/utils/key-rotation'
-import { BCDispatchAction } from '@/store'
 import { getAllKeys } from 'react-native-bcsc-core'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
@@ -122,12 +122,12 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
   }
 
   async onFail(): Promise<void> {
-    // Dispatched before rotate() so the attempt stamp is queued first — best-effort ordering, not
-    // a durable write barrier.
-    this.utils.dispatch({
-      type: BCDispatchAction.KEY_ROTATION_ATTEMPTED,
-      payload: [new Date().toISOString()],
-    })
+    // Saved before rotate(), so an attempt that crashes mid-rotation still throttles the next one
+    await getBCSCState()
+      .app.update({ lastKeyRotationAttemptAt: new Date().toISOString() })
+      .catch((error: unknown) =>
+        this.utils.logger.error('KeyRotationSystemCheck: failed to record the attempt', error as Error)
+      )
 
     try {
       const result = await this.rotate()

@@ -8,6 +8,7 @@ import NativeBcscCoreSpec, {
   type NativeAccountReadStatus,
   type NativeAuthorizationRequest,
   type NativeFilesScan,
+  type NativeLegacyRecord,
   type NativeSavedService,
 } from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
@@ -21,8 +22,18 @@ export type {
   NativeAddress,
   NativeAuthorizationRequest,
   NativeFilesScan,
+  NativeLegacyRecord,
   NativeSavedService,
 } from './NativeBcscCore';
+
+export type NativeLegacyRecordName =
+  | 'account'
+  | 'tokens'
+  | 'credential'
+  | 'authorizationRequest'
+  | 'accountFlags'
+  | 'evidence'
+  | 'savedServices';
 
 /**
  * Standard error codes used by native modules when rejecting promises.
@@ -237,8 +248,8 @@ export interface CredentialInfo {
   updatedDate?: number | null; // Unix timestamp in seconds
 
   // BCSC specific fields
-  bcscEvent: 'Authorization' | 'Renewal' | 'Replace' | 'Cancel' | 'Expire'; // Maps to BcscEvent enum
-  bcscReason: string; // Maps to BcscReason enum
+  bcscEvent?: 'Authorization' | 'Renewal' | 'Replace' | 'Cancel' | 'Expire'; // Maps to BcscEvent enum; null in v3 with no event
+  bcscReason?: string; // Maps to BcscReason enum; null in v3 with no event
   bcscStatusDate?: number | null; // Unix timestamp in seconds
   bcscEventDate?: number | null; // Unix timestamp in seconds
 
@@ -528,6 +539,16 @@ export const getAccountReadStatus = async (): Promise<NativeAccountReadStatus> =
 };
 
 /**
+ * Reads one stored record with its status (ok, absent, locked or unreadable), where the getters above
+ * resolve null for all of absent, locked and unreadable. Never rejects.
+ * @param name The record to read
+ * @returns A promise that resolves to the record and its status.
+ */
+export const readLegacyRecord = async (name: NativeLegacyRecordName): Promise<NativeLegacyRecord> => {
+  return await BcscCore.readLegacyRecord(name);
+};
+
+/**
  * Checks if an account is registered by verifying the presence of a client ID.
  * @param account The Account object to check (without securityMethod).
  * @returns True if an account is registered, false otherwise.
@@ -759,41 +780,48 @@ export const clearAllKeychainData = async (): Promise<void> => {
 
 // Export authentication types
 export { BiometricType } from './NativeBcscCore';
+
+/** The account a PIN belongs to, as account/profile holds it. The PIN methods find the PIN through it. */
+export type PINAccount = { accountId: string; issuer: string };
 export type { DeviceSecurityUnlockResult, PINSetupResult, PINVerificationResult } from './NativeBcscCore';
 
 /**
- * Sets a user-created PIN for the current account.
+ * Sets a user-created PIN for the account.
  * @param pin The PIN to set (should be validated before calling)
  * @returns A promise that resolves to setup result with success status and wallet key hash
  */
-export const setPIN = async (pin: string): Promise<import('./NativeBcscCore').PINSetupResult> => {
-  return BcscCore.setPIN(pin);
+export const setPIN = async (account: PINAccount, pin: string): Promise<import('./NativeBcscCore').PINSetupResult> => {
+  return await BcscCore.setPIN(account.accountId, account.issuer, pin);
 };
 
 /**
- * Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
+ * Verifies a PIN for the account. Only checks the PIN: wrong attempts are counted, and
  * lockouts enforced, by the caller.
  * @param pin The PIN to verify
  * @returns A promise that resolves to verification result with success status and wallet key hash on success
  */
-export const verifyPIN = async (pin: string): Promise<import('./NativeBcscCore').PINVerificationResult> => {
-  return BcscCore.verifyPIN(pin);
+export const verifyPIN = async (
+  account: PINAccount,
+  pin: string
+): Promise<import('./NativeBcscCore').PINVerificationResult> => {
+  return await BcscCore.verifyPIN(account.accountId, account.issuer, pin);
 };
 
 /**
- * Deletes the PIN for the current account.
+ * Deletes the PIN for the account.
  * @returns A promise that resolves to true on success
  */
-export const deletePIN = async (): Promise<boolean> => {
-  return BcscCore.deletePIN();
+export const deletePIN = async (account: PINAccount): Promise<boolean> => {
+  return await BcscCore.deletePIN(account.accountId, account.issuer);
 };
 
 /**
- * Checks if a PIN is set for the current account.
+ * Checks if a PIN secret is stored for the account. It doesn't look at the security method: a device-security
+ * account also has one (auto-generated), so callers that mean "uses a PIN" check the method too.
  * @returns A promise that resolves to true if PIN is set, false otherwise
  */
-export const hasPINSet = async (): Promise<boolean> => {
-  return BcscCore.hasPINSet();
+export const hasPINSet = async (account: PINAccount): Promise<boolean> => {
+  return await BcscCore.hasPINSet(account.accountId, account.issuer);
 };
 
 /**
@@ -870,8 +898,8 @@ export const getAccountSecurityMethod = async (): Promise<import('./NativeBcscCo
  *   - walletKey: The PBKDF2-derived key (base64 encoded) for Askar wallet
  *   - isAutoGenerated: Always true for this method
  */
-export const setupDeviceSecurity = async (): Promise<import('./NativeBcscCore').PINSetupResult> => {
-  return BcscCore.setupDeviceSecurity();
+export const setupDeviceSecurity = async (account: PINAccount): Promise<import('./NativeBcscCore').PINSetupResult> => {
+  return await BcscCore.setupDeviceSecurity(account.accountId, account.issuer);
 };
 
 /**
@@ -891,9 +919,10 @@ export const setupDeviceSecurity = async (): Promise<import('./NativeBcscCore').
  * @throws Other native codes (e.g. E_ACCOUNT_NOT_FOUND) for failures outside the prompt
  */
 export const unlockWithDeviceSecurity = async (
+  account: PINAccount,
   reason?: string
 ): Promise<import('./NativeBcscCore').DeviceSecurityUnlockResult> => {
-  return BcscCore.unlockWithDeviceSecurity(reason);
+  return await BcscCore.unlockWithDeviceSecurity(account.accountId, account.issuer, reason);
 };
 
 /**
@@ -903,8 +932,8 @@ export const unlockWithDeviceSecurity = async (
  *
  * @returns A promise that resolves to true if PIN was auto-generated, false if user-created
  */
-export const isPINAutoGenerated = async (): Promise<boolean> => {
-  return BcscCore.isPINAutoGenerated();
+export const isPINAutoGenerated = async (account: PINAccount): Promise<boolean> => {
+  return await BcscCore.isPINAutoGenerated(account.accountId, account.issuer);
 };
 
 // MARK: - Authorization Request Storage Methods

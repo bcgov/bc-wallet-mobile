@@ -120,6 +120,7 @@
     "react-native-keychain": "~10.0.0",
     "react-native-localize": "~2.2.6",
     "react-native-logs": "~5.1.0",
+    "react-native-mmkv": "^4.3.2",
     "react-native-nitro-image": "^0.15.2",
     "react-native-nitro-modules": "^0.37.0",
     "react-native-orientation-locker": "patch:react-native-orientation-locker@npm%3A1.6.0#~/.yarn/patches/react-native-orientation-locker-npm-1.6.0-8c2ca3b279.patch",

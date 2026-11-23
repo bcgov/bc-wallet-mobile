@@ -1,4 +1,5 @@
 import { BCSCAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { storeFromBCState } from '@/bcsc-theme/storage/testing'
 import { EXPIRED_JWT, makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState } from '@/store'
@@ -9,10 +10,10 @@ const NOW = new Date('2026-10-19T12:00:00.000Z')
 const FUTURE = new Date('2027-10-19T00:00:00.000Z')
 
 const buildState = (opts: { verified?: boolean; bcscReason?: BCSCReason; refreshToken?: string } = {}) =>
-  ({
+  storeFromBCState({
     bcscSecure: { verified: opts.verified ?? true, refreshToken: opts.refreshToken },
     bcsc: { credentialMetadata: { bcscReason: opts.bcscReason ?? BCSCReason.ApprovedByAgent } },
-  }) as unknown as BCState
+  } as unknown as BCState)
 
 const buildAccount = (date: Date) => ({ account_expiration_date: date }) as unknown as BCSCAccount
 
@@ -54,7 +55,7 @@ describe('selectAccountPhase', () => {
   })
 
   it('tolerates missing credential metadata', () => {
-    const state = { bcscSecure: { verified: true }, bcsc: {} } as unknown as BCState
+    const state = storeFromBCState({ bcscSecure: { verified: true }, bcsc: {} } as unknown as BCState)
 
     expect(selectAccountPhase(state, buildAccount(FUTURE), NOW).phase).toBe(AccountPhaseType.Active)
   })

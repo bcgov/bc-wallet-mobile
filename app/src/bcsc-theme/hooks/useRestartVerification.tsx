@@ -2,11 +2,11 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import useEvidenceApi from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { getBCSCState, useVerificationRequestId } from '@/bcsc-theme/storage/hooks'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { isAxiosAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSecureActions } from './useSecureActions'
@@ -30,11 +30,10 @@ export const useRestartVerification = () => {
   const loadingScreen = useLoadingScreen()
   const verificationReset = useVerificationReset()
   const { continueVerificationProcess } = useSecureActions()
-  const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { client } = useBCSCApiClientState()
   const evidenceApi = useEvidenceApi(client as BCSCApiClient)
-  const verificationRequestId = store.bcscSecure.verificationRequestId
+  const verificationRequestId = useVerificationRequestId()
 
   const cancelPendingVerificationRequest = useCallback(async (): Promise<void> => {
     if (!verificationRequestId) {
@@ -70,13 +69,13 @@ export const useRestartVerification = () => {
         // question ("verify a new account" vs. "connect an existing device"). Clearing the prior
         // choice makes the VerifyStack remount land there (via getResumeStepRoute) instead of
         // resuming the transfer/identity sub-flow the user was previously in.
-        dispatch({ type: BCDispatchAction.ACCOUNT_SETUP_TYPE, payload: [] })
+        await getBCSCState().app.update({ accountSetupType: undefined })
         continueVerificationProcess()
       }
     } finally {
       stopLoading()
     }
-  }, [loadingScreen, t, cancelPendingVerificationRequest, verificationReset, continueVerificationProcess, dispatch])
+  }, [loadingScreen, t, cancelPendingVerificationRequest, verificationReset, continueVerificationProcess])
 
   const promptRestartVerification = useCallback(
     (onConfirm?: () => void) => {

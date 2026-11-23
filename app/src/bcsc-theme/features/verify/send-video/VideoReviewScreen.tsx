@@ -1,11 +1,11 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
+import { useSession } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
 import { SELFIE_VIDEO_EXPIRY_CHECK_INTERVAL_MS, SELFIE_VIDEO_EXPIRY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
-import { BCDispatchAction, BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { withAlert } from '@/utils/alert'
 import readFileInChunks from '@/utils/read-file'
@@ -18,7 +18,6 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { CommonActions, useIsFocused } from '@react-navigation/native'
@@ -46,7 +45,6 @@ type VideoReviewScreenProps = {
 
 const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
@@ -63,6 +61,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { failedToReadFromLocalStorageAlert, videoPromptsMissingAlert } = useAlerts(navigation)
   const { refreshPrompts, isRefreshingPrompts } = useVideoPrompts()
   const { ButtonLoading } = useAnimatedComponents()
+  const { update: updateSession } = useSession()
 
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
@@ -108,10 +107,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
 
     logger.info('[VideoReview] Recording expired before it was submitted, discarding it')
     VerificationVideoCache.clearCache()
-    dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
-    dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [''] })
+    updateSession({ videoPath: undefined, videoDuration: undefined, videoThumbnailPath: '' })
     navigation.replace(BCSCScreens.VideoExpired)
-  }, [dispatch, logger, navigation])
+  }, [logger, navigation, updateSession])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -147,7 +145,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     isSubmittingRef.current = true
     setIsSubmitting(true)
 
-    dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [videoThumbnailPath] })
+    updateSession({ videoThumbnailPath: videoThumbnailPath })
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
@@ -175,8 +173,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     }
 
     VerificationVideoCache.clearCache()
-    dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
-    dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [''] })
+    updateSession({ videoPath: undefined, videoDuration: undefined, videoThumbnailPath: '' })
     navigation.goBack()
   }
 
@@ -220,7 +217,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     try {
       // Clear the previously cached video
       VerificationVideoCache.clearCache()
-      dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath: undefined, videoDuration: undefined }] })
+      updateSession({ videoPath: undefined, videoDuration: undefined })
 
       // Wrap the file reader with alert
       const readFileInChunksWithAlert = withAlert(readFileInChunks, failedToReadFromLocalStorageAlert)
@@ -232,10 +229,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       logger.error('Error caching video file:', error as Error)
     } finally {
       // Optimistically save the video path and duration
-      dispatch({
-        type: BCDispatchAction.SAVE_VIDEO,
-        payload: [{ videoPath: videoPath, videoDuration: Math.floor(data.duration) }],
-      })
+      updateSession({ videoPath: videoPath, videoDuration: Math.floor(data.duration) })
       setVideoLoaded(true)
     }
   }

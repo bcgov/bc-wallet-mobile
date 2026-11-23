@@ -1,6 +1,7 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BifoldLogger } from '@bifold/core'
 import { Platform } from 'react-native'
-import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo, setToken, TokenType } from 'react-native-bcsc-core'
+import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
 import { confirmModulusRegistered, modulusInSet } from './jwk-modulus'
 import { describeError, reRegisterNewestKey } from './key-recovery'
@@ -158,7 +159,7 @@ export async function rotateSigningKey(
   if (putResult.newRegistrationAccessToken) {
     newRegistrationAccessToken = putResult.newRegistrationAccessToken
     try {
-      await setToken(TokenType.Registration, putResult.newRegistrationAccessToken)
+      await getBCSCState().account.setTokens({ registrationAccessToken: putResult.newRegistrationAccessToken })
       logger.info('[rotateSigningKey] persisted rotated registration_access_token from PUT response')
     } catch (err) {
       // Still returned to the caller below — a best-effort fallback syncs it into the in-memory store.

@@ -1,11 +1,11 @@
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useVerificationPendingActions } from '@/bcsc-theme/hooks/useVerificationPendingActions'
+import { useSession } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isDecidedVerificationStatus } from '@/bcsc-theme/utils/verification-status'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
@@ -27,8 +27,7 @@ type PendingReviewScreenProps = {
 const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
-  const { verificationVideoSubmittedAt, verificationRequestStatus } = store.bcscSecure
+  const { verificationVideoSubmittedAt, verificationRequestStatus } = useSession()
   const { handleCheckStatus, handleCancelVerification } = useVerificationPendingActions(navigation)
 
   // Check status when the screen is visible

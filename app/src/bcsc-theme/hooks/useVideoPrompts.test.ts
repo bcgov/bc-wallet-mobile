@@ -1,5 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useVideoPrompts, { PromptsResult } from '@/bcsc-theme/hooks/useVideoPrompts'
+import { storage } from '@/bcsc-theme/storage'
+import {
+  reportSessionWritesAs,
+  resetBCSCStore,
+  seedBCSCStore,
+  seedBCSCStoreFromBCState,
+} from '@/bcsc-theme/storage/testing'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -7,7 +14,6 @@ import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
-import { setAuthorizationRequest } from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@bifold/core', () => {
@@ -60,9 +66,16 @@ describe('useVideoPrompts', () => {
       },
       mockDispatch,
     ])
+    seedBCSCStoreFromBCState({
+      ...baseStore,
+      ...overrides,
+      bcscSecure: { ...baseStore.bcscSecure, ...(overrides.bcscSecure ?? {}) },
+    } as never)
   }
 
   beforeEach(() => {
+    reportSessionWritesAs(mockDispatch)
+    resetBCSCStore()
     jest.clearAllMocks()
 
     jest.mocked(useApi).mockReturnValue({ evidence: mockEvidenceApi } as any)
@@ -88,14 +101,8 @@ describe('useVideoPrompts', () => {
       expect(outcome).toEqual({ ready: true })
       expect(mockEvidenceApi.getVerificationRequestPrompts).toHaveBeenCalledWith('existing-id')
       expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
-        payload: ['fresh-sha'],
-      })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
-        payload: [fetched.prompts],
-      })
+      expect(storage.store.getState().session.verificationRequestSha).toEqual('fresh-sha')
+      expect(storage.store.getState().session.prompts).toEqual(fetched.prompts)
     })
 
     it('refreshes even when a full prompt set is already cached', async () => {
@@ -118,10 +125,7 @@ describe('useVideoPrompts', () => {
       })
 
       expect(mockEvidenceApi.getVerificationRequestPrompts).toHaveBeenCalledWith('existing-id')
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
-        payload: [[{ id: 2, prompt: 'Look left' }]],
-      })
+      expect(storage.store.getState().session.prompts).toEqual([{ id: 2, prompt: 'Look left' }])
     })
 
     it('creates a request when none is open yet', async () => {
@@ -163,10 +167,7 @@ describe('useVideoPrompts', () => {
       expect(outcome).toEqual({ ready: true })
       expect(mockEvidenceApi.getVerificationRequestPrompts).toHaveBeenCalledWith('stale-id')
       expect(mockEvidenceApi.createVerificationRequest).toHaveBeenCalledTimes(1)
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
-        payload: ['fresh-id'],
-      })
+      expect(storage.store.getState().verification.request?.backCheckVerificationId).toEqual('fresh-id')
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('creating a fresh request'))
     })
 
@@ -189,9 +190,8 @@ describe('useVideoPrompts', () => {
 
       expect(outcome?.ready).toBe(false)
       expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID })
-      )
+      // The open request is left as it was
+      expect(storage.store.getState().verification.request).toEqual({ backCheckVerificationId: 'existing-id' })
     })
 
     it('reports failure without clearing the cached prompts when the server returns an empty set', async () => {
@@ -211,9 +211,8 @@ describe('useVideoPrompts', () => {
       })
 
       expect(outcome?.ready).toBe(false)
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS })
-      )
+      // The cached prompts are left as they were
+      expect(storage.store.getState().session.prompts).toEqual([{ id: 1, prompt: 'Previous prompt' }])
     })
 
     it('nulls the sha of an unusable response rather than pairing it with the cached prompts', async () => {
@@ -237,10 +236,7 @@ describe('useVideoPrompts', () => {
         await result.current.refreshPrompts()
       })
 
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
-        payload: [null],
-      })
+      expect(storage.store.getState().session.verificationRequestSha).toBeUndefined()
       expect(mockDispatch).not.toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
         payload: ['rotated-sha'],
@@ -309,10 +305,7 @@ describe('useVideoPrompts', () => {
         await result.current.refreshPrompts()
       })
 
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
-        payload: ['new-id'],
-      })
+      expect(storage.store.getState().verification.request?.backCheckVerificationId).toEqual('new-id')
     })
 
     it('reports failure when both the fetch and the fallback create fail', async () => {
@@ -405,9 +398,8 @@ describe('useVideoPrompts', () => {
       }
       expect(outcome.error.appEvent).toBe(AppEventCode.VIDEO_PROMPTS_MISSING)
       expect(outcome.error.technicalMessage).toBe(`Server returned no usable prompts (prompts was ${description})`)
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS })
-      )
+      // The cached prompts are left as they were
+      expect(storage.store.getState().session.prompts).toEqual([])
       expect(outcome.error.context.prompts_request).toBe('create')
     })
 
@@ -430,7 +422,9 @@ describe('useVideoPrompts', () => {
       mockStoreWith({ bcscSecure: { verificationRequestId: 'existing-id' } })
       const fetched = { id: 'existing-id', sha256: 'fresh-sha', prompts: [{ id: 1, prompt: 'Say your name' }] }
       mockEvidenceApi.getVerificationRequestPrompts.mockResolvedValue(fetched)
-      jest.mocked(setAuthorizationRequest).mockRejectedValueOnce(new Error('device storage is full'))
+      seedBCSCStore({
+        verification: { updateRequest: jest.fn().mockRejectedValueOnce(new Error('device storage is full')) },
+      })
 
       const { result } = renderHook(() => useVideoPrompts())
 
@@ -440,10 +434,7 @@ describe('useVideoPrompts', () => {
       })
 
       expect(outcome).toEqual({ ready: true })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
-        payload: [fetched.prompts],
-      })
+      expect(storage.store.getState().session.prompts).toEqual(fetched.prompts)
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Failed to persist'))
     })
 

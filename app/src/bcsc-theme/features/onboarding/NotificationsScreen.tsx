@@ -1,18 +1,17 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { usePreferences } from '@/bcsc-theme/storage/hooks'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import PushNotificationImage from '@assets/img/push-notifications-image.svg'
 import {
   Button,
   ButtonType,
-  DispatchAction,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -32,7 +31,7 @@ interface NotificationsScreenProps {
  */
 export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): React.ReactElement => {
   const { t } = useTranslation()
-  const [, dispatch] = useStore()
+  const { setUsePushNotifications } = usePreferences()
   const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [deniedPermission, setDeniedPermission] = useState(false)
@@ -95,16 +94,16 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     try {
       const status = await PushNotifications.setup()
       logger.info(`[NotificationsScreen] Push notification permission status: ${status}`)
-      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [status === 'granted'] })
+      void setUsePushNotifications(status === 'granted')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[NotificationsScreen] Failed to request push notification permission: ${message}`)
-      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+      void setUsePushNotifications(false)
     }
   }
 
   const skipPushNotifications = () => {
-    dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+    void setUsePushNotifications(false)
   }
 
   const controls = (

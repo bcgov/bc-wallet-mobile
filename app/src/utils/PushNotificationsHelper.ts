@@ -1,3 +1,5 @@
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
+import { IS_BCSC } from '@/utils/environment'
 import { PersistentStorage } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import {
@@ -23,6 +25,16 @@ import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { checkNotifications, PermissionStatus, requestNotifications, RESULTS } from 'react-native-permissions'
 import { BCLocalStorageKeys } from '../store'
+
+// BCSC keeps these two in its own store (m0001 moved them there); BC Wallet keeps them in AsyncStorage
+const readDeviceToken = (): Promise<string | undefined> =>
+  IS_BCSC
+    ? Promise.resolve(getBCSCState().app.deviceToken)
+    : PersistentStorage.fetchValueForKey<string>(BCLocalStorageKeys.DeviceToken)
+const saveDeviceToken = (token: string): Promise<void> =>
+  IS_BCSC
+    ? getBCSCState().app.update({ deviceToken: token })
+    : PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, token)
 
 const REQUEST_NOTIFICATIONS_TIMEOUT_MS = 2000
 
@@ -158,6 +170,9 @@ const getMediatorConnection = async (agent: Agent): Promise<DidCommConnectionRec
  * @returns {Promise<boolean>}
  */
 const hasPromptedForNotifications = async (): Promise<boolean> => {
+  if (IS_BCSC) {
+    return getBCSCState().preferences.userDeniedPushNotifications ?? false
+  }
   return (await PersistentStorage.fetchValueForKey<boolean>(BCLocalStorageKeys.UserDeniedPushNotifications)) ?? false
 }
 
@@ -166,6 +181,10 @@ const hasPromptedForNotifications = async (): Promise<boolean> => {
  * @returns {Promise<void>}
  */
 const setHasPromptedForNotifications = async (): Promise<void> => {
+  if (IS_BCSC) {
+    await getBCSCState().preferences.update({ userDeniedPushNotifications: true })
+    return
+  }
   await PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.UserDeniedPushNotifications, true)
 }
 
@@ -208,7 +227,7 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
 const isRegistered = async (): Promise<boolean> => {
   const messagingInstance = getMessaging(getApp())
   const authorized = (await hasPermission(messagingInstance)) === AuthorizationStatus.AUTHORIZED
-  const tokenValue = await PersistentStorage.fetchValueForKey<string>(BCLocalStorageKeys.DeviceToken)
+  const tokenValue = await readDeviceToken()
 
   // Need to register for push notification capability on iOS
   if (Platform.OS === 'ios' && !isDeviceRegisteredForRemoteMessages(messagingInstance)) {
@@ -228,7 +247,7 @@ const isRegistered = async (): Promise<boolean> => {
 const isEnabled = async (): Promise<boolean> => {
   try {
     const messagingInstance = getMessaging(getApp())
-    const deviceTokenValue = await PersistentStorage.fetchValueForKey<string>(BCLocalStorageKeys.DeviceToken)
+    const deviceTokenValue = await readDeviceToken()
     const messageTokenValue = await getToken(messagingInstance)
 
     return messageTokenValue === deviceTokenValue
@@ -269,9 +288,9 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
     await agent.context.dependencyManager.resolve(DidCommMessageSender).sendMessage(outbound)
     agent.config.logger.info(`Successfully sent device info to mediator [${mediator.id}]`)
     if (blankDeviceToken) {
-      await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, 'blank')
+      await saveDeviceToken('blank')
     } else if (token) {
-      await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, token)
+      await saveDeviceToken(token)
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? `${error.name}: ${error.message}` : String(error)

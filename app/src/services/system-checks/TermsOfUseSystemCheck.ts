@@ -1,6 +1,6 @@
 import { TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction } from '@/store'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -92,10 +92,7 @@ export class TermsOfUseSystemCheck implements SystemCheckStrategy {
     // Only seed when nothing was recorded and the fetch succeeded, to avoid
     // a redundant storage write on every check
     if (this.acceptedVersion === undefined && this.fetchedVersion !== undefined) {
-      this.utils.dispatch({
-        type: BCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION,
-        payload: [this.fetchedVersion],
-      })
+      void getBCSCState().app.update({ acceptedTermsOfUseVersion: this.fetchedVersion })
     }
   }
 }

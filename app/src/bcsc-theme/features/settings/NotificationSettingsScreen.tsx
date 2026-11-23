@@ -1,19 +1,17 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { BCState } from '@/store'
+import { usePreferences } from '@/bcsc-theme/storage/hooks'
 import { TestIds } from '@/test-ids/registry'
 import * as PushNotifications from '@/utils/PushNotificationsHelper'
 import PushNotificationImage from '@assets/img/push-notifications-image.svg'
 import {
   Button,
   ButtonType,
-  DispatchAction,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { useCallback, useEffect, useState } from 'react'
@@ -50,7 +48,7 @@ const INSTRUCTION_STEPS = [
 export const NotificationSettingsScreen = (): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+  const { setUsePushNotifications } = usePreferences()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const agent = useBCSCAgentSafe()?.agent ?? null
   const { status, refresh } = useNotificationPermissionStatus()
@@ -109,14 +107,14 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
   // Keep the app preference in sync with the OS permission in both directions
   useEffect(() => {
     if (status === PushNotifications.NotificationPermissionStatus.GRANTED) {
-      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [true] })
+      void setUsePushNotifications(true)
     } else if (
       status === PushNotifications.NotificationPermissionStatus.DENIED ||
       status === PushNotifications.NotificationPermissionStatus.BLOCKED
     ) {
-      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+      void setUsePushNotifications(false)
     }
-  }, [status, dispatch])
+  }, [status, setUsePushNotifications])
 
   const isGranted = status === PushNotifications.NotificationPermissionStatus.GRANTED
   const notificationsActive = isGranted
@@ -133,7 +131,7 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
       const result = await PushNotifications.setup()
       logger.info(`[NotificationSettingsScreen] Push notification permission status: ${result}`)
       const granted = result === PushNotifications.NotificationPermissionStatus.GRANTED
-      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [granted] })
+      void setUsePushNotifications(granted)
       // Agent setup already ran, so register the device token with the mediator now.
       if (granted && agent) {
         await PushNotifications.activate(agent)
@@ -141,12 +139,12 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[NotificationSettingsScreen] Failed to request push notification permission: ${message}`)
-      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+      void setUsePushNotifications(false)
     } finally {
       setHasPrompted(true)
       await refresh()
     }
-  }, [agent, dispatch, logger, refresh])
+  }, [agent, setUsePushNotifications, logger, refresh])
 
   const openDeviceSettings = useCallback(async () => {
     try {

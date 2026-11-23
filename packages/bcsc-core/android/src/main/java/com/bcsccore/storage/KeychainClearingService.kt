@@ -7,7 +7,7 @@ import java.security.KeyStore
 import java.util.Collections
 
 /**
- * Wipes every AndroidKeyStore alias this app has created
+ * Wipes every AndroidKeyStore alias this app has created, and the PIN storage files those keys protected
  */
 class KeychainClearingService(
     private val context: Context,
@@ -23,8 +23,17 @@ class KeychainClearingService(
     }
 
     fun clearAll() {
+        clearPinPrefsFiles()
         clearKeyStoreEntries()
         clearLegacyPrefs()
+    }
+
+    private fun clearPinPrefsFiles() {
+        try {
+            NativeCompatiblePinStorage(context).deleteAllPinPrefsFiles()
+        } catch (e: Exception) {
+            Log.e(TAG, "clearPinPrefsFiles: failed to delete PIN prefs files: ${e.javaClass.simpleName}", e)
+        }
     }
 
     private fun clearKeyStoreEntries() {

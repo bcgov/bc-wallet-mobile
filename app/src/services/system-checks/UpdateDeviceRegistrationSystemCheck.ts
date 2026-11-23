@@ -1,6 +1,6 @@
 import { RegistrationResponseData } from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { getBCSCState } from '@/bcsc-theme/storage/hooks'
 import { isAppError } from '@/errors/appError'
-import { BCDispatchAction } from '@/store'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
@@ -53,7 +53,7 @@ export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy 
     try {
       await this.updateRegistration()
 
-      this.utils.dispatch({ type: BCDispatchAction.UPDATE_APP_VERSION })
+      await getBCSCState().app.update({ appVersion: getVersion(), appBuildNumber: getBuildNumber() })
     } catch (error) {
       // This catch is the only trace the automatic update leaves (no modal on
       // this path), and the problem-report view surfaces only the message text —

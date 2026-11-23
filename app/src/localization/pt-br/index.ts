@@ -378,6 +378,14 @@ const translation = {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
       "AppStartup": "Getting your BC Services Card App ready... (PT-BR)"
     },
+    "Storage": {
+      "ErrorTitle": "We can't open your app data (PT-BR)",
+      "ErrorDescription": "Your information is still on this device. Please try again. (PT-BR)",
+      "Retry": "Try again (PT-BR)",
+      "ReferenceCode": "Reference: {{code}} (PT-BR)",
+      "UpdateTitle": "Update the app (PT-BR)",
+      "UpdateDescription": "This device has data from a newer version of the app. Update the app to keep using it. (PT-BR)"
+    },
     "AccountLanding": {
       "Title": "BC Services Card (PT-BR)",
       "Description": "A secure way to prove\nwho you are online (PT-BR)",

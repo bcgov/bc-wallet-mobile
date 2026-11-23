@@ -4,7 +4,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { fireEvent, render, RenderResult, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { verifyPIN } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, verifyPIN } from 'react-native-bcsc-core'
 import { EnterPINScreen } from './EnterPINScreen'
 
 const mockHandleSuccessfulAuth = jest.fn()
@@ -22,6 +22,18 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
 
 const mockVerifyPIN = jest.mocked(verifyPIN)
 
+// BasicAppContext resets the store, so the account goes in through it
+const accountSeed = {
+  account: {
+    profile: {
+      accountId: 'test-account-id',
+      clientId: 'test-client-id',
+      issuer: 'https://idsit.gov.bc.ca/device/',
+      securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
+    },
+  },
+}
+
 const mockNavigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
 
 // The lockout service is the real one here: only the native PIN check and device storage are mocked
@@ -38,7 +50,7 @@ describe('EnterPINScreen with the lockout service', () => {
 
   const renderScreen = () =>
     render(
-      <BasicAppContext>
+      <BasicAppContext bcscState={accountSeed}>
         <EnterPINScreen navigation={mockNavigation} />
       </BasicAppContext>
     )

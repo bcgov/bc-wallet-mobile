@@ -1,8 +1,8 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useDeviceCodeExpiresAt } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -17,7 +17,7 @@ type CallBusyOrClosedScreenProps = {
 const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenProps) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const deviceCodeExpiresAt = useDeviceCodeExpiresAt()
   const { busy, formattedHours } = route.params
 
   const onPressSendVideo = () => {
@@ -77,7 +77,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
       </ThemedText>
       <ThemedText>
         {t('BCSC.VideoCall.CallBusyOrClosed.AddCardAgainReminder', {
-          date: store.bcscSecure.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+          date: deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
             month: 'long',
             day: 'numeric',
             year: 'numeric',

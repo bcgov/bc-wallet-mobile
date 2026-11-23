@@ -1,7 +1,7 @@
+import { usePreferences } from '@/bcsc-theme/storage/hooks'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
-import { formatTime, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { formatTime, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useHeaderHeight } from '@react-navigation/elements'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -39,7 +39,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   const headerHeight = useHeaderHeight()
 
   const { items, theirLabel, onSend, isAgentReady } = useContactChat(connectionId, navigation)
-  const [store] = useStore<BCState>()
+  const { developerModeEnabled } = usePreferences()
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: theirLabel })
@@ -318,10 +318,10 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
 
   const renderActions = useCallback(
     (props: ActionsProps) =>
-      store.preferences.developerModeEnabled ? (
+      developerModeEnabled ? (
         <Actions {...props} wrapperStyle={styles.actionsContainer} icon={renderActionsIcon} />
       ) : undefined,
-    [renderActionsIcon, store.preferences.developerModeEnabled, styles.actionsContainer]
+    [renderActionsIcon, developerModeEnabled, styles.actionsContainer]
   )
 
   return (

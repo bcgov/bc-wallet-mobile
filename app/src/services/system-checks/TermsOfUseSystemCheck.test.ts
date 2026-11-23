@@ -1,7 +1,7 @@
 import { TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
+import { resetBCSCStore, seedBCSCStore } from '@/bcsc-theme/storage/testing'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
-import { BCDispatchAction } from '@/store'
 import { MockLogger } from '@bifold/core'
 
 const mockTermsOfUse = (version: unknown): TermsOfUseResponseData =>
@@ -12,12 +12,18 @@ const mockTermsOfUse = (version: unknown): TermsOfUseResponseData =>
   }) as TermsOfUseResponseData
 
 const createMockUtils = () => ({
-  dispatch: jest.fn(),
   translation: jest.fn() as any,
   logger: new MockLogger(),
 })
 
 describe('TermsOfUseSystemCheck', () => {
+  // The accepted version is saved to the app slice of the BCSC store
+  const mockUpdateApp = jest.fn().mockResolvedValue(undefined)
+  beforeEach(() => {
+    resetBCSCStore()
+    seedBCSCStore({ app: { update: mockUpdateApp } })
+  })
+
   describe('runCheck', () => {
     it('should return true when accepted version matches the server version', async () => {
       const mockGetTermsOfUse = jest.fn().mockResolvedValue(mockTermsOfUse('8'))
@@ -87,7 +93,7 @@ describe('TermsOfUseSystemCheck', () => {
       termsOfUseCheck.onFail()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.TermsOfUseUpdated)
-      expect(mockUtils.dispatch).not.toHaveBeenCalled()
+      expect(mockUpdateApp).not.toHaveBeenCalled()
     })
   })
 
@@ -102,10 +108,7 @@ describe('TermsOfUseSystemCheck', () => {
       await termsOfUseCheck.runCheck()
       termsOfUseCheck.onSuccess()
 
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION,
-        payload: ['8'],
-      })
+      expect(mockUpdateApp).toHaveBeenCalledWith({ acceptedTermsOfUseVersion: '8' })
     })
 
     it('should not dispatch when an accepted version was already recorded', async () => {
@@ -118,7 +121,7 @@ describe('TermsOfUseSystemCheck', () => {
       await termsOfUseCheck.runCheck()
       termsOfUseCheck.onSuccess()
 
-      expect(mockUtils.dispatch).not.toHaveBeenCalled()
+      expect(mockUpdateApp).not.toHaveBeenCalled()
     })
 
     it('should not dispatch when the terms of use fetch failed', async () => {
@@ -131,7 +134,7 @@ describe('TermsOfUseSystemCheck', () => {
       await termsOfUseCheck.runCheck()
       termsOfUseCheck.onSuccess()
 
-      expect(mockUtils.dispatch).not.toHaveBeenCalled()
+      expect(mockUpdateApp).not.toHaveBeenCalled()
     })
   })
 })

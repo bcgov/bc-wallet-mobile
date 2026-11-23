@@ -7,6 +7,8 @@ import useAlreadyVerifiedRecovery from '@/bcsc-theme/hooks/useAlreadyVerifiedRec
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
+import { selectJourney } from '@/bcsc-theme/state/verification/journey'
+import { getBCSCState, useSession, useVerificationRequestId } from '@/bcsc-theme/storage/hooks'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
@@ -18,9 +20,8 @@ import { isAxiosAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -93,7 +94,6 @@ const useEvidenceUploadModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceUploading>
 ) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store, dispatch] = useStore<BCState>()
   // Identity for the settler check
   const instanceRef = useRef<object>({})
   const evidence = useEvidenceService()
@@ -105,8 +105,9 @@ const useEvidenceUploadModel = (
   const { fileUploadErrorAlert, alreadyVerifiedAlert } = useAlerts(navigation)
   const { recoverFromAlreadyVerified } = useAlreadyVerifiedRecovery()
 
-  const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata } = store.bcsc
-  const { verificationRequestId, verificationRequestSha } = store.bcscSecure
+  const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata, verificationRequestSha } =
+    useSession()
+  const verificationRequestId = useVerificationRequestId()
 
   // Derived from the stage alone so the text keeps matching the bar after an error or completion.
   const uploadMessage = useMemo(() => {
@@ -218,8 +219,14 @@ const useEvidenceUploadModel = (
       removeFileSafely(videoThumbnailPath, logger),
     ])
     VerificationVideoCache.clearCache()
-    dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-  }, [dispatch, logger, photoPath, videoPath, videoThumbnailPath])
+    getBCSCState().session.update({
+      photoPath: undefined,
+      photoMetadata: undefined,
+      videoPath: undefined,
+      videoDuration: undefined,
+      videoThumbnailPath: undefined,
+    })
+  }, [logger, photoPath, videoPath, videoThumbnailPath])
 
   /**
    * Uploads the evidence and submits the verification request. Server and store effects only: every way it can
@@ -247,7 +254,7 @@ const useEvidenceUploadModel = (
             '[useEvidenceUploadModel] Missing verification request data at submit; routing back to Verification Method Selection so prompts can be refreshed and video re-recorded'
           )
           await updateVerificationRequest(undefined, null)
-          dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
+          getBCSCState().session.update({ prompts: undefined })
           await cleanupFilesAndState()
           return {
             kind: 'requestMissing',
@@ -323,7 +330,7 @@ const useEvidenceUploadModel = (
         await cleanupFilesAndState()
 
         // Capture a timestamp when the user successfully submits their verification video. This is needed on the pending review screen
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [new Date()] })
+        getBCSCState().session.update({ verificationVideoSubmittedAt: new Date() })
 
         setStage(UploadStage.Complete)
         return { kind: 'submitted', avgTurnaroundTimeMessage: verificationResponse?.avg_turnaround_time_message }
@@ -334,7 +341,6 @@ const useEvidenceUploadModel = (
     },
     [
       cleanupFilesAndState,
-      dispatch,
       finalizeVerification,
       logger,
       photoMetadata,
@@ -411,7 +417,7 @@ const useEvidenceUploadModel = (
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [getResumeStepRoute(store)],
+              routes: [getResumeStepRoute(selectJourney(getBCSCState()))],
             })
           )
           await surfaceFailure(outcome.error)
@@ -423,7 +429,7 @@ const useEvidenceUploadModel = (
           return
       }
     },
-    [navigation, store, surfaceFailure]
+    [navigation, surfaceFailure]
   )
 
   const handleSend = useCallback(async () => {
