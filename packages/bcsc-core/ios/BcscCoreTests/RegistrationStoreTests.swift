@@ -50,6 +50,20 @@ private final class MockRegistrationAccountStorage: RegistrationAccountStorage {
   }
 }
 
+/// An account that is stored but cannot be read, as `StorageService` reports a corrupt archive.
+private final class UnreadableAccountStorage: RegistrationAccountStorage {
+  private(set) var writeCount = 0
+
+  func readAccount() throws -> Account? {
+    throw AccountReadFailure.decodeFailed(CocoaError(.coderReadCorrupt))
+  }
+
+  func writeAccount(_: Account) -> Bool {
+    writeCount += 1
+    return true
+  }
+}
+
 private final class MockTokenStorage: TokenStorageServiceProtocol {
   var tokens: [String: Token] = [:]
   var saveStatus: OSStatus = errSecSuccess
@@ -370,6 +384,22 @@ final class RegistrationStoreTests: XCTestCase {
     XCTAssertTrue(tokens.deletedIDs.isEmpty)
   }
 
+  func testClearRejectsAndChangesNothingWhenTheAccountCannotBeRead() {
+    let accounts = UnreadableAccountStorage()
+    let tokens = MockTokenStorage()
+    tokens.tokens["client-a/tokens/2/1"] = registrationToken("token-a", clientID: "client-a")
+
+    let rejection = try assertRejection(
+      RegistrationStore(accountStorage: accounts, tokenStorage: tokens).clear(),
+      code: "E_GET_ACCOUNT_ERROR", site: "clearRegistration.read_account"
+    )
+
+    XCTAssertEqual(rejection?.diagnostics["accountReadStatus"] as? String, "account_decode_failed")
+    XCTAssertEqual(accounts.writeCount, 0)
+    XCTAssertTrue(tokens.deletedIDs.isEmpty)
+    XCTAssertEqual(tokens.tokens["client-a/tokens/2/1"]?.token, "token-a")
+  }
+
   func testClearWithoutARegistrationDoesNotRewriteTheAccount() throws {
     let accounts = MockRegistrationAccountStorage(account: makeAccount(clientID: ""))
 
@@ -430,12 +460,22 @@ final class RegistrationStoreStorageServiceTests: XCTestCase {
     try? FileManager.default.removeItem(at: dataURL)
   }
 
-  private func seedAccount(clientID: String) throws {
+  @discardableResult
+  private func seedAccount(clientID: String) throws -> String {
     let accountID = UUID().uuidString
     try storage.updateAccountListEntry(accountID: accountID)
     let account = Account(id: accountID, clientID: clientID, issuer: accountIssuer, securityMethod: .deviceAuth)
     account.nickname = "My phone"
     XCTAssertTrue(storage.writeAccount(account))
+    return accountID
+  }
+
+  private func accountFileURL(accountID: String) throws -> URL {
+    try FileManager.default
+      .url(for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+      .appendingPathComponent(storage.basePath)
+      .appendingPathComponent(accountID)
+      .appendingPathComponent(AccountFiles.accountMetadata.rawValue)
   }
 
   func testSaveThenClearRoundTripsThroughTheAccountFile() throws {
@@ -445,13 +485,13 @@ final class RegistrationStoreStorageServiceTests: XCTestCase {
 
     try store.save(clientID: "client-a", issuer: accountIssuer, registrationAccessToken: "token-a")
 
-    XCTAssertEqual(StorageService().readAccount()?.clientID, "client-a")
-    XCTAssertEqual(StorageService().readAccount()?.nickname, "My phone")
+    XCTAssertEqual(try StorageService().readAccount()?.clientID, "client-a")
+    XCTAssertEqual(try StorageService().readAccount()?.nickname, "My phone")
     XCTAssertEqual(tokens.tokens["client-a/tokens/2/1"]?.token, "token-a")
 
     try store.clear()
 
-    let cleared = StorageService().readAccount()
+    let cleared = try StorageService().readAccount()
     XCTAssertEqual(cleared?.clientID, "")
     XCTAssertEqual(cleared?.clientIDMissingFromArchive, false)
     XCTAssertEqual(cleared?.nickname, "My phone")
@@ -466,5 +506,31 @@ final class RegistrationStoreStorageServiceTests: XCTestCase {
     ) { error in
       XCTAssertEqual((error as? DiagnosticRejection)?.code, "E_ACCOUNT_NOT_FOUND")
     }
+  }
+
+  func testClearSucceedsWhenNoAccountIsStored() throws {
+    let tokens = MockTokenStorage()
+
+    try RegistrationStore(accountStorage: storage, tokenStorage: tokens).clear()
+
+    XCTAssertTrue(tokens.deletedIDs.isEmpty)
+  }
+
+  func testClearRejectsAndKeepsAnAccountFileItCannotRead() throws {
+    let accountFile = try accountFileURL(accountID: seedAccount(clientID: "client-a"))
+    let corrupt = Data("not an archive".utf8)
+    try corrupt.write(to: accountFile)
+    let tokens = MockTokenStorage()
+    tokens.tokens["client-a/tokens/2/1"] = Token(id: "client-a/tokens/2/1", type: .Registration, token: "token-a")
+
+    XCTAssertThrowsError(try RegistrationStore(accountStorage: storage, tokenStorage: tokens).clear()) { error in
+      let rejection = error as? DiagnosticRejection
+      XCTAssertEqual(rejection?.code, "E_GET_ACCOUNT_ERROR")
+      XCTAssertEqual(rejection?.site, "clearRegistration.read_account")
+      XCTAssertEqual(rejection?.diagnostics["accountReadStatus"] as? String, "account_decode_failed")
+    }
+
+    XCTAssertEqual(try Data(contentsOf: accountFile), corrupt)
+    XCTAssertEqual(tokens.tokens["client-a/tokens/2/1"]?.token, "token-a")
   }
 }

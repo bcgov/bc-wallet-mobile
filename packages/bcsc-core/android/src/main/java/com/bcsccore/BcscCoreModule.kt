@@ -1238,7 +1238,8 @@ class BcscCoreModule internal constructor(
 
     /**
      * Removes the client ID and the registration access token. The account keeps its issuer, security
-     * method and nickname. Succeeds when there is no account or no registration to clear.
+     * method and nickname. Succeeds when there is no account or no registration to clear. An account that
+     * is stored but cannot be read rejects instead, and nothing is changed.
      *
      * The client ID goes first. The token names its own client ID, so a clear that stops before the token
      * is removed leaves a registration that can be put back together, never a client ID without its token.
@@ -1251,10 +1252,26 @@ class BcscCoreModule internal constructor(
         val method = "clearRegistration"
 
         try {
-            val account = resolveFirstAccount()
-            if (account == null) {
+            val resolution = resolveAccountsWithStatus()
+            val account = resolution.accounts?.firstOrNull()
+            if (account == null && resolution.noAccountStored) {
                 Log.d(NAME, "$method: no account, nothing to clear")
                 promise.resolve(null)
+                return
+            }
+            if (account == null) {
+                // It may still hold a registration, so the clear is not reported as done
+                rejectWithDiagnostics(
+                    promise,
+                    "E_GET_ACCOUNT_ERROR",
+                    "Failed to read the account, so its registration was not cleared.",
+                    "$method.read_account",
+                    diagnostics =
+                        mapOf(
+                            "accountReadStatus" to resolution.native.statusCode,
+                            "legacyStatus" to resolution.legacy.statusCode,
+                        ),
+                )
                 return
             }
 
@@ -1452,7 +1469,20 @@ class BcscCoreModule internal constructor(
         val native: AccountsRead,
         val legacy: LegacyAccountsRead,
         val accounts: List<NativeAccount>?,
-    )
+    ) {
+        /**
+         * Neither accounts file holds an account: each is missing or lists none. An account that is stored
+         * but cannot be read also leaves [accounts] null, and is not this.
+         */
+        val noAccountStored: Boolean
+            get() {
+                val nativeHoldsNone =
+                    native is AccountsRead.FileMissing ||
+                        (native is AccountsRead.Parsed && native.accounts.isNullOrEmpty())
+                val legacyHoldsNone = legacy is LegacyAccountsRead.Absent || legacy is LegacyAccountsRead.Empty
+                return nativeHoldsNone && legacyHoldsNone
+            }
+    }
 
     /**
      * Finds the accounts (native storage first, then the legacy file) and records what each step found.

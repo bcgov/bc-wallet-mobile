@@ -502,7 +502,8 @@ export const setRegistration = (
 /**
  * Removes the device registration: the account keeps its issuer, security method and nickname but has no
  * client ID, and the registration access token is deleted. Clearing a registration that is already
- * absent succeeds.
+ * absent succeeds. Rejects with `E_GET_ACCOUNT_ERROR`, changing nothing, when an account is stored but
+ * cannot be read.
  *
  * On iOS every token is stored under the client ID, so delete the access and refresh tokens first.
  */

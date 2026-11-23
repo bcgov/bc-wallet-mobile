@@ -133,6 +133,14 @@ class BcscCoreModuleRegistrationTest {
         tokensFile().writeText("""{"issuer":"$issuer","idToken":""")
     }
 
+    /** An accounts file that is there but cannot be decrypted, as after its keystore key is lost. */
+    private fun storeUndecryptableAccount() {
+        File(tempFolder.root, "$issuerName/$accountUuid").mkdirs()
+        // Not plain JSON, so the storage decrypts it
+        accountsFile().writeBytes(ByteArray(64) { 0x7F })
+        every { anyConstructed<AESEncryptor>().decrypt(any()) } throws IllegalStateException("keystore key lost")
+    }
+
     private fun storedAccount(): NativeAccount? = storage.readAccounts(issuerName)?.firstOrNull()
 
     private fun storedTokens(): NativeTokens? = storage.readTokens(issuerName, accountUuid)
@@ -386,6 +394,45 @@ class BcscCoreModuleRegistrationTest {
 
         verify(exactly = 1) { promise.resolve(null) }
         verify(exactly = 0) { anyConstructed<AESEncryptor>().encrypt(any()) }
+    }
+
+    @Test
+    fun `clearRegistration resolves when the accounts file lists no account`() {
+        File(tempFolder.root, "$issuerName/$accountUuid").mkdirs()
+        accountsFile().writeText("[]")
+        assertEquals("account_list_empty", storage.readAccountsResult(issuerName).statusCode)
+
+        module.clearRegistration(promise)
+
+        verify(exactly = 1) { promise.resolve(null) }
+    }
+
+    @Test
+    fun `clearRegistration rejects and changes nothing when the account cannot be read`() {
+        storeUndecryptableAccount()
+        storeTokens()
+        val accountBefore = accountsFile().readBytes()
+        val tokensBefore = tokensFile().readText()
+
+        module.clearRegistration(promise)
+
+        val userInfo = rejectionUserInfo("E_GET_ACCOUNT_ERROR")
+        assertEquals("clearRegistration.read_account", userInfo.getString("site"))
+        assertEquals("account_decrypt_failed", userInfo.getString("accountReadStatus"))
+        assertTrue(accountBefore.contentEquals(accountsFile().readBytes()))
+        assertEquals(tokensBefore, tokensFile().readText())
+        verify(exactly = 0) { anyConstructed<AESEncryptor>().encrypt(any()) }
+    }
+
+    @Test
+    fun `clearRegistration rejects when the legacy accounts file cannot be read`() {
+        File(tempFolder.root, "accounts").writeText("not json")
+
+        module.clearRegistration(promise)
+
+        val userInfo = rejectionUserInfo("E_GET_ACCOUNT_ERROR")
+        assertEquals("account_file_missing", userInfo.getString("accountReadStatus"))
+        assertEquals("parse_failed", userInfo.getString("legacyStatus"))
     }
 
     @Test

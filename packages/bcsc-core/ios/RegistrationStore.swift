@@ -11,13 +11,26 @@ import Security
 
 /// Reads and writes the account record. `StorageService` in the app, a stand-in in unit tests.
 protocol RegistrationAccountStorage {
-  func readAccount() -> Account?
+  /// The account, or nil when none is stored. Throws when one is stored but cannot be read.
+  func readAccount() throws -> Account?
   func writeAccount(_ account: Account) -> Bool
 }
 
 extension StorageService: RegistrationAccountStorage {
-  func readAccount() -> Account? {
-    readData(file: AccountFiles.accountMetadata, pathDirectory: defaultSearchPathDirectory)
+  func readAccount() throws -> Account? {
+    do {
+      let account: Account = try readDataOrThrow(
+        file: AccountFiles.accountMetadata, pathDirectory: defaultSearchPathDirectory
+      )
+      return account
+    } catch let failure as AccountReadFailure {
+      switch failure {
+      case .accountListMissing, .accountListEmpty, .fileMissing:
+        return nil
+      case .storageRootUnavailable, .accountListUnreadable, .fileUnreadable, .decodeFailed, .noObjectForProvider:
+        throw failure
+      }
+    }
   }
 
   func writeAccount(_ account: Account) -> Bool {
@@ -68,7 +81,8 @@ final class RegistrationStore {
       )
     }
 
-    guard let account = accountStorage.readAccount() else {
+    // An account that cannot be read rejects as not found too, as on Android: there is no account to save to
+    guard let account = try? accountStorage.readAccount() else {
       throw DiagnosticRejection(
         code: "E_ACCOUNT_NOT_FOUND", message: "Account not found.", site: "\(method).read_account"
       )
@@ -129,7 +143,8 @@ final class RegistrationStore {
   }
 
   /// Removes the client ID and the registration access token. The account keeps its issuer, security
-  /// method and nickname. Succeeds when there is no account or no registration to clear.
+  /// method and nickname. Succeeds when there is no account or no registration to clear. An account that
+  /// is stored but cannot be read rejects instead, and nothing is changed.
   ///
   /// The other tokens are stored under the client ID too, so the caller deletes them first.
   ///
@@ -137,7 +152,20 @@ final class RegistrationStore {
   func clear() throws {
     let method = "clearRegistration"
 
-    guard let account = accountStorage.readAccount() else {
+    let storedAccount: Account?
+    do {
+      storedAccount = try accountStorage.readAccount()
+    } catch {
+      // It may still hold a registration, so the clear is not reported as done
+      throw DiagnosticRejection(
+        code: "E_GET_ACCOUNT_ERROR",
+        message: "Failed to read the account, so its registration was not cleared.",
+        site: "\(method).read_account",
+        diagnostics: ["accountReadStatus": (error as? AccountReadFailure)?.accountStatusCode ?? "unknown"]
+      )
+    }
+
+    guard let account = storedAccount else {
       logger.log("\(method): no account, nothing to clear")
       return
     }
