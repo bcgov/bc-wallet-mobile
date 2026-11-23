@@ -563,14 +563,14 @@ describe('useRegistrationApi', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to update registration'))
     })
 
-    it('should still return data, and save the nickname, when the registration cannot be saved', async () => {
-      mockSaveRegistration.mockRejectedValue(new Error('storage write failure'))
+    it('rejects with the save failure, after saving the nickname, when the registration cannot be saved', async () => {
+      const saveError = new Error('storage write failure')
+      mockSaveRegistration.mockRejectedValue(saveError)
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const data = await result.current.updateRegistration('nickname')
-
-      expect(data).toEqual(mockRegistrationResponse)
+      // Not a success: the server may have rotated the token and revoked the one the device still holds
+      await expect(result.current.updateRegistration('nickname')).rejects.toBe(saveError)
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to store updated registration data')
       )

@@ -264,6 +264,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
    * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if response body cannot be parsed as JSON
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
+   * @throws AppError (e.g. `TOKEN_SAVE_FAILED`, `NATIVE_STORAGE_WRITE_FAILED`) if the returned registration cannot
+   *   be saved. The server has the update by then, and the nickname is still saved.
    *
    * @param selectedNickname - New client name/nickname to set
    * @returns Promise resolving to updated registration response data
@@ -339,8 +341,9 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         // The client ID the account holds once the registration save below has run: the new one, or the
         // previous one if that save failed
         let storedClientId = registration.clientId
+        // A failed registration save, thrown once the nickname save below has run
+        let registrationSaveError: unknown
 
-        // The server has accepted the update, so a failed save is logged and the response still returned.
         // Each save stands on its own: one failing does not hold back the other.
         try {
           // The registration first. If the server rotated the token it has revoked the old one. A
@@ -354,6 +357,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           })
           storedClientId = clientId
         } catch (error) {
+          registrationSaveError = error
           const errMessage = error instanceof Error ? error.message : String(error)
           logger.error(`Failed to store updated registration data: ${errMessage}`)
         }
@@ -370,6 +374,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         } catch (error) {
           const errMessage = error instanceof Error ? error.message : String(error)
           logger.error(`Failed to store updated account nickname: ${errMessage}`)
+        }
+
+        if (registrationSaveError) {
+          // The server has the update, but the device may still hold a token the server rotated and revoked.
+          // Unlock does not repair that, so the update is not reported as a success.
+          throw registrationSaveError
         }
 
         return updatedRegistrationData
