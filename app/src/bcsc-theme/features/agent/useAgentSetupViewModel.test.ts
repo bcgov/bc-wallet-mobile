@@ -706,6 +706,92 @@ describe('useAgentSetupViewModel', () => {
         expect(agentService.shutdownAgent).toHaveBeenCalledTimes(1)
       })
 
+      it('closes the in-flight agent itself when start-up is stuck on the mediator pickup', async () => {
+        const inFlightAgent = mockAgent()
+        let failPickup: (reason: Error) => void = () => undefined
+        inFlightAgent.didcomm.mediationRecipient.initiateMessagePickup.mockReturnValue(
+          new Promise<void>((_resolve, reject) => {
+            failPickup = reject
+          })
+        )
+        jest.mocked(agentService.buildAgent).mockReturnValue(inFlightAgent)
+        // Closing the agent tears down its transports, which fails the stalled pickup
+        jest.mocked(agentService.shutdownAgent).mockImplementation(async () => failPickup(new Error('socket closed')))
+
+        const { result } = renderHook(() => useAgentSetupViewModel())
+        await waitFor(() => expect(inFlightAgent.didcomm.mediationRecipient.initiateMessagePickup).toHaveBeenCalled())
+
+        await act(async () => {
+          await expect(result.current.teardownAgent()).resolves.toBe(false)
+        })
+
+        expect(agentService.shutdownAgent).toHaveBeenCalledWith(inFlightAgent, logger, noWarmCacheDrain)
+        expect(agentService.deleteWalletStore).not.toHaveBeenCalled()
+        expect(Bifold.createLinkSecretIfRequired).not.toHaveBeenCalled()
+        expect(result.current.status).toBe('idle')
+        expect(result.current.agent).toBeNull()
+      })
+
+      it('holds the shutdown and delete until a pending push activation settles', async () => {
+        const { activate } = jest.requireMock('@/utils/PushNotificationsHelper')
+        const activation = deferred()
+        activate.mockReturnValueOnce(activation.promise)
+        jest.mocked(Bifold.useStore).mockReturnValue(
+          mockedStore({
+            preferences: { selectedMediator: 'https://m', walletName: 'BC Wallet', usePushNotifications: true },
+          }) as never
+        )
+        const agent1 = mockAgent()
+        jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+        const { result } = renderHook(() => useAgentSetupViewModel())
+        await waitFor(() => expect(result.current.status).toBe('ready'))
+        expect(activate).toHaveBeenCalledWith(agent1)
+
+        const { outcome, promise } = startTeardown(result.current.teardownAgent)
+        await act(async () => {
+          await new Promise((r) => setTimeout(r, 0))
+        })
+        expect(outcome.settled).toBe(false)
+        expect(agentService.shutdownAgent).not.toHaveBeenCalled()
+        expect(agentService.deleteWalletStore).not.toHaveBeenCalled()
+
+        await act(async () => {
+          activation.resolve()
+          await promise
+        })
+
+        expect(outcome.value).toBe(true)
+        expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
+        expect(agentService.deleteWalletStore).toHaveBeenCalledWith(agent1)
+      })
+
+      it('goes ahead once a push activation has stalled past the drain limit', async () => {
+        jest.useFakeTimers()
+        try {
+          const { activate } = jest.requireMock('@/utils/PushNotificationsHelper')
+          activate.mockReturnValueOnce(new Promise<void>(() => undefined))
+          jest.mocked(Bifold.useStore).mockReturnValue(
+            mockedStore({
+              preferences: { selectedMediator: 'https://m', walletName: 'BC Wallet', usePushNotifications: true },
+            }) as never
+          )
+
+          const { result } = renderHook(() => useAgentSetupViewModel())
+          await waitFor(() => expect(result.current.status).toBe('ready'))
+
+          const { promise } = startTeardown(result.current.teardownAgent)
+          await act(async () => {
+            await jest.advanceTimersByTimeAsync(5000)
+            await promise
+          })
+
+          expect(agentService.deleteWalletStore).toHaveBeenCalledTimes(1)
+        } finally {
+          jest.useRealTimers()
+        }
+      })
+
       it('lets a later start-up run after the teardown', async () => {
         const init = deferred()
         jest.mocked(agentService.initializeAgent).mockReturnValueOnce(init.promise)

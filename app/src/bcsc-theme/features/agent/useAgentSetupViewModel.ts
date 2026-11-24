@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
 
 const CACHE_DRAIN_TIMEOUT_MS = 5000 // max time to wait for warmCache() to drain on teardown
+const PUSH_ACTIVATION_DRAIN_TIMEOUT_MS = 5000 // max time teardown waits for a pending push activation
 
 import {
   AgentWalletSecret,
@@ -64,6 +65,7 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
   const initializingRef = useRef(false)
   const resettingRef = useRef(false)
   const initRunRef = useRef<{ cancel: () => Promise<void> } | null>(null)
+  const pushActivationRef = useRef<Promise<void> | null>(null)
   const teardownRef = useRef<Promise<boolean> | null>(null)
   const warmCacheRef = useRef<{ controller: AbortController; promise: Promise<void> } | null>(null)
   const statusRef = useRef<AgentSetupStatus>('idle')
@@ -167,6 +169,21 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
 
     let cancelled = false
     let inFlightAgent: Agent | undefined
+    let awaitingPickup = false
+
+    // The pickup connects to the mediator with no bound of its own, so a stalled connection
+    // would hold this run (and any teardown waiting on it) until the agent's transports close.
+    const startPickup = async (target: Agent): Promise<void> => {
+      awaitingPickup = true
+      try {
+        await target.didcomm.mediationRecipient.initiateMessagePickup(
+          undefined,
+          DidCommMediatorPickupStrategy.PickUpV2LiveMode
+        )
+      } finally {
+        awaitingPickup = false
+      }
+    }
 
     const startedAt = Date.now()
 
@@ -188,10 +205,7 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
         setAgent(null)
         return 'rebuild'
       }
-      await restarted.didcomm.mediationRecipient.initiateMessagePickup(
-        undefined,
-        DidCommMediatorPickupStrategy.PickUpV2LiveMode
-      )
+      await startPickup(restarted)
       if (cancelled) {
         return 'cancelled'
       }
@@ -252,10 +266,7 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
       if (cancelled) {
         return
       }
-      await inFlightAgent.didcomm.mediationRecipient.initiateMessagePickup(
-        undefined,
-        DidCommMediatorPickupStrategy.PickUpV2LiveMode
-      )
+      await startPickup(inFlightAgent)
       if (cancelled) {
         return
       }
@@ -281,7 +292,10 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
       }
 
       if (usePushNotifications) {
-        activate(inFlightAgent).catch((err) => logger.warn(`Push notification activation failed: ${err}`))
+        // Never rejects: teardown waits on it, because the token callback queries the wallet
+        pushActivationRef.current = activate(inFlightAgent).catch((err) =>
+          logger.warn(`Push notification activation failed: ${err}`)
+        )
       }
 
       refreshMonitors(inFlightAgent)
@@ -384,7 +398,14 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
       // an agent never will after cancel, so there is nothing to wait for.
       cancel: () => {
         cancelled = true
-        return inFlightAgent || agentRef.current ? runPromise : Promise.resolve()
+        const built = inFlightAgent ?? agentRef.current
+        if (!built) {
+          return Promise.resolve()
+        }
+        // Closing the agent now is what unblocks a stalled pickup; the run's own close
+        // then finds nothing left to do. Any other step reaches its cancel checkpoint on its own.
+        const closed = awaitingPickup ? stopAgent(built) : Promise.resolve()
+        return Promise.all([closed, runPromise]).then(() => undefined)
       },
     }
     agentPromiseRef.current = runPromise.then(() => agentRef.current)
@@ -474,6 +495,21 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
     }
   }, [logger, attestationMonitor, stopAgent, walletKey, mediatorUrl, walletLabel, enableProxy])
 
+  const drainPushActivation = useCallback(async () => {
+    const activation = pushActivationRef.current
+    pushActivationRef.current = null
+    if (!activation) {
+      return
+    }
+
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const timedOut = new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, PUSH_ACTIVATION_DRAIN_TIMEOUT_MS)
+    })
+    await Promise.race([activation, timedOut])
+    clearTimeout(timer)
+  }, [])
+
   // Factory-reset teardown, never re-initializes; nulls the agent so mounted consumers skip reads
   // on the deleted store. Resolves true once a delete was attempted or is owned by a running wallet
   // reset, false if the caller must purge.
@@ -518,6 +554,9 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
 
         const currentAgent = agentRef.current
         if (currentAgent) {
+          // A token landing after the shutdown would query the wallet, and Askar reopens
+          // (and provisions) a closed store on demand, recreating the one deleted below.
+          await drainPushActivation()
           await stopAgent(currentAgent)
           deleteAttempted = true
 
@@ -541,7 +580,7 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
 
     teardownRef.current = teardown
     return teardown
-  }, [logger, attestationMonitor, credentialProvisioningMonitor, stopAgent])
+  }, [logger, attestationMonitor, credentialProvisioningMonitor, stopAgent, drainPushActivation])
 
   /**
    * Waits for the agent to be ready and returns it, or null if the agent is not ready or has failed to initialize.
