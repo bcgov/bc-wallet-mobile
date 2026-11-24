@@ -370,7 +370,8 @@ describe('mobile-app set-status', () => {
     assert.match(stdout, /An Activated mobile app becomes\s+Suspended and a Suspended one becomes Activated/)
     assert.match(stdout, /reverses\s+it/)
     assert.match(stdout, /Problem with Account/)
-    assert.match(stdout, /card\s+tap/)
+    assert.match(stdout, /There is a problem with your\s+account/)
+    assert.match(stdout, /while the registration is\s+unexpired/)
     assert.match(stdout, /not a reliable check/)
     assert.match(stdout, /--hostname/)
   })
@@ -391,7 +392,7 @@ describe('mobile-app set-status', () => {
       assert.match(stderr, /--hostname/)
     })
 
-    for (const status of [500, 502, 503, 504, 507, 524]) {
+    for (const status of [500, 502, 503, 504, 507, 524, 599]) {
       it(`does not retry a ${status} and says to check before running it again`, async () => {
         const fetchMock = mockFetch(() => new Response(null, { status }))
         const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
@@ -404,6 +405,63 @@ describe('mobile-app set-status', () => {
       })
     }
 
+    it('sends with manual redirects and never follows a 307', async () => {
+      const fetchMock = mockFetch(
+        () => new Response(null, { status: 307, headers: { Location: 'https://other.example/' } })
+      )
+      const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.equal(fetchMock.mock.callCount(), 1)
+      assert.equal(sentRequest(fetchMock, 0)[1].redirect, 'manual')
+      assert.equal(stdout, '')
+      assert.match(stderr, /IAS answered with a redirect \(status 307\)\. The outcome is unknown; check the device/)
+      assert.match(stderr, /a second run switches the status back/)
+      assert.doesNotMatch(stderr, /endpoint was found|check the registration/)
+    })
+
+    it('treats an opaque redirect as an unknown outcome', async () => {
+      const opaque = new Response(null, { status: 200 })
+      Object.defineProperty(opaque, 'type', { value: 'opaqueredirect' })
+      mockFetch(() => opaque)
+      const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.equal(stdout, '')
+      assert.match(stderr, /IAS answered with a redirect/)
+    })
+
+    for (const [name, cause] of [
+      ['a timeout', Object.assign(new Error('timed out'), { name: 'TimeoutError' })],
+      [
+        'a connection reset',
+        Object.assign(new TypeError('fetch failed'), { cause: { code: 'ECONNRESET', message: 'read ECONNRESET' } }),
+      ],
+    ] as const) {
+      it(`gives the device-check wording after ${name} once the request may have been sent`, async () => {
+        const fetchMock = mockFetch(() => Promise.reject(cause))
+        const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
+        assert.equal(code, 1)
+        assert.equal(fetchMock.mock.callCount(), 1)
+        assert.equal(stdout, '')
+        assert.match(stderr, /may have been sent/)
+        assert.match(stderr, /check the device before running the command again/)
+        assert.match(stderr, /a second run switches the status back/)
+        assert.doesNotMatch(stderr, /check the registration/)
+      })
+    }
+
+    it('keeps the plain wording when the connection was never made', async () => {
+      mockFetch(() =>
+        Promise.reject(
+          Object.assign(new TypeError('fetch failed'), {
+            cause: { code: 'ECONNREFUSED', message: 'connect ECONNREFUSED' },
+          })
+        )
+      )
+      const { code, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.match(stderr, /Nothing was sent/)
+    })
+
     it('keeps the not-implemented message for a 501', async () => {
       mockFetch(() => new Response(null, { status: 501 }))
       const { code, stderr } = await invokeStatus(['--reason', 'E2E1'])
@@ -412,18 +470,12 @@ describe('mobile-app set-status', () => {
       assert.doesNotMatch(stderr, /may or may not/)
     })
 
-    const redirected = () => {
-      const response = new Response(null, { status: 200 })
-      Object.defineProperty(response, 'redirected', { value: true })
-      return response
-    }
     const unreadable = () =>
       new Response(new ReadableStream({ start: (controller) => controller.error(new Error('stream failed')) }), {
         status: 200,
       })
     const unexpected = [
       ['an empty 204', () => new Response(null, { status: 204 })],
-      ['a 200 that followed a redirect', redirected],
       ['a 200 with a body', () => new Response('{"status":"SUSPENDED"}', { status: 200 })],
       ['a 200 whose body cannot be read', unreadable],
     ] as const

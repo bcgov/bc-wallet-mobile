@@ -128,19 +128,18 @@ const statusErrors = (host: string): Partial<Record<number, string>> => ({
   ...serverErrors(),
 })
 
-// IAS answers a change with 200 and no body; a redirect, a body or a failed read cannot be trusted as that.
+const STATUS_OUTCOME_UNKNOWN =
+  'The outcome is unknown; check the device before running the command again, because a second run switches the status back.'
+
+// IAS answers a change with 200 and no body; any other success, a body or a failed read cannot be trusted as that.
 const confirmedStatusChange = async (response: Response): Promise<void> => {
   let body: string | undefined
   try {
-    body = response.status === 200 && !response.redirected ? await response.text() : undefined
+    body = response.status === 200 ? await response.text() : undefined
   } catch {
     body = undefined
   }
-  if (body !== '') {
-    throw new CliError(
-      'IAS answered unexpectedly. The outcome is unknown; check the device before running the command again, because a second run switches the status back.'
-    )
-  }
+  if (body !== '') throw new CliError(`IAS answered unexpectedly. ${STATUS_OUTCOME_UNKNOWN}`)
 }
 
 export const setStatus = async (ctx: HandlerContext): Promise<number> => {
@@ -152,6 +151,8 @@ export const setStatus = async (ctx: HandlerContext): Promise<number> => {
     path: `/accounts/mobile-app/${encodeURIComponent(usercode)}/status`,
     body: { reason },
     errors: statusErrors(host),
+    redirect: 'manual',
+    outcomeUnknown: STATUS_OUTCOME_UNKNOWN,
   })
   if (!response) return ExitCode.ok
   await confirmedStatusChange(response)

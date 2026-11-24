@@ -292,12 +292,13 @@ is rejected. IAS returns nothing on success, so check the device to see which
 way it went.
 
 A Suspended mobile app keeps its device key and expiry. A fresh quick login is
-refused, card tap with a newly generated pairing code reports the mobile card as
-suspended, and the app shows its Problem with Account message the next time it
-requests a person credential. No push notification is sent, so the app learns of
-the change only when it next calls IAS. An already open digital card or an
-earlier pairing code is not a reliable check. set-expiry is rejected until the
-mobile app is Activated again.
+refused, and the app shows its Problem with Account message the next time it
+requests a person credential. Card tap with a newly generated pairing code shows
+"There is a problem with your account" while the registration is unexpired; an
+expired registration shows the expired message instead. No push notification is
+sent, so the app learns of the change only when it next calls IAS. An already
+open digital card or an earlier pairing code is not a reliable check. set-expiry
+is rejected until the mobile app is Activated again.
 
 --reason is a ticket reference of 1 to 25 letters or digits, with no spaces or
 punctuation. IAS stores it in the status comment; it does not choose the status.`,
