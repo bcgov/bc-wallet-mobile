@@ -26,7 +26,7 @@ import { getVideoServiceUnavailability, VideoServiceUnavailability } from '../ut
 
 // Maps v4 error types to v3-compatible Snowplow error codes
 // so analytics are consistent across both platforms
-const AnalyticsErrorCodeMap: Record<VideoCallErrorType, string> = {
+const AnalyticsErrorCodeMap: Record<Exclude<VideoCallErrorType, VideoCallErrorType.CALL_END_FAILED>, string> = {
   [VideoCallErrorType.DOCUMENT_UPLOAD_FAILED]: 'file_upload_error',
   [VideoCallErrorType.ALREADY_VERIFIED]: 'already_verified',
   [VideoCallErrorType.SESSION_FAILED]: 'server_error',
@@ -106,7 +106,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       await leaveCall()
     } catch (error) {
       logger.error('Failed to leave the call after it ended', error as Error)
-      setFlowState(VideoCallFlowState.CALL_END_FAILED)
+      setVideoCallError(createVideoCallError(VideoCallErrorType.CALL_END_FAILED, String(error)))
+      setFlowState(VideoCallFlowState.ERROR)
     }
   }, [leaveCall, logger])
 

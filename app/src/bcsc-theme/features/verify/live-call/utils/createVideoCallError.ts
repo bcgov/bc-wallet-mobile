@@ -44,6 +44,13 @@ export const createVideoCallError = (type: VideoCallErrorType, technicalDetails?
         retryable: true,
         technicalDetails,
       }
+    case VideoCallErrorType.CALL_END_FAILED:
+      return {
+        type,
+        message: 'Failed to end video call.',
+        retryable: true,
+        technicalDetails,
+      }
     // User has denied permissions
     case VideoCallErrorType.PERMISSION_DENIED:
       return {

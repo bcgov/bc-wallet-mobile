@@ -3,7 +3,7 @@ import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/comp
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { useFcmService } from '@/bcsc-theme/features/fcm'
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
-import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
+import { VideoCallErrorType, VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
@@ -443,6 +443,17 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     [width, Spacing, ColorPalette]
   )
 
+  if (flowState === VideoCallFlowState.ERROR && videoCallError?.type === VideoCallErrorType.CALL_END_FAILED) {
+    return (
+      <CallErrorView
+        title={t('BCSC.VideoCall.Errors.CallEndFailedTitle')}
+        message={t('BCSC.VideoCall.Errors.CallEndFailedMessage')}
+        onRetry={preventDoublePress(leaveCallSafely)}
+        onGoBack={goToVerifyNotComplete}
+      />
+    )
+  }
+
   if (flowState === VideoCallFlowState.ERROR) {
     return (
       <CallErrorView
@@ -450,17 +461,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         message={stateMessage || t('BCSC.VideoCall.Errors.GenericError')}
         onGoBack={() => navigation.goBack()}
         onRetry={videoCallError?.retryable ? retryConnection : undefined}
-      />
-    )
-  }
-
-  if (flowState === VideoCallFlowState.CALL_END_FAILED) {
-    return (
-      <CallErrorView
-        title={t('BCSC.VideoCall.Errors.CallEndFailedTitle')}
-        message={t('BCSC.VideoCall.Errors.CallEndFailedMessage')}
-        onRetry={preventDoublePress(leaveCallSafely)}
-        onGoBack={goToVerifyNotComplete}
       />
     )
   }
