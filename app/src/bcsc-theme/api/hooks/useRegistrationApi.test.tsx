@@ -587,6 +587,20 @@ describe('useRegistrationApi', () => {
       expect(mockSaveRegistration).toHaveBeenCalled()
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to store updated account nickname'))
     })
+
+    it('rejects with the registration save failure, not the nickname one, when both saves fail', async () => {
+      const saveError = new Error('registration write failure')
+      mockSaveRegistration.mockRejectedValue(saveError)
+      jest.mocked(setAccount).mockRejectedValue(new Error('nickname write failure'))
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await expect(result.current.updateRegistration('nickname')).rejects.toBe(saveError)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to store updated registration data')
+      )
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to store updated account nickname'))
+    })
   })
 
   // ---------------------------------------------------------------------------
