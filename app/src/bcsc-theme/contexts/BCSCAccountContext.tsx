@@ -11,6 +11,7 @@ import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
 import { ReconnectEvent, useRetryOnReconnect } from '../hooks/useRetryOnReconnect'
 import { useUserService } from '../services/hooks/useUserService'
+import { getRefreshTokenExpiryBeforeCard } from '../state/account/refresh-token'
 import { selectVerificationState } from '../state/verification/selectors'
 import { formatAccountName } from '../utils/account-utils'
 
@@ -149,6 +150,26 @@ export const BCSCAccountProvider = ({ enabled = true, children }: BCSCAccountPro
     () => !data && !isLoading,
     (event) => startAccountLoad('reconnect', event)
   )
+
+  // card_expiry is the expiry source of truth. A refresh token that runs out first ends sign-in early
+  const cardExpiry = data?.user.card_expiry
+  const refreshToken = store.bcscSecure.refreshToken
+  useEffect(() => {
+    if (!cardExpiry) {
+      return
+    }
+
+    const tokenExpiresAt = getRefreshTokenExpiryBeforeCard(
+      refreshToken,
+      moment(cardExpiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate()
+    )
+    if (tokenExpiresAt) {
+      logger.warn('BCSCAccountProvider: Refresh token expires before the card expiry date', {
+        refreshTokenExpiresAt: tokenExpiresAt.toISOString(),
+        cardExpiry,
+      })
+    }
+  }, [cardExpiry, refreshToken, logger])
 
   const refreshAccount = useCallback(() => startAccountLoad('manual'), [startAccountLoad])
 

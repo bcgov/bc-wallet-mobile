@@ -1,7 +1,9 @@
+import { makeJwt } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { BCSCSecureState, initialBCSCSecureState } from '@/store'
+import { BifoldLogger, TOKENS, useServices } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import NetInfo, { NetInfoChangeHandler } from '@react-native-community/netinfo'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
@@ -330,6 +332,57 @@ describe('BCSCAccountContext', () => {
       })
 
       await waitFor(() => expect(manualError.context.accountLoad).toMatchObject({ trigger: 'manual' }))
+    })
+  })
+
+  describe('refresh token expiring before the card expiry date', () => {
+    const tokenExpiringAt = (date: Date) => makeJwt({ exp: date.getTime() / 1000 })
+
+    const renderWithLogger = (refreshToken: string) => {
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <BasicAppContext initialStateOverride={{ bcscSecure: { ...verified, refreshToken } }}>
+          <BCSCAccountProvider>{children}</BCSCAccountProvider>
+        </BasicAppContext>
+      )
+
+      const rendered = renderHook(
+        () => ({ account: useAccount().account, logger: useServices([TOKENS.UTIL_LOGGER])[0] as BifoldLogger }),
+        { wrapper }
+      )
+      // The account loads asynchronously, so the spy is in place before the comparison runs
+      const warn = jest.spyOn(rendered.result.current.logger, 'warn')
+      return { ...rendered, warn }
+    }
+
+    it('warns with both dates, and never the token, when the token expires on an earlier day', async () => {
+      mockGetUserMetadata.mockResolvedValue(mockUserData({ card_expiry: 'December 31, 2025' }))
+      const tokenExpiresAt = new Date(2025, 11, 30, 12)
+      const token = tokenExpiringAt(tokenExpiresAt)
+
+      const { result, warn } = renderWithLogger(token)
+
+      await waitFor(() => expect(result.current.account).not.toBeNull())
+
+      const warnings = warn.mock.calls.filter(([message]) =>
+        String(message).includes('Refresh token expires before the card expiry date')
+      )
+      expect(warnings).toEqual([
+        [
+          'BCSCAccountProvider: Refresh token expires before the card expiry date',
+          { refreshTokenExpiresAt: tokenExpiresAt.toISOString(), cardExpiry: 'December 31, 2025' },
+        ],
+      ])
+      expect(JSON.stringify(warn.mock.calls)).not.toContain(token)
+    })
+
+    it('does not warn when the token outlives the card expiry date', async () => {
+      mockGetUserMetadata.mockResolvedValue(mockUserData({ card_expiry: 'December 31, 2025' }))
+
+      const { result, warn } = renderWithLogger(tokenExpiringAt(new Date(2026, 0, 2)))
+
+      await waitFor(() => expect(result.current.account).not.toBeNull())
+
+      expect(JSON.stringify(warn.mock.calls)).not.toContain('before the card expiry date')
     })
   })
 
