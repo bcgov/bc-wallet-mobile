@@ -169,11 +169,11 @@ describe('reducer', () => {
     )
   })
 
-  it('UPDATE_SECURE_VERIFIED only touches secure state, leaving verificationSkipped to its own action', () => {
+  it('CREDENTIAL_RECORD_SAVED only touches secure state, leaving verificationSkipped to its own action', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
-    const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [true] })
+    const result = reducer(state, { type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
 
-    expect(result.bcscSecure.verified).toBe(true)
+    expect(result.bcscSecure.hasCredentialRecord).toBe(true)
     expect(result.bcscSecure.inVerifyFlow).toBe(false)
     expect(result.bcscSecure.credentialDeactivated).toBe(false)
     expect(result.bcsc.verificationSkipped).toBe(false)
@@ -181,13 +181,21 @@ describe('reducer', () => {
   })
 
   describe('verification facts', () => {
-    const withFacts = (facts: { credentialDeactivated: boolean; inVerifyFlow: boolean }) => ({
+    const withFacts = (facts: {
+      credentialDeactivated: boolean
+      inVerifyFlow: boolean
+      hasCredentialRecord?: boolean
+    }) => ({
       ...initialState,
       bcscSecure: { ...initialState.bcscSecure, ...facts },
     })
 
-    it('starts with neither fact set', () => {
-      expect(initialState.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
+    it('starts with no fact set', () => {
+      expect(initialState.bcscSecure).toMatchObject({
+        hasCredentialRecord: false,
+        credentialDeactivated: false,
+        inVerifyFlow: false,
+      })
     })
 
     it.each([true, false])('UPDATE_SECURE_IN_VERIFY_FLOW writes %s and leaves deactivation alone', (inVerifyFlow) => {
@@ -197,18 +205,26 @@ describe('reducer', () => {
       expect(result.bcscSecure).toMatchObject({ inVerifyFlow, credentialDeactivated: true })
     })
 
-    it('UPDATE_SECURE_VERIFIED clears both', () => {
+    it('CREDENTIAL_RECORD_SAVED records the record and clears both of the others', () => {
       const state = withFacts({ credentialDeactivated: true, inVerifyFlow: true })
-      const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [false] })
+      const result = reducer(state, { type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
 
-      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
+      expect(result.bcscSecure).toMatchObject({
+        hasCredentialRecord: true,
+        credentialDeactivated: false,
+        inVerifyFlow: false,
+      })
     })
 
-    it('CLEAR_SECURE_STATE keeps the flow when asked and clears deactivation', () => {
-      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: false })
+    it('CLEAR_SECURE_STATE keeps the flow when asked and clears the record and deactivation', () => {
+      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: false, hasCredentialRecord: true })
       const result = reducer(state, { type: BCDispatchAction.CLEAR_SECURE_STATE, payload: [{ inVerifyFlow: true }] })
 
-      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: true })
+      expect(result.bcscSecure).toMatchObject({
+        hasCredentialRecord: false,
+        credentialDeactivated: false,
+        inVerifyFlow: true,
+      })
     })
   })
 

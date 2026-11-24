@@ -56,7 +56,7 @@ const unverified: BCSCSecureState = { ...initialBCSCSecureState }
 // A realistic verified account: verified flag true, and (as in production) a refresh token
 const verified: BCSCSecureState = {
   ...initialBCSCSecureState,
-  verified: true,
+  hasCredentialRecord: true,
   refreshToken: 'stored-refresh',
 }
 

@@ -38,9 +38,9 @@ describe('Home (default export, v4.1) — verification gating', () => {
     account_expiration_date: new Date('2999-12-31'),
   }
 
-  const renderHome = (verified: boolean) =>
+  const renderHome = (hasCredentialRecord: boolean) =>
     render(
-      <BasicAppContext initialStateOverride={{ bcscSecure: { ...initialState.bcscSecure, verified } }}>
+      <BasicAppContext initialStateOverride={{ bcscSecure: { ...initialState.bcscSecure, hasCredentialRecord } }}>
         <DefaultHome navigation={mockNavigation} route={{ key: 'home', name: 'Home' } as any} />
       </BasicAppContext>
     )

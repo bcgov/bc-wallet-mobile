@@ -46,7 +46,7 @@ jest.mock('../contexts/ServerStatusContext', () => ({
 const mockStore = (overrides: Record<string, any> = {}) => ({
   stateLoaded: true,
   bcsc: { hasAccount: false },
-  bcscSecure: { verified: false },
+  bcscSecure: { hasCredentialRecord: false },
   authentication: { didAuthenticate: false },
   ...overrides,
 })
@@ -158,13 +158,17 @@ describe('useRootStackViewModel', () => {
         {
           bcsc: { hasAccount: true },
           authentication: { didAuthenticate: true },
-          bcscSecure: { verified: false, inVerifyFlow: true },
+          bcscSecure: { hasCredentialRecord: false, inVerifyFlow: true },
         },
         RootPhase.Verify,
       ],
       [
         'main when unlocked and verified',
-        { bcsc: { hasAccount: true }, authentication: { didAuthenticate: true }, bcscSecure: { verified: true } },
+        {
+          bcsc: { hasAccount: true },
+          authentication: { didAuthenticate: true },
+          bcscSecure: { hasCredentialRecord: true },
+        },
         RootPhase.Main,
       ],
       [
@@ -172,9 +176,9 @@ describe('useRootStackViewModel', () => {
         {
           bcsc: { hasAccount: true },
           authentication: { didAuthenticate: true },
-          // verified:true would normally route to MainStack — recovery must take precedence.
+          // hasCredentialRecord:true would normally route to MainStack — recovery must take precedence.
           // (VerifyStack starts on the SessionRecovery screen when sessionRecoveryRequired is set.)
-          bcscSecure: { verified: true, sessionRecoveryRequired: true },
+          bcscSecure: { hasCredentialRecord: true, sessionRecoveryRequired: true },
         },
         RootPhase.Recovery,
       ],
@@ -186,7 +190,7 @@ describe('useRootStackViewModel', () => {
           // They start verification from the MainStack instead.
           bcsc: { hasAccount: true, verificationSkipped: true, verificationStarted: false },
           authentication: { didAuthenticate: true },
-          bcscSecure: { verified: false },
+          bcscSecure: { hasCredentialRecord: false },
         },
         RootPhase.Main,
       ],
@@ -255,7 +259,7 @@ describe('useRootStackViewModel', () => {
       mockStore({
         bcsc: { hasAccount: false },
         authentication: { didAuthenticate: false },
-        bcscSecure: { verified: false },
+        bcscSecure: { hasCredentialRecord: false },
       }),
       dispatch
     )
@@ -268,7 +272,7 @@ describe('useRootStackViewModel', () => {
       mockStore({
         bcsc: { hasAccount: true },
         authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false },
+        bcscSecure: { hasCredentialRecord: false },
       }),
       dispatch
     )
@@ -299,7 +303,7 @@ describe('useRootStackViewModel', () => {
       mockStore({
         bcsc: { hasAccount: true, ...flags },
         authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false, ...facts },
+        bcscSecure: { hasCredentialRecord: false, ...facts },
       })
 
     const resumeDispatch = { type: 'bcsc/updateSecureInVerifyFlow', payload: [true] }
@@ -609,7 +613,7 @@ describe('useRootStackViewModel', () => {
        */
       const lock = (current: Record<string, any>) => ({
         ...current,
-        bcscSecure: { verified: false },
+        bcscSecure: { hasCredentialRecord: false },
         authentication: { didAuthenticate: false },
       })
       const unlock = (current: Record<string, any>) => ({
@@ -775,7 +779,7 @@ describe('useRootStackViewModel', () => {
           expect(result.current.phase).toBe(RootPhase.Verify)
 
           // Continue on the success screen sets `verified`
-          apply((current) => ({ ...current, bcscSecure: { ...current.bcscSecure, verified: true } }))
+          apply((current) => ({ ...current, bcscSecure: { ...current.bcscSecure, hasCredentialRecord: true } }))
 
           expect(result.current.phase).toBe(RootPhase.Main)
           expect(swapTransitions()).toEqual([PUSH])
@@ -797,7 +801,7 @@ describe('useRootStackViewModel', () => {
             mockStore({
               bcsc: { hasAccount: true, verificationSkipped: true },
               authentication: { didAuthenticate: true },
-              bcscSecure: { verified: true },
+              bcscSecure: { hasCredentialRecord: true },
             })
           )
           expect(result.current.phase).toBe(RootPhase.Main)
@@ -807,7 +811,7 @@ describe('useRootStackViewModel', () => {
           // The unlock hydrates the verified flag before SUCCESSFUL_AUTH
           apply((current) => ({
             ...unlock(current),
-            bcscSecure: { verified: true, isHydrated: true },
+            bcscSecure: { hasCredentialRecord: true, isHydrated: true },
           }))
           expect(result.current.phase).toBe(RootPhase.Main)
 

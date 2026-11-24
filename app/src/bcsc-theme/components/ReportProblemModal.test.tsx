@@ -119,7 +119,7 @@ describe('ReportProblemModal', () => {
     expect(mockReportProblem).toHaveBeenCalledWith(expect.anything())
   })
 
-  it('records whether the card is inactive, including an expiry saved after unlock', () => {
+  it('records the record fact and whether the card is inactive, including an expiry saved after unlock', () => {
     const { getByTestId } = render(
       <BasicAppContext
         initialStateOverride={{
@@ -127,7 +127,7 @@ describe('ReportProblemModal', () => {
             ...initialState.bcsc,
             credentialMetadata: { bcscReason: BCSCReason.ExpiredBySystem } as never,
           },
-          bcscSecure: { ...initialState.bcscSecure, verified: true },
+          bcscSecure: { ...initialState.bcscSecure, hasCredentialRecord: true },
         }}
       >
         <ReportProblemModal visible onClose={jest.fn()} />
@@ -138,6 +138,10 @@ describe('ReportProblemModal', () => {
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 
     const { error } = mockReportProblem.mock.calls[0][0] as { error: { context?: Record<string, unknown> } }
-    expect(error.context).toMatchObject({ state_credential_deactivated: false, state_card_inactive: true })
+    expect(error.context).toMatchObject({
+      state_verified: true,
+      state_credential_deactivated: false,
+      state_card_inactive: true,
+    })
   })
 })

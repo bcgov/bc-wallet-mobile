@@ -45,7 +45,7 @@ const unlock =
       payload: [
         {
           refreshToken: withToken ? UNEXPIRED_JWT : undefined,
-          verified: Boolean(record),
+          hasCredentialRecord: Boolean(record),
           credentialDeactivated: isCredentialDeactivated(record),
           inVerifyFlow: false,
         },
@@ -74,7 +74,7 @@ const receiveToken: Step = (state) =>
 const finish: Step = (state) =>
   apply(
     state,
-    { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [true] },
+    { type: BCDispatchAction.CREDENTIAL_RECORD_SAVED },
     { type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [undefined] },
     { type: BCDispatchAction.SET_VERIFICATION_STARTED, payload: [false] },
     { type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] }
@@ -103,7 +103,6 @@ const reset =
           {
             isHydrated: true,
             registrationAccessToken: state.bcscSecure.registrationAccessToken,
-            verified: false,
             inVerifyFlow: stayInFlow,
           },
         ],

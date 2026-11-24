@@ -25,7 +25,7 @@ describe('getResumeStepRoute', () => {
   it('routes a verified user to the success screen regardless of setup type', () => {
     const store = structuredClone(initialState)
     store.bcsc.accountSetupType = AccountSetupType.TransferAccount
-    store.bcscSecure.verified = true
+    store.bcscSecure.hasCredentialRecord = true
     expect(getResumeStepRoute(store).name).toBe(BCSCScreens.VerificationSuccess)
   })
 

@@ -142,7 +142,7 @@ const viewModel = (overrides: Partial<RootStackViewModel> = {}): RootStackViewMo
 const mockStore = (secure: Record<string, any> = {}) => ({
   stateLoaded: true,
   bcsc: { hasAccount: true },
-  bcscSecure: { verified: true, ...secure },
+  bcscSecure: { hasCredentialRecord: true, ...secure },
   authentication: { didAuthenticate: true },
 })
 

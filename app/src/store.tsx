@@ -140,7 +140,7 @@ export interface BCSCState {
    *
    * Only the prompt answers it: starting verification later from Home leaves it alone, so it still tells
    * a first-time verifier from one who skipped. Whether a launch resumes verification is
-   * `verificationStarted`, not this. Set `true` when verification completes (see updateVerified) and
+   * `verificationStarted`, not this. Set `true` when verification completes (see completeVerification) and
    * reset to `undefined` by CLEAR_BCSC. Intentionally on plain (AsyncStorage) state, not secure state, so
    * an app uninstall clears it — iOS Keychain-backed secure state would survive a reinstall.
    */
@@ -149,7 +149,7 @@ export interface BCSCState {
    * Whether the user has entered identity verification (the prompt's Continue, a Home card, a renewal, a
    * restart) and not finished it, whether or not they skipped the prompt first. RootStack resumes a
    * started, unfinished verification at its last incomplete step on every launch. Cleared when
-   * verification completes (see updateVerified) and by CLEAR_BCSC. Plain state for the same reason as
+   * verification completes (see completeVerification) and by CLEAR_BCSC. Plain state for the same reason as
    * `verificationSkipped`.
    */
   verificationStarted?: boolean
@@ -173,8 +173,8 @@ export interface BCSCSecureState {
   /** Whether secure state has been loaded from native storage */
   isHydrated: boolean
 
-  /** A credential record exists, active or not */
-  verified?: boolean
+  /** The device holds a credential record, active or not */
+  hasCredentialRecord: boolean
   /** The record read at unlock says cancelled or expired; later expiry is saved with the account details */
   credentialDeactivated: boolean
   /** The user is in the verify flow this session */
@@ -261,6 +261,7 @@ export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
   savedServices: [],
+  hasCredentialRecord: false,
   credentialDeactivated: false,
   inVerifyFlow: false,
 }
@@ -337,7 +338,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE = 'bcsc/updateSecureVerificationRequestStatusMessage',
   VERIFICATION_STATUS_RECEIVED = 'bcsc/verificationStatusReceived',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
-  UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
+  CREDENTIAL_RECORD_SAVED = 'bcsc/credentialRecordSaved',
   UPDATE_SECURE_IN_VERIFY_FLOW = 'bcsc/updateSecureInVerifyFlow', // controls whether the VerifyStack or the MainStack are displayed
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
   UPDATE_SECURE_SECURITY_METHOD = 'bcsc/updateSecureSecurityMethod',
@@ -829,13 +830,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = { ...state.bcscSecure, verificationOptions }
       return { ...state, bcscSecure }
     }
-    case BCSCDispatchAction.UPDATE_SECURE_VERIFIED: {
-      const verified = (action?.payload || []).pop() ?? false
+    case BCSCDispatchAction.CREDENTIAL_RECORD_SAVED: {
+      // The record just written is new and active, and writing it ends the verify flow
       const bcscSecure = {
         ...state.bcscSecure,
-        verified,
-        inVerifyFlow: false,
+        hasCredentialRecord: true,
         credentialDeactivated: false,
+        inVerifyFlow: false,
       }
       return { ...state, bcscSecure }
     }

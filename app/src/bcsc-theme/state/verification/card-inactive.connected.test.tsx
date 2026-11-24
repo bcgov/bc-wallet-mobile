@@ -180,7 +180,7 @@ describe('"card not active", from the real check through the store to Home', () 
       expect(device.current.verification.isCardInactive).toBe(true)
 
       await act(async () => {
-        await device.current.secure.updateVerified(true)
+        await device.current.secure.completeVerification()
       })
 
       expect(setCredential).toHaveBeenCalledTimes(1)
@@ -191,7 +191,7 @@ describe('"card not active", from the real check through the store to Home', () 
   })
 
   describe('a credential record that says cancelled or expired, with a usable token', () => {
-    const upgraded = { verified: true, credentialDeactivated: true, refreshToken: UNEXPIRED_JWT }
+    const upgraded = { hasCredentialRecord: true, credentialDeactivated: true, refreshToken: UNEXPIRED_JWT }
 
     it('shows the expired notice, and stays on it when the server says expired', async () => {
       const device = await renderDevice(upgraded)

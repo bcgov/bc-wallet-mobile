@@ -22,7 +22,7 @@ const daysFromNow = (days: number) => {
 
 const buildStore = (bcscReason = BCSCReason.ApprovedByAgent) =>
   ({
-    bcscSecure: { verified: true },
+    bcscSecure: { hasCredentialRecord: true },
     bcsc: { credentialMetadata: { bcscReason } },
   }) as unknown as BCState
 

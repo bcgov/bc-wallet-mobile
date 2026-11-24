@@ -299,7 +299,7 @@ describe('computeSetupStepCompletion', () => {
 
   describe('Verify Step', () => {
     it('should be focused when ID step completed, address step completed, email step completed, but verify not yet completed', () => {
-      const store = makeNamedStore({ ...EMAIL_COMPLETE, verified: false })
+      const store = makeNamedStore({ ...EMAIL_COMPLETE, hasCredentialRecord: false })
 
       const result = computeSetupStepCompletion(store)
 
@@ -308,7 +308,11 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be completed when verified is true', () => {
-      const store = makeNamedStore({ ...EMAIL_COMPLETE, verified: true, userSubmittedVerificationVideo: false })
+      const store = makeNamedStore({
+        ...EMAIL_COMPLETE,
+        hasCredentialRecord: true,
+        userSubmittedVerificationVideo: false,
+      })
 
       const result = computeSetupStepCompletion(store)
 
@@ -317,7 +321,11 @@ describe('computeSetupStepCompletion', () => {
     })
 
     it('should be completed when userSubmittedVerificationVideo is true', () => {
-      const store = makeNamedStore({ ...EMAIL_COMPLETE, verified: false, userSubmittedVerificationVideo: true })
+      const store = makeNamedStore({
+        ...EMAIL_COMPLETE,
+        hasCredentialRecord: false,
+        userSubmittedVerificationVideo: true,
+      })
 
       const result = computeSetupStepCompletion(store)
 
@@ -372,7 +380,7 @@ describe('computeSetupStepCompletion', () => {
       expect(result.verify.completed).toBe(false)
       expect(result.verify.focused).toBe(true)
 
-      store.bcscSecure.verified = true
+      store.bcscSecure.hasCredentialRecord = true
       store.bcscSecure.userSubmittedVerificationVideo = false
 
       result = computeSetupStepCompletion(store)
@@ -439,7 +447,7 @@ describe('computeSetupStepCompletion', () => {
         deviceCode: 'ABCDEFGH',
         emailAddress: 'test@email.com',
         isEmailVerified: true,
-        verified: true,
+        hasCredentialRecord: true,
         userSubmittedVerificationVideo: false,
       })
       expect(computeSetupStepCompletion(store).allCompleted).toBe(true)

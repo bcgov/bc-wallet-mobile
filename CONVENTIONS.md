@@ -400,7 +400,7 @@ flag that something has to remember to set and clear. The three live together in
   only maps its result to a component.
 - `getVerificationState` (`bcsc-theme/state/verification/`) is the only definition of "verified", "device verified by
   IAS" and "needs verification". Screens, navigators, Home and system checks read it through `useVerificationState`
-  or `selectVerificationState`, never from `bcscSecure.verified`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
+  or `selectVerificationState`, never from `bcscSecure.hasCredentialRecord`, `credentialDeactivated`, `inVerifyFlow` or the tokens directly.
 - `isCardInactive` (`bcsc-theme/state/verification/card-inactive.ts`) is the only definition of "card not active": the
   credential record read at unlock says cancelled or expired, or the saved account details say "Expired by System".
   Card expiry and the verification rule both take it from `selectVerificationState`. A saved cancel reason is not part

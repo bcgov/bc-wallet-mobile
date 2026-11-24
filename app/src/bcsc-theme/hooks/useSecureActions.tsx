@@ -538,55 +538,42 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Update verification status: persists the credential record (the marker hydration reads on every
-   * unlock, kept in the v3 format for rollback) and then updates the store. When marking as verified,
-   * stores the credential object; when unverified, removes it.
+   * Finishes verification: persists the credential record (the marker hydration reads on every unlock,
+   * kept in the v3 format for rollback) and then records that the device holds it.
    *
-   * The native write goes first and its failure is thrown: a session that says verified while the next
-   * unlock says otherwise is the status mismatch this ordering rules out.
+   * The native write goes first and its failure is thrown: a session that says it holds a record while
+   * the next unlock says otherwise is the status mismatch this ordering rules out.
    */
-  const updateVerified = useCallback(
-    async (verified: boolean) => {
-      if (verified) {
-        const account = await getAccount()
-        if (!account) {
-          throw new Error('Cannot mark as verified: no account found')
-        }
-        if (!isAccountRegistered(account)) {
-          throw new Error('Cannot mark as verified: the account has no registration')
-        }
+  const completeVerification = useCallback(async () => {
+    const account = await getAccount()
+    if (!account) {
+      throw new Error('Cannot complete verification: no account found')
+    }
+    if (!isAccountRegistered(account)) {
+      throw new Error('Cannot complete verification: the account has no registration')
+    }
 
-        await setCredential(createVerifiedCredential(account.issuer, account.clientID, store.bcscSecure.cardProcess))
-      } else {
-        await deleteCredential()
-      }
+    await setCredential(createVerifiedCredential(account.issuer, account.clientID, store.bcscSecure.cardProcess))
 
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
-        payload: [verified],
-      })
-      if (verified) {
-        // The saved account details describe the registration this record replaces; the next check saves the new ones
-        dispatch({
-          type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-          payload: [undefined],
-        })
-        // Verification is finished: nothing is left to resume on launch, and the user is no longer a
-        // first-time verifier (a later re-verification, e.g. a renewal, starts from Home)
-        dispatch({
-          type: BCDispatchAction.SET_VERIFICATION_STARTED,
-          payload: [false],
-        })
-        dispatch({
-          type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
-          payload: [true],
-        })
-        // Clean up scheduled verification reminders, the user is verified
-        await cancelVerificationReminders(logger)
-      }
-    },
-    [dispatch, logger, store.bcscSecure.cardProcess]
-  )
+    dispatch({ type: BCDispatchAction.CREDENTIAL_RECORD_SAVED })
+    // The saved account details describe the registration this record replaces; the next check saves the new ones
+    dispatch({
+      type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+      payload: [undefined],
+    })
+    // Verification is finished: nothing is left to resume on launch, and the user is no longer a
+    // first-time verifier (a later re-verification, e.g. a renewal, starts from Home)
+    dispatch({
+      type: BCDispatchAction.SET_VERIFICATION_STARTED,
+      payload: [false],
+    })
+    dispatch({
+      type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
+      payload: [true],
+    })
+    // Clean up scheduled verification reminders, the user is verified
+    await cancelVerificationReminders(logger)
+  }, [dispatch, logger, store.bcscSecure.cardProcess])
 
   /**
    * Enters (or re-enters) the verification flow: RootStack shows the VerifyStack while the user is in
@@ -1304,7 +1291,7 @@ export const useSecureActions = () => {
       const cardProcess = hydrateCardProcess(authRequest, cleanedEvidence)
 
       // The credential record is the persisted "verified" marker, written when the user finishes setup
-      // (see updateVerified). A device can hold a refresh token IAS still accepts without that record:
+      // (see completeVerification). A device can hold a refresh token IAS still accepts without that record:
       // the finish step never ran, or its write failed. Treating such a device as unverified is the
       // status mismatch users report, so once IAS has confirmed the device by issuing fresh tokens the
       // record is restored. Not while a started verification is still being resumed: that resume ends
@@ -1332,11 +1319,11 @@ export const useSecureActions = () => {
 
       const record = credential ?? restoredCredential
       const credentialDeactivated = isCredentialDeactivated(record)
-      // A cancelled or expired record still counts as verified, matching the verification rule
-      const verified = Boolean(record)
+      // A cancelled or expired record still counts as a record, matching the verification rule
+      const hasCredentialRecord = Boolean(record)
 
       // A verified account with no refresh token is unrecoverable
-      const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
+      const sessionRecoveryRequired = Boolean(hasCredentialRecord && account && !refreshToken)
 
       // Extract bookmarked service IDs from native client metadata
       const savedServices = (nativeSavedServices ?? [])
@@ -1357,7 +1344,7 @@ export const useSecureActions = () => {
 
         ...effectiveTokens,
 
-        verified,
+        hasCredentialRecord,
         credentialDeactivated,
         inVerifyFlow: false,
 
@@ -1521,7 +1508,7 @@ export const useSecureActions = () => {
     updateCardProcess,
     updateUserMetadata,
     updateResidentialAddressDraft,
-    updateVerified,
+    completeVerification,
     updateWalletKey,
     updateAccountFlags,
     clearAccountFlags,

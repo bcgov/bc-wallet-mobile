@@ -7,7 +7,8 @@ Read before refactoring app state that is computed from other state. Reference i
 - Store only **facts**: raw data from the server, device, or user. Never store conclusions ("isExpired", "showRenewalNotice").
 - Compute conclusions on read. A stored conclusion goes stale and disagrees with its facts.
 - Delete actions, reducer cases, persisted fields, and launch-time resets that only existed to hold a conclusion.
-- A stored value that mixes facts with conclusions (the old `verifiedStatus` enum) is split into one fact per source (`credentialDeactivated`, `inVerifyFlow`); the conclusions move into the rule.
+- A stored value that mixes facts with conclusions (the old `verifiedStatus` enum) is split into one fact per source (`hasCredentialRecord`, `credentialDeactivated`, `inVerifyFlow`); the conclusions move into the rule.
+- A fact about a device record is set by the step that writes the record (`CREDENTIAL_RECORD_SAVED` after the finish step's native write) and by the load that reads it; nothing else sets it by hand.
 
 ## Layers
 
