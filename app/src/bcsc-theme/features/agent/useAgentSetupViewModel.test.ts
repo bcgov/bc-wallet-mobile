@@ -575,7 +575,12 @@ describe('useAgentSetupViewModel', () => {
         jest.mocked(agentService.initializeAgent).mockReturnValue(init.promise)
         jest.mocked(agentService.shutdownAgent).mockReturnValue(close.promise)
 
-        const { result } = renderHook(() => useAgentSetupViewModel())
+        const statuses: string[] = []
+        const { result } = renderHook(() => {
+          const viewModel = useAgentSetupViewModel()
+          statuses.push(viewModel.status)
+          return viewModel
+        })
         await waitFor(() => expect(agentService.initializeAgent).toHaveBeenCalled())
 
         const { outcome, promise } = startTeardown(result.current.teardownAgent)
@@ -599,6 +604,7 @@ describe('useAgentSetupViewModel', () => {
         expect(Bifold.createLinkSecretIfRequired).not.toHaveBeenCalled()
         expect(result.current.status).toBe('idle')
         expect(result.current.agent).toBeNull()
+        expect(statuses).not.toContain('ready')
       })
 
       it('waits for a failed start-up to close its agent', async () => {
