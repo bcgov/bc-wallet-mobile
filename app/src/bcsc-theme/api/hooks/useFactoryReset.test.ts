@@ -235,9 +235,8 @@ describe('useFactoryReset', () => {
   })
 
   it('purges the store only after teardown of a starting agent finishes, and before the account is touched', async () => {
-    // The agent is still starting up, so the provider's `agent` is null and its
-    // teardown has to stop that start-up first. The purge must not run under it, and
-    // nothing that clears the wallet key may run before the purge.
+    // A starting agent is not shared yet (`agent` is null): the purge must wait for its
+    // teardown, and nothing that clears the wallet key may run before the purge.
     let resolveTeardown: (deleted: boolean) => void = () => undefined
     const teardownAgent = jest.fn().mockReturnValue(
       new Promise<boolean>((resolve) => {

@@ -134,12 +134,8 @@ export const useFactoryReset = () => {
         // Tear the agent down before clearing keys/state: if keys were cleared first,
         // re-onboarding would derive a new wallet key and the next agent init would
         // trip on the stale on-disk wallet (duplicate-store error, code 3).
-        // teardownAgent also stops an agent that is still starting up, shuts down before
-        // deleting (deleting first leaves the agent's askar context pointing at a removed
-        // store, so its shutdown's onCloseContext throws "There is no open store"), nulls
-        // the provider's agent reference, and is itself best-effort/non-throwing. Both ops
-        // route through the agent-service wallet-op queue, so they never race the shutdown
-        // the provider fires on DID_AUTHENTICATE -> false unmount (also idempotent).
+        // teardownAgent stops a starting agent, shuts down before deleting, and never throws;
+        // its ops share the wallet-op queue, so they cannot race the provider's unmount shutdown.
         let deleteAttempted = false
         if (agentCtx) {
           logger.info('FactoryReset: Tearing down agent and wallet store...')
@@ -147,11 +143,8 @@ export const useFactoryReset = () => {
         }
 
         if (!deleteAttempted && store.bcscSecure.walletKey) {
-          // No agent to delete through (start-up cancelled or failed, a reset interrupted
-          // mid-rebuild, or no provider), but the on-disk store is keyed with this
-          // about-to-be-cleared key. Purge it via a throwaway agent (delete is by file
-          // URI) or it orphans a store no future key can open, failing agent init on
-          // every later launch.
+          // No agent deleted the store, but it is keyed with the key about to be cleared: purge it
+          // by file URI, or it orphans a store no future key can open and every later init fails.
           try {
             logger.info('FactoryReset: No active agent; purging any orphaned wallet store...')
             await purgeWalletStore({

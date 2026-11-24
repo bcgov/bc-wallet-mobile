@@ -474,20 +474,8 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
     }
   }, [logger, attestationMonitor, stopAgent, walletKey, mediatorUrl, walletLabel, enableProxy])
 
-  // Permanent agent teardown (e.g. factory reset). Unlike resetWallet this never
-  // re-initializes: it stops any start-up in flight, shuts down, deletes the wallet
-  // store, and nulls the agent so any consumer still mounted against a transient render
-  // (see RootStack's hasAccount/showVerifyStack derivation) sees `agent: null` and skips
-  // its mount-time storage reads instead of racing Credo's store-not-found ->
-  // auto-provision fallback against the just-deleted store.
-  //
-  // An agent still starting up is not shared yet, so the run is cancelled and awaited:
-  // its own close must be queued before the delete, or the delete would run under an
-  // open store. Guards against a concurrent resetWallet via resettingRef, and a
-  // re-entrant call shares the pending teardown.
-  //
-  // Resolves true once the store delete was attempted through an agent (a failed delete is
-  // logged), false when there was no agent to delete through and the caller must purge.
+  // Factory-reset teardown, never re-initializes; nulls the agent so mounted consumers skip reads
+  // on the deleted store. Resolves true once a delete was attempted, false if the caller must purge.
   const teardownAgent = useCallback((): Promise<boolean> => {
     if (teardownRef.current) {
       return teardownRef.current
@@ -518,6 +506,7 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
         credentialProvisioningMonitor?.stop()
 
         if (initRun) {
+          // The run's own close must be queued before the delete, or the delete runs under an open store
           await runStopped
           // The cancelled run's finally skips this
           initializingRef.current = false
