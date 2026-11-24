@@ -1,6 +1,6 @@
 import { Timeouts } from '../../../../src/constants.js'
 import { unlockWithPin } from '../../../../src/flows/auth.js'
-import { capability, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
+import { arrangeBcscUser, capability, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
 import { resumeVerification } from '../../../../src/flows/verify.js'
 import { installCurrentBuildOverRunningApp, relaunchAfterInstall } from '../../../../src/helpers/app-install.js'
 import { annotate } from '../../../../src/helpers/sauce.js'
@@ -22,8 +22,8 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
 export function defineResumeSerialUpgrade(prev: PrevBuild): void {
   let appId: string | undefined
 
-  before(() => {
-    setTestUser(prev.bcscUser)
+  before(async () => {
+    setTestUser(await arrangeBcscUser(prev))
   })
 
   it('onboards on the previous build', async () => {

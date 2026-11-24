@@ -1,6 +1,6 @@
 import { Timeouts } from '../../../../src/constants.js'
 import { unlockWithPin } from '../../../../src/flows/auth.js'
-import { capability, nonBcscDocsOf, nonBcscUserOf, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
+import { arrangeNonBcscUser, capability, nonBcscDocsOf, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
 import { resumeVerification } from '../../../../src/flows/verify.js'
 import { installCurrentBuildOverRunningApp, relaunchAfterInstall } from '../../../../src/helpers/app-install.js'
 import { annotate } from '../../../../src/helpers/sauce.js'
@@ -30,8 +30,8 @@ import { getNonBcscTestUser, setTestUser } from '../../../../src/support/context
 export function defineNonBcscPartialUpgrade(prev: PrevBuild): void {
   let appId: string | undefined
 
-  before(() => {
-    setTestUser(nonBcscUserOf(prev))
+  before(async () => {
+    setTestUser(await arrangeNonBcscUser(prev))
   })
 
   it('onboards on the previous build', async () => {

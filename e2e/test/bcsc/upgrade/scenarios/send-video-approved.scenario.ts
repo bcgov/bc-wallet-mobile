@@ -1,6 +1,6 @@
 import { unlockWithPin } from '../../../../src/flows/auth.js'
 import { expectVerifiedInSettings } from '../../../../src/flows/main.js'
-import { capability, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
+import { arrangeBcscUser, capability, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
 import {
   cleanUpQueuedSubmission,
   clearReviewQueueBeforeSubmit,
@@ -27,8 +27,8 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
 export function defineSendVideoApprovedUpgrade(prev: PrevBuild): void {
   let appId: string | undefined
 
-  before(() => {
-    setTestUser(prev.bcscUser)
+  before(async () => {
+    setTestUser(await arrangeBcscUser(prev, 'send-video'))
   })
 
   after(async () => {

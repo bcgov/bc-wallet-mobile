@@ -69,8 +69,8 @@ export const BACKGROUND_NO_LOCK_SECONDS = 5
 /**
  * The hand-minted SIT personas, shared by both platforms and every lane. Legacy: a journey asks
  * `arrangeTestUser` (src/support/identity.ts) for its holder, which mints one per session unless the
- * portal decides the journey. Still the holders for the journeys the portal decides (its queue drain
- * knows only the personas) and the upgrade suites.
+ * portal decides the journey. Still the holders for the journeys the portal decides: its queue drain
+ * knows only the personas.
  *
  * `cardScanImage` is a photo of the card, for EVIDENCE capture. A card back to SCAN is rendered from
  * the holder's serial, name and birthdate (src/helpers/card-back.ts).

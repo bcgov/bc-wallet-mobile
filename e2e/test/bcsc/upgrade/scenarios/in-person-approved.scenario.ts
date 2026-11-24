@@ -1,6 +1,6 @@
 import { unlockWithPin } from '../../../../src/flows/auth.js'
 import { expectVerifiedInSettings } from '../../../../src/flows/main.js'
-import type { PrevBuild } from '../../../../src/flows/prev-build/types.js'
+import { arrangeBcscUser, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
 import { approvalInputForUser, finishApprovedVerification } from '../../../../src/flows/verify.js'
 import { closeRunningApp, installCurrentBuildOver, relaunchAfterInstall } from '../../../../src/helpers/app-install.js'
 import { approveInPersonRequest } from '../../../../src/helpers/approval.js'
@@ -27,8 +27,8 @@ export function defineInPersonApprovedUpgrade(prev: PrevBuild): void {
   let appId: string | undefined
   let code: string | undefined
 
-  before(() => {
-    setTestUser(prev.bcscUser)
+  before(async () => {
+    setTestUser(await arrangeBcscUser(prev, 'counter'))
   })
 
   it('onboards on the previous build', async () => {

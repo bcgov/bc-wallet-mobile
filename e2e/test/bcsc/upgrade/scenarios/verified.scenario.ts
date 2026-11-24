@@ -7,7 +7,7 @@ import {
   expectVerifiedInSettings,
   loginWithPairingCode,
 } from '../../../../src/flows/main.js'
-import type { PrevBuild } from '../../../../src/flows/prev-build/types.js'
+import { arrangeBcscUser, type PrevBuild } from '../../../../src/flows/prev-build/types.js'
 import { installCurrentBuildOverRunningApp, relaunchAfterInstall } from '../../../../src/helpers/app-install.js'
 import { annotate } from '../../../../src/helpers/sauce.js'
 import { TabBar } from '../../../../src/screens/main.js'
@@ -31,8 +31,8 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
 export function defineVerifiedUpgrade(prev: PrevBuild): void {
   let appId: string | undefined
 
-  before(() => {
-    setTestUser(prev.bcscUser)
+  before(async () => {
+    setTestUser(await arrangeBcscUser(prev, 'counter'))
   })
 
   it('onboards on the previous build', async () => {

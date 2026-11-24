@@ -1,4 +1,4 @@
-import { TEST_PIN, TestUsers, Timeouts } from '../../constants.js'
+import { TEST_PIN, Timeouts } from '../../constants.js'
 import { getEmailConfirmationCode } from '../../helpers/email.js'
 import { VerificationMethodSelectionScreen } from '../../screens/verify.js'
 import { completeOnboarding } from '../onboarding.js'
@@ -29,8 +29,7 @@ import type { PrevBuild } from './types.js'
 export const currentPrevBuild: PrevBuild = {
   label: '4.1.x',
   pin: TEST_PIN,
-  bcscUser: TestUsers.photo,
-  nonBcscUser: TestUsers.na,
+  bcscKind: 'photo',
   nonBcscDocs: { first: 'BC Drivers Licence', second: 'Canadian Passport' },
 
   onboard: (pin) => completeOnboarding(pin),
