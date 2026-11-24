@@ -1753,9 +1753,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/core@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/core@npm:3.1.3"
+"@bifold/core@npm:3.1.4":
+  version: 3.1.4
+  resolution: "@bifold/core@npm:3.1.4"
   dependencies:
     "@openwallet-foundation/askar-react-native": "npm:0.6.1"
     "@openwallet-foundation/askar-shared": "npm:0.6.1"
@@ -1834,13 +1834,13 @@ __metadata:
     uuid: ~9.0.1
   bin:
     bifold: bin/bifold
-  checksum: 10c0/de075f2ed123548ddda250ad1e2a0bf8b55052ea15cefca37da6184d149c825d254fb482fad507ea0c914444d8220b3e011b0ff2b62516ee2477c1a8c4b61af2
+  checksum: 10c0/23ed533ae4221846da321dcafc2e86a5760119b5de61bce007cf532a86e9fae2b92579b74af99d17f91e69ccb1216792be44eb8d1b0ad068c9fd96f358a28c97
   languageName: node
   linkType: hard
 
-"@bifold/oca@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/oca@npm:3.1.3"
+"@bifold/oca@npm:3.1.4":
+  version: 3.1.4
+  resolution: "@bifold/oca@npm:3.1.4"
   dependencies:
     "@credo-ts/anoncreds": "npm:0.7.0"
     "@credo-ts/core": "npm:0.7.0"
@@ -1848,13 +1848,13 @@ __metadata:
     axios: "npm:~1.15.0"
     lodash.startcase: "npm:~4.4.0"
     react-native-fs: "npm:~2.20.0"
-  checksum: 10c0/cc45c7f674d7ad38c23a01ca7acb347fcddae75664be0d019e724f4e7877b299f116824a2f09d2762d4108bb4c7127fe9daedc4d5819a2e8dbff982cd8e8826e
+  checksum: 10c0/b8756aa2ef9d0cb230fecd1078daf8d7d9be8ee49ada30389596f18f0ccff1ec7216c625f6ff68e816cfc3c25b8dee4ace0c120d517a7bde27b36b67262d91b3
   languageName: node
   linkType: hard
 
-"@bifold/react-hooks@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/react-hooks@npm:3.1.3"
+"@bifold/react-hooks@npm:3.1.4":
+  version: 3.1.4
+  resolution: "@bifold/react-hooks@npm:3.1.4"
   dependencies:
     rxjs: "npm:^7.2.0"
   peerDependencies:
@@ -1864,25 +1864,25 @@ __metadata:
     react: 19.2.3
   bin:
     bifold: bin/bifold
-  checksum: 10c0/3ccd5b7071dbbd367254ca96b8627194c0428fafff2a0f411bcdad13270c8638cabf906e4f00dbab0ad330c183433245604e83121c45874d9560839009b167b9
+  checksum: 10c0/59a85d61b82aa55568f1fe0b83097af3e7f372449f8d39a5eba5e95aa77257cf996864cedad9787d7807a964a66dbaabd248c68c4414ec8d80612ade51c3386b
   languageName: node
   linkType: hard
 
-"@bifold/react-native-attestation@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/react-native-attestation@npm:3.1.3"
+"@bifold/react-native-attestation@npm:3.1.4":
+  version: 3.1.4
+  resolution: "@bifold/react-native-attestation@npm:3.1.4"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/c8acc90d13b1054c16ec9850285e6a7610e6a239b5f64d1854c9c7445a4c0421f534940547b71d38a519d780acbe2ebf8bdadc9c84f90bc03e0325a1b0e35c4e
+  checksum: 10c0/671227e32fc7bab2e6aaf1ebcee7dc7189871251d7c97363aa43d791cb4c6020552a9a8eb87e1bddc7777d99d4b314345423c37b57d002b24af8ce0d0ab1f479
   languageName: node
   linkType: hard
 
-"@bifold/remote-logs@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/remote-logs@npm:3.1.3"
+"@bifold/remote-logs@npm:3.1.4":
+  version: 3.1.4
+  resolution: "@bifold/remote-logs@npm:3.1.4"
   dependencies:
-    "@bifold/core": "npm:3.1.3"
+    "@bifold/core": "npm:3.1.4"
     "@credo-ts/core": "npm:0.7.0"
     axios: "npm:~1.15.0"
     buffer: "npm:~6.0.3"
@@ -1896,15 +1896,15 @@ __metadata:
     react: 19.2.3
     react-native: 0.86.3
     react-native-logs: ~5.1.0
-  checksum: 10c0/bad7541b3ec111b8b6f50f52c446a311151656b14fd474b0c17f53bc6c07e4ab16d26522067b149d21cc21aac57df5e74c8028e6bd46390f8faeb1e3b3bcb2c7
+  checksum: 10c0/c4ec2f45874adab03015ecf042288aa401b2096aeee3a9f7fd025d5e9821256265ac1d639ec89320d404279e6a3f3516fd07c82a7f017640effd75fe079656e3
   languageName: node
   linkType: hard
 
-"@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.3#~/.yarn/patches/@bifold-remote-logs-npm-3.1.3-757c19c437.patch":
-  version: 3.1.3
-  resolution: "@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.3#~/.yarn/patches/@bifold-remote-logs-npm-3.1.3-757c19c437.patch::version=3.1.3&hash=d66630"
+"@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.4#~/.yarn/patches/@bifold-remote-logs-npm-3.1.4-1d0d1d6695.patch":
+  version: 3.1.4
+  resolution: "@bifold/remote-logs@patch:@bifold/remote-logs@npm%3A3.1.4#~/.yarn/patches/@bifold-remote-logs-npm-3.1.4-1d0d1d6695.patch::version=3.1.4&hash=d66630"
   dependencies:
-    "@bifold/core": "npm:3.1.3"
+    "@bifold/core": "npm:3.1.4"
     "@credo-ts/core": "npm:0.7.0"
     axios: "npm:~1.15.0"
     buffer: "npm:~6.0.3"
@@ -1918,20 +1918,20 @@ __metadata:
     react: 19.2.3
     react-native: 0.86.3
     react-native-logs: ~5.1.0
-  checksum: 10c0/8fe05da6cf7e241dc07fc777aed4ca7a1ce2082eb17c39911853aca13e0a8babab83ef554d51b8d1793d2e39b7739d473abf1c0267b6203a5485fbc218fc40fd
+  checksum: 10c0/cc6351a58bb9eea6b993d382ed491cab9e48ac135acc8630e2a1b27206c9c05b03913a15eb4cde8835a7e17ebfc1b243079f228f459e7be95ef2a1ee3ab74835
   languageName: node
   linkType: hard
 
-"@bifold/verifier@npm:3.1.3":
-  version: 3.1.3
-  resolution: "@bifold/verifier@npm:3.1.3"
+"@bifold/verifier@npm:3.1.4":
+  version: 3.1.4
+  resolution: "@bifold/verifier@npm:3.1.4"
   peerDependencies:
     "@bifold/react-hooks": ^3.0.22
     "@credo-ts/anoncreds": 0.7.0
     "@credo-ts/core": 0.7.0
     "@hyperledger/anoncreds-shared": 0.4.1-alpha-20260609124337
     react: 19.2.3
-  checksum: 10c0/eb6971e47a8327630dc6d6dddfe79f5715a34a8ba6ee6353239600de561da8025e3d9a153c1c2ee2c2c0f7f9dee5c8008dff7f2f4ea51d9822f1e739d89f7f68
+  checksum: 10c0/2c20835ba681fbe3c3f96007bd4140408c26c6eeb1c49fbc10325ac77fe6dadb30b838cfe3335ef21cef9655f0c3cb12ebd665bdd187fafe9cdf0d35a788110a
   languageName: node
   linkType: hard
 
@@ -2613,9 +2613,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/eslintrc@npm:~3.3.1":
-  version: 3.3.5
-  resolution: "@eslint/eslintrc@npm:3.3.5"
+"@eslint/eslintrc@npm:~3.3.7":
+  version: 3.3.7
+  resolution: "@eslint/eslintrc@npm:3.3.7"
   dependencies:
     ajv: "npm:^6.14.0"
     debug: "npm:^4.3.2"
@@ -2623,10 +2623,10 @@ __metadata:
     globals: "npm:^14.0.0"
     ignore: "npm:^5.2.0"
     import-fresh: "npm:^3.2.1"
-    js-yaml: "npm:^4.1.1"
+    js-yaml: "npm:^4.3.2"
     minimatch: "npm:^3.1.5"
     strip-json-comments: "npm:^3.1.1"
-  checksum: 10c0/9fb9f1ca65e46d6173966e3aaa5bd353e3a65d7f1f582bebf77f578fab7d7960a399fac1ecfb1e7d52bd61f5cefd6531087ca52a3a3c388f2e1b4f1ebd3da8b7
+  checksum: 10c0/010fca3403489ff109cfb5b9996142a2a4b4be28bbb233eda3c30ed004826aeab84d6914d0c5c4b1cd80add7051525adb7818268e0fb4775ddb6dbc620f00c72
   languageName: node
   linkType: hard
 
@@ -7567,12 +7567,12 @@ __metadata:
     "@babel/core": "npm:~7.28.6"
     "@babel/preset-env": "npm:~7.28.6"
     "@babel/runtime": "npm:~7.28.6"
-    "@bifold/core": "npm:3.1.3"
-    "@bifold/oca": "npm:3.1.3"
-    "@bifold/react-hooks": "npm:3.1.3"
-    "@bifold/react-native-attestation": "npm:3.1.3"
-    "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.1.3#~/.yarn/patches/@bifold-remote-logs-npm-3.1.3-757c19c437.patch"
-    "@bifold/verifier": "npm:3.1.3"
+    "@bifold/core": "npm:3.1.4"
+    "@bifold/oca": "npm:3.1.4"
+    "@bifold/react-hooks": "npm:3.1.4"
+    "@bifold/react-native-attestation": "npm:3.1.4"
+    "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.1.4#~/.yarn/patches/@bifold-remote-logs-npm-3.1.4-1d0d1d6695.patch"
+    "@bifold/verifier": "npm:3.1.4"
     "@credo-ts/anoncreds": "npm:0.7.0"
     "@credo-ts/askar": "npm:0.7.0"
     "@credo-ts/core": "npm:0.7.0"
@@ -7706,7 +7706,7 @@ __metadata:
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:13.16.2"
     react-native-worklets: "npm:0.10.4"
-    react-test-renderer: "npm:~19.1.4"
+    react-test-renderer: "npm:~19.2.9"
     reflect-metadata: "npm:~0.1.14"
     rxjs: "npm:~7.8.2"
     tsyringe: "npm:~4.8.0"
@@ -13016,6 +13016,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"js-yaml@npm:^4.3.2":
+  version: 4.3.2
+  resolution: "js-yaml@npm:4.3.2"
+  dependencies:
+    argparse: "npm:^2.0.1"
+  bin:
+    js-yaml: bin/js-yaml.js
+  checksum: 10c0/dedd34c2e8fef1d504687f1bc94ed0ee1311a1f78770fa2800352c6d59c635ccf555009d74e9afe529ae62199da2b1ccef30e53dc84dcd8d2d8187c22574bc97
+  languageName: node
+  linkType: hard
+
 "jsc-safe-url@npm:^0.2.2":
   version: 0.2.4
   resolution: "jsc-safe-url@npm:0.2.4"
@@ -15595,10 +15606,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:^19.2.3":
-  version: 19.2.8
-  resolution: "react-is@npm:19.2.8"
-  checksum: 10c0/ed5322c84efe035c8fc814b1614ff5ca7fb8c2872a7c045197daf99f9b1bd68f32a2c79ffcbcfcff2fc5d93924ff9f9447400898f5b1534e6302bb0736a257f0
+"react-is@npm:^19.2.9":
+  version: 19.3.1
+  resolution: "react-is@npm:19.3.1"
+  checksum: 10c0/428e02d986d56f1859c57756084489f6d2900fd686905003c405b32f1168738b78772bfa4bb6c706f5ac821199171522c28bf6434281f524f901459390a19606
   languageName: node
   linkType: hard
 
@@ -15619,7 +15630,7 @@ __metadata:
   dependencies:
     "@commitlint/config-conventional": "npm:~19.6.0"
     "@eslint/compat": "npm:^1.3.2"
-    "@eslint/eslintrc": "npm:~3.3.1"
+    "@eslint/eslintrc": "npm:~3.3.7"
     "@eslint/js": "npm:^9.34.0"
     "@react-native-community/cli": "npm:~15.0.1"
     "@react-native/eslint-config": "npm:~0.82.0"
@@ -16355,22 +16366,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-test-renderer@npm:19.2.3":
-  version: 19.2.3
-  resolution: "react-test-renderer@npm:19.2.3"
+"react-test-renderer@npm:19.2.9":
+  version: 19.2.9
+  resolution: "react-test-renderer@npm:19.2.9"
   dependencies:
-    react-is: "npm:^19.2.3"
+    react-is: "npm:^19.2.9"
     scheduler: "npm:^0.27.0"
   peerDependencies:
-    react: ^19.2.3
-  checksum: 10c0/842b82239dbddbc536083a6260c3e1b0507c02a3400bd05879fc19160468fd0f8ab79fec5dceffa6113b131835cc7621212f8415b46ea5156ab66bbfd7e24297
+    react: ^19.2.9
+  checksum: 10c0/432e905c01bfba7ad1dda931b6b55ccc63aaf190c0f042a344d9f7d9af4fe53224add7938c4310ac74fe1d0b5fbf32987f508681eb719244406a158369e42d2c
   languageName: node
   linkType: hard
 
-"react@npm:19.2.3":
-  version: 19.2.3
-  resolution: "react@npm:19.2.3"
-  checksum: 10c0/094220b3ba3a76c1b668f972ace1dd15509b157aead1b40391d1c8e657e720c201d9719537375eff08f5e0514748c0319063392a6f000e31303aafc4471f1436
+"react@npm:19.2.9":
+  version: 19.2.9
+  resolution: "react@npm:19.2.9"
+  checksum: 10c0/2177cc3206824d0d18fa2c40bbbfd64f5716d5f932917d1be6863ce2f14555e6df60fa4621a69780f8986f27d5e0d696b0d8d6cac941f45b3bacf1bea2e0f732
   languageName: node
   linkType: hard
 

@@ -37,7 +37,12 @@ export interface AgentSetupResult {
   waitForAgent: () => Promise<Agent | null>
 }
 
-const useAgentSetupViewModel = (): AgentSetupResult => {
+export interface AgentSetupOptions {
+  /** False keeps the agent down (shutting down a live one) as if the user were signed out. Defaults to true. */
+  enabled?: boolean
+}
+
+const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): AgentSetupResult => {
   const [store] = useStore<BCState>()
   const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas, ocaBundleResolver] = useServices(
     [
@@ -79,28 +84,29 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     }
   }, [attestationMonitor, enableAttestation])
 
-  // Cancel the background cache warm-up and wait for its in-flight promise to drain
-  const stopWarmCache = useCallback(async () => {
+  // Cancel the background cache warm-up now and hand back the wait for its in-flight
+  // promise to drain. The wait runs inside the queued wallet close (see stopAgent), not
+  // ahead of it, so a rebuild can't get its wallet open into the queue first.
+  const abortWarmCache = useCallback((): (() => Promise<unknown>) | undefined => {
     if (!warmCacheRef.current) {
-      return
+      return undefined
     }
 
     const warmCache = warmCacheRef.current
     warmCacheRef.current = null
     warmCache.controller.abort() // inject the abort signal into warmCache()
-    await Promise.race([
-      warmCache.promise, // drain any in-flight promises
-      new Promise((resolve) => setTimeout(resolve, CACHE_DRAIN_TIMEOUT_MS)), // 5s timeout to avoid indefinite hang
-    ])
+    return () =>
+      Promise.race([
+        warmCache.promise, // drain any in-flight promises
+        new Promise((resolve) => setTimeout(resolve, CACHE_DRAIN_TIMEOUT_MS)), // 5s timeout to avoid indefinite hang
+      ])
   }, [])
 
   // Stop the agent and its background cache warm-up. Used on sign-out, reset, and teardown.
+  // The close is queued synchronously, even when the caller doesn't wait for it.
   const stopAgent = useCallback(
-    async (liveAgent: Agent) => {
-      await stopWarmCache() // stopWarmCache will not block shutdownAgent (5s timeout)
-      await shutdownAgent(liveAgent, loggerRef.current)
-    },
-    [stopWarmCache]
+    (liveAgent: Agent) => shutdownAgent(liveAgent, loggerRef.current, abortWarmCache()),
+    [abortWarmCache]
   )
 
   const refreshMonitors = useCallback(
@@ -137,7 +143,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   }, [stopAgent])
 
   useEffect(() => {
-    if (!didAuthenticate) {
+    if (!enabled || !didAuthenticate) {
       if (agentRef.current) {
         void stopAgent(agentRef.current)
         agentRef.current = null
@@ -378,6 +384,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       agentPromiseRef.current = null
     }
   }, [
+    enabled,
     didAuthenticate,
     walletKey,
     mediatorUrl,

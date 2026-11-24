@@ -241,8 +241,13 @@ export const HEADER_SHADOW: ViewStyle = {
   borderBottomWidth: 0,
 }
 
-// Account constants
-export const TEMPORARY_ACCOUNT_CLIENT_ID = ''
+// What a tab navigator that uses `createTabHeader` passes as `sceneContainerStyle`, so Android draws
+// HEADER_SHADOW. The scene container is a plain View with only a background colour, so React Native
+// flattens it: the header is mounted next to it, directly under react-native-screens' `Screen`. Unlike a
+// React Native view, that `Screen` clips each child's drawing to the child's own bounds, and the
+// elevation shadow, drawn below the header, is cut off. `isolation` makes the scene container a stacking
+// context, which keeps it as the header's parent. It changes nothing else, on either platform.
+export const TAB_SCENE_CONTAINER_STYLE: ViewStyle = { isolation: 'isolate' }
 
 // Credential constants
 // TODO (MD): Pull these values from well-known urls or remote config (ie: Firebase Remote Config)

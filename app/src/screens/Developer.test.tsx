@@ -98,7 +98,7 @@ describe('Developer Screen', () => {
     expect(queryByTestId(testIdWithKey('developer.environment'))).toBeNull()
   })
 
-  test('deleteTokens deletes all token types, clears the api client, and updates state on success', async () => {
+  test('deleteTokens deletes the refresh and access tokens, clears the api client, and updates state on success', async () => {
     const { getByTestId, getByText } = render(
       <BasicAppContext initialStateOverride={{ mode: Mode.BCSC }}>
         <AuthProvider>
@@ -116,11 +116,12 @@ describe('Developer Screen', () => {
     })
 
     expect(mockDeleteToken).toHaveBeenCalledWith(TokenType.Refresh)
-    expect(mockDeleteToken).toHaveBeenCalledWith(TokenType.Registration)
     expect(mockDeleteToken).toHaveBeenCalledWith(TokenType.Access)
+    // The registration access token is only ever removed together with its client ID, never on its own
+    expect(mockDeleteToken).not.toHaveBeenCalledWith(TokenType.Registration)
     expect(mockClearTokens).toHaveBeenCalledTimes(1)
     expect(mockLogger.info).toHaveBeenCalledWith(
-      'Developer: Deleted all tokens from native storage and cleared in-memory cache'
+      'Developer: Deleted the refresh and access tokens from native storage and cleared in-memory cache'
     )
     expect(mockLogger.error).not.toHaveBeenCalled()
   })

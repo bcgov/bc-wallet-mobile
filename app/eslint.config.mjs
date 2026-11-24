@@ -7,6 +7,17 @@ import reactNativeA11y from 'eslint-plugin-react-native-a11y'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
+// Device registration (#4925): the client ID and its registration access token are saved together and
+// cleared together by one owner, so a save or a clear anywhere else can leave the two not matching.
+const registrationOwnerMessage =
+  'Read, save and clear the registration through services/device-registration, which keeps the client ID and its token together.'
+
+const registrationOwnerImports = {
+  group: ['react-native-bcsc-core'],
+  importNames: ['setRegistration', 'clearRegistration'],
+  message: registrationOwnerMessage,
+}
+
 export default [
   {
     settings: {
@@ -132,16 +143,26 @@ export default [
             "JSXOpeningElement[name.object.name='Animated'][name.property.name='Text']:not(:has(JSXAttribute[name.name='maxFontSizeMultiplier']))",
           message: 'Pass maxFontSizeMultiplier (from useTheme()) to Animated.Text so large OS font sizes stay capped.',
         },
+        // Device registration (#4925): the registration access token is not a token to read, set or delete
+        // on its own, apart from its client ID.
+        {
+          selector:
+            "CallExpression[callee.name=/^(getToken|getTokenWithDiagnostics|setToken|deleteToken)$/] > MemberExpression[object.name='TokenType'][property.name='Registration']",
+          message: registrationOwnerMessage,
+        },
       ],
+      'no-restricted-imports': ['error', { patterns: [registrationOwnerImports] }],
     },
   },
   {
     files: ['src/bcsc-theme/**'],
     ignores: ['**/*.test.{ts,tsx}'],
     rules: {
+      // Replaces the src-wide rule above for these files, so it repeats the registration imports
       'no-restricted-imports': [
         'error',
         {
+          patterns: [registrationOwnerImports],
           paths: [
             // Large OS font sizes (#4401): a raw react-native Text scales without limit (3.57x on iOS).
             // Bifold's ThemedText applies the theme's cap, so BCSC screens use it exclusively.

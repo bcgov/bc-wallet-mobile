@@ -12,3 +12,7 @@ export const interpretVerificationStatus = (
   status && (Object.values(VerificationRequestStatus) as string[]).includes(status)
     ? (status as VerificationRequestStatus)
     : UNKNOWN_VERIFICATION_STATUS
+
+/** The agent has reviewed the request: there is a decision to act on. */
+export const isDecidedVerificationStatus = (status?: VerificationRequestStatus): boolean =>
+  status === VerificationRequestStatus.VERIFIED || status === VerificationRequestStatus.CANCELLED

@@ -66,7 +66,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const handleLater = useCallback(() => {
     onAnswered?.()
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
-    // A first-time verifier who walked back here from the first step is still IN_PROGRESS, which alone
+    // A first-time verifier who walked back here from the first step is still in the verify flow, which alone
     // keeps VerifyStack mounted; skipping is their way to Home, so leave the flow as well (a no-op at the
     // fresh prompt, where nothing is in progress yet). Progress is kept for the Home card
     leaveVerification()

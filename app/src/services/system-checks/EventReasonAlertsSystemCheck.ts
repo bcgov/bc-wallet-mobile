@@ -3,7 +3,7 @@ import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
 import { AlertOptions } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCDispatchAction, CredentialMetadata, VerificationStatus } from '@/store'
+import { BCDispatchAction, CredentialMetadata } from '@/store'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -81,8 +81,8 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
       case BCSCEvent.Expire:
         // Login, pairing, and Services, will only be usable in emergency mode, but don't force reverification
         this.utils.dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
-          payload: [VerificationStatus.DEACTIVATED],
+          type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED,
+          payload: [true],
         })
         break
       case BCSCEvent.Renewal:

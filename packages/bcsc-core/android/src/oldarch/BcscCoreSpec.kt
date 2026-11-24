@@ -43,6 +43,15 @@ abstract class BcscCoreSpec internal constructor(
         promise: Promise,
     )
 
+    abstract fun setRegistration(
+        clientID: String,
+        issuer: String,
+        registrationAccessToken: String?,
+        promise: Promise,
+    )
+
+    abstract fun clearRegistration(promise: Promise)
+
     abstract fun getAccount(promise: Promise)
 
     abstract fun getDeviceId(promise: Promise)
@@ -224,12 +233,6 @@ abstract class BcscCoreSpec internal constructor(
     abstract fun deleteCredential(promise: Promise)
 
     abstract fun hasCredential(promise: Promise)
-
-    abstract fun showLocalNotification(
-        title: String,
-        message: String,
-        promise: Promise,
-    )
 
     abstract fun decodeLoginChallenge(
         jwt: String,

@@ -2,7 +2,7 @@ import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useVerificationPendingActions } from '@/bcsc-theme/hooks/useVerificationPendingActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { VerificationRequestStatus } from '@/constants'
+import { isDecidedVerificationStatus } from '@/bcsc-theme/utils/verification-status'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -16,10 +16,6 @@ import { AppState, View } from 'react-native'
 type PendingReviewScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PendingReview>
 }
-
-/** The agent has reviewed the request: there is a decision to act on. */
-const isDecided = (status?: VerificationRequestStatus) =>
-  status === VerificationRequestStatus.VERIFIED || status === VerificationRequestStatus.CANCELLED
 
 /**
  * Waits for the agent's review of a submitted video. The screen offers no check of its own (by design)
@@ -62,7 +58,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   // VerificationResponseService → useVerificationResponseListener (mounted by VerifyStack) →
   // verificationRequestStatus. A decided status is acted on straight away rather than at the next focus
   useEffect(() => {
-    if (navigation.isFocused() && isDecided(verificationRequestStatus)) {
+    if (navigation.isFocused() && isDecidedVerificationStatus(verificationRequestStatus)) {
       void handleCheckStatus()
     }
   }, [navigation, verificationRequestStatus, handleCheckStatus])

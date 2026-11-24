@@ -69,7 +69,7 @@ export const MainVerifyPromptScreen = defineScreen({
 
 /**
  * Wallet tab — currently modeling the EMPTY credential wallet (the unverified/fresh state).
- * `self` is the BCSC empty-state container; `loading` is the shared agent/credentials gate spinner
+ * `self` is the BCSC empty-state container; `loading` is the agent/credentials gate's skeleton
  * (the Credo agent boots for any authenticated user, verified or not — allow a generous wait).
  * The verified journeys extend this for the populated state.
  */

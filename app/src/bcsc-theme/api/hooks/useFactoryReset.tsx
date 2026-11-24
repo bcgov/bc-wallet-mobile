@@ -3,12 +3,13 @@ import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-ser
 import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { readDeviceRegistration } from '@/bcsc-theme/services/device-registration'
 import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { WALLET_ID } from '@/constants'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
-import { clearAllKeychainData, getAccount, getToken, removeAccount, TokenType } from 'react-native-bcsc-core'
+import { clearAllKeychainData, getAccount, NativeAccount, removeAccount } from 'react-native-bcsc-core'
 import { Config } from 'react-native-config'
 import useRegistrationApi from './useRegistrationApi'
 
@@ -45,28 +46,27 @@ export const useFactoryReset = () => {
   const agentCtx = useBCSCAgentSafe()
 
   /**
-   * Deletes the IAS account associated with the given clientID from the server.
+   * Deletes the account's registration from the IAS server. A failed delete is logged, not thrown.
    *
-   * @param clientID - The clientID of the account to delete.
+   * The registration is read from storage, so this works before secure state has been hydrated.
+   *
+   * @param account - The account whose registration to delete.
    * @returns A promise that resolves when the deletion attempt is complete.
    */
   const deleteRegistration = useCallback(
-    async (clientID: string) => {
+    async (account: NativeAccount) => {
       try {
-        let registrationAccessToken = store.bcscSecure.registrationAccessToken
+        const deviceRegistration = await readDeviceRegistration(account)
 
-        if (!registrationAccessToken) {
-          // Note: This allows a factory reset before secure state has been hydrated
-          const nativeToken = await getToken(TokenType.Registration)
-          registrationAccessToken = nativeToken?.token
-        }
-
-        if (!registrationAccessToken) {
-          logger.info('FactoryReset: No registration access token found, skipping IAS account deletion')
+        if (!deviceRegistration) {
+          logger.info('FactoryReset: No registration found on the device, skipping IAS account deletion')
           return
         }
 
-        const deleteIASAccount = await registration.deleteRegistration(registrationAccessToken, clientID)
+        const deleteIASAccount = await registration.deleteRegistration(
+          deviceRegistration.registrationAccessToken,
+          deviceRegistration.clientId
+        )
 
         if (!deleteIASAccount.success) {
           logger.warn('FactoryReset: Failed to delete IAS account from server')
@@ -75,7 +75,7 @@ export const useFactoryReset = () => {
         logger.warn('FactoryReset: Error occurred while deleting registration', { error })
       }
     },
-    [logger, registration, store.bcscSecure.registrationAccessToken]
+    [logger, registration]
   )
 
   /**
@@ -89,7 +89,7 @@ export const useFactoryReset = () => {
     if (account) {
       // Delete IAS account registration
       logger.info('FactoryReset: Deleting IAS account from server...')
-      await deleteRegistration(account.clientID)
+      await deleteRegistration(account)
 
       // Delete secure data from native storage
       logger.info('FactoryReset: Deleting secure data from native storage...')
@@ -174,7 +174,7 @@ export const useFactoryReset = () => {
 
         // Reset BCSC state to initial state. CLEAR_BCSC (which flips hasAccount to
         // false) must dispatch BEFORE clearSecureState (which resets bcscSecure,
-        // including verifiedStatus out of IN_PROGRESS) — RootStack short-circuits to
+        // including inVerifyFlow) — RootStack short-circuits to
         // OnboardingStack on `hasAccount === false` before it ever derives
         // showVerifyStack, so ordering it first prevents the transient MainStack
         // mount that let Bifold's provider tree fire storage reads against the

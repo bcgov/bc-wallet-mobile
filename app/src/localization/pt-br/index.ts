@@ -414,8 +414,6 @@ const translation = {
       "MustCheckBox": "You must check this box to continue. (PT-BR)",
       "PINTooShort": "PIN must be 6 digits (PT-BR)",
       "PINsDoNotMatch": "PINs do not match (PT-BR)",
-      "SettingUpPIN": "Setting up your PIN... (PT-BR)",
-      "SettingUpAccount": "Setting up your account... (PT-BR)",
       "FailedToSetPIN": "Failed to set PIN (PT-BR)",
       "ErrorSettingPIN": "An error occurred while setting the PIN (PT-BR)"
     },
@@ -454,7 +452,6 @@ const translation = {
       "IUnderstand": "I understand if I forget my PIN that I have to set up this app again. (PT-BR)",
       "MustCheckBox": "You must check this box to continue. (PT-BR)",
       "ButtonTitle": "Change PIN (PT-BR)",
-      "ChangingPIN": "Changing your PIN... (PT-BR)",
       "PINTooShort": "Your PIN must be 6 digits (PT-BR)",
       "PINsDoNotMatch": "PIN does not match (PT-BR)",
       "IncorrectPIN": "Incorrect PIN (PT-BR)",
@@ -566,8 +563,6 @@ const translation = {
       "NotListedDescriptionContact": "Contact the service if you wish to see them listed here. (PT-BR)",
       "PrivacyPolicy": "Privacy Policy (PT-BR)",
       "LoginErrorTitle": "Problem with Login (PT-BR)",
-      "SavedServices": "Saved Services (PT-BR)",
-      "NoSavedServices": "No saved services (PT-BR)",
       "Remove": "Remove (PT-BR)",
       "Open": "Open (PT-BR)",
     },
@@ -630,9 +625,6 @@ const translation = {
       "Title": "Home (PT-BR)",
       "Welcome": "Welcome (PT-BR)",
       "Scan": "Scan (PT-BR)",
-      "WhereToUseTitle": "Where to use (PT-BR)",
-      "WhereToUseAccessibilityLabel": "Find services (PT-BR)",
-      "WhereToUseDescription": "Find the websites you can log in to with this app. (PT-BR)",
       "LogInFromComputerTitle": "Log in from another device (PT-BR)",
       "LogInFromComputerAccessibilityLabel": "Log in from another device (PT-BR)",
       "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code (PT-BR)",
@@ -1256,7 +1248,8 @@ const translation = {
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified (PT-BR)",
       "Label": "Details from Service BC agent: \n{{reason}} (PT-BR)",
-      "Button": "Retry verification (PT-BR)",
+      "RetryButton": "Verify a different way (PT-BR)",
+      "RestartButton": "Restart from beginning (PT-BR)",
       "NoReason": "No reason provided (PT-BR)"
     },
     "DualNonBCSCEvidence": {

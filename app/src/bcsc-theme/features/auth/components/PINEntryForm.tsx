@@ -1,11 +1,9 @@
 import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { clearPinAttempts } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
-import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TestIds } from '@/test-ids/registry'
 import {
@@ -45,9 +43,13 @@ interface PINEntryFormProps {
    */
   onSuccess: (result: PINEntryResult) => Promise<void>
   /**
-   * Optional loading message to show during PIN setup
+   * Keeps the button spinning once `onSuccess` resolves, for an `onSuccess` that always takes this screen
+   * away: Create PIN's ends in the root phase swap, which slides this screen out, and a reset would flip the
+   * button back in the slide's first frame. Leave it unset when `onSuccess` can stay on the screen (Change
+   * PIN navigates only while the screen is focused). Either way the wait stays on the button with the
+   * inputs locked, never under the global overlay, so the slide away starts from this screen.
    */
-  loadingMessage?: string
+  keepLoadingOnSuccess?: boolean
   /**
    * Translation key prefix for labels (defaults to 'BCSC.PIN')
    * Will look for: CreatePIN, ConfirmPIN, RememberPIN, RememberPINDescription,
@@ -73,13 +75,12 @@ interface PINEntryFormProps {
  */
 export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   onSuccess,
-  loadingMessage,
+  keepLoadingOnSuccess = false,
   translationPrefix = 'BCSC.PIN',
   creatingNewPIN = false,
 }: PINEntryFormProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
-  const { startLoading } = useLoadingScreen()
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState(false)
   const [checkboxError, setCheckboxError] = useState(false)
@@ -98,7 +99,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 
   const validateAndContinue = useCallback(
     async (pin1: string, pin2: string) => {
-      let stopLoading: (() => void) | undefined
+      let succeeded = false
       try {
         setLoading(true)
         setErrorMessage1(undefined)
@@ -128,9 +129,6 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           return
         }
 
-        // All validations passed, show a full screen loading indicator
-        stopLoading = startLoading(loadingMessage ?? tWithPrefix('SettingUpPIN'))
-
         const account = await getAccount()
 
         if (!account) {
@@ -140,9 +138,8 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             ? AccountSecurityMethod.PinWithDeviceAuth
             : AccountSecurityMethod.PinNoDeviceAuth
 
-          // Note: account must exist before setting the PIN
+          // Note: account must exist before setting the PIN. It has no client ID until the device registers.
           await setAccount({
-            clientID: TEMPORARY_ACCOUNT_CLIENT_ID,
             issuer: client.endpoints.issuer,
             securityMethod: deviceSecurityMethod,
           })
@@ -157,6 +154,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 
           // Call the success handler with the wallet key
           await onSuccess({ success, walletKey })
+          succeeded = true
           logger.info('PIN set successfully')
         } else {
           setErrorMessage1(tWithPrefix('FailedToSetPIN'))
@@ -166,11 +164,12 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         setErrorMessage1(tWithPrefix('ErrorSettingPIN'))
         logger.error(`PIN setup error [${appError.appEvent}]: ${appError.technicalMessage ?? appError.message}`)
       } finally {
-        setLoading(false)
-        stopLoading?.()
+        if (!succeeded || !keepLoadingOnSuccess) {
+          setLoading(false)
+        }
       }
     },
-    [checked, startLoading, loadingMessage, tWithPrefix, client.endpoints.issuer, onSuccess, logger]
+    [checked, keepLoadingOnSuccess, tWithPrefix, client.endpoints.issuer, onSuccess, logger]
   )
 
   const onPressContinue = useCallback(async () => {
@@ -230,6 +229,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         testID={testIdWithKey(
           creatingNewPIN ? TestIds.onboarding.createPin.createPin : TestIds.onboarding.createPin.continue
         )}
+        disabled={loading}
         onPress={onPressContinue}
       >
         {loading && <ButtonLoading />}
@@ -245,6 +245,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             {tWithPrefix('CreatePIN')}
           </ThemedText>
           <PINInput
+            editable={!loading}
             onPINChange={handlePIN1Change}
             onPINComplete={handlePIN1Complete}
             errorMessage={errorMessage1}
@@ -259,6 +260,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           </ThemedText>
           <PINInput
             ref={pin2Ref}
+            editable={!loading}
             onPINChange={handlePIN2Change}
             onPINComplete={handlePIN2Complete}
             errorMessage={errorMessage2}

@@ -5,14 +5,7 @@ import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
-import {
-  BCDispatchAction,
-  BCSCSecureState,
-  BCState,
-  NonBCSCUserMetadata,
-  ResidentialAddressDraft,
-  VerificationStatus,
-} from '@/store'
+import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, ResidentialAddressDraft } from '@/store'
 import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
@@ -38,10 +31,10 @@ import {
   getEvidence,
   getSavedServices,
   getToken,
+  isAccountRegistered,
   NativeAuthorizationRequest,
   NativeSavedService,
   PhotoMetadata,
-  setAccount,
   setAccountFlags,
   setAuthorizationRequest,
   setCredential,
@@ -52,8 +45,15 @@ import {
 } from 'react-native-bcsc-core'
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
+import {
+  clearDeviceRegistration,
+  DeviceRegistration,
+  fillInDeviceRegistration,
+  readStoredDeviceRegistration,
+  saveDeviceRegistration,
+} from '../services/device-registration'
 import { ProvinceCode } from '../utils/address-utils'
-import { createVerifiedCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
+import { createVerifiedCredential, isCredentialDeactivated } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { KeyRecoveryStatus, performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import {
@@ -86,6 +86,9 @@ import { useBCSCApiClientState } from './useBCSCApiClient'
  * // Save tokens received from API
  * await updateTokens({ refreshToken: 'abc123' })
  *
+ * // Save the registration the server returned
+ * await saveRegistration({ clientId, issuer, registrationAccessToken })
+ *
  * // After successful authentication:
  * await hydrateSecureState()
  *
@@ -107,26 +110,21 @@ export const useSecureActions = () => {
   // ============================================================================
 
   /**
-   * Persists tokens to native secure storage.
+   * Persists tokens to native secure storage. The registration access token is not one of them: it is
+   * saved with its client ID (see saveRegistration).
    *
    * @param refreshToken OAuth refresh token
-   * @param registrationAccessToken DCR registration access token
    * @param accessToken OAuth access token (not used much from storage in v3, for
    * most use cases access token doesn't live long enough to need persistence)
    */
   const persistTokens = useCallback(
-    async (refreshToken?: string, registrationAccessToken?: string, accessToken?: string) => {
+    async (refreshToken?: string, accessToken?: string) => {
       try {
         const promises: Promise<boolean | TokenResponse>[] = []
 
         if (refreshToken) {
           logger.info(`Persisting refresh token`)
           promises.push(setToken(TokenType.Refresh, refreshToken))
-        }
-
-        if (registrationAccessToken) {
-          logger.info(`Persisting registration access token`)
-          promises.push(setToken(TokenType.Registration, registrationAccessToken))
         }
 
         if (accessToken) {
@@ -201,26 +199,40 @@ export const useSecureActions = () => {
     [logger]
   )
 
+  /**
+   * Removes the copy of the client ID that an authorization request carried over from v3 can hold (Android
+   * only: an iOS request has none). The rest of the request, such as a verification in progress, is kept.
+   */
+  const removeCarriedOverClientId = useCallback(async () => {
+    try {
+      const existingData = await getAuthorizationRequest()
+      if (!existingData?.clientID) {
+        return
+      }
+
+      const remainingData = { ...existingData }
+      delete remainingData.clientID
+      await setAuthorizationRequest(remainingData)
+      logger.info('Client ID carried over from v3 removed from the authorization request')
+    } catch (error) {
+      logger.error('Failed to remove the client ID carried over from v3:', error as Error)
+      throwNativeBcscError(error)
+    }
+  }, [logger])
+
   // ============================================================================
   // ACTIONS - High-level operations that update store and persist to storage
   // ============================================================================
 
   /**
-   * Update tokens in state and persist to native storage
+   * Update the refresh and access tokens in state and persist them to native storage
    */
   const updateTokens = useCallback(
-    async (tokens: { refreshToken?: string; registrationAccessToken?: string; accessToken?: string }) => {
+    async (tokens: { refreshToken?: string; accessToken?: string }) => {
       if (tokens.refreshToken !== undefined) {
         dispatch({
           type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN,
           payload: [tokens.refreshToken],
-        })
-      }
-
-      if (tokens.registrationAccessToken !== undefined) {
-        dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN,
-          payload: [tokens.registrationAccessToken],
         })
       }
 
@@ -231,10 +243,47 @@ export const useSecureActions = () => {
         })
       }
 
-      await persistTokens(tokens.refreshToken, tokens.registrationAccessToken, tokens.accessToken)
+      await persistTokens(tokens.refreshToken, tokens.accessToken)
     },
     [dispatch, persistTokens]
   )
+
+  /**
+   * Save the device registration (client ID, issuer and registration access token) in one step, then
+   * keep the token in state.
+   *
+   * The save goes first and its failure is thrown: the previous registration is then still in place, and
+   * the state still holds its token.
+   */
+  const saveRegistration = useCallback(
+    async (registration: DeviceRegistration) => {
+      await saveDeviceRegistration(registration, logger)
+
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN,
+        payload: [registration.registrationAccessToken],
+      })
+    },
+    [dispatch, logger]
+  )
+
+  /**
+   * Clear the device registration (client ID and registration access token), then drop the token from
+   * state. Delete the access and refresh tokens first (see clearDeviceRegistration).
+   *
+   * A copy of the client ID that an authorization request carried over from v3 can hold is removed first.
+   * Unlock fills a missing client ID in from it (hydrateSecureState), so it would bring back a client ID the
+   * server may have deleted, and ensureRegistered would then not register again.
+   *
+   * The clear goes first and its failure is thrown, so the state never says the device has no
+   * registration while storage still holds one.
+   */
+  const clearRegistration = useCallback(async () => {
+    await removeCarriedOverClientId()
+    await clearDeviceRegistration(logger)
+
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN, payload: [] })
+  }, [dispatch, logger, removeCarriedOverClientId])
 
   /**
    * Update user info in state and persist to native storage
@@ -503,6 +552,9 @@ export const useSecureActions = () => {
         if (!account) {
           throw new Error('Cannot mark as verified: no account found')
         }
+        if (!isAccountRegistered(account)) {
+          throw new Error('Cannot mark as verified: the account has no registration')
+        }
 
         await setCredential(createVerifiedCredential(account.issuer, account.clientID, store.bcscSecure.cardProcess))
       } else {
@@ -532,8 +584,8 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Enters (or re-enters) the verification flow: RootStack shows the VerifyStack while verification is
-   * IN_PROGRESS, and marking it started makes every later launch resume it until the user is verified.
+   * Enters (or re-enters) the verification flow: RootStack shows the VerifyStack while the user is in
+   * the verify flow, and marking it started makes every later launch resume it until the user is verified.
    */
   const continueVerificationProcess = useCallback(() => {
     dispatch({
@@ -541,8 +593,8 @@ export const useSecureActions = () => {
       payload: [true],
     })
     dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
-      payload: [VerificationStatus.IN_PROGRESS],
+      type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW,
+      payload: [true],
     })
   }, [dispatch])
 
@@ -936,22 +988,23 @@ export const useSecureActions = () => {
     try {
       logger.info('Hydrating secure state from native storage...')
 
-      // Load all data from native storage in parallel
+      // The registration (client ID, issuer and its token) is read through its owner, from this account
+      const account = await getAccount()
+
+      // Load the rest from native storage in parallel
       const [
-        account,
+        registration,
         authRequest,
         refreshTokenObj,
-        registrationAccessTokenObj,
         accessTokenObj,
         accountFlags,
         evidenceData,
         credential,
         nativeSavedServices,
       ] = await Promise.all([
-        getAccount(),
+        readStoredDeviceRegistration(account),
         getAuthorizationRequest(),
         getToken(TokenType.Refresh),
-        getToken(TokenType.Registration),
         getToken(TokenType.Access),
         getAccountFlags(),
         getEvidence(),
@@ -960,14 +1013,21 @@ export const useSecureActions = () => {
       ])
 
       const refreshToken = refreshTokenObj?.token
-      let registrationAccessToken = registrationAccessTokenObj?.token
       const accessToken = accessTokenObj?.token
 
-      let issuer = account?.issuer
-      let clientID = account?.clientID
+      let { issuer, clientId: clientID, registrationAccessToken } = registration
+      // The token storage holds. One the server rotates during this unlock differs from it until it is saved.
+      let savedRegistrationAccessToken = registrationAccessToken
       const tokenClientID = getRegistrationTokenClientId(registrationAccessToken)
 
-      if (account && (!issuer || !clientID)) {
+      // An account that has not registered yet has no client ID, no tokens, and nothing to fill one in
+      // from. A refresh token without a client ID is not that: it is a registration that lost its client ID.
+      const fillInClientID = registrationAccessToken ? tokenClientID : authRequest?.clientID
+      const isUnregistered = Boolean(
+        issuer && !clientID && !registrationAccessToken && !refreshToken && !fillInClientID
+      )
+
+      if (account && (!issuer || !clientID) && !isUnregistered) {
         // A missing issuer or clientID breaks refresh. Prefer the registration token's `aud`; the
         // authorization request (possibly re-imported from v3) is the fallback only when there is no token.
         const clientIDSource = registrationAccessToken ? 'registration token' : 'authorization request'
@@ -977,15 +1037,14 @@ export const useSecureActions = () => {
 
         try {
           issuer = issuer || authRequest?.issuer
-          clientID = clientID || (registrationAccessToken ? tokenClientID : authRequest?.clientID)
+          clientID = clientID || fillInClientID
 
           if (issuer && clientID) {
-            // The account record already carries its security method, so only the recovered fields change.
-            const updatedAccount = { ...account, issuer, clientID }
+            // Only the recovered fields change: the stored token, if there is one, is left as it is.
             logger.info(
               `[hydrateSecureState] Recovered issuer/clientID (clientID source: ${clientIDSource}); updating account`
             )
-            await setAccount(updatedAccount)
+            await fillInDeviceRegistration({ clientId: clientID, issuer }, logger)
           } else {
             logger.warn(
               `[hydrateSecureState] Could not recover account fields: issuer=${issuer ? 'OK' : 'MISSING'}, clientID=${clientID ? 'OK' : 'MISSING'}`
@@ -1010,6 +1069,25 @@ export const useSecureActions = () => {
           clientID !== tokenClientID
       )
 
+      // Saves a registration access token the server rotated during this unlock, with the client ID the
+      // account holds. Returns whether storage now holds the token in use.
+      const saveRotatedRegistrationAccessToken = async (): Promise<boolean> => {
+        if (!registrationAccessToken || registrationAccessToken === savedRegistrationAccessToken) {
+          return true
+        }
+        if (!clientID || !issuer) {
+          return false
+        }
+
+        try {
+          await saveRegistration({ clientId: clientID, issuer, registrationAccessToken })
+          savedRegistrationAccessToken = registrationAccessToken
+          return true
+        } catch {
+          return false
+        }
+      }
+
       // Switches the account to the client ID the registration token was issued for, but only after the
       // server confirms that registration. Returns whether the local clientID now equals the token's.
       const repairClientIdDrift = async (): Promise<boolean> => {
@@ -1023,18 +1101,18 @@ export const useSecureActions = () => {
         )
         const confirmation = await confirmRegistrationClientId(apiClient, tokenClientID, registrationAccessToken)
 
-        // The server revokes the old token when it rotates, so persist the new one whatever the outcome.
+        // The server revokes the old token when it rotates, so the new one is kept whatever the outcome.
         if (confirmation.status !== 'request_failed' && confirmation.newRegistrationAccessToken) {
           registrationAccessToken = confirmation.newRegistrationAccessToken
-          try {
-            await updateTokens({ registrationAccessToken })
-          } catch {
-            logger.error('[hydrateSecureState] event=client_id_drift_rejected reason=persist_failed')
-            return false
-          }
         }
 
         if (confirmation.status !== 'confirmed') {
+          // Not switching, so a rotated token is saved with the client ID the account already holds
+          if (!(await saveRotatedRegistrationAccessToken())) {
+            logger.error('[hydrateSecureState] event=client_id_drift_rejected reason=persist_failed')
+            return false
+          }
+
           const httpStatus = confirmation.status === 'request_failed' ? (confirmation.httpStatus ?? 'none') : 'none'
           logger.warn(
             `[hydrateSecureState] event=client_id_drift_rejected reason=${confirmation.status} http_status=${httpStatus}`
@@ -1043,19 +1121,12 @@ export const useSecureActions = () => {
         }
 
         try {
-          await setAccount({ ...account, issuer, clientID: tokenClientID })
+          // One save: the confirmed client ID together with its token, rotated or not
+          await saveRegistration({ clientId: tokenClientID, issuer, registrationAccessToken })
           clientID = tokenClientID
+          savedRegistrationAccessToken = registrationAccessToken
         } catch {
-          // Android can save the account and then fail on the issuer file, so trust what is stored.
-          try {
-            clientID = (await getAccount())?.clientID ?? clientID
-          } catch {
-            logger.error('[hydrateSecureState] event=client_id_drift_rejected reason=persist_failed')
-            return false
-          }
-        }
-
-        if (clientID !== tokenClientID) {
+          // Nothing was switched. A rotated token is still saved, at the end of hydration.
           logger.error('[hydrateSecureState] event=client_id_drift_rejected reason=persist_failed')
           return false
         }
@@ -1105,9 +1176,14 @@ export const useSecureActions = () => {
             logger.error(
               '[hydrateSecureState] event=refresh_token_rejected server rejected a locally-valid refresh token (invalid_token); skipping key recovery'
             )
+          } else if (isAppError(error, AppEventCode.CLOCK_SKEW_ERROR)) {
+            // The keys are fine: the refresh was refused, or its assertion rejected, for the device clock
+            logger.warn(
+              '[hydrateSecureState] event=clock_skew token refresh failed on the device clock; skipping key recovery'
+            )
           } else {
             // Only a 401 naming an unknown client, or one that doesn't own the token, proves the stored ID is
-            // bad. Other 401s (bad signature, clock skew) and network/timeout/5xx go straight to key recovery.
+            // bad. Other 401s (bad signature) and network/timeout/5xx go straight to key recovery.
             if (driftDetected && isUnusableClientIdError(error)) {
               const repaired = await repairClientIdDrift()
               if (repaired) {
@@ -1150,11 +1226,14 @@ export const useSecureActions = () => {
         }
       }
 
+      // A token the recovery probe or the re-registration surfaced replaces the one in use
+      registrationAccessToken = recoveredRegistrationAccessToken ?? registrationAccessToken
+
       // Computed once and used for both the keychain write-back and the store, so the
       // HYDRATE_SECURE_STATE dispatch below can't clobber a refreshed or rotated token.
       const effectiveTokens = {
         refreshToken: freshTokens?.refresh_token ?? refreshToken,
-        registrationAccessToken: recoveredRegistrationAccessToken ?? registrationAccessToken,
+        registrationAccessToken,
         accessToken: freshTokens?.access_token ?? accessToken,
       }
 
@@ -1162,9 +1241,17 @@ export const useSecureActions = () => {
       // "Device Authentication Failed" (#4645). The tokens are in memory either way, and the next
       // unlock refreshes from the stored token again, so log and continue.
       try {
-        await updateTokens(effectiveTokens)
+        await updateTokens({ refreshToken: effectiveTokens.refreshToken, accessToken: effectiveTokens.accessToken })
       } catch (error) {
         logger.error('[hydrateSecureState] Failed to persist tokens; continuing with in-memory tokens', error as Error)
+      }
+
+      // The registration access token is written only when the server rotated it: the server has
+      // revoked the stored one. Same as above, a failed write must not fail the unlock.
+      if (!(await saveRotatedRegistrationAccessToken())) {
+        logger.error(
+          '[hydrateSecureState] Failed to persist the rotated registration access token; continuing with it in memory'
+        )
       }
 
       // Reconstruct userMetadata from authorizationRequest (matches IAS apps)
@@ -1238,8 +1325,9 @@ export const useSecureActions = () => {
         }
       }
 
-      const verificationStatus = getCredentialVerificationStatus(credential ?? restoredCredential)
-      const verified = verificationStatus === VerificationStatus.VERIFIED
+      const record = credential ?? restoredCredential
+      const credentialDeactivated = isCredentialDeactivated(record)
+      const verified = Boolean(record) && !credentialDeactivated
 
       // A verified account with no refresh token is unrecoverable
       const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
@@ -1264,7 +1352,8 @@ export const useSecureActions = () => {
         ...effectiveTokens,
 
         verified,
-        verifiedStatus: verificationStatus,
+        credentialDeactivated,
+        inVerifyFlow: false,
 
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
         emailAddress: accountFlags.emailAddress ?? authRequest?.verifiedEmail,
@@ -1303,6 +1392,7 @@ export const useSecureActions = () => {
     apiClient,
     isClientReady,
     updateTokens,
+    saveRegistration,
     removeAbandonedEvidence,
     dispatch,
     store.bcsc.verificationStarted,
@@ -1339,7 +1429,7 @@ export const useSecureActions = () => {
 
   /**
    * Completely removes sensitive data from native storage.
-   * Call this on account removal.
+   * Call this on account removal, before `removeAccount`, which also takes the registration with it.
    */
   const deleteSecureData = useCallback(async () => {
     try {
@@ -1350,9 +1440,16 @@ export const useSecureActions = () => {
         deleteSavedServices(),
         deleteCredential(),
         deleteToken(TokenType.Refresh),
-        deleteToken(TokenType.Registration),
         deleteToken(TokenType.Access),
       ])
+      // After the other tokens: iOS stores them under the client ID this clears. Best effort, so a failed
+      // clear cannot stop a factory reset: removing the account next takes the registration with it.
+      try {
+        await clearDeviceRegistration(logger)
+      } catch {
+        // clearDeviceRegistration has logged the cause
+        logger.warn('Registration not cleared; continuing, as removing the account removes it')
+      }
       // doesn't throw
       await cancelVerificationReminders(logger)
       logger.info('Secure data deleted from native storage')
@@ -1403,6 +1500,8 @@ export const useSecureActions = () => {
   return {
     // Actions
     updateTokens,
+    saveRegistration,
+    clearRegistration,
     updateUserInfo,
     updateDeviceCodes,
     clearDeviceCodes,

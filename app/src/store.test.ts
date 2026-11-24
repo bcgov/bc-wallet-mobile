@@ -1,15 +1,7 @@
-import type { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 // Not imported via AppBanner: that would load the theme, which this suite's @bifold/core mock cannot support
 import { BCSCBanner } from './bcsc-theme/types/banners'
 import { InstallIdSystemCheck } from './services/system-checks/InstallIdSystemCheck'
-import {
-  BCDispatchAction,
-  BCLocalStorageKeys,
-  initialState,
-  migrateBCSCState,
-  reducer,
-  VerificationStatus,
-} from './store'
+import { BCDispatchAction, BCLocalStorageKeys, initialState, migrateBCSCState, reducer } from './store'
 
 jest.mock('react-native-config', () => ({
   BUILD_TARGET: 'bcsc',
@@ -47,6 +39,9 @@ describe('reducer', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
+
+  const requestId = (state: typeof initialState, id?: string) =>
+    reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID, payload: [id] })
 
   it('UPDATE_APP_VERSION sets appVersion and appBuildNumber', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, appVersion: '', appBuildNumber: '' } }
@@ -179,9 +174,52 @@ describe('reducer', () => {
     const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [true] })
 
     expect(result.bcscSecure.verified).toBe(true)
-    expect(result.bcscSecure.verifiedStatus).toBe(VerificationStatus.VERIFIED)
+    expect(result.bcscSecure.inVerifyFlow).toBe(false)
+    expect(result.bcscSecure.credentialDeactivated).toBe(false)
     expect(result.bcsc.verificationSkipped).toBe(false)
     expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
+  })
+
+  describe('verification facts', () => {
+    const withFacts = (facts: { credentialDeactivated: boolean; inVerifyFlow: boolean }) => ({
+      ...initialState,
+      bcscSecure: { ...initialState.bcscSecure, ...facts },
+    })
+
+    it('starts with neither fact set', () => {
+      expect(initialState.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
+    })
+
+    it.each([true, false])('UPDATE_SECURE_IN_VERIFY_FLOW writes %s and clears deactivation', (inVerifyFlow) => {
+      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: !inVerifyFlow })
+      const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW, payload: [inVerifyFlow] })
+
+      expect(result.bcscSecure).toMatchObject({ inVerifyFlow, credentialDeactivated: false })
+    })
+
+    it.each([true, false])('UPDATE_SECURE_CREDENTIAL_DEACTIVATED writes %s and leaves the flow', (deactivated) => {
+      const state = withFacts({ credentialDeactivated: !deactivated, inVerifyFlow: true })
+      const result = reducer(state, {
+        type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED,
+        payload: [deactivated],
+      })
+
+      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: deactivated, inVerifyFlow: false })
+    })
+
+    it('UPDATE_SECURE_VERIFIED clears both', () => {
+      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: true })
+      const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [false] })
+
+      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
+    })
+
+    it('CLEAR_SECURE_STATE keeps the flow when asked and clears deactivation', () => {
+      const state = withFacts({ credentialDeactivated: true, inVerifyFlow: false })
+      const result = reducer(state, { type: BCDispatchAction.CLEAR_SECURE_STATE, payload: [{ inVerifyFlow: true }] })
+
+      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: true })
+    })
   })
 
   it('UPDATE_SECURE_SECURITY_METHOD stores the method on secure state without persisting it', () => {
@@ -278,6 +316,28 @@ describe('reducer', () => {
     expect(result.bcsc.verificationStarted).toBeUndefined()
   })
 
+  describe('UPDATE_SECURE_VERIFICATION_REQUEST_ID', () => {
+    const cancelled = reducer(requestId(initialState, 'request-a'), {
+      type: BCDispatchAction.VERIFICATION_STATUS_RECEIVED,
+      payload: [{ status: 'cancelled', status_message: 'Face does not match' }],
+    })
+
+    it.each([
+      ['a new request', 'request-b'],
+      ['no request', undefined],
+    ])('clears the status and its message when the ID changes to %s', (_label, id) => {
+      const result = requestId(cancelled, id)
+
+      expect(result.bcscSecure.verificationRequestId).toBe(id)
+      expect(result.bcscSecure.verificationRequestStatus).toBeUndefined()
+      expect(result.bcscSecure.verificationRequestStatusMessage).toBeUndefined()
+    })
+
+    it('keeps the status when the same ID is stored again', () => {
+      expect(requestId(cancelled, 'request-a')).toBe(cancelled)
+    })
+  })
+
   describe('DISMISS_BANNER', () => {
     const dismiss = (state: typeof initialState, bannerId: BCSCBanner) =>
       reducer(state, { type: BCDispatchAction.DISMISS_BANNER, payload: [{ bannerId }] })
@@ -347,17 +407,6 @@ describe('reducer', () => {
       expect(state.bcsc.dismissedBanners).toBe(dismissedBanners)
     })
 
-    it('leaves the rest of the BCSC state alone', () => {
-      const bannerMessages: BCSCBannerMessage[] = [
-        { id: BCSCBanner.IAS_SERVER_NOTIFICATION, title: 'Notice', type: 'info' },
-      ]
-      const state = { ...initialState, bcsc: { ...initialState.bcsc, bannerMessages } }
-
-      const result = dismiss(state, BCSCBanner.APP_UPDATE_AVAILABLE)
-
-      expect(result.bcsc.bannerMessages).toBe(bannerMessages)
-    })
-
     it('persists the BCSC state with the dismissal', () => {
       const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000)
 
@@ -402,11 +451,48 @@ describe('reducer', () => {
     })
 
     it('stores pending and leaves the message undefined', () => {
-      const cancelled = received(initialState, [{ status: 'cancelled', status_message: 'Face does not match' }])
-      const result = received(cancelled, [{ status: 'pending', status_message: 'Waiting' }])
+      const result = received(initialState, [{ status: 'pending', status_message: 'Waiting' }])
 
       expect(result.bcscSecure.verificationRequestStatus).toBe('pending')
       expect(result.bcscSecure.verificationRequestStatusMessage).toBeUndefined()
+    })
+
+    it('records a decision that follows pending', () => {
+      const pending = received(initialState, [{ status: 'pending' }])
+
+      expect(received(pending, [{ status: 'verified' }]).bcscSecure.verificationRequestStatus).toBe('verified')
+    })
+
+    describe('a late pending answer', () => {
+      it('does not replace a verified decision', () => {
+        const verified = received(initialState, [{ status: 'verified' }])
+
+        expect(received(verified, [{ status: 'pending' }])).toBe(verified)
+      })
+
+      it('does not replace a cancelled decision or its message', () => {
+        const cancelled = received(initialState, [{ status: 'cancelled', status_message: 'Face does not match' }])
+        const result = received(cancelled, [{ status: 'pending', status_message: 'Waiting' }])
+
+        expect(result).toBe(cancelled)
+        expect(result.bcscSecure.verificationRequestStatus).toBe('cancelled')
+        expect(result.bcscSecure.verificationRequestStatusMessage).toBe('Face does not match')
+      })
+
+      it('is recorded once the request has ended and the status was cleared', () => {
+        const verified = received(initialState, [{ status: 'verified' }])
+        const cleared = reducer(verified, { type: BCDispatchAction.CLEAR_SECURE_STATE })
+
+        expect(received(cleared, [{ status: 'pending' }]).bcscSecure.verificationRequestStatus).toBe('pending')
+      })
+
+      it('is recorded for a new request that follows a decided one', () => {
+        const first = requestId(initialState, 'request-a')
+        const cancelled = received(first, [{ status: 'cancelled', status_message: 'Face does not match' }])
+        const second = requestId(cancelled, 'request-b')
+
+        expect(received(second, [{ status: 'pending' }]).bcscSecure.verificationRequestStatus).toBe('pending')
+      })
     })
 
     it('clears an earlier cancelled message when verified arrives', () => {
@@ -499,6 +585,12 @@ describe('migrateBCSCState', () => {
     expect(result.bcsc).not.toHaveProperty('reportUUID')
   })
 
+  it('removes a legacy bannerMessages field', () => {
+    const result = migrateBCSCState({ bannerMessages: ['x'] })
+
+    expect(result).toEqual({ bcsc: {}, migrated: true })
+  })
+
   it('prefers an existing installId over a legacy reportUUID, and still strips the legacy field', () => {
     const result = migrateBCSCState({ installId: 'y', reportUUID: 'x' })
 
@@ -582,48 +674,5 @@ describe('migrateBCSCState', () => {
     const check = new InstallIdSystemCheck(bcsc.installId, jest.fn())
 
     expect(check.runCheck()).toBe(true)
-  })
-
-  describe('bannerMessages', () => {
-    const deviceLimit = { id: BCSCBanner.DEVICE_LIMIT_EXCEEDED, title: 'Limit', type: 'error' } as BCSCBannerMessage
-    const serviceNotice = {
-      id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-      title: 'Notice',
-      type: 'warning',
-    } as BCSCBannerMessage
-    const retired4xBanner = {
-      id: 'CardExpiringSoonBanner',
-      title: 'Expires in 9 days',
-      description: 'Renew your account before it expires',
-      type: 'warning',
-      dismissible: false,
-    } as unknown as BCSCBannerMessage
-    const futureBanner = { id: 'SomeFutureBanner', title: 'Future', type: 'info' } as unknown as BCSCBannerMessage
-
-    it('drops banners whose id is not a current BCSCBanner, keeping the rest in order', () => {
-      const result = migrateBCSCState({ bannerMessages: [deviceLimit, retired4xBanner, futureBanner, serviceNotice] })
-
-      expect(result).toEqual({ bcsc: { bannerMessages: [deviceLimit, serviceNotice] }, migrated: true })
-    })
-
-    it('is idempotent: running again on the cleaned result changes nothing', () => {
-      const first = migrateBCSCState({ bannerMessages: [deviceLimit, retired4xBanner, serviceNotice] })
-      const second = migrateBCSCState(first.bcsc)
-
-      expect(second).toEqual({ bcsc: { bannerMessages: [deviceLimit, serviceNotice] }, migrated: false })
-    })
-
-    it.each(Object.values(BCSCBanner))('keeps a current %s banner', (id) => {
-      const banner = { id, title: 'Title', type: 'info' } as BCSCBannerMessage
-
-      expect(migrateBCSCState({ bannerMessages: [banner] })).toEqual({
-        bcsc: { bannerMessages: [banner] },
-        migrated: false,
-      })
-    })
-
-    it.each([[{ bannerMessages: [] }], [{}]])('has nothing to clean in %j', (persisted) => {
-      expect(migrateBCSCState(persisted)).toEqual({ bcsc: persisted, migrated: false })
-    })
   })
 })

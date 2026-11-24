@@ -1,11 +1,8 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import useConfigApi, { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { AppState } from 'react-native'
 
 type ServerStatusState =
@@ -67,11 +64,9 @@ const toResult = (serverStatus: ServerStatusState): ServerStatusRefreshResult =>
   return { isAvailable: true, serverStatus: null }
 }
 
-// Fetches IAS server status and keeps outage banner in sync.
+// Fetches IAS server status
 // `isAvailable` is used in other screens to gate access (verification flow, service login)
 export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
-  const { t } = useTranslation()
-  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
@@ -82,6 +77,8 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
 
   // Wait for the request to finish before starting another
   const inFlightRef = useRef<Promise<ServerStatusRefreshResult> | null>(null)
+  // Bumped when the app goes to the background: a fetch started before then may bring back a stale Date header
+  const generationRef = useRef(0)
   const fetchedForClientRef = useRef<BCSCApiClient | null>(null)
   const serverStatusStateRef = useRef(serverStatusState)
   serverStatusStateRef.current = serverStatusState
@@ -91,6 +88,7 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
       return inFlightRef.current
     }
 
+    const generation = generationRef.current
     const run = (async (): Promise<ServerStatusRefreshResult> => {
       setIsChecking(true)
       let newState: ServerStatusState = { kind: 'unknown' }
@@ -100,10 +98,23 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
       } catch (error) {
         logger.error('ServerStatusProvider: failed to fetch server status', error as Error)
         newState = { kind: 'error' }
-      } finally {
-        setIsChecking(false)
-        setHasChecked(true)
-        inFlightRef.current = null
+      }
+
+      // Started before the app went to the background; the fetch on return replaces it
+      if (generation !== generationRef.current) {
+        return toResult(newState)
+      }
+
+      // The status call is also the clock check: the client refuses token requests while the clock is off
+      client?.recordServerTime(newState.kind === 'loaded' ? newState.data.serverTimestamp : undefined)
+      setIsChecking(false)
+      setHasChecked(true)
+      inFlightRef.current = null
+
+      // A failed check during an outage keeps the last known outage
+      const previous = serverStatusStateRef.current
+      if (newState.kind === 'error' && previous.kind === 'loaded' && previous.data.status !== 'ok') {
+        newState = previous
       }
 
       setServerStatusState(newState)
@@ -112,7 +123,7 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
 
     inFlightRef.current = run
     return run
-  }, [configApi, logger])
+  }, [client, configApi, logger])
 
   const refresh = useCallback(
     async (options?: { force?: boolean }): Promise<ServerStatusRefreshResult> => {
@@ -147,7 +158,12 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
     }
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
+      if (nextAppState === 'background') {
+        // The user may change the clock while away, so drop the reading and any fetch still in flight
+        generationRef.current += 1
+        inFlightRef.current = null
+        client.recordServerTime()
+      } else if (nextAppState === 'active') {
         void fetchStatus()
       }
     })
@@ -155,57 +171,15 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
     return () => subscription.remove()
   }, [isClientReady, client, fetchStatus])
 
-  // Keep the outage and banner in sync with the latest known status
-  // TODO (MD): These banner messages and all banner messages should be derived from `facts` in the store (on the fly) instead of being dispatched.
+  // A token request with no clock reading runs this fetch first
   useEffect(() => {
-    if (serverStatusState.kind === 'unknown') {
+    if (!isClientReady || !client) {
       return
     }
 
-    if (serverStatusState.kind === 'error') {
-      return
-    }
-
-    const serverStatus = serverStatusState.data
-
-    if (serverStatus.status !== 'ok') {
-      dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
-      dispatch({
-        type: BCDispatchAction.ADD_BANNER_MESSAGE,
-        payload: [
-          {
-            id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-            title: undefined,
-            description: serverStatus.statusMessage ?? t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'),
-            type: 'info',
-            dismissible: false,
-            metadata: { contactLink: serverStatus.contactLink },
-          },
-        ],
-      })
-      return
-    }
-
-    dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
-
-    if (serverStatus.statusMessage) {
-      // A fixed one-line summary: the message itself can run long enough to fill the screen, so it
-      // is shown on the ServiceNotice screen the banner opens instead.
-      dispatch({
-        type: BCDispatchAction.ADD_BANNER_MESSAGE,
-        payload: [
-          {
-            id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-            title: t('BCSC.SystemChecks.ServerStatus.NoticeBannerTitle'),
-            type: 'warning',
-            dismissible: false,
-          },
-        ],
-      })
-    } else {
-      dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
-    }
-  }, [serverStatusState, dispatch, t])
+    client.setClockCheck(fetchStatus)
+    return () => client.setClockCheck(undefined)
+  }, [isClientReady, client, fetchStatus])
 
   const value = useMemo<ServerStatusContextType>(
     () => ({ ...toResult(serverStatusState), isChecking, hasChecked, refresh }),

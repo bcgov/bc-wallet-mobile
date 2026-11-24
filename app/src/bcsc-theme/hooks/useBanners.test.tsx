@@ -88,7 +88,7 @@ describe('useBanners', () => {
       const { result } = renderBanners({ scope: BannersScope.Auth })
 
       act(() => {
-        result.current.banners[0].onPress?.(BCSCBanner.APP_UPDATE_AVAILABLE)
+        result.current.banners[0].onPress?.()
       })
 
       expect(openLinkSpy).toHaveBeenCalledWith(links.getBCSCAppStoreUrl())
@@ -144,7 +144,7 @@ describe('useBanners', () => {
       const onDeviceLimitPress = jest.fn()
       const { result } = renderBanners({ scope: BannersScope.Home, onDeviceLimitPress }, { idToken: overLimitIdToken })
 
-      result.current.banners[0].onPress?.(BCSCBanner.DEVICE_LIMIT_EXCEEDED)
+      result.current.banners[0].onPress?.()
 
       expect(onDeviceLimitPress).toHaveBeenCalledTimes(1)
     })

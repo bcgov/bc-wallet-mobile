@@ -414,8 +414,6 @@ const translation = {
       "MustCheckBox": "You must check this box to continue. (FR)",
       "PINTooShort": "PIN must be 6 digits (FR)",
       "PINsDoNotMatch": "PINs do not match (FR)",
-      "SettingUpPIN": "Setting up your PIN... (FR)",
-      "SettingUpAccount": "Setting up your account... (FR)",
       "FailedToSetPIN": "Failed to set PIN (FR)",
       "ErrorSettingPIN": "An error occurred while setting the PIN (FR)"
     },
@@ -454,7 +452,6 @@ const translation = {
       "IUnderstand": "I understand if I forget my PIN that I have to set up this app again. (FR)",
       "MustCheckBox": "You must check this box to continue. (FR)",
       "ButtonTitle": "Change PIN (FR)",
-      "ChangingPIN": "Changing your PIN... (FR)",
       "PINTooShort": "Your PIN must be 6 digits (FR)",
       "PINsDoNotMatch": "PIN does not match (FR)",
       "IncorrectPIN": "Incorrect PIN (FR)",
@@ -566,8 +563,6 @@ const translation = {
       "NotListedDescriptionContact": "Contact the service if you wish to see them listed here. (FR)",
       "PrivacyPolicy": "Privacy Policy (FR)",
       "LoginErrorTitle": "Problem with Login (FR)",
-      "SavedServices": "Saved Services (FR)",
-      "NoSavedServices": "No saved services (FR)",
       "Remove": "Remove (FR)",
       "Open": "Open (FR)",
     },
@@ -630,9 +625,6 @@ const translation = {
       "Title": "Home (FR)",
       "Welcome": "Welcome (FR)",
       "Scan": "Scan (FR)",
-      "WhereToUseTitle": "Where to use (FR)",
-      "WhereToUseAccessibilityLabel": "Find services (FR)",
-      "WhereToUseDescription": "Find the websites you can log in to with this app. (FR)",
       "LogInFromComputerTitle": "Log in from another device (FR)",
       "LogInFromComputerAccessibilityLabel": "Log in from another device (FR)",
       "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code (FR)",
@@ -1256,7 +1248,8 @@ const translation = {
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified (FR)",
       "Label": "Details from Service BC agent: \n{{reason}} (FR)",
-      "Button": "Retry verification (FR)",
+      "RetryButton": "Verify a different way (FR)",
+      "RestartButton": "Restart from beginning (FR)",
       "NoReason": "No reason provided (FR)"
     },
     "DualNonBCSCEvidence": {

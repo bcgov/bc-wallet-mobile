@@ -1,7 +1,7 @@
 import { getAccountReadContext } from '@/bcsc-theme/utils/account-read-status'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { getAccount, isAccountRegistered } from 'react-native-bcsc-core'
+import { getAccount, isAccountRegistered, RegisteredNativeAccount } from 'react-native-bcsc-core'
 
 /**
  * Thrown by `withAccount` when there is no device account. Still a plain `Error` with the same message, so
@@ -21,12 +21,12 @@ export class AccountNotFoundError extends Error {
  * This is a wrapper function to centralize checking for an account before executing a function.
  *
  * Throws an `AccountNotFoundError` when there is no device account, and an `ACCOUNT_NOT_REGISTERED` AppError when
- * the account is only a temporary one (empty client ID), so recovery can register it.
+ * the account has no registration yet (no client ID), so recovery can register it.
  *
- * @param fn Function that `withAccount` will wrap, which requires an account to be present.
+ * @param fn Function that `withAccount` will wrap, which requires a registered account to be present.
  * @returns The executed function with the account passed as an argument.
  */
-export const withAccount = async <T>(fn: (account: any) => Promise<T>): Promise<T> => {
+export const withAccount = async <T>(fn: (account: RegisteredNativeAccount) => Promise<T>): Promise<T> => {
   const account = await getAccount()
 
   if (!isAccountRegistered(account)) {

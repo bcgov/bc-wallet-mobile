@@ -1,6 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
 import { PAIRING_CODE_LENGTH } from '@/constants'
 import { isAppError } from '@/errors/appError'
@@ -12,9 +11,9 @@ import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Alert, Keyboard, StyleSheet, View } from 'react-native'
 import { ChallengeSource } from 'react-native-bcsc-core'
 
 const ManualPairing: React.FC = () => {
@@ -24,10 +23,12 @@ const ManualPairing: React.FC = () => {
   const { t } = useTranslation()
   const [code, setCode] = useState(route.params?.pairingCode ?? '')
   const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  // The code being checked: it is not sent twice, and it alone reports a failure or ends the wait
+  const pendingCodeRef = useRef<string | null>(null)
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { pairing } = useApi()
-  const loadingScreen = useLoadingScreen()
   const { isAvailable: isServerAvailable } = useServerStatus()
   const alerts = useAlerts(navigation)
 
@@ -37,19 +38,41 @@ const ManualPairing: React.FC = () => {
       if (!isServerAvailable) {
         return
       }
-      const stopLoading = loadingScreen.startLoading()
+
+      // The scanner tab stays live during the wait: scanning the code being checked changes nothing,
+      // and scanning another code replaces it
+      if (pendingCodeRef.current === pairingCode) {
+        return
+      }
+      pendingCodeRef.current = pairingCode
+      const isReplaced = () => pendingCodeRef.current !== pairingCode
+
+      // The round trip waits inside the card, with the code locked and a spinner beneath it, rather than
+      // under the global overlay: the overlay hid this screen, and released as the push to the
+      // confirmation started it left the slide beginning from a screen that had just been hidden.
+      Keyboard.dismiss()
+      setSubmitting(true)
       try {
         logger.info('Submitting pairing code.')
         const serviceClient = await pairing.loginByPairingCode(pairingCode, challengeSource)
 
         logger.info('Pairing code submitted successfully.')
 
+        // The server approved the login when it accepted the code, and this confirmation is the only place
+        // the app says so. The tab bar and Back stay live during an in-card wait, so it is shown even to a
+        // user who left or scanned another code: otherwise the login completes unannounced, and the code,
+        // now used, only fails when tried again.
         navigation.navigate(BCSCScreens.PairingConfirmation, {
           serviceId: serviceClient.client_ref_id,
           serviceName: serviceClient.client_name,
         })
       } catch (error) {
         logger.error('Error submitting pairing code', error as Error)
+
+        // The field shows another code by now, so this failure is not reported against it
+        if (isReplaced()) {
+          return
+        }
 
         // A plain 404 is assumed to be an incorrect pairing code, which pairingCodeErrorPolicy leaves for this screen
         if (isAppError(error, AppEventCode.NOT_FOUND)) {
@@ -68,10 +91,14 @@ const ManualPairing: React.FC = () => {
           }
         }
       } finally {
-        stopLoading()
+        // A replaced code leaves the wait to the one that replaced it
+        if (!isReplaced()) {
+          pendingCodeRef.current = null
+          setSubmitting(false)
+        }
       }
     },
-    [isServerAvailable, loadingScreen, logger, navigation, pairing, t, alerts]
+    [isServerAvailable, logger, navigation, pairing, t, alerts]
   )
 
   // QRCoreStack keeps tabs mounted (unmountOnBlur: false), so a pre-populated
@@ -109,6 +136,9 @@ const ManualPairing: React.FC = () => {
       marginTop: Spacing.md,
       marginHorizontal: Spacing.md,
     },
+    verifying: {
+      marginTop: Spacing.lg,
+    },
   })
 
   return (
@@ -133,11 +163,20 @@ const ManualPairing: React.FC = () => {
           autoCapitalize: 'characters',
           autoComplete: 'off',
           autoCorrect: false,
+          editable: !submitting,
           testID: testIdWithKey(TestIds.main.pairing.manualCodeInput),
           accessibilityLabel: 'Pairing-Code-Input',
         }}
       />
       <View style={[styles.lineBreak, { backgroundColor: ColorPalette.brand.highlight }]} />
+      {submitting && (
+        <ActivityIndicator
+          size="large"
+          color={ColorPalette.brand.primary}
+          style={styles.verifying}
+          testID={testIdWithKey(TestIds.main.pairing.verifying)}
+        />
+      )}
     </ScreenWrapper>
   )
 }
