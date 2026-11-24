@@ -521,6 +521,18 @@ describe('shutdownAgent', () => {
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('shutdown boom'))
   })
 
+  it('logs both errors when shutdown and the fallback store close both fail', async () => {
+    const agent = makeAgent({ isInitialized: true })
+    agent.shutdown.mockRejectedValue(new Error('shutdown boom'))
+    agent.modules.askar.closeStore.mockRejectedValue(new Error('close boom'))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await expect(shutdownAgent(agent as any, logger)).resolves.toBeUndefined()
+
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('shutdown boom'))
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('close boom'))
+  })
+
   it('still closes the wallet when the pre-close step fails', async () => {
     const agent = makeAgent({ isInitialized: true })
     const beforeClose = jest.fn().mockRejectedValue(new Error('drain boom'))

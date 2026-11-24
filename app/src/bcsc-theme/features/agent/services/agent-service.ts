@@ -351,11 +351,12 @@ export const shutdownAgent = async (
       }
       try {
         await agent.shutdown()
-      } finally {
-        // shutdown() can throw before it reaches the store close
-        if (askar.isStoreOpen) {
-          await askar.closeStore()
-        }
+      } catch (error) {
+        logger.error(`Error shutting down agent: ${error}`)
+      }
+      // shutdown() can throw before it reaches the store close; a failure here is logged by the outer catch
+      if (askar.isStoreOpen) {
+        await askar.closeStore()
       }
     })
   } catch (error) {
