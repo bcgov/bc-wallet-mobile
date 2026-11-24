@@ -33,7 +33,7 @@ export interface AgentSetupResult {
   error: AppError | null
   retry: () => void
   resetWallet: () => Promise<void>
-  teardownAgent: () => Promise<void>
+  teardownAgent: () => Promise<boolean>
   waitForAgent: () => Promise<Agent | null>
 }
 
@@ -63,6 +63,8 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
   const agentPromiseRef = useRef<Promise<Agent | null> | null>(null)
   const initializingRef = useRef(false)
   const resettingRef = useRef(false)
+  const initRunRef = useRef<{ cancel: () => Promise<void> } | null>(null)
+  const teardownRef = useRef<Promise<boolean> | null>(null)
   const warmCacheRef = useRef<{ controller: AbortController; promise: Promise<void> } | null>(null)
   const statusRef = useRef<AgentSetupStatus>('idle')
   statusRef.current = status
@@ -376,7 +378,16 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
     }
 
     // Store the promise so consumers can await agent initialization
-    agentPromiseRef.current = run().then(() => agentRef.current)
+    const runPromise = run()
+    initRunRef.current = {
+      // Resolves once this run can no longer touch the store. A run that has not built
+      // an agent never will after cancel, so there is nothing to wait for.
+      cancel: () => {
+        cancelled = true
+        return inFlightAgent || agentRef.current ? runPromise : Promise.resolve()
+      },
+    }
+    agentPromiseRef.current = runPromise.then(() => agentRef.current)
 
     return () => {
       cancelled = true
@@ -464,50 +475,80 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
   }, [logger, attestationMonitor, stopAgent, walletKey, mediatorUrl, walletLabel, enableProxy])
 
   // Permanent agent teardown (e.g. factory reset). Unlike resetWallet this never
-  // re-initializes: it shuts down, deletes the wallet store, and nulls the agent so
-  // any consumer still mounted against a transient render (see RootStack's
-  // hasAccount/showVerifyStack derivation) sees `agent: null` and skips its
-  // mount-time storage reads instead of racing Credo's store-not-found ->
+  // re-initializes: it stops any start-up in flight, shuts down, deletes the wallet
+  // store, and nulls the agent so any consumer still mounted against a transient render
+  // (see RootStack's hasAccount/showVerifyStack derivation) sees `agent: null` and skips
+  // its mount-time storage reads instead of racing Credo's store-not-found ->
   // auto-provision fallback against the just-deleted store.
   //
-  // Guards against a concurrent resetWallet (and a re-entrant teardownAgent) via
-  // resettingRef, but — unlike resetWallet — does NOT check initializingRef: this is
-  // a destructive path that must always delete the store when a live agent exists,
-  // never silently no-op just because an init happens to be in flight.
-  const teardownAgent = useCallback(async () => {
-    if (resettingRef.current) {
-      logger.info('AgentTeardown: a reset is already in progress, ignoring request')
-      return
+  // An agent still starting up is not shared yet, so the run is cancelled and awaited:
+  // its own close must be queued before the delete, or the delete would run under an
+  // open store. Guards against a concurrent resetWallet via resettingRef, and a
+  // re-entrant call shares the pending teardown.
+  //
+  // Resolves true once the store delete was attempted through an agent (a failed delete is
+  // logged), false when there was no agent to delete through and the caller must purge.
+  const teardownAgent = useCallback((): Promise<boolean> => {
+    if (teardownRef.current) {
+      return teardownRef.current
     }
 
-    const currentAgent = agentRef.current
-    if (!currentAgent) {
-      return
+    if (resettingRef.current) {
+      logger.info('AgentTeardown: a reset is already in progress, ignoring request')
+      return Promise.resolve(false)
+    }
+
+    const initRun = initializingRef.current ? initRunRef.current : null
+    if (!agentRef.current && !initRun) {
+      return Promise.resolve(false)
     }
 
     resettingRef.current = true
 
-    try {
-      // Stop both monitors — a provisioning/attestation poll firing against the
-      // about-to-be-deleted store is exactly the "mounted consumer issuing a
-      // storage op against a deleted store" scenario this teardown exists to prevent.
-      attestationMonitor?.stop()
-      credentialProvisioningMonitor?.stop()
-
-      await stopAgent(currentAgent)
+    const teardown = (async () => {
+      let deleteAttempted = false
 
       try {
-        await deleteWalletStore(currentAgent)
-      } catch (err) {
-        logger.warn(`AgentTeardown: wallet store deleteStore() failed; wallet file may persist: ${err}`)
+        const runStopped = initRun?.cancel()
+
+        // Stop both monitors — a provisioning/attestation poll firing against the
+        // about-to-be-deleted store is exactly the "mounted consumer issuing a
+        // storage op against a deleted store" scenario this teardown exists to prevent.
+        attestationMonitor?.stop()
+        credentialProvisioningMonitor?.stop()
+
+        if (initRun) {
+          await runStopped
+          // The cancelled run's finally skips this
+          initializingRef.current = false
+          agentPromiseRef.current = null
+        }
+
+        const currentAgent = agentRef.current
+        if (currentAgent) {
+          await stopAgent(currentAgent)
+          deleteAttempted = true
+
+          try {
+            await deleteWalletStore(currentAgent)
+          } catch (err) {
+            logger.warn(`AgentTeardown: wallet store deleteStore() failed; wallet file may persist: ${err}`)
+          }
+        }
+      } finally {
+        agentRef.current = null
+        setAgent(null)
+        setError(null)
+        setStatus('idle')
+        resettingRef.current = false
+        teardownRef.current = null
       }
-    } finally {
-      agentRef.current = null
-      setAgent(null)
-      setError(null)
-      setStatus('idle')
-      resettingRef.current = false
-    }
+
+      return deleteAttempted
+    })()
+
+    teardownRef.current = teardown
+    return teardown
   }, [logger, attestationMonitor, credentialProvisioningMonitor, stopAgent])
 
   /**

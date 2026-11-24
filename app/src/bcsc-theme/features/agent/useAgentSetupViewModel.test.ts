@@ -432,7 +432,7 @@ describe('useAgentSetupViewModel', () => {
       await waitFor(() => expect(result.current.status).toBe('ready'))
 
       await act(async () => {
-        await result.current.teardownAgent()
+        await expect(result.current.teardownAgent()).resolves.toBe(true)
       })
 
       expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger, warmCacheDrain)
@@ -517,7 +517,7 @@ describe('useAgentSetupViewModel', () => {
       await waitFor(() => expect(result.current.status).toBe('ready'))
 
       await act(async () => {
-        await expect(result.current.teardownAgent()).resolves.toBeUndefined()
+        await expect(result.current.teardownAgent()).resolves.toBe(true)
       })
 
       expect(logger.warn).toHaveBeenCalledWith(
@@ -534,12 +534,165 @@ describe('useAgentSetupViewModel', () => {
       await waitFor(() => expect(result.current.status).toBe('error'))
 
       await act(async () => {
-        await result.current.teardownAgent()
+        await expect(result.current.teardownAgent()).resolves.toBe(false)
       })
 
       expect(agentService.shutdownAgent).not.toHaveBeenCalled()
       expect(agentService.deleteWalletStore).not.toHaveBeenCalled()
       expect(result.current.status).toBe('error')
+    })
+
+    describe('while the agent is starting up', () => {
+      const deferred = <T = void>() => {
+        let resolve: (value: T) => void = () => undefined
+        let reject: (reason: unknown) => void = () => undefined
+        const promise = new Promise<T>((res, rej) => {
+          resolve = res
+          reject = rej
+        })
+        return { promise, resolve, reject }
+      }
+
+      // Calls teardownAgent without awaiting it and tracks whether it has settled
+      const startTeardown = (teardownAgent: () => Promise<boolean>) => {
+        const outcome: { settled: boolean; value?: boolean } = { settled: false }
+        let promise: Promise<boolean> = Promise.resolve(false)
+        act(() => {
+          promise = teardownAgent().then((value) => {
+            outcome.settled = true
+            outcome.value = value
+            return value
+          })
+        })
+        return { outcome, promise }
+      }
+
+      it('waits for the in-flight agent to close before it resolves', async () => {
+        const init = deferred()
+        const close = deferred()
+        const inFlightAgent = mockAgent()
+        jest.mocked(agentService.buildAgent).mockReturnValue(inFlightAgent)
+        jest.mocked(agentService.initializeAgent).mockReturnValue(init.promise)
+        jest.mocked(agentService.shutdownAgent).mockReturnValue(close.promise)
+
+        const { result } = renderHook(() => useAgentSetupViewModel())
+        await waitFor(() => expect(agentService.initializeAgent).toHaveBeenCalled())
+
+        const { outcome, promise } = startTeardown(result.current.teardownAgent)
+
+        await act(async () => {
+          init.resolve()
+        })
+        await waitFor(() =>
+          expect(agentService.shutdownAgent).toHaveBeenCalledWith(inFlightAgent, logger, noWarmCacheDrain)
+        )
+        expect(outcome.settled).toBe(false)
+
+        await act(async () => {
+          close.resolve()
+          await promise
+        })
+
+        expect(outcome.value).toBe(false)
+        expect(agentService.deleteWalletStore).not.toHaveBeenCalled()
+        expect(agentService.purgeWalletStore).not.toHaveBeenCalled()
+        expect(Bifold.createLinkSecretIfRequired).not.toHaveBeenCalled()
+        expect(result.current.status).toBe('idle')
+        expect(result.current.agent).toBeNull()
+      })
+
+      it('waits for a failed start-up to close its agent', async () => {
+        const close = deferred()
+        jest.mocked(agentService.initializeAgent).mockRejectedValue(new Error('initialize failed'))
+        jest.mocked(agentService.shutdownAgent).mockReturnValue(close.promise)
+
+        const { result } = renderHook(() => useAgentSetupViewModel())
+        await waitFor(() => expect(result.current.status).toBe('error'))
+
+        const { outcome, promise } = startTeardown(result.current.teardownAgent)
+        await act(async () => {
+          await new Promise((r) => setTimeout(r, 0))
+        })
+        expect(outcome.settled).toBe(false)
+
+        await act(async () => {
+          close.resolve()
+          await promise
+        })
+
+        expect(outcome.value).toBe(false)
+        expect(agentService.shutdownAgent).toHaveBeenCalledTimes(1)
+        expect(result.current.status).toBe('idle')
+      })
+
+      it('does not wait for a start-up that has not built an agent', async () => {
+        const ledgers = deferred<undefined>()
+        jest.mocked(agentService.loadCachedLedgers).mockReturnValue(ledgers.promise)
+
+        const { result } = renderHook(() => useAgentSetupViewModel())
+        await waitFor(() => expect(agentService.loadCachedLedgers).toHaveBeenCalled())
+
+        await act(async () => {
+          await expect(result.current.teardownAgent()).resolves.toBe(false)
+        })
+        await act(async () => {
+          ledgers.resolve(undefined)
+          await new Promise((r) => setTimeout(r, 0))
+        })
+
+        expect(agentService.buildAgent).not.toHaveBeenCalled()
+        expect(result.current.status).toBe('idle')
+      })
+
+      it('shares one teardown between overlapping calls', async () => {
+        const init = deferred()
+        jest.mocked(agentService.buildAgent).mockReturnValue(mockAgent())
+        jest.mocked(agentService.initializeAgent).mockReturnValue(init.promise)
+
+        const { result } = renderHook(() => useAgentSetupViewModel())
+        await waitFor(() => expect(agentService.initializeAgent).toHaveBeenCalled())
+
+        const first = startTeardown(result.current.teardownAgent)
+        const second = startTeardown(result.current.teardownAgent)
+        await act(async () => {
+          await new Promise((r) => setTimeout(r, 0))
+        })
+        expect(first.outcome.settled).toBe(false)
+        expect(second.outcome.settled).toBe(false)
+
+        await act(async () => {
+          init.resolve()
+          await Promise.all([first.promise, second.promise])
+        })
+
+        expect(first.outcome.value).toBe(second.outcome.value)
+        expect(agentService.shutdownAgent).toHaveBeenCalledTimes(1)
+      })
+
+      it('lets a later start-up run after the teardown', async () => {
+        const init = deferred()
+        jest.mocked(agentService.initializeAgent).mockReturnValueOnce(init.promise)
+
+        const { result } = renderHook(() => useAgentSetupViewModel())
+        await waitFor(() => expect(agentService.initializeAgent).toHaveBeenCalled())
+
+        const { promise } = startTeardown(result.current.teardownAgent)
+        await act(async () => {
+          init.resolve()
+          await promise
+        })
+        expect(agentService.purgeWalletStore).not.toHaveBeenCalled()
+
+        // resetWallet ignores requests while an init is flagged in flight, so it
+        // reaching the purge shows the teardown cleared that flag.
+        await act(async () => {
+          await result.current.resetWallet()
+        })
+        expect(agentService.purgeWalletStore).toHaveBeenCalledTimes(1)
+
+        await waitFor(() => expect(result.current.status).toBe('ready'))
+        expect(result.current.agent).not.toBeNull()
+      })
     })
   })
 
