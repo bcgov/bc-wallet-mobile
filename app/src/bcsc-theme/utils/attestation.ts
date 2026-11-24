@@ -10,9 +10,6 @@ type AttestationErrorLogContext = {
 /**
  * Extracts relevant information from an attestation error for logging purposes,
  * specifically for errors from the @bifold/react-native-attestation package
- *
- * @param error The error object to extract information from.
- * @returns An object containing relevant error details for logging.
  */
 export const getAttestationErrorLogContext = (error: unknown): AttestationErrorLogContext => {
   if (!(error instanceof Error)) {

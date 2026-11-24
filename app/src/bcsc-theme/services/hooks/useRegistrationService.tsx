@@ -39,12 +39,6 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST]: alerts.invalidRegistrationRequestAlert,
 })
 
-/**
- * Service layer hook for registration api.
- * Business logic related to registration API calls and UI event handling should be implemented here.
- *
- * @returns Registration service
- */
 export const useRegistrationService = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const registrationApi = useRegistrationApi(client, isClientReady)
@@ -76,8 +70,6 @@ export const useRegistrationService = () => {
 
   /**
    * Registers a new BCSC client and alerts on failures during the registration process.
-   *
-   * @returns Promise resolving to registration response data or void if account exists
    */
   const register = useCallback(async () => {
     try {
@@ -151,7 +143,6 @@ export const useRegistrationService = () => {
    * registration then fails, the account has no registration (rather than a client ID the server has
    * deleted) and `ensureRegistered` registers it again.
    *
-   * @returns Promise<void>
    * @throws AppError `ACCOUNT_NOT_FOUND` when there is no native account to hold the registration
    */
   const cycleRegistration = useCallback(async () => {

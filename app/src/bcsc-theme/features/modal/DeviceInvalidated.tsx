@@ -8,12 +8,6 @@ import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from './components/SystemModal'
 
-/**
- * Component displayed when the device has been invalidated.
- *
- * @returns {*} {React.ReactElement} The DeviceInvalidated component.
- */
-
 type DeviceInvalidatedProps = StackScreenProps<BCSCMainStackParams, BCSCModals.DeviceInvalidated>
 
 export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.ReactElement => {
@@ -23,9 +17,6 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
   const factoryReset = useFactoryReset()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  /**
-   * Handles the factory reset operation.
-   */
   const handleFactoryReset = useCallback(async () => {
     const factoryResetParams: Partial<Record<BCSCReason, Partial<BCSCState>>> = {
       // Can add more cases here for different BCSCReason types in the future

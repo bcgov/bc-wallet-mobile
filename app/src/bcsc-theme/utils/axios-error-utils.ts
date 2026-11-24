@@ -18,15 +18,7 @@ enum AxiosErrorCode {
 }
 
 interface LogAxiosErrorOptions {
-  /**
-   * The axios error to log
-   * @type {AxiosError<any>}
-   */
   error: AxiosError<any>
-  /**
-   * Suppress stack trace in logs
-   * @type {boolean}
-   */
   suppressStackTrace: boolean
 }
 
@@ -132,9 +124,6 @@ const getNativeNetworkReason = (error: AxiosError): string | undefined => {
  * `AppError.technicalMessage` (the modal's Debug line), `toJSON().cause` and the logger say what
  * actually happened on the wire. The axios `code` is left untouched because {@link isNetworkError}
  * and the error policies key off it. Idempotent: only the bare message is rewritten.
- *
- * @param error - The axios error to format
- * @returns The same error, with its message extended when a native reason was available
  */
 export const formatNetworkAxiosError = (error: AxiosError): AxiosError => {
   if (error.code !== AxiosErrorCode.NETWORK_ERROR || error.message !== AXIOS_NETWORK_ERROR_MESSAGE) {
@@ -184,9 +173,6 @@ export const normalizeAxiosTimeoutError = (axiosError: AxiosError): AxiosError =
  * Buffers (e.g. an evidence upload's photo/video bytes); logging them verbatim expands the
  * Buffer to a per-byte JSON number array and can exhaust memory. Replace binary or very
  * large payloads with a short descriptor; pass small values through unchanged.
- *
- * @param body - The request or response body to summarize
- * @returns The body unchanged, or a size descriptor for binary/oversized payloads
  */
 export const summarizeLoggedBody = (body: unknown): unknown => {
   if (body == null) {
@@ -237,9 +223,6 @@ const SENSITIVE_HEADERS = new Set(['authorization', 'proxy-authorization', 'cook
 /**
  * Return a shallow copy of an HTTP headers object with sensitive values (auth tokens,
  * cookies) replaced by a redaction marker. Non-sensitive headers are preserved for debugging.
- *
- * @param headers - The request or response headers
- * @returns A copy with sensitive header values redacted
  */
 const redactHeaders = (headers: unknown): unknown => {
   if (!headers || typeof headers !== 'object') {
@@ -257,8 +240,6 @@ const redactHeaders = (headers: unknown): unknown => {
  * Outputs detailed information about an AxiosError to the provided logger.
  *
  * @see bcsc-theme/api/client.ts
- * @param {LogAxiosErrorOptions} options - The options for logging the error
- * @returns {*} {void}
  */
 export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record<string, unknown> => {
   const errorDetails: Record<string, unknown> = {
@@ -289,7 +270,6 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
     }
   }
 
-  // Include stack trace unless suppressed
   if (options.error.stack && !options.suppressStackTrace) {
     errorDetails.stack = options.error.stack
   }
@@ -299,10 +279,6 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
 
 /**
  * Determines if the provided error is a network error: the request produced no HTTP response.
- *
- * @param {unknown} error - The error to check
- * @param depth - Recursion guard for the cause chain
- * @returns {*} {boolean} True if the error is a network error, false otherwise.
  */
 export const isNetworkError = (error: unknown, depth = 0): boolean => {
   if (depth > 10) {
@@ -325,9 +301,6 @@ const MAX_CAUSE_DEPTH = 5
 
 /**
  * Checks a single error for a network error, a timeout, or a 5xx server response.
- *
- * @param {unknown} error - The error to check
- * @returns {*} {boolean} True if this error is transient, false otherwise.
  */
 const isTransientError = (error: unknown): boolean => {
   if (isNetworkError(error)) {
@@ -355,9 +328,6 @@ const isTransientError = (error: unknown): boolean => {
  *
  * Walks cause chain for transient errors (network, timeout, 5xx) and returns true if any are found.
  * Walk is limited to 5 to prevent infinite loops
- *
- * @param {unknown} error - The error to check
- * @returns {*} {boolean} True if this error alone is transient, false otherwise.
  */
 export const isTransientRequestError = (error: unknown): boolean => {
   let current: unknown = error
@@ -444,9 +414,6 @@ export const getAxiosErrorDefinition = (
  * "expected"/already-owned-elsewhere: analytics tracking is skipped for it too, not just the response
  * interceptor's own log line, so a caller that retries internally doesn't inflate dashboards once per
  * attempt.
- *
- * @param error - The AxiosError to convert
- * @returns The resulting AppError with structured information and cause
  */
 export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   const errorCode = error.code
@@ -547,11 +514,6 @@ const _isEncodedVerificationRequestId = (value: string): boolean => {
   return /^\d+$/.test(Buffer.from(value.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'))
 }
 
-/**
- * For a given payload, calculate its byte length.
- * @param value - The value to calculate the byte length for
- * @returns The byte length of the value
- */
 const _getByteLength = (value: unknown): number => {
   if (value === undefined || value === null) {
     return 0

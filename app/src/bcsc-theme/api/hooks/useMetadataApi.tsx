@@ -32,8 +32,6 @@ export interface ClientMetadata {
 const useMetadataApi = (apiClient: BCSCApiClient) => {
   /**
    * Fetches the client metadata from the IAS Client Metadata endpoint.
-   *
-   * @return {*} {Promise<ClientMetadata[]>} A promise that resolves to an array of client metadata objects.
    */
   const getClientMetadata = useCallback(async (): Promise<ClientMetadata[]> => {
     const {

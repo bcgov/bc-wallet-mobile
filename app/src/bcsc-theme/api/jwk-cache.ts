@@ -20,10 +20,6 @@ export interface PersistedJwkRecord {
  * Never throws: a storage write failure is logged and swallowed (idempotency-over-erroring) since
  * this is best-effort caching, not a correctness requirement — `fetchJwk` already has the fresh key
  * in-memory for the current session regardless of whether persistence succeeds.
- *
- * @param baseURL - The IAS environment base URL the key belongs to
- * @param jwk - The JWK to persist
- * @param logger - Logger used to record a failure to persist
  */
 export const persistJwk = async (baseURL: string, jwk: JWK, logger: RemoteLogger): Promise<void> => {
   const record: PersistedJwkRecord = { baseURL, jwk, fetchedAt: Date.now() }
@@ -43,9 +39,6 @@ export const persistJwk = async (baseURL: string, jwk: JWK, logger: RemoteLogger
  * Returns `null` when nothing has been persisted, the persisted record belongs to a different
  * environment (baseURL mismatch — e.g. a dev/test/prod switch, where a stale key must never be
  * used), or the read itself fails. Never throws.
- *
- * @param baseURL - The IAS environment base URL to match against the persisted record
- * @param logger - Logger used to record a failure to read
  */
 export const loadPersistedJwk = async (baseURL: string, logger: RemoteLogger): Promise<JWK | null> => {
   try {

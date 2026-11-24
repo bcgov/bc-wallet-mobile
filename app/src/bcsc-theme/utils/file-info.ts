@@ -106,10 +106,6 @@ export const getVideoMetadata = async (
 
 /**
  * Removes a file at the specified path if it exists.
- *
- * @param {string} [path] - The file path to remove.
- * @param {BifoldLogger} logger - The logger instance for logging messages.
- * @returns {*} {Promise<void>}
  */
 export const removeFileSafely = async (path: string | undefined, logger: BifoldLogger): Promise<void> => {
   try {
@@ -134,10 +130,6 @@ export const removeFileSafely = async (path: string | undefined, logger: BifoldL
 
 /**
  * Checks if the file system has at least the specified minimum free storage in megabytes.
- * @param minMb The minimum free storage in megabytes to check for.
- * @param logger The logger instance for logging messages.
- * @returns A promise that resolves to an object containing a boolean indicating
- *          if there is enough free storage and the amount of free storage in megabytes.
  */
 export const checkFileSystemFreeStorage = async (
   minMb: number,

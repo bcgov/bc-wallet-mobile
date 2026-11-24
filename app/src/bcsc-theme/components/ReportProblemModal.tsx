@@ -84,7 +84,6 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
 
     const appError = AppError.fromErrorDefinition(ErrorRegistry.REPORT_PROBLEM)
 
-    // Add context to the error for debugging purposes
     appError.addContext({
       state_ias_environment: store.developer.environment.name,
       state_verified: store.bcscSecure.verified,

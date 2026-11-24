@@ -32,8 +32,6 @@ type WebViewContentProps = (WebViewUrlSource | WebViewHtmlSource) & {
   /**
    * Optional callback function that is called when the WebView has finished loading.
    * Loading test url: 'https://httpbin.org/delay/2'
-   *
-   * @type {() => void}
    */
   onLoaded?: () => void
 }
@@ -55,11 +53,7 @@ const reportableUrl = (url?: string): string | undefined => url?.split('?')[0]
 const isWebSchemeUrl = (url: string): boolean => /^(https?|about):/i.test(url)
 
 /**
- * A WebView component that loads a given URL or renders HTML content.
  * Automatically applies accessibility font scaling based on device settings.
- *
- * @param {WebViewContentProps} props - The component props.
- * @returns {*} {React.ReactElement} The rendered WebView component.
  */
 const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) => {
   const { t } = useTranslation()

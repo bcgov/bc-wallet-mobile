@@ -17,9 +17,6 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  * `device_code`, and fails (→ onFail) when the pending code's expiry is in the past. See issue #4050.
  *
  * @see {VerificationSessionExpired.tsx} for the modal displayed on failure.
- *
- * @class VerificationSessionExpiredSystemCheck
- * @implements {SystemCheckStrategy}
  */
 export class VerificationSessionExpiredSystemCheck implements SystemCheckStrategy {
   private readonly getDeviceCodeExpiry: () => Promise<Date | null>
@@ -81,8 +78,6 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
 
   /**
    * Handles failure by routing to the verification session expired modal.
-   *
-   * @returns {*} {void}
    */
   onFail() {
     this.utils.logger.warn(

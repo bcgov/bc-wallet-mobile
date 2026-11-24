@@ -24,12 +24,6 @@ const SEARCH_DEBOUNCE_DELAY_MS = 300
 
 type ServicesNavigationProp = StackNavigationProp<BCSCMainStackParams, BCSCScreens.ServiceLogin>
 
-/**
- * Services screen component that displays a list of services accessible
- * with the user's BCSC card.
- *
- * @return {*} {React.ReactElement} The Services screen component.
- */
 const Services: React.FC = () => {
   const { reportActivity } = useBCSCActivity() ?? {}
   const token = useTokenService()
@@ -133,7 +127,6 @@ const Services: React.FC = () => {
             autoCorrect={false}
             onChangeText={(newText) => {
               reportActivity?.()
-              // Dismiss keyboard when clearing search text
               if (search.length > 0 && newText === '') {
                 Keyboard.dismiss()
               }

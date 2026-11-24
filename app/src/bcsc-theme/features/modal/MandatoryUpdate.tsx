@@ -4,11 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { Linking, Platform } from 'react-native'
 import { SystemModal } from './components/SystemModal'
 
-/**
- * Component displayed when a mandatory app update is required.
- *
- * @returns {*} {React.ReactElement} The MandatoryUpdate component.
- */
 export const MandatoryUpdate = (): React.ReactElement => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])

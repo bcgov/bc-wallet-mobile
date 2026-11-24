@@ -12,10 +12,6 @@ type DualIdentificationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.DualIdentificationRequired>
 }
 
-/**
- * Renders an instructions screen, when users are registering non-bcsc cards.
- * It explains, what access the user will have and what types of cards are required during the setup.
- */
 const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScreenProps> = ({
   navigation,
 }: DualIdentificationRequiredScreenProps) => {

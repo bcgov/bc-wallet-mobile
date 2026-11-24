@@ -20,10 +20,6 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  *
  * Replace:
  *  - emits an alert informing the user their card type has changed
- *
- * @export
- * @class EventReasonAlertsSystemCheck
- * @implements {SystemCheckStrategy}
  */
 export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   private readonly navigation: SystemCheckNavigation
@@ -60,7 +56,6 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
       return false
     }
 
-    // Compare new and stored credential metadata
     const isMetadataTheSame = compareCredentialMetadata(this.tokenMetadata, this.credentialMetadata)
 
     return isMetadataTheSame
@@ -71,7 +66,6 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
       return
     }
 
-    // update the credential metadata
     this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
 
     switch (this.event) {
@@ -100,7 +94,6 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
     // nothing to alert
   }
 
-  // helper function for building the alert to emit
   alertBuilder(eventCode: AppEventCode) {
     this.emitAlert(
       this.utils.translation('Alerts.AccountUpdated.Title'),

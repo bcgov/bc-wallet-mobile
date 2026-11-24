@@ -104,10 +104,7 @@ export const useSecureActions = () => {
   const { t } = useTranslation()
   const { client: apiClient, isClientReady } = useBCSCApiClientState()
 
-  // ============================================================================
-  // PERSISTENCE LAYER - Direct native storage operations, not for external use
-  // ============================================================================
-
+  // Persistence layer: direct native storage operations, not for external use
   /**
    * Persists tokens to native secure storage. The registration access token is not one of them: it is
    * saved with its client ID (see saveRegistration).
@@ -218,10 +215,6 @@ export const useSecureActions = () => {
       throwNativeBcscError(error)
     }
   }, [logger])
-
-  // ============================================================================
-  // ACTIONS - High-level operations that update store and persist to storage
-  // ============================================================================
 
   /**
    * Update the refresh and access tokens in state and persist them to native storage
@@ -735,7 +728,6 @@ export const useSecureActions = () => {
         payload: [updatedEvidence],
       })
 
-      // Persist the updated evidence data
       await persistEvidenceData(updatedEvidence)
     },
     [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
@@ -783,9 +775,6 @@ export const useSecureActions = () => {
 
   /**
    * Remove a specific evidence type from secure state and persist to native storage
-   *
-   * @param evidenceType The evidence type to remove
-   * @returns The evidence metadata left
    */
   const removeEvidenceByType = useCallback(
     async (evidenceType: EvidenceType) => {
@@ -807,9 +796,6 @@ export const useSecureActions = () => {
 
   /**
    * Remove incomplete evidence entries and persist to native storage
-   *
-   * @param evidence Array of evidence metadata to filter and persist
-   * @returns An updated list of evidence metadata with incomplete entries removed
    */
   const removeIncompleteEvidence = useCallback(
     async (evidence: EvidenceMetadata[]) => {
@@ -817,7 +803,6 @@ export const useSecureActions = () => {
         return []
       }
 
-      // Filter out incomplete evidence (those without photo metadata)
       const updatedEvidence = evidence.filter((item) => isCardEvidenceComplete(item))
 
       if (updatedEvidence.length === evidence.length) {
@@ -841,10 +826,6 @@ export const useSecureActions = () => {
    * Keep only the first `count` evidence entries (dropping the rest) and persist. Used when the user
    * navigates back to an evidence-type list to release the ID(s) selected from that list onward so
    * they can be picked again, while keeping the ones collected before it.
-   *
-   * @param evidence Current evidence metadata array
-   * @param count Number of leading entries to keep
-   * @returns The kept evidence metadata array
    */
   const truncateEvidence = useCallback(
     async (evidence: EvidenceMetadata[], count: number) => {
@@ -942,12 +923,10 @@ export const useSecureActions = () => {
 
         let updatedServices: NativeSavedService[]
         if (existingIndex >= 0) {
-          // Update existing entry
           updatedServices = existingServices.map((s: NativeSavedService) =>
             s.clientRefId === clientRefId ? { ...s, ...metadata, bookmarked, lastUsed: Date.now() / 1000 } : s
           )
         } else if (bookmarked) {
-          // Add new entry
           updatedServices = [
             ...existingServices,
             {
@@ -971,10 +950,6 @@ export const useSecureActions = () => {
     },
     [dispatch, logger]
   )
-
-  // ============================================================================
-  // HYDRATION & CLEARING - Loading and clearing secure state
-  // ============================================================================
 
   /**
    * Loads sensitive data from native secure storage and dispatches to store.
@@ -1494,7 +1469,6 @@ export const useSecureActions = () => {
   )
 
   return {
-    // Actions
     updateTokens,
     saveRegistration,
     clearRegistration,
@@ -1522,7 +1496,6 @@ export const useSecureActions = () => {
     clearAdditionalEvidence,
     updateSavedService,
     handleSuccessfulAuth,
-    // Hydration & clearing
     hydrateSecureState,
     clearSecureState,
     logout,

@@ -34,8 +34,6 @@ export interface UserInfoResponseData {
 const useUserApi = (apiClient: BCSCApiClient) => {
   /**
    * Get user information in a JWE string and decode.
-   *
-   * @returns {*} {Promise<UserInfoResponseData>} A promise that resolves to the user information.
    */
   const getUserInfo = useCallback(async (): Promise<UserInfoResponseData> => {
     return withAccount(async () => {
@@ -88,12 +86,10 @@ const useUserApi = (apiClient: BCSCApiClient) => {
           responseType: 'arraybuffer', // get raw binary data
         })
 
-        // convert to base64
         const base64String = btoa(
           new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
         )
 
-        // return as uri
         return `data:image/jpeg;base64,${base64String}`
       })
     },

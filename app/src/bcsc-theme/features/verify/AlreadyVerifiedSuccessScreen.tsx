@@ -9,20 +9,13 @@ import { StyleSheet } from 'react-native'
 
 type AlreadyVerifiedSuccessScreenProps = StackScreenProps<BCSCMainStackParams>
 
-/**
- * AlreadyVerifiedSuccessScreen is a component that renders a screen indicating that the user has already been verified.
- * It displays a success message and provides a button to continue. Used in the QR code scanning flow.
- * @returns A React element that renders the already verified success screen.
- */
+/** Used in the QR code scanning flow. */
 const AlreadyVerifiedSuccessScreen = ({ navigation }: AlreadyVerifiedSuccessScreenProps) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     contentContainer: {
-      // flexGrow lets the ScrollView content fill the viewport so justifyContent can actually
-      // center it vertically (without it the content stays top-aligned and looks top-heavy).
-      // flexGrow: 1,
       alignItems: 'center',
       padding: Spacing.lg,
       paddingTop: Spacing.xxl,

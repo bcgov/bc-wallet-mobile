@@ -44,9 +44,6 @@ type InputWithValidationProps = {
  * An input component which includes a label, input, subtext and error props.
  *
  * Note: This also includes the equivalent styling props for each section for customization.
- *
- * @param {InputWithValidationProps} props - Input props
- * @returns {*} {React.ReactElement}
  */
 export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
   const { Inputs, ColorPalette, Spacing, TextTheme, maxFontSizeMultiplier } = useTheme()

@@ -8,11 +8,6 @@ interface AccountRenewalFirstWarningProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.AccountRenewalInformation>
 }
 
-/**
- * Renders the Account Renewal First Warning screen, alerting users about the impending expiration of their account.
- *
- * @returns {*} {React.ReactElement} The AccountRenewalFirstWarningScreen component.
- */
 export const AccountRenewalFirstWarningScreen = ({
   navigation,
 }: AccountRenewalFirstWarningProps): React.ReactElement => {

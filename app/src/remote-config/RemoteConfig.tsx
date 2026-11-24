@@ -11,11 +11,6 @@ import {
 let REMOTE_CONFIG_CACHE = getBundledRemoteConfig()
 
 interface RemoteConfigContextType {
-  /**
-   * Get the value of a remote config key.
-   * @param key The key of the remote config to get.
-   * @returns The value of the remote config key.
-   */
   getValue: <T extends keyof RemoteConfig>(key: T) => RemoteConfig[T]
   /**
    * Set the local value of a remote config key.
@@ -27,13 +22,8 @@ interface RemoteConfigContextType {
   setValue: <T extends keyof RemoteConfig>(key: T, value: RemoteConfig[T]) => void
   /**
    * Refresh the remote config from the server and update the local cache.
-   * @returns A promise that resolves when the refresh is complete.
    */
   refresh: () => Promise<void>
-  /**
-   * Indicates whether the remote config is currently being loaded.
-   * @returns True if the remote config is loading, false otherwise.
-   */
   loading: boolean
 }
 
@@ -50,8 +40,6 @@ const RemoteConfigContext = createContext<RemoteConfigContextType | null>(null)
 
 /**
  * RemoteConfigProvider is a React context provider that initializes and provides access to the remote configuration throughout the app.
- * @param props The props for the RemoteConfigProvider, including children and a logger.
- * @returns A React context provider that wraps its children and provides access to the remote configuration.
  */
 export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   const [loading, setLoading] = useState(!props.initialConfig)
@@ -60,8 +48,6 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
 
   /**
    * Sets the remote config in memory and persistent storage.
-   * @param newConfig The new remote config to set.
-   * @returns void
    */
   const setRemoteConfig = useCallback(
     (newConfig: RemoteConfig) => {
@@ -72,11 +58,6 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
     [props.logger]
   )
 
-  /**
-   * Get the value of a remote config key.
-   * @param key The key of the remote config to get.
-   * @returns The value of the remote config key.
-   */
   const getValue = useCallback(
     <T extends keyof RemoteConfig>(key: T): RemoteConfig[T] => {
       return remoteConfigState[key]
@@ -87,9 +68,6 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   /**
    * Set the local value of a remote config key.
    * Note: This will only update the value in memory and persistent storage - **not** the server.
-   * @param key The key of the remote config to set.
-   * @param value The value to set for the remote config key.
-   * @returns void
    */
   const setValue = useCallback(
     <T extends keyof RemoteConfig>(key: T, value: RemoteConfig[T]) => {
@@ -103,7 +81,6 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
 
   /**
    * Refresh the remote config from the server and update the local cache.
-   * @returns A promise that resolves when the refresh is complete.
    */
   const refresh = useCallback(async () => {
     try {
@@ -159,13 +136,8 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   return <RemoteConfigContext.Provider value={context}>{props.children}</RemoteConfigContext.Provider>
 }
 
-// -----------------------------
-// PUBLIC API
-// -----------------------------
-
 /**
  * Hook to access the remote config context. Must be used within a RemoteConfigProvider.
- * @returns The remote config context value, including the current remote config, a setter function, and a loading state.
  */
 export const useRemoteConfig = () => {
   const context = useContext(RemoteConfigContext)
@@ -179,7 +151,6 @@ export const useRemoteConfig = () => {
 
 /**
  * Get the current remote config from memory cache.
- * @returns The current remote config object.
  */
 export function getRemoteConfig(): RemoteConfig {
   if (!REMOTE_CONFIG_CACHE) {
@@ -190,10 +161,6 @@ export function getRemoteConfig(): RemoteConfig {
 
   return REMOTE_CONFIG_CACHE
 }
-
-// -----------------------------
-// HELPER FUNCTIONS
-// -----------------------------
 
 async function _initRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig> {
   // 1. Try to get the cached remote config from persistent storage

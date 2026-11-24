@@ -25,11 +25,6 @@ interface NotificationsScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingNotifications>
 }
 
-/**
- * Renders the notifications screen for the BCSC onboarding process.
- *
- * @returns {*} {React.ReactElement} The NotificationsScreen component.
- */
 export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
@@ -86,8 +81,6 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
    * Prompts the user to enable push notifications and updates the global state based on their response.
    *
    * Note: This will only display the prompt once.
-   *
-   * @returns {*} {Promise<void>} A promise that resolves when the operation is complete.
    */
   const activatePushNotifications = async () => {
     logger.debug(`[NotificationsScreen] Requesting push notification permission`)

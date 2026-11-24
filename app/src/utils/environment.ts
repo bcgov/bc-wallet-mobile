@@ -92,7 +92,6 @@ export const getInitialEnvironment = (): IASEnvironment => {
 
 /**
  * Determines if the current bundle ID corresponds to the production BCSC bundle.
- * @returns True if the current bundle ID is the production BCSC bundle ID, false otherwise.
  */
 export const isProductionBundle = (): boolean => {
   return getBundleId() === BCSC_PROD_BUNDLE_ID
@@ -100,8 +99,6 @@ export const isProductionBundle = (): boolean => {
 
 /**
  * Determines if the given IAS environment is the production environment.
- * @param environment - The IAS environment to check.
- * @returns True if the given environment is the production environment, false otherwise.
  */
 export const isProductionEnvironment = (environment: IASEnvironment): boolean => {
   return environment.iasApiBaseUrl === IASEnvironment.PROD.iasApiBaseUrl

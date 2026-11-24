@@ -65,9 +65,6 @@ export interface ListButtonProps {
  * ╭──────────────╮
  * │ Item 1       │ ← only (rounded)
  * ╰──────────────╯
- *
- * @param props - The props for the ListButton component.
- * @returns A React element representing the ListButton component.
  */
 export const ListButton = (props: ListButtonProps) => {
   const { Spacing, ColorPalette } = useTheme()
@@ -133,9 +130,6 @@ export const ListButton = (props: ListButtonProps) => {
 /**
  * A ListButtonGroup component that renders a group of ListButton components with appropriate border radius based on their position in the group.
  * Automagically injects the position prop into each ListButton child based on its index in the children array (first, middle, last, only).
- *
- * @param props - The props for the ListButtonGroup component, which includes the children ListButton components.
- * @returns A React element representing the ListButtonGroup component.
  */
 export const ListButtonGroup = (props: ListButtonGroupProps) => {
   const { Spacing } = useTheme()

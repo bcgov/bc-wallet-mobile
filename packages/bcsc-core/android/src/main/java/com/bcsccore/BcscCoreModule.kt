@@ -1,6 +1,5 @@
 package com.bcsccore
 
-// Android imports
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.media.AudioDeviceInfo
@@ -12,7 +11,6 @@ import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.FragmentActivity
 
-// React Native imports
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -24,7 +22,6 @@ import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.module.annotations.ReactModule
 
-// Java/Kotlin standard library imports
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -53,7 +50,6 @@ import javax.crypto.SecretKey
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-// JWT/Nimbus imports
 import com.nimbusds.jose.EncryptionMethod
 import com.nimbusds.jose.JWEAlgorithm
 import com.nimbusds.jose.JWEHeader
@@ -67,7 +63,6 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 
-// BCSC KeyPair package imports
 import com.bcsccore.keypair.core.exceptions.BcscException
 import com.bcsccore.keypair.core.exceptions.KeyAlreadyExistsException
 import com.bcsccore.keypair.core.exceptions.KeyNotFoundException
@@ -79,7 +74,6 @@ import com.bcsccore.keypair.core.models.KeyPairInfo
 import com.bcsccore.keypair.repos.key.BcscKeyPairRepo
 import com.bcsccore.keypair.repos.keypairinfo.SimpleKeyPairInfoSource
 
-// BCSC File Port imports
 import com.bcsccore.fileport.FileReader
 import com.bcsccore.fileport.FileReaderFactory
 import com.bcsccore.fileport.decryption.DecryptedFileData
@@ -87,16 +81,13 @@ import com.bcsccore.fileport.decryption.DecryptedFileReader
 import com.bcsccore.fileport.decryption.DecryptionException
 import com.facebook.react.bridge.Dynamic
 
-// Authentication service imports
 import com.bcsccore.authentication.device.DeviceAuthenticationService
 import com.bcsccore.authentication.device.DeviceAuthenticationServiceImpl
 import com.bcsccore.authentication.device.DeviceAuthenticationResult
 import com.bcsccore.authentication.PinService
 
-// Utility imports
 import com.bcsccore.util.GuardedPromise
 
-// Native-compatible storage imports
 import com.bcsccore.storage.AccountsRead
 import com.bcsccore.storage.KeychainClearingService
 import com.bcsccore.storage.NativeCompatibleStorage
@@ -131,12 +122,6 @@ private enum class AccountFileName(
     AUTHORIZATION_REQUEST("authorization_request"),
 }
 
-/**
- * BC Services Card React Native Module
- *
- * Provides secure key management, token handling, and authentication services
- * for BC Services Card integration in React Native applications.
- */
 @ReactModule(name = BcscCoreModule.NAME)
 class BcscCoreModule internal constructor(
     reactContext: ReactApplicationContext,
@@ -146,12 +131,10 @@ class BcscCoreModule internal constructor(
     companion object {
         const val NAME = "BcscCore"
 
-        // Token type constants
         private const val TOKEN_TYPE_ACCESS = 0
         private const val TOKEN_TYPE_REFRESH = 1
         private const val TOKEN_TYPE_REGISTRATION = 2
 
-        // JWT expiration in seconds
         private const val JWT_EXPIRATION_SECONDS = 3600 // 1 hour
 
         // JWS compact serialization: header.payload.signature
@@ -166,7 +149,6 @@ class BcscCoreModule internal constructor(
 
     override fun getName(): String = NAME
 
-    // Initialize the BC Services Card KeyPair functionality
     private val keyPairSource: BcscKeyPairSource by lazy {
         keyPairSourceOverride ?: BcscKeyPairRepo(SimpleKeyPairInfoSource(reactApplicationContext))
     }
@@ -226,7 +208,6 @@ class BcscCoreModule internal constructor(
     @ReactMethod
     override fun getAllKeys(promise: Promise) {
         try {
-            // Check if KeyStore is available
             if (!keyPairSource.isAvailable()) {
                 promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
                 return
@@ -502,7 +483,6 @@ class BcscCoreModule internal constructor(
         val tokenType = tokenType.toInt()
         Log.d(NAME, "getToken called with tokenType: $tokenType")
 
-        // First, get the account to obtain the account ID
         val account = getAccountSync()
         if (account == null) {
             promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
@@ -678,8 +658,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    // MARK: - Token creation helper methods
-
     private fun createTokenFromJson(
         tokenObj: JSONObject,
         tokenType: Int,
@@ -787,10 +765,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Saves a token to secure native-compatible encrypted storage.
-     * Matches TypeScript: setToken(tokenType: number, token: string, expiry?: number): Promise<boolean>
-     */
     @ReactMethod
     override fun setToken(
         tokenType: Double,
@@ -803,7 +777,6 @@ class BcscCoreModule internal constructor(
         Log.d(NAME, "setToken called with tokenType: $tokenType")
 
         try {
-            // Get the account to obtain issuer and account ID
             val account = getAccountSync()
             if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
@@ -879,7 +852,6 @@ class BcscCoreModule internal constructor(
                     }
                 }
 
-            // Save to encrypted storage
             val success = nativeStorage.saveTokens(updatedTokens, issuerName, accountId)
 
             if (success) {
@@ -894,10 +866,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Deletes a token from secure native-compatible encrypted storage.
-     * Matches TypeScript: deleteToken(tokenType: number): Promise<boolean>
-     */
     @ReactMethod
     override fun deleteToken(
         tokenType: Double,
@@ -908,7 +876,6 @@ class BcscCoreModule internal constructor(
         Log.d(NAME, "deleteToken called with tokenType: $tokenType")
 
         try {
-            // Get the account to obtain issuer and account ID
             val account = getAccountSync()
             if (account == null) {
                 // No account means no tokens to delete — treat as success (idempotent)
@@ -936,7 +903,6 @@ class BcscCoreModule internal constructor(
                 return
             }
 
-            // Read existing tokens
             val existingTokens = nativeStorage.readTokens(issuerName, accountId)
 
             if (existingTokens == null) {
@@ -975,7 +941,6 @@ class BcscCoreModule internal constructor(
                 nativeStorage.deleteTokens(issuerName, accountId)
                 Log.d(NAME, "deleteToken: Deleted all tokens for account")
             } else {
-                // Save updated tokens with the removed entry
                 nativeStorage.saveTokens(updatedTokens, issuerName, accountId)
                 Log.d(NAME, "deleteToken: Removed token of type $tokenType")
             }
@@ -1035,7 +1000,6 @@ class BcscCoreModule internal constructor(
         promise: Promise,
     ) {
         try {
-            // Validate required fields
             if (!account.hasKey("issuer") || !account.hasKey("clientID") || !account.hasKey("securityMethod")) {
                 promise.reject("E_INVALID_PARAMETERS", "Account must have issuer, clientID, and securityMethod fields")
                 return
@@ -1054,11 +1018,9 @@ class BcscCoreModule internal constructor(
             }
 
             try {
-                // Get issuer name for native-compatible storage path
                 val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
                 Log.d(NAME, "setAccount - Using issuer name: $issuerName")
 
-                // Try to load existing account
                 val existingAccounts = nativeStorage.readAccounts(issuerName)
                 val existingAccount = existingAccounts?.firstOrNull()
 
@@ -1086,7 +1048,6 @@ class BcscCoreModule internal constructor(
                         else -> NativeAccountSecurityType.DeviceSecurity
                     }
 
-                // Get optional nickname
                 val nickname =
                     when {
                         account.hasKey("displayName") -> account.getString("displayName")
@@ -1094,7 +1055,6 @@ class BcscCoreModule internal constructor(
                         else -> null
                     }
 
-                // Create native-compatible account object
                 val nativeAccount =
                     NativeAccount(
                         uuid = accountId,
@@ -1141,8 +1101,6 @@ class BcscCoreModule internal constructor(
      * account is written can be completed from the token, and the newest token is never the one lost. If
      * the account cannot be saved the tokens file is put back, so a failed save leaves the previous
      * registration in place.
-     *
-     * Matches TypeScript: setRegistration(clientID, issuer, registrationAccessToken | null): Promise<void>
      */
     @ReactMethod
     override fun setRegistration(
@@ -1243,8 +1201,6 @@ class BcscCoreModule internal constructor(
      *
      * The client ID goes first. The token names its own client ID, so a clear that stops before the token
      * is removed leaves a registration that can be put back together, never a client ID without its token.
-     *
-     * Matches TypeScript: clearRegistration(): Promise<void>
      */
     @ReactMethod
     override fun clearRegistration(promise: Promise) {
@@ -1407,9 +1363,6 @@ class BcscCoreModule internal constructor(
         promise.resolve(result)
     }
 
-    /**
-     * Converts a NativeAccount to a WritableMap for React Native.
-     */
     private fun convertNativeAccountToWritableMap(nativeAccount: NativeAccount): WritableMap {
         val account: WritableMap = Arguments.createMap()
 
@@ -1539,7 +1492,6 @@ class BcscCoreModule internal constructor(
 
     private fun resolveFirstAccount(): NativeAccount? = resolveAccounts()?.firstOrNull()
 
-    /** Builds a [NativeAccount] from a legacy flat-file account JSON object. */
     private fun nativeAccountFromLegacyJson(accountObj: JSONObject): NativeAccount {
         val securityType =
             when (accountObj.optString("accountSecurityType", "")) {
@@ -1664,7 +1616,6 @@ class BcscCoreModule internal constructor(
         refreshToken: String,
         promise: Promise,
     ) {
-        // Validate all parameters are provided
         if (issuer.isEmpty() || clientID.isEmpty() || refreshToken.isEmpty()) {
             promise.reject(
                 "E_INVALID_PARAMETERS",
@@ -1689,7 +1640,6 @@ class BcscCoreModule internal constructor(
                     .jwtID(UUID.randomUUID().toString())
                     .build()
 
-            // Sign the JWT assertion
             val clientAssertion = keyPairSource.signAndSerializeClaimsSet(claimsSet)
 
             // Format OAuth2 request body for refresh token
@@ -1732,7 +1682,6 @@ class BcscCoreModule internal constructor(
         // Sites are `signPairingCode.<stage>`, matching iOS, so reports show which stage failed
         val method = "signPairingCode"
         try {
-            // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
             // Load the key once and sign with it, so a key failure is reported as get_key, not sign (matches iOS signJWT)
@@ -1785,7 +1734,6 @@ class BcscCoreModule internal constructor(
                     return
                 }
 
-            // Sign the JWT using bcsc-keypair-port
             val signedJWT =
                 try {
                     keyPairSource.signAndSerializeClaimsSet(claimsSet, keyPair)
@@ -1842,13 +1790,11 @@ class BcscCoreModule internal constructor(
         promise: Promise,
     ) {
         try {
-            // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
             // Get or create the current key pair
             val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
 
-            // Convert the public key to JWK format
             val publicKeyJWK = keyPairSource.convertBcscKeyPairToJWK(currentKeyPair)
 
             // Create device info JWT claims
@@ -1867,7 +1813,6 @@ class BcscCoreModule internal constructor(
                     .claim("mobile_id_build", getAppBuildNumber())
                     .claim("has_other_accounts", false)
 
-            // Add attestation if provided
             if (attestation != null && attestation.isNotEmpty()) {
                 deviceInfoClaimsBuilder.claim("attestation", attestation)
             }
@@ -1944,7 +1889,6 @@ class BcscCoreModule internal constructor(
                     put("application_type", "native")
                 }
 
-            // Convert to serialized JSON string
             val registrationBodyAsString = registrationBodyJson.toString()
 
             Log.d(NAME, "getDynamicClientRegistrationBody: Successfully created DCR body")
@@ -2005,7 +1949,6 @@ class BcscCoreModule internal constructor(
         confirmationCode: String,
         promise: Promise,
     ) {
-        // Validate all parameters are provided
         if (deviceCode.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || confirmationCode.isEmpty()) {
             promise.reject(
                 "E_INVALID_PARAMETERS",
@@ -2033,7 +1976,6 @@ class BcscCoreModule internal constructor(
                     .claim("code", confirmationCode) // Add confirmation code as additional claim
                     .build()
 
-            // Sign the JWT assertion using bcsc-keypair-port
             val clientAssertion = keyPairSource.signAndSerializeClaimsSet(claimsSet)
 
             // Format OAuth2 device code request body (matching iOS implementation)
@@ -2074,7 +2016,6 @@ class BcscCoreModule internal constructor(
                     .claim("client_id", clientID)
                     .build()
 
-            // Sign the JWT using bcsc-keypair-port
             val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
 
             Log.d(NAME, "createPreVerificationJWT: Successfully created pre-verification JWT")
@@ -2111,7 +2052,6 @@ class BcscCoreModule internal constructor(
 
             val claimsSet = claimsSetBuilder.build()
 
-            // Sign the JWT using bcsc-keypair-port
             val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
 
             Log.d(NAME, "createSignedJWT: Successfully created JWT")
@@ -2149,7 +2089,6 @@ class BcscCoreModule internal constructor(
             // Decode base64 string to bytes (similar to iOS implementation)
             val data = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
 
-            // Create SHA-256 hash
             val digest = java.security.MessageDigest.getInstance("SHA-256")
             val hashBytes = digest.digest(data)
 
@@ -2320,10 +2259,8 @@ class BcscCoreModule internal constructor(
                 base64Payload += "=".repeat(paddingLength)
             }
 
-            // Convert base64url to base64 (replace URL-safe characters)
             base64Payload = base64Payload.replace("-", "+").replace("_", "/")
 
-            // Decode the base64 payload
             val decodedBytes = android.util.Base64.decode(base64Payload, android.util.Base64.DEFAULT)
             val decodedPayload = String(decodedBytes, Charsets.UTF_8)
 
@@ -2379,7 +2316,6 @@ class BcscCoreModule internal constructor(
         // Sites are `createQuickLoginJWT.<stage>`, matching iOS, so reports show which stage failed
         val method = "createQuickLoginJWT"
         try {
-            // Validate required parameters
             if (accessToken.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || clientRefId.isEmpty() ||
                 fcmDeviceToken.isEmpty()
             ) {
@@ -2405,7 +2341,6 @@ class BcscCoreModule internal constructor(
                 return
             }
 
-            // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
             Log.d(
@@ -2634,14 +2569,12 @@ class BcscCoreModule internal constructor(
                     .Builder(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A256GCM)
                     .build()
 
-            // Create JWE object with the signed JWT as payload
             val jweObject = JWEObject(header, Payload(jwt))
 
             // Encrypt using RSA encrypter (hybrid encryption - RSA for key, AES for content)
             val encrypter = RSAEncrypter(rsaKey)
             jweObject.encrypt(encrypter)
 
-            // Serialize to JWE compact format
             return jweObject.serialize()
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JWE encrypted JWT: ${e.message}", e)
@@ -2675,7 +2608,6 @@ class BcscCoreModule internal constructor(
                 }
             }
 
-            // Write back updated accounts array
             FileWriter(accountsFile).use { writer ->
                 writer.write(updatedAccountsArray.toString())
                 writer.flush()
@@ -2691,10 +2623,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Method to remove the current account.
-     * Removes the current account from the accounts file by accountId
-     */
     @ReactMethod
     override fun removeAccount(promise: Promise) {
         Log.d(NAME, "removeAccount - Starting account removal process")
@@ -2756,12 +2684,6 @@ class BcscCoreModule internal constructor(
         promise.resolve(null)
     }
 
-    // MARK: - Account management methods
-
-    /**
-     * Helper method to get account data synchronously (without Promise)
-     * This is used internally by getToken to get the account ID
-     */
     private fun getAccountSync(): WritableMap? {
         Log.d(NAME, "getAccountSync called")
 
@@ -2788,7 +2710,6 @@ class BcscCoreModule internal constructor(
                     "typ" to "JWT",
                 )
 
-            // Convert header and payload to JSON and then base64url encode
             val headerJson = JSONObject(header).toString()
             val payloadJson = claimsSet.toString()
 
@@ -2815,9 +2736,6 @@ class BcscCoreModule internal constructor(
     private fun ByteArray.toBase64String(): String =
         android.util.Base64.encodeToString(this, android.util.Base64.NO_WRAP)
 
-    /**
-     * Gets the app version name from the package info
-     */
     private fun getAppVersion(): String {
         return try {
             val packageInfo =
@@ -2832,9 +2750,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Gets the app build number (version code) from the package info
-     */
     private fun getAppBuildNumber(): String {
         return try {
             val packageInfo =
@@ -2902,12 +2817,6 @@ class BcscCoreModule internal constructor(
             "00000000-0000-0000-0000-000000000000"
         }
 
-    // MARK: - Authentication Methods
-
-    /**
-     * Sets a PIN for the current account.
-     * Matches TypeScript: setPIN(pin: string): Promise<PINSetupResult>
-     */
     @ReactMethod
     override fun setPIN(
         pin: String,
@@ -2941,8 +2850,6 @@ class BcscCoreModule internal constructor(
     /**
      * Verifies a PIN for the current account. Only checks the PIN: wrong attempts are counted, and
      * lockouts enforced, in TypeScript.
-     * Matches TypeScript: verifyPIN(pin: string): Promise<PINVerificationResult>
-     * Returns: { success: boolean, walletKey?: string }
      */
     @ReactMethod
     override fun verifyPIN(
@@ -2966,7 +2873,6 @@ class BcscCoreModule internal constructor(
                 return
             }
 
-            // Validate PIN and get hash if successful
             val validationResult = pinService.validatePINReturningHash(account.uuid, pin)
 
             val result = Arguments.createMap()
@@ -2985,10 +2891,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Deletes the PIN for the current account.
-     * Matches TypeScript: deletePIN(): Promise<boolean>
-     */
     @ReactMethod
     override fun deletePIN(promise: Promise) {
         try {
@@ -3009,10 +2911,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Checks if a PIN is set for the current account.
-     * Matches TypeScript: hasPINSet(): Promise<boolean>
-     */
     @ReactMethod
     override fun hasPINSet(promise: Promise) {
         try {
@@ -3033,10 +2931,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Performs device authentication (biometric or passcode).
-     * Matches TypeScript: performDeviceAuthentication(reason?: string): Promise<boolean>
-     */
     @ReactMethod
     override fun performDeviceAuthentication(
         reason: String?,
@@ -3093,10 +2987,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Checks if device authentication is available.
-     * Matches TypeScript: canPerformDeviceAuthentication(): Promise<boolean>
-     */
     @ReactMethod
     override fun canPerformDeviceAuthentication(promise: Promise) {
         try {
@@ -3111,7 +3001,6 @@ class BcscCoreModule internal constructor(
 
     /**
      * Gets the available biometric type.
-     * Matches TypeScript: getAvailableBiometricType(): Promise<BiometricType>
      * Returns: 'none', 'touchID', 'faceID', or 'opticID'
      * Note: On Android, we map fingerprint to 'touchID' and face to 'faceID'
      */
@@ -3158,7 +3047,6 @@ class BcscCoreModule internal constructor(
 
     /**
      * Checks if biometric authentication (not including passcode) is available.
-     * Matches TypeScript: canPerformBiometricAuthentication(): Promise<boolean>
      */
     @ReactMethod
     override fun canPerformBiometricAuthentication(promise: Promise) {
@@ -3178,17 +3066,12 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Sets the security method for the specified account.
-     * Matches TypeScript: setAccountSecurityMethod(accountID: string, securityMethod: AccountSecurityMethod): Promise<boolean>
-     */
     @ReactMethod
     override fun setAccountSecurityMethod(
         securityMethod: String,
         promise: Promise,
     ) {
         try {
-            // Validate security method
             val validMethods = listOf("device_authentication", "app_pin_no_device_authn", "app_pin_has_device_authn")
             if (securityMethod !in validMethods) {
                 promise.reject("E_INVALID_SECURITY_METHOD", "Invalid security method: $securityMethod")
@@ -3214,11 +3097,9 @@ class BcscCoreModule internal constructor(
             val issuerName = nativeStorage.getDefaultIssuerName()
             val accountID = account.uuid
 
-            // Update the account with new security type
             val updatedAccount = account.copy(accountSecurityType = accountSecurityType)
             val updatedAccounts = listOf(updatedAccount)
 
-            // Save updated accounts
             if (nativeStorage.saveAccounts(updatedAccounts, issuerName)) {
                 Log.d(
                     NAME,
@@ -3236,7 +3117,6 @@ class BcscCoreModule internal constructor(
 
     /**
      * Gets the security method for the current account.
-     * Matches TypeScript: getAccountSecurityMethod(): Promise<AccountSecurityMethod>
      * Rejects with E_ACCOUNT_NOT_FOUND when no account exists, matching iOS: a defaulted method
      * would let callers register or unlock with a method the user never set up.
      */
@@ -3264,13 +3144,10 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    // MARK: - Device Security Methods (for biometric/device authentication)
-
     /**
      * Sets up device security by generating a random PIN internally,
      * storing its hash behind biometric auth, and returning the wallet key.
      * Call this during onboarding when user chooses device security.
-     * Matches TypeScript: setupDeviceSecurity(): Promise<PINSetupResult>
      */
     @ReactMethod
     override fun setupDeviceSecurity(promise: Promise) {
@@ -3283,7 +3160,6 @@ class BcscCoreModule internal constructor(
 
             val accountID = account.uuid
 
-            // Generate a cryptographically secure random PIN
             val secureRandom = java.security.SecureRandom()
             val pinDigits = StringBuilder()
             for (i in 0 until AUTO_GENERATED_PIN_LENGTH) {
@@ -3311,7 +3187,6 @@ class BcscCoreModule internal constructor(
     /**
      * Unlocks using device security (biometric/passcode) and returns the wallet key.
      * Call this on app unlock when account uses device security method.
-     * Matches TypeScript: unlockWithDeviceSecurity(reason?: string): Promise<DeviceSecurityUnlockResult>
      */
     @ReactMethod
     override fun unlockWithDeviceSecurity(
@@ -3429,12 +3304,10 @@ class BcscCoreModule internal constructor(
 
     /**
      * Checks if the stored PIN was auto-generated (for device security) or user-created.
-     * Matches TypeScript: isPINAutoGenerated(): Promise<boolean>
      */
     @ReactMethod
     override fun isPINAutoGenerated(promise: Promise) {
         try {
-            // Get the account to obtain the account ID
             val account = getAccountSync()
             if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
@@ -3456,17 +3329,13 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    // MARK: - Authorization Request Storage Methods
-
     /**
      * Gets the stored authorization request data.
      * Reads from encrypted storage, compatible with v3 migration.
-     * Matches TypeScript: getAuthorizationRequest(): Promise<NativeAuthorizationRequest | null>
      */
     @ReactMethod
     override fun getAuthorizationRequest(promise: Promise) {
         try {
-            // Get the account to obtain issuer and account ID
             val account = getAccountSync()
             if (account == null) {
                 // No account yet - return null (not an error)
@@ -3520,7 +3389,6 @@ class BcscCoreModule internal constructor(
                 return
             }
 
-            // Convert to WritableMap for React Native
             val result =
                 Arguments.createMap().apply {
                     authRequest.deviceCode?.let { putString("deviceCode", it) }
@@ -3586,17 +3454,12 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Saves authorization request data to encrypted storage.
-     * Matches TypeScript: setAuthorizationRequest(data: NativeAuthorizationRequest): Promise<boolean>
-     */
     @ReactMethod
     override fun setAuthorizationRequest(
         data: ReadableMap,
         promise: Promise,
     ) {
         try {
-            // Get the account to obtain issuer and account ID
             val account = getAccountSync()
             if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
@@ -3613,7 +3476,6 @@ class BcscCoreModule internal constructor(
 
             val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
 
-            // Convert ReadableMap to NativeAuthorizationRequest
             val authRequest =
                 NativeAuthorizationRequest(
                     deviceCode = if (data.hasKey("deviceCode")) data.getString("deviceCode") else null,
@@ -3735,7 +3597,6 @@ class BcscCoreModule internal constructor(
                     cardProcess = if (data.hasKey("cardProcess")) data.getString("cardProcess") else null,
                 )
 
-            // Save to encrypted storage
             val success = nativeStorage.saveAuthorizationRequest(authRequest, issuerName, accountId)
 
             if (success) {
@@ -3750,14 +3611,9 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Deletes the stored authorization request data.
-     * Matches TypeScript: deleteAuthorizationRequest(): Promise<boolean>
-     */
     @ReactMethod
     override fun deleteAuthorizationRequest(promise: Promise) {
         try {
-            // Get the account to obtain issuer and account ID
             val account = getAccountSync()
             if (account == null) {
                 // No account, so nothing to delete
@@ -3793,8 +3649,6 @@ class BcscCoreModule internal constructor(
             promise.reject("E_DELETE_AUTH_REQUEST_ERROR", "Error deleting authorization request: ${e.message}", e)
         }
     }
-
-    // MARK: - Android Global Flags Storage Methods
 
     /**
      * Gets global (non-account-scoped) flags from SharedPreferences.
@@ -3864,12 +3718,9 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    // MARK: - Account Flags Storage Methods
-
     /**
      * Gets account flags from SharedPreferences.
      * Compatible with v3 native app storage location.
-     * Matches TypeScript: getAccountFlags(): Promise<Record<string, any>>
      */
     @ReactMethod
     override fun getAccountFlags(promise: Promise) {
@@ -3937,7 +3788,6 @@ class BcscCoreModule internal constructor(
     /**
      * Sets account flags in SharedPreferences.
      * Compatible with v3 native app storage location.
-     * Matches TypeScript: setAccountFlags(flags: Record<string, any>): Promise<boolean>
      */
     @ReactMethod
     override fun setAccountFlags(
@@ -3987,7 +3837,6 @@ class BcscCoreModule internal constructor(
                     "userSubmittedVerificationVideo" -> {
                         editor.putBoolean("user_submitted_verification_video", flags.getBoolean(key))
                     }
-                    // Add more flag mappings as needed
                 }
             }
 
@@ -4001,10 +3850,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Deletes all account flags from SharedPreferences.
-     * Matches TypeScript: deleteAccountFlags(): Promise<boolean>
-     */
     @ReactMethod
     override fun deleteAccountFlags(promise: Promise) {
         try {
@@ -4033,10 +3878,6 @@ class BcscCoreModule internal constructor(
             promise.reject("E_DELETE_ACCOUNT_FLAGS_ERROR", "Error deleting account flags: ${e.message}", e)
         }
     }
-
-    // ============================================================================
-    // MARK: - Evidence Storage Methods
-    // ============================================================================
 
     /**
      * Gets evidence metadata from storage.
@@ -4265,7 +4106,6 @@ class BcscCoreModule internal constructor(
                 }
             }
 
-            // Delete documents photo directory
             val documentsDir = File(reactApplicationContext.filesDir, "documents")
             if (documentsDir.exists() && documentsDir.isDirectory) {
                 documentsDir.deleteRecursively()
@@ -4283,8 +4123,6 @@ class BcscCoreModule internal constructor(
      * Saves a photo to the documents directory.
      * Photos are stored as JPEG files in {filesDir}/documents/{filename}.
      *
-     * @param base64Data Base64-encoded photo data
-     * @param filename Target filename for the photo
      * @return The absolute path to the saved file
      */
     @ReactMethod
@@ -4322,7 +4160,6 @@ class BcscCoreModule internal constructor(
     internal fun convertToEvidenceUploadEntry(item: ReadableMap): JSONObject {
         val entry = JSONObject()
 
-        // Evidence type
         if (item.hasKey("evidenceType")) {
             item.getMap("evidenceType")?.let { et ->
                 entry.put("evidencetype", convertMapToJson(et))
@@ -4358,7 +4195,6 @@ class BcscCoreModule internal constructor(
         images.put("evidencePhotos", photosArray)
         entry.put("images", images)
 
-        // Barcodes
         if (item.hasKey("barcodes")) {
             item.getArray("barcodes")?.let { barcodesArray ->
                 entry.put("barcodes", convertArrayToJson(barcodesArray))
@@ -4368,16 +4204,11 @@ class BcscCoreModule internal constructor(
         return entry
     }
 
-    // ============================================================================
-    // MARK: - Credential Storage Methods
-    // ============================================================================
-
     /**
      * Gets credential information from native storage.
      * Android: Stored within Provider → ClientRegistration in secure storage
      * As a fallback this will also search ~/issuer/account_uuid/providers file for stored credentials
      * Compatible with v3 native app storage for verification state detection.
-     * Matches TypeScript: getCredential(): Promise<Record<string, unknown> | null>
      */
     @ReactMethod
     override fun getCredential(promise: Promise) {
@@ -4417,7 +4248,6 @@ class BcscCoreModule internal constructor(
 
             val credentialJson = clientRegistration.getJSONObject("credential")
 
-            // Convert JSON to WritableMap for React Native
             val credentialMap = Arguments.createMap()
             credentialJson.keys().forEach { key ->
                 val value = credentialJson.get(key)
@@ -4473,7 +4303,6 @@ class BcscCoreModule internal constructor(
      * Sets credential information in native storage.
      * Android: Stores within Provider → ClientRegistration in secure storage
      * Compatible with v3 native app storage for verification state detection.
-     * Matches TypeScript: setCredential(credential: Record<string, unknown>): Promise<boolean>
      */
     @ReactMethod
     override fun setCredential(
@@ -4504,7 +4333,6 @@ class BcscCoreModule internal constructor(
                     JSONObject()
                 }
 
-            // Convert ReadableMap to JSONObject
             val credentialJson = JSONObject()
             val iterator = credentialData.keySetIterator()
             while (iterator.hasNextKey()) {
@@ -4530,7 +4358,6 @@ class BcscCoreModule internal constructor(
             clientRegistration.put("credential", credentialJson)
             providerData.put("clientRegistration", clientRegistration)
 
-            // Save back to SharedPreferences
             val editor = sharedPreferences.edit()
             editor.putString("provider", providerData.toString())
             editor.apply()
@@ -4546,7 +4373,6 @@ class BcscCoreModule internal constructor(
     /**
      * Deletes credential information from native storage.
      * This effectively marks the account as not verified
-     * Matches TypeScript: deleteCredential(): Promise<boolean>
      */
     @ReactMethod
     override fun deleteCredential(promise: Promise) {
@@ -4573,11 +4399,9 @@ class BcscCoreModule internal constructor(
 
             val clientRegistration = providerData.getJSONObject("clientRegistration")
 
-            // Remove credential from clientRegistration
             if (clientRegistration.has("credential")) {
                 clientRegistration.remove("credential")
 
-                // Save updated provider data
                 providerData.put("clientRegistration", clientRegistration)
                 val editor = sharedPreferences.edit()
                 editor.putString("provider", providerData.toString())
@@ -4598,7 +4422,6 @@ class BcscCoreModule internal constructor(
     /**
      * Checks if a credential exists without retrieving it.
      * Useful for quick verification status checks
-     * Matches TypeScript: hasCredential(): Promise<boolean>
      */
     @ReactMethod
     override fun hasCredential(promise: Promise) {
@@ -4634,9 +4457,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    // MARK: - Authentication Service Initialization
-
-    // Initialize authentication services
     private val deviceAuthenticationService: DeviceAuthenticationService by lazy {
         DeviceAuthenticationServiceImpl(reactApplicationContext)
     }
@@ -4664,11 +4484,6 @@ class BcscCoreModule internal constructor(
         super.invalidate()
     }
 
-    // MARK: - JSON Conversion Helpers
-
-    /**
-     * Converts a JSONObject to a WritableMap for React Native.
-     */
     private fun convertJsonToMap(jsonObject: JSONObject): WritableMap {
         val map = Arguments.createMap()
         jsonObject.keys().forEach { key ->
@@ -4687,9 +4502,6 @@ class BcscCoreModule internal constructor(
         return map
     }
 
-    /**
-     * Converts a JSONArray to a WritableArray for React Native.
-     */
     private fun convertJsonToArray(jsonArray: JSONArray): WritableArray {
         val array = Arguments.createArray()
         for (i in 0 until jsonArray.length()) {
@@ -4708,9 +4520,6 @@ class BcscCoreModule internal constructor(
         return array
     }
 
-    /**
-     * Converts a ReadableMap to a JSONObject.
-     */
     private fun convertMapToJson(readableMap: ReadableMap): JSONObject {
         val jsonObject = JSONObject()
         val iterator = readableMap.keySetIterator()
@@ -4751,9 +4560,6 @@ class BcscCoreModule internal constructor(
         return jsonObject
     }
 
-    /**
-     * Converts a ReadableArray to a JSONArray.
-     */
     private fun convertArrayToJson(readableArray: ReadableArray): JSONArray {
         val jsonArray = JSONArray()
         for (i in 0 until readableArray.size()) {
@@ -4791,8 +4597,6 @@ class BcscCoreModule internal constructor(
         }
         return jsonArray
     }
-
-    // MARK: - Saved Services (Client Metadata) Storage
 
     /**
      * Gets saved services (client metadata) from native encrypted storage.
@@ -4854,9 +4658,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Saves services (client metadata) to native encrypted storage.
-     */
     @ReactMethod
     override fun setSavedServices(
         services: ReadableArray,
@@ -5008,9 +4809,6 @@ class BcscCoreModule internal constructor(
         }
     }
 
-    /**
-     * Deletes all saved services (client metadata) from native storage.
-     */
     @ReactMethod
     override fun deleteSavedServices(promise: Promise) {
         try {
@@ -5246,13 +5044,6 @@ class BcscCoreModule internal constructor(
      * This method scans the filesDir (context.filesDir) and logs all files and directories
      * to help diagnose storage layout, migration issues, and file organization.
      * Mirrors the iOS getNativeFilesScan functionality.
-     *
-     * @param promise Resolves with a map containing:
-     *   - packageName: The app's package name
-     *   - filesDirectory: Path to the app's files directory
-     *   - filesDirExists: Whether the files directory exists
-     *   - files: Array of relative paths to all files/directories found
-     *   - fileCount: Total count of files/directories
      */
     @ReactMethod
     override fun getNativeFilesScan(promise: Promise) {
@@ -5289,8 +5080,6 @@ class BcscCoreModule internal constructor(
                                 Log.d(NAME, "[Native File Scan] $file")
                             }
                         }
-
-                        // logEvidenceFileContents(filesDir, allFiles)
                     } else {
                         putArray("files", Arguments.createArray())
                         putInt("fileCount", 0)
@@ -5311,10 +5100,6 @@ class BcscCoreModule internal constructor(
 
     /**
      * Recursively scans a directory and collects all file/directory paths relative to the base directory.
-     *
-     * @param directory The current directory to scan
-     * @param baseDirectory The root directory (used to compute relative paths)
-     * @param results Mutable list to collect file paths
      */
     private fun recursiveFileScan(
         directory: File,
@@ -5325,7 +5110,6 @@ class BcscCoreModule internal constructor(
             val files = directory.listFiles() ?: return
 
             for (file in files) {
-                // Compute relative path from base directory
                 val relativePath =
                     file.absolutePath
                         .removePrefix(baseDirectory.absolutePath)
@@ -5343,49 +5127,4 @@ class BcscCoreModule internal constructor(
             Log.w(NAME, "recursiveFileScan: Error scanning directory: ${e.message}", e)
         }
     }
-
-    // private fun logEvidenceFileContents(
-    //     baseDirectory: File,
-    //     scannedRelativePaths: List<String>,
-    // ) {
-    //     val evidenceFileNames = setOf("evidence_config", "evidence_upload")
-
-    //     scannedRelativePaths.forEach { relativePath ->
-    //         val segments = relativePath.split(File.separator).filter { it.isNotBlank() }
-    //         if (segments.size < 2) {
-    //             return@forEach
-    //         }
-
-    //         val fileName = segments.last()
-    //         if (fileName !in evidenceFileNames) {
-    //             return@forEach
-    //         }
-
-    //         val file = File(baseDirectory, relativePath)
-    //         if (!file.exists() || !file.isFile) {
-    //             return@forEach
-    //         }
-
-    //         try {
-    //             val content = nativeStorage.readEncryptedFile(file)
-    //             if (content != null) {
-    //                 Log.i(
-    //                     NAME,
-    //                     "[Native File Scan] ${file.absolutePath} contents:\n$content",
-    //                 )
-    //             } else {
-    //                 Log.w(
-    //                     NAME,
-    //                     "[Native File Scan] ${file.absolutePath} could not be decrypted/read as text",
-    //                 )
-    //             }
-    //         } catch (e: Exception) {
-    //             Log.w(
-    //                 NAME,
-    //                 "[Native File Scan] Failed to read ${file.absolutePath}: ${e.message}",
-    //                 e,
-    //             )
-    //         }
-    //     }
-    // }
 }

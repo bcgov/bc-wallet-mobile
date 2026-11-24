@@ -9,30 +9,24 @@ interface InformationCardProps {
    * Title text to display at the top of the card
    *
    * @example "Card Title"
-   * @type {string}
    */
   title: string
   /**
    * Subtext to display below the title
    *
    * @example "This is a subtext"
-   * @type {string}
    */
   subtext: string
   /**
    * MaterialIcon compatible icon name shown to the left of the title
    *
    * @example "fingerprint", "dialpad"
-   * @type {string}
    */
   startIcon?: string
 }
 
 /**
  * A reusable information card component that displays a title, optional subtext, and an optional icon.
- *
- * @param props - The InformationCard component props
- * @returns The InformationCard component
  */
 export const InformationCard = (props: InformationCardProps) => {
   const { Spacing, ColorPalette } = useTheme()

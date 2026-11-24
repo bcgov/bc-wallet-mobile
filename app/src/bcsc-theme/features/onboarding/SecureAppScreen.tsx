@@ -22,11 +22,6 @@ interface SecureAppScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSecureApp>
 }
 
-/**
- * Secure App screen for onboarding.
- * Provides options for securing the app using biometric authentication or a PIN.
- * Uses the shared SecurityMethodSelector component.
- */
 export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const { handleSuccessfulAuth } = useSecureActions()
@@ -47,7 +42,6 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
         })
       }
 
-      // Now setup device security (generates random PIN and stores it securely)
       const { success, walletKey } = await setupDeviceSecurity()
       if (success) {
         if (account) {
@@ -58,7 +52,6 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
           })
         }
 
-        // Complete onboarding with the wallet key
         await handleSuccessfulAuth(walletKey)
         logger.info('Device security setup completed successfully')
       } else {

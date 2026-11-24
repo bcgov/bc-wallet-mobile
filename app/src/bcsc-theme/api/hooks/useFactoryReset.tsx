@@ -34,8 +34,6 @@ type FactoryResetResult =
  *  - Removing the local account file.
  *  - Clearing the BCSC state in the global store.
  *  - Logging out the user by updating the authentication state.
- *
- * @returns A function that performs the factory reset when called.
  */
 export const useFactoryReset = () => {
   const { client, isClientReady } = useBCSCApiClientState()
@@ -49,9 +47,6 @@ export const useFactoryReset = () => {
    * Deletes the account's registration from the IAS server. A failed delete is logged, not thrown.
    *
    * The registration is read from storage, so this works before secure state has been hydrated.
-   *
-   * @param account - The account whose registration to delete.
-   * @returns A promise that resolves when the deletion attempt is complete.
    */
   const deleteRegistration = useCallback(
     async (account: NativeAccount) => {
@@ -78,24 +73,16 @@ export const useFactoryReset = () => {
     [logger, registration]
   )
 
-  /**
-   * Removes all artifacts associated with the current BCSC account.
-   *
-   * @returns A promise that resolves when all account dependencies have been purged.
-   */
   const removeAccountArtifacts = useCallback(async () => {
     const account = await getAccount()
 
     if (account) {
-      // Delete IAS account registration
       logger.info('FactoryReset: Deleting IAS account from server...')
       await deleteRegistration(account)
 
-      // Delete secure data from native storage
       logger.info('FactoryReset: Deleting secure data from native storage...')
       await deleteSecureData()
 
-      // Remove local account file
       logger.info('FactoryReset: Removing local account file...')
       await removeAccount()
     } else {
@@ -188,7 +175,6 @@ export const useFactoryReset = () => {
         logger.info('FactoryReset: Logging out user...')
         dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
 
-        // Factory reset complete
         logger.info('FactoryReset: BCSC factory reset completed successfully')
         return { success: true }
       } catch (error) {
@@ -215,12 +201,6 @@ export const useFactoryReset = () => {
   return factoryReset
 }
 
-/**
- * Formats errors that occur during the factory reset process.
- *
- * @param {unknown} error - The error to format.
- * @returns {*} {Error} The formatted error.
- */
 function _formatFactoryResetError(error: unknown): Error {
   if (error instanceof Error) {
     error.message = `FactoryResetError: ${error.message}`

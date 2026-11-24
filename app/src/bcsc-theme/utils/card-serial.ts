@@ -31,8 +31,6 @@ const normalizeSerial = (raw?: string | null): string => {
  * Whether two serials name the same card. A serial reaches the app in more than one shape — the 1D
  * barcode's raw value, the 2D barcode's zero-padded DCN, or typed by hand in either case — so each is
  * reduced to its DCN when it is one, and to its trimmed upper-case form otherwise.
- *
- * @returns false when either serial is missing.
  */
 export const isSameCardSerial = (a?: string | null, b?: string | null): boolean => {
   const left = normalizeSerial(a)

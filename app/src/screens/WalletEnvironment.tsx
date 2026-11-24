@@ -19,9 +19,6 @@ const WalletEnvironmentScreen: React.FC<WalletEnvironmentProps> = ({ shouldDismi
   /**
    * Handles the change of the IAS environment by updating the store.
    * No factory reset needed for BC Wallet mode.
-   *
-   * @param environment - The selected IAS environment to switch to.
-   * @returns A promise that resolves when the environment change process is complete.
    */
   const handleEnvironmentChange = useCallback(
     async (environment: IASEnvironment) => {

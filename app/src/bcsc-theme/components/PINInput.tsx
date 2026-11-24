@@ -65,7 +65,6 @@ export const PINInput = ({
   })
 
   const handlePINChange = (value: string) => {
-    // Only allow digits and limit to 6 characters
     const numericValue = String(value.replaceAll(/\D/g, '')).slice(0, PIN_LENGTH)
     setPin(numericValue)
     onPINChange?.(numericValue)

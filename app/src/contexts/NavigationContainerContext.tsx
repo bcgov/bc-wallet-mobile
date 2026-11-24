@@ -56,11 +56,6 @@ export interface NavigationContainerContextType {
 
 export const NavigationContainerContext = createContext<NavigationContainerContextType | null>(null)
 
-/**
- * NavigationContainerProvider component that wraps the app's navigation container.
- *
- * @returns {*} {React.ReactElement}
- */
 export const NavigationContainerProvider = ({ children }: PropsWithChildren): React.JSX.Element => {
   const [navigationReady, setNavigationReady] = useState(false)
   const { NavigationTheme } = useTheme()
@@ -120,11 +115,6 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
   )
 }
 
-/**
- * Hook to access the NavigationContainerContext.
- *
- * @returns {*} {NavigationContainerContextType}
- */
 export const useNavigationContainer = () => {
   const context = useContext(NavigationContainerContext)
 

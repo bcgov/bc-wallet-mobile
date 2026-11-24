@@ -29,10 +29,6 @@ interface SecurityMethodSelectorProps {
    * This is because setupDeviceSecurity() requires an account to already exist.
    */
   onDeviceAuthPress: () => Promise<void>
-  /**
-   * Called when user selects PIN option.
-   * The parent should navigate to the appropriate PIN screen.
-   */
   onPINPress: () => void
   /**
    * Current security method (for settings context).
@@ -40,9 +36,6 @@ interface SecurityMethodSelectorProps {
    * If undefined, assumes onboarding context (no current method).
    */
   currentMethod?: AccountSecurityMethod | null
-  /**
-   * Optional custom prompt for device authentication.
-   */
   deviceAuthPrompt?: string
 }
 
@@ -102,11 +95,6 @@ const getSecurityCopy = (
   }
 }
 
-/**
- * Shared security method selector component.
- * Displays options to secure the app using device authentication (biometrics/passcode) or PIN.
- * Used by both SecureAppScreen (onboarding) and ChangeSecurityScreen (settings).
- */
 export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   onDeviceAuthPress,
   onPINPress,
@@ -189,7 +177,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   const deviceAuthSelected = isSettingsContext && isCurrentMethodDeviceAuth
   const pinSelected = isSettingsContext && isCurrentMethodPin
 
-  // Controls for when device auth is NOT available
   const controlsForNoDeviceAuth = (
     <ControlContainer>
       <Button
@@ -210,7 +197,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
     )
   }
 
-  // When device auth is available, show both options
   if (isDeviceAuthAvailable) {
     return (
       <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer}>
@@ -242,7 +228,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
     )
   }
 
-  // When device auth is NOT available
   return (
     <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer} controls={controlsForNoDeviceAuth}>
       <ThemedText variant="headingThree" style={{ textAlign: isSettingsContext ? 'left' : 'center' }}>

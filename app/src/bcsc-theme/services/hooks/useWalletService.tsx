@@ -7,8 +7,6 @@ import { useCallback, useMemo } from 'react'
 
 /**
  * useWalletService is a custom hook that provides functionality to manage the underlying wallet.
- *
- * @returns Wallet Service
  */
 export const useWalletService = () => {
   const agentContext = useBCSCAgentSafe()
@@ -21,8 +19,6 @@ export const useWalletService = () => {
    * Rotates the wallet key for the agent's underlying wallet.
    *
    * @throws An error if the wallet key rotation fails.
-   * @param walletKey - The new wallet key to be set for the agent's wallet.
-   * @returns A promise that resolves to true if the wallet key rotation is successful, or false if it fails.
    */
   const rotateWalletKey = useCallback(
     async (walletKey: string) => {

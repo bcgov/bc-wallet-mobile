@@ -19,17 +19,8 @@ const ALLOWED_QR_SCHEMES = [
 ]
 
 type ToErrorModalReturn = {
-  /**
-   * The error that occurred during the QR code handling process.
-   */
   error: AppError
-  /**
-   * The title to display in the error modal.
-   */
   title: string
-  /**
-   * The description/message to display in the error modal.
-   */
   description: string
   /**
    * Indicates whether the error modal should include a report button for sending error details to support.
@@ -53,11 +44,6 @@ export type QRCodeStrategy = {
   toErrorModal: (error: unknown) => ToErrorModalReturn | null // Return null to suppress the modal. ie: already handled.
 }
 
-/**
- * Custom hook to handle QR code scanning with multiple strategies.
- * @param strategies - An array of QRCodeStrategy objects that define how to handle different QR code formats.
- * @returns An object containing the scan handling functions and state.
- */
 export const useQRScanner = (strategies: QRCodeStrategy[]) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -84,8 +70,6 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
 
   /**
    * Handle a scanned QR code value by finding a matching strategy and executing its handler.
-   * @param value - The scanned QR code value.
-   * @returns A promise that resolves when the scan handling is complete.
    */
   const handleScan = useCallback(
     async (value: string) => {
@@ -142,8 +126,6 @@ export const useQRScanner = (strategies: QRCodeStrategy[]) => {
 /**
  * Describes a QR code value by extracting its scheme, length, and presence of query or fragment components.
  * NOTE: Doesn't expose the actual value to avoid logging sensitive information.
- * @param value - The QR code value to describe.
- * @returns An object containing the scheme, length, and flags for query and fragment presence.
  */
 function describeQRCode(value: string) {
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(value)?.[1]?.toLowerCase() ?? 'none'

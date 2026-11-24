@@ -520,7 +520,6 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       </View>
 
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        {/* Error Modal Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>{t('Developer.ErrorModals')}</Text>
           <Text style={styles.description}>{t('Developer.ErrorModalsDescription')}</Text>
@@ -710,7 +709,6 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
           ))}
         </View>
 
-        {/* Plain Alerts Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>{t('Developer.PlainAlerts')}</Text>
           <Text style={styles.description}>{t('Developer.PlainAlertsDescription')}</Text>
@@ -746,7 +744,6 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
           </View>
         </View>
 
-        {/* Crashlytics */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>{'Crashlytics'}</Text>
           <Text style={styles.description}>

@@ -1,8 +1,5 @@
 package com.bcsccore.fileport.decryption;
 
-/**
- * Exception thrown when file decryption fails
- */
 public class DecryptionException extends Exception {
     
     public DecryptionException(String message) {

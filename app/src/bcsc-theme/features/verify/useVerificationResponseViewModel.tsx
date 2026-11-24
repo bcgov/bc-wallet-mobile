@@ -42,13 +42,11 @@ const useVerificationResponseViewModel = () => {
       const token = await getCachedIdTokenMetadata({ refreshCache: true })
       // fallback to family_name to support mononyms
       const nickname = getShortDisplayName(token ?? {})
-      // update local store with nickname
       updateNicknameInLocalStorage(nickname)
       // this updates their registration status with their nickname and new access tokens
       await handleUpdateRegistration(nickname)
       // this marks their account as verified, so we know to navigate them to the correct stack
       await updateVerified(true)
-      // account setup is complete, clear the authorization request record
       await clearAuthorizationRequest()
 
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })

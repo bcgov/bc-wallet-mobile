@@ -25,7 +25,6 @@ import {
  *   testID,
  *   accessibilityLabel,
  * }
- * @return {*}
  */
 const SettingsHeaderButton = ({
   onPress,
@@ -90,8 +89,6 @@ export const createAuthSettingsHeaderButton = () => {
 
 /**
  * Creates a Settings Header Button for the Onboarding Stack that navigates to OnboardingSettings.
- *
- * @return {*}
  */
 export const createOnboardingSettingsHeaderButton = () => {
   const OnboardingSettingsHeaderButton = () => {

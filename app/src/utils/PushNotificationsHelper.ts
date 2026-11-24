@@ -34,10 +34,6 @@ export const enum NotificationPermissionStatus {
 }
 
 /**
- * Permissions Section
- */
-
-/**
  * Requests device notification permissions
  *
  * TODO (MD): Workaround for a known React Native issue where `requestNotifications` may hang indefinitely
@@ -113,10 +109,6 @@ const requestPermission = async (): Promise<NotificationPermissionStatus> => {
   return formatPermissionAndroid(status)
 }
 
-/**
- * Helper Functions Section
- */
-
 const getMediatorConnection = async (agent: Agent): Promise<DidCommConnectionRecord | undefined> => {
   // The default mediator wins; the most recent mediator connection is the fallback
   const defaultMediatorConnection = await agent.didcomm.mediationRecipient.findDefaultMediatorConnection()
@@ -155,7 +147,6 @@ const getMediatorConnection = async (agent: Agent): Promise<DidCommConnectionRec
  * Checks if we have previously prompted the user for notification permissions.
  * This helps work around a React Native bug where permission status may not be
  * correctly reported on fresh installs.
- * @returns {Promise<boolean>}
  */
 const hasPromptedForNotifications = async (): Promise<boolean> => {
   return (await PersistentStorage.fetchValueForKey<boolean>(BCLocalStorageKeys.UserDeniedPushNotifications)) ?? false
@@ -163,7 +154,6 @@ const hasPromptedForNotifications = async (): Promise<boolean> => {
 
 /**
  * Marks that we have prompted the user for notification permissions.
- * @returns {Promise<void>}
  */
 const setHasPromptedForNotifications = async (): Promise<void> => {
   await PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.UserDeniedPushNotifications, true)
@@ -171,8 +161,6 @@ const setHasPromptedForNotifications = async (): Promise<void> => {
 
 /**
  * Uses the discover didcomm protocol to check with the mediator if it supports the firebase push notification protocol
- * @param agent - The active aries agent
- * @returns {Promise<boolean>}
  */
 const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => {
   if (Config.MEDIATOR_USE_PUSH_NOTIFICATIONS !== 'true') {
@@ -203,7 +191,6 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
 /**
  * Checks if the device token is already registered by checking the permission was granted and the storage key was used
  * @param token - If defined will use this token instead of fetching with firebase
- * @returns {Promise<boolean>}
  */
 const isRegistered = async (): Promise<boolean> => {
   const messagingInstance = getMessaging(getApp())
@@ -223,7 +210,6 @@ const isRegistered = async (): Promise<boolean> => {
 
 /**
  * Checks if push notifications are enabled by checking if the stored token matches the expected firebase token
- * @returns {Promise<boolean>}
  */
 const isEnabled = async (): Promise<boolean> => {
   try {
@@ -241,7 +227,6 @@ const isEnabled = async (): Promise<boolean> => {
  * Attempts to send the device token to the mediator agent. If the token is blank this is equivalent to disabling
  * @param agent - The active aries agent
  * @param blankDeviceToken - If true, will send an empty string as the device token to the mediator
- * @returns {Promise<void>}
  */
 const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<void> => {
   const messagingInstance = getMessaging(getApp())

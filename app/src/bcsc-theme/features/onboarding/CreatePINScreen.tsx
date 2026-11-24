@@ -9,11 +9,6 @@ interface CreatePINScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingCreatePIN>
 }
 
-/**
- * Create PIN screen for onboarding.
- * Used when setting up the app for the first time with PIN security.
- * Uses the shared PINEntryForm component.
- */
 export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
   const { handleSuccessfulAuth } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])

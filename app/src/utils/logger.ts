@@ -117,9 +117,6 @@ export const appLogger = createAppLogger()
  * always given a code to share, even when the network/Loki is unavailable.
  *
  * TODO (MD): Consider moving this to `utils/report-problem.ts`
- *
- * @param problem - the problem being reported
- * @returns the reference code to surface to the user
  */
 export const reportProblem = (problem: ReportProblem): string => {
   const reportId = generateReferenceCode()

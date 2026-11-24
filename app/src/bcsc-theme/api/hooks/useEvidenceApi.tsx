@@ -289,8 +289,6 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
 
   /**
    * Fetches the status of a verification request by its ID.
-   * @param verificationRequestId - The ID of the verification request to check.
-   * @returns Promise resolving to the verification status response data.
    */
   const getVerificationRequestStatus = useCallback(
     async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {

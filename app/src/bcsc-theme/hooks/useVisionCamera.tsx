@@ -38,7 +38,6 @@ interface VisionCameraOptions {
 /**
  * A custom hook that provides a convenient interface for using the Vision Camera.
  * It manages camera device selection, photo capture, and video recording.
- * @returns An object containing the camera reference, selected device, and functions for taking photos and recording videos.
  */
 export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutput }: VisionCameraOptions) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -56,7 +55,6 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
   /**
    * Captures a photo using the configured `CameraPhotoOutput`.
    * @throws If no `CameraPhotoOutput` is configured or if an error occurs during photo capture.
-   * @returns A Promise that resolves with the file path of the captured photo.
    */
   const takePhoto = useCallback(async () => {
     if (!photoOutput) {
@@ -110,17 +108,12 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
           fileSize: recorderRef.current?.recordedFileSize ?? -1,
         })
 
-        // Reset the recorder reference after recording is finished
         recorderRef.current = null
       }, options.onRecordingError)
     },
     [logger, videoOutput]
   )
 
-  /**
-   * Stops the current video recording.
-   * @returns A Promise that resolves when the recording has been stopped.
-   */
   const stopRecordingVideo = useCallback(async () => {
     if (!recorderRef.current?.isRecording) {
       logger.warn('[Camera] No recording in progress')
@@ -135,7 +128,6 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
 
   /**
    * Cancels the current video recording and discards the recorded file.
-   * @returns A Promise that resolves when the recording has been canceled.
    */
   const cancelRecordingVideo = useCallback(async () => {
     if (!recorderRef.current?.isRecording) {

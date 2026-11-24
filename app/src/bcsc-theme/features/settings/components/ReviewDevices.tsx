@@ -13,12 +13,6 @@ interface ReviewDevicesProps {
   onManageDevices: () => void
 }
 
-/**
- * Renders the content for the Review Devices modal, allowing users to manage their registered devices.
- *
- * @param {ReviewDevicesProps} props - The properties for the ReviewDevices component.
- * @returns {*} {React.ReactElement} The ReviewDevices component.
- */
 export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageDevices }: ReviewDevicesProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()

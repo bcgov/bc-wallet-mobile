@@ -29,9 +29,6 @@ type FloatingHelpMenuButtonProps = {
 
 /**
  * Renders a floating help menu button in the header, which opens a menu with provided options when pressed.
- *
- * @param props - The props for the FloatingHelpMenuButton component, including the menu options as children.
- * @returns The FloatingHelpMenuButton component with an IconButton and a FloatingHelpMenu.
  */
 const FloatingHelpMenuButton = (props: FloatingHelpMenuButtonProps) => {
   const { t } = useTranslation()

@@ -51,8 +51,6 @@ type BannersOptions =
 
 /**
  * Returns the list of banners to be displayed in the app, including both shared banners and banners from the store.
- *
- * @returns An object containing the list of banners and metadata.
  */
 export const useBanners = (options: BannersOptions) => {
   const { t } = useTranslation()

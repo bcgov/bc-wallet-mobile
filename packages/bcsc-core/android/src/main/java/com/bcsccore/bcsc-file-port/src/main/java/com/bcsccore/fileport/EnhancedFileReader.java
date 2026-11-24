@@ -8,15 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/**
- * Enhanced file reader with pattern matching capabilities
- */
 public class EnhancedFileReader extends SimpleFileReader implements PatternFileReader {
     
-    /**
-     * Constructor
-     * @param context Android application context
-     */
     public EnhancedFileReader(@NonNull Context context) {
         super(context);
     }
@@ -42,7 +35,6 @@ public class EnhancedFileReader extends SimpleFileReader implements PatternFileR
         String[] allFiles = listFiles();
         List<String> matchingFiles = new ArrayList<>();
         
-        // Convert wildcard pattern to regex
         String regexPattern = wildcardToRegex(pattern);
         Pattern compiledPattern = Pattern.compile(regexPattern);
         
@@ -91,17 +83,12 @@ public class EnhancedFileReader extends SimpleFileReader implements PatternFileR
     
     /**
      * Read all token files (files starting with "tokens")
-     * @return array of FileData objects for all token files
      */
     @NonNull
     public FileData[] readAllTokenFiles() {
         return readFilesWithPrefix("tokens");
     }
     
-    /**
-     * Read files matching common BCSC patterns
-     * @return array of FileData objects for BCSC-related files
-     */
     @NonNull
     public FileData[] readBcscFiles() {
         List<FileData> allBcscFiles = new ArrayList<>();
@@ -127,7 +114,6 @@ public class EnhancedFileReader extends SimpleFileReader implements PatternFileR
     /**
      * Convert wildcard pattern to regex
      * @param wildcardPattern pattern with * and ? wildcards
-     * @return regex pattern
      */
     private String wildcardToRegex(String wildcardPattern) {
         StringBuilder sb = new StringBuilder(wildcardPattern.length());

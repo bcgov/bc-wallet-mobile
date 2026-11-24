@@ -10,9 +10,6 @@ export interface ClockReading {
 /**
  * System check that alerts when the device clock is too far off the server's for signed requests.
  * Reads the same reading the API client uses to refuse token requests, so the two never disagree.
- *
- * @class ServerClockSkewSystemCheck
- * @implements {SystemCheckStrategy}
  */
 export class ServerClockSkewSystemCheck implements SystemCheckStrategy {
   constructor(

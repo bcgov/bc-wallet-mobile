@@ -22,7 +22,6 @@ public interface KeyPairInfoSource {
 
   /**
    * Get all stored key pair information.
-   * @return a map of alias -> KeyPairInfo for all stored key pairs
    * @throws BcscException if retrieval fails
    */
   @NonNull
@@ -30,14 +29,12 @@ public interface KeyPairInfoSource {
 
   /**
    * Save key pair information.
-   * @param info the key pair information to save
    * @throws BcscException if saving fails
    */
   void saveKeyPairInfo(KeyPairInfo info) throws BcscException;
 
   /**
    * Delete key pair information.
-   * @param alias the alias of the key pair info to delete
    * @throws BcscException if deletion fails
    */
   void deleteKeyPairInfo(String alias) throws BcscException;

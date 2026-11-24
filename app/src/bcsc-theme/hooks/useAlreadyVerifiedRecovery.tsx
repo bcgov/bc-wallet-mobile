@@ -21,8 +21,6 @@ export const useAlreadyVerifiedRecovery = () => {
    *
    * Returns false — leaving the caller to surface its own message — when the approval hasn't
    * propagated to the token endpoint yet, or when the exchange fails outright.
-   *
-   * @returns True if the user was navigated to VerificationSuccess
    */
   const recoverFromAlreadyVerified = useCallback(async (): Promise<boolean> => {
     const { deviceCode, userCode } = store.bcscSecure

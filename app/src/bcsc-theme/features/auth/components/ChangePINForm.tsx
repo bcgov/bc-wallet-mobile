@@ -29,15 +29,9 @@ interface ChangePINFormProps {
 }
 
 /**
- * Change PIN form component that handles:
- * - Current PIN verification
- * - New PIN input fields (create + confirm)
- * - Validation (6 digits, matching)
- * - Setting the new PIN via native module
- *
- * Used when user already has a PIN and wants to change it. The wait, through `onSuccess`, stays on the
- * button with the inputs locked rather than under the global loading overlay: `onSuccess` navigates
- * within the stack, and the slide away must start from this screen, not from behind the overlay.
+ * The wait, through `onSuccess`, stays on the button with the inputs locked rather than under the global
+ * loading overlay: `onSuccess` navigates within the stack, and the slide away must start from this screen,
+ * not from behind the overlay.
  */
 export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess }: ChangePINFormProps) => {
   const { t } = useTranslation()
@@ -66,35 +60,30 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess }: Chang
         setNewPINError(undefined)
         setConfirmPINError(undefined)
 
-        // Validate current PIN length
         if (current.length < 6) {
           setCurrentPINError(t('BCSC.ChangePIN.PINTooShort'))
           setLoading(false)
           return
         }
 
-        // Validate new PIN length
         if (newPin.length < 6) {
           setNewPINError(t('BCSC.ChangePIN.PINTooShort'))
           setLoading(false)
           return
         }
 
-        // Validate confirm PIN length
         if (confirm.length < 6) {
           setConfirmPINError(t('BCSC.ChangePIN.PINTooShort'))
           setLoading(false)
           return
         }
 
-        // Check if new PINs match
         if (newPin !== confirm) {
           setConfirmPINError(t('BCSC.ChangePIN.PINsDoNotMatch'))
           setLoading(false)
           return
         }
 
-        // Check if checkbox is checked
         if (!checked) {
           setLoading(false)
           setCheckboxError(true)
@@ -115,7 +104,6 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess }: Chang
           return
         }
 
-        // Current PIN verified, now set the new PIN
         const { success, walletKey } = await setNativePIN(newPin)
 
         if (success) {

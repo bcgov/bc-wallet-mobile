@@ -9,7 +9,6 @@ import {
 } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 
-// Define a structured return type for clarity
 export interface NotificationTokens {
   fcmDeviceToken: string
   deviceToken: string | null // Device token (APNS token on iOS, null on Android)
@@ -50,7 +49,6 @@ export const getPushTokenStatus = ({ fcmDeviceToken, deviceToken }: Notification
 /**
  * Retrieves the tokens associated with push notifications. fcmDeviceToken is required,
  * deviceToken (APNS) is optional and iOS only.
- * @param logger
  * @returns NotificationTokens object containing fcmDeviceToken and deviceToken
  * unless it fails in which case it returns a dummy fcmDeviceToken and null deviceToken
  */

@@ -22,11 +22,6 @@ export interface TermsOfUseResponseData {
 }
 
 const useConfigApi = (apiClient: BCSCApiClient) => {
-  /**
-   * Fetches the server status from the IAS API.
-   *
-   * @returns {*} {Promise<ServerStatusResponseData>} A promise that resolves to the server status data.
-   */
   const getServerStatus = useCallback(async () => {
     const { data, headers } = await apiClient.get<ServerStatusResponseData>(
       `${apiClient.endpoints.cardTap}/v3/status/${Platform.OS}/mobile_card`,

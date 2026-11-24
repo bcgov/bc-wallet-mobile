@@ -125,8 +125,6 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
   /**
    * Performs device authentication (biometric or passcode). Ignored if an unlock is already in progress.
-   *
-   * @returns Promise that resolves when the device auth process is complete
    */
   const performDeviceAuth = useCallback(
     () => withAuthGuard('performDeviceAuth', runDeviceAuth),
@@ -148,7 +146,6 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
         logger.info(`[Authentication:UnlockApp] PIN unlock, PIN entry locked: ${locked}`)
 
         if (!locked) {
-          // If not locked, navigate to PIN entry screen
           navigation.navigate(BCSCScreens.EnterPIN)
           return
         }
@@ -194,8 +191,6 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
    * - Device auth: DeviceAuthInfo (unless dismissed), DeviceAuthAppReset if unavailable, else the OS prompt.
    *
    * Ignored if an unlock is already in progress.
-   *
-   * @returns Promise that resolves when the unlock process is complete
    */
   const unlockApp = useCallback(() => withAuthGuard('UnlockApp', runUnlockApp), [withAuthGuard, runUnlockApp])
 

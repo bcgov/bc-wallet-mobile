@@ -18,9 +18,6 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  *    A. Accepted version differs from the server version => user must re-accept
  *
  * @see {TermsOfUseUpdated.tsx} for the blocking modal displayed on failure.
- *
- * @class TermsOfUseSystemCheck
- * @implements {SystemCheckStrategy}
  */
 export class TermsOfUseSystemCheck implements SystemCheckStrategy {
   private readonly getTermsOfUse: () => Promise<TermsOfUseResponseData>
@@ -43,8 +40,6 @@ export class TermsOfUseSystemCheck implements SystemCheckStrategy {
 
   /**
    * Runs the terms of use check to verify the user has accepted the latest server version.
-   *
-   * @returns {Promise<boolean>} - A promise that resolves to true if no re-acceptance is needed, false otherwise.
    */
   async runCheck() {
     try {
@@ -75,8 +70,6 @@ export class TermsOfUseSystemCheck implements SystemCheckStrategy {
 
   /**
    * Handles the failure of the terms of use check by displaying the blocking re-acceptance modal.
-   *
-   * @returns {*} {void}
    */
   onFail() {
     this.navigation.navigate(BCSCModals.TermsOfUseUpdated)
@@ -85,8 +78,6 @@ export class TermsOfUseSystemCheck implements SystemCheckStrategy {
   /**
    * Handles the success of the terms of use check by seeding the accepted version
    * for users who onboarded before acceptance tracking existed (grandfathering).
-   *
-   * @returns {*} {void}
    */
   onSuccess() {
     // Only seed when nothing was recorded and the fetch succeeded, to avoid

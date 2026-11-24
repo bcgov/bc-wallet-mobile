@@ -260,7 +260,6 @@ class BCSCApiClient {
   private async ensureValidTokens(): Promise<TokenResponse> {
     return withAccount(async () => {
       if (this.tokensPromise) {
-        // return the existing promise if currently refreshing
         return this.tokensPromise
       }
 
@@ -462,7 +461,6 @@ class BCSCApiClient {
 
   async getTokensForRefreshToken(refreshToken: string): Promise<TokenResponse> {
     if (this.tokensPromise) {
-      // Return the existing promise if currently refreshing
       return this.tokensPromise
     }
 
@@ -488,7 +486,6 @@ class BCSCApiClient {
    * token still lives in secure storage, so we lazily rebuild the cache instead
    * of forcing the user to reinstall the app.
    *
-   * @returns the populated tokens
    * @throws AppError TOKEN_NULL when the cache is empty and no refresh token
    *   exists in secure storage — the only genuinely unrecoverable case.
    * @throws Error 'Refresh token expired' when the stored refresh token's `exp` has passed (#4654) —

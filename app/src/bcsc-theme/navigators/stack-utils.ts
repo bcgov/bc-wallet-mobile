@@ -54,9 +54,6 @@ const getRouteLeafName = (route: NavigationRoute): string => {
 
 /**
  * Gets the current screen name from the navigation state, accounting for nested navigators.
- *
- * @param state - The navigation state object.
- * @returns The name of the current screen.
  */
 export const getCurrentStateScreenName = (state: NavigationState): string => getRouteLeafName(state.routes[state.index])
 
@@ -188,8 +185,6 @@ export const formatNavigationTrail = (screens: VisitedScreen[], droppedCount: nu
 /**
  * Formats the session's recorded `NAVIGATION_TRAIL` into a breadcrumb trail for error reports.
  * Recorded as navigation happens because React Navigation prunes popped routes from a live state snapshot.
- *
- * @returns A string representing the navigation breadcrumbs.
  */
 export const getNavigationBreadcrumbs = (): string =>
   formatNavigationTrail(NAVIGATION_TRAIL.screens, NAVIGATION_TRAIL.droppedCount)

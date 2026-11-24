@@ -211,7 +211,6 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         }).catch((error) => {
           logger.error(`Error resetting account flags after cancelling verification: ${error}`)
         })
-        // reset navigation stack
         navigation.reset({
           index: 0,
           routes: [{ name: BCSCScreens.VerificationMethodSelection }],

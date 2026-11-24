@@ -121,8 +121,6 @@ class NativeCompatibleStorage(
             .create()
     }
 
-    // MARK: - Issuer Name Resolution
-
     fun saveIssuerToFile(issuer: String): Boolean {
         val file = File(context.filesDir, ISSUER_FILENAME)
         return writeEncryptedFile(file, issuer)
@@ -157,9 +155,6 @@ class NativeCompatibleStorage(
         }
     }
 
-    /**
-     * Gets the current isser name by reading the issuer file.
-     */
     fun getDefaultIssuerName(): String {
         val issuerFile = File(context.filesDir, ISSUER_FILENAME)
         val issuer = readEncryptedFile(issuerFile)
@@ -239,7 +234,6 @@ class NativeCompatibleStorage(
         return null
     }
 
-    // MARK: - File Path Helpers
     private fun getAccountsFile(issuerName: String): File {
         val path = issuerName + File.separator + ACCOUNTS_FILENAME
         return File(context.filesDir, path)
@@ -252,8 +246,6 @@ class NativeCompatibleStorage(
         val path = issuerName + File.separator + accountUuid + File.separator + TOKENS_FILENAME
         return File(context.filesDir, path)
     }
-
-    // MARK: - Low-level I/O with Encryption
 
     internal fun readEncryptedFile(file: File): String? =
         (readEncryptedFileResult(file) as? EncryptedFileRead.Content)?.text
@@ -320,7 +312,6 @@ class NativeCompatibleStorage(
         file: File,
         content: String,
     ): Boolean {
-        // Ensure parent directory exists
         val parent = file.parentFile
         parent?.mkdirs()
 
@@ -368,8 +359,6 @@ class NativeCompatibleStorage(
         }
     }
 
-    // MARK: - Account Storage (Native Compatible)
-
     /**
      * Saves accounts to native-compatible encrypted storage.
      * Path: {filesDir}/{issuerName}/accounts
@@ -384,9 +373,6 @@ class NativeCompatibleStorage(
         return writeEncryptedFile(file, jsonContent)
     }
 
-    /**
-     * Reads accounts from native-compatible encrypted storage.
-     */
     fun readAccounts(issuerName: String): List<NativeAccount>? =
         (readAccountsResult(issuerName) as? AccountsRead.Parsed)?.accounts
 
@@ -414,20 +400,12 @@ class NativeCompatibleStorage(
         }
     }
 
-    /**
-     * Checks if accounts file exists for the given issuer.
-     */
     fun accountsExist(issuerName: String): Boolean = getAccountsFile(issuerName).exists()
 
-    /**
-     * Deletes the accounts file for the given issuer.
-     */
     fun deleteAccounts(issuerName: String): Boolean {
         val file = getAccountsFile(issuerName)
         return if (file.exists()) file.delete() else true
     }
-
-    // MARK: - Token Storage (Native Compatible)
 
     /**
      * Saves tokens to native-compatible encrypted storage.
@@ -444,9 +422,6 @@ class NativeCompatibleStorage(
         return writeEncryptedFile(file, jsonContent)
     }
 
-    /**
-     * Reads tokens from native-compatible encrypted storage.
-     */
     fun readTokens(
         issuerName: String,
         accountUuid: String,
@@ -464,17 +439,11 @@ class NativeCompatibleStorage(
         }
     }
 
-    /**
-     * Checks if tokens file exists for the given account.
-     */
     fun tokensExist(
         issuerName: String,
         accountUuid: String,
     ): Boolean = getTokensFile(issuerName, accountUuid).exists()
 
-    /**
-     * Deletes tokens and the account directory.
-     */
     fun deleteTokens(
         issuerName: String,
         accountUuid: String,
@@ -482,7 +451,6 @@ class NativeCompatibleStorage(
         val tokensFile = getTokensFile(issuerName, accountUuid)
         val accountDir = tokensFile.parentFile
 
-        // Delete tokens file
         if (tokensFile.exists()) {
             tokensFile.delete()
         }
@@ -496,8 +464,6 @@ class NativeCompatibleStorage(
 
         return true
     }
-
-    // MARK: - Migration Helpers
 
     /**
      * Attempts to read accounts from the old flat file location and migrate them.
@@ -554,7 +520,6 @@ class NativeCompatibleStorage(
                 accounts.add(account)
             }
 
-            // Save in new encrypted format
             if (saveAccounts(accounts, issuerName)) {
                 Log.d(TAG, "Successfully migrated ${accounts.size} accounts to native format")
                 oldFile.delete() // Remove old file
@@ -572,8 +537,6 @@ class NativeCompatibleStorage(
     private fun parseSecurityType(value: String): NativeAccountSecurityType =
         gson.fromJson("\"$value\"", NativeAccountSecurityType::class.java)
             ?: NativeAccountSecurityType.DeviceSecurity
-
-    // MARK: - Authorization Request Storage
 
     private fun getAuthorizationRequestFile(
         issuerName: String,
@@ -598,9 +561,6 @@ class NativeCompatibleStorage(
         return writeEncryptedFile(file, jsonContent)
     }
 
-    /**
-     * Reads authorization request from native-compatible encrypted storage.
-     */
     fun readAuthorizationRequest(
         issuerName: String,
         accountUuid: String,
@@ -618,17 +578,11 @@ class NativeCompatibleStorage(
         }
     }
 
-    /**
-     * Checks if authorization request file exists for the given account.
-     */
     fun authorizationRequestExists(
         issuerName: String,
         accountUuid: String,
     ): Boolean = getAuthorizationRequestFile(issuerName, accountUuid).exists()
 
-    /**
-     * Deletes the authorization request file for the given account.
-     */
     fun deleteAuthorizationRequest(
         issuerName: String,
         accountUuid: String,
@@ -671,8 +625,6 @@ class NativeCompatibleStorage(
     /**
      * Reads the registration access token from the V3 providers file.
      *
-     * @param issuerName The issuer name
-     * @param accountUuid The account UUID
      * @return The registration access token string, or null if not found
      */
     fun readRegistrationTokenFromV3Provider(
@@ -720,8 +672,6 @@ class NativeCompatibleStorage(
      * Attempts to read authorization request from v3 Provider file and migrate it.
      * V3 stored AuthorizationRequest nested in Provider->ClientRegistration.
      *
-     * @param issuerName The issuer name
-     * @param accountUuid The account UUID
      * @return The extracted NativeAuthorizationRequest or null if not found/failed
      */
     fun readAuthorizationRequestFromV3Provider(
@@ -790,7 +740,6 @@ class NativeCompatibleStorage(
                 )
             }
 
-            // Convert to our model
             NativeAuthorizationRequest(
                 clientID = v3ClientID,
                 deviceCode = authReqJson.optString("deviceCode", null),
@@ -816,8 +765,6 @@ class NativeCompatibleStorage(
             null
         }
     }
-
-    // MARK: - Client Metadata (Saved Services) Storage
 
     private fun getClientMetadataFile(
         issuerName: String,
@@ -864,9 +811,6 @@ class NativeCompatibleStorage(
         return writeEncryptedFile(file, jsonContent)
     }
 
-    /**
-     * Deletes the client metadata file for the given account.
-     */
     fun deleteClientMetadata(
         issuerName: String,
         accountUuid: String,

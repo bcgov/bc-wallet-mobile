@@ -28,11 +28,6 @@ const FIELD_ORDER: (keyof ResidentialAddressFormState)[] = [
   'postalCode',
 ]
 
-/**
- * Screen for collecting residential address information from the user.
- *
- * @returns {*} {React.ReactElement} The ResidentialAddressScreen component.
- */
 export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()

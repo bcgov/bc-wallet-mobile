@@ -4,9 +4,6 @@ import androidx.annotation.NonNull;
 
 import com.bcsccore.fileport.FileData;
 
-/**
- * Data class that combines raw file data with decrypted content
- */
 public class DecryptedFileData {
     
     private final FileData rawFileData;
@@ -17,37 +14,21 @@ public class DecryptedFileData {
         this.decryptedContent = decryptedContent;
     }
     
-    /**
-     * Get the original raw file data
-     * @return FileData containing encrypted content
-     */
     @NonNull
     public FileData getRawFileData() {
         return rawFileData;
     }
     
-    /**
-     * Get the decrypted content as string
-     * @return decrypted content
-     */
     @NonNull
     public String getDecryptedContent() {
         return decryptedContent;
     }
     
-    /**
-     * Get the file name
-     * @return file name
-     */
     @NonNull
     public String getFileName() {
         return rawFileData.getFilename();
     }
     
-    /**
-     * Get the raw encrypted content
-     * @return encrypted byte array
-     */
     @NonNull
     public byte[] getRawContent() {
         byte[] data = rawFileData.getData();

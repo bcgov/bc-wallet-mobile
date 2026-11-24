@@ -425,7 +425,6 @@ export class AttestationMonitor implements AttestationMonitorI {
         return
       }
 
-      // if it's a new offer, automatically accept
       if (credential.state === DidCommCredentialState.OfferReceived) {
         this.log?.info('Accepting credential offer')
         await this.agent.didcomm.credentials.acceptOffer({

@@ -663,8 +663,6 @@ class BcscCore: NSObject {
   ///   - tokenTypeNumber: The token type (0=Access, 1=Refresh, 2=Registration)
   ///   - tokenString: The token string to store
   ///   - expiry: Optional expiry timestamp in seconds since epoch
-  ///   - resolve: Returns true if saved successfully
-  ///   - reject: Returns error on failure
   func setToken(
     _ tokenTypeNumber: NSNumber, tokenString: String, expiry: NSNumber,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -733,8 +731,6 @@ class BcscCore: NSObject {
   ///
   /// - Parameters:
   ///   - tokenTypeNumber: The token type (0=Access, 1=Refresh, 2=Registration)
-  ///   - resolve: Returns true if deleted successfully
-  ///   - reject: Returns error on failure
   func deleteToken(
     _ tokenTypeNumber: NSNumber,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -778,8 +774,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - deviceCode: The device code to include in the JWT.
   ///   - clientID: The client ID to include in the JWT.
-  /// - Resolves: The hashed string in hexadecimal format.
-  /// - Rejects: An error if the input is not valid base64 or if hashing fails.
   func createPreVerificationJWT(
     _ deviceCode: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -799,8 +793,6 @@ class BcscCore: NSObject {
   ///
   /// - Parameters:
   ///   - claims: The raw claims as a dictionary
-  /// - Resolves: The hashed string in hexadecimal format.
-  /// - Rejects: An error if the input is not valid base64 or if hashing fails.
   func createSignedJWT(
     _ claims: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -826,8 +818,6 @@ class BcscCore: NSObject {
   /// Sets the issuer URL in persistent storage.
   /// - Parameters:
   ///   - issuer: The issuer URL as a string.
-  ///   - resolve: Called with true if the issuer was saved successfully.
-  ///   - reject: Called with an error if saving fails.
   func setIssuer(
     _ issuer: NSString,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -840,10 +830,6 @@ class BcscCore: NSObject {
     resolve(saved)
   }
 
-  /// Gets the issuer URL from persistent storage.
-  /// - Parameters:
-  ///   - resolve: Called with the issuer URL string if found, otherwise nil.
-  ///   - reject: Called with an error if reading fails.
   func getIssuer(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1068,10 +1054,6 @@ class BcscCore: NSObject {
   }
 
   /// Remove the current account and all related files.
-  ///
-  /// - Parameters:
-  ///   - resolve: Called when the account is successfully removed (returns nil).
-  ///   - reject: Called with an error if the account ID is missing/invalid or if account file removal fails.
   func removeAccount(
     _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
@@ -1455,7 +1437,6 @@ class BcscCore: NSObject {
     ]
 
     do {
-      // logger.log("BcscCore: getDynamicClientRegistrationBody - Client Registration Data: \(clientRegistrationData)")
       let jsonData = try JSONSerialization.data(withJSONObject: clientRegistrationData, options: [])
       let jsonString = String(data: jsonData, encoding: .utf8) ?? "{}"
 
@@ -1509,7 +1490,6 @@ class BcscCore: NSObject {
   ///   - jweString: A string representing the JWE to decode.
   ///   - key: Optional JWK public key used to verify the inner JWS signature. When omitted,
   ///     `verified` is `false` and the claims are still returned (the caller gates on `verified`).
-  ///   - resolve: A `["verified": Bool, "claims": String]` map; `claims` is the decoded payload JSON string.
   ///   - reject: An error if the JWE cannot be parsed/decrypted, the payload cannot be decoded, or the
   ///     key cannot verify it (E_INVALID_JWK, E_JWS_VERIFY_ERROR).
   func decodePayload(
@@ -1623,7 +1603,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - jwt: The JWT string containing the login challenge.
   ///   - key: Optional JWK public key for signature verification.
-  ///   - resolve: Returns LoginChallengeResult with verified status and decoded claims.
   ///   - reject: An error if the JWT cannot be parsed or the key cannot verify it (E_INVALID_JWK,
   ///     E_JWS_VERIFY_ERROR).
   func decodeLoginChallenge(
@@ -1740,8 +1719,6 @@ class BcscCore: NSObject {
   ///   - key: The JWK public key object for encryption
   ///   - fcmDeviceToken: The FCM device token for push notifications
   ///   - deviceToken: The device token (APNS token on iOS, optional)
-  ///   - resolve: The signed and encrypted JWT string
-  ///   - reject: An error if the JWT creation or encryption fails
   func createQuickLoginJWT(
     _ accessToken: String, clientId: String, issuer: String, clientRefId: String,
     key: NSDictionary, fcmDeviceToken: String, deviceToken: String?,
@@ -1907,7 +1884,6 @@ class BcscCore: NSObject {
     return hmacData.base64EncodedString()
   }
 
-  /// Encrypt JWT with public key using provided SecKey
   private func encryptJWTWithPublicKey(
     serializedJWT: String,
     publicKey: SecKey,
@@ -1962,8 +1938,6 @@ class BcscCore: NSObject {
   ///
   /// - Parameters:
   ///   - base64: The base64 encoded string to hash.
-  ///   - resolve: The hashed string in hexadecimal format.
-  ///   - reject: An error if the input is not valid base64 or if hashing fails.
   func hashBase64(
     _ base64: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1990,8 +1964,6 @@ class BcscCore: NSObject {
   ///
   /// - Parameters:
   ///   - path: Path or `file://` URI of the recorded video.
-  ///   - resolve: Path of the new MP4, in the same form (path or `file://` URI) as the input.
-  ///   - reject: An error if the path is invalid or the export fails.
   func remuxVideoToMp4(
     _ path: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2044,8 +2016,6 @@ class BcscCore: NSObject {
   /// Sets a PIN for the current account
   /// - Parameters:
   ///   - pin: The PIN to set (should be validated on JS side)
-  ///   - resolve: Returns PINSetupResult with success, walletKey, and isAutoGenerated
-  ///   - reject: Returns error on failure
   func setPIN(
     _ pin: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2088,8 +2058,6 @@ class BcscCore: NSObject {
   /// lockouts enforced, in TypeScript.
   /// - Parameters:
   ///   - pin: The PIN to verify
-  ///   - resolve: Returns `success`, with `walletKey` when the PIN is correct
-  ///   - reject: Returns error on failure
   func verifyPIN(
     _ pin: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2120,11 +2088,6 @@ class BcscCore: NSObject {
     resolve(["success": true, "walletKey": walletKey])
   }
 
-  /// Deletes the PIN for the specified account
-  /// - Parameters:
-  ///   - accountID: The account identifier
-  ///   - resolve: Returns true on success
-  ///   - reject: Returns error on failure
   func deletePIN(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2149,11 +2112,6 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Checks if a PIN is set for the specified account
-  /// - Parameters:
-  ///   - accountID: The account identifier
-  ///   - resolve: Returns true if PIN is set, false otherwise
-  ///   - reject: Returns error on failure
   func hasPINSet(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2177,8 +2135,6 @@ class BcscCore: NSObject {
   /// Performs device authentication (biometric or passcode)
   /// - Parameters:
   ///   - reason: Optional reason string for the authentication prompt
-  ///   - resolve: Returns true on successful authentication
-  ///   - reject: Returns error on failure
   func performDeviceAuthentication(
     _ reason: String?, resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -2195,10 +2151,6 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Checks if device authentication is available
-  /// - Parameters:
-  ///   - resolve: Returns true if device authentication is available
-  ///   - reject: Returns error on failure
   func canPerformDeviceAuthentication(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -2208,10 +2160,6 @@ class BcscCore: NSObject {
     resolve(canPerform)
   }
 
-  /// Gets the available biometric type
-  /// - Parameters:
-  ///   - resolve: Returns biometric type: 'none', 'touchID', 'faceID', or 'opticID'
-  ///   - reject: Returns error on failure
   func getAvailableBiometricType(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -2222,9 +2170,6 @@ class BcscCore: NSObject {
   }
 
   /// Checks if biometric authentication (not including passcode) is available
-  /// - Parameters:
-  ///   - resolve: Returns true if biometric authentication is available
-  ///   - reject: Returns error on failure
   func canPerformBiometricAuthentication(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -2241,8 +2186,6 @@ class BcscCore: NSObject {
   ///   - accountID: The account identifier
   ///   - securityMethod: The security method ('device_authentication', 'app_pin_no_device_authn',
   /// 'app_pin_has_device_authn')
-  ///   - resolve: Returns true on success
-  ///   - reject: Returns error on failure
   func setAccountSecurityMethod(
     _ securityMethod: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2282,11 +2225,6 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Gets the security method for the specified account
-  /// - Parameters:
-  ///   - accountID: The account identifier
-  ///   - resolve: Returns the security method string
-  ///   - reject: Returns error on failure
   func getAccountSecurityMethod(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2321,8 +2259,6 @@ class BcscCore: NSObject {
   /// Sets up device security by generating a random PIN internally and storing its hash
   /// - Parameters:
   ///   - accountID: The account identifier
-  ///   - resolve: Returns PINSetupResult with success, walletKey, and isAutoGenerated=true
-  ///   - reject: Returns error on failure
   func setupDeviceSecurity(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2368,8 +2304,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - accountID: The account identifier
   ///   - reason: Optional reason string for the biometric prompt
-  ///   - resolve: Returns DeviceSecurityUnlockResult with success and walletKey
-  ///   - reject: Returns error on failure
   func unlockWithDeviceSecurity(
     _ reason: String?, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2477,8 +2411,6 @@ class BcscCore: NSObject {
   ///  Expect this to be empty when migrating a verified v3 user since the v3 app clears this value immediately after
   ///  verification, but it will be populated for users who were pending verification during migration and for all new
   ///  users. This reads from the same location used by the v3 native app, so it can be set by either version.
-  ///   - resolve: Returns the authorization request as a dictionary, or null if not found
-  ///   - reject: Returns error on failure
   func getAuthorizationRequest(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2560,8 +2492,6 @@ class BcscCore: NSObject {
   ///
   /// - Parameters:
   ///   - data: Dictionary containing the authorization request fields
-  ///   - resolve: Returns true if saved successfully
-  ///   - reject: Returns error on failure
   func setAuthorizationRequest(
     _ data: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -2634,11 +2564,6 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Deletes the stored authorization request data.
-  ///
-  /// - Parameters:
-  ///   - resolve: Returns true if deleted successfully (or if it didn't exist)
-  ///   - reject: Returns error on failure
   func deleteAuthorizationRequest(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2681,9 +2606,6 @@ class BcscCore: NSObject {
   }
 
   /// Checks if the stored PIN was auto-generated (for device security) or user-created
-  /// - Parameters:
-  ///   - resolve: Returns true if PIN was auto-generated, false if user-created
-  ///   - reject: Returns error on failure
   func isPINAutoGenerated(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2729,10 +2651,6 @@ class BcscCore: NSObject {
   /// Gets account flags from storage.
   /// These are stored in the account_flag file, compatible with v3 native app.
   /// Common flags include: isEmailVerified, userSkippedEmailVerification, emailAddress
-  ///
-  /// - Parameters:
-  ///   - resolve: Returns the flags dictionary, or empty dictionary if not found
-  ///   - reject: Returns error on failure
   func getAccountFlags(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -2766,8 +2684,6 @@ class BcscCore: NSObject {
   ///
   /// - Parameters:
   ///   - flags: Dictionary of flags to store (merges with existing)
-  ///   - resolve: Returns true if saved successfully
-  ///   - reject: Returns error on failure
   func setAccountFlags(
     _ flags: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -2811,11 +2727,6 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Deletes all account flags from storage.
-  ///
-  /// - Parameters:
-  ///   - resolve: Returns true if deleted successfully
-  ///   - reject: Returns error on failure
   func deleteAccountFlags(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2861,10 +2772,6 @@ class BcscCore: NSObject {
   /// Gets evidence metadata from storage.
   /// Evidence metadata contains user's collected evidence during verification flow.
   /// Gets evidence metadata from the documents file.
-  ///
-  /// - Parameters:
-  ///   - resolve: Returns array of evidence metadata dictionaries
-  ///   - reject: Returns error on failure
   func getEvidence(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -2884,8 +2791,6 @@ class BcscCore: NSObject {
   ///
   /// - Parameters:
   ///   - evidence: Array of evidence metadata dictionaries
-  ///   - resolve: Returns true if saved successfully
-  ///   - reject: Returns error on failure
   func setEvidence(
     _ evidence: NSArray,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -2937,10 +2842,6 @@ class BcscCore: NSObject {
   }
 
   /// Deletes all evidence data from the documents file.
-  ///
-  /// - Parameters:
-  ///   - resolve: Returns true if deleted successfully
-  ///   - reject: Returns error on failure
   func deleteEvidence(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2994,8 +2895,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - base64Data: Base64-encoded photo data
   ///   - filename: Target filename for the photo
-  ///   - resolve: Returns the absolute path to the saved file
-  ///   - reject: Returns error on failure
   func saveEvidencePhoto(
     _ base64Data: String,
     filename: String,
@@ -3076,7 +2975,6 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Converts a DocumentsDataModel to an array of evidence metadata dictionaries.
   private func convertDocumentsModelToMetadata(_ model: DocumentsDataModel) -> [[String: Any]] {
     var result = [[String: Any]]()
 
@@ -3090,7 +2988,6 @@ class BcscCore: NSObject {
     return result
   }
 
-  /// Converts an EvidenceModel to an evidence metadata dictionary.
   private func convertEvidenceModelToMetadata(_ evidence: EvidenceModel, prefix: String = "evidence") -> [String: Any] {
     var dict = [String: Any]()
 
@@ -3187,7 +3084,6 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Converts evidence NSArray to a DocumentsDataModel.
   private func convertEvidenceToDocumentsModel(_ evidence: NSArray) -> DocumentsDataModel {
     let items = evidence as? [[String: Any]] ?? []
 
@@ -3197,7 +3093,6 @@ class BcscCore: NSObject {
     return DocumentsDataModel(firstId: firstId, secondId: secondId)
   }
 
-  /// Converts an evidence metadata dictionary to an EvidenceModel.
   private func convertMetadataToEvidenceModel(_ dict: [String: Any]) -> EvidenceModel {
     // Evidence type
     var evidenceType: EvidenceType?

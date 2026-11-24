@@ -43,12 +43,6 @@ type useResidentialAddressModelProps = {
   onInvalidSubmit?: (errors: ResidentialAddressFormErrors) => void
 }
 
-/**
- * Model hook for the ResidentialAddressScreen that provides:
- * - Form state and error management
- * - Form validation
- * - Submit handler with device authorization
- */
 const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResidentialAddressModelProps) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
@@ -102,27 +96,14 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
     }
   }, [updateResidentialAddressDraft])
 
-  /**
-   * Handles changes to the form fields.
-   *
-   * @param {keyof ResidentialAddressFormState} field - The field being updated.
-   * @param {ResidentialAddressFormState[keyof ResidentialAddressFormState]} value - The new value for the field.
-   */
   const handleChange = useCallback(
     <K extends keyof ResidentialAddressFormState>(field: K, value: ResidentialAddressFormState[K]) => {
       setFormState((prev) => ({ ...prev, [field]: value }))
-      // clear field-specific error on change
       setFormErrors((prev) => ({ ...prev, [field]: undefined }))
     },
     []
   )
 
-  /**
-   * Validates the Residential Address form and returns the errors
-   *
-   * @param {ResidentialAddressFormState} values - The form values to validate
-   * @returns {ResidentialAddressFormErrors}
-   */
   const validateForm = useCallback(
     (values: ResidentialAddressFormState): ResidentialAddressFormErrors => {
       const errors: ResidentialAddressFormErrors = {}
@@ -152,10 +133,6 @@ const useResidentialAddressModel = ({ navigation, onInvalidSubmit }: useResident
     [t]
   )
 
-  /**
-   * Handles form submission, validates the form, updates user metadata,
-   * and performs device authorization if needed.
-   */
   const handleSubmit = useCallback(async () => {
     setFormErrors({})
 

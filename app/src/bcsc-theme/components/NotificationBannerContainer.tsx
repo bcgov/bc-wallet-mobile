@@ -21,9 +21,6 @@ type NotificationBannerContainerProps =
 
 /**
  * Container component for displaying notification banners and handling their interactions.
- *
- * @param {NotificationBannerContainerProps} props - The properties for the NotificationBannerContainer component.
- * @returns {*} {React.ReactElement} The NotificationBannerContainer component.
  */
 export const NotificationBannerContainer = ({ scope, onManageDevices }: NotificationBannerContainerProps) => {
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)

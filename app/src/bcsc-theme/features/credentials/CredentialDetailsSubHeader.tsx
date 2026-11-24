@@ -11,11 +11,8 @@ interface CredentialDetailsSubHeaderProps {
 }
 
 /**
- * CredentialDetailsSubHeader is a component that renders components for specific credentials.
- *
  * Used as a child component of Bifold's CredentialDetails - injected using token `TOKENS.COMPONENT_CRED_SUBHEADER` in the container-imp.
  *
- * @param props - The props for the component, which include a credential of type DidCommCredentialExchangeRecord.
  * @returns A React element representing the CredentialDetailsSubHeader component, or null if the credential does not match the specified criteria.
  */
 export const CredentialDetailsSubHeader = ({ credential }: CredentialDetailsSubHeaderProps) => {

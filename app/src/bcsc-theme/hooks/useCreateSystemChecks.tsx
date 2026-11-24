@@ -99,10 +99,6 @@ const rotateKey = async ({
 type UseGetSystemChecksReturn = Record<
   SystemCheckScope,
   {
-    /**
-     * Callback to get system checks for the scope
-     * @return Array of system check strategies
-     */
     getSystemChecks: () => Promise<SystemCheckStrategy[]> | SystemCheckStrategy[]
     /**
      * Callback to get the checks to run again each time the app returns to the foreground
@@ -124,8 +120,6 @@ type UseGetSystemChecksReturn = Record<
  * Hook to create system checks to be used by useSystemChecks hook.
  *
  * @see useSystemChecks.tsx
- *
- * @returns Object containing system check getters and readiness for each scope
  */
 export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { t } = useTranslation()
@@ -156,16 +150,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
   const verificationRequestId = store.bcscSecure.verificationRequestId
 
-  // update credential metadata ref on store change
   useEffect(() => {
     credentialMetadataRef.current = store.bcsc.credentialMetadata
   }, [store.bcsc.credentialMetadata])
 
-  /**
-   * Get system checks to run at app startup
-   *
-   * @returns Array of system check strategies
-   */
   const getStartupSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
     const serverStatus = cachedServerStatus ?? (await refreshServerStatus({ force: true })).serverStatus
 
@@ -210,8 +198,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
   /**
    * Get system checks to run again each time the app returns to the foreground
-   *
-   * @returns Array of system check strategies
    */
   const getForegroundSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
     // The user may have changed the clock while away. Joins the status fetch ServerStatusProvider
@@ -221,11 +207,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return client ? [new ServerClockSkewSystemCheck(client, clockSkewAlert, utils)] : []
   }, [client, clockSkewAlert, refreshServerStatus, utils])
 
-  /**
-   * Get system checks to run on main stack
-   *
-   * @returns Array of system check strategies
-   */
   const getMainSystemChecks = useCallback((): SystemCheckStrategy[] => {
     // Guard the native call so a failure here cannot throw away the whole batch
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
@@ -380,8 +361,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * VerifyStack is only mounted for an unverified, authenticated user once secure state is hydrated,
    * so the expired-session check runs in the right place (never on the auth/main stacks) and needs no
    * verified-status gating. See issue #4050.
-   *
-   * @returns Array of system check strategies
    */
   const getVerifySystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
     return [new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils)]

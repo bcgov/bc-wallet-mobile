@@ -19,17 +19,11 @@ export class PairingService {
 
   constructor(private readonly logger: AbstractBifoldLogger) {}
 
-  /**
-   * Subscribe to navigation events. Called when pairing should trigger screen navigation.
-   */
   public onNavigationRequest(listener: PairingNavigationListener): () => void {
     this.navigationListeners.add(listener)
     return () => this.navigationListeners.delete(listener)
   }
 
-  /**
-   * Subscribe to pending state changes. Useful for UI indicators.
-   */
   public onPendingStateChange(listener: PendingPairingListener): () => void {
     this.pendingStateListeners.add(listener)
     // Emit current state immediately upon subscription
@@ -37,16 +31,10 @@ export class PairingService {
     return () => this.pendingStateListeners.delete(listener)
   }
 
-  /**
-   * Check if there's a pending pairing request waiting to be processed.
-   */
   public get hasPendingPairing(): boolean {
     return this.pendingPairing !== null
   }
 
-  /**
-   * Get the pending pairing payload without consuming it.
-   */
   public getPendingPairing(): PairingPayload | null {
     return this.pendingPairing
   }
@@ -80,9 +68,6 @@ export class PairingService {
     }
   }
 
-  /**
-   * Clear any pending pairing without processing it.
-   */
   public clearPendingPairing() {
     this.pendingPairing = null
     this.notifyPendingStateChange()

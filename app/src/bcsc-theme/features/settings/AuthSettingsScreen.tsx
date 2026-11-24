@@ -9,10 +9,6 @@ type AuthSettingsScreenProps = {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.AuthSettings>
 }
 
-/**
- * Settings screen for the Auth stack.
- * Wraps SettingsContent with Auth stack-specific navigation callbacks.
- */
 export const AuthSettingsScreen: React.FC<AuthSettingsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
 

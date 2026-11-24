@@ -75,9 +75,7 @@ export interface ErrorDefinition {
  *   9998: Reserved for fatal unrecoverable errors
  */
 export const ErrorRegistry = {
-  // ============================================
   // Special Errors
-  // ===========================================
   REPORT_PROBLEM: {
     statusCode: USER_REPORT_ERROR_CODE, // 0
     appEvent: AppEventCode.REPORT_PROBLEM,
@@ -117,9 +115,7 @@ export const ErrorRegistry = {
     message: 'An unmapped native module error occurred — see technical details for the raw native error code',
   },
 
-  // ============================================
   // Camera/Scanning Errors (2000-2099)
-  // ============================================
   // TODO (MD): Rename to CARD_CAMERA_BROKEN to avoid confusion with general camera errors
   CAMERA_BROKEN: {
     statusCode: 2000,
@@ -157,9 +153,7 @@ export const ErrorRegistry = {
     message: 'Scanned QR code is unrecognized — no matching handler found for the QR code type',
   },
 
-  // ============================================
   // Network Errors (2100-2199)
-  // ============================================
   NO_INTERNET: {
     statusCode: 2100,
     appEvent: AppEventCode.NO_INTERNET,
@@ -272,9 +266,7 @@ export const ErrorRegistry = {
     message: 'Server returned 409 — request conflicts with the current state of the resource',
   },
 
-  // ============================================
   // Authentication/Login Errors (2200-2299)
-  // ============================================
   LOGIN_PARSE_URI: {
     statusCode: 2200,
     appEvent: AppEventCode.LOGIN_PARSE_URI,
@@ -360,9 +352,7 @@ export const ErrorRegistry = {
     message: 'Login failed on the device',
   },
 
-  // ============================================
   // Credential/Card Errors (2300-2399)
-  // ============================================
   CARD_EXPIRED_WILL_REMOVE: {
     statusCode: 2300,
     appEvent: AppEventCode.CARD_EXPIRED_WILL_REMOVE,
@@ -498,9 +488,7 @@ export const ErrorRegistry = {
     message: 'Account has more active mobile cards than allowed',
   },
 
-  // ============================================
   // Verification Errors (2400-2499)
-  // ============================================
   VERIFY_NOT_COMPLETE: {
     statusCode: 2400,
     appEvent: AppEventCode.VERIFY_NOT_COMPLETE,
@@ -593,9 +581,7 @@ export const ErrorRegistry = {
     message: 'Verification submit returned 500 but the server already had the request on record — submitted twice',
   },
 
-  // ============================================
   // Token/Crypto Errors (2500-2599)
-  // ============================================
   INVALID_TOKEN: {
     statusCode: 2500,
     appEvent: AppEventCode.INVALID_TOKEN,
@@ -731,9 +717,7 @@ export const ErrorRegistry = {
     message: 'Native JWT construction or payload creation failed',
   },
 
-  // ============================================
   // Storage Errors (2600-2699)
-  // ============================================
   STORAGE_WRITE_ERROR: {
     statusCode: 2600,
     appEvent: AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE,
@@ -857,9 +841,7 @@ export const ErrorRegistry = {
     message: 'No signing keys available in the keystore — re-registration may be required',
   },
 
-  // ============================================
   // Device Errors (2700-2799)
-  // ============================================
   ANDROID_APP_UPDATE_REQUIRED: {
     statusCode: 2700,
     appEvent: AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
@@ -939,9 +921,7 @@ export const ErrorRegistry = {
     message: 'Device UUID is not available',
   },
 
-  // ============================================
   // General/Registration Errors (2800-2899)
-  // ============================================
   GENERAL_ERROR: {
     statusCode: 2800,
     appEvent: AppEventCode.GENERAL,
@@ -1196,9 +1176,7 @@ export const ErrorRegistry = {
     message: 'Device account exists but is not registered with the server (no client ID)',
   },
 
-  // ============================================
   // Wallet/Agent Errors (2900-2999)
-  // ============================================
   STATE_LOAD_ERROR: {
     statusCode: 2900,
     appEvent: AppEventCode.STATE_LOAD_ERROR,
@@ -1235,9 +1213,7 @@ export const ErrorRegistry = {
     message: 'Switching the wallet to another mediator failed — the previous mediator stays in use',
   },
 
-  // ============================================
   // Connection/BCID Errors (3000-3099)
-  // ============================================
   PARSE_INVITATION_ERROR: {
     statusCode: 3000,
     appEvent: AppEventCode.PARSE_INVITATION_ERROR,
@@ -1274,9 +1250,7 @@ export const ErrorRegistry = {
     message: 'BC Services Card authentication flow failed — OIDC callback error',
   },
 
-  // ============================================
   // Attestation Errors (3100-3199)
-  // ============================================
   ATTESTATION_BAD_INVITATION: {
     statusCode: 3100,
     appEvent: AppEventCode.ATTESTATION_BAD_INVITATION,

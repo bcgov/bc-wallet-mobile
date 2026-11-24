@@ -17,7 +17,6 @@ export const openLink = async (url: string) => {
       return
     }
 
-    // Will open in device browser.
     await Linking.openURL(url)
   } catch (error) {
     appLogger.error(`Failed to open URL: ${url}`, error instanceof Error ? error : new Error(String(error)))
@@ -26,8 +25,6 @@ export const openLink = async (url: string) => {
 
 /**
  * Get the BCSC App Store URL based on the platform.
- *
- * @returns {*} {string} The BCSC app store URL.
  */
 export const getBCSCAppStoreUrl = (): string => {
   if (Platform.OS === 'ios') {

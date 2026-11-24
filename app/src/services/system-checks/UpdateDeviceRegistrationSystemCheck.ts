@@ -12,9 +12,6 @@ type UpdateRegistrationFunction = () => Promise<RegistrationResponseData>
  * Currently supports:
  *    - App version or build number mismatch
  *    - Blank stored values (v3→v4 upgrade or first run)
- *
- * @class UpdateDeviceRegistrationSystemCheck
- * @implements {SystemCheckStrategy}
  */
 export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy {
   private readonly lastAppVersion: string

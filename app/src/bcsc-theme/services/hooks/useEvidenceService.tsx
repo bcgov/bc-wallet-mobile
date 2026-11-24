@@ -25,7 +25,6 @@ const KNOWN_VERIFICATION_REQUEST_STATUSES: readonly string[] = Object.values(Ver
  * the original 500's HTTP status and route template only — never the id in the URL, never the body.
  *
  * @param submitError - The 500 the submit came back with.
- * @returns void
  */
 const trackAlreadyRecordedSubmit = (submitError: AppError): void => {
   AppError.fromErrorDefinition(ErrorRegistry.EVIDENCE_SUBMIT_ALREADY_RECORDED, {
@@ -35,12 +34,6 @@ const trackAlreadyRecordedSubmit = (submitError: AppError): void => {
   }).track()
 }
 
-/**
- * Service layer hook for evidence api.
- * Business logic related to Evidence API calls and UI event handling should be implemented here.
- *
- * @returns Evidence service
- */
 export const useEvidenceService = () => {
   const { client } = useBCSCApiClientState()
   const evidenceApi = useEvidenceApi(client as BCSCApiClient)
@@ -52,9 +45,6 @@ export const useEvidenceService = () => {
   /**
    * Handles errors from evidence API calls and emits the appropriate actions.
    * An `AppError` is marked `handled` once surfaced, so a caller that checks the flag shows nothing more.
-   *
-   * @param error - The error object
-   * @returns void
    */
   const handleEvidenceApiError = useCallback(
     (error: unknown): void => {
@@ -122,8 +112,6 @@ export const useEvidenceService = () => {
 
   /**
    * Fetches the status of a verification request by its ID and handles errors appropriately.
-   * @param verificationRequestId - The ID of the verification request to check.
-   * @returns Promise resolving to the verification status response data.
    */
   const getVerificationRequestStatus = useCallback(
     async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {

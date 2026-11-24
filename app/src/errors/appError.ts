@@ -91,7 +91,6 @@ const extractServerReason = (responseData: unknown): string | undefined => {
  * Custom application error class with structured information.
  *
  * @extends {Error}
- * @class
  */
 export class AppError extends Error {
   private tracked: boolean // Whether this error has been tracked in analytics
@@ -166,8 +165,6 @@ export class AppError extends Error {
    * @example
    * `No internet connection
    * Debug: [network.err_no_internet.2100] Failed to fetch resource`
-   *
-   * @returns The full error message string.
    */
   get fullMessage(): string {
     let formattedMessage = this.message
@@ -181,11 +178,6 @@ export class AppError extends Error {
     return formattedMessage
   }
 
-  /**
-   * Track the error in analytics.
-   *
-   * @returns void
-   */
   track() {
     if (this.tracked) {
       return
@@ -240,9 +232,6 @@ export class AppError extends Error {
 
   /**
    * Add additional context to the AppError. This can be useful for providing more information about the error.
-   *
-   * @param context - An object containing additional context to add to the error.
-   * @returns void
    */
   addContext(context: Record<string, unknown>): void {
     this.context = { ...this.context, ...context }
@@ -250,8 +239,6 @@ export class AppError extends Error {
 
   /**
    * Merges the context of this error with the context of all AppErrors in its cause chain, up to a maximum depth.
-   *
-   * @returns The merged error chain context
    */
   getChainedContext(): Record<string, unknown> {
     let merged: Record<string, unknown> = { ...this.context }
@@ -270,8 +257,6 @@ export class AppError extends Error {
 
   /**
    * Serialize the AppError to a JSON object. Useful for logging.
-   *
-   * @return An object containing the serialized error details.
    */
   toJSON() {
     return {
@@ -291,9 +276,6 @@ export class AppError extends Error {
 
 /**
  * Check if an error is an AppError that has already been handled by an error policy.
- *
- * @param error - The error to check
- * @returns True if the error is an AppError and has been handled
  */
 export function isHandledAppError(error: unknown): error is AppError {
   return error instanceof AppError && error.handled

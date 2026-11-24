@@ -3,8 +3,6 @@ import Foundation
 class ClientRegistration: NSObject, NSSecureCoding {
   static var supportsSecureCoding = true
 
-  // var provider: Provider?
-  // var keys: [JWK] = []
   var credential: Credential?
   var accessToken: String?
   var accessTokenID: String?
@@ -36,8 +34,6 @@ class ClientRegistration: NSObject, NSSecureCoding {
   }
 
   func encode(with coder: NSCoder) {
-    // coder.encode(self.provider, forKey: .provider)
-    // coder.encode(self.keys, forKey: .keys)
     coder.encode(self.credential, forKey: .credential)
     coder.encode(self.accessToken, forKey: .accessToken)
     coder.encode(self.accessTokenID, forKey: .accessTokenID)

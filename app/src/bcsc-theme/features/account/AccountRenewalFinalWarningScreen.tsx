@@ -5,11 +5,6 @@ import { ThemedText, TOKENS, useServices } from '@bifold/core'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-/**
- * Renders the Account Renewal Final Warning screen, informing users about the consequences of renewing their account.
- *
- * @returns {*} {React.ReactElement} The AccountRenewalFinalWarningScreen component.
- */
 export const AccountRenewalFinalWarningScreen = (): React.ReactElement => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])

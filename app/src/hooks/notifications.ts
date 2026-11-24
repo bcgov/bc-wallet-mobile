@@ -80,7 +80,6 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
   }, [])
 
   useEffect(() => {
-    // get all unseen messages
     const unseenMessages: DidCommBasicMessageRecord[] = basicMessages.filter((msg: DidCommBasicMessageRecord) => {
       const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
       return !meta?.seen

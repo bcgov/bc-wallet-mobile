@@ -15,10 +15,6 @@ public class SimpleFileReader implements FileReader {
     @NonNull
     private final Context context;
     
-    /**
-     * Constructor
-     * @param context Android application context
-     */
     public SimpleFileReader(@NonNull Context context) {
         this.context = context;
     }
@@ -88,7 +84,6 @@ public class SimpleFileReader implements FileReader {
     
     /**
      * Read file as string (assuming UTF-8 encoding)
-     * @param filename the name of the file to read
      * @return string content of the file, or null if file doesn't exist
      */
     @Nullable

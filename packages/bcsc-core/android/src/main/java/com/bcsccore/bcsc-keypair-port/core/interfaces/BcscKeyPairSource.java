@@ -26,7 +26,6 @@ public interface BcscKeyPairSource {
   /**
    * Get the current (newest) key pair for signing operations.
    * Creates a new key pair if none exists.
-   * @return the current key pair
    * @throws BcscException if key generation or retrieval fails
    */
   @NonNull
@@ -43,7 +42,6 @@ public interface BcscKeyPairSource {
 
   /**
    * Generate a new key pair.
-   * @return the newly generated key pair
    * @throws BcscException if key generation fails
    */
   @NonNull
@@ -51,7 +49,6 @@ public interface BcscKeyPairSource {
 
   /**
    * Delete a specific key pair.
-   * @param alias the alias of the key pair to delete
    * @throws BcscException if deletion fails
    */
   void deleteBcscKeyPair(@NonNull String alias) throws BcscException;
@@ -71,7 +68,6 @@ public interface BcscKeyPairSource {
    * Mark the given alias as the active (newest) key by stamping its
    * createdAt to now. Creates a metadata entry if none exists. Does not
    * touch the keystore.
-   * @param alias the alias to mark active
    * @throws BcscException if metadata cannot be written
    */
   void markActiveBcscKeyPair(@NonNull String alias) throws BcscException;
@@ -85,16 +81,12 @@ public interface BcscKeyPairSource {
 
   /**
    * Convert a key pair to JWK format for public key sharing.
-   * @param bcscKeyPair the key pair to convert
-   * @return the public key in JWK format
    */
   @NonNull
   JWK convertBcscKeyPairToJWK(@NonNull BcscKeyPair bcscKeyPair);
 
   /**
    * Sign a JWT claims set and return the serialized JWT string.
-   * @param claimsSet the claims to sign
-   * @return the signed JWT as a string
    * @throws BcscException if signing fails
    */
   @NonNull
@@ -103,9 +95,7 @@ public interface BcscKeyPairSource {
   /**
    * Sign a JWT claims set with an already-loaded key pair and return the serialized JWT string.
    * Lets callers load the key once, so a key failure is never reported as a signing failure.
-   * @param claimsSet the claims to sign
    * @param keyPair the key pair to sign with, from {@link #getCurrentBcscKeyPair()}
-   * @return the signed JWT as a string
    * @throws BcscException if signing fails
    */
   @NonNull
@@ -114,8 +104,6 @@ public interface BcscKeyPairSource {
 
   /**
    * Sign a JWT claims set and return the SignedJWT object.
-   * @param claimsSet the claims to sign
-   * @return the signed JWT object
    * @throws BcscException if signing fails
    */
   @NonNull

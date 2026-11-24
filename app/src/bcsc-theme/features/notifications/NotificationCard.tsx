@@ -13,12 +13,6 @@ export interface NotificationIconProps {
   hideIconCircle?: boolean
 }
 
-/**
- * Displays icons for notifications
- *
- * @param props
- * @returns
- */
 export const NotificationIcon: React.FC<NotificationIconProps> = ({ logoUrl, iconName, iconColor, hideIconCircle }) => {
   const { ColorPalette } = useTheme()
   const styles = StyleSheet.create({
@@ -108,13 +102,6 @@ export interface NotificationCardProps {
   logoUrl?: string
 }
 
-/**
- * NotificationCard is a reusable component for displaying notifications with consistent styling and behavior across the app.
- * It supports different types of notifications (info, success, warning, error) and can include an optional action button and dismiss functionality.
- *
- * @param {*} props
- * @return {*}
- */
 const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const { ColorPalette, Spacing } = useTheme()
   const cardStyle = getCardStyle(props.status, ColorPalette)
@@ -211,13 +198,6 @@ interface CardStyle {
   defaultIcon: string
 }
 
-/**
- * getCardStyle returns the appropriate background color and default icon for a given notification status, based on the app's color palette.
- *
- * @param {NotificationCardStatus} status
- * @param {IColorPalette} palette
- * @return {*}  {CardStyle}
- */
 function getCardStyle(status: NotificationCardStatus, palette: IColorPalette): CardStyle {
   switch (status) {
     case NotificationCardStatus.Read:

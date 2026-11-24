@@ -32,14 +32,8 @@ export interface ErrorAlertContextType {
    */
   emitErrorModal: (title: string, description: string, error: AppError, options?: ErrorModalOptions) => void
 
-  /**
-   * Show native alert with title and description
-   */
   emitAlert: (title: string, description: string, options?: AlertOptions) => void
 
-  /**
-   * Indicates whether the error modal is currently visible
-   */
   isErrorModalVisible: boolean
 }
 
@@ -70,19 +64,10 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
 
   const reportEnabled = errorModalOptions?.enableReport !== false && enableReport !== false
 
-  /**
-   * Show error via ErrorModal
-   *
-   * @param title - The title to display in the error modal
-   * @param description - The description/message to display in the error modal
-   * @param error - The AppError instance containing error details and analytics info
-   * @returns void
-   */
   const emitErrorModal = useCallback(
     (title: string, description: string, error: AppError, options?: ErrorModalOptions): void => {
       setErrorModalOptions(options ?? null)
 
-      // Track alert display and error events in analytics
       Analytics.trackAlertDisplayEvent(error.appEvent)
       error.track()
 
@@ -104,16 +89,10 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
     [store.bcsc.installId, store.developer.remoteDebugging.sessionId]
   )
 
-  /**
-   * Show native alert with title and description
-   */
   const emitAlert = useCallback((title: string, description: string, options?: AlertOptions): void => {
     showAlert(title, description, options?.actions, options?.event)
   }, [])
 
-  /**
-   * Dismiss the currently displayed error modal
-   */
   const dismissErrorModal = useCallback((): void => {
     setErrorPayload(null)
     setErrorModalOptions(null)
@@ -145,7 +124,6 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
 /**
  * Hook to access error and alert functionality
  *
- * @returns Error alert context with members: emitErrorModal, emitAlert, isErrorModalVisible
  * @throws Error if used outside of ErrorAlertProvider
  */
 export const useErrorAlert = (): ErrorAlertContextType => {

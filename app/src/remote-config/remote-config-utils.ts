@@ -21,9 +21,6 @@ export const RemoteConfigSchema = z.looseObject({
     // TODO (FF): Remove this test feature when feature flagging fully enabled
     'debug.testFeature': z.boolean().catch(false),
     'kill.crashlytics': z.boolean().catch(false),
-    // 'kill.featureX': z.boolean(),
-    // 'release.featureY': z.boolean(),
-    // 'experimental.featureZ': z.boolean(),
   }),
 })
 
@@ -45,7 +42,6 @@ export interface CachedRemoteConfig {
 /**
  * Retrieves the bundled remote config from the local JSON file.
  * @throws An error if the bundled remote config is invalid
- * @returns The bundled remote config.
  */
 export function getBundledRemoteConfig(): RemoteConfig {
   const result = StrictRemoteConfigSchema.safeParse(remoteConfigJSON)
@@ -119,9 +115,6 @@ export async function fetchRemoteConfig(logger: RemoteLogger): Promise<RemoteCon
 
 /**
  * Caches the remote config in persistent storage.
- * @param remoteConfig The remote config to cache.
- * @param logger The logger to use for logging errors.
- * @returns A promise that resolves when the caching is complete.
  */
 export async function cacheRemoteConfig(remoteConfig: RemoteConfig, logger: RemoteLogger): Promise<void> {
   try {

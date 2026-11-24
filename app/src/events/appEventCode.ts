@@ -246,9 +246,6 @@ const AppEventCodeSet = new Set<string>(Object.values(AppEventCode))
 
 /**
  * Type guard to check if a given value is a valid AppEventCode.
- *
- * @param value - The string value to check.
- * @returns True if the value is a valid AppEventCode, false otherwise.
  */
 export const isAppEventCode = (value: unknown): value is AppEventCode => {
   return typeof value === 'string' && AppEventCodeSet.has(value)

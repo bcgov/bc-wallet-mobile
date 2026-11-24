@@ -48,7 +48,6 @@ interface GetBCAgentModulesOptions {
 
 /**
  * Constructs the modules to be used in the agent setup
- * @param indyNetworks
  * @param mediatorInvitationUrl determine which mediator to use
  * @param txnCache optional in-memory ledger transaction cache config for indyvdr
  * @param enableProxy boolean from the store to determine if proxy should be used

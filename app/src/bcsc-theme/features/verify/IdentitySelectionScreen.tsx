@@ -29,7 +29,6 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   const verificationReset = useVerificationReset()
   const loadingScreen = useLoadingScreen()
 
-  // Reset the card registration process when the user navigates back
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (event) => {
       if (

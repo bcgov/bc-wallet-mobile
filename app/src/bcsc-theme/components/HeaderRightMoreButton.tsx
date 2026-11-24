@@ -1,11 +1,6 @@
 import { ButtonLocation, IconButton } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
 
-/**
- * Shared Header Right "More" Button component.
- *
- * @returns {*} {React.ReactElement}
- */
 export const HeaderRightMoreButton = (props: HeaderBackButtonProps) => {
   return (
     <IconButton
@@ -18,11 +13,6 @@ export const HeaderRightMoreButton = (props: HeaderBackButtonProps) => {
   )
 }
 
-/**
- * Creates a Header Right "More" Button component.
- *
- * @returns {*} {React.ReactElement}
- */
 export const createHeaderRightMoreButton = (props: HeaderBackButtonProps) => {
   return <HeaderRightMoreButton {...props} />
 }

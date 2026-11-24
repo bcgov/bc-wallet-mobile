@@ -48,12 +48,10 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean 
 
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, t, logger])
 
-  // Updated credential metadata ref
   useEffect(() => {
     credentialMetadataRef.current = store.bcsc.credentialMetadata
   }, [store.bcsc.credentialMetadata])
 
-  // Get system checks for the specified scope (useGetSystemChecks)
   const scopeSystemCheck = systemChecks[scope]
 
   // Internet connectivity and foreground listener

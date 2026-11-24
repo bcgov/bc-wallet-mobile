@@ -24,10 +24,6 @@ public enum AlertKey {
   INVALID_TOKEN,
   NO_TOKENS_RETURNED;
   
-  /**
-   * Get a string representation of this alert key.
-   * @return the name of the enum constant
-   */
   public String getKeyString() {
     return this.name();
   }

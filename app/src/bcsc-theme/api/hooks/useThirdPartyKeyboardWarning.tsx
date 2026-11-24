@@ -13,7 +13,6 @@ import { isThirdPartyKeyboardActive, openAndroidKeyboardSelector } from 'react-n
  * @param t Translation text
  * @param emitAlert Function that displays alert to user
  * @param dispatch Dispatch funtion to update when the user has seen the alert so it doesn't show again
- * @returns
  */
 export const showThirdPartyKeyboardWarning = async (
   hasShownWarning: boolean,

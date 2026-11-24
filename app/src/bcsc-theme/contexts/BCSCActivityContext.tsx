@@ -84,7 +84,6 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
 
       // do not set timeout if timeout duration is set to 0 (never lock)
       if (milliseconds > 0) {
-        // create new timeout
         inactivityTimeoutRef.current = setTimeout(handleInactivityTimeout, milliseconds)
       }
     },
@@ -110,7 +109,6 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
   }, [resetInactivityTimeout])
 
   useEffect(() => {
-    // listener for backgrounding / foregrounding
     const eventSubscription = AppState.addEventListener('change', async (nextAppState) => {
       // Snapshot the previous state and advance the ref/state synchronously, before any
       // await below. The handler is async (it awaits pickup calls), so if the OS fires
@@ -121,7 +119,6 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
       prevAppStateStatusRef.current = nextAppState
       setAppStateStatus(nextAppState)
 
-      // if going into the background
       if (['active', 'inactive'].includes(prevAppState) && nextAppState === 'background') {
         // remove timeout when backgrounded as timeout refs can be lost when app is backgrounded
         clearInactivityTimeoutIfExists()
@@ -141,7 +138,6 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
         }
       }
 
-      // if coming to the foreground
       if (prevAppState === 'background' && ['active', 'inactive'].includes(nextAppState)) {
         // if app was in background for longer than allowed time, log out user
         if (
@@ -181,7 +177,6 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
     const keyboardDidShowSubscription = Keyboard.addListener('keyboardDidShow', reportActivity)
     const keyboardDidHideSubscription = Keyboard.addListener('keyboardDidHide', reportActivity)
 
-    // initial timeout setup
     resetInactivityTimeout(timeoutInMilliseconds.current)
 
     return () => {

@@ -38,12 +38,6 @@ interface CredentialNotificationProps {
   notification: CredentialNotificationRecord
 }
 
-/**
- * CredentialNotification component that renders different types of notifications based on the notification type.
- *
- * @param {CredentialNotificationProps} props
- * @return {*}
- */
 const CredentialNotification = (props: CredentialNotificationProps) => {
   const notificationType = getCredentialNotificationType(props.notification)
 
@@ -82,7 +76,6 @@ interface NotificationProofMetadata extends ProofCustomMetadata {
  *
  * @param {boolean} read Whether the user has opened the notification
  * @param {Date} [expiresTime] When the notification expires, if it does
- * @return {*}  {NotificationCardStatus}
  */
 function getTimeSensitiveStatus(read: boolean, expiresTime?: Date): NotificationCardStatus {
   if (expiresTime && expiresTime.getTime() - Date.now() <= NOTIFICATION_EXPIRY_WARNING_WINDOW_MS) {
@@ -91,12 +84,6 @@ function getTimeSensitiveStatus(read: boolean, expiresTime?: Date): Notification
   return read ? NotificationCardStatus.Read : NotificationCardStatus.Unread
 }
 
-/**
- * Basic Message Notifications
- *
- * @param {CredentialNotificationProps} { notification }
- * @return {*}
- */
 const BasicMessageNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
@@ -179,12 +166,6 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
   )
 }
 
-/**
- * Credential Offer Notifications
- *
- * @param {CredentialNotificationProps} { notification }
- * @return {*}
- */
 const CredentialOfferNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
@@ -249,12 +230,6 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
   )
 }
 
-/**
- * Proof Request Notifications
- *
- * @param {CredentialNotificationProps} { notification }
- * @return {*}
- */
 const ProofRequestNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
@@ -342,12 +317,6 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   )
 }
 
-/**
- * Revocation Notifications
- *
- * @param {CredentialNotificationProps} { notification }
- * @return {*}
- */
 const RevocationNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()

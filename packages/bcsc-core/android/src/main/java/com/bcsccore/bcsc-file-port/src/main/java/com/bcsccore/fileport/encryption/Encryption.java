@@ -7,16 +7,12 @@ package com.bcsccore.fileport.encryption;
 public interface Encryption {
     /**
      * Encrypt a message string into bytes
-     * @param message The string to encrypt
-     * @return Encrypted bytes
      * @throws Exception if encryption fails
      */
     byte[] encrypt(String message) throws Exception;
 
     /**
      * Decrypt bytes back to a string
-     * @param bytes The encrypted bytes to decrypt
-     * @return Decrypted string
      * @throws Exception if decryption fails
      */
     String decrypt(byte[] bytes) throws Exception;

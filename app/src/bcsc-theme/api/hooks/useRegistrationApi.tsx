@@ -180,8 +180,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_121_REGISTRATION_KEY_NOT_CONFIRMED` if the sent signing key's modulus is
    *   definitively absent from the server's echoed jwks (see {@link confirmRegisteredKey})
    * @throws AppError (e.g. `TOKEN_SAVE_FAILED`, `NATIVE_STORAGE_WRITE_FAILED`) if the registration cannot be saved
-   *
-   * @returns Promise resolving to registration response data
    */
   const createRegistration = useCallback(async () => {
     if (!isClientReady || !apiClient) {
@@ -231,8 +229,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    *
    * FIXME (MD): This might be better in `useRegistrationService` since it includes the account guard.
    * Putting this here to prevent breaking tests.
-   *
-   * @returns Promise resolving to registration response data or void if account exists
    */
   const register = useCallback(async () => {
     const account = await getAccount()
@@ -266,9 +262,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    * @throws AppError (e.g. `TOKEN_SAVE_FAILED`, `NATIVE_STORAGE_WRITE_FAILED`) if the returned registration cannot
    *   be saved. The server has the update by then, and the nickname is still saved.
-   *
-   * @param selectedNickname - New client name/nickname to set
-   * @returns Promise resolving to updated registration response data
    */
   const updateRegistration = useCallback(
     async (selectedNickname: string | undefined) => {

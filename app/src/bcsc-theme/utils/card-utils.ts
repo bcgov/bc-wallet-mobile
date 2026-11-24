@@ -37,9 +37,6 @@ export function getCardProcessForCardType(cardType: BCSCCardType | null): BCSCCa
  * Completeness depends on the card: single-sided IDs (e.g. Canadian Passport) only need 1 photo,
  * double-sided IDs (e.g. driver's licence, BCSC) need 2. The required count is derived from
  * the card's own `image_sides`. Falling back to 1 keeps this safe if `image_sides` is missing.
- *
- * @param card - The card evidence metadata to check for completeness.
- * @returns True if the card evidence is complete, false otherwise.
  */
 export function isCardEvidenceComplete(card?: EvidenceMetadata): boolean {
   if (!card?.evidenceType || !card.documentNumber) {
@@ -60,9 +57,6 @@ const LEGACY_EVIDENCE_LABEL_MAP: Record<string, string> = { front: 'FRONT_SIDE',
  * Normalizes an evidence image label to the /v1/documents form (`FRONT_SIDE`/`BACK_SIDE`),
  * mapping the legacy lowercase `front`/`back` labels used by /v1/photos. Any other label is
  * returned unchanged.
- *
- * @param label - The evidence image label to normalize.
- * @returns The normalized label.
  */
 export function normalizeEvidenceImageLabel(label: string): string {
   return LEGACY_EVIDENCE_LABEL_MAP[label] ?? label
@@ -132,9 +126,6 @@ export function isEvidenceAwaitingDocumentNumber(card?: EvidenceMetadata): boole
  * state: distinct from a fully-captured evidence awaiting a document number
  * ({@link isEvidenceAwaitingDocumentNumber}) and from a completed one. The user is resumed to
  * IDPhotoInformation to (re)start capture from the first side.
- *
- * @param card - The card evidence metadata to check.
- * @returns True if the evidence is selected, has no document number, and is missing required photos.
  */
 export function isEvidenceCaptureIncomplete(card?: EvidenceMetadata): boolean {
   if (!card?.evidenceType || card.documentNumber) {

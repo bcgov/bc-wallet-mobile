@@ -70,10 +70,6 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   @NonNull
   private final KeyPairInfoSource keyPairInfoSource;
 
-  /**
-   * Create a new BcscKeyPairRepo.
-   * @param keyPairInfoSource the source for storing key pair metadata
-   */
   public BcscKeyPairRepo(@NonNull KeyPairInfoSource keyPairInfoSource) {
     this.keyPairInfoSource = keyPairInfoSource;
   }
@@ -457,7 +453,6 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
    * Generate a new RSA key pair in Android KeyStore.
    * Creates a 4096-bit RSA key with SHA-512 digest for signing.
    * 
-   * @param alias the alias to store the key pair under
    * @throws KeypairGenerationException if key generation fails
    */
   protected void generateKeyPair(String alias) throws KeypairGenerationException {
@@ -547,8 +542,6 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
    * Signs a JWT claims set using the current key pair's private key.
    * Uses RS512 algorithm (RSA signature with SHA-512 hash).
    * 
-   * @param claimsSet the JWT claims to sign
-   * @return the signed JWT
    * @throws BcscException if signing fails
    */
   @Override

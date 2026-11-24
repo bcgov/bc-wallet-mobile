@@ -141,9 +141,7 @@ class RSAUtil {
     {
       i += 1
       if let modulusLength = NSInteger(octetBytes: keyBytes, startIdx: &i) {
-        // NSRange(location: i, length: modulusLength).toRange()!
         let modulus = keyData.subdata(in: Range(NSRange(location: i, length: modulusLength))!)
-        // var k = Range.i
         i += modulusLength
 
         // Second should be the exponent

@@ -9,10 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { credentialEventLabelKey, proofEventLabelKey } from './chat-events'
 
 /**
- * Custom hook to generate a subtitle for a contact based on the most recent interaction,
- *
- * @param {string} connectionId
- * @return {*}  {(string | undefined)}
+ * Custom hook to generate a subtitle for a contact based on the most recent interaction.
  */
 export const useContactSubtitle = (connectionId: string): string | undefined => {
   const { t } = useTranslation()

@@ -163,9 +163,6 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({ onActiveTabChange, ...p
  * Builds the navigator's `tabBar` renderer. A factory rather than an inline arrow so the component
  * isn't redefined inside {@link BCSCTabStack} on every render, which would remount the tab bar and
  * restart its indicator animation.
- *
- * @param onActiveTabChange - Called with the route name of the tab the navigator has focused.
- * @returns A React component that renders the animated tab bar.
  */
 const createAnimatedTabBar = (onActiveTabChange: (routeName: string) => void) => {
   const AnimatedTabBarRenderer = (props: BottomTabBarProps): React.JSX.Element => (

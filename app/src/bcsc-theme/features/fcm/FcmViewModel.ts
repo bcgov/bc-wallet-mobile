@@ -40,10 +40,6 @@ export class FcmViewModel {
   private isCardExpired = false
 
   /**
-   * @param fcmService - Firebase Cloud Messaging service
-   * @param logger - Logger instance
-   * @param pairingService - Service for handling pairing requests
-   * @param verificationResponseService - Service for handling verification response notifications
    * @param mode - App mode (BCSC or BCWallet). Local notifications are only shown in BCSC mode.
    */
   constructor(
@@ -92,7 +88,6 @@ export class FcmViewModel {
     this.logger.info('[FcmViewModel] FCM service initialized')
     // Pre-fetch the server JWK for signature verification (if API client is ready)
     void this.fetchServerJwk()
-    // Log FCM token for debugging
     void this.logFcmToken()
   }
 
@@ -151,7 +146,6 @@ export class FcmViewModel {
     }
 
     try {
-      // Check if environment changed or JWK not yet available
       const apiClient = getBCSCApiClient()
 
       if (!apiClient) {
@@ -169,7 +163,6 @@ export class FcmViewModel {
         await this.fetchServerJwk()
       }
 
-      // Decode and verify the JWT
       const result = await decodeLoginChallenge(jwt, this.serverJwk ?? undefined)
 
       this.logger.info(
@@ -189,7 +182,6 @@ export class FcmViewModel {
         return
       }
 
-      // Extract pairing data and inject into deep link flow
       const serviceTitle = result.claims.bcsc_client_name
       const pairingCode = result.claims.bcsc_challenge
 
@@ -222,7 +214,6 @@ export class FcmViewModel {
       await this.showForegroundNotification(data.title, data.message)
     }
 
-    // Check if this is a verification request reviewed notification (send-video)
     if (isVerificationRequestReviewed(data)) {
       this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationResponseService')
       this.verificationResponseService.handleRequestReviewed()
@@ -319,7 +310,6 @@ export class FcmViewModel {
         return
       }
 
-      // Check if environment changed (baseURL changed) - invalidate cached JWK
       if (this.lastJwkBaseUrl && this.lastJwkBaseUrl !== apiClient.baseURL) {
         this.logger.info('[FcmViewModel] Environment changed, clearing cached JWK')
         this.serverJwk = null
@@ -345,7 +335,6 @@ export class FcmViewModel {
 
   /**
    * Processes any pending challenge notifications that were received before the API client was ready.
-   *
    */
   public async processPendingChallenges(): Promise<void> {
     this.logger.info(`[FcmViewModel] Processing ${this.pendingChallenges.length} pending challenge(s)`)

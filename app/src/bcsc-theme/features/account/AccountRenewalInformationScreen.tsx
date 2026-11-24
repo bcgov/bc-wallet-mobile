@@ -11,11 +11,6 @@ interface AccountRenewalInformationScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.AccountRenewalInformation>
 }
 
-/**
- * Renders the Account Renewal Information screen, providing users with information about renewing their account.
- *
- * @returns {*} {React.ReactElement} The AccountRenewalInformationScreen component.
- */
 export const AccountRenewalInformationScreen = ({
   navigation,
 }: AccountRenewalInformationScreenProps): React.ReactElement => {

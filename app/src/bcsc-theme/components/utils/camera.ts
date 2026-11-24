@@ -2,8 +2,6 @@ import { Platform } from 'react-native'
 import { CameraDevice } from 'react-native-vision-camera'
 import { Barcode, BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
 
-// ─── Shared Types ─────────────────────────────────────────────────────────────
-
 /** Axis-aligned bounding rectangle */
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -65,14 +63,6 @@ export interface ScanZone {
 /** Collective scan state: scanning → aligned → locked */
 export type ScanState = 'scanning' | 'aligned' | 'locked'
 
-// ─── Pure Utility Functions ───────────────────────────────────────────────────
-
-/**
- * Calculate barcode orientation from its corner points.
- *
- * @param corners Corner points of the detected barcode
- * @returns 'horizontal' if wider than tall, 'vertical' otherwise
- */
 export const calculateBarcodeOrientation = (corners?: { x: number; y: number }[]): 'horizontal' | 'vertical' => {
   if (!corners || corners.length < 2) {
     return 'horizontal'
@@ -259,10 +249,6 @@ export const isCodeAlignedWithZones = (
  * `false` return, which resets the scanner. `isAligned` is still computed per
  * code (see `enhanceSingleCode`) but only drives focus-cycle prioritisation and
  * the (purely visual) scan zone outline colour — never whether a scan counts.
- *
- * @param codes Enhanced codes from the current scan frame
- * @param options Thresholds controlling state transitions
- * @returns The new scan state and the qualifying codes that drove the transition
  */
 export const determineScanState = (
   codes: EnhancedCode[],
@@ -382,9 +368,6 @@ export const isRecoverableCameraRuntimeError = (error: unknown, platform: string
 /**
  * Whether a photo capture failed only because the camera wasn't running at that moment (stopped,
  * interrupted or restarting), so the user can simply try again.
- *
- * @param error The error thrown by the photo capture
- * @returns true if the capture can be retried once the camera is running again
  */
 export const isCameraNotReadyCaptureError = (error: unknown): boolean => {
   const message = errorMessage(error)
@@ -395,9 +378,6 @@ export const isCameraNotReadyCaptureError = (error: unknown): boolean => {
 /**
  * Get camera metadata including the selected device and format, with deduplicated formats.
  * Mostly used for logging and debugging purposes.
- *
- * @param device The CameraDevice to get metadata for
- * @returns An object containing the selected device and format, with deduplicated formats
  */
 export const getCameraMetadata = (device?: CameraDevice) => {
   if (!device) {

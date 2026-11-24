@@ -52,14 +52,9 @@ export interface CodeScanningCameraProps {
    * camera will automatically reset to the scanning state so the user can
    * try again.  Any other return value (including `void`) is treated as
    * accepted.
-   *
-   * @param codes Array of scanned codes with position and orientation metadata
    */
   onCodeScanned: (codes: EnhancedCode[]) => Promise<void | boolean>
 
-  /**
-   * Custom style for the camera container
-   */
   style?: ViewStyle
 
   /**
@@ -203,7 +198,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // Store locked codes for deferred callback when user taps "Continue"
   const lockedScanRef = useRef<{ codes: EnhancedCode[] } | null>(null)
 
-  // --- Configurable scan thresholds ---
   // Reading count required per code to reach "locked" state.
   // The count accumulates on each frame the code is detected and decays by
   // READING_DECAY_PER_MISSED_FRAME (not reset to 0) on a missed frame — see
@@ -365,8 +359,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     tapGesture.enabled(isGestureEnabled)
   )
 
-  // --- Helpers extracted from onCodeScanned to reduce cognitive complexity ---
-
   /** Enhance a single barcode with position, orientation, alignment, and validation metadata */
   const enhanceSingleCode = (code: ScannedCode): EnhancedCode => {
     const frameSize = scannerOutputRef.current?.currentResolution
@@ -409,7 +401,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     if (code.value) {
       const existing = barcodeReadings.current.get(key)
       if (existing && existing.value === code.value && existing.type === code.type) {
-        // Same code detected consecutively - increment count
         readingCount = existing.count + 1
         barcodeReadings.current.set(key, { value: code.value, type: code.type, count: readingCount })
       } else {
@@ -503,7 +494,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     const now = Date.now()
     const newlyValidated = enhancedCodes.filter((code) => code.isValidated)
 
-    // Add/update validated codes in the accumulator
     newlyValidated.forEach((code) => {
       const key = `${code.type}-${code.value}`
       accumulatedCodes.current.set(key, { code, timestamp: now })
@@ -584,7 +574,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     barcodeFormats: codeTypes,
     outputResolution: 'full',
     onBarcodeScanned: (barcodes) => {
-      // When locked, completely pause scanning
       if (isLockedRef.current) {
         return
       }
@@ -597,7 +586,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       // Codes are actively being detected — hold off auto-refocus cycling
       lastDetectionAtRef.current = Date.now()
 
-      // Enhance codes with position and orientation metadata
       const enhancedCodes = barcodes.map((barcode) => enhanceSingleCode(toScannedCode(barcode)))
       const currentScanKeys = new Set(enhancedCodes.map((c) => `${c.type}-${c.value}`))
       decayStaleReadings(currentScanKeys)
@@ -620,7 +608,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       void requestPermission()
     }
 
-    // Cleanup timeout on unmount
     return () => {
       if (focusCycleTimerRef.current) {
         clearInterval(focusCycleTimerRef.current)
@@ -671,7 +658,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       return
     }
 
-    // Clear any existing timer
     if (focusCycleTimerRef.current) {
       clearInterval(focusCycleTimerRef.current)
     }
@@ -1164,7 +1150,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       {showScanZoneOverlay && (
         <View style={styles.overlayContainer} pointerEvents="none" testID="scan-zone">
           {scanZones && scanZones.length > 0 && containerSize ? (
-            // Render custom scan zones from saved coordinates
             scanZones.map((zone) => {
               let zoneColor
               if (scanState === 'locked') {

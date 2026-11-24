@@ -9,8 +9,6 @@ const ACCOUNT_FETCH_RETRY_DELAY_MS = 500
 
 /**
  * Hook to initialize the account status in the global store on app startup.
- *
- * @returns An object containing the initializingAccount boolean which indicates if the account status is being initialized.
  */
 export const useInitializeAccountStatus = () => {
   const [store, dispatch] = useStore<BCState>()
@@ -27,8 +25,6 @@ export const useInitializeAccountStatus = () => {
   /**
    * Checks for an existing BCSC account and updates the global store accordingly.
    * Note: Will try to fetch the account multiple times with a delay in case of transient errors
-   *
-   * @returns Promise that resolves when the account status has been initialized
    */
   const initializeAccountStatus = useCallback(async () => {
     try {

@@ -35,7 +35,6 @@ export const ChangePINContent = ({
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [, dispatch] = useStore<BCState>()
 
-  // Handler for when user is changing their existing PIN
   const handleChangePINSuccess = useCallback(
     async (result: PINEntryResult) => {
       logger.info('PIN changed successfully')
@@ -49,7 +48,6 @@ export const ChangePINContent = ({
     [logger, navigation, walletService, onChangePINSuccess]
   )
 
-  // Handler for when user is switching from Device Auth to PIN
   const handleCreatePINSuccess = useCallback(
     async (result: PINEntryResult) => {
       const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
@@ -70,7 +68,6 @@ export const ChangePINContent = ({
     [logger, navigation, walletService, onCreatePINSuccess, dispatch]
   )
 
-  // Render ChangePINForm when changing existing PIN, PINEntryForm when switching from Device Auth
   if (isChangingExistingPIN) {
     return <ChangePINForm onSuccess={handleChangePINSuccess} />
   }

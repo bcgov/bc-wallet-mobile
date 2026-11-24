@@ -28,9 +28,6 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  * To force an upgrade, raise the min build.
  *
  * @see {MandatoryUpdate.tsx} for the modal displayed during a mandatory update.
- *
- * @class UpdateAppSystemCheck
- * @implements {SystemCheckStrategy}
  */
 export class UpdateAppSystemCheck implements SystemCheckStrategy {
   private readonly serverStatus: ServerStatusResponseData
@@ -67,8 +64,6 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
 
   /**
    * Handles a build below the minimum build by navigating to the blocking update modal.
-   *
-   * @returns {*} {void}
    */
   onFail() {
     this.utils.logger.info('[UpdateAppSystemCheck] result: mandatory update', {

@@ -36,9 +36,6 @@ data class NativeToken(
     val expiry: Date? = null,
 )
 
-/**
- * Native-compatible TokenType enum.
- */
 enum class NativeTokenType {
     @SerializedName("ACCESS")
     ACCESS,

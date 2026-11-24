@@ -6,11 +6,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const ICON_SIZE = 24
 
-/**
- * A component that displays a notification when there are no notifications to show.
- *
- * @returns {React.ReactElement} The EmptyNotification component
- */
 export const EmptyNotification = () => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()

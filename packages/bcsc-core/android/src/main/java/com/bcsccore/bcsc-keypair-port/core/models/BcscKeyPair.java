@@ -18,9 +18,7 @@ public class BcscKeyPair {
   private final KeyPairInfo keyInfo;
 
   /**
-   * Create a new BcscKeyPair.
    * @param keyPair the cryptographic key pair (can be null if key retrieval failed)
-   * @param keyInfo the metadata about this key pair
    */
   public BcscKeyPair(@Nullable KeyPair keyPair, @NonNull KeyPairInfo keyInfo) {
     this.keyPair = keyPair;
@@ -36,10 +34,6 @@ public class BcscKeyPair {
     return keyPair;
   }
 
-  /**
-   * Get the metadata about this key pair.
-   * @return the key pair information
-   */
   @NonNull
   public KeyPairInfo getKeyInfo() {
     return keyInfo;

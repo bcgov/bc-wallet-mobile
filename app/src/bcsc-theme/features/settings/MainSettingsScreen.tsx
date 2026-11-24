@@ -14,10 +14,6 @@ type MainSettingsScreenProps = {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainSettings>
 }
 
-/**
- * Settings screen for the Main stack.
- * Wraps SettingsContent with Main stack-specific navigation callbacks.
- */
 export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { account } = useAccount()

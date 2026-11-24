@@ -92,7 +92,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     return VideoCallBackgroundMode.FULL_CLEANUP
   }, [flowState, isInBackground])
 
-  // sets to final flow state which allows UI to update accordingly
   const setCallEnded = useCallback(() => {
     setFlowState(VideoCallFlowState.CALL_ENDED)
   }, [])
@@ -399,7 +398,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     }
   }, [createSession, uploadPreCallEvidence, establishWebRTCConnection, createCall])
 
-  // if the user encounters a retryable error, they can start the process again
   const retryConnection = useCallback(async () => {
     setVideoCallError(null)
     await cleanup()
@@ -415,7 +413,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     }
   }, [])
 
-  // create listener for background state
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState: string) => {
       if (nextAppState === 'background') {
@@ -472,7 +469,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     }
   }, [isInBackground, backgroundMode, localStream, setCallEnded, cleanup, leaveCall, logger])
 
-  // start the API keep alive when the call is ready
   useEffect(() => {
     if (flowState === VideoCallFlowState.IN_CALL && session && clientCallId) {
       logger.info('Starting backend keep-alive timer...')

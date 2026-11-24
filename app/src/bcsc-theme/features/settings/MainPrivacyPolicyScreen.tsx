@@ -8,9 +8,6 @@ type MainPrivacyPolicyScreenProps = {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainPrivacyPolicy>
 }
 
-/**
- * Privacy Policy screen for the Main stack.
- */
 export const MainPrivacyPolicyScreen = ({ navigation }: MainPrivacyPolicyScreenProps) => {
   const { t } = useTranslation()
 

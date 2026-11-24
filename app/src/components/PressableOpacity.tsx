@@ -11,9 +11,6 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 /**
  * A wrapper around Pressable that mimics the opacity change of TouchableOpacity when pressed.
- *
- * @param props - The props for the Pressable component
- * @returns A Pressable component that changes opacity when pressed, similar to TouchableOpacity
  */
 export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) => {
   const animatedOpacity = useRef(new Animated.Value(OPACITY_MAXIMUM_VALUE)).current

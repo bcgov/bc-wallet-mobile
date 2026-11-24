@@ -18,20 +18,15 @@ import { QRCodeStrategy, QRError } from '../useQRScanner'
 
 const TRANSFER_QR_PATH = /selfsetup\.html$/i
 
-/**
- * Creates a QRCodeStrategy for handling account transfer QR codes.
- */
 export const useAccountTransferQRCodeStrategy = (
   /**
    * Callback function to be called when the account transfer is successful.
    * ie: Navigate to the "Verification Success" screen.
-   * @returns void
    */
   onSuccess: () => void,
   /**
    * Callback function to be called when the account is already verified.
    * ie: Navigate to the "Already Verified" screen
-   * @returns void
    */
   onAlreadyVerified?: () => void
 ): QRCodeStrategy => {
@@ -50,12 +45,7 @@ export const useAccountTransferQRCodeStrategy = (
   const step = useRef('initAccountTransfer') // Tracks the current step of the account transfer process for error reporting
   const updateStep = (newStep: string) => (step.current = newStep)
 
-  /**
-   * Registers the device with the BCSC authorization service if it hasn't been registered yet.
-   * @returns A promise that resolves when the device registration is complete.
-   */
   const registerDevice = useCallback(async () => {
-    // we already have a device code, no need to authorize again
     if (store.bcscSecure.deviceCode) {
       deviceCodeRef.current = store.bcscSecure.deviceCode
       return
@@ -83,11 +73,6 @@ export const useAccountTransferQRCodeStrategy = (
     deviceCodeRef.current = deviceAuth.device_code
   }, [store.bcscSecure.deviceCode, attemptWithRecovery, authorization, route.name, updateDeviceCodes, updateUserInfo])
 
-  /**
-   * Transfers the account to the new device using the provided transfer token.
-   * @param transferToken - The transfer token extracted from the QR code.
-   * @returns A promise that resolves when the account transfer is complete.
-   */
   const transferAccount = useCallback(
     async (transferToken: string) => {
       updateStep('getAccount')
@@ -116,7 +101,6 @@ export const useAccountTransferQRCodeStrategy = (
         throw new QRError('Device code not found')
       }
 
-      // Attest: verify the new device
       updateStep('verifyAttestation')
       const response = await deviceAttestation.verifyAttestation({
         client_id: account.clientID,
@@ -129,7 +113,6 @@ export const useAccountTransferQRCodeStrategy = (
         throw new QRError('Attestation was not accepted')
       }
 
-      // fetch tokens for the new device
       updateStep('getDeviceToken')
       const deviceToken = await token.deviceToken({
         client_id: account.clientID,
@@ -145,20 +128,10 @@ export const useAccountTransferQRCodeStrategy = (
     [deviceAttestation, token, apiClient, updateTokens]
   )
 
-  /**
-   * Checks if the given URI matches the account transfer QR code pattern.
-   * @param uri - The URI to check.
-   * @returns True if the URI matches the account transfer QR code pattern, false otherwise.
-   */
   const matches = useCallback((uri: string): boolean => {
     return extractTransferToken(uri) !== null
   }, [])
 
-  /**
-   * Handles the account transfer process when a matching QR code is scanned.
-   * @param uri - The URI extracted from the scanned QR code.
-   * @returns A promise that resolves when the account transfer process is complete.
-   */
   const handle = useCallback(
     async (uri: string): Promise<void> => {
       updateStep('startAccountTransfer')
@@ -187,11 +160,6 @@ export const useAccountTransferQRCodeStrategy = (
     [logger, onAlreadyVerified, onSuccess, registerDevice, isVerified, transferAccount]
   )
 
-  /**
-   * Handles errors that occur during the account transfer process.
-   * @param error - The error that occurred during the account transfer process.
-   * @returns An object containing the error, title, and description for displaying in an error modal.
-   */
   const toErrorModal = useCallback(
     (error: unknown) => {
       const appError = ensureAppError(error, AppEventCode.ACCOUNT_TRANSFER_ERROR)

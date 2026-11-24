@@ -6,10 +6,6 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { setIssuer } from 'react-native-bcsc-core'
 
-/**
- * Hook to switch the environment.
- * @returns A function to switch the environment, which performs a factory reset and updates the store.
- */
 export const useSwitchEnvironment = () => {
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])

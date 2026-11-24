@@ -28,26 +28,18 @@ export type DataLoaderOptions = {
 export type DataLoader<ResponseType> = {
   /**
    * The response of the `fetchData` call
-   *
-   * @type {(ResponseType | undefined)}
    */
   data: ResponseType | undefined
   /**
    * The error caught if the `fetchData` call throws
-   *
-   * @type {(unknown)}
    */
   error: unknown
   /**
    * `true` if the `fetchData` function is currently executing
-   *
-   * @type {boolean}
    */
   isLoading: boolean
   /**
    * `true` if data has been loaded at least once
-   *
-   * @type {boolean}
    */
   isReady: boolean
   /**
@@ -76,11 +68,7 @@ export type DataLoader<ResponseType> = {
 /**
  * A custom hook that provides a data loader for fetching data
  *
- * @export
  * @template ResponseType typed structure of the data
- * @param {() => Promise<ResponseType>} fetchData return a promise that resolves to the data to be loaded, usually an API call
- * @param {DataLoaderOptions} options
- * @return {DataLoader<ResponseType>}
  */
 export default function useDataLoader<ResponseType>(
   fetchData: () => Promise<ResponseType>,
@@ -138,7 +126,6 @@ export default function useDataLoader<ResponseType>(
             timeout - (Date.now() - startTime)
           )
 
-          // if no time left for retries, break
           if (backoffMs <= 0) {
             break
           }

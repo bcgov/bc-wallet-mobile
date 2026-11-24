@@ -14,8 +14,6 @@ type TermsOfUseUpdatedProps = StackScreenProps<BCSCMainStackParams, BCSCModals.T
  * version the user last accepted. The user must accept the updated terms to continue.
  *
  * @see {TermsOfUseSystemCheck.ts} for the system check that presents this modal.
- *
- * @returns {*} {React.ReactElement} The TermsOfUseUpdated component.
  */
 export const TermsOfUseUpdated = ({ navigation }: TermsOfUseUpdatedProps): React.ReactElement => {
   const { t } = useTranslation()

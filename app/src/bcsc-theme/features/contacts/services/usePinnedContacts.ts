@@ -49,8 +49,6 @@ const togglePinId = (contactId: string) => {
 /**
  * Custom hook to manage pinned contacts, allowing components to subscribe to changes
  * in the set of pinned contact IDs and toggle the pinned state of individual contacts.
- *
- * @return {*}
  */
 export const usePinnedContacts = () => {
   const ids = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
