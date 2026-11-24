@@ -52,6 +52,16 @@ export interface CredentialMetadata {
   lastUpdated: number // THIS IS THE bcsc_status_date from the token response
 }
 
+// A key that is absent equals one set to undefined, as in details saved before bcscEvent existed
+const isSameCredentialMetadata = (a: CredentialMetadata | undefined, b: CredentialMetadata | undefined): boolean => {
+  if (!a || !b) {
+    return a === b
+  }
+
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof CredentialMetadata>
+  return [...keys].every((key) => a[key] === b[key])
+}
+
 export interface BCSCAlertEvent {
   event: string
   reason: string
@@ -310,6 +320,7 @@ enum BCSCDispatchAction {
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
   UPDATE_CREDENTIAL_METADATA = 'bcsc/updateCredentialMetadata',
+  REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED = 'bcsc/replaceCredentialMetadataIfUnchanged',
   UPDATE_ACCEPTED_TERMS_OF_USE_VERSION = 'bcsc/updateAcceptedTermsOfUseVersion',
   // Secure state actions
   HYDRATE_SECURE_STATE = 'bcsc/hydrateSecureState',
@@ -929,6 +940,20 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
+    }
+
+    case BCSCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED: {
+      const [expected, next] = (action?.payload ?? []) as [
+        CredentialMetadata | undefined,
+        CredentialMetadata | undefined,
+      ]
+      if (!isSameCredentialMetadata(state.bcsc.credentialMetadata, expected)) {
+        return state
+      }
+
+      const bcsc = { ...state.bcsc, credentialMetadata: next }
+      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return { ...state, bcsc }
     }
 
     case BCSCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION: {

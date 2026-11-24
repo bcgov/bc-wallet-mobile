@@ -142,16 +142,7 @@ export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean;
         const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
 
         await runSystemChecks(
-          [
-            new EventReasonAlertsSystemCheck(
-              getIdToken,
-              emitAlert,
-              credentialMetadataRef.current,
-              utils,
-              navigation,
-              () => credentialMetadataRef.current
-            ),
-          ],
+          [new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)],
           logger
         )
       } catch (error) {

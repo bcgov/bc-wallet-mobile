@@ -228,6 +228,69 @@ describe('reducer', () => {
     })
   })
 
+  describe('REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED', () => {
+    const saved = {
+      fullName: 'Jamie Doe',
+      bcscReason: 'Approved by Agent',
+      deviceCount: 1,
+      deviceLimit: 5,
+      cardType: 'Combined',
+      lastUpdated: 1,
+    }
+    const next = { ...saved, bcscEvent: 'Cancel', bcscReason: 'Canceled by Card Cancel', lastUpdated: 2 }
+    const withSaved = (credentialMetadata?: typeof saved) => ({
+      ...initialState,
+      bcsc: { ...initialState.bcsc, credentialMetadata },
+    })
+    const replace = (state: typeof initialState, expected: unknown, replacement: unknown) =>
+      reducer(state, {
+        type: BCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED,
+        payload: [expected, replacement],
+      })
+
+    it('applies the new details, and persists them, when the saved details are the expected ones', () => {
+      const result = replace(withSaved(saved), { ...saved }, next)
+
+      expect(result.bcsc.credentialMetadata).toEqual(next)
+      expect(mockedStoreValueForKey).toHaveBeenCalledWith(
+        BCLocalStorageKeys.BCSC,
+        expect.objectContaining({ credentialMetadata: next })
+      )
+    })
+
+    it('applies when none were saved and none were expected', () => {
+      expect(replace(withSaved(undefined), undefined, next).bcsc.credentialMetadata).toEqual(next)
+    })
+
+    it('treats a missing key as equal to one set to undefined', () => {
+      const result = replace(withSaved(saved), { ...saved, bcscEvent: undefined }, next)
+
+      expect(result.bcsc.credentialMetadata).toEqual(next)
+    })
+
+    it('leaves the state alone, and persists nothing, when the saved details were cleared', () => {
+      const state = withSaved(undefined)
+      const result = replace(state, saved, next)
+
+      expect(result).toBe(state)
+      expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+    })
+
+    it('leaves the state alone when the saved details changed since the check', () => {
+      const state = withSaved({ ...saved, lastUpdated: 3 })
+      const result = replace(state, saved, next)
+
+      expect(result).toBe(state)
+      expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+    })
+
+    it('leaves the state alone when details exist but none were expected', () => {
+      const state = withSaved(saved)
+
+      expect(replace(state, undefined, next)).toBe(state)
+    })
+  })
+
   it('UPDATE_SECURE_SECURITY_METHOD stores the method on secure state without persisting it', () => {
     const result = reducer(initialState, {
       type: BCDispatchAction.UPDATE_SECURE_SECURITY_METHOD,

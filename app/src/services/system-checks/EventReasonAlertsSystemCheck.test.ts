@@ -191,9 +191,10 @@ describe('EventReasonAlertsSystemCheck', () => {
       await runSuccessfulCheck(token, savedBeforeTheEventWasKept)
 
       expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
+      // Guarded on the details this check compared against, so a reset or a newer check in between wins
       expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-        payload: [tokenToCredentialMetadata(token)],
+        type: BCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED,
+        payload: [savedBeforeTheEventWasKept, tokenToCredentialMetadata(token)],
       })
       expect(emitAlert).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
@@ -208,57 +209,18 @@ describe('EventReasonAlertsSystemCheck', () => {
       await runSuccessfulCheck(token, saved)
 
       expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-        payload: [expect.objectContaining({ bcscEvent: BCSCEvent.Renewal })],
+        type: BCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED,
+        payload: [saved, expect.objectContaining({ bcscEvent: BCSCEvent.Renewal })],
       })
       expect(emitAlert).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
-    })
-
-    it('does not write when a reset cleared the saved details after the check ran', async () => {
-      const token = expireToken()
-      const saved = { ...tokenToCredentialMetadata(token), bcscEvent: undefined }
-      let current: typeof saved | undefined = saved
-      const check = new EventReasonAlertsSystemCheck(
-        jest.fn().mockResolvedValue(token),
-        emitAlert,
-        saved,
-        mockUtils,
-        mockNavigation,
-        () => current
-      )
-      await expect(check.runCheck()).resolves.toBe(true)
-
-      // A renewal reset lands while the rest of the batch is still resolving
-      current = undefined
-      check.onSuccess()
-
-      expect(mockUtils.dispatch).not.toHaveBeenCalled()
-    })
-
-    it('does not write when the saved details changed after the check ran', async () => {
-      const token = expireToken()
-      const saved = { ...tokenToCredentialMetadata(token), bcscEvent: undefined }
-      const check = new EventReasonAlertsSystemCheck(
-        jest.fn().mockResolvedValue(token),
-        emitAlert,
-        saved,
-        mockUtils,
-        mockNavigation,
-        () => ({ ...saved, bcscReason: BCSCReason.Renew })
-      )
-      await expect(check.runCheck()).resolves.toBe(true)
-
-      check.onSuccess()
-
-      expect(mockUtils.dispatch).not.toHaveBeenCalled()
     })
 
     it('does nothing on the next check once the event is saved', async () => {
       const token = expireToken()
       const savedBeforeTheEventWasKept = { ...tokenToCredentialMetadata(token), bcscEvent: undefined }
       await runSuccessfulCheck(token, savedBeforeTheEventWasKept)
-      const saved = (mockUtils.dispatch as jest.Mock).mock.calls[0][0].payload[0]
+      const saved = (mockUtils.dispatch as jest.Mock).mock.calls[0][0].payload[1]
       jest.mocked(mockUtils.dispatch).mockClear()
 
       await runSuccessfulCheck(token, saved)
@@ -281,13 +243,36 @@ describe('EventReasonAlertsSystemCheck', () => {
       check.onFail()
 
       expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-        payload: [expect.objectContaining({ bcscEvent: BCSCEvent.Cancel, bcscReason: BCSCReason.Cancel })],
+        type: BCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED,
+        payload: [undefined, expect.objectContaining({ bcscEvent: BCSCEvent.Cancel, bcscReason: BCSCReason.Cancel })],
       })
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, {
         invalidationReason: BCSCReason.Cancel,
       })
       expect(emitAlert).not.toHaveBeenCalled()
+    })
+
+    it('guards the save on the details the check compared against', async () => {
+      const saved = tokenToCredentialMetadata(
+        createMockIdToken({ bcsc_event: BCSCEvent.Authorization, bcsc_reason: BCSCReason.ApprovedByAgent })
+      )
+      const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Renewal, bcsc_reason: BCSCReason.Renew })
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        emitAlert,
+        saved,
+        mockUtils,
+        mockNavigation
+      )
+
+      await check.runCheck()
+      check.onFail()
+
+      expect(mockUtils.dispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED,
+        payload: [saved, tokenToCredentialMetadata(mockIdToken)],
+      })
+      expect(emitAlert).toHaveBeenCalledTimes(1)
     })
 
     it('should pass without a dispatch or an alert when the saved details match the token', async () => {
@@ -352,8 +337,11 @@ describe('EventReasonAlertsSystemCheck', () => {
 
       // The saved event is what marks the card inactive, so it is the only write.
       expect(mockUtils.dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
-        payload: [expect.objectContaining({ bcscEvent: BCSCEvent.Expire, bcscReason: BCSCReason.ExpiredBySystem })],
+        type: BCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED,
+        payload: [
+          undefined,
+          expect.objectContaining({ bcscEvent: BCSCEvent.Expire, bcscReason: BCSCReason.ExpiredBySystem }),
+        ],
       })
       expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
       // ias-ios suppresses the expiry alert deliberately (IASP-12489); v4 matches it.

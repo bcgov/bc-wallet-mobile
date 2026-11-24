@@ -36,24 +36,19 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   private event: BCSCEvent | undefined
   private reason: BCSCReason | undefined
   private tokenMetadata: CredentialMetadata | undefined
-  private readonly readCurrentMetadata: () => CredentialMetadata | undefined
 
   constructor(
     getIdToken: () => Promise<IdToken>,
     emitAlert: (title: string, body: string, options?: AlertOptions) => void,
     metadata: CredentialMetadata | undefined,
     utils: SystemCheckUtils,
-    navigation: SystemCheckNavigation,
-    // The batch resolves after its slowest check, so a reset can clear the saved details before onSuccess
-    // runs; the snapshot above would then overwrite that clear
-    readCurrentMetadata: () => CredentialMetadata | undefined = () => metadata
+    navigation: SystemCheckNavigation
   ) {
     this.getIdToken = getIdToken
     this.emitAlert = emitAlert
     this.utils = utils
     this.credentialMetadata = metadata
     this.navigation = navigation
-    this.readCurrentMetadata = readCurrentMetadata
   }
 
   async runCheck(): Promise<boolean> {
@@ -76,8 +71,7 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
       return
     }
 
-    // update the credential metadata
-    this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
+    this.saveIfUnchanged()
 
     switch (this.event) {
       case BCSCEvent.Cancel:
@@ -99,16 +93,18 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
 
   onSuccess() {
     // No alert, but backfill a missing or changed saved event: isCardInactive reads it
-    if (this.tokenMetadata && this.savedEventIsOutOfDate(this.tokenMetadata)) {
-      this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
+    if (this.tokenMetadata && this.credentialMetadata?.bcscEvent !== this.tokenMetadata.bcscEvent) {
+      this.saveIfUnchanged()
     }
   }
 
-  // True only while the saved details still exist and match the token apart from the event
-  private savedEventIsOutOfDate(tokenMetadata: CredentialMetadata): boolean {
-    const saved = this.readCurrentMetadata()
-
-    return saved?.bcscEvent !== tokenMetadata.bcscEvent && compareCredentialMetadata(tokenMetadata, saved)
+  // The batch resolves after its slowest check, so a reset or a newer check can change the saved details
+  // first; the save then applies only if they are still the ones this check compared against
+  private saveIfUnchanged() {
+    this.utils.dispatch({
+      type: BCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED,
+      payload: [this.credentialMetadata, this.tokenMetadata],
+    })
   }
 
   // helper function for building the alert to emit

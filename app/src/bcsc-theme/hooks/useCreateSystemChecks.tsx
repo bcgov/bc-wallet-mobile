@@ -290,14 +290,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     if (shouldRunIdTokenChecks) {
       systemChecks.push(
-        new EventReasonAlertsSystemCheck(
-          getIdToken,
-          emitAlert,
-          credentialMetadataRef.current,
-          utils,
-          navigation,
-          () => credentialMetadataRef.current
-        )
+        new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
       )
     }
 

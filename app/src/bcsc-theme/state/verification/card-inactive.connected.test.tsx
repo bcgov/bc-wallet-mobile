@@ -1,4 +1,5 @@
 import { BCSCAccountProvider } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { tokenToCredentialMetadata } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
@@ -146,8 +147,8 @@ const dispatchOn = (device: Device, type: BCDispatchAction, payload: unknown[]) 
     device.current.dispatch({ type, payload } as Parameters<typeof device.current.dispatch>[0])
   })
 
-/** Runs the real account-change check against the device's own store, as the main stack does. */
-const runAccountChangeCheck = async (device: Device, token: IdToken, navigate = jest.fn()) => {
+/** The real account-change check, built from the device's saved details as they are now. */
+const buildAccountChangeCheck = (device: Device, token: IdToken, navigate = jest.fn()) => {
   const { store, dispatch } = device.current
   const check = new EventReasonAlertsSystemCheck(
     async () => token,
@@ -156,6 +157,13 @@ const runAccountChangeCheck = async (device: Device, token: IdToken, navigate = 
     { dispatch, translation: ((key: string) => key) as never, logger: logger as never },
     { navigate } as never
   )
+
+  return { check, navigate }
+}
+
+/** Runs the real account-change check against the device's own store, as the main stack does. */
+const runAccountChangeCheck = async (device: Device, token: IdToken, navigate = jest.fn()) => {
+  const { check } = buildAccountChangeCheck(device, token, navigate)
 
   await act(async () => {
     await runSystemChecks([check], logger as never)
@@ -245,8 +253,9 @@ describe('"card not active", from the real check through the store to Home', () 
       expect(navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, { invalidationReason: BCSCReason.Cancel })
     })
   })
-  // Native storage is faked statefully, so a restart runs the real hydrateSecureState on what earlier steps wrote.
-  // Reset is its end state (memory clear, native deletes); the hook itself is covered in useVerificationReset.test.
+
+  // Native storage is faked statefully, so a restart runs the real hydrateSecureState on what earlier steps
+  // wrote, and the real reset's native deletes act on the same fake.
   describe('the credential record fact through finish, cancel, reset and restarts', () => {
     const account = { issuer: 'https://issuer.example.com', clientID: 'client-1' }
     const native: { credential: CredentialInfo | null; refreshToken?: string; registrationToken?: string } = {
@@ -331,6 +340,55 @@ describe('"card not active", from the real check through the store to Home', () 
       expect(restarted.current.store.bcscSecure.hasCredentialRecord).toBe(true)
       expect(restarted.current.verification).toMatchObject({ isVerified: true, isCardInactive: true })
       await waitFor(() => expect(restarted.current.phase.phase).toBe(AccountPhaseType.Expired))
+    })
+
+    // The batch resolves after its slowest check, so the handlers can run after a reset or a newer check
+    describe('a check whose result is applied after the saved details changed', () => {
+      const olderToken = idToken(BCSCEvent.Authorization, BCSCReason.ApprovedByAgent)
+
+      const finishedDeviceWithSavedDetails = async () => {
+        const device = await finishVerification()
+        await dispatchOn(device, BCDispatchAction.UPDATE_CREDENTIAL_METADATA, [tokenToCredentialMetadata(olderToken)])
+        return device
+      }
+
+      it('leaves the details cleared when a reset cleared them between the check and its handler', async () => {
+        const device = await finishedDeviceWithSavedDetails()
+        const { check } = buildAccountChangeCheck(device, EXPIRE_TOKEN)
+        await expect(check.runCheck()).resolves.toBe(false)
+
+        await act(async () => {
+          await device.current.reset()
+        })
+        expect(device.current.store.bcsc.credentialMetadata).toBeUndefined()
+
+        await act(async () => {
+          await check.onFail()
+        })
+
+        expect(device.current.store.bcsc.credentialMetadata).toBeUndefined()
+        expect(device.current.verification.isCardInactive).toBe(false)
+      })
+
+      it('does not overwrite a newer saved cancel with the result of an older check', async () => {
+        const device = await finishedDeviceWithSavedDetails()
+        const older = buildAccountChangeCheck(device, EXPIRE_TOKEN)
+        await expect(older.check.runCheck()).resolves.toBe(false)
+
+        await runAccountChangeCheck(device, CANCEL_TOKEN)
+        expect(device.current.store.bcsc.credentialMetadata?.bcscEvent).toBe(BCSCEvent.Cancel)
+
+        await act(async () => {
+          await older.check.onFail()
+        })
+
+        expect(device.current.store.bcsc.credentialMetadata).toMatchObject({
+          bcscEvent: BCSCEvent.Cancel,
+          bcscReason: BCSCReason.Cancel,
+        })
+        expect(persistedBcsc().credentialMetadata).toMatchObject({ bcscEvent: BCSCEvent.Cancel })
+        expect(device.current.verification.isCardInactive).toBe(true)
+      })
     })
 
     it('has no record, and no card to judge, after the reset clears memory and storage and the app restarts', async () => {
