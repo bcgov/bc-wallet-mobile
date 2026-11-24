@@ -77,9 +77,8 @@ const normalizeLegacyFullName = (fullName: string | undefined): string => {
  * fullName is compared after normalizing away the legacy mononym artifact (see {@link normalizeLegacyFullName})
  * so existing mononym users don't get a spurious "account updated" alert purely from the fullName bugfix.
  *
- * bcscEvent is not compared: an event change always changes the reason and the status date, and details saved
- * before the field existed would otherwise raise an "account updated" alert on every existing install.
- * EventReasonAlertsSystemCheck saves a missing or changed event without an alert.
+ * bcscEvent is not compared, so details saved before it was kept raise no "account updated" alert;
+ * EventReasonAlertsSystemCheck saves a missing or changed event silently.
  *
  * @param c1 Credential Metadata object to check
  * @param c2 Credential Metadata object to check

@@ -21,7 +21,7 @@ describe('selectVerificationState', () => {
     expect(selectVerificationState(initialState)).toMatchObject({ isVerified: false, needsVerification: true })
   })
 
-  it('reads the verified flag as the credential', () => {
+  it('reads the credential record fact as the credential', () => {
     expect(selectVerificationState(buildState({ hasCredentialRecord: true }))).toMatchObject({
       isVerified: true,
       needsVerification: false,
@@ -126,7 +126,7 @@ describe('selectVerificationRequestCheck', () => {
     })
   })
 
-  it('reads the verified flag, which leaves nothing to check', () => {
+  it('reads the credential record fact, which leaves nothing to check', () => {
     expect(
       selectVerificationRequestCheck(
         buildState({ hasCredentialRecord: true, verificationRequestId: 'req-1', ...deviceCodes })

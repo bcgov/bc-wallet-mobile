@@ -778,7 +778,7 @@ describe('useRootStackViewModel', () => {
           const { result, apply } = renderColdStart(authedUnverified(CHOSE_TO_VERIFY))
           expect(result.current.phase).toBe(RootPhase.Verify)
 
-          // Continue on the success screen sets `verified`
+          // Continue on the success screen saves the credential record
           apply((current) => ({ ...current, bcscSecure: { ...current.bcscSecure, hasCredentialRecord: true } }))
 
           expect(result.current.phase).toBe(RootPhase.Main)
@@ -808,7 +808,7 @@ describe('useRootStackViewModel', () => {
 
           apply(lock)
           expect(result.current.phase).toBe(RootPhase.Auth)
-          // The unlock hydrates the verified flag before SUCCESSFUL_AUTH
+          // The unlock hydrates the record fact before SUCCESSFUL_AUTH
           apply((current) => ({
             ...unlock(current),
             bcscSecure: { hasCredentialRecord: true, isHydrated: true },

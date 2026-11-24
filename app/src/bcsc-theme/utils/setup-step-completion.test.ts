@@ -307,27 +307,11 @@ describe('computeSetupStepCompletion', () => {
       expect(result.verify.completed).toBe(false)
     })
 
-    it('should be completed when verified is true', () => {
-      const store = makeNamedStore({
-        ...EMAIL_COMPLETE,
-        hasCredentialRecord: true,
-        userSubmittedVerificationVideo: false,
-      })
-
-      const result = computeSetupStepCompletion(store)
-
-      expect(result.verify.focused).toBe(true)
-      expect(result.verify.completed).toBe(true)
-    })
-
-    it('should be completed when userSubmittedVerificationVideo is true', () => {
-      const store = makeNamedStore({
-        ...EMAIL_COMPLETE,
-        hasCredentialRecord: false,
-        userSubmittedVerificationVideo: true,
-      })
-
-      const result = computeSetupStepCompletion(store)
+    it.each([
+      ['a credential record is held', { hasCredentialRecord: true, userSubmittedVerificationVideo: false }],
+      ['userSubmittedVerificationVideo is true', { hasCredentialRecord: false, userSubmittedVerificationVideo: true }],
+    ])('should be completed when %s', (_label, secure) => {
+      const result = computeSetupStepCompletion(makeNamedStore({ ...EMAIL_COMPLETE, ...secure }))
 
       expect(result.verify.focused).toBe(true)
       expect(result.verify.completed).toBe(true)

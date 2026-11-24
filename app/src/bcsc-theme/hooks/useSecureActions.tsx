@@ -538,11 +538,8 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Finishes verification: persists the credential record (the marker hydration reads on every unlock,
-   * kept in the v3 format for rollback) and then records that the device holds it.
-   *
-   * The native write goes first and its failure is thrown: a session that says it holds a record while
-   * the next unlock says otherwise is the status mismatch this ordering rules out.
+   * Finishes verification: writes the credential record (v3 format, read on every unlock), then records it.
+   * The native write goes first and throws on failure, so the session never claims a record the next unlock lacks.
    */
   const completeVerification = useCallback(async () => {
     const account = await getAccount()
@@ -1319,7 +1316,7 @@ export const useSecureActions = () => {
 
       const record = credential ?? restoredCredential
       const credentialDeactivated = isCredentialDeactivated(record)
-      // A cancelled or expired record still counts as a record, matching the verification rule
+      // A cancelled or expired record still counts; whether the card is active is credentialDeactivated
       const hasCredentialRecord = Boolean(record)
 
       // A verified account with no refresh token is unrecoverable

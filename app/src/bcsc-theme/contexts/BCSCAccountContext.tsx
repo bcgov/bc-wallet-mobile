@@ -35,9 +35,8 @@ interface AccountLoadDiagnostics {
   navigationReady: boolean
   appState: AppStateStatus
   connectivity?: ReconnectEvent
-  /** Whether the device holds a credential record (the key keeps its old name `verified`). With
-   *  cardInactive and hasRefreshToken below, these are all the inputs to the account-load guard, so
-   *  together they reconstruct it. */
+  /** hasCredentialRecord under its old key name. With cardInactive and hasRefreshToken below, these are
+   *  all the account-load guard's inputs, so together they reconstruct it. */
   verified: boolean
   credentialDeactivated: boolean
   /** Cancelled or expired, from the credential record or the saved account details */

@@ -97,7 +97,7 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   }
 
   onSuccess() {
-    // Nothing to alert. The card is no more or less inactive for it, but the saved event is what says so
+    // No alert, but backfill a missing or changed saved event: isCardInactive reads it
     if (this.savedEventIsStale) {
       this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
     }

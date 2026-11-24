@@ -253,7 +253,7 @@ describe('MainStack', () => {
   })
 
   it('stops registering VerificationSuccess once the user is verified', () => {
-    // This stack inherits the outgoing navigator's state on the `verified` flip. React Navigation only
+    // This stack inherits the outgoing navigator's state when the record is saved. React Navigation only
     // drops VerificationSuccess from that state if the route no longer exists here; while it was always
     // registered, pressing Continue from the Home "Verified" card left the user on the screen (#4719).
     const screenNames = queryScreenNames(render(<MainStack />))

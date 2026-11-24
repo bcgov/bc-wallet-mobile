@@ -15,11 +15,8 @@ export interface CardInactiveFacts {
 const isInactiveEvent = (event: string): boolean => event === BCSCEvent.Expire || event === BCSCEvent.Cancel
 
 /**
- * The single definition of "card not active". The server's saved event decides: Expire and Cancel. A cancelled
- * card is still sent to the device-invalidated screen as well. Details saved before the event was kept fall
- * back to the reason, so an expiry saved then still reads as inactive. No saved details means nothing to
- * judge, and details left over from a reset registration (no record, no token) describe nothing the device
- * still holds.
+ * The single definition of "card not active": the record says so, or the saved server event is Expire or Cancel.
+ * Details saved before the event was kept fall back to the reason; none count once no record or token remains.
  */
 export const isCardInactive = ({
   recordDeactivated,

@@ -53,7 +53,7 @@ const mockUserData = (overrides: Record<string, any> = {}) => ({
 
 const unverified: BCSCSecureState = { ...initialBCSCSecureState }
 
-// A realistic verified account: verified flag true, and (as in production) a refresh token
+// A realistic verified account: a credential record and (as in production) a refresh token
 const verified: BCSCSecureState = {
   ...initialBCSCSecureState,
   hasCredentialRecord: true,
@@ -350,9 +350,9 @@ describe('BCSCAccountContext', () => {
       expect(mockGetUserMetadata).not.toHaveBeenCalled()
     })
 
-    // Only a transfer (refresh token, no `verified` flag) tells the raw flag apart from the gated result,
-    // so this pins the diagnostics' `verified` field to the raw flag
-    it('records the raw (unset) verified flag for a token-backed transfer load failure', async () => {
+    // Only a transfer (refresh token, no credential record) tells the raw fact apart from the gated result,
+    // so this pins the diagnostics' `verified` field to the raw fact
+    it('records the raw (unset) record fact for a token-backed transfer load failure', async () => {
       const tokenNullError = AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
       mockGetUserMetadata.mockRejectedValueOnce(tokenNullError)
 

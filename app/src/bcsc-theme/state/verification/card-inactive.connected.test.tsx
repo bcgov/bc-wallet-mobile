@@ -214,9 +214,8 @@ describe('"card not active", from the real check through the store to Home', () 
       expect(navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, { invalidationReason: BCSCReason.Cancel })
     })
   })
-  // The native store is faked statefully, so a restart runs the real hydrateSecureState against what the
-  // earlier steps wrote. The reset's own steps are covered in useVerificationReset.test; here it is the
-  // memory clear and the native deletes it ends in.
+  // Native storage is faked statefully, so a restart runs the real hydrateSecureState on what earlier steps wrote.
+  // Reset is its end state (memory clear, native deletes); the hook itself is covered in useVerificationReset.test.
   describe('the credential record fact through finish, cancel, reset and restarts', () => {
     const account = { issuer: 'https://issuer.example.com', clientID: 'client-1' }
     const native: { credential: CredentialInfo | null; refreshToken?: string } = { credential: null }
