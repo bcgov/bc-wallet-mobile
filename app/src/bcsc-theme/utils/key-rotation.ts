@@ -1,7 +1,8 @@
 import { BifoldLogger } from '@bifold/core'
 import { Platform } from 'react-native'
-import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo, setToken, TokenType } from 'react-native-bcsc-core'
+import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
+import { DeviceRegistration, saveDeviceRegistration } from '../services/device-registration'
 import { confirmModulusRegistered, modulusInSet } from './jwk-modulus'
 import { describeError, reRegisterNewestKey } from './key-recovery'
 
@@ -130,13 +131,15 @@ async function rollback(
  * Rotates the device's signing key: generate, PUT to IAS, confirm via the echoed jwks, and
  * prune the superseded key on confirmed success, so the previous key survives one full
  * rotation cycle (#4601). See issue #3876 for the full design rationale.
+ *
+ * @param registration The device's registration: the client ID to re-register and the token that manages it
  */
 export async function rotateSigningKey(
   apiClient: BCSCApiClient,
-  clientId: string,
-  registrationAccessToken: string,
+  registration: DeviceRegistration,
   logger: BifoldLogger
 ): Promise<KeyRotationResult> {
+  const { clientId, registrationAccessToken } = registration
   logger.info(`[rotateSigningKey] event=triggered client_id=${redactClientId(clientId)}`)
 
   const newKey = await createNewKeyPair().catch((err) => {
@@ -158,7 +161,8 @@ export async function rotateSigningKey(
   if (putResult.newRegistrationAccessToken) {
     newRegistrationAccessToken = putResult.newRegistrationAccessToken
     try {
-      await setToken(TokenType.Registration, putResult.newRegistrationAccessToken)
+      // Saved through the registration's owner, with the client ID it was issued for
+      await saveDeviceRegistration({ ...registration, registrationAccessToken: newRegistrationAccessToken }, logger)
       logger.info('[rotateSigningKey] persisted rotated registration_access_token from PUT response')
     } catch (err) {
       // Still returned to the caller below — a best-effort fallback syncs it into the in-memory store.

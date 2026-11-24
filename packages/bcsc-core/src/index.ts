@@ -6,6 +6,7 @@ import NativeBcscCoreSpec, {
   type LoginChallengeResult,
   type NativeAccount,
   type NativeAccountReadStatus,
+  type NativeAccountWithoutId,
   type NativeAuthorizationRequest,
   type NativeFilesScan,
   type NativeSavedService,
@@ -18,6 +19,7 @@ export type {
   LoginChallengeResult,
   NativeAccount,
   NativeAccountReadStatus,
+  NativeAccountWithoutId,
   NativeAddress,
   NativeAuthorizationRequest,
   NativeFilesScan,
@@ -410,7 +412,10 @@ export const getTokenWithDiagnostics = async (
 
 /**
  * Saves a token to secure native storage.
- * @param tokenType The type of token (Access, Refresh, Registration)
+ *
+ * Use it for the access and refresh tokens. The registration access token is saved with its client ID
+ * by {@link setRegistration}, so the two cannot stop matching.
+ * @param tokenType The type of token (Access, Refresh)
  * @param token The token string to store
  * @param expiry Optional Unix timestamp in seconds when token expires
  * @returns A promise that resolves to true if saved successfully
@@ -421,7 +426,10 @@ export const setToken = async (tokenType: TokenType, token: string, expiry?: num
 
 /**
  * Deletes a token from secure native storage.
- * @param tokenType The type of token to delete (Access, Refresh, Registration)
+ *
+ * Use it for the access and refresh tokens. The registration access token is removed with its client ID
+ * by {@link clearRegistration}.
+ * @param tokenType The type of token to delete (Access, Refresh)
  * @returns A promise that resolves to true if deleted successfully
  */
 export const deleteToken = async (tokenType: TokenType): Promise<boolean> => {
@@ -472,12 +480,51 @@ export const getNativeFilesScan = (): Promise<NativeFilesScan> => {
 };
 
 /**
- * Sets the current account information.
- * @param account The Account object to set as the current account (without id, which will be generated).
+ * Creates the account, or updates its issuer, security method and nickname.
+ *
+ * Never changes the client ID: a new account has none, and an existing account keeps the one it has.
+ * The client ID belongs to the device registration, which only {@link setRegistration} and
+ * {@link clearRegistration} change.
+ * @param account The account fields to save (without id, which is generated for a new account).
  * @returns A promise that resolves when the account has been successfully set.
  */
-export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<void> => {
+export const setAccount = (account: NativeAccountWithoutId): Promise<void> => {
   return BcscCore.setAccount(account);
+};
+
+/**
+ * Saves the device registration: the client ID and issuer on the account record, and the registration
+ * access token in secure storage, in one native call.
+ *
+ * The token is written first and the account second. If the account cannot be saved the token is put
+ * back, so a failed save leaves the previous registration in place. Rejects with `E_ACCOUNT_NOT_FOUND`
+ * when there is no account to register.
+ *
+ * The app calls this through its device registration owner only (`services/device-registration`).
+ * @param clientID The client ID the server issued. Never empty.
+ * @param issuer The issuer the device is registered with. Never empty.
+ * @param registrationAccessToken The token that manages this registration; null leaves the stored token as it is.
+ */
+export const setRegistration = (
+  clientID: string,
+  issuer: string,
+  registrationAccessToken: string | null
+): Promise<void> => {
+  return BcscCore.setRegistration(clientID, issuer, registrationAccessToken);
+};
+
+/**
+ * Removes the device registration: the account keeps its issuer, security method and nickname but has no
+ * client ID, and the registration access token is deleted. Clearing a registration that is already
+ * absent succeeds. Rejects with `E_GET_ACCOUNT_ERROR`, changing nothing, when an account is stored but
+ * cannot be read.
+ *
+ * On iOS every token is stored under the client ID, so delete the access and refresh tokens first.
+ *
+ * The app calls this through its device registration owner only (`services/device-registration`).
+ */
+export const clearRegistration = (): Promise<void> => {
+  return BcscCore.clearRegistration();
 };
 
 /**
@@ -496,12 +543,15 @@ export const getAccountReadStatus = async (): Promise<NativeAccountReadStatus> =
   return await BcscCore.getAccountReadStatus();
 };
 
+/** An account that has a device registration, and so a client ID. */
+export type RegisteredNativeAccount = NativeAccount & { readonly clientID: string };
+
 /**
  * Checks if an account is registered by verifying the presence of a client ID.
- * @param account The Account object to check (without securityMethod).
+ * @param account The Account object to check.
  * @returns True if an account is registered, false otherwise.
  */
-export const isAccountRegistered = (account: Omit<NativeAccount, 'securityMethod'> | null): boolean => {
+export const isAccountRegistered = (account: NativeAccount | null): account is RegisteredNativeAccount => {
   return Boolean(account?.clientID);
 };
 
@@ -687,25 +737,6 @@ export const createQuickLoginJWT = async (
   deviceToken: string | null
 ): Promise<string> => {
   return BcscCore.createQuickLoginJWT(accessToken, clientId, issuer, clientRefId, key, fcmDeviceToken, deviceToken);
-};
-
-/**
- * Retrieves the registration token (idToken) - currently commented out but ready for use.
- * @returns A promise that resolves to a TokenInfo object containing the idToken, or null if not found.
- */
-export const getRegistrationToken = async (): Promise<TokenInfo | null> => {
-  // Uncomment when ready to use:
-  // const nativeToken = await BcscCore.getToken(TokenType.Registration as number);
-  // if (!nativeToken) {
-  //   return null;
-  // }
-  // return {
-  //   ...nativeToken,
-  //   type: nativeToken.type as TokenType,
-  // };
-
-  // For now, return null
-  return null;
 };
 
 /**

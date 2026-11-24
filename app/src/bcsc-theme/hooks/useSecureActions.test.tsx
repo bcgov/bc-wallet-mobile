@@ -13,9 +13,11 @@ import {
   AccountSecurityMethod,
   BCSCCardProcess,
   BCSCCardType,
+  clearRegistration,
   deleteAuthorizationRequest,
   deleteCredential,
   deleteEvidence,
+  deleteToken,
   EvidenceMetadata,
   getAccount,
   getAccountFlags,
@@ -29,6 +31,7 @@ import {
   setAuthorizationRequest,
   setCredential,
   setEvidence,
+  setRegistration,
   setToken,
   TokenType,
 } from 'react-native-bcsc-core'
@@ -64,12 +67,16 @@ jest.mock('react-native-bcsc-core', () => ({
   BCSCAccountType: jest.requireActual('../../../__mocks__/react-native-bcsc-core').BCSCAccountType,
   setEvidence: jest.fn(),
   setAccount: jest.fn(),
+  // The registration's two native writers. Only services/device-registration calls them.
+  setRegistration: jest.fn().mockResolvedValue(undefined),
+  clearRegistration: jest.fn().mockResolvedValue(undefined),
   setAccountFlags: jest.fn(),
   setAuthorizationRequest: jest.fn(),
   setCredential: jest.fn().mockResolvedValue(undefined),
   setToken: jest.fn(),
-  // Delegate to the central manual mock so the predicate can't drift from the real implementation.
+  // Delegate to the central manual mock so the predicates can't drift from the real implementation.
   isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
+  isAccountRegistered: (account?: { clientID?: string } | null) => Boolean(account?.clientID),
   getAccount: jest.fn(),
   getAccountFlags: jest.fn(),
   getAuthorizationRequest: jest.fn(),
@@ -137,6 +144,9 @@ describe('useSecureActions', () => {
       error: undefined,
     } as any)
     jest.mocked(isTokenExpired).mockReturnValue(false)
+    // clearAllMocks keeps implementations, so a rejection one test sets would leak into the next
+    jest.mocked(setRegistration).mockReset().mockResolvedValue(undefined)
+    jest.mocked(clearRegistration).mockReset().mockResolvedValue(undefined)
   })
 
   // #3419: persistence failures surface the distinct native error code instead of a STORAGE_WRITE_ERROR catch-all.
@@ -537,14 +547,10 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(setAccount).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'account-1',
-          issuer: 'https://idsit.gov.bc.ca',
-          clientID: 'recovered-client-id',
-          securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
-        })
-      )
+      // Filled in through the registration's owner. No token is passed, so the stored one (if any) is kept,
+      // and the account is not saved: its security method and nickname are untouched.
+      expect(setRegistration).toHaveBeenCalledWith('recovered-client-id', 'https://idsit.gov.bc.ca', null)
+      expect(setAccount).not.toHaveBeenCalled()
     })
 
     it('hydrates securityMethod from the account record', async () => {
@@ -565,7 +571,7 @@ describe('useSecureActions', () => {
       expect(captureHydrateField('securityMethod')).toBe(AccountSecurityMethod.DeviceAuth)
     })
 
-    it('does not call setAccount when account already has issuer and clientID', async () => {
+    it('fills nothing in when the account already has issuer and clientID', async () => {
       jest.mocked(getAccount).mockResolvedValue({
         ...baseAccount,
         issuer: 'https://idsit.gov.bc.ca',
@@ -582,10 +588,10 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(setAccount).not.toHaveBeenCalled()
+      expect(setRegistration).not.toHaveBeenCalled()
     })
 
-    it('does not call setAccount when authorization request lacks issuer/clientID', async () => {
+    it('fills nothing in when authorization request lacks issuer/clientID', async () => {
       jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue({
         // no issuer or clientID
@@ -598,10 +604,10 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(setAccount).not.toHaveBeenCalled()
+      expect(setRegistration).not.toHaveBeenCalled()
     })
 
-    it('does not call setAccount when authorization request is null', async () => {
+    it('fills nothing in when authorization request is null', async () => {
       jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null)
 
@@ -611,7 +617,53 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(setAccount).not.toHaveBeenCalled()
+      expect(setRegistration).not.toHaveBeenCalled()
+    })
+
+    it('treats an account with no client ID, no token and no v3 record as not registered yet', async () => {
+      // The account every new user has between choosing a PIN and registering: nothing is missing
+      jest.mocked(getAccount).mockResolvedValue({
+        id: 'account-1',
+        issuer: 'https://idsit.gov.bc.ca',
+        securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
+      } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null)
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(setRegistration).not.toHaveBeenCalled()
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('Account missing required fields'))
+      expect(captureHydrateField('isHydrated')).toBe(true)
+      expect(captureHydrateField('registrationAccessToken')).toBeUndefined()
+    })
+
+    it('still reports an account that holds a refresh token but has lost its client ID', async () => {
+      // Not an account that has yet to register: it was verified, so the missing client ID is a fault
+      jest.mocked(getAccount).mockResolvedValue({
+        id: 'account-1',
+        issuer: 'https://idsit.gov.bc.ca',
+        securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
+      } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null)
+      jest
+        .mocked(getToken)
+        .mockImplementation(async (type: any) =>
+          type === TokenType.Refresh ? ({ token: 'refresh-token', type } as any) : null
+        )
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Account missing required fields'))
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Could not recover account fields'))
+      expect(setRegistration).not.toHaveBeenCalled()
     })
 
     it('backfills only the missing field (clientID) from authorization request', async () => {
@@ -631,12 +683,7 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(setAccount).toHaveBeenCalledWith(
-        expect.objectContaining({
-          issuer: 'https://idsit.gov.bc.ca',
-          clientID: 'recovered-client-id',
-        })
-      )
+      expect(setRegistration).toHaveBeenCalledWith('recovered-client-id', 'https://idsit.gov.bc.ca', null)
     })
 
     const captureSessionRecoveryRequired = () => {
@@ -802,7 +849,11 @@ describe('useSecureActions', () => {
       expect(reRegisterNewestKey).not.toHaveBeenCalled()
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(2)
       expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'new-refresh')
-      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'rotated-token')
+      // The rotated token is saved with the client ID it belongs to, never as a token on its own
+      expect(setRegistration).toHaveBeenCalledTimes(1)
+      expect(setRegistration).toHaveBeenCalledWith('client-1', 'https://idsit.gov.bc.ca', 'rotated-token')
+      expect(setToken).not.toHaveBeenCalledWith(TokenType.Registration, expect.anything())
+      expect(captureHydrateField('registrationAccessToken')).toBe('rotated-token')
     })
 
     it('falls back to reRegisterNewestKey on no_match, persists its rotated token, and retries the refresh', async () => {
@@ -826,7 +877,8 @@ describe('useSecureActions', () => {
         expect.anything()
       )
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(2)
-      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'put-rotated-token')
+      expect(setRegistration).toHaveBeenCalledTimes(1)
+      expect(setRegistration).toHaveBeenCalledWith('client-1', 'https://idsit.gov.bc.ca', 'put-rotated-token')
     })
 
     it('leaves tokens stale (no retry) when recovery fails outright', async () => {
@@ -841,7 +893,32 @@ describe('useSecureActions', () => {
       expect(reRegisterNewestKey).not.toHaveBeenCalled()
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
       expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
-      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
+      // Nothing rotated the registration access token, so the registration is not written again
+      expect(setRegistration).not.toHaveBeenCalled()
+      expect(captureHydrateField('registrationAccessToken')).toBe('stored-reg-token')
+    })
+
+    it('unlocks with the rotated token in memory when it cannot be saved', async () => {
+      mockGetTokensForRefreshToken
+        .mockRejectedValueOnce(new Error('401'))
+        .mockResolvedValueOnce({ refresh_token: 'new-refresh', access_token: 'new-access' })
+      jest
+        .mocked(performKeyRecovery)
+        .mockResolvedValue({ status: KeyRecoveryStatus.Recovered, newRegistrationAccessToken: 'rotated-token' })
+      jest
+        .mocked(setRegistration)
+        .mockRejectedValue(Object.assign(new Error('native'), { code: 'E_TOKEN_SAVE_FAILED' }))
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await expect(result.current.hydrateSecureState()).resolves.toBeUndefined()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to persist the rotated registration access token')
+      )
+      expect(captureHydrateField('registrationAccessToken')).toBe('rotated-token')
+      expect(captureHydrateField('refreshToken')).toBe('new-refresh')
     })
 
     it('skips key recovery and re-registration when the refresh fails on the device clock, and still unlocks', async () => {
@@ -908,7 +985,9 @@ describe('useSecureActions', () => {
       expect(captureHydrateField('refreshToken')).toBe('stale-refresh-token')
       // The stale token is still re-persisted, matching today's failure path (renewal deletes it)
       expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
-      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
+      // The registration is left as it is: nothing rotated its token
+      expect(setRegistration).not.toHaveBeenCalled()
+      expect(captureHydrateField('registrationAccessToken')).toBe('stored-reg-token')
     })
 
     it('stores the new token when the stored token is valid and refresh succeeds', async () => {
@@ -1005,13 +1084,10 @@ describe('useSecureActions', () => {
 
       await hydrate()
 
-      expect(setAccount).toHaveBeenCalledWith(
-        expect.objectContaining({
-          issuer: 'https://idsit.gov.bc.ca',
-          clientID: 'A',
-          securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
-        })
-      )
+      // The token is not passed back in: the fill-in changes the client ID only and keeps the stored token
+      expect(setRegistration).toHaveBeenCalledTimes(1)
+      expect(setRegistration).toHaveBeenCalledWith('A', 'https://idsit.gov.bc.ca', null)
+      expect(setAccount).not.toHaveBeenCalled()
     })
 
     it('backfills from the token when there is no authorization request', async () => {
@@ -1020,7 +1096,7 @@ describe('useSecureActions', () => {
 
       await hydrate()
 
-      expect(setAccount).toHaveBeenCalledWith(expect.objectContaining({ clientID: 'A' }))
+      expect(setRegistration).toHaveBeenCalledWith('A', 'https://idsit.gov.bc.ca', null)
     })
 
     it('falls back to the authorization request when there is no registration token', async () => {
@@ -1029,7 +1105,22 @@ describe('useSecureActions', () => {
 
       await hydrate()
 
-      expect(setAccount).toHaveBeenCalledWith(expect.objectContaining({ clientID: 'V3' }))
+      expect(setRegistration).toHaveBeenCalledWith('V3', 'https://idsit.gov.bc.ca', null)
+    })
+
+    it('carries on with the recovered client ID when the fill-in cannot be saved', async () => {
+      mockRegistrationToken(makeRegistrationToken({ aud: 'A' }))
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null)
+      jest
+        .mocked(setRegistration)
+        .mockRejectedValue(Object.assign(new Error('native'), { code: 'E_SAVE_ACCOUNT_FAILED' }))
+
+      await hydrate()
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to update account with recovered values')
+      )
+      expect(captureHydrateField('isHydrated')).toBe(true)
     })
 
     it.each([
@@ -1044,7 +1135,7 @@ describe('useSecureActions', () => {
 
         await hydrate()
 
-        expect(setAccount).not.toHaveBeenCalled()
+        expect(setRegistration).not.toHaveBeenCalled()
       }
     )
 
@@ -1054,7 +1145,7 @@ describe('useSecureActions', () => {
 
       await hydrate()
 
-      expect(setAccount).not.toHaveBeenCalled()
+      expect(setRegistration).not.toHaveBeenCalled()
     })
   })
 
@@ -1127,7 +1218,6 @@ describe('useSecureActions', () => {
       jest.mocked(getSavedServices).mockResolvedValue([] as any)
       jest.mocked(getAccount).mockResolvedValue(account as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
-      jest.mocked(setAccount).mockResolvedValue(undefined as never)
       jest.mocked(setToken).mockResolvedValue(true as never)
       jest.mocked(confirmRegistrationClientId).mockReset()
       jest.mocked(performKeyRecovery).mockReset()
@@ -1152,7 +1242,7 @@ describe('useSecureActions', () => {
         await hydrate()
 
         expect(confirmRegistrationClientId).not.toHaveBeenCalled()
-        expect(setAccount).not.toHaveBeenCalled()
+        expect(setRegistration).not.toHaveBeenCalled()
       })
 
       it('switches to the token client ID when the refresh fails and the server confirms, then retries the refresh', async () => {
@@ -1164,10 +1254,11 @@ describe('useSecureActions', () => {
         await hydrate()
 
         expect(confirmRegistrationClientId).toHaveBeenCalledWith(expect.anything(), NEW_ID, REG_TOKEN)
-        expect(setAccount).toHaveBeenCalledWith({
-          ...account,
-          clientID: NEW_ID,
-        })
+        // One save through the registration's owner: the confirmed client ID with the token it was confirmed for.
+        // The account is not saved, so its security method and nickname cannot be touched by the repair.
+        expect(setRegistration).toHaveBeenCalledTimes(1)
+        expect(setRegistration).toHaveBeenCalledWith(NEW_ID, account.issuer, REG_TOKEN)
+        expect(setAccount).not.toHaveBeenCalled()
         expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(2)
         expect(performKeyRecovery).not.toHaveBeenCalled()
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -1193,7 +1284,7 @@ describe('useSecureActions', () => {
 
         await hydrate()
 
-        expect(setAccount).not.toHaveBeenCalled()
+        expect(setRegistration).not.toHaveBeenCalled()
         expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
         expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, REG_TOKEN, expect.anything())
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('reason=request_failed http_status=403'))
@@ -1213,7 +1304,7 @@ describe('useSecureActions', () => {
         await hydrate()
 
         expect(confirmRegistrationClientId).not.toHaveBeenCalled()
-        expect(setAccount).not.toHaveBeenCalled()
+        expect(setRegistration).not.toHaveBeenCalled()
         expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, REG_TOKEN, expect.anything())
       })
 
@@ -1229,7 +1320,7 @@ describe('useSecureActions', () => {
         await hydrate()
 
         expect(confirmRegistrationClientId).toHaveBeenCalledWith(expect.anything(), NEW_ID, REG_TOKEN)
-        expect(setAccount).toHaveBeenCalledWith(expect.objectContaining({ clientID: NEW_ID }))
+        expect(setRegistration).toHaveBeenCalledWith(NEW_ID, account.issuer, REG_TOKEN)
         expect(performKeyRecovery).not.toHaveBeenCalled()
       })
 
@@ -1248,7 +1339,7 @@ describe('useSecureActions', () => {
         await hydrate()
 
         expect(confirmRegistrationClientId).not.toHaveBeenCalled()
-        expect(setAccount).not.toHaveBeenCalled()
+        expect(setRegistration).not.toHaveBeenCalled()
         expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
         expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, REG_TOKEN, expect.anything())
       })
@@ -1266,7 +1357,7 @@ describe('useSecureActions', () => {
         await hydrate()
 
         expect(confirmRegistrationClientId).not.toHaveBeenCalled()
-        expect(setAccount).not.toHaveBeenCalled()
+        expect(setRegistration).not.toHaveBeenCalled()
         expect(performKeyRecovery).not.toHaveBeenCalled()
       })
 
@@ -1286,7 +1377,7 @@ describe('useSecureActions', () => {
 
         expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
         expect(confirmRegistrationClientId).not.toHaveBeenCalled()
-        expect(setAccount).not.toHaveBeenCalled()
+        expect(setRegistration).not.toHaveBeenCalled()
       })
 
       it('does not confirm when the refresh token is expired', async () => {
@@ -1327,7 +1418,7 @@ describe('useSecureActions', () => {
         await hydrate()
 
         expect(confirmRegistrationClientId).not.toHaveBeenCalled()
-        expect(setAccount).not.toHaveBeenCalled()
+        expect(setRegistration).not.toHaveBeenCalled()
       })
 
       it('skips the refresh, and so the repair, when the API client is not ready', async () => {
@@ -1352,20 +1443,17 @@ describe('useSecureActions', () => {
         jest.mocked(performKeyRecovery).mockResolvedValue({ status: KeyRecoveryStatus.Failed })
       })
 
-      it('persists a rotated token before switching the client ID when confirmed', async () => {
+      it('saves the rotated token and the confirmed client ID together, in one step', async () => {
         jest
           .mocked(confirmRegistrationClientId)
           .mockResolvedValue({ status: 'confirmed', newRegistrationAccessToken: 'rotated' })
 
         await hydrate()
 
-        expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'rotated')
-        const rotatedWrite = jest
-          .mocked(setToken)
-          .mock.calls.findIndex(([type, token]) => type === TokenType.Registration && token === 'rotated')
-        expect(jest.mocked(setToken).mock.invocationCallOrder[rotatedWrite]).toBeLessThan(
-          jest.mocked(setAccount).mock.invocationCallOrder[0]
-        )
+        // One save, so there is no moment when the new token is stored against the old client ID
+        expect(setRegistration).toHaveBeenCalledTimes(1)
+        expect(setRegistration).toHaveBeenCalledWith(NEW_ID, account.issuer, 'rotated')
+        expect(setToken).not.toHaveBeenCalledWith(TokenType.Registration, expect.anything())
         expect(captureHydrateField('registrationAccessToken')).toBe('rotated')
       })
 
@@ -1376,26 +1464,50 @@ describe('useSecureActions', () => {
 
         await hydrate()
 
-        expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'rotated')
-        expect(setAccount).not.toHaveBeenCalled()
+        // The server revoked the old token, so the new one is saved, with the client ID the account already holds
+        expect(setRegistration).toHaveBeenCalledTimes(1)
+        expect(setRegistration).toHaveBeenCalledWith(OLD_ID, account.issuer, 'rotated')
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('reason=client_id_mismatch'))
         expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, 'rotated', expect.anything())
+        expect(captureHydrateField('registrationAccessToken')).toBe('rotated')
       })
 
-      it('does not switch the client ID when the rotated token cannot be persisted', async () => {
+      it('reports persist_failed on a mismatch when the rotated token cannot be saved', async () => {
+        jest
+          .mocked(confirmRegistrationClientId)
+          .mockResolvedValue({ status: 'client_id_mismatch', newRegistrationAccessToken: 'rotated' })
+        jest
+          .mocked(setRegistration)
+          .mockRejectedValue(Object.assign(new Error('native'), { code: 'E_TOKEN_SAVE_FAILED' }))
+
+        await hydrate()
+
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('reason=persist_failed'))
+        expect(captureHydrateField('registrationAccessToken')).toBe('rotated')
+      })
+
+      it('does not switch the client ID when the save fails, and still saves the rotated token', async () => {
         jest
           .mocked(confirmRegistrationClientId)
           .mockResolvedValue({ status: 'confirmed', newRegistrationAccessToken: 'rotated' })
-        jest.mocked(setToken).mockImplementation(async (type: any, token: any) => {
-          if (type === TokenType.Registration && token === 'rotated') {
-            throw Object.assign(new Error('native'), { code: 'E_TOKEN_SAVE_ERROR' })
+        // The save that switches the client ID fails; a failed save leaves the previous registration in place
+        jest.mocked(setRegistration).mockImplementation(async (clientID: string) => {
+          if (clientID === NEW_ID) {
+            throw Object.assign(new Error('native'), { code: 'E_SAVE_ACCOUNT_FAILED' })
           }
-          return true as never
         })
 
         await hydrate()
 
-        expect(setAccount).not.toHaveBeenCalled()
         expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('reason=persist_failed'))
+        // Not switched: the refresh is not retried and key recovery runs with the stored client ID
+        expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
+        expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, 'rotated', expect.anything())
+        // The server has revoked the old token, so the rotated one is still saved, with the stored client ID
+        expect(jest.mocked(setRegistration).mock.calls).toEqual([
+          [NEW_ID, account.issuer, 'rotated'],
+          [OLD_ID, account.issuer, 'rotated'],
+        ])
         expect(captureHydrateField('registrationAccessToken')).toBe('rotated')
       })
 
@@ -1404,10 +1516,9 @@ describe('useSecureActions', () => {
 
         await hydrate()
 
-        expect(setAccount).not.toHaveBeenCalled()
-        // The only registration token write is the end-of-hydrate write-back of the original token.
-        const registrationWrites = jest.mocked(setToken).mock.calls.filter(([type]) => type === TokenType.Registration)
-        expect(registrationWrites).toEqual([[TokenType.Registration, REG_TOKEN]])
+        // Nothing rotated and nothing confirmed, so the registration is not written at all
+        expect(setRegistration).not.toHaveBeenCalled()
+        expect(setToken).not.toHaveBeenCalledWith(TokenType.Registration, expect.anything())
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('reason=request_failed http_status=none'))
         expect(mockDispatch.mock.calls.some(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)).toBe(
           true
@@ -1429,33 +1540,19 @@ describe('useSecureActions', () => {
         expect(logged).not.toContain(NEW_ID)
       })
 
-      it('trusts the stored client ID and retries the refresh when setAccount rejects after saving', async () => {
+      it('does not retry the refresh when the save rejects: the stored client ID is still the old one', async () => {
         jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'confirmed' })
-        jest.mocked(setAccount).mockRejectedValue(new Error('issuer file write failed'))
         jest
-          .mocked(getAccount)
-          .mockResolvedValueOnce(account as any)
-          .mockResolvedValue({ ...account, clientID: NEW_ID } as any)
+          .mocked(setRegistration)
+          .mockRejectedValue(Object.assign(new Error('native'), { code: 'E_SAVE_ACCOUNT_FAILED' }))
 
         await hydrate()
 
-        expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(2)
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          expect.stringContaining('token refresh succeeded after client id repair')
-        )
-        expect(mockDispatch.mock.calls.some(([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE)).toBe(
-          true
-        )
-      })
-
-      it('skips the retry when setAccount rejects and the stored client ID is still the old one', async () => {
-        jest.mocked(confirmRegistrationClientId).mockResolvedValue({ status: 'confirmed' })
-        jest.mocked(setAccount).mockRejectedValue(new Error('write failed'))
-
-        await hydrate()
-
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('reason=persist_failed'))
         expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
         expect(performKeyRecovery).toHaveBeenCalledWith(expect.anything(), OLD_ID, REG_TOKEN, expect.anything())
+        // A rejected save changed nothing, so the account is not read again to find out what was stored
+        expect(getAccount).toHaveBeenCalledTimes(1)
       })
     })
   })
@@ -1721,7 +1818,7 @@ describe('useSecureActions', () => {
       expect(mockDispatch).not.toHaveBeenCalled()
       expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
       expect(setToken).not.toHaveBeenCalled()
-      expect(setAccount).not.toHaveBeenCalled()
+      expect(setRegistration).not.toHaveBeenCalled()
     })
 
     it('unlocks normally when the user retries after a failed hydration', async () => {
@@ -1850,6 +1947,18 @@ describe('useSecureActions', () => {
       const { result } = renderHook(() => useSecureActions())
 
       await expect(result.current.updateVerified(true)).rejects.toThrow('no account found')
+
+      expect(setCredential).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED })
+      )
+    })
+
+    it('throws and leaves the store alone when the account has no registration to verify', async () => {
+      jest.mocked(getAccount).mockResolvedValue({ id: 'account-1', issuer: 'https://idsit.gov.bc.ca' } as any)
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.updateVerified(true)).rejects.toThrow('the account has no registration')
 
       expect(setCredential).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalledWith(
@@ -2401,6 +2510,235 @@ describe('useSecureActions', () => {
       })
 
       expect(cancelVerificationReminders).toHaveBeenCalledWith(mockLogger)
+    })
+
+    it('clears the registration through its owner, after the access and refresh tokens are deleted', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.deleteSecureData()
+      })
+
+      // The registration access token is never deleted on its own: it goes with its client ID
+      expect(deleteToken).toHaveBeenCalledTimes(2)
+      expect(deleteToken).toHaveBeenCalledWith(TokenType.Refresh)
+      expect(deleteToken).toHaveBeenCalledWith(TokenType.Access)
+      expect(clearRegistration).toHaveBeenCalledTimes(1)
+      // iOS stores the other tokens under the client ID the clear removes, so they go first
+      const lastTokenDelete = Math.max(...jest.mocked(deleteToken).mock.invocationCallOrder)
+      expect(lastTokenDelete).toBeLessThan(jest.mocked(clearRegistration).mock.invocationCallOrder[0])
+    })
+
+    it('logs a failed registration clear and carries on, since removing the account takes the registration', async () => {
+      jest
+        .mocked(clearRegistration)
+        .mockRejectedValue(Object.assign(new Error('native'), { code: 'E_SAVE_ACCOUNT_FAILED' }))
+      const { result } = renderHook(() => useSecureActions())
+
+      // Factory reset is the way out of a broken device, so this must not stop it before removeAccount
+      await act(async () => {
+        await result.current.deleteSecureData()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to clear the registration'),
+        expect.any(Error)
+      )
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Registration not cleared; continuing, as removing the account removes it'
+      )
+      expect(cancelVerificationReminders).toHaveBeenCalledWith(mockLogger)
+    })
+  })
+
+  // The registration (client ID, issuer and registration access token) has one owner, and these two
+  // actions are how hooks reach it: storage first, then the token kept in state.
+  describe('saveRegistration', () => {
+    const registration = {
+      clientId: 'client-1',
+      issuer: 'https://idsit.gov.bc.ca/device/',
+      registrationAccessToken: 'reg-token',
+    }
+    const registrationTokenAction = (payload: unknown[]) => ({
+      type: BCDispatchAction.UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN,
+      payload,
+    })
+
+    it('saves the client ID, issuer and token in one native call, then keeps the token in state', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.saveRegistration(registration)
+      })
+
+      expect(setRegistration).toHaveBeenCalledTimes(1)
+      expect(setRegistration).toHaveBeenCalledWith('client-1', 'https://idsit.gov.bc.ca/device/', 'reg-token')
+      // Neither the account nor the token is written any other way
+      expect(setAccount).not.toHaveBeenCalled()
+      expect(setToken).not.toHaveBeenCalled()
+      expect(mockDispatch).toHaveBeenCalledWith(registrationTokenAction(['reg-token']))
+      expect(jest.mocked(setRegistration).mock.invocationCallOrder[0]).toBeLessThan(
+        mockDispatch.mock.invocationCallOrder[0]
+      )
+    })
+
+    it('throws the mapped error and leaves state alone when the save fails', async () => {
+      jest
+        .mocked(setRegistration)
+        .mockRejectedValue(Object.assign(new Error('native'), { code: 'E_TOKEN_SAVE_FAILED' }))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.saveRegistration(registration)).rejects.toMatchObject({
+        appEvent: AppEventCode.TOKEN_SAVE_FAILED,
+      })
+
+      // The previous registration is still in place, and state still holds its token
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      ['client ID', { ...registration, clientId: '' }],
+      ['issuer', { ...registration, issuer: '' }],
+      ['token', { ...registration, registrationAccessToken: undefined as unknown as string }],
+    ])('never saves part of a registration: rejects one with no %s before any write', async (_label, partial) => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.saveRegistration(partial)).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL,
+      })
+
+      expect(setRegistration).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('never logs the client ID or the token', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.saveRegistration(registration)
+      })
+
+      const logged = JSON.stringify([mockLogger.info, mockLogger.warn, mockLogger.error].flatMap((fn) => fn.mock.calls))
+      expect(logged).not.toContain('client-1')
+      expect(logged).not.toContain('reg-token')
+    })
+  })
+
+  describe('clearRegistration', () => {
+    it('clears the client ID and the token in one native call, then drops the token from state', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.clearRegistration()
+      })
+
+      expect(clearRegistration).toHaveBeenCalledTimes(1)
+      expect(deleteToken).not.toHaveBeenCalled()
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN,
+        payload: [],
+      })
+    })
+
+    it('throws the mapped error and keeps the token in state when the clear fails', async () => {
+      jest
+        .mocked(clearRegistration)
+        .mockRejectedValue(Object.assign(new Error('native'), { code: 'E_TOKEN_DELETE_ERROR' }))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.clearRegistration()).rejects.toMatchObject({
+        appEvent: AppEventCode.TOKEN_DELETE_FAILED,
+      })
+
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('first removes the client ID an authorization request carried over from v3, keeping the rest of it', async () => {
+      // Unlock fills a missing client ID in from this copy, which would bring the cleared one back
+      jest
+        .mocked(getAuthorizationRequest)
+        .mockResolvedValueOnce({ clientID: 'v3-client', issuer: 'https://v3', deviceCode: 'device-code' } as any)
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.clearRegistration()
+      })
+
+      expect(setAuthorizationRequest).toHaveBeenCalledTimes(1)
+      expect(setAuthorizationRequest).toHaveBeenCalledWith({ issuer: 'https://v3', deviceCode: 'device-code' })
+      expect(jest.mocked(setAuthorizationRequest).mock.invocationCallOrder[0]).toBeLessThan(
+        jest.mocked(clearRegistration).mock.invocationCallOrder[0]
+      )
+      expect(clearRegistration).toHaveBeenCalledTimes(1)
+    })
+
+    it.each([
+      ['no authorization request', null],
+      ['an authorization request with no client ID', { issuer: 'https://v3', deviceCode: 'device-code' }],
+    ])('leaves the authorization request as it is when there is %s', async (_label, authorizationRequest) => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValueOnce(authorizationRequest as any)
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.clearRegistration()
+      })
+
+      expect(setAuthorizationRequest).not.toHaveBeenCalled()
+      expect(clearRegistration).toHaveBeenCalledTimes(1)
+    })
+
+    it.each([
+      [
+        'read',
+        AppEventCode.NATIVE_STORAGE_READ_FAILED,
+        () =>
+          jest
+            .mocked(getAuthorizationRequest)
+            .mockRejectedValueOnce(Object.assign(new Error('native'), { code: 'E_GET_AUTH_REQUEST_ERROR' })),
+      ],
+      [
+        'saved without the client ID',
+        AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+        () => {
+          jest
+            .mocked(getAuthorizationRequest)
+            .mockResolvedValueOnce({ clientID: 'v3-client', issuer: 'https://v3' } as any)
+          jest
+            .mocked(setAuthorizationRequest)
+            .mockRejectedValueOnce(Object.assign(new Error('native'), { code: 'E_SET_AUTH_REQUEST_ERROR' }))
+        },
+      ],
+    ])('keeps the registration when the authorization request cannot be %s', async (_label, appEvent, fail) => {
+      fail()
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.clearRegistration()).rejects.toMatchObject({ appEvent })
+
+      expect(clearRegistration).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('updateTokens', () => {
+    it('persists the refresh and access tokens, and has no way to write the registration access token', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        // A caller that still passes one is ignored: the token is saved with its client ID or not at all
+        await result.current.updateTokens({
+          refreshToken: 'refresh',
+          accessToken: 'access',
+          registrationAccessToken: 'reg-token',
+        } as any)
+      })
+
+      expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'refresh')
+      expect(setToken).toHaveBeenCalledWith(TokenType.Access, 'access')
+      expect(setToken).not.toHaveBeenCalledWith(TokenType.Registration, expect.anything())
+      expect(setRegistration).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_REGISTRATION_ACCESS_TOKEN })
+      )
     })
   })
 })

@@ -29,12 +29,13 @@ import { BifoldLogger, TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
+import { getAccount } from 'react-native-bcsc-core'
 import { getBuildNumber, getBundleId, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
 import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
+import { readStoredDeviceRegistration, StoredDeviceRegistration } from '../services/device-registration'
 import { useEvidenceService } from '../services/hooks/useEvidenceService'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useTokenService } from '../services/hooks/useTokenService'
@@ -45,14 +46,12 @@ const BCSC_BUILD_SUFFIX = '.servicescard'
 
 const updateRegistration = ({
   registrationService,
-  registrationAccessToken,
   selectedNickname,
 }: {
   registrationService: ReturnType<typeof useRegistrationService>
-  registrationAccessToken?: string
   selectedNickname?: string
 }) =>
-  registrationService.updateRegistration(registrationAccessToken, selectedNickname, {
+  registrationService.updateRegistration(selectedNickname, {
     // Automatic check: a transient keychain-unavailable failure retries on the
     // next launch (UPDATE_APP_VERSION only dispatches on success) — no modal.
     suppressTransientAlerts: true,
@@ -61,24 +60,25 @@ const updateRegistration = ({
 const rotateKey = async ({
   client,
   logger,
-  updateTokens,
+  saveRegistration,
   fallbackRegistrationAccessToken,
 }: {
   client: BCSCApiClient
   logger: BifoldLogger
-  updateTokens: ReturnType<typeof useSecureActions>['updateTokens']
+  saveRegistration: ReturnType<typeof useSecureActions>['saveRegistration']
   fallbackRegistrationAccessToken?: string
 }): Promise<KeyRotationResult> => {
   // Read fresh, not the store fallback: UpdateDeviceRegistrationSystemCheck's onFail may have rotated it this pass.
-  // Both native reads reject (not resolve null) on failure, so degrade to null or the fallback is unreachable.
-  const [tokenInfo, account] = await Promise.all([
-    getToken(TokenType.Registration).catch(() => null),
-    getAccount().catch(() => null),
-  ])
-  const registrationAccessToken = tokenInfo?.token ?? fallbackRegistrationAccessToken
-  const clientId = account?.clientID
+  // Both native reads reject (not resolve null) on failure, so each degrades on its own: with no account
+  // there is no client ID, and with no readable token the fallback is used.
+  const account = await getAccount().catch(() => null)
+  const stored = await readStoredDeviceRegistration(account).catch(
+    (): StoredDeviceRegistration => ({ clientId: account?.clientID, issuer: account?.issuer })
+  )
+  const registrationAccessToken = stored.registrationAccessToken ?? fallbackRegistrationAccessToken
+  const { clientId, issuer } = stored
 
-  if (!registrationAccessToken || !clientId) {
+  if (!registrationAccessToken || !clientId || !issuer) {
     // Recorded as a failed attempt (not a skip) — this path returns status='failed' below.
     logger.warn(
       'KeyRotationSystemCheck: missing registrationAccessToken or clientID; recording a failed rotation attempt'
@@ -86,11 +86,12 @@ const rotateKey = async ({
     return { status: 'failed' as const, confirmed: false }
   }
 
-  const result = await rotateSigningKey(client, clientId, registrationAccessToken, logger)
+  const registration = { clientId, issuer, registrationAccessToken }
+  const result = await rotateSigningKey(client, registration, logger)
   if (result.newRegistrationAccessToken) {
     // Syncs the rotated token into the in-memory store; the repeated native write is
-    // idempotent and covers the case where rotateSigningKey's own setToken failed.
-    await updateTokens({ registrationAccessToken: result.newRegistrationAccessToken })
+    // idempotent and covers the case where rotateSigningKey's own save failed.
+    await saveRegistration({ ...registration, registrationAccessToken: result.newRegistrationAccessToken })
   }
   return result
 }
@@ -135,7 +136,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const tokenService = useTokenService()
   const registrationService = useRegistrationService()
-  const { updateTokens } = useSecureActions()
+  const { saveRegistration } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const { isNavigationReady } = useNavigationContainer()
@@ -304,7 +305,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
           () =>
             updateRegistration({
               registrationService,
-              registrationAccessToken: store.bcscSecure.registrationAccessToken,
               selectedNickname: store.bcsc.selectedNickname,
             }),
           utils
@@ -327,7 +327,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
             rotateKey({
               client: client as BCSCApiClient,
               logger,
-              updateTokens,
+              saveRegistration,
               fallbackRegistrationAccessToken: store.bcscSecure.registrationAccessToken,
             }),
           utils
@@ -370,7 +370,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     configApi,
     client,
     logger,
-    updateTokens,
+    saveRegistration,
     dispatch,
   ])
 

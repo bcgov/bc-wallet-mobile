@@ -111,11 +111,14 @@ export const getToken = jest.fn().mockResolvedValue(null)
 export const getTokenWithDiagnostics = jest.fn().mockResolvedValue({ token: null })
 export const setToken = jest.fn().mockResolvedValue(true)
 export const deleteToken = jest.fn().mockResolvedValue(true)
-export const getRegistrationToken = jest.fn().mockResolvedValue(null)
 
 // Account Management
 export const setAccount = jest.fn().mockResolvedValue(undefined)
 export const getAccount = jest.fn().mockResolvedValue(null)
+
+// Device Registration (client ID, issuer and registration access token, saved and cleared together)
+export const setRegistration = jest.fn().mockResolvedValue(undefined)
+export const clearRegistration = jest.fn().mockResolvedValue(undefined)
 export const getAccountReadStatus = jest.fn().mockResolvedValue({ status: 'ok' })
 export const isAccountRegistered = jest.fn((account: { clientID?: string } | null) => Boolean(account?.clientID))
 export const removeAccount = jest.fn().mockResolvedValue(undefined)

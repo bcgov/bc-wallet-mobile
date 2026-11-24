@@ -1,5 +1,7 @@
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { readDeviceRegistration } from '@/bcsc-theme/services/device-registration'
 import { AppError, isAppError } from '@/errors/appError'
 import { ensureAppError } from '@/errors/errorHandler'
 import { ErrorRegistry } from '@/errors/errorRegistry'
@@ -9,13 +11,7 @@ import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
-import {
-  AccountSecurityMethod,
-  getAccount,
-  getAccountSecurityMethod,
-  getToken,
-  TokenType,
-} from 'react-native-bcsc-core'
+import { getAccount } from 'react-native-bcsc-core'
 
 /**
  * Maps AppEventCodes that can be thrown during registration to their
@@ -54,8 +50,12 @@ export const useRegistrationService = () => {
   const registrationApi = useRegistrationApi(client, isClientReady)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const [store] = useStore<BCState>()
+  const { clearRegistration } = useSecureActions()
   const alerts = useAlerts(navigation)
-  /** Whether the device holds an IAS registration, so `ensureRegistered` has nothing to wait for. */
+  /**
+   * Whether app state holds the registration access token, so `ensureRegistered` has nothing to wait for.
+   * A hint for screens only: `ensureRegistered` itself asks the stored account.
+   */
   const isRegistered = Boolean(store.bcscSecure.registrationAccessToken)
 
   /** @returns whether a mapped registration alert was shown */
@@ -77,26 +77,21 @@ export const useRegistrationService = () => {
   /**
    * Registers a new BCSC client and alerts on failures during the registration process.
    *
-   * @param securityMethod - The account security method to use for registration
    * @returns Promise resolving to registration response data or void if account exists
    */
-  const register = useCallback(
-    async (securityMethod: AccountSecurityMethod) => {
-      try {
-        return await registrationApi.register(securityMethod)
-      } catch (error) {
-        emitRegistrationAlert(error)
+  const register = useCallback(async () => {
+    try {
+      return await registrationApi.register()
+    } catch (error) {
+      emitRegistrationAlert(error)
 
-        throw error
-      }
-    },
-    [registrationApi, emitRegistrationAlert]
-  )
+      throw error
+    }
+  }, [registrationApi, emitRegistrationAlert])
 
   /**
    * Updates an existing BCSC client registration and alerts on failures during the update process.
    *
-   * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
    * @param options - Set `suppressTransientAlerts` for automatic (non user-initiated) callers:
    *   transient keychain-unavailable failures are logged but not surfaced as a modal, since
@@ -104,13 +99,9 @@ export const useRegistrationService = () => {
    * @return Promise resolving to updated registration response data
    */
   const updateRegistration = useCallback(
-    async (
-      registrationAccessToken: string | undefined,
-      selectedNickname: string | undefined,
-      options?: { suppressTransientAlerts?: boolean }
-    ) => {
+    async (selectedNickname: string | undefined, options?: { suppressTransientAlerts?: boolean }) => {
       try {
-        return await registrationApi.updateRegistration(registrationAccessToken, selectedNickname)
+        return await registrationApi.updateRegistration(selectedNickname)
       } catch (error) {
         const isTransient = isAppError(error) && error.appEvent === AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR
         if (!(options?.suppressTransientAlerts && isTransient)) {
@@ -128,23 +119,18 @@ export const useRegistrationService = () => {
    * If the account is already registered, it does nothing.
    * If the account is not registered, it registers the account with the backend.
    *
+   * Whether the account is registered is read from the stored account (it has a client ID), not from
+   * app state, so a device whose registration was cleared registers again.
+   *
    * On failure it shows at most one alert, for the error it rethrows (none if a client policy
    * already handled that error), and rethrows it marked as `handled`.
    *
    * @returns Promise resolving when the account is ensured to be registered
    * */
   const ensureRegistered = useCallback(async () => {
-    // 1. Check if account is already registered
-    if (isRegistered) {
-      return
-    }
-
-    // 2. Register the account with the backend
     try {
-      const securityMethod = await getAccountSecurityMethod()
-
-      // Note: Fetches registration access token and updates the account's `clientID`
-      await registrationApi.register(securityMethod)
+      // Registers only an account with no client ID, saving the new client ID and its token together
+      await registrationApi.register()
     } catch (error) {
       const appError = ensureAppError(error, AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE)
       // e.g. NO_INTERNET maps to no registration alert and no client policy, so fall back to a generic one
@@ -155,34 +141,34 @@ export const useRegistrationService = () => {
 
       throw appError
     }
-  }, [alerts, registrationApi, emitRegistrationAlert, isRegistered])
+  }, [alerts, registrationApi, emitRegistrationAlert])
 
   /**
-   * Deletes the current IAS client registration and creates a fresh one, keeping the same
-   * security method
+   * Deletes the current IAS client registration and creates a fresh one. The account keeps its
+   * security method and nickname.
+   *
+   * The old registration is cleared from the device before the new one is created. If the new
+   * registration then fails, the account has no registration (rather than a client ID the server has
+   * deleted) and `ensureRegistered` registers it again.
    *
    * @returns Promise<void>
-   * @throws AppError `ACCOUNT_NOT_FOUND` when there is no native account to take the security method from
+   * @throws AppError `ACCOUNT_NOT_FOUND` when there is no native account to hold the registration
    */
   const cycleRegistration = useCallback(async () => {
     const account = await getAccount()
     if (!account) {
-      // The record carries the security method the new registration keeps, so there is nothing to cycle without it.
+      // The registration is saved on the account record, so there is nothing to cycle without it.
       throw AppError.fromErrorDefinition(ErrorRegistry.ACCOUNT_NOT_FOUND)
     }
 
-    let registrationAccessToken = store.bcscSecure.registrationAccessToken
-    if (!registrationAccessToken) {
-      const nativeToken = await getToken(TokenType.Registration)
-      registrationAccessToken = nativeToken?.token
+    const registration = await readDeviceRegistration(account)
+    if (registration) {
+      await registrationApi.deleteRegistration(registration.registrationAccessToken, registration.clientId)
     }
 
-    if (registrationAccessToken && account.clientID) {
-      await registrationApi.deleteRegistration(registrationAccessToken, account.clientID)
-    }
-
-    await registrationApi.createRegistration(account.securityMethod)
-  }, [registrationApi, store.bcscSecure.registrationAccessToken])
+    await clearRegistration()
+    await registrationApi.createRegistration()
+  }, [registrationApi, clearRegistration])
 
   return useMemo(
     () => ({

@@ -8,12 +8,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native'
 import React, { useEffect } from 'react'
 import { Text } from 'react-native'
-import {
-  getAccount,
-  getAccountSecurityMethod,
-  getAuthorizationRequest,
-  setAuthorizationRequest,
-} from 'react-native-bcsc-core'
+import { getAccount, getAuthorizationRequest, setAuthorizationRequest } from 'react-native-bcsc-core'
 import AccountSetupScreen from './AccountSetupScreen'
 
 // Spies on cycleRegistration specifically while keeping the rest of the real hook (ensureRegistered,
@@ -35,6 +30,9 @@ const SetupTypeProbe = () => {
   const [store] = useStore<BCState>()
   return <Text testID="SetupTypeProbe">{String(store.bcsc.accountSetupType)}</Text>
 }
+
+// ensureRegistered asks the stored account whether the device is registered: it is when it has a client ID
+const registeredAccount = { clientID: 'client-id' } as any
 
 const mockNavigation = getMockNavigation() as never
 const mockNavigate = (mockNavigation as unknown as { navigate: jest.Mock }).navigate
@@ -59,6 +57,7 @@ describe('AccountSetup', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
+    jest.mocked(getAccount).mockReset().mockResolvedValue(registeredAccount)
     // Run the focus callback as an effect, emulating the screen gaining focus after render
     focusEffectMock.mockImplementation((callback: () => void) => {
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -178,30 +177,28 @@ describe('AccountSetup', () => {
   })
 
   it('does not navigate to IdentitySelection when ensureRegistered fails for Add Account', async () => {
-    const getAccountSecurityMethodMock = getAccountSecurityMethod as jest.Mock
-    getAccountSecurityMethodMock.mockRejectedValueOnce(new Error('registration boom'))
+    jest.mocked(getAccount).mockRejectedValueOnce(new Error('registration boom'))
 
     const { getByTestId } = renderScreen()
 
     fireEvent.press(getByTestId(testIdWithKey('AddAccount')))
 
     await waitFor(() => {
-      expect(getAccountSecurityMethodMock).toHaveBeenCalled()
+      expect(getAccount).toHaveBeenCalled()
     })
 
     expect(mockNavigate).not.toHaveBeenCalledWith(BCSCScreens.IdentitySelection)
   })
 
   it('does not navigate to TransferAccountInstructions when ensureRegistered fails for Transfer Account', async () => {
-    const getAccountSecurityMethodMock = getAccountSecurityMethod as jest.Mock
-    getAccountSecurityMethodMock.mockRejectedValueOnce(new Error('registration boom'))
+    jest.mocked(getAccount).mockRejectedValueOnce(new Error('registration boom'))
 
     const { getByTestId } = renderScreen()
 
     fireEvent.press(getByTestId(testIdWithKey('TransferAccount')))
 
     await waitFor(() => {
-      expect(getAccountSecurityMethodMock).toHaveBeenCalled()
+      expect(getAccount).toHaveBeenCalled()
     })
 
     expect(mockNavigate).not.toHaveBeenCalledWith(BCSCScreens.TransferAccountInstructions)
@@ -222,8 +219,8 @@ describe('AccountSetup', () => {
     },
   ])('registration before saving the setup choice ($name)', ({ buttonId, setupType, destination }) => {
     it('waits on the pressed button, overlay down, with nothing saved while registering', async () => {
-      let settle: (method: any) => void = () => {}
-      jest.mocked(getAccountSecurityMethod).mockReturnValueOnce(
+      let settle: (account: any) => void = () => {}
+      jest.mocked(getAccount).mockReturnValueOnce(
         new Promise((resolve) => {
           settle = resolve
         })
@@ -244,28 +241,26 @@ describe('AccountSetup', () => {
       expect(mockNavigate).not.toHaveBeenCalled()
 
       await act(async () => {
-        settle('app_pin_no_device_authn')
+        settle(registeredAccount)
       })
     })
 
     it('unlocks the buttons and saves nothing when registration fails, then succeeds on retry', async () => {
-      jest.mocked(getAccountSecurityMethod).mockRejectedValueOnce(new Error('registration boom'))
+      jest.mocked(getAccount).mockRejectedValueOnce(new Error('registration boom'))
       const { getByTestId, queryByTestId } = renderScreen()
       const button = () => getByTestId(testIdWithKey(buttonId))
 
       fireEvent.press(button())
 
       await waitFor(() => {
-        expect(getAccountSecurityMethod).toHaveBeenCalled()
+        expect(getAccount).toHaveBeenCalled()
         expect(button()).not.toBeDisabled()
       })
       expect(queryByTestId(testIdWithKey('ButtonLoading'))).toBeNull()
       expect(getByTestId('SetupTypeProbe').props.children).toBe('undefined')
       expect(mockNavigate).not.toHaveBeenCalled()
 
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue('app_pin_no_device_authn' as any)
-      jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-id' } as any)
-
+      // The retry reads the account again; this time the read succeeds
       fireEvent.press(button())
 
       await waitFor(() => {
@@ -279,15 +274,13 @@ describe('AccountSetup', () => {
       const isFocused = jest
         .spyOn(mockNavigation as unknown as { isFocused: () => boolean }, 'isFocused')
         .mockReturnValue(false)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue('app_pin_no_device_authn' as any)
-      jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-id' } as any)
       const { getByTestId } = renderScreen()
       const button = () => getByTestId(testIdWithKey(buttonId))
 
       fireEvent.press(button())
 
       await waitFor(() => {
-        expect(getAccountSecurityMethod).toHaveBeenCalled()
+        expect(getAccount).toHaveBeenCalled()
         expect(button()).not.toBeDisabled()
       })
       expect(getByTestId('SetupTypeProbe').props.children).toBe('undefined')

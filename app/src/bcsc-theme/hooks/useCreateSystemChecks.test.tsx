@@ -202,7 +202,7 @@ describe('useGetSystemChecks', () => {
       serverStatus: null,
       refresh: jest.fn().mockResolvedValue({ serverStatus: null }),
     })
-    mockUseSecureActions.mockReturnValue({ updateTokens: jest.fn() })
+    mockUseSecureActions.mockReturnValue({ saveRegistration: jest.fn() })
     mockUseRegistrationService.mockImplementation(
       jest.requireActual('../services/hooks/useRegistrationService').useRegistrationService
     )
@@ -773,7 +773,7 @@ describe('useGetSystemChecks', () => {
           })
         })
 
-        it('passes the registration token and nickname to the registration service, suppressing transient alerts', async () => {
+        it('passes the nickname to the registration service, suppressing transient alerts', async () => {
           const updateRegistration = mockMainStackStore({
             bcscSecure: { verified: true, registrationAccessToken: 'test-registration-token' },
             bcsc: { selectedNickname: 'Test Device' },
@@ -786,7 +786,8 @@ describe('useGetSystemChecks', () => {
           }
           await check.updateRegistration()
 
-          expect(updateRegistration).toHaveBeenCalledWith('test-registration-token', 'Test Device', {
+          // No token is passed: the service reads the client ID and its token together, from storage
+          expect(updateRegistration).toHaveBeenCalledWith('Test Device', {
             suppressTransientAlerts: true,
           })
         })
@@ -1011,10 +1012,12 @@ describe('useGetSystemChecks', () => {
       // above to just record its constructor args) — this drives the captured `rotate` closure
       // directly, the way the real class's onFail would.
       describe('rotate (the closure passed to KeyRotationSystemCheck)', () => {
-        const mockUpdateTokens = jest.fn()
+        const mockSaveRegistration = jest.fn()
+        const issuer = 'https://idsit.gov.bc.ca/device/'
+        const storedAccount = { clientID: 'client-abc', issuer } as any
 
         beforeEach(() => {
-          mockUseSecureActions.mockReturnValue({ updateTokens: mockUpdateTokens })
+          mockUseSecureActions.mockReturnValue({ saveRegistration: mockSaveRegistration })
           mockRotateSigningKey.mockResolvedValue({ status: 'rotated', confirmed: true })
         })
 
@@ -1026,7 +1029,7 @@ describe('useGetSystemChecks', () => {
             token: 'native-registration-token',
             created: 0,
           })
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
+          jest.mocked(getAccount).mockResolvedValue(storedAccount)
 
           const check = await findKeyRotationCheck()
           await check.rotate()
@@ -1034,8 +1037,7 @@ describe('useGetSystemChecks', () => {
           expect(getToken).toHaveBeenCalledWith(TokenType.Registration)
           expect(mockRotateSigningKey).toHaveBeenCalledWith(
             expect.anything(),
-            'client-abc',
-            'native-registration-token',
+            { clientId: 'client-abc', issuer, registrationAccessToken: 'native-registration-token' },
             expect.anything()
           )
         })
@@ -1043,15 +1045,14 @@ describe('useGetSystemChecks', () => {
         it('falls back to the store registration token when the native read comes back empty', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
           jest.mocked(getToken).mockResolvedValue(null)
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
+          jest.mocked(getAccount).mockResolvedValue(storedAccount)
 
           const check = await findKeyRotationCheck()
           await check.rotate()
 
           expect(mockRotateSigningKey).toHaveBeenCalledWith(
             expect.anything(),
-            'client-abc',
-            'store-registration-token',
+            { clientId: 'client-abc', issuer, registrationAccessToken: 'store-registration-token' },
             expect.anything()
           )
         })
@@ -1061,15 +1062,14 @@ describe('useGetSystemChecks', () => {
         it('falls back to the store registration token when the native token read rejects', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
           jest.mocked(getToken).mockRejectedValue(new Error('E_ACCOUNT_NOT_FOUND'))
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
+          jest.mocked(getAccount).mockResolvedValue(storedAccount)
 
           const check = await findKeyRotationCheck()
           await check.rotate()
 
           expect(mockRotateSigningKey).toHaveBeenCalledWith(
             expect.anything(),
-            'client-abc',
-            'store-registration-token',
+            { clientId: 'client-abc', issuer, registrationAccessToken: 'store-registration-token' },
             expect.anything()
           )
         })
@@ -1098,6 +1098,18 @@ describe('useGetSystemChecks', () => {
           expect(mockRotateSigningKey).not.toHaveBeenCalled()
         })
 
+        it('does the same for an account that has no registration, whatever token app state holds', async () => {
+          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
+          jest.mocked(getToken).mockResolvedValue(null)
+          jest.mocked(getAccount).mockResolvedValue({ issuer } as any)
+
+          const check = await findKeyRotationCheck()
+          const result = await check.rotate()
+
+          expect(result).toEqual({ status: 'failed', confirmed: false })
+          expect(mockRotateSigningKey).not.toHaveBeenCalled()
+        })
+
         it('syncs the rotated registration token into the store when rotateSigningKey returns one', async () => {
           mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
           jest.mocked(getToken).mockResolvedValue({
@@ -1106,7 +1118,7 @@ describe('useGetSystemChecks', () => {
             token: 'native-registration-token',
             created: 0,
           })
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
+          jest.mocked(getAccount).mockResolvedValue(storedAccount)
           mockRotateSigningKey.mockResolvedValue({
             status: 'rotated',
             confirmed: true,
@@ -1116,7 +1128,12 @@ describe('useGetSystemChecks', () => {
           const check = await findKeyRotationCheck()
           await check.rotate()
 
-          expect(mockUpdateTokens).toHaveBeenCalledWith({ registrationAccessToken: 'rotated-registration-token' })
+          // Saved with the client ID and issuer it belongs to, never as a token on its own
+          expect(mockSaveRegistration).toHaveBeenCalledWith({
+            clientId: 'client-abc',
+            issuer,
+            registrationAccessToken: 'rotated-registration-token',
+          })
         })
 
         it('does not touch the store when rotateSigningKey returns no rotated token', async () => {
@@ -1127,13 +1144,13 @@ describe('useGetSystemChecks', () => {
             token: 'native-registration-token',
             created: 0,
           })
-          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
+          jest.mocked(getAccount).mockResolvedValue(storedAccount)
           mockRotateSigningKey.mockResolvedValue({ status: 'rotated', confirmed: true })
 
           const check = await findKeyRotationCheck()
           await check.rotate()
 
-          expect(mockUpdateTokens).not.toHaveBeenCalled()
+          expect(mockSaveRegistration).not.toHaveBeenCalled()
         })
       })
     })
