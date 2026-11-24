@@ -1,5 +1,6 @@
 import { BCSCAccountProvider } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
+import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
@@ -20,7 +21,17 @@ import { act, renderHook, waitFor } from '@testing-library/react-native'
 import moment from 'moment'
 import React from 'react'
 import { AppState } from 'react-native'
-import { CredentialInfo, getAccount, getCredential, getToken, setCredential, TokenType } from 'react-native-bcsc-core'
+import {
+  clearRegistration,
+  CredentialInfo,
+  deleteCredential,
+  deleteToken,
+  getAccount,
+  getCredential,
+  getToken,
+  setCredential,
+  TokenType,
+} from 'react-native-bcsc-core'
 import { AccountPhaseType } from '../account/account-phase'
 import { useAccountPhase } from '../account/useAccountPhase'
 import { HomeNoticeType } from '../home/home-notice'
@@ -36,6 +47,25 @@ jest.mock('@/bcsc-theme/services/hooks/useUserService', () => ({
   useUserService: jest.fn(() => ({
     getUserMetadata: mockGetUserMetadata,
   })),
+}))
+
+// The reset's IAS calls and its failure alert are the only parts faked; its native deletes are real
+const mockCreateRegistration = jest.fn().mockResolvedValue({})
+jest.mock('@/bcsc-theme/services/hooks/useRegistrationService', () => ({
+  useRegistrationService: () => ({
+    deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
+    createRegistration: (...args: unknown[]) => mockCreateRegistration(...args),
+  }),
+}))
+
+const mockFactoryResetAlert = jest.fn()
+jest.mock('@/hooks/useAlerts', () => ({
+  useAlerts: () => ({ factoryResetAlert: (...args: unknown[]) => mockFactoryResetAlert(...args) }),
+}))
+
+jest.mock('@react-navigation/core', () => ({
+  ...jest.requireActual('@react-navigation/core'),
+  useNavigation: () => ({}),
 }))
 
 jest.mock('@/services/notifications/verificationReminders', () => ({
@@ -99,6 +129,7 @@ const renderDevice = async (secure: Partial<BCSCSecureState>, bcsc: Partial<BCSC
         verification: useVerificationState(),
         phase: useAccountPhase(),
         secure: useSecureActions(),
+        reset: useVerificationReset(),
       }
     },
     { wrapper }
@@ -218,24 +249,36 @@ describe('"card not active", from the real check through the store to Home', () 
   // Reset is its end state (memory clear, native deletes); the hook itself is covered in useVerificationReset.test.
   describe('the credential record fact through finish, cancel, reset and restarts', () => {
     const account = { issuer: 'https://issuer.example.com', clientID: 'client-1' }
-    const native: { credential: CredentialInfo | null; refreshToken?: string } = { credential: null }
+    const native: { credential: CredentialInfo | null; refreshToken?: string; registrationToken?: string } = {
+      credential: null,
+    }
 
     beforeEach(() => {
       native.credential = null
       native.refreshToken = UNEXPIRED_JWT
+      native.registrationToken = 'registration-token'
       jest.mocked(getAccount).mockResolvedValue(account as never)
       jest.mocked(getCredential).mockImplementation(async () => native.credential)
       jest.mocked(setCredential).mockImplementation(async (credential) => {
         native.credential = credential
       })
-      jest
-        .mocked(getToken)
-        .mockImplementation(
-          async (type) =>
-            (type === TokenType.Refresh && native.refreshToken
-              ? { id: 'refresh', type, token: native.refreshToken, created: 0 }
-              : null) as never
-        )
+      jest.mocked(getToken).mockImplementation(async (type) => {
+        const token = type === TokenType.Refresh ? native.refreshToken : native.registrationToken
+        return (token ? { id: `${type}`, type, token, created: 0 } : null) as never
+      })
+      // The reset's native deletes act on the fake, so a reset that skips one leaves its data behind
+      jest.mocked(deleteCredential).mockImplementation(async () => {
+        native.credential = null
+      })
+      jest.mocked(deleteToken).mockImplementation(async (type) => {
+        if (type === TokenType.Refresh) {
+          native.refreshToken = undefined
+        }
+        return true
+      })
+      jest.mocked(clearRegistration).mockImplementation(async () => {
+        native.registrationToken = undefined
+      })
     })
 
     afterEach(() => {
@@ -243,6 +286,9 @@ describe('"card not active", from the real check through the store to Home', () 
       jest.mocked(getCredential).mockResolvedValue(null)
       jest.mocked(setCredential).mockResolvedValue(undefined)
       jest.mocked(getToken).mockResolvedValue(null as never)
+      jest.mocked(deleteCredential).mockResolvedValue(undefined)
+      jest.mocked(deleteToken).mockResolvedValue(true)
+      jest.mocked(clearRegistration).mockResolvedValue(undefined)
     })
 
     const restart = async () => {
@@ -291,11 +337,15 @@ describe('"card not active", from the real check through the store to Home', () 
       const device = await finishVerification()
       await runAccountChangeCheck(device, CANCEL_TOKEN)
 
-      native.credential = null
-      native.refreshToken = undefined
-      await dispatchOn(device, BCDispatchAction.CLEAR_SECURE_STATE, [{ isHydrated: true, inVerifyFlow: false }])
-      await dispatchOn(device, BCDispatchAction.UPDATE_CREDENTIAL_METADATA, [undefined])
+      let completed: boolean | undefined
+      await act(async () => {
+        completed = await device.current.reset()
+      })
+
+      expect(completed).toBe(true)
+      expect(mockFactoryResetAlert).not.toHaveBeenCalled()
       expect(device.current.store.bcscSecure.hasCredentialRecord).toBe(false)
+      expect(device.current.store.bcsc.credentialMetadata).toBeUndefined()
 
       const restarted = await restart()
 

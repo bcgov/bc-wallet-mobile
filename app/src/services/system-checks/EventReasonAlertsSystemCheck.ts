@@ -36,20 +36,24 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   private event: BCSCEvent | undefined
   private reason: BCSCReason | undefined
   private tokenMetadata: CredentialMetadata | undefined
-  private savedEventIsStale = false
+  private readonly readCurrentMetadata: () => CredentialMetadata | undefined
 
   constructor(
     getIdToken: () => Promise<IdToken>,
     emitAlert: (title: string, body: string, options?: AlertOptions) => void,
     metadata: CredentialMetadata | undefined,
     utils: SystemCheckUtils,
-    navigation: SystemCheckNavigation
+    navigation: SystemCheckNavigation,
+    // The batch resolves after its slowest check, so a reset can clear the saved details before onSuccess
+    // runs; the snapshot above would then overwrite that clear
+    readCurrentMetadata: () => CredentialMetadata | undefined = () => metadata
   ) {
     this.getIdToken = getIdToken
     this.emitAlert = emitAlert
     this.utils = utils
     this.credentialMetadata = metadata
     this.navigation = navigation
+    this.readCurrentMetadata = readCurrentMetadata
   }
 
   async runCheck(): Promise<boolean> {
@@ -64,10 +68,7 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
     }
 
     // Compare new and stored credential metadata
-    const isMetadataTheSame = compareCredentialMetadata(this.tokenMetadata, this.credentialMetadata)
-    this.savedEventIsStale = isMetadataTheSame && this.credentialMetadata?.bcscEvent !== this.tokenMetadata.bcscEvent
-
-    return isMetadataTheSame
+    return compareCredentialMetadata(this.tokenMetadata, this.credentialMetadata)
   }
 
   onFail() {
@@ -97,8 +98,14 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   }
 
   onSuccess() {
-    // No alert, but backfill a missing or changed saved event: isCardInactive reads it
-    if (this.savedEventIsStale) {
+    // No alert, but backfill a missing or changed saved event: isCardInactive reads it. Only while the
+    // saved details still exist and match the token apart from the event.
+    const saved = this.readCurrentMetadata()
+    if (
+      this.tokenMetadata &&
+      saved?.bcscEvent !== this.tokenMetadata.bcscEvent &&
+      compareCredentialMetadata(this.tokenMetadata, saved)
+    ) {
       this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
     }
   }

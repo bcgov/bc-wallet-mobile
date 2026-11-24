@@ -215,6 +215,45 @@ describe('EventReasonAlertsSystemCheck', () => {
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
 
+    it('does not write when a reset cleared the saved details after the check ran', async () => {
+      const token = expireToken()
+      const saved = { ...tokenToCredentialMetadata(token), bcscEvent: undefined }
+      let current: typeof saved | undefined = saved
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(token),
+        emitAlert,
+        saved,
+        mockUtils,
+        mockNavigation,
+        () => current
+      )
+      await expect(check.runCheck()).resolves.toBe(true)
+
+      // A renewal reset lands while the rest of the batch is still resolving
+      current = undefined
+      check.onSuccess()
+
+      expect(mockUtils.dispatch).not.toHaveBeenCalled()
+    })
+
+    it('does not write when the saved details changed after the check ran', async () => {
+      const token = expireToken()
+      const saved = { ...tokenToCredentialMetadata(token), bcscEvent: undefined }
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(token),
+        emitAlert,
+        saved,
+        mockUtils,
+        mockNavigation,
+        () => ({ ...saved, bcscReason: BCSCReason.Renew })
+      )
+      await expect(check.runCheck()).resolves.toBe(true)
+
+      check.onSuccess()
+
+      expect(mockUtils.dispatch).not.toHaveBeenCalled()
+    })
+
     it('does nothing on the next check once the event is saved', async () => {
       const token = expireToken()
       const savedBeforeTheEventWasKept = { ...tokenToCredentialMetadata(token), bcscEvent: undefined }
