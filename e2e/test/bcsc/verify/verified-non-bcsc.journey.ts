@@ -65,7 +65,7 @@ const EMAIL_ALERT_OK = 'OK'
  */
 describe('Verified journey: non-bcsc card', () => {
   before(async () => {
-    setTestUser(await arrangeTestUser('na'))
+    setTestUser(await arrangeTestUser('na', 'counter'))
   })
 
   it('onboards to the verify prompt', async () => {

@@ -48,7 +48,7 @@ const OTHER_ID_OPTIONS_HEADING = 'Other ID options'
  */
 describe('Verified journey: non-photo card', () => {
   before(async () => {
-    setTestUser(await arrangeTestUser('nonPhoto'))
+    setTestUser(await arrangeTestUser('nonPhoto', 'counter'))
   })
 
   it('onboards to the verify prompt', async () => {

@@ -1,15 +1,16 @@
 /**
- * A journey's card holder (src/support/identity.ts): which source answers, what a mint sends, what the
+ * A journey's card holder (src/support/identity.ts): persona or minted, what a mint sends, what the
  * holder carries and how it is masked. A fake host stands in for the test API; every value is made up.
  */
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, test } from 'node:test'
 import { TestUsers } from '../src/constants.ts'
 import { personaLabel, redactSensitiveText } from '../src/helpers/redact.ts'
-import { arrangeTestUser, identitySource } from '../src/support/identity.ts'
+import { mintsHolders } from '../src/support/approval-routes.ts'
+import { arrangeTestUser } from '../src/support/identity.ts'
 
 const ENV_KEYS = [
-  'E2E_IDENTITY_SOURCE',
+  'E2E_APPROVAL_SOURCE',
   'GITHUB_RUN_ID',
   'IAS_TEST_API_HOST',
   'IAS_TEST_API_CLIENT_ID',
@@ -25,7 +26,7 @@ let hosts = 0
 // The client caches a token per host, so every test talks to a host of its own.
 beforeEach(() => {
   saved = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]))
-  process.env.E2E_IDENTITY_SOURCE = 'api'
+  process.env.E2E_APPROVAL_SOURCE = 'api'
   process.env.GITHUB_RUN_ID = '4242'
   process.env.IAS_TEST_API_HOST = `https://ias-${++hosts}.test`
   process.env.IAS_TEST_API_CLIENT_ID = 'e2e.unit.test.client'
@@ -69,23 +70,43 @@ function ageOf(birthDate) {
 
 // --- source -----------------------------------------------------------------------------------------
 
-test('the fixed personas answer unless the run says api', async (t) => {
+test('unset, a journey mints only once the route table has a channel on the API', async (t) => {
   const api = fakeApi(t)
-  for (const source of [undefined, '', 'personas', ' Personas ']) {
-    if (source === undefined) delete process.env.E2E_IDENTITY_SOURCE
-    else process.env.E2E_IDENTITY_SOURCE = source
-    assert.equal(identitySource(), 'personas')
-    assert.equal(await arrangeTestUser('photo'), TestUsers.photo)
-    assert.equal(await arrangeTestUser('na'), TestUsers.na)
-  }
+  delete process.env.E2E_APPROVAL_SOURCE
+  const holder = await arrangeTestUser('photo')
+  assert.equal(holder === TestUsers.photo, !mintsHolders())
+  assert.equal(api.mints.length, mintsHolders() ? 1 : 0)
+})
+
+test('with api, a journey mints unless the portal decides it', async (t) => {
+  const api = fakeApi(t)
+  assert.notEqual((await arrangeTestUser('photo', 'counter')).cardSerial, TestUsers.photo.cardSerial)
+  assert.notEqual((await arrangeTestUser('combined')).cardSerial, TestUsers.combined.cardSerial)
+  assert.equal(await arrangeTestUser('na', 'counter'), TestUsers.na)
+  assert.equal(api.mints.length, 2)
+})
+
+test('idcheck keeps every journey on the personas', async (t) => {
+  const api = fakeApi(t)
+  process.env.E2E_APPROVAL_SOURCE = 'idcheck'
+  assert.equal(await arrangeTestUser('photo'), TestUsers.photo)
+  assert.equal(await arrangeTestUser('photo', 'counter'), TestUsers.photo)
+  assert.equal(await arrangeTestUser('na'), TestUsers.na)
   assert.equal(api.calls, 0)
+})
+
+test('with api, send-video mints too, but a holder without a card stays with the portal', async (t) => {
+  const api = fakeApi(t)
+  assert.notEqual((await arrangeTestUser('photo', 'send-video')).cardSerial, TestUsers.photo.cardSerial)
+  assert.equal(await arrangeTestUser('na', 'send-video'), TestUsers.na)
+  assert.equal(api.mints.length, 1)
 })
 
 test('an unknown source is refused rather than guessed', async (t) => {
   const api = fakeApi(t)
-  process.env.E2E_IDENTITY_SOURCE = 'sit'
-  assert.throws(() => identitySource(), /use api or personas/)
-  await assert.rejects(arrangeTestUser('photo'), /use api or personas/)
+  process.env.E2E_APPROVAL_SOURCE = 'sit'
+  await assert.rejects(arrangeTestUser('photo'), /use api or idcheck/)
+  await assert.rejects(arrangeTestUser('photo', 'counter'), /use api or idcheck/)
   assert.equal(api.calls, 0)
 })
 

@@ -8,7 +8,8 @@
 #   onboarding   — onboarding journeys
 #   auth         — auth/unlock journey
 #   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
-#   verify       — verify entry + verified card-type journeys (uses the IDCHECK_* sign-in)
+#   verify       — verify entry + verified card-type journeys (the IDCHECK_* sign-in, or the IAS test
+#                  API for whatever e2e/src/support/approval-routes.ts puts on it)
 #   send-video   — the four send-video journeys alone: scripted agent review against a shared,
 #                  blind-FIFO SIT queue, so CI runs them one platform at a time (max-parallel 1) and
 #                  keeps them out of every concurrent multi-device run (exclude_send_video)

@@ -10,7 +10,7 @@ The suite is built on a typed **screen-object DSL** and **per-area journey files
 - **Screen descriptors** (`src/screens/<stack>.ts`) map semantic roles (`self`/`primary`/`secondary`/`back`/`help`/`menu` + named `links`/`inputs`/`elements`) to testIDs via `defineScreen`. Journeys call `tap('primary')`, `fill('pin', …)` — never raw selectors. `src/screens/main.ts` is the reference style.
 - **Arrange flows** (`src/flows/`) are how journeys earn preconditions — there is no app-side seeding: `completeOnboarding()`, `skipToHome()`, `unlockWithPin()`, `completeVerification()`. The VerifyPrompt is answered **only in the session that completed onboarding**; never relaunch between onboarding and verify entry. The answer decides the exits for the rest of the account's life: `startVerification()` (Continue) makes a **first-time verifier** with no "Back to home" and a back arrow that returns to the prompt, `skipPromptAndStartFromHome()` (Skip, then the Home card) a **deferred verifier** who keeps every exit — pick the entry a journey's later checkpoints need.
 - **Journeys** (`test/bcsc/<area>/*.journey.ts`): one file = one app session = one ordered journey of checkpoints, so a failure isolates to its file and reports per scenario. wdio `bail: 0` keeps files independent; `mochaOpts.bail: true` aborts the rest of a file on its first failure. See **[Writing Tests → Journeys](#journeys)** to add one.
-- **Test context** (`src/support/context.ts`) carries the active `TestUser` across a journey's checkpoints (`setTestUser` / `getTestUser`). `arrangeTestUser(kind)` (`src/support/identity.ts`) decides who that is: a fixed SIT persona, or a card minted for the session — see **[Card holders](#card-holders)**.
+- **Test context** (`src/support/context.ts`) carries the active `TestUser` across a journey's checkpoints (`setTestUser` / `getTestUser`). `arrangeTestUser(kind, channel)` (`src/support/identity.ts`) decides who that is: a fixed SIT persona, or a card minted for the session once the route table puts a channel on the IAS test API — see **[Card holders and approvals](#card-holders-and-approvals)**.
 - Failure screenshots + JUnit/Allure output land in `e2e/reports/` (gitignored).
 
 ## _Prerequisites_
@@ -61,7 +61,7 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite main
 yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts --suite scan
 ```
 
-_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need IDCheck credentials (see the **IDCheck sign-in** section) for the in-person approval step. The `main` suite's wallet journey additionally needs the Traction issuer tenant configured (`ISSUER_TENANT_ID`/`ISSUER_API_KEY` in `.env.e2e`, one-time `yarn issuer:provision` — see `issuer/README.md`). A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
+_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The journeys the ID Check portal decides need IDCheck credentials (see the **IDCheck sign-in** section); the ones the IAS test API decides, or that mint their holder, need its client (see **[Card holders and approvals](#card-holders-and-approvals)**). The `main` suite's wallet journey additionally needs the Traction issuer tenant configured (`ISSUER_TENANT_ID`/`ISSUER_API_KEY` in `.env.e2e`, one-time `yarn issuer:provision` — see `issuer/README.md`). A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
 
 ### _Local — iOS Simulator_
 
@@ -208,7 +208,7 @@ _Adding a **lineage** = implement `PrevBuild` for it, map its paths in `src/upgr
 
 1. _The version's build in Sauce storage as `BCSC-v<version>.apk` / `.ipa` — attached to its GitHub release by **Publish Release E2E Builds** (`RELEASE.md`) and re-uploaded monthly by **Refresh E2E Sauce Builds** from `e2e/upgrade-sources.json`._
 2. _The current build under test via the standard vars: `ANDROID_APP_FILENAME` / `IOS_APP_FILENAME`._
-3. _`PREV_VERSION` (every upgrade suite) and, for everything but `upgradePartial`, the `IDCHECK_*` credentials on an allowlisted runner (the approvals)._
+3. _`PREV_VERSION` (every upgrade suite); for everything but `upgradePartial`, whatever decides its approvals: the `IDCHECK_*` credentials on an allowlisted runner, or the IAS test-API client (see **[Card holders and approvals](#card-holders-and-approvals)**)._
 
 ```bash
 # One state group, from one version, on Sauce (the CI path; --suite picks the state group)
@@ -244,7 +244,7 @@ VARIANT=bcsc yarn test:android:sauce
 
 _Two env files split general e2e config (including the IDCheck credentials) from SauceLabs credentials:_
 
-- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_. Includes the IDCheck credentials used by the in-person verification approval flow and the IAS test-API client._
+- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_. Includes the IAS test-API client and the IDCheck credentials for the approvals still on the portal._
 - **`.env.saucelabs`** _— loaded only for sauce runs. Copy from_ `.env.saucelabs.example`_._
 
 ### _General (`.env.e2e`)_
@@ -287,7 +287,7 @@ _Two env files split general e2e config (including the IDCheck credentials) from
 
 ### _IDCheck sign-in (in_ `.env.e2e`_)_
 
-_The in-person verification approval (`approveInPersonRequest` in_ `src/helpers/approval.ts`_; with_ `E2E_APPROVAL_SOURCE=api` _the IAS test API decides it instead, see **[In-person approvals](#in-person-approvals)**), the send-video review and the queue drain all act in the IDCheck SIT portal, which signs its agents in through BC Gov SSO (Keycloak) and Entra ID ("IDIR - MFA"). The sign-in is a short drive of the Microsoft pages in a headless Chrome (`scripts/idcheck-session.mjs`); everything after it is plain cookie-bound HTTP (`scripts/login.mjs`). One sign-in is cached per process, so a journey's drain → review → drain signs in once. The account is the shared IAS test IDIR (`bcsc-ias-test-account` in 1Password); its sign-in name is the account's gov email. Credentials come from_ `process.env` _— locally from_ `e2e/.env.e2e` _(loaded by_ `configs/wdio.shared.conf.ts`_), in CI from 1Password via_ `.github/workflows/e2e.yml`_:_
+_Whatever the route table leaves on the portal (see **[Card holders and approvals](#card-holders-and-approvals)**) and the queue drain act in the IDCheck SIT portal, which signs its agents in through BC Gov SSO (Keycloak) and Entra ID ("IDIR - MFA"). The sign-in is a short drive of the Microsoft pages in a headless Chrome (`scripts/idcheck-session.mjs`); everything after it is plain cookie-bound HTTP (`scripts/login.mjs`). One sign-in is cached per process, so a journey's drain → review → drain signs in once. The account is the shared IAS test IDIR (`bcsc-ias-test-account` in 1Password); its sign-in name is the account's gov email. Credentials come from_ `process.env` _— locally from_ `e2e/.env.e2e` _(loaded by_ `configs/wdio.shared.conf.ts`_), in CI from 1Password via_ `.github/workflows/e2e.yml`_:_
 
 | _Variable_             | _Description_                                                                                                                                            |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -333,15 +333,14 @@ _Scope_ `e2e` _is the default everywhere (journeys, nightly, the workflow's inpu
 
 ### IAS E2E Test API (in `.env.e2e`)
 
-IAS's non-production test API (`https://<host>/test/idv/v1`) mints BC Services Card test identities and records the agent's side of a verification, keyed by the usercode the app shows. `src/api/ias-test.ts` is the runner's client for it. IAS issued one OAuth 2.0 client per environment, kept in 1Password (`bcsc-mobile-app-cd`: `ias-test-api-dev` and `ias-test-api-sit`); CI loads the SIT one in `e2e.yml`. Nothing in CI uses the API yet: the journeys move onto it locally first, behind the two settings below, and the workflows follow once that runs clean.
+IAS's non-production test API (`https://<host>/test/idv/v1`) mints BC Services Card test identities and records the agent's side of a verification, keyed by the usercode the app shows. `src/api/ias-test.ts` is the runner's client for it. IAS issued one OAuth 2.0 client per environment, kept in 1Password (`bcsc-mobile-app-cd`: `ias-test-api-dev` and `ias-test-api-sit`); CI loads the SIT one in `e2e.yml` and uses it for whatever the route table puts on it (see **[Card holders and approvals](#card-holders-and-approvals)**).
 
 | Variable | Description |
 | --- | --- |
 | `IAS_TEST_API_HOST` | The environment's host: `idsit.gov.bc.ca` (SIT) or `iddev.gov.bc.ca` (DEV). A URL works too; only its origin is used (the item's `hostname`) |
 | `IAS_TEST_API_CLIENT_ID` | The environment's client id (the item's `username`, which 1Password shows as "key name") |
 | `IAS_TEST_API_CLIENT_SECRET` | The client secret (the item's `credential`) |
-| `E2E_IDENTITY_SOURCE` | `api` mints a card for each session; `personas` (the default) takes the fixed SIT personas. See **[Card holders](#card-holders)** |
-| `E2E_APPROVAL_SOURCE` | `api` approves an in-person request with one call to the decision route; `idcheck` (the default) replays the ID Check portal. See **[In-person approvals](#in-person-approvals)** |
+| `E2E_APPROVAL_SOURCE` | Unset (what CI runs), the route table decides. `api` puts every channel on the API, `idcheck` puts every channel on the portal with the personas. See **[Card holders and approvals](#card-holders-and-approvals)** |
 
 ```bash
 yarn test-api:check              # mint a token, check both scopes, probe the decision route with a usercode that does not exist
@@ -435,7 +434,7 @@ _Element lookup is cross-platform with no branching:_
 
 Tests are organized as **journeys**, not composable specs. Each `*.journey.ts` file is **one app session running one ordered sequence of checkpoints** (`it` blocks). Area suites glob them (`--suite verify` → `verify/*.journey.ts`). Runner-level `bail: 0` keeps files independent — a failed journey reports and the rest still run — while `mochaOpts.bail: true` stops the rest of a *single* file after its first failure, because later checkpoints depend on the state earlier ones left behind.
 
-A journey earns its preconditions through the UI via **arrange flows** (`src/flows/`), then chains dependent checkpoints so an expensive setup (a verification is ~5–8 min) is paid once and amortized. The one thing arranged outside the UI is who the journey is: its root `before()` asks `arrangeTestUser` for a card holder (see **[Card holders](#card-holders)**), sets it once, and every checkpoint reads it via `src/support/context.ts`:
+A journey earns its preconditions through the UI via **arrange flows** (`src/flows/`), then chains dependent checkpoints so an expensive setup (a verification is ~5–8 min) is paid once and amortized. The one thing arranged outside the UI is who the journey is: its root `before()` asks `arrangeTestUser` for a card holder (see **[Card holders and approvals](#card-holders-and-approvals)**), sets it once, and every checkpoint reads it via `src/support/context.ts`:
 
 ```typescript
 // test/bcsc/verify/verified-photo.journey.ts (abridged)
@@ -450,7 +449,7 @@ import { arrangeTestUser } from '../../../src/support/identity.js'
 
 describe('Verified journey: photo card', () => {
   before(async () => {
-    setTestUser(await arrangeTestUser('photo')) // the card holder for every checkpoint below
+    setTestUser(await arrangeTestUser('photo', 'counter')) // the card holder for every checkpoint below
   })
 
   it('onboards to the verify prompt', async () => {
@@ -484,11 +483,11 @@ Run just the file you are iterating on:
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/verify/verified-photo.journey.ts
 ```
 
-<a id="card-holders"></a>
+<a id="card-holders-and-approvals"></a>
 
-### Card holders
+### Card holders and approvals
 
-A journey drives one card holder, a `TestUser`: the serial, birthdate, names and document numbers it types, and the photos it captures. Its root `before()` asks for one by kind:
+A journey drives one card holder, a `TestUser`: the serial, birthdate, names and document numbers it types, and the photos it captures. Its root `before()` asks for one by kind and names how its request is decided (`setTestUser(await arrangeTestUser('photo', 'counter'))`; no channel when nothing is decided):
 
 | Kind | Card | Verify path | Also carries |
 | --- | --- | --- | --- |
@@ -498,40 +497,30 @@ A journey drives one card holder, a `TestUser`: the serial, birthdate, names and
 | `na` | no card | two IDs + address + email | a licence number and a passport number |
 | `u12` | standalone photo card, holder under 12 | serial + birthdate | |
 
-`E2E_IDENTITY_SOURCE` decides where the holder comes from:
+**Who decides a request.** `src/support/approval-routes.ts` is the route table: for each channel, who plays the agent. Either the IAS test API (`decideVerification` in `src/api/ias-test.ts`, keyed by the code the app shows; no sign-in, no serial, no birthdate) or the ID Check portal (replayed after an Entra sign-in; SIT only, with the `IDCHECK_*` credentials and an allowlisted address). The suite moves channel by channel: a row turns to `api` once IAS serves that decision on SIT. Two channels: `counter` (`approveInPersonRequest`: the in-person journeys, the upgrade scenarios, the old-build drivers) and `send-video` (`reviewSendVideoRequest`). Today both are on the portal: SIT answers every COUNTER decision with a 500 since IAS 4.7.0 (DEV decides them), and SEND_VIDEO still answers 501.
 
-- **`personas`** (the default, and what CI runs): the five hand-minted SIT personas (`TestUsers` in `src/constants.ts`, listed in `assets/USERS.md`). Both platforms and every lane share them, and SIT keeps one active device per card, so two lanes verifying the same persona invalidate each other.
-- **`api`**: a holder of the session's own. `arrangeTestUser` mints the card through the IAS test API (`mintIdentity` in `src/api/ias-test.ts`) and shapes it as a `TestUser`. A retry is a new session and mints again.
+- A holder without a card is always the portal's: the API neither mints card type `NA` (an empty 400) nor decides such a registration (an empty 400 for its code).
+- Holders move with the decisions. Once any channel is on the API, a journey the API decides, or one that asks for no decision, gets a card minted for the session. Until then, and for a journey the portal decides, the persona answers: the portal's queue drain knows only the personas.
+- `E2E_APPROVAL_SOURCE` overrides the table for a local run: `api` puts every channel on the API, to rehearse one before its row moves; `idcheck` puts everything on the portal with the personas, as the suite ran before the move. CI never sets it.
+- The API host has to serve the decision: `yarn test-api:check` says so before a session is spent finding out. `IAS_TEST_API_HOST` has to name the environment the app is on (`DEFAULT_ENVIRONMENT` in `app/.env` for a local build; SIT for the Sauce builds).
+- Either way the journey taps Complete itself afterwards: a decision does not move the app. The log line for an approval names the flow and the source, never the code.
 
-What a mint sends and gets back:
+**Minted holders.** `arrangeTestUser` mints the card through the IAS test API (`mintIdentity`) and shapes it as a `TestUser`. A retry is a new session and mints again.
 
 - The API echoes only the serial and the birthdate and generates whatever is left out, so the given name, gender and birthdate are always sent, under a surname no other session has (`AUTOTEST` + eight letters). The minor's birthdate is six years before today; left alone the API picks an age of 16 to 80.
-- Each identity carries the grouping label `e2e-<workflow run id, or local-<user>>-<platform>`.
-- The API issues no card to a holder without one: it refuses card type `NA` (an empty 400 on both hosts). The `na` holder is generated instead: a surname of its own and a licence and a passport number that fit the masks the evidence metadata serves. Nor does the API decide such a registration: on DEV a counter approval for it answers an empty 400, so the cardless journeys still need the portal.
-- The card is minted on the environment `IAS_TEST_API_HOST` names, which has to be the one the app is on (`DEFAULT_ENVIRONMENT` in `app/.env` for a local build; SIT for the Sauce builds).
+- Each identity carries the grouping label `e2e-<workflow run id, or local-<user>>-<platform>`. Nothing deletes them: the API has no such route.
+- A holder without a card that no one decides (the scan reroutes) is generated instead: a surname of its own and a licence and a passport number that fit the masks the evidence metadata serves.
 - A card minted on SIT comes with a verified email, as the personas' do. One minted on DEV does not: there the app shows the email step after the birthdate, and `reachVerificationMethod` skips it.
 - A minted holder's values are registered with the redaction (`src/helpers/redact.ts`) and read `<minted>` in failure text. Each mint logs one `[identity]` line and is counted in the session record, which the brief totals in its Sessions line.
 
-Who approves the holder's request is a setting of its own (see **[In-person approvals](#in-person-approvals)**). The ID Check portal finds a minted card by its serial and birthdate, as it does a persona's.
+**The personas** are the five hand-minted SIT holders (`TestUsers` in `src/constants.ts`, listed in `assets/USERS.md`). Both platforms and every lane share them, and SIT keeps one active device per card, so two lanes verifying the same persona invalidate each other. Until a channel moves to the API every journey takes them; after that, the journeys the portal decides, the scan suite (its committed card backs carry the personas' serials) and the upgrade suites.
 
-Three groups stay on the personas whatever the source: the send-video journeys (the portal review checks which persona a claimed request belongs to), the scan suite (its committed card backs carry the personas' serials) and the upgrade suites.
+**Moving a channel to the API**, once IAS serves its decision on SIT:
 
-<a id="in-person-approvals"></a>
-
-### In-person approvals
-
-A verified journey shows its confirmation code on the in-person screen and has an agent approve it. `approveInPersonRequest` (`src/helpers/approval.ts`) is that agent for every caller: the verified journeys, the upgrade scenarios and the old-build drivers. `E2E_APPROVAL_SOURCE` decides how it approves:
-
-- **`idcheck`** (the default, and what CI runs): the ID Check portal, replayed after an Entra sign-in. It takes the code with the card's serial and birthdate (the two document numbers for a holder without a card), needs the `IDCHECK_*` credentials and an allowlisted address, and exists for SIT only.
-- **`api`**: one call to the IAS test API (`decideVerification` in `src/api/ias-test.ts`, a `COUNTER` `APPROVE`), keyed by the code alone. No sign-in, no serial, no birthdate, and the only way to approve on DEV.
-
-What the API path depends on:
-
-- The host has to serve the decision route. DEV does; SIT answers `route-absent` until IAS deploys the current build there. `yarn test-api:check` says which, before a session is spent finding out.
-- `IAS_TEST_API_HOST` has to name the environment the app is on, as it does for a minted card.
-- The API decides no registration without a card (an empty 400 on DEV). That request goes to the portal whatever the source, so the cardless journey still needs SIT and the `IDCHECK_*` credentials.
-
-Either way the journey taps Complete itself afterwards: a decision does not move the app. The log line for an approval names the flow and the source, never the code.
+1. Rehearse it locally with `E2E_APPROVAL_SOURCE=api`.
+2. Flip its row in `src/support/approval-routes.ts`. Its journeys, and from the first flip every journey that asks for no decision, then mint their holders.
+3. Rename its checkpoint titles that say they are scripted against the SIT portal, with `src/brief/coverage-map.ts` and the brief fixtures (`yarn brief:check` matches titles verbatim).
+4. Delete what only that channel used on the portal. With no row left on `idcheck`, the portal goes: `scripts/login.mjs`, `scripts/idcheck-session.mjs`, `scripts/entra-auth-guard.mjs`, the queue drains, the `IDCHECK_*` secrets and the personas.
 
 ### Runner-side API clients
 
@@ -728,7 +717,7 @@ _The app under test is the main build's Sauce storage copy, `BCSC-Dev-<build_num
 
 _The nightly ends with the_ `device-auth` _lane (both platforms, last in the chain so its two sessions stay inside the cap): the device-authentication journey on a Sauce session whose device carries a screen lock and biometric interception — see **[Device authentication](#device-authentication-sauce-device-lock-lane)**._
 
-_**Note:** There is no E2E job on_ `main` _merge by design — regression is deferred to the nightly workflow so SauceLabs devices stay free during the day when multiple PRs merge. The in-person verification step needs the runner's egress IP allowlisted with the BC Gov ID Check portal; see the notes in_ `e2e-nightly.yml` _and use the "Verify Allowlist Connectivity" workflow to confirm reachability._
+_**Note:** There is no E2E job on_ `main` _merge by design — regression is deferred to the nightly workflow so SauceLabs devices stay free during the day when multiple PRs merge. The approvals the route table leaves on the BC Gov ID Check portal need the runner's egress IP allowlisted with it; see the notes in_ `e2e-nightly.yml` _and use the "Verify Allowlist Connectivity" workflow to confirm reachability._
 
 _**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices = 2 jobs) this fits within a single round. Nightly uses the same two-device matrix; it runs longer end-to-end because the send-video and device-auth lanes chain serially after the regression. The weekly upgrade run is hours of serial device time on its own, which is why it has its own Saturday slot._
 
@@ -738,7 +727,7 @@ Every red nightly of Oct 7–14 2026 was reviewed down to the checkpoint (`tmp/e
 
 | Cause | Rule / guard |
 | --- | --- |
-| **Shared personas, one device per card.** Both platforms verify the same five SIT personas (`TestUsers`), and SIT keeps one active device per card: whichever lane verifies a persona later invalidates the other's device at its next cold start ("Device invalidated" on the combined journey's cold deep link and the upgrade's post-install unlock). A retry re-verifies the same persona, so retries of verified journeys are not hermetic. | Lanes that verify the same persona on both platforms run them one at a time (`send-video`, and the weekly `upgradeSubmitted` / `upgradeApproved` / `upgradeVerified`: `max_parallel: 1`). The real fix is a card per session, which `E2E_IDENTITY_SOURCE=api` mints (see **[Card holders](#card-holders)**); CI stays on the personas until that path runs clean locally. |
+| **Shared personas, one device per card.** Both platforms verify the same five SIT personas (`TestUsers`), and SIT keeps one active device per card: whichever lane verifies a persona later invalidates the other's device at its next cold start ("Device invalidated" on the combined journey's cold deep link and the upgrade's post-install unlock). A retry re-verifies the same persona, so retries of verified journeys are not hermetic. | Lanes that verify the same persona on both platforms run them one at a time (`send-video`, and the weekly `upgradeSubmitted` / `upgradeApproved` / `upgradeVerified`: `max_parallel: 1`). The fix is a card per session, which journeys mint once their channel is on the test API (see **[Card holders and approvals](#card-holders-and-approvals)**). |
 | **One Entra account, two lanes signing in at once.** The platform jobs run the same specs in step, so their cold IDCheck sign-ins mint the same TOTP code in the same 30 s window; the code page then sat for the whole deadline. | `IDCHECK_TOTP_WINDOW_PARITY` (iOS even windows, Android odd — `e2e.yml`), and `scripts/idcheck-session.mjs` resubmits a code that brings no verdict within 12 s, retypes a password Entra's re-render wiped ("Please enter your password"), and gives the IDCheck landing 30 s. |
 | **An app change the journey never adapted to.** #4792 surfaces an injected biometric failure as the error modal; the device-auth journey waited for a prompt under it. | `recoverFromFailedDeviceAuth` closes the modal (logging its error code) and asserts it on Android. Adapt journeys in the PR that changes the UX. |
 | **A heuristic that depends on the light.** Android `text-contrast` sampled the live camera frame on ScanSerial. | Camera screens skip it; NEW findings are advisory in the nightly (above). |
@@ -852,13 +841,14 @@ e2e/
 │   │
 │   ├── support/
 │   │   ├── context.ts                       # per-journey TestUser context (setTestUser / getTestUser)
-│   │   └── identity.ts                      # arrangeTestUser: a fixed persona, or a card minted for the session
+│   │   ├── approval-routes.ts               # the route table: who decides each channel (test API or portal)
+│   │   └── identity.ts                      # arrangeTestUser: a card minted for the session, or the persona the portal needs
 │   │
 │   ├── helpers/
 │   │   ├── a11y-audit.ts                    # auditScreen(): iOS XCTest audit engine + report/roll-up (non-blocking)
 │   │   ├── a11y-android.ts                  # Android heuristics: unlabeled controls, touch targets, screenshot contrast
 │   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
-│   │   ├── approval.ts                      # in-person approval (IDCheck portal or the IAS test API) + send-video review via the portal
+│   │   ├── approval.ts                      # in-person approval (as the route table says) + send-video review via the portal
 │   │   ├── biometrics.ts                    # biometric simulation (Sauce Labs RDC)
 │   │   ├── camera.ts                        # camera image injection + padding (photos, QR, video)
 │   │   ├── deep-link.ts                     # dispatch <scheme>:// deep links (pairing / login)

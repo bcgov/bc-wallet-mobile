@@ -11,7 +11,7 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  * Upgrade with an in-person request APPROVED WHILE THE APP WAS CLOSED — "approved, not finished
  * in-app": the user shows their code at the counter, the agent approves it, and the app is updated
  * before they ever reopen it to tap Complete. Display the code on the previous build, close the app,
- * approve the request in IDCheck, install the current build over the closed app, relaunch and unlock —
+ * have the agent approve the request, install the current build over the closed app, relaunch and unlock —
  * the current build must pick the approval up from wherever it resumes and reach verified Home.
  *
  * The approval lives server-side; what the upgrade tests is that the current build re-fetches it
@@ -20,7 +20,8 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  * product finding, and this fails on it — not flake. Every lineage can arrange it: the in-person path is
  * the one each previous-build driver has.
  *
- * Photo card, so no camera. Needs the IDCheck credentials on an allowlisted runner.
+ * Photo card, so no camera. The agent is whoever the route table names for a counter request
+ * (src/support/approval-routes.ts).
  */
 export function defineInPersonApprovedUpgrade(prev: PrevBuild): void {
   let appId: string | undefined
@@ -46,7 +47,7 @@ export function defineInPersonApprovedUpgrade(prev: PrevBuild): void {
     appId = await closeRunningApp()
   })
 
-  it('is approved in IDCheck while the app is closed (scripted against the SIT portal)', async () => {
+  it('is approved by the agent while the app is closed', async () => {
     if (!code) throw new Error('the code step did not record a confirmation code')
     await annotate(`Upgrade (in-person approved, from ${prev.label}): approving while the app is closed`)
     await approveInPersonRequest(code, approvalInputForUser(getTestUser()))

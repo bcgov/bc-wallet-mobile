@@ -3,6 +3,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describeError } from '../api/http.js'
 import { decideVerification, normalizeUsercode } from '../api/ias-test.js'
 import { TestUsers } from '../constants.js'
+import { approvalSourceFor } from '../support/approval-routes.js'
 import { clearQueuedSubmission } from '../support/send-video-queue.js'
 import { withDriverKeepalive } from './driver-keepalive.js'
 import { type PersonaLabel, personaLabel } from './redact.js'
@@ -169,23 +170,6 @@ function currentPlatform(): 'ios' | 'android' | undefined {
   return driver.isIOS ? 'ios' : 'android'
 }
 
-/** Who plays the agent for an in-person request: the IDCheck portal replay, or the IAS test API. */
-export type ApprovalSource = 'api' | 'idcheck'
-
-/** Where this run's in-person approvals are decided: E2E_APPROVAL_SOURCE, `idcheck` unless it says `api`. */
-export function approvalSource(): ApprovalSource {
-  const value = process.env.E2E_APPROVAL_SOURCE?.trim().toLowerCase()
-  if (!value || value === 'idcheck') return 'idcheck'
-  if (value === 'api') return 'api'
-  throw new Error('Unknown E2E_APPROVAL_SOURCE: use api or idcheck')
-}
-
-/** Who decides a request of this flow. The test API refuses a registration without a card, which keeps the portal. */
-export function inPersonApprovalSource(flow: ApproveInPersonInput['flow']): ApprovalSource {
-  const source = approvalSource()
-  return source === 'api' && flow === 'non-bcsc' ? 'idcheck' : source
-}
-
 /** One call keyed by the code alone: no sign-in, no serial, no birthdate. */
 async function approveInPersonThroughApi(usercode: string, flow: ApproveInPersonInput['flow']): Promise<void> {
   const startedAt = Date.now()
@@ -202,8 +186,8 @@ async function approveInPersonThroughApi(usercode: string, flow: ApproveInPerson
 }
 
 /**
- * Approve an in-person verification request: by driving the IDCheck portal in-process, or with one call
- * to the IAS test API when E2E_APPROVAL_SOURCE=api.
+ * Approve an in-person verification request: with one call to the IAS test API, or by driving the
+ * IDCheck portal in-process, whichever the route table names for the flow (src/support/approval-routes.ts).
  *
  * Strips dashes/spaces from the formatted code (e.g. "PEDD-RJUW" → "PEDDRJUW")
  * before passing it on. For card-tap flows ('photo', 'non-photo') the portal's
@@ -223,7 +207,7 @@ export async function approveInPersonRequest(
   timeoutMs = 120_000
 ): Promise<void> {
   const code = normalizeUsercode(formattedCode)
-  const source = inPersonApprovalSource(input.flow)
+  const source = approvalSourceFor('counter', input.flow)
   // The code stays out of this log and the errors below: it approves the request, and Sauce/CI logs are remote.
   console.log(`[approval] Approving in-person request (flow=${input.flow}, source=${source})`)
   if (source === 'api') return approveInPersonThroughApi(code, input.flow)

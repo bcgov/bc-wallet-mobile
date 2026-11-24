@@ -327,10 +327,8 @@ export async function reachInPersonConfirmationCode(): Promise<string> {
 
 /**
  * From VerifyInPerson with `formattedCode` already displayed: have the request approved, then
- * Complete → VerificationSuccess → Home. The approval is the real IDCheck SIT one (needs
- * `IDCHECK_USER`/`IDCHECK_PASSWORD`/`IDCHECK_TOTP_SECRET` and an allowlisted runner IP), or one call to
- * the IAS test API with `E2E_APPROVAL_SOURCE=api`. The half of {@link completeVerification} after the
- * code is read.
+ * Complete → VerificationSuccess → Home. The agent is whoever the route table names for a counter
+ * request (src/support/approval-routes.ts). The half of {@link completeVerification} after the code is read.
  */
 export async function approveInPersonAndComplete(user: TestUser, formattedCode: string): Promise<void> {
   await approveInPersonRequest(formattedCode, approvalInputForUser(user))

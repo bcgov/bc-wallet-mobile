@@ -1,12 +1,13 @@
 /**
- * Who approves an in-person request (src/helpers/approval.ts): which source answers for which flow,
- * what the API path sends, and what its log and its failure may say. A fake host stands in for the
+ * Who approves a request (src/support/approval-routes.ts, src/helpers/approval.ts): which source
+ * answers for which channel and flow, what the API path sends, and what its log and its failure may say. A fake host stands in for the
  * test API; the portal is never reached. Every value is made up.
  */
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, test } from 'node:test'
 import { IasTestApiError } from '../src/api/ias-test.ts'
-import { approvalSource, approveInPersonRequest, inPersonApprovalSource } from '../src/helpers/approval.ts'
+import { approveInPersonRequest } from '../src/helpers/approval.ts'
+import { APPROVAL_ROUTES, approvalOverride, approvalSourceFor, mintsHolders } from '../src/support/approval-routes.ts'
 
 const ENV_KEYS = ['E2E_APPROVAL_SOURCE', 'IAS_TEST_API_HOST', 'IAS_TEST_API_CLIENT_ID', 'IAS_TEST_API_CLIENT_SECRET']
 const DISPLAYED_CODE = 'ABCD-2345'
@@ -66,26 +67,43 @@ function assertNamesNoHolder(text) {
 
 // --- source -----------------------------------------------------------------------------------------
 
-test('the portal approves unless the run says api', () => {
-  for (const source of [undefined, '', 'idcheck', ' IDCheck ']) {
+/** Who decides each flow on a channel. */
+const sourcesOn = (channel) => FLOWS.map((flow) => approvalSourceFor(channel, flow))
+
+test('unset, the table decides each channel, and a holder without a card stays with the portal', () => {
+  for (const source of [undefined, '', '  ']) {
     if (source === undefined) delete process.env.E2E_APPROVAL_SOURCE
     else process.env.E2E_APPROVAL_SOURCE = source
-    assert.equal(approvalSource(), 'idcheck')
-    assert.deepEqual(FLOWS.map(inPersonApprovalSource), ['idcheck', 'idcheck', 'idcheck'])
+    assert.equal(approvalOverride(), undefined)
+    for (const channel of ['counter', 'send-video']) {
+      const row = APPROVAL_ROUTES[channel]
+      assert.deepEqual(sourcesOn(channel), [row, row, 'idcheck'])
+    }
+    assert.equal(mintsHolders(), Object.values(APPROVAL_ROUTES).includes('api'))
   }
 })
 
-test('with api, a card holder is approved by the test API and a holder without a card by the portal', () => {
+test('api puts every channel on the test API, except a holder without a card', () => {
   process.env.E2E_APPROVAL_SOURCE = ' API '
-  assert.equal(approvalSource(), 'api')
-  assert.deepEqual(FLOWS.map(inPersonApprovalSource), ['api', 'api', 'idcheck'])
+  assert.equal(approvalOverride(), 'api')
+  assert.equal(mintsHolders(), true)
+  assert.deepEqual(sourcesOn('counter'), ['api', 'api', 'idcheck'])
+  assert.deepEqual(sourcesOn('send-video'), ['api', 'api', 'idcheck'])
+})
+
+test('idcheck puts every channel on the portal', () => {
+  process.env.E2E_APPROVAL_SOURCE = ' IDCheck '
+  assert.equal(approvalOverride(), 'idcheck')
+  assert.equal(mintsHolders(), false)
+  assert.deepEqual(sourcesOn('counter'), ['idcheck', 'idcheck', 'idcheck'])
+  assert.deepEqual(sourcesOn('send-video'), ['idcheck', 'idcheck', 'idcheck'])
 })
 
 test('an unknown source is refused rather than guessed', async (t) => {
   const api = fakeApi(t)
   process.env.E2E_APPROVAL_SOURCE = 'portal'
-  assert.throws(() => approvalSource(), /use api or idcheck/)
-  for (const flow of FLOWS) assert.throws(() => inPersonApprovalSource(flow), /use api or idcheck/)
+  assert.throws(() => approvalOverride(), /use api or idcheck/)
+  for (const flow of FLOWS) assert.throws(() => approvalSourceFor('counter', flow), /use api or idcheck/)
   await assert.rejects(approveInPersonRequest(DISPLAYED_CODE, PHOTO), /use api or idcheck/)
   assert.equal(api.requests.length, 0)
 })

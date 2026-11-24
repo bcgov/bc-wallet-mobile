@@ -27,7 +27,7 @@ export interface PrevBuild {
   authorize(user: TestUser): Promise<void>
   /** Method selection → In person → the displayed XXXX-XXXX code, NOT approved. */
   showInPersonCode(): Promise<string>
-  /** Approve `code` in IDCheck, Complete → this build's verified Home. */
+  /** Have `code` approved (src/support/approval-routes.ts), Complete → this build's verified Home. */
   approveAndComplete(user: TestUser, code: string): Promise<void>
 
   /** Resting state → serial typed, stopping ON the birthdate step (serial persisted, card not authorized). */

@@ -166,7 +166,7 @@ describe('Verified journey: combined card', () => {
   let coveredLoginBranch: ServiceLoginBranch | undefined
 
   before(async () => {
-    setTestUser(await arrangeTestUser('combined'))
+    setTestUser(await arrangeTestUser('combined', 'counter'))
   })
 
   it('onboards to the verify prompt', async () => {
