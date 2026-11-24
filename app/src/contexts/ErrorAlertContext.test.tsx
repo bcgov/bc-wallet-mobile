@@ -38,6 +38,10 @@ jest.mock('@bifold/core', () => ({
     {
       bcsc: {
         installId: 'test-install-id',
+        appBuildHistory: [
+          { version: '4.0.0', build: '100' },
+          { version: '3.9.0', build: '90' },
+        ],
       },
       developer: {
         remoteDebugging: {
@@ -208,6 +212,8 @@ describe('ErrorAlertContext', () => {
             error: appError,
             // Pins the store -> payload hop: emitErrorModal must read the install id off the store, not drop it.
             installId: 'test-install-id',
+            // Same hop for the build history, so modal reports can tell an update from a fresh install
+            buildHistory: '4.0.0+100 < 3.9.0+90',
           }),
           errorKey: 1,
         })
