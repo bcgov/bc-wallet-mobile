@@ -498,6 +498,123 @@ describe('useGetSystemChecks', () => {
       })
     })
 
+    describe('sessionKey', () => {
+      const renderWithSecure = (bcscSecure: object) => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          {
+            stateLoaded: true,
+            developer: { environment: { analyticsAppId: 'test-app-id' } },
+            bcsc: { analyticsOptIn: true },
+            bcscSecure: { isHydrated: true, ...bcscSecure },
+          },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        // The hook reads the account and error-alert contexts; neither decides the key
+        jest.spyOn(React, 'useContext').mockReturnValue({})
+
+        return renderHook(() => useCreateSystemChecks())
+      }
+
+      const mainStackKey = (bcscSecure: object) =>
+        renderWithSecure(bcscSecure).result.current[SystemCheckScope.MAIN_STACK].sessionKey
+
+      const expiresAt = new Date('2026-11-26T00:00:00.000Z')
+      const laterExpiresAt = new Date('2026-11-27T00:00:00.000Z')
+      const deviceCodes = { deviceCode: 'device-code', userCode: 'user-code', deviceCodeExpiresAt: expiresAt }
+
+      it('runs the main stack batch once per session, and once more when the user verifies', () => {
+        expect(mainStackKey({ verified: false })).toBe('MAIN_STACK:unverified')
+        expect(mainStackKey({ verified: true })).toBe('MAIN_STACK:verified')
+      })
+
+      it('gives each submitted verification request a batch of its own', () => {
+        const first = mainStackKey({ verified: false, verificationRequestId: 'req-1', ...deviceCodes })
+        // "Verify a different way": a second request under the same device authorization
+        const second = mainStackKey({ verified: false, verificationRequestId: 'req-2', ...deviceCodes })
+
+        expect(first).toBe('MAIN_STACK:unverified:RequestStatus:req-1')
+        expect(second).toBe('MAIN_STACK:unverified:RequestStatus:req-2')
+      })
+
+      it('gives each device authorization awaiting recovery a batch of its own, named by its expiry', () => {
+        const first = mainStackKey({ verified: false, ...deviceCodes })
+        const second = mainStackKey({ verified: false, ...deviceCodes, deviceCodeExpiresAt: laterExpiresAt })
+
+        expect(first).toBe(`MAIN_STACK:unverified:PendingRecovery:${expiresAt.getTime()}`)
+        expect(second).toBe(`MAIN_STACK:unverified:PendingRecovery:${laterExpiresAt.getTime()}`)
+      })
+
+      it('never puts the device or user code in the key', () => {
+        const keys = [
+          mainStackKey({ verified: false, ...deviceCodes }),
+          mainStackKey({ verified: false, verificationRequestId: 'req-1', ...deviceCodes }),
+        ]
+
+        expect(keys.join()).not.toContain('device-code')
+        expect(keys.join()).not.toContain('user-code')
+      })
+
+      it('still keys a device authorization whose expiry was never recorded apart from having nothing to check', () => {
+        expect(mainStackKey({ verified: false, deviceCode: 'device-code', userCode: 'user-code' })).toBe(
+          'MAIN_STACK:unverified:PendingRecovery:'
+        )
+      })
+
+      it('keeps the one verified key whatever request data is still held', () => {
+        expect(mainStackKey({ verified: true, verificationRequestId: 'req-1', ...deviceCodes })).toBe(
+          'MAIN_STACK:verified'
+        )
+      })
+
+      it('leaves the startup and verify scopes to run once per mount', () => {
+        const { result } = renderWithSecure({ verified: false })
+
+        expect(result.current[SystemCheckScope.STARTUP].sessionKey).toBeUndefined()
+        expect(result.current[SystemCheckScope.VERIFY].sessionKey).toBeUndefined()
+      })
+    })
+
+    describe('decidesHomeCard', () => {
+      const renderWithSecure = (bcscSecure: object) => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          {
+            stateLoaded: true,
+            developer: { environment: { analyticsAppId: 'test-app-id' } },
+            bcsc: { analyticsOptIn: true },
+            bcscSecure: { isHydrated: true, ...bcscSecure },
+          },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        jest.spyOn(React, 'useContext').mockReturnValue({})
+
+        return renderHook(() => useCreateSystemChecks()).result.current[SystemCheckScope.MAIN_STACK].decidesHomeCard
+      }
+
+      it('is false for an unverified user with nothing submitted, whose batch is the Terms of Use fetch', () => {
+        expect(renderWithSecure({ verified: false })).toBe(false)
+      })
+
+      it('is true while a verification request can resolve', () => {
+        expect(renderWithSecure({ verified: false, verificationRequestId: 'req-1' })).toBe(true)
+      })
+
+      it('is true while a pending verification can be recovered from its device codes', () => {
+        expect(renderWithSecure({ verified: false, deviceCode: 'device', userCode: 'user' })).toBe(true)
+      })
+
+      it('is false for a verified user, who has no request left to check', () => {
+        expect(renderWithSecure({ verified: true, verificationRequestId: 'req-1' })).toBe(false)
+      })
+    })
+
     describe('getSystemChecks', () => {
       it('should return the correct system checks for MAIN_STACK scope', async () => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')

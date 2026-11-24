@@ -1486,6 +1486,12 @@ export const useSecureActions = () => {
   /**
    * Handles successful authentication by updating wallet key, hydrating state, and dispatching auth success.
    * Call this after setPIN, setupDeviceSecurity, unlockWithDeviceSecurity, or verifyPIN succeeds.
+   * Enter PIN and Create PIN wait for it on their button, so the root slides from that screen into the next
+   * phase. The device-auth callers wait under the loading overlay, the backdrop of the OS prompt: release it
+   * in the same continuation as this resolves (no `await` in between). SUCCESSFUL_AUTH changes the root's
+   * route, and the overlay provider keeps a shown overlay up through the commit its release lands in, so the
+   * change is rendered beneath it, as a cut rather than a slide, and the stack it mounts extends the overlay
+   * for its own wait.
    * @param walletKey wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
    */
   const handleSuccessfulAuth = useCallback(
