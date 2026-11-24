@@ -98,16 +98,17 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   }
 
   onSuccess() {
-    // No alert, but backfill a missing or changed saved event: isCardInactive reads it. Only while the
-    // saved details still exist and match the token apart from the event.
-    const saved = this.readCurrentMetadata()
-    if (
-      this.tokenMetadata &&
-      saved?.bcscEvent !== this.tokenMetadata.bcscEvent &&
-      compareCredentialMetadata(this.tokenMetadata, saved)
-    ) {
+    // No alert, but backfill a missing or changed saved event: isCardInactive reads it
+    if (this.tokenMetadata && this.savedEventIsOutOfDate(this.tokenMetadata)) {
       this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
     }
+  }
+
+  // True only while the saved details still exist and match the token apart from the event
+  private savedEventIsOutOfDate(tokenMetadata: CredentialMetadata): boolean {
+    const saved = this.readCurrentMetadata()
+
+    return saved?.bcscEvent !== tokenMetadata.bcscEvent && compareCredentialMetadata(tokenMetadata, saved)
   }
 
   // helper function for building the alert to emit
