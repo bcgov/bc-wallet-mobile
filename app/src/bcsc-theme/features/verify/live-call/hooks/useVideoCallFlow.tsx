@@ -26,7 +26,7 @@ import { getVideoServiceUnavailability, VideoServiceUnavailability } from '../ut
 
 // Maps v4 error types to v3-compatible Snowplow error codes
 // so analytics are consistent across both platforms
-const AnalyticsErrorCodeMap: Record<Exclude<VideoCallErrorType, VideoCallErrorType.CALL_END_FAILED>, string> = {
+const AnalyticsErrorCodeMap: Record<VideoCallErrorType, string> = {
   [VideoCallErrorType.DOCUMENT_UPLOAD_FAILED]: 'file_upload_error',
   [VideoCallErrorType.ALREADY_VERIFIED]: 'already_verified',
   [VideoCallErrorType.SESSION_FAILED]: 'server_error',
@@ -34,6 +34,8 @@ const AnalyticsErrorCodeMap: Record<Exclude<VideoCallErrorType, VideoCallErrorTy
   [VideoCallErrorType.CALL_FAILED]: 'problem_with_connection',
   [VideoCallErrorType.NETWORK_ERROR]: 'no_internet',
   [VideoCallErrorType.PERMISSION_DENIED]: 'permission_denied',
+  // Added to keep the map exhaustive, analytics handled in AppError -> unknownErrorModal
+  [VideoCallErrorType.CALL_END_FAILED]: 'call_end_failed',
 }
 
 export interface VideoCallFlow {

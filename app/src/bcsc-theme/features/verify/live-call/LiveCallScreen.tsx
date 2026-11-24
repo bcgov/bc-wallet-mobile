@@ -93,6 +93,10 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         store.bcscSecure.userCode
       )
 
+      if (navigation.isFocused()) {
+        return
+      }
+
       if (!isVerified) {
         logger.info('[LiveCallScreen.leaveCall] User not verified')
         goToVerifyNotComplete()
@@ -106,6 +110,10 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         })
       )
     } catch (error) {
+      if (!navigation.isFocused()) {
+        return
+      }
+
       // 1. Render the modal so the specific error can be reported
       unknownErrorModal(error)
 
