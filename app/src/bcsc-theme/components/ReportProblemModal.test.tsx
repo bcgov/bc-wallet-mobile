@@ -1,3 +1,4 @@
+import { BCState, initialState } from '@/store'
 import { reportProblem } from '@/utils/logger'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -20,9 +21,9 @@ describe('ReportProblemModal', () => {
     jest.clearAllMocks()
   })
 
-  const renderModal = (onClose: () => void = jest.fn()) =>
+  const renderModal = (onClose: () => void = jest.fn(), initialStateOverride?: Partial<BCState>) =>
     render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={initialStateOverride}>
         <ReportProblemModal visible onClose={onClose} />
       </BasicAppContext>
     )
@@ -115,5 +116,31 @@ describe('ReportProblemModal', () => {
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 
     expect(mockReportProblem).toHaveBeenCalledWith(expect.anything())
+  })
+
+  it('includes the formatted build history in the report, newest first', () => {
+    const { getByTestId } = renderModal(jest.fn(), {
+      bcsc: {
+        ...initialState.bcsc,
+        appBuildHistory: [
+          { version: '4.0.0', build: '100' },
+          { version: '3.9.0', build: '90' },
+        ],
+      },
+    })
+
+    enterDescription(getByTestId)
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+
+    expect(mockReportProblem).toHaveBeenCalledWith(expect.objectContaining({ buildHistory: '4.0.0+100 < 3.9.0+90' }))
+  })
+
+  it('sends an empty build history when none has been recorded', () => {
+    const { getByTestId } = renderModal()
+
+    enterDescription(getByTestId)
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+
+    expect(mockReportProblem).toHaveBeenCalledWith(expect.objectContaining({ buildHistory: '' }))
   })
 })
