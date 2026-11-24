@@ -316,6 +316,10 @@ const refreshLedgerCache = async (poolService: IndyVdrPoolService, logger: Bifol
 /**
  * Best-effort agent shutdown.
  *
+ * Also closes an agent whose `initialize()` failed after the store opened: Credo marks
+ * an agent initialized only as its last step, so the store and transports can be live
+ * while `isInitialized` is still false.
+ *
  * Errors are logged but never thrown — shutdown failures must not block logout
  * or app teardown, and the wallet is closed in the underlying Askar handle even
  * if Credo's cleanup throws.
@@ -340,16 +344,25 @@ export const shutdownAgent = async (
         // The step is a courtesy to in-flight work; its failure must not leave the wallet open
         logger.warn(`Agent pre-close step failed (closing anyway): ${error}`)
       }
+      const { askar } = agent.modules
       // Idempotent shutdown. A reset path (wallet reset / factory reset) may have
       // already shut this agent down before the provider unmounts and calls here
       // again on the same instance. Re-check inside the serialized op so we observe
       // any prior queued shutdown's result: a second agent.shutdown() runs askar's
       // onCloseContext against an already-closed store, which throws
-      // ("There is no open store" → CredoError on the 'askar' module).
-      if (!agent.isInitialized) {
+      // ("There is no open store" → CredoError on the 'askar' module). An agent that
+      // never opened its store, or whose store an earlier shutdown closed, has nothing to close.
+      if (!agent.isInitialized && !askar.isStoreOpen) {
         return
       }
-      await agent.shutdown()
+      try {
+        await agent.shutdown()
+      } finally {
+        // shutdown() can throw before it reaches the store close
+        if (askar.isStoreOpen) {
+          await askar.closeStore()
+        }
+      }
     })
   } catch (error) {
     logger.error(`Error shutting down agent: ${error}`)
@@ -377,10 +390,13 @@ export const deleteWalletStore = async (agent: Agent): Promise<void> => {
 
 /**
  * Deletes the shared BCSC wallet store when no live agent is held (e.g. a reset
- * interrupted mid-shutdown, or a factory reset fired while the provider is
- * rebuilding and its `agent` is transiently null). Builds a throwaway agent
- * purely to reach the Askar store manager; deletion is by file URI, so it needs
- * neither an open store nor a matching key. Rethrows like {@link deleteWalletStore}.
+ * interrupted mid-shutdown, or an agent whose start-up was cancelled or failed).
+ * Builds a throwaway agent purely to reach the Askar store manager; deletion is by
+ * file URI, so it needs neither an open store nor a matching key. Rethrows like
+ * {@link deleteWalletStore}.
+ *
+ * The caller must stop any agent that is starting up first: the delete does not
+ * close another instance's open handle.
  *
  * @param opts - Agent build options identifying the wallet store to delete.
  */
