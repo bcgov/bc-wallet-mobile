@@ -1,6 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { PinVerificationType, verifyPinWithLockout } from '@/bcsc-theme/features/auth/services/pin-lockout-service'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -20,7 +19,7 @@ import {
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { InteractionManager, View } from 'react-native'
 
@@ -32,17 +31,24 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
   const [loading, setLoading] = useState(false)
+  // One unlock at a time: completing the PIN and pressing Continue both start one, and the second can land
+  // before the re-render that disables the button
+  const isVerifyingRef = useRef(false)
   const [currentPIN, setCurrentPIN] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { handleSuccessfulAuth } = useSecureActions()
-  const { startLoading } = useLoadingScreen()
 
   const { Spacing } = useTheme()
 
   const verifyPINAndContinue = useCallback(
     async (pin: string) => {
-      let stopLoading: (() => void) | undefined
+      if (isVerifyingRef.current) {
+        return
+      }
+      isVerifyingRef.current = true
+      // Once the unlock succeeds the button keeps spinning: the root slides this screen away
+      let unlocked = false
       try {
         setLoading(true)
         setErrorMessage(undefined)
@@ -62,8 +68,11 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         const verification = await verifyPinWithLockout(pin, logger)
 
         if (verification.type === PinVerificationType.Success) {
-          stopLoading = startLoading(t('BCSC.Loading.AppStartup'))
+          // The rest of the wait stays on the button, not under the global overlay: for an unverified user
+          // it is local work that ends within a few frames, and the root then slides from this screen. A
+          // verified user's first Home loads the account; the root cuts to it and Home shows the waiting screen
           await handleSuccessfulAuth(verification.walletKey)
+          unlocked = true
           logger.info('PIN verified successfully - navigating to main app')
         } else if (verification.type === PinVerificationType.Locked) {
           navigation.dispatch(
@@ -81,11 +90,13 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         setErrorMessage(t('BCSC.EnterPIN.VerifyError'))
         logger.error(`PIN verification error: ${error}`)
       } finally {
-        stopLoading?.()
-        setLoading(false)
+        if (!unlocked) {
+          isVerifyingRef.current = false
+          setLoading(false)
+        }
       }
     },
-    [logger, handleSuccessfulAuth, navigation, startLoading, t]
+    [logger, handleSuccessfulAuth, navigation, t]
   )
 
   const onPressContinue = useCallback(async () => {
@@ -147,6 +158,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
           testIDKey={TestIds.auth.enterPin.pin}
           onPINChange={handlePINChange}
           onPINComplete={handlePINComplete}
+          editable={!loading}
           errorMessage={errorMessage}
           accessibilityLabel={a11yLabel(t('BCSC.EnterPIN.Title'))}
         />

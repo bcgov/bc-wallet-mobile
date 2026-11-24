@@ -1,6 +1,7 @@
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BCState, initialState } from '@/store'
-import { selectVerificationState } from './selectors'
+import { selectVerificationRequestCheck, selectVerificationState } from './selectors'
+import { VerificationRequestCheckType } from './verification-request-check'
 
 const buildState = (secure: Partial<BCState['bcscSecure']> = {}, bcscReason?: BCSCReason): BCState => ({
   ...initialState,
@@ -77,5 +78,34 @@ describe('selectVerificationState', () => {
     expect(selectVerificationState(buildState({ refreshToken: 'token', ...secure }, reason))).toMatchObject({
       isDeviceVerifiedByIas: false,
     })
+  })
+})
+
+describe('selectVerificationRequestCheck', () => {
+  const deviceCodeExpiresAt = new Date('2026-11-26T00:00:00.000Z')
+  const deviceCodes = { deviceCode: 'device', userCode: 'user', deviceCodeExpiresAt }
+
+  it('has nothing to check in the initial state', () => {
+    expect(selectVerificationRequestCheck(initialState)).toEqual({ type: VerificationRequestCheckType.None })
+  })
+
+  it('reads the stored request ID as the request to check the status of', () => {
+    expect(selectVerificationRequestCheck(buildState({ verificationRequestId: 'req-1', ...deviceCodes }))).toEqual({
+      type: VerificationRequestCheckType.RequestStatus,
+      verificationRequestId: 'req-1',
+    })
+  })
+
+  it('reads the stored device codes and their expiry as the pending verification to recover', () => {
+    expect(selectVerificationRequestCheck(buildState(deviceCodes))).toEqual({
+      type: VerificationRequestCheckType.PendingRecovery,
+      ...deviceCodes,
+    })
+  })
+
+  it('reads the verified flag, which leaves nothing to check', () => {
+    expect(
+      selectVerificationRequestCheck(buildState({ verified: true, verificationRequestId: 'req-1', ...deviceCodes }))
+    ).toEqual({ type: VerificationRequestCheckType.None })
   })
 })

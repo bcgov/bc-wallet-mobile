@@ -56,6 +56,10 @@ Use Node 24 and the Yarn version pinned in `package.json`. From the repo root:
 - New features use MVVM: a `use<Feature>ViewModel` hook holds the logic and
   the Screen renders. Read `docs/guides/mvvm.md` before building a new screen
   or feature. When editing existing code, follow the file's current pattern.
+- BCSC navigation: a phase change (onboarding, auth, verify, main) is a store
+  dispatch; nothing navigates between phases. Read `docs/guides/navigation.md`
+  before adding, removing or moving a screen, modal or navigator, and check
+  the change against its checklist.
 - API hooks throw. One layer, a service hook or the ViewModel, surfaces each
   failure. Map native errors through `native-error-map.ts`. Read
   `docs/guides/error-handling.md` before adding error handling.

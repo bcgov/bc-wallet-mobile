@@ -1,3 +1,4 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   MAX_VISITED_SCREENS,
   NAVIGATION_TRAIL,
@@ -19,6 +20,7 @@ jest.mock('@react-navigation/native', () => ({
     capturedOnStateChange = onStateChange
     return <>{children}</>
   },
+  findFocusedRoute: jest.requireActual('@react-navigation/core').findFocusedRoute,
   createNavigationContainerRef: jest.fn(() => ({
     getRootState: jest.fn(() => mockRootState),
     current: {
@@ -29,10 +31,6 @@ jest.mock('@react-navigation/native', () => ({
 
 jest.mock('@/bcsc-theme/navigators/stack-utils', () => ({
   getBaseScreenName: jest.fn((name: string) => name),
-  getCurrentStateScreenName: jest.fn((state: any) => {
-    const route = state?.routes?.[state.index]
-    return route?.name
-  }),
   // Only matches the real helper for flat stacks; nested behaviour is covered in the .nested test
   getRouteNamesBelowFocus: jest.fn((state: any) => state.routes.slice(0, state.index).map((r: any) => r.name)),
   isForwardPush: jest.fn((previous: any, next: any) => {
@@ -117,6 +115,21 @@ describe('NavigationContainerContext', () => {
         { name: 'Settings', isBack: false },
         { name: 'Home', isBack: true },
       ])
+    })
+
+    it('counts the root Loading route as no screen, so the first real screen is recorded by onStateChange', () => {
+      mockRootState = { index: 0, routes: [{ name: BCSCScreens.RootLoading, key: 'Loading' }] }
+      renderHook(() => useContext(NavigationContainerContext), { wrapper })
+
+      act(() => {
+        capturedOnReady?.()
+      })
+      expect(NAVIGATION_TRAIL.screens).toEqual([])
+
+      capturedOnStateChange?.({ index: 0, routes: [{ name: 'Intro', key: 'Intro' }] })
+
+      expect(NAVIGATION_TRAIL.screens).toEqual([{ name: 'Intro', isBack: false }])
+      expect(Analytics.trackScreenEvent).toHaveBeenCalledWith('Intro', undefined)
     })
 
     it('records nothing when the root state is not available', () => {
