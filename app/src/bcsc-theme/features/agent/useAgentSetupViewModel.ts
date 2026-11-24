@@ -475,15 +475,18 @@ const useAgentSetupViewModel = ({ enabled = true }: AgentSetupOptions = {}): Age
   }, [logger, attestationMonitor, stopAgent, walletKey, mediatorUrl, walletLabel, enableProxy])
 
   // Factory-reset teardown, never re-initializes; nulls the agent so mounted consumers skip reads
-  // on the deleted store. Resolves true once a delete was attempted, false if the caller must purge.
+  // on the deleted store. Resolves true once a delete was attempted or is owned by a running wallet
+  // reset, false if the caller must purge.
   const teardownAgent = useCallback((): Promise<boolean> => {
     if (teardownRef.current) {
       return teardownRef.current
     }
 
     if (resettingRef.current) {
+      // The running wallet reset deletes the store through the live agent; a purge here would
+      // delete it by URI under that agent's open handle.
       logger.info('AgentTeardown: a reset is already in progress, ignoring request')
-      return Promise.resolve(false)
+      return Promise.resolve(true)
     }
 
     const initRun = initializingRef.current ? initRunRef.current : null

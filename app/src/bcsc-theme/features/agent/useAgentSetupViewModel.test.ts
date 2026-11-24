@@ -542,6 +542,37 @@ describe('useAgentSetupViewModel', () => {
       expect(result.current.status).toBe('error')
     })
 
+    it('reports true without touching the store while a wallet reset is running', async () => {
+      // The reset owns the store delete, so a caller that purged on false would delete it by
+      // URI under the live agent's open handle.
+      const { deactivate } = jest.requireMock('@/utils/PushNotificationsHelper')
+      let releaseDeactivate: () => void = () => undefined
+      deactivate.mockReturnValueOnce(
+        new Promise<void>((resolve) => {
+          releaseDeactivate = resolve
+        })
+      )
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      let resetPromise: Promise<void> = Promise.resolve()
+      act(() => {
+        resetPromise = result.current.resetWallet()
+      })
+
+      await act(async () => {
+        await expect(result.current.teardownAgent()).resolves.toBe(true)
+      })
+      expect(agentService.deleteWalletStore).not.toHaveBeenCalled()
+
+      await act(async () => {
+        releaseDeactivate()
+        await resetPromise
+      })
+      expect(agentService.deleteWalletStore).toHaveBeenCalledTimes(1)
+    })
+
     describe('while the agent is starting up', () => {
       const deferred = <T = void>() => {
         let resolve: (value: T) => void = () => undefined
