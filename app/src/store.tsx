@@ -498,6 +498,21 @@ export const initialState: BCState = {
   mode: Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet,
 }
 
+/** Applies `next` only while the saved details are still `expected`; otherwise the state is returned as it was. */
+const replaceCredentialMetadataIfUnchanged = (
+  state: BCState,
+  expected: CredentialMetadata | undefined,
+  next: CredentialMetadata | undefined
+): BCState => {
+  if (!isSameCredentialMetadata(state.bcsc.credentialMetadata, expected)) {
+    return state
+  }
+
+  const bcsc = { ...state.bcsc, credentialMetadata: next }
+  void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+  return { ...state, bcsc }
+}
+
 const applyVerificationStatusReceived = (
   state: BCState,
   received: Partial<Pick<VerificationStatusResponseData, 'status' | 'status_message'>>
@@ -943,17 +958,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
 
     case BCSCDispatchAction.REPLACE_CREDENTIAL_METADATA_IF_UNCHANGED: {
-      const [expected, next] = (action?.payload ?? []) as [
-        CredentialMetadata | undefined,
-        CredentialMetadata | undefined,
-      ]
-      if (!isSameCredentialMetadata(state.bcsc.credentialMetadata, expected)) {
-        return state
-      }
-
-      const bcsc = { ...state.bcsc, credentialMetadata: next }
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return { ...state, bcsc }
+      const [expected, next] = action?.payload ?? []
+      return replaceCredentialMetadataIfUnchanged(state, expected, next)
     }
 
     case BCSCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION: {
