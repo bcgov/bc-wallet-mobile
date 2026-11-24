@@ -1,6 +1,6 @@
 import { ThemedText, useTheme } from '@bifold/core'
 import { StyleSheet, View } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialIcons'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 export enum CameraIssueType {
   CAMERA_MISSING = 'camera_missing',
@@ -12,6 +12,9 @@ interface CameraIssueProps {
   description: string
 }
 
+/**
+ * A React component that displays a camera issue message with an icon, title, and description.
+ */
 export const CameraIssue = (props: CameraIssueProps) => {
   const { ColorPalette, Spacing } = useTheme()
 
@@ -41,7 +44,7 @@ export const CameraIssue = (props: CameraIssueProps) => {
 
   return (
     <View style={styles.cameraErrorBlock}>
-      <Icon name={'no-photography'} size={80} color={ColorPalette.grayscale.white} style={styles.icon} />
+      <Icon name={'camera-off-outline'} size={80} color={ColorPalette.grayscale.white} style={styles.icon} />
       <ThemedText style={styles.instructionText}>{props.title}</ThemedText>
       <ThemedText style={styles.instructionSubText}>{props.description}</ThemedText>
     </View>

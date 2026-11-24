@@ -198,7 +198,6 @@ const IdCardMaskOverlay: React.FC<IdCardMaskOverlayProps> = ({
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const insets = useSafeAreaInsets()
   const { hasPermission, requestPermission } = useCameraPermission()
   const scanner = useCardScanner()
   const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
@@ -364,20 +363,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const frameStrokeColor =
     scanState === 'scanning' ? ColorPalette.brand.highlight : scanState === 'aligned' ? '#00CC00' : '#00FF00'
 
-  const renderCameraIssue = useCallback(() => {
-    if (cameraFailed) {
-      return (
-        <CameraIssue title={t('BCSC.CameraDisclosure.Error')} description={t('BCSC.CameraDisclosure.ErrorMessage')} />
-      )
-    }
-
-    if (!device) {
-      return (
-        <CameraIssue title={t('BCSC.Scan.CameraMissingTitle')} description={t('BCSC.Scan.CameraMissingDescription')} />
-      )
-    }
-  }, [cameraFailed, device, t])
-
   if (isLoading) {
     return <LoadingScreen />
   }
@@ -395,87 +380,147 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     )
   }
 
+  if (cameraFailed) {
+    return (
+      <ScanSerialScreenWrapper
+        onEnterManually={goToManualEntry}
+        secondaryAction={
+          <Button
+            title={t('BCSC.Scan.TryAgain')}
+            accessibilityLabel={t('BCSC.Scan.TryAgain')}
+            testID={testIdWithKey(TestIds.verify.scanSerial.retryCamera)}
+            onPress={retryCamera}
+            buttonType={ButtonType.Secondary}
+          />
+        }
+      >
+        <CameraIssue title={t('BCSC.CameraDisclosure.Error')} description={t('BCSC.CameraDisclosure.ErrorMessage')} />
+      </ScanSerialScreenWrapper>
+    )
+  }
+
+  if (!device) {
+    return (
+      <ScanSerialScreenWrapper onEnterManually={goToManualEntry}>
+        <CameraIssue title={t('BCSC.Scan.CameraMissingTitle')} description={t('BCSC.Scan.CameraMissingDescription')} />
+      </ScanSerialScreenWrapper>
+    )
+  }
+
+  return (
+    <ScanSerialScreenWrapper
+      onEnterManually={goToManualEntry}
+      accessory={hasTorch ? <TorchButton active={torchOn} onPress={toggleTorch} /> : null}
+    >
+      <>
+        {/* Instruction text — initial guidance until the timeout, then steady-hold help */}
+        <View style={styles.topBanner}>
+          {showHelp ? (
+            <ThemedText variant={'labelTitle'} style={styles.instructionText}>
+              {t('BCSC.Scan.HoldSteadyHelp')}
+            </ThemedText>
+          ) : (
+            <>
+              <ThemedText variant={'labelTitle'} style={styles.instructionText}>
+                {t('BCSC.Scan.ScanYourCard')}
+              </ThemedText>
+              <ThemedText variant={'labelSubtitle'} style={styles.instructionSubText}>
+                {t('BCSC.Scan.LineUpHelp')}
+              </ThemedText>
+            </>
+          )}
+        </View>
+
+        {/* Camera fills the space between the banner and the buttons */}
+        <View style={styles.cameraArea} onLayout={onContainerLayout}>
+          <CodeScanningCamera
+            key={cameraKey}
+            device={device}
+            onCodeScanned={onCodeScanned}
+            cameraType={'back'}
+            initialZoom={2}
+            scanZones={BCSC_SN_SCAN_ZONES}
+            showScanZoneOverlay={false}
+            showZoomIndicator={false}
+            hideTorchButton
+            torchActive={torchOn}
+            onToggleTorch={toggleTorch}
+            onTorchAvailabilityChange={setHasTorch}
+            onError={onCameraError}
+            style={StyleSheet.absoluteFill}
+          />
+
+          {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
+          {size ? (
+            <IdCardMaskOverlay
+              width={size.width}
+              height={size.height}
+              margin={Spacing.lg}
+              strokeColor={frameStrokeColor}
+            />
+          ) : null}
+        </View>
+      </>
+    </ScanSerialScreenWrapper>
+  )
+}
+
+type ScanSerialScreenWrapperProps = React.PropsWithChildren<{
+  onEnterManually: () => void
+  // Rendered right-aligned above the button block, e.g. the torch toggle
+  accessory?: React.ReactNode
+  // Rendered below "Enter manually", e.g. a retry button
+  secondaryAction?: React.ReactNode
+}>
+
+// Black full-screen layout shared by every scan state, with "Enter manually" always reachable at the bottom
+const ScanSerialScreenWrapper: React.FC<ScanSerialScreenWrapperProps> = ({
+  children,
+  onEnterManually,
+  accessory,
+  secondaryAction,
+}) => {
+  const { t } = useTranslation()
+  const { ColorPalette, Spacing } = useTheme()
+  const insets = useSafeAreaInsets()
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#000',
+    },
+    bottomBar: {
+      gap: Spacing.sm,
+    },
+    accessoryRow: {
+      alignItems: 'flex-end',
+      paddingBottom: Spacing.sm,
+      paddingRight: Spacing.lg,
+    },
+    buttonBlock: {
+      padding: Spacing.lg,
+      paddingBottom: insets.bottom + Spacing.lg,
+      backgroundColor: ColorPalette.notification.popupOverlay,
+      gap: Spacing.md,
+    },
+  })
+
   return (
     <ScreenWrapper padded={false} scrollable={false} edges={[]}>
       <View style={styles.container}>
-        {cameraFailed || !device ? (
-          renderCameraIssue()
-        ) : (
-          <>
-            {/* Instruction text — initial guidance until the timeout, then steady-hold help */}
-            <View style={styles.topBanner}>
-              {showHelp ? (
-                <ThemedText variant={'labelTitle'} style={styles.instructionText}>
-                  {t('BCSC.Scan.HoldSteadyHelp')}
-                </ThemedText>
-              ) : (
-                <>
-                  <ThemedText variant={'labelTitle'} style={styles.instructionText}>
-                    {t('BCSC.Scan.ScanYourCard')}
-                  </ThemedText>
-                  <ThemedText variant={'labelSubtitle'} style={styles.instructionSubText}>
-                    {t('BCSC.Scan.LineUpHelp')}
-                  </ThemedText>
-                </>
-              )}
-            </View>
+        {children}
 
-            {/* Camera fills the space between the banner and the buttons */}
-            <View style={styles.cameraArea} onLayout={onContainerLayout}>
-              <CodeScanningCamera
-                key={cameraKey}
-                device={device}
-                onCodeScanned={onCodeScanned}
-                cameraType={'back'}
-                initialZoom={2}
-                scanZones={BCSC_SN_SCAN_ZONES}
-                showScanZoneOverlay={false}
-                showZoomIndicator={false}
-                hideTorchButton
-                torchActive={torchOn}
-                onToggleTorch={toggleTorch}
-                onTorchAvailabilityChange={setHasTorch}
-                onError={onCameraError}
-                style={StyleSheet.absoluteFill}
-              />
-
-              {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
-              {size ? (
-                <IdCardMaskOverlay
-                  width={size.width}
-                  height={size.height}
-                  margin={Spacing.lg}
-                  strokeColor={frameStrokeColor}
-                />
-              ) : null}
-            </View>
-          </>
-        )}
-
-        {/* Torch + manual entry */}
         <View style={styles.bottomBar}>
-          {cameraFailed || !hasTorch ? null : (
-            <View style={styles.torchRow}>
-              <TorchButton active={torchOn} onPress={toggleTorch} />
-            </View>
-          )}
-          <View style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg }]}>
+          {accessory ? <View style={styles.accessoryRow}>{accessory}</View> : null}
+          <View style={styles.buttonBlock}>
             <Button
               title={t('BCSC.Instructions.EnterManually')}
               accessibilityLabel={t('BCSC.Instructions.EnterManually')}
               testID={testIdWithKey(TestIds.verify.scanSerial.enterManually)}
-              onPress={goToManualEntry}
+              onPress={onEnterManually}
               buttonType={ButtonType.Primary}
             />
-            {cameraFailed ? (
-              <Button
-                title={t('BCSC.Scan.TryAgain')}
-                accessibilityLabel={t('BCSC.Scan.TryAgain')}
-                testID={testIdWithKey(TestIds.verify.scanSerial.retryCamera)}
-                onPress={retryCamera}
-                buttonType={ButtonType.Secondary}
-              />
-            ) : null}
+            {secondaryAction}
           </View>
         </View>
       </View>
