@@ -106,7 +106,7 @@ describe('useVerificationResponseViewModel', () => {
         type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('TestNickname')
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
@@ -373,7 +373,7 @@ describe('useVerificationResponseViewModel', () => {
         type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['RC0000080'],
       })
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'RC0000080')
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('RC0000080')
     })
 
     it('prefers given_name over family_name when both are present', async () => {
@@ -390,7 +390,7 @@ describe('useVerificationResponseViewModel', () => {
         type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['Jamie'],
       })
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'Jamie')
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('Jamie')
     })
   })
 })

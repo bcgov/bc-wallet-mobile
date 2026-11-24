@@ -43,6 +43,15 @@ abstract class BcscCoreSpec internal constructor(
         promise: Promise,
     )
 
+    abstract fun setRegistration(
+        clientID: String,
+        issuer: String,
+        registrationAccessToken: String?,
+        promise: Promise,
+    )
+
+    abstract fun clearRegistration(promise: Promise)
+
     abstract fun getAccount(promise: Promise)
 
     abstract fun getDeviceId(promise: Promise)

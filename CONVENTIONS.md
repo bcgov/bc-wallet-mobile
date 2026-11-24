@@ -422,6 +422,37 @@ only says whether a PIN is right.
 **Why:** each platform kept its own schedule and English messages in native code, so the same five wrong PINs
 locked iOS for a minute and Android for 30 seconds, and the lock screen copy could not be translated (#4423).
 
+## Device registration: one owner, saved and cleared together
+
+The device registration is the client ID, the issuer and the registration access token. One module owns it,
+and the three are saved together and cleared together.
+
+- `device-registration.ts` (`bcsc-theme/services/`) is the only code that reads, saves and clears the
+  registration. Hooks reach it through `saveRegistration` and `clearRegistration` in `useSecureActions`, which
+  also keep the token in app state. ESLint blocks native `setRegistration` and `clearRegistration`, and any
+  `getToken`, `setToken` or `deleteToken` of `TokenType.Registration`, everywhere else.
+- A registration the server returns (create, update, or a rotated token) is saved with one native call. It
+  writes the token first, then the client ID and issuer; if the second write fails the first is put back, so a
+  failed save leaves the previous registration in place.
+- `setAccount` saves the issuer, security method and nickname. It cannot change the client ID. An account
+  that has not registered has no `clientID`; the native record keeps an empty string, which never reaches
+  TypeScript.
+- A flow that replaces the registration (verification reset, registration cycle) clears the old one before it
+  creates the new one. If the new registration fails, the account has no registration and `ensureRegistered`
+  registers it again, instead of holding a client ID the server has deleted. The clear also removes the copy
+  of the client ID that an Android authorization request carried over from v3 can hold, because unlock fills
+  a missing client ID in from it.
+- Delete the access and refresh tokens before clearing the registration: iOS stores every token under the
+  client ID.
+- The storage did not move. The client ID and issuer are on the native account record and the token is in the
+  keychain (iOS) or the encrypted tokens file (Android), so an upgrade reads what the previous release wrote.
+- Unlock still fills in a missing client ID from the token and, on Android, repairs a client ID the server
+  rejects (#4874). Both write through the owner. They also finish a save that was cut short: Android writes
+  two files, so an app killed between them leaves the new token with the old client ID.
+
+**Why:** six callers saved the client ID on the account, separately from its token. When the two stopped
+matching, the server rejected the device with error 2210 on every launch and it could not recover (#4868).
+
 ## Removing an account: a usable account is confirmed first
 
 A control that removes an account the user could still use opens `RemoveAccountConfirmationScreen` (the shared
