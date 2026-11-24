@@ -1,5 +1,5 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { readDeviceRegistration } from '@/bcsc-theme/services/device-registration'
+import { DeviceRegistration, readDeviceRegistration } from '@/bcsc-theme/services/device-registration'
 import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
 import { confirmModulusRegistered } from '@/bcsc-theme/utils/jwk-modulus'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
@@ -15,6 +15,7 @@ import {
   getDeviceId,
   getDynamicClientRegistrationBody,
   isAccountRegistered,
+  NativeAccount,
   setAccount,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -246,6 +247,66 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   }, [createRegistration, logger])
 
   /**
+   * Saves what a registration update returned: the registration, then the nickname on the account.
+   *
+   * Each save stands on its own, so one failing does not hold back the other: the nickname save never
+   * blocks, and a failed registration save is thrown once both have run.
+   *
+   * @param issuer - Issuer both saves are made for
+   * @param registration - Registration the update request was made with
+   * @param updatedRegistrationData - Registration the server returned for the update
+   * @param account - Account the nickname is saved on
+   * @param selectedNickname - Nickname to save
+   * @throws AppError (e.g. `TOKEN_SAVE_FAILED`, `NATIVE_STORAGE_WRITE_FAILED`) if the registration cannot be saved
+   */
+  const persistUpdatedRegistration = useCallback(
+    async (
+      issuer: string,
+      registration: DeviceRegistration,
+      updatedRegistrationData: RegistrationResponseData,
+      account: NativeAccount,
+      selectedNickname: string
+    ) => {
+      // A failed registration save, thrown once the nickname save below has run
+      let registrationSaveError: unknown
+
+      try {
+        // The registration first. If the server rotated the token it has revoked the old one. A
+        // response that leaves out the client ID or the token keeps the one the request was made with.
+        await saveRegistration({
+          clientId: updatedRegistrationData.client_id ?? registration.clientId,
+          issuer,
+          registrationAccessToken:
+            updatedRegistrationData.registration_access_token ?? registration.registrationAccessToken,
+        })
+      } catch (error) {
+        registrationSaveError = error
+        const errMessage = error instanceof Error ? error.message : String(error)
+        logger.error(`Failed to store updated registration data: ${errMessage}`)
+      }
+
+      try {
+        await setAccount({
+          issuer,
+          securityMethod: account.securityMethod,
+          nickname: selectedNickname,
+          didPostNicknameToServer: true,
+        })
+      } catch (error) {
+        const errMessage = error instanceof Error ? error.message : String(error)
+        logger.error(`Failed to store updated account nickname: ${errMessage}`)
+      }
+
+      if (registrationSaveError) {
+        // The server has the update, but the device may still hold a token the server rotated and revoked.
+        // Unlock does not repair that, so the update is not reported as a success.
+        throw registrationSaveError
+      }
+    },
+    [logger, saveRegistration]
+  )
+
+  /**
    * Updates an existing BCSC client registration with new nickname and attestation.
    *
    * Requires a registered device and a nickname. The client ID and its registration access token are
@@ -306,7 +367,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         // Deserialize the body and add required fields for the update request (client_id and scope)
         let updatePayload
         try {
-          updatePayload = body ? JSON.parse(body) : body
+          updatePayload = JSON.parse(body)
           // Add required fields for PUT request: client_id and scope. Scope mirrors
           // useAuthorizationApi.tsx's IAS_SCOPE and key-recovery.ts's reRegisterNewestKey —
           // keep all three in sync if it ever changes.
@@ -338,54 +399,18 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
         logger.info('Completed registration update request')
 
-        // The client ID the account holds once the registration save below has run: the new one, or the
-        // previous one if that save failed
-        let storedClientId = registration.clientId
-        // A failed registration save, thrown once the nickname save below has run
-        let registrationSaveError: unknown
-
-        // Each save stands on its own: one failing does not hold back the other.
-        try {
-          // The registration first. If the server rotated the token it has revoked the old one. A
-          // response that leaves out the client ID or the token keeps the one the request was made with.
-          const clientId = updatedRegistrationData.client_id ?? registration.clientId
-          await saveRegistration({
-            clientId,
-            issuer: apiClient.endpoints.issuer,
-            registrationAccessToken:
-              updatedRegistrationData.registration_access_token ?? registration.registrationAccessToken,
-          })
-          storedClientId = clientId
-        } catch (error) {
-          registrationSaveError = error
-          const errMessage = error instanceof Error ? error.message : String(error)
-          logger.error(`Failed to store updated registration data: ${errMessage}`)
-        }
-
-        try {
-          // setAccount writes the client ID it is given, so it is passed back as stored, never changed here
-          await setAccount({
-            clientID: storedClientId,
-            issuer: apiClient.endpoints.issuer,
-            securityMethod: account.securityMethod,
-            nickname: selectedNickname,
-            didPostNicknameToServer: true,
-          })
-        } catch (error) {
-          const errMessage = error instanceof Error ? error.message : String(error)
-          logger.error(`Failed to store updated account nickname: ${errMessage}`)
-        }
-
-        if (registrationSaveError) {
-          // The server has the update, but the device may still hold a token the server rotated and revoked.
-          // Unlock does not repair that, so the update is not reported as a success.
-          throw registrationSaveError
-        }
+        await persistUpdatedRegistration(
+          apiClient.endpoints.issuer,
+          registration,
+          updatedRegistrationData,
+          account,
+          selectedNickname
+        )
 
         return updatedRegistrationData
       })
     },
-    [isClientReady, apiClient, logger, getAttestation, saveRegistration]
+    [isClientReady, apiClient, logger, getAttestation, persistUpdatedRegistration]
   )
 
   /**

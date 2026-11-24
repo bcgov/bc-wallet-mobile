@@ -6,7 +6,7 @@ import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
-import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
+import { createQuickLoginJWT, getAccount, isAccountRegistered } from 'react-native-bcsc-core'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { getAccountReadContext } from '../utils/account-read-status'
 import { getNotificationTokens } from '../utils/push-notification-tokens'
@@ -87,6 +87,11 @@ export const useQuickLoginURL = () => {
         if (!account) {
           const context = await getAccountReadContext()
           throw steps.fail('account', new Error('No account data received'), { context })
+        }
+
+        // The login hint is signed as the device's client, so the account needs its registration
+        if (!isAccountRegistered(account)) {
+          throw steps.fail('account', new Error('Account has no registration'))
         }
 
         const { jwk } = jwkResult

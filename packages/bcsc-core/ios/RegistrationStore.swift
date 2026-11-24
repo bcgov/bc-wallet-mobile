@@ -39,7 +39,7 @@ extension StorageService: RegistrationAccountStorage {
 }
 
 /// The device registration: the client ID and issuer on the account record, and the registration access
-/// token in the keychain.
+/// token in the keychain. Nothing else writes the client ID (`setAccount` keeps the one that is stored).
 ///
 /// Every token is kept under the client ID (`{clientID}/tokens/{type}/1`), so the order of the two writes
 /// decides what an interrupted save leaves behind:

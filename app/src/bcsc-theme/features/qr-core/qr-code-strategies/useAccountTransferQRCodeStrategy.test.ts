@@ -331,6 +331,16 @@ describe('useAccountTransferQRCodeStrategy', () => {
       expect(onSuccess).not.toHaveBeenCalled()
     })
 
+    it('throws, signing nothing, when the account has no registration', async () => {
+      // The transfer is requested as this device's client, and this account has no client ID
+      jest.mocked(getAccount).mockResolvedValue({ ...mockAccount, clientID: undefined } as any)
+
+      await expect(setup().handle(validQrValue)).rejects.toThrow('Local account is not registered')
+
+      expect(createDeviceSignedJWT).not.toHaveBeenCalled()
+      expect(onSuccess).not.toHaveBeenCalled()
+    })
+
     it('throws when attestation returns no response', async () => {
       mockVerifyAttestation.mockResolvedValue(null)
 
