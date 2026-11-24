@@ -6,8 +6,11 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, test } from 'node:test'
 import { IasTestApiError } from '../src/api/ias-test.ts'
-import { approveInPersonRequest } from '../src/helpers/approval.ts'
+import { TestUsers } from '../src/constants.ts'
+import { approveInPersonRequest, reviewSendVideoRequest, withdrawSendVideoRequest } from '../src/helpers/approval.ts'
 import { APPROVAL_ROUTES, approvalOverride, approvalSourceFor, mintsHolders } from '../src/support/approval-routes.ts'
+import { setTestUser, setUsercode } from '../src/support/context.ts'
+import { hasQueuedSubmission, markSubmissionQueued } from '../src/support/send-video-queue.ts'
 
 const ENV_KEYS = ['E2E_APPROVAL_SOURCE', 'IAS_TEST_API_HOST', 'IAS_TEST_API_CLIENT_ID', 'IAS_TEST_API_CLIENT_SECRET']
 const DISPLAYED_CODE = 'ABCD-2345'
@@ -154,4 +157,62 @@ test('a code the API does not know fails the approval, with the reason kept for 
   assert.match(error.message, /source=api\).*→ 400 \(empty body\): the usercode is unknown/)
   assertNamesNoHolder(error.message)
   assert.equal(error.cause.kind, 'unknown-usercode')
+})
+
+// --- send-video on the API ----------------------------------------------------------------------------
+
+/** Who a send-video request is for, as the journeys pass it: made-up values, no persona. */
+const HOLDER = { cardSerialNumber: SERIAL, surname: 'TESTER', firstName: 'PAT', platform: 'android' }
+
+/** A photo-card journey that has read its usercode, as `readUsercode` leaves it. */
+function journeyWithUsercode() {
+  setTestUser(TestUsers.photo)
+  setUsercode(CODE)
+}
+
+test('a send-video review on the API decides the usercode the journey read', async (t) => {
+  let answers = 0
+  const api = fakeApi(t, () => json(200, { status: ++answers === 1 ? 'VERIFIED' : 'DECLINED' }))
+  journeyWithUsercode()
+  markSubmissionQueued()
+
+  assert.deepEqual(await reviewSendVideoRequest({ decision: 'approve', ...HOLDER }), { source: 'api', decision: 'APPROVE' })
+  assert.equal(hasQueuedSubmission(), false)
+  await reviewSendVideoRequest({ decision: 'reject', verificationComment: 'Your video was unclear.', ...HOLDER })
+
+  assert.deepEqual(api.requests[0], {
+    path: `/test/idv/v1/verifications/${CODE}/decision`,
+    body: { channel: 'SEND_VIDEO', decision: 'APPROVE' },
+  })
+  const { channel, decision, userMessage, internalComment } = api.requests[1].body
+  assert.deepEqual({ channel, decision, userMessage }, { channel: 'SEND_VIDEO', decision: 'DECLINE', userMessage: 'Your video was unclear.' })
+  assert.match(internalComment, /^e2e (run \d+|a local run) \(no device\): scripted review$/)
+  assertNamesNoHolder(api.lines.join('\n'))
+})
+
+test('a send-video review on the API needs the usercode read first', async (t) => {
+  const api = fakeApi(t)
+  setTestUser(TestUsers.photo)
+  await assert.rejects(reviewSendVideoRequest({ decision: 'approve', ...HOLDER }), /No usercode was read for this journey/)
+  assert.equal(api.requests.length, 0)
+})
+
+test('while SEND_VIDEO is not built, the review fails by name and keeps the code out', async (t) => {
+  fakeApi(t, () => new Response(null, { status: 501 }))
+  journeyWithUsercode()
+  const error = await reviewSendVideoRequest({ decision: 'approve', ...HOLDER }).catch((caught) => caught)
+
+  assert.match(error.message, /^Send-video approve failed after \d+ms \(source=api\): .*\(SEND_VIDEO APPROVE\) → 501/)
+  assert.equal(error.cause.kind, 'not-implemented')
+  assertNamesNoHolder(error.message)
+})
+
+test('a journey that never reviewed its upload withdraws it with a decline', async (t) => {
+  const api = fakeApi(t, () => json(200, { status: 'DECLINED' }))
+  journeyWithUsercode()
+  await withdrawSendVideoRequest()
+
+  const { channel, decision, userMessage, internalComment } = api.requests[0].body
+  assert.deepEqual({ channel, decision }, { channel: 'SEND_VIDEO', decision: 'DECLINE' })
+  assert.ok(userMessage && internalComment.endsWith('journey teardown'))
 })

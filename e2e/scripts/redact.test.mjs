@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { TestUsers } from '../src/constants.ts'
-import { personaLabel, redactSensitiveText } from '../src/helpers/redact.ts'
+import { personaLabel, redactSensitiveText, registerUsercode } from '../src/helpers/redact.ts'
 
 test('persona values are masked whatever their case', () => {
   const { firstName, lastName, cardSerial, dob, username } = TestUsers.photo
@@ -26,6 +26,12 @@ test('a birthdate is masked however it is written', () => {
   assert.equal(redactSensitiveText('Birthdate: March 9, 2001'), 'Birthdate: <date>')
   assert.equal(redactSensitiveText('born 2001-03-09 or 2001/03/09'), 'born <date> or <date>')
   assert.equal(redactSensitiveText('typed as 20010309'), 'typed as <digits>')
+})
+
+test('a usercode read this session is masked bare or dashed, and words of its shape are not', () => {
+  registerUsercode('QRST7890')
+  assert.equal(redactSensitiveText('decided QRST7890, shown as qrst-7890'), 'decided <code>, shown as <code>')
+  assert.equal(redactSensitiveText('status VERIFIED, card NONPHOTO, then DECLINED'), 'status VERIFIED, card NONPHOTO, then DECLINED')
 })
 
 test('ordinary screen text is left alone', () => {

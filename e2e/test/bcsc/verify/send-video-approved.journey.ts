@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
+import { TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { unlockWithPin } from '../../../src/flows/auth.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
@@ -15,10 +15,11 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { reviewSendVideoRequest, type SendVideoReview } from '../../../src/helpers/approval.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import { PendingReviewScreen, VerificationSuccessScreen } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /**
  * Verified journey: send video, approved — the send-video method end to end, the one verification path
@@ -35,11 +36,11 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * and the send-video journeys run one platform at a time (CI's `send-video` lane), never concurrently.
  */
 describe('Verified journey: send video, approved', () => {
-  /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
-  let reviewed: ClaimedRequestSummary | undefined
+  /** What the review decided — named by the decision wait's failure, should the app never see it. */
+  let reviewed: SendVideoReview | undefined
 
-  before(() => {
-    setTestUser(TestUsers.photo)
+  before(async () => {
+    setTestUser(await arrangeTestUser('photo', 'send-video'))
   })
 
   after(async () => {

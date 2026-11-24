@@ -2,12 +2,15 @@ import type { TestUser } from '../constants.js'
 import { COMBO_CARD_BARCODE_MASKS, Timeouts } from '../constants.js'
 import { acceptAppAlert, acceptSystemAlert, acceptSystemAlertsUntil, tapAlertButton } from '../helpers/alerts.js'
 import { describeAppError, isAppErrorShowing, throwIfAppErrorShowing } from '../helpers/app-error.js'
+import { normalizeUsercode } from '../api/ias-test.js'
 import {
   ApproveInPersonInput,
   approveInPersonRequest,
-  type ClaimedRequestSummary,
+  describeReview,
   drainSendVideoQueue,
   reviewQueueFor,
+  type SendVideoReview,
+  withdrawSendVideoRequest,
 } from '../helpers/approval.js'
 import type { ImageMaskRegion } from '../helpers/camera.js'
 import { canInjectImages, injectPhoto, injectScanTarget } from '../helpers/camera.js'
@@ -22,6 +25,7 @@ import {
   RestartVerificationAlert,
   tapHelpMenuRow,
 } from '../helpers/help-menu.js'
+import { registerUsercode } from '../helpers/redact.js'
 import { describeCurrentScreen, probeAnyScreen, reachCameraScreen, type ScreenProbe } from '../helpers/screens.js'
 import { bcsc } from '../screens/core/appId.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
@@ -64,7 +68,8 @@ import {
   VideoReviewScreen,
   VideoTooLongScreen,
 } from '../screens/verify.js'
-import { getTestUser } from '../support/context.js'
+import { approvalSourceFor } from '../support/approval-routes.js'
+import { getTestUser, setUsercode } from '../support/context.js'
 import { clearQueuedSubmission, hasQueuedSubmission, markSubmissionQueued } from '../support/send-video-queue.js'
 import { TestIds } from '../test-ids/registry.js'
 import { backgroundAppFor } from './auth.js'
@@ -327,6 +332,20 @@ export async function reachInPersonConfirmationCode(): Promise<string> {
 }
 
 /**
+ * From VerificationMethodSelection: In person → read the usercode → back, choosing no method. The app
+ * has the code from device authorization but shows it only on the in-person screen, and opening that
+ * screen persists nothing, so a send-video journey reads the key its API decision needs this way. The
+ * code is kept in the test context and masked in every log from here on.
+ */
+export async function readUsercode(): Promise<string> {
+  const usercode = normalizeUsercode(await reachInPersonConfirmationCode())
+  registerUsercode(usercode)
+  setUsercode(usercode)
+  await VerifyInPersonScreen.back.tapToReach(VerificationMethodSelectionScreen)
+  return usercode
+}
+
+/**
  * From VerifyInPerson with `formattedCode` already displayed: have the request approved, then
  * Complete → VerificationSuccess → Home. The agent is whoever the route table names for a counter
  * request (src/support/approval-routes.ts). The half of {@link completeVerification} after the code is read.
@@ -390,6 +409,10 @@ const FOCUS_CHECK_SETTLE_MS = 10_000
  * never watches it, and the flow only needs a recording to upload.
  */
 export async function submitSendVideoVerification(user: TestUser): Promise<void> {
+  // The test API decides by usercode, which only the in-person screen shows; the portal needs none.
+  if (approvalSourceFor('send-video', user.flow) === 'api') {
+    await readUsercode()
+  }
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   await VerificationMethodSelectionScreen.link('sendVideo')
 
@@ -695,12 +718,9 @@ function assertExpectedDecision(actual: 'verified' | 'cancelled', expected: 'ver
  */
 export async function waitForSendVideoDecision(
   expected: 'verified' | 'cancelled',
-  options: { reviewed?: ClaimedRequestSummary } = {}
+  options: { reviewed?: SendVideoReview } = {}
 ): Promise<void> {
-  const reviewed = options.reviewed
-    ? `The scripted review decided ${options.reviewed.queue} request ${options.reviewed.requestIdentifier} ` +
-      `(${options.reviewed.persona}, ${options.reviewed.claimedOs || 'os unknown'})`
-    : 'The scripted review reported success'
+  const reviewed = options.reviewed ? `Per the review, ${describeReview(options.reviewed)}` : 'The review reported success'
 
   const status = await driver.waitUntil(
     async (): Promise<'verified' | 'cancelled' | false> => {
@@ -861,6 +881,8 @@ export async function finishApprovedVerification(method: 'in-person' | 'send-vid
  * that is not an e2e persona heads that queue. A cardholder journey is not held up by it.
  */
 export async function clearReviewQueueBeforeSubmit(): Promise<void> {
+  // The test API decides by usercode, not by the queue's head: nothing to clear.
+  if (approvalSourceFor('send-video', getTestUser().flow) === 'api') return
   const queue = reviewQueueFor({ cardSerialNumber: getTestUser().cardSerial })
   const { stoppedReason, queuesWithWork } = await drainSendVideoQueue()
   if (queuesWithWork.includes(queue)) {
@@ -876,19 +898,24 @@ export async function clearReviewQueueBeforeSubmit(): Promise<void> {
 }
 
 /**
- * Journey teardown: drain the review queue when this session's upload was never claimed — a failure
- * between the upload and the scripted review would otherwise leave it for the next run, or the
- * morning. Best-effort by design: a hook that throws is reported as a failure of its own.
+ * Journey teardown: when this session's upload was never decided, decline it through the test API, or
+ * drain the portal's queue — a failure between the upload and the review would otherwise leave it for
+ * the next run, or the morning. Best-effort by design: a hook that throws is reported as a failure of
+ * its own.
  */
 export async function cleanUpQueuedSubmission(): Promise<void> {
   if (!hasQueuedSubmission()) {
     return
   }
-  console.warn('[verify] This journey left its send-video upload in the review queue — draining it')
+  const throughApi = approvalSourceFor('send-video', getTestUser().flow) === 'api'
+  console.warn(
+    `[verify] This journey left its send-video upload undecided — ${throughApi ? 'declining it through the test API' : 'draining the review queue'}`
+  )
   try {
-    await drainSendVideoQueue({ maxClaims: 5, timeoutMs: 120_000 })
+    if (throughApi) await withdrawSendVideoRequest()
+    else await drainSendVideoQueue({ maxClaims: 5, timeoutMs: 120_000 })
   } catch (err) {
-    console.warn(`[verify] The post-journey queue drain failed: ${(err as Error).message ?? err}`)
+    console.warn(`[verify] The post-journey cleanup failed: ${(err as Error).message ?? err}`)
   } finally {
     // Cleared however the drain went: the orphan is this teardown's to deal with, once.
     clearQueuedSubmission()

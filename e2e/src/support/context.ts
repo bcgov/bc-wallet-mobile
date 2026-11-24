@@ -7,10 +7,26 @@ import type { NonBcscUser, NonPhotoCardUser, TestUser } from '../constants.js'
  */
 
 let currentUser: TestUser | undefined
+/** The usercode read for the holder's registration, stripped: what the test API's decisions are keyed by. */
+let currentUsercode: string | undefined
 
 /** Set the TestUser this journey drives. Call from the journey's root `before()`. */
 export function setTestUser(user: TestUser): void {
   currentUser = user
+  currentUsercode = undefined
+}
+
+/** Keep the usercode read for this journey's registration (`readUsercode` in src/flows/verify.ts). */
+export function setUsercode(usercode: string): void {
+  currentUsercode = usercode
+}
+
+/** The usercode read for this journey's registration. Throws when none was read. */
+export function getUsercode(): string {
+  if (!currentUsercode) {
+    throw new Error('No usercode was read for this journey: readUsercode() reads it from method selection')
+  }
+  return currentUsercode
 }
 
 /** The journey's TestUser. Throws when no journey has called {@link setTestUser} yet. */
@@ -43,4 +59,5 @@ export function getNonBcscTestUser(): NonBcscUser {
 /** Clear the context — defensive reset for suites that run multiple journeys in one worker. */
 export function clearTestUser(): void {
   currentUser = undefined
+  currentUsercode = undefined
 }

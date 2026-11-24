@@ -1,9 +1,10 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describeError } from '../api/http.js'
-import { decideVerification, normalizeUsercode } from '../api/ias-test.js'
+import { decideVerification, normalizeUsercode, type Decision } from '../api/ias-test.js'
 import { TestUsers } from '../constants.js'
 import { approvalSourceFor } from '../support/approval-routes.js'
+import { getTestUser, getUsercode } from '../support/context.js'
 import { clearQueuedSubmission } from '../support/send-video-queue.js'
 import { withDriverKeepalive } from './driver-keepalive.js'
 import { type PersonaLabel, personaLabel } from './redact.js'
@@ -94,7 +95,7 @@ export type SendVideoReviewInput =
 /** An identity plus the label logs use for it — the serial and name themselves never reach a log line. */
 type LabelledIdentity = SendVideoReviewIdentity & { persona: PersonaLabel }
 
-/** What the scripted review claimed and decided — for the journey's logs and its decision-timeout message. */
+/** What the portal review claimed and decided — for the journey's logs and its decision-timeout message. */
 export interface ClaimedRequestSummary {
   requestIdentifier: string
   queue: ReviewQueue
@@ -106,6 +107,15 @@ export interface ClaimedRequestSummary {
   claimedOs: string
   claimedAppVersion: string
   videoDate: string
+}
+
+/** What a send-video review decided: the request the portal claimed, or the test API's decision on the usercode. */
+export type SendVideoReview = ({ source: 'idcheck' } & ClaimedRequestSummary) | { source: 'api'; decision: Decision }
+
+/** A review as a log line or a timeout message may name it: never the serial, the name or the code. */
+export function describeReview(review: SendVideoReview): string {
+  if (review.source === 'api') return `the test API recorded ${review.decision} for this journey's usercode`
+  return `the portal review decided ${review.queue} request ${review.requestIdentifier} (${review.persona}, ${review.claimedOs || 'os unknown'})`
 }
 
 /**
@@ -240,10 +250,48 @@ export async function approveInPersonRequest(
   }
 }
 
+/** Which run and device a decline came from, for the note the test API stores with it. Never who it was for. */
+function declineNote(reason: string): string {
+  const run = process.env.GITHUB_RUN_ID ? `run ${process.env.GITHUB_RUN_ID}` : 'a local run'
+  return `e2e ${run} (${currentPlatform() ?? 'no device'}): ${reason}`
+}
+
+/** One call keyed by the journey's usercode (`readUsercode` in src/flows/verify.ts): no claim, no queue. */
+async function reviewSendVideoThroughApi(input: SendVideoReviewInput): Promise<SendVideoReview> {
+  const decision: Decision = input.decision === 'approve' ? 'APPROVE' : 'DECLINE'
+  const comments =
+    input.decision === 'reject'
+      ? { userMessage: input.verificationComment, internalComment: input.comment ?? declineNote('scripted review') }
+      : {}
+  const startedAt = Date.now()
+  try {
+    await withDriverKeepalive(() => decideVerification(getUsercode(), 'SEND_VIDEO', decision, comments))
+  } catch (error: unknown) {
+    const elapsedMs = Date.now() - startedAt
+    throw new Error(`Send-video ${input.decision} failed after ${elapsedMs}ms (source=api): ${describeError(error)}`, {
+      cause: error,
+    })
+  }
+  clearQueuedSubmission()
+  console.log(`[approval] The test API recorded the ${decision} in ${Date.now() - startedAt}ms`)
+  return { source: 'api', decision }
+}
+
 /**
- * Review (approve or reject) a queued send-video verification request by driving the IDCheck portal
- * in-process, and say which request that was.
+ * Decline this journey's own undecided send-video request through the test API: the teardown for an
+ * upload the journey never got to review. The user is never shown the message.
+ */
+export async function withdrawSendVideoRequest(): Promise<void> {
+  const comments = { userMessage: 'This test request was withdrawn.', internalComment: declineNote('journey teardown') }
+  await withDriverKeepalive(() => decideVerification(getUsercode(), 'SEND_VIDEO', 'DECLINE', comments))
+}
+
+/**
+ * Review (approve or reject) a queued send-video verification request, as the route table names for
+ * the journey's holder (src/support/approval-routes.ts): one call to the IAS test API keyed by the
+ * usercode, or the IDCheck portal driven in-process. Says which request that was.
  *
+ * On the portal:
  * The portal's queue is a blind FIFO claim, so the script polls until the submission appears and
  * refuses to review one that is not for the expected person on the expected platform. It works for
  * every card type: the review form is echoed back as rendered, which covers the extra document and
@@ -257,13 +305,16 @@ export async function approveInPersonRequest(
 export async function reviewSendVideoRequest(
   input: SendVideoReviewInput,
   timeoutMs = 180_000
-): Promise<ClaimedRequestSummary> {
+): Promise<SendVideoReview> {
   const platform = input.platform ?? currentPlatform()
   // Logs and errors name the persona, never the serial or the name: Sauce/CI logs are remote.
   const persona = personaLabel(input)
+  const source = approvalSourceFor('send-video', getTestUser().flow)
   console.log(
-    `[approval] Reviewing send-video request (decision=${input.decision}, persona=${persona}, platform=${platform ?? 'any'})`
+    `[approval] Reviewing send-video request (decision=${input.decision}, persona=${persona}, ` +
+      `platform=${platform ?? 'any'}, source=${source})`
   )
+  if (source === 'api') return reviewSendVideoThroughApi(input)
 
   const { reviewSendVideoLogin } = await loadLoginModule()
 
@@ -276,11 +327,9 @@ export async function reviewSendVideoRequest(
       reviewSendVideoLogin({ ...input, platform, persona }, { signal: controller.signal })
     )
     clearQueuedSubmission()
-    console.log(
-      `[approval] Decided ${claimed.queue} request ${claimed.requestIdentifier} ` +
-        `(${claimed.persona}, ${claimed.claimedOs || 'os unknown'})`
-    )
-    return claimed
+    const review: SendVideoReview = { source: 'idcheck', ...claimed }
+    console.log(`[approval] Decided: ${describeReview(review)}`)
+    return review
   } catch (error: unknown) {
     const elapsedMs = Date.now() - startedAt
     const message = error instanceof Error ? error.message : String(error)

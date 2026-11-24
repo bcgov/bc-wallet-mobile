@@ -46,6 +46,19 @@ export function registerMintedHolder(holder: HolderIdentity, alsoMask: readonly 
   if (mintedValues.size > 0) mintedPattern = literalPattern(mintedValues)
 }
 
+/** Usercodes read this session. The bare form has no shape safe to mask on its own, so each is registered. */
+const usercodes = new Set<string>()
+let usercodePattern: RegExp | undefined
+
+/** Mask a usercode read this session as `<code>`, bare (`ABCD2345`) or dashed (`ABCD-2345`). */
+export function registerUsercode(usercode: string): void {
+  const bare = usercode.replaceAll(/[\s-]/g, '')
+  if (!bare) return
+  usercodes.add(bare)
+  usercodes.add(`${bare.slice(0, 4)}-${bare.slice(4)}`)
+  usercodePattern = literalPattern(usercodes)
+}
+
 const sameText = (a = '', b = ''): boolean => a.trim().toUpperCase() === b.trim().toUpperCase()
 
 /** Whether `identity` names `holder`: by serial, or by name where neither has a card. */
@@ -111,7 +124,8 @@ function isEmailLike(token: string): boolean {
 /** `text` with anything that identifies a card holder or unlocks a request masked. */
 export function redactSensitiveText(text: string): string {
   const withoutMinted = mintedPattern ? text.replaceAll(mintedPattern, '<minted>') : text
-  const masked = MASKS.reduce((out, [pattern, mask]) => out.replaceAll(pattern, mask), withoutMinted)
+  const withoutCodes = usercodePattern ? withoutMinted.replaceAll(usercodePattern, '<code>') : withoutMinted
+  const masked = MASKS.reduce((out, [pattern, mask]) => out.replaceAll(pattern, mask), withoutCodes)
   // Emails go by token: an unanchored `local+@domain` regex rescans the local part from every position.
   return masked.replaceAll(/\S+/g, (token) => (isEmailLike(token) ? '<email>' : token))
 }

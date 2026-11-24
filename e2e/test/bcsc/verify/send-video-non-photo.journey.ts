@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   captureAdditionalPhotoId,
@@ -15,10 +15,11 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { reviewSendVideoRequest, type SendVideoReview } from '../../../src/helpers/approval.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import { VerificationSuccessScreen } from '../../../src/screens/verify.js'
 import { getNonPhotoTestUser, getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /** The additional photo ID this card type must add, as a substring of the server-keyed row testID. */
 const ADDITIONAL_ID_MATCH = 'Passport'
@@ -40,11 +41,11 @@ const ADDITIONAL_ID_MATCH = 'Passport'
  * and the send-video journeys run one platform at a time (CI's `send-video` lane), never concurrently.
  */
 describe('Verified journey: non-photo card, send video', () => {
-  /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
-  let reviewed: ClaimedRequestSummary | undefined
+  /** What the review decided — named by the decision wait's failure, should the app never see it. */
+  let reviewed: SendVideoReview | undefined
 
-  before(() => {
-    setTestUser(TestUsers.nonPhoto)
+  before(async () => {
+    setTestUser(await arrangeTestUser('nonPhoto', 'send-video'))
   })
 
   after(async () => {

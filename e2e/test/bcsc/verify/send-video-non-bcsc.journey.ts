@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   captureFirstNonBcscDocument,
@@ -16,11 +16,12 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { reviewSendVideoRequest, type SendVideoReview } from '../../../src/helpers/approval.js'
 import { getEmailConfirmationCode } from '../../../src/helpers/email.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import { VerificationSuccessScreen } from '../../../src/screens/verify.js'
 import { getNonBcscTestUser, getTestUser, setTestUser } from '../../../src/support/context.js'
+import { arrangeTestUser } from '../../../src/support/identity.js'
 
 /** The two documents, in slot order. Case-insensitive substrings of the server-keyed row testIDs. */
 const FIRST_DOC_MATCH = 'BC Drivers Licence'
@@ -47,11 +48,11 @@ const SECOND_DOC_MATCH = 'Canadian Passport'
  * and the send-video journeys run one platform at a time (CI's `send-video` lane), never concurrently.
  */
 describe('Verified journey: non-bcsc, send video', () => {
-  /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
-  let reviewed: ClaimedRequestSummary | undefined
+  /** What the review decided — named by the decision wait's failure, should the app never see it. */
+  let reviewed: SendVideoReview | undefined
 
-  before(() => {
-    setTestUser(TestUsers.na)
+  before(async () => {
+    setTestUser(await arrangeTestUser('na', 'send-video'))
   })
 
   after(async () => {
