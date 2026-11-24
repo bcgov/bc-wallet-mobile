@@ -59,6 +59,27 @@ const expire: Step = (state) =>
     payload: [{ bcscEvent: BCSCEvent.Expire, bcscReason: BCSCReason.ExpiredBySystem }],
   })
 
+const cancel: Step = (state) =>
+  apply(state, {
+    type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+    payload: [{ bcscEvent: BCSCEvent.Cancel, bcscReason: BCSCReason.Cancel }],
+  })
+
+// A new registration's tokens arrive before the finish step, which does not write them
+const receiveToken: Step = (state) =>
+  apply(state, { type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN, payload: [UNEXPIRED_JWT] })
+
+// Mirrors the finish step: the record is written, the saved account details are dropped, and the
+// verify prompt counts as answered
+const finish: Step = (state) =>
+  apply(
+    state,
+    { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [true] },
+    { type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [undefined] },
+    { type: BCDispatchAction.SET_VERIFICATION_STARTED, payload: [false] },
+    { type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] }
+  )
+
 const enterFlow: Step = (state) =>
   apply(
     state,
@@ -163,6 +184,36 @@ const scenarios: { name: string; start: Step; unlockAgain: Step; steps?: [string
     unlockAgain: unlock(credential(BCSCEvent.Authorization)),
     steps: restartTransitions,
   },
+  {
+    name: 'token-only account finishes verification',
+    start: unlock(null),
+    unlockAgain: unlock(credential(BCSCEvent.Authorization)),
+    steps: [['finish', finish]],
+  },
+  {
+    name: 'finished account, then the card is cancelled',
+    start: (state) => finish(unlock(null)(state)),
+    unlockAgain: unlock(credential(BCSCEvent.Authorization)),
+    steps: [['cancel', cancel]],
+  },
+  {
+    name: 'finished account, expires, then renews',
+    start: unlock(credential(BCSCEvent.Authorization)),
+    unlockAgain: unlock(credential(BCSCEvent.Authorization)),
+    steps: [
+      ['expire', expire],
+      ['reset, leaving the flow', reset(false)],
+      ['enter the flow', enterFlow],
+      ['receive the new token', receiveToken],
+      ['finish', finish],
+    ],
+  },
+  {
+    name: 'finished account, then verification is reset',
+    start: (state) => finish(unlock(null)(state)),
+    unlockAgain: unlock(null, { withToken: false }),
+    steps: [['reset, leaving the flow', reset(false)]],
+  },
 ]
 
 const row = (
@@ -231,6 +282,30 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, true, HomeNoticeType.AccountExpired, null),
     row(false, true, HomeNoticeType.AccountExpired, null),
+  ],
+  'token-only account finishes verification': [
+    row(false, true, HomeNoticeType.BCSCVerified, null),
+    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.None, null),
+  ],
+  'finished account, then the card is cancelled': [
+    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.None, null),
+  ],
+  'finished account, expires, then renews': [
+    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(true, false, HomeNoticeType.BCSCStartVerification, BCSCScreens.AccountSetup),
+    row(true, true, HomeNoticeType.BCSCVerified, BCSCScreens.VerificationSuccess),
+    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.None, null),
+  ],
+  'finished account, then verification is reset': [
+    row(false, true, HomeNoticeType.None, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
   ],
 }
 
