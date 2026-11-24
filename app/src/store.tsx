@@ -43,6 +43,8 @@ export interface DismissPersonCredentialOffer {
 // This is a misnomer, it's actually just account data that is used to determine if an account has been updated outside of the app (agent, websites, etc.)
 export interface CredentialMetadata {
   fullName: string
+  /** Absent in details saved before the field existed */
+  bcscEvent?: string
   bcscReason: string
   deviceCount: number
   deviceLimit: number

@@ -10,7 +10,7 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  * Checks token metadata and renders a modal or alert
  * Reasons:
  * Cancel
- *  - displays a modal instructing user to reset their app
+ *  - displays a modal instructing user to reset their app; the saved event also marks the card inactive
  *
  * Expire:
  *  - saved with the account details, which is what marks the card inactive; no alert (see IASP-12489)
@@ -20,6 +20,8 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  *
  * Replace:
  *  - emits an alert informing the user their card type has changed
+ *
+ * Details saved before the event was kept, or whose event alone changed, are saved again without an alert.
  *
  * @export
  * @class EventReasonAlertsSystemCheck
@@ -34,6 +36,7 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   private event: BCSCEvent | undefined
   private reason: BCSCReason | undefined
   private tokenMetadata: CredentialMetadata | undefined
+  private savedEventIsStale = false
 
   constructor(
     getIdToken: () => Promise<IdToken>,
@@ -62,6 +65,7 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
 
     // Compare new and stored credential metadata
     const isMetadataTheSame = compareCredentialMetadata(this.tokenMetadata, this.credentialMetadata)
+    this.savedEventIsStale = isMetadataTheSame && this.credentialMetadata?.bcscEvent !== this.tokenMetadata.bcscEvent
 
     return isMetadataTheSame
   }
@@ -93,7 +97,10 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   }
 
   onSuccess() {
-    // nothing to alert
+    // Nothing to alert. The card is no more or less inactive for it, but the saved event is what says so
+    if (this.savedEventIsStale) {
+      this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
+    }
   }
 
   // helper function for building the alert to emit

@@ -196,6 +196,12 @@ const scenarios: { name: string; start: Step; unlockAgain: Step; steps?: [string
     steps: [['cancel', cancel]],
   },
   {
+    name: 'token-only account, then the card is cancelled',
+    start: unlock(null),
+    unlockAgain: unlock(null),
+    steps: [['cancel', cancel]],
+  },
+  {
     name: 'finished account, expires, then renews',
     start: unlock(credential(BCSCEvent.Authorization)),
     unlockAgain: unlock(credential(BCSCEvent.Authorization)),
@@ -287,10 +293,17 @@ const expected: Record<string, Observation[]> = {
     row(false, true, HomeNoticeType.None, null),
     row(false, true, HomeNoticeType.None, null),
   ],
+  // A saved Cancel marks the card inactive. The device-invalidated screen sits above Home, so these
+  // rows are what is beneath it, and what a launch shows when the account-change check cannot run.
   'finished account, then the card is cancelled': [
     row(false, true, HomeNoticeType.None, null),
-    row(false, true, HomeNoticeType.None, null),
-    row(false, true, HomeNoticeType.None, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+    row(false, true, HomeNoticeType.AccountExpired, null),
+  ],
+  'token-only account, then the card is cancelled': [
+    row(false, true, HomeNoticeType.BCSCVerified, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
+    row(false, false, HomeNoticeType.BCSCStartVerification, null),
   ],
   'finished account, expires, then renews': [
     row(false, true, HomeNoticeType.None, null),
