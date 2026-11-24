@@ -114,10 +114,18 @@ const checkReason = (flag: FlagValue): string => {
 const mayHaveChanged = (status: number): string =>
   `IAS answered with status ${status} after the request was sent, so it may or may not have changed the status. Check the device before running the command again, because a second run switches it back.`
 
+// 501 keeps its own message: IAS says it does not implement the operation, so nothing was changed.
+const serverErrors = (): Partial<Record<number, string>> =>
+  Object.fromEntries(
+    Array.from({ length: 100 }, (_, offset) => 500 + offset)
+      .filter((status) => status !== 501)
+      .map((status) => [status, mayHaveChanged(status)])
+  )
+
 const statusErrors = (host: string): Partial<Record<number, string>> => ({
   400: 'IAS rejected the status change. It accepts one only for a usercode whose mobile app is Activated or Suspended. The usercode may be unknown, not yet verified, expired or deactivated.',
   404: endpointMissing(host),
-  ...Object.fromEntries([500, 502, 503, 504].map((status) => [status, mayHaveChanged(status)])),
+  ...serverErrors(),
 })
 
 // IAS answers a change with 200 and no body; a redirect, a body or a failed read cannot be trusted as that.
@@ -128,7 +136,11 @@ const confirmedStatusChange = async (response: Response): Promise<void> => {
   } catch {
     body = undefined
   }
-  if (body !== '') throw new CliError(`IAS answered unexpectedly. ${OUTCOME_UNKNOWN}`)
+  if (body !== '') {
+    throw new CliError(
+      'IAS answered unexpectedly. The outcome is unknown; check the device before running the command again, because a second run switches the status back.'
+    )
+  }
 }
 
 export const setStatus = async (ctx: HandlerContext): Promise<number> => {

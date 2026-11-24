@@ -283,6 +283,8 @@ describe('mobile-app set-status', () => {
     const invalid = [
       ['a space', 'Flaky test'],
       ['punctuation', 'INC-123'],
+      ['an underscore', 'E2E_1'],
+      ['a non-ASCII letter', 'Café1'],
       ['26 characters', 'A'.repeat(26)],
     ]
     for (const [name, value] of invalid) {
@@ -389,7 +391,7 @@ describe('mobile-app set-status', () => {
       assert.match(stderr, /--hostname/)
     })
 
-    for (const status of [500, 502, 503, 504]) {
+    for (const status of [500, 502, 503, 504, 507, 524]) {
       it(`does not retry a ${status} and says to check before running it again`, async () => {
         const fetchMock = mockFetch(() => new Response(null, { status }))
         const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
@@ -401,6 +403,14 @@ describe('mobile-app set-status', () => {
         assert.doesNotMatch(stderr, /Retry/)
       })
     }
+
+    it('keeps the not-implemented message for a 501', async () => {
+      mockFetch(() => new Response(null, { status: 501 }))
+      const { code, stderr } = await invokeStatus(['--reason', 'E2E1'])
+      assert.equal(code, 1)
+      assert.match(stderr, /does not implement this operation/)
+      assert.doesNotMatch(stderr, /may or may not/)
+    })
 
     const redirected = () => {
       const response = new Response(null, { status: 200 })
@@ -423,7 +433,9 @@ describe('mobile-app set-status', () => {
         const { code, stdout, stderr } = await invokeStatus(['--reason', 'E2E1'])
         assert.equal(code, 1)
         assert.equal(stdout, '')
-        assert.match(stderr, /IAS answered unexpectedly\. The outcome is unknown/)
+        assert.match(stderr, /IAS answered unexpectedly\. The outcome is unknown; check the device/)
+        assert.match(stderr, /a second run switches the status back/)
+        assert.doesNotMatch(stderr, /check the registration/)
       })
     }
   })
