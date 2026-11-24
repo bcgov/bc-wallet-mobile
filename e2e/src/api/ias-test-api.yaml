@@ -2,12 +2,33 @@ openapi: 3.0.3
 info:
   title: BCSC Mobile E2E Test API
   version: "1.0"
-  description: >
+  description: |
     Non-production API for BCSC mobile app e2e tests to provision bare test
     identities and drive IDV/account-state transitions without automating
     the ID Check UI.
+
+    **Implemented.** These calls write tables and return their documented success status.
+
+    - POST /accounts
+    - POST /verifications/{usercode}/decision with channel COUNTER
+    - POST /accounts/{usercode}/card-status
+    - POST /accounts/mobile-app/{usercode}/status
+    - POST /accounts/mobile-app/{usercode}/expiry
+    - POST /accounts/{usercode}/card-renewal
+    - POST /accounts/{csn}/address-update
+
+    **Not implemented.** These return 501 and write nothing.
+
+    - POST /verifications/{usercode}/decision with channel LIVE_VIDEO or SEND_VIDEO
+    - POST /registrations/{usercode}/email-verification/complete
 servers:
   - url: /test/idv/v1
+
+tags:
+  - name: Implemented
+    description: These calls write tables and return their documented success status.
+  - name: Not implemented
+    description: These calls return 501 and write nothing.
 
 components:
   securitySchemes:
@@ -154,29 +175,28 @@ components:
 
     CardEventType:
       type: string
-      enum: [ACTIVATE, SUSPEND, UNSUSPEND, CANCEL]
+      enum: [SUSPEND, UNSUSPEND, CANCEL]
 
     ChangeCardStatusRequest:
       type: object
-      required: [cardEventType, reason]
+      required: [cardEventType]
       properties:
         cardEventType:
           $ref: '#/components/schemas/CardEventType'
-        reason:
-          type: string
-
-    MobileAppStatus:
-      type: string
-      enum: [ACTIVATED, SUSPENDED, DEACTIVATED]
 
     ChangeMobileAppStatusRequest:
       type: object
-      required: [status, reason]
+      required: [reason]
       properties:
-        status:
-          $ref: '#/components/schemas/MobileAppStatus'
         reason:
           type: string
+          description: >
+            Remedy number, the same value an agent types on the ID Search
+            Change Mobile App Status screen. 1 to 25 letters or digits.
+            Stored in the status comment as "changed device status as per
+            remedy ticket" plus this value. This is not the new status.
+            The caller does not send a status. Activated becomes Suspended,
+            and Suspended becomes Activated.
 
     SetMobileAppExpiryRequest:
       type: object
@@ -206,20 +226,22 @@ components:
     CardRenewalRequest:
       type: object
       description: >
-        Simulates a renewed or replacement physical/mobile BCSC being issued
-        with changed identity data, via the same card-issuance feed used for
-        production files. Whether this is treated as a RENEW or a REPLACE is
-        determined by cardExpiryDate: matching the existing card's current
-        expiry date means REPLACE (e.g. lost/damaged card, same validity
-        period); a later expiry date means RENEW.
+        Issues a renewed or replacement physical BCSC for the card registered
+        to the mobile app. cardExpiryDate selects the process. The same date
+        as the current card expiry is a replace for an Activated card. A date
+        after today and after the current expiry is a renew. A Deactivated
+        card follows BCSC011, which reports a matching expiry as a renew.
+        Surname, given names, gender, and address are optional. Sent values
+        replace the current ones. Omitted values stay as they are.
       required: [cardExpiryDate]
       properties:
         cardExpiryDate:
           type: string
           format: date
           description: >
-            Same as the existing card's current expiry date to simulate a
-            REPLACE; a later date to simulate a RENEW.
+            The expiry date of the new card. The same date as the current
+            expiry is a replace for an Activated card. A date after today and
+            after the current expiry is a renew.
         surname:
           type: string
         givenName1:
@@ -230,7 +252,7 @@ components:
           type: string
         gender:
           type: string
-          description: ICBC gender code as carried on the card (e.g. M/F/X).
+          description: Gender code M, F, X, or U.
         cardAddressLine1:
           type: string
         cardAddressLine2:
@@ -247,30 +269,42 @@ components:
       properties:
         csn:
           type: string
-          description: CSN of the newly issued renewed/replacement card.
+          description: Card serial number of the new card.
         registrationProcessType:
           type: string
+          description: >
+            RENEW_SERVICES_CARD or REPLACE_SERVICES_CARD, the process used to
+            issue the card.
           enum: [RENEW_SERVICES_CARD, REPLACE_SERVICES_CARD]
 
     AddressUpdateRequest:
       type: object
       description: >
-        Simulates an address-only update feed entry (no new card issued),
-        distinct from a card renewal/replacement.
+        Account address only. No new card is issued, and the address printed
+        on the card stays as it is. The ICBC parser reads the city and
+        province from the address lines. Put the street on line 1
+        and the city and province on the next line, for example line 1
+        "1 MAIN ST" and line 2 "VICTORIA BC". city must start with that
+        parsed city, and province must equal the parsed province. Both are
+        uppercase.
       required: [cardAddressLine1, city, province, postalCode]
       properties:
         cardAddressLine1:
           type: string
+          description: Street line, for example "1 MAIN ST".
         cardAddressLine2:
           type: string
+          description: City and province when they are not on line 1, for example "VICTORIA BC".
         cardAddressLine3:
           type: string
         cardAddressLine4:
           type: string
         city:
           type: string
+          description: Uppercase. Must start with the city parsed from the address lines.
         province:
           type: string
+          description: Uppercase province code. Must equal the province parsed from the address lines, for example BC.
         postalCode:
           type: string
         cardAddressEffectiveDate:
@@ -288,10 +322,15 @@ components:
           format: int64
         status:
           type: string
+          description: >
+            Received. The row is saved before this response. Address processing
+            continues after the response and may later set Processed, Error,
+            On Hold, or Not Applied.
 
 paths:
   /accounts:
     post:
+      tags: [Implemented]
       summary: Issue a new BC Services Card to a new, bare/unverified identity
       security:
         - iasOAuth2: [test-idv-accounts]
@@ -309,7 +348,11 @@ paths:
 
   /verifications/{usercode}/decision:
     post:
+      tags: [Implemented]
       summary: Record an identity verification decision for a mobile app registration
+      description: >
+        COUNTER is implemented. LIVE_VIDEO and SEND_VIDEO return 501 and
+        write nothing.
       security:
         - iasOAuth2: [test-idv-verify]
       parameters:
@@ -325,16 +368,22 @@ paths:
             schema: { $ref: '#/components/schemas/VerificationDecisionRequest' }
       responses:
         '200':
-          description: Verification decision recorded.
+          description: Verification decision recorded for channel COUNTER.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/VerifyResponse' }
+        '501':
+          description: >
+            channel is LIVE_VIDEO or SEND_VIDEO. The response body is empty
+            and nothing is written.
 
   /registrations/{usercode}/email-verification/complete:
     post:
+      tags: [Not implemented]
       summary: Complete pending email verification for a device registration
       description: >
-        Completes verification of the email associated with this device
+        Returns 501 and writes nothing. When this call is implemented it
+        completes verification of the email associated with this device
         registration only. It does not modify the email associated with the
         verified identity. The supplied address is a match guard and must
         equal the pending registration email; it is not logged or returned.
@@ -352,53 +401,102 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/CompleteRegistrationEmailVerificationRequest' }
       responses:
+        '501':
+          description: >
+            Not implemented. The response body is empty and nothing is written.
+            This is the status the server returns today.
         '204':
-          description: Pending registration email verification completed.
+          description: >
+            Intended when this call is implemented. Pending registration email
+            verification completed.
         '404':
-          description: Registration or pending email verification not found.
+          description: >
+            Intended when this call is implemented. Registration or pending
+            email verification not found.
         '409':
-          description: Expected email does not match the pending registration email.
+          description: >
+            Intended when this call is implemented. Expected email does not
+            match the pending registration email.
 
-  /accounts/{csn}/card-status:
+  /accounts/{usercode}/card-status:
     post:
-      summary: Change the physical BCSC card status (activate/suspend/unsuspend/cancel)
+      tags: [Implemented]
+      summary: Change the physical card status for the mobile app's registration
+      description: >
+        The usercode is the confirmation number the mobile app showed during
+        registration, the same value sent to POST /verifications/{usercode}/decision.
+        That code stays with the registration when a new card is issued. The
+        call changes the card that is still effective, including one issued
+        later by renew or replace. Activated can be suspended or cancelled.
+        Suspended can be unsuspended or cancelled. A deactivated card cannot
+        be changed. The chip event is stored with reason "No reason provided"
+        and no comment. This call does not change the mobile app or the
+        username/password credential.
       security:
         - iasOAuth2: [test-idv-accounts]
       parameters:
-        - name: csn
+        - name: usercode
           in: path
           required: true
           schema: { type: string }
-          description: Card serial number of the card whose status is changed.
+          description: Usercode displayed by the mobile app during its registration flow.
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: '#/components/schemas/ChangeCardStatusRequest' }
       responses:
-        '200': { description: Card status changed. }
+        '200':
+          description: Card status changed. The response body is empty.
+        '400':
+          description: >
+            The user code is blank or unknown, the registration has no card
+            serial, cardEventType is missing, the card is not effective, or
+            the current status cannot take the event.
+        '401':
+          description: Missing, expired, or invalid bearer token.
+        '403':
+          description: The token does not have scope test-idv-accounts.
 
-  /accounts/mobile-app/{client_id}/status:
+  /accounts/mobile-app/{usercode}/status:
     post:
+      tags: [Implemented]
       summary: Change a paired mobile app instance's (device credential) status
+      description: >
+        The usercode is the confirmation number the mobile app showed during
+        registration, the same value sent to POST /verifications/{usercode}/decision.
+        The caller does not send the next status. Activated becomes Suspended.
+        Suspended becomes Activated. Any other credential status is rejected.
+        reason is the remedy number stored in the status comment.
       security:
         - iasOAuth2: [test-idv-accounts]
       parameters:
-        - name: client_id
+        - name: usercode
           in: path
           required: true
           schema: { type: string }
-          description: OAuth client ID the mobile app instance registered with device-server.
+          description: Usercode displayed by the mobile app during its registration flow.
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: '#/components/schemas/ChangeMobileAppStatusRequest' }
       responses:
-        '200': { description: Mobile app status changed. }
+        '200':
+          description: Mobile app status changed. The response body is empty.
+        '400':
+          description: >
+            The user code is blank, reason is missing or not a remedy number
+            of 1 to 25 letters or digits, or the user code is not an Activated
+            or Suspended mobile app.
+        '401':
+          description: Missing, expired, or invalid bearer token.
+        '403':
+          description: The token does not have scope test-idv-accounts.
 
   /accounts/mobile-app/{usercode}/expiry:
     post:
+      tags: [Implemented]
       summary: Set a paired mobile app instance's expiry date (past, present, or future)
       description: >
         The usercode is the confirmation number the mobile app showed during
@@ -437,17 +535,28 @@ paths:
         '403':
           description: The token does not have scope test-idv-accounts.
 
-  /accounts/{csn}/card-renewal:
+  /accounts/{usercode}/card-renewal:
     post:
-      summary: Simulate a card renewal/replacement carrying a name, gender, and/or address change
+      tags: [Implemented]
+      summary: Renew or replace the physical card registered to the mobile app
+      description: >
+        The usercode is the confirmation number the mobile app showed during
+        registration, the same value sent to POST /verifications/{usercode}/decision.
+        The call renews or replaces the current physical card for that
+        registration. The card must be Activated or Deactivated. The response
+        csn is the new card serial. The same cardExpiryDate as the current
+        expiry is a replace for an Activated card. A date after today and
+        after the current expiry is a renew. Name, gender, and address, when
+        sent, replace the current values. Omitted fields stay as they are.
+        A later call with the same user code renews or replaces the current card.
       security:
         - iasOAuth2: [test-idv-accounts]
       parameters:
-        - name: csn
+        - name: usercode
           in: path
           required: true
           schema: { type: string }
-          description: Card serial number of the existing card, as carried on the real feed.
+          description: Usercode displayed by the mobile app during its registration flow.
       requestBody:
         required: true
         content:
@@ -459,10 +568,32 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/CardRenewalResponse' }
+        '400':
+          description: >
+            The user code is blank or unknown, the registration has no card
+            serial, cardExpiryDate is missing or is not the current expiry and
+            not after both today and the current expiry, an optional attribute
+            is blank, gender is not M, F, X, or U, or the card is not an
+            effective Activated or Deactivated card.
+        '401':
+          description: Missing, expired, or invalid bearer token.
+        '403':
+          description: The token does not have scope test-idv-accounts.
 
   /accounts/{csn}/address-update:
     post:
-      summary: Simulate an address-only update feed entry (no new card issued)
+      tags: [Implemented]
+      summary: Update the account address without issuing a new card
+      description: >
+        Updates the account address for the current card. It does not change
+        the address printed on the card. A later renewal that omits the address
+        keeps the last card address. The path is the current card serial; after
+        a renew or replace, use the new serial. Saves mes.incoming_address_update
+        with status Received and returns without waiting. AddressUpdateProcessor
+        then runs on its own, the same way the ICBC card-address service does.
+        The caller sends the address only. ICBC client id, PHN, card type, and
+        card issue date are read from the effective card. Print pending is N
+        and the source is Other. cardAddressEffectiveDate defaults to today.
       security:
         - iasOAuth2: [test-idv-accounts]
       parameters:
@@ -470,7 +601,9 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: Card serial number of the existing card, as carried on the real feed.
+          description: >
+            Current card serial, as carried on the address feed. After a renew
+            or replace, use the new serial.
       requestBody:
         required: true
         content:
@@ -478,7 +611,18 @@ paths:
             schema: { $ref: '#/components/schemas/AddressUpdateRequest' }
       responses:
         '200':
-          description: Address update accepted.
+          description: >
+            Address update accepted. The account address is not necessarily
+            updated yet. status in the body is Received.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AddressUpdateResponse' }
+        '400':
+          description: >
+            The card serial is blank, a required address field is missing,
+            the card serial has no effective chip-credential row, or that card
+            has no ICBC client id, PHN, card issue date, or known card type.
+        '401':
+          description: Missing, expired, or invalid bearer token.
+        '403':
+          description: The token does not have scope test-idv-accounts.

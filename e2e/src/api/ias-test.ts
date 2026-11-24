@@ -33,14 +33,16 @@ const CONNECT_RETRY_INTERVAL_MS = 3_000
 /** The column both decline comments are stored in. */
 const MAX_COMMENT_LENGTH = 500
 
+/** A remedy number, as an agent types it on the status screen. */
+const REMEDY_NUMBER = /^[A-Za-z0-9]{1,25}$/
+
 // --- contract (./ias-test-api.yaml) ---------------------------------------------------------------
 
 export type CardType = 'COMBO' | 'STANDALONE' | 'NONPHOTO' | 'NA'
 export type Decision = 'APPROVE' | 'DECLINE'
 export type VerificationChannel = 'COUNTER' | 'LIVE_VIDEO' | 'SEND_VIDEO'
 export type VerificationStatus = 'VERIFIED' | 'DECLINED'
-export type CardEventType = 'ACTIVATE' | 'SUSPEND' | 'UNSUSPEND' | 'CANCEL'
-export type MobileAppStatus = 'ACTIVATED' | 'SUSPENDED' | 'DEACTIVATED'
+export type CardEventType = 'SUSPEND' | 'UNSUSPEND' | 'CANCEL'
 
 /** Name, gender and address as the card carries them: the same fields mint a card and renew one. */
 interface CardAttributes {
@@ -48,7 +50,7 @@ interface CardAttributes {
   givenName1?: string
   givenName2?: string
   givenName3?: string
-  /** ICBC gender code as on the card (M, F, X). */
+  /** Gender code as on the card: M, F, X or U. */
   gender?: string
   cardAddressLine1?: string
   cardAddressLine2?: string
@@ -83,7 +85,7 @@ export interface DecisionComments {
 }
 
 export interface CardRenewalRequest extends CardAttributes {
-  /** `YYYY-MM-DD`. The card's current expiry replaces it; a later one renews it. */
+  /** `YYYY-MM-DD`. The card's current expiry replaces it; a date after today and that expiry renews it. */
   cardExpiryDate: string
 }
 
@@ -92,12 +94,15 @@ export interface CardRenewalResponse {
   registrationProcessType?: 'RENEW_SERVICES_CARD' | 'REPLACE_SERVICES_CARD'
 }
 
+/** The host parses city and province from the lines: street on line 1, then e.g. `VICTORIA BC`. */
 export interface AddressUpdateRequest {
   cardAddressLine1: string
   cardAddressLine2?: string
   cardAddressLine3?: string
   cardAddressLine4?: string
+  /** Upper case; must start with the city parsed from the lines. */
   city: string
+  /** Upper-case code; must equal the province parsed from the lines. */
   province: string
   postalCode: string
   /** `YYYY-MM-DD`. Today when omitted. */
@@ -524,39 +529,45 @@ export async function setMobileAppExpiry(usercode: string, expiryDate: string | 
   return stored.expiryDate
 }
 
-/** Change the status of an app instance, keyed by the client id it registered with. */
-export async function setMobileAppStatus(clientId: string, status: MobileAppStatus, reason: string): Promise<void> {
+/**
+ * Flip the app instance registered under a usercode between Activated and Suspended; any other status
+ * is refused. The host picks the next status: `remedyNumber` is the ticket an agent would quote.
+ */
+export async function toggleMobileAppStatus(usercode: string, remedyNumber: string): Promise<void> {
+  if (!REMEDY_NUMBER.test(remedyNumber)) throw new Error('A remedy number is 1 to 25 letters or digits')
   const route: Route = {
-    path: '/accounts/mobile-app/{client_id}/status',
+    path: '/accounts/mobile-app/{usercode}/status',
     scope: 'test-idv-accounts',
-    parameter: requirePathValue(clientId, 'client id'),
-    qualifier: status,
+    parameter: normalizeUsercode(usercode),
   }
-  await post<unknown>(route, { status, reason })
+  await post<unknown>(route, { reason: remedyNumber })
 }
 
-/** Activate, suspend, unsuspend or cancel a physical card. */
-export async function setCardStatus(csn: string, cardEventType: CardEventType, reason: string): Promise<void> {
+/** Suspend, unsuspend or cancel the physical card in effect for the registration behind a usercode. */
+export async function setCardStatus(usercode: string, cardEventType: CardEventType): Promise<void> {
   const route: Route = {
-    path: '/accounts/{csn}/card-status',
+    path: '/accounts/{usercode}/card-status',
     scope: 'test-idv-accounts',
-    parameter: requirePathValue(csn, 'card serial number'),
+    parameter: normalizeUsercode(usercode),
     qualifier: cardEventType,
   }
-  await post<unknown>(route, { cardEventType, reason })
+  await post<unknown>(route, { cardEventType })
 }
 
-/** Issue a renewal or replacement of a card, optionally with changed name, gender or address. */
-export async function renewCard(csn: string, request: CardRenewalRequest): Promise<CardRenewalResponse> {
+/**
+ * Renew or replace the physical card registered under a usercode, optionally with a changed name,
+ * gender or address. The answer carries the new card's serial.
+ */
+export async function renewCard(usercode: string, request: CardRenewalRequest): Promise<CardRenewalResponse> {
   const route: Route = {
-    path: '/accounts/{csn}/card-renewal',
+    path: '/accounts/{usercode}/card-renewal',
     scope: 'test-idv-accounts',
-    parameter: requirePathValue(csn, 'card serial number'),
+    parameter: normalizeUsercode(usercode),
   }
   return (await post<CardRenewalResponse | undefined>(route, request)) ?? {}
 }
 
-/** Feed an address-only update for a card; no new card is issued. */
+/** Feed an address-only update for the card in effect (after a renewal, the new serial); no card is issued. */
 export async function updateAddress(csn: string, request: AddressUpdateRequest): Promise<AddressUpdateResponse> {
   const route: Route = {
     path: '/accounts/{csn}/address-update',

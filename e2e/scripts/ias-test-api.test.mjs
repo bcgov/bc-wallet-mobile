@@ -13,8 +13,10 @@ import {
   IasTestApiError,
   mintIdentity,
   normalizeUsercode,
+  renewCard,
   setCardStatus,
   setMobileAppExpiry,
+  toggleMobileAppStatus,
 } from '../src/api/ias-test.ts'
 
 const ENV_KEYS = ['IAS_TEST_API_HOST', 'IAS_TEST_API_CLIENT_ID', 'IAS_TEST_API_CLIENT_SECRET']
@@ -251,6 +253,7 @@ test('400 with an empty body on a usercode route is an unknown usercode', async 
   fakeHost(t, () => empty(400))
   await assert.rejects(decideVerification(USERCODE, 'COUNTER', 'APPROVE'), failsAs('unknown-usercode', 400))
   await assert.rejects(setMobileAppExpiry(USERCODE, new Date()), failsAs('unknown-usercode', 400))
+  await assert.rejects(setCardStatus(USERCODE, 'SUSPEND'), failsAs('unknown-usercode', 400))
 })
 
 test('400 with a body is the request being refused, not the usercode', async (t) => {
@@ -275,10 +278,10 @@ test('an error names the route with its key masked and quotes nothing the host s
     error.message,
     `POST ${origin}/test/idv/v1/verifications/<usercode>/decision (COUNTER APPROVE) → 500 (body withheld)`
   )
-  const cardError = await setCardStatus(SERIAL, 'SUSPEND', 'e2e').catch((caught) => caught)
+  const cardError = await setCardStatus(DISPLAYED_USERCODE, 'SUSPEND').catch((caught) => caught)
   assert.equal(
     cardError.message,
-    `POST ${origin}/test/idv/v1/accounts/<csn>/card-status (SUSPEND) → 500 (body withheld)`
+    `POST ${origin}/test/idv/v1/accounts/<usercode>/card-status (SUSPEND) → 500 (body withheld)`
   )
   for (const sensitive of [USERCODE, DISPLAYED_USERCODE, SERIAL, SECRET, 'token-1']) {
     assert.ok(!shown(error).includes(sensitive) && !shown(cardError).includes(sensitive), `${sensitive} leaked`)
@@ -412,4 +415,29 @@ test('an expiry is sent to the second, the precision the host accepts', async (t
   await assert.rejects(setMobileAppExpiry(USERCODE, 'next week'), /ISO 8601 date-time/)
   assert.equal(host.requests.length, 2)
   assert.equal(host.requests[0].path, `/test/idv/v1/accounts/mobile-app/${USERCODE}/expiry`)
+})
+
+test('card status, the app status toggle and a renewal go to the stripped usercode with their own fields', async (t) => {
+  const renewed = { csn: 'C00000002', registrationProcessType: 'RENEW_SERVICES_CARD' }
+  const host = fakeHost(t, (request) => (request.path.endsWith('/card-renewal') ? json(200, renewed) : empty(200)))
+
+  await setCardStatus(DISPLAYED_USERCODE, 'SUSPEND')
+  await toggleMobileAppStatus(USERCODE, 'RT12345')
+  assert.deepEqual(await renewCard(USERCODE, { cardExpiryDate: '2031-01-01' }), renewed)
+  assert.deepEqual(
+    host.requests.map(({ path, body }) => ({ path, body })),
+    [
+      { path: `/test/idv/v1/accounts/${USERCODE}/card-status`, body: { cardEventType: 'SUSPEND' } },
+      { path: `/test/idv/v1/accounts/mobile-app/${USERCODE}/status`, body: { reason: 'RT12345' } },
+      { path: `/test/idv/v1/accounts/${USERCODE}/card-renewal`, body: { cardExpiryDate: '2031-01-01' } },
+    ]
+  )
+})
+
+test('a remedy number is 1 to 25 letters or digits, checked before anything is sent', async (t) => {
+  const host = fakeHost(t, () => empty(200))
+  for (const malformed of ['', 'RT-1', 'x'.repeat(26)]) {
+    await assert.rejects(toggleMobileAppStatus(USERCODE, malformed), /1 to 25 letters or digits/)
+  }
+  assert.equal(host.tokenRequests.length + host.requests.length, 0)
 })

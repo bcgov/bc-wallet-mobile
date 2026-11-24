@@ -355,7 +355,7 @@ The hosts do not always run the same build, and the client names what a host ans
 | `400` with an empty body, on a route keyed by a usercode | `unknown-usercode` | The usercode is unknown, or not in a state the call can act on |
 | `400` with a body | `unexpected` | The host rejected the request itself (a field it cannot read) |
 
-`yarn test-api:check` exits non-zero unless the decision route is live. `e2e.yml` runs it before any Sauce session when it is dispatched with `approval_source: api`. Errors name the route with its usercode or serial masked and never carry the secret, the token or a response body.
+`yarn test-api:check` exits non-zero unless the decision route is live. Errors name the route with its usercode or serial masked and never carry the secret, the token or a response body.
 
 ## _Config Hierarchy_
 
