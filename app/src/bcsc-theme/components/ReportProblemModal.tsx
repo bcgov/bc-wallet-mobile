@@ -4,6 +4,7 @@ import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { TestIds } from '@/test-ids/registry'
+import { formatBuildHistory } from '@/utils/app-build'
 import { reportProblem } from '@/utils/logger'
 import { Button, ButtonType, Link, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
@@ -105,6 +106,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       code: appError.statusCode,
       error: appError,
       installId: store.bcsc.installId, // App install ID
+      buildHistory: formatBuildHistory(store.bcsc.appBuildHistory),
       sessionId: store.developer.remoteDebugging.sessionId, // Remote logging session ID
     })
 
@@ -113,12 +115,13 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     description,
     store.developer.environment.name,
     store.developer.remoteDebugging.sessionId,
+    store.bcsc.appBuildHistory,
+    store.bcsc.installId,
     store.bcscSecure.verified,
     store.bcscSecure.credentialDeactivated,
     isCardInactive,
     store.bcscSecure.inVerifyFlow,
     store.bcscSecure.cardProcess,
-    store.bcsc.installId,
     t,
   ])
 

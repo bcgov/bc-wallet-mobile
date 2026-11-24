@@ -86,6 +86,7 @@ const validPayload: ErrorModalPayload = {
   description: 'Something went wrong.',
   error: validError,
   installId: 'default-install-id',
+  buildHistory: '4.0.0+100 < 3.9.0+90',
 }
 
 const defaultProps: BCSCErrorModalProps = {
@@ -208,6 +209,7 @@ describe('BCSCErrorModal', () => {
         code: validPayload.error.statusCode,
         error: validPayload.error,
         installId: validPayload.installId,
+        buildHistory: validPayload.buildHistory,
       })
     })
 

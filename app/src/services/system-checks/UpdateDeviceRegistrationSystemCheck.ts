@@ -1,6 +1,7 @@
 import { RegistrationResponseData } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { isAppError } from '@/errors/appError'
 import { BCDispatchAction } from '@/store'
+import { AppBuild } from '@/utils/app-build'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
@@ -10,50 +11,40 @@ type UpdateRegistrationFunction = () => Promise<RegistrationResponseData>
  * Checks conditions to determine if the device registration needs to be updated.
  *
  * Currently supports:
- *    - App version or build number mismatch
- *    - Blank stored values (v3→v4 upgrade or first run)
+ *    - The running build differs from the last registered build (new build, failed earlier update, or v3→v4 upgrade)
  *
  * @class UpdateDeviceRegistrationSystemCheck
  * @implements {SystemCheckStrategy}
  */
 export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy {
-  private readonly lastAppVersion: string
-  private readonly lastAppBuildNumber: string
+  private readonly registeredBuild: AppBuild | undefined
   private readonly updateRegistration: UpdateRegistrationFunction
   private readonly utils: SystemCheckUtils
 
   constructor(
-    lastAppVersion: string,
-    lastAppBuildNumber: string,
+    registeredBuild: AppBuild | undefined,
     updateRegistration: UpdateRegistrationFunction,
     utils: SystemCheckUtils
   ) {
-    this.lastAppVersion = lastAppVersion
-    this.lastAppBuildNumber = lastAppBuildNumber
+    this.registeredBuild = registeredBuild
     this.utils = utils
     this.updateRegistration = updateRegistration
   }
 
   runCheck() {
-    // Force update if stored values are blank (v3→v4 upgrade or first run)
-    if (!this.lastAppVersion || !this.lastAppBuildNumber) {
-      return false
-    }
-
-    return this.lastAppVersion === getVersion() && this.lastAppBuildNumber === getBuildNumber()
+    // The registered build only advances after the PUT succeeds, so a failed update retries on the next launch
+    return this.registeredBuild?.version === getVersion() && this.registeredBuild.build === getBuildNumber()
   }
 
   async onFail() {
-    const reason =
-      !this.lastAppVersion || !this.lastAppBuildNumber
-        ? 'missing stored version/build (first run or upgrade)'
-        : 'version/build change'
-    this.utils.logger.info(`UpdateDeviceRegistrationSystemCheck: Updating device registration due to ${reason}`)
+    this.utils.logger.info(
+      'UpdateDeviceRegistrationSystemCheck: Updating device registration, build differs from the registered one'
+    )
 
     try {
       await this.updateRegistration()
 
-      this.utils.dispatch({ type: BCDispatchAction.UPDATE_APP_VERSION })
+      this.utils.dispatch({ type: BCDispatchAction.SET_REGISTERED_BUILD })
     } catch (error) {
       // This catch is the only trace the automatic update leaves (no modal on
       // this path), and the problem-report view surfaces only the message text —

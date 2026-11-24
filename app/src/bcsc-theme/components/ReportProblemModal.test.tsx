@@ -1,5 +1,5 @@
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
-import { initialState } from '@/store'
+import { BCState, initialState } from '@/store'
 import { reportProblem } from '@/utils/logger'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -22,9 +22,9 @@ describe('ReportProblemModal', () => {
     jest.clearAllMocks()
   })
 
-  const renderModal = (onClose: () => void = jest.fn()) =>
+  const renderModal = (onClose: () => void = jest.fn(), initialStateOverride?: Partial<BCState>) =>
     render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={initialStateOverride}>
         <ReportProblemModal visible onClose={onClose} />
       </BasicAppContext>
     )
@@ -120,24 +120,44 @@ describe('ReportProblemModal', () => {
   })
 
   it('records whether the card is inactive, including an expiry saved after unlock', () => {
-    const { getByTestId } = render(
-      <BasicAppContext
-        initialStateOverride={{
-          bcsc: {
-            ...initialState.bcsc,
-            credentialMetadata: { bcscReason: BCSCReason.ExpiredBySystem } as never,
-          },
-          bcscSecure: { ...initialState.bcscSecure, verified: true },
-        }}
-      >
-        <ReportProblemModal visible onClose={jest.fn()} />
-      </BasicAppContext>
-    )
+    const { getByTestId } = renderModal(jest.fn(), {
+      bcsc: {
+        ...initialState.bcsc,
+        credentialMetadata: { bcscReason: BCSCReason.ExpiredBySystem } as never,
+      },
+      bcscSecure: { ...initialState.bcscSecure, verified: true },
+    })
 
     enterDescription(getByTestId)
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 
     const { error } = mockReportProblem.mock.calls[0][0] as { error: { context?: Record<string, unknown> } }
     expect(error.context).toMatchObject({ state_credential_deactivated: false, state_card_inactive: true })
+  })
+
+  it('includes the formatted build history in the report, newest first', () => {
+    const { getByTestId } = renderModal(jest.fn(), {
+      bcsc: {
+        ...initialState.bcsc,
+        appBuildHistory: [
+          { version: '4.0.0', build: '100' },
+          { version: '3.9.0', build: '90' },
+        ],
+      },
+    })
+
+    enterDescription(getByTestId)
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+
+    expect(mockReportProblem).toHaveBeenCalledWith(expect.objectContaining({ buildHistory: '4.0.0+100 < 3.9.0+90' }))
+  })
+
+  it('sends an empty build history when none has been recorded', () => {
+    const { getByTestId } = renderModal()
+
+    enterDescription(getByTestId)
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+
+    expect(mockReportProblem).toHaveBeenCalledWith(expect.objectContaining({ buildHistory: '' }))
   })
 })

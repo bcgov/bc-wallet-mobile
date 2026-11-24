@@ -21,6 +21,7 @@ import {
   isDecidedVerificationStatus,
   UNKNOWN_VERIFICATION_STATUS,
 } from './bcsc-theme/utils/verification-status'
+import { AppBuild, isAppBuildEqual, toAppBuild } from './utils/app-build'
 import { appLogger } from './utils/logger'
 
 export type RemoteDebuggingState = {
@@ -95,8 +96,9 @@ export interface ResidentialAddressDraft {
 }
 
 export interface BCSCState {
-  appVersion: string
-  appBuildNumber: string
+  appBuildHistory: AppBuild[]
+  // The build last registered with IAS, set after a successful registration PUT
+  registeredBuild?: AppBuild
   hasAccount: boolean
   selectedNickname?: string
   prompts?: VerificationPrompt[]
@@ -119,16 +121,6 @@ export interface BCSCState {
   /** ISO timestamp of the last automatic key-rotation attempt (success or failure), used to
    * throttle retries — see KeyRotationSystemCheck. Not PII. */
   lastKeyRotationAttemptAt?: string
-  /**
-   * App version/build seen the last time the main-stack system checks ran, stamped whenever it
-   * differs from the running app (see getMainSystemChecks) — deliberately distinct from
-   * `appVersion`/`appBuildNumber` above, which only advance on a SUCCESSFUL device-registration
-   * PUT. KeyRotationSystemCheck uses this pair (never `appVersion`/`appBuildNumber`) to detect
-   * "did the app version change since last launch", so a persistently failing registration PUT
-   * can never latch key rotation off forever. See the #3876 review.
-   */
-  lastSeenAppVersion?: string
-  lastSeenAppBuildNumber?: string
   /**
    * The user's answer to the post-onboarding "verify your account now?" prompt, persisted so the
    * choice survives an app restart:
@@ -294,7 +286,7 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
-  UPDATE_APP_VERSION = 'bcsc/updateAppVersion',
+  SET_REGISTERED_BUILD = 'bcsc/setRegisteredBuild',
   UPDATE_NICKNAME = 'bcsc/updateNickname',
   UPDATE_VIDEO_PROMPTS = 'bcsc/updateVideoPrompts',
   SAVE_PHOTO = 'bcsc/savePhoto',
@@ -347,7 +339,6 @@ enum BCSCDispatchAction {
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
   SET_INSTALL_ID = 'bcsc/setInstallId',
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
-  RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
   SET_VERIFICATION_SKIPPED = 'bcsc/setVerificationSkipped',
   SET_VERIFICATION_STARTED = 'bcsc/setVerificationStarted',
 }
@@ -402,8 +393,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 }
 
 export const initialBCSCState: BCSCState = {
-  appVersion: '',
-  appBuildNumber: '',
+  appBuildHistory: [],
   hasAccount: false,
   selectedNickname: undefined,
   analyticsOptIn: false,
@@ -411,7 +401,17 @@ export const initialBCSCState: BCSCState = {
 
 // The fields migrateBCSCState may add, kept in its return type even when T is inferred from a narrow
 // literal that never mentions them (e.g. `{ reportUUID: 'x' }` in tests)
-type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'>
+type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 'verificationStarted'> &
+  Partial<Pick<BCSCState, 'appBuildHistory' | 'registeredBuild'>>
+
+interface BCSCDeprecatedFields {
+  reportUUID?: string
+  bannerMessages?: unknown[]
+  appVersion?: string
+  appBuildNumber?: string
+  lastSeenAppVersion?: string
+  lastSeenAppBuildNumber?: string
+}
 
 /**
  * Migrates a persisted BCSC state blob on load. Idempotent, read-side migrations:
@@ -424,12 +424,22 @@ type MigratedBCSCFields = Pick<BCSCState, 'installId' | 'verificationSkipped' | 
  *   `verificationSkipped: false` (Continue on the prompt, or Start on the Home card), so exactly those
  *   count as started.
  *  - `bannerMessages` is removed from the persisted blob (previously used to store a list of banners)
+ *  - `registeredBuild` is seeded from the deprecated `appVersion`/`appBuildNumber` pair, and `appBuildHistory` from the
+ *   deprecated `lastSeenApp*` pair (else the registered pair). The deprecated fields are dropped from the blob.
  */
-export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string; bannerMessages?: unknown[] }>(
+export const migrateBCSCState = <T extends Partial<BCSCState> & BCSCDeprecatedFields>(
   persisted: T
-): { bcsc: Omit<T, 'reportUUID' | 'bannerMessages'> & MigratedBCSCFields; migrated: boolean } => {
-  const { reportUUID, bannerMessages, ...rest } = persisted
-  let bcsc: Omit<T, 'reportUUID' | 'bannerMessages'> & MigratedBCSCFields = rest
+): { bcsc: Omit<T, keyof BCSCDeprecatedFields> & MigratedBCSCFields; migrated: boolean } => {
+  const {
+    reportUUID,
+    bannerMessages,
+    appVersion,
+    appBuildNumber,
+    lastSeenAppVersion,
+    lastSeenAppBuildNumber,
+    ...rest
+  } = persisted
+  let bcsc: Omit<T, keyof BCSCDeprecatedFields> & MigratedBCSCFields = rest
   let migrated = false
 
   if (reportUUID !== undefined) {
@@ -450,6 +460,23 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
   if (bannerMessages !== undefined) {
     // The persisted blob had a `bannerMessages` array, which is no longer used
     migrated = true
+  }
+
+  // The registered pair is the build the server knows about, the last seen pair is the build last launched
+  const oldRegisteredBuild = toAppBuild(appVersion, appBuildNumber)
+
+  if (!bcsc.registeredBuild && oldRegisteredBuild) {
+    bcsc = { ...bcsc, registeredBuild: oldRegisteredBuild }
+    migrated = true
+  }
+
+  if (!bcsc.appBuildHistory?.length) {
+    const seedBuild = toAppBuild(lastSeenAppVersion, lastSeenAppBuildNumber) ?? oldRegisteredBuild
+
+    if (seedBuild) {
+      bcsc = { ...bcsc, appBuildHistory: [seedBuild] }
+      migrated = true
+    }
   }
 
   return { bcsc, migrated }
@@ -632,8 +659,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
-    case BCSCDispatchAction.UPDATE_APP_VERSION: {
-      const bcsc = { ...state.bcsc, appVersion: getVersion(), appBuildNumber: getBuildNumber() }
+    case BCSCDispatchAction.SET_REGISTERED_BUILD: {
+      const registeredBuild = state.bcsc.registeredBuild
+      const currentBuild = { version: getVersion(), build: getBuildNumber() }
+      if (isAppBuildEqual(registeredBuild, currentBuild)) {
+        return state
+      }
+
+      const bcsc = { ...state.bcsc, registeredBuild: currentBuild }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
@@ -869,6 +902,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         ...initialBCSCState,
         ...partialBcscState,
         installId: state.bcsc.installId ?? partialBcscState.installId,
+        // Like installId, the build history belongs to the install, not the account; registeredBuild does not
+        appBuildHistory: state.bcsc.appBuildHistory,
       }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
@@ -947,14 +982,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.KEY_ROTATION_ATTEMPTED: {
       const lastKeyRotationAttemptAt = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, lastKeyRotationAttemptAt }
-      const newState = { ...state, bcsc }
-      void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-
-    case BCSCDispatchAction.RECORD_APP_LAUNCH_VERSION: {
-      const { version: lastSeenAppVersion, buildNumber: lastSeenAppBuildNumber } = (action?.payload || []).pop() ?? {}
-      const bcsc = { ...state.bcsc, lastSeenAppVersion, lastSeenAppBuildNumber }
       const newState = { ...state, bcsc }
       void PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

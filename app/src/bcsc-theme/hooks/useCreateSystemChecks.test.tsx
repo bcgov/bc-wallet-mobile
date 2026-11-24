@@ -1,5 +1,4 @@
 import { EXPIRED_JWT, UNEXPIRED_JWT } from '@/bcsc-theme/utils/__fixtures__/jwt'
-import { BCDispatchAction } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
 import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
@@ -90,19 +89,12 @@ jest.mock('@/services/system-checks/UpdateAppSystemCheck', () => ({
 
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
   UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {
-    lastAppVersion: unknown
-    lastAppBuildNumber: unknown
+    runningBuild: unknown
     updateRegistration: () => Promise<unknown>
     utils: unknown
 
-    constructor(
-      lastAppVersion: unknown,
-      lastAppBuildNumber: unknown,
-      updateRegistration: () => Promise<unknown>,
-      utils: unknown
-    ) {
-      this.lastAppVersion = lastAppVersion
-      this.lastAppBuildNumber = lastAppBuildNumber
+    constructor(runningBuild: unknown, updateRegistration: () => Promise<unknown>, utils: unknown) {
+      this.runningBuild = runningBuild
       this.updateRegistration = updateRegistration
       this.utils = utils
     }
@@ -111,13 +103,13 @@ jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => 
 
 jest.mock('@/services/system-checks/KeyRotationSystemCheck', () => ({
   KeyRotationSystemCheck: class KeyRotationSystemCheck {
-    deferForPendingRegistrationUpdate: boolean
+    deferForPendingRegistrationUpdate: () => boolean
     lastRotationAttemptAt: unknown
     rotate: unknown
     utils: unknown
 
     constructor(
-      deferForPendingRegistrationUpdate: boolean,
+      deferForPendingRegistrationUpdate: () => boolean,
       lastRotationAttemptAt: unknown,
       rotate: unknown,
       utils: unknown
@@ -191,7 +183,6 @@ jest.mock('@/bcsc-theme/components/AppBanner', () => ({
 jest.mock('@/store', () => ({
   BCDispatchAction: {
     SET_INSTALL_ID: 'bcsc/setInstallId',
-    RECORD_APP_LAUNCH_VERSION: 'bcsc/recordAppLaunchVersion',
   },
 }))
 
@@ -931,7 +922,11 @@ describe('useGetSystemChecks', () => {
           {
             stateLoaded: true,
             developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: { analyticsOptIn: true, selectedNickname: 'Test Device', ...bcsc },
+            bcsc: {
+              analyticsOptIn: true,
+              selectedNickname: 'Test Device',
+              ...bcsc,
+            },
             bcscSecure: {
               isHydrated: true,
               verified: true,
@@ -990,130 +985,71 @@ describe('useGetSystemChecks', () => {
         return systemChecks.find((check) => check.constructor.name === 'KeyRotationSystemCheck') as any
       }
 
-      describe('deferForPendingRegistrationUpdate (the app-version-changed signal)', () => {
-        const currentLaunch = { lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1000' }
-        const previousLaunch = { lastSeenAppVersion: '4.0.0', lastSeenAppBuildNumber: '999' }
-        const recordLaunchAction = {
-          type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
-          payload: [{ version: '4.1.0', buildNumber: '1000' }],
+      describe('deferForPendingRegistrationUpdate (registered during this launch)', () => {
+        const getChecks = async () => {
+          const { result } = renderHook(() => useCreateSystemChecks())
+          const checks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          return {
+            registration: checks.find((c) => c.constructor.name === 'UpdateDeviceRegistrationSystemCheck') as any,
+            rotation: checks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any,
+          }
         }
-        const anyRecordLaunchAction = expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
 
-        beforeEach(() => {
-          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
-          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
+        it('does not defer when the registration update has not run this launch', async () => {
+          mockStoreWith()
+          mockUseRegistrationService.mockReturnValue({ updateRegistration: jest.fn() })
+
+          const { rotation } = await getChecks()
+
+          expect(rotation.deferForPendingRegistrationUpdate()).toBe(false)
         })
 
-        // RECORD_APP_LAUNCH_VERSION is the only thing keeping lastSeenApp* current; losing it
-        // would latch rotation off forever. Every test here asserts the dispatch too, not just
-        // the boolean passed to the constructor.
-        it('does NOT dispatch RECORD_APP_LAUNCH_VERSION, and does not defer, when lastSeen already matches this launch', async () => {
-          const dispatch = mockStoreWith({ bcsc: currentLaunch })
+        it('defers once the registration update has succeeded this launch', async () => {
+          mockStoreWith()
+          mockUseRegistrationService.mockReturnValue({ updateRegistration: jest.fn().mockResolvedValue({}) })
 
-          const check = await findKeyRotationCheck()
+          const { registration, rotation } = await getChecks()
+          await registration.updateRegistration()
 
-          expect(check.deferForPendingRegistrationUpdate).toBe(false)
-          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
+          expect(rotation.deferForPendingRegistrationUpdate()).toBe(true)
         })
 
-        it('DISPATCHES RECORD_APP_LAUNCH_VERSION with the current version/build, and defers, on the first launch of a new version', async () => {
-          const dispatch = mockStoreWith({ bcsc: previousLaunch })
+        // A persistently failing PUT must never turn rotation off
+        it('does not defer when the registration update failed this launch', async () => {
+          mockStoreWith()
+          mockUseRegistrationService.mockReturnValue({
+            updateRegistration: jest.fn().mockRejectedValue(new Error('PUT failed')),
+          })
 
-          const check = await findKeyRotationCheck()
+          const { registration, rotation } = await getChecks()
+          await expect(registration.updateRegistration()).rejects.toThrow('PUT failed')
 
-          expect(check.deferForPendingRegistrationUpdate).toBe(true)
-          expect(dispatch).toHaveBeenCalledWith(recordLaunchAction)
+          expect(rotation.deferForPendingRegistrationUpdate()).toBe(false)
         })
 
-        // Population 1: no selectedNickname means UpdateDeviceRegistrationSystemCheck is never
-        // constructed, so reading its signal directly (the old, buggy approach) would defer
-        // rotation forever. The per-launch marker must not be fooled by this.
-        it('does not defer, and needs no RECORD_APP_LAUNCH_VERSION dispatch, for a verified user with no selectedNickname (population 1)', async () => {
-          const dispatch = mockStoreWith({ bcsc: { ...currentLaunch, selectedNickname: undefined } })
+        // No selectedNickname means UpdateDeviceRegistrationSystemCheck is never constructed, so nothing
+        // can ever set the ref and rotation must not be deferred.
+        it('does not defer for a verified user with no selectedNickname', async () => {
+          mockStoreWith({ bcsc: { selectedNickname: undefined } })
 
-          const { result } = renderHook(() => useCreateSystemChecks())
-          const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
-          const names = systemChecks.map((check) => check.constructor.name)
-          const check = systemChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
+          const { registration, rotation } = await getChecks()
 
-          expect(names).not.toContain('UpdateDeviceRegistrationSystemCheck')
-          expect(names).toContain('KeyRotationSystemCheck')
-          expect(check.deferForPendingRegistrationUpdate).toBe(false)
-          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
+          expect(registration).toBeUndefined()
+          expect(rotation.deferForPendingRegistrationUpdate()).toBe(false)
         })
 
-        // Population 2: appVersion is stuck (its owning PUT keeps failing), but lastSeenApp* is
-        // stamped independent of that success, so rotation must still not defer here.
-        it('does not defer, and needs no RECORD_APP_LAUNCH_VERSION dispatch, even though appVersion is permanently stale from a persistently-failing PUT (population 2)', async () => {
-          // appVersion is stuck on the OLD version (the registration PUT that would advance it via
-          // UPDATE_APP_VERSION keeps failing) but the per-launch marker IS current.
-          const dispatch = mockStoreWith({ bcsc: { ...currentLaunch, appVersion: '3.9.0', appBuildNumber: '1' } })
+        // The answer is read when the check runs, so a registration that finishes after the checks were
+        // built still defers rotation.
+        it('reads the registration outcome when the check runs, not when it is built', async () => {
+          mockStoreWith()
+          mockUseRegistrationService.mockReturnValue({ updateRegistration: jest.fn().mockResolvedValue({}) })
 
-          const check = await findKeyRotationCheck()
+          const { registration, rotation } = await getChecks()
+          expect(rotation.deferForPendingRegistrationUpdate()).toBe(false)
 
-          expect(check.deferForPendingRegistrationUpdate).toBe(false)
-          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
-        })
+          await registration.updateRegistration()
 
-        // Same population 2 setup, but lastSeen itself is stale — the dispatch must still fire.
-        it('DISPATCHES RECORD_APP_LAUNCH_VERSION even with a stale appVersion from a persistently-failing PUT, when lastSeen itself is stale', async () => {
-          const dispatch = mockStoreWith({ bcsc: { ...previousLaunch, appVersion: '3.9.0', appBuildNumber: '1' } })
-
-          const check = await findKeyRotationCheck()
-
-          expect(check.deferForPendingRegistrationUpdate).toBe(true)
-          expect(dispatch).toHaveBeenCalledWith(recordLaunchAction)
-        })
-
-        // findKeyRotationCheck does its own renderHook per call, which would mask the regression
-        // this guards against — a single hook instance must be kept alive across the store update.
-        it('keeps deferring after a later store rebuild reflects the just-dispatched marker (regression guard)', async () => {
-          const dispatch = mockStoreWith({ bcsc: previousLaunch })
-
-          const { result, rerender } = renderHook(() => useCreateSystemChecks())
-          const firstChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
-          const firstCheck = firstChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
-
-          expect(firstCheck.deferForPendingRegistrationUpdate).toBe(true)
-          expect(dispatch).toHaveBeenCalledWith(recordLaunchAction)
-
-          // Simulate the reducer having applied the dispatched marker: lastSeen now matches.
-          mockStoreWith({ bcsc: currentLaunch, dispatch })
-          rerender(undefined)
-
-          const secondChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
-          const secondCheck = secondChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
-
-          expect(secondCheck.deferForPendingRegistrationUpdate).toBe(true)
-        })
-
-        it('dispatches RECORD_APP_LAUNCH_VERSION at most once per mount, even across repeated and post-update batch builds', async () => {
-          const dispatch = mockStoreWith({ bcsc: previousLaunch })
-
-          const { result, rerender } = renderHook(() => useCreateSystemChecks())
-          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
-          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
-
-          mockStoreWith({ bcsc: currentLaunch, dispatch })
-          rerender(undefined)
-          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
-
-          const recordCalls = dispatch.mock.calls.filter(
-            ([action]) => action.type === BCDispatchAction.RECORD_APP_LAUNCH_VERSION
-          )
-          expect(recordCalls).toEqual([[recordLaunchAction]])
-        })
-
-        it('does not dispatch RECORD_APP_LAUNCH_VERSION merely from mounting the hook, only once getSystemChecks is awaited', async () => {
-          const dispatch = mockStoreWith({ bcsc: previousLaunch })
-
-          const { result } = renderHook(() => useCreateSystemChecks())
-
-          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
-
-          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
-
-          expect(dispatch).toHaveBeenCalledWith(anyRecordLaunchAction)
+          expect(rotation.deferForPendingRegistrationUpdate()).toBe(true)
         })
       })
 

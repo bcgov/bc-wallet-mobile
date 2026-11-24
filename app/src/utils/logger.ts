@@ -41,6 +41,11 @@ export interface ReportProblem {
    */
   installId?: string
   /**
+   * The formatted build history of this app install, newest first.
+   * @see `formatBuildHistory` and `store.bcsc.appBuildHistory` for the source of this value.
+   */
+  buildHistory?: string
+  /**
    * The remote logging ID represents the unique identifier for the remote logging session.
    * This is optional and can be omitted if there is no remote logging session available.
    * @see `store.developer.remoteDebugging.sessionId` for the source of this value.
