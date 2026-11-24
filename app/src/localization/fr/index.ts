@@ -843,6 +843,8 @@ const translation = {
       "ContinueScanning": "Continue Scanning (FR)",
       "Confirm": "Confirm (FR)",
       "TryAgain": "Try Again (FR)",
+      "CameraMissingTitle": "Unable to access camera (FR)",
+      "CameraMissingDescription": "Try again or enter the serial number of your BC Services Card manually (FR)",
       "Connecting": "Connecting… (FR)",
       "UnrecognizedQR": "QR code not recognized (FR)",
       "InvalidConnectionInvitation": "This connection invitation could not be opened. (FR)",

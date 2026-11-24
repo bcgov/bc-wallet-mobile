@@ -23,10 +23,11 @@ import { useTranslation } from 'react-i18next'
 import { LayoutChangeEvent, StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, Mask, Rect } from 'react-native-svg'
-import { useCameraPermission } from 'react-native-vision-camera'
+import { useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 import TorchButton from '../../components/TorchButton'
 import { BCSC_SN_SCAN_ZONES, ScanState } from '../../components/utils/camera'
+import { CameraIssue } from './components/CameraIssue'
 
 /**
  * How long the initial "Scan your card" guidance shows before falling back to
@@ -214,6 +215,8 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [hasTorch, setHasTorch] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  const device = useCameraDevice('back')
+
   const isProcessingScan = useRef(false)
   // Whether the screen has already had focus once — see the focus effect below.
   const hasFocusedRef = useRef(false)
@@ -361,6 +364,20 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const frameStrokeColor =
     scanState === 'scanning' ? ColorPalette.brand.highlight : scanState === 'aligned' ? '#00CC00' : '#00FF00'
 
+  const renderCameraIssue = useCallback(() => {
+    if (cameraFailed) {
+      return (
+        <CameraIssue title={t('BCSC.CameraDisclosure.Error')} description={t('BCSC.CameraDisclosure.ErrorMessage')} />
+      )
+    }
+
+    if (!device) {
+      return (
+        <CameraIssue title={t('BCSC.Scan.CameraMissingTitle')} description={t('BCSC.Scan.CameraMissingDescription')} />
+      )
+    }
+  }, [cameraFailed, device, t])
+
   if (isLoading) {
     return <LoadingScreen />
   }
@@ -381,15 +398,8 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   return (
     <ScreenWrapper padded={false} scrollable={false} edges={[]}>
       <View style={styles.container}>
-        {cameraFailed ? (
-          <View style={styles.cameraErrorBlock}>
-            <ThemedText variant={'labelTitle'} style={styles.instructionText}>
-              {t('BCSC.CameraDisclosure.Error')}
-            </ThemedText>
-            <ThemedText variant={'labelSubtitle'} style={styles.instructionSubText}>
-              {t('BCSC.CameraDisclosure.ErrorMessage')}
-            </ThemedText>
-          </View>
+        {cameraFailed || !device ? (
+          renderCameraIssue()
         ) : (
           <>
             {/* Instruction text — initial guidance until the timeout, then steady-hold help */}
@@ -414,6 +424,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
             <View style={styles.cameraArea} onLayout={onContainerLayout}>
               <CodeScanningCamera
                 key={cameraKey}
+                device={device}
                 onCodeScanned={onCodeScanned}
                 cameraType={'back'}
                 initialZoom={2}
