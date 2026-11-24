@@ -1,7 +1,7 @@
 import { contextHost } from './config.ts'
 import { CliError, ExitCode } from './exit-codes.ts'
 import { OUTCOME_UNKNOWN, readJson, sendApiRequest } from './request.ts'
-import type { HandlerContext } from './spec.ts'
+import type { FlagValue, HandlerContext } from './spec.ts'
 
 const EXPIRY_EXAMPLE = '2099-12-01T00:00:00-08:00'
 
@@ -57,9 +57,12 @@ const checkExpiry = (value: string): string => {
   return value
 }
 
+const endpointMissing = (host: string): string =>
+  `No mobile-app endpoint was found on ${host}. Check --hostname, and that the test API is deployed there.`
+
 const expiryErrors = (host: string): Partial<Record<number, string>> => ({
   400: 'IAS rejected the expiry. It accepts one only for a usercode whose mobile app is Activated. The usercode may be unknown, not yet verified, already expired or suspended, or IAS may have refused the date.',
-  404: `No mobile-app endpoint was found on ${host}. Check --hostname, and that the test API is deployed there.`,
+  404: endpointMissing(host),
   500: 'IAS failed with status 500 after the request was sent, so it may have saved the expiry. Check the credential state before retrying.',
 })
 
@@ -89,5 +92,59 @@ export const setExpiry = async (ctx: HandlerContext): Promise<number> => {
       `Set the expiry of ${usercode} on ${host} to ${stored}.\nIf that date is already past on the IAS server, the mobile app is now Expired, and this command cannot change it again.\n`
     )
   }
+  return ExitCode.ok
+}
+
+const REASON_EXAMPLE = 'E2E1'
+// Mirrors the check IAS applies to the trimmed reason; anything else gets a 400 with no explanation.
+const REASON_PATTERN = /^[A-Za-z0-9]{1,25}$/
+
+const checkReason = (flag: FlagValue): string => {
+  const reason = typeof flag === 'string' ? flag.trim() : ''
+  if (!reason) throw new CliError('--reason is required.')
+  if (!REASON_PATTERN.test(reason)) {
+    throw new CliError(
+      `"${reason}" is not a valid reason. IAS takes a ticket reference of 1 to 25 letters or digits, with no spaces or punctuation, e.g. ${REASON_EXAMPLE}. Nothing was sent.`
+    )
+  }
+  return reason
+}
+
+// A second run switches the status back, so every failure that may have reached IAS says to check first.
+const mayHaveChanged = (status: number): string =>
+  `IAS answered with status ${status} after the request was sent, so it may or may not have changed the status. Check the device before running the command again, because a second run switches it back.`
+
+const statusErrors = (host: string): Partial<Record<number, string>> => ({
+  400: 'IAS rejected the status change. It accepts one only for a usercode whose mobile app is Activated or Suspended. The usercode may be unknown, not yet verified, expired or deactivated.',
+  404: endpointMissing(host),
+  ...Object.fromEntries([500, 502, 503, 504].map((status) => [status, mayHaveChanged(status)])),
+})
+
+// IAS answers a change with 200 and no body; a redirect, a body or a failed read cannot be trusted as that.
+const confirmedStatusChange = async (response: Response): Promise<void> => {
+  let body: string | undefined
+  try {
+    body = response.status === 200 && !response.redirected ? await response.text() : undefined
+  } catch {
+    body = undefined
+  }
+  if (body !== '') throw new CliError(`IAS answered unexpectedly. ${OUTCOME_UNKNOWN}`)
+}
+
+export const setStatus = async (ctx: HandlerContext): Promise<number> => {
+  const reason = checkReason(ctx.flags.reason)
+  const host = contextHost(ctx)
+  const usercode = ctx.args.usercode
+  const response = await sendApiRequest(ctx, host, {
+    method: 'POST',
+    path: `/accounts/mobile-app/${encodeURIComponent(usercode)}/status`,
+    body: { reason },
+    errors: statusErrors(host),
+  })
+  if (!response) return ExitCode.ok
+  await confirmedStatusChange(response)
+  ctx.io.stdout(
+    `Changed the status of ${usercode} on ${host}: an Activated mobile app is now Suspended, and a Suspended one is now Activated. Run the command again to reverse it.\n`
+  )
   return ExitCode.ok
 }
