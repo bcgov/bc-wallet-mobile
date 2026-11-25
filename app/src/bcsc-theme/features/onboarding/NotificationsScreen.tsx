@@ -56,7 +56,8 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
       .catch(() => {
         // Keep the "never prompted" default, as NotificationSettingsScreen does
       })
-  }, [])
+    // Re-read when the OS status changes: a grant is not recorded locally, but setup() has persisted the marker
+  }, [status])
 
   const isGranted = status === PushNotifications.NotificationPermissionStatus.GRANTED
   // Android reports DENIED before the first prompt, so only trust denied/blocked once we have prompted

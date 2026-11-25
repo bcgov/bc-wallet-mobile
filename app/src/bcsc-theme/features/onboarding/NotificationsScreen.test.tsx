@@ -134,6 +134,23 @@ describe('Notifications', () => {
       }
     )
 
+    it('shows the disabled variant when the permission is later turned off in OS Settings', async () => {
+      renderScreen(false)
+      const enable = await screen.findByTestId(tid(ids.enable))
+
+      // setup() persists the prompt marker, which the screen never saw locally because the answer was a grant
+      mockHasPrompted.mockResolvedValue(true)
+      mockStatus.mockResolvedValue(NPStatus.GRANTED)
+      fireEvent.press(enable)
+      expect(await screen.findByTestId(tid(ids.continue))).toBeTruthy()
+
+      mockStatus.mockResolvedValue(NPStatus.BLOCKED)
+      await focusScreen()
+
+      expect(await screen.findByTestId(tid(ids.openSettings))).toBeTruthy()
+      expect(screen.queryByTestId(tid(ids.enable))).toBeNull()
+    })
+
     it('Continue keeps notifications on without asking again, and goes to Secure App', async () => {
       mockStatus.mockResolvedValue(NPStatus.GRANTED)
       mockHasPrompted.mockResolvedValue(true)
