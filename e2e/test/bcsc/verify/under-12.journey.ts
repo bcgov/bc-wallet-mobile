@@ -25,12 +25,12 @@ import { arrangeTestUser } from '../../../src/support/identity.js'
  *    `account.birthdate` sends a minor to the transfer QR — so this also guards that date-format contract.
  *
  * One ordered session: onboard → Continue → manual serial → birthdate submit (`authorizeDevice`) → method
- * selection (restricted-set assert) → in-person completion via the real IDcheck approval
- * (the `IDCHECK_*` credentials on an allowlisted runner) → verified Home → Settings → Add device.
+ * selection (restricted-set assert) → in-person completion (`approveInPersonRequest`, routed by
+ * src/support/approval-routes.ts) → verified Home → Settings → Add device.
  */
 describe('Verified journey: under-12 account', () => {
   before(async () => {
-    setTestUser(await arrangeTestUser('u12'))
+    setTestUser(await arrangeTestUser('u12', 'counter'))
   })
 
   it('onboards to the verify prompt', async () => {

@@ -25,8 +25,8 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  *
  * `prev` drives the previous build (its onboarding and verify screens differ per release); the
  * binary-swap proof itself lives in the base upgrade spec, so this spends its budget on the state.
- * Needs the IDCheck credentials on an allowlisted runner for the in-person approval (photo card, no
- * camera). mocha bail isolates any failure to the wrapper file.
+ * The in-person approval follows the route table (src/support/approval-routes.ts); photo card, no
+ * camera. mocha bail isolates any failure to the wrapper file.
  */
 export function defineVerifiedUpgrade(prev: PrevBuild): void {
   let appId: string | undefined

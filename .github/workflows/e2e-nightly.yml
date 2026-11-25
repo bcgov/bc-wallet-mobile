@@ -44,9 +44,10 @@
 # the regression. If no viable run exists in the 24h window, the workflow
 # fails rather than testing stale artifacts.
 #
-# Runner egress allowlist: the in-person verification step runs the IDcheck
-# approval flow in-process on the runner (e2e/scripts/login.mjs), so it
-# is the RUNNER's egress IP — not SauceLabs — that BC Gov SIT must allowlist. The
+# Runner egress allowlist: the approvals e2e/src/support/approval-routes.ts leaves on
+# the ID Check portal run in-process on the runner (e2e/scripts/login.mjs), so it is
+# the RUNNER's egress IP — not SauceLabs — that BC Gov SIT must allowlist. The IAS
+# test API needs no allowlist. The
 # e2e job runs on the whitelisted `ubuntu-latest-m` runner (the default `runner_label` in
 # e2e.yml), whose egress ranges (20.10.68.0/28, 130.131.47.80/28) are opened on
 # the ID Broker / IDcheck firewalls. Use the "Verify Allowlist Connectivity"

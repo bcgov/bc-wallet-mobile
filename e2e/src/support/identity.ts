@@ -4,25 +4,17 @@ import { getIasTestApiConfig, mintIdentity, type CardType } from '../api/ias-tes
 import { TestUsers, type TestUser } from '../constants.js'
 import { registerMintedHolder } from '../helpers/redact.js'
 import { recordMintedIdentity } from '../helpers/session-record.js'
+import { approvalSourceFor, mintsHolders, type DecisionChannel } from './approval-routes.js'
 
 /**
- * A journey's card holder. `arrangeTestUser(kind)` hands out the fixed SIT persona of that kind, or,
- * with E2E_IDENTITY_SOURCE=api, a holder of its own for the session: a card minted through the IAS
- * test API (src/api/ias-test.ts), so no two sessions share one. A retry is a new session and mints again.
+ * A journey's card holder. Once any channel is on the IAS test API (./approval-routes.ts),
+ * `arrangeTestUser(kind, channel)` gives the session a holder of its own, a card minted through the
+ * API (src/api/ias-test.ts), so no two sessions share one; a retry is a new session and mints again.
+ * A journey the portal decides keeps the fixed SIT persona: the portal's queue drain knows only those.
  */
 
 /** The holders a journey can ask for, named as the personas are. */
 export type IdentityKind = keyof typeof TestUsers
-
-export type IdentitySource = 'api' | 'personas'
-
-/** Where this run's holders come from: E2E_IDENTITY_SOURCE, `personas` unless it says `api`. */
-export function identitySource(): IdentitySource {
-  const value = process.env.E2E_IDENTITY_SOURCE?.trim().toLowerCase()
-  if (!value || value === 'personas') return 'personas'
-  if (value === 'api') return 'api'
-  throw new Error('Unknown E2E_IDENTITY_SOURCE: use api or personas')
-}
 
 interface Recipe {
   cardType: CardType
@@ -189,7 +181,16 @@ async function mintTestUser(kind: IdentityKind): Promise<TestUser> {
   return user
 }
 
-/** The holder a journey drives: `setTestUser(await arrangeTestUser('photo'))` in its root `before()`. */
-export async function arrangeTestUser(kind: IdentityKind): Promise<TestUser> {
-  return identitySource() === 'api' ? mintTestUser(kind) : TestUsers[kind]
+/** Whether the persona answers: nothing is on the API yet, or the portal decides the journey's channel. */
+function takesPersona(kind: IdentityKind, channel?: DecisionChannel): boolean {
+  if (!mintsHolders()) return true
+  return channel !== undefined && approvalSourceFor(channel, TestUsers[kind].flow) === 'idcheck'
+}
+
+/**
+ * The holder a journey drives: `setTestUser(await arrangeTestUser('photo', 'counter'))` in its root
+ * `before()`. `channel` is how the journey has its request decided; leave it out when nothing is.
+ */
+export async function arrangeTestUser(kind: IdentityKind, channel?: DecisionChannel): Promise<TestUser> {
+  return takesPersona(kind, channel) ? TestUsers[kind] : mintTestUser(kind)
 }
