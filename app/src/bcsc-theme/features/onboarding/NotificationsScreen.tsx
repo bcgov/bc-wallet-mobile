@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { useNotificationPermissionStatus } from '@/bcsc-theme/features/settings/useNotificationPermissionStatus'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TestIds } from '@/test-ids/registry'
 import PushNotificationImage from '@assets/img/push-notifications-image.svg'
@@ -16,9 +17,9 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppState, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 
 interface NotificationsScreenProps {
@@ -35,7 +36,8 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
   const [, dispatch] = useStore()
   const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [deniedPermission, setDeniedPermission] = useState(false)
+  const { status, refresh } = useNotificationPermissionStatus()
+  const [hasPrompted, setHasPrompted] = useState(false)
 
   const styles = StyleSheet.create({
     imageContainer: {
@@ -47,40 +49,21 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     },
   })
 
-  const checkPermissions = useCallback(async () => {
-    const status = await PushNotifications.status()
-    const hasPrompted = await PushNotifications.hasPromptedForNotifications()
-
-    // Only show PermissionDisabled if:
-    // 1. We have previously prompted the user (to work around React Native bug where status may be incorrect on fresh install)
-    // 2. The current status is DENIED or BLOCKED
-    const isDeniedOrBlocked =
-      status === PushNotifications.NotificationPermissionStatus.DENIED ||
-      status === PushNotifications.NotificationPermissionStatus.BLOCKED
-
-    if (hasPrompted && isDeniedOrBlocked) {
-      setDeniedPermission(true)
-    } else {
-      setDeniedPermission(false)
-    }
+  useEffect(() => {
+    PushNotifications.hasPromptedForNotifications()
+      // Sticky: a late read must not clear a prompt recorded during this mount
+      .then((prompted) => setHasPrompted((previous) => previous || prompted))
+      .catch(() => {
+        // Keep the "never prompted" default, as NotificationSettingsScreen does
+      })
   }, [])
 
-  useEffect(() => {
-    void checkPermissions()
-  }, [checkPermissions])
-
-  // Re-check permissions when user returns from settings
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        void checkPermissions()
-      }
-    })
-
-    return () => {
-      subscription.remove()
-    }
-  }, [checkPermissions])
+  const isGranted = status === PushNotifications.NotificationPermissionStatus.GRANTED
+  // Android reports DENIED before the first prompt, so only trust denied/blocked once we have prompted
+  const isDenied =
+    hasPrompted &&
+    (status === PushNotifications.NotificationPermissionStatus.DENIED ||
+      status === PushNotifications.NotificationPermissionStatus.BLOCKED)
 
   /**
    * Prompts the user to enable push notifications and updates the global state based on their response.
@@ -93,13 +76,18 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     logger.debug(`[NotificationsScreen] Requesting push notification permission`)
 
     try {
-      const status = await PushNotifications.setup()
-      logger.info(`[NotificationsScreen] Push notification permission status: ${status}`)
-      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [status === 'granted'] })
+      const result = await PushNotifications.setup()
+      logger.info(`[NotificationsScreen] Push notification permission status: ${result}`)
+      // A refusal does not change the OS status value on Android, so this is what swaps in PermissionDisabled
+      setHasPrompted(true)
+      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [result === 'granted'] })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[NotificationsScreen] Failed to request push notification permission: ${message}`)
       dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+    } finally {
+      // Not awaited: the OS read must not delay navigation
+      void refresh()
     }
   }
 
@@ -107,7 +95,26 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
   }
 
-  const controls = (
+  // The OS permission cannot be revoked from the app, so once granted the only honest choice is to carry on.
+  // The stored preference is re-asserted because it can lag the OS (allowed from Settings, or a late Android answer).
+  const continueWithNotifications = () => {
+    dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [true] })
+    navigation.navigate(BCSCScreens.OnboardingSecureApp)
+  }
+
+  const grantedControls = (
+    <ControlContainer>
+      <Button
+        title={t('Global.Continue')}
+        buttonType={ButtonType.Primary}
+        onPress={continueWithNotifications}
+        testID={testIdWithKey(TestIds.onboarding.notifications.continue)}
+        accessibilityLabel={t('Global.Continue')}
+      />
+    </ControlContainer>
+  )
+
+  const enableOrSkipControls = (
     <ControlContainer>
       <Button
         title={t('BCSC.Onboarding.EnableNotifications')}
@@ -132,7 +139,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     </ControlContainer>
   )
 
-  if (deniedPermission) {
+  if (isDenied) {
     return (
       <PermissionDisabled
         permissionType="notifications"
@@ -144,7 +151,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
   return (
     <ScreenWrapper
       padded={false}
-      controls={controls}
+      controls={isGranted ? grantedControls : enableOrSkipControls}
       scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
     >
       <View style={styles.imageContainer}>

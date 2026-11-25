@@ -78,6 +78,22 @@ export const OnboardingNotificationsScreen = defineScreen({
   secondary: bcsc(ob.notifications.skip),
   back: bcsc(common.back),
   help: bcsc(common.help),
+  elements: {
+    enable: bcsc(ob.notifications.enable),
+    skip: bcsc(ob.notifications.skip),
+  },
+})
+
+/**
+ * The granted variant of the SAME `OnboardingNotifications` route — a lone Continue replaces the
+ * enable/skip pair once the OS permission is granted (the app cannot revoke it). Reached by navigating
+ * BACK to the screen after allowing the dialog. `primary` (Continue) → SecureApp.
+ */
+export const OnboardingNotificationsGrantedScreen = defineScreen({
+  self: bcsc(ob.notifications.continue),
+  primary: bcsc(ob.notifications.continue),
+  back: bcsc(common.back),
+  help: bcsc(common.help),
 })
 
 /**
