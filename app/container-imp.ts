@@ -380,8 +380,7 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-      let { environment, remoteDebugging, enableProxy, enableAppToAppPersonFlow, enableAttestation } =
-        initialState.developer
+      let { environment, remoteDebugging, enableProxy, enableAppToAppPersonFlow } = initialState.developer
       let bcsc = initialState.bcsc
       let mode = initialState.mode
       let recordedMediatorUrl: string | undefined
@@ -404,7 +403,6 @@ export class AppContainer implements Container {
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
-        loadState<boolean>(BCLocalStorageKeys.EnableAttestation, (val) => (enableAttestation = val)),
         loadState<BCSCState>(BCLocalStorageKeys.BCSC, (val) => (bcsc = val)),
         loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
         loadState<string>(BCLocalStorageKeys.MediatorUrl, (val) => (recordedMediatorUrl = val)),
@@ -469,7 +467,6 @@ export class AppContainer implements Container {
           },
           enableProxy,
           enableAppToAppPersonFlow,
-          enableAttestation,
         },
         bcsc: { ...initialState.bcsc, ...bcsc },
         mode,
