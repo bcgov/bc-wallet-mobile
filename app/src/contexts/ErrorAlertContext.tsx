@@ -4,6 +4,7 @@ import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
+import { formatBuildHistory } from '@/utils/app-build'
 import { appLogger } from '@/utils/logger'
 import { useStore } from '@bifold/core'
 
@@ -97,11 +98,12 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
         description,
         error,
         installId: store.bcsc.installId,
+        buildHistory: formatBuildHistory(store.bcsc.appBuildHistory),
         sessionId: store.developer.remoteDebugging.sessionId,
       })
       setErrorKey((prev) => prev + 1)
     },
-    [store.bcsc.installId, store.developer.remoteDebugging.sessionId]
+    [store.bcsc.appBuildHistory, store.bcsc.installId, store.developer.remoteDebugging.sessionId]
   )
 
   /**

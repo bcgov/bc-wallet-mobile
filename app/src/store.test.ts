@@ -43,12 +43,38 @@ describe('reducer', () => {
   const requestId = (state: typeof initialState, id?: string) =>
     reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID, payload: [id] })
 
-  it('UPDATE_APP_VERSION sets appVersion and appBuildNumber', () => {
-    const state = { ...initialState, bcsc: { ...initialState.bcsc, appVersion: '', appBuildNumber: '' } }
-    const result = reducer(state, { type: BCDispatchAction.UPDATE_APP_VERSION })
+  describe('SET_REGISTERED_BUILD', () => {
+    // The device-info mock reports version 4.0.0, build 100
+    it('stores the running build as the registered build and persists it', () => {
+      const state = {
+        ...initialState,
+        bcsc: { ...initialState.bcsc, registeredBuild: { version: '3.9.0', build: '90' } },
+      }
+      const result = reducer(state, { type: BCDispatchAction.SET_REGISTERED_BUILD })
 
-    expect(result.bcsc.appVersion).toBe('4.0.0')
-    expect(result.bcsc.appBuildNumber).toBe('100')
+      expect(result.bcsc.registeredBuild).toEqual({ version: '4.0.0', build: '100' })
+      expect(mockedStoreValueForKey).toHaveBeenCalledWith(
+        BCLocalStorageKeys.BCSC,
+        expect.objectContaining({ registeredBuild: { version: '4.0.0', build: '100' } })
+      )
+    })
+
+    it('registers a build when none was registered before', () => {
+      const result = reducer(initialState, { type: BCDispatchAction.SET_REGISTERED_BUILD })
+
+      expect(result.bcsc.registeredBuild).toEqual({ version: '4.0.0', build: '100' })
+    })
+
+    it('returns the same state without persisting when the running build is already registered', () => {
+      const state = {
+        ...initialState,
+        bcsc: { ...initialState.bcsc, registeredBuild: { version: '4.0.0', build: '100' } },
+      }
+      const result = reducer(state, { type: BCDispatchAction.SET_REGISTERED_BUILD })
+
+      expect(result).toBe(state)
+      expect(mockedStoreValueForKey).not.toHaveBeenCalled()
+    })
   })
 
   describe('UPDATE_ENVIRONMENT', () => {
@@ -84,6 +110,21 @@ describe('reducer', () => {
 
     expect(result.bcsc.installId).toBe('existing-install-id')
     expect(result.bcsc.selectedNickname).toBeUndefined()
+  })
+
+  it('CLEAR_BCSC preserves appBuildHistory but clears registeredBuild', () => {
+    const history = [
+      { version: '4.0.0', build: '100' },
+      { version: '3.9.0', build: '90' },
+    ]
+    const state = {
+      ...initialState,
+      bcsc: { ...initialState.bcsc, appBuildHistory: history, registeredBuild: history[0] },
+    }
+    const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })
+
+    expect(result.bcsc.appBuildHistory).toEqual(history)
+    expect(result.bcsc.registeredBuild).toBeUndefined()
   })
 
   it('CLEAR_BCSC keeps state.installId even when the payload carries a conflicting installId', () => {
@@ -136,24 +177,6 @@ describe('reducer', () => {
     )
   })
 
-  it('RECORD_APP_LAUNCH_VERSION sets and persists lastSeenAppVersion/lastSeenAppBuildNumber', () => {
-    const state = {
-      ...initialState,
-      bcsc: { ...initialState.bcsc, lastSeenAppVersion: undefined, lastSeenAppBuildNumber: undefined },
-    }
-    const result = reducer(state, {
-      type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
-      payload: [{ version: '4.1.0', buildNumber: '1234' }],
-    })
-
-    expect(result.bcsc.lastSeenAppVersion).toBe('4.1.0')
-    expect(result.bcsc.lastSeenAppBuildNumber).toBe('1234')
-    expect(mockedStoreValueForKey).toHaveBeenCalledWith(
-      BCLocalStorageKeys.BCSC,
-      expect.objectContaining({ lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1234' })
-    )
-  })
-
   it.each([
     ['true (skipped)', true],
     ['false (opted in, unfinished)', false],
@@ -190,21 +213,11 @@ describe('reducer', () => {
       expect(initialState.bcscSecure).toMatchObject({ credentialDeactivated: false, inVerifyFlow: false })
     })
 
-    it.each([true, false])('UPDATE_SECURE_IN_VERIFY_FLOW writes %s and clears deactivation', (inVerifyFlow) => {
+    it.each([true, false])('UPDATE_SECURE_IN_VERIFY_FLOW writes %s and leaves deactivation alone', (inVerifyFlow) => {
       const state = withFacts({ credentialDeactivated: true, inVerifyFlow: !inVerifyFlow })
       const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_IN_VERIFY_FLOW, payload: [inVerifyFlow] })
 
-      expect(result.bcscSecure).toMatchObject({ inVerifyFlow, credentialDeactivated: false })
-    })
-
-    it.each([true, false])('UPDATE_SECURE_CREDENTIAL_DEACTIVATED writes %s and leaves the flow', (deactivated) => {
-      const state = withFacts({ credentialDeactivated: !deactivated, inVerifyFlow: true })
-      const result = reducer(state, {
-        type: BCDispatchAction.UPDATE_SECURE_CREDENTIAL_DEACTIVATED,
-        payload: [deactivated],
-      })
-
-      expect(result.bcscSecure).toMatchObject({ credentialDeactivated: deactivated, inVerifyFlow: false })
+      expect(result.bcscSecure).toMatchObject({ inVerifyFlow, credentialDeactivated: true })
     })
 
     it('UPDATE_SECURE_VERIFIED clears both', () => {
@@ -596,6 +609,64 @@ describe('migrateBCSCState', () => {
 
     expect(result).toEqual({ bcsc: { installId: 'y' }, migrated: true })
     expect(result.bcsc).not.toHaveProperty('reportUUID')
+  })
+
+  describe('app build seeds', () => {
+    it('seeds the history from the last seen pair and the registered build from the old registered pair', () => {
+      const result = migrateBCSCState({
+        lastSeenAppVersion: '4.1.0',
+        lastSeenAppBuildNumber: '1000',
+        appVersion: '4.0.0',
+        appBuildNumber: '999',
+      })
+
+      expect(result).toEqual({
+        bcsc: {
+          appBuildHistory: [{ version: '4.1.0', build: '1000' }],
+          registeredBuild: { version: '4.0.0', build: '999' },
+        },
+        migrated: true,
+      })
+    })
+
+    it('falls back to the registered pair for the history when nothing was last seen', () => {
+      const result = migrateBCSCState({ appVersion: '4.0.0', appBuildNumber: '999' })
+
+      expect(result.bcsc.appBuildHistory).toEqual([{ version: '4.0.0', build: '999' }])
+      expect(result.bcsc.registeredBuild).toEqual({ version: '4.0.0', build: '999' })
+      expect(result.migrated).toBe(true)
+    })
+
+    it('does not seed from an incomplete pair or empty strings', () => {
+      const result = migrateBCSCState({ lastSeenAppVersion: '4.1.0', appVersion: '', appBuildNumber: '' })
+
+      expect(result.bcsc).not.toHaveProperty('appBuildHistory')
+      expect(result.bcsc).not.toHaveProperty('registeredBuild')
+      expect(result.migrated).toBe(false)
+    })
+
+    it('does not touch an existing history or registered build', () => {
+      const appBuildHistory = [{ version: '4.2.0', build: '1100' }]
+      const registeredBuild = { version: '4.2.0', build: '1100' }
+      const result = migrateBCSCState({
+        appBuildHistory,
+        registeredBuild,
+        lastSeenAppVersion: '4.1.0',
+        lastSeenAppBuildNumber: '1000',
+        appVersion: '4.0.0',
+        appBuildNumber: '999',
+      })
+
+      expect(result.bcsc.appBuildHistory).toBe(appBuildHistory)
+      expect(result.bcsc.registeredBuild).toBe(registeredBuild)
+    })
+
+    it('drops the deprecated fields from the blob', () => {
+      const result = migrateBCSCState({ appVersion: '4.0.0', appBuildNumber: '999' })
+
+      expect(result.bcsc).not.toHaveProperty('appVersion')
+      expect(result.bcsc).not.toHaveProperty('appBuildNumber')
+    })
   })
 
   it('is a no-op when installId is already set and there is no legacy field (idempotent re-run)', () => {

@@ -102,6 +102,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                   accessibilityLabel="BCSC.EnterPIN.Title"
                   autoFocus={false}
                   cursorColor="#313132"
+                  editable={true}
                   keyboardType="number-pad"
                   maxFontSizeMultiplier={1}
                   maxLength={6}

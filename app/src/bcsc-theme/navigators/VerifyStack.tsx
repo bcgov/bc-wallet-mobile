@@ -26,6 +26,7 @@ import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurit
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
+import { TermsOfUseUpdated } from '../features/modal/TermsOfUseUpdated'
 import { VerificationSessionExpired } from '../features/modal/VerificationSessionExpired'
 import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
@@ -542,6 +543,18 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       <Stack.Screen
         name={BCSCModals.VerificationSessionExpired}
         component={VerificationSessionExpired}
+        options={{
+          ...getDefaultModalOptions(t('BCSC.Title')),
+          gestureEnabled: false,
+        }}
+      />
+
+      {/* The main stack's Terms of Use check finishes after Home has painted, so a user who starts verifying
+          first is here when it asks for re-acceptance. Its navigate reaches this stack, and the prompt shows
+          over the verify step instead of being lost for the rest of the session. */}
+      <Stack.Screen
+        name={BCSCModals.TermsOfUseUpdated}
+        component={TermsOfUseUpdated}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false,

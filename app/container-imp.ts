@@ -39,12 +39,14 @@ import { CredentialDetailsSubHeader } from '@/bcsc-theme/features/credentials/Cr
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
+import { addNewBuildToHistory } from '@/utils/app-build'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
 import { IASEnvironment } from '@utils/environment'
 import { expirationOverrideInMinutes } from '@utils/expiration'
 import { createAppLogger } from '@utils/logger'
 import { reconcileMediatorPreferences } from '@utils/mediator-preferences'
 import { TFunction } from 'i18next'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { buildDigitalServicesCardCredentialRule } from './src/bcsc-theme/services/digitalServicesCardProvisioner'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
 import EmptyList from './src/bcwallet-theme/components/EmptyList'
@@ -412,6 +414,12 @@ export class AppContainer implements Container {
       const bcscMigration = migrateBCSCState(bcsc)
       bcsc = bcscMigration.bcsc
 
+      const currentBuild = { version: getVersion(), build: getBuildNumber() }
+      const { history, added } = addNewBuildToHistory(currentBuild, bcsc.appBuildHistory)
+
+      // Update the build history
+      bcsc.appBuildHistory = history
+
       // Reset paths and prompts on load as they should not be persisted
       bcsc.photoPath = undefined
       bcsc.videoPath = undefined
@@ -419,7 +427,7 @@ export class AppContainer implements Container {
       bcsc.prompts = undefined
       bcsc.photoMetadata = undefined
       bcsc.videoDuration = undefined
-      if (bcscMigration.migrated) {
+      if (bcscMigration.migrated || added) {
         // Written after the scrub above so the saved blob omits the transient fields it nulled.
         // Failure is non-fatal: the migrations re-run next launch.
         PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc).catch((error) => {

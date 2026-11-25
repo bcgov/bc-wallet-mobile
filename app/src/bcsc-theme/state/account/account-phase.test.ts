@@ -4,7 +4,7 @@ const NOW = new Date('2026-10-19T12:00:00.000Z')
 
 const facts = (overrides: Partial<ExpiryFacts> = {}): ExpiryFacts => ({
   isVerified: true,
-  expiredByServer: false,
+  cardInactive: false,
   credentialExpired: false,
   cardExpiresAt: new Date('2027-10-19T00:00:00.000Z'),
   ...overrides,
@@ -12,21 +12,21 @@ const facts = (overrides: Partial<ExpiryFacts> = {}): ExpiryFacts => ({
 
 describe('getAccountPhase', () => {
   it('is none when the user is not verified, whatever the other inputs say', () => {
-    expect(getAccountPhase(facts({ isVerified: false, expiredByServer: true, credentialExpired: true }), NOW)).toEqual({
+    expect(getAccountPhase(facts({ isVerified: false, cardInactive: true, credentialExpired: true }), NOW)).toEqual({
       phase: AccountPhaseType.None,
     })
   })
 
-  it('is expired when the server expired the card, even with a future date', () => {
-    expect(getAccountPhase(facts({ expiredByServer: true }), NOW)).toEqual({
+  it('is expired when the card is inactive, even with a future date', () => {
+    expect(getAccountPhase(facts({ cardInactive: true }), NOW)).toEqual({
       phase: AccountPhaseType.Expired,
       expiresAt: new Date('2027-10-19T00:00:00.000Z'),
     })
   })
 
-  it('is expired when the server expired a card that is also inside the renewal window', () => {
+  it('is expired when an inactive card is also inside the renewal window', () => {
     const phase = getAccountPhase(
-      facts({ expiredByServer: true, cardExpiresAt: new Date('2026-10-27T00:00:00.000Z') }),
+      facts({ cardInactive: true, cardExpiresAt: new Date('2026-10-27T00:00:00.000Z') }),
       NOW
     )
 
@@ -35,7 +35,7 @@ describe('getAccountPhase', () => {
 
   // #4654: hydration flags the token before userinfo can load, so there is no account
   it.each([
-    ['the server expired the card', { expiredByServer: true }],
+    ['the card is inactive', { cardInactive: true }],
     ['the stored refresh token expired', { credentialExpired: true }],
   ])('is expired with no account loaded when %s', (_name, signal) => {
     expect(getAccountPhase(facts({ ...signal, cardExpiresAt: undefined }), NOW)).toEqual({

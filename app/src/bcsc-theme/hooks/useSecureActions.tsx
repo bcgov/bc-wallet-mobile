@@ -566,6 +566,11 @@ export const useSecureActions = () => {
         payload: [verified],
       })
       if (verified) {
+        // The saved account details describe the registration this record replaces; the next check saves the new ones
+        dispatch({
+          type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+          payload: [undefined],
+        })
         // Verification is finished: nothing is left to resume on launch, and the user is no longer a
         // first-time verifier (a later re-verification, e.g. a renewal, starts from Home)
         dispatch({
@@ -1327,7 +1332,8 @@ export const useSecureActions = () => {
 
       const record = credential ?? restoredCredential
       const credentialDeactivated = isCredentialDeactivated(record)
-      const verified = Boolean(record) && !credentialDeactivated
+      // A cancelled or expired record still counts as verified, matching the verification rule
+      const verified = Boolean(record)
 
       // A verified account with no refresh token is unrecoverable
       const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
@@ -1486,6 +1492,12 @@ export const useSecureActions = () => {
   /**
    * Handles successful authentication by updating wallet key, hydrating state, and dispatching auth success.
    * Call this after setPIN, setupDeviceSecurity, unlockWithDeviceSecurity, or verifyPIN succeeds.
+   * Enter PIN and Create PIN wait for it on their button, so the root slides from that screen into the next
+   * phase. The device-auth callers wait under the loading overlay, the backdrop of the OS prompt: release it
+   * in the same continuation as this resolves (no `await` in between). SUCCESSFUL_AUTH changes the root's
+   * route, and the overlay provider keeps a shown overlay up through the commit its release lands in, so the
+   * change is rendered beneath it, as a cut rather than a slide, and the stack it mounts extends the overlay
+   * for its own wait.
    * @param walletKey wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
    */
   const handleSuccessfulAuth = useCallback(

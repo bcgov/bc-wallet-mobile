@@ -2,10 +2,14 @@ import { BCSCMainStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { RouteProp } from '@react-navigation/native'
+import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { BackHandler } from 'react-native'
 import { DeviceInvalidated } from './DeviceInvalidated'
+
+// Its own focus effect needs a real navigator; this file only cares about DeviceInvalidated's back handler
+jest.mock('@/hooks/usePreventGestureBack', () => ({ __esModule: true, default: jest.fn() }))
 
 const mockFactoryReset = jest.fn().mockResolvedValue({ success: true })
 jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
@@ -59,6 +63,24 @@ describe('DeviceInvalidated', () => {
     )
 
     expect(tree.toJSON()).toMatchSnapshot()
+  })
+
+  it('swallows Android hardware back while focused, so the only way out is removing the account', () => {
+    const remove = jest.fn()
+    const spy = jest.spyOn(BackHandler, 'addEventListener').mockReturnValue({ remove })
+    render(
+      <BasicAppContext>
+        <DeviceInvalidated route={createRoute(BCSCReason.Cancel)} navigation={jest.fn() as any} />
+      </BasicAppContext>
+    )
+
+    // useFocusEffect is a bare mock in tests: run the effect as focus would, then blur it
+    const blur = jest.mocked(useFocusEffect).mock.calls.at(-1)![0]()
+    const hardwareBack = spy.mock.calls.find(([event]) => event === 'hardwareBackPress')?.[1]
+    expect((hardwareBack as () => boolean)()).toBe(true)
+    ;(blur as () => void)()
+    expect(remove).toHaveBeenCalled()
+    spy.mockRestore()
   })
 
   it('renders the header and OK button', () => {

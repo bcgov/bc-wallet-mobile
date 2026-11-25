@@ -70,14 +70,45 @@ describe('selectHomeNotice', () => {
     expect(select(state).type).toBe(HomeNoticeType.BCSCContinueVerification)
   })
 
-  it('does not show Finish for a verified account whose credential was deactivated', () => {
+  it('shows the expired notice, not Finish, for a verified account whose record says deactivated', () => {
     const state = buildState({
       verified: true,
       credentialDeactivated: true,
       refreshToken: 'token',
     })
 
-    expect(select(state).type).toBe(HomeNoticeType.None)
+    expect(select(state, buildAccount(IN_8_DAYS)).type).toBe(HomeNoticeType.AccountExpired)
+  })
+
+  // Token-only fixtures below stay unfinished because the store has no credential record and no unlock refresh ran
+  it('does not show Finish for an unfinished device whose saved details say the card expired', () => {
+    const state = buildState({ refreshToken: UNEXPIRED_JWT }, BCSCReason.ExpiredBySystem)
+
+    expect(select(state).type).toBe(HomeNoticeType.BCSCStartVerification)
+  })
+
+  it('does not show Finish for an unfinished device whose record says deactivated', () => {
+    const state = buildState({ refreshToken: UNEXPIRED_JWT, credentialDeactivated: true })
+
+    expect(select(state).type).toBe(HomeNoticeType.BCSCStartVerification)
+  })
+
+  it('shows Finish for an approved renewal request whose saved details predate the reset (no record, no token)', () => {
+    const state = buildState(
+      { verificationRequestStatus: VerificationRequestStatus.VERIFIED },
+      BCSCReason.ExpiredBySystem
+    )
+
+    expect(select(state).type).toBe(HomeNoticeType.BCSCVerified)
+  })
+
+  it('does not show Finish for an approved request once the saved details say the card expired', () => {
+    const state = buildState(
+      { verificationRequestStatus: VerificationRequestStatus.VERIFIED, refreshToken: UNEXPIRED_JWT },
+      BCSCReason.ExpiredBySystem
+    )
+
+    expect(select(state).type).toBe(HomeNoticeType.BCSCStartVerification)
   })
 
   it('shows the renewal notice with the date for a verified card expiring soon', () => {

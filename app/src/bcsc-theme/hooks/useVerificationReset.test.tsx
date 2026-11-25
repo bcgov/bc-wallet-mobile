@@ -1,4 +1,5 @@
 import * as useAlertsModule from '@/hooks/useAlerts'
+import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -48,6 +49,7 @@ const mockNavigation = {
 
 const mockFactoryResetAlert = jest.fn()
 const mockClearSecureState = jest.fn()
+const mockDispatch = jest.fn()
 const mockDeleteVerificationData = jest.fn().mockResolvedValue(undefined)
 const mockClearRegistration = jest.fn().mockResolvedValue(undefined)
 const mockDeleteRegistration = jest.fn().mockResolvedValue({ success: true })
@@ -74,7 +76,7 @@ describe('useVerificationReset', () => {
           savedServices: ['service-a', 'service-b'],
         },
       } as any,
-      jest.fn(),
+      mockDispatch,
     ])
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
     jest.mocked(useNavigation).mockReturnValue(mockNavigation as any)
@@ -123,6 +125,64 @@ describe('useVerificationReset', () => {
     expect(mockCreateRegistration).toHaveBeenCalledWith()
     expect(mockFactoryResetAlert).not.toHaveBeenCalled()
     expect(mockLogger.error).not.toHaveBeenCalled()
+  })
+
+  it('clears the saved account details once the deletes have succeeded, before re-registering', async () => {
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    expect(mockDispatch).toHaveBeenCalledTimes(1)
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+      payload: [undefined],
+    })
+    const [clearOrder] = mockDispatch.mock.invocationCallOrder
+    expect(clearOrder).toBeGreaterThan(mockDeleteVerificationData.mock.invocationCallOrder[0])
+    expect(clearOrder).toBeGreaterThan(Math.max(...jest.mocked(deleteToken).mock.invocationCallOrder))
+    expect(clearOrder).toBeGreaterThan(mockClearRegistration.mock.invocationCallOrder[0])
+    expect(clearOrder).toBeLessThan(mockCreateRegistration.mock.invocationCallOrder[0])
+  })
+
+  it('keeps the saved account details when a native delete fails, so the surviving record still carries its expiry', async () => {
+    mockDeleteVerificationData.mockRejectedValueOnce(new Error('delete failed'))
+
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    expect(mockDispatch).not.toHaveBeenCalled()
+  })
+
+  it('keeps the saved account details when a token delete fails', async () => {
+    jest.mocked(deleteToken).mockRejectedValueOnce(new Error('token delete failed'))
+
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    expect(mockDispatch).not.toHaveBeenCalled()
+  })
+
+  it('has already cleared the saved account details when re-registration fails, since the session they described is gone', async () => {
+    mockCreateRegistration.mockRejectedValueOnce(new Error('create failed'))
+
+    const { result } = renderHook(() => useVerificationReset())
+
+    await act(async () => {
+      await result.current()
+    })
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+      payload: [undefined],
+    })
   })
 
   it('clears the old registration after the other tokens and before the new one is created', async () => {

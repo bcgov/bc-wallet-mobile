@@ -1,5 +1,5 @@
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/core'
 import { NavigationProp, ParamListBase } from '@react-navigation/native'
@@ -21,9 +21,10 @@ import { useSecureActions } from './useSecureActions'
  *   2. Deletes the existing IAS registration
  *   3. Deletes all verification data and the access and refresh tokens from native storage
  *   4. Clears the old registration from the device (client ID and registration access token together)
- *   5. Creates a new IAS registration, saving its client ID and token together
+ *   5. Clears the saved account details, which describe the registration just deleted
+ *   6. Creates a new IAS registration, saving its client ID and token together
  *
- * If step 5 fails the account is left with no registration, not with a client ID IAS has deleted, so
+ * If step 6 fails the account is left with no registration, not with a client ID IAS has deleted, so
  * the next verification step registers it again.
  *
  * A factory reset alert is shown if any error occurs so the user isn't stuck with a broken app
@@ -41,7 +42,7 @@ export type VerificationResetOptions = {
 }
 
 export const useVerificationReset = () => {
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, clearRegistration, deleteVerificationData } = useSecureActions()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
@@ -108,6 +109,10 @@ export const useVerificationReset = () => {
           await clearRegistration()
           logger.info('[useVerificationReset] Verification data, tokens and registration deleted from native storage')
 
+          // After the deletes succeed: if one fails, the record or token read back at the next unlock
+          // still carries its expiry reason. Not in CLEAR_SECURE_STATE, which lock and logout share.
+          dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [undefined] })
+
           // Register the device again. The account keeps its security method and nickname.
           logger.info('[useVerificationReset] Creating new IAS registration...')
           await registrationService.createRegistration()
@@ -124,6 +129,7 @@ export const useVerificationReset = () => {
     [
       store.bcscSecure.walletKey,
       store.bcscSecure.securityMethod,
+      dispatch,
       logger,
       clearSecureState,
       clearRegistration,
